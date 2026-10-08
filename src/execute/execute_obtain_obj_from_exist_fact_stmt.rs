@@ -18,16 +18,16 @@ use std::collections::HashMap;
 
 use crate::ast::fact::{
     AndFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ExistShapedFact, Fact, ForallFact,
-    PlainExistFact
+    PlainExistFact,
 };
 use crate::ast::names::BoundName;
-use crate::ast::obj::{IdentifierObj, Obj, Tuple, ProductShape};
+use crate::ast::obj::{IdentifierObj, Obj, ProductShape, Tuple};
 use crate::ast::param::{TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::ObtainObjFromExistFact;
 use crate::execute::execute_fact_stmt::{
     VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
     VerifyExistUniqueFactSuccess, VerifyFactResult, VerifyPlainExistFactResult,
-    VerifyPlainExistFactSuccess, VerifyState
+    VerifyPlainExistFactSuccess, VerifyState,
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
@@ -36,12 +36,12 @@ use crate::runtime::{IdentifierId, Runtime, RuntimeError, RuntimeResult};
 pub enum ExecObtainObjFromExistFactStmtFailed {
     ArityMismatch { expected: usize, got: usize },
     NotExistSource,
-    Exist(VerifyExistShapedFactFailed)
+    Exist(VerifyExistShapedFactFailed),
 }
 
 pub enum ObtainExistVerifySuccess {
     Exist(VerifyPlainExistFactSuccess),
-    ExistUnique(VerifyExistUniqueFactSuccess)
+    ExistUnique(VerifyExistUniqueFactSuccess),
 }
 
 // Pipeline: verify known exist → rename binders → define + store body
@@ -49,12 +49,12 @@ pub enum ObtainExistVerifySuccess {
 pub struct ExecObtainObjFromExistFactStmtSuccessResult {
     pub statement: ObtainObjFromExistFact,
     pub verify_exist: ObtainExistVerifySuccess,
-    pub store_and_infer_result: StoreHaveObjAndInferResult
+    pub store_and_infer_result: StoreHaveObjAndInferResult,
 }
 
 pub enum ExecObtainObjFromExistFactStmtResult {
     Success(ExecObtainObjFromExistFactStmtSuccessResult),
-    Failed(ExecObtainObjFromExistFactStmtFailed)
+    Failed(ExecObtainObjFromExistFactStmtFailed),
 }
 
 impl ExecObtainObjFromExistFactStmtResult {
@@ -88,15 +88,16 @@ impl Runtime {
         match self.apply_obtain_from_known_exist_family(
             &stmt.fact,
             &stmt.equal_tos,
-         crate::execute::execute_fact_stmt::VerifyState::top_level())? {
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromExistFactStmtResult::Success(
                 ExecObtainObjFromExistFactStmtSuccessResult {
                     statement: stmt.clone(),
                     verify_exist,
-                    store_and_infer_result
+                    store_and_infer_result,
                 },
             )),
-            Err(failed) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(failed))
+            Err(failed) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(failed)),
         }
     }
 
@@ -108,7 +109,8 @@ impl Runtime {
         &mut self,
         family: &ExistShapedFact,
         equal_tos: &[BoundName],
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
     {
         if matches!(family, ExistShapedFact::NotExist(_)) {
             return Ok(Err(ExecObtainObjFromExistFactStmtFailed::NotExistSource));
@@ -120,7 +122,7 @@ impl Runtime {
         if expected != got {
             return Ok(Err(ExecObtainObjFromExistFactStmtFailed::ArityMismatch {
                 expected,
-                got
+                got,
             }));
         }
 
@@ -335,7 +337,7 @@ impl Runtime {
                 fact_id: self.global_ids.allocate_fact_id(),
                 left,
                 right,
-                line_file: plain.line_file.clone()
+                line_file: plain.line_file.clone(),
             });
             vec![ExistOrAndChainAtomicFact::AtomicFact(equal)]
         } else {
@@ -345,24 +347,24 @@ impl Runtime {
                     fact_id: self.global_ids.allocate_fact_id(),
                     left: Obj::Identifier(IdentifierObj::from_bound_name(left_b)),
                     right: Obj::Identifier(IdentifierObj::from_bound_name(right_b)),
-                    line_file: plain.line_file.clone()
+                    line_file: plain.line_file.clone(),
                 }));
             }
             vec![ExistOrAndChainAtomicFact::AndFact(AndFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 facts: equals,
-                line_file: plain.line_file.clone()
+                line_file: plain.line_file.clone(),
             })]
         };
 
         Ok(ForallFact {
             fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList {
-                groups: forall_groups
+                groups: forall_groups,
             },
             dom_facts,
             then_facts,
-            line_file: plain.line_file.clone()
+            line_file: plain.line_file.clone(),
         })
     }
 }
@@ -375,7 +377,7 @@ fn witness_tuple_or_single(binders: &[BoundName]) -> Obj {
             args: binders
                 .iter()
                 .map(|b| Box::new(Obj::Identifier(IdentifierObj::from_bound_name(b))))
-                .collect()
+                .collect(),
         }))
     }
 }

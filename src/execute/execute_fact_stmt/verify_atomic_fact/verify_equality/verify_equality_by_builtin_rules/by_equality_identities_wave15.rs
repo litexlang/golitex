@@ -201,8 +201,7 @@ fn obj_mentions_param_id(obj: &Obj, id: IdentifierId) -> bool {
             obj_mentions_param_id(af.equal_to.as_ref(), id)
         }
         Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(s)) => {
-            obj_mentions_param_id(s.set.as_ref(), id)
-                || obj_mentions_param_id(s.func.as_ref(), id)
+            obj_mentions_param_id(s.set.as_ref(), id) || obj_mentions_param_id(s.func.as_ref(), id)
         }
         Obj::ProductShape(ProductShape::Cart(Cart { args }))
         | Obj::ProductShape(ProductShape::Tuple(Tuple { args })) => {

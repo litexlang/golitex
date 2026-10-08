@@ -1,7 +1,9 @@
-use crate::ast::obj::{ArithmeticOperator, ComplexOperator, ExpLogOperator, IntegerOperator, Literal, Number, Obj};
+use super::integer_factorization::factor_positive_integer;
+use crate::ast::obj::{
+    ArithmeticOperator, ComplexOperator, ExpLogOperator, IntegerOperator, Literal, Number, Obj,
+};
 use crate::rational_expression::helper::{div_objs, obj_from_number};
 use crate::rational_expression::NumberCompareResult;
-use super::integer_factorization::factor_positive_integer;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -109,11 +111,15 @@ impl EvalRational {
                 exact_rational_log(&base, &argument)
             }
             Obj::ExpLogOperator(ExpLogOperator::Exp(exp)) => {
-                if !Self::from_obj(&exp.arg)?.is_zero() { return None; }
+                if !Self::from_obj(&exp.arg)?.is_zero() {
+                    return None;
+                }
                 Self::new(1, 1)
             }
             Obj::ExpLogOperator(ExpLogOperator::Ln(ln)) => {
-                if Self::from_obj(&ln.arg)? != Self::new(1, 1)? { return None; }
+                if Self::from_obj(&ln.arg)? != Self::new(1, 1)? {
+                    return None;
+                }
                 Self::new(0, 1)
             }
             Obj::ComplexOperator(ComplexOperator::RealPart(part)) => {
@@ -123,7 +129,9 @@ impl EvalRational {
                 Some(super::exact_complex::exact_complex_coordinates(&part.arg)?.1)
             }
             Obj::ComplexOperator(ComplexOperator::ComplexAbs(abs)) => {
-                super::exact_complex::exact_modulus_radicand(&abs.arg)?.2.exact_sqrt()
+                super::exact_complex::exact_modulus_radicand(&abs.arg)?
+                    .2
+                    .exact_sqrt()
             }
             _ => None,
         }
@@ -372,27 +380,39 @@ fn exact_integer_operator(operator: &IntegerOperator) -> Option<EvalRational> {
         }
         IntegerOperator::Quot(value) => {
             let divisor = integer(&value.right)?;
-            if divisor <= 0 { return None; }
+            if divisor <= 0 {
+                return None;
+            }
             integer(&value.left)?.checked_div_euclid(divisor)?
         }
         IntegerOperator::Gcd(value) => {
             let left = integer(&value.left)?;
             let right = integer(&value.right)?;
-            if left == 0 && right == 0 { return None; }
+            if left == 0 && right == 0 {
+                return None;
+            }
             gcd_i128(left, right)?
         }
         IntegerOperator::Lcm(value) => {
             let left = integer(&value.left)?;
             let right = integer(&value.right)?;
-            if left == 0 || right == 0 { 0 } else {
-                (left / gcd_i128(left, right)?).checked_mul(right)?.checked_abs()?
+            if left == 0 || right == 0 {
+                0
+            } else {
+                (left / gcd_i128(left, right)?)
+                    .checked_mul(right)?
+                    .checked_abs()?
             }
         }
         IntegerOperator::Factorial(value) => {
             let argument = integer(&value.arg)?;
-            if argument < 0 { return None; }
+            if argument < 0 {
+                return None;
+            }
             let mut product = 1i128;
-            for factor in 2..=argument { product = product.checked_mul(factor)?; }
+            for factor in 2..=argument {
+                product = product.checked_mul(factor)?;
+            }
             product
         }
     };
@@ -403,12 +423,15 @@ fn exact_integer_operator(operator: &IntegerOperator) -> Option<EvalRational> {
 // when every valuation of x is r times that of b, with b>0, b!=1, x>0.
 // Example: log(8,4)=2/3; log(1/3,27)=-3. No approximate log or search premises.
 fn exact_rational_log(base: &EvalRational, argument: &EvalRational) -> Option<EvalRational> {
-    if base.numerator <= 0 || argument.numerator <= 0
-        || base.numerator == base.denominator {
+    if base.numerator <= 0 || argument.numerator <= 0 || base.numerator == base.denominator {
         return None;
     }
-    if argument.numerator == argument.denominator { return EvalRational::new(0, 1); }
-    if base == argument { return EvalRational::new(1, 1); }
+    if argument.numerator == argument.denominator {
+        return EvalRational::new(0, 1);
+    }
+    if base == argument {
+        return EvalRational::new(1, 1);
+    }
     let valuations = |value: &EvalRational| -> Option<BTreeMap<i128, i128>> {
         let mut result = BTreeMap::new();
         for (prime, exponent) in factor_positive_integer(value.numerator)? {
@@ -426,11 +449,17 @@ fn exact_rational_log(base: &EvalRational, argument: &EvalRational) -> Option<Ev
     for (&prime, &exponent) in &base_factors {
         let argument_exponent = *argument_factors.get(&prime).unwrap_or(&0);
         if ratio.numerator.checked_mul(exponent)?
-            != ratio.denominator.checked_mul(argument_exponent)? {
+            != ratio.denominator.checked_mul(argument_exponent)?
+        {
             return None;
         }
     }
-    if argument_factors.keys().any(|prime| !base_factors.contains_key(prime)) { return None; }
+    if argument_factors
+        .keys()
+        .any(|prime| !base_factors.contains_key(prime))
+    {
+        return None;
+    }
     Some(ratio)
 }
 

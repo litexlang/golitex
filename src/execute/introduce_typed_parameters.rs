@@ -12,9 +12,7 @@
 //! nonempty checks) should call the stages separately, then
 //! `auto_open_struct_layers_for_typed_parameters`.
 
-use crate::ast::fact::{
-    AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
-};
+use crate::ast::fact::{AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact};
 use crate::ast::obj::{Obj, StructAndFieldAccessObj};
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::{
@@ -47,10 +45,7 @@ impl SharedHaveDefinition {
     fn with_name(&self, name: String) -> StoredIdentifierDefinition {
         match self {
             SharedHaveDefinition::HaveObjInNonemptySetOrParamType(stmt) => {
-                StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((
-                    name,
-                    Rc::clone(stmt),
-                ))
+                StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((name, Rc::clone(stmt)))
             }
             SharedHaveDefinition::HaveObjEqual(stmt) => {
                 StoredIdentifierDefinition::HaveObjEqual((name, Rc::clone(stmt)))
@@ -114,37 +109,42 @@ impl Runtime {
             let one = TypedParameterList {
                 groups: vec![group.clone()],
             };
-            let proof = self
-                .verify_param_type_well_definedness(&group.param_type, verify_state.clone())?;
+            let proof =
+                self.verify_param_type_well_definedness(&group.param_type, verify_state.clone())?;
             if proof.is_failed() {
                 let failed = match proof {
                     ParamTypeWellDefinedProof::Obj(wd) => wd,
                     ParamTypeWellDefinedProof::Set
                     | ParamTypeWellDefinedProof::NonemptySet
-                    | ParamTypeWellDefinedProof::FiniteSet => unreachable!(
-                        "kind param types never soft-fail well-definedness"
-                    ),
+                    | ParamTypeWellDefinedProof::FiniteSet => {
+                        unreachable!("kind param types never soft-fail well-definedness")
+                    }
                 };
                 return Ok(Err(IntroduceTypedParametersFailed::ParamType(failed)));
             }
             param_type_well_defined.push(proof);
-            let defined = self.define_typed_parameters_in_current_env(&one, shared_have.clone(), verify_state)?;
+            let defined = self.define_typed_parameters_in_current_env(
+                &one,
+                shared_have.clone(),
+                verify_state,
+            )?;
             stored_fact_ids.extend(defined.stored_fact_ids);
         }
 
         let defined_params = StoreHaveObjAndInferResult { stored_fact_ids };
-        let auto_opened_struct_layers =
-            match self.auto_open_struct_layers_for_typed_parameters(typed_parameters, verify_state)? {
-                Ok(layers) => layers,
-                Err((opened_before_fail, failed)) => {
-                    return Ok(Err(IntroduceTypedParametersFailed::AutoOpenStructLayer {
-                        param_type_well_defined,
-                        defined_params,
-                        opened_before_fail,
-                        failed,
-                    }));
-                }
-            };
+        let auto_opened_struct_layers = match self
+            .auto_open_struct_layers_for_typed_parameters(typed_parameters, verify_state)?
+        {
+            Ok(layers) => layers,
+            Err((opened_before_fail, failed)) => {
+                return Ok(Err(IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                    param_type_well_defined,
+                    defined_params,
+                    opened_before_fail,
+                    failed,
+                }));
+            }
+        };
 
         Ok(Ok(IntroduceTypedParametersResult {
             param_type_well_defined,
@@ -168,9 +168,9 @@ impl Runtime {
                     ParamTypeWellDefinedProof::Obj(wd) => wd,
                     ParamTypeWellDefinedProof::Set
                     | ParamTypeWellDefinedProof::NonemptySet
-                    | ParamTypeWellDefinedProof::FiniteSet => unreachable!(
-                        "kind param types never soft-fail well-definedness"
-                    ),
+                    | ParamTypeWellDefinedProof::FiniteSet => {
+                        unreachable!("kind param types never soft-fail well-definedness")
+                    }
                 };
                 return Ok(Err(failed));
             }
@@ -194,7 +194,8 @@ impl Runtime {
         &mut self,
         typed_parameters: &TypedParameterList,
         shared_have: Option<SharedHaveDefinition>,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveObjAndInferResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<StoreHaveObjAndInferResult> {
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
             for identifier in &group.params {
@@ -265,7 +266,10 @@ impl Runtime {
 
     // A typed definition selects the default field view; an ordinary membership does not.
     pub(crate) fn record_default_struct_view(&mut self, fact: &InFact) {
-        if matches!(&fact.set, Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_))) {
+        if matches!(
+            &fact.set,
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_))
+        ) {
             self.top_exec_env_mut().record_special_property(
                 fact.element.ir(),
                 SpecialProperty::DefaultStructView(fact.clone()),

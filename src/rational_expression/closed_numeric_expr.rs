@@ -31,12 +31,13 @@
 //! at the boundary) instead of re-testing Obj ad hoc.
 
 use crate::ast::obj::{
-    Abs, Add, ArithmeticOperator, Ceil, Div, ExpLogOperator, Factorial, Floor, Gcd, IntegerOperator,
-    Lcm, Literal, Log, Max, Min, Mod, Mul, Neg, Number, Obj, Pow, Quot, Sign, Sqrt, Sub,
+    Abs, Add, ArithmeticOperator, Ceil, Div, ExpLogOperator, Factorial, Floor, Gcd,
+    IntegerOperator, Lcm, Literal, Log, Max, Min, Mod, Mul, Neg, Number, Obj, Pow, Quot, Sign,
+    Sqrt, Sub,
 };
 use crate::rational_expression::decimal_arithmetic::{
-    evaluate_obj_to_normalized_decimal_number, normalized_decimal_str_is_integer,
-    normalized_decimal_str_is_non_negative_integer, normalize_decimal_number_string,
+    evaluate_obj_to_normalized_decimal_number, normalize_decimal_number_string,
+    normalized_decimal_str_is_integer, normalized_decimal_str_is_non_negative_integer,
 };
 
 /// Classified closed-numeric tree. See module docs for the definition.
@@ -110,21 +111,15 @@ impl ClosedNumericExpr {
                 Box::new(Self::try_from_obj(&max.left)?),
                 Box::new(Self::try_from_obj(&max.right)?),
             )),
-            Obj::ArithmeticOperator(ArithmeticOperator::Floor(floor)) => {
-                Some(ClosedNumericExpr::Floor(Box::new(Self::try_from_obj(
-                    &floor.arg,
-                )?)))
-            }
-            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(ceil)) => {
-                Some(ClosedNumericExpr::Ceil(Box::new(Self::try_from_obj(
-                    &ceil.arg,
-                )?)))
-            }
-            Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => {
-                Some(ClosedNumericExpr::Sign(Box::new(Self::try_from_obj(
-                    &sign.arg,
-                )?)))
-            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(floor)) => Some(
+                ClosedNumericExpr::Floor(Box::new(Self::try_from_obj(&floor.arg)?)),
+            ),
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(ceil)) => Some(
+                ClosedNumericExpr::Ceil(Box::new(Self::try_from_obj(&ceil.arg)?)),
+            ),
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => Some(
+                ClosedNumericExpr::Sign(Box::new(Self::try_from_obj(&sign.arg)?)),
+            ),
             Obj::IntegerOperator(IntegerOperator::Mod(mod_obj)) => {
                 let left = Self::try_from_obj(&mod_obj.left)?;
                 let right = Self::try_from_obj(&mod_obj.right)?;
@@ -273,12 +268,10 @@ impl ClosedNumericExpr {
             ClosedNumericExpr::Sqrt(arg) => Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt {
                 arg: Box::new(arg.to_obj()),
             })),
-            ClosedNumericExpr::Log { base, arg } => {
-                Obj::ExpLogOperator(ExpLogOperator::Log(Log {
-                    base: Box::new(base.to_obj()),
-                    arg: Box::new(arg.to_obj()),
-                }))
-            }
+            ClosedNumericExpr::Log { base, arg } => Obj::ExpLogOperator(ExpLogOperator::Log(Log {
+                base: Box::new(base.to_obj()),
+                arg: Box::new(arg.to_obj()),
+            })),
         }
     }
 }

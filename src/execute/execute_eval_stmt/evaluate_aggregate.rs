@@ -3,10 +3,12 @@ use super::evaluate_closed_numeric::evaluate_closed_numeric_obj;
 use super::evaluate_obj::evaluate_obj;
 use super::helper::{ActiveAlgoCalls, MAX_AGGREGATE_TERMS};
 use super::result::ExecEvalStmtFailed;
-use crate::ast::obj::{FnObj, FnObjHead, FunctionSpace, IteratedOperator, Literal, Number, Obj, SetFormer};
+use crate::ast::obj::{
+    FnObj, FnObjHead, FunctionSpace, IteratedOperator, Literal, Number, Obj, SetFormer,
+};
 use crate::execute::execute_by_stmt::proof_verify_state;
-use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
 use crate::rational_expression::exact_rational::EvalRational;
 use crate::rational_expression::helper::{add_objs, mul_objs};
 use crate::runtime::{Runtime, RuntimeResult};
@@ -110,62 +112,153 @@ pub fn evaluate_aggregate(
             )
         }
         IteratedOperator::Reduce(r) => {
-            let bounds=checked!(evaluate_bounds(runtime,&r.start,&r.end,depth,context));
-            let indices=checked!(enumerate_range(bounds.start_integer,bounds.end_integer,true,context));
-            let seed=checked!(evaluate_obj(runtime,&r.seed,depth+1,context));
-            let mut value=seed.clone();
-            let mut terms=Vec::new();
+            let bounds = checked!(evaluate_bounds(runtime, &r.start, &r.end, depth, context));
+            let indices = checked!(enumerate_range(
+                bounds.start_integer,
+                bounds.end_integer,
+                true,
+                context
+            ));
+            let seed = checked!(evaluate_obj(runtime, &r.seed, depth + 1, context));
+            let mut value = seed.clone();
+            let mut terms = Vec::new();
             // Ascending left fold: op(op(seed,f(start)),f(start+1)), ...
             // Every beta expansion and WD result remains in the evidence.
             for argument in indices {
-                let term=checked!(evaluate_fold_application(runtime,&r.func,vec![argument.clone()],depth,context));
-                let operation=checked!(evaluate_fold_application(runtime,&r.op,vec![value,term.value.clone()],depth,context));
-                value=operation.value.clone();
-                terms.push(ReduceTermEvaluationResult {argument,term,operation,accumulated_value:value.clone()});
+                let term = checked!(evaluate_fold_application(
+                    runtime,
+                    &r.func,
+                    vec![argument.clone()],
+                    depth,
+                    context
+                ));
+                let operation = checked!(evaluate_fold_application(
+                    runtime,
+                    &r.op,
+                    vec![value, term.value.clone()],
+                    depth,
+                    context
+                ));
+                value = operation.value.clone();
+                terms.push(ReduceTermEvaluationResult {
+                    argument,
+                    term,
+                    operation,
+                    accumulated_value: value.clone(),
+                });
             }
-            (AggregateEvaluationResult::Reduce(RangeReduceEvaluationResult {source,bounds,seed,terms,value:value.clone()}),value)
+            (
+                AggregateEvaluationResult::Reduce(RangeReduceEvaluationResult {
+                    source,
+                    bounds,
+                    seed,
+                    terms,
+                    value: value.clone(),
+                }),
+                value,
+            )
         }
         IteratedOperator::FiniteSetReduce(r) => {
             // The source WD includes associativity and commutativity, so this
             // finite enumeration cannot change the mathematical value.
-            match runtime.verify_obj_well_definedness(&source,context.function_proof_state.clone())? {
-                VerifyObjWellDefinedResult::Success(_)=>{},failed=>return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
+            match runtime
+                .verify_obj_well_definedness(&source, context.function_proof_state.clone())?
+            {
+                VerifyObjWellDefinedResult::Success(_) => {}
+                failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
             }
-            let enumeration=checked!(enumerate_set(runtime,&r.set,depth,context));
-            let seed=checked!(evaluate_obj(runtime,&r.seed,depth+1,context));
-            let mut value=seed.clone();let mut terms=Vec::new();
+            let enumeration = checked!(enumerate_set(runtime, &r.set, depth, context));
+            let seed = checked!(evaluate_obj(runtime, &r.seed, depth + 1, context));
+            let mut value = seed.clone();
+            let mut terms = Vec::new();
             for argument in &enumeration.elements {
-                let term=checked!(evaluate_fold_application(runtime,&r.func,vec![argument.clone()],depth,context));
-                let operation=checked!(evaluate_fold_application(runtime,&r.op,vec![value,term.value.clone()],depth,context));
-                value=operation.value.clone();terms.push(ReduceTermEvaluationResult {argument:argument.clone(),term,operation,accumulated_value:value.clone()});
+                let term = checked!(evaluate_fold_application(
+                    runtime,
+                    &r.func,
+                    vec![argument.clone()],
+                    depth,
+                    context
+                ));
+                let operation = checked!(evaluate_fold_application(
+                    runtime,
+                    &r.op,
+                    vec![value, term.value.clone()],
+                    depth,
+                    context
+                ));
+                value = operation.value.clone();
+                terms.push(ReduceTermEvaluationResult {
+                    argument: argument.clone(),
+                    term,
+                    operation,
+                    accumulated_value: value.clone(),
+                });
             }
-            (AggregateEvaluationResult::FiniteSetReduce(FiniteSetReduceEvaluationResult {source,enumeration,seed,terms,value:value.clone()}),value)
+            (
+                AggregateEvaluationResult::FiniteSetReduce(FiniteSetReduceEvaluationResult {
+                    source,
+                    enumeration,
+                    seed,
+                    terms,
+                    value: value.clone(),
+                }),
+                value,
+            )
         }
     };
     context.aggregate_evaluations.push(proof);
     Ok(Ok(value))
 }
 
-fn evaluate_fold_application(runtime:&mut Runtime,function:&Obj,args:Vec<Obj>,depth:usize,context:&mut ActiveAlgoCalls)
-    -> RuntimeResult<Result<FunctionApplicationEvaluationResult,ExecEvalStmtFailed>> {
-    let Some(application)=fold_application(function,args) else {return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));};
-    let application_obj=Obj::FnObj(application.clone());
-    let application_well_defined=match runtime.verify_obj_well_definedness(&application_obj,context.function_proof_state.clone())? {
-        VerifyObjWellDefinedResult::Success(p)=>p,failed=>return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
+fn evaluate_fold_application(
+    runtime: &mut Runtime,
+    function: &Obj,
+    args: Vec<Obj>,
+    depth: usize,
+    context: &mut ActiveAlgoCalls,
+) -> RuntimeResult<Result<FunctionApplicationEvaluationResult, ExecEvalStmtFailed>> {
+    let Some(application) = fold_application(function, args) else {
+        return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
     };
-    let Some(expansion)=runtime.expanded_named_or_literal_anon_fn_application_body(&application)? else {return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));};
-    let (body,cites)=runtime.rewrite_obj_by_known_closed_numeric_equal(&expansion.expanded_body);
+    let application_obj = Obj::FnObj(application.clone());
+    let application_well_defined = match runtime
+        .verify_obj_well_definedness(&application_obj, context.function_proof_state.clone())?
+    {
+        VerifyObjWellDefinedResult::Success(p) => p,
+        failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
+    };
+    let Some(expansion) =
+        runtime.expanded_named_or_literal_anon_fn_application_body(&application)?
+    else {
+        return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
+    };
+    let (body, cites) = runtime.rewrite_obj_by_known_closed_numeric_equal(&expansion.expanded_body);
     context.cited_equal_fact_ids.extend(cites);
-    let value=match evaluate_obj(runtime,&body,depth+1,context)? {Ok(v)=>v,Err(e)=>return Ok(Err(e))};
-    Ok(Ok(FunctionApplicationEvaluationResult {application:application_obj,application_well_defined,expansion:FunctionApplicationExpansionProof::Anonymous(expansion),value}))
-}
-fn fold_application(function:&Obj,args:Vec<Obj>)->Option<FnObj> {
-    let (head,mut body)=match function {
-        Obj::Identifier(id)=>(FnObjHead::Identifier(id.clone()),vec![]),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(a))=>(FnObjHead::AnonymousFnLiteral(Box::new(a.clone())),vec![]),
-        Obj::FnObj(f)=>(f.head.as_ref().clone(),f.body.clone()),_=>return None,
+    let value = match evaluate_obj(runtime, &body, depth + 1, context)? {
+        Ok(v) => v,
+        Err(e) => return Ok(Err(e)),
     };
-    body.push(args.into_iter().map(Box::new).collect());Some(FnObj {head:Box::new(head),body})
+    Ok(Ok(FunctionApplicationEvaluationResult {
+        application: application_obj,
+        application_well_defined,
+        expansion: FunctionApplicationExpansionProof::Anonymous(expansion),
+        value,
+    }))
+}
+fn fold_application(function: &Obj, args: Vec<Obj>) -> Option<FnObj> {
+    let (head, mut body) = match function {
+        Obj::Identifier(id) => (FnObjHead::Identifier(id.clone()), vec![]),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(a)) => {
+            (FnObjHead::AnonymousFnLiteral(Box::new(a.clone())), vec![])
+        }
+        Obj::FnObj(f) => (f.head.as_ref().clone(), f.body.clone()),
+        _ => return None,
+    };
+    body.push(args.into_iter().map(Box::new).collect());
+    Some(FnObj {
+        head: Box::new(head),
+        body,
+    })
 }
 
 fn evaluate_bounds(
@@ -339,10 +432,9 @@ fn evaluate_terms(
         let Some(application) = unary_application(function, argument.clone()) else {
             return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
         };
-        let application_well_defined = match runtime.verify_obj_well_definedness(
-            &Obj::FnObj(application.clone()),
-            proof_verify_state(),
-        )? {
+        let application_well_defined = match runtime
+            .verify_obj_well_definedness(&Obj::FnObj(application.clone()), proof_verify_state())?
+        {
             VerifyObjWellDefinedResult::Success(p) => p,
             failed => return Ok(Err(ExecEvalStmtFailed::WellDefined(Box::new(failed)))),
         };

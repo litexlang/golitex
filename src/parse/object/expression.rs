@@ -1,13 +1,13 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::ast::obj::{
     Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj, FnSet,
-    FunctionSpace, IntegerOperator, Intersect, Mod, Mul, Neg, Obj, Pow, ProductShape,
-    SetFormer, SetOperator, StructAndFieldAccessObj, Sub, Union,
+    FunctionSpace, IntegerOperator, Intersect, Mod, Mul, Neg, Obj, Pow, ProductShape, SetFormer,
+    SetOperator, StructAndFieldAccessObj, Sub, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::{
-    ADD, BANG, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW,
-    SUB, UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
+    ADD, BANG, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, SUB,
+    UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
@@ -195,9 +195,11 @@ fn parse_optional_factorial_bang(tb: &mut TokenBlock, left: Obj) -> RuntimeResul
         return Ok(left);
     }
     tb.advance()?;
-    Ok(Obj::IntegerOperator(IntegerOperator::Factorial(Factorial {
-        arg: Box::new(left),
-    })))
+    Ok(Obj::IntegerOperator(IntegerOperator::Factorial(
+        Factorial {
+            arg: Box::new(left),
+        },
+    )))
 }
 
 fn parse_field_and_call_postfixes(
@@ -219,10 +221,12 @@ fn parse_field_and_call_postfixes(
                     access.fields.push(field_name);
                     Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access))
                 }
-                other => Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(FieldAccess {
-                    obj: Box::new(other),
-                    fields: vec![field_name],
-                })),
+                other => Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(
+                    FieldAccess {
+                        obj: Box::new(other),
+                        fields: vec![field_name],
+                    },
+                )),
             };
             continue;
         }
@@ -230,7 +234,11 @@ fn parse_field_and_call_postfixes(
         if tb.peek() == Some(LEFT_PAREN) {
             let (head, mut body_vectors) = match result {
                 Obj::FnObj(call) => (*call.head, call.body),
-                other => (fn_obj_head_from_obj(other).expect("all object expressions have an application head"), Vec::new()),
+                other => (
+                    fn_obj_head_from_obj(other)
+                        .expect("all object expressions have an application head"),
+                    Vec::new(),
+                ),
             };
             while tb.peek() == Some(LEFT_PAREN) {
                 let args = super::primary::parse_obj_list_paren(rt, tb)?;

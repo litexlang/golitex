@@ -241,8 +241,12 @@ fn expression(
                 FunctionSpace::FnSet(x) => parens(&fn_set(x, modules, lang)?),
                 FunctionSpace::AnonymousFn(x) => anonymous(x, modules, lang)?,
                 FunctionSpace::FnRange(x) => operator("range", &[o(&x.function)?]),
-                FunctionSpace::Preimage(x) => operator("preimage", &[o(&x.function)?, o(&x.value)?]),
-                FunctionSpace::PreimageSet(x) => operator("preimage_set", &[o(&x.function)?, o(&x.target_set)?]),
+                FunctionSpace::Preimage(x) => {
+                    operator("preimage", &[o(&x.function)?, o(&x.value)?])
+                }
+                FunctionSpace::PreimageSet(x) => {
+                    operator("preimage_set", &[o(&x.function)?, o(&x.target_set)?])
+                }
             },
             50,
         ),

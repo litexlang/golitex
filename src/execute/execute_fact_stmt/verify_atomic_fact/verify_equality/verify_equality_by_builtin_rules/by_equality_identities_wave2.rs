@@ -4,7 +4,7 @@
 
 use super::log_algebra_base_proof::LogAlgebraBaseProof;
 use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, NotEqualFact, GreaterFact,
+    AtomicFact, EqualFact, Fact, GreaterFact, LessEqualFact, LessFact, NotEqualFact,
 };
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Div, ExpLogOperator, IntegerOperator, Literal, Log, Mod, Mul,
@@ -90,7 +90,10 @@ pub struct LogArgPowerBuiltinRuleProof {
 }
 impl LogArgPowerBuiltinRuleProof {
     pub fn new(base_proof: LogAlgebraBaseProof, argument_positive_proof: VerifyFactResult) -> Self {
-        Self { base_proof, argument_positive_proof }
+        Self {
+            base_proof,
+            argument_positive_proof,
+        }
     }
 }
 
@@ -102,8 +105,16 @@ pub struct LogProductBuiltinRuleProof {
     pub right_argument_positive_proof: VerifyFactResult,
 }
 impl LogProductBuiltinRuleProof {
-    pub fn new(base_proof: LogAlgebraBaseProof, left_argument_positive_proof: VerifyFactResult, right_argument_positive_proof: VerifyFactResult) -> Self {
-        Self { base_proof, left_argument_positive_proof, right_argument_positive_proof }
+    pub fn new(
+        base_proof: LogAlgebraBaseProof,
+        left_argument_positive_proof: VerifyFactResult,
+        right_argument_positive_proof: VerifyFactResult,
+    ) -> Self {
+        Self {
+            base_proof,
+            left_argument_positive_proof,
+            right_argument_positive_proof,
+        }
     }
 }
 
@@ -115,8 +126,16 @@ pub struct LogQuotientBuiltinRuleProof {
     pub denominator_positive_proof: VerifyFactResult,
 }
 impl LogQuotientBuiltinRuleProof {
-    pub fn new(base_proof: LogAlgebraBaseProof, numerator_positive_proof: VerifyFactResult, denominator_positive_proof: VerifyFactResult) -> Self {
-        Self { base_proof, numerator_positive_proof, denominator_positive_proof }
+    pub fn new(
+        base_proof: LogAlgebraBaseProof,
+        numerator_positive_proof: VerifyFactResult,
+        denominator_positive_proof: VerifyFactResult,
+    ) -> Self {
+        Self {
+            base_proof,
+            numerator_positive_proof,
+            denominator_positive_proof,
+        }
     }
 }
 
@@ -128,7 +147,10 @@ pub struct LogReciprocalBuiltinRuleProof {
 }
 impl LogReciprocalBuiltinRuleProof {
     pub fn new(base_proof: LogAlgebraBaseProof, argument_positive_proof: VerifyFactResult) -> Self {
-        Self { base_proof, argument_positive_proof }
+        Self {
+            base_proof,
+            argument_positive_proof,
+        }
     }
 }
 
@@ -203,10 +225,14 @@ impl Runtime {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(p) = self.try_one_to_any_power(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::OneToAnyPower(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::OneToAnyPower(p),
+                ));
             }
             if let Some(p) = self.try_zero_to_pos_nat_power(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::ZeroToPosNatPower(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::ZeroToPosNatPower(p),
+                ));
             }
             if let Some(p) = self.try_sqrt_square(left, right, child.clone())? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtSquare(p)));
@@ -218,16 +244,24 @@ impl Runtime {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtOne(p)));
             }
             if let Some(p) = self.try_sqrt_of_square(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtOfSquare(p)));
+                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtOfSquare(
+                    p,
+                )));
             }
             if let Some(p) = self.try_sqrt_product(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtProduct(p)));
+                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtProduct(
+                    p,
+                )));
             }
             if let Some(p) = self.try_sqrt_quotient(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtQuotient(p)));
+                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::SqrtQuotient(
+                    p,
+                )));
             }
             if let Some(p) = self.try_abs_of_negation(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::AbsOfNegation(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::AbsOfNegation(p),
+                ));
             }
             if let Some(p) = self.try_abs_product(left, right)? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::AbsProduct(p)));
@@ -236,28 +270,40 @@ impl Runtime {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::AbsSquare(p)));
             }
             if let Some(p) = self.try_log_base_self(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogBaseSelf(p)));
+                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogBaseSelf(
+                    p,
+                )));
             }
             if let Some(p) = self.try_log_of_one(left, right, child.clone())? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogOfOne(p)));
             }
             if let Some(p) = self.try_log_of_power_same_base(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogOfPowerSameBase(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::LogOfPowerSameBase(p),
+                ));
             }
             if let Some(p) = self.try_log_arg_power(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogArgPower(p)));
+                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogArgPower(
+                    p,
+                )));
             }
             if let Some(p) = self.try_log_product(left, right, child.clone())? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogProduct(p)));
             }
             if let Some(p) = self.try_log_quotient(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogQuotient(p)));
+                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogQuotient(
+                    p,
+                )));
             }
             if let Some(p) = self.try_log_reciprocal(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogReciprocal(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::LogReciprocal(p),
+                ));
             }
             if let Some(p) = self.try_log_change_of_base(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::LogChangeOfBase(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::LogChangeOfBase(p),
+                ));
             }
             if let Some(p) = self.try_zero_mod(left, right, child.clone())? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::ZeroMod(p)));
@@ -266,16 +312,16 @@ impl Runtime {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::ModOne(p)));
             }
             if let Some(p) = self.try_one_mod_at_least_two(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::OneModAtLeastTwo(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::OneModAtLeastTwo(p),
+                ));
             }
             if let Some(p) = self.try_nested_same_mod_absorption(left, right, child.clone())? {
                 return Ok(Some(
                     EqualityIdentitiesWave2BuiltinRuleProof::NestedSameModAbsorption(p),
                 ));
             }
-            if let Some(p) =
-                self.try_mod_compatible_smaller_modulus(left, right, child.clone())?
-            {
+            if let Some(p) = self.try_mod_compatible_smaller_modulus(left, right, child.clone())? {
                 return Ok(Some(
                     EqualityIdentitiesWave2BuiltinRuleProof::ModCompatibleSmallerModulus(p),
                 ));
@@ -407,10 +453,7 @@ impl Runtime {
         let Some(arg) = match_sqrt(left) else {
             return Ok(None);
         };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-            left: a,
-            right: b,
-        })) = arg
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) = arg
         else {
             return Ok(None);
         };
@@ -461,10 +504,7 @@ impl Runtime {
         let Some(arg) = match_sqrt(left) else {
             return Ok(None);
         };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
-            left: a,
-            right: b,
-        })) = arg
+        let Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left: a, right: b })) = arg
         else {
             return Ok(None);
         };
@@ -524,7 +564,9 @@ impl Runtime {
             return Ok(None);
         };
         if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) = arg {
-            if neg.arg.ir() == other.ir() { return Ok(Some(AbsOfNegationBuiltinRuleProof {})); }
+            if neg.arg.ir() == other.ir() {
+                return Ok(Some(AbsOfNegationBuiltinRuleProof {}));
+            }
         }
         // abs(0 - a) = abs(a)
         if let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left: z, right: a })) = arg {
@@ -551,10 +593,7 @@ impl Runtime {
         let Some(arg) = match_abs(left) else {
             return Ok(None);
         };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-            left: a,
-            right: b,
-        })) = arg
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) = arg
         else {
             return Ok(None);
         };
@@ -621,7 +660,10 @@ impl Runtime {
         if base.ir() != arg.ir() || !is_one_obj(right) {
             return Ok(None);
         }
-        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)? else { return Ok(None); };
+        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(LogBaseSelfBuiltinRuleProof {
             proof_of_requirement_facts,
         }))
@@ -639,7 +681,10 @@ impl Runtime {
         if !is_one_obj(arg) || !is_zero_obj(right) {
             return Ok(None);
         }
-        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)? else { return Ok(None); };
+        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(LogOfOneBuiltinRuleProof {
             proof_of_requirement_facts,
         }))
@@ -660,7 +705,10 @@ impl Runtime {
         if pbase.ir() != base.ir() || pexp.ir() != right.ir() {
             return Ok(None);
         }
-        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)? else { return Ok(None); };
+        let Some(proof_of_requirement_facts) = self.verify_log_algebra_base(base, verify_state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(LogOfPowerSameBaseBuiltinRuleProof {
             proof_of_requirement_facts,
         }))
@@ -668,14 +716,24 @@ impl Runtime {
 
     // Algebraic log identities hold on both positive base ranges, excluding 1.
     // Example: log(1/2,(1/2)^(-3))=-3; monotonicity keeps its own sign premise.
-    fn verify_log_algebra_base(&mut self, base: &Obj, state: VerifyState) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
+    fn verify_log_algebra_base(
+        &mut self,
+        base: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
         // Reuse the same positive, nonunit alternatives as the other log laws.
         // Example: a R+, a<1 => log(a,a)=1, with actual a<1 evidence.
-        let Some(base_proof) = self.verify_log_algebra_base_guard(base, state)? else { return Ok(None); };
+        let Some(base_proof) = self.verify_log_algebra_base_guard(base, state)? else {
+            return Ok(None);
+        };
         Ok(Some(match base_proof {
             LogAlgebraBaseProof::GreaterThanOne(proof) => vec![proof],
-            LogAlgebraBaseProof::BelowOne(proof) => vec![proof.positive_proof, proof.less_than_one_proof],
-            LogAlgebraBaseProof::PositiveNonunit(proof) => vec![proof.positive_proof, proof.nonunit_proof],
+            LogAlgebraBaseProof::BelowOne(proof) => {
+                vec![proof.positive_proof, proof.less_than_one_proof]
+            }
+            LogAlgebraBaseProof::PositiveNonunit(proof) => {
+                vec![proof.positive_proof, proof.nonunit_proof]
+            }
         }))
     }
 
@@ -730,10 +788,7 @@ impl Runtime {
         let Some((base, arg)) = match_log(left) else {
             return Ok(None);
         };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-            left: a,
-            right: b,
-        })) = arg
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) = arg
         else {
             return Ok(None);
         };
@@ -788,10 +843,7 @@ impl Runtime {
         let Some((base, arg)) = match_log(left) else {
             return Ok(None);
         };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
-            left: a,
-            right: b,
-        })) = arg
+        let Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left: a, right: b })) = arg
         else {
             return Ok(None);
         };
@@ -848,33 +900,32 @@ impl Runtime {
             return Ok(None);
         }
         // right is 0-log(b,x), (-1)*log(b,x), or -log(b,x)
-        let log_side = if let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
-            left: z,
-            right: t,
-        })) = right
-        {
-            if is_zero_obj(z.as_ref()) {
-                Some(t.as_ref())
+        let log_side =
+            if let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left: z, right: t })) =
+                right
+            {
+                if is_zero_obj(z.as_ref()) {
+                    Some(t.as_ref())
+                } else {
+                    None
+                }
+            } else if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                left: x,
+                right: y,
+            })) = right
+            {
+                if is_neg_one_obj(x.as_ref()) {
+                    Some(y.as_ref())
+                } else if is_neg_one_obj(y.as_ref()) {
+                    Some(x.as_ref())
+                } else {
+                    None
+                }
+            } else if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(negative)) = right {
+                Some(negative.arg.as_ref())
             } else {
                 None
-            }
-        } else if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-            left: x,
-            right: y,
-        })) = right
-        {
-            if is_neg_one_obj(x.as_ref()) {
-                Some(y.as_ref())
-            } else if is_neg_one_obj(y.as_ref()) {
-                Some(x.as_ref())
-            } else {
-                None
-            }
-        } else if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(negative)) = right {
-            Some(negative.arg.as_ref())
-        } else {
-            None
-        };
+            };
         let Some(log_side) = log_side else {
             return Ok(None);
         };
@@ -919,11 +970,21 @@ impl Runtime {
         if x1.ir() != x.ir() || a2.ir() != a.ir() || b1.ir() != b2.ir() {
             return Ok(None);
         }
-        let Some(base_proof) = self.verify_log_algebra_base_guard(a, verify_state)? else { return Ok(None); };
-        let Some(chosen_base_proof) = self.verify_log_algebra_base_guard(b1, verify_state)? else { return Ok(None); };
+        let Some(base_proof) = self.verify_log_algebra_base_guard(a, verify_state)? else {
+            return Ok(None);
+        };
+        let Some(chosen_base_proof) = self.verify_log_algebra_base_guard(b1, verify_state)? else {
+            return Ok(None);
+        };
         let argument_positive_proof = self.verify_log_algebra_positive(x, verify_state)?;
-        if argument_positive_proof.is_failed() { return Ok(None); }
-        Ok(Some(LogChangeOfBaseBuiltinRuleProof { base_proof, chosen_base_proof, argument_positive_proof }))
+        if argument_positive_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(LogChangeOfBaseBuiltinRuleProof {
+            base_proof,
+            chosen_base_proof,
+            argument_positive_proof,
+        }))
     }
 
     fn try_zero_mod(
@@ -1147,7 +1208,9 @@ fn is_neg_one_obj(obj: &Obj) -> bool {
     // The current parser represents surface (-1) with native Neg.
     // Example: log(a,1/x)=(-1)*log(a,x), with the same legal-base guard.
     if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(negative)) = obj {
-        if is_one_obj(&negative.arg) { return true; }
+        if is_one_obj(&negative.arg) {
+            return true;
+        }
     }
     if matches!(
         obj,
@@ -1180,13 +1243,20 @@ mod principal_root_nonnegative_algebra_tests {
 
     fn runtime() -> Runtime {
         Runtime::new(LaunchCommand::Eval {
-            code: String::new(), session: false, strict: true, language: OutputLanguage::English,
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
         })
     }
 
     fn check(rt: &mut Runtime, code: &str, expected: bool) -> JsonValue {
         let run = rt.run_litex_code(code).expect("public Runtime");
-        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
         assert_eq!(run.success, expected, "{code}");
         project_run_detailed(&run, rt, "eval", None)
     }
@@ -1197,7 +1267,10 @@ mod principal_root_nonnegative_algebra_tests {
                 if fields.get("rule").and_then(|v| v.as_str().ok()) == Some(rule) {
                     return Some(value);
                 }
-                fields.keys_in_order().into_iter().find_map(|key| find_rule(fields.get(&key).unwrap(), rule))
+                fields
+                    .keys_in_order()
+                    .into_iter()
+                    .find_map(|key| find_rule(fields.get(&key).unwrap(), rule))
             }
             JsonValue::Array(items) => items.iter().find_map(|v| find_rule(v, rule)),
             _ => None,
@@ -1205,20 +1278,33 @@ mod principal_root_nonnegative_algebra_tests {
     }
 
     fn requirements(json: &JsonValue, rule: &str) -> Vec<String> {
-        let leaf = find_rule(json, rule).expect("actual winning native root rule").as_object().unwrap();
-        let values = leaf.get("proof_of_requirement_facts").unwrap().as_array().unwrap();
+        let leaf = find_rule(json, rule)
+            .expect("actual winning native root rule")
+            .as_object()
+            .unwrap();
+        let values = leaf
+            .get("proof_of_requirement_facts")
+            .unwrap()
+            .as_array()
+            .unwrap();
         assert_eq!(values.len(), 2);
-        values.iter().map(|v| {
-            let proof = v.as_object().unwrap();
-            assert_eq!(proof.get("success"), Some(&JsonValue::Bool(true)));
-            assert!(proof.get("searched_proof").is_some());
-            proof.get("fact").unwrap().as_str().unwrap().to_owned()
-        }).collect()
+        values
+            .iter()
+            .map(|v| {
+                let proof = v.as_object().unwrap();
+                assert_eq!(proof.get("success"), Some(&JsonValue::Bool(true)));
+                assert!(proof.get("searched_proof").is_some());
+                proof.get("fact").unwrap().as_str().unwrap().to_owned()
+            })
+            .collect()
     }
 
     #[test]
     fn principal_root_nonnegative_algebra_tracer_retains_checked_requirements() {
-        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/proof_nodes/equal/by_builtin_rule/principal_root_nonnegative_algebra.lit"));
+        let source = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/principal_root_nonnegative_algebra.lit"
+        ));
         let json = check(&mut runtime(), source, true);
         assert_eq!(requirements(&json, "SqrtProduct"), vec!["0 <= a", "0 <= b"]);
         assert_eq!(requirements(&json, "SqrtQuotient"), vec!["0 <= a", "0 < b"]);
@@ -1253,38 +1339,102 @@ mod principal_root_nonnegative_algebra_tests {
 
     #[test]
     fn principal_root_nonnegative_algebra_cites_actual_nonnegative_assumptions() {
-        let code = "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)*sqrt(b)\n";
+        let code =
+            "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)*sqrt(b)\n";
         let json = check(&mut runtime(), code, true);
-        let statement = &json.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
-        let verify = statement.as_object().unwrap().get("verify").unwrap().as_object().unwrap();
+        let statement = &json
+            .as_object()
+            .unwrap()
+            .get("statement_results")
+            .unwrap()
+            .as_array()
+            .unwrap()[0];
+        let verify = statement
+            .as_object()
+            .unwrap()
+            .get("verify")
+            .unwrap()
+            .as_object()
+            .unwrap();
         let assumptions = verify.get("assumed_dom_facts").unwrap().as_array().unwrap();
-        let leaf = find_rule(&json, "SqrtProduct").unwrap().as_object().unwrap();
-        let requirements = leaf.get("proof_of_requirement_facts").unwrap().as_array().unwrap();
+        let leaf = find_rule(&json, "SqrtProduct")
+            .unwrap()
+            .as_object()
+            .unwrap();
+        let requirements = leaf
+            .get("proof_of_requirement_facts")
+            .unwrap()
+            .as_array()
+            .unwrap();
         for (assumption, requirement) in assumptions.iter().zip(requirements) {
-            let source = &assumption.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap()[0];
-            let source_id = source.as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
-            let proof = requirement.as_object().unwrap().get("searched_proof").unwrap().as_object().unwrap();
-            assert_eq!(proof.get("cite_fact_id").unwrap().as_str().unwrap(), source_id);
+            let source = &assumption
+                .as_object()
+                .unwrap()
+                .get("store_and_infer")
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .get("stores")
+                .unwrap()
+                .as_array()
+                .unwrap()[0];
+            let source_id = source
+                .as_object()
+                .unwrap()
+                .get("fact_id")
+                .unwrap()
+                .as_str()
+                .unwrap();
+            let proof = requirement
+                .as_object()
+                .unwrap()
+                .get("searched_proof")
+                .unwrap()
+                .as_object()
+                .unwrap();
+            assert_eq!(
+                proof.get("cite_fact_id").unwrap().as_str().unwrap(),
+                source_id
+            );
         }
     }
 
     #[test]
     fn principal_root_nonnegative_algebra_respects_inherited_search_ceiling() {
         let mut rt = runtime();
-        check(&mut rt, "have a,b R+\n0<=a\n0<=b\na*b $in R\nsqrt(a*b) $in R\nsqrt(a) $in R\nsqrt(b) $in R\n", true);
-        let tokens = Tokenizer::new().tokenize("sqrt(a*b)=sqrt(a)*sqrt(b)", rt.current_file.clone()).unwrap();
-        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact") };
-        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty] {
-            assert!(rt.verify_fact(&goal, VerifyState::new(level)).unwrap().is_failed());
+        check(
+            &mut rt,
+            "have a,b R+\n0<=a\n0<=b\na*b $in R\nsqrt(a*b) $in R\nsqrt(a) $in R\nsqrt(b) $in R\n",
+            true,
+        );
+        let tokens = Tokenizer::new()
+            .tokenize("sqrt(a*b)=sqrt(a)*sqrt(b)", rt.current_file.clone())
+            .unwrap();
+        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("fact")
+        };
+        for level in [
+            VerifyStateLevel::Direct,
+            VerifyStateLevel::KnownSpecialProperty,
+        ] {
+            assert!(rt
+                .verify_fact(&goal, VerifyState::new(level))
+                .unwrap()
+                .is_failed());
         }
-        assert!(!rt.verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule)).unwrap().is_failed());
+        assert!(!rt
+            .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+            .unwrap()
+            .is_failed());
     }
 
     #[test]
     fn principal_root_nonnegative_algebra_false_goal_does_not_publish_or_poison_reuse() {
         let mut rt = runtime();
-        let wrong = "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)+sqrt(b)\n";
-        let valid = "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)*sqrt(b)\n";
+        let wrong =
+            "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)+sqrt(b)\n";
+        let valid =
+            "forall a,b R:\n    0<=a\n    0<=b\n    =>:\n        sqrt(a*b)=sqrt(a)*sqrt(b)\n";
         check(&mut rt, wrong, false);
         check(&mut rt, "1=2\n", false);
         check(&mut rt, valid, true);

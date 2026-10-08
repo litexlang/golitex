@@ -1,7 +1,7 @@
 //! Entry points for Detailed JSON projection.
 
-use super::store::{project_have_store_ids, project_store_and_infer};
 use super::stmt::project_stmt_detailed;
+use super::store::{project_have_store_ids, project_store_and_infer};
 use super::verify::project_verify_fact;
 use super::wd::{project_param_type_wd, project_verify_obj_wd};
 use crate::ast::fact::AtomicFact;
@@ -47,52 +47,64 @@ pub fn project_run_detailed(
         None => JsonValue::Null,
         Some(err) => string(err.to_string()),
     };
-    object_for(runtime, vec![
-        ("kind", string("run")),
-        ("success", bool_value(run.success)),
-        ("target", string(target)),
-        ("path", path_value),
-        ("detail", string(OutputDetail::Detailed.as_str())),
-        (
-            "language",
-            string(runtime.launch_command.output_language().as_str()),
-        ),
-        ("statement_results", JsonValue::Array(statement_results)),
-        ("session_error", session_error),
-    ])
+    object_for(
+        runtime,
+        vec![
+            ("kind", string("run")),
+            ("success", bool_value(run.success)),
+            ("target", string(target)),
+            ("path", path_value),
+            ("detail", string(OutputDetail::Detailed.as_str())),
+            (
+                "language",
+                string(runtime.launch_command.output_language().as_str()),
+            ),
+            ("statement_results", JsonValue::Array(statement_results)),
+            ("session_error", session_error),
+        ],
+    )
 }
 
 pub(super) fn project_fact_only(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue {
     match fact {
-        ExecFactStmtResult::Success(success) => object_for(runtime, vec![
-            ("success", bool_value(true)),
-            ("kind", string("fact")),
-            (
-                "statement",
-                string(verify_goal_display(&success.verify_result)),
-            ),
-            (
-                "verify",
-                project_verify_fact(&success.verify_result, runtime),
-            ),
-            (
-                "store_and_infer",
-                project_store_and_infer(&success.store_and_infer_result, runtime),
-            ),
-        ]),
-        ExecFactStmtResult::Failed(verify) => object_for(runtime, vec![
-            ("success", bool_value(false)),
-            ("kind", string("fact")),
-            ("statement", string(verify_goal_display(verify))),
-            ("verify", project_verify_fact(verify, runtime)),
-            (
-                "store_and_infer",
-                object_for(runtime, vec![
-                    ("stores", JsonValue::Array(Vec::new())),
-                    ("infers", JsonValue::Array(Vec::new())),
-                ]),
-            ),
-        ]),
+        ExecFactStmtResult::Success(success) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(true)),
+                ("kind", string("fact")),
+                (
+                    "statement",
+                    string(verify_goal_display(&success.verify_result)),
+                ),
+                (
+                    "verify",
+                    project_verify_fact(&success.verify_result, runtime),
+                ),
+                (
+                    "store_and_infer",
+                    project_store_and_infer(&success.store_and_infer_result, runtime),
+                ),
+            ],
+        ),
+        ExecFactStmtResult::Failed(verify) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(false)),
+                ("kind", string("fact")),
+                ("statement", string(verify_goal_display(verify))),
+                ("verify", project_verify_fact(verify, runtime)),
+                (
+                    "store_and_infer",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("stores", JsonValue::Array(Vec::new())),
+                            ("infers", JsonValue::Array(Vec::new())),
+                        ],
+                    ),
+                ),
+            ],
+        ),
     }
 }
 
@@ -101,47 +113,59 @@ pub(super) fn project_have_in_nonempty_only(
     runtime: &Runtime,
 ) -> JsonValue {
     match have {
-        ExecHaveObjInNonemptySetStmtResult::Success(success) => object_for(runtime, vec![
-            ("success", bool_value(true)),
-            ("kind", string("have_obj_in_nonempty_set")),
-            ("statement", string(success.statement.readable_string())),
-            (
-                "param_type_well_defined",
-                JsonValue::Array(
-                    success
-                        .groups
-                        .iter()
-                        .map(|g| project_param_type_wd(&g.param_type_well_defined, runtime))
-                        .collect(),
+        ExecHaveObjInNonemptySetStmtResult::Success(success) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(true)),
+                ("kind", string("have_obj_in_nonempty_set")),
+                ("statement", string(success.statement.readable_string())),
+                (
+                    "param_type_well_defined",
+                    JsonValue::Array(
+                        success
+                            .groups
+                            .iter()
+                            .map(|g| project_param_type_wd(&g.param_type_well_defined, runtime))
+                            .collect(),
+                    ),
                 ),
-            ),
-            (
-                "nonempty_checks",
-                JsonValue::Array(
-                    success
-                        .groups
-                        .iter()
-                        .map(|g| project_param_type_fact_check(&g.nonempty_check, runtime))
-                        .collect(),
+                (
+                    "nonempty_checks",
+                    JsonValue::Array(
+                        success
+                            .groups
+                            .iter()
+                            .map(|g| project_param_type_fact_check(&g.nonempty_check, runtime))
+                            .collect(),
+                    ),
                 ),
-            ),
-            (
-                "store_and_infer",
-                project_have_store_ids(&success.store_and_infer_result.stored_fact_ids, runtime),
-            ),
-        ]),
-        ExecHaveObjInNonemptySetStmtResult::Failed(failed) => object_for(runtime, vec![
-            ("success", bool_value(false)),
-            ("kind", string("have_obj_in_nonempty_set")),
-            ("why_failed", project_have_in_failed(failed, runtime)),
-            (
-                "store_and_infer",
-                object_for(runtime, vec![
-                    ("stores", JsonValue::Array(Vec::new())),
-                    ("infers", JsonValue::Array(Vec::new())),
-                ]),
-            ),
-        ]),
+                (
+                    "store_and_infer",
+                    project_have_store_ids(
+                        &success.store_and_infer_result.stored_fact_ids,
+                        runtime,
+                    ),
+                ),
+            ],
+        ),
+        ExecHaveObjInNonemptySetStmtResult::Failed(failed) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(false)),
+                ("kind", string("have_obj_in_nonempty_set")),
+                ("why_failed", project_have_in_failed(failed, runtime)),
+                (
+                    "store_and_infer",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("stores", JsonValue::Array(Vec::new())),
+                            ("infers", JsonValue::Array(Vec::new())),
+                        ],
+                    ),
+                ),
+            ],
+        ),
     }
 }
 
@@ -150,60 +174,73 @@ pub(super) fn project_have_equal_only(
     runtime: &Runtime,
 ) -> JsonValue {
     match have {
-        ExecHaveObjEqualStmtResult::Success(success) => object_for(runtime, vec![
-            ("success", bool_value(true)),
-            ("kind", string("have_obj_equal")),
-            ("statement", string(success.statement.readable_string())),
-            (
-                "param_type_well_defined",
-                JsonValue::Array(
-                    success
-                        .type_preflight.param_type_well_defined
-                        .iter()
-                        .map(|p| project_param_type_wd(p, runtime))
-                        .collect(),
+        ExecHaveObjEqualStmtResult::Success(success) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(true)),
+                ("kind", string("have_obj_equal")),
+                ("statement", string(success.statement.readable_string())),
+                (
+                    "param_type_well_defined",
+                    JsonValue::Array(
+                        success
+                            .type_preflight
+                            .param_type_well_defined
+                            .iter()
+                            .map(|p| project_param_type_wd(p, runtime))
+                            .collect(),
+                    ),
                 ),
-            ),
-            (
-                "equal_to_well_defined",
-                JsonValue::Array(
-                    success
-                        .equal_to_well_defined
-                        .iter()
-                        .map(|w| project_verify_obj_wd(w, runtime))
-                        .collect(),
+                (
+                    "equal_to_well_defined",
+                    JsonValue::Array(
+                        success
+                            .equal_to_well_defined
+                            .iter()
+                            .map(|w| project_verify_obj_wd(w, runtime))
+                            .collect(),
+                    ),
                 ),
-            ),
-            (
-                "membership_checks",
-                JsonValue::Array(
-                    success
-                        .membership_checks
-                        .iter()
-                        .map(|v| project_verify_fact(v, runtime))
-                        .collect(),
+                (
+                    "membership_checks",
+                    JsonValue::Array(
+                        success
+                            .membership_checks
+                            .iter()
+                            .map(|v| project_verify_fact(v, runtime))
+                            .collect(),
+                    ),
                 ),
-            ),
-            (
-                "store_and_infer",
-                project_have_store_ids(&success.store_and_infer_result.stored_fact_ids, runtime),
-            ),
-        ]),
-        ExecHaveObjEqualStmtResult::Failed(_) => object_for(runtime, vec![
-            ("success", bool_value(false)),
-            ("kind", string("have_obj_equal")),
-            (
-                "why_failed",
-                object_for(runtime, vec![("phase", string("have_obj_equal"))]),
-            ),
-            (
-                "store_and_infer",
-                object_for(runtime, vec![
-                    ("stores", JsonValue::Array(Vec::new())),
-                    ("infers", JsonValue::Array(Vec::new())),
-                ]),
-            ),
-        ]),
+                (
+                    "store_and_infer",
+                    project_have_store_ids(
+                        &success.store_and_infer_result.stored_fact_ids,
+                        runtime,
+                    ),
+                ),
+            ],
+        ),
+        ExecHaveObjEqualStmtResult::Failed(_) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(false)),
+                ("kind", string("have_obj_equal")),
+                (
+                    "why_failed",
+                    object_for(runtime, vec![("phase", string("have_obj_equal"))]),
+                ),
+                (
+                    "store_and_infer",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("stores", JsonValue::Array(Vec::new())),
+                            ("infers", JsonValue::Array(Vec::new())),
+                        ],
+                    ),
+                ),
+            ],
+        ),
     }
 }
 
@@ -212,32 +249,42 @@ fn project_have_in_failed(
     runtime: &Runtime,
 ) -> JsonValue {
     match failed {
-        ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => object_for(runtime, vec![
-            ("phase", string("param_type")),
-            ("well_defined", project_verify_obj_wd(wd, runtime)),
-        ]),
-        ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(v) => object_for(runtime, vec![
-            ("phase", string("nonempty_check")),
-            ("verify", project_verify_fact(v, runtime)),
-        ]),
+        ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => object_for(
+            runtime,
+            vec![
+                ("phase", string("param_type")),
+                ("well_defined", project_verify_obj_wd(wd, runtime)),
+            ],
+        ),
+        ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(v) => object_for(
+            runtime,
+            vec![
+                ("phase", string("nonempty_check")),
+                ("verify", project_verify_fact(v, runtime)),
+            ],
+        ),
         ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(_) => {
             object_for(runtime, vec![("phase", string("auto_open_struct_layer"))])
         }
     }
 }
 
-fn project_param_type_fact_check(
-    check: &ParamTypeFactCheckResult,
-    runtime: &Runtime,
-) -> JsonValue {
+fn project_param_type_fact_check(check: &ParamTypeFactCheckResult, runtime: &Runtime) -> JsonValue {
     match check {
         ParamTypeFactCheckResult::Set => object_for(runtime, vec![("type", string("set"))]),
-        ParamTypeFactCheckResult::NonemptySet => object_for(runtime, vec![("type", string("nonempty_set"))]),
-        ParamTypeFactCheckResult::FiniteSet => object_for(runtime, vec![("type", string("finite_set"))]),
-        ParamTypeFactCheckResult::Obj(v) => object_for(runtime, vec![
-            ("type", string("obj")),
-            ("verify", project_verify_fact(v, runtime)),
-        ]),
+        ParamTypeFactCheckResult::NonemptySet => {
+            object_for(runtime, vec![("type", string("nonempty_set"))])
+        }
+        ParamTypeFactCheckResult::FiniteSet => {
+            object_for(runtime, vec![("type", string("finite_set"))])
+        }
+        ParamTypeFactCheckResult::Obj(v) => object_for(
+            runtime,
+            vec![
+                ("type", string("obj")),
+                ("verify", project_verify_fact(v, runtime)),
+            ],
+        ),
     }
 }
 
@@ -256,9 +303,9 @@ fn verify_goal_display(verify: &VerifyFactResult) -> String {
             VerifyEqualityResult::Success(s) => {
                 AtomicFact::EqualFact(s.fact.clone()).readable_string()
             }
-            VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof { fact, .. }) => {
-                AtomicFact::EqualFact(fact.clone()).readable_string()
-            }
+            VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof {
+                fact, ..
+            }) => AtomicFact::EqualFact(fact.clone()).readable_string(),
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_)) => {
                 "<well_defined_not_proven>".into()
             }

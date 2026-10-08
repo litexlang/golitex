@@ -17,11 +17,15 @@ fn function_value_parameter_applications_keep_checked_body_evidence() {
         "/examples/proof_nodes/equal/by_object_definition/by_fn_application/function_value_parameter_application.lit"));
     let mut rt = runtime();
     let run = rt.run_litex_code(source).unwrap();
-    assert!(run.success && run.session_error.is_none(), "{}",
-        crate::json_output::emit_run_detailed(&run, &rt, "test", None));
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{}",
+        crate::json_output::emit_run_detailed(&run, &rt, "test", None)
+    );
     assert_eq!(run.statement_results.len(), 8);
     for index in [2, 6] {
-        let detailed = crate::json_output::project_stmt_detailed(&run.statement_results[index], &rt);
+        let detailed =
+            crate::json_output::project_stmt_detailed(&run.statement_results[index], &rt);
         assert!(field_rec(&detailed, "expanded_body").is_some());
         assert!(field_rec(&detailed, "function_body").is_some());
     }
@@ -267,14 +271,22 @@ fn a_function_may_ignore_a_well_defined_argument_with_a_cyclic_body() {
 #[test]
 fn one_step_beta_preserves_symbolic_arguments_and_checked_evidence() {
     let mut rt = runtime();
-    let run = rt.run_litex_code(include_str!(
-        "../../../../examples/proof_nodes/equal/by_object_definition/nested_call_one_step.lit"
-    )).unwrap();
+    let run = rt
+        .run_litex_code(include_str!(
+            "../../../../examples/proof_nodes/equal/by_object_definition/nested_call_one_step.lit"
+        ))
+        .unwrap();
     assert!(run.success && run.session_error.is_none());
     for index in [3, 7] {
         let detail = crate::json_output::project_stmt_detailed(&run.statement_results[index], &rt);
         let normalization = field_rec(&detail, "normalization").unwrap();
-        let steps = normalization.as_object().unwrap().get("expansions").unwrap().as_array().unwrap();
+        let steps = normalization
+            .as_object()
+            .unwrap()
+            .get("expansions")
+            .unwrap()
+            .as_array()
+            .unwrap();
         assert_eq!(steps.len(), 1);
         let step = steps[0].as_object().unwrap();
         assert!(step.get("application_well_defined").is_some());
@@ -286,11 +298,18 @@ fn one_step_beta_preserves_symbolic_arguments_and_checked_evidence() {
 #[test]
 fn exact_beta_body_still_requires_domains_and_does_not_accept_wrong_values() {
     for (setup, bad) in [
-        ("have fn inner(x R) R = x+1\nhave fn outer(x R) R = x*x\nhave x R\n",
-         "outer(inner(x))=inner(x)*inner(x)+1\n"),
-        ("have fn inner(x R) R = x+1\nhave fn outer(x R) R = x*x\n",
-         "outer(inner(i))=inner(i)*inner(i)\n"),
-        ("", "forall f fn(x R) R:\n    f = fn(x R: x!=0) R {x*x}\n    =>:\n        f(0)=0*0\n"),
+        (
+            "have fn inner(x R) R = x+1\nhave fn outer(x R) R = x*x\nhave x R\n",
+            "outer(inner(x))=inner(x)*inner(x)+1\n",
+        ),
+        (
+            "have fn inner(x R) R = x+1\nhave fn outer(x R) R = x*x\n",
+            "outer(inner(i))=inner(i)*inner(i)\n",
+        ),
+        (
+            "",
+            "forall f fn(x R) R:\n    f = fn(x R: x!=0) R {x*x}\n    =>:\n        f(0)=0*0\n",
+        ),
     ] {
         let mut rt = runtime();
         assert!(rt.run_litex_code(setup).unwrap().success);
@@ -310,7 +329,8 @@ fn restriction_beta_consumes_exact_parent_wd_without_raising_premise_permissions
     let source = "forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = f(point)\n";
     let mut rt = runtime();
     let tokens = crate::tokenize::Tokenizer::new()
-        .tokenize(source, rt.current_file.clone()).unwrap();
+        .tokenize(source, rt.current_file.clone())
+        .unwrap();
     let mut stmts = rt.parse(&tokens).unwrap();
     let Stmt::Fact(Fact::ForallFact(forall)) = stmts.remove(0) else {
         panic!("one quantified diagnostic context")
@@ -373,9 +393,16 @@ fn restriction_beta_consumes_exact_parent_wd_without_raising_premise_permissions
     let run = root.run_litex_code(
         "claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        fn(x K) Y {f(x)}(point) = f(point)\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = f(point)\n"
     ).unwrap();
-    assert!(run.success && run.session_error.is_none(), "restriction beta root must verify");
-    let detailed = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &root);
-    assert_eq!(field_rec(&detailed, "parent_well_defined_side"), Some(JsonValue::String("left".into())));
+    assert!(
+        run.success && run.session_error.is_none(),
+        "restriction beta root must verify"
+    );
+    let detailed =
+        crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &root);
+    assert_eq!(
+        field_rec(&detailed, "parent_well_defined_side"),
+        Some(JsonValue::String("left".into()))
+    );
     assert!(field_rec(&detailed, "residual_proof").is_some());
 }
 
@@ -384,20 +411,34 @@ fn restricted_literal_beta_right_side_and_cited_residual_keep_evidence() {
     let mut rt = runtime();
     let run = rt.run_litex_code("claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K:\n        f(point) = fn(x K) Y {f(x)}(point)\n    point $in X\n    f(point) $in Y\n    f(point) = fn(x K) Y {f(x)}(point)\n").unwrap();
     assert!(run.success && run.session_error.is_none());
-    let detailed = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
-    assert_eq!(field_rec(&detailed, "parent_well_defined_side"), Some(JsonValue::String("right".into())));
+    let detailed =
+        crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
+    assert_eq!(
+        field_rec(&detailed, "parent_well_defined_side"),
+        Some(JsonValue::String("right".into()))
+    );
 
     let mut rt = runtime();
     let run = rt.run_litex_code("claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K, other Y:\n        f(point) = other\n        =>:\n            fn(x K) Y {f(x)}(point) = other\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = other\n").unwrap();
     assert!(run.success && run.session_error.is_none());
-    let detailed = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
+    let detailed =
+        crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
     assert!(field_rec(&detailed, "parent_well_defined_side").is_some());
     let residual = field_rec(&detailed, "residual_proof").unwrap();
-    assert!(field_rec(&residual, "cite_fact_id").is_some(), "residual must retain the actual equality citation ID after the local scope closes");
+    assert!(
+        field_rec(&residual, "cite_fact_id").is_some(),
+        "residual must retain the actual equality citation ID after the local scope closes"
+    );
     let path = field_rec(&residual, "path").unwrap();
     assert_eq!(path.as_array().unwrap().len(), 1);
-    assert_eq!(field_rec(&path, "from"), Some(JsonValue::String("f(point)".into())));
-    assert_eq!(field_rec(&path, "to"), Some(JsonValue::String("other".into())));
+    assert_eq!(
+        field_rec(&path, "from"),
+        Some(JsonValue::String("f(point)".into()))
+    );
+    assert_eq!(
+        field_rec(&path, "to"),
+        Some(JsonValue::String("other".into()))
+    );
 }
 
 #[test]
@@ -429,8 +470,10 @@ fn field_rec(value: &JsonValue, name: &str) -> Option<JsonValue> {
 
 #[test]
 fn function_body_template_set_return_keeps_binder_and_domain_evidence() {
-    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
-        "/examples/proof_nodes/equal/by_object_definition/by_template/set_valued_application.lit"));
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/examples/proof_nodes/equal/by_object_definition/by_template/set_valued_application.lit"
+    ));
     let mut rt = runtime();
     let run = rt.run_litex_code(source).unwrap();
     assert!(run.success && run.session_error.is_none());

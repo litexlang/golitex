@@ -6,8 +6,8 @@ use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, IsFiniteSetFact, NotIsNonemptySetFact, SubsetFact,
 };
 use crate::ast::obj::{
-    ArithmeticOperator, FiniteSetSize, FiniteSetStat, ListSet, Literal, Number, Obj, Pow, PowerSet,
-    SetFormer, SetMinus, SetOperator, Union, Intersect,
+    ArithmeticOperator, FiniteSetSize, FiniteSetStat, Intersect, ListSet, Literal, Number, Obj,
+    Pow, PowerSet, SetFormer, SetMinus, SetOperator, Union,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -76,7 +76,6 @@ pub struct PowerSetFiniteSetSizeBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-
 // Builtin UnionAssociative: union(union(A, B), C) = union(A, union(B, C)).
 // Example: have A, B, C set; union(union(A, B), C) = union(A, union(B, C)).
 pub struct UnionAssociativeBuiltinRuleProof {}
@@ -136,14 +135,18 @@ impl Runtime {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if union_empty_right_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave9BuiltinRuleProof::UnionEmptyRight(
-                    UnionEmptyRightBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::UnionEmptyRight(
+                        UnionEmptyRightBuiltinRuleProof {},
+                    ),
+                ));
             }
             if union_empty_left_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave9BuiltinRuleProof::UnionEmptyLeft(
-                    UnionEmptyLeftBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::UnionEmptyLeft(
+                        UnionEmptyLeftBuiltinRuleProof {},
+                    ),
+                ));
             }
             if intersect_empty_right_shape(left, right) {
                 return Ok(Some(
@@ -181,9 +184,11 @@ impl Runtime {
                 ));
             }
             if union_commutative_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave9BuiltinRuleProof::UnionCommutative(
-                    UnionCommutativeBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::UnionCommutative(
+                        UnionCommutativeBuiltinRuleProof {},
+                    ),
+                ));
             }
             if intersect_commutative_shape(left, right) {
                 return Ok(Some(
@@ -193,9 +198,11 @@ impl Runtime {
                 ));
             }
             if union_idempotent_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave9BuiltinRuleProof::UnionIdempotent(
-                    UnionIdempotentBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::UnionIdempotent(
+                        UnionIdempotentBuiltinRuleProof {},
+                    ),
+                ));
             }
             if intersect_idempotent_shape(left, right) {
                 return Ok(Some(
@@ -205,9 +212,11 @@ impl Runtime {
                 ));
             }
             if union_associative_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave9BuiltinRuleProof::UnionAssociative(
-                    UnionAssociativeBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::UnionAssociative(
+                        UnionAssociativeBuiltinRuleProof {},
+                    ),
+                ));
             }
             if intersect_associative_shape(left, right) {
                 return Ok(Some(
@@ -264,9 +273,9 @@ impl Runtime {
             }
         }
         if let Some(p) = self.try_intersect_from_subset(fact, child.clone())? {
-            return Ok(Some(EqualityIdentitiesWave9BuiltinRuleProof::IntersectFromSubset(
-                p,
-            )));
+            return Ok(Some(
+                EqualityIdentitiesWave9BuiltinRuleProof::IntersectFromSubset(p),
+            ));
         }
         if let Some(p) = self.try_empty_set_from_not_nonempty(fact, child)? {
             return Ok(Some(
@@ -281,10 +290,9 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<IntersectFromSubsetBuiltinRuleProof>> {
-        for (intersection_side, target_side) in [
-            (&fact.left, &fact.right),
-            (&fact.right, &fact.left),
-        ] {
+        for (intersection_side, target_side) in
+            [(&fact.left, &fact.right), (&fact.right, &fact.left)]
+        {
             let Some(intersect) = match_intersect(intersection_side) else {
                 continue;
             };
@@ -462,7 +470,10 @@ fn power_set_finite_set_size_shape(size_side: &Obj, pow_side: &Obj) -> Option<Ob
     let Obj::SetOperator(SetOperator::PowerSet(PowerSet { set: base })) = set.as_ref() else {
         return None;
     };
-    let Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base: two, exponent })) = pow_side
+    let Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
+        base: two,
+        exponent,
+    })) = pow_side
     else {
         return None;
     };
@@ -482,31 +493,57 @@ fn power_set_finite_set_size_shape(size_side: &Obj, pow_side: &Obj) -> Option<Ob
 }
 
 fn union_associative_shape(left: &Obj, right: &Obj) -> bool {
-    let Some(left_outer) = match_union(left) else { return false; };
-    let Some(left_inner) = match_union(left_outer.left.as_ref()) else { return false; };
-    let Some(right_outer) = match_union(right) else { return false; };
-    let Some(right_inner) = match_union(right_outer.right.as_ref()) else { return false; };
+    let Some(left_outer) = match_union(left) else {
+        return false;
+    };
+    let Some(left_inner) = match_union(left_outer.left.as_ref()) else {
+        return false;
+    };
+    let Some(right_outer) = match_union(right) else {
+        return false;
+    };
+    let Some(right_inner) = match_union(right_outer.right.as_ref()) else {
+        return false;
+    };
     left_inner.left.ir() == right_outer.left.ir()
         && left_inner.right.ir() == right_inner.left.ir()
         && left_outer.right.ir() == right_inner.right.ir()
 }
 
 fn intersect_associative_shape(left: &Obj, right: &Obj) -> bool {
-    let Some(left_outer) = match_intersect(left) else { return false; };
-    let Some(left_inner) = match_intersect(left_outer.left.as_ref()) else { return false; };
-    let Some(right_outer) = match_intersect(right) else { return false; };
-    let Some(right_inner) = match_intersect(right_outer.right.as_ref()) else { return false; };
+    let Some(left_outer) = match_intersect(left) else {
+        return false;
+    };
+    let Some(left_inner) = match_intersect(left_outer.left.as_ref()) else {
+        return false;
+    };
+    let Some(right_outer) = match_intersect(right) else {
+        return false;
+    };
+    let Some(right_inner) = match_intersect(right_outer.right.as_ref()) else {
+        return false;
+    };
     left_inner.left.ir() == right_outer.left.ir()
         && left_inner.right.ir() == right_inner.left.ir()
         && left_outer.right.ir() == right_inner.right.ir()
 }
 
 fn intersect_union_distributive_shape(left: &Obj, right: &Obj) -> bool {
-    let Some(intersect) = match_intersect(left) else { return false; };
-    let Some(union) = match_union(intersect.right.as_ref()) else { return false; };
-    let Some(right_union) = match_union(right) else { return false; };
-    let Some(left_i) = match_intersect(right_union.left.as_ref()) else { return false; };
-    let Some(right_i) = match_intersect(right_union.right.as_ref()) else { return false; };
+    let Some(intersect) = match_intersect(left) else {
+        return false;
+    };
+    let Some(union) = match_union(intersect.right.as_ref()) else {
+        return false;
+    };
+    let Some(right_union) = match_union(right) else {
+        return false;
+    };
+    let Some(left_i) = match_intersect(right_union.left.as_ref()) else {
+        return false;
+    };
+    let Some(right_i) = match_intersect(right_union.right.as_ref()) else {
+        return false;
+    };
     let a = intersect.left.as_ref();
     a.ir() == left_i.left.ir()
         && a.ir() == right_i.left.ir()
@@ -515,11 +552,21 @@ fn intersect_union_distributive_shape(left: &Obj, right: &Obj) -> bool {
 }
 
 fn set_minus_union_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
-    let Some(diff) = match_set_minus(left) else { return false; };
-    let Some(removed_union) = match_union(diff.right.as_ref()) else { return false; };
-    let Some(inter) = match_intersect(right) else { return false; };
-    let Some(left_diff) = match_set_minus(inter.left.as_ref()) else { return false; };
-    let Some(right_diff) = match_set_minus(inter.right.as_ref()) else { return false; };
+    let Some(diff) = match_set_minus(left) else {
+        return false;
+    };
+    let Some(removed_union) = match_union(diff.right.as_ref()) else {
+        return false;
+    };
+    let Some(inter) = match_intersect(right) else {
+        return false;
+    };
+    let Some(left_diff) = match_set_minus(inter.left.as_ref()) else {
+        return false;
+    };
+    let Some(right_diff) = match_set_minus(inter.right.as_ref()) else {
+        return false;
+    };
     let a = diff.left.as_ref();
     a.ir() == left_diff.left.ir()
         && a.ir() == right_diff.left.ir()
@@ -528,11 +575,21 @@ fn set_minus_union_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
 }
 
 fn set_minus_intersect_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
-    let Some(diff) = match_set_minus(left) else { return false; };
-    let Some(removed_inter) = match_intersect(diff.right.as_ref()) else { return false; };
-    let Some(u) = match_union(right) else { return false; };
-    let Some(left_diff) = match_set_minus(u.left.as_ref()) else { return false; };
-    let Some(right_diff) = match_set_minus(u.right.as_ref()) else { return false; };
+    let Some(diff) = match_set_minus(left) else {
+        return false;
+    };
+    let Some(removed_inter) = match_intersect(diff.right.as_ref()) else {
+        return false;
+    };
+    let Some(u) = match_union(right) else {
+        return false;
+    };
+    let Some(left_diff) = match_set_minus(u.left.as_ref()) else {
+        return false;
+    };
+    let Some(right_diff) = match_set_minus(u.right.as_ref()) else {
+        return false;
+    };
     let a = diff.left.as_ref();
     a.ir() == left_diff.left.ir()
         && a.ir() == right_diff.left.ir()
@@ -541,7 +598,9 @@ fn set_minus_intersect_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
 }
 
 fn intersect_set_minus_self_empty_shape(intersect_side: &Obj, empty_side: &Obj) -> bool {
-    let Some(i) = match_intersect(intersect_side) else { return false; };
+    let Some(i) = match_intersect(intersect_side) else {
+        return false;
+    };
     if !is_empty_list_set(empty_side) {
         return false;
     }
@@ -549,7 +608,9 @@ fn intersect_set_minus_self_empty_shape(intersect_side: &Obj, empty_side: &Obj) 
         (i.left.as_ref(), i.right.as_ref()),
         (i.right.as_ref(), i.left.as_ref()),
     ] {
-        let Some(diff) = match_set_minus(difference) else { continue; };
+        let Some(diff) = match_set_minus(difference) else {
+            continue;
+        };
         if plain.ir() == diff.right.ir() {
             return true;
         }

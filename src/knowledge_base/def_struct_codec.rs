@@ -89,8 +89,7 @@ fn decode_def_struct(value: &JsonValue) -> Result<DefStructStmt, KbCodecError> {
         JsonValue::Null => None,
         other => {
             let pmap = other.as_object()?;
-            let params =
-                decode_typed_parameter_list(JsonValue::get(pmap, "typed_parameters")?)?;
+            let params = decode_typed_parameter_list(JsonValue::get(pmap, "typed_parameters")?)?;
             let dom = JsonValue::get(pmap, "dom_facts")?
                 .as_array()?
                 .iter()

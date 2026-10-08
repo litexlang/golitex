@@ -28,9 +28,7 @@ impl Runtime {
         allow_empty: bool,
     ) -> RuntimeResult<TypedParameterList> {
         let mut groups = Vec::new();
-        while !tb.exceed_end_of_head()
-            && tb.peek() != Some(COLON)
-            && tb.peek() != Some(RIGHT_ARROW)
+        while !tb.exceed_end_of_head() && tb.peek() != Some(COLON) && tb.peek() != Some(RIGHT_ARROW)
         {
             groups.push(self.parse_one_typed_param_group(tb)?);
             if tb.peek() == Some(COMMA) {
@@ -78,10 +76,7 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> RuntimeResult<TypedParameterList> {
         let mut groups = Vec::new();
-        while !tb.exceed_end_of_head()
-            && tb.peek() != Some(EQUAL)
-            && tb.peek() != Some(COLON)
-        {
+        while !tb.exceed_end_of_head() && tb.peek() != Some(EQUAL) && tb.peek() != Some(COLON) {
             groups.push(self.parse_one_typed_param_group(tb)?);
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;

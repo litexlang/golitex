@@ -307,9 +307,14 @@ impl Runtime {
         fact: &IsChoiceFunctionForFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        let Some(requirements)=self.choice_definition_requirements(fact) else {return Ok(None);};
-        let Some((requirement_facts,proof_of_requirement_facts))=
-            self.verify_definition_requirements(requirements,verify_state)? else {return Ok(None);};
+        let Some(requirements) = self.choice_definition_requirements(fact) else {
+            return Ok(None);
+        };
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_definition_requirements(requirements, verify_state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(BuiltinPropDefinitionProof::IsChoiceFunctionFor(
             BuiltinIsChoiceFunctionForDefinitionProof {
                 requirement_facts,
@@ -318,7 +323,10 @@ impl Runtime {
         )))
     }
 
-    fn choice_definition_requirements(&mut self,fact:&IsChoiceFunctionForFact)->Option<Vec<Fact>> {
+    fn choice_definition_requirements(
+        &mut self,
+        fact: &IsChoiceFunctionForFact,
+    ) -> Option<Vec<Fact>> {
         let index = fact.index.clone();
         let family_fn = fact.family.clone();
         let choice_fn = fact.choice.clone();
@@ -407,20 +415,28 @@ impl Runtime {
         )))
     }
 
-
     /// Definition consequences of a checked positive predicate. The same
     /// builders serve verification and inference, preserving order for WD.
-    pub(crate) fn builtin_atomic_definition_consequences(&mut self, fact: &AtomicFact) -> Vec<Fact> {
+    pub(crate) fn builtin_atomic_definition_consequences(
+        &mut self,
+        fact: &AtomicFact,
+    ) -> Vec<Fact> {
         match fact {
-            AtomicFact::InjectiveFact(f) => self.injective_definition_requirements(f).unwrap_or_default(),
-            AtomicFact::SurjectiveFact(f) => self.surjective_definition_requirements(f).unwrap_or_default(),
+            AtomicFact::InjectiveFact(f) => self
+                .injective_definition_requirements(f)
+                .unwrap_or_default(),
+            AtomicFact::SurjectiveFact(f) => self
+                .surjective_definition_requirements(f)
+                .unwrap_or_default(),
             AtomicFact::ProperSubsetFact(f) => self.proper_subset_definition_requirements(f),
             AtomicFact::ProperSupersetFact(f) => self.proper_superset_definition_requirements(f),
             AtomicFact::BijectiveFact(f) => self.bijective_definition_requirements(f),
             AtomicFact::PrimeFact(f) => self.prime_definition_requirements(f),
             AtomicFact::CoprimeFact(f) => self.coprime_definition_requirements(f),
             AtomicFact::DvdFact(f) => self.dvd_definition_requirements(f),
-            AtomicFact::IsChoiceFunctionForFact(f) => self.choice_definition_requirements(f).unwrap_or_default(),
+            AtomicFact::IsChoiceFunctionForFact(f) => {
+                self.choice_definition_requirements(f).unwrap_or_default()
+            }
             _ => vec![],
         }
     }

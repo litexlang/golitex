@@ -362,7 +362,10 @@ fn common_obj_relations_actual_assumption_citations_survive_projection() {
 #[test]
 fn common_obj_relations_durable_tracers_and_factorial_author_proof_pass() {
     for code in [
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/proof_nodes/equal/by_builtin_rule/log_reciprocal_negative_one.lit")),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/log_reciprocal_negative_one.lit"
+        )),
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/examples/proof_nodes/equal/by_builtin_rule/gcd_common_divisor.lit"

@@ -15,11 +15,11 @@ impl From<crate::ast::obj::PreimageSet> for crate::ast::obj::Obj {
 
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, ExistOrAndChainAtomicFact, Fact,
-    GreaterEqualFact, GreaterFact, InFact, InjectiveFact, IsChoiceFunctionForFact,
-    IsFiniteSetFact, IsNonemptySetFact, IsSetFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotEqualFact,
-    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact,     NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
-    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
+    GreaterEqualFact, GreaterFact, InFact, InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact,
+    IsNonemptySetFact, IsSetFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
+    NotCoprimeFact, NotDvdFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
+    NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact,
+    NotIsSetFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
     NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact,
     PrimeFact, ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
@@ -83,7 +83,6 @@ impl From<InFact> for AtomicFact {
         AtomicFact::InFact(f)
     }
 }
-
 
 impl From<SubsetFact> for AtomicFact {
     fn from(f: SubsetFact) -> Self {
@@ -210,7 +209,6 @@ impl From<NotInFact> for AtomicFact {
         AtomicFact::NotInFact(f)
     }
 }
-
 
 impl From<NotSubsetFact> for AtomicFact {
     fn from(f: NotSubsetFact) -> Self {
@@ -344,7 +342,6 @@ impl From<InFact> for Fact {
     }
 }
 
-
 impl From<SubsetFact> for Fact {
     fn from(f: SubsetFact) -> Self {
         Fact::AtomicFact(f.into())
@@ -470,7 +467,6 @@ impl From<NotInFact> for Fact {
         Fact::AtomicFact(f.into())
     }
 }
-
 
 impl From<NotSubsetFact> for Fact {
     fn from(f: NotSubsetFact) -> Self {

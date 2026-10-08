@@ -187,8 +187,14 @@ fn member_removal_keeps_membership_restriction_and_zero() {
     let map = node.as_object().unwrap();
     assert_eq!(map.get("premises").unwrap().as_array().unwrap().len(), 2);
     let callback = map.get("pointwise").unwrap().as_object().unwrap();
-    assert_eq!(callback.get("type").unwrap().as_str().ok(), Some("literal_restriction"));
-    assert!(callback.get("equality").is_none(), "literal restriction must not invent a local equality proof");
+    assert_eq!(
+        callback.get("type").unwrap().as_str().ok(),
+        Some("literal_restriction")
+    );
+    assert!(
+        callback.get("equality").is_none(),
+        "literal restriction must not invent a local equality proof"
+    );
     assert!(map.get("factor_equal").is_some());
     check("forall S finite_set,a S,f fn(x S)R:\n    f(a)*finite_set_product(set_minus(S,{a}),fn(y set_minus(S,{a}))R {f(y)})=finite_set_product(S,f)", true);
     check("forall S finite_set,a S,f fn(x S)R:\n    f(a)=0\n    =>:\n        finite_set_product(S,f)=finite_set_product(set_minus(S,{a}),fn(x set_minus(S,{a}))R {f(x)})*0", true);

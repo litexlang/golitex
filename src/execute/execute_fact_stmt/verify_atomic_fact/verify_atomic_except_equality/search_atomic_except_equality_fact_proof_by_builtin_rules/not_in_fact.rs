@@ -4,9 +4,9 @@ use crate::ast::fact::{
 use crate::ast::obj::{
     IntervalObj, Obj, OneSideInfinityIntervalObj, SetFormer, SetOperator, StandardSet,
 };
-use crate::rational_expression::closed_scalar_membership::normalized_decimal_inhabits_standard_set;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::rational_expression::closed_scalar_membership::normalized_decimal_inhabits_standard_set;
 use crate::rational_expression::evaluate_obj_to_normalized_decimal_number;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -146,9 +146,7 @@ impl Runtime {
         }
         Ok(Some(
             NotInFactSearchProofByBuiltinRule::ListSetExhaustiveDisequality(
-                ListSetExhaustiveDisequalityBuiltinRuleProof {
-                    disequality_proofs,
-                },
+                ListSetExhaustiveDisequalityBuiltinRuleProof { disequality_proofs },
             ),
         ))
     }
@@ -224,12 +222,14 @@ impl Runtime {
         if right_proof.is_failed() {
             return Ok(None);
         }
-        Ok(Some(NotInFactSearchProofByBuiltinRule::NonMembershipOfUnion(
-            NonMembershipOfUnionBuiltinRuleProof {
-                left_non_membership_proof: left_proof,
-                right_non_membership_proof: right_proof,
-            },
-        )))
+        Ok(Some(
+            NotInFactSearchProofByBuiltinRule::NonMembershipOfUnion(
+                NonMembershipOfUnionBuiltinRuleProof {
+                    left_non_membership_proof: left_proof,
+                    right_non_membership_proof: right_proof,
+                },
+            ),
+        ))
     }
 
     fn set_minus_non_membership_proof(

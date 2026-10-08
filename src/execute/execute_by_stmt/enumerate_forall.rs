@@ -54,9 +54,11 @@ pub(super) fn exec_enumerate_forall_goal(
                 .introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())?
             {
                 Ok(introduced) => introduced,
-                Err(_) => return Ok(Err(EnumerateForallFailed::Domain(
-                    "enumeration parameter introduction failed".to_string(),
-                ))),
+                Err(_) => {
+                    return Ok(Err(EnumerateForallFailed::Domain(
+                        "enumeration parameter introduction failed".to_string(),
+                    )))
+                }
             };
             // Each branch fixes the quantified parameters to one displayed assignment.
             // Keep the binders live so nested proof statements can use their names.
@@ -73,7 +75,8 @@ pub(super) fn exec_enumerate_forall_goal(
                         left: Obj::Identifier(rt.identifier_obj_for_stored_mention(param)),
                         right: value.clone(),
                         line_file: forall.line_file.clone(),
-                    }.into();
+                    }
+                    .into();
                     match assume_enumeration_fact(rt, &equality)? {
                         Ok(assumed) => binding_assumptions.push(assumed),
                         Err(failed) => return Ok(Err(failed)),
@@ -85,19 +88,28 @@ pub(super) fn exec_enumerate_forall_goal(
             for (premise_index, premise) in forall.dom_facts.iter().enumerate() {
                 let instantiated = match rt.inst_fact(premise, &subst) {
                     Ok(fact) => fact,
-                    Err(err) => return Ok(Err(EnumerateForallFailed::Instantiate(err.to_string()))),
+                    Err(err) => {
+                        return Ok(Err(EnumerateForallFailed::Instantiate(err.to_string())))
+                    }
                 };
                 // A proved false antecedent closes this implication vacuously.
                 // Otherwise assume the antecedent locally; a failed negation is never a skip.
                 if let Fact::AtomicFact(atomic) = &instantiated {
-                    if let Some(negated) = negate_atomic_fact(atomic, rt.global_ids.allocate_fact_id()) {
+                    if let Some(negated) =
+                        negate_atomic_fact(atomic, rt.global_ids.allocate_fact_id())
+                    {
                         let negated: Fact = negated.into();
                         let negated_premise = verify_goal_fact(rt, &negated)?;
                         if !negated_premise.is_failed() {
-                            return Ok(Ok((introduced_params, binding_assumptions,
+                            return Ok(Ok((
+                                introduced_params,
+                                binding_assumptions,
                                 EnumerateAssignmentOutcome::Skipped {
-                                    premise_assumptions, premise_index, negated_premise,
-                                })));
+                                    premise_assumptions,
+                                    premise_index,
+                                    negated_premise,
+                                },
+                            )));
                         }
                     }
                 }
@@ -116,21 +128,36 @@ pub(super) fn exec_enumerate_forall_goal(
                 let then_fact: Fact = then.clone().into();
                 let instantiated = match rt.inst_fact(&then_fact, &subst) {
                     Ok(f) => f,
-                    Err(err) => return Ok(Err(EnumerateForallFailed::Instantiate(err.to_string()))),
+                    Err(err) => {
+                        return Ok(Err(EnumerateForallFailed::Instantiate(err.to_string())))
+                    }
                 };
                 let proof = verify_goal_fact(rt, &instantiated)?;
                 if proof.is_failed() {
                     return Ok(Err(EnumerateForallFailed::Assignment {
-                        index, then_index, result: proof,
+                        index,
+                        then_index,
+                        result: proof,
                     }));
                 }
-                let store_and_infer = rt.store_fact_and_infer(&instantiated, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
-                then_proofs.push(ProveAndStoreThenFactResult { verify_result: proof, store_and_infer });
+                let store_and_infer = rt.store_fact_and_infer(
+                    &instantiated,
+                    crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                )?;
+                then_proofs.push(ProveAndStoreThenFactResult {
+                    verify_result: proof,
+                    store_and_infer,
+                });
             }
-            Ok(Ok((introduced_params, binding_assumptions,
+            Ok(Ok((
+                introduced_params,
+                binding_assumptions,
                 EnumerateAssignmentOutcome::Proved {
-                    premise_assumptions, proof_steps, then_proofs,
-                })))
+                    premise_assumptions,
+                    proof_steps,
+                    then_proofs,
+                },
+            )))
         })?;
 
         let (introduced_params, binding_assumptions, outcome) = match outcome {
@@ -138,7 +165,10 @@ pub(super) fn exec_enumerate_forall_goal(
             Err(failed) => return Ok(Err(failed)),
         };
         assignments.push(EnumerateAssignmentSuccess {
-            introduced_params, binding_assumptions, outcome, local_env,
+            introduced_params,
+            binding_assumptions,
+            outcome,
+            local_env,
         });
     }
 
@@ -147,7 +177,11 @@ pub(super) fn exec_enumerate_forall_goal(
         Err(msg) => return Ok(Err(EnumerateForallFailed::Store(msg))),
     };
 
-    Ok(Ok(EnumerateForallSuccess { goal_wd, assignments, stored }))
+    Ok(Ok(EnumerateForallSuccess {
+        goal_wd,
+        assignments,
+        stored,
+    }))
 }
 
 fn assume_enumeration_fact(
@@ -158,6 +192,12 @@ fn assume_enumeration_fact(
         VerifyFactWellDefinedResult::Success(proof) => proof,
         failed => return Ok(Err(EnumerateForallFailed::GoalWd(failed))),
     };
-    let store_and_infer = runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
-    Ok(Ok(AssumeDomFactResult { well_defined, store_and_infer }))
+    let store_and_infer = runtime.store_fact_and_infer(
+        fact,
+        crate::execute::execute_fact_stmt::VerifyState::top_level(),
+    )?;
+    Ok(Ok(AssumeDomFactResult {
+        well_defined,
+        store_and_infer,
+    }))
 }

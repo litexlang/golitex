@@ -12,9 +12,7 @@ macro_rules! impl_display_pair {
 
         // Human-facing: IR text with `#id#` wrappers stripped.
         pub fn readable_string(&self) -> String {
-            crate::display_and_ir::readable_string_from_ir_text(
-                self.ir().as_str(),
-            )
+            crate::display_and_ir::readable_string_from_ir_text(self.ir().as_str())
         }
     };
 }
@@ -716,13 +714,13 @@ impl Cart {
     impl_display_pair!();
 }
 
-
-
 impl Tuple {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         // `(a)` parses as grouping; preserve the singleton constructor.
-        if self.args.len() == 1 { out.push_str(TUPLE); }
+        if self.args.len() == 1 {
+            out.push_str(TUPLE);
+        }
         {
             out.push_str(LEFT_PAREN);
             out.push_str(
@@ -763,7 +761,6 @@ impl_obj_kw_call!(FiniteSetMin, FINITE_SET_MIN, set);
 impl_obj_kw_call!(FnRange, FN_RANGE, function);
 impl_obj_kw_call!(Preimage, PREIMAGE, function, value);
 impl_obj_kw_call!(PreimageSet, PREIMAGE_SET, function, target_set);
-
 
 impl_obj_kw_call!(Sum, SUM, start, end, func);
 

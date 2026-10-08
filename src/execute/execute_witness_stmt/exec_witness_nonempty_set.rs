@@ -59,16 +59,14 @@ impl Runtime {
     ) -> RuntimeResult<ExecWitnessNonemptySetStmtResult> {
         let verify_state = VerifyState::top_level();
 
-        let obj_well_defined =
-            self.verify_obj_well_definedness(&stmt.obj, verify_state.clone())?;
+        let obj_well_defined = self.verify_obj_well_definedness(&stmt.obj, verify_state.clone())?;
         if obj_well_defined.is_failed() {
             return Ok(ExecWitnessNonemptySetStmtResult::Failed(
                 ExecWitnessNonemptySetStmtFailed::ObjWd(obj_well_defined),
             ));
         }
 
-        let set_well_defined =
-            self.verify_obj_well_definedness(&stmt.set, verify_state.clone())?;
+        let set_well_defined = self.verify_obj_well_definedness(&stmt.set, verify_state.clone())?;
         if set_well_defined.is_failed() {
             return Ok(ExecWitnessNonemptySetStmtResult::Failed(
                 ExecWitnessNonemptySetStmtFailed::SetWd(set_well_defined),
@@ -110,7 +108,10 @@ impl Runtime {
             set: stmt.set.clone(),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let store_and_infer_result = self.store_fact_and_infer(&nonempty_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let store_and_infer_result = self.store_fact_and_infer(
+            &nonempty_fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         Ok(ExecWitnessNonemptySetStmtResult::Success(
             ExecWitnessNonemptySetStmtSuccessResult {

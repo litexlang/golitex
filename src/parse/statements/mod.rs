@@ -14,7 +14,7 @@ mod prop;
 pub mod prop_registration_shape;
 mod register;
 mod release_and_expand;
+mod sketch;
 mod thm_axiom;
 mod trust;
-mod sketch;
 mod witness;

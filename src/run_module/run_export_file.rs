@@ -2,9 +2,7 @@
 
 use crate::module_manager::ExportFileAndItsExecEnv;
 use crate::run::run_command_outcome::RunFileResult;
-use crate::runtime::{
-    CodeSource, RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult,
-};
+use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use std::fs;
 use std::path::Path;
 
@@ -61,32 +59,21 @@ pub fn run_export_file(
     if !code_result.success {
         runtime.abort_file();
         let _ = runtime.global_module_manager.set_current_mod_id(None);
-        return Ok(RunFileResult::new(
-            export_path.to_path_buf(),
-            code_result,
-        ));
+        return Ok(RunFileResult::new(export_path.to_path_buf(), code_result));
     }
 
     if keep_env_open {
         let _ = runtime.global_module_manager.set_current_mod_id(None);
         let _ = export_name;
-        return Ok(RunFileResult::new(
-            export_path.to_path_buf(),
-            code_result,
-        ));
+        return Ok(RunFileResult::new(export_path.to_path_buf(), code_result));
     }
 
     let (_file, exec_env) = runtime.finish_file();
-    let recorded = ExportFileAndItsExecEnv::new(
-        export_name.to_string(),
-        export_path.to_path_buf(),
-        exec_env,
-    );
+    let recorded =
+        ExportFileAndItsExecEnv::new(export_name.to_string(), export_path.to_path_buf(), exec_env);
     match current_mod_id {
         None => {
-            runtime
-                .global_module_manager
-                .record_root_export(recorded);
+            runtime.global_module_manager.record_root_export(recorded);
         }
         Some(mod_id) => {
             runtime

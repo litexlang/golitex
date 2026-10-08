@@ -409,8 +409,12 @@ impl FnObjHead {
     pub fn from_obj(obj: Obj) -> Self {
         match obj {
             Obj::Identifier(id) => Self::Identifier(id),
-            Obj::FunctionSpace(FunctionSpace::AnonymousFn(value)) => Self::AnonymousFnLiteral(Box::new(value)),
-            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(value)) => Self::FieldAccess(value),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(value)) => {
+                Self::AnonymousFnLiteral(Box::new(value))
+            }
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(value)) => {
+                Self::FieldAccess(value)
+            }
             Obj::InstantiatedTemplateObj(value) => Self::InstantiatedTemplateObj(value),
             other => Self::Object(Box::new(other)),
         }
@@ -880,7 +884,10 @@ pub struct Preimage {
 
 impl Preimage {
     pub fn new(function: Obj, value: Obj) -> Self {
-        Self { function: Box::new(function), value: Box::new(value) }
+        Self {
+            function: Box::new(function),
+            value: Box::new(value),
+        }
     }
 }
 
@@ -892,7 +899,10 @@ pub struct PreimageSet {
 
 impl PreimageSet {
     pub fn new(function: Obj, target_set: Obj) -> Self {
-        Self { function: Box::new(function), target_set: Box::new(target_set) }
+        Self {
+            function: Box::new(function),
+            target_set: Box::new(target_set),
+        }
     }
 }
 
@@ -981,7 +991,6 @@ pub struct SeqSet {
 // What: tuple / sequence indexing (1-based).
 // Surface: `t[i]`
 // Example: `(1, 2)[1]` (1).
-
 
 // Built-in number sets and common signed / nonzero variants.
 #[derive(Clone, Debug, PartialEq, Eq)]

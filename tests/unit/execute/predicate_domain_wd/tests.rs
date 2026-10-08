@@ -18,11 +18,19 @@ fn predicate_domain_wd_gcd_accepts_a_checked_nonzero_disjunction() {
     ] {
         let mut rt = runtime();
         let run = rt.run_litex_code(code).unwrap();
-        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
         assert!(run.success, "{code}");
-        let detail = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+        let detail =
+            crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
         if code.contains("gcd(") {
-            assert!(detail.contains("by_known_or") || detail.contains("by_selected_branch"), "{detail}");
+            assert!(
+                detail.contains("by_known_or") || detail.contains("by_selected_branch"),
+                "{detail}"
+            );
         }
         assert_eq!(rt.execution_environments_stack.len(), 1);
         // The disjunction neither chooses a branch nor admits the all-zero pair.
@@ -74,7 +82,11 @@ fn predicate_domain_wd_does_not_reopen_anonymous_function_peers() {
         let mut rt = runtime();
         let code = format!("have fn prior(n N) N = 1\n{body}");
         let run = rt.run_litex_code(&code).unwrap();
-        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
         assert_eq!(run.success, expected, "{code}");
         assert_eq!(rt.execution_environments_stack.len(), 1);
         assert!(!rt.run_litex_code("0 = 1\n").unwrap().success);
@@ -166,15 +178,24 @@ fn predicate_domain_wd_valid_domains_and_prior_carrier_facts_succeed() {
 #[test]
 fn retired_dimension_interfaces_reject_and_current_coordinate_carriers_remain_usable() {
     for source in ["cart_dim(A) $in N", "tuple_dim(0) $in N", "cart_dim(A)=2"] {
-        let mut rt=runtime();
+        let mut rt = runtime();
         assert!(rt.run_litex_code("have A set=cart(R,R)").unwrap().success);
-        let result=rt.run_litex_code(source).unwrap();
-        assert!(!result.success && result.session_error.is_some(), "{source}");
+        let result = rt.run_litex_code(source).unwrap();
+        assert!(
+            !result.success && result.session_error.is_some(),
+            "{source}"
+        );
         assert!(result.statement_results.is_empty());
     }
-    let mut rt=runtime();
-    assert!(rt.run_litex_code("have p cart(R,R)\np(1) $in R\np(2) $in R").unwrap().success);
-    for wrong in ["p(3) $in R", "0=1"] { assert!(!rt.run_litex_code(wrong).unwrap().success); }
+    let mut rt = runtime();
+    assert!(
+        rt.run_litex_code("have p cart(R,R)\np(1) $in R\np(2) $in R")
+            .unwrap()
+            .success
+    );
+    for wrong in ["p(3) $in R", "0=1"] {
+        assert!(!rt.run_litex_code(wrong).unwrap().success);
+    }
 }
 
 #[test]
@@ -270,15 +291,21 @@ fn predicate_domain_wd_preserves_equal_carriers_and_the_exact_one_based_prefix()
 
 #[test]
 fn predicate_domain_wd_closed_negative_carriers_terminate_and_positive_integer_evidence_remains() {
-    let run = runtime().run_litex_code(include_str!(
-        "../../../../examples/wd/predicate_positive_integer_carrier.lit"
-    )).unwrap();
+    let run = runtime()
+        .run_litex_code(include_str!(
+            "../../../../examples/wd/predicate_positive_integer_carrier.lit"
+        ))
+        .unwrap();
     assert!(run.success, "{:?}", run.session_error);
     for carrier in ["Z", "N", "N+"] {
         let mut rt = runtime();
         let code = format!("1 / 2 $in {carrier}\n");
         let run = rt.run_litex_code(&code).unwrap();
-        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
         assert!(!run.success, "{code}");
         assert_eq!(rt.execution_environments_stack.len(), 1);
     }

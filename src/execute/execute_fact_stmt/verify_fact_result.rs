@@ -16,9 +16,7 @@
 //! forall search instead. Object WD reuses `WellDefinedObjectMemory` via ByKnown.
 
 use super::verify_and_fact::{VerifyAndFactFailed, VerifyAndFactResult};
-use super::verify_atomic_fact::{
-    VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult,
-};
+use super::verify_atomic_fact::{VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult};
 use super::verify_chain_fact::{VerifyChainFactFailed, VerifyChainFactResult};
 use super::verify_exist_shaped_fact::{
     VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
@@ -105,4 +103,3 @@ impl VerifyFactResult {
         }
     }
 }
-

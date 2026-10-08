@@ -110,12 +110,10 @@ impl Runtime {
                 ),
             ));
         }
-        if let Some(proof) = self
-            .search_atomic_except_equality_by_known_equal_obj_substitution(
-                fact,
-                verify_state.clone(),
-            )?
-        {
+        if let Some(proof) = self.search_atomic_except_equality_by_known_equal_obj_substitution(
+            fact,
+            verify_state.clone(),
+        )? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinRewrite::KnownEqualObjSubstitution(
                     proof,
@@ -134,9 +132,7 @@ impl Runtime {
                 ),
             ));
         }
-        if let Some(proof) =
-            self.search_atomic_except_equality_by_order_dual(fact, verify_state)?
-        {
+        if let Some(proof) = self.search_atomic_except_equality_by_order_dual(fact, verify_state)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(proof),
             ));
@@ -197,15 +193,11 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution>>
-    {
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution>> {
         if matches!(fact, AtomicFact::EqualFact(_)) {
             return Ok(None);
         }
-        let args: Vec<Obj> = atomic_fact_args_ref(fact)
-            .into_iter()
-            .cloned()
-            .collect();
+        let args: Vec<Obj> = atomic_fact_args_ref(fact).into_iter().cloned().collect();
         let adjacency = self.visible_equivalence_class_adjacency();
         let residual_state = verify_state.without_rewrite();
 
@@ -234,7 +226,10 @@ impl Runtime {
                 return Ok(Some(
                     AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution {
                         rewritten_fact: rewritten.into(),
-                        cited_equal_fact_ids: path.into_iter().map(|(_, _, fact_id)| fact_id).collect(),
+                        cited_equal_fact_ids: path
+                            .into_iter()
+                            .map(|(_, _, fact_id)| fact_id)
+                            .collect(),
                         proof_of_rewritten_fact,
                     },
                 ));
@@ -254,13 +249,12 @@ impl Runtime {
         if matches!(fact, AtomicFact::EqualFact(_)) {
             return Ok(None);
         }
-        if !verify_state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall) {
+        if !verify_state
+            .allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
+        {
             return Ok(None);
         }
-        let args: Vec<Obj> = atomic_fact_args_ref(fact)
-            .into_iter()
-            .cloned()
-            .collect();
+        let args: Vec<Obj> = atomic_fact_args_ref(fact).into_iter().cloned().collect();
         let equal_child_state = verify_state.without_rewrite();
         let residual_state = verify_state.without_rewrite();
 
@@ -318,7 +312,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinOrderDual>> {
-        let Some(alternate) = order_dual_atomic_fact(fact, || self.global_ids.allocate_fact_id()) else {
+        let Some(alternate) = order_dual_atomic_fact(fact, || self.global_ids.allocate_fact_id())
+        else {
             return Ok(None);
         };
         let residual_state = verify_state.without_rewrite();
@@ -326,10 +321,12 @@ impl Runtime {
         if proof_of_alternate_fact.is_failed() {
             return Ok(None);
         }
-        Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
-            alternate_fact: alternate.into(),
-            proof_of_alternate_fact,
-        }))
+        Ok(Some(
+            AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
+                alternate_fact: alternate.into(),
+                proof_of_alternate_fact,
+            },
+        ))
     }
 }
 
@@ -391,12 +388,14 @@ fn order_dual_atomic_fact(
                 line_file: f.line_file.clone(),
             }))
         }
-        AtomicFact::ProperSubsetFact(f) => Some(AtomicFact::ProperSupersetFact(ProperSupersetFact {
-            fact_id: next_fact_id(),
-            left: f.right.clone(),
-            right: f.left.clone(),
-            line_file: f.line_file.clone(),
-        })),
+        AtomicFact::ProperSubsetFact(f) => {
+            Some(AtomicFact::ProperSupersetFact(ProperSupersetFact {
+                fact_id: next_fact_id(),
+                left: f.right.clone(),
+                right: f.left.clone(),
+                line_file: f.line_file.clone(),
+            }))
+        }
         AtomicFact::ProperSupersetFact(f) => Some(AtomicFact::ProperSubsetFact(ProperSubsetFact {
             fact_id: next_fact_id(),
             left: f.right.clone(),

@@ -1,6 +1,6 @@
 use crate::ast::fact::AndFact;
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
+use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
 pub enum VerifyAndFactResult {
     Success(VerifyAndFactSuccess),

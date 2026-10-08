@@ -117,8 +117,7 @@ fn decode_def_prop(value: &JsonValue) -> Result<DefPropStmt, KbCodecError> {
         )));
     }
     let name = JsonValue::get(map, "name")?.as_str()?.to_string();
-    let typed_parameters =
-        decode_typed_parameter_list(JsonValue::get(map, "typed_parameters")?)?;
+    let typed_parameters = decode_typed_parameter_list(JsonValue::get(map, "typed_parameters")?)?;
     let iff_facts = JsonValue::get(map, "iff_facts")?
         .as_array()?
         .iter()
@@ -133,7 +132,9 @@ fn decode_def_prop(value: &JsonValue) -> Result<DefPropStmt, KbCodecError> {
     })
 }
 
-pub(crate) fn encode_typed_parameter_list(list: &TypedParameterList) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_typed_parameter_list(
+    list: &TypedParameterList,
+) -> Result<JsonValue, KbCodecError> {
     let groups = list
         .groups
         .iter()
@@ -145,7 +146,9 @@ pub(crate) fn encode_typed_parameter_list(list: &TypedParameterList) -> Result<J
     )]))
 }
 
-pub(crate) fn decode_typed_parameter_list(value: &JsonValue) -> Result<TypedParameterList, KbCodecError> {
+pub(crate) fn decode_typed_parameter_list(
+    value: &JsonValue,
+) -> Result<TypedParameterList, KbCodecError> {
     let map = value.as_object()?;
     let groups = JsonValue::get(map, "groups")?
         .as_array()?
@@ -155,7 +158,9 @@ pub(crate) fn decode_typed_parameter_list(value: &JsonValue) -> Result<TypedPara
     Ok(TypedParameterList { groups })
 }
 
-pub(crate) fn encode_typed_parameter_group(group: &TypedParameterGroup) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_typed_parameter_group(
+    group: &TypedParameterGroup,
+) -> Result<JsonValue, KbCodecError> {
     let params = group
         .params
         .iter()
@@ -167,7 +172,9 @@ pub(crate) fn encode_typed_parameter_group(group: &TypedParameterGroup) -> Resul
     ]))
 }
 
-pub(crate) fn decode_typed_parameter_group(value: &JsonValue) -> Result<TypedParameterGroup, KbCodecError> {
+pub(crate) fn decode_typed_parameter_group(
+    value: &JsonValue,
+) -> Result<TypedParameterGroup, KbCodecError> {
     let map = value.as_object()?;
     let params = JsonValue::get(map, "params")?
         .as_array()?
@@ -228,10 +235,7 @@ pub(crate) fn decode_param_type(value: &JsonValue) -> Result<ParamType, KbCodecE
 
 pub(crate) fn encode_line_file(line_file: &SourceLine) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
-        (
-            "line".into(),
-            JsonValue::Number(line_file.line as f64),
-        ),
+        ("line".into(), JsonValue::Number(line_file.line as f64)),
         ("origin".into(), encode_code_source(&line_file.origin)?),
     ]))
 }
@@ -309,7 +313,9 @@ pub(crate) fn encode_optional_line_file(
     }
 }
 
-pub(crate) fn decode_optional_line_file(value: &JsonValue) -> Result<Option<SourceLine>, KbCodecError> {
+pub(crate) fn decode_optional_line_file(
+    value: &JsonValue,
+) -> Result<Option<SourceLine>, KbCodecError> {
     match value {
         JsonValue::Null => Ok(None),
         other => Ok(Some(decode_line_file(other)?)),
@@ -349,13 +355,9 @@ pub(crate) fn decode_fact(value: &JsonValue) -> Result<Fact, KbCodecError> {
 
 pub(crate) fn encode_atomic_fact(atomic: &AtomicFact) -> Result<JsonValue, KbCodecError> {
     match atomic {
-        AtomicFact::GreaterFact(f) => encode_binary_compare(
-            "GreaterFact",
-            f.fact_id,
-            &f.left,
-            &f.right,
-            &f.line_file,
-        ),
+        AtomicFact::GreaterFact(f) => {
+            encode_binary_compare("GreaterFact", f.fact_id, &f.left, &f.right, &f.line_file)
+        }
         AtomicFact::LessFact(f) => {
             encode_binary_compare("LessFact", f.fact_id, &f.left, &f.right, &f.line_file)
         }
@@ -366,30 +368,18 @@ pub(crate) fn encode_atomic_fact(atomic: &AtomicFact) -> Result<JsonValue, KbCod
             &f.right,
             &f.line_file,
         ),
-        AtomicFact::LessEqualFact(f) => encode_binary_compare(
-            "LessEqualFact",
-            f.fact_id,
-            &f.left,
-            &f.right,
-            &f.line_file,
-        ),
+        AtomicFact::LessEqualFact(f) => {
+            encode_binary_compare("LessEqualFact", f.fact_id, &f.left, &f.right, &f.line_file)
+        }
         AtomicFact::EqualFact(f) => {
             encode_binary_compare("EqualFact", f.fact_id, &f.left, &f.right, &f.line_file)
         }
-        AtomicFact::NotGreaterFact(f) => encode_binary_compare(
-            "NotGreaterFact",
-            f.fact_id,
-            &f.left,
-            &f.right,
-            &f.line_file,
-        ),
-        AtomicFact::NotLessFact(f) => encode_binary_compare(
-            "NotLessFact",
-            f.fact_id,
-            &f.left,
-            &f.right,
-            &f.line_file,
-        ),
+        AtomicFact::NotGreaterFact(f) => {
+            encode_binary_compare("NotGreaterFact", f.fact_id, &f.left, &f.right, &f.line_file)
+        }
+        AtomicFact::NotLessFact(f) => {
+            encode_binary_compare("NotLessFact", f.fact_id, &f.left, &f.right, &f.line_file)
+        }
         AtomicFact::NotGreaterEqualFact(f) => encode_binary_compare(
             "NotGreaterEqualFact",
             f.fact_id,
@@ -404,27 +394,15 @@ pub(crate) fn encode_atomic_fact(atomic: &AtomicFact) -> Result<JsonValue, KbCod
             &f.right,
             &f.line_file,
         ),
-        AtomicFact::NotEqualFact(f) => encode_binary_compare(
-            "NotEqualFact",
-            f.fact_id,
-            &f.left,
-            &f.right,
-            &f.line_file,
-        ),
-        AtomicFact::InFact(f) => encode_in_like(
-            "InFact",
-            f.fact_id,
-            &f.element,
-            &f.set,
-            &f.line_file,
-        ),
-        AtomicFact::NotInFact(f) => encode_in_like(
-            "NotInFact",
-            f.fact_id,
-            &f.element,
-            &f.set,
-            &f.line_file,
-        ),
+        AtomicFact::NotEqualFact(f) => {
+            encode_binary_compare("NotEqualFact", f.fact_id, &f.left, &f.right, &f.line_file)
+        }
+        AtomicFact::InFact(f) => {
+            encode_in_like("InFact", f.fact_id, &f.element, &f.set, &f.line_file)
+        }
+        AtomicFact::NotInFact(f) => {
+            encode_in_like("NotInFact", f.fact_id, &f.element, &f.set, &f.line_file)
+        }
         other => Err(KbCodecError::Unsupported(format!(
             "AtomicFact variant `{other:?}` (def_prop codec subset)"
         ))),
@@ -440,16 +418,10 @@ pub(crate) fn encode_binary_compare(
 ) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         ("tag".into(), JsonValue::String(tag.into())),
-        (
-            "fact_id".into(),
-            JsonValue::Number(fact_id.value() as f64),
-        ),
+        ("fact_id".into(), JsonValue::Number(fact_id.value() as f64)),
         ("left".into(), encode_obj(left)?),
         ("right".into(), encode_obj(right)?),
-        (
-            "line_file".into(),
-            encode_optional_line_file(line_file)?,
-        ),
+        ("line_file".into(), encode_optional_line_file(line_file)?),
     ]))
 }
 
@@ -462,16 +434,10 @@ pub(crate) fn encode_in_like(
 ) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         ("tag".into(), JsonValue::String(tag.into())),
-        (
-            "fact_id".into(),
-            JsonValue::Number(fact_id.value() as f64),
-        ),
+        ("fact_id".into(), JsonValue::Number(fact_id.value() as f64)),
         ("element".into(), encode_obj(element)?),
         ("set".into(), encode_obj(set)?),
-        (
-            "line_file".into(),
-            encode_optional_line_file(line_file)?,
-        ),
+        ("line_file".into(), encode_optional_line_file(line_file)?),
     ]))
 }
 
@@ -596,7 +562,10 @@ pub(crate) fn encode_obj(obj: &Obj) -> Result<JsonValue, KbCodecError> {
         ])),
         Obj::StandardSet(set) => Ok(JsonValue::object_from(vec![
             ("tag".into(), JsonValue::String("StandardSet".into())),
-            ("set".into(), JsonValue::String(standard_set_name(set).into())),
+            (
+                "set".into(),
+                JsonValue::String(standard_set_name(set).into()),
+            ),
         ])),
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Ok(JsonValue::object_from(vec![
             ("tag".into(), JsonValue::String("AnonymousFn".into())),
@@ -779,16 +748,10 @@ pub(crate) fn decode_literal(value: &JsonValue) -> Result<Literal, KbCodecError>
         "Number" => Ok(Literal::Number(Number::new(
             JsonValue::get(map, "text")?.as_str()?.to_string(),
         ))),
-        "ImaginaryUnit" => Ok(Literal::ImaginaryUnit(
-            crate::ast::obj::ImaginaryUnit,
-        )),
-        "EulerNumber" => Ok(Literal::EulerNumber(
-            crate::ast::obj::EulerNumber,
-        )),
+        "ImaginaryUnit" => Ok(Literal::ImaginaryUnit(crate::ast::obj::ImaginaryUnit)),
+        "EulerNumber" => Ok(Literal::EulerNumber(crate::ast::obj::EulerNumber)),
         "Pi" => Ok(Literal::Pi(crate::ast::obj::Pi)),
-        other => Err(KbCodecError::Unsupported(format!(
-            "Literal tag `{other}`"
-        ))),
+        other => Err(KbCodecError::Unsupported(format!("Literal tag `{other}`"))),
     }
 }
 
@@ -829,11 +792,7 @@ pub(crate) fn decode_standard_set(name: &str) -> Result<StandardSet, KbCodecErro
         "ZStar" => StandardSet::ZStar,
         "RStar" => StandardSet::RStar,
         "CStar" => StandardSet::CStar,
-        other => {
-            return Err(KbCodecError::Unsupported(format!(
-                "StandardSet `{other}`"
-            )))
-        }
+        other => return Err(KbCodecError::Unsupported(format!("StandardSet `{other}`"))),
     })
 }
 

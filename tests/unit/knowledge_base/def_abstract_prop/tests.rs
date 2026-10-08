@@ -20,9 +20,8 @@ fn sample() -> DefAbstractPropStmt {
 }
 
 fn fixture_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join(
-        "examples/knowledge_base/def_abstract_prop/marked.def_abstract_prop.json",
-    )
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("examples/knowledge_base/def_abstract_prop/marked.def_abstract_prop.json")
 }
 
 #[test]

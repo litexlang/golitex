@@ -13,9 +13,7 @@ macro_rules! impl_display_pair {
 
         // Human-facing: IR text with `#id#` wrappers stripped.
         pub fn readable_string(&self) -> String {
-            crate::display_and_ir::readable_string_from_ir_text(
-                self.ir().as_str(),
-            )
+            crate::display_and_ir::readable_string_from_ir_text(self.ir().as_str())
         }
     };
 }
@@ -141,12 +139,7 @@ impl AtomicFact {
 
 impl EqualFact {
     pub fn ir(&self) -> FactIR {
-        FactIR(format!(
-            "{} {} {}",
-            self.left.ir(),
-            EQUAL,
-            self.right.ir()
-        ))
+        FactIR(format!("{} {} {}", self.left.ir(), EQUAL, self.right.ir()))
     }
     pub fn display_string(&self) -> String {
         format!(
@@ -181,12 +174,7 @@ macro_rules! impl_bin_rel {
     ($ty:ty, $op:expr) => {
         impl $ty {
             pub fn ir(&self) -> FactIR {
-                FactIR(format!(
-                    "{} {} {}",
-                    self.left.ir(),
-                    $op,
-                    self.right.ir()
-                ))
+                FactIR(format!("{} {} {}", self.left.ir(), $op, self.right.ir()))
             }
             pub fn display_string(&self) -> String {
                 format!(
@@ -635,11 +623,7 @@ macro_rules! impl_normal_atomic {
                 }
                 s.push_str(FACT_PREFIX);
                 s.push_str(&self.predicate.ir());
-                let parts: Vec<_> = self
-                    .body
-                    .iter()
-                    .map(|o| o.ir())
-                    .collect();
+                let parts: Vec<_> = self.body.iter().map(|o| o.ir()).collect();
                 s.push_str(LEFT_PAREN);
                 s.push_str(&parts.join(&format!("{} ", COMMA)));
                 s.push_str(RIGHT_PAREN);
@@ -671,11 +655,7 @@ macro_rules! impl_normal_atomic {
                 }
                 s.push_str(FACT_PREFIX);
                 s.push_str(&self.predicate.display_string());
-                let parts: Vec<_> = self
-                    .body
-                    .iter()
-                    .map(|o| o.display_string())
-                    .collect();
+                let parts: Vec<_> = self.body.iter().map(|o| o.display_string()).collect();
                 s.push_str(LEFT_PAREN);
                 s.push_str(&parts.join(&format!("{} ", COMMA)));
                 s.push_str(RIGHT_PAREN);
@@ -687,8 +667,6 @@ macro_rules! impl_normal_atomic {
 
 impl_normal_atomic!(NormalAtomicFact, false);
 impl_normal_atomic!(NotNormalAtomicFact, true);
-
-
 
 impl AndFact {
     pub fn ir(&self) -> FactIR {
@@ -827,11 +805,7 @@ impl ExistOrAndChainAtomicFact {
 
 impl PlainExistFact {
     pub fn ir(&self) -> FactIR {
-        let parts: Vec<_> = self
-            .facts
-            .iter()
-            .map(|fact| fact.ir())
-            .collect();
+        let parts: Vec<_> = self.facts.iter().map(|fact| fact.ir()).collect();
         FactIR(format!(
             "{} {} {} {}{}{}",
             EXIST,
@@ -874,11 +848,7 @@ impl ExistShapedFact {
             | ExistShapedFact::ExistUnique(b)
             | ExistShapedFact::NotExist(b) => b,
         };
-        let parts: Vec<_> = body
-            .facts
-            .iter()
-            .map(|fact| fact.ir())
-            .collect();
+        let parts: Vec<_> = body.facts.iter().map(|fact| fact.ir()).collect();
         FactIR(format!(
             "{} {} {} {}{}{}",
             keyword,
@@ -928,37 +898,20 @@ impl ForallFact {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        let mut s = format!(
-            "{} {}{}",
-            FORALL,
-            self.typed_parameters.ir(),
-            COLON
-        );
+        let mut s = format!("{} {}{}", FORALL, self.typed_parameters.ir(), COLON);
         if self.dom_facts.is_empty() {
             s.push('\n');
-            let then_parts: Vec<_> = self
-                .then_facts
-                .iter()
-                .map(|t| t.ir())
-                .collect();
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.ir()).collect();
             s.push_str(&indent(&then_parts.join("\n"), 1));
         } else {
             s.push('\n');
-            let dom_parts: Vec<_> = self
-                .dom_facts
-                .iter()
-                .map(|d| d.ir())
-                .collect();
+            let dom_parts: Vec<_> = self.dom_facts.iter().map(|d| d.ir()).collect();
             s.push_str(&indent(&dom_parts.join("\n"), 1));
             s.push('\n');
             s.push_str(&indent(RIGHT_ARROW, 1));
             s.push_str(COLON);
             s.push('\n');
-            let then_parts: Vec<_> = self
-                .then_facts
-                .iter()
-                .map(|t| t.ir())
-                .collect();
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.ir()).collect();
             s.push_str(&indent(&then_parts.join("\n"), 2));
         }
         FactIR(s)
@@ -979,29 +932,17 @@ impl ForallFact {
         );
         if self.dom_facts.is_empty() {
             s.push('\n');
-            let then_parts: Vec<_> = self
-                .then_facts
-                .iter()
-                .map(|t| t.display_string())
-                .collect();
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.display_string()).collect();
             s.push_str(&indent(&then_parts.join("\n"), 1));
         } else {
             s.push('\n');
-            let dom_parts: Vec<_> = self
-                .dom_facts
-                .iter()
-                .map(|d| d.display_string())
-                .collect();
+            let dom_parts: Vec<_> = self.dom_facts.iter().map(|d| d.display_string()).collect();
             s.push_str(&indent(&dom_parts.join("\n"), 1));
             s.push('\n');
             s.push_str(&indent(RIGHT_ARROW, 1));
             s.push_str(COLON);
             s.push('\n');
-            let then_parts: Vec<_> = self
-                .then_facts
-                .iter()
-                .map(|t| t.display_string())
-                .collect();
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.display_string()).collect();
             s.push_str(&indent(&then_parts.join("\n"), 2));
         }
         s
@@ -1021,8 +962,12 @@ impl ForallFactWithIff {
             let then_parts: Vec<_> = self.forall_fact.then_facts.iter().map(|t| t.ir()).collect();
             format!(
                 "{} {}{}\n{}{}\n{}",
-                FORALL, self.forall_fact.typed_parameters.ir(), COLON,
-                indent(RIGHT_ARROW, 1), COLON, indent(&then_parts.join("\n"), 2)
+                FORALL,
+                self.forall_fact.typed_parameters.ir(),
+                COLON,
+                indent(RIGHT_ARROW, 1),
+                COLON,
+                indent(&then_parts.join("\n"), 2)
             )
         } else {
             format!("{}", self.forall_fact.ir())
@@ -1031,11 +976,7 @@ impl ForallFactWithIff {
         s.push_str(&indent(EQUIVALENT_SIGN, 1));
         s.push_str(COLON);
         s.push('\n');
-        let iff_parts: Vec<_> = self
-            .iff_facts
-            .iter()
-            .map(|t| t.ir())
-            .collect();
+        let iff_parts: Vec<_> = self.iff_facts.iter().map(|t| t.ir()).collect();
         s.push_str(&indent(&iff_parts.join("\n"), 2));
         FactIR(s)
     }
@@ -1048,11 +989,20 @@ impl ForallFactWithIff {
                 .join("\n")
         };
         let mut s = if self.forall_fact.dom_facts.is_empty() {
-            let then_parts: Vec<_> = self.forall_fact.then_facts.iter().map(|t| t.display_string()).collect();
+            let then_parts: Vec<_> = self
+                .forall_fact
+                .then_facts
+                .iter()
+                .map(|t| t.display_string())
+                .collect();
             format!(
                 "{} {}{}\n{}{}\n{}",
-                FORALL, self.forall_fact.typed_parameters.display_string(), COLON,
-                indent(RIGHT_ARROW, 1), COLON, indent(&then_parts.join("\n"), 2)
+                FORALL,
+                self.forall_fact.typed_parameters.display_string(),
+                COLON,
+                indent(RIGHT_ARROW, 1),
+                COLON,
+                indent(&then_parts.join("\n"), 2)
             )
         } else {
             format!("{}", self.forall_fact.display_string())
@@ -1061,11 +1011,7 @@ impl ForallFactWithIff {
         s.push_str(&indent(EQUIVALENT_SIGN, 1));
         s.push_str(COLON);
         s.push('\n');
-        let iff_parts: Vec<_> = self
-            .iff_facts
-            .iter()
-            .map(|t| t.display_string())
-            .collect();
+        let iff_parts: Vec<_> = self.iff_facts.iter().map(|t| t.display_string()).collect();
         s.push_str(&indent(&iff_parts.join("\n"), 2));
         s
     }
@@ -1080,13 +1026,7 @@ impl NotForallFact {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        let mut s = format!(
-            "{} {} {}{}",
-            NOT,
-            FORALL,
-            self.typed_parameters.ir(),
-            COLON
-        );
+        let mut s = format!("{} {} {}{}", NOT, FORALL, self.typed_parameters.ir(), COLON);
         if self.dom_facts.is_empty() {
             s.push('\n');
             let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.ir()).collect();
@@ -1121,29 +1061,17 @@ impl NotForallFact {
         );
         if self.dom_facts.is_empty() {
             s.push('\n');
-            let then_parts: Vec<_> = self
-                .then_facts
-                .iter()
-                .map(|t| t.display_string())
-                .collect();
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.display_string()).collect();
             s.push_str(&indent(&then_parts.join("\n"), 1));
         } else {
             s.push('\n');
-            let dom_parts: Vec<_> = self
-                .dom_facts
-                .iter()
-                .map(|d| d.display_string())
-                .collect();
+            let dom_parts: Vec<_> = self.dom_facts.iter().map(|d| d.display_string()).collect();
             s.push_str(&indent(&dom_parts.join("\n"), 1));
             s.push('\n');
             s.push_str(&indent(RIGHT_ARROW, 1));
             s.push_str(COLON);
             s.push('\n');
-            let then_parts: Vec<_> = self
-                .then_facts
-                .iter()
-                .map(|t| t.display_string())
-                .collect();
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.display_string()).collect();
             s.push_str(&indent(&then_parts.join("\n"), 2));
         }
         s

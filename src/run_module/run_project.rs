@@ -56,7 +56,12 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(session_error) => {
-                return Ok(finish_repo(&runtime, root, file_results, Some(session_error)));
+                return Ok(finish_repo(
+                    &runtime,
+                    root,
+                    file_results,
+                    Some(session_error),
+                ));
             }
         }
     }
@@ -77,7 +82,11 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         ) {
             Ok(file_result) => {
                 let failed = !file_result.run.success;
-                let session_error = file_result.run.session_error.clone().unwrap_or(RunSessionError::FailToImport);
+                let session_error = file_result
+                    .run
+                    .session_error
+                    .clone()
+                    .unwrap_or(RunSessionError::FailToImport);
                 file_results.push(file_result);
                 if failed {
                     return Ok(finish_repo(

@@ -1,16 +1,15 @@
+use crate::ast::fact::atomic_fact_args_ref;
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, GreaterEqualFact, GreaterFact, InFact,
-    InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
-    IsSetFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
-    NotCoprimeFact, NotDvdFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
-    NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
-    NotIsNonemptySetFact, NotIsSetFact, NotLessEqualFact, NotLessFact,
-    NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact,
-    NotSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
-    SubsetFact, SupersetFact, SurjectiveFact,
+    InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+    LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact,
+    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact,
+    NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
+    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact,
+    NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact, PrimeFact,
+    ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
 use crate::ast::obj::Obj;
-use crate::ast::fact::atomic_fact_args_ref;
 use crate::runtime::runtime_ids::FactId;
 
 // Rebuild an atomic fact with the same shape and new argument list (same arity).

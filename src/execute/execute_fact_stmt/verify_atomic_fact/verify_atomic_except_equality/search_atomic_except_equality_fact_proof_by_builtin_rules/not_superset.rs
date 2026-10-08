@@ -1,5 +1,5 @@
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{AtomicFact, NotSupersetFact};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -29,6 +29,4 @@ impl Runtime {
         }
         Ok(None)
     }
-
-
 }

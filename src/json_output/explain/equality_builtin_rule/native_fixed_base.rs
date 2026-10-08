@@ -96,7 +96,10 @@ impl ExpAsEulerPowerProof {
         )
     }
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Exponentielle comme puissance de e", "Exponentielle comme puissance de e: x in R, both sides well-defined => exp(x)=e^x")
+        text(
+            "Exponentielle comme puissance de e",
+            "Exponentielle comme puissance de e: x in R, both sides well-defined => exp(x)=e^x",
+        )
     }
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(

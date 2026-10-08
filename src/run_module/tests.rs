@@ -136,7 +136,8 @@ fn run_project_kb_cache_write_then_hit_cross_mod() {
     .expect("first run_project");
     assert!(first.run.success, "{:?}", first.run.session_error);
     assert!(
-        root.join("lib/__litex_knowledge_base__/manifest.json").is_file(),
+        root.join("lib/__litex_knowledge_base__/manifest.json")
+            .is_file(),
         "expected kb write after cold import"
     );
 
@@ -149,30 +150,46 @@ fn run_project_kb_cache_write_then_hit_cross_mod() {
     .expect("second run_project");
     assert!(second.run.success, "{:?}", second.run.session_error);
     // Root export still runs; imported lib should be served from kb (no lib file result).
-    assert_eq!(second.files.len(), 1, "kb hit should skip re-exec of lib export");
+    assert_eq!(
+        second.files.len(),
+        1,
+        "kb hit should skip re-exec of lib export"
+    );
 
     // Old decimal/aggregate and empty-domain function-graph products must be
     // rebuilt even when their module source bytes have not changed.
     let manifest = root.join("lib/__litex_knowledge_base__/manifest.json");
     let current_manifest = fs::read_to_string(&manifest).unwrap();
     for old_abi in ["2", "5", "6"] {
-    let old_manifest = current_manifest.replace(
-        &format!("\"abi\": \"{}\"", crate::knowledge_base::KB_ABI),
-        &format!("\"abi\": \"{old_abi}\""),
-    );
-    assert_ne!(old_manifest, current_manifest);
-    fs::write(&manifest, old_manifest).unwrap();
-    let rebuilt = run_project(LaunchCommand::Repository {
-        path:root.clone(), session:false, strict:false, language:OutputLanguage::English,
-    }).expect("old ABI falls back to source");
-    assert!(rebuilt.run.success, "{:?}", rebuilt.run.session_error);
-    assert_eq!(rebuilt.files.len(), 2, "old cached library must execute again");
-    assert_eq!(fs::read_to_string(&manifest).unwrap(), current_manifest);
-    let warm_again = run_project(LaunchCommand::Repository {
-        path:root.clone(), session:false, strict:false, language:OutputLanguage::English,
-    }).expect("rebuilt cache can be reused");
-    assert!(warm_again.run.success);
-    assert_eq!(warm_again.files.len(), 1);
+        let old_manifest = current_manifest.replace(
+            &format!("\"abi\": \"{}\"", crate::knowledge_base::KB_ABI),
+            &format!("\"abi\": \"{old_abi}\""),
+        );
+        assert_ne!(old_manifest, current_manifest);
+        fs::write(&manifest, old_manifest).unwrap();
+        let rebuilt = run_project(LaunchCommand::Repository {
+            path: root.clone(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        })
+        .expect("old ABI falls back to source");
+        assert!(rebuilt.run.success, "{:?}", rebuilt.run.session_error);
+        assert_eq!(
+            rebuilt.files.len(),
+            2,
+            "old cached library must execute again"
+        );
+        assert_eq!(fs::read_to_string(&manifest).unwrap(), current_manifest);
+        let warm_again = run_project(LaunchCommand::Repository {
+            path: root.clone(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        })
+        .expect("rebuilt cache can be reused");
+        assert!(warm_again.run.success);
+        assert_eq!(warm_again.files.len(), 1);
     }
 
     let _ = fs::remove_dir_all(&root);
@@ -281,10 +298,7 @@ fn run_file_stops_at_listed_export() {
 #[test]
 fn run_file_unlisted_runs_all_exports_then_target() {
     let root = temp_dir("f_extra");
-    write(
-        &root.join("litex.config"),
-        "[export]\na = \"./a.lit\"\n",
-    );
+    write(&root.join("litex.config"), "[export]\na = \"./a.lit\"\n");
     write(&root.join("a.lit"), "1 = 1\n");
     write(&root.join("scratch.lit"), "2 = 2\n");
 
@@ -332,10 +346,7 @@ fn run_file_mount_soft_fail_is_fail_to_import() {
 #[test]
 fn run_file_target_soft_fail_is_normal_failure() {
     let root = temp_dir("f_target_fail");
-    write(
-        &root.join("litex.config"),
-        "[export]\nok = \"./ok.lit\"\n",
-    );
+    write(&root.join("litex.config"), "[export]\nok = \"./ok.lit\"\n");
     write(&root.join("ok.lit"), "1 = 1\n");
     write(&root.join("scratch.lit"), "1 = 2\n");
 

@@ -2,18 +2,16 @@
 
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
-use super::helper::{
-    fn_obj_head_as_obj, set_bound_parameter_count, set_bound_params_to_arg_map,
-};
+use super::helper::{fn_obj_head_as_obj, set_bound_parameter_count, set_bound_params_to_arg_map};
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::obj::{
     FnObj, FnObjHead, FnRange, FnSet, FunctionSpace, IdentifierObj, Literal, Obj,
 };
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::exec_env::SpecialProperty;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::runtime_ids::FactId;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -56,7 +54,6 @@ impl Runtime {
         obj: Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-
         let by_def = match &obj {
             Obj::Identifier(_) => {
                 ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new())
@@ -70,10 +67,7 @@ impl Runtime {
             _ => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
         };
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef {
-                obj,
-                proof: by_def,
-            },
+            ObjWellDefinedProof::ByDef { obj, proof: by_def },
         ))
     }
 
@@ -90,24 +84,37 @@ impl Runtime {
         let root = Obj::FnObj(value.clone());
         if value.body.is_empty() {
             return Ok(VerifyObjWellDefinedResult::Failed {
-                obj: root.clone(), reason: FailToVerifyObjWellDefinedResult::FnObj(
-                    FailToVerifyFnObjObjWellDefined::Domain(ObjWellDefinedByDefCommonStages::leaf().into_common_fail(&root))),
+                obj: root.clone(),
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::Domain(
+                        ObjWellDefinedByDefCommonStages::leaf().into_common_fail(&root),
+                    ),
+                ),
             });
         }
         let mut finite_domain_failure = None;
         for source in self.finite_function_signatures(&head_obj) {
             let head_wd = self.verify_obj_well_definedness(&head_obj, verify_state)?;
-            if head_wd.is_failed() { continue; }
+            if head_wd.is_failed() {
+                continue;
+            }
             match self.try_verify_fn_obj_against_fn_set(value, &source.signature, verify_state)? {
                 Ok(mut stages) => {
                     stages.child_obj_well_defined.insert(0, head_wd);
-                    let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
-                    return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-                        obj: root, proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
-                            domain_fn_set: Some(FnObjDomainFnSetEvidence::FiniteFunction(Box::new(source))),
-                            child_obj_well_defined, requirement_fact_verified,
-                        }),
-                    }));
+                    let (child_obj_well_defined, requirement_fact_verified) =
+                        stages.into_success_child_proofs();
+                    return Ok(VerifyObjWellDefinedResult::Success(
+                        ObjWellDefinedProof::ByDef {
+                            obj: root,
+                            proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                                domain_fn_set: Some(FnObjDomainFnSetEvidence::FiniteFunction(
+                                    Box::new(source),
+                                )),
+                                child_obj_well_defined,
+                                requirement_fact_verified,
+                            }),
+                        },
+                    ));
                 }
                 Err(stages) => finite_domain_failure = Some(stages),
             }
@@ -115,7 +122,9 @@ impl Runtime {
         // An equality alias retains the checked template's callable contract.
         // Instance WD still checks template parameters and guards before use.
         for (candidate, path) in self.exact_property_object_values(&head_obj) {
-            let Obj::InstantiatedTemplateObj(instance) = &candidate else { continue; };
+            let Obj::InstantiatedTemplateObj(instance) = &candidate else {
+                continue;
+            };
             let head_wd = self.verify_obj_well_definedness(&candidate, verify_state)?;
             if head_wd.is_failed() {
                 if path.is_empty() {
@@ -135,22 +144,34 @@ impl Runtime {
                 match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state)? {
                     Ok(mut stages) => {
                         stages.child_obj_well_defined.insert(0, head_wd);
-                        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
-                        return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-                            obj: root,
-                            proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
-                                domain_fn_set: Some(FnObjDomainFnSetEvidence::TemplateDefinition {
-                                    fn_set, function_equal: KnownEqualityPathProof::new(path),
+                        let (child_obj_well_defined, requirement_fact_verified) =
+                            stages.into_success_child_proofs();
+                        return Ok(VerifyObjWellDefinedResult::Success(
+                            ObjWellDefinedProof::ByDef {
+                                obj: root,
+                                proof: ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof {
+                                    domain_fn_set: Some(
+                                        FnObjDomainFnSetEvidence::TemplateDefinition {
+                                            fn_set,
+                                            function_equal: KnownEqualityPathProof::new(path),
+                                        },
+                                    ),
+                                    child_obj_well_defined,
+                                    requirement_fact_verified,
                                 }),
-                                child_obj_well_defined,
-                                requirement_fact_verified,
-                            }),
-                        }));
+                            },
+                        ));
                     }
-                    Err(stages) if path.is_empty() => return Ok(VerifyObjWellDefinedResult::Failed {
-                        obj: root.clone(),
-                        reason: FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(stages.into_common_fail(&root))),
-                    }),
+                    Err(stages) if path.is_empty() => {
+                        return Ok(VerifyObjWellDefinedResult::Failed {
+                            obj: root.clone(),
+                            reason: FailToVerifyObjWellDefinedResult::FnObj(
+                                FailToVerifyFnObjObjWellDefined::Domain(
+                                    stages.into_common_fail(&root),
+                                ),
+                            ),
+                        })
+                    }
                     Err(_) => continue,
                 }
             }
@@ -159,8 +180,10 @@ impl Runtime {
         if candidates.is_empty() {
             if let Some(stages) = finite_domain_failure {
                 return Ok(VerifyObjWellDefinedResult::Failed {
-                    obj: root.clone(), reason: FailToVerifyObjWellDefinedResult::FnObj(
-                        FailToVerifyFnObjObjWellDefined::Domain(stages.into_common_fail(&root))),
+                    obj: root.clone(),
+                    reason: FailToVerifyObjWellDefinedResult::FnObj(
+                        FailToVerifyFnObjObjWellDefined::Domain(stages.into_common_fail(&root)),
+                    ),
                 });
             }
             return Ok(VerifyObjWellDefinedResult::Failed {
@@ -185,12 +208,20 @@ impl Runtime {
         let mut last_domain_fail: Option<ObjWellDefinedByDefCommonStages> = None;
         for (fn_set, fact_id) in candidates {
             let source = match self.fact_by_id_in_stack(fact_id) {
-                Some(Fact::AtomicFact(AtomicFact::InFact(fact))) => SpecialProperty::Membership(fact.clone()),
-                Some(Fact::AtomicFact(AtomicFact::EqualFact(fact))) => SpecialProperty::Equality(fact.clone()),
+                Some(Fact::AtomicFact(AtomicFact::InFact(fact))) => {
+                    SpecialProperty::Membership(fact.clone())
+                }
+                Some(Fact::AtomicFact(AtomicFact::EqualFact(fact))) => {
+                    SpecialProperty::Equality(fact.clone())
+                }
                 _ => continue,
             };
-            let Some(subject) = source.function_subject() else { continue; };
-            let Some(path) = self.exact_property_equality_path(&head_obj, subject) else { continue; };
+            let Some(subject) = source.function_subject() else {
+                continue;
+            };
+            let Some(path) = self.exact_property_equality_path(&head_obj, subject) else {
+                continue;
+            };
             match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
                 Ok(stages) => {
                     let (child_obj_well_defined, requirement_fact_verified) =
@@ -376,8 +407,9 @@ impl Runtime {
                 Ok(mut stages) => {
                     let mut children = vec![head_wd];
                     children.append(&mut stages.child_obj_well_defined);
-                    let (child_proofs, _) = ObjWellDefinedByDefCommonStages::from_children(children)
-                        .into_success_child_proofs();
+                    let (child_proofs, _) =
+                        ObjWellDefinedByDefCommonStages::from_children(children)
+                            .into_success_child_proofs();
                     let proof = FnObjObjWellDefinedProof {
                         domain_fn_set: Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }),
                         child_obj_well_defined: child_proofs,
@@ -465,14 +497,21 @@ impl Runtime {
         for prop in self.known_special_properties_of(obj) {
             // Equality to a function space constructs a set alias, not a function.
             if let SpecialProperty::Equality(fact) = &prop {
-                if !matches!(&fact.left, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)))
-                    && !matches!(&fact.right, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {
+                if !matches!(
+                    &fact.left,
+                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
+                ) && !matches!(
+                    &fact.right,
+                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
+                ) {
                     continue;
                 }
             }
             if let Some(signature) = prop.function_signature() {
                 let candidate = (signature, prop.fact_id());
-                if !out.contains(&candidate) { out.push(candidate); }
+                if !out.contains(&candidate) {
+                    out.push(candidate);
+                }
             }
         }
         out
@@ -491,9 +530,7 @@ impl Runtime {
             // proofs must not cite WD ids created only inside that scope.
             // Existing ancestor ids remain usable; success records the whole
             // application in the caller's environment after candidate selection.
-            rt.verify_fn_obj_against_fn_set_in_local(
-                value, fn_set, verify_state,
-            )
+            rt.verify_fn_obj_against_fn_set_in_local(value, fn_set, verify_state)
         })?;
         Ok(proof)
     }
@@ -532,7 +569,9 @@ impl Runtime {
     {
         let mut proof = ObjWellDefinedByDefCommonStages::leaf();
         let mut space = fn_set.clone();
-        let Some(last) = value.body.len().checked_sub(1) else { return Ok(Err(proof)); };
+        let Some(last) = value.body.len().checked_sub(1) else {
+            return Ok(Err(proof));
+        };
         for (layer_index, layer) in value.body.iter().enumerate() {
             let args: Vec<Obj> = layer.iter().map(|a| a.as_ref().clone()).collect();
             let expected = set_bound_parameter_count(&space.set_bound_parameters);
@@ -600,21 +639,30 @@ impl Runtime {
                     let mut prefix = value.clone();
                     prefix.body.truncate(layer_index + 1);
                     let Some(checked) = self.verify_stored_prefix_function_signature(
-                        &Obj::FnObj(prefix), verify_state,
-                    )? else { return Ok(Err(proof)); };
+                        &Obj::FnObj(prefix),
+                        verify_state,
+                    )?
+                    else {
+                        return Ok(Err(proof));
+                    };
                     proof.requirement_fact_verified.push(checked.source);
                     space = checked.signature;
                     continue;
                 };
                 if carrier != next_ret {
                     let equality = AtomicFact::EqualFact(EqualFact {
-                        fact_id: self.global_ids.allocate_fact_id(), left: next_ret,
-                        right: carrier, line_file: None,
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: next_ret,
+                        right: carrier,
+                        line_file: None,
                     });
-                    let requirement = self.verify_fact(&Fact::AtomicFact(equality), verify_state)?;
+                    let requirement =
+                        self.verify_fact(&Fact::AtomicFact(equality), verify_state)?;
                     let failed = requirement.is_failed();
                     proof.requirement_fact_verified.push(requirement);
-                    if failed { return Ok(Err(proof)); }
+                    if failed {
+                        return Ok(Err(proof));
+                    }
                 }
                 space = next_space;
             }
@@ -646,7 +694,8 @@ impl Runtime {
                 ),
             });
         }
-        let function_domains = self.complete_function_domains(value.function.as_ref(), verify_state)?;
+        let function_domains =
+            self.complete_function_domains(value.function.as_ref(), verify_state)?;
         if function_domains.is_empty() {
             return Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,

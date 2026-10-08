@@ -29,9 +29,12 @@ use crate::ast::fact::{
     QuantifierFreeFact,
 };
 use crate::ast::names::BoundName;
-use crate::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj, FunctionSpace, StructAndFieldAccessObj};
+use crate::ast::obj::{
+    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, StructAndFieldAccessObj,
+};
 use crate::ast::param::{
-    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
+    TypedParameterList,
 };
 use crate::ast::stmt::{FnSetClause, HaveFnByForallExistUniqueStmt};
 use crate::exec_env::StoredIdentifierDefinition;
@@ -113,8 +116,10 @@ impl Runtime {
         }
 
         let fn_set = fn_set_from_clause(&shape.fn_set_clause);
-        let fn_set_well_defined =
-            self.verify_obj_well_definedness(&Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())), verify_state.clone())?;
+        let fn_set_well_defined = self.verify_obj_well_definedness(
+            &Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
+            verify_state.clone(),
+        )?;
         if fn_set_well_defined.is_failed() {
             return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
                 ExecHaveFnByForallExistUniqueStmtFailed::FnSetWellDefined(fn_set_well_defined),
@@ -131,9 +136,17 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self.store_fact_and_infer(&membership, crate::execute::execute_fact_stmt::VerifyState::top_level())?.stored_fact_ids();
+        let mut stored_fact_ids = self
+            .store_fact_and_infer(
+                &membership,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?
+            .stored_fact_ids();
 
-        let applied = applied_function_obj(&Obj::Identifier(function_ident.clone()), &stmt.forall.typed_parameters);
+        let applied = applied_function_obj(
+            &Obj::Identifier(function_ident.clone()),
+            &stmt.forall.typed_parameters,
+        );
         let property_forall =
             self.build_have_fn_by_exist_property_forall(stmt, &shape, applied.clone())?;
         let property_fact = Fact::ForallFact(property_forall);
@@ -146,13 +159,25 @@ impl Runtime {
             }
         }
         let property_forall_fact_id = property_fact.fact_id();
-        stored_fact_ids.extend(self.store_fact_and_infer(&property_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?.stored_fact_ids());
+        stored_fact_ids.extend(
+            self.store_fact_and_infer(
+                &property_fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?
+            .stored_fact_ids(),
+        );
 
         let uniqueness_forall =
             self.build_have_fn_by_exist_uniqueness_forall(stmt, &shape, applied)?;
         let uniqueness_fact = Fact::ForallFact(uniqueness_forall);
         let uniqueness_forall_fact_id = uniqueness_fact.fact_id();
-        stored_fact_ids.extend(self.store_fact_and_infer(&uniqueness_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?.stored_fact_ids());
+        stored_fact_ids.extend(
+            self.store_fact_and_infer(
+                &uniqueness_fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?
+            .stored_fact_ids(),
+        );
 
         self.top_exec_env_mut().definitions.identifiers.insert(
             stmt.name.name.clone(),
@@ -194,12 +219,13 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         let applied = applied_function_obj(surface, &stmt.forall.typed_parameters);
-        let property = Fact::ForallFact(
-            self.build_have_fn_by_exist_property_forall(stmt, &shape, applied.clone())?,
-        );
-        let uniqueness = Fact::ForallFact(
-            self.build_have_fn_by_exist_uniqueness_forall(stmt, &shape, applied)?,
-        );
+        let property = Fact::ForallFact(self.build_have_fn_by_exist_property_forall(
+            stmt,
+            &shape,
+            applied.clone(),
+        )?);
+        let uniqueness =
+            Fact::ForallFact(self.build_have_fn_by_exist_uniqueness_forall(stmt, &shape, applied)?);
         Ok(Ok((membership, property, uniqueness)))
     }
 
@@ -209,7 +235,9 @@ impl Runtime {
         &self,
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> Option<FnSet> {
-        self.have_fn_by_exist_shape(stmt).ok().map(|shape| fn_set_from_clause(&shape.fn_set_clause))
+        self.have_fn_by_exist_shape(stmt)
+            .ok()
+            .map(|shape| fn_set_from_clause(&shape.fn_set_clause))
     }
 
     fn have_fn_by_exist_shape(
@@ -275,9 +303,9 @@ impl Runtime {
         subst.insert(shape.witness.id, applied);
         let mut then_facts = Vec::with_capacity(shape.exist_body_facts.len());
         for body in &shape.exist_body_facts {
-            let inst = self
-                .inst_quantifier_free_fact(body, &subst)
-                .map_err(|e| RuntimeError::InternalBug(format!("have fn by exist! property: {e}")))?;
+            let inst = self.inst_quantifier_free_fact(body, &subst).map_err(|e| {
+                RuntimeError::InternalBug(format!("have fn by exist! property: {e}"))
+            })?;
             then_facts.push(quantifier_free_to_exist_or_and_chain(inst));
         }
         Ok(ForallFact {
@@ -311,11 +339,9 @@ impl Runtime {
 
         let mut dom_facts = stmt.forall.dom_facts.clone();
         for body in &shape.exist_body_facts {
-            let inst = self
-                .inst_quantifier_free_fact(body, &subst)
-                .map_err(|e| {
-                    RuntimeError::InternalBug(format!("have fn by exist! uniqueness: {e}"))
-                })?;
+            let inst = self.inst_quantifier_free_fact(body, &subst).map_err(|e| {
+                RuntimeError::InternalBug(format!("have fn by exist! uniqueness: {e}"))
+            })?;
             dom_facts.push(quantifier_free_fact_to_fact(inst));
         }
 
@@ -324,14 +350,14 @@ impl Runtime {
             fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList { groups: params },
             dom_facts,
-            then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-                EqualFact {
+            then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(
+                AtomicFact::EqualFact(EqualFact {
                     fact_id: equal_fact_id,
                     left: fresh_obj,
                     right: applied,
                     line_file: Some(stmt.line_file.clone()),
-                },
-            ))],
+                }),
+            )],
             line_file: Some(stmt.line_file.clone()),
         })
     }
@@ -365,9 +391,7 @@ fn applied_function_obj(surface: &Obj, params: &TypedParameterList) -> Obj {
     })
 }
 
-fn single_obj_witness(
-    exist_body: &PlainExistFact,
-) -> Result<(BoundName, ParamType, Obj), String> {
+fn single_obj_witness(exist_body: &PlainExistFact) -> Result<(BoundName, ParamType, Obj), String> {
     let mut witness: Option<(BoundName, ParamType, Obj)> = None;
     let mut count = 0usize;
     for group in &exist_body.typed_parameters.groups {
@@ -376,11 +400,7 @@ fn single_obj_witness(
             return Err("exist! witness type must be Obj".to_string());
         };
         if let Some(param) = group.params.first() {
-            witness = Some((
-                param.clone(),
-                group.param_type.clone(),
-                ret_set.clone(),
-            ));
+            witness = Some((param.clone(), group.param_type.clone(), ret_set.clone()));
         }
     }
     if count != 1 {

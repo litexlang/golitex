@@ -81,19 +81,19 @@ pub fn run_import_module(
     // global display label. Identity and alias resolution remain path-based.
     // Two packages may both import `Common = "./dep"` for different paths.
     let display_name = global_display_name(runtime, alias);
-    let mod_id = match runtime.global_module_manager.mount_module(
-        display_name,
-        key.clone(),
-        config.clone(),
-    ) {
-        Ok(mod_id) => mod_id,
-        Err(_) => {
-            running.remove(&key);
-            return Ok(RunImportModuleOutcome::SessionError(
-                RunSessionError::FailToImport,
-            ));
-        }
-    };
+    let mod_id =
+        match runtime
+            .global_module_manager
+            .mount_module(display_name, key.clone(), config.clone())
+        {
+            Ok(mod_id) => mod_id,
+            Err(_) => {
+                running.remove(&key);
+                return Ok(RunImportModuleOutcome::SessionError(
+                    RunSessionError::FailToImport,
+                ));
+            }
+        };
 
     let exports = runtime.global_module_manager.imports()[mod_id]
         .litex_config
@@ -135,13 +135,15 @@ pub fn run_import_module(
             }
         };
         let failed = !file_result.run.success;
-        let session_error = file_result.run.session_error.clone().unwrap_or(RunSessionError::FailToImport);
+        let session_error = file_result
+            .run
+            .session_error
+            .clone()
+            .unwrap_or(RunSessionError::FailToImport);
         file_results.push(file_result);
         if failed {
             running.remove(&key);
-            return Ok(RunImportModuleOutcome::SessionError(
-                session_error,
-            ));
+            return Ok(RunImportModuleOutcome::SessionError(session_error));
         }
     }
 

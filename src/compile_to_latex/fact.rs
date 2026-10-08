@@ -50,7 +50,6 @@ pub(super) fn atomic(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
 ) -> RuntimeResult<String> {
-
     let mut args = Vec::new();
     for arg in atomic_fact_args_ref(value) {
         args.push(obj(arg, modules, lang)?);

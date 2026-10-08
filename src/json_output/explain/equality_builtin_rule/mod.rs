@@ -2,18 +2,18 @@
 //!
 //! Call site: `rule.rule_name_and_message(lang)` on `EqualitySearchProofByBuiltinRule`.
 
-mod exponential_logarithm_identities;
-mod scalar_division_relations;
-mod common_obj_relations;
-mod native_fixed_base;
-mod elementary_definitions;
-mod lcm_divisibility;
-mod constructor_order;
-mod finite_set_reindex;
-mod finite_partition;
 mod calculation;
+mod common_obj_relations;
+mod constructor_order;
+mod elementary_definitions;
+mod exponential_logarithm_identities;
+mod finite_partition;
+mod finite_set_reindex;
 mod finite_subset_size;
+mod lcm_divisibility;
 mod leaves;
+mod native_fixed_base;
+mod scalar_division_relations;
 mod scalar_identities;
 
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
@@ -24,23 +24,36 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "Factorial predecessor recurrence".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "Factorial predecessor recurrence".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_en(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_en(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Negative integer power reciprocal".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "Negative integer power reciprocal".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_en(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_en(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_en(),
-            Self::RangeSize(p)=>p.rule_name_and_message_en(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_en(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_en(),
+            Self::RangeSize(p) => p.rule_name_and_message_en(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_en(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_en(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_en(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_en(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_en(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_en(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_en(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_en(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_en(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_en(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_en(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_en(),
 
@@ -257,23 +270,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "阶乘前项递推".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "阶乘前项递推".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_zh(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_zh(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "负整数幂的倒数".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "负整数幂的倒数".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_zh(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_zh(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_zh(),
-            Self::RangeSize(p)=>p.rule_name_and_message_zh(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_zh(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_zh(),
+            Self::RangeSize(p) => p.rule_name_and_message_zh(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_zh(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_zh(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_zh(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_zh(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_zh(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_zh(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_zh(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_zh(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_zh(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_zh(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_zh(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_zh(),
 
@@ -490,23 +516,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "阶乘前项递推".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "阶乘前项递推".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_zh_hant(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_zh_hant(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "負整數冪的倒數".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "負整數冪的倒數".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_zh_hant(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_zh_hant(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_zh_hant(),
-            Self::RangeSize(p)=>p.rule_name_and_message_zh_hant(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_zh_hant(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_zh_hant(),
+            Self::RangeSize(p) => p.rule_name_and_message_zh_hant(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_zh_hant(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_zh_hant(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_zh_hant(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_zh_hant(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_zh_hant(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_zh_hant(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_zh_hant(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_zh_hant(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_zh_hant(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_zh_hant(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_zh_hant(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_zh_hant(),
 
@@ -723,23 +762,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "factorial(n)=n*factorial(n-1)".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_fr(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_fr(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Inverse de puissance entière".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "Inverse de puissance entière".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_fr(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_fr(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_fr(),
-            Self::RangeSize(p)=>p.rule_name_and_message_fr(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_fr(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_fr(),
+            Self::RangeSize(p) => p.rule_name_and_message_fr(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_fr(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_fr(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_fr(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_fr(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_fr(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_fr(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_fr(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_fr(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_fr(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_fr(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_fr(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_fr(),
 
@@ -956,23 +1008,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "factorial(n)=n*factorial(n-1)".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ru(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ru(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Обратная целая степень".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "Обратная целая степень".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ru(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ru(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ru(),
-            Self::RangeSize(p)=>p.rule_name_and_message_ru(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ru(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ru(),
+            Self::RangeSize(p) => p.rule_name_and_message_ru(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_ru(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_ru(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_ru(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_ru(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ru(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_ru(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_ru(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_ru(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ru(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ru(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ru(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ru(),
 
@@ -1189,23 +1254,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "factorial(n)=n*factorial(n-1)".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_es(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_es(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Recíproco de potencia entera".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "Recíproco de potencia entera".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_es(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_es(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_es(),
-            Self::RangeSize(p)=>p.rule_name_and_message_es(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_es(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_es(),
+            Self::RangeSize(p) => p.rule_name_and_message_es(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_es(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_es(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_es(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_es(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_es(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_es(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_es(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_es(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_es(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_es(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_es(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_es(),
 
@@ -1422,23 +1500,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "factorial(n)=n*factorial(n-1)".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ar(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ar(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "مقلوب القوة الصحيحة".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "مقلوب القوة الصحيحة".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ar(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ar(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ar(),
-            Self::RangeSize(p)=>p.rule_name_and_message_ar(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ar(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ar(),
+            Self::RangeSize(p) => p.rule_name_and_message_ar(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_ar(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_ar(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_ar(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_ar(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ar(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_ar(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_ar(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_ar(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ar(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ar(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ar(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ar(),
 
@@ -1655,23 +1746,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "factorial(n)=n*factorial(n-1)".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ja(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ja(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "整数べきの逆数".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "整数べきの逆数".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ja(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ja(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ja(),
-            Self::RangeSize(p)=>p.rule_name_and_message_ja(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ja(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ja(),
+            Self::RangeSize(p) => p.rule_name_and_message_ja(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_ja(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_ja(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_ja(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_ja(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ja(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_ja(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_ja(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_ja(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ja(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ja(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ja(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ja(),
 
@@ -1888,23 +1992,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "factorial(n)=n*factorial(n-1)".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ko(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ko(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "정수 거듭제곱의 역수".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "정수 거듭제곱의 역수".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_ko(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_ko(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_ko(),
-            Self::RangeSize(p)=>p.rule_name_and_message_ko(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_ko(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_ko(),
+            Self::RangeSize(p) => p.rule_name_and_message_ko(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_ko(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_ko(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_ko(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_ko(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_ko(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_ko(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_ko(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_ko(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ko(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ko(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ko(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ko(),
 
@@ -2121,23 +2238,36 @@ Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"A
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
-Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
-            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
-            Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
+            Self::ScalarExtra(p) => BuiltinRuleText {
+                rule_name: p.rule_id().into(),
+                message: "Apply the fixed scalar identity with its checked premises and domains"
+                    .into(),
+            },
+            Self::IntegerInterval(_) => BuiltinRuleText {
+                rule_name: "Integer singleton interval".into(),
+                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
+            },
+            Self::FactorialPredecessor(_) => BuiltinRuleText {
+                rule_name: "factorial(n)=n*factorial(n-1)".into(),
+                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
+            },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_vi(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_vi(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText { rule_name: "Nghịch đảo lũy thừa nguyên".into(), message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into() },
+            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
+                rule_name: "Nghịch đảo lũy thừa nguyên".into(),
+                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
+            },
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_vi(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_vi(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_vi(),
-            Self::RangeSize(p)=>p.rule_name_and_message_vi(),
-            Self::ClosedRangeSize(p)=>p.rule_name_and_message_vi(),
-            Self::EuclideanRemainder(p)=>p.rule_name_and_message_vi(),
+            Self::RangeSize(p) => p.rule_name_and_message_vi(),
+            Self::ClosedRangeSize(p) => p.rule_name_and_message_vi(),
+            Self::EuclideanRemainder(p) => p.rule_name_and_message_vi(),
             Self::GcdCommonDivisor(p) => p.rule_name_and_message_vi(),
             Self::LcmCommonMultiple(p) => p.rule_name_and_message_vi(),
-            Self::FactorialDivisibility(p)=>p.rule_name_and_message_vi(),
-            Self::LcmLeftAbsDivisibility(p)=>p.rule_name_and_message_vi(),
-            Self::LcmRightAbsDivisibility(p)=>p.rule_name_and_message_vi(),
+            Self::FactorialDivisibility(p) => p.rule_name_and_message_vi(),
+            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_vi(),
+            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_vi(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_vi(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_vi(),
 

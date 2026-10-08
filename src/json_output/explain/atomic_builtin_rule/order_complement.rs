@@ -19,10 +19,7 @@ impl FromKnownOrderComplementBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "已知實數序補關係",
-            "已知否定比較等價於互補的實數序關係",
-        )
+        text("已知實數序補關係", "已知否定比較等價於互補的實數序關係")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {

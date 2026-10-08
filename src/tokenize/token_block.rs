@@ -1,6 +1,4 @@
-use crate::runtime::{
-    CodeSource, RealOrVirtualPath, RuntimeParseError, RuntimeResult,
-};
+use crate::runtime::{CodeSource, RealOrVirtualPath, RuntimeParseError, RuntimeResult};
 
 /// One indented source unit handed from tokenizer to parser.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -99,10 +97,7 @@ impl TokenBlock {
         crate::ast::SourceLine::new(self.line, code_source)
     }
 
-    pub fn parse_error(
-        &self,
-        message: impl Into<String>,
-    ) -> crate::runtime::RuntimeError {
+    pub fn parse_error(&self, message: impl Into<String>) -> crate::runtime::RuntimeError {
         RuntimeParseError::new(message, self.line, self.source_path.clone()).into()
     }
 }

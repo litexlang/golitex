@@ -1,28 +1,28 @@
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
-    Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, Ceil,
-    ClosedRange, ComplexAbs, ComplexOperator, Cos, Cot, EulerNumber, Exp, ExpLogOperator,
-    Factorial, FamilyIntersect, FamilyUnion, FiniteSeqSet, FiniteSetMax, FiniteSetMin,
-    FiniteSetReduce, FiniteSetSize, FiniteSetStat, Floor, FnObjHead, FnRange, FnSet, FunctionSpace,
-    Gcd, IdentifierObj, ImaginaryPart, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
+    Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, Ceil, ClosedRange,
+    ComplexAbs, ComplexOperator, Cos, Cot, EulerNumber, Exp, ExpLogOperator, Factorial,
+    FamilyIntersect, FamilyUnion, FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetReduce,
+    FiniteSetSize, FiniteSetStat, Floor, FnObjHead, FnRange, FnSet, FunctionSpace, Gcd,
+    IdentifierObj, ImaginaryPart, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
     InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
     IteratedOperator, Lcm, ListSet, Literal, Ln, Log, Max, Min, Number, Obj,
-    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pi, PowerSet, Preimage, PreimageSet, Product,
-    ProductOfFiniteSet, ProductShape, Quot, Range, RealPart, Reduce, SeqSet, SetBuilder,
-    SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet, StructAndFieldAccessObj,
-    StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, Union,
+    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pi, PowerSet, Preimage,
+    PreimageSet, Product, ProductOfFiniteSet, ProductShape, Quot, Range, RealPart, Reduce, SeqSet,
+    SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
+    StructAndFieldAccessObj, StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
     COT, C_ABS, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ,
     FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_REDUCE, FINITE_SET_SIZE,
-    FINITE_SET_SUM, FLOOR, FN, FN_RANGE, GCD, GREATER, IMG, INDEX_CART, INDEX_INTERSECT, INDEX_UNION,
-    INTERSECT, INTERVAL_LITERAL_PREFIX, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, LOG,
-    MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PRODUCT, PROJ, Q, QUOT, Q_NEG, Q_POS,
-    Q_STAR, R, RANGE, RE, REDUCE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, PREIMAGE, PREIMAGE_SET,
-    SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, SUM, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE,
-    TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    FINITE_SET_SUM, FLOOR, FN, FN_RANGE, GCD, GREATER, IMG, INDEX_CART, INDEX_INTERSECT,
+    INDEX_UNION, INTERSECT, INTERVAL_LITERAL_PREFIX, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN,
+    LESS, LN, LOG, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PREIMAGE, PREIMAGE_SET,
+    PRODUCT, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RE, REDUCE, RIGHT_BRACKET, RIGHT_CURLY,
+    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, SUM,
+    TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
@@ -325,7 +325,14 @@ impl Runtime {
                 }
                 tb.advance()?;
             }
-            if matches!(tb.peek(), Some(crate::parse::keywords::SET | crate::parse::keywords::NONEMPTY_SET | crate::parse::keywords::FINITE_SET)) {
+            if matches!(
+                tb.peek(),
+                Some(
+                    crate::parse::keywords::SET
+                        | crate::parse::keywords::NONEMPTY_SET
+                        | crate::parse::keywords::FINITE_SET
+                )
+            ) {
                 return Err(tb.parse_error(
                     "fn parameters must be set-bound objects (e.g. `x R`), not `set` / `nonempty_set` / `finite_set`",
                 ));
@@ -348,7 +355,10 @@ impl Runtime {
                 for name in names {
                     params.push(self.define_plain_atom_as_parse(tb, name)?);
                 }
-                groups.push(SetBoundParameterGroup { params, param_type: Box::new(param_type) });
+                groups.push(SetBoundParameterGroup {
+                    params,
+                    param_type: Box::new(param_type),
+                });
             }
             let mut dom_facts = Vec::new();
             if tb.peek() == Some(COLON) {
@@ -457,16 +467,18 @@ fn try_parse_keyword_primary(
             Obj::ComplexOperator(ComplexOperator::RealPart(RealPart { arg: Box::new(arg) }))
         })?)),
         IMG => Ok(Some(parse_unary_keyword(rt, tb, IMG, |arg| {
-            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(ImaginaryPart { arg: Box::new(arg) }))
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(ImaginaryPart {
+                arg: Box::new(arg),
+            }))
         })?)),
         C_ABS => Ok(Some(parse_unary_keyword(rt, tb, C_ABS, |arg| {
-            Obj::ComplexOperator(ComplexOperator::ComplexAbs(ComplexAbs { arg: Box::new(arg) }))
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(ComplexAbs {
+                arg: Box::new(arg),
+            }))
         })?)),
 
         FACTORIAL => Ok(Some(parse_unary_keyword(rt, tb, FACTORIAL, |arg| {
-            Obj::IntegerOperator(IntegerOperator::Factorial(Factorial {
-                arg: Box::new(arg),
-            }))
+            Obj::IntegerOperator(IntegerOperator::Factorial(Factorial { arg: Box::new(arg) }))
         })?)),
         LOG => Ok(Some(parse_binary_keyword(rt, tb, LOG, |base, arg| {
             Obj::ExpLogOperator(ExpLogOperator::Log(Log {
@@ -569,13 +581,18 @@ fn try_parse_keyword_primary(
                 }))
             },
         )?)),
-        SUM => Ok(Some(parse_ternary_keyword(rt, tb, SUM, |start, end, func| {
-            Obj::IteratedOperator(IteratedOperator::Sum(Sum {
-                start: Box::new(start),
-                end: Box::new(end),
-                func: Box::new(func),
-            }))
-        })?)),
+        SUM => Ok(Some(parse_ternary_keyword(
+            rt,
+            tb,
+            SUM,
+            |start, end, func| {
+                Obj::IteratedOperator(IteratedOperator::Sum(Sum {
+                    start: Box::new(start),
+                    end: Box::new(end),
+                    func: Box::new(func),
+                }))
+            },
+        )?)),
         PRODUCT => Ok(Some(parse_ternary_keyword(
             rt,
             tb,
@@ -629,9 +646,14 @@ fn try_parse_keyword_primary(
                 args: args.into_iter().map(Box::new).collect(),
             }))))
         }
-        CART_DIM => Err(tb.parse_error("cart_dim is removed: a Cartesian set has no unique construction dimension")),
-        TUPLE_DIM => Err(tb.parse_error("tuple_dim is removed: use exact finite_seq membership and complete-domain evidence")),
-        PROJ => Err(tb.parse_error("proj is removed: Cartesian sets do not retain construction projections")),
+        CART_DIM => Err(tb.parse_error(
+            "cart_dim is removed: a Cartesian set has no unique construction dimension",
+        )),
+        TUPLE_DIM => Err(tb.parse_error(
+            "tuple_dim is removed: use exact finite_seq membership and complete-domain evidence",
+        )),
+        PROJ => Err(tb
+            .parse_error("proj is removed: Cartesian sets do not retain construction projections")),
         // Half-open integer interval [start, end).
         // Example: `range(1, 3)` is {1, 2}.
         RANGE => Ok(Some(parse_binary_keyword(rt, tb, RANGE, |start, end| {
@@ -676,12 +698,18 @@ fn try_parse_keyword_primary(
                 function: Box::new(function),
             }))
         })?)),
-        PREIMAGE => Ok(Some(parse_binary_keyword(rt, tb, PREIMAGE, |function, value| {
-            Preimage::new(function, value).into()
-        })?)),
-        PREIMAGE_SET => Ok(Some(parse_binary_keyword(rt, tb, PREIMAGE_SET, |function, target_set| {
-            PreimageSet::new(function, target_set).into()
-        })?)),
+        PREIMAGE => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            PREIMAGE,
+            |function, value| Preimage::new(function, value).into(),
+        )?)),
+        PREIMAGE_SET => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            PREIMAGE_SET,
+            |function, target_set| PreimageSet::new(function, target_set).into(),
+        )?)),
         // Finite sequences of length n in S. Example: `finite_seq(R, 3)`.
         FINITE_SEQ => Ok(Some(parse_binary_keyword(rt, tb, FINITE_SEQ, |set, n| {
             Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet {
@@ -691,9 +719,7 @@ fn try_parse_keyword_primary(
         })?)),
         // Infinite sequences in S. Example: `seq(R)`.
         SEQ => Ok(Some(parse_unary_keyword(rt, tb, SEQ, |set| {
-            Obj::SetFormer(SetFormer::SeqSet(SeqSet {
-                set: Box::new(set),
-            }))
+            Obj::SetFormer(SetFormer::SeqSet(SeqSet { set: Box::new(set) }))
         })?)),
         INDEX_UNION => Ok(Some(parse_ternary_keyword(
             rt,
@@ -858,9 +884,7 @@ fn parse_identifier_or_mod_or_standard_set(
         let key = rt
             .elaborate_flat_import(&name, next)
             .map_err(|err| match err {
-                crate::runtime::RuntimeError::InternalBug(message) => {
-                    tb.parse_error(message)
-                }
+                crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
                 other => other,
             })?;
         return Ok(Obj::Identifier(identifier_obj_from_qualified_atomic(
@@ -881,9 +905,7 @@ fn parse_identifier_or_mod_or_standard_set(
             return Err(tb.parse_error("qualified name must be `a::b`, `a:::b`, or `a::b::c`"));
         }
         let key = rt.elaborate_name_parts(&parts).map_err(|err| match err {
-            crate::runtime::RuntimeError::InternalBug(message) => {
-                tb.parse_error(message)
-            }
+            crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
             other => other,
         })?;
 
@@ -905,9 +927,7 @@ fn parse_identifier_or_mod_or_standard_set(
     let identifier = rt
         .identifier_obj_for_plain_free_ref(name)
         .map_err(|err| match err {
-            crate::runtime::RuntimeError::InternalBug(message) => {
-                tb.parse_error(message)
-            }
+            crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
             other => other,
         })?;
     Ok(Obj::Identifier(identifier))
@@ -991,9 +1011,7 @@ fn parse_interval_literal(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResul
         LEFT_PAREN => false,
         LEFT_BRACKET => true,
         _ => {
-            return Err(tb.parse_error(
-                "interval literal after `'` expects `(` or `[`",
-            ));
+            return Err(tb.parse_error("interval literal after `'` expects `(` or `[`"));
         }
     };
     tb.advance()?;
@@ -1007,23 +1025,19 @@ fn parse_interval_literal(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResul
         }
         tb.expect(COMMA)?;
         if tb.peek() == Some(RIGHT_PAREN) {
-            return Err(tb.parse_error(
-                "interval literal cannot omit both endpoints; use `R`",
-            ));
+            return Err(tb.parse_error("interval literal cannot omit both endpoints; use `R`"));
         }
         let right = parse_obj(rt, tb)?;
         if tb.peek() == Some(COMMA) {
-            return Err(tb.parse_error(
-                "interval literal expects exactly two endpoints",
-            ));
+            return Err(tb.parse_error("interval literal expects exactly two endpoints"));
         }
         let right_closed = match tb.current()? {
             RIGHT_PAREN => false,
             RIGHT_BRACKET => true,
             _ => {
-                return Err(tb.parse_error(
-                    "interval literal expects `)` or `]` after its right endpoint",
-                ));
+                return Err(
+                    tb.parse_error("interval literal expects `)` or `]` after its right endpoint")
+                );
             }
         };
         tb.advance()?;
@@ -1059,24 +1073,22 @@ fn parse_interval_literal(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResul
         )));
     }
     if tb.peek() == Some(RIGHT_BRACKET) {
-        return Err(tb.parse_error(
-            "right-unbounded interval must end with `)`; use `'(a,)` or `'[a,)`",
-        ));
+        return Err(
+            tb.parse_error("right-unbounded interval must end with `)`; use `'(a,)` or `'[a,)`")
+        );
     }
 
     let right = parse_obj(rt, tb)?;
     if tb.peek() == Some(COMMA) {
-        return Err(tb.parse_error(
-            "interval literal expects exactly two endpoints",
-        ));
+        return Err(tb.parse_error("interval literal expects exactly two endpoints"));
     }
     let right_closed = match tb.current()? {
         RIGHT_PAREN => false,
         RIGHT_BRACKET => true,
         _ => {
-            return Err(tb.parse_error(
-                "interval literal expects `)` or `]` after its right endpoint",
-            ));
+            return Err(
+                tb.parse_error("interval literal expects `)` or `]` after its right endpoint")
+            );
         }
     };
     tb.advance()?;

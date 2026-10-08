@@ -204,26 +204,37 @@ fn proved_forall_replay_renames_nested_builders_and_cites_the_whole_source() {
     }
 }
 
-
 #[test]
 fn whole_forall_exist_replay_renames_nested_function_binders_without_search() {
     use crate::ast::fact::Fact;
     use crate::ast::stmt::Stmt;
+    use crate::execute::execute_fact_stmt::verify_forall_fact::{
+        VerifyForallFactProof, VerifyForallFactResult,
+    };
     use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState, VerifyStateLevel};
-    use crate::execute::execute_fact_stmt::verify_forall_fact::{VerifyForallFactProof, VerifyForallFactResult};
     let mut rt = runtime();
     let prefix = "have fn identity(x R) R=x\nclaim:\n    ? forall a R:\n        exist f fn(x R) R st {f(a)=a}\n    witness exist f fn(x R) R st {f(a)=a} from identity:\n        f(a)=identity(a)=a\n";
     assert!(rt.run_litex_code(prefix).unwrap().success);
     let parse = |rt: &mut Runtime, source: &str| {
-        let tokens = crate::tokenize::Tokenizer::new().tokenize(source,rt.current_file.clone()).unwrap();
+        let tokens = crate::tokenize::Tokenizer::new()
+            .tokenize(source, rt.current_file.clone())
+            .unwrap();
         let mut stmts = rt.parse(&tokens).unwrap();
-        let Stmt::Fact(Fact::ForallFact(fact)) = stmts.remove(0) else { panic!("forall goal"); };
+        let Stmt::Fact(Fact::ForallFact(fact)) = stmts.remove(0) else {
+            panic!("forall goal");
+        };
         fact
     };
-    let goal = parse(&mut rt,"forall b R:\n    exist g fn(y R) R st {g(b)=b}\n");
-    let before: Vec<_> = rt.execution_environments_stack.iter().map(|env| env.facts.facts_by_id.len()).collect();
-    let (cite, renamings) = rt.match_known_forall_source(&goal).expect("nested alpha replay");
-    assert_eq!(renamings.len(),1);
+    let goal = parse(&mut rt, "forall b R:\n    exist g fn(y R) R st {g(b)=b}\n");
+    let before: Vec<_> = rt
+        .execution_environments_stack
+        .iter()
+        .map(|env| env.facts.facts_by_id.len())
+        .collect();
+    let (cite, renamings) = rt
+        .match_known_forall_source(&goal)
+        .expect("nested alpha replay");
+    assert_eq!(renamings.len(), 1);
     for bad in [
         "forall b R:\n    exist g fn(y R) Z st {g(b)=b}\n",
         "forall b R:\n    exist g fn(y R: y>0) R st {g(b)=b}\n",
@@ -231,13 +242,28 @@ fn whole_forall_exist_replay_renames_nested_function_binders_without_search() {
         "forall b R:\n    exist! g fn(y R) R st {g(b)=b}\n",
         "forall b R:\n    not exist g fn(y R) R st {g(b)=b}\n",
     ] {
-        let altered = parse(&mut rt,bad);
-        assert!(rt.match_known_forall_source(&altered).is_none(),"{bad}");
+        let altered = parse(&mut rt, bad);
+        assert!(rt.match_known_forall_source(&altered).is_none(), "{bad}");
     }
-    let after: Vec<_> = rt.execution_environments_stack.iter().map(|env| env.facts.facts_by_id.len()).collect();
-    assert_eq!(before,after);
-    let result = rt.verify_fact(&Fact::ForallFact(goal),VerifyState::new(VerifyStateLevel::Direct)).unwrap();
-    let VerifyFactResult::ForallFact(result) = result else { panic!("forall result"); };
-    let VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) = result.as_ref() else { panic!("source citation at Direct"); };
-    assert_eq!(proof.cite_fact_id,cite);
+    let after: Vec<_> = rt
+        .execution_environments_stack
+        .iter()
+        .map(|env| env.facts.facts_by_id.len())
+        .collect();
+    assert_eq!(before, after);
+    let result = rt
+        .verify_fact(
+            &Fact::ForallFact(goal),
+            VerifyState::new(VerifyStateLevel::Direct),
+        )
+        .unwrap();
+    let VerifyFactResult::ForallFact(result) = result else {
+        panic!("forall result");
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) =
+        result.as_ref()
+    else {
+        panic!("source citation at Direct");
+    };
+    assert_eq!(proof.cite_fact_id, cite);
 }

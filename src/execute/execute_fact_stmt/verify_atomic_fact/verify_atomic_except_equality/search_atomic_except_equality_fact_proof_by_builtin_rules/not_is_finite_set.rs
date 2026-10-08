@@ -1,7 +1,5 @@
-use crate::ast::fact::{
-    AtomicFact, Fact, IsFiniteSetFact, NotIsFiniteSetFact,
-};
-use crate::ast::obj::{Obj, SetOperator, SetMinus};
+use crate::ast::fact::{AtomicFact, Fact, IsFiniteSetFact, NotIsFiniteSetFact};
+use crate::ast::obj::{Obj, SetMinus, SetOperator};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -53,7 +51,8 @@ impl Runtime {
             set: left.as_ref().clone(),
             line_file: None,
         }));
-        let left_infinite_proof = self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
+        let left_infinite_proof =
+            self.verify_builtin_rule_premise(&left_goal, verify_state.clone())?;
         if left_infinite_proof.is_failed() {
             return Ok(None);
         }

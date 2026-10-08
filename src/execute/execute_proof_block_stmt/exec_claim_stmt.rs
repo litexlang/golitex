@@ -24,23 +24,22 @@ pub fn exec_claim_stmt(
     stmt: &ClaimStmt,
 ) -> RuntimeResult<ExecProofBlockStmtResult> {
     if matches!(stmt.fact, Fact::ForallFactWithIff(_)) {
-        return Ok(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Failed(
-            ExecClaimStmtFailed::GoalUnsupported(
+        return Ok(ExecProofBlockStmtResult::Claim(
+            ExecClaimStmtResult::Failed(ExecClaimStmtFailed::GoalUnsupported(
                 "claim: forall ... <=> goals are not supported".to_string(),
-            ),
-        )));
+            )),
+        ));
     }
 
-    let goal_wd =
-        runtime.verify_fact_well_definedness(&stmt.fact, claim_proof_verify_state())?;
+    let goal_wd = runtime.verify_fact_well_definedness(&stmt.fact, claim_proof_verify_state())?;
     if goal_wd.is_failed() {
-        return Ok(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Failed(
-            ExecClaimStmtFailed::GoalWd(goal_wd),
-        )));
+        return Ok(ExecProofBlockStmtResult::Claim(
+            ExecClaimStmtResult::Failed(ExecClaimStmtFailed::GoalWd(goal_wd)),
+        ));
     }
 
-    let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        match &stmt.fact {
+    let (local_outcome, local_env) =
+        runtime.run_in_local_env_and_take_env(|rt| match &stmt.fact {
             Fact::ForallFact(forall) => exec_claim_forall_body(rt, forall, &stmt.proof),
             _ => {
                 let proof_steps = match run_proof_body_stmts(rt, &stmt.proof)? {
@@ -56,37 +55,35 @@ pub fn exec_claim_stmt(
                 }
                 Ok(Ok((proof_steps, vec![proof])))
             }
-        }
-    })?;
-
+        })?;
 
     let (proof_steps, conclusion_proofs) = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
-            return Ok(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Failed(
-                failed,
-            )));
+            return Ok(ExecProofBlockStmtResult::Claim(
+                ExecClaimStmtResult::Failed(failed),
+            ));
         }
     };
 
     let stored = match claim_store_goal_fact(runtime, &stmt.fact)? {
         Ok(s) => s,
         Err(msg) => {
-            return Ok(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Failed(
-                ExecClaimStmtFailed::Store(msg),
-            )));
+            return Ok(ExecProofBlockStmtResult::Claim(
+                ExecClaimStmtResult::Failed(ExecClaimStmtFailed::Store(msg)),
+            ));
         }
     };
 
-    Ok(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
-        ExecClaimStmtSuccess {
+    Ok(ExecProofBlockStmtResult::Claim(
+        ExecClaimStmtResult::Success(ExecClaimStmtSuccess {
             goal_wd,
             proof_steps,
             conclusion_proofs,
             local_env,
             stored,
-        },
-    )))
+        }),
+    ))
 }
 
 fn exec_claim_forall_body(
@@ -110,7 +107,10 @@ fn exec_claim_forall_body(
                 "claim: forall domain fact is not well-defined".to_string(),
             )));
         }
-        let _ = runtime.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let _ = runtime.store_fact_and_infer(
+            dom,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
     }
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {
@@ -123,7 +123,10 @@ fn exec_claim_forall_body(
         let then_fact: Fact = then.clone().into();
         let proof = claim_verify_goal_fact(runtime, &then_fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecClaimStmtFailed::Conclusion { index, result: proof }));
+            return Ok(Err(ExecClaimStmtFailed::Conclusion {
+                index,
+                result: proof,
+            }));
         }
         conclusion_proofs.push(proof);
     }

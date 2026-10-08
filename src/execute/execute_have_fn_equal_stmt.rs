@@ -4,7 +4,7 @@
 //!   have fn successor(x Z) Z = x + 1
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
-use crate::ast::obj::{FnSet, Obj, FunctionSpace};
+use crate::ast::obj::{FnSet, FunctionSpace, Obj};
 use crate::ast::stmt::HaveFnEqualStmt;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
@@ -50,7 +50,9 @@ impl Runtime {
     ) -> RuntimeResult<ExecHaveFnEqualStmtResult> {
         let verify_state = VerifyState::top_level();
 
-        let anon_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));
+        let anon_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+            stmt.equal_to_anonymous_fn.clone(),
+        ));
         let anonymous_fn_well_defined =
             self.verify_obj_well_definedness(&anon_obj, verify_state.clone())?;
         if anonymous_fn_well_defined.is_failed() {
@@ -61,15 +63,18 @@ impl Runtime {
 
         let fn_set: FnSet = stmt.equal_to_anonymous_fn.body.clone();
         let fn_set_obj = Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone()));
-        let fn_set_well_defined =
-            self.verify_obj_well_definedness(&fn_set_obj, verify_state)?;
+        let fn_set_well_defined = self.verify_obj_well_definedness(&fn_set_obj, verify_state)?;
         if fn_set_well_defined.is_failed() {
             return Ok(ExecHaveFnEqualStmtResult::Failed(
                 ExecHaveFnEqualStmtFailed::FnSetWellDefined(fn_set_well_defined),
             ));
         }
 
-        let store_and_infer_result = self.store_have_fn_equal_facts(stmt, &fn_set, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let store_and_infer_result = self.store_have_fn_equal_facts(
+            stmt,
+            &fn_set,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         Ok(ExecHaveFnEqualStmtResult::Success(
             ExecHaveFnEqualStmtSuccessResult {
@@ -85,7 +90,8 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualStmt,
         fn_set: &FnSet,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveFnEqualAndInferResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<StoreHaveFnEqualAndInferResult> {
         if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
@@ -110,13 +116,17 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self.store_fact_and_infer(&membership, verify_state)?.stored_fact_ids();
+        let mut stored_fact_ids = self
+            .store_fact_and_infer(&membership, verify_state)?
+            .stored_fact_ids();
 
         let defining_equal_fact_id = self.global_ids.allocate_fact_id();
         let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: defining_equal_fact_id,
             left: function_obj,
-            right: Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone())),
+            right: Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+                stmt.equal_to_anonymous_fn.clone(),
+            )),
             line_file: Some(stmt.line_file.clone()),
         }));
         stored_fact_ids.extend(

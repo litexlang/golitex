@@ -388,13 +388,7 @@ fn interval_order_supplies_partial_wd_and_maintained_tracers_execute() {
         let mut rt = runtime(OutputLanguage::English);
         let r = rt.run_litex_code(code).unwrap();
         assert!(r.success && r.session_error.is_none(), "{code}");
-        let d = crate::json_output::project_run_detailed(
-            &r,
-            &rt,
-            "eval",
-            None,
-        )
-        .stringify();
+        let d = crate::json_output::project_run_detailed(&r, &rt, "eval", None).stringify();
         assert!(d.contains("well_defined"));
     }
     for code in [

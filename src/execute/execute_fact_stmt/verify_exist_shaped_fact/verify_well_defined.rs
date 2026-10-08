@@ -5,8 +5,8 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::well_defined_re
     VerifyExistShapedFactWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    FactWellDefinedProof, fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult, VerifyFactWellDefinedResult,
-    VerifyObjWellDefinedResult,
+    fail_to_verify_obj_well_defined_others, FactWellDefinedProof, FailToVerifyObjWellDefinedResult,
+    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::instantiate::quantifier_free_fact_to_fact;
@@ -24,13 +24,13 @@ impl Runtime {
             rt.verify_plain_exist_fact_well_definedness_in_local(plain, verify_state.clone())
         })?;
         match stages {
-            Ok((param_type_well_defined, body)) => Ok(VerifyExistShapedFactWellDefinedResult::Success(
-                ExistShapedFactWellDefinedProof {
+            Ok((param_type_well_defined, body)) => Ok(
+                VerifyExistShapedFactWellDefinedResult::Success(ExistShapedFactWellDefinedProof {
                     param_type_well_defined,
                     body,
                     local_env,
-                },
-            )),
+                }),
+            ),
             Err(reason) => Ok(VerifyExistShapedFactWellDefinedResult::Failed(reason)),
         }
     }
@@ -45,15 +45,16 @@ impl Runtime {
             FailToVerifyExistShapedFactWellDefinedResult,
         >,
     > {
-        let param_type_well_defined = match self.verify_and_define_wd_parameters(
-            &plain.typed_parameters,
-            verify_state.clone(),
-        )? {
+        let param_type_well_defined = match self
+            .verify_and_define_wd_parameters(&plain.typed_parameters, verify_state.clone())?
+        {
             Ok(proofs) => proofs,
             Err(failed) => {
-                return Ok(Err(FailToVerifyExistShapedFactWellDefinedResult::ParamType(
-                    extract_obj_wd_fail(failed),
-                )));
+                return Ok(Err(
+                    FailToVerifyExistShapedFactWellDefinedResult::ParamType(extract_obj_wd_fail(
+                        failed,
+                    )),
+                ));
             }
         };
 
@@ -68,12 +69,14 @@ impl Runtime {
                     succeeded_body.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(failed_body) => {
-                    return Ok(Err(FailToVerifyExistShapedFactWellDefinedResult::BodyFact {
-                        failed_index,
-                        param_type_well_defined,
-                        succeeded_body,
-                        failed_body: Box::new(failed_body),
-                    }));
+                    return Ok(Err(
+                        FailToVerifyExistShapedFactWellDefinedResult::BodyFact {
+                            failed_index,
+                            param_type_well_defined,
+                            succeeded_body,
+                            failed_body: Box::new(failed_body),
+                        },
+                    ));
                 }
             }
         }
@@ -109,8 +112,8 @@ fn plain_exist_body(fact: &ExistShapedFact) -> &PlainExistFact {
 fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
     match failed {
         VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
-        _ => fail_to_verify_obj_well_defined_others(
-            "param type well-definedness failed".to_string(),
-        ),
+        _ => {
+            fail_to_verify_obj_well_defined_others("param type well-definedness failed".to_string())
+        }
     }
 }

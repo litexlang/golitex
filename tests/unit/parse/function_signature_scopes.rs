@@ -7,7 +7,10 @@ use crate::tokenize::Tokenizer;
 
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
-        code: String::new(), session: false, strict: true, language: OutputLanguage::English,
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
     })
 }
 
@@ -39,7 +42,10 @@ fn function_signature_scopes_reject_parameter_and_return_dependencies_during_par
     ] {
         let error = parse(&mut runtime(), code).expect_err(code);
         let message = format!("{error:?}");
-        assert!(message.contains("undefined name") || message.contains("must not reference"), "{code}: {message}");
+        assert!(
+            message.contains("undefined name") || message.contains("must not reference"),
+            "{code}: {message}"
+        );
     }
 }
 
@@ -70,19 +76,35 @@ fn function_signature_scopes_preserve_conditions_bodies_and_external_carriers() 
 fn function_signature_scopes_keep_disjoint_same_spelling_binders_independent() {
     let mut rt = runtime();
     let mut statements = parse(&mut rt, "let F = fn(x R) fn(x R) R").unwrap();
-    let Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(stmt))) = statements.remove(0) else { panic!("let object") };
-    let Obj::FunctionSpace(FunctionSpace::FnSet(outer)) = stmt.value else { panic!("outer fn") };
-    let Obj::FunctionSpace(FunctionSpace::FnSet(inner)) = *outer.ret_set else { panic!("inner fn") };
-    assert_ne!(outer.set_bound_parameters.groups[0].params[0].id, inner.set_bound_parameters.groups[0].params[0].id);
+    let Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(stmt))) =
+        statements.remove(0)
+    else {
+        panic!("let object")
+    };
+    let Obj::FunctionSpace(FunctionSpace::FnSet(outer)) = stmt.value else {
+        panic!("outer fn")
+    };
+    let Obj::FunctionSpace(FunctionSpace::FnSet(inner)) = *outer.ret_set else {
+        panic!("inner fn")
+    };
+    assert_ne!(
+        outer.set_bound_parameters.groups[0].params[0].id,
+        inner.set_bound_parameters.groups[0].params[0].id
+    );
     parse(&mut runtime(), "have fn f(x fn(x R) R) R = x(0)").unwrap();
-    assert!(parse(&mut runtime(), "have x R\nlet F = fn(x R) R").is_err(), "visible outer names still cannot be shadowed");
+    assert!(
+        parse(&mut runtime(), "have x R\nlet F = fn(x R) R").is_err(),
+        "visible outer names still cannot be shadowed"
+    );
 }
 
 #[test]
 fn function_signature_scopes_rollback_failed_carriers_and_do_not_leak_binders() {
     let mut rt = runtime();
     assert!(parse(&mut rt, "let F = fn(S power_set(R)) fn(x S) R").is_err());
-    for name in ["F", "S", "x"] { assert!(!rt.plain_atom_is_visible(name)); }
+    for name in ["F", "S", "x"] {
+        assert!(!rt.plain_atom_is_visible(name));
+    }
     parse(&mut rt, "have fn F(x R: x > 0) R = x").unwrap();
     assert!(rt.plain_atom_is_visible("F"));
     assert!(!rt.plain_atom_is_visible("x"));
@@ -93,8 +115,14 @@ fn function_signature_scopes_rollback_failed_carriers_and_do_not_leak_binders() 
 
 fn parsed_fn_set(rt: &mut Runtime, code: &str) -> FnSet {
     let mut statements = parse(rt, code).unwrap();
-    let Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(stmt))) = statements.remove(0) else { panic!("let object") };
-    let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) = stmt.value else { panic!("fn set") };
+    let Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(stmt))) =
+        statements.remove(0)
+    else {
+        panic!("let object")
+    };
+    let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) = stmt.value else {
+        panic!("fn set")
+    };
     signature
 }
 
@@ -112,14 +140,21 @@ fn function_signature_scopes_wd_rejects_independently_constructed_dependent_asts
     dependent_parameter.set_bound_parameters.groups[1].param_type = Box::new(reference.clone());
     let mut self_dependent_parameter = outer;
     self_dependent_parameter.set_bound_parameters.groups[0].param_type = Box::new(reference);
-    for signature in [dependent_return, dependent_parameter, self_dependent_parameter] {
+    for signature in [
+        dependent_return,
+        dependent_parameter,
+        self_dependent_parameter,
+    ] {
         for object in [
             Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())),
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(crate::ast::obj::AnonymousFn {
-                body: signature, equal_to: Box::new(Obj::StandardSet(crate::ast::obj::StandardSet::R)),
+                body: signature,
+                equal_to: Box::new(Obj::StandardSet(crate::ast::obj::StandardSet::R)),
             })),
         ] {
-            let result = rt.verify_obj_well_definedness(&object, VerifyState::top_level()).unwrap();
+            let result = rt
+                .verify_obj_well_definedness(&object, VerifyState::top_level())
+                .unwrap();
             assert!(matches!(result, VerifyObjWellDefinedResult::Failed { .. }));
             assert_eq!(rt.execution_environments_stack.len(), 1);
         }
@@ -129,7 +164,11 @@ fn function_signature_scopes_wd_rejects_independently_constructed_dependent_asts
 #[test]
 fn function_signature_scopes_run_the_durable_positive_tracer() {
     let mut rt = runtime();
-    let run = rt.run_litex_code(include_str!("../../../examples/wd/fixed_function_signature_scopes.lit")).unwrap();
+    let run = rt
+        .run_litex_code(include_str!(
+            "../../../examples/wd/fixed_function_signature_scopes.lit"
+        ))
+        .unwrap();
     assert!(run.success, "{:?}", run.session_error);
     assert!(run.session_error.is_none());
 }

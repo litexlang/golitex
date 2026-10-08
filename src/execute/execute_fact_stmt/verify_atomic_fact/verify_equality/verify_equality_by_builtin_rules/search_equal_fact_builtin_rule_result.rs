@@ -1,21 +1,63 @@
-use super::by_native_fixed_base::{LnAsEulerLogProof, ExpAsEulerPowerProof};
-use super::by_inverse_trig::{
-    ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
-    ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
-    ArccotCotRightInverseBuiltinRuleProof, ArccotExactZeroBuiltinRuleProof,
-    ArcsinExactNegOneBuiltinRuleProof, ArcsinExactOneBuiltinRuleProof,
-    ArcsinExactZeroBuiltinRuleProof, ArcsinSinRightInverseBuiltinRuleProof,
-    ArctanExactZeroBuiltinRuleProof, ArctanTanRightInverseBuiltinRuleProof,
-    CosArccosLeftInverseBuiltinRuleProof, CotArccotLeftInverseBuiltinRuleProof,
-    SinArcsinLeftInverseBuiltinRuleProof, TanArctanLeftInverseBuiltinRuleProof,
+use super::by_closed_trig::{
+    CosOfPiBuiltinRuleProof, CosOfZeroBuiltinRuleProof, CotOfHalfPiBuiltinRuleProof,
+    PythagoreanIdentityBuiltinRuleProof, SinOfHalfPiBuiltinRuleProof, SinOfPiBuiltinRuleProof,
+    SinOfZeroBuiltinRuleProof, TanOfZeroBuiltinRuleProof,
+};
+use super::by_equal_from_known_difference_zero::EqualFromKnownDifferenceZeroBuiltinRuleProof;
+use super::by_equality_identities_wave10::{
+    FiniteSetProductEmptyBuiltinRuleProof, FiniteSetReduceEmptyBuiltinRuleProof,
+    FiniteSetSumEmptyBuiltinRuleProof, ProductEmptyRangeBuiltinRuleProof,
+    ReduceEmptyBuiltinRuleProof, SumEmptyRangeBuiltinRuleProof,
+};
+use super::by_equality_identities_wave11::{
+    ClosedRangeSingletonListSetBuiltinRuleProof, EmptySetFromSizeZeroBuiltinRuleProof,
+    FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof, FiniteSetSizeSetMinusBuiltinRuleProof,
+    FiniteSetSizeUnionBuiltinRuleProof, PowOfLogInverseBuiltinRuleProof,
+    ProductSingleTermBuiltinRuleProof, ReduceAddZeroEqualsSumBuiltinRuleProof,
+    SetMinusRecoversSubsetBuiltinRuleProof, SumSingleTermBuiltinRuleProof,
+    UnionAbsorptionFromSubsetBuiltinRuleProof,
+};
+use super::by_equality_identities_wave12::{
+    ComplexAbsOfImaginaryUnitBuiltinRuleProof, FiniteSetProductListExpansionBuiltinRuleProof,
+    FiniteSetSumListExpansionBuiltinRuleProof, ImgOfImaginaryUnitBuiltinRuleProof,
+    ImgOfRealEmbeddingBuiltinRuleProof, ImgOfRealPlusIBuiltinRuleProof,
+    ModNestedDivisibleAbsorptionBuiltinRuleProof, ProductSplitLastTermBuiltinRuleProof,
+    ReOfImaginaryUnitBuiltinRuleProof, ReOfRealEmbeddingBuiltinRuleProof,
+    ReOfRealPlusIBuiltinRuleProof, SetMinusIntersectSelfBuiltinRuleProof,
+    SumSplitLastTermBuiltinRuleProof, UnionSetMinusDecompositionBuiltinRuleProof,
+};
+use super::by_equality_identities_wave13::{
+    CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
+    ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
+    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof,
+    FamilyUnionOfPowerSetBuiltinRuleProof, FamilyUnionOfSingletonBuiltinRuleProof,
+    FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof,
+    FnRangeOfConstantAnonymousFnBuiltinRuleProof, ImgOfRealBuiltinRuleProof,
+    ImgOfRealPlusImagScaledBuiltinRuleProof, LnOfEulerBuiltinRuleProof,
+    PowerSetOfEmptyBuiltinRuleProof, PowerSetOfSingletonBuiltinRuleProof,
+    RangeLiteralExpansionBuiltinRuleProof, ReOfRealBuiltinRuleProof,
+    ReOfRealPlusImagScaledBuiltinRuleProof, SeqEqualsFnOnNPosBuiltinRuleProof,
+    SetMinusChainToUnionBuiltinRuleProof, UnionOverIntersectDistributiveBuiltinRuleProof,
+};
+use super::by_equality_identities_wave14::{
+    ComplexAbsSquaredOfRectFormBuiltinRuleProof, CosOfSumBuiltinRuleProof,
+    ExpOfSumBuiltinRuleProof, FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof,
+    ImgOfProductBuiltinRuleProof, IndexCartEmptyIndexBuiltinRuleProof,
+    IndexIntersectEmptyIndexBuiltinRuleProof, IndexUnionEmptyIndexBuiltinRuleProof,
+    IndexUnionSingletonBuiltinRuleProof, LogBasePowerBuiltinRuleProof, ReOfProductBuiltinRuleProof,
+    ReduceSingleTermWithAddZeroBuiltinRuleProof, SetBuilderObviouslyEmptyBuiltinRuleProof,
+    SinOfSumBuiltinRuleProof,
+};
+use super::by_equality_identities_wave15::{
+    FiniteSetSumFubiniSwapBuiltinRuleProof, FiniteSetSumOverCartesianProductBuiltinRuleProof,
 };
 use super::by_equality_identities_wave2::{
     AbsOfNegationBuiltinRuleProof, AbsProductBuiltinRuleProof, AbsSquareBuiltinRuleProof,
     LogArgPowerBuiltinRuleProof, LogBaseSelfBuiltinRuleProof, LogChangeOfBaseBuiltinRuleProof,
     LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, LogProductBuiltinRuleProof,
-    LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof, ModOneBuiltinRuleProof,
-    NestedSameModAbsorptionBuiltinRuleProof, ModCompatibleSmallerModulusBuiltinRuleProof,
-    OneModAtLeastTwoBuiltinRuleProof,
+    LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof,
+    ModCompatibleSmallerModulusBuiltinRuleProof, ModOneBuiltinRuleProof,
+    NestedSameModAbsorptionBuiltinRuleProof, OneModAtLeastTwoBuiltinRuleProof,
     OneToAnyPowerBuiltinRuleProof, SqrtOfSquareBuiltinRuleProof, SqrtOneBuiltinRuleProof,
     SqrtProductBuiltinRuleProof, SqrtQuotientBuiltinRuleProof, SqrtSquareBuiltinRuleProof,
     SqrtZeroBuiltinRuleProof, ZeroModBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof,
@@ -34,7 +76,8 @@ use super::by_equality_identities_wave5::{
     FactorialSuccessorBuiltinRuleProof, GcdCommutativeBuiltinRuleProof,
     GcdIdempotentAbsBuiltinRuleProof, GcdLeftZeroAbsBuiltinRuleProof,
     GcdRightZeroAbsBuiltinRuleProof, LcmCommutativeBuiltinRuleProof,
-    LcmIdempotentAbsBuiltinRuleProof, LcmLeftAbsDivisibilityProof, LcmRightAbsDivisibilityProof, QuotByOneBuiltinRuleProof, QuotSelfOneBuiltinRuleProof,
+    LcmIdempotentAbsBuiltinRuleProof, LcmLeftAbsDivisibilityProof, LcmRightAbsDivisibilityProof,
+    QuotByOneBuiltinRuleProof, QuotSelfOneBuiltinRuleProof,
 };
 use super::by_equality_identities_wave6::{
     AbsNonnegEqualsSelfBuiltinRuleProof, AbsNonposEqualsNegationBuiltinRuleProof,
@@ -49,8 +92,6 @@ use super::by_equality_identities_wave7::{
     SignOfProductBuiltinRuleProof, SignTimesAbsEqualsArgBuiltinRuleProof,
     SubtractionFromKnownAdditionBuiltinRuleProof, ZeroProductCancelBuiltinRuleProof,
 };
-use super::by_equal_from_known_difference_zero::EqualFromKnownDifferenceZeroBuiltinRuleProof;
-use super::by_finite_subset_size::FiniteSetEqualFromSubsetSizeBuiltinRuleProof;
 use super::by_equality_identities_wave8::{
     LcmGcdProductAbsBuiltinRuleProof, MinusOneOddNaturalPowerBuiltinRuleProof,
     ModDividendMinusRemainderZeroBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
@@ -68,58 +109,18 @@ use super::by_equality_identities_wave9::{
     UnionCommutativeBuiltinRuleProof, UnionEmptyLeftBuiltinRuleProof,
     UnionEmptyRightBuiltinRuleProof, UnionIdempotentBuiltinRuleProof,
 };
-use super::by_equality_identities_wave10::{
-    FiniteSetProductEmptyBuiltinRuleProof, FiniteSetReduceEmptyBuiltinRuleProof,
-    FiniteSetSumEmptyBuiltinRuleProof, ProductEmptyRangeBuiltinRuleProof,
-    ReduceEmptyBuiltinRuleProof, SumEmptyRangeBuiltinRuleProof,
+use super::by_finite_subset_size::FiniteSetEqualFromSubsetSizeBuiltinRuleProof;
+use super::by_inverse_trig::{
+    ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
+    ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
+    ArccotCotRightInverseBuiltinRuleProof, ArccotExactZeroBuiltinRuleProof,
+    ArcsinExactNegOneBuiltinRuleProof, ArcsinExactOneBuiltinRuleProof,
+    ArcsinExactZeroBuiltinRuleProof, ArcsinSinRightInverseBuiltinRuleProof,
+    ArctanExactZeroBuiltinRuleProof, ArctanTanRightInverseBuiltinRuleProof,
+    CosArccosLeftInverseBuiltinRuleProof, CotArccotLeftInverseBuiltinRuleProof,
+    SinArcsinLeftInverseBuiltinRuleProof, TanArctanLeftInverseBuiltinRuleProof,
 };
-use super::by_equality_identities_wave11::{
-    ClosedRangeSingletonListSetBuiltinRuleProof,
-    EmptySetFromSizeZeroBuiltinRuleProof, FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof,
-    FiniteSetSizeSetMinusBuiltinRuleProof, FiniteSetSizeUnionBuiltinRuleProof,
-    PowOfLogInverseBuiltinRuleProof, ProductSingleTermBuiltinRuleProof,
-    ReduceAddZeroEqualsSumBuiltinRuleProof, SetMinusRecoversSubsetBuiltinRuleProof,
-    SumSingleTermBuiltinRuleProof, UnionAbsorptionFromSubsetBuiltinRuleProof,
-};
-use super::by_equality_identities_wave12::{
-    ComplexAbsOfImaginaryUnitBuiltinRuleProof, FiniteSetProductListExpansionBuiltinRuleProof,
-    FiniteSetSumListExpansionBuiltinRuleProof, ImgOfImaginaryUnitBuiltinRuleProof,
-    ImgOfRealEmbeddingBuiltinRuleProof, ImgOfRealPlusIBuiltinRuleProof,
-    ModNestedDivisibleAbsorptionBuiltinRuleProof, ProductSplitLastTermBuiltinRuleProof,
-    ReOfImaginaryUnitBuiltinRuleProof, ReOfRealEmbeddingBuiltinRuleProof,
-    ReOfRealPlusIBuiltinRuleProof, SetMinusIntersectSelfBuiltinRuleProof,
-    SumSplitLastTermBuiltinRuleProof, UnionSetMinusDecompositionBuiltinRuleProof,
-};
-use super::by_equality_identities_wave13::{
-    CartWithEmptyFactorBuiltinRuleProof, ClosedRangeLiteralExpansionBuiltinRuleProof,
-    ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
-    EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof, FamilyUnionOfSingletonBuiltinRuleProof, FamilyUnionOfPowerSetBuiltinRuleProof,
-    FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,
-    ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
-    LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
-    PowerSetOfSingletonBuiltinRuleProof, RangeLiteralExpansionBuiltinRuleProof,
-    ReOfRealBuiltinRuleProof, ReOfRealPlusImagScaledBuiltinRuleProof,
-    SeqEqualsFnOnNPosBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
-    UnionOverIntersectDistributiveBuiltinRuleProof,
-};
-use super::by_equality_identities_wave14::{
-    ComplexAbsSquaredOfRectFormBuiltinRuleProof, CosOfSumBuiltinRuleProof,
-    ExpOfSumBuiltinRuleProof, FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof,
-    ImgOfProductBuiltinRuleProof, IndexCartEmptyIndexBuiltinRuleProof,
-    IndexIntersectEmptyIndexBuiltinRuleProof, IndexUnionEmptyIndexBuiltinRuleProof,
-    IndexUnionSingletonBuiltinRuleProof, LogBasePowerBuiltinRuleProof,
-    ReduceSingleTermWithAddZeroBuiltinRuleProof, ReOfProductBuiltinRuleProof,
-    SetBuilderObviouslyEmptyBuiltinRuleProof, SinOfSumBuiltinRuleProof,
-};
-use super::by_equality_identities_wave15::{
-    FiniteSetSumFubiniSwapBuiltinRuleProof, FiniteSetSumOverCartesianProductBuiltinRuleProof,
-};
-use super::by_closed_trig::{
-    CosOfPiBuiltinRuleProof, CosOfZeroBuiltinRuleProof, CotOfHalfPiBuiltinRuleProof,
-    PythagoreanIdentityBuiltinRuleProof, SinOfHalfPiBuiltinRuleProof, SinOfPiBuiltinRuleProof,
-    SinOfZeroBuiltinRuleProof,
-    TanOfZeroBuiltinRuleProof,
-};
+use super::by_native_fixed_base::{ExpAsEulerPowerProof, LnAsEulerLogProof};
 use super::by_power_laws::{
     PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
@@ -132,7 +133,9 @@ pub enum EqualitySearchProofByBuiltinRule {
     ScalarExtra(super::by_scalar_extra::ScalarExtraEqualityProof),
     IntegerInterval(super::by_integer_interval::IntegerIntervalEqualityProof),
     FactorialPredecessor(super::by_factorial_predecessor::FactorialPredecessorProof),
-    ExponentialLogarithmIdentity(super::by_exponential_logarithm_identities::ExponentialLogarithmIdentityProof),
+    ExponentialLogarithmIdentity(
+        super::by_exponential_logarithm_identities::ExponentialLogarithmIdentityProof,
+    ),
     ScalarDivisionRelation(super::by_scalar_division_relations::ScalarDivisionRelationProof),
     TanQuotientDefinition(super::by_elementary_definitions::TanQuotientDefinitionProof),
     CotQuotientDefinition(super::by_elementary_definitions::CotQuotientDefinitionProof),
@@ -160,8 +163,12 @@ pub enum EqualitySearchProofByBuiltinRule {
     ReducePointwise(super::by_reduce_pointwise::ReducePointwiseProof),
     CartesianSize(super::by_cartesian_size::CartesianSizeProof),
     FiniteMapSize(super::by_finite_map_size::FiniteMapSizeProof),
-    AggregateIdentity(super::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof),
-    AggregateCalculation(super::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof),
+    AggregateIdentity(
+        super::aggregate_identity_builtin_rule_proof::AggregateIdentityBuiltinRuleProof,
+    ),
+    AggregateCalculation(
+        super::search_equal_fact_by_aggregate_calculation::AggregateCalculationBuiltinRuleProof,
+    ),
     Calculation(EqualitySearchProofByCalculation),
     SinArcsinLeftInverse(SinArcsinLeftInverseBuiltinRuleProof),
     CosArccosLeftInverse(CosArccosLeftInverseBuiltinRuleProof),
@@ -179,7 +186,9 @@ pub enum EqualitySearchProofByBuiltinRule {
     ArccosExactNegOne(ArccosExactNegOneBuiltinRuleProof),
     ArctanExactZero(ArctanExactZeroBuiltinRuleProof),
     ArccotExactZero(ArccotExactZeroBuiltinRuleProof),
-    NegativeIntegerPowerReciprocal(super::by_power_laws::NegativeIntegerPowerReciprocalBuiltinRuleProof),
+    NegativeIntegerPowerReciprocal(
+        super::by_power_laws::NegativeIntegerPowerReciprocalBuiltinRuleProof,
+    ),
     PowerProductSameBase(PowerProductSameBaseBuiltinRuleProof),
     PowerOfPower(PowerOfPowerBuiltinRuleProof),
     PowerOfProduct(PowerOfProductBuiltinRuleProof),
@@ -288,7 +297,6 @@ pub enum EqualitySearchProofByBuiltinRule {
     EmptySetFromSizeZero(EmptySetFromSizeZeroBuiltinRuleProof),
     FiniteSetEqualFromSubsetSize(FiniteSetEqualFromSubsetSizeBuiltinRuleProof),
 
-
     FiniteSetSizeSetMinus(FiniteSetSizeSetMinusBuiltinRuleProof),
     FiniteSetSizeUnion(FiniteSetSizeUnionBuiltinRuleProof),
     ClosedRangeSingletonListSet(ClosedRangeSingletonListSetBuiltinRuleProof),
@@ -332,7 +340,9 @@ pub enum EqualitySearchProofByBuiltinRule {
     FnRangeOfConstantAnonymousFn(FnRangeOfConstantAnonymousFnBuiltinRuleProof),
     FnRangeOfEmptyDomain(super::by_function_domain_image::FnRangeOfEmptyDomainBuiltinRuleProof),
     EmptyFunctionGraph(super::by_empty_function_graph::EmptyFunctionGraphBuiltinRuleProof),
-    EmptyDomainFunctionSpaceSingleton(super::by_empty_function_graph::EmptyDomainFunctionSpaceSingletonBuiltinRuleProof),
+    EmptyDomainFunctionSpaceSingleton(
+        super::by_empty_function_graph::EmptyDomainFunctionSpaceSingletonBuiltinRuleProof,
+    ),
     SeqEqualsFnOnNPos(SeqEqualsFnOnNPosBuiltinRuleProof),
     FiniteSeqEqualsFnOnOneBasedDomain(FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof),
     IndexUnionEmptyIndex(IndexUnionEmptyIndexBuiltinRuleProof),
@@ -380,7 +390,10 @@ pub enum EqualitySearchProofByBuiltinRule {
 // (legacy compares monomial vectors, not reconstructed Obj normals).
 pub enum EqualitySearchProofByCalculation {
     // Exact closed fractions, including signed integer powers.
-    ClosedRational { left_normal: String, right_normal: String },
+    ClosedRational {
+        left_normal: String,
+        right_normal: String,
+    },
     // Both sides evaluate to the same normalized decimal.
     // Example: `1 + 1 = 2` with normals `"2"` and `"2"`.
     ClosedDecimal {

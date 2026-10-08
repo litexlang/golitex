@@ -144,10 +144,7 @@ impl EmptyListSetNotNonemptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "빈 목록 집합",
-            "빈 목록 집합 내장 규칙으로 검증했습니다",
-        )
+        text("빈 목록 집합", "빈 목록 집합 내장 규칙으로 검증했습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {

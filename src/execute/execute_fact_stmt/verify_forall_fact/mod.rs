@@ -4,10 +4,9 @@ mod verify_well_defined;
 mod well_defined_result;
 
 pub use result::{
-    AssumeDomFactResult, ProveAndStoreThenFactResult,
-    VerifyForallFactFailed, VerifyForallFactResult,
-    VerifyForallFactProof, VerifyForallFactSuccess, VerifyKnownForallFactProof, ForallParameterRenaming,
-    VerifyEmptyParameterDomainForallProof,
+    AssumeDomFactResult, ForallParameterRenaming, ProveAndStoreThenFactResult,
+    VerifyEmptyParameterDomainForallProof, VerifyForallFactFailed, VerifyForallFactProof,
+    VerifyForallFactResult, VerifyForallFactSuccess, VerifyKnownForallFactProof,
 };
 pub use well_defined_result::{
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,

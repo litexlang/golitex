@@ -89,12 +89,15 @@ fn compact_failure_has_fail_reason_english() {
     );
     assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(false));
     let fail = obj_field(&json, "fail_reason").as_object().unwrap();
+    assert_eq!(fail.keys_in_order(), vec!["phase", "goal"]);
     assert_eq!(
-        fail.keys_in_order(),
-        vec!["phase", "goal"]
+        fail.get("phase").and_then(|x| x.as_str().ok()),
+        Some("search_proof")
     );
-    assert_eq!(fail.get("phase").and_then(|x| x.as_str().ok()), Some("search_proof"));
-    assert_eq!(fail.get("goal").and_then(|x| x.as_str().ok()), Some("a > 10"));
+    assert_eq!(
+        fail.get("goal").and_then(|x| x.as_str().ok()),
+        Some("a > 10")
+    );
     assert!(json.as_object().unwrap().get("why_failed").is_none());
     assert!(json.as_object().unwrap().get("stores").is_none());
 }
@@ -109,8 +112,14 @@ fn compact_failure_chinese_keys_and_phase() {
         vec!["成功", "语句", "失败原因"]
     );
     let fail = obj_field(&json, "失败原因").as_object().unwrap();
-    assert_eq!(fail.get("阶段").and_then(|x| x.as_str().ok()), Some("搜索证明"));
-    assert_eq!(fail.get("目标命题").and_then(|x| x.as_str().ok()), Some("a > 10"));
+    assert_eq!(
+        fail.get("阶段").and_then(|x| x.as_str().ok()),
+        Some("搜索证明")
+    );
+    assert_eq!(
+        fail.get("目标命题").and_then(|x| x.as_str().ok()),
+        Some("a > 10")
+    );
 }
 
 #[test]

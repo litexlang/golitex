@@ -2,14 +2,16 @@ use crate::ast::fact::{AtomicFact, Fact};
 use crate::ast::names::PlainName;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
-    AtomicExceptEqualityFactSearchProofByKnownSpecialProperty, AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
-    AtomicExceptEqualityFactSearchProofByBuiltinRule, AtomicExceptEqualityFactSearchProofByBuiltinStrategy,
+    AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
+    AtomicExceptEqualityFactSearchProofByBuiltinRule,
+    AtomicExceptEqualityFactSearchProofByBuiltinStrategy,
     AtomicExceptEqualityFactSearchProofByKnownRewrite,
+    AtomicExceptEqualityFactSearchProofByKnownSpecialProperty,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     ForallConclusionArgMatchProof, ProveForallInstantiationRequirementsProof,
 };
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
 };
@@ -45,7 +47,9 @@ impl VerifyAtomicExceptEqualityFactResult {
 // Mirrors search_atomic_except_equality_fact_proof stage order.
 pub enum AtomicExceptEqualityFactSearchedProof {
     ByStructuralMembership(super::super::structural_membership_proof::StructuralMembershipProof),
-    ByClosedCalculation(super::super::closed_calculation_proof::ClosedAtomicExceptEqualityCalculationProof),
+    ByClosedCalculation(
+        super::super::closed_calculation_proof::ClosedAtomicExceptEqualityCalculationProof,
+    ),
     ByKnownAtomicFact(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     ByKnownSpecialProperty(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty),
     ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule),
@@ -84,7 +88,9 @@ pub struct AtomicExceptEqualityFactKnownProof {
 impl AtomicExceptEqualityFactKnownProof {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self.searched_proof.as_ref() {
-            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => Some(proof.cite_fact_id),
+            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => {
+                Some(proof.cite_fact_id)
+            }
             AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_)
             | AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_)
             | AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(_)
@@ -98,7 +104,6 @@ impl AtomicExceptEqualityFactKnownProof {
         }
     }
 }
-
 
 // By-definition fork: user `prop` vs builtin predicate definitions.
 pub enum AtomicExceptEqualityFactSearchProofByDefinition {
@@ -184,25 +189,21 @@ pub struct BuiltinDvdDefinitionProof {
 pub fn atomic_except_equality_fact_result_from_wd_fail(
     reason: FailToVerifyAtomicFactWellDefinedResult,
 ) -> VerifyFactResult {
-    VerifyFactResult::AtomicExceptEquality(Box::new(
-        VerifyAtomicExceptEqualityFactResult::Failed(
-            VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(reason),
-        ),
-    ))
+    VerifyFactResult::AtomicExceptEquality(Box::new(VerifyAtomicExceptEqualityFactResult::Failed(
+        VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(reason),
+    )))
 }
 
 pub fn atomic_except_equality_fact_result_from_search_fail(
     fact: &AtomicFact,
     well_defined_proof: AtomicFactWellDefinedProof,
 ) -> VerifyFactResult {
-    VerifyFactResult::AtomicExceptEquality(Box::new(
-        VerifyAtomicExceptEqualityFactResult::Failed(
-            VerifyAtomicExceptEqualityFactFailed::FailToSearchProof {
-                fact: fact.clone(),
-                well_defined_proof,
-            },
-        ),
-    ))
+    VerifyFactResult::AtomicExceptEquality(Box::new(VerifyAtomicExceptEqualityFactResult::Failed(
+        VerifyAtomicExceptEqualityFactFailed::FailToSearchProof {
+            fact: fact.clone(),
+            well_defined_proof,
+        },
+    )))
 }
 
 pub fn atomic_except_equality_fact_result_from_success(
@@ -210,11 +211,11 @@ pub fn atomic_except_equality_fact_result_from_success(
     well_defined_proof: AtomicFactWellDefinedProof,
     searched_proof: AtomicExceptEqualityFactSearchedProof,
 ) -> VerifyFactResult {
-    VerifyFactResult::AtomicExceptEquality(Box::new(
-        VerifyAtomicExceptEqualityFactResult::Success(VerifyAtomicExceptEqualityFactSuccess {
+    VerifyFactResult::AtomicExceptEquality(Box::new(VerifyAtomicExceptEqualityFactResult::Success(
+        VerifyAtomicExceptEqualityFactSuccess {
             fact: fact.clone(),
             well_defined_proof,
             searched_proof,
-        }),
-    ))
+        },
+    )))
 }

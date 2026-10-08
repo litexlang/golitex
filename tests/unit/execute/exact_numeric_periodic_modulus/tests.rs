@@ -49,7 +49,11 @@ fn exact_signed_integer_powers_and_eval() {
         check(source, false);
     }
     let json = check("3^(-2)=1/9", true);
-    assert!(json.contains("by_closed_calculation") && json.contains("rational") && json.contains("left_normal"));
+    assert!(
+        json.contains("by_closed_calculation")
+            && json.contains("rational")
+            && json.contains("left_normal")
+    );
     let mut runtime = Runtime::new(LaunchCommand::Eval {
         code: String::new(),
         session: false,
@@ -92,7 +96,11 @@ fn exact_fraction_order_and_extrema() {
         check(source, false);
     }
     let json = check("1/3 < 1/2", true);
-    assert!(json.contains("by_closed_calculation") && json.contains("comparison") && json.contains("1 / 3"));
+    assert!(
+        json.contains("by_closed_calculation")
+            && json.contains("comparison")
+            && json.contains("1 / 3")
+    );
 }
 
 #[test]
@@ -224,13 +232,13 @@ fn new_rule_normal_output_is_bilingual() {
             "Exact periodic trigonometric value",
             "精确周期三角值",
         ),
-        (
-            "C_abs(3+4*i)=5",
-            "Closed calculation",
-            "封闭计算",
-        ),
+        ("C_abs(3+4*i)=5", "Closed calculation", "封闭计算"),
         ("3^(-2)=1/9", "Closed calculation", "封闭计算"),
-        ("finite_set_max({1/3,1/2})=1/2", "Exact finite-set maximum", "有限集合最大值精确选取"),
+        (
+            "finite_set_max({1/3,1/2})=1/2",
+            "Exact finite-set maximum",
+            "有限集合最大值精确选取",
+        ),
         ("pi/4<pi/2", "Exact pi coefficient order", "pi 系数精确比较"),
         ("e>1", "Euler constant exceeds one", "自然常数 e 大于一"),
     ] {
@@ -259,7 +267,12 @@ fn new_leaves_inherit_search_ceiling_and_do_not_store_search_facts() {
         strict: true,
         language: OutputLanguage::English,
     });
-    assert!(runtime.run_litex_code("have k Z\nlet rational_max = finite_set_max({1/3,1/2})").unwrap().success);
+    assert!(
+        runtime
+            .run_litex_code("have k Z\nlet rational_max = finite_set_max({1/3,1/2})")
+            .unwrap()
+            .success
+    );
     for source in [
         "tan(pi+2*k*pi)=0",
         "C_abs(3-4*i)=5",
@@ -301,11 +314,10 @@ fn new_leaves_inherit_search_ceiling_and_do_not_store_search_facts() {
             "successful search is read-only: {source}"
         );
         let state = state.capped_at(VerifyStateLevel::KnownSpecialProperty);
-        let calculated = matches!(source,
-            "C_abs(3-4*i)=5" | "3^(-2)=1/9" | "1/3<1/2"
-        );
+        let calculated = matches!(source, "C_abs(3-4*i)=5" | "3^(-2)=1/9" | "1/3<1/2");
         assert_eq!(
-            runtime.verify_fact(&fact, state).unwrap().is_failed(), !calculated,
+            runtime.verify_fact(&fact, state).unwrap().is_failed(),
+            !calculated,
             "closed calculation remains Direct; symbolic builtin is capped: {source}"
         );
         assert_eq!(
@@ -327,7 +339,9 @@ fn finite_rational_extrema_selection_certificate() {
         "1/3=finite_set_max({1/4,2/6})",
         "finite_set_min({3^(-1),1/2,2/3})=1/3",
         "finite_set_max({1/100000000000000000000,1/100000000000000000001})=1/100000000000000000000",
-    ] { check(source, true); }
+    ] {
+        check(source, true);
+    }
     for source in [
         "finite_set_max({1/3,1/2})=1/3",
         "finite_set_min({1/3,1/2})=1/2",
@@ -335,13 +349,24 @@ fn finite_rational_extrema_selection_certificate() {
         "finite_set_min({1/3,2/6})=1/3",
         "finite_set_max({i,1/2})=1/2",
         "finite_set_min({1/0,1/2})=1/2",
-    ] { check(source, false); }
+    ] {
+        check(source, false);
+    }
     let json = check("finite_set_max({1/4,2/6})=1/3", true);
-    assert!(json.contains("FiniteSetMaxSelection") && json.contains("selected_member")
-        && json.contains("2 / 6") && json.contains("comparisons")
-        && json.contains("\"ordering\": \"less\"") && json.contains("\"ordering\": \"equal\""), "{json}");
+    assert!(
+        json.contains("FiniteSetMaxSelection")
+            && json.contains("selected_member")
+            && json.contains("2 / 6")
+            && json.contains("comparisons")
+            && json.contains("\"ordering\": \"less\"")
+            && json.contains("\"ordering\": \"equal\""),
+        "{json}"
+    );
     let json = check("finite_set_min({1/3,1/2})=1/3", true);
-    assert!(json.contains("FiniteSetMinSelection") && json.contains("\"ordering\": \"greater\""), "{json}");
+    assert!(
+        json.contains("FiniteSetMinSelection") && json.contains("\"ordering\": \"greater\""),
+        "{json}"
+    );
 }
 
 #[test]
@@ -359,50 +384,82 @@ fn rational_pi_order_and_inverse_principal_values() {
         "0 $in R\npi $in R\n3*pi/4 $in R\nsin(3*pi/4)!=0\ncot(3*pi/4)=-1\n0<3*pi/4\n3*pi/4<pi\narccot(-1)=arccot(cot(3*pi/4))=3*pi/4",
     ] { check(source, true); }
     for source in [
-        "pi/2<pi/4", "pi/4<pi/4", "pi/4<0",
+        "pi/2<pi/4",
+        "pi/4<pi/4",
+        "pi/4<0",
         "arctan(tan(3*pi/4))=3*pi/4",
         "(-pi)/2 $in R\npi/2 $in R\n3*pi/4 $in R\ntan(3*pi/4)=-1\narctan(tan(3*pi/4))=3*pi/4",
         "arccot(cot(-pi/4))=-pi/4",
         "0 $in R\npi $in R\n(-pi)/4 $in R\ncot(-pi/4)=-1\narccot(cot(-pi/4))=-pi/4",
-        "arccot(-1)=-pi/4", "arctan(1)=-pi/4",
-        "arctan(tan(pi/2))=pi/2", "cot(0)=0", "cot(pi)=0",
-        "have x R\nx*pi<pi", "pi/0<pi", "pi*pi<pi",
-    ] { check(source, false); }
+        "arccot(-1)=-pi/4",
+        "arctan(1)=-pi/4",
+        "arctan(tan(pi/2))=pi/2",
+        "cot(0)=0",
+        "cot(pi)=0",
+        "have x R\nx*pi<pi",
+        "pi/0<pi",
+        "pi*pi<pi",
+    ] {
+        check(source, false);
+    }
     let json = check("pi/4<pi/2", true);
     assert!(json.contains("PiMultipleComparison") && json.contains("left_coefficient"));
     let json = check("0 $in R\npi $in R\n3*pi/4 $in R\ncot(3*pi/4)=-1\n0<3*pi/4\n3*pi/4<pi\narccot(-1)=arccot(cot(3*pi/4))=3*pi/4", true);
-    assert!(json.contains("ArccotCotRightInverse") && json.contains("proof_of_requirement_facts"), "{json}");
+    assert!(
+        json.contains("ArccotCotRightInverse") && json.contains("proof_of_requirement_facts"),
+        "{json}"
+    );
 }
 
 #[test]
 fn logarithm_algebra_for_positive_nonunit_bases() {
     for source in [
-        "1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,1/2)=1", "1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,1)=0",
+        "1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,1/2)=1",
+        "1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,1)=0",
         "1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,(1/2)^(-3))=-3",
         "1/2 $in R\n1/2>0\n1/2!=1\n(1/2)^(-3)=8\nlog(1/2,8)=log(1/2,(1/2)^(-3))=-3",
         "e $in R\ne>1\ne!=1\ne>0\nlog(e,e)=1",
         "1 $in R\nforall b R:\n    b>0\n    b!=1\n    =>:\n        log(b,b)=1\n        log(b,1)=0",
         "1 $in R\nforall b R:\n    0<b\n    b!=1\n    =>:\n        log(b,b^(-3))=-3",
-    ] { check(&format!("0 $in R\n{source}"), true); }
+    ] {
+        check(&format!("0 $in R\n{source}"), true);
+    }
     for source in [
-        "log(1,1)=1", "log(0,1)=0", "log(-2,-2)=1",
-        "log(1/2,8)=3", "log(1/2,2)<log(1/2,4)", "e<1",
+        "log(1,1)=1",
+        "log(0,1)=0",
+        "log(-2,-2)=1",
+        "log(1/2,8)=3",
+        "log(1/2,2)<log(1/2,4)",
+        "e<1",
         "forall b R:\n    b>0\n    =>:\n        log(b,b)=1",
-    ] { check(source, false); }
-    let json = check("0 $in R\n1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,(1/2)^(-3))=-3", true);
-    assert!(json.contains("by_closed_calculation") && json.contains("\"left_normal\": \"-3\""), "{json}");
+    ] {
+        check(source, false);
+    }
+    let json = check(
+        "0 $in R\n1/2 $in R\n1/2>0\n1/2!=1\nlog(1/2,(1/2)^(-3))=-3",
+        true,
+    );
+    assert!(
+        json.contains("by_closed_calculation") && json.contains("\"left_normal\": \"-3\""),
+        "{json}"
+    );
     let symbolic = check("0 $in R\n1 $in R\nforall b R:\n    0 < b\n    b != 1\n    =>:\n        log(b, b^(-3)) = -3", true);
-    assert!(symbolic.contains("LogOfPowerSameBase") && symbolic.contains("proof_of_requirement_facts"), "{symbolic}");
+    assert!(
+        symbolic.contains("LogOfPowerSameBase") && symbolic.contains("proof_of_requirement_facts"),
+        "{symbolic}"
+    );
     let json = check("0 $in R\ne $in R\ne>1\ne!=1\ne>0\nlog(e,e)=1", true);
-    assert!(json.contains("NativeEulerGreaterOne") && json.contains("LogBaseSelf"), "{json}");
+    assert!(
+        json.contains("NativeEulerGreaterOne") && json.contains("LogBaseSelf"),
+        "{json}"
+    );
 }
 
 #[test]
 fn arccos_principal_lower_bound_precedes_generic_zero_dispatch() {
     for lower in ["0", "0 + 0", "0 - 0"] {
-        let source = format!(
-            "forall x R:\n    -1 <= x\n    x <= 1\n    =>:\n        {lower} <= arccos(x)"
-        );
+        let source =
+            format!("forall x R:\n    -1 <= x\n    x <= 1\n    =>:\n        {lower} <= arccos(x)");
         let json = check(&source, true);
         assert!(json.contains("ArccosPrincipalLowerBound"), "{json}");
     }

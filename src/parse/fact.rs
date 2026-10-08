@@ -5,9 +5,9 @@ use super::keywords::{
 };
 use super::object::{parse_obj, parse_obj_list_paren};
 use crate::ast::fact::{
-    AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, ExistShapedFact,
-    ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact, OrFact,
-    PlainExistFact, QuantifierFreeFact,
+    AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, ExistOrAndChainAtomicFact,
+    ExistShapedFact, Fact, ForallFact, ForallFactWithIff, NotForallFact, OrFact, PlainExistFact,
+    QuantifierFreeFact,
 };
 use crate::ast::names::AtomicName;
 use crate::ast::stmt::Stmt;
@@ -25,7 +25,8 @@ impl Runtime {
         let fact = self.parse_fact(tb)?;
         if !tb.exceed_end_of_head() {
             return Err(tb.parse_error(format!(
-                "trailing tokens after fact: `{}`", tb.peek().unwrap_or("")
+                "trailing tokens after fact: `{}`",
+                tb.peek().unwrap_or("")
             )));
         }
         Ok(fact)
@@ -34,7 +35,9 @@ impl Runtime {
     pub(super) fn parse_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Fact> {
         match tb.peek() {
             Some(FORALL) => self.parse_forall_fact(tb),
-            Some(EXIST) | Some(EXIST_BANG) => Ok(crate::ast::fact::exist_shaped_fact_to_fact(&self.parse_exist_fact(tb)?)),
+            Some(EXIST) | Some(EXIST_BANG) => Ok(crate::ast::fact::exist_shaped_fact_to_fact(
+                &self.parse_exist_fact(tb)?,
+            )),
             Some(NOT) if matches!(tb.peek_at(1), Some(FORALL | EXIST | EXIST_BANG)) => {
                 self.parse_not_fact(tb)
             }
@@ -375,7 +378,9 @@ impl Runtime {
             };
             let mut premise = TokenBlock::new(
                 tb.header[tb.parse_index..arrow_index].to_vec(),
-                vec![], tb.line, tb.source_path.clone(),
+                vec![],
+                tb.line,
+                tb.source_path.clone(),
             );
             dom_facts.push(self.parse_complete_fact(&mut premise)?);
             tb.parse_index = arrow_index;
@@ -412,7 +417,10 @@ impl Runtime {
         }))
     }
 
-    pub(super) fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<ExistShapedFact> {
+    pub(super) fn parse_exist_fact(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<ExistShapedFact> {
         self.push_parse_scope();
         let result = (|| {
             let unique = match tb.peek() {
@@ -490,20 +498,18 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> RuntimeResult<ExistOrAndChainAtomicFact> {
         let fact: RuntimeResult<ExistOrAndChainAtomicFact> = match tb.peek() {
-            Some(EXIST) | Some(EXIST_BANG) => {
-                match self.parse_exist_fact(tb)? {
-                    ExistShapedFact::Exist(p) => Ok(ExistOrAndChainAtomicFact::ExistFact(p)),
-                    ExistShapedFact::ExistUnique(p) => {
-                        Ok(ExistOrAndChainAtomicFact::ExistUniqueFact(p))
-                    }
-                    ExistShapedFact::NotExist(_) => Err(RuntimeParseError::new(
-                        "internal: parse_exist_fact returned not-exist",
-                        tb.line,
-                        tb.source_path.clone(),
-                    )
-                    .into()),
+            Some(EXIST) | Some(EXIST_BANG) => match self.parse_exist_fact(tb)? {
+                ExistShapedFact::Exist(p) => Ok(ExistOrAndChainAtomicFact::ExistFact(p)),
+                ExistShapedFact::ExistUnique(p) => {
+                    Ok(ExistOrAndChainAtomicFact::ExistUniqueFact(p))
                 }
-            }
+                ExistShapedFact::NotExist(_) => Err(RuntimeParseError::new(
+                    "internal: parse_exist_fact returned not-exist",
+                    tb.line,
+                    tb.source_path.clone(),
+                )
+                .into()),
+            },
             Some(NOT) if tb.peek_at(1) == Some(EXIST) => {
                 tb.expect(NOT)?;
                 if tb.peek() == Some(EXIST_BANG)
@@ -537,7 +543,8 @@ impl Runtime {
         let fact = fact?;
         if !tb.exceed_end_of_head() {
             return Err(tb.parse_error(format!(
-                "trailing tokens after fact: `{}`", tb.peek().unwrap_or("")
+                "trailing tokens after fact: `{}`",
+                tb.peek().unwrap_or("")
             )));
         }
         Ok(fact)

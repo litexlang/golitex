@@ -70,9 +70,11 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         }
         .into();
-        let Some(left_lower_bound) = self.verify_trig_interval_bound(
-            &lower, TrigIntervalBoundSide::Lower, state,
-        )? else { return Ok(None); };
+        let Some(left_lower_bound) =
+            self.verify_trig_interval_bound(&lower, TrigIntervalBoundSide::Lower, state)?
+        else {
+            return Ok(None);
+        };
         let upper: Fact = LessEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: *b.arg.clone(),
@@ -80,9 +82,11 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         }
         .into();
-        let Some(right_upper_bound) = self.verify_trig_interval_bound(
-            &upper, TrigIntervalBoundSide::Upper, state,
-        )? else { return Ok(None); };
+        let Some(right_upper_bound) =
+            self.verify_trig_interval_bound(&upper, TrigIntervalBoundSide::Upper, state)?
+        else {
+            return Ok(None);
+        };
         let order: Fact = LessFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: *a.arg.clone(),

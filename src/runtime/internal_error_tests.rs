@@ -64,7 +64,10 @@ fn internal_error_ordinary_user_failures_keep_their_existing_classification() {
         RunSessionError::Runtime(launch.clone()).to_string(),
         launch.to_string()
     );
-    assert_eq!(RunSessionError::FailToImport.to_string(), "failed to import project");
+    assert_eq!(
+        RunSessionError::FailToImport.to_string(),
+        "failed to import project"
+    );
     let mut rt = runtime();
     let proof = rt.run_litex_code("0 = 1").unwrap();
     assert!(!proof.success);

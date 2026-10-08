@@ -6,7 +6,9 @@ impl ScalarDivisionRelationProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
             Self::ProductFromDivision(_) => text("Product from checked division", "a/b=c => a=c*b"),
-            Self::DivisionFromProduct(_) => text("Division from checked product", "b!=0, a=c*b => a/b=c"),
+            Self::DivisionFromProduct(_) => {
+                text("Division from checked product", "b!=0, a=c*b => a/b=c")
+            }
         }
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {

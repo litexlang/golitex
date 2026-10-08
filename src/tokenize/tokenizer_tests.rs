@@ -45,7 +45,9 @@ fn tokenizes_indented_block_body() {
 #[test]
 fn hash_comments_ignore_unbalanced_quotes_and_preserve_line_numbers() {
     let source = "# Finally \"there is no x satisfying\n# P(x)\" and \"every x fails.\"\n1 = 1 # \"unfinished comment\n";
-    let blocks = Tokenizer::new().tokenize(source, RealOrVirtualPath::Eval).unwrap();
+    let blocks = Tokenizer::new()
+        .tokenize(source, RealOrVirtualPath::Eval)
+        .unwrap();
     assert_eq!(blocks.len(), 1);
     assert_eq!(blocks[0].header, vec!["1", "=", "1"]);
     assert_eq!(blocks[0].line, 3);
@@ -54,7 +56,9 @@ fn hash_comments_ignore_unbalanced_quotes_and_preserve_line_numbers() {
 #[test]
 fn hash_comment_after_a_header_does_not_hide_its_colon() {
     let source = "forall x R: # \"unfinished comment\n    x = x # \"another comment\n";
-    let blocks = Tokenizer::new().tokenize(source, RealOrVirtualPath::Eval).unwrap();
+    let blocks = Tokenizer::new()
+        .tokenize(source, RealOrVirtualPath::Eval)
+        .unwrap();
     assert_eq!(blocks.len(), 1);
     assert_eq!(blocks[0].body.len(), 1);
     assert_eq!(blocks[0].body[0].header, vec!["x", "=", "x"]);
@@ -63,9 +67,13 @@ fn hash_comment_after_a_header_does_not_hide_its_colon() {
 #[test]
 fn hash_in_an_inline_aside_does_not_begin_a_comment() {
     let source = "1 \"note # inside aside\" = 1 # \"ignored\n";
-    let blocks = Tokenizer::new().tokenize(source, RealOrVirtualPath::Eval).unwrap();
+    let blocks = Tokenizer::new()
+        .tokenize(source, RealOrVirtualPath::Eval)
+        .unwrap();
     assert_eq!(blocks[0].header, vec!["1", "=", "1"]);
-    let error = Tokenizer::new().tokenize("1 = 1 \"unclosed # inside aside\n", RealOrVirtualPath::Eval).unwrap_err();
+    let error = Tokenizer::new()
+        .tokenize("1 = 1 \"unclosed # inside aside\n", RealOrVirtualPath::Eval)
+        .unwrap_err();
     assert!(format!("{error:?}").contains("unclosed inline aside"));
 }
 

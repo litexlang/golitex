@@ -11,7 +11,9 @@
 
 use std::collections::HashMap;
 
-use crate::ast::fact::{exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact, PlainExistFact};
+use crate::ast::fact::{
+    exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact, PlainExistFact,
+};
 use crate::ast::obj::Obj;
 use crate::ast::stmt::{Stmt, WitnessExistFact, WitnessStmt};
 use crate::exec_env::exec_env::ExecEnv;
@@ -121,10 +123,14 @@ impl Runtime {
             &stmt.exist_shaped_fact_in_witness,
             &stmt.equal_tos,
             &stmt.proof,
-         crate::execute::execute_fact_stmt::VerifyState::top_level())? {
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )? {
             Ok((ambient, proof_steps, obligations, local_env)) => {
                 let exist_as_fact = exist_shaped_fact_to_fact(&stmt.exist_shaped_fact_in_witness);
-                let store_and_infer_result = self.store_fact_and_infer(&exist_as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+                let store_and_infer_result = self.store_fact_and_infer(
+                    &exist_as_fact,
+                    crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                )?;
                 Ok(ExecWitnessExistFactStmtResult::Success(
                     ExecWitnessExistFactStmtSuccessResult {
                         statement: stmt.clone(),
@@ -151,7 +157,8 @@ impl Runtime {
         exist_fact: &ExistShapedFact,
         equal_tos: &[Obj],
         proof: &[Stmt],
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<
         Result<
             (
                 WitnessExistAmbientSuccess,
@@ -183,11 +190,11 @@ impl Runtime {
             return Ok(Err(ExecWitnessExistFactStmtFailed::WitnessCountMismatch));
         }
 
-        let ambient = match self.check_witness_exist_ambient(exist_fact, equal_tos, verify_state.clone())?
-        {
-            Ok(a) => a,
-            Err(failed) => return Ok(Err(failed)),
-        };
+        let ambient =
+            match self.check_witness_exist_ambient(exist_fact, equal_tos, verify_state.clone())? {
+                Ok(a) => a,
+                Err(failed) => return Ok(Err(failed)),
+            };
 
         let need_uniqueness = matches!(exist_fact, ExistShapedFact::ExistUnique(_));
         let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
@@ -196,7 +203,9 @@ impl Runtime {
             match rt.introduce_typed_parameters(&plain.typed_parameters, verify_state.clone())? {
                 Ok(_) => {}
                 Err(failed) => {
-                    return Ok(Err(ExecWitnessExistFactStmtFailed::IntroduceBinders(failed)));
+                    return Ok(Err(ExecWitnessExistFactStmtFailed::IntroduceBinders(
+                        failed,
+                    )));
                 }
             }
             {
@@ -206,14 +215,13 @@ impl Runtime {
                         let witness = &equal_tos[witness_index];
                         witness_index += 1;
                         let left = Obj::Identifier(rt.identifier_obj_for_stored_mention(param));
-                        let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(
-                            crate::ast::fact::EqualFact {
+                        let equal_fact =
+                            Fact::AtomicFact(AtomicFact::EqualFact(crate::ast::fact::EqualFact {
                                 fact_id: rt.global_ids.allocate_fact_id(),
                                 left,
                                 right: witness.clone(),
                                 line_file: plain.line_file.clone(),
-                            },
-                        ));
+                            }));
                         rt.store_fact_and_infer(&equal_fact, verify_state)?;
                     }
                 }
@@ -263,9 +271,9 @@ impl Runtime {
         for witness in equal_tos {
             let wd = self.verify_obj_well_definedness(witness, verify_state.clone())?;
             if wd.is_failed() {
-                return Ok(Err(
-                    ExecWitnessExistFactStmtFailed::WitnessObjWellDefined(wd),
-                ));
+                return Ok(Err(ExecWitnessExistFactStmtFailed::WitnessObjWellDefined(
+                    wd,
+                )));
             }
             witness_obj_well_defined.push(wd);
         }
@@ -354,7 +362,9 @@ impl Runtime {
             };
             let verify_result = self.verify_fact(&instantiated, verify_state.clone())?;
             if verify_result.is_failed() {
-                return Ok(Err(ExecWitnessExistFactStmtFailed::BodyCheck(verify_result)));
+                return Ok(Err(ExecWitnessExistFactStmtFailed::BodyCheck(
+                    verify_result,
+                )));
             }
             body_checks.push(verify_result);
         }

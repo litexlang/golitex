@@ -21,7 +21,8 @@ impl Runtime {
     pub(crate) fn infer_exist_shaped_fact(
         &mut self,
         fact: &Fact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferExistShapedFactResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<InferExistShapedFactResult> {
         let Some(family) = exist_shaped_fact_from_fact(fact) else {
             return Err(crate::runtime::RuntimeError::InternalBug(
                 "infer_exist_shaped_fact: expected exist-shaped fact".to_string(),
@@ -46,7 +47,8 @@ impl Runtime {
     fn infer_exist_unique_fact(
         &mut self,
         plain: &PlainExistFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferExistUniqueFactResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<InferExistUniqueFactResult> {
         let n: usize = plain
             .typed_parameters
             .groups
@@ -71,11 +73,13 @@ impl Runtime {
     fn infer_not_exist_fact(
         &mut self,
         plain: &PlainExistFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferNotExistFactResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<InferNotExistFactResult> {
         let Some(forall) = self.not_exist_to_demorgan_forall(plain)? else {
             return Ok(InferNotExistFactResult::NoInfer);
         };
-        let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
+        let derived =
+            Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
         Ok(InferNotExistFactResult::DemorganForall(
             InferNotExistDemorganForallResult { derived },
         ))
@@ -115,11 +119,13 @@ impl Runtime {
         let mut forall_groups = Vec::new();
         let mut idx = 0usize;
         for group in &plain.typed_parameters.groups {
-            let param_type = self.inst_param_type(&group.param_type, &subst).map_err(|e| {
-                crate::runtime::RuntimeError::InternalBug(format!(
-                    "not exist demorgan: instantiate type: {e}"
-                ))
-            })?;
+            let param_type = self
+                .inst_param_type(&group.param_type, &subst)
+                .map_err(|e| {
+                    crate::runtime::RuntimeError::InternalBug(format!(
+                        "not exist demorgan: instantiate type: {e}"
+                    ))
+                })?;
             let mut params = Vec::new();
             for old in &group.params {
                 let b = fresh[idx].clone();
@@ -189,7 +195,8 @@ impl Runtime {
                 }
                 let mut out = Vec::with_capacity(af.facts.len());
                 for a in &af.facts {
-                    let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
+                    let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id())
+                    else {
                         return Ok(None);
                     };
                     out.push(AndChainAtomicFact::AtomicFact(neg));
@@ -203,7 +210,8 @@ impl Runtime {
                 }
                 let mut out = Vec::with_capacity(adjacent.len());
                 for a in &adjacent {
-                    let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
+                    let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id())
+                    else {
                         return Ok(None);
                     };
                     out.push(AndChainAtomicFact::AtomicFact(neg));

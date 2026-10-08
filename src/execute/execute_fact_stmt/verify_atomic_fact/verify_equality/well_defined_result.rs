@@ -34,7 +34,8 @@ impl From<EqualFactWellDefinedProof> for AtomicFactWellDefinedProof {
         AtomicFactWellDefinedProof {
             well_defined_of_each_parameter: vec![proof.left, proof.right],
             predicate_signature: PredicateSignatureWellDefinedProof::Builtin,
-            predicate_domain: super::super::well_defined_result::PredicateDomainProof::ByRequirements(Vec::new()),
+            predicate_domain:
+                super::super::well_defined_result::PredicateDomainProof::ByRequirements(Vec::new()),
         }
     }
 }

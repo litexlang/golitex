@@ -135,15 +135,23 @@ pub struct SignNonzeroFromArgumentProof {
     pub argument_nonzero: AtomicExceptEqualityFactKnownProof,
 }
 impl SignNonzeroFromArgumentProof {
-    pub fn new(argument_nonzero: AtomicExceptEqualityFactKnownProof) -> Self { Self { argument_nonzero } }
+    pub fn new(argument_nonzero: AtomicExceptEqualityFactKnownProof) -> Self {
+        Self { argument_nonzero }
+    }
 }
 pub struct SignNonzeroReflectionProof {
     pub real_proof: VerifyFactResult,
     pub sign_nonzero: AtomicExceptEqualityFactKnownProof,
 }
 impl SignNonzeroReflectionProof {
-    pub fn new(real_proof: VerifyFactResult, sign_nonzero: AtomicExceptEqualityFactKnownProof) -> Self {
-        Self { real_proof, sign_nonzero }
+    pub fn new(
+        real_proof: VerifyFactResult,
+        sign_nonzero: AtomicExceptEqualityFactKnownProof,
+    ) -> Self {
+        Self {
+            real_proof,
+            sign_nonzero,
+        }
     }
 }
 
@@ -156,7 +164,9 @@ pub struct InequalityFromSumNonzeroBuiltinRuleProof {
 pub struct ComplexModulusNonzeroBuiltinRuleProof {
     pub arg_nonzero_proof: VerifyFactResult,
 }
-pub struct NonzeroFromSignedBoundBuiltinRuleProof { pub cite_fact_id: FactId }
+pub struct NonzeroFromSignedBoundBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
 pub struct PiNonzeroBuiltinRuleProof {}
 pub struct ImaginaryUnitNonzeroBuiltinRuleProof {}
 
@@ -228,7 +238,9 @@ pub struct ProductComponentNonzeroBuiltinRuleProof {
 
 impl ProductComponentNonzeroBuiltinRuleProof {
     pub fn new(product_nonzero_proof: AtomicExceptEqualityFactKnownProof) -> Self {
-        Self { product_nonzero_proof }
+        Self {
+            product_nonzero_proof,
+        }
     }
 }
 
@@ -268,21 +280,29 @@ impl Runtime {
         for (value, zero) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if is_zero_obj(zero) {
                 if let Some(proof) = self.periodic_trig_nonzero(value, verify_state.clone())? {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(proof)));
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(proof),
+                    ));
                 }
             }
         }
-        if (matches!(&fact.left, Obj::Literal(Literal::ImaginaryUnit(_))) && is_zero_obj(&fact.right))
-            || (matches!(&fact.right, Obj::Literal(Literal::ImaginaryUnit(_))) && is_zero_obj(&fact.left))
+        if (matches!(&fact.left, Obj::Literal(Literal::ImaginaryUnit(_)))
+            && is_zero_obj(&fact.right))
+            || (matches!(&fact.right, Obj::Literal(Literal::ImaginaryUnit(_)))
+                && is_zero_obj(&fact.left))
         {
-            return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ImaginaryUnitNonzero(
-                ImaginaryUnitNonzeroBuiltinRuleProof {},
-            )));
+            return Ok(Some(
+                NotEqualFactSearchProofByBuiltinRule::ImaginaryUnitNonzero(
+                    ImaginaryUnitNonzeroBuiltinRuleProof {},
+                ),
+            ));
         }
         if (matches!(&fact.left, Obj::Literal(Literal::Pi(_))) && is_zero_obj(&fact.right))
             || (matches!(&fact.right, Obj::Literal(Literal::Pi(_))) && is_zero_obj(&fact.left))
         {
-            return Ok(Some(NotEqualFactSearchProofByBuiltinRule::PiNonzero(PiNonzeroBuiltinRuleProof {})));
+            return Ok(Some(NotEqualFactSearchProofByBuiltinRule::PiNonzero(
+                PiNonzeroBuiltinRuleProof {},
+            )));
         }
 
         if let Some(proof) = self.search_common_relation_nonzero(fact, verify_state)? {
@@ -310,7 +330,8 @@ impl Runtime {
             if left != right {
                 return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ClosedRational(
                     ClosedRationalNotEqualBuiltinRuleProof {
-                        left_normal: left.to_obj(), right_normal: right.to_obj(),
+                        left_normal: left.to_obj(),
+                        right_normal: right.to_obj(),
                     },
                 )));
             }
@@ -344,15 +365,36 @@ impl Runtime {
                 ),
             ));
         }
-        for (value,zero) in [(&fact.left,&fact.right),(&fact.right,&fact.left)] {
-            if !is_zero_obj(zero) { continue; }
-            let positive=LessFact {fact_id:self.global_ids.allocate_fact_id(),left:zero.clone(),right:value.clone(),line_file:None};
-            let negative=LessEqualFact {fact_id:self.global_ids.allocate_fact_id(),left:value.clone(),right:zero.clone(),line_file:None};
-            let cite=self.try_order_sign_from_positive_literal_bound(&positive).map(|p|p.cite_fact_id)
-                .or_else(||self.try_order_sign_from_negative_literal_bound(&negative).map(|p|p.cite_fact_id));
-            if let Some(cite_fact_id)=cite { return Ok(Some(NotEqualFactSearchProofByBuiltinRule::NonzeroFromSignedBound(
-                NonzeroFromSignedBoundBuiltinRuleProof {cite_fact_id},
-            ))); }
+        for (value, zero) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            if !is_zero_obj(zero) {
+                continue;
+            }
+            let positive = LessFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: zero.clone(),
+                right: value.clone(),
+                line_file: None,
+            };
+            let negative = LessEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: value.clone(),
+                right: zero.clone(),
+                line_file: None,
+            };
+            let cite = self
+                .try_order_sign_from_positive_literal_bound(&positive)
+                .map(|p| p.cite_fact_id)
+                .or_else(|| {
+                    self.try_order_sign_from_negative_literal_bound(&negative)
+                        .map(|p| p.cite_fact_id)
+                });
+            if let Some(cite_fact_id) = cite {
+                return Ok(Some(
+                    NotEqualFactSearchProofByBuiltinRule::NonzeroFromSignedBound(
+                        NonzeroFromSignedBoundBuiltinRuleProof { cite_fact_id },
+                    ),
+                ));
+            }
         }
         // Prove `a != b` from a known / already-proved `b != a` (no recursive flip).
         if let Some(proof) = self.try_not_equal_symmetry(fact) {
@@ -360,36 +402,57 @@ impl Runtime {
         }
 
         for (value, zero) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
-            if !is_zero_obj(zero) { continue; }
+            if !is_zero_obj(zero) {
+                continue;
+            }
             match value {
                 Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ExpNonzero(ExpNonzeroProof)));
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ExpNonzero(
+                        ExpNonzeroProof,
+                    )));
                 }
                 Obj::IntegerOperator(crate::ast::obj::IntegerOperator::Factorial(_)) => {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::FactorialNonzero(FactorialNonzeroProof)));
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::FactorialNonzero(
+                            FactorialNonzeroProof,
+                        ),
+                    ));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => {
-                    if let Some(argument_nonzero) = self.known_not_equal_proof(&sign.arg, zero)
-                        .or_else(|| self.known_not_equal_proof(zero, &sign.arg)) {
-                        return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SignNonzeroFromArgument(
-                            SignNonzeroFromArgumentProof::new(argument_nonzero),
-                        )));
+                    if let Some(argument_nonzero) = self
+                        .known_not_equal_proof(&sign.arg, zero)
+                        .or_else(|| self.known_not_equal_proof(zero, &sign.arg))
+                    {
+                        return Ok(Some(
+                            NotEqualFactSearchProofByBuiltinRule::SignNonzeroFromArgument(
+                                SignNonzeroFromArgumentProof::new(argument_nonzero),
+                            ),
+                        ));
                     }
                 }
                 _ => {}
             }
-            let sign = Obj::ArithmeticOperator(ArithmeticOperator::Sign(crate::ast::obj::Sign { arg: Box::new(value.clone()) }));
-            if let Some(sign_nonzero) = self.known_not_equal_proof(&sign, zero)
-                .or_else(|| self.known_not_equal_proof(zero, &sign)) {
+            let sign = Obj::ArithmeticOperator(ArithmeticOperator::Sign(crate::ast::obj::Sign {
+                arg: Box::new(value.clone()),
+            }));
+            if let Some(sign_nonzero) = self
+                .known_not_equal_proof(&sign, zero)
+                .or_else(|| self.known_not_equal_proof(zero, &sign))
+            {
                 let domain: Fact = InFact {
-                    fact_id: self.global_ids.allocate_fact_id(), element: value.clone(),
-                    set: Obj::StandardSet(StandardSet::R), line_file: fact.line_file.clone(),
-                }.into();
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: value.clone(),
+                    set: Obj::StandardSet(StandardSet::R),
+                    line_file: fact.line_file.clone(),
+                }
+                .into();
                 let real_proof = self.verify_builtin_rule_premise(&domain, verify_state)?;
                 if !real_proof.is_failed() {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SignNonzeroReflection(
-                        SignNonzeroReflectionProof::new(real_proof, sign_nonzero),
-                    )));
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::SignNonzeroReflection(
+                            SignNonzeroReflectionProof::new(real_proof, sign_nonzero),
+                        ),
+                    ));
                 }
             }
         }
@@ -397,37 +460,50 @@ impl Runtime {
         // Consume a checked nonzero difference/sum; never recursively prove it.
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             let difference = Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
-                left: Box::new(left.clone()), right: Box::new(right.clone()),
+                left: Box::new(left.clone()),
+                right: Box::new(right.clone()),
             }));
             if let Some(premise_proof) = self.known_not_equal_proof(&difference, &zero_obj()) {
-                return Ok(Some(NotEqualFactSearchProofByBuiltinRule::InequalityFromDifferenceNonzero(
-                    InequalityFromDifferenceNonzeroBuiltinRuleProof { premise_proof },
-                )));
+                return Ok(Some(
+                    NotEqualFactSearchProofByBuiltinRule::InequalityFromDifferenceNonzero(
+                        InequalityFromDifferenceNonzeroBuiltinRuleProof { premise_proof },
+                    ),
+                ));
             }
             let negated_arg = match right {
                 Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => Some(neg.arg.as_ref()),
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) if is_zero_obj(&sub.left) => Some(sub.right.as_ref()),
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) if is_zero_obj(&sub.left) => {
+                    Some(sub.right.as_ref())
+                }
                 _ => None,
             };
             if let Some(arg) = negated_arg {
                 for (a, b) in [(left, arg), (arg, left)] {
                     let sum = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
-                        left: Box::new(a.clone()), right: Box::new(b.clone()),
+                        left: Box::new(a.clone()),
+                        right: Box::new(b.clone()),
                     }));
                     if let Some(premise_proof) = self.known_not_equal_proof(&sum, &zero_obj()) {
-                        return Ok(Some(NotEqualFactSearchProofByBuiltinRule::InequalityFromSumNonzero(
-                            InequalityFromSumNonzeroBuiltinRuleProof { premise_proof },
-                        )));
+                        return Ok(Some(
+                            NotEqualFactSearchProofByBuiltinRule::InequalityFromSumNonzero(
+                                InequalityFromSumNonzeroBuiltinRuleProof { premise_proof },
+                            ),
+                        ));
                     }
                 }
             }
             if let Obj::ComplexOperator(ComplexOperator::ComplexAbs(modulus)) = left {
                 if is_zero_obj(right) {
                     if let Some(NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(p)) =
-                        self.abs_nonzero_from_arg_proof(&modulus.arg, verify_state.clone())? {
-                        return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ComplexModulusNonzero(
-                            ComplexModulusNonzeroBuiltinRuleProof { arg_nonzero_proof: p.arg_nonzero_proof },
-                        )));
+                        self.abs_nonzero_from_arg_proof(&modulus.arg, verify_state.clone())?
+                    {
+                        return Ok(Some(
+                            NotEqualFactSearchProofByBuiltinRule::ComplexModulusNonzero(
+                                ComplexModulusNonzeroBuiltinRuleProof {
+                                    arg_nonzero_proof: p.arg_nonzero_proof,
+                                },
+                            ),
+                        ));
                     }
                 }
             }
@@ -446,44 +522,56 @@ impl Runtime {
                 ));
             }
 
-            (Obj::TrigOperator(TrigOperator::Cos(Cos { arg })), right)
-                if is_zero_obj(right) =>
-            {
+            (Obj::TrigOperator(TrigOperator::Cos(Cos { arg })), right) if is_zero_obj(right) => {
                 if is_zero_obj(arg.as_ref()) {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(
-                        CosNonzeroAtZeroBuiltinRuleProof {},
-                    )));
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(
+                            CosNonzeroAtZeroBuiltinRuleProof {},
+                        ),
+                    ));
                 }
                 if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
-                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(
-                        super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
-                    )));
+                if let Some((lower_bound_proof, upper_bound_proof)) =
+                    self.first_quadrant_bounds_for_arg(arg.as_ref())
+                {
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(
+                            super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof {
+                                lower_bound_proof,
+                                upper_bound_proof,
+                            },
+                        ),
+                    ));
                 }
             }
-            (left, Obj::TrigOperator(TrigOperator::Cos(Cos { arg })))
-                if is_zero_obj(left) =>
-            {
+            (left, Obj::TrigOperator(TrigOperator::Cos(Cos { arg }))) if is_zero_obj(left) => {
                 if is_zero_obj(arg.as_ref()) {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(
-                        CosNonzeroAtZeroBuiltinRuleProof {},
-                    )));
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(
+                            CosNonzeroAtZeroBuiltinRuleProof {},
+                        ),
+                    ));
                 }
                 if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
-                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(
-                        super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
-                    )));
+                if let Some((lower_bound_proof, upper_bound_proof)) =
+                    self.first_quadrant_bounds_for_arg(arg.as_ref())
+                {
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(
+                            super::trig_first_quadrant::CosNonzeroOnFirstQuadrantProof {
+                                lower_bound_proof,
+                                upper_bound_proof,
+                            },
+                        ),
+                    ));
                 }
             }
 
-            (Obj::TrigOperator(TrigOperator::Sin(Sin { arg })), right)
-                if is_zero_obj(right) =>
-            {
+            (Obj::TrigOperator(TrigOperator::Sin(Sin { arg })), right) if is_zero_obj(right) => {
                 if is_half_pi_obj(arg.as_ref()) {
                     return Ok(Some(
                         NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHalfPi(
@@ -494,15 +582,20 @@ impl Runtime {
                 if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
-                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(
-                        super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
-                    )));
+                if let Some((lower_bound_proof, upper_bound_proof)) =
+                    self.first_quadrant_bounds_for_arg(arg.as_ref())
+                {
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(
+                            super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof {
+                                lower_bound_proof,
+                                upper_bound_proof,
+                            },
+                        ),
+                    ));
                 }
             }
-            (left, Obj::TrigOperator(TrigOperator::Sin(Sin { arg })))
-                if is_zero_obj(left) =>
-            {
+            (left, Obj::TrigOperator(TrigOperator::Sin(Sin { arg }))) if is_zero_obj(left) => {
                 if is_half_pi_obj(arg.as_ref()) {
                     return Ok(Some(
                         NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHalfPi(
@@ -513,28 +606,33 @@ impl Runtime {
                 if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref())? {
                     return Ok(Some(proof));
                 }
-                if let Some((lower_bound_proof, upper_bound_proof)) = self.first_quadrant_bounds_for_arg(arg.as_ref()) {
-                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(
-                        super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof { lower_bound_proof, upper_bound_proof },
-                    )));
+                if let Some((lower_bound_proof, upper_bound_proof)) =
+                    self.first_quadrant_bounds_for_arg(arg.as_ref())
+                {
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(
+                            super::trig_first_quadrant::SinNonzeroOnFirstQuadrantProof {
+                                lower_bound_proof,
+                                upper_bound_proof,
+                            },
+                        ),
+                    ));
                 }
             }
 
             // `abs(x) != 0` from `x != 0`
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })),
-                right,
-            ) if is_zero_obj(right) => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })), right)
+                if is_zero_obj(right) =>
+            {
                 if let Some(proof) =
                     self.abs_nonzero_from_arg_proof(arg.as_ref(), verify_state.clone())?
                 {
                     return Ok(Some(proof));
                 }
             }
-            (
-                left,
-                Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })),
-            ) if is_zero_obj(left) => {
+            (left, Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })))
+                if is_zero_obj(left) =>
+            {
                 if let Some(proof) =
                     self.abs_nonzero_from_arg_proof(arg.as_ref(), verify_state.clone())?
                 {
@@ -543,10 +641,9 @@ impl Runtime {
             }
 
             // `a - b != 0` from `a != b`
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
-                zero,
-            ) if is_zero_obj(zero) => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })), zero)
+                if is_zero_obj(zero) =>
+            {
                 if let Some(proof) = self.diff_nonzero_from_inequality_proof(
                     left.as_ref(),
                     right.as_ref(),
@@ -555,10 +652,9 @@ impl Runtime {
                     return Ok(Some(proof));
                 }
             }
-            (
-                zero,
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
-            ) if is_zero_obj(zero) => {
+            (zero, Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })))
+                if is_zero_obj(zero) =>
+            {
                 if let Some(proof) = self.diff_nonzero_from_inequality_proof(
                     left.as_ref(),
                     right.as_ref(),
@@ -569,10 +665,9 @@ impl Runtime {
             }
 
             // `a^n != 0` from `a != 0` (integer exponent)
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent })),
-                right,
-            ) if is_zero_obj(right) => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent })), right)
+                if is_zero_obj(right) =>
+            {
                 if let Some(proof) = self.pow_nonzero_from_base_proof(
                     base.as_ref(),
                     exponent.as_ref(),
@@ -581,10 +676,9 @@ impl Runtime {
                     return Ok(Some(proof));
                 }
             }
-            (
-                left,
-                Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent })),
-            ) if is_zero_obj(left) => {
+            (left, Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent })))
+                if is_zero_obj(left) =>
+            {
                 if let Some(proof) = self.pow_nonzero_from_base_proof(
                     base.as_ref(),
                     exponent.as_ref(),
@@ -595,10 +689,9 @@ impl Runtime {
             }
 
             // `a / b != 0` from `a != 0` and `b != 0`
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left, right })),
-                zero,
-            ) if is_zero_obj(zero) => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left, right })), zero)
+                if is_zero_obj(zero) =>
+            {
                 if let Some(proof) = self.div_nonzero_from_factors_proof(
                     left.as_ref(),
                     right.as_ref(),
@@ -607,10 +700,9 @@ impl Runtime {
                     return Ok(Some(proof));
                 }
             }
-            (
-                zero,
-                Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left, right })),
-            ) if is_zero_obj(zero) => {
+            (zero, Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left, right })))
+                if is_zero_obj(zero) =>
+            {
                 if let Some(proof) = self.div_nonzero_from_factors_proof(
                     left.as_ref(),
                     right.as_ref(),
@@ -641,10 +733,9 @@ impl Runtime {
             }
 
             // `a + b != 0` from `a != -b`
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })),
-                zero,
-            ) if is_zero_obj(zero) => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })), zero)
+                if is_zero_obj(zero) =>
+            {
                 if let Some(proof) = self.add_nonzero_from_not_equal_negation_proof(
                     left.as_ref(),
                     right.as_ref(),
@@ -653,10 +744,9 @@ impl Runtime {
                     return Ok(Some(proof));
                 }
             }
-            (
-                zero,
-                Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })),
-            ) if is_zero_obj(zero) => {
+            (zero, Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })))
+                if is_zero_obj(zero) =>
+            {
                 if let Some(proof) = self.add_nonzero_from_not_equal_negation_proof(
                     left.as_ref(),
                     right.as_ref(),
@@ -687,7 +777,9 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
-        if let Some(proof) = self.search_scalar_nonzero_relation(fact)? { return Ok(Some(proof)); }
+        if let Some(proof) = self.search_scalar_nonzero_relation(fact)? {
+            return Ok(Some(proof));
+        }
         Ok(None)
     }
 
@@ -718,9 +810,11 @@ impl Runtime {
         if arg_nonzero_proof.is_failed() {
             return Ok(None);
         }
-        Ok(Some(NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(
-            AbsNonzeroFromArgBuiltinRuleProof { arg_nonzero_proof },
-        )))
+        Ok(Some(
+            NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(
+                AbsNonzeroFromArgBuiltinRuleProof { arg_nonzero_proof },
+            ),
+        ))
     }
 
     fn diff_nonzero_from_inequality_proof(
@@ -757,14 +851,24 @@ impl Runtime {
         let mut lower_bound_proof = None;
         for bound in trig_interval_bound_spellings(&lower) {
             lower_bound_proof = self.trig_nonzero_bound_from_known_order(&bound, arg)?;
-            if lower_bound_proof.is_some() { break; }
+            if lower_bound_proof.is_some() {
+                break;
+            }
         }
-        let Some(lower_bound_proof) = lower_bound_proof else { return Ok(None); };
-        let Some(upper_bound_proof) = self.trig_nonzero_bound_from_known_order(arg, &upper)?
-            else { return Ok(None); };
-        Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(
-            CosNonzeroOnOpenHalfPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
-        )))
+        let Some(lower_bound_proof) = lower_bound_proof else {
+            return Ok(None);
+        };
+        let Some(upper_bound_proof) = self.trig_nonzero_bound_from_known_order(arg, &upper)? else {
+            return Ok(None);
+        };
+        Ok(Some(
+            NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(
+                CosNonzeroOnOpenHalfPiBuiltinRuleProof {
+                    lower_bound_proof,
+                    upper_bound_proof,
+                },
+            ),
+        ))
     }
 
     fn sin_nonzero_on_open_pi_for_arg(
@@ -773,13 +877,20 @@ impl Runtime {
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
         let lower = zero_obj();
         let upper = pi_obj();
-        let Some(lower_bound_proof) = self.trig_nonzero_bound_from_known_order(&lower, arg)?
-            else { return Ok(None); };
-        let Some(upper_bound_proof) = self.trig_nonzero_bound_from_known_order(arg, &upper)?
-            else { return Ok(None); };
-        Ok(Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
-            SinNonzeroOnOpenPiBuiltinRuleProof { lower_bound_proof, upper_bound_proof },
-        )))
+        let Some(lower_bound_proof) = self.trig_nonzero_bound_from_known_order(&lower, arg)? else {
+            return Ok(None);
+        };
+        let Some(upper_bound_proof) = self.trig_nonzero_bound_from_known_order(arg, &upper)? else {
+            return Ok(None);
+        };
+        Ok(Some(
+            NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
+                SinNonzeroOnOpenPiBuiltinRuleProof {
+                    lower_bound_proof,
+                    upper_bound_proof,
+                },
+            ),
+        ))
     }
 
     // A nonzero interval leaf may consume one direct bound or exactly two
@@ -791,20 +902,28 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactKnownProof>> {
-        if let Some(proof) = self.known_less_proof(left, right)
-            .or_else(|| self.known_greater_proof(right, left)) {
+        if let Some(proof) = self
+            .known_less_proof(left, right)
+            .or_else(|| self.known_greater_proof(right, left))
+        {
             return Ok(Some(proof));
         }
         let fact = LessFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: left.clone(), right: right.clone(), line_file: None,
+            left: left.clone(),
+            right: right.clone(),
+            line_file: None,
         };
-        let Some(proof) = self.less_transitivity_proof(&fact)? else { return Ok(None); };
+        let Some(proof) = self.less_transitivity_proof(&fact)? else {
+            return Ok(None);
+        };
         Ok(Some(AtomicExceptEqualityFactKnownProof {
             fact: fact.into(),
-            searched_proof: Box::new(super::super::result::AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-                super::AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(proof),
-            )),
+            searched_proof: Box::new(
+                super::super::result::AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                    super::AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(proof),
+                ),
+            ),
         }))
     }
 
@@ -960,15 +1079,14 @@ impl Runtime {
         } else {
             return None;
         };
-        let key = (
-            AtomicName::Plain {
-                name: EQUAL.into(),
-            },
-            false,
-        );
+        let key = (AtomicName::Plain { name: EQUAL.into() }, false);
         let mut candidates = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
-            let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key)
+            let Some(knowns) = env
+                .facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .get(&key)
             else {
                 continue;
             };
@@ -1049,7 +1167,8 @@ impl Runtime {
                 element: base.clone(),
                 set: Obj::StandardSet(StandardSet::R),
                 line_file: None,
-            }.into();
+            }
+            .into();
             let proof = self.verify_builtin_rule_premise(&membership, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
@@ -1086,17 +1205,21 @@ impl Runtime {
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
         let neg_right = negate_obj(right);
         let neg_left = negate_obj(left);
-        let native_neg_right = Obj::ArithmeticOperator(ArithmeticOperator::Neg(
-            crate::ast::obj::Neg { arg: Box::new(right.clone()) },
-        ));
-        let native_neg_left = Obj::ArithmeticOperator(ArithmeticOperator::Neg(
-            crate::ast::obj::Neg { arg: Box::new(left.clone()) },
-        ));
+        let native_neg_right =
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(crate::ast::obj::Neg {
+                arg: Box::new(right.clone()),
+            }));
+        let native_neg_left =
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(crate::ast::obj::Neg {
+                arg: Box::new(left.clone()),
+            }));
         // Both existing representations denote the additive inverse.
         // Example: a != -b, as well as a != 0-b, proves a+b != 0.
         for (a, neg_b) in [
-            (left, &neg_right), (right, &neg_left),
-            (left, &native_neg_right), (right, &native_neg_left),
+            (left, &neg_right),
+            (right, &neg_left),
+            (left, &native_neg_right),
+            (right, &native_neg_left),
         ] {
             let goal = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -1128,7 +1251,11 @@ impl Runtime {
             let member_ir = member.ir();
             let mut candidate_sets = Vec::new();
             for env in self.execution_environments_stack.iter().rev() {
-                let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&in_key)
+                let Some(knowns) = env
+                    .facts
+                    .known_atomic_except_equality_facts
+                    .by_prop
+                    .get(&in_key)
                 else {
                     continue;
                 };
@@ -1157,7 +1284,8 @@ impl Runtime {
                     set,
                     line_file: None,
                 }));
-                let not_in_proof = self.verify_builtin_rule_premise(&not_in_goal, verify_state.clone())?;
+                let not_in_proof =
+                    self.verify_builtin_rule_premise(&not_in_goal, verify_state.clone())?;
                 if not_in_proof.is_failed() {
                     continue;
                 }

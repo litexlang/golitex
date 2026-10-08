@@ -302,11 +302,21 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::LogOfPowerSameBase(LogOfPowerSameBaseBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
-        actual_log_algebra_fixture("forall a,x R+,n Z:\n    a<1\n    =>:\n        log(a,x^n)=n*log(a,x)\n"),
-        actual_log_algebra_fixture("forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x*y)=log(a,x)+log(a,y)\n"),
-        actual_log_algebra_fixture("forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x/y)=log(a,x)-log(a,y)\n"),
-        actual_log_algebra_fixture("forall a,x R+:\n    a<1\n    =>:\n        log(a,1/x)=-log(a,x)\n"),
-        actual_log_algebra_fixture("forall a,b,x R+:\n    a!=1\n    b!=1\n    =>:\n        log(a,x)=log(b,x)/log(b,a)\n"),
+        actual_log_algebra_fixture(
+            "forall a,x R+,n Z:\n    a<1\n    =>:\n        log(a,x^n)=n*log(a,x)\n",
+        ),
+        actual_log_algebra_fixture(
+            "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x*y)=log(a,x)+log(a,y)\n",
+        ),
+        actual_log_algebra_fixture(
+            "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x/y)=log(a,x)-log(a,y)\n",
+        ),
+        actual_log_algebra_fixture(
+            "forall a,x R+:\n    a<1\n    =>:\n        log(a,1/x)=-log(a,x)\n",
+        ),
+        actual_log_algebra_fixture(
+            "forall a,b,x R+:\n    a!=1\n    b!=1\n    =>:\n        log(a,x)=log(b,x)/log(b,a)\n",
+        ),
         EqualitySearchProofByBuiltinRule::ZeroMod(ZeroModBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
@@ -538,7 +548,6 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
                 proof_of_requirement_facts: Vec::new(),
             },
         ),
-
         EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(
             FiniteSetSizeSetMinusBuiltinRuleProof {},
         ),
@@ -675,7 +684,9 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
             ComplexAbsSquaredOfRectFormBuiltinRuleProof {},
         ),
         EqualitySearchProofByBuiltinRule::ExpOfSum(ExpOfSumBuiltinRuleProof {}),
-        actual_log_algebra_fixture("forall a,x R+,n Z*:\n    a!=1\n    =>:\n        log(a^n,x)=log(a,x)/n\n"),
+        actual_log_algebra_fixture(
+            "forall a,x R+,n Z*:\n    a!=1\n    =>:\n        log(a^n,x)=log(a,x)/n\n",
+        ),
         EqualitySearchProofByBuiltinRule::ReOfProduct(ReOfProductBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::ImgOfProduct(ImgOfProductBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::SinOfSum(SinOfSumBuiltinRuleProof {}),
@@ -727,12 +738,7 @@ fn acceptance_equality_builtin_all_variants_bilingual() {
         );
         for language in OutputLanguage::ALL.into_iter().skip(2) {
             let localized = rule.rule_name_and_message(language);
-            assert_builtin_text_ok(
-                &context,
-                language,
-                &localized.rule_name,
-                &localized.message,
-            );
+            assert_builtin_text_ok(&context, language, &localized.rule_name, &localized.message);
             if has_english_prose(&en.message) {
                 assert_ne!(
                     localized.message, en.message,
@@ -774,11 +780,17 @@ fn acceptance_equality_named_language_methods_match_dispatch_for_every_variant()
 #[test]
 fn localized_copy_states_the_actual_rule_instead_of_an_unrelated_formula() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::ZeroFromNatAndOneLeBuiltinRuleProof;
-    let sqrt = SqrtSquareBuiltinRuleProof { proof_of_requirement_facts: vec![] };
+    let sqrt = SqrtSquareBuiltinRuleProof {
+        proof_of_requirement_facts: vec![],
+    };
     let difference = IntersectSetMinusSelfEmptyBuiltinRuleProof {};
     let arcsin = ArcsinExactZeroBuiltinRuleProof {};
-    let inverse = ArcsinSinRightInverseBuiltinRuleProof { proof_of_requirement_facts: vec![] };
-    let nonzero = ZeroFromNatAndOneLeBuiltinRuleProof { proof_of_requirement_facts: vec![] };
+    let inverse = ArcsinSinRightInverseBuiltinRuleProof {
+        proof_of_requirement_facts: vec![],
+    };
+    let nonzero = ZeroFromNatAndOneLeBuiltinRuleProof {
+        proof_of_requirement_facts: vec![],
+    };
     for lang in OutputLanguage::ALL {
         let text = sqrt.rule_name_and_message(lang);
         assert!(text.message.contains("(sqrt(x))^2 = x (x ≥ 0)"), "{lang:?}");
@@ -1155,7 +1167,6 @@ fn acceptance_previously_stubbed_atomic_families_bilingual() {
         IsFiniteSetFactSearchProofByBuiltinRule, ListSetFiniteBuiltinRuleProof,
     };
 
-
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::{
         SubsetFactSearchProofByBuiltinRule, SubsetReflexivityBuiltinRuleProof,
     };
@@ -1236,7 +1247,6 @@ fn acceptance_previously_stubbed_atomic_families_bilingual() {
                 ClosedNumericMembershipBuiltinRuleProof {},
             ),
         ),
-
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(
             SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(
                 SubsetReflexivityBuiltinRuleProof {},
@@ -1427,34 +1437,66 @@ fn acceptance_all_locales_cover_statement_and_proof_routes() {
     }
 }
 
-
 fn actual_log_algebra_fixture(code: &str) -> EqualitySearchProofByBuiltinRule {
-    use crate::execute::{ExecFactStmtResult, ExecStmtResult};
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
+        EqualFactSearchedProof, VerifyEqualityResult,
+    };
+    use crate::execute::execute_fact_stmt::verify_forall_fact::{
+        VerifyForallFactProof, VerifyForallFactResult,
+    };
     use crate::execute::execute_fact_stmt::VerifyFactResult;
-    use crate::execute::execute_fact_stmt::verify_forall_fact::{VerifyForallFactProof, VerifyForallFactResult};
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{EqualFactSearchedProof, VerifyEqualityResult};
+    use crate::execute::{ExecFactStmtResult, ExecStmtResult};
     let mut runtime = runtime_en();
     let mut run = runtime.run_litex_code(code).unwrap();
     assert!(run.success && run.session_error.is_none());
-    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = run.statement_results.pop().unwrap() else { panic!("actual forall") };
-    let VerifyFactResult::ForallFact(proof) = statement.verify_result else { panic!("forall result") };
-    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(mut proof)) = *proof else { panic!("local introduction") };
-    let VerifyFactResult::Equality(proof) = proof.proved_then_facts.pop().unwrap().verify_result else { panic!("actual equality") };
-    let VerifyEqualityResult::Success(proof) = *proof else { panic!("equality success") };
-    let EqualFactSearchedProof::ByBuiltinRule(rule) = proof.searched_proof else { panic!("actual builtin") };
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+        run.statement_results.pop().unwrap()
+    else {
+        panic!("actual forall")
+    };
+    let VerifyFactResult::ForallFact(proof) = statement.verify_result else {
+        panic!("forall result")
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(mut proof)) =
+        *proof
+    else {
+        panic!("local introduction")
+    };
+    let VerifyFactResult::Equality(proof) = proof.proved_then_facts.pop().unwrap().verify_result
+    else {
+        panic!("actual equality")
+    };
+    let VerifyEqualityResult::Success(proof) = *proof else {
+        panic!("equality success")
+    };
+    let EqualFactSearchedProof::ByBuiltinRule(rule) = proof.searched_proof else {
+        panic!("actual builtin")
+    };
     rule
 }
 
 fn actual_function_domain_fixture(code: &str) -> EqualitySearchProofByBuiltinRule {
-    use crate::execute::{ExecFactStmtResult, ExecStmtResult};
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
+        EqualFactSearchedProof, VerifyEqualityResult,
+    };
     use crate::execute::execute_fact_stmt::VerifyFactResult;
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{EqualFactSearchedProof, VerifyEqualityResult};
+    use crate::execute::{ExecFactStmtResult, ExecStmtResult};
     let mut runtime = runtime_en();
     let mut run = runtime.run_litex_code(code).unwrap();
     assert!(run.success && run.session_error.is_none(), "{code}");
-    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = run.statement_results.pop().unwrap() else { panic!("actual function-domain fact") };
-    let VerifyFactResult::Equality(proof) = statement.verify_result else { panic!("actual equality") };
-    let VerifyEqualityResult::Success(proof) = *proof else { panic!("actual equality success") };
-    let EqualFactSearchedProof::ByBuiltinRule(rule) = proof.searched_proof else { panic!("actual function-domain builtin") };
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+        run.statement_results.pop().unwrap()
+    else {
+        panic!("actual function-domain fact")
+    };
+    let VerifyFactResult::Equality(proof) = statement.verify_result else {
+        panic!("actual equality")
+    };
+    let VerifyEqualityResult::Success(proof) = *proof else {
+        panic!("actual equality success")
+    };
+    let EqualFactSearchedProof::ByBuiltinRule(rule) = proof.searched_proof else {
+        panic!("actual function-domain builtin")
+    };
     rule
 }

@@ -1,13 +1,13 @@
 use super::super::keywords::{
-    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, STRATEGY, STRUCT, TEMPLATE
+    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, STRATEGY, STRUCT, TEMPLATE,
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::ast::fact::QuantifierFreeFact;
 use crate::ast::line_file::SourceLine;
 use crate::ast::param::TypedParameterList;
 use crate::ast::stmt::{
-    DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefineObjStmt, DefinitionStmt, Stmt, StructFieldDef,
-    TemplateDefEnum, TrustBoundaryStmt
+    DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefineObjStmt, DefinitionStmt, Stmt,
+    StructFieldDef, TemplateDefEnum, TrustBoundaryStmt,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
@@ -82,15 +82,15 @@ impl Runtime {
                         .advance()
                         .map_err(|_| field_tb.parse_error("struct field expects a name"))?;
                     if !is_simple_name(&binding_name) {
-                        return Err(field_tb
-                            .parse_error(format!("invalid struct field `{binding_name}`")));
+                        return Err(
+                            field_tb.parse_error(format!("invalid struct field `{binding_name}`"))
+                        );
                     }
                     if fields.iter().any(|f| f.binding.name == binding_name) {
                         return Err(field_tb
                             .parse_error(format!("duplicate struct field `{binding_name}`")));
                     }
-                    let binding =
-                        self.define_plain_atom_as_parse(&field_tb, binding_name)?;
+                    let binding = self.define_plain_atom_as_parse(&field_tb, binding_name)?;
                     let field_type = parse_obj(self, &mut field_tb)?;
                     if !field_tb.exceed_end_of_head() {
                         return Err(
@@ -99,7 +99,7 @@ impl Runtime {
                     }
                     fields.push(StructFieldDef {
                         binding,
-                        field_type
+                        field_type,
                     });
                 }
             }
@@ -119,7 +119,7 @@ impl Runtime {
                 param_def_with_dom,
                 fields,
                 equivalent_facts,
-                line_file: SourceLine::new(block.line, self.code_source.clone())
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -143,16 +143,14 @@ impl Runtime {
                 return Err(tb.parse_error("template: unexpected tokens after header `:`"));
             }
             if tb.body.len() != 1 {
-                return Err(tb.parse_error(
-                    "template definition expects exactly one body statement",
-                ));
+                return Err(
+                    tb.parse_error("template definition expects exactly one body statement")
+                );
             }
             let body_stmt = self.parse_token_block(&tb.body[0])?;
             let template_def_stmt = template_def_enum_from_body_stmt(body_stmt, &tb)?;
             let template_name = template_def_enum_name(&template_def_stmt).ok_or_else(|| {
-                tb.parse_error(
-                    "template body must define exactly one object or function name",
-                )
+                tb.parse_error("template body must define exactly one object or function name")
             })?;
             Ok((
                 template_name,
@@ -171,7 +169,7 @@ impl Runtime {
                 template_arg_def,
                 template_arg_dom,
                 template_def_stmt,
-                line_file: SourceLine::new(block.line, self.code_source.clone())
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -183,19 +181,16 @@ impl Runtime {
     ) -> RuntimeResult<(TypedParameterList, Vec<QuantifierFreeFact>)> {
         tb.expect(LESS)?;
         let mut groups = Vec::new();
-        while !tb.exceed_end_of_head()
-            && tb.peek() != Some(GREATER)
-            && tb.peek() != Some(COLON)
-        {
+        while !tb.exceed_end_of_head() && tb.peek() != Some(GREATER) && tb.peek() != Some(COLON) {
             groups.push(self.parse_one_typed_param_group(tb)?);
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;
             }
         }
         if groups.is_empty() {
-            return Err(tb.parse_error(
-                "template header expects at least one parameter inside `<...>`",
-            ));
+            return Err(
+                tb.parse_error("template header expects at least one parameter inside `<...>`")
+            );
         }
 
         let mut template_arg_dom = Vec::new();
@@ -248,38 +243,35 @@ impl Runtime {
                 name,
                 forall_fact,
                 prove_process,
-                line_file: SourceLine::new(block.line, self.code_source.clone())
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
 }
 
-fn template_def_enum_from_body_stmt(
-    body: Stmt,
-    tb: &TokenBlock,
-) -> RuntimeResult<TemplateDefEnum> {
+fn template_def_enum_from_body_stmt(body: Stmt, tb: &TokenBlock) -> RuntimeResult<TemplateDefEnum> {
     match body {
-        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjInNonemptySetStmt(stmt))) => {
-            Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))
-        }
+        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjInNonemptySetStmt(
+            stmt,
+        ))) => Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt)),
         Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjEqualStmt(stmt))) => {
             Ok(TemplateDefEnum::HaveObjEqualStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjByExistFactsStmt(stmt))) => {
-            Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
-        }
-        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByReplacementAxiomStmt(stmt))) => {
-            Ok(TemplateDefEnum::HaveByReplacementAxiomStmt(stmt))
-        }
+        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjByExistFactsStmt(
+            stmt,
+        ))) => Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt)),
+        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByReplacementAxiomStmt(
+            stmt,
+        ))) => Ok(TemplateDefEnum::HaveByReplacementAxiomStmt(stmt)),
         Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(stmt)) => {
             Ok(TemplateDefEnum::TrustHaveStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromExistFact(stmt))) => {
-            Ok(TemplateDefEnum::ObtainObjFromExistFact(stmt))
-        }
-        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromAtomicFact(stmt))) => {
-            Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt))
-        }
+        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromExistFact(
+            stmt,
+        ))) => Ok(TemplateDefEnum::ObtainObjFromExistFact(stmt)),
+        Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromAtomicFact(
+            stmt,
+        ))) => Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt)),
         Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))
         }
@@ -294,7 +286,7 @@ fn template_def_enum_from_body_stmt(
         }
         _ => Err(tb.parse_error(
             "template body only supports `have` / `trust have` / `obtain` definition statements",
-        ))
+        )),
     }
 }
 
@@ -305,12 +297,16 @@ fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
         TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => first_typed_param_name(&stmt.param_def),
         TemplateDefEnum::HaveByReplacementAxiomStmt(stmt) => Some(stmt.name.name.clone()),
         TemplateDefEnum::TrustHaveStmt(stmt) => first_typed_param_name(&stmt.param_def),
-        TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.equal_tos.first().map(|bound| bound.name.clone()),
-        TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.equal_tos.first().map(|bound| bound.name.clone()),
+        TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
+            stmt.equal_tos.first().map(|bound| bound.name.clone())
+        }
+        TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
+            stmt.equal_tos.first().map(|bound| bound.name.clone())
+        }
         TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.name.clone()),
         TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.name.clone()),
         TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.name.clone()),
-        TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.name.name.clone())
+        TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.name.name.clone()),
     }
 }
 

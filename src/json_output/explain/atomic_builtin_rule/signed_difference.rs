@@ -18,7 +18,10 @@ impl LessFromNegativeDifferenceBuiltinRuleProof {
         text("差為負推出嚴格大小關係", "若 a - b 為負，則 a < b。")
     }
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Différence négative et ordre strict", "Si a - b est négatif, alors a < b.")
+        text(
+            "Différence négative et ordre strict",
+            "Si a - b est négatif, alors a < b.",
+        )
     }
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
@@ -27,10 +30,16 @@ impl LessFromNegativeDifferenceBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Diferencia negativa y orden estricto", "Si a - b es negativo, entonces a < b.")
+        text(
+            "Diferencia negativa y orden estricto",
+            "Si a - b es negativo, entonces a < b.",
+        )
     }
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الفرق السالب والترتيب الصارم", "إذا كان a - b سالبًا فإن a < b.")
+        text(
+            "الفرق السالب والترتيب الصارم",
+            "إذا كان a - b سالبًا فإن a < b.",
+        )
     }
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text("負の差と厳密な順序", "a - b が負なら a < b です。")
@@ -71,7 +80,10 @@ impl NegativeDifferenceFromLessBuiltinRuleProof {
         text("嚴格大小關係推出差為負", "若 a < b，則差 a - b 為負。")
     }
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Ordre strict et différence négative", "Si a < b, alors a - b est négatif.")
+        text(
+            "Ordre strict et différence négative",
+            "Si a < b, alors a - b est négatif.",
+        )
     }
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
@@ -80,19 +92,31 @@ impl NegativeDifferenceFromLessBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Orden estricto y diferencia negativa", "Si a < b, entonces a - b es negativo.")
+        text(
+            "Orden estricto y diferencia negativa",
+            "Si a < b, entonces a - b es negativo.",
+        )
     }
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الترتيب الصارم يعطي فرقًا سالبًا", "إذا كان a < b فإن الفرق a - b سالب.")
+        text(
+            "الترتيب الصارم يعطي فرقًا سالبًا",
+            "إذا كان a < b فإن الفرق a - b سالب.",
+        )
     }
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text("厳密な順序から負の差", "a < b なら差 a - b は負です。")
     }
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("엄격한 순서에서 음의 차", "a < b이면 차 a - b는 음수입니다.")
+        text(
+            "엄격한 순서에서 음의 차",
+            "a < b이면 차 a - b는 음수입니다.",
+        )
     }
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Thứ tự nghiêm ngặt cho hiệu âm", "Nếu a < b thì hiệu a - b âm.")
+        text(
+            "Thứ tự nghiêm ngặt cho hiệu âm",
+            "Nếu a < b thì hiệu a - b âm.",
+        )
     }
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
@@ -136,16 +160,25 @@ impl LessEqualFromNonpositiveDifferenceBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Diferencia no positiva y orden débil", "Si a - b no es positivo, entonces a <= b.")
+        text(
+            "Diferencia no positiva y orden débil",
+            "Si a - b no es positivo, entonces a <= b.",
+        )
     }
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الفرق غير الموجب والترتيب غير الصارم", "إذا كان a - b غير موجب فإن a <= b.")
+        text(
+            "الفرق غير الموجب والترتيب غير الصارم",
+            "إذا كان a - b غير موجب فإن a <= b.",
+        )
     }
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         text("非正の差と弱い順序", "a - b が非正なら a <= b です。")
     }
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("양이 아닌 차와 비엄격 순서", "a - b가 양수가 아니면 a <= b입니다.")
+        text(
+            "양이 아닌 차와 비엄격 순서",
+            "a - b가 양수가 아니면 a <= b입니다.",
+        )
     }
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text(
@@ -195,7 +228,10 @@ impl NonpositiveDifferenceFromLessEqualBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Orden débil y diferencia no positiva", "Si a <= b, entonces a - b no es positivo.")
+        text(
+            "Orden débil y diferencia no positiva",
+            "Si a <= b, entonces a - b no es positivo.",
+        )
     }
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         text(
@@ -207,7 +243,10 @@ impl NonpositiveDifferenceFromLessEqualBuiltinRuleProof {
         text("弱い順序から非正の差", "a <= b なら差 a - b は非正です。")
     }
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("비엄격 순서에서 양이 아닌 차", "a <= b이면 차 a - b는 양수가 아닙니다.")
+        text(
+            "비엄격 순서에서 양이 아닌 차",
+            "a <= b이면 차 a - b는 양수가 아닙니다.",
+        )
     }
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text(

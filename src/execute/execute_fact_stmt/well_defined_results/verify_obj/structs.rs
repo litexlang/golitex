@@ -5,10 +5,12 @@ use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::{finish_by_def, wrap_common_fail};
 use crate::ast::fact::{
-    AtomicFact, EqualFact, ExistShapedFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+    AtomicFact, EqualFact, ExistShapedFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact,
+    IsSetFact,
 };
 use crate::ast::obj::{
-    FieldAccess, FnSet, FunctionSpace, InstantiatedTemplateObj, Obj, StructAndFieldAccessObj, StructObj,
+    FieldAccess, FnSet, FunctionSpace, InstantiatedTemplateObj, Obj, StructAndFieldAccessObj,
+    StructObj,
 };
 use crate::ast::param::ParamType;
 use crate::ast::stmt::TemplateDefEnum;
@@ -20,13 +22,17 @@ use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
 fn first_exist_function_signature(family: &ExistShapedFact) -> Option<FnSet> {
-    if matches!(family, ExistShapedFact::NotExist(_)) { return None; }
+    if matches!(family, ExistShapedFact::NotExist(_)) {
+        return None;
+    }
     let group = family.plain().typed_parameters.groups.first()?;
-    if group.params.is_empty() { return None; }
+    if group.params.is_empty() {
+        return None;
+    }
     match &group.param_type {
         ParamType::Obj(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) => {
             Some(signature.clone())
-        },
+        }
         _ => None,
     }
 }
@@ -60,7 +66,10 @@ impl Runtime {
             };
             match &def.param_def_with_dom {
                 None => (0, None),
-                Some((params, dom)) => (params.ordered_param_ids().len(), Some((params.clone(), dom.clone()))),
+                Some((params, dom)) => (
+                    params.ordered_param_ids().len(),
+                    Some((params.clone(), dom.clone())),
+                ),
             }
         };
         if value.params.len() != expected_arity {
@@ -86,24 +95,42 @@ impl Runtime {
         let root = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value.clone()));
         if stages.is_fully_known() {
             if let Some((params, dom)) = header {
-                let mut requirements = match self.type_facts_for_typed_arguments(&params, &value.params) {
-                    Ok(facts) => facts,
-                    Err(reason) => return Ok(VerifyObjWellDefinedResult::Failed {
-                        obj: root.clone(),
-                        reason: wrap_common_fail(&root, FailToVerifyObjWellDefinedByDefCommon::Others(reason)),
-                    }),
-                };
-                let subst: HashMap<IdentifierId, Obj> = params.ordered_param_ids().into_iter()
-                    .zip(value.params.iter().cloned()).collect();
+                let mut requirements =
+                    match self.type_facts_for_typed_arguments(&params, &value.params) {
+                        Ok(facts) => facts,
+                        Err(reason) => {
+                            return Ok(VerifyObjWellDefinedResult::Failed {
+                                obj: root.clone(),
+                                reason: wrap_common_fail(
+                                    &root,
+                                    FailToVerifyObjWellDefinedByDefCommon::Others(reason),
+                                ),
+                            })
+                        }
+                    };
+                let subst: HashMap<IdentifierId, Obj> = params
+                    .ordered_param_ids()
+                    .into_iter()
+                    .zip(value.params.iter().cloned())
+                    .collect();
                 for fact in &dom {
                     let instantiated = match self.inst_quantifier_free_fact(fact, &subst) {
                         Ok(fact) => fact,
-                        Err(error) => return Ok(VerifyObjWellDefinedResult::Failed {
-                            obj: root.clone(),
-                            reason: wrap_common_fail(&root, FailToVerifyObjWellDefinedByDefCommon::Others(error.to_string())),
-                        }),
+                        Err(error) => {
+                            return Ok(VerifyObjWellDefinedResult::Failed {
+                                obj: root.clone(),
+                                reason: wrap_common_fail(
+                                    &root,
+                                    FailToVerifyObjWellDefinedByDefCommon::Others(
+                                        error.to_string(),
+                                    ),
+                                ),
+                            })
+                        }
                     };
-                    requirements.push(crate::instantiate::quantifier_free_fact_to_fact(instantiated));
+                    requirements.push(crate::instantiate::quantifier_free_fact_to_fact(
+                        instantiated,
+                    ));
                 }
                 for fact in &requirements {
                     let proof = self.verify_fact(fact, verify_state.clone())?;
@@ -116,15 +143,12 @@ impl Runtime {
             }
         }
         match finish_by_def(&root, stages) {
-            Ok(by_def) => {
-
-                Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: root,
-                        proof: by_def,
-                    },
-                ))
-            }
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
+                ObjWellDefinedProof::ByDef {
+                    obj: root,
+                    proof: by_def,
+                },
+            )),
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: fail,
@@ -218,25 +242,21 @@ impl Runtime {
                     ));
                 }
             }
-            receiver = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(
-                FieldAccess {
+            receiver =
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(FieldAccess {
                     obj: value.obj.clone(),
                     fields: value.fields[..=index].to_vec(),
-                },
-            ));
+                }));
         }
 
         let stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
         match finish_by_def(&root, stages) {
-            Ok(by_def) => {
-
-                Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: root,
-                        proof: by_def,
-                    },
-                ))
-            }
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
+                ObjWellDefinedProof::ByDef {
+                    obj: root,
+                    proof: by_def,
+                },
+            )),
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: fail,
@@ -273,7 +293,10 @@ impl Runtime {
             };
             for prop in props {
                 if let SpecialProperty::DefaultStructView(fact) = prop {
-                    if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) = &fact.set {
+                    if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                        carrier,
+                    )) = &fact.set
+                    {
                         return Some(carrier.clone());
                     }
                 }
@@ -414,15 +437,12 @@ impl Runtime {
 
         let root = Obj::InstantiatedTemplateObj(value.clone());
         match finish_by_def(&root, stages) {
-            Ok(by_def) => {
-
-                Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: root,
-                        proof: by_def,
-                    },
-                ))
-            }
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
+                ObjWellDefinedProof::ByDef {
+                    obj: root,
+                    proof: by_def,
+                },
+            )),
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: fail,
@@ -438,7 +458,9 @@ impl Runtime {
     ) -> Option<FnSet> {
         let def = self.def_template_visible(&value.template_name)?.clone();
         let ids = def.template_arg_def.ordered_param_ids();
-        if ids.len() != value.args.len() { return None; }
+        if ids.len() != value.args.len() {
+            return None;
+        }
         let signature = match &def.template_def_stmt {
             TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.equal_to_anonymous_fn.body.clone(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => FnSet {
@@ -451,31 +473,45 @@ impl Runtime {
                 dom_facts: stmt.fn_set_clause.dom_facts.clone(),
                 ret_set: Box::new(stmt.fn_set_clause.ret_set.clone()),
             },
-            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => self.have_fn_by_exist_signature(stmt)?,
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
+                self.have_fn_by_exist_signature(stmt)?
+            }
             // `obtain` exports its first witness as the template object. Its
             // checked existential binder supplies the same callable carrier as
             // `have fn`; instance WD remains the caller's responsibility.
             TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
                 first_exist_function_signature(&stmt.fact)?
-            },
+            }
             TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
                 let definition = self.def_prop_visible(&stmt.fact.predicate)?.clone();
                 let family = project_sole_positive_exist_clause(&definition.iff_facts).ok()?;
                 let signature = first_exist_function_signature(&family)?;
                 let param_ids = definition.typed_parameters.ordered_param_ids();
-                if param_ids.len() != stmt.fact.body.len() { return None; }
-                let prop_subst = param_ids.into_iter().zip(stmt.fact.body.iter().cloned()).collect();
-                match self.inst_obj(
-                    &Obj::FunctionSpace(FunctionSpace::FnSet(signature)), &prop_subst,
-                ).ok()? {
+                if param_ids.len() != stmt.fact.body.len() {
+                    return None;
+                }
+                let prop_subst = param_ids
+                    .into_iter()
+                    .zip(stmt.fact.body.iter().cloned())
+                    .collect();
+                match self
+                    .inst_obj(
+                        &Obj::FunctionSpace(FunctionSpace::FnSet(signature)),
+                        &prop_subst,
+                    )
+                    .ok()?
+                {
                     Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => signature,
                     _ => return None,
                 }
-            },
+            }
             _ => return None,
         };
         let subst = ids.into_iter().zip(value.args.iter().cloned()).collect();
-        match self.inst_obj(&Obj::FunctionSpace(FunctionSpace::FnSet(signature)), &subst).ok()? {
+        match self
+            .inst_obj(&Obj::FunctionSpace(FunctionSpace::FnSet(signature)), &subst)
+            .ok()?
+        {
             Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => Some(signature),
             _ => None,
         }
@@ -489,7 +525,8 @@ impl Runtime {
     fn maybe_register_instantiated_template_definitional_facts(
         &mut self,
         value: &InstantiatedTemplateObj,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<()> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<()> {
         let Some(def) = self.def_template_visible(&value.template_name).cloned() else {
             return Ok(());
         };
@@ -536,14 +573,16 @@ impl Runtime {
                     value,
                     &have_fn.fn_set_clause,
                     &subst,
-                 verify_state)?;
+                    verify_state,
+                )?;
             }
             TemplateDefEnum::HaveFnByInducStmt(have_fn) => {
                 self.store_instantiated_template_fn_set_membership(
                     value,
                     &have_fn.fn_set_clause,
                     &subst,
-                 verify_state)?;
+                    verify_state,
+                )?;
             }
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
                 // Same three facts as plain `have fn by exist!` / `release obj def`,
@@ -607,7 +646,8 @@ impl Runtime {
         value: &InstantiatedTemplateObj,
         clause: &crate::ast::stmt::FnSetClause,
         subst: &HashMap<IdentifierId, Obj>,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<()> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<()> {
         let fn_set = crate::ast::obj::FnSet {
             set_bound_parameters: clause.set_bound_parameters.clone(),
             dom_facts: clause.dom_facts.clone(),

@@ -216,10 +216,14 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         for difference in difference_spellings(&fact.right, &fact.left) {
-            if let Some(premise_proof) = self.known_signed_difference_order(&zero_obj(), &difference, true) {
-                return Ok(Some(LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(
-                    LessEqualFromNonnegDifferenceBuiltinRuleProof { premise_proof },
-                )));
+            if let Some(premise_proof) =
+                self.known_signed_difference_order(&zero_obj(), &difference, true)
+            {
+                return Ok(Some(
+                    LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(
+                        LessEqualFromNonnegDifferenceBuiltinRuleProof { premise_proof },
+                    ),
+                ));
             }
         }
         Ok(None)
@@ -235,8 +239,12 @@ impl Runtime {
         if !is_zero_obj(&fact.left) {
             return Ok(None);
         }
-        let Some((left, right)) = difference_parts(&fact.right) else { return Ok(None); };
-        let Some(premise_proof) = self.known_signed_difference_order(&right, &left, true) else { return Ok(None); };
+        let Some((left, right)) = difference_parts(&fact.right) else {
+            return Ok(None);
+        };
+        let Some(premise_proof) = self.known_signed_difference_order(&right, &left, true) else {
+            return Ok(None);
+        };
         Ok(Some(
             LessEqualFactSearchProofByBuiltinRule::NonnegDifferenceFromLessEqual(
                 NonnegDifferenceFromLessEqualBuiltinRuleProof { premise_proof },
@@ -253,10 +261,14 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
         for difference in difference_spellings(&fact.right, &fact.left) {
-            if let Some(premise_proof) = self.known_signed_difference_order(&zero_obj(), &difference, false) {
-                return Ok(Some(LessFactSearchProofByBuiltinRule::LessFromPosDifference(
-                    LessFromPosDifferenceBuiltinRuleProof { premise_proof },
-                )));
+            if let Some(premise_proof) =
+                self.known_signed_difference_order(&zero_obj(), &difference, false)
+            {
+                return Ok(Some(
+                    LessFactSearchProofByBuiltinRule::LessFromPosDifference(
+                        LessFromPosDifferenceBuiltinRuleProof { premise_proof },
+                    ),
+                ));
             }
         }
         Ok(None)
@@ -272,11 +284,17 @@ impl Runtime {
         if !is_zero_obj(&fact.left) {
             return Ok(None);
         }
-        let Some((left, right)) = difference_parts(&fact.right) else { return Ok(None); };
-        let Some(premise_proof) = self.known_signed_difference_order(&right, &left, false) else { return Ok(None); };
-        Ok(Some(LessFactSearchProofByBuiltinRule::PosDifferenceFromLess(
-            PosDifferenceFromLessBuiltinRuleProof { premise_proof },
-        )))
+        let Some((left, right)) = difference_parts(&fact.right) else {
+            return Ok(None);
+        };
+        let Some(premise_proof) = self.known_signed_difference_order(&right, &left, false) else {
+            return Ok(None);
+        };
+        Ok(Some(
+            LessFactSearchProofByBuiltinRule::PosDifferenceFromLess(
+                PosDifferenceFromLessBuiltinRuleProof { premise_proof },
+            ),
+        ))
     }
 
     // Euclidean remainder is nonnegative: `a $in Z`, `b $in N+` ⇒ `0 <= a % b`.
@@ -362,7 +380,8 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_equal_fact(left_num, right_num, self);
-        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
+        let numerators_order_proof =
+            self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -397,7 +416,8 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_fact(left_num, right_num, self);
-        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
+        let numerators_order_proof =
+            self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -563,9 +583,7 @@ impl Runtime {
         }
         Ok(Some(
             LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeSubsetLe(
-                FiniteSetSizeSubsetLeBuiltinRuleProof {
-                    subset_proof,
-                },
+                FiniteSetSizeSubsetLeBuiltinRuleProof { subset_proof },
             ),
         ))
     }
@@ -577,8 +595,12 @@ impl Runtime {
         fact: &LessFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        let Some(left_set) = match_finite_set_size(&fact.left) else { return Ok(None); };
-        let Some(right_set) = match_finite_set_size(&fact.right) else { return Ok(None); };
+        let Some(left_set) = match_finite_set_size(&fact.left) else {
+            return Ok(None);
+        };
+        let Some(right_set) = match_finite_set_size(&fact.right) else {
+            return Ok(None);
+        };
         // The enclosing LessFact verifier has already proved both size objects
         // well-defined, including finiteness. At the bounded builtin depth,
         // by-definition search may be disabled: retain the actual winning route
@@ -588,41 +610,53 @@ impl Runtime {
             left: left_set.clone(),
             right: right_set.clone(),
             line_file: fact.line_file.clone(),
-        }.into();
-        let proper_subset_proof = self.verify_builtin_rule_premise(&proper_subset, verify_state.clone())?;
+        }
+        .into();
+        let proper_subset_proof =
+            self.verify_builtin_rule_premise(&proper_subset, verify_state.clone())?;
         if !proper_subset_proof.is_failed() {
-            return Ok(Some(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
-                FiniteSetSizeProperSubsetLtBuiltinRuleProof {
-                    inclusion_proof: FiniteProperInclusionProof::ByProperSubset {
-                        proper_subset_proof,
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
+                    FiniteSetSizeProperSubsetLtBuiltinRuleProof {
+                        inclusion_proof: FiniteProperInclusionProof::ByProperSubset {
+                            proper_subset_proof,
+                        },
                     },
-                },
-            )));
+                ),
+            ));
         }
         let subset: Fact = SubsetFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left_set.clone(),
             right: right_set.clone(),
             line_file: fact.line_file.clone(),
-        }.into();
+        }
+        .into();
         let subset_proof = self.verify_builtin_rule_premise(&subset, verify_state.clone())?;
-        if subset_proof.is_failed() { return Ok(None); }
+        if subset_proof.is_failed() {
+            return Ok(None);
+        }
         let not_equal: Fact = NotEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left_set.clone(),
             right: right_set.clone(),
             line_file: fact.line_file.clone(),
-        }.into();
+        }
+        .into();
         let not_equal_proof = self.verify_builtin_rule_premise(&not_equal, verify_state)?;
-        if not_equal_proof.is_failed() { return Ok(None); }
-        Ok(Some(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
-            FiniteSetSizeProperSubsetLtBuiltinRuleProof {
-                inclusion_proof: FiniteProperInclusionProof::BySubsetAndNotEqual {
-                    subset_proof,
-                    not_equal_proof,
+        if not_equal_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(
+                FiniteSetSizeProperSubsetLtBuiltinRuleProof {
+                    inclusion_proof: FiniteProperInclusionProof::BySubsetAndNotEqual {
+                        subset_proof,
+                        not_equal_proof,
+                    },
                 },
-            },
-        )))
+            ),
+        ))
     }
 
     pub(crate) fn verify_in_integer(
@@ -697,7 +731,12 @@ impl Runtime {
     pub(super) fn known_order_edges(&self) -> Vec<(FactId, Obj, Obj, bool)> {
         let mut edges = Vec::new();
         let less_key = (AtomicName::Plain { name: LESS.into() }, true);
-        let less_equal_key = (AtomicName::Plain { name: LESS_EQUAL.into() }, true);
+        let less_equal_key = (
+            AtomicName::Plain {
+                name: LESS_EQUAL.into(),
+            },
+            true,
+        );
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(knowns) = env
                 .facts
@@ -726,12 +765,21 @@ impl Runtime {
         }
         // Opposite written directions retain their actual source fact ids.
         for env in self.execution_environments_stack.iter().rev() {
-            for knowns in env.facts.known_atomic_except_equality_facts.by_prop.values() {
+            for knowns in env
+                .facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .values()
+            {
                 for known in knowns {
                     match known {
-                        AtomicFact::GreaterFact(f) => edges.push((f.fact_id,f.right.clone(),f.left.clone(),true)),
-                        AtomicFact::GreaterEqualFact(f) => edges.push((f.fact_id,f.right.clone(),f.left.clone(),false)),
-                        _ => {},
+                        AtomicFact::GreaterFact(f) => {
+                            edges.push((f.fact_id, f.right.clone(), f.left.clone(), true))
+                        }
+                        AtomicFact::GreaterEqualFact(f) => {
+                            edges.push((f.fact_id, f.right.clone(), f.left.clone(), false))
+                        }
+                        _ => {}
                     }
                 }
             }

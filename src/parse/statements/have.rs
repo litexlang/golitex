@@ -59,9 +59,9 @@ impl Runtime {
             }
 
             if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error(
-                    "have: expected `=`, `:`, or end of header after parameters",
-                ));
+                return Err(
+                    tb.parse_error("have: expected `=`, `:`, or end of header after parameters")
+                );
             }
             if !tb.body.is_empty() {
                 return Err(tb.parse_error("have without `=`/`:` cannot have an indented body"));
@@ -75,36 +75,36 @@ impl Runtime {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjInNonemptySetStmt(
-                    HaveObjInNonemptySetOrParamTypeStmt {
+                Ok(Stmt::Definition(DefinitionStmt::DefineObj(
+                    DefineObjStmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt {
                         param_def,
                         line_file: SourceLine::new(block.line, self.code_source.clone()),
-                    },
-                ))))
+                    }),
+                )))
             }
             HaveObjKind::Equal(param_def, objs_equal_to, identifiers) => {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjEqualStmt(
-                    HaveObjEqualStmt {
+                Ok(Stmt::Definition(DefinitionStmt::DefineObj(
+                    DefineObjStmt::HaveObjEqualStmt(HaveObjEqualStmt {
                         param_def,
                         objs_equal_to,
                         line_file: SourceLine::new(block.line, self.code_source.clone()),
-                    },
-                ))))
+                    }),
+                )))
             }
             HaveObjKind::ByExist(param_def, facts, identifiers) => {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjByExistFactsStmt(
-                    HaveObjByExistFactsStmt {
+                Ok(Stmt::Definition(DefinitionStmt::DefineObj(
+                    DefineObjStmt::HaveObjByExistFactsStmt(HaveObjByExistFactsStmt {
                         param_def,
                         facts,
                         line_file: SourceLine::new(block.line, self.code_source.clone()),
-                    },
-                ))))
+                    }),
+                )))
             }
         }
     }

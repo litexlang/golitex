@@ -159,9 +159,16 @@ fn finite_set_cardinality_rule_strategy_budget_is_consumed_without_truth_storage
     assert!(!exec(&mut rt, "have A set = intersect({1}, R)").is_failed());
     // Seed only the verified inclusion, without forward inference, so this
     // test still isolates verification's permissions and non-storage contract.
-    let tokens = Tokenizer::new().tokenize("A $subset {1}", rt.current_file.clone()).unwrap();
-    let Stmt::Fact(inclusion) = rt.parse(&tokens).unwrap().pop().unwrap() else { panic!("inclusion") };
-    assert!(!rt.verify_fact(&inclusion, VerifyState::top_level()).unwrap().is_failed());
+    let tokens = Tokenizer::new()
+        .tokenize("A $subset {1}", rt.current_file.clone())
+        .unwrap();
+    let Stmt::Fact(inclusion) = rt.parse(&tokens).unwrap().pop().unwrap() else {
+        panic!("inclusion")
+    };
+    assert!(!rt
+        .verify_fact(&inclusion, VerifyState::top_level())
+        .unwrap()
+        .is_failed());
     rt.store_fact(&inclusion).unwrap();
     let tokens = Tokenizer::new()
         .tokenize("$is_finite_set(A)", rt.current_file.clone())
@@ -171,16 +178,25 @@ fn finite_set_cardinality_rule_strategy_budget_is_consumed_without_truth_storage
         panic!("fact")
     };
     assert!(rt
-        .verify_fact(&fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
+        .verify_fact(
+            &fact,
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule)
+        )
         .unwrap()
         .is_failed());
     assert!(!rt
-        .verify_fact(&fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Strategy))
+        .verify_fact(
+            &fact,
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Strategy)
+        )
         .unwrap()
         .is_failed());
     // Verification alone must not cache truth and bypass a subsequent budget.
     assert!(rt
-        .verify_fact(&fact, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
+        .verify_fact(
+            &fact,
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule)
+        )
         .unwrap()
         .is_failed());
 }
@@ -274,29 +290,50 @@ fn finite_set_cardinality_rule_normal_explains_actual_certificates_in_both_langu
     }
 }
 
-
 #[test]
 fn subset_finite_upper_bound_infer_publishes_direct_evidence() {
     let mut rt = runtime(OutputLanguage::English);
-    assert!(!exec(&mut rt, "have A set = intersect({1}, R)\nhave B finite_set = {1}").is_failed());
+    assert!(!exec(
+        &mut rt,
+        "have A set = intersect({1}, R)\nhave B finite_set = {1}"
+    )
+    .is_failed());
     let result = exec(&mut rt, "A $subset B");
     assert!(!result.is_failed());
     let projected = project_stmt_normal(&result, &rt).stringify_pretty();
     assert!(projected.contains("$is_finite_set(A)"), "{projected}");
-    let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else { panic!("fact success") };
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
+        panic!("fact success")
+    };
     let crate::store_fact_and_infer::InferFactResult::AtomicFact(
-        crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules)
-    ) = &success.store_and_infer_result.infer else { panic!("infer rules") };
+        crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
+    ) = &success.store_and_infer_result.infer
+    else {
+        panic!("infer rules")
+    };
     let proof = rules.iter().find_map(|r| match r {
         crate::store_fact_and_infer::InferAtomicExceptEqualityResult::SubsetFiniteUpperBound(p) => Some(p),
         _ => None,
     }).expect("finite upper bound certificate");
-    assert_eq!(proof.source_fact_id, success.store_and_infer_result.primary_fact_id());
+    assert_eq!(
+        proof.source_fact_id,
+        success.store_and_infer_result.primary_fact_id()
+    );
     assert!(!proof.upper_finite_proof.is_failed());
     assert!(!proof.derived.stored_fact_ids().is_empty());
-    let tokens = Tokenizer::new().tokenize("$is_finite_set(A)", rt.current_file.clone()).unwrap();
-    let Stmt::Fact(finite) = rt.parse(&tokens).unwrap().pop().unwrap() else { panic!("finite") };
-    assert!(!rt.verify_fact(&finite, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct)).unwrap().is_failed());
+    let tokens = Tokenizer::new()
+        .tokenize("$is_finite_set(A)", rt.current_file.clone())
+        .unwrap();
+    let Stmt::Fact(finite) = rt.parse(&tokens).unwrap().pop().unwrap() else {
+        panic!("finite")
+    };
+    assert!(!rt
+        .verify_fact(
+            &finite,
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct)
+        )
+        .unwrap()
+        .is_failed());
 }
 
 #[test]

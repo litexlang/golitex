@@ -87,9 +87,10 @@ fn field<'a>(
     language: OutputLanguage,
 ) -> &'a crate::knowledge_base::JsonValue {
     let key = crate::json_output::json_keys::localize_key(name, language);
-    json.as_object().unwrap().get(&key).unwrap_or_else(|| {
-        panic!("missing {name}: {}", json.stringify())
-    })
+    json.as_object()
+        .unwrap()
+        .get(&key)
+        .unwrap_or_else(|| panic!("missing {name}: {}", json.stringify()))
 }
 
 fn array(json: &crate::knowledge_base::JsonValue) -> &[crate::knowledge_base::JsonValue] {
@@ -114,22 +115,44 @@ fn atomic_success_preserves_checked_arguments_local_proof_and_obligations() {
         assert!(run.success && run.session_error.is_none());
         let ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(
             ExecWitnessAtomicFactStmtResult::Success(s),
-        )) = &run.statement_results[1] else { panic!("atomic success"); };
+        )) = &run.statement_results[1]
+        else {
+            panic!("atomic success");
+        };
         let json = crate::json_output::project_stmt_detailed(&run.statement_results[1], &rt);
-        assert_eq!(array(field(&json, "prop_argument_type_checks", language)).len(), 1);
-        assert_eq!(field(&json, "projected_exist", language).as_str().unwrap(),
-            "exist x R st {x = 2}");
-        assert!(field(&json, "exist_fact_well_defined", language).as_object().is_ok());
-        assert_eq!(array(field(&json, "witness_obj_well_defined", language)).len(), 1);
-        assert_eq!(array(field(&json, "witness_type_checks", language)).len(), 1);
+        assert_eq!(
+            array(field(&json, "prop_argument_type_checks", language)).len(),
+            1
+        );
+        assert_eq!(
+            field(&json, "projected_exist", language).as_str().unwrap(),
+            "exist x R st {x = 2}"
+        );
+        assert!(field(&json, "exist_fact_well_defined", language)
+            .as_object()
+            .is_ok());
+        assert_eq!(
+            array(field(&json, "witness_obj_well_defined", language)).len(),
+            1
+        );
+        assert_eq!(
+            array(field(&json, "witness_type_checks", language)).len(),
+            1
+        );
         assert_eq!(array(field(&json, "proof_steps", language)).len(), 2);
         let bodies = array(field(&json, "body_checks", language));
         assert_eq!(bodies.len(), s.obligations.body_checks.len());
-        assert_eq!(bodies[0], crate::json_output::project_detailed::project_verify_fact(
-            &s.obligations.body_checks[0], &rt,
-        ));
+        assert_eq!(
+            bodies[0],
+            crate::json_output::project_detailed::project_verify_fact(
+                &s.obligations.body_checks[0],
+                &rt,
+            )
+        );
         assert_eq!(field(&json, "uniqueness_check", language), &JsonValue::Null);
-        assert!(field(&json, "store_and_infer", language).as_object().is_ok());
+        assert!(field(&json, "store_and_infer", language)
+            .as_object()
+            .is_ok());
         assert!(!json.stringify().contains("local_env"));
         assert!(!json.stringify().contains("局部环境"));
     }
@@ -149,12 +172,18 @@ fn dependent_atomic_witness_preserves_each_instantiated_type_check() {
     assert!(run.success && run.session_error.is_none());
     let ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(
         ExecWitnessAtomicFactStmtResult::Success(s),
-    )) = &run.statement_results[1] else { panic!("atomic success"); };
+    )) = &run.statement_results[1]
+    else {
+        panic!("atomic success");
+    };
     let json = crate::json_output::project_stmt_detailed(&run.statement_results[1], &rt);
     let checks = array(field(&json, "witness_type_checks", language));
     assert_eq!(checks.len(), 2);
     for (actual, checked) in checks.iter().zip(&s.ambient.witness_type_checks) {
-        assert_eq!(actual, &crate::json_output::project_detailed::project_verify_fact(checked, &rt));
+        assert_eq!(
+            actual,
+            &crate::json_output::project_detailed::project_verify_fact(checked, &rt)
+        );
     }
     assert!(checks[1].stringify().contains("2 $in {2}"));
 }
@@ -167,9 +196,18 @@ fn nonempty_failure_preserves_each_actual_stage_in_both_languages() {
     };
     use crate::execute::ExecStmtResult;
     let cases = [
-        ("witness $is_nonempty_set({1}) from 1/0\n", "obj_well_defined"),
-        ("witness $is_nonempty_set({1/0}) from 1\n", "set_well_defined"),
-        ("witness $is_nonempty_set({1}) from 1:\n    1=1\n    0=1\n", "proof_body"),
+        (
+            "witness $is_nonempty_set({1}) from 1/0\n",
+            "obj_well_defined",
+        ),
+        (
+            "witness $is_nonempty_set({1/0}) from 1\n",
+            "set_well_defined",
+        ),
+        (
+            "witness $is_nonempty_set({1}) from 1:\n    1=1\n    0=1\n",
+            "proof_body",
+        ),
         ("witness $is_nonempty_set({1}) from 2\n", "membership"),
     ];
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
@@ -179,15 +217,23 @@ fn nonempty_failure_preserves_each_actual_stage_in_both_languages() {
             assert!(!run.success && run.session_error.is_none());
             let ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(
                 ExecWitnessNonemptySetStmtResult::Failed(f),
-            )) = &run.statement_results[0] else { panic!("nonempty failure"); };
+            )) = &run.statement_results[0]
+            else {
+                panic!("nonempty failure");
+            };
             let json = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt);
             let failure = field(&json, "failure", language);
-            assert_eq!(field(failure, "phase", language).as_str().unwrap(), expected_phase);
+            assert_eq!(
+                field(failure, "phase", language).as_str().unwrap(),
+                expected_phase
+            );
             let expected = match f {
                 F::ObjWd(r) | F::SetWd(r) => {
                     crate::json_output::project_detailed::project_verify_obj_wd(r, &rt)
                 }
-                F::Membership(r) => crate::json_output::project_detailed::project_verify_fact(r, &rt),
+                F::Membership(r) => {
+                    crate::json_output::project_detailed::project_verify_fact(r, &rt)
+                }
                 F::ProofBody(r) => crate::json_output::project_stmt_detailed(&r.result, &rt),
             };
             assert_eq!(field(failure, "result", language), &expected);
@@ -200,15 +246,21 @@ fn nonempty_local_proof_failure_retains_exact_step_and_goal() {
     use crate::knowledge_base::JsonValue;
     let language = OutputLanguage::English;
     let mut rt = runtime_language(language);
-    let run = rt.run_litex_code(
-        "witness $is_nonempty_set({1}) from 1:\n    1=1\n    0=1\n",
-    ).unwrap();
+    let run = rt
+        .run_litex_code("witness $is_nonempty_set({1}) from 1:\n    1=1\n    0=1\n")
+        .unwrap();
     assert!(!run.success && run.session_error.is_none());
     let json = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt);
     let failure = field(&json, "failure", language);
-    assert_eq!(field(failure, "step_index", language), &JsonValue::Number(1.0));
+    assert_eq!(
+        field(failure, "step_index", language),
+        &JsonValue::Number(1.0)
+    );
     let child = field(failure, "result", language);
-    assert_eq!(field(child, "statement", language).as_str().unwrap(), "0 = 1");
+    assert_eq!(
+        field(child, "statement", language).as_str().unwrap(),
+        "0 = 1"
+    );
     assert_eq!(field(child, "success", language), &JsonValue::Bool(false));
 }
 
@@ -218,19 +270,26 @@ fn failed_nonempty_witness_never_publishes_and_valid_reuse_survives() {
     let mut rt = runtime();
     let direct = VerifyState::new(VerifyStateLevel::Direct);
     let tokens = crate::tokenize::Tokenizer::new()
-        .tokenize("$is_nonempty_set({1})", rt.current_file.clone()).unwrap();
+        .tokenize("$is_nonempty_set({1})", rt.current_file.clone())
+        .unwrap();
     let crate::ast::stmt::Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else {
         panic!("fact");
     };
-    let failed = rt.run_litex_code("witness $is_nonempty_set({1}) from 2\n").unwrap();
+    let failed = rt
+        .run_litex_code("witness $is_nonempty_set({1}) from 2\n")
+        .unwrap();
     assert!(!failed.success && failed.session_error.is_none());
     let before_json = crate::json_output::project_stmt_detailed(&failed.statement_results[0], &rt);
     assert!(before_json.stringify().contains("2 $in {1}"));
     assert!(rt.verify_fact(&goal, direct.clone()).unwrap().is_failed());
-    let valid = rt.run_litex_code("witness $is_nonempty_set({1}) from 1\n").unwrap();
+    let valid = rt
+        .run_litex_code("witness $is_nonempty_set({1}) from 1\n")
+        .unwrap();
     assert!(valid.success && valid.session_error.is_none());
     assert!(!rt.verify_fact(&goal, direct.clone()).unwrap().is_failed());
-    let repeated = rt.run_litex_code("witness $is_nonempty_set({1}) from 2\n").unwrap();
+    let repeated = rt
+        .run_litex_code("witness $is_nonempty_set({1}) from 2\n")
+        .unwrap();
     assert!(!repeated.success && repeated.session_error.is_none());
     assert!(!rt.verify_fact(&goal, direct).unwrap().is_failed());
 }

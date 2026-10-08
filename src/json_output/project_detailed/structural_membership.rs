@@ -23,8 +23,14 @@ pub(super) fn project_structural_membership(
             "known"
         }
         KnownSubset(p) => {
-            fields.push(("member_proof", super::searched::project_known_premise(&p.member_proof, rt)));
-            fields.push(("subset_proof", super::searched::project_known_premise(&p.subset_proof, rt)));
+            fields.push((
+                "member_proof",
+                super::searched::project_known_premise(&p.member_proof, rt),
+            ));
+            fields.push((
+                "subset_proof",
+                super::searched::project_known_premise(&p.subset_proof, rt),
+            ));
             "known_subset"
         }
         Closed(p) => {
@@ -105,7 +111,6 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
         RealPart => "re",
         ImaginaryPart => "img",
         ComplexAbs => "C_abs",
-
 
         FiniteSetSize => "finite_set_size",
         FiniteSetMax => "finite_set_max",

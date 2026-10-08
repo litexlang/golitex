@@ -15,9 +15,7 @@ use std::collections::HashMap;
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::names::AtomicName;
-use crate::ast::obj::{
-    Cart, FieldAccess, Obj, ProductShape, StructAndFieldAccessObj, StructObj,
-};
+use crate::ast::obj::{Cart, FieldAccess, Obj, ProductShape, StructAndFieldAccessObj, StructObj};
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::DefStructStmt;
 use crate::runtime::runtime_ids::IdentifierId;
@@ -53,7 +51,8 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         struct_obj: &StructObj,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<ReleaseOneStructLayerResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<ReleaseOneStructLayerResult> {
         let def = match self.struct_def_for_release(struct_obj) {
             Ok(d) => d,
             Err(reason) => {
@@ -84,7 +83,9 @@ impl Runtime {
 
         let mut coordinates = Vec::with_capacity(def.fields.len());
         for index in 0..def.fields.len() {
-            match crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(obj, index) {
+            match crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(
+                obj, index,
+            ) {
                 Ok(coordinate) => coordinates.push(coordinate),
                 Err(reason) => return Ok(failed_release(obj, struct_obj, reason)),
             }
@@ -152,7 +153,8 @@ impl Runtime {
     pub fn auto_open_struct_layers_for_typed_parameters(
         &mut self,
         typed_parameters: &TypedParameterList,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<
         Result<
             Option<Vec<ReleaseOneStructLayerProof>>,
             (Vec<ReleaseOneStructLayerProof>, FailToReleaseOneStructLayer),
@@ -160,8 +162,9 @@ impl Runtime {
     > {
         let mut opened = Vec::new();
         for group in &typed_parameters.groups {
-            let ParamType::Obj(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj))) =
-                &group.param_type
+            let ParamType::Obj(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                struct_obj,
+            ))) = &group.param_type
             else {
                 continue;
             };

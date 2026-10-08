@@ -18,17 +18,17 @@ use crate::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity, AtomicFact, ExistOrAndChainAtomicFact,
     ForallFact,
 };
+use crate::ast::fact::{Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact};
 use crate::ast::names::PlainName;
+use crate::ast::obj::Obj;
+use crate::ast::param::ParamType;
 use crate::ast::stmt::DefStrategyStmt;
-use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::SearchProofByKnownStrategy;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     ForallParamTypeRequirementProof, ProveForallInstantiationRequirementsProof,
 };
-use crate::ast::fact::{Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact};
-use crate::ast::obj::Obj;
-use crate::ast::param::ParamType;
+use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;

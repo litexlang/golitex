@@ -24,21 +24,47 @@ pub enum LessFactSearchProofByBuiltinRule {
     LnPositiveAboveOne(super::scalar_extra_sign::LnPositiveAboveOneProof),
     ProductPositiveNegativeStrict(super::scalar_extra_sign::ProductPositiveNegativeStrictProof),
     SumStrictOperands(super::scalar_order_relations::SumStrictOperandsProof),
-    NegationNegativeFromLiteralBound(super::scalar_order_relations::NegationNegativeFromLiteralBoundProof),
+    NegationNegativeFromLiteralBound(
+        super::scalar_order_relations::NegationNegativeFromLiteralBoundProof,
+    ),
     NegationStrictOrder(super::scalar_order_relations::NegationStrictOrderProof),
     CosPositiveOnOpenHalfPi(super::trig_additional_interval_order::CosPositiveOnOpenHalfPiProof),
-    SinNegativeOnOpenNegativePi(super::trig_additional_interval_order::SinNegativeOnOpenNegativePiProof),
-    TanNegativeOnOpenNegativeHalfPi(super::trig_additional_interval_order::TanNegativeOnOpenNegativeHalfPiProof),
-    CotNegativeOnOpenUpperHalfPi(super::trig_additional_interval_order::CotNegativeOnOpenUpperHalfPiProof),
-    SinPositiveOnFirstQuadrant(super::trig_additional_interval_order::SinPositiveOnFirstQuadrantProof),
-    CosPositiveOnFirstQuadrant(super::trig_additional_interval_order::CosPositiveOnFirstQuadrantProof),
-    CosStrictDecreasingOnClosedPi(super::trig_additional_interval_order::CosStrictDecreasingOnClosedPiProof),
-    TanStrictIncreasingOnOpenHalfPi(super::trig_additional_interval_order::TanStrictIncreasingOnOpenHalfPiProof),
-    CotStrictDecreasingOnOpenPi(super::trig_additional_interval_order::CotStrictDecreasingOnOpenPiProof),
-    MulLeftNegativeReversesStrictLess(super::order_negative_common_factor::MulLeftNegativeReversesStrictLessProof),
-    MulRightNegativeReversesStrictLess(super::order_negative_common_factor::MulRightNegativeReversesStrictLessProof),
-    MulLeftRightNegativeReversesStrictLess(super::order_negative_common_factor::MulLeftRightNegativeReversesStrictLessProof),
-    MulRightLeftNegativeReversesStrictLess(super::order_negative_common_factor::MulRightLeftNegativeReversesStrictLessProof),
+    SinNegativeOnOpenNegativePi(
+        super::trig_additional_interval_order::SinNegativeOnOpenNegativePiProof,
+    ),
+    TanNegativeOnOpenNegativeHalfPi(
+        super::trig_additional_interval_order::TanNegativeOnOpenNegativeHalfPiProof,
+    ),
+    CotNegativeOnOpenUpperHalfPi(
+        super::trig_additional_interval_order::CotNegativeOnOpenUpperHalfPiProof,
+    ),
+    SinPositiveOnFirstQuadrant(
+        super::trig_additional_interval_order::SinPositiveOnFirstQuadrantProof,
+    ),
+    CosPositiveOnFirstQuadrant(
+        super::trig_additional_interval_order::CosPositiveOnFirstQuadrantProof,
+    ),
+    CosStrictDecreasingOnClosedPi(
+        super::trig_additional_interval_order::CosStrictDecreasingOnClosedPiProof,
+    ),
+    TanStrictIncreasingOnOpenHalfPi(
+        super::trig_additional_interval_order::TanStrictIncreasingOnOpenHalfPiProof,
+    ),
+    CotStrictDecreasingOnOpenPi(
+        super::trig_additional_interval_order::CotStrictDecreasingOnOpenPiProof,
+    ),
+    MulLeftNegativeReversesStrictLess(
+        super::order_negative_common_factor::MulLeftNegativeReversesStrictLessProof,
+    ),
+    MulRightNegativeReversesStrictLess(
+        super::order_negative_common_factor::MulRightNegativeReversesStrictLessProof,
+    ),
+    MulLeftRightNegativeReversesStrictLess(
+        super::order_negative_common_factor::MulLeftRightNegativeReversesStrictLessProof,
+    ),
+    MulRightLeftNegativeReversesStrictLess(
+        super::order_negative_common_factor::MulRightLeftNegativeReversesStrictLessProof,
+    ),
     TanPositiveOnFirstQuadrant(super::trig_first_quadrant::TanPositiveOnFirstQuadrantProof),
     CotPositiveOnFirstQuadrant(super::trig_first_quadrant::CotPositiveOnFirstQuadrantProof),
     SinPositiveOnOpenPi(super::trig_interval_order::SinPositiveOnOpenPiProof),
@@ -110,7 +136,9 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Log sign: `1 < a` and `1 < x` ⇒ `0 < log(a, x)`.
     LogPositiveFromBaseAndArgGtOne(LogPositiveFromBaseAndArgGtOneBuiltinRuleProof),
     // Log sign: `1 < a`, `0 < x`, `x < 1` ⇒ `log(a, x) < 0`.
-    LogNegativeFromBaseGtOneArgInUnitInterval(LogNegativeFromBaseGtOneArgInUnitIntervalBuiltinRuleProof),
+    LogNegativeFromBaseGtOneArgInUnitInterval(
+        LogNegativeFromBaseGtOneArgInUnitIntervalBuiltinRuleProof,
+    ),
     // Order transitivity with at least one strict premise.
     // Example: known `x <= y` and `y < z` prove `x < z`.
     LessTransitivity(LessTransitivityBuiltinRuleProof),
@@ -181,7 +209,10 @@ pub struct PiMultipleComparisonBuiltinRuleProof {
 }
 impl PiMultipleComparisonBuiltinRuleProof {
     fn new(left_coefficient: Obj, right_coefficient: Obj) -> Self {
-        Self { left_coefficient, right_coefficient }
+        Self {
+            left_coefficient,
+            right_coefficient,
+        }
     }
 }
 
@@ -302,9 +333,6 @@ pub struct DivByGtOneLessSelfBuiltinRuleProof {
     pub denominator_gt_one_proof: VerifyFactResult,
 }
 
-
-
-
 pub struct DivMonotoneStrictSameNegDivisorBuiltinRuleProof {
     pub divisor_neg_proof: VerifyFactResult,
     pub numerators_order_proof: VerifyFactResult,
@@ -341,7 +369,6 @@ pub struct MulRightPositiveMonotoneStrictBuiltinRuleProof {
     pub order_premise_proof: VerifyFactResult,
 }
 
-
 pub struct FromKnownGreaterBuiltinRuleProof {
     pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
@@ -361,10 +388,16 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(premise_proof) = self.known_greater_proof(&fact.right, &fact.left) {
-            return Ok(Some(LessFactSearchProofByBuiltinRule::FromKnownGreater(FromKnownGreaterBuiltinRuleProof { premise_proof })));
+            return Ok(Some(LessFactSearchProofByBuiltinRule::FromKnownGreater(
+                FromKnownGreaterBuiltinRuleProof { premise_proof },
+            )));
         }
-        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
-            return Ok(Some(LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        if let Some(proof) =
+            self.known_order_complement(fact.clone().into(), verify_state.clone())?
+        {
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof),
+            ));
         }
         if let Some(proof) = self.try_order_sign_from_positive_literal_bound(fact) {
             return Ok(Some(
@@ -372,9 +405,9 @@ impl Runtime {
             ));
         }
         if let Some(proof) = self.try_order_flip_mul_minus_one_to_less(fact) {
-            return Ok(Some(LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(
-                proof,
-            )));
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(proof),
+            ));
         }
 
         // Zero-premise closed numeric (no nested search).
@@ -398,31 +431,37 @@ impl Runtime {
             crate::rational_expression::pi_multiple::pi_coefficient(&fact.right),
         ) {
             use crate::rational_expression::exact_rational::EvalRational;
-            if let (Some(left), Some(right)) = (EvalRational::from_obj(&left), EvalRational::from_obj(&right)) {
+            if let (Some(left), Some(right)) = (
+                EvalRational::from_obj(&left),
+                EvalRational::from_obj(&right),
+            ) {
                 if left.compare(&right) == Some(NumberCompareResult::Less) {
-                    return Ok(Some(LessFactSearchProofByBuiltinRule::PiMultipleComparison(
-                        PiMultipleComparisonBuiltinRuleProof::new(left.to_obj(), right.to_obj()),
-                    )));
+                    return Ok(Some(
+                        LessFactSearchProofByBuiltinRule::PiMultipleComparison(
+                            PiMultipleComparisonBuiltinRuleProof::new(
+                                left.to_obj(),
+                                right.to_obj(),
+                            ),
+                        ),
+                    ));
                 }
             }
         }
 
         // Pure shape cites that do not nest verify_fact.
         match (&fact.left, &fact.right) {
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
-                minuend,
-            ) if is_number_value(right.as_ref(), "1") && left.as_ref().ir() == minuend.ir() => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })), minuend)
+                if is_number_value(right.as_ref(), "1") && left.as_ref().ir() == minuend.ir() =>
+            {
                 return Ok(Some(LessFactSearchProofByBuiltinRule::SubtractOneLess(
                     SubtractOneLessBuiltinRuleProof {
                         minuend: left.as_ref().clone(),
                     },
                 )));
             }
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
-                minuend,
-            ) if left.as_ref().ir() == minuend.ir() => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })), minuend)
+                if left.as_ref().ir() == minuend.ir() =>
+            {
                 if let Some((NumberCompareResult::Greater, normalized_subtrahend, _)) =
                     compare_closed_numeric_objs(right.as_ref(), &zero_obj())
                 {
@@ -482,22 +521,18 @@ impl Runtime {
             (left, Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b })))
                 if is_zero_obj(left) =>
             {
-                if let Some(proof) = self.sum_positive_cone_proof(
-                    a.as_ref(),
-                    b.as_ref(),
-                    verify_state.clone(),
-                )? {
+                if let Some(proof) =
+                    self.sum_positive_cone_proof(a.as_ref(), b.as_ref(), verify_state.clone())?
+                {
                     return Ok(Some(proof));
                 }
             }
             (left, Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })))
                 if is_zero_obj(left) =>
             {
-                if let Some(proof) = self.product_both_positive_proof(
-                    a.as_ref(),
-                    b.as_ref(),
-                    verify_state.clone(),
-                )? {
+                if let Some(proof) =
+                    self.product_both_positive_proof(a.as_ref(), b.as_ref(), verify_state.clone())?
+                {
                     return Ok(Some(proof));
                 }
             }
@@ -579,9 +614,7 @@ impl Runtime {
         {
             return Ok(Some(proof));
         }
-        if let Some(proof) =
-            self.search_order_stage_a_remainder_less_proof(fact, verify_state)?
-        {
+        if let Some(proof) = self.search_order_stage_a_remainder_less_proof(fact, verify_state)? {
             return Ok(Some(proof));
         }
 
@@ -596,16 +629,25 @@ impl Runtime {
         if let Some(proof) = self.search_sin_interval_order(fact, verify_state)? {
             return Ok(Some(proof));
         }
-        if let Some(proof) = self.search_additional_trig_less(fact, verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof) = self.search_factorial_strict_order(fact, verify_state)? {
-            return Ok(Some(LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(proof)));
+        if let Some(proof) = self.search_additional_trig_less(fact, verify_state)? {
+            return Ok(Some(proof));
         }
-        if let Some(proof)=self.search_exp_ln_strict_order(fact,verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof) = self.search_scalar_less_relation(fact)? { return Ok(Some(proof)); }
-        if let Some(proof)=self.scalar_extra_less(fact,verify_state)? {return Ok(Some(proof));}
+        if let Some(proof) = self.search_factorial_strict_order(fact, verify_state)? {
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(proof),
+            ));
+        }
+        if let Some(proof) = self.search_exp_ln_strict_order(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.search_scalar_less_relation(fact)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.scalar_extra_less(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
         Ok(None)
     }
-
 
     // Prefer both-strict, then left-strict/right-weak, then left-weak/right-strict.
     fn sum_positive_cone_proof(
@@ -693,14 +735,12 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         // Reuse the shared `0 <= obj` goal helper from order_abs via verify_fact.
-        let goal = Fact::AtomicFact(AtomicFact::LessEqualFact(
-            crate::ast::fact::LessEqualFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: zero_obj(),
-                right: obj.clone(),
-                line_file: None,
-            },
-        ));
+        let goal = Fact::AtomicFact(AtomicFact::LessEqualFact(crate::ast::fact::LessEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: zero_obj(),
+            right: obj.clone(),
+            line_file: None,
+        }));
         self.verify_builtin_rule_premise(&goal, verify_state)
     }
 

@@ -166,10 +166,9 @@ impl Runtime {
 
             // Right Add: `a <= a+b` or `a <= b+a` (only when left matches an addend).
             // Non-matching goals such as `0 <= u + v` fall through to the left-zero arm.
-            (
-                left,
-                Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b })),
-            ) if left.ir() == a.as_ref().ir() || left.ir() == b.as_ref().ir() => {
+            (left, Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b })))
+                if left.ir() == a.as_ref().ir() || left.ir() == b.as_ref().ir() =>
+            {
                 if left.ir() == a.as_ref().ir() {
                     return self.add_right_nonnegative_from_addend(b.as_ref(), verify_state);
                 }
@@ -197,27 +196,24 @@ impl Runtime {
 
             // Left zero: `0 <= abs(x)`, `0 <= a+b`, `0 <= a*b`, or `0 <= n` from `n $in N`.
             (left, right) if is_zero_obj(left) => {
-                if matches!(
-                    right,
-                    Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
-                ) {
+                if matches!(right, Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))) {
                     return Ok(Some(LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(
                         AbsNonnegativeBuiltinRuleProof {},
                     )));
                 }
-                if let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
-                    left: a,
-                    right: b,
-                })) = right
+                if let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b })) =
+                    right
                 {
                     return self.sum_of_nonnegatives_proof(a.as_ref(), b.as_ref(), verify_state);
                 }
-                if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-                    left: a,
-                    right: b,
-                })) = right
+                if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) =
+                    right
                 {
-                    return self.product_of_nonnegatives_proof(a.as_ref(), b.as_ref(), verify_state);
+                    return self.product_of_nonnegatives_proof(
+                        a.as_ref(),
+                        b.as_ref(),
+                        verify_state,
+                    );
                 }
                 Ok(None)
             }
@@ -250,22 +246,24 @@ impl Runtime {
                     ),
                 ))
             }
-            (
-                _,
-                Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_)),
-            ) if match_unit_circle_lower(&fact.left, &fact.right) => Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::UnitCircleLowerBound(
-                    UnitCircleLowerBoundBuiltinRuleProof {},
-                ),
-            )),
-            (
-                Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_)),
-                _,
-            ) if match_unit_circle_upper(&fact.left, &fact.right) => Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::UnitCircleUpperBound(
-                    UnitCircleUpperBoundBuiltinRuleProof {},
-                ),
-            )),
+            (_, Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_)))
+                if match_unit_circle_lower(&fact.left, &fact.right) =>
+            {
+                Ok(Some(
+                    LessEqualFactSearchProofByBuiltinRule::UnitCircleLowerBound(
+                        UnitCircleLowerBoundBuiltinRuleProof {},
+                    ),
+                ))
+            }
+            (Obj::TrigOperator(TrigOperator::Sin(_) | TrigOperator::Cos(_)), _)
+                if match_unit_circle_upper(&fact.left, &fact.right) =>
+            {
+                Ok(Some(
+                    LessEqualFactSearchProofByBuiltinRule::UnitCircleUpperBound(
+                        UnitCircleUpperBoundBuiltinRuleProof {},
+                    ),
+                ))
+            }
 
             _ => Ok(None),
         }
@@ -434,15 +432,22 @@ impl Runtime {
         // The same -x premise may be written natively or as (-1)*x.
         // Keep its actual verify result instead of creating a rewritten cite.
         if neg_upper_proof.is_failed() {
-            let native = Obj::ArithmeticOperator(ArithmeticOperator::Neg(crate::ast::obj::Neg { arg: arg.clone() }));
+            let native = Obj::ArithmeticOperator(ArithmeticOperator::Neg(crate::ast::obj::Neg {
+                arg: arg.clone(),
+            }));
             let requirement = less_equal_fact(&native, bound, self);
             neg_upper_proof = self.verify_builtin_rule_premise(&requirement, verify_state)?;
         }
         if neg_upper_proof.is_failed() {
             let product = Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-                left: Box::new(Obj::ArithmeticOperator(ArithmeticOperator::Neg(crate::ast::obj::Neg {
-                    arg: Box::new(Obj::Literal(crate::ast::obj::Literal::Number(crate::ast::obj::Number::new("1".into())))),
-                }))), right: arg.clone(),
+                left: Box::new(Obj::ArithmeticOperator(ArithmeticOperator::Neg(
+                    crate::ast::obj::Neg {
+                        arg: Box::new(Obj::Literal(crate::ast::obj::Literal::Number(
+                            crate::ast::obj::Number::new("1".into()),
+                        ))),
+                    },
+                ))),
+                right: arg.clone(),
             }));
             let requirement = less_equal_fact(&product, bound, self);
             neg_upper_proof = self.verify_builtin_rule_premise(&requirement, verify_state)?;
@@ -543,8 +548,6 @@ impl Runtime {
     {
         self.verify_order_nonnegative(obj, verify_state)
     }
-
-
 }
 
 fn less_equal_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {

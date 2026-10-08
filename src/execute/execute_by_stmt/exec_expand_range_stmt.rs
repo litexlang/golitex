@@ -65,10 +65,12 @@ pub fn exec_expand_range_stmt(
         }
     };
 
-    Ok(ExecExpandRangeStmtResult::Success(ExecExpandRangeStmtSuccess {
-        values,
-        membership,
-        local_env,
-        stored,
-    }))
+    Ok(ExecExpandRangeStmtResult::Success(
+        ExecExpandRangeStmtSuccess {
+            values,
+            membership,
+            local_env,
+            stored,
+        },
+    ))
 }

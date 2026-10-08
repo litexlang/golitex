@@ -60,10 +60,7 @@ impl GreaterFactSearchProofByBuiltinRule {
             Self::MulRightPositiveMonotoneStrict(p) => p.rule_name_and_message_zh(),
             Self::FromPositiveRealMembership(p) => p.rule_name_and_message_zh(),
             Self::NativeEulerGreaterZero(p) => p.rule_name_and_message_zh(),
-            Self::NativeEulerGreaterOne(_) => text(
-                "自然常数 e 大于一",
-                "内建自然常数满足 e > 1",
-            ),
+            Self::NativeEulerGreaterOne(_) => text("自然常数 e 大于一", "内建自然常数满足 e > 1"),
             Self::NativePiGreaterZero(p) => p.rule_name_and_message_zh(),
         }
     }
@@ -85,10 +82,7 @@ impl GreaterFactSearchProofByBuiltinRule {
             Self::MulRightPositiveMonotoneStrict(p) => p.rule_name_and_message_zh_hant(),
             Self::FromPositiveRealMembership(p) => p.rule_name_and_message_zh_hant(),
             Self::NativeEulerGreaterZero(p) => p.rule_name_and_message_zh_hant(),
-            Self::NativeEulerGreaterOne(_) => text(
-                "Euler 常數大於一",
-                "內建 Euler 常數滿足 e > 1",
-            ),
+            Self::NativeEulerGreaterOne(_) => text("Euler 常數大於一", "內建 Euler 常數滿足 e > 1"),
             Self::NativePiGreaterZero(p) => p.rule_name_and_message_zh_hant(),
         }
     }
@@ -185,10 +179,9 @@ impl GreaterFactSearchProofByBuiltinRule {
             Self::MulRightPositiveMonotoneStrict(p) => p.rule_name_and_message_ar(),
             Self::FromPositiveRealMembership(p) => p.rule_name_and_message_ar(),
             Self::NativeEulerGreaterZero(p) => p.rule_name_and_message_ar(),
-            Self::NativeEulerGreaterOne(_) => text(
-                "ثابت أويلر أكبر من واحد",
-                "ثابت أويلر الأصلي يحقق e > 1",
-            ),
+            Self::NativeEulerGreaterOne(_) => {
+                text("ثابت أويلر أكبر من واحد", "ثابت أويلر الأصلي يحقق e > 1")
+            }
             Self::NativePiGreaterZero(p) => p.rule_name_and_message_ar(),
         }
     }
@@ -316,10 +309,7 @@ impl ClosedNumericComparisonBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "封闭数值比较",
-            "两边算出的数满足目标比较关系",
-        )
+        text("封闭数值比较", "两边算出的数满足目标比较关系")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -396,17 +386,11 @@ impl ClosedNumericComparisonBuiltinRuleProof {
 
 impl FromKnownLessBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "From Known Less",
-            "`>` is the converse of `<`",
-        )
+        text("From Known Less", "`>` is the converse of `<`")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知严格小于",
-            "目标由已知的严格小于事实推出",
-        )
+        text("已知严格小于", "目标由已知的严格小于事实推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -435,31 +419,19 @@ impl FromKnownLessBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "من علاقة أصغر معلومة",
-            "`>` هي العلاقة العكسية لـ `<`",
-        )
+        text("من علاقة أصغر معلومة", "`>` هي العلاقة العكسية لـ `<`")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "既知の小なり関係から",
-            "`>` は `<` の逆向きの関係です",
-        )
+        text("既知の小なり関係から", "`>` は `<` の逆向きの関係です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "알려진 작음 관계에서",
-            "`>`는 `<`의 역방향 관계입니다",
-        )
+        text("알려진 작음 관계에서", "`>`는 `<`의 역방향 관계입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Từ quan hệ nhỏ hơn đã biết",
-            "`>` là quan hệ đảo của `<`",
-        )
+        text("Từ quan hệ nhỏ hơn đã biết", "`>` là quan hệ đảo của `<`")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -487,10 +459,7 @@ impl AddRightCongruenceStrictBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "右边加法同余（严格）",
-            "严格序在右边加同一项后保持",
-        )
+        text("右边加法同余（严格）", "严格序在右边加同一项后保持")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -574,10 +543,7 @@ impl AddLeftCongruenceStrictBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "左边加法同余（严格）",
-            "严格序在左边加同一项后保持",
-        )
+        text("左边加法同余（严格）", "严格序在左边加同一项后保持")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -661,10 +627,7 @@ impl MulLeftPositiveMonotoneStrictBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "左乘正数保持严格大小关系",
-            "正因子左边乘法保持严格序",
-        )
+        text("左乘正数保持严格大小关系", "正因子左边乘法保持严格序")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -748,17 +711,11 @@ impl MulRightPositiveMonotoneStrictBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "右边正数乘法保序（严格）",
-            "正因子右边乘法保持严格序",
-        )
+        text("右边正数乘法保序（严格）", "正因子右边乘法保持严格序")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "右乘正數保持嚴格序",
-            "右乘正因子保持嚴格序",
-        )
+        text("右乘正數保持嚴格序", "右乘正因子保持嚴格序")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -922,17 +879,11 @@ impl NativeEulerGreaterZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "自然常数 e 大于零",
-            "自然常数 e 严格大于零",
-        )
+        text("自然常数 e 大于零", "自然常数 e 严格大于零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "內建 Euler 常數大於零",
-            "內建 Euler 常數嚴格為正：`e > 0`",
-        )
+        text("內建 Euler 常數大於零", "內建 Euler 常數嚴格為正：`e > 0`")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1009,17 +960,11 @@ impl NativePiGreaterZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "圆周率 π 大于零",
-            "圆周率 π 严格大于零",
-        )
+        text("圆周率 π 大于零", "圆周率 π 严格大于零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "內建 Pi 常數大於零",
-            "內建 Pi 常數嚴格為正：`pi > 0`",
-        )
+        text("內建 Pi 常數大於零", "內建 Pi 常數嚴格為正：`pi > 0`")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1044,10 +989,7 @@ impl NativePiGreaterZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "ثابت pi الأصلي موجب",
-            "ثابت pi الأصلي موجب تمامًا: `pi > 0`",
-        )
+        text("ثابت pi الأصلي موجب", "ثابت pi الأصلي موجب تمامًا: `pi > 0`")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {

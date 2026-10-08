@@ -28,22 +28,24 @@ pub fn exec_by_def_stmt(
         // Explicit definition requests must recheck the defining clauses even
         // when ordinary search can prove (or already knows) the target.
         let Some(definition) = rt.search_atomic_except_equality_fact_proof_by_definition(
-            &stmt.fact, proof_verify_state(),
-        )? else {
+            &stmt.fact,
+            proof_verify_state(),
+        )?
+        else {
             return Ok(Err(ExecByDefStmtFailed::DefinitionUnavailable));
         };
-        let well_defined = match rt.verify_atomic_fact_well_definedness(
-            &stmt.fact, proof_verify_state(),
-        )? {
-            VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
-            VerifyAtomicFactWellDefinedResult::Failed(reason) => {
-                return Ok(Err(ExecByDefStmtFailed::Proof(
-                    atomic_except_equality_fact_result_from_wd_fail(reason),
-                )));
-            }
-        };
+        let well_defined =
+            match rt.verify_atomic_fact_well_definedness(&stmt.fact, proof_verify_state())? {
+                VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
+                VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                    return Ok(Err(ExecByDefStmtFailed::Proof(
+                        atomic_except_equality_fact_result_from_wd_fail(reason),
+                    )));
+                }
+            };
         let proof = atomic_except_equality_fact_result_from_success(
-            &stmt.fact, well_defined,
+            &stmt.fact,
+            well_defined,
             AtomicExceptEqualityFactSearchedProof::ByDefinition(definition),
         );
         Ok(Ok(proof))
@@ -52,9 +54,7 @@ pub fn exec_by_def_stmt(
     let proof = match proof_outcome {
         Ok(p) => p,
         Err(failed) => {
-            return Ok(ExecByStmtResult::Def(ExecByDefStmtResult::Failed(
-                failed,
-            )));
+            return Ok(ExecByStmtResult::Def(ExecByDefStmtResult::Failed(failed)));
         }
     };
 

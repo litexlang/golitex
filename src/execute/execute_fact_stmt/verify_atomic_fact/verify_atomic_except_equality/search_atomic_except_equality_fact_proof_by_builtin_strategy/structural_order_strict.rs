@@ -7,13 +7,14 @@ use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-
     pub(super) fn search_product_positive_both_pos_strategy(
         &mut self,
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<ProductPositiveBothPosStrategySingleStep>> {
-        let Some((l, r, lf)) = zero_lt_mul(fact) else { return Ok(None); };
+        let Some((l, r, lf)) = zero_lt_mul(fact) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_fact(zero_obj(), l, lf.clone()),
             self.strategy_less_fact(zero_obj(), r, lf),
@@ -34,7 +35,9 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<ProductPositiveBothNegStrategySingleStep>> {
-        let Some((l, r, lf)) = zero_lt_mul(fact) else { return Ok(None); };
+        let Some((l, r, lf)) = zero_lt_mul(fact) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_fact(l, zero_obj(), lf.clone()),
             self.strategy_less_fact(r, zero_obj(), lf),
@@ -55,7 +58,9 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<QuotientPositiveSameSignPosStrategySingleStep>> {
-        let Some((l, r, lf)) = zero_lt_div(fact) else { return Ok(None); };
+        let Some((l, r, lf)) = zero_lt_div(fact) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_fact(zero_obj(), l, lf.clone()),
             self.strategy_less_fact(zero_obj(), r, lf),
@@ -76,7 +81,9 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<QuotientPositiveSameSignNegStrategySingleStep>> {
-        let Some((l, r, lf)) = zero_lt_div(fact) else { return Ok(None); };
+        let Some((l, r, lf)) = zero_lt_div(fact) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_fact(l, zero_obj(), lf.clone()),
             self.strategy_less_fact(r, zero_obj(), lf),
@@ -97,8 +104,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AddComponentwiseStrictLeftStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_add(&lt.left), as_add(&lt.right)) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(left), Some(right)) = (as_add(&lt.left), as_add(&lt.right)) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_fact(left.0, right.0, lt.line_file.clone()),
             self.strategy_less_equal_fact(left.1, right.1, lt.line_file.clone()),
@@ -119,8 +130,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AddComponentwiseStrictRightStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_add(&lt.left), as_add(&lt.right)) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(left), Some(right)) = (as_add(&lt.left), as_add(&lt.right)) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_equal_fact(left.0, right.0, lt.line_file.clone()),
             self.strategy_less_fact(left.1, right.1, lt.line_file.clone()),
@@ -141,9 +156,15 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<SubSharedSubtrahendLessStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_sub(&lt.left), as_sub(&lt.right)) else { return Ok(None); };
-        if left.1 != right.1 { return Ok(None); }
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(left), Some(right)) = (as_sub(&lt.left), as_sub(&lt.right)) else {
+            return Ok(None);
+        };
+        if left.1 != right.1 {
+            return Ok(None);
+        }
         let requirements = vec![self.strategy_less_fact(left.0, right.0, lt.line_file.clone())];
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_strategy_requirements(requirements, ctx)?
@@ -161,9 +182,15 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<SubSharedMinuendLessStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_sub(&lt.left), as_sub(&lt.right)) else { return Ok(None); };
-        if left.0 != right.0 { return Ok(None); }
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(left), Some(right)) = (as_sub(&lt.left), as_sub(&lt.right)) else {
+            return Ok(None);
+        };
+        if left.0 != right.0 {
+            return Ok(None);
+        }
         let requirements = vec![self.strategy_less_fact(right.1, left.1, lt.line_file.clone())];
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_strategy_requirements(requirements, ctx)?
@@ -181,9 +208,15 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<DivSharedPositiveDenomLessStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_div(&lt.left), as_div(&lt.right)) else { return Ok(None); };
-        if left.1 != right.1 { return Ok(None); }
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(left), Some(right)) = (as_div(&lt.left), as_div(&lt.right)) else {
+            return Ok(None);
+        };
+        if left.1 != right.1 {
+            return Ok(None);
+        }
         let requirements = vec![
             self.strategy_less_fact(zero_obj(), left.1.clone(), lt.line_file.clone()),
             self.strategy_less_fact(left.0, right.0, lt.line_file.clone()),
@@ -204,9 +237,15 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<DivSharedNegativeDenomLessStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_div(&lt.left), as_div(&lt.right)) else { return Ok(None); };
-        if left.1 != right.1 { return Ok(None); }
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(left), Some(right)) = (as_div(&lt.left), as_div(&lt.right)) else {
+            return Ok(None);
+        };
+        if left.1 != right.1 {
+            return Ok(None);
+        }
         let requirements = vec![
             self.strategy_less_fact(left.1.clone(), zero_obj(), lt.line_file.clone()),
             self.strategy_less_fact(right.0, left.0, lt.line_file.clone()),
@@ -227,11 +266,21 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<PowSharedExponentLessStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(left), Some(right)) = (as_pow(&lt.left), as_pow(&lt.right)) else { return Ok(None); };
-        if left.1 != right.1 { return Ok(None); }
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(left), Some(right)) = (as_pow(&lt.left), as_pow(&lt.right)) else {
+            return Ok(None);
+        };
+        if left.1 != right.1 {
+            return Ok(None);
+        }
         let requirements = vec![
-            self.strategy_in_fact(left.1.clone(), Obj::StandardSet(StandardSet::NPos), lt.line_file.clone()),
+            self.strategy_in_fact(
+                left.1.clone(),
+                Obj::StandardSet(StandardSet::NPos),
+                lt.line_file.clone(),
+            ),
             self.strategy_less_equal_fact(zero_obj(), left.0.clone(), lt.line_file.clone()),
             self.strategy_less_fact(left.0, right.0, lt.line_file.clone()),
         ];
@@ -251,12 +300,28 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AbsVsSquareLessStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(la), Some(ra)) = (as_abs(&lt.left), as_abs(&lt.right)) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(la), Some(ra)) = (as_abs(&lt.left), as_abs(&lt.right)) else {
+            return Ok(None);
+        };
         let requirements = vec![
-            self.strategy_in_fact(la.clone(), Obj::StandardSet(StandardSet::R), lt.line_file.clone()),
-            self.strategy_in_fact(ra.clone(), Obj::StandardSet(StandardSet::R), lt.line_file.clone()),
-            self.strategy_less_fact(pow_obj(la, two_obj()), pow_obj(ra, two_obj()), lt.line_file.clone()),
+            self.strategy_in_fact(
+                la.clone(),
+                Obj::StandardSet(StandardSet::R),
+                lt.line_file.clone(),
+            ),
+            self.strategy_in_fact(
+                ra.clone(),
+                Obj::StandardSet(StandardSet::R),
+                lt.line_file.clone(),
+            ),
+            self.strategy_less_fact(
+                pow_obj(la, two_obj()),
+                pow_obj(ra, two_obj()),
+                lt.line_file.clone(),
+            ),
         ];
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_strategy_requirements(requirements, ctx)?
@@ -274,8 +339,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftLeftStrictStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let Some(add) = as_add(&lt.right) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let Some(add) = as_add(&lt.right) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_fact(lt.left.clone(), add.0, lt.line_file.clone()),
             self.strategy_less_equal_fact(zero_obj(), add.1, lt.line_file.clone()),
@@ -296,8 +365,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftLeftWeakStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let Some(add) = as_add(&lt.right) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let Some(add) = as_add(&lt.right) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_equal_fact(lt.left.clone(), add.0, lt.line_file.clone()),
             self.strategy_less_fact(zero_obj(), add.1, lt.line_file.clone()),
@@ -318,8 +391,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftRightStrictStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let Some(add) = as_add(&lt.right) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let Some(add) = as_add(&lt.right) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_fact(lt.left.clone(), add.1, lt.line_file.clone()),
             self.strategy_less_equal_fact(zero_obj(), add.0, lt.line_file.clone()),
@@ -340,8 +417,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AddRightStrictShiftRightWeakStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let Some(add) = as_add(&lt.right) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let Some(add) = as_add(&lt.right) else {
+            return Ok(None);
+        };
         let requirements = vec![
             self.strategy_less_equal_fact(lt.left.clone(), add.1, lt.line_file.clone()),
             self.strategy_less_fact(zero_obj(), add.0, lt.line_file.clone()),
@@ -362,9 +443,15 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<SubPositiveToZeroStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        if !is_zero_obj(&lt.right) { return Ok(None); }
-        let Some(sub) = as_sub(&lt.left) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        if !is_zero_obj(&lt.right) {
+            return Ok(None);
+        }
+        let Some(sub) = as_sub(&lt.left) else {
+            return Ok(None);
+        };
         let requirements = vec![self.strategy_less_fact(sub.0, sub.1, lt.line_file.clone())];
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_strategy_requirements(requirements, ctx)?
@@ -382,9 +469,15 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<SubPositiveFromZeroStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        if !is_zero_obj(&lt.left) { return Ok(None); }
-        let Some(sub) = as_sub(&lt.right) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        if !is_zero_obj(&lt.left) {
+            return Ok(None);
+        }
+        let Some(sub) = as_sub(&lt.right) else {
+            return Ok(None);
+        };
         let requirements = vec![self.strategy_less_fact(sub.1, sub.0, lt.line_file.clone())];
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_strategy_requirements(requirements, ctx)?
@@ -402,25 +495,42 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<CommonPositiveFactorLessStrategySingleStep>> {
-        let Some(lt) = as_lt(fact) else { return Ok(None); };
-        let (Some(lm), Some(rm)) = (as_mul(&lt.left), as_mul(&lt.right)) else { return Ok(None); };
+        let Some(lt) = as_lt(fact) else {
+            return Ok(None);
+        };
+        let (Some(lm), Some(rm)) = (as_mul(&lt.left), as_mul(&lt.right)) else {
+            return Ok(None);
+        };
         let left_factors = [lm.0, lm.1];
         let right_factors = [rm.0, rm.1];
         let mut alts = Vec::new();
         for (li, lf) in left_factors.iter().enumerate() {
             for (ri, rf) in right_factors.iter().enumerate() {
-                if lf != rf { continue; }
+                if lf != rf {
+                    continue;
+                }
                 alts.push(vec![
                     self.strategy_less_fact(zero_obj(), lf.clone(), lt.line_file.clone()),
-                    self.strategy_less_fact(left_factors[1-li].clone(), right_factors[1-ri].clone(), lt.line_file.clone()),
+                    self.strategy_less_fact(
+                        left_factors[1 - li].clone(),
+                        right_factors[1 - ri].clone(),
+                        lt.line_file.clone(),
+                    ),
                 ]);
             }
         }
-        if alts.is_empty() { return Ok(None); }
+        if alts.is_empty() {
+            return Ok(None);
+        }
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.try_strategy_requirement_alternatives(alts, ctx)?
-        else { return Ok(None); };
-        Ok(Some(CommonPositiveFactorLessStrategySingleStep { requirement_facts, proof_of_requirement_facts }))
+        else {
+            return Ok(None);
+        };
+        Ok(Some(CommonPositiveFactorLessStrategySingleStep {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
     }
 }
 
@@ -430,41 +540,79 @@ fn as_lt(fact: &AtomicFact) -> Option<std::borrow::Cow<'_, LessFact>> {
     match fact {
         AtomicFact::LessFact(f) => Some(std::borrow::Cow::Borrowed(f)),
         AtomicFact::GreaterFact(f) => Some(std::borrow::Cow::Owned(LessFact {
-            fact_id: f.fact_id, left: f.right.clone(), right: f.left.clone(), line_file: f.line_file.clone(),
+            fact_id: f.fact_id,
+            left: f.right.clone(),
+            right: f.left.clone(),
+            line_file: f.line_file.clone(),
         })),
         _ => None,
     }
 }
 fn as_add(obj: &Obj) -> Option<(Obj, Obj)> {
-    match obj { Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => Some((x.left.as_ref().clone(), x.right.as_ref().clone())), _ => None }
+    match obj {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
+            Some((x.left.as_ref().clone(), x.right.as_ref().clone()))
+        }
+        _ => None,
+    }
 }
 fn as_sub(obj: &Obj) -> Option<(Obj, Obj)> {
-    match obj { Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => Some((x.left.as_ref().clone(), x.right.as_ref().clone())), _ => None }
+    match obj {
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => {
+            Some((x.left.as_ref().clone(), x.right.as_ref().clone()))
+        }
+        _ => None,
+    }
 }
 fn as_mul(obj: &Obj) -> Option<(Obj, Obj)> {
-    match obj { Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => Some((x.left.as_ref().clone(), x.right.as_ref().clone())), _ => None }
+    match obj {
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => {
+            Some((x.left.as_ref().clone(), x.right.as_ref().clone()))
+        }
+        _ => None,
+    }
 }
 fn as_div(obj: &Obj) -> Option<(Obj, Obj)> {
-    match obj { Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => Some((x.left.as_ref().clone(), x.right.as_ref().clone())), _ => None }
+    match obj {
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => {
+            Some((x.left.as_ref().clone(), x.right.as_ref().clone()))
+        }
+        _ => None,
+    }
 }
 fn as_pow(obj: &Obj) -> Option<(Obj, Obj)> {
-    match obj { Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => Some((x.base.as_ref().clone(), x.exponent.as_ref().clone())), _ => None }
+    match obj {
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
+            Some((x.base.as_ref().clone(), x.exponent.as_ref().clone()))
+        }
+        _ => None,
+    }
 }
 fn as_abs(obj: &Obj) -> Option<Obj> {
-    match obj { Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })) => Some(arg.as_ref().clone()), _ => None }
+    match obj {
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })) => Some(arg.as_ref().clone()),
+        _ => None,
+    }
 }
 fn pow_obj(base: Obj, exponent: Obj) -> Obj {
-    Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base: Box::new(base), exponent: Box::new(exponent) }))
+    Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
+        base: Box::new(base),
+        exponent: Box::new(exponent),
+    }))
 }
 fn zero_lt_mul(fact: &AtomicFact) -> Option<(Obj, Obj, Option<SourceLine>)> {
     let lt = as_lt(fact)?;
-    if !is_zero_obj(&lt.left) { return None; }
+    if !is_zero_obj(&lt.left) {
+        return None;
+    }
     let (l, r) = as_mul(&lt.right)?;
     Some((l, r, lt.line_file.clone()))
 }
 fn zero_lt_div(fact: &AtomicFact) -> Option<(Obj, Obj, Option<SourceLine>)> {
     let lt = as_lt(fact)?;
-    if !is_zero_obj(&lt.left) { return None; }
+    if !is_zero_obj(&lt.left) {
+        return None;
+    }
     let (l, r) = as_div(&lt.right)?;
     Some((l, r, lt.line_file.clone()))
 }

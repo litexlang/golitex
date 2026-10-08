@@ -1,5 +1,5 @@
-use crate::runtime::FactId;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::runtime::FactId;
 
 use super::StoreFactAndInferResult;
 
@@ -116,8 +116,8 @@ pub struct InferBijectiveDefinitionResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 pub struct InferChoiceFunctionDefinitionResult {
-    pub source_fact_id:FactId,
-    pub derived:Vec<StoreFactAndInferResult>,
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreFactAndInferResult>,
 }
 impl InferBuiltinDefinitionResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
@@ -134,7 +134,6 @@ impl InferBuiltinDefinitionResult {
         }
     }
 }
-
 
 pub struct InferExpandDefinitionResult {
     pub derived: Vec<StoreFactAndInferResult>,
@@ -275,8 +274,16 @@ impl InferAtomicExceptEqualityResult {
                 }
                 ids
             }
-            Self::InFactPreimage(r) => r.derived.iter().flat_map(|proof| proof.stored_fact_ids()).collect(),
-            Self::InFactPreimageSet(r) => r.derived.iter().flat_map(|proof| proof.stored_fact_ids()).collect(),
+            Self::InFactPreimage(r) => r
+                .derived
+                .iter()
+                .flat_map(|proof| proof.stored_fact_ids())
+                .collect(),
+            Self::InFactPreimageSet(r) => r
+                .derived
+                .iter()
+                .flat_map(|proof| proof.stored_fact_ids())
+                .collect(),
             Self::InFactSetBuilder(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
@@ -391,17 +398,18 @@ impl InferAtomicExceptEqualityResult {
     }
 }
 
-
 pub struct InferInFactPreimageResult {
     pub source_fact_id: FactId,
     pub source_equal: KnownEqualityPathProof,
-    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub construction:
+        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
 pub struct InferInFactPreimageSetResult {
     pub source_fact_id: FactId,
     pub source_equal: KnownEqualityPathProof,
-    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub construction:
+        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
     pub derived: Vec<StoreFactAndInferResult>,
 }

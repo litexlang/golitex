@@ -49,7 +49,12 @@ impl Runtime {
         if !block.exceed_end_of_head() {
             return Err(block.parse_error(format!("{syntax_name}: unfinished tokens in `?` goal")));
         }
-        if !block.body.is_empty() && !matches!(&fact, Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_)) {
+        if !block.body.is_empty()
+            && !matches!(
+                &fact,
+                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_)
+            )
+        {
             return Err(block.parse_error(format!(
                 "{syntax_name}: `?` body is only allowed for multiline `forall` facts"
             )));

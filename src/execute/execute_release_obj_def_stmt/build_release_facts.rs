@@ -4,7 +4,9 @@ use crate::ast::fact::{
     and_chain_as_fact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
     IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::ast::obj::{FnObj, FnObjHead, IdentifierObj, Obj, StructObj, FunctionSpace, StructAndFieldAccessObj};
+use crate::ast::obj::{
+    FnObj, FnObjHead, FunctionSpace, IdentifierObj, Obj, StructAndFieldAccessObj, StructObj,
+};
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::{
     HaveByReplacementAxiomStmt, HaveFnByForallExistUniqueStmt, HaveFnEqualCaseByCaseStmt,
@@ -44,9 +46,9 @@ impl Runtime {
     ) -> RuntimeResult<Result<BuiltReleaseFacts, BuildReleaseFactsFailed>> {
         let plain = plain_name(surface);
         match def {
-            StoredIdentifierDefinition::ParamType(_) => Ok(Err(
-                BuildReleaseFactsFailed::ParamTypeNotReleasable,
-            )),
+            StoredIdentifierDefinition::ParamType(_) => {
+                Ok(Err(BuildReleaseFactsFailed::ParamTypeNotReleasable))
+            }
             StoredIdentifierDefinition::LetObj((_, stmt)) => {
                 Ok(Ok(build_let_obj(self, surface, stmt)))
             }
@@ -86,7 +88,8 @@ impl Runtime {
     pub(super) fn store_built_release_facts(
         &mut self,
         built: &BuiltReleaseFacts,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
         let mut out = Vec::with_capacity(built.facts.len());
         for fact in &built.facts {
             if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = fact {
@@ -110,7 +113,9 @@ fn build_let_obj(
         line_file: Some(stmt.line_file.clone()),
     }));
     BuiltReleaseFacts {
-        kind: ReleaseObjDefByKind::LetObj { equal: equal.clone() },
+        kind: ReleaseObjDefByKind::LetObj {
+            equal: equal.clone(),
+        },
         facts: vec![equal],
         defined_as_struct: None,
     }
@@ -258,8 +263,12 @@ fn build_have_fn_equal(
     surface: &IdentifierObj,
     stmt: &Rc<HaveFnEqualStmt>,
 ) -> BuiltReleaseFacts {
-    let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(stmt.equal_to_anonymous_fn.body.clone()));
-    let anon = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));
+    let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(
+        stmt.equal_to_anonymous_fn.body.clone(),
+    ));
+    let anon = Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+        stmt.equal_to_anonymous_fn.clone(),
+    ));
     let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
         element: Obj::Identifier(surface.clone()),
@@ -355,7 +364,10 @@ fn build_have_fn_by_forall_exist_unique(
     surface: &IdentifierObj,
     stmt: &HaveFnByForallExistUniqueStmt,
 ) -> RuntimeResult<Result<BuiltReleaseFacts, BuildReleaseFactsFailed>> {
-    match runtime.build_have_fn_by_forall_exist_unique_facts_for_surface(&Obj::Identifier(surface.clone()), stmt)? {
+    match runtime.build_have_fn_by_forall_exist_unique_facts_for_surface(
+        &Obj::Identifier(surface.clone()),
+        stmt,
+    )? {
         Ok((membership, property_forall, uniqueness_forall)) => {
             let facts = vec![
                 membership.clone(),
@@ -389,7 +401,9 @@ fn type_fact_for_surface(
         ParamType::Obj(param_set) => {
             let fact_id = runtime.global_ids.allocate_fact_id();
             let defined_as_struct = match param_set {
-                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj)) => Some((element.clone(), struct_obj.clone())),
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj)) => {
+                    Some((element.clone(), struct_obj.clone()))
+                }
                 _ => None,
             };
             (

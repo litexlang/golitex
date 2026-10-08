@@ -2,9 +2,7 @@ use crate::ast::fact::ChainFact;
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::{AtomicName, BoundName};
 use crate::ast::param::TypedParameterList;
-use crate::parse::keywords::{
-    EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
-};
+use crate::parse::keywords::{EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL};
 use crate::runtime::CodeSource;
 
 pub(crate) fn chain_line_file(chain_fact: &ChainFact) -> SourceLine {

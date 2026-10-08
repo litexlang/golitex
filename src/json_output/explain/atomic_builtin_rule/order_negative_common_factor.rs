@@ -208,4 +208,3 @@ impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText { text("음수 또는 비양수 공통 인수에 의한 순서 반전: a*c>=c*b", "음수 또는 비양수 공통 인수에 의한 순서 반전: c<=0; a<=b => a*c>=c*b") }
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText { text("Đảo thứ tự với thừa số chung âm hoặc không dương: a*c>=c*b", "Đảo thứ tự với thừa số chung âm hoặc không dương: c<=0; a<=b => a*c>=c*b") }
 }
-

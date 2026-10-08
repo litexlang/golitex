@@ -24,7 +24,6 @@ pub fn exec_sketch_stmt(
         }
     })?;
 
-
     match local_outcome {
         Ok(proof_steps) => Ok(ExecProofBlockStmtResult::Sketch(
             ExecSketchStmtResult::Success(ExecSketchStmtSuccess {

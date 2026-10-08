@@ -31,8 +31,7 @@ pub struct ExecTrustHaveStmtSuccessResult {
     pub statement: TrustHaveStmt,
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
     pub defined_param_store_and_infer: StoreHaveObjAndInferResult,
-    pub auto_opened_struct_layers:
-        Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
     pub body_facts_well_defined: Vec<FactWellDefinedProof>,
     pub body_store_and_infer_results: Vec<StoreFactAndInferResult>,
 }
@@ -60,7 +59,8 @@ impl Runtime {
         let verify_state = trust_verify_state();
 
         let introduced = match self.introduce_typed_parameters_with_definition(
-            &stmt.param_def, verify_state.clone(),
+            &stmt.param_def,
+            verify_state.clone(),
             Some(SharedHaveDefinition::TrustHave(Rc::new(stmt.clone()))),
         )? {
             Ok(result) => result,
@@ -85,9 +85,9 @@ impl Runtime {
             match self.inst_fact(fact, &subst) {
                 Ok(inst) => rewritten_body.push(inst),
                 Err(e) => {
-                    return Err(crate::runtime::RuntimeError::InternalBug(
-                        format!("trust have body instantiate: {e}"),
-                    ));
+                    return Err(crate::runtime::RuntimeError::InternalBug(format!(
+                        "trust have body instantiate: {e}"
+                    )));
                 }
             }
         }
@@ -108,7 +108,10 @@ impl Runtime {
 
         let mut body_store_and_infer_results = Vec::with_capacity(rewritten_body.len());
         for fact in &rewritten_body {
-            body_store_and_infer_results.push(self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?);
+            body_store_and_infer_results.push(self.store_fact_and_infer(
+                fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?);
         }
 
         Ok(ExecTrustHaveStmtResult::Success(

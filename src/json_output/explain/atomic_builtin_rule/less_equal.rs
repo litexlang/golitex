@@ -182,15 +182,29 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
-Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
-            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::ProductNonnegativeNegativeWeak(_) => text(
+                "ProductNonnegativeNegativeWeak",
+                "Apply the fixed scalar sign property with checked guards",
+            ),
+            Self::LiteralWeakBound(_) => {
+                text("LiteralWeakBound", "Weaken a checked exact literal bound")
+            }
+            Self::IntegerSuccessorGap(_) => {
+                text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
+            }
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
-            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
+            Self::AbsFromIntervalBounds(_) => {
+                text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b")
+            }
+            Self::SqrtMonotoneFromDefinedRoots(_) => text(
+                "SqrtMonotoneFromDefinedRoots",
+                "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)",
+            ),
             Self::SignLowerBound(_) => text("sign 的下界", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("sign 的上界", "x in R: sign(x)<=1"),
-            Self::SignWeakMonotone(_) => text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::SignWeakMonotone(_) => {
+                text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)")
+            }
             Self::MinLowerBound(_) => text("min 的基本下界", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
             Self::MaxUpperBound(_) => text("max 的基本上界", "a,b in R: a<=max(a,b), b<=max(a,b)"),
             Self::MinWeakMonotone(_) => text("min 的弱单调", "a<=c, b<=d => min(a,b)<=min(c,d)"),
@@ -210,21 +224,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_zh(),
             Self::LnWeakOrderReflection(p) => p.rule_name_and_message_zh(),
             Self::FactorialMonotone(p) => p.rule_name_and_message_zh(),
-            Self::FloorMonotone(p)=>p.rule_name_and_message_zh(),
-            Self::CeilMonotone(p)=>p.rule_name_and_message_zh(),
-            Self::ComplexTriangle(p)=>p.rule_name_and_message_zh(),
-            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_zh(),
-            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_zh(),
-            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_zh(),
+            Self::FloorMonotone(p) => p.rule_name_and_message_zh(),
+            Self::CeilMonotone(p) => p.rule_name_and_message_zh(),
+            Self::ComplexTriangle(p) => p.rule_name_and_message_zh(),
+            Self::FiniteSetSumTriangle(p) => p.rule_name_and_message_zh(),
+            Self::ComplexReverseTriangle(p) => p.rule_name_and_message_zh(),
+            Self::LcmCommonMultipleBound(p) => p.rule_name_and_message_zh(),
 
             Self::ClosedSubtractionBound(_) => text(
                 "从已有数值界减去常数",
                 "已有上界或下界减去闭式常数后满足目标弱序界",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "复数模长非负",
-                "复数模长取非负主根",
-            ),
+            Self::ComplexModulusNonnegative => text("复数模长非负", "复数模长取非负主根"),
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_zh(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_zh(),
@@ -249,9 +260,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_zh(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_zh(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_zh(),
-            Self::AbsDifferenceTriangle(_) => text("实数距离三角不等式", "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)"),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text("最大值的 Lipschitz 界", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon"),
-            Self::MinLipschitzFromCoordinateBounds(_) => text("最小值的 Lipschitz 界", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon"),
+            Self::AbsDifferenceTriangle(_) => text(
+                "实数距离三角不等式",
+                "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)",
+            ),
+            Self::MaxLipschitzFromCoordinateBounds(_) => text(
+                "最大值的 Lipschitz 界",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon",
+            ),
+            Self::MinLipschitzFromCoordinateBounds(_) => text(
+                "最小值的 Lipschitz 界",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon",
+            ),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_zh(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_zh(),
             Self::AbsReverseTriangleSub(p) => p.rule_name_and_message_zh(),
@@ -298,15 +318,29 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
-Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
-            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::ProductNonnegativeNegativeWeak(_) => text(
+                "ProductNonnegativeNegativeWeak",
+                "Apply the fixed scalar sign property with checked guards",
+            ),
+            Self::LiteralWeakBound(_) => {
+                text("LiteralWeakBound", "Weaken a checked exact literal bound")
+            }
+            Self::IntegerSuccessorGap(_) => {
+                text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
+            }
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
-            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
+            Self::AbsFromIntervalBounds(_) => {
+                text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b")
+            }
+            Self::SqrtMonotoneFromDefinedRoots(_) => text(
+                "SqrtMonotoneFromDefinedRoots",
+                "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)",
+            ),
             Self::SignLowerBound(_) => text("sign 的下界", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("sign 的上界", "x in R: sign(x)<=1"),
-            Self::SignWeakMonotone(_) => text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)"),
+            Self::SignWeakMonotone(_) => {
+                text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)")
+            }
             Self::MinLowerBound(_) => text("min 的基本下界", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
             Self::MaxUpperBound(_) => text("max 的基本上界", "a,b in R: a<=max(a,b), b<=max(a,b)"),
             Self::MinWeakMonotone(_) => text("min 的弱單調", "a<=c, b<=d => min(a,b)<=min(c,d)"),
@@ -317,8 +351,12 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::CotWeakDecreasingOnOpenPi(p) => p.rule_name_and_message_zh_hant(),
             Self::MulLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::MulRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
-            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
-            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulLeftRightNonpositiveReversesWeakLessEqual(p) => {
+                p.rule_name_and_message_zh_hant()
+            }
+            Self::MulRightLeftNonpositiveReversesWeakLessEqual(p) => {
+                p.rule_name_and_message_zh_hant()
+            }
             Self::FloorLowerBound(p) => p.rule_name_and_message_zh_hant(),
             Self::CeilUpperBound(p) => p.rule_name_and_message_zh_hant(),
             Self::ExpWeakMonotone(p) => p.rule_name_and_message_zh_hant(),
@@ -326,21 +364,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_zh_hant(),
             Self::LnWeakOrderReflection(p) => p.rule_name_and_message_zh_hant(),
             Self::FactorialMonotone(p) => p.rule_name_and_message_zh_hant(),
-            Self::FloorMonotone(p)=>p.rule_name_and_message_zh_hant(),
-            Self::CeilMonotone(p)=>p.rule_name_and_message_zh_hant(),
-            Self::ComplexTriangle(p)=>p.rule_name_and_message_zh_hant(),
-            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_zh_hant(),
-            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_zh_hant(),
-            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_zh_hant(),
+            Self::FloorMonotone(p) => p.rule_name_and_message_zh_hant(),
+            Self::CeilMonotone(p) => p.rule_name_and_message_zh_hant(),
+            Self::ComplexTriangle(p) => p.rule_name_and_message_zh_hant(),
+            Self::FiniteSetSumTriangle(p) => p.rule_name_and_message_zh_hant(),
+            Self::ComplexReverseTriangle(p) => p.rule_name_and_message_zh_hant(),
+            Self::LcmCommonMultipleBound(p) => p.rule_name_and_message_zh_hant(),
 
             Self::ClosedSubtractionBound(_) => text(
                 "從已有數值界減去常數",
                 "已有上界或下界減去封閉常數後仍足以滿足目標",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "複數模長非負",
-                "複數模長取非負主根",
-            ),
+            Self::ComplexModulusNonnegative => text("複數模長非負", "複數模長取非負主根"),
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh_hant(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_zh_hant(),
@@ -365,9 +400,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_zh_hant(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_zh_hant(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_zh_hant(),
-            Self::AbsDifferenceTriangle(_) => text("實數距離三角不等式", "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)"),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text("最大值的 Lipschitz 界", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon"),
-            Self::MinLipschitzFromCoordinateBounds(_) => text("最小值的 Lipschitz 界", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon"),
+            Self::AbsDifferenceTriangle(_) => text(
+                "實數距離三角不等式",
+                "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)",
+            ),
+            Self::MaxLipschitzFromCoordinateBounds(_) => text(
+                "最大值的 Lipschitz 界",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon",
+            ),
+            Self::MinLipschitzFromCoordinateBounds(_) => text(
+                "最小值的 Lipschitz 界",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon",
+            ),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_zh_hant(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_zh_hant(),
             Self::AbsReverseTriangleSub(p) => p.rule_name_and_message_zh_hant(),
@@ -744,19 +788,46 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
-Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
-            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::ProductNonnegativeNegativeWeak(_) => text(
+                "ProductNonnegativeNegativeWeak",
+                "Apply the fixed scalar sign property with checked guards",
+            ),
+            Self::LiteralWeakBound(_) => {
+                text("LiteralWeakBound", "Weaken a checked exact literal bound")
+            }
+            Self::IntegerSuccessorGap(_) => {
+                text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
+            }
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
-            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
+            Self::AbsFromIntervalBounds(_) => {
+                text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b")
+            }
+            Self::SqrtMonotoneFromDefinedRoots(_) => text(
+                "SqrtMonotoneFromDefinedRoots",
+                "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)",
+            ),
             Self::SignLowerBound(_) => text("الحد الأدنى للإشارة", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("الحد الأعلى للإشارة", "x in R: sign(x)<=1"),
-            Self::SignWeakMonotone(_) => text("الرتابة الضعيفة للإشارة", "a,b in R, a<=b => sign(a)<=sign(b)"),
-            Self::MinLowerBound(_) => text("الحد الأدنى لا يتجاوز المعامل", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
-            Self::MaxUpperBound(_) => text("الحد الأعلى لا يقل عن المعامل", "a,b in R: a<=max(a,b), b<=max(a,b)"),
-            Self::MinWeakMonotone(_) => text("الرتابة الضعيفة للحد الأدنى", "a<=c, b<=d => min(a,b)<=min(c,d)"),
-            Self::MaxWeakMonotone(_) => text("الرتابة الضعيفة للحد الأعلى", "a<=c, b<=d => max(a,b)<=max(c,d)"),
+            Self::SignWeakMonotone(_) => text(
+                "الرتابة الضعيفة للإشارة",
+                "a,b in R, a<=b => sign(a)<=sign(b)",
+            ),
+            Self::MinLowerBound(_) => text(
+                "الحد الأدنى لا يتجاوز المعامل",
+                "a,b in R: min(a,b)<=a, min(a,b)<=b",
+            ),
+            Self::MaxUpperBound(_) => text(
+                "الحد الأعلى لا يقل عن المعامل",
+                "a,b in R: a<=max(a,b), b<=max(a,b)",
+            ),
+            Self::MinWeakMonotone(_) => text(
+                "الرتابة الضعيفة للحد الأدنى",
+                "a<=c, b<=d => min(a,b)<=min(c,d)",
+            ),
+            Self::MaxWeakMonotone(_) => text(
+                "الرتابة الضعيفة للحد الأعلى",
+                "a<=c, b<=d => max(a,b)<=max(c,d)",
+            ),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ar(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_ar(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_ar(),
@@ -772,21 +843,20 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ar(),
             Self::LnWeakOrderReflection(p) => p.rule_name_and_message_ar(),
             Self::FactorialMonotone(p) => p.rule_name_and_message_ar(),
-            Self::FloorMonotone(p)=>p.rule_name_and_message_ar(),
-            Self::CeilMonotone(p)=>p.rule_name_and_message_ar(),
-            Self::ComplexTriangle(p)=>p.rule_name_and_message_ar(),
-            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_ar(),
-            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_ar(),
-            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_ar(),
+            Self::FloorMonotone(p) => p.rule_name_and_message_ar(),
+            Self::CeilMonotone(p) => p.rule_name_and_message_ar(),
+            Self::ComplexTriangle(p) => p.rule_name_and_message_ar(),
+            Self::FiniteSetSumTriangle(p) => p.rule_name_and_message_ar(),
+            Self::ComplexReverseTriangle(p) => p.rule_name_and_message_ar(),
+            Self::LcmCommonMultipleBound(p) => p.rule_name_and_message_ar(),
 
             Self::ClosedSubtractionBound(_) => text(
                 "طرح من حد عددي مخزن",
                 "يبقى الحد الأعلى أو الأدنى المخزن كافيًا بعد طرح الثابت المغلق",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "مقياس مركب غير سالب",
-                "المقياس المركب الرئيسي غير سالب",
-            ),
+            Self::ComplexModulusNonnegative => {
+                text("مقياس مركب غير سالب", "المقياس المركب الرئيسي غير سالب")
+            }
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_ar(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ar(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ar(),
@@ -811,9 +881,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_ar(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_ar(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_ar(),
-            Self::AbsDifferenceTriangle(_) => text("متباينة المثلث للمسافة الحقيقية", "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)"),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text("حد ليبشيتز للقيمة العظمى", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon"),
-            Self::MinLipschitzFromCoordinateBounds(_) => text("حد ليبشيتز للقيمة الصغرى", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon"),
+            Self::AbsDifferenceTriangle(_) => text(
+                "متباينة المثلث للمسافة الحقيقية",
+                "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)",
+            ),
+            Self::MaxLipschitzFromCoordinateBounds(_) => text(
+                "حد ليبشيتز للقيمة العظمى",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon",
+            ),
+            Self::MinLipschitzFromCoordinateBounds(_) => text(
+                "حد ليبشيتز للقيمة الصغرى",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon",
+            ),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_ar(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_ar(),
             Self::AbsReverseTriangleSub(p) => p.rule_name_and_message_ar(),
@@ -860,17 +939,33 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
-Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
-            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::ProductNonnegativeNegativeWeak(_) => text(
+                "ProductNonnegativeNegativeWeak",
+                "Apply the fixed scalar sign property with checked guards",
+            ),
+            Self::LiteralWeakBound(_) => {
+                text("LiteralWeakBound", "Weaken a checked exact literal bound")
+            }
+            Self::IntegerSuccessorGap(_) => {
+                text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
+            }
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
-            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
+            Self::AbsFromIntervalBounds(_) => {
+                text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b")
+            }
+            Self::SqrtMonotoneFromDefinedRoots(_) => text(
+                "SqrtMonotoneFromDefinedRoots",
+                "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)",
+            ),
             Self::SignLowerBound(_) => text("符号の下界", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("符号の上界", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("符号の単調性", "a,b in R, a<=b => sign(a)<=sign(b)"),
-            Self::MinLowerBound(_) => text("最小値は各引数以下", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
-            Self::MaxUpperBound(_) => text("最大値は各引数以上", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::MinLowerBound(_) => {
+                text("最小値は各引数以下", "a,b in R: min(a,b)<=a, min(a,b)<=b")
+            }
+            Self::MaxUpperBound(_) => {
+                text("最大値は各引数以上", "a,b in R: a<=max(a,b), b<=max(a,b)")
+            }
             Self::MinWeakMonotone(_) => text("最小値の単調性", "a<=c, b<=d => min(a,b)<=min(c,d)"),
             Self::MaxWeakMonotone(_) => text("最大値の単調性", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ja(),
@@ -888,21 +983,20 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ja(),
             Self::LnWeakOrderReflection(p) => p.rule_name_and_message_ja(),
             Self::FactorialMonotone(p) => p.rule_name_and_message_ja(),
-            Self::FloorMonotone(p)=>p.rule_name_and_message_ja(),
-            Self::CeilMonotone(p)=>p.rule_name_and_message_ja(),
-            Self::ComplexTriangle(p)=>p.rule_name_and_message_ja(),
-            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_ja(),
-            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_ja(),
-            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_ja(),
+            Self::FloorMonotone(p) => p.rule_name_and_message_ja(),
+            Self::CeilMonotone(p) => p.rule_name_and_message_ja(),
+            Self::ComplexTriangle(p) => p.rule_name_and_message_ja(),
+            Self::FiniteSetSumTriangle(p) => p.rule_name_and_message_ja(),
+            Self::ComplexReverseTriangle(p) => p.rule_name_and_message_ja(),
+            Self::LcmCommonMultipleBound(p) => p.rule_name_and_message_ja(),
 
             Self::ClosedSubtractionBound(_) => text(
                 "保存済みの数値の境界からの減算",
                 "保存済みの上界または下界は閉じた定数を引いた後も十分です",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "複素数の絶対値の非負性",
-                "複素数の主絶対値は非負です",
-            ),
+            Self::ComplexModulusNonnegative => {
+                text("複素数の絶対値の非負性", "複素数の主絶対値は非負です")
+            }
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_ja(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ja(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_ja(),
@@ -927,9 +1021,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_ja(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_ja(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_ja(),
-            Self::AbsDifferenceTriangle(_) => text("実数距離の三角不等式", "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)"),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text("最大値のリプシッツ評価", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon"),
-            Self::MinLipschitzFromCoordinateBounds(_) => text("最小値のリプシッツ評価", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon"),
+            Self::AbsDifferenceTriangle(_) => text(
+                "実数距離の三角不等式",
+                "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)",
+            ),
+            Self::MaxLipschitzFromCoordinateBounds(_) => text(
+                "最大値のリプシッツ評価",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon",
+            ),
+            Self::MinLipschitzFromCoordinateBounds(_) => text(
+                "最小値のリプシッツ評価",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon",
+            ),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_ja(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_ja(),
             Self::AbsReverseTriangleSub(p) => p.rule_name_and_message_ja(),
@@ -976,17 +1079,37 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
-Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
-            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::ProductNonnegativeNegativeWeak(_) => text(
+                "ProductNonnegativeNegativeWeak",
+                "Apply the fixed scalar sign property with checked guards",
+            ),
+            Self::LiteralWeakBound(_) => {
+                text("LiteralWeakBound", "Weaken a checked exact literal bound")
+            }
+            Self::IntegerSuccessorGap(_) => {
+                text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
+            }
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
-            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
+            Self::AbsFromIntervalBounds(_) => {
+                text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b")
+            }
+            Self::SqrtMonotoneFromDefinedRoots(_) => text(
+                "SqrtMonotoneFromDefinedRoots",
+                "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)",
+            ),
             Self::SignLowerBound(_) => text("부호의 하한", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("부호의 상한", "x in R: sign(x)<=1"),
-            Self::SignWeakMonotone(_) => text("부호의 단조성", "a,b in R, a<=b => sign(a)<=sign(b)"),
-            Self::MinLowerBound(_) => text("최솟값은 각 인수 이하", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
-            Self::MaxUpperBound(_) => text("최댓값은 각 인수 이상", "a,b in R: a<=max(a,b), b<=max(a,b)"),
+            Self::SignWeakMonotone(_) => {
+                text("부호의 단조성", "a,b in R, a<=b => sign(a)<=sign(b)")
+            }
+            Self::MinLowerBound(_) => text(
+                "최솟값은 각 인수 이하",
+                "a,b in R: min(a,b)<=a, min(a,b)<=b",
+            ),
+            Self::MaxUpperBound(_) => text(
+                "최댓값은 각 인수 이상",
+                "a,b in R: a<=max(a,b), b<=max(a,b)",
+            ),
             Self::MinWeakMonotone(_) => text("최솟값의 단조성", "a<=c, b<=d => min(a,b)<=min(c,d)"),
             Self::MaxWeakMonotone(_) => text("최댓값의 단조성", "a<=c, b<=d => max(a,b)<=max(c,d)"),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_ko(),
@@ -1004,12 +1127,12 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_ko(),
             Self::LnWeakOrderReflection(p) => p.rule_name_and_message_ko(),
             Self::FactorialMonotone(p) => p.rule_name_and_message_ko(),
-            Self::FloorMonotone(p)=>p.rule_name_and_message_ko(),
-            Self::CeilMonotone(p)=>p.rule_name_and_message_ko(),
-            Self::ComplexTriangle(p)=>p.rule_name_and_message_ko(),
-            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_ko(),
-            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_ko(),
-            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_ko(),
+            Self::FloorMonotone(p) => p.rule_name_and_message_ko(),
+            Self::CeilMonotone(p) => p.rule_name_and_message_ko(),
+            Self::ComplexTriangle(p) => p.rule_name_and_message_ko(),
+            Self::FiniteSetSumTriangle(p) => p.rule_name_and_message_ko(),
+            Self::ComplexReverseTriangle(p) => p.rule_name_and_message_ko(),
+            Self::LcmCommonMultipleBound(p) => p.rule_name_and_message_ko(),
 
             Self::ClosedSubtractionBound(_) => text(
                 "저장된 수치 경계에서 빼기",
@@ -1043,9 +1166,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_ko(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_ko(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_ko(),
-            Self::AbsDifferenceTriangle(_) => text("실수 거리의 삼각 부등식", "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)"),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text("최댓값의 립시츠 경계", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon"),
-            Self::MinLipschitzFromCoordinateBounds(_) => text("최솟값의 립시츠 경계", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon"),
+            Self::AbsDifferenceTriangle(_) => text(
+                "실수 거리의 삼각 부등식",
+                "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)",
+            ),
+            Self::MaxLipschitzFromCoordinateBounds(_) => text(
+                "최댓값의 립시츠 경계",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon",
+            ),
+            Self::MinLipschitzFromCoordinateBounds(_) => text(
+                "최솟값의 립시츠 경계",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon",
+            ),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_ko(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_ko(),
             Self::AbsReverseTriangleSub(p) => p.rule_name_and_message_ko(),
@@ -1092,19 +1224,46 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
-Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
-            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::ProductNonnegativeNegativeWeak(_) => text(
+                "ProductNonnegativeNegativeWeak",
+                "Apply the fixed scalar sign property with checked guards",
+            ),
+            Self::LiteralWeakBound(_) => {
+                text("LiteralWeakBound", "Weaken a checked exact literal bound")
+            }
+            Self::IntegerSuccessorGap(_) => {
+                text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
+            }
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
-            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
+            Self::AbsFromIntervalBounds(_) => {
+                text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b")
+            }
+            Self::SqrtMonotoneFromDefinedRoots(_) => text(
+                "SqrtMonotoneFromDefinedRoots",
+                "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)",
+            ),
             Self::SignLowerBound(_) => text("Cận dưới của dấu", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("Cận trên của dấu", "x in R: sign(x)<=1"),
-            Self::SignWeakMonotone(_) => text("Tính đơn điệu yếu của dấu", "a,b in R, a<=b => sign(a)<=sign(b)"),
-            Self::MinLowerBound(_) => text("Giá trị nhỏ nhất không vượt đối số", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
-            Self::MaxUpperBound(_) => text("Giá trị lớn nhất không nhỏ hơn đối số", "a,b in R: a<=max(a,b), b<=max(a,b)"),
-            Self::MinWeakMonotone(_) => text("Tính đơn điệu yếu của giá trị nhỏ nhất", "a<=c, b<=d => min(a,b)<=min(c,d)"),
-            Self::MaxWeakMonotone(_) => text("Tính đơn điệu yếu của giá trị lớn nhất", "a<=c, b<=d => max(a,b)<=max(c,d)"),
+            Self::SignWeakMonotone(_) => text(
+                "Tính đơn điệu yếu của dấu",
+                "a,b in R, a<=b => sign(a)<=sign(b)",
+            ),
+            Self::MinLowerBound(_) => text(
+                "Giá trị nhỏ nhất không vượt đối số",
+                "a,b in R: min(a,b)<=a, min(a,b)<=b",
+            ),
+            Self::MaxUpperBound(_) => text(
+                "Giá trị lớn nhất không nhỏ hơn đối số",
+                "a,b in R: a<=max(a,b), b<=max(a,b)",
+            ),
+            Self::MinWeakMonotone(_) => text(
+                "Tính đơn điệu yếu của giá trị nhỏ nhất",
+                "a<=c, b<=d => min(a,b)<=min(c,d)",
+            ),
+            Self::MaxWeakMonotone(_) => text(
+                "Tính đơn điệu yếu của giá trị lớn nhất",
+                "a<=c, b<=d => max(a,b)<=max(c,d)",
+            ),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_vi(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_vi(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_vi(),
@@ -1120,21 +1279,20 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::ExpWeakOrderReflection(p) => p.rule_name_and_message_vi(),
             Self::LnWeakOrderReflection(p) => p.rule_name_and_message_vi(),
             Self::FactorialMonotone(p) => p.rule_name_and_message_vi(),
-            Self::FloorMonotone(p)=>p.rule_name_and_message_vi(),
-            Self::CeilMonotone(p)=>p.rule_name_and_message_vi(),
-            Self::ComplexTriangle(p)=>p.rule_name_and_message_vi(),
-            Self::FiniteSetSumTriangle(p)=>p.rule_name_and_message_vi(),
-            Self::ComplexReverseTriangle(p)=>p.rule_name_and_message_vi(),
-            Self::LcmCommonMultipleBound(p)=>p.rule_name_and_message_vi(),
+            Self::FloorMonotone(p) => p.rule_name_and_message_vi(),
+            Self::CeilMonotone(p) => p.rule_name_and_message_vi(),
+            Self::ComplexTriangle(p) => p.rule_name_and_message_vi(),
+            Self::FiniteSetSumTriangle(p) => p.rule_name_and_message_vi(),
+            Self::ComplexReverseTriangle(p) => p.rule_name_and_message_vi(),
+            Self::LcmCommonMultipleBound(p) => p.rule_name_and_message_vi(),
 
             Self::ClosedSubtractionBound(_) => text(
                 "Trừ từ cận số đã lưu",
                 "Cận trên hoặc dưới đã lưu vẫn đủ sau khi trừ hằng đóng",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "Môđun phức không âm",
-                "Môđun phức chính không âm",
-            ),
+            Self::ComplexModulusNonnegative => {
+                text("Môđun phức không âm", "Môđun phức chính không âm")
+            }
             Self::FromKnownGreaterEqual(p) => p.rule_name_and_message_vi(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_vi(),
             Self::ClosedNumericComparison(p) => p.rule_name_and_message_vi(),
@@ -1159,9 +1317,18 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_vi(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_vi(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_vi(),
-            Self::AbsDifferenceTriangle(_) => text("Bất đẳng thức tam giác cho khoảng cách thực", "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)"),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text("Chặn Lipschitz của giá trị lớn nhất", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon"),
-            Self::MinLipschitzFromCoordinateBounds(_) => text("Chặn Lipschitz của giá trị nhỏ nhất", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon"),
+            Self::AbsDifferenceTriangle(_) => text(
+                "Bất đẳng thức tam giác cho khoảng cách thực",
+                "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)",
+            ),
+            Self::MaxLipschitzFromCoordinateBounds(_) => text(
+                "Chặn Lipschitz của giá trị lớn nhất",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon",
+            ),
+            Self::MinLipschitzFromCoordinateBounds(_) => text(
+                "Chặn Lipschitz của giá trị nhỏ nhất",
+                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon",
+            ),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_vi(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_vi(),
             Self::AbsReverseTriangleSub(p) => p.rule_name_and_message_vi(),
@@ -1223,8 +1390,12 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
-Self::ProductNonnegativeNegativeWeak(_) => None,
-            Self::LiteralWeakBound(_) | Self::IntegerSuccessorGap(_) | Self::NegationWeakOrder(_) | Self::AbsFromIntervalBounds(_) | Self::SqrtMonotoneFromDefinedRoots(_) => None,
+            Self::ProductNonnegativeNegativeWeak(_) => None,
+            Self::LiteralWeakBound(_)
+            | Self::IntegerSuccessorGap(_)
+            | Self::NegationWeakOrder(_)
+            | Self::AbsFromIntervalBounds(_)
+            | Self::SqrtMonotoneFromDefinedRoots(_) => None,
             Self::MulLeftNonpositiveReversesWeakLessEqual(_) => None,
             Self::MulRightNonpositiveReversesWeakLessEqual(_) => None,
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(_) => None,
@@ -1263,17 +1434,11 @@ impl ClosedNumericComparisonBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "封闭数值比较",
-            "两边都是可计算的数，并满足所述比较",
-        )
+        text("封闭数值比较", "两边都是可计算的数，并满足所述比较")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "封閉數值比較",
-            "兩邊為封閉數值且符合所述比較",
-        )
+        text("封閉數值比較", "兩邊為封閉數值且符合所述比較")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1343,17 +1508,11 @@ impl ClosedNumericComparisonBuiltinRuleProof {
 
 impl OrderReflexivityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Order reflexivity",
-            "A quantity is less-or-equal to itself",
-        )
+        text("Order reflexivity", "A quantity is less-or-equal to itself")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "序的自反性",
-            "任何量都不大于也不小于自己（≤ 自身）",
-        )
+        text("序的自反性", "任何量都不大于也不小于自己（≤ 自身）")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1382,10 +1541,7 @@ impl OrderReflexivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "انعكاسية الترتيب",
-            "الكمية أصغر من نفسها أو تساويها",
-        )
+        text("انعكاسية الترتيب", "الكمية أصغر من نفسها أو تساويها")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -1393,10 +1549,7 @@ impl OrderReflexivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "순서 반사성",
-            "양은 자기 자신보다 작거나 같습니다",
-        )
+        text("순서 반사성", "양은 자기 자신보다 작거나 같습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -1431,10 +1584,7 @@ impl FromKnownLessBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知严格小于",
-            "弱序目标由已知的严格小于推出",
-        )
+        text("已知严格小于", "弱序目标由已知的严格小于推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1515,17 +1665,11 @@ impl ArcsinPrincipalLowerBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "arcsin 下界",
-            "arcsin 落在其主值下界内",
-        )
+        text("arcsin 下界", "arcsin 落在其主值下界内")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "arcsin 下界",
-            "arcsin 不低於主值下界",
-        )
+        text("arcsin 下界", "arcsin 不低於主值下界")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1550,31 +1694,19 @@ impl ArcsinPrincipalLowerBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "حد أدنى لـ arcsin",
-            "arcsin يبقى ضمن حده الرئيسي الأدنى",
-        )
+        text("حد أدنى لـ arcsin", "arcsin يبقى ضمن حده الرئيسي الأدنى")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "arcsin の下界",
-            "arcsin は主値の下界以上です",
-        )
+        text("arcsin の下界", "arcsin は主値の下界以上です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "arcsin 하한",
-            "arcsin는 주값 하한 이상입니다",
-        )
+        text("arcsin 하한", "arcsin는 주값 하한 이상입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Cận dưới arcsin",
-            "arcsin giữ trong cận dưới chính",
-        )
+        text("Cận dưới arcsin", "arcsin giữ trong cận dưới chính")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1602,17 +1734,11 @@ impl ArcsinPrincipalUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "arcsin 上界",
-            "arcsin 落在其主值上界内",
-        )
+        text("arcsin 上界", "arcsin 落在其主值上界内")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "arcsin 上界",
-            "arcsin 不高於主值上界",
-        )
+        text("arcsin 上界", "arcsin 不高於主值上界")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1637,31 +1763,19 @@ impl ArcsinPrincipalUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "حد أعلى لـ arcsin",
-            "arcsin يبقى ضمن حده الرئيسي الأعلى",
-        )
+        text("حد أعلى لـ arcsin", "arcsin يبقى ضمن حده الرئيسي الأعلى")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "arcsin の上界",
-            "arcsin は主値の上界以下です",
-        )
+        text("arcsin の上界", "arcsin は主値の上界以下です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "arcsin 상한",
-            "arcsin는 주값 상한 이하입니다",
-        )
+        text("arcsin 상한", "arcsin는 주값 상한 이하입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Cận trên arcsin",
-            "arcsin giữ trong cận trên chính",
-        )
+        text("Cận trên arcsin", "arcsin giữ trong cận trên chính")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1689,17 +1803,11 @@ impl ArccosPrincipalLowerBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "arccos 下界",
-            "arccos 落在其主值下界内",
-        )
+        text("arccos 下界", "arccos 落在其主值下界内")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "arccos 下界",
-            "arccos 不低於主值下界",
-        )
+        text("arccos 下界", "arccos 不低於主值下界")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1724,31 +1832,19 @@ impl ArccosPrincipalLowerBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "حد أدنى لـ arccos",
-            "arccos يبقى ضمن حده الرئيسي الأدنى",
-        )
+        text("حد أدنى لـ arccos", "arccos يبقى ضمن حده الرئيسي الأدنى")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "arccos の下界",
-            "arccos は主値の下界以上です",
-        )
+        text("arccos の下界", "arccos は主値の下界以上です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "arccos 하한",
-            "arccos는 주값 하한 이상입니다",
-        )
+        text("arccos 하한", "arccos는 주값 하한 이상입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Cận dưới arccos",
-            "arccos giữ trong cận dưới chính",
-        )
+        text("Cận dưới arccos", "arccos giữ trong cận dưới chính")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1776,17 +1872,11 @@ impl ArccosPrincipalUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "arccos 上界",
-            "arccos 落在其主值上界内",
-        )
+        text("arccos 上界", "arccos 落在其主值上界内")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "arccos 上界",
-            "arccos 不高於主值上界",
-        )
+        text("arccos 上界", "arccos 不高於主值上界")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1811,31 +1901,19 @@ impl ArccosPrincipalUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "حد أعلى لـ arccos",
-            "arccos يبقى ضمن حده الرئيسي الأعلى",
-        )
+        text("حد أعلى لـ arccos", "arccos يبقى ضمن حده الرئيسي الأعلى")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "arccos の上界",
-            "arccos は主値の上界以下です",
-        )
+        text("arccos の上界", "arccos は主値の上界以下です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "arccos 상한",
-            "arccos는 주값 상한 이하입니다",
-        )
+        text("arccos 상한", "arccos는 주값 상한 이하입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Cận trên arccos",
-            "arccos giữ trong cận trên chính",
-        )
+        text("Cận trên arccos", "arccos giữ trong cận trên chính")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1863,10 +1941,7 @@ impl UnitCircleLowerBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "单位圆下界",
-            "单位圆上的三角函数值满足下界",
-        )
+        text("单位圆下界", "单位圆上的三角函数值满足下界")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1902,17 +1977,11 @@ impl UnitCircleLowerBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "単位円の下界",
-            "単位円上の三角関数値は下界を満たします",
-        )
+        text("単位円の下界", "単位円上の三角関数値は下界を満たします")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "단위원 하한",
-            "단위원의 삼각함숫값은 하한을 만족합니다",
-        )
+        text("단위원 하한", "단위원의 삼각함숫값은 하한을 만족합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -1947,10 +2016,7 @@ impl UnitCircleUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "单位圆上界",
-            "单位圆上的三角函数值满足上界",
-        )
+        text("单位圆上界", "单位圆上的三角函数值满足上界")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1986,17 +2052,11 @@ impl UnitCircleUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "単位円の上界",
-            "単位円上の三角関数値は上界を満たします",
-        )
+        text("単位円の上界", "単位円上の三角関数値は上界を満たします")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "단위원 상한",
-            "단위원의 삼각함숫값은 상한을 만족합니다",
-        )
+        text("단위원 상한", "단위원의 삼각함숫값은 상한을 만족합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -2024,7 +2084,10 @@ impl UnitCircleUpperBoundBuiltinRuleProof {
 
 impl AbsNonnegativeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Nonnegativity of absolute value", "Absolute value is nonnegative")
+        text(
+            "Nonnegativity of absolute value",
+            "Absolute value is nonnegative",
+        )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -2123,17 +2186,11 @@ impl AddRightNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "جمع غير سالب أيمن",
-            "إضافة حد غير سالب يمينًا تحفظ ≤",
-        )
+        text("جمع غير سالب أيمن", "إضافة حد غير سالب يمينًا تحفظ ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "右に非負の項を加算",
-            "右に非負の項を加えると ≤ を保ちます",
-        )
+        text("右に非負の項を加算", "右に非負の項を加えると ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -2204,17 +2261,11 @@ impl AddLeftNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "جمع غير سالب أيسر",
-            "إضافة حد غير سالب يسارًا تحفظ ≤",
-        )
+        text("جمع غير سالب أيسر", "إضافة حد غير سالب يسارًا تحفظ ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "左に非負の項を加算",
-            "左に非負の項を加えると ≤ を保ちます",
-        )
+        text("左に非負の項を加算", "左に非負の項を加えると ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -2285,17 +2336,11 @@ impl AddRightCongruenceBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "جمع أيمن (≤)",
-            "إضافة الحد نفسه يمينًا تحفظ ≤",
-        )
+        text("جمع أيمن (≤)", "إضافة الحد نفسه يمينًا تحفظ ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "右加算（≤）",
-            "右に同じ項を加えても ≤ を保ちます",
-        )
+        text("右加算（≤）", "右に同じ項を加えても ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -2306,10 +2351,7 @@ impl AddRightCongruenceBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Cộng phải (≤)",
-            "Cộng cùng hạng bên phải bảo toàn ≤",
-        )
+        text("Cộng phải (≤)", "Cộng cùng hạng bên phải bảo toàn ≤")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2366,31 +2408,19 @@ impl AddLeftCongruenceBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "جمع أيسر (≤)",
-            "إضافة الحد نفسه يسارًا تحفظ ≤",
-        )
+        text("جمع أيسر (≤)", "إضافة الحد نفسه يسارًا تحفظ ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "左加算（≤）",
-            "左に同じ項を加えても ≤ を保ちます",
-        )
+        text("左加算（≤）", "左に同じ項を加えても ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "왼쪽 덧셈 (≤)",
-            "왼쪽에 같은 항을 더하면 ≤가 보존됩니다",
-        )
+        text("왼쪽 덧셈 (≤)", "왼쪽에 같은 항을 더하면 ≤가 보존됩니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Cộng trái (≤)",
-            "Cộng cùng hạng bên trái bảo toàn ≤",
-        )
+        text("Cộng trái (≤)", "Cộng cùng hạng bên trái bảo toàn ≤")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2499,17 +2529,11 @@ impl MulLeftNonnegativeMonotoneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "左乘单调（≤）",
-            "左边乘以非负因子保持 ≤",
-        )
+        text("左乘单调（≤）", "左边乘以非负因子保持 ≤")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "左乘單調性（≤）",
-            "左乘非負因子保持 ≤",
-        )
+        text("左乘單調性（≤）", "左乘非負因子保持 ≤")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2534,17 +2558,11 @@ impl MulLeftNonnegativeMonotoneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "رتابة الضرب الأيسر (≤)",
-            "الضرب يسارًا بعامل غير سالب يحفظ ≤",
-        )
+        text("رتابة الضرب الأيسر (≤)", "الضرب يسارًا بعامل غير سالب يحفظ ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "左乗算の単調性（≤）",
-            "左に非負因子を掛けると ≤ を保ちます",
-        )
+        text("左乗算の単調性（≤）", "左に非負因子を掛けると ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -2586,17 +2604,11 @@ impl MulRightNonnegativeMonotoneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "右乘单调（≤）",
-            "右边乘以非负因子保持 ≤",
-        )
+        text("右乘单调（≤）", "右边乘以非负因子保持 ≤")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "右乘單調性（≤）",
-            "右乘非負因子保持 ≤",
-        )
+        text("右乘單調性（≤）", "右乘非負因子保持 ≤")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2621,17 +2633,11 @@ impl MulRightNonnegativeMonotoneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "رتابة الضرب الأيمن (≤)",
-            "الضرب يمينًا بعامل غير سالب يحفظ ≤",
-        )
+        text("رتابة الضرب الأيمن (≤)", "الضرب يمينًا بعامل غير سالب يحفظ ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "右乗算の単調性（≤）",
-            "右に非負因子を掛けると ≤ を保ちます",
-        )
+        text("右乗算の単調性（≤）", "右に非負因子を掛けると ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -2673,17 +2679,11 @@ impl AbsLeFromSymmetricBoundsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由 ± 界得 |x| ≤ M",
-            "当 -M ≤ x ≤ M 时，|x| ≤ M",
-        )
+        text("由 ± 界得 |x| ≤ M", "当 -M ≤ x ≤ M 时，|x| ≤ M")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由正負界得 |x| ≤ M",
-            "當 -M ≤ x ≤ M，絕對值不大於 M",
-        )
+        text("由正負界得 |x| ≤ M", "當 -M ≤ x ≤ M，絕對值不大於 M")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2694,10 +2694,7 @@ impl AbsLeFromSymmetricBoundsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "|x| ≤ M из границ ±",
-            "Модуль ограничен M при -M ≤ x ≤ M",
-        )
+        text("|x| ≤ M из границ ±", "Модуль ограничен M при -M ≤ x ≤ M")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -2722,10 +2719,7 @@ impl AbsLeFromSymmetricBoundsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "± 경계로 |x| ≤ M",
-            "-M ≤ x ≤ M이면 절댓값은 M 이하입니다",
-        )
+        text("± 경계로 |x| ≤ M", "-M ≤ x ≤ M이면 절댓값은 M 이하입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -2760,17 +2754,11 @@ impl AbsLeImpliesUpperBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由绝对值上界得到原数上界",
-            "绝对值上界蕴含 x 的同样上界",
-        )
+        text("由绝对值上界得到原数上界", "绝对值上界蕴含 x 的同样上界")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由絕對值上界得到原數上界",
-            "絕對值上界同樣限制 x",
-        )
+        text("由絕對值上界得到原數上界", "絕對值上界同樣限制 x")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2847,17 +2835,11 @@ impl AbsLeImpliesNegUpperBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由绝对值上界得到相反数上界",
-            "绝对值上界蕴含 -x 的同样上界",
-        )
+        text("由绝对值上界得到相反数上界", "绝对值上界蕴含 -x 的同样上界")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由絕對值上界得到相反數上界",
-            "絕對值上界同樣限制 -x",
-        )
+        text("由絕對值上界得到相反數上界", "絕對值上界同樣限制 -x")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3049,10 +3031,7 @@ impl AbsSelfLowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "음의 절댓값 하계",
-            "양은 자기 절댓값의 음수 이상입니다",
-        )
+        text("음의 절댓값 하계", "양은 자기 절댓값의 음수 이상입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3087,11 +3066,17 @@ impl AbsTriangleInequalityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("绝对值的三角不等式", "绝对值的三角不等式可写为: abs(a+b) ≤ abs(a)+abs(b)")
+        text(
+            "绝对值的三角不等式",
+            "绝对值的三角不等式可写为: abs(a+b) ≤ abs(a)+abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("絕對值的三角不等式", "絕對值的三角不等式可寫為: abs(a+b) ≤ abs(a)+abs(b)")
+        text(
+            "絕對值的三角不等式",
+            "絕對值的三角不等式可寫為: abs(a+b) ≤ abs(a)+abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3116,15 +3101,24 @@ impl AbsTriangleInequalityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("متباينة المثلث للقيمة المطلقة", "تُكتب خاصية «متباينة المثلث للقيمة المطلقة» كما يلي: abs(a+b) ≤ abs(a)+abs(b)")
+        text(
+            "متباينة المثلث للقيمة المطلقة",
+            "تُكتب خاصية «متباينة المثلث للقيمة المطلقة» كما يلي: abs(a+b) ≤ abs(a)+abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("絶対値の三角不等式", "絶対値の三角不等式は次の式で表されます: abs(a+b) ≤ abs(a)+abs(b)")
+        text(
+            "絶対値の三角不等式",
+            "絶対値の三角不等式は次の式で表されます: abs(a+b) ≤ abs(a)+abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("절댓값의 삼각부등식", "절댓값의 삼각부등식은 다음 식으로 나타납니다: abs(a+b) ≤ abs(a)+abs(b)")
+        text(
+            "절댓값의 삼각부등식",
+            "절댓값의 삼각부등식은 다음 식으로 나타납니다: abs(a+b) ≤ abs(a)+abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3159,17 +3153,11 @@ impl AbsReverseTriangleAddBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "反向三角（|a|+|b|）",
-            "和的绝对值的反向三角不等式",
-        )
+        text("反向三角（|a|+|b|）", "和的绝对值的反向三角不等式")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "反三角不等式（|a|+|b|）",
-            "和的絕對值反三角不等式",
-        )
+        text("反三角不等式（|a|+|b|）", "和的絕對值反三角不等式")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3201,17 +3189,11 @@ impl AbsReverseTriangleAddBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "逆三角不等式（|a|+|b|）",
-            "和の絶対値の逆三角不等式",
-        )
+        text("逆三角不等式（|a|+|b|）", "和の絶対値の逆三角不等式")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "역삼각부등식 (|a|+|b|)",
-            "합의 절댓값 역삼각부등식",
-        )
+        text("역삼각부등식 (|a|+|b|)", "합의 절댓값 역삼각부등식")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3246,17 +3228,11 @@ impl AbsReverseTriangleSubBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "反向三角（|a|-|b|）",
-            "差的绝对值的反向三角不等式",
-        )
+        text("反向三角（|a|-|b|）", "差的绝对值的反向三角不等式")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "反三角不等式（|a|-|b|）",
-            "差的絕對值反三角不等式",
-        )
+        text("反三角不等式（|a|-|b|）", "差的絕對值反三角不等式")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3288,17 +3264,11 @@ impl AbsReverseTriangleSubBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "逆三角不等式（|a|-|b|）",
-            "差の絶対値の逆三角不等式",
-        )
+        text("逆三角不等式（|a|-|b|）", "差の絶対値の逆三角不等式")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "역삼각부등식 (|a|-|b|)",
-            "차의 절댓값 역삼각부등식",
-        )
+        text("역삼각부등식 (|a|-|b|)", "차의 절댓값 역삼각부등식")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3362,31 +3332,19 @@ impl SumOfNonnegativesBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "مجموع غير السوالب ≥ 0",
-            "مجموع حدود غير سالبة غير سالب",
-        )
+        text("مجموع غير السوالب ≥ 0", "مجموع حدود غير سالبة غير سالب")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "非負数の和 ≥ 0",
-            "非負の項の和は非負です",
-        )
+        text("非負数の和 ≥ 0", "非負の項の和は非負です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "비음수의 합 ≥ 0",
-            "음이 아닌 항의 합은 음이 아닙니다",
-        )
+        text("비음수의 합 ≥ 0", "음이 아닌 항의 합은 음이 아닙니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tổng số không âm ≥ 0",
-            "Tổng các hạng không âm không âm",
-        )
+        text("Tổng số không âm ≥ 0", "Tổng các hạng không âm không âm")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3418,10 +3376,7 @@ impl ProductOfNonnegativesBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非負數乘積 ≥ 0",
-            "非負因子的乘積非負",
-        )
+        text("非負數乘積 ≥ 0", "非負因子的乘積非負")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3453,24 +3408,15 @@ impl ProductOfNonnegativesBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "非負数の積 ≥ 0",
-            "非負因子の積は非負です",
-        )
+        text("非負数の積 ≥ 0", "非負因子の積は非負です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "비음수의 곱 ≥ 0",
-            "음이 아닌 인자의 곱은 음이 아닙니다",
-        )
+        text("비음수의 곱 ≥ 0", "음이 아닌 인자의 곱은 음이 아닙니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tích số không âm ≥ 0",
-            "Tích các thừa số không âm không âm",
-        )
+        text("Tích số không âm ≥ 0", "Tích các thừa số không âm không âm")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3498,17 +3444,11 @@ impl EvenPowNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "偶次幂 ≥ 0",
-            "已验证的实数底数的偶次幂非负",
-        )
+        text("偶次幂 ≥ 0", "已验证的实数底数的偶次幂非负")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "偶數次方 ≥ 0",
-            "經驗證實數底數的偶數次方非負",
-        )
+        text("偶數次方 ≥ 0", "經驗證實數底數的偶數次方非負")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3540,10 +3480,7 @@ impl EvenPowNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "偶数乗 ≥ 0",
-            "検証済みの実数の底の偶数乗は非負です",
-        )
+        text("偶数乗 ≥ 0", "検証済みの実数の底の偶数乗は非負です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -3585,17 +3522,11 @@ impl PowNonnegFromPositiveBaseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "幂 ≥ 0（正底）",
-            "正底数的实数次幂在有定义时非负",
-        )
+        text("幂 ≥ 0（正底）", "正底数的实数次幂在有定义时非负")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "正底數的冪 ≥ 0",
-            "正底數的實數次方在定義成立時非負",
-        )
+        text("正底數的冪 ≥ 0", "正底數的實數次方在定義成立時非負")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3672,17 +3603,11 @@ impl PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "幂 ≥ 0（非负底）",
-            "非负底数的正整数次幂非负",
-        )
+        text("幂 ≥ 0（非负底）", "非负底数的正整数次幂非负")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非負底數的冪 ≥ 0",
-            "非負底數的正整數次方非負",
-        )
+        text("非負底數的冪 ≥ 0", "非負底數的正整數次方非負")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3714,10 +3639,7 @@ impl PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "冪 ≥ 0（非負の底）",
-            "非負の底の正の整数乗は非負です",
-        )
+        text("冪 ≥ 0（非負の底）", "非負の底の正の整数乗は非負です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -3752,7 +3674,10 @@ impl PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof {
 
 impl SqrtNonnegativeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Nonnegativity of the principal square root", "Square root is nonnegative")
+        text(
+            "Nonnegativity of the principal square root",
+            "Square root is nonnegative",
+        )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -3785,7 +3710,10 @@ impl SqrtNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("عدم سلبية الجذر التربيعي الرئيسي", "الجذر التربيعي غير سالب")
+        text(
+            "عدم سلبية الجذر التربيعي الرئيسي",
+            "الجذر التربيعي غير سالب",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -3818,24 +3746,15 @@ impl SqrtNonnegativeBuiltinRuleProof {
 
 impl SqrtMonotoneNondecreasingBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "√ monotone weak",
-            "Square root is nondecreasing on [0,∞)",
-        )
+        text("√ monotone weak", "Square root is nondecreasing on [0,∞)")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "√ 弱单调",
-            "平方根在 [0,∞) 上非减",
-        )
+        text("√ 弱单调", "平方根在 [0,∞) 上非减")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "平方根弱單調性",
-            "平方根在 [0,∞) 上非遞減",
-        )
+        text("平方根弱單調性", "平方根在 [0,∞) 上非遞減")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3867,17 +3786,11 @@ impl SqrtMonotoneNondecreasingBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "√ の広義単調性",
-            "平方根は [0,∞) 上で非減少です",
-        )
+        text("√ の広義単調性", "平方根は [0,∞) 上で非減少です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "√ 약한 단조성",
-            "제곱근은 [0,∞)에서 감소하지 않습니다",
-        )
+        text("√ 약한 단조성", "제곱근은 [0,∞)에서 감소하지 않습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3912,17 +3825,11 @@ impl FromKnownInPositiveNaturalBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知属于正自然数",
-            "目标由已知的正自然数成员关系推出",
-        )
+        text("已知属于正自然数", "目标由已知的正自然数成员关系推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由已知正自然數成員",
-            "目標由已知正自然數成員關係得出",
-        )
+        text("由已知正自然數成員", "目標由已知正自然數成員關係得出")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3992,24 +3899,15 @@ impl FromKnownInPositiveNaturalBuiltinRuleProof {
 
 impl LogOrderPreservingWeakBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "log order weak",
-            "Log with base > 1 preserves ≤",
-        )
+        text("log order weak", "Log with base > 1 preserves ≤")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "对数弱保序",
-            "底大于 1 的对数保持 ≤",
-        )
+        text("对数弱保序", "底大于 1 的对数保持 ≤")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "對數弱序",
-            "底數 > 1 的對數保持 ≤",
-        )
+        text("對數弱序", "底數 > 1 的對數保持 ≤")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4034,24 +3932,15 @@ impl LogOrderPreservingWeakBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "ترتيب غير صارم للوغاريتم",
-            "اللوغاريتم بأساس > 1 يحفظ ≤",
-        )
+        text("ترتيب غير صارم للوغاريتم", "اللوغاريتم بأساس > 1 يحفظ ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "対数の広義順序",
-            "底 > 1 の対数は ≤ を保ちます",
-        )
+        text("対数の広義順序", "底 > 1 の対数は ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "로그의 약한 순서",
-            "밑 > 1인 로그는 ≤를 보존합니다",
-        )
+        text("로그의 약한 순서", "밑 > 1인 로그는 ≤를 보존합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4079,10 +3968,7 @@ impl LogOrderPreservingWeakBuiltinRuleProof {
 
 impl LessEqualTransitivityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "≤ transitivity",
-            "Less-or-equal is transitive",
-        )
+        text("≤ transitivity", "Less-or-equal is transitive")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -4101,38 +3987,23 @@ impl LessEqualTransitivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Транзитивность ≤",
-            "Отношение меньше или равно транзитивно",
-        )
+        text("Транзитивность ≤", "Отношение меньше или равно транзитивно")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Transitividad de ≤",
-            "Menor o igual es transitivo",
-        )
+        text("Transitividad de ≤", "Menor o igual es transitivo")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "تعدي ≤",
-            "علاقة أصغر أو يساوي متعدية",
-        )
+        text("تعدي ≤", "علاقة أصغر أو يساوي متعدية")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "≤ の推移性",
-            "以下の関係は推移的です",
-        )
+        text("≤ の推移性", "以下の関係は推移的です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "≤ 추이성",
-            "작거나 같음은 추이적입니다",
-        )
+        text("≤ 추이성", "작거나 같음은 추이적입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4254,17 +4125,11 @@ impl NonnegDifferenceFromLessEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "非严格大小关系推出差非负",
-            "由 ≤ 得到非负差",
-        )
+        text("非严格大小关系推出差非负", "由 ≤ 得到非负差")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非嚴格大小關係推出差非負",
-            "≤ 推出差非負",
-        )
+        text("非嚴格大小關係推出差非負", "≤ 推出差非負")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4296,10 +4161,7 @@ impl NonnegDifferenceFromLessEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "弱い大小関係による差の非負性",
-            "≤ から差の非負性を導きます",
-        )
+        text("弱い大小関係による差の非負性", "≤ から差の非負性を導きます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -4334,10 +4196,7 @@ impl NonnegDifferenceFromLessEqualBuiltinRuleProof {
 
 impl ModRemainderNonnegativeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "mod remainder ≥ 0",
-            "Euclidean remainder is nonnegative",
-        )
+        text("mod remainder ≥ 0", "Euclidean remainder is nonnegative")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -4349,52 +4208,31 @@ impl ModRemainderNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Reste modulaire ≥ 0",
-            "Le reste euclidien est non négatif",
-        )
+        text("Reste modulaire ≥ 0", "Le reste euclidien est non négatif")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Остаток по модулю ≥ 0",
-            "Евклидов остаток неотрицателен",
-        )
+        text("Остаток по модулю ≥ 0", "Евклидов остаток неотрицателен")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Resto modular ≥ 0",
-            "El resto euclídeo es no negativo",
-        )
+        text("Resto modular ≥ 0", "El resto euclídeo es no negativo")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "باقي القسمة ≥ 0",
-            "الباقي الإقليدي غير سالب",
-        )
+        text("باقي القسمة ≥ 0", "الباقي الإقليدي غير سالب")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "剰余 ≥ 0",
-            "ユークリッドの剰余は非負です",
-        )
+        text("剰余 ≥ 0", "ユークリッドの剰余は非負です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "나머지 ≥ 0",
-            "유클리드 나머지는 음이 아닙니다",
-        )
+        text("나머지 ≥ 0", "유클리드 나머지는 음이 아닙니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Số dư ≥ 0",
-            "Số dư Euclid không âm",
-        )
+        text("Số dư ≥ 0", "Số dư Euclid không âm")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -4422,17 +4260,11 @@ impl DivMonotoneWeakSamePosDivisorBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "除法弱单调（正）",
-            "同除以正除数保持 ≤",
-        )
+        text("除法弱单调（正）", "同除以正除数保持 ≤")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "正除數弱序單調性",
-            "同除正數保持 ≤",
-        )
+        text("正除數弱序單調性", "同除正數保持 ≤")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4464,10 +4296,7 @@ impl DivMonotoneWeakSamePosDivisorBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "正の除数の広義単調性",
-            "同じ正の数で割ると ≤ を保ちます",
-        )
+        text("正の除数の広義単調性", "同じ正の数で割ると ≤ を保ちます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -4509,17 +4338,11 @@ impl FiniteSetSizeNonnegativeLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "有限集合的基数非负",
-            "有限集大小非负（写成 ≤）",
-        )
+        text("有限集合的基数非负", "有限集大小非负（写成 ≤）")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "有限集合的基數非負",
-            "有限集合大小非負（以 ≤ 表示）",
-        )
+        text("有限集合的基數非負", "有限集合大小非負（以 ≤ 表示）")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4770,17 +4593,11 @@ impl DivMonotoneWeakSameNegDivisorBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "除法弱单调（负）",
-            "同除以负除数反转并保持 ≤",
-        )
+        text("除法弱单调（负）", "同除以负除数反转并保持 ≤")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "負除數弱序單調性",
-            "同除負數反轉並保持 ≤",
-        )
+        text("負除數弱序單調性", "同除負數反轉並保持 ≤")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4857,17 +4674,11 @@ impl LessEqualFromPosDivProductBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由正除数积得 ≤",
-            "正除数的积界给出 ≤",
-        )
+        text("由正除数积得 ≤", "正除数的积界给出 ≤")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由正除數乘積得 ≤",
-            "正除數的乘積界得 ≤",
-        )
+        text("由正除數乘積得 ≤", "正除數的乘積界得 ≤")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4944,17 +4755,11 @@ impl LessEqualFromPosDenomQuotientBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由正分母商得 ≤",
-            "正分母的商界给出 ≤",
-        )
+        text("由正分母商得 ≤", "正分母的商界给出 ≤")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由正分母商得 ≤",
-            "正分母的商界得 ≤",
-        )
+        text("由正分母商得 ≤", "正分母的商界得 ≤")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5031,17 +4836,11 @@ impl NumericLowerBoundWeakenLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "放宽数值下界（≤）",
-            "数值下界在 ≤ 下可放宽",
-        )
+        text("放宽数值下界（≤）", "数值下界在 ≤ 下可放宽")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "放寬數值下界（≤）",
-            "數值下界依 ≤ 放寬",
-        )
+        text("放寬數值下界（≤）", "數值下界依 ≤ 放寬")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5066,31 +4865,19 @@ impl NumericLowerBoundWeakenLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "إضعاف الحد الأدنى (≤)",
-            "الحد الأدنى العددي يضعف تحت ≤",
-        )
+        text("إضعاف الحد الأدنى (≤)", "الحد الأدنى العددي يضعف تحت ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "数値下界の緩和（≤）",
-            "数値の下界を ≤ で緩めます",
-        )
+        text("数値下界の緩和（≤）", "数値の下界を ≤ で緩めます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "수치 하한 완화 (≤)",
-            "수치 하한을 ≤로 완화합니다",
-        )
+        text("수치 하한 완화 (≤)", "수치 하한을 ≤로 완화합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Nới cận dưới (≤)",
-            "Cận dưới số được nới theo ≤",
-        )
+        text("Nới cận dưới (≤)", "Cận dưới số được nới theo ≤")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -5118,17 +4905,11 @@ impl NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由前驱得下界",
-            "由严格前驱比较得到数值下界",
-        )
+        text("由前驱得下界", "由严格前驱比较得到数值下界")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由前驅得下界",
-            "嚴格前驅比較得數值下界",
-        )
+        text("由前驅得下界", "嚴格前驅比較得數值下界")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5205,17 +4986,11 @@ impl NumericUpperBoundWeakenLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "放宽数值上界（≤）",
-            "数值上界在 ≤ 下可放宽",
-        )
+        text("放宽数值上界（≤）", "数值上界在 ≤ 下可放宽")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "放寬數值上界（≤）",
-            "數值上界依 ≤ 放寬",
-        )
+        text("放寬數值上界（≤）", "數值上界依 ≤ 放寬")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5240,31 +5015,19 @@ impl NumericUpperBoundWeakenLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "إضعاف الحد الأعلى (≤)",
-            "الحد الأعلى العددي يضعف تحت ≤",
-        )
+        text("إضعاف الحد الأعلى (≤)", "الحد الأعلى العددي يضعف تحت ≤")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "数値上界の緩和（≤）",
-            "数値の上界を ≤ で緩めます",
-        )
+        text("数値上界の緩和（≤）", "数値の上界を ≤ で緩めます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "수치 상한 완화 (≤)",
-            "수치 상한을 ≤로 완화합니다",
-        )
+        text("수치 상한 완화 (≤)", "수치 상한을 ≤로 완화합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Nới cận trên (≤)",
-            "Cận trên số được nới theo ≤",
-        )
+        text("Nới cận trên (≤)", "Cận trên số được nới theo ≤")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -5336,7 +5099,10 @@ impl IntegerSuccessorLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Số nguyên không lớn hơn số kế tiếp", "Số nguyên ≤ số liền sau")
+        text(
+            "Số nguyên không lớn hơn số kế tiếp",
+            "Số nguyên ≤ số liền sau",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -5357,10 +5123,7 @@ impl IntegerSuccessorLeBuiltinRuleProof {
 
 impl IntegerAdjacencyLeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Integer adjacency ≤",
-            "Adjacent integers compare by ≤",
-        )
+        text("Integer adjacency ≤", "Adjacent integers compare by ≤")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -5379,10 +5142,7 @@ impl IntegerAdjacencyLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Соседние целые ≤",
-            "Соседние целые сравниваются по ≤",
-        )
+        text("Соседние целые ≤", "Соседние целые сравниваются по ≤")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -5400,17 +5160,11 @@ impl IntegerAdjacencyLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "隣接整数 ≤",
-            "隣接する整数は ≤ で比較されます",
-        )
+        text("隣接整数 ≤", "隣接する整数は ≤ で比較されます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "인접 정수 ≤",
-            "인접한 정수는 ≤로 비교됩니다",
-        )
+        text("인접 정수 ≤", "인접한 정수는 ≤로 비교됩니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -5526,17 +5280,11 @@ impl IntegerDiffAtLeastOneLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "整数间隔 ≥ 1",
-            "不同整数至少相差 1",
-        )
+        text("整数间隔 ≥ 1", "不同整数至少相差 1")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "整數差距 ≥ 1",
-            "不同整數至少相差一",
-        )
+        text("整數差距 ≥ 1", "不同整數至少相差一")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5568,17 +5316,11 @@ impl IntegerDiffAtLeastOneLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "整数の差 ≥ 1",
-            "異なる整数は少なくとも一だけ異なります",
-        )
+        text("整数の差 ≥ 1", "異なる整数は少なくとも一だけ異なります")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "정수 간격 ≥ 1",
-            "서로 다른 정수는 적어도 1만큼 차이납니다",
-        )
+        text("정수 간격 ≥ 1", "서로 다른 정수는 적어도 1만큼 차이납니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -5613,17 +5355,11 @@ impl FiniteSetMaxMemberLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "元素 ≤ 最大值",
-            "有限集每个元素 ≤ 其最大值",
-        )
+        text("元素 ≤ 最大值", "有限集每个元素 ≤ 其最大值")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "成員 ≤ 最大值",
-            "有限集合每個成員 ≤ 其最大值",
-        )
+        text("成員 ≤ 最大值", "有限集合每個成員 ≤ 其最大值")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5655,17 +5391,11 @@ impl FiniteSetMaxMemberLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "要素 ≤ 最大値",
-            "有限集合の各要素はその最大値以下です",
-        )
+        text("要素 ≤ 最大値", "有限集合の各要素はその最大値以下です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "원소 ≤ 최댓값",
-            "유한 집합의 모든 원소는 최댓값 이하입니다",
-        )
+        text("원소 ≤ 최댓값", "유한 집합의 모든 원소는 최댓값 이하입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -5700,17 +5430,11 @@ impl FiniteSetMinMemberLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "最小值 ≤ 元素",
-            "有限集最小值 ≤ 每个元素",
-        )
+        text("最小值 ≤ 元素", "有限集最小值 ≤ 每个元素")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "最小值 ≤ 成員",
-            "有限集合的最小值 ≤ 每個成員",
-        )
+        text("最小值 ≤ 成員", "有限集合的最小值 ≤ 每個成員")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5742,17 +5466,11 @@ impl FiniteSetMinMemberLeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "最小値 ≤ 要素",
-            "有限集合の最小値は各要素以下です",
-        )
+        text("最小値 ≤ 要素", "有限集合の最小値は各要素以下です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "최솟값 ≤ 원소",
-            "유한 집합의 최솟값은 모든 원소 이하입니다",
-        )
+        text("최솟값 ≤ 원소", "유한 집합의 최솟값은 모든 원소 이하입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -5787,17 +5505,11 @@ impl FiniteSetSizeUnionLeSumBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "并集基数不大于基数之和",
-            "有限并集大小不超过各大小之和",
-        )
+        text("并集基数不大于基数之和", "有限并集大小不超过各大小之和")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "聯集基數不大於基數之和",
-            "有限集合聯集大小至多為大小之和",
-        )
+        text("聯集基數不大於基數之和", "有限集合聯集大小至多為大小之和")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5874,17 +5586,11 @@ impl FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "|值域| ≤ |定义域|",
-            "满射蕴含值域不大于定义域",
-        )
+        text("|值域| ≤ |定义域|", "满射蕴含值域不大于定义域")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "|陪域| ≤ |定義域|",
-            "滿射推出陪域不大於定義域",
-        )
+        text("|陪域| ≤ |定義域|", "滿射推出陪域不大於定義域")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5961,17 +5667,11 @@ impl OrderFlipMulMinusOneToLessEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "乘以 -1 反转不等式",
-            "两边同乘 -1 后不等式方向相反",
-        )
+        text("乘以 -1 反转不等式", "两边同乘 -1 后不等式方向相反")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "乘以 -1 反轉序",
-            "乘以 -1 反轉不等式方向",
-        )
+        text("乘以 -1 反轉序", "乘以 -1 反轉不等式方向")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5996,24 +5696,15 @@ impl OrderFlipMulMinusOneToLessEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "عكس الترتيب بالضرب في (-1)",
-            "الضرب في -1 يعكس المتباينة",
-        )
+        text("عكس الترتيب بالضرب في (-1)", "الضرب في -1 يعكس المتباينة")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "×(-1) による順序反転",
-            "-1 を掛けると不等号が反転します",
-        )
+        text("×(-1) による順序反転", "-1 を掛けると不等号が反転します")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "×(-1)에 의한 순서 반전",
-            "-1을 곱하면 부등호가 반전됩니다",
-        )
+        text("×(-1)에 의한 순서 반전", "-1을 곱하면 부등호가 반전됩니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -6048,17 +5739,11 @@ impl OrderSignFromNegativeLiteralBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由负上界得符号",
-            "负的字面上界推出所述序/符号关系",
-        )
+        text("由负上界得符号", "负的字面上界推出所述序/符号关系")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由負數界得符號",
-            "負字面值界推出所述序或符號",
-        )
+        text("由負數界得符號", "負字面值界推出所述序或符號")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -6135,10 +5820,7 @@ impl FromKnownGreaterEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知反向序关系",
-            "引用已知的反向比较事实",
-        )
+        text("已知反向序关系", "引用已知的反向比较事实")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -6174,10 +5856,7 @@ impl FromKnownGreaterEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "既知の逆向きの順序",
-            "逆向きの比較は既知です",
-        )
+        text("既知の逆向きの順序", "逆向きの比較は既知です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {

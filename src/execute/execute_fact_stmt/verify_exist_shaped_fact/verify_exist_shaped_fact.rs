@@ -55,7 +55,10 @@ impl Runtime {
                 }
             };
         let Some(searched_proof) = self.search_exist_shaped_fact_proof(fact, verify_state)? else {
-            return Ok(exist_shaped_fact_result_from_search_fail(fact, well_defined_proof));
+            return Ok(exist_shaped_fact_result_from_search_fail(
+                fact,
+                well_defined_proof,
+            ));
         };
         Ok(exist_shaped_fact_result_from_success(
             fact,
@@ -75,8 +78,8 @@ impl Runtime {
         {
             return Ok(Some(ExistShapedFactSearchedProof::ByBuiltinRule(proof)));
         }
-        if let Some(proof) =
-            self.search_exist_shaped_fact_proof_by_known_exist_shaped_fact(fact, verify_state.clone())?
+        if let Some(proof) = self
+            .search_exist_shaped_fact_proof_by_known_exist_shaped_fact(fact, verify_state.clone())?
         {
             return Ok(Some(proof));
         }
@@ -93,13 +96,17 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistShapedFactSearchProofByBuiltinRule>> {
-        let Some(verify_state) = verify_state.for_premises(
-            crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
-        ) else { return Ok(None); };
+        let Some(verify_state) = verify_state
+            .for_premises(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule)
+        else {
+            return Ok(None);
+        };
         if let Some(proof) =
             self.search_exist_builtin_bijective_preimage(fact, verify_state.clone())?
         {
-            return Ok(Some(ExistShapedFactSearchProofByBuiltinRule::BijectivePreimage(proof)));
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::BijectivePreimage(proof),
+            ));
         }
         if let Some(proof) =
             self.search_exist_builtin_real_line_comparison_witness(fact, verify_state.clone())?
@@ -150,9 +157,7 @@ impl Runtime {
                 ExistShapedFactSearchProofByBuiltinRule::ArchimedeanReciprocal(proof),
             ));
         }
-        if let Some(proof) =
-            self.search_exist_builtin_real_density_midpoint(fact, verify_state)?
-        {
+        if let Some(proof) = self.search_exist_builtin_real_density_midpoint(fact, verify_state)? {
             return Ok(Some(
                 ExistShapedFactSearchProofByBuiltinRule::RealDensityMidpoint(proof),
             ));
@@ -478,11 +483,13 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
+        if !verify_state
+            .allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
         {
             return Ok(None);
         }
-        let premise_state = verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
+        let premise_state = verify_state
+            .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         for lookup_key in exist_shaped_fact_known_lookup_keys(fact) {
             let mut cites = Vec::new();
             for env in self.execution_environments_stack.iter().rev() {
@@ -549,7 +556,8 @@ impl Runtime {
         if !self.complete_forall_subst_from_dom_facts(&forall, &mut subst, &param_ids)? {
             return Ok(None);
         }
-        let forall_parameters_match_what_args = param_ids.iter()
+        let forall_parameters_match_what_args = param_ids
+            .iter()
             .map(|id| subst.get(id).expect("all forall parameters bound").clone())
             .collect();
 

@@ -121,7 +121,10 @@ impl Runtime {
     }
 }
 
-pub(in crate::execute::execute_fact_stmt::verify_atomic_fact) fn reduce_application(function: &Obj, args: Vec<Obj>) -> Option<Obj> {
+pub(in crate::execute::execute_fact_stmt::verify_atomic_fact) fn reduce_application(
+    function: &Obj,
+    args: Vec<Obj>,
+) -> Option<Obj> {
     let (head, mut body) = match function {
         Obj::Identifier(id) => (FnObjHead::Identifier(id.clone()), vec![]),
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(a)) => {

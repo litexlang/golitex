@@ -101,11 +101,21 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
-            Self::MinPreservesPositiveCarrier(_) => text("正实数的最小值", "a,b $in R+ => min(a,b) $in R+"),
-            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
-            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
-            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
-            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
+            Self::MinPreservesPositiveCarrier(_) => {
+                text("正实数的最小值", "a,b $in R+ => min(a,b) $in R+")
+            }
+            Self::PositiveRealProduct(_) => {
+                text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+")
+            }
+            Self::PositiveRealQuotient(_) => {
+                text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+")
+            }
+            Self::NonzeroRationalProduct(_) => {
+                text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*")
+            }
+            Self::NonzeroRationalQuotient(_) => {
+                text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*")
+            }
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_zh(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_zh(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_zh(),
@@ -113,17 +123,25 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(p) => p.rule_name_and_message_zh(),
             Self::ComplexCoordinateInComplex(p) => p.rule_name_and_message_zh(),
             Self::RealArithmeticClosure(p) => p.rule_name_and_message_zh(),
-            Self::RealArithmeticConstructorClosure(_) => text("实数运算结构封闭", "已验证的实数叶子经四则运算和整数幂仍为实数；定义域条件保留在外层WD证明中"),
-            Self::DiscreteArithmeticConstructorClosure(_) => text("自然数/整数运算结构封闭", "已验证的自然数/整数叶子经对应的封闭运算保持类型；定义域条件保留在外层WD证明中"),
+            Self::RealArithmeticConstructorClosure(_) => text(
+                "实数运算结构封闭",
+                "已验证的实数叶子经四则运算和整数幂仍为实数；定义域条件保留在外层WD证明中",
+            ),
+            Self::DiscreteArithmeticConstructorClosure(_) => text(
+                "自然数/整数运算结构封闭",
+                "已验证的自然数/整数叶子经对应的封闭运算保持类型；定义域条件保留在外层WD证明中",
+            ),
             Self::RealOperandArithmeticClosure(_) => text(
                 "由实数操作数得实数运算结果",
                 "已验证的实数操作数经四则运算仍为实数；除法另有已验证的定义域条件",
             ),
-            Self::RealPower(_) => text("实数幂", "底数已验证为实数；外层幂的定义良好证据验证受支持的实数幂定义域"),
-            Self::ClosedExactScalarMembership(_) => text(
-                "精确数值载体",
-                "精确的实部和虚部满足目标数值集合的条件",
+            Self::RealPower(_) => text(
+                "实数幂",
+                "底数已验证为实数；外层幂的定义良好证据验证受支持的实数幂定义域",
             ),
+            Self::ClosedExactScalarMembership(_) => {
+                text("精确数值载体", "精确的实部和虚部满足目标数值集合的条件")
+            }
             Self::IntegerArithmeticClosure(_) => text(
                 "整数运算封闭",
                 "已验证的整数操作数经取负、绝对值、加减乘及自然数幂仍为整数",
@@ -132,10 +150,9 @@ impl InFactSearchProofByBuiltinRule {
             Self::FiniteSetMinMember(p) => p.rule_name_and_message_zh(),
             Self::NativeScalarCodomain(p) => p.rule_name_and_message_zh(),
             Self::PositiveIntegerInNPos(p) => p.rule_name_and_message_zh(),
-            Self::FoldScalarCodomain(_) => text(
-                "Fold 的载体",
-                "已验证的齐次运算与初值保持 fold 的载体",
-            ),
+            Self::FoldScalarCodomain(_) => {
+                text("Fold 的载体", "已验证的齐次运算与初值保持 fold 的载体")
+            }
             Self::AggregateScalarCodomain(_) => {
                 let (name, message) = (
                     "有限聚合的数值载体",
@@ -178,11 +195,21 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
-            Self::MinPreservesPositiveCarrier(_) => text("正實數的最小值", "a,b $in R+ => min(a,b) $in R+"),
-            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
-            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
-            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
-            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
+            Self::MinPreservesPositiveCarrier(_) => {
+                text("正實數的最小值", "a,b $in R+ => min(a,b) $in R+")
+            }
+            Self::PositiveRealProduct(_) => {
+                text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+")
+            }
+            Self::PositiveRealQuotient(_) => {
+                text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+")
+            }
+            Self::NonzeroRationalProduct(_) => {
+                text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*")
+            }
+            Self::NonzeroRationalQuotient(_) => {
+                text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*")
+            }
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_zh_hant(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_zh_hant(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_zh_hant(),
@@ -190,17 +217,25 @@ impl InFactSearchProofByBuiltinRule {
             Self::ComplexCoordinateInReal(p) => p.rule_name_and_message_zh_hant(),
             Self::ComplexCoordinateInComplex(p) => p.rule_name_and_message_zh_hant(),
             Self::RealArithmeticClosure(p) => p.rule_name_and_message_zh_hant(),
-            Self::RealArithmeticConstructorClosure(_) => text("實數運算結構封閉", "已驗證的實數葉子經四則運算和整數冪仍為實數；定義域條件保留在外層WD證明中"),
-            Self::DiscreteArithmeticConstructorClosure(_) => text("自然數/整數運算結構封閉", "已驗證的自然數/整數葉子經對應的封閉運算保持類型；定義域條件保留在外層WD證明中"),
+            Self::RealArithmeticConstructorClosure(_) => text(
+                "實數運算結構封閉",
+                "已驗證的實數葉子經四則運算和整數冪仍為實數；定義域條件保留在外層WD證明中",
+            ),
+            Self::DiscreteArithmeticConstructorClosure(_) => text(
+                "自然數/整數運算結構封閉",
+                "已驗證的自然數/整數葉子經對應的封閉運算保持類型；定義域條件保留在外層WD證明中",
+            ),
             Self::RealOperandArithmeticClosure(_) => text(
                 "由已檢查運算元得實數運算",
                 "經檢查的實數在體運算下仍為實數；除法亦有已檢查的良定域",
             ),
-            Self::RealPower(_) => text("實數冪", "底數已驗證為實數；外層冪的良定證據驗證受支援的實數冪定義域"),
-            Self::ClosedExactScalarMembership(_) => text(
-                "精確純量成員關係",
-                "精確實部與虛部符合目標純量載體",
+            Self::RealPower(_) => text(
+                "實數冪",
+                "底數已驗證為實數；外層冪的良定證據驗證受支援的實數冪定義域",
             ),
+            Self::ClosedExactScalarMembership(_) => {
+                text("精確純量成員關係", "精確實部與虛部符合目標純量載體")
+            }
             Self::IntegerArithmeticClosure(_) => text(
                 "整數運算封閉",
                 "經檢查的整數在取負、絕對值、加減乘及自然數次方下仍為整數",
@@ -209,10 +244,7 @@ impl InFactSearchProofByBuiltinRule {
             Self::FiniteSetMinMember(p) => p.rule_name_and_message_zh_hant(),
             Self::NativeScalarCodomain(p) => p.rule_name_and_message_zh_hant(),
             Self::PositiveIntegerInNPos(p) => p.rule_name_and_message_zh_hant(),
-            Self::FoldScalarCodomain(_) => text(
-                "折疊載體",
-                "已檢查的同質運算與初值保持折疊載體",
-            ),
+            Self::FoldScalarCodomain(_) => text("折疊載體", "已檢查的同質運算與初值保持折疊載體"),
             Self::AggregateScalarCodomain(_) => {
                 let (name, message) = (
                     "有限聚合純量載體",
@@ -681,7 +713,10 @@ impl InFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::MinPreservesPositiveCarrier(_) => None,
-            Self::PositiveRealProduct(_) | Self::PositiveRealQuotient(_) | Self::NonzeroRationalProduct(_) | Self::NonzeroRationalQuotient(_) => None,
+            Self::PositiveRealProduct(_)
+            | Self::PositiveRealQuotient(_)
+            | Self::NonzeroRationalProduct(_)
+            | Self::NonzeroRationalQuotient(_) => None,
             Self::ClosedNumericMembership(_) => None,
             Self::ComplexArithmeticClosure(_) => None,
             Self::RealTrigClosure(_) => None,
@@ -737,17 +772,11 @@ impl ClosedNumericMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "闭式求值确认成员关系",
-            "闭式的求值结果属于目标集合",
-        )
+        text("闭式求值确认成员关系", "闭式的求值结果属于目标集合")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "閉式求值確認成員關係",
-            "閉式的求值結果屬於目標集合",
-        )
+        text("閉式求值確認成員關係", "閉式的求值結果屬於目標集合")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -824,10 +853,7 @@ impl ComplexArithmeticClosureBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "复数运算封闭",
-            "良定的复数运算结果属于复数",
-        )
+        text("复数运算封闭", "良定的复数运算结果属于复数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -911,17 +937,11 @@ impl RealTrigClosureBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "实三角运算封闭",
-            "良定的实三角运算结果属于实数",
-        )
+        text("实三角运算封闭", "良定的实三角运算结果属于实数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "實三角運算封閉",
-            "子物件良定後，實三角運算結果屬於實數",
-        )
+        text("實三角運算封閉", "子物件良定後，實三角運算結果屬於實數")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1085,10 +1105,7 @@ impl ComplexCoordinateInRealBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "复坐标属于实数",
-            "模与实部虚部属于实数",
-        )
+        text("复坐标属于实数", "模与实部虚部属于实数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1172,17 +1189,11 @@ impl ComplexCoordinateInComplexBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "复坐标属于复数",
-            "模与实部虚部属于复数",
-        )
+        text("复坐标属于复数", "模与实部虚部属于复数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "複數座標屬於複數",
-            "複數模或座標亦經 R ⊂ C 屬於 C",
-        )
+        text("複數座標屬於複數", "複數模或座標亦經 R ⊂ C 屬於 C")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1259,10 +1270,7 @@ impl RealArithmeticClosureBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "实数运算封闭",
-            "良定的实数运算结果属于实数",
-        )
+        text("实数运算封闭", "良定的实数运算结果属于实数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1346,10 +1354,7 @@ impl StandardSetSubsetMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "标准集链上传成员",
-            "沿标准集包含链提升成员关系",
-        )
+        text("标准集链上传成员", "沿标准集包含链提升成员关系")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1520,17 +1525,11 @@ impl SetBuilderMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "集合构造成员",
-            "由底集成员与定义事实得集合构造成员",
-        )
+        text("集合构造成员", "由底集成员与定义事实得集合构造成员")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "集合構造成員",
-            "由基礎成員關係及定義命題得集合構造成員",
-        )
+        text("集合構造成員", "由基礎成員關係及定義命題得集合構造成員")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1607,17 +1606,11 @@ impl NativeConstantMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "内置常数成员",
-            "内置数学常数属于固定载体",
-        )
+        text("内置常数成员", "内置数学常数属于固定载体")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "內建常數成員",
-            "內建數學常數屬於固定載體",
-        )
+        text("內建常數成員", "內建數學常數屬於固定載體")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1694,10 +1687,7 @@ impl ListSetElementMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "列表集元素成员",
-            "等于某一列出元素则属于列表集",
-        )
+        text("列表集元素成员", "等于某一列出元素则属于列表集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1777,10 +1767,16 @@ impl CartMembershipBuiltinRuleProof {
         text("Cart Membership", "The complete domain matches the finite coordinate domain and every coordinate belongs to its factor")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("笛卡尔积成员", "完整定义域等于有限坐标域，且每个坐标属于对应因子")
+        text(
+            "笛卡尔积成员",
+            "完整定义域等于有限坐标域，且每个坐标属于对应因子",
+        )
     }
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("笛卡兒積成員", "完整定義域等於有限座標域，且每個座標屬於對應因子")
+        text(
+            "笛卡兒積成員",
+            "完整定義域等於有限座標域，且每個座標屬於對應因子",
+        )
     }
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         text("Appartenance au produit cartésien", "Le domaine complet est le domaine fini des coordonnées et chaque coordonnée appartient à son facteur")
@@ -1792,16 +1788,28 @@ impl CartMembershipBuiltinRuleProof {
         text("Pertenencia a producto cartesiano", "El dominio completo es el dominio finito de coordenadas y cada coordenada pertenece a su factor")
     }
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("انتماء لحاصل الضرب الديكارتي", "المجال الكامل يساوي مجال الإحداثيات المنتهي وكل إحداثي ينتمي إلى عامله")
+        text(
+            "انتماء لحاصل الضرب الديكارتي",
+            "المجال الكامل يساوي مجال الإحداثيات المنتهي وكل إحداثي ينتمي إلى عامله",
+        )
     }
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("直積への所属", "完全な定義域が有限の座標域と一致し、各座標が対応する因子に属します")
+        text(
+            "直積への所属",
+            "完全な定義域が有限の座標域と一致し、各座標が対応する因子に属します",
+        )
     }
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("데카르트 곱 소속", "전체 정의역이 유한 좌표 정의역과 일치하고 각 좌표가 해당 인자에 속합니다")
+        text(
+            "데카르트 곱 소속",
+            "전체 정의역이 유한 좌표 정의역과 일치하고 각 좌표가 해당 인자에 속합니다",
+        )
     }
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Thuộc tích Descartes", "Miền đầy đủ bằng miền tọa độ hữu hạn và mỗi tọa độ thuộc thừa số tương ứng")
+        text(
+            "Thuộc tích Descartes",
+            "Miền đầy đủ bằng miền tọa độ hữu hạn và mỗi tọa độ thuộc thừa số tương ứng",
+        )
     }
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match lang {
@@ -1912,17 +1920,11 @@ impl StructObjMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "结构对象成员",
-            "结构载体与等价律推出结构集成员",
-        )
+        text("结构对象成员", "结构载体与等价律推出结构集成员")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "結構物件成員",
-            "結構載體與等價律推出 `e` 為結構集合成員",
-        )
+        text("結構物件成員", "結構載體與等價律推出 `e` 為結構集合成員")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2260,17 +2262,11 @@ impl AnonymousFnApplicationInFnRangeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "匿名函数应用落在值域",
-            "良定的匿名函数应用落在该函数值域",
-        )
+        text("匿名函数应用落在值域", "良定的匿名函数应用落在该函数值域")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "匿名函數套用落在值域",
-            "良定的匿名函數套用屬於其值域",
-        )
+        text("匿名函數套用落在值域", "良定的匿名函數套用屬於其值域")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2521,7 +2517,10 @@ impl IntersectMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("同时属于两集合则属于其交集", "同时属于两集合则属于其交集可写为：x ∈ A ∧ x ∈ B ⇒ x ∈ A ∩ B")
+        text(
+            "同时属于两集合则属于其交集",
+            "同时属于两集合则属于其交集可写为：x ∈ A ∧ x ∈ B ⇒ x ∈ A ∩ B",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -2605,10 +2604,7 @@ impl SetMinusMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "差集成员",
-            "属于左且不属于右则属于差集",
-        )
+        text("差集成员", "属于左且不属于右则属于差集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -2692,10 +2688,7 @@ impl FamilyUnionMembershipFromMemberBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由成员集得族并成员",
-            "属于族中某集则属于族并",
-        )
+        text("由成员集得族并成员", "属于族中某集则属于族并")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -2779,10 +2772,7 @@ impl IndexUnionMembershipFromIndexBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由指标得指标并成员",
-            "属于某指标纤维则属于指标并",
-        )
+        text("由指标得指标并成员", "属于某指标纤维则属于指标并")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -2866,17 +2856,11 @@ impl IntervalMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "区间成员",
-            "由载体与端点界推出区间成员",
-        )
+        text("区间成员", "由载体与端点界推出区间成员")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "區間成員",
-            "`x $in R` 及對應開閉端點不等式",
-        )
+        text("區間成員", "`x $in R` 及對應開閉端點不等式")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2953,17 +2937,11 @@ impl OneSideInfinityIntervalMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "单侧无穷区间成员",
-            "由载体与有限端点界推出射线成员",
-        )
+        text("单侧无穷区间成员", "由载体与有限端点界推出射线成员")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "單側無限區間成員",
-            "由載體與有限端點界得單側實射線成員",
-        )
+        text("單側無限區間成員", "由載體與有限端點界得單側實射線成員")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3040,7 +3018,10 @@ impl AddInNaturalBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("自然数加法封闭性", "自然数加法封闭性可写为：a ∈ N ∧ b ∈ N ⇒ a+b ∈ N")
+        text(
+            "自然数加法封闭性",
+            "自然数加法封闭性可写为：a ∈ N ∧ b ∈ N ⇒ a+b ∈ N",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -3124,7 +3105,10 @@ impl MulInNaturalBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("自然数乘法封闭性", "自然数乘法封闭性可写为：a ∈ N ∧ b ∈ N ⇒ a·b ∈ N")
+        text(
+            "自然数乘法封闭性",
+            "自然数乘法封闭性可写为：a ∈ N ∧ b ∈ N ⇒ a·b ∈ N",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -3315,7 +3299,6 @@ impl NativeScalarCodomainBuiltinRuleProof {
         }
     }
 }
-
 
 impl AnonymousFnInDeclaredFnSetBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {

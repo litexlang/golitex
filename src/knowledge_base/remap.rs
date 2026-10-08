@@ -6,11 +6,10 @@ use crate::ast::fact::{
     AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, QuantifierFreeFact,
 };
 use crate::ast::names::BoundName;
-use crate::ast::obj::{
-    AnonymousFn, ArithmeticOperator, FnSet, FunctionSpace, IdentifierObj, Obj,
-};
+use crate::ast::obj::{AnonymousFn, ArithmeticOperator, FnSet, FunctionSpace, IdentifierObj, Obj};
 use crate::ast::param::{
-    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
+    TypedParameterList,
 };
 use crate::ast::stmt::{
     AxiomStmt, DefAbstractPropStmt, DefPropStmt, DefStructStmt, DefThmStmt, HaveFnEqualStmt,
@@ -294,9 +293,7 @@ fn remap_identifier_obj(id: &mut IdentifierObj, plan: &RemapPlan) -> Result<(), 
             Ok(())
         }
         IdentifierObj::WithExportFileId { .. } => Ok(()),
-        IdentifierObj::WithModAndExportFileId {
-            global_mod_id, ..
-        } => {
+        IdentifierObj::WithModAndExportFileId { global_mod_id, .. } => {
             *global_mod_id = remap_mod_id(*global_mod_id, plan)?;
             Ok(())
         }
@@ -322,9 +319,7 @@ fn remap_fact(fact: &mut Fact, plan: &RemapPlan) -> Result<(), KbCodecError> {
     match fact {
         Fact::AtomicFact(atomic) => remap_atomic_fact(atomic, plan),
         Fact::ForallFact(forall) => remap_forall_fact(forall, plan),
-        other => Err(KbCodecError::Unsupported(format!(
-            "remap Fact `{other:?}`"
-        ))),
+        other => Err(KbCodecError::Unsupported(format!("remap Fact `{other:?}`"))),
     }
 }
 

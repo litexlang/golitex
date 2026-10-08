@@ -122,7 +122,8 @@ impl JsonValue {
         // u64::MAX rounds up to 2^64 in f64, so this bound is exclusive.
         match self {
             JsonValue::Number(n)
-                if n.is_finite() && *n >= 0.0 && *n < (u64::MAX as f64) && n.fract() == 0.0 => {
+                if n.is_finite() && *n >= 0.0 && *n < (u64::MAX as f64) && n.fract() == 0.0 =>
+            {
                 Ok(*n as u64)
             }
             _ => Err(JsonError(
@@ -309,10 +310,7 @@ impl<'a> Parser<'a> {
             Some(b'[') => self.parse_array(),
             Some(b'{') => self.parse_object(),
             Some(b'-') | Some(b'0'..=b'9') => self.parse_number(),
-            Some(b) => Err(JsonError(format!(
-                "unexpected JSON byte `{}`",
-                b as char
-            ))),
+            Some(b) => Err(JsonError(format!("unexpected JSON byte `{}`", b as char))),
             None => Err(JsonError("unexpected end of JSON".to_string())),
         }
     }
@@ -427,7 +425,9 @@ impl<'a> Parser<'a> {
                         let mut code = self.parse_hex_quad()?;
                         if (0xd800..=0xdbff).contains(&code) {
                             if self.bump()? != b'\\' || self.bump()? != b'u' {
-                                return Err(JsonError("expected low Unicode surrogate".to_string()));
+                                return Err(JsonError(
+                                    "expected low Unicode surrogate".to_string(),
+                                ));
                             }
                             let low = self.parse_hex_quad()?;
                             if !(0xdc00..=0xdfff).contains(&low) {
@@ -448,22 +448,22 @@ impl<'a> Parser<'a> {
                     }
                 },
                 0x00..=0x1f => {
-                    return Err(JsonError("unescaped control character in JSON string".to_string()));
+                    return Err(JsonError(
+                        "unescaped control character in JSON string".to_string(),
+                    ));
                 }
                 b => out.push(b),
             }
         }
-        String::from_utf8(out)
-            .map_err(|_| JsonError("invalid UTF-8 in JSON string".to_string()))
+        String::from_utf8(out).map_err(|_| JsonError("invalid UTF-8 in JSON string".to_string()))
     }
 
     fn parse_hex_quad(&mut self) -> Result<u32, JsonError> {
         let mut code = 0;
         for _ in 0..4 {
             code = code * 16
-                + hex_digit(self.bump()?).ok_or_else(|| {
-                    JsonError("invalid \\u escape in JSON string".to_string())
-                })?;
+                + hex_digit(self.bump()?)
+                    .ok_or_else(|| JsonError("invalid \\u escape in JSON string".to_string()))?;
         }
         Ok(code)
     }
@@ -517,7 +517,9 @@ impl<'a> Parser<'a> {
             .parse()
             .map_err(|_| JsonError(format!("invalid JSON number `{s}`")))?;
         if !n.is_finite() {
-            return Err(JsonError(format!("JSON number `{s}` exceeds the finite numeric range")));
+            return Err(JsonError(format!(
+                "JSON number `{s}` exceeds the finite numeric range"
+            )));
         }
         Ok(JsonValue::Number(n))
     }

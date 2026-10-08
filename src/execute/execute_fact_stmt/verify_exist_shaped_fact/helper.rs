@@ -4,9 +4,7 @@ use crate::ast::fact::{
     AtomicFact, ChainFact, ExistShapedFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::ast::names::AtomicName;
-use crate::ast::obj::{
-    ArithmeticOperator, IdentifierObj, Literal, Number, Obj, StandardSet,
-};
+use crate::ast::obj::{ArithmeticOperator, IdentifierObj, Literal, Number, Obj, StandardSet};
 use crate::ast::param::ParamType;
 use crate::instantiate::collect_free_plain_ids;
 use crate::parse::keywords::LESS;
@@ -440,7 +438,10 @@ fn dense_order_exist_endpoints(
     Some((left, right))
 }
 
-fn strict_between_chain_endpoints(chain: &ChainFact, witness_id: IdentifierId) -> Option<(Obj, Obj)> {
+fn strict_between_chain_endpoints(
+    chain: &ChainFact,
+    witness_id: IdentifierId,
+) -> Option<(Obj, Obj)> {
     if chain.objs.len() != 3 || chain.prop_names.len() != 2 {
         return None;
     }

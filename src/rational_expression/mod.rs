@@ -4,16 +4,16 @@ mod closed_numeric_expr_tests;
 mod decimal_arithmetic;
 mod decimal_comparison;
 mod denominator_clearing;
-mod exact_division;
-pub mod exact_rational;
-pub(crate) mod integer_factorization;
-pub(crate) mod exact_radical;
 pub(crate) mod exact_complex;
-pub(crate) mod pi_multiple;
+mod exact_division;
+pub(crate) mod exact_radical;
+pub mod exact_rational;
 pub(crate) mod helper;
+pub(crate) mod integer_factorization;
 mod monomial;
 mod monomial_collection;
 mod normalization;
+pub(crate) mod pi_multiple;
 
 pub use closed_numeric_expr::{is_closed_numeric_expr, ClosedNumericExpr};
 pub use decimal_arithmetic::{
@@ -26,8 +26,8 @@ pub use decimal_comparison::{
     compare_closed_numeric_objs, compare_number_strings, NumberCompareResult,
 };
 pub use normalization::{
-    algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,
-    objs_equal_by_complex_expression_evaluation, contains_imaginary_unit,
+    algebraic_normalization_nonzero_requirements, contains_imaginary_unit,
+    objs_equal_by_complex_expression_evaluation, objs_equal_by_rational_expression_evaluation,
 };
 
 pub(crate) mod closed_scalar_membership;

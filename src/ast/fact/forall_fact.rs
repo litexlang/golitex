@@ -1,6 +1,6 @@
-use super::{AndFact, AtomicFact, ChainFact, Fact, OrFact, PlainExistFact};
 use super::super::line_file::SourceLine;
 use super::super::param::TypedParameterList;
+use super::{AndFact, AtomicFact, ChainFact, Fact, OrFact, PlainExistFact};
 use crate::runtime::FactId;
 
 // Forall then-clause shapes. Exist-family facts are allowed here; nested forall is not.

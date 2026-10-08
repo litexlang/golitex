@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use crate::runtime::runtime_ids::IdentifierId;
 
 use crate::ast::obj::{
-    AnonymousFn, FnObj, FnObjHead, FnSet, FunctionSpace, Obj, SetBuilder, SetFormer, StructAndFieldAccessObj,
+    AnonymousFn, FnObj, FnObjHead, FnSet, FunctionSpace, Obj, SetBuilder, SetFormer,
+    StructAndFieldAccessObj,
 };
 use crate::runtime::Runtime;
 
@@ -24,14 +25,16 @@ impl Runtime {
                     Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => {
                         Ok(FnObjHead::AnonymousFnLiteral(Box::new(af)))
                     }
-                    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(v)) => Ok(FnObjHead::FieldAccess(v)),
-                    Obj::InstantiatedTemplateObj(v) => {
-                        Ok(FnObjHead::InstantiatedTemplateObj(v))
+                    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(v)) => {
+                        Ok(FnObjHead::FieldAccess(v))
                     }
+                    Obj::InstantiatedTemplateObj(v) => Ok(FnObjHead::InstantiatedTemplateObj(v)),
                     other => Ok(FnObjHead::Object(Box::new(other))),
                 }
             }
-            FnObjHead::Object(obj) => Ok(FnObjHead::from_obj(self.inst_obj_rec(obj, param_to_arg_map)?)),
+            FnObjHead::Object(obj) => Ok(FnObjHead::from_obj(
+                self.inst_obj_rec(obj, param_to_arg_map)?,
+            )),
             FnObjHead::AnonymousFnLiteral(af) => Ok(FnObjHead::AnonymousFnLiteral(Box::new(
                 self.inst_anonymous_fn(af, param_to_arg_map)?,
             ))),
@@ -74,10 +77,7 @@ impl Runtime {
             }
             body.push(new_group);
         }
-        Ok(Obj::FnObj(FnObj {
-            head,
-            body,
-        }))
+        Ok(Obj::FnObj(FnObj { head, body }))
     }
 
     pub(crate) fn inst_set_builder_obj(

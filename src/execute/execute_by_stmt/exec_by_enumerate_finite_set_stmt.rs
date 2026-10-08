@@ -29,7 +29,9 @@ fn map_failed(failed: EnumerateForallFailed) -> ExecByEnumerateFiniteSetStmtFail
     match failed {
         EnumerateForallFailed::GoalWd(r) => ExecByEnumerateFiniteSetStmtFailed::GoalWd(r),
         EnumerateForallFailed::Domain(s) => ExecByEnumerateFiniteSetStmtFailed::Domain(s),
-        EnumerateForallFailed::ProofBody(failed) => ExecByEnumerateFiniteSetStmtFailed::ProofBody(failed),
+        EnumerateForallFailed::ProofBody(failed) => {
+            ExecByEnumerateFiniteSetStmtFailed::ProofBody(failed)
+        }
         EnumerateForallFailed::Assignment {
             index,
             then_index,
@@ -43,4 +45,3 @@ fn map_failed(failed: EnumerateForallFailed) -> ExecByEnumerateFiniteSetStmtFail
         EnumerateForallFailed::Store(s) => ExecByEnumerateFiniteSetStmtFailed::Store(s),
     }
 }
-

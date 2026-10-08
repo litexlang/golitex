@@ -1,7 +1,8 @@
 //! Exact closed complex coordinates. No symbolic atom or approximate value.
 use super::exact_rational::EvalRational;
 use crate::ast::obj::{
-    Add, ArithmeticOperator as A, ComplexOperator, ExpLogOperator, ImaginaryUnit, Literal, Mul, Neg, Obj, Sqrt, Sub,
+    Add, ArithmeticOperator as A, ComplexOperator, ExpLogOperator, ImaginaryUnit, Literal, Mul,
+    Neg, Obj, Sqrt, Sub,
 };
 
 // Coordinate arithmetic makes a+b*i, b*i+a and either subtraction order agree.
@@ -12,22 +13,38 @@ pub(crate) fn exact_complex_coordinates(obj: &Obj) -> Option<(EvalRational, Eval
 
 pub(crate) fn exact_complex_value(obj: &Obj) -> Option<Obj> {
     let (real, imaginary) = exact_complex_coordinates(obj)?;
-    if imaginary.is_zero() { return Some(real.to_obj()); }
+    if imaginary.is_zero() {
+        return Some(real.to_obj());
+    }
     let (numerator, denominator) = imaginary.parts();
     let magnitude = EvalRational::new(numerator.checked_abs()?, denominator)?;
     let unit = Obj::Literal(Literal::ImaginaryUnit(ImaginaryUnit));
-    let term = if magnitude == EvalRational::new(1, 1)? { unit } else {
+    let term = if magnitude == EvalRational::new(1, 1)? {
+        unit
+    } else {
         Obj::ArithmeticOperator(A::Mul(Mul {
-            left: Box::new(magnitude.to_obj()), right: Box::new(unit),
+            left: Box::new(magnitude.to_obj()),
+            right: Box::new(unit),
         }))
     };
     Some(if real.is_zero() {
-        if imaginary.is_negative() { Obj::ArithmeticOperator(A::Neg(Neg { arg: Box::new(term) })) }
-        else { term }
+        if imaginary.is_negative() {
+            Obj::ArithmeticOperator(A::Neg(Neg {
+                arg: Box::new(term),
+            }))
+        } else {
+            term
+        }
     } else if imaginary.is_negative() {
-        Obj::ArithmeticOperator(A::Sub(Sub { left: Box::new(real.to_obj()), right: Box::new(term) }))
+        Obj::ArithmeticOperator(A::Sub(Sub {
+            left: Box::new(real.to_obj()),
+            right: Box::new(term),
+        }))
     } else {
-        Obj::ArithmeticOperator(A::Add(Add { left: Box::new(real.to_obj()), right: Box::new(term) }))
+        Obj::ArithmeticOperator(A::Add(Add {
+            left: Box::new(real.to_obj()),
+            right: Box::new(term),
+        }))
     })
 }
 

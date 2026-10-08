@@ -1,4 +1,7 @@
-use crate::ast::obj::{FiniteSetSize, Number, Obj, ArithmeticOperator, ExpLogOperator, FiniteSetStat, IntegerOperator, Literal, ProductShape, SetFormer};
+use crate::ast::obj::{
+    ArithmeticOperator, ExpLogOperator, FiniteSetSize, FiniteSetStat, IntegerOperator, Literal,
+    Number, Obj, ProductShape, SetFormer,
+};
 use crate::rational_expression::exact_division::safe_div;
 use crate::rational_expression::helper::{
     count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
@@ -188,33 +191,39 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
                 Some(argument)
             }
         }
-        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(finite_set_size)) => match &*finite_set_size.set {
-            Obj::SetFormer(SetFormer::ListSet(list_set)) => Some(Number::new(list_set.list.len().to_string())),
-            Obj::SetFormer(SetFormer::ClosedRange(cr)) => {
-                let start = evaluate_obj_to_normalized_decimal_number(&cr.start)?;
-                let end = evaluate_obj_to_normalized_decimal_number(&cr.end)?;
-                count_closed_range_integer_endpoints(&start, &end)
-            }
-            Obj::SetFormer(SetFormer::Range(r)) => {
-                let start = evaluate_obj_to_normalized_decimal_number(&r.start)?;
-                let end = evaluate_obj_to_normalized_decimal_number(&r.end)?;
-                count_half_open_range_integer_endpoints(&start, &end)
-            }
-            Obj::ProductShape(ProductShape::Cart(cart)) => {
-                let mut acc = "1".to_string();
-                for arg in cart.args.iter() {
-                    let factor = evaluate_obj_to_normalized_decimal_number(&Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(
-                        FiniteSetSize {
-                            set: Box::new((**arg).clone()),
-                        },
-                    )))?;
-                    acc = mul_signed_decimal_str(acc.trim(), factor.normalized_value.trim());
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(finite_set_size)) => {
+            match &*finite_set_size.set {
+                Obj::SetFormer(SetFormer::ListSet(list_set)) => {
+                    Some(Number::new(list_set.list.len().to_string()))
                 }
-                Some(Number::new(acc))
+                Obj::SetFormer(SetFormer::ClosedRange(cr)) => {
+                    let start = evaluate_obj_to_normalized_decimal_number(&cr.start)?;
+                    let end = evaluate_obj_to_normalized_decimal_number(&cr.end)?;
+                    count_closed_range_integer_endpoints(&start, &end)
+                }
+                Obj::SetFormer(SetFormer::Range(r)) => {
+                    let start = evaluate_obj_to_normalized_decimal_number(&r.start)?;
+                    let end = evaluate_obj_to_normalized_decimal_number(&r.end)?;
+                    count_half_open_range_integer_endpoints(&start, &end)
+                }
+                Obj::ProductShape(ProductShape::Cart(cart)) => {
+                    let mut acc = "1".to_string();
+                    for arg in cart.args.iter() {
+                        let factor = evaluate_obj_to_normalized_decimal_number(
+                            &Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(FiniteSetSize {
+                                set: Box::new((**arg).clone()),
+                            })),
+                        )?;
+                        acc = mul_signed_decimal_str(acc.trim(), factor.normalized_value.trim());
+                    }
+                    Some(Number::new(acc))
+                }
+                _ => None,
             }
-            _ => None,
-        },
-        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(extremum)) => evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), true),
+        }
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(extremum)) => {
+            evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), true)
+        }
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(extremum)) => {
             evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), false)
         }
@@ -235,10 +244,8 @@ pub fn two_objs_equal_by_closed_decimal_calculation(left: &Obj, right: &Obj) -> 
 }
 
 fn evaluated_min_or_max_value(left: &Number, right: &Number, take_maximum: bool) -> Number {
-    let difference = sub_signed_decimal_str(
-        right.normalized_value.trim(),
-        left.normalized_value.trim(),
-    );
+    let difference =
+        sub_signed_decimal_str(right.normalized_value.trim(), left.normalized_value.trim());
     let right_is_larger = !difference.trim().starts_with('-') && difference.trim() != "0";
     if right_is_larger == take_maximum {
         right.clone()
@@ -372,10 +379,8 @@ fn decimal_str_to_reduced_nonneg_fraction_strings(value: &str) -> Option<(String
     } else {
         normalize_decimal_number_string(&numerator_raw)
     };
-    let denominator = normalize_decimal_number_string(&format!(
-        "1{}",
-        "0".repeat(fractional_part.len())
-    ));
+    let denominator =
+        normalize_decimal_number_string(&format!("1{}", "0".repeat(fractional_part.len())));
     if numerator == "0" {
         return Some(("0".to_string(), "1".to_string()));
     }
@@ -399,10 +404,7 @@ fn integer_perfect_sqrt_nonneg_int_str(value: &str) -> Option<String> {
     let mut high = normalized.clone();
     let mut candidate = "0".to_string();
     while compare_nonneg_decimal_str_sign(&low, &high) != std::cmp::Ordering::Greater {
-        let mid = quot_decimal_str_and_normalize(
-            &add_decimal_str_and_normalize(&low, &high),
-            "2",
-        );
+        let mid = quot_decimal_str_and_normalize(&add_decimal_str_and_normalize(&low, &high), "2");
         let square = mul_signed_decimal_str(&mid, &mid);
         match compare_nonneg_decimal_str_sign(&square, &normalized) {
             std::cmp::Ordering::Equal => return Some(normalize_decimal_number_string(&mid)),
@@ -465,7 +467,6 @@ fn ceil_decimal_str(value: &str) -> String {
     }
     add_decimal_str_and_normalize(integer, "1")
 }
-
 
 pub fn gcd_decimal_str_and_normalize(left: &str, right: &str) -> Option<String> {
     let normalized_left = normalize_decimal_number_string(left);

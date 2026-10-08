@@ -5,16 +5,14 @@
 //! No `family_intersect({}) = {}`: absolute empty ∩ is the universe class;
 //! Litex keeps empty-index ∩ on `index_intersect({}, X, A) = X`.
 
-use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, QuantifierFreeFact,
-};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, QuantifierFreeFact};
+use crate::ast::names::BoundName;
 use crate::ast::obj::{
     Add, AnonymousFn, ArithmeticOperator, ComplexAbs, ComplexOperator, Cos, Div, Exp,
-    ExpLogOperator, FiniteSeqSet, FnObj, FnObjHead, FnSet, FunctionSpace, ImaginaryPart,
-    IndexCart, IndexIntersect, IndexUnion, IteratedOperator, ListSet, Literal, Log, Mul, Number,
-    Obj, Pow, RealPart, Reduce, SetFormer, SetOperator, Sin, StandardSet, Sub, TrigOperator,
+    ExpLogOperator, FiniteSeqSet, FnObj, FnObjHead, FnSet, FunctionSpace, ImaginaryPart, IndexCart,
+    IndexIntersect, IndexUnion, IteratedOperator, ListSet, Literal, Log, Mul, Number, Obj, Pow,
+    RealPart, Reduce, SetFormer, SetOperator, Sin, StandardSet, Sub, TrigOperator,
 };
-use crate::ast::names::BoundName;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -159,7 +157,9 @@ impl Runtime {
                 )));
             }
             if let Some(p) = self.try_log_base_power(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave14BuiltinRuleProof::LogBasePower(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave14BuiltinRuleProof::LogBasePower(p),
+                ));
             }
             if re_of_product_shape(left, right) {
                 return Ok(Some(EqualityIdentitiesWave14BuiltinRuleProof::ReOfProduct(
@@ -167,9 +167,11 @@ impl Runtime {
                 )));
             }
             if img_of_product_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave14BuiltinRuleProof::ImgOfProduct(
-                    ImgOfProductBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave14BuiltinRuleProof::ImgOfProduct(
+                        ImgOfProductBuiltinRuleProof {},
+                    ),
+                ));
             }
             if sin_of_sum_shape(left, right) {
                 return Ok(Some(EqualityIdentitiesWave14BuiltinRuleProof::SinOfSum(
@@ -181,7 +183,8 @@ impl Runtime {
                     CosOfSumBuiltinRuleProof {},
                 )));
             }
-            if let Some(p) = self.try_reduce_single_term_with_add_zero(left, right, child.clone())?
+            if let Some(p) =
+                self.try_reduce_single_term_with_add_zero(left, right, child.clone())?
             {
                 return Ok(Some(
                     EqualityIdentitiesWave14BuiltinRuleProof::ReduceSingleTermWithAddZero(p),
@@ -215,18 +218,34 @@ impl Runtime {
         {
             return Ok(None);
         }
-        let Some(base_proof) = self.verify_log_algebra_base_guard(pow_base, verify_state)? else { return Ok(None); };
+        let Some(base_proof) = self.verify_log_algebra_base_guard(pow_base, verify_state)? else {
+            return Ok(None);
+        };
         let real: Fact = crate::ast::fact::InFact {
-            fact_id: self.global_ids.allocate_fact_id(), element: pow_exp.clone(),
-            set: Obj::StandardSet(StandardSet::R), line_file: None,
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: pow_exp.clone(),
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }
+        .into();
         let exponent_real = self.verify_builtin_rule_premise(&real, verify_state)?;
-        if exponent_real.is_failed() { return Ok(None); }
+        if exponent_real.is_failed() {
+            return Ok(None);
+        }
         let exponent_nonzero = self.verify_order_nonzero(pow_exp, verify_state)?;
-        if exponent_nonzero.is_failed() { return Ok(None); }
+        if exponent_nonzero.is_failed() {
+            return Ok(None);
+        }
         let argument_positive_proof = self.verify_log_algebra_positive(arg, verify_state)?;
-        if argument_positive_proof.is_failed() { return Ok(None); }
-        Ok(Some(LogBasePowerBuiltinRuleProof { base_proof, exponent_real, exponent_nonzero, argument_positive_proof }))
+        if argument_positive_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(LogBasePowerBuiltinRuleProof {
+            base_proof,
+            exponent_real,
+            exponent_nonzero,
+            argument_positive_proof,
+        }))
     }
 
     fn try_reduce_single_term_with_add_zero(
@@ -444,10 +463,7 @@ fn re_of_product_shape(left: &Obj, right: &Obj) -> bool {
     let Some((z_img, w_img)) = match_mul(prod2) else {
         return false;
     };
-    is_re_of(z_re, z)
-        && is_re_of(w_re, w)
-        && is_img_of(z_img, z)
-        && is_img_of(w_img, w)
+    is_re_of(z_re, z) && is_re_of(w_re, w) && is_img_of(z_img, z) && is_img_of(w_img, w)
 }
 
 fn img_of_product_shape(left: &Obj, right: &Obj) -> bool {
@@ -461,10 +477,7 @@ fn img_of_product_shape(left: &Obj, right: &Obj) -> bool {
     let Some((prod1, prod2)) = match_add(right) else {
         return false;
     };
-    let pairs = [
-        (prod1, prod2),
-        (prod2, prod1),
-    ];
+    let pairs = [(prod1, prod2), (prod2, prod1)];
     for (p1, p2) in pairs {
         let Some((a, b)) = match_mul(p1) else {
             continue;
@@ -513,14 +526,8 @@ fn cos_of_sum_shape(left: &Obj, right: &Obj) -> bool {
     let Some((s1, s2)) = match_mul(p2) else {
         return false;
     };
-    is_cos_of(c1, a)
-        && is_cos_of(c2, b)
-        && is_sin_of(s1, a)
-        && is_sin_of(s2, b)
-        || is_cos_of(c1, b)
-            && is_cos_of(c2, a)
-            && is_sin_of(s1, a)
-            && is_sin_of(s2, b)
+    is_cos_of(c1, a) && is_cos_of(c2, b) && is_sin_of(s1, a) && is_sin_of(s2, b)
+        || is_cos_of(c1, b) && is_cos_of(c2, a) && is_sin_of(s1, a) && is_sin_of(s2, b)
 }
 
 fn trig_add_product_pair(p1: &Obj, p2: &Obj, a: &Obj, b: &Obj, want_sin_cos: bool) -> bool {
@@ -688,11 +695,7 @@ fn bound_name_obj(name: &BoundName) -> Obj {
 }
 
 fn is_binary_add_anonymous_fn(obj: &Obj) -> bool {
-    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(AnonymousFn {
-        equal_to,
-        body,
-    })) = obj
-    else {
+    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(AnonymousFn { equal_to, body })) = obj else {
         return false;
     };
     let mut nparams = 0;

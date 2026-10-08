@@ -1,20 +1,18 @@
 use super::super::keywords::{
-    AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, IN, INDUC,
-    LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, QUESTION_GOAL, REGULARITY_AXIOM, RIGHT_ARROW, RIGHT_PAREN,
-    STRONG_INDUC, EXTENSION, FN_EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, RANGE,
-    ZORN_LEMMA,
+    AXIOM_OF_CHOICE, BY, CASE, CASES, CLOSED_RANGE, COLON, COMMA, CONTRA, DEF, ENUMERATE, EQUAL,
+    EXTENSION, FINITE_SET, FN_EXTENSION, FOR, FROM, IMPOSSIBLE, IN, INDUC, LEFT_PAREN,
+    MOD_FLAT_SIGN, MOD_SIGN, QUESTION_GOAL, RANGE, REGULARITY_AXIOM, RIGHT_ARROW, RIGHT_PAREN,
+    STRONG_INDUC, THM, ZORN_LEMMA,
 };
 use super::super::object::{is_simple_name, parse_obj};
-use crate::ast::obj::Obj;
-use crate::ast::fact::{
-    AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact,
-};
+use crate::ast::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact};
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::AtomicName;
+use crate::ast::obj::Obj;
 use crate::ast::stmt::{
-    ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByStmt, ByStrongInducStmt, ByExtensionStmt,
-    ByFnExtensionStmt, ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseAndExpandStmt,
-    ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
+    ByCasesStmt, ByContraStmt, ByDefStmt, ByEnumerateFiniteSetStmt, ByExtensionStmt,
+    ByFnExtensionStmt, ByForStmt, ByInducStmt, ByStmt, ByStrongInducStmt, ByThmStmt,
+    ReleaseAndExpandStmt, ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
@@ -51,7 +49,6 @@ impl Runtime {
             None => Err(tb.parse_error("by: expected a proof directive after `by`")),
         }
     }
-
 
     fn parse_by_extension_stmt(
         &mut self,
@@ -106,9 +103,7 @@ impl Runtime {
         let (left, right, proof) = if tb.peek() == Some(COLON) {
             tb.expect_colon_end_of_header()?;
             if tb.body.is_empty() {
-                return Err(tb.parse_error(
-                    "by fn_extension: expects a `? <equality>` goal block",
-                ));
+                return Err(tb.parse_error("by fn_extension: expects a `? <equality>` goal block"));
             }
             let mut goal = tb.body[0].clone();
             let fact = self.parse_goal_fact(&mut goal, "by fn_extension")?;
@@ -128,9 +123,7 @@ impl Runtime {
             }
             let atomic = self.parse_atomic_fact(tb, true)?;
             if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error(
-                    "inline by fn_extension expects exactly one equality",
-                ));
+                return Err(tb.parse_error("inline by fn_extension expects exactly one equality"));
             }
             let AtomicFact::EqualFact(eq) = atomic else {
                 return Err(tb.parse_error("by fn_extension: expects an equality fact"));
@@ -174,9 +167,10 @@ impl Runtime {
         }
         let mut goal = tb.body[0].clone();
         let forall_fact = self.parse_goal_forall_fact(&mut goal, "by enumerate finite_set")?;
-        let proof = self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
-            this.parse_body_stmts(&tb.body[1..])
-        })?;
+        let proof =
+            self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
+                this.parse_body_stmts(&tb.body[1..])
+            })?;
         Ok(Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(
             ByEnumerateFiniteSetStmt {
                 forall_fact,
@@ -198,9 +192,10 @@ impl Runtime {
         }
         let mut goal = tb.body[0].clone();
         let forall_fact = self.parse_goal_forall_fact(&mut goal, "by for")?;
-        let proof = self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
-            this.parse_body_stmts(&tb.body[1..])
-        })?;
+        let proof =
+            self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
+                this.parse_body_stmts(&tb.body[1..])
+            })?;
         Ok(Stmt::By(ByStmt::ByForStmt(ByForStmt {
             forall_fact,
             proof,
@@ -453,20 +448,20 @@ impl Runtime {
         }
         if tb.peek() == Some(MOD_FLAT_SIGN) {
             tb.advance()?;
-            let next = tb.advance().map_err(|_| {
-                tb.parse_error("theorem call: expected identifier after `:::`")
-            })?;
+            let next = tb
+                .advance()
+                .map_err(|_| tb.parse_error("theorem call: expected identifier after `:::`"))?;
             if !is_simple_name(&next) {
                 return Err(tb.parse_error(format!(
                     "theorem call: expected identifier after `:::`, got `{next}`"
                 )));
             }
-            return self.elaborate_flat_import(&first, next).map_err(|err| match err {
-                crate::runtime::RuntimeError::InternalBug(message) => {
-                    tb.parse_error(message)
-                }
-                other => other,
-            });
+            return self
+                .elaborate_flat_import(&first, next)
+                .map_err(|err| match err {
+                    crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
+                    other => other,
+                });
         }
         if tb.peek() != Some(MOD_SIGN) {
             return Ok(AtomicName::Plain { name: first });
@@ -474,9 +469,9 @@ impl Runtime {
         let mut parts = vec![first];
         while tb.peek() == Some(MOD_SIGN) {
             tb.advance()?;
-            let next = tb.advance().map_err(|_| {
-                tb.parse_error("theorem call: expected identifier after `::`")
-            })?;
+            let next = tb
+                .advance()
+                .map_err(|_| tb.parse_error("theorem call: expected identifier after `::`"))?;
             if !is_simple_name(&next) {
                 return Err(tb.parse_error(format!(
                     "theorem call: expected identifier after `::`, got `{next}`"
@@ -485,14 +480,12 @@ impl Runtime {
             parts.push(next);
         }
         if parts.len() != 2 && parts.len() != 3 {
-            return Err(tb.parse_error(
-                "qualified theorem name must be `a::b`, `a:::b`, or `a::b::c`",
-            ));
+            return Err(
+                tb.parse_error("qualified theorem name must be `a::b`, `a:::b`, or `a::b::c`")
+            );
         }
         self.elaborate_name_parts(&parts).map_err(|err| match err {
-            crate::runtime::RuntimeError::InternalBug(message) => {
-                tb.parse_error(message)
-            }
+            crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
             other => other,
         })
     }
@@ -510,7 +503,11 @@ impl Runtime {
         } else {
             tb.expect(INDUC)?;
         }
-        let syntax = if strong { "by strong_induc" } else { "by induc" };
+        let syntax = if strong {
+            "by strong_induc"
+        } else {
+            "by induc"
+        };
         let Some(param) = tb.peek().map(str::to_string) else {
             return Err(tb.parse_error(format!("{syntax}: expected induction parameter")));
         };
@@ -612,7 +609,9 @@ impl Runtime {
             for child in rest {
                 if is_induc_base_header_block(child) {
                     if base_proof.is_some() {
-                        return Err(child.parse_error(format!("{syntax}: duplicated `? from` block")));
+                        return Err(
+                            child.parse_error(format!("{syntax}: duplicated `? from` block"))
+                        );
                     }
                     let mut header = child.clone();
                     self.expect_induc_base_header(&mut header, param, induc_from, syntax)?;
@@ -739,10 +738,7 @@ fn is_negative_atomic(fact: &AtomicFact) -> bool {
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
             | AtomicFact::NotInFact(_)
-
-
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
     )
 }
-

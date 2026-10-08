@@ -127,20 +127,22 @@ impl fmt::Display for BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn arity(self) -> usize {
         match self {
-            Self::FiniteSetHasBijectiveIndex | Self::RationalHasUniqueReducedFraction
+            Self::FiniteSetHasBijectiveIndex
+            | Self::RationalHasUniqueReducedFraction
             | Self::IndexCartesianNonemptyByChoiceFromFamily
             | Self::IndexCartesianNonemptyByChoiceFromPointwise
             | Self::RealArchimedeanNaturalUpperBound => 1,
-            Self::RealMemberLeLeastUpperBound | Self::RealLeastUpperBoundLeUpperBound
-            | Self::RealGreatestLowerBoundLeMember | Self::RealLowerBoundLeGreatestLowerBound => 3,
+            Self::RealMemberLeLeastUpperBound
+            | Self::RealLeastUpperBoundLeUpperBound
+            | Self::RealGreatestLowerBoundLeMember
+            | Self::RealLowerBoundLeGreatestLowerBound => 3,
             _ => 2,
         }
     }
 }
 
 pub fn is_reserved_builtin_name(name: &str) -> bool {
-    BuiltinTheoremId::from_name(name).is_some()
-        || builtin_certificate_arity(name).is_some()
+    BuiltinTheoremId::from_name(name).is_some() || builtin_certificate_arity(name).is_some()
 }
 
 // Opaque legacy predicates produced by completeness and consumed by its

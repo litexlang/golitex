@@ -21,11 +21,17 @@ pub(super) fn project_equal_calculation(
 
 fn project_values(values: &ClosedValuePair, runtime: &Runtime) -> JsonValue {
     match values {
-        ClosedValuePair::Radical { left_normal, right_normal } => object_for(runtime, vec![
-            ("representation", string("radical")),
-            ("left_normal", string(left_normal.readable_string())),
-            ("right_normal", string(right_normal.readable_string())),
-        ]),
+        ClosedValuePair::Radical {
+            left_normal,
+            right_normal,
+        } => object_for(
+            runtime,
+            vec![
+                ("representation", string("radical")),
+                ("left_normal", string(left_normal.readable_string())),
+                ("right_normal", string(right_normal.readable_string())),
+            ],
+        ),
         ClosedValuePair::Decimal { left, right } => object_for(
             runtime,
             vec![
@@ -121,10 +127,15 @@ pub(super) fn project_membership(
     runtime: &Runtime,
 ) -> JsonValue {
     let (value, set, bounds) = match proof {
-        ClosedMembershipCalculationProof::StandardSet { value, set } =>
-            (value, Obj::StandardSet(set.clone()), None),
-        ClosedMembershipCalculationProof::IntegerRange { value, set, start, end } =>
-            (value, set.clone(), Some((start, end))),
+        ClosedMembershipCalculationProof::StandardSet { value, set } => {
+            (value, Obj::StandardSet(set.clone()), None)
+        }
+        ClosedMembershipCalculationProof::IntegerRange {
+            value,
+            set,
+            start,
+            end,
+        } => (value, set.clone(), Some((start, end))),
     };
     let mut fields = vec![
         ("type", string("by_closed_calculation")),
@@ -133,7 +144,13 @@ pub(super) fn project_membership(
         ("set", string(set.readable_string())),
     ];
     if let Some((start, end)) = bounds {
-        fields.push(("bounds", JsonValue::Array(vec![project_scalar(start, runtime), project_scalar(end, runtime)])));
+        fields.push((
+            "bounds",
+            JsonValue::Array(vec![
+                project_scalar(start, runtime),
+                project_scalar(end, runtime),
+            ]),
+        ));
     }
     object_for(runtime, fields)
 }

@@ -5,25 +5,22 @@ use crate::ast::fact::{
 use crate::ast::obj::{Obj, StandardSet};
 use crate::execute::execute_fact_stmt::verify_or_fact::helper::{
     complementary_atomic_pair, equal_matches_pair, is_number_obj, match_abs_sign_split_arg,
-    match_complete_residues, match_component_nonzero_pair,
-    match_equality_plus_strict_covers_weak, match_greater_or_less_equal_operands,
-    match_integer_discrete_split, match_integer_successor_tail,
-    match_less_or_greater_equal_operands, match_weak_order_le_or_ge_operands, objs_same,
-    square_sum_nonzero_candidates, zero_factor_from_equal,
+    match_complete_residues, match_component_nonzero_pair, match_equality_plus_strict_covers_weak,
+    match_greater_or_less_equal_operands, match_integer_discrete_split,
+    match_integer_successor_tail, match_less_or_greater_equal_operands,
+    match_weak_order_le_or_ge_operands, objs_same, square_sum_nonzero_candidates,
+    zero_factor_from_equal,
 };
 use crate::execute::execute_fact_stmt::verify_or_fact::result::{
     OrBuiltinAbsSignSplit, OrBuiltinClassicalImplication, OrBuiltinComplementaryAtomic,
-    OrBuiltinCompleteResidues, OrBuiltinEqualityPlusStrictCoversWeak,
-    OrBuiltinGreaterOrLessEqual, OrBuiltinIntegerDiscreteSplit, OrBuiltinIntegerSuccessorTail,
-    OrBuiltinLessOrGreaterEqual, OrBuiltinNaturalZeroOrAtLeastOne,
-    OrBuiltinRealLineTrichotomyEqLessGreater, OrBuiltinRealLineTrichotomyGreaterEqLess,
-    OrBuiltinRealLineTrichotomyLessEqGreater, OrBuiltinSquareSumComponentNonzero,
-    OrBuiltinWeakOrderLeOrGe, OrBuiltinZeroProductSplit, OrFactSearchProofByBuiltinRule,
-    OrFactSearchedProof,
+    OrBuiltinCompleteResidues, OrBuiltinEqualityPlusStrictCoversWeak, OrBuiltinGreaterOrLessEqual,
+    OrBuiltinIntegerDiscreteSplit, OrBuiltinIntegerSuccessorTail, OrBuiltinLessOrGreaterEqual,
+    OrBuiltinNaturalZeroOrAtLeastOne, OrBuiltinRealLineTrichotomyEqLessGreater,
+    OrBuiltinRealLineTrichotomyGreaterEqLess, OrBuiltinRealLineTrichotomyLessEqGreater,
+    OrBuiltinSquareSumComponentNonzero, OrBuiltinWeakOrderLeOrGe, OrBuiltinZeroProductSplit,
+    OrFactSearchProofByBuiltinRule, OrFactSearchedProof,
 };
-use crate::execute::execute_fact_stmt::{
-    VerifyFactWellDefinedResult, VerifyState,
-};
+use crate::execute::execute_fact_stmt::{VerifyFactWellDefinedResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -37,15 +34,15 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let Some(verify_state) = verify_state.for_premises(
-            crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
-        ) else { return Ok(None); };
+        let Some(verify_state) = verify_state
+            .for_premises(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule)
+        else {
+            return Ok(None);
+        };
         if let Some(proof) = self.search_or_complete_residues(fact)? {
             return Ok(Some(proof));
         }
-        if let Some(proof) =
-            self.search_or_integer_successor_tail(fact, verify_state.clone())?
-        {
+        if let Some(proof) = self.search_or_integer_successor_tail(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
         if fact.facts.len() == 2 {
@@ -63,19 +60,13 @@ impl Runtime {
             if let Some(proof) = self.search_or_zero_product_split(fact, verify_state.clone())? {
                 return Ok(Some(proof));
             }
-            if let Some(proof) =
-                self.search_or_less_or_greater_equal(fact, verify_state.clone())?
-            {
+            if let Some(proof) = self.search_or_less_or_greater_equal(fact, verify_state.clone())? {
                 return Ok(Some(proof));
             }
-            if let Some(proof) =
-                self.search_or_greater_or_less_equal(fact, verify_state.clone())?
-            {
+            if let Some(proof) = self.search_or_greater_or_less_equal(fact, verify_state.clone())? {
                 return Ok(Some(proof));
             }
-            if let Some(proof) =
-                self.search_or_weak_order_le_or_ge(fact, verify_state.clone())?
-            {
+            if let Some(proof) = self.search_or_weak_order_le_or_ge(fact, verify_state.clone())? {
                 return Ok(Some(proof));
             }
             if let Some(proof) =
@@ -93,9 +84,7 @@ impl Runtime {
             {
                 return Ok(Some(proof));
             }
-            if let Some(proof) =
-                self.search_or_classical_implication(fact, verify_state)?
-            {
+            if let Some(proof) = self.search_or_classical_implication(fact, verify_state)? {
                 return Ok(Some(proof));
             }
             return Ok(None);
@@ -240,10 +229,8 @@ impl Runtime {
         &mut self,
         fact: &OrFact,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(left),
-            AndChainAtomicFact::AtomicFact(right),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(left), AndChainAtomicFact::AtomicFact(right)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };
@@ -327,10 +314,8 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(first),
-            AndChainAtomicFact::AtomicFact(second),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };
@@ -359,10 +344,8 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(first),
-            AndChainAtomicFact::AtomicFact(second),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };
@@ -391,10 +374,8 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(first),
-            AndChainAtomicFact::AtomicFact(second),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };
@@ -423,10 +404,8 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(first),
-            AndChainAtomicFact::AtomicFact(second),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };
@@ -516,10 +495,8 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(first),
-            AndChainAtomicFact::AtomicFact(second),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };
@@ -554,10 +531,8 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(first),
-            AndChainAtomicFact::AtomicFact(second),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };
@@ -586,10 +561,8 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        let (
-            AndChainAtomicFact::AtomicFact(first),
-            AndChainAtomicFact::AtomicFact(second),
-        ) = (&fact.facts[0], &fact.facts[1])
+        let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+            (&fact.facts[0], &fact.facts[1])
         else {
             return Ok(None);
         };

@@ -20,7 +20,9 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<ListSetMembershipStrategySingleStep>> {
-        let Some(in_fact) = as_in(fact) else { return Ok(None) };
+        let Some(in_fact) = as_in(fact) else {
+            return Ok(None);
+        };
         let Obj::SetFormer(SetFormer::ListSet(list)) = &in_fact.set else {
             return Ok(None);
         };
@@ -30,7 +32,8 @@ impl Runtime {
                 left: in_fact.element.clone(),
                 right: element.as_ref().clone(),
                 line_file: in_fact.line_file.clone(),
-            }.into();
+            }
+            .into();
             if let Some((requirement_facts, proof_of_requirement_facts)) =
                 self.verify_strategy_requirements(vec![equal], ctx)?
             {
@@ -50,44 +53,64 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<ListSetNonMembershipStrategySingleStep>> {
-        let AtomicFact::NotInFact(not_in_fact) = fact else { return Ok(None) };
+        let AtomicFact::NotInFact(not_in_fact) = fact else {
+            return Ok(None);
+        };
         let Obj::SetFormer(SetFormer::ListSet(list)) = &not_in_fact.set else {
             return Ok(None);
         };
         let mut requirements = Vec::with_capacity(list.list.len());
         for element in &list.list {
-            requirements.push(NotEqualFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: not_in_fact.element.clone(),
-                right: element.as_ref().clone(),
-                line_file: not_in_fact.line_file.clone(),
-            }.into());
+            requirements.push(
+                NotEqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: not_in_fact.element.clone(),
+                    right: element.as_ref().clone(),
+                    line_file: not_in_fact.line_file.clone(),
+                }
+                .into(),
+            );
         }
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_strategy_requirements(requirements, ctx)?
-        else { return Ok(None) };
+        else {
+            return Ok(None);
+        };
         Ok(Some(ListSetNonMembershipStrategySingleStep {
             requirement_facts,
             proof_of_requirement_facts,
         }))
     }
 
-
     pub(super) fn search_cart_membership_strategy(
         &mut self,
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<CartMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Some(cart) = self.cart_definition_for_set(&inf.set) else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Some(cart) = self.cart_definition_for_set(&inf.set) else {
+            return Ok(None);
+        };
         let target = self.cart_function_signature(&cart);
-        let Ok(domain) = self.verify_complete_function_domain(&inf.element, &target, ctx)?
-        else { return Ok(None); };
+        let Ok(domain) = self.verify_complete_function_domain(&inf.element, &target, ctx)? else {
+            return Ok(None);
+        };
         let Ok(requirements) = self.cart_coordinate_membership_requirements(&inf.element, &inf.set)
-        else { return Ok(None); };
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            CartMembershipStrategySingleStep { domain, requirement_facts, proof_of_requirement_facts }
-        })
+        else {
+            return Ok(None);
+        };
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| CartMembershipStrategySingleStep {
+                domain,
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )
     }
 
     pub(super) fn search_union_membership_from_left_strategy(
@@ -95,16 +118,28 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionMembershipFromLeftStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetOperator(SetOperator::Union(set)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetOperator(SetOperator::Union(set)) = &inf.set else {
+            return Ok(None);
+        };
         let requirements = vec![self.strategy_in_fact(
             inf.element.clone(),
             set.left.as_ref().clone(),
             inf.line_file.clone(),
         )];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            UnionMembershipFromLeftStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| {
+                UnionMembershipFromLeftStrategySingleStep {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                }
+            },
+        )
     }
 
     pub(super) fn search_union_membership_from_right_strategy(
@@ -112,16 +147,28 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<UnionMembershipFromRightStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetOperator(SetOperator::Union(set)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetOperator(SetOperator::Union(set)) = &inf.set else {
+            return Ok(None);
+        };
         let requirements = vec![self.strategy_in_fact(
             inf.element.clone(),
             set.right.as_ref().clone(),
             inf.line_file.clone(),
         )];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            UnionMembershipFromRightStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| {
+                UnionMembershipFromRightStrategySingleStep {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                }
+            },
+        )
     }
 
     pub(super) fn search_intersect_membership_strategy(
@@ -129,15 +176,33 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<IntersectMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetOperator(SetOperator::Intersect(set)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetOperator(SetOperator::Intersect(set)) = &inf.set else {
+            return Ok(None);
+        };
         let requirements = vec![
-            self.strategy_in_fact(inf.element.clone(), set.left.as_ref().clone(), inf.line_file.clone()),
-            self.strategy_in_fact(inf.element.clone(), set.right.as_ref().clone(), inf.line_file.clone()),
+            self.strategy_in_fact(
+                inf.element.clone(),
+                set.left.as_ref().clone(),
+                inf.line_file.clone(),
+            ),
+            self.strategy_in_fact(
+                inf.element.clone(),
+                set.right.as_ref().clone(),
+                inf.line_file.clone(),
+            ),
         ];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            IntersectMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| IntersectMembershipStrategySingleStep {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )
     }
 
     pub(super) fn search_set_minus_membership_strategy(
@@ -145,15 +210,33 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<SetMinusMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetOperator(SetOperator::SetMinus(set)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetOperator(SetOperator::SetMinus(set)) = &inf.set else {
+            return Ok(None);
+        };
         let requirements = vec![
-            self.strategy_in_fact(inf.element.clone(), set.left.as_ref().clone(), inf.line_file.clone()),
-            self.strategy_not_in_fact(inf.element.clone(), set.right.as_ref().clone(), inf.line_file.clone()),
+            self.strategy_in_fact(
+                inf.element.clone(),
+                set.left.as_ref().clone(),
+                inf.line_file.clone(),
+            ),
+            self.strategy_not_in_fact(
+                inf.element.clone(),
+                set.right.as_ref().clone(),
+                inf.line_file.clone(),
+            ),
         ];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            SetMinusMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| SetMinusMembershipStrategySingleStep {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )
     }
 
     pub(super) fn search_power_set_membership_strategy(
@@ -161,16 +244,26 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<PowerSetMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetOperator(SetOperator::PowerSet(set)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetOperator(SetOperator::PowerSet(set)) = &inf.set else {
+            return Ok(None);
+        };
         let requirements = vec![self.strategy_subset_fact(
             inf.element.clone(),
             set.set.as_ref().clone(),
             inf.line_file.clone(),
         )];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            PowerSetMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| PowerSetMembershipStrategySingleStep {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )
     }
 
     pub(super) fn search_range_membership_strategy(
@@ -178,16 +271,38 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<RangeMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetFormer(SetFormer::Range(range)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetFormer(SetFormer::Range(range)) = &inf.set else {
+            return Ok(None);
+        };
         let requirements = vec![
-            self.strategy_in_fact(inf.element.clone(), Obj::StandardSet(StandardSet::Z), inf.line_file.clone()),
-            self.strategy_less_equal_fact(range.start.as_ref().clone(), inf.element.clone(), inf.line_file.clone()),
-            self.strategy_less_fact(inf.element.clone(), range.end.as_ref().clone(), inf.line_file.clone()),
+            self.strategy_in_fact(
+                inf.element.clone(),
+                Obj::StandardSet(StandardSet::Z),
+                inf.line_file.clone(),
+            ),
+            self.strategy_less_equal_fact(
+                range.start.as_ref().clone(),
+                inf.element.clone(),
+                inf.line_file.clone(),
+            ),
+            self.strategy_less_fact(
+                inf.element.clone(),
+                range.end.as_ref().clone(),
+                inf.line_file.clone(),
+            ),
         ];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            RangeMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| RangeMembershipStrategySingleStep {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )
     }
 
     pub(super) fn search_closed_range_membership_strategy(
@@ -195,16 +310,40 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<ClosedRangeMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetFormer(SetFormer::ClosedRange(range)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetFormer(SetFormer::ClosedRange(range)) = &inf.set else {
+            return Ok(None);
+        };
         let requirements = vec![
-            self.strategy_in_fact(inf.element.clone(), Obj::StandardSet(StandardSet::Z), inf.line_file.clone()),
-            self.strategy_less_equal_fact(range.start.as_ref().clone(), inf.element.clone(), inf.line_file.clone()),
-            self.strategy_less_equal_fact(inf.element.clone(), range.end.as_ref().clone(), inf.line_file.clone()),
+            self.strategy_in_fact(
+                inf.element.clone(),
+                Obj::StandardSet(StandardSet::Z),
+                inf.line_file.clone(),
+            ),
+            self.strategy_less_equal_fact(
+                range.start.as_ref().clone(),
+                inf.element.clone(),
+                inf.line_file.clone(),
+            ),
+            self.strategy_less_equal_fact(
+                inf.element.clone(),
+                range.end.as_ref().clone(),
+                inf.line_file.clone(),
+            ),
         ];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            ClosedRangeMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| {
+                ClosedRangeMembershipStrategySingleStep {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                }
+            },
+        )
     }
 
     pub(super) fn search_interval_membership_strategy(
@@ -212,8 +351,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<IntervalMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetFormer(SetFormer::IntervalObj(interval)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetFormer(SetFormer::IntervalObj(interval)) = &inf.set else {
+            return Ok(None);
+        };
         let (start, end, left_closed, right_closed) = interval_bounds(interval);
         let left_bound = if left_closed {
             self.strategy_less_equal_fact(start, inf.element.clone(), inf.line_file.clone())
@@ -226,13 +369,23 @@ impl Runtime {
             self.strategy_less_fact(inf.element.clone(), end, inf.line_file.clone())
         };
         let requirements = vec![
-            self.strategy_in_fact(inf.element.clone(), Obj::StandardSet(StandardSet::R), inf.line_file.clone()),
+            self.strategy_in_fact(
+                inf.element.clone(),
+                Obj::StandardSet(StandardSet::R),
+                inf.line_file.clone(),
+            ),
             left_bound,
             right_bound,
         ];
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            IntervalMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| IntervalMembershipStrategySingleStep {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )
     }
 
     // Direct set-builder only (no definition transport / template unfold).
@@ -241,8 +394,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<SetBuilderMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &inf.set else {
+            return Ok(None);
+        };
         let mut requirements = Vec::new();
         requirements.push(self.strategy_in_fact(
             inf.element.clone(),
@@ -258,9 +415,17 @@ impl Runtime {
             };
             requirements.push(instantiated);
         }
-        finish(self, requirements, ctx, |requirement_facts, proof_of_requirement_facts| {
-            SetBuilderMembershipStrategySingleStep { requirement_facts, proof_of_requirement_facts }
-        })
+        finish(
+            self,
+            requirements,
+            ctx,
+            |requirement_facts, proof_of_requirement_facts| {
+                SetBuilderMembershipStrategySingleStep {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                }
+            },
+        )
     }
 
     // Prove `x $in T` from `x $in S` (S ⊂ T among standard sets) as one strategy
@@ -271,8 +436,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<StandardSetSubsetMembershipStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::StandardSet(target) = &inf.set else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::StandardSet(target) = &inf.set else {
+            return Ok(None);
+        };
         let mut alternatives = Vec::new();
         for source in proper_subsets_in_membership_proof_order(target) {
             alternatives.push(vec![self.strategy_in_fact(
@@ -299,8 +468,12 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<FnApplicationInCodomainStrategySingleStep>> {
-        let Some(inf) = as_in(fact) else { return Ok(None); };
-        let Obj::FnObj(fn_obj) = &inf.element else { return Ok(None); };
+        let Some(inf) = as_in(fact) else {
+            return Ok(None);
+        };
+        let Obj::FnObj(fn_obj) = &inf.element else {
+            return Ok(None);
+        };
         // Field applications use the same signature evidence and domain
         // obligations as named functions, including equality-class candidates.
         let head_obj = match fn_obj.head.as_ref() {
@@ -390,10 +563,27 @@ fn as_in(fact: &AtomicFact) -> Option<&InFact> {
 
 fn interval_bounds(interval: &IntervalObj) -> (Obj, Obj, bool, bool) {
     match interval {
-        IntervalObj::LeftOpenRightOpen(s) => (s.start.as_ref().clone(), s.end.as_ref().clone(), false, false),
-        IntervalObj::LeftOpenRightClosed(s) => (s.start.as_ref().clone(), s.end.as_ref().clone(), false, true),
-        IntervalObj::LeftClosedRightOpen(s) => (s.start.as_ref().clone(), s.end.as_ref().clone(), true, false),
-        IntervalObj::LeftClosedRightClosed(s) => (s.start.as_ref().clone(), s.end.as_ref().clone(), true, true),
+        IntervalObj::LeftOpenRightOpen(s) => (
+            s.start.as_ref().clone(),
+            s.end.as_ref().clone(),
+            false,
+            false,
+        ),
+        IntervalObj::LeftOpenRightClosed(s) => (
+            s.start.as_ref().clone(),
+            s.end.as_ref().clone(),
+            false,
+            true,
+        ),
+        IntervalObj::LeftClosedRightOpen(s) => (
+            s.start.as_ref().clone(),
+            s.end.as_ref().clone(),
+            true,
+            false,
+        ),
+        IntervalObj::LeftClosedRightClosed(s) => {
+            (s.start.as_ref().clone(), s.end.as_ref().clone(), true, true)
+        }
     }
 }
 

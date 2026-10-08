@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::ExtremumEqualityStrategySingleStep;
 use crate::ast::fact::{EqualFact, LessEqualFact};
-use crate::ast::obj::{Obj, ArithmeticOperator, FiniteSetStat};
+use crate::ast::obj::{ArithmeticOperator, FiniteSetStat, Obj};
 use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 

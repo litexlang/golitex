@@ -15,7 +15,9 @@ pub enum TrigComplexIdentityProof {
     RealPartQuotient(RealPartQuotientProof),
     ImaginaryPartQuotient(ImaginaryPartQuotientProof),
     TanCotProduct(super::by_trig_quotient_relations::TanCotProductBuiltinRuleProof),
-    TanSquareReciprocalCosine(super::by_trig_quotient_relations::TanSquareReciprocalCosineBuiltinRuleProof),
+    TanSquareReciprocalCosine(
+        super::by_trig_quotient_relations::TanSquareReciprocalCosineBuiltinRuleProof,
+    ),
     SinHalfPiShift(SinHalfPiShiftProof),
     CosHalfPiShift(CosHalfPiShiftProof),
     CosDoubleAngle(CosDoubleAngleBuiltinRuleProof),
@@ -58,7 +60,13 @@ pub struct SinThreeAngleSumProof {
     pub third: Obj,
 }
 impl SinThreeAngleSumProof {
-    pub fn new(first: Obj, second: Obj, third: Obj) -> Self { Self { first, second, third } }
+    pub fn new(first: Obj, second: Obj, third: Obj) -> Self {
+        Self {
+            first,
+            second,
+            third,
+        }
+    }
 }
 // Parent WD owns cos(x), cos(y), cos(x+y) and the tangent-sum denominator.
 pub struct TanAdditionProof;
@@ -81,23 +89,41 @@ pub struct CosDoubleAngleBuiltinRuleProof {
     pub form: CosDoubleAngleForm,
 }
 impl CosDoubleAngleBuiltinRuleProof {
-    pub fn new(angle: Obj, form: CosDoubleAngleForm) -> Self { Self { angle, form } }
+    pub fn new(angle: Obj, form: CosDoubleAngleForm) -> Self {
+        Self { angle, form }
+    }
 }
-pub struct SinPiReflectionBuiltinRuleProof { pub angle: Obj }
+pub struct SinPiReflectionBuiltinRuleProof {
+    pub angle: Obj,
+}
 impl SinPiReflectionBuiltinRuleProof {
-    pub fn new(angle: Obj) -> Self { Self { angle } }
+    pub fn new(angle: Obj) -> Self {
+        Self { angle }
+    }
 }
-pub struct CosPiReflectionBuiltinRuleProof { pub angle: Obj }
+pub struct CosPiReflectionBuiltinRuleProof {
+    pub angle: Obj,
+}
 impl CosPiReflectionBuiltinRuleProof {
-    pub fn new(angle: Obj) -> Self { Self { angle } }
+    pub fn new(angle: Obj) -> Self {
+        Self { angle }
+    }
 }
-pub struct SinHalfPiReflectionBuiltinRuleProof { pub angle: Obj }
+pub struct SinHalfPiReflectionBuiltinRuleProof {
+    pub angle: Obj,
+}
 impl SinHalfPiReflectionBuiltinRuleProof {
-    pub fn new(angle: Obj) -> Self { Self { angle } }
+    pub fn new(angle: Obj) -> Self {
+        Self { angle }
+    }
 }
-pub struct CosHalfPiReflectionBuiltinRuleProof { pub angle: Obj }
+pub struct CosHalfPiReflectionBuiltinRuleProof {
+    pub angle: Obj,
+}
 impl CosHalfPiReflectionBuiltinRuleProof {
-    pub fn new(angle: Obj) -> Self { Self { angle } }
+    pub fn new(angle: Obj) -> Self {
+        Self { angle }
+    }
 }
 impl TrigComplexIdentityProof {
     pub fn rule_id(&self) -> &'static str {
@@ -154,18 +180,28 @@ impl Runtime {
             if let Obj::TrigOperator(T::Sin(sine)) = left {
                 if let Obj::ArithmeticOperator(A::Add(sum)) = &*sine.arg {
                     let triple = match (&*sum.left, &*sum.right) {
-                        (Obj::ArithmeticOperator(A::Add(pair)), third) => Some((&*pair.left, &*pair.right, third)),
-                        (first, Obj::ArithmeticOperator(A::Add(pair))) => Some((first, &*pair.left, &*pair.right)),
+                        (Obj::ArithmeticOperator(A::Add(pair)), third) => {
+                            Some((&*pair.left, &*pair.right, third))
+                        }
+                        (first, Obj::ArithmeticOperator(A::Add(pair))) => {
+                            Some((first, &*pair.left, &*pair.right))
+                        }
                         _ => None,
                     };
-                    if let Some((x,y,z)) = triple {
-                        let first = mul(mul(sin(x),cos(y)),cos(z));
-                        let second = mul(mul(cos(x),sin(y)),cos(z));
-                        let third = mul(mul(cos(x),cos(y)),sin(z));
-                        let negative = mul(mul(sin(x),sin(y)),sin(z));
-                        let expected = subtract(add(add(first,second),third),negative);
-                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right,&expected) {
-                            return Ok(Some(P::SinThreeAngleSum(SinThreeAngleSumProof::new(x.clone(),y.clone(),z.clone()))));
+                    if let Some((x, y, z)) = triple {
+                        let first = mul(mul(sin(x), cos(y)), cos(z));
+                        let second = mul(mul(cos(x), sin(y)), cos(z));
+                        let third = mul(mul(cos(x), cos(y)), sin(z));
+                        let negative = mul(mul(sin(x), sin(y)), sin(z));
+                        let expected = subtract(add(add(first, second), third), negative);
+                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                            right, &expected,
+                        ) {
+                            return Ok(Some(P::SinThreeAngleSum(SinThreeAngleSumProof::new(
+                                x.clone(),
+                                y.clone(),
+                                z.clone(),
+                            ))));
                         }
                     }
                 }
@@ -173,23 +209,34 @@ impl Runtime {
             // tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y)).
             if let Obj::TrigOperator(T::Tan(tangent)) = left {
                 if let Obj::ArithmeticOperator(A::Add(sum)) = &*tangent.arg {
-                    let x = Obj::TrigOperator(T::Tan(crate::ast::obj::Tan { arg: sum.left.clone() }));
-                    let y = Obj::TrigOperator(T::Tan(crate::ast::obj::Tan { arg: sum.right.clone() }));
-                    let expected = Obj::ArithmeticOperator(A::Div(crate::ast::obj::Div {
-                        left: Box::new(add(x.clone(),y.clone())),
-                        right: Box::new(subtract(number("1"),mul(x,y))),
+                    let x = Obj::TrigOperator(T::Tan(crate::ast::obj::Tan {
+                        arg: sum.left.clone(),
                     }));
-                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right,&expected) {
+                    let y = Obj::TrigOperator(T::Tan(crate::ast::obj::Tan {
+                        arg: sum.right.clone(),
+                    }));
+                    let expected = Obj::ArithmeticOperator(A::Div(crate::ast::obj::Div {
+                        left: Box::new(add(x.clone(), y.clone())),
+                        right: Box::new(subtract(number("1"), mul(x, y))),
+                    }));
+                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                        right, &expected,
+                    ) {
                         return Ok(Some(P::TanAddition(TanAdditionProof)));
                     }
                 }
             }
 
-            if let Some(proof) = super::by_trig_quotient_relations::trig_quotient_relation(left, right) {
+            if let Some(proof) =
+                super::by_trig_quotient_relations::trig_quotient_relation(left, right)
+            {
                 return Ok(Some(proof));
             }
             if let Some(proof) = self.periodic_trig_value(left, state.clone())? {
-                if crate::rational_expression::objs_equal_by_rational_expression_evaluation(&proof.value, right) {
+                if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                    &proof.value,
+                    right,
+                ) {
                     return Ok(Some(P::PeriodicTrig(proof)));
                 }
             }
@@ -202,9 +249,11 @@ impl Runtime {
                             let expected = match (sine, half_turn) {
                                 (true, true) | (false, false) => sin(x),
                                 (true, false) => cos(x),
-                                (false, true) => Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg {
-                                    arg: Box::new(cos(x)),
-                                })),
+                                (false, true) => {
+                                    Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg {
+                                        arg: Box::new(cos(x)),
+                                    }))
+                                }
                             };
                             if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
                                 return Ok(Some(match (sine, half_turn) {
@@ -222,9 +271,18 @@ impl Runtime {
                         if let Some(x) = doubled_arg(arg) {
                             use CosDoubleAngleForm as F;
                             for (expected, form) in [
-                                (subtract(square(cos(x)), square(sin(x))), F::CosineSquareMinusSineSquare),
-                                (subtract(number("1"), mul(number("2"), square(sin(x)))), F::OneMinusTwiceSineSquare),
-                                (subtract(mul(number("2"), square(cos(x))), number("1")), F::TwiceCosineSquareMinusOne),
+                                (
+                                    subtract(square(cos(x)), square(sin(x))),
+                                    F::CosineSquareMinusSineSquare,
+                                ),
+                                (
+                                    subtract(number("1"), mul(number("2"), square(sin(x)))),
+                                    F::OneMinusTwiceSineSquare,
+                                ),
+                                (
+                                    subtract(mul(number("2"), square(cos(x))), number("1")),
+                                    F::TwiceCosineSquareMinusOne,
+                                ),
                             ] {
                                 if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
                                     return Ok(Some(P::CosDoubleAngle(CosDoubleAngleBuiltinRuleProof::new(x.clone(), form))));
@@ -236,10 +294,18 @@ impl Runtime {
                     // The whole equality WD establishes real arguments and defined arithmetic.
                     if let Obj::ArithmeticOperator(A::Add(sum)) = arg {
                         for (x, shift) in [(&*sum.left, &*sum.right), (&*sum.right, &*sum.left)] {
-                            let Some(coefficient) = crate::rational_expression::pi_multiple::pi_coefficient(shift) else { continue; };
+                            let Some(coefficient) =
+                                crate::rational_expression::pi_multiple::pi_coefficient(shift)
+                            else {
+                                continue;
+                            };
                             if !crate::rational_expression::objs_equal_by_rational_expression_evaluation(&coefficient, &number("0.5")) { continue; }
-                            let expected = if sine { cos(x) } else {
-                                Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg { arg: Box::new(sin(x)) }))
+                            let expected = if sine {
+                                cos(x)
+                            } else {
+                                Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg {
+                                    arg: Box::new(sin(x)),
+                                }))
                             };
                             if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
                                 return Ok(Some(if sine { P::SinHalfPiShift(SinHalfPiShiftProof) } else { P::CosHalfPiShift(CosHalfPiShiftProof) }));
@@ -261,8 +327,14 @@ impl Runtime {
                                 right: Box::new(mul(sin(x), sin(y))),
                             }))
                         };
-                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
-                            return Ok(Some(if sine { P::SinDifference } else { P::CosDifference }));
+                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                            right, &expected,
+                        ) {
+                            return Ok(Some(if sine {
+                                P::SinDifference
+                            } else {
+                                P::CosDifference
+                            }));
                         }
                     }
                     if let Some(x) = neg_arg(arg) {
@@ -304,13 +376,19 @@ impl Runtime {
                     right: Box::new(square(part(&abs.arg, false))),
                 }));
                 if let Obj::ExpLogOperator(crate::ast::obj::ExpLogOperator::Sqrt(root)) = right {
-                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(&root.arg, &radicand) {
-                        return Ok(Some(P::ComplexModulusCoordinates(ComplexModulusCoordinatesProof)));
+                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                        &root.arg, &radicand,
+                    ) {
+                        return Ok(Some(P::ComplexModulusCoordinates(
+                            ComplexModulusCoordinatesProof,
+                        )));
                     }
                 }
                 if let Obj::ArithmeticOperator(A::Mul(product)) = &*abs.arg {
                     let expected = mul(modulus(&product.left), modulus(&product.right));
-                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
+                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                        right, &expected,
+                    ) {
                         return Ok(Some(P::ComplexModulusProduct));
                     }
                 }
@@ -343,14 +421,25 @@ impl Runtime {
                         let first = mul(part(&quotient.left, real), part(&quotient.right, true));
                         let second = mul(part(&quotient.left, !real), part(&quotient.right, false));
                         let numerator = if real {
-                            Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add { left: Box::new(first), right: Box::new(second) }))
-                        } else { subtract(first, second) };
+                            Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add {
+                                left: Box::new(first),
+                                right: Box::new(second),
+                            }))
+                        } else {
+                            subtract(first, second)
+                        };
                         let expected = Obj::ArithmeticOperator(A::Div(crate::ast::obj::Div {
-                            left: Box::new(numerator), right: Box::new(square(modulus(&quotient.right))),
+                            left: Box::new(numerator),
+                            right: Box::new(square(modulus(&quotient.right))),
                         }));
-                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &expected) {
-                            return Ok(Some(if real { P::RealPartQuotient(RealPartQuotientProof) }
-                                else { P::ImaginaryPartQuotient(ImaginaryPartQuotientProof) }));
+                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                            right, &expected,
+                        ) {
+                            return Ok(Some(if real {
+                                P::RealPartQuotient(RealPartQuotientProof)
+                            } else {
+                                P::ImaginaryPartQuotient(ImaginaryPartQuotientProof)
+                            }));
                         }
                     }
                     // z^(n+1)=z^n*z gives the two coordinate recurrences.
@@ -546,12 +635,14 @@ fn mul(a: Obj, b: Obj) -> Obj {
 }
 fn subtract(left: Obj, right: Obj) -> Obj {
     Obj::ArithmeticOperator(A::Sub(crate::ast::obj::Sub {
-        left: Box::new(left), right: Box::new(right),
+        left: Box::new(left),
+        right: Box::new(right),
     }))
 }
 fn square(base: Obj) -> Obj {
     Obj::ArithmeticOperator(A::Pow(crate::ast::obj::Pow {
-        base: Box::new(base), exponent: Box::new(number("2")),
+        base: Box::new(base),
+        exponent: Box::new(number("2")),
     }))
 }
 fn sin(x: &Obj) -> Obj {
@@ -565,9 +656,14 @@ fn cos(x: &Obj) -> Obj {
     }))
 }
 fn modulus(x: &Obj) -> Obj {
-    Obj::ComplexOperator(C::ComplexAbs(ComplexAbs { arg: Box::new(x.clone()) }))
+    Obj::ComplexOperator(C::ComplexAbs(ComplexAbs {
+        arg: Box::new(x.clone()),
+    }))
 }
 
 fn add(left: Obj, right: Obj) -> Obj {
-    Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add { left: Box::new(left), right: Box::new(right) }))
+    Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add {
+        left: Box::new(left),
+        right: Box::new(right),
+    }))
 }

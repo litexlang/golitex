@@ -223,8 +223,15 @@ fn eval_returns_exact_values_and_publishes_the_checked_equality() {
             crate::execute::execute_eval_stmt::ExecCommandStmtResult::Eval(
                 crate::execute::execute_eval_stmt::ExecEvalStmtResult::Success(evaluated),
             ),
-        ) = &result.statement_results[0] else { panic!("eval success"); };
-        assert!(rt.top_exec_env().facts.facts_by_id.contains_key(&evaluated.evaluated_equal_fact.fact_id));
+        ) = &result.statement_results[0]
+        else {
+            panic!("eval success");
+        };
+        assert!(rt
+            .top_exec_env()
+            .facts
+            .facts_by_id
+            .contains_key(&evaluated.evaluated_equal_fact.fact_id));
         let stored: Fact = evaluated.evaluated_equal_fact.clone().into();
         assert!(normal.contains(&stored.readable_string()), "{normal}");
     }

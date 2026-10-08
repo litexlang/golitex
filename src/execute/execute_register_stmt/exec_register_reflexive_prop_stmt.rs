@@ -5,9 +5,7 @@ use super::result::{
 use crate::ast::stmt::RegisterReflexivePropStmt;
 use crate::exec_env::exec_env::PropRewriteProperty;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::parse::prop_registration_shape::{
-    plain_prop_name, reflexive_prop_name_from_forall,
-};
+use crate::parse::prop_registration_shape::{plain_prop_name, reflexive_prop_name_from_forall};
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub fn exec_register_reflexive_prop_stmt(

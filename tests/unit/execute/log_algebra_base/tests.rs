@@ -13,7 +13,12 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language })
+    Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language,
+    })
 }
 
 fn input(kind: usize, guard: &str) -> String {
@@ -37,10 +42,17 @@ fn check(rt: &mut Runtime, code: &str, accepted: bool) -> JsonValue {
 fn find_rule(value: &JsonValue, name: &str) -> Option<JsonValue> {
     match value {
         JsonValue::Object(fields) => {
-            if fields.keys_in_order().into_iter().any(|k| fields.get(&k).and_then(|v| v.as_str().ok()) == Some(name)) {
+            if fields
+                .keys_in_order()
+                .into_iter()
+                .any(|k| fields.get(&k).and_then(|v| v.as_str().ok()) == Some(name))
+            {
                 return Some(value.clone());
             }
-            fields.keys_in_order().into_iter().find_map(|k| find_rule(fields.get(&k).unwrap(), name))
+            fields
+                .keys_in_order()
+                .into_iter()
+                .find_map(|k| find_rule(fields.get(&k).unwrap(), name))
         }
         JsonValue::Array(items) => items.iter().find_map(|v| find_rule(v, name)),
         _ => None,
@@ -50,7 +62,10 @@ fn find_rule(value: &JsonValue, name: &str) -> Option<JsonValue> {
 fn contains_string(value: &JsonValue, text: &str) -> bool {
     match value {
         JsonValue::String(s) => s == text,
-        JsonValue::Object(fields) => fields.keys_in_order().into_iter().any(|k| contains_string(fields.get(&k).unwrap(), text)),
+        JsonValue::Object(fields) => fields
+            .keys_in_order()
+            .into_iter()
+            .any(|k| contains_string(fields.get(&k).unwrap(), text)),
         JsonValue::Array(items) => items.iter().any(|v| contains_string(v, text)),
         _ => false,
     }
@@ -74,20 +89,39 @@ fn assert_base(proof: &LogAlgebraBaseProof, kind: &str) {
 }
 
 fn actual_text(result: &ExecStmtResult, kind: &str, language: OutputLanguage) -> BuiltinRuleText {
-    let ExecStmtResult::Fact(ExecFactStmtResult::Success(s)) = result else { panic!("fact success") };
-    let VerifyFactResult::ForallFact(f) = &s.verify_result else { panic!("forall") };
-    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(p)) = &**f else { panic!("local forall") };
-    let VerifyFactResult::Equality(e) = &p.proved_then_facts[0].verify_result else { panic!("equality") };
-    let VerifyEqualityResult::Success(p) = &**e else { panic!("equality success") };
-    let EqualFactSearchedProof::ByBuiltinRule(rule) = &p.searched_proof else { panic!("actual builtin") };
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(s)) = result else {
+        panic!("fact success")
+    };
+    let VerifyFactResult::ForallFact(f) = &s.verify_result else {
+        panic!("forall")
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(p)) = &**f
+    else {
+        panic!("local forall")
+    };
+    let VerifyFactResult::Equality(e) = &p.proved_then_facts[0].verify_result else {
+        panic!("equality")
+    };
+    let VerifyEqualityResult::Success(p) = &**e else {
+        panic!("equality success")
+    };
+    let EqualFactSearchedProof::ByBuiltinRule(rule) = &p.searched_proof else {
+        panic!("actual builtin")
+    };
     match rule {
         EqualitySearchProofByBuiltinRule::LogProduct(p) => {
             assert_base(&p.base_proof, kind);
-            assert!(!p.left_argument_positive_proof.is_failed() && !p.right_argument_positive_proof.is_failed());
+            assert!(
+                !p.left_argument_positive_proof.is_failed()
+                    && !p.right_argument_positive_proof.is_failed()
+            );
         }
         EqualitySearchProofByBuiltinRule::LogQuotient(p) => {
             assert_base(&p.base_proof, kind);
-            assert!(!p.numerator_positive_proof.is_failed() && !p.denominator_positive_proof.is_failed());
+            assert!(
+                !p.numerator_positive_proof.is_failed()
+                    && !p.denominator_positive_proof.is_failed()
+            );
         }
         EqualitySearchProofByBuiltinRule::LogReciprocal(p) => {
             assert_base(&p.base_proof, kind);
@@ -106,7 +140,11 @@ fn actual_text(result: &ExecStmtResult, kind: &str, language: OutputLanguage) ->
 fn actual_three_guard_routes_and_four_typed_leaves_keep_ten_language_outputs() {
     let names = ["LogProduct", "LogQuotient", "LogReciprocal", "LogArgPower"];
     for kind in 0..4 {
-        for (guard, route) in [("a<1", "below_one"), ("1<a", "greater_than_one"), ("a!=1", "positive_nonunit")] {
+        for (guard, route) in [
+            ("a<1", "below_one"),
+            ("1<a", "greater_than_one"),
+            ("a!=1", "positive_nonunit"),
+        ] {
             for language in OutputLanguage::ALL {
                 let mut rt = runtime(language);
                 let run = rt.run_litex_code(&input(kind, guard)).unwrap();
@@ -116,7 +154,11 @@ fn actual_three_guard_routes_and_four_typed_leaves_keep_ten_language_outputs() {
                 let json = crate::json_output::project_run_detailed(&run, &rt, "eval", None);
                 let leaf = find_rule(&json, names[kind]).unwrap();
                 assert!(contains_string(&leaf, route));
-                assert!(!leaf.as_object().unwrap().keys_in_order().contains(&"proof_of_requirement_facts"));
+                assert!(!leaf
+                    .as_object()
+                    .unwrap()
+                    .keys_in_order()
+                    .contains(&"proof_of_requirement_facts"));
             }
         }
     }
@@ -193,10 +235,14 @@ fn illegal_domains_missing_guards_and_false_laws_remain_rejected() {
 #[test]
 fn real_argument_power_uses_the_expanded_power_wd_domain() {
     // Formerly rejected in Pow WD; the unchanged real power law is now legal.
-    check(&mut runtime(OutputLanguage::English),
-        "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x^y)=y*log(a,x)\n", true);
+    check(
+        &mut runtime(OutputLanguage::English),
+        "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x^y)=y*log(a,x)\n",
+        true,
+    );
     for guard in ["a<1", "1<a", "a!=1"] {
-        let code = format!("forall a,x R+,y R:\n    {guard}\n    =>:\n        log(a,x^y)=y*log(a,x)\n");
+        let code =
+            format!("forall a,x R+,y R:\n    {guard}\n    =>:\n        log(a,x^y)=y*log(a,x)\n");
         check(&mut runtime(OutputLanguage::English), &code, true);
         let wrong = code.replace("y*log(a,x)", "(y+1)*log(a,x)");
         check(&mut runtime(OutputLanguage::English), &wrong, false);
@@ -211,21 +257,42 @@ fn inherited_ceiling_and_failed_publication_stay_bounded() {
         // cannot yet supply the derived a!=1 there. Strategy admits that
         // existing proof for product/quotient/reciprocal. The symbolic power
         // argument needs the normal root route for its own carrier proof.
-        for (level, passed) in [(VerifyStateLevel::Direct, false), (VerifyStateLevel::KnownSpecialProperty, false), (VerifyStateLevel::BuiltinRule, false), (VerifyStateLevel::Strategy, kind != 3)] {
+        for (level, passed) in [
+            (VerifyStateLevel::Direct, false),
+            (VerifyStateLevel::KnownSpecialProperty, false),
+            (VerifyStateLevel::BuiltinRule, false),
+            (VerifyStateLevel::Strategy, kind != 3),
+        ] {
             let mut rt = runtime(OutputLanguage::English);
-            let tokens = Tokenizer::new().tokenize(&code, rt.current_file.clone()).unwrap();
+            let tokens = Tokenizer::new()
+                .tokenize(&code, rt.current_file.clone())
+                .unwrap();
             let mut stmts = rt.parse(&tokens).unwrap();
-            let crate::ast::stmt::Stmt::Fact(fact) = stmts.remove(0) else { panic!("fact") };
+            let crate::ast::stmt::Stmt::Fact(fact) = stmts.remove(0) else {
+                panic!("fact")
+            };
             if level == VerifyStateLevel::BuiltinRule {
-                assert!(rt.verify_fact_well_definedness(&fact, VerifyState::new(level)).unwrap().is_failed());
+                assert!(rt
+                    .verify_fact_well_definedness(&fact, VerifyState::new(level))
+                    .unwrap()
+                    .is_failed());
             }
             let result = rt.verify_fact(&fact, VerifyState::new(level)).unwrap();
             assert_eq!(!result.is_failed(), passed, "{code}");
         }
         let mut rt = runtime(OutputLanguage::English);
-        let tokens = Tokenizer::new().tokenize(&code, rt.current_file.clone()).unwrap();
-        let crate::ast::stmt::Stmt::Fact(fact) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact") };
-        assert!(!rt.verify_fact(&fact, VerifyState::top_level()).unwrap().is_failed(), "{code}");
+        let tokens = Tokenizer::new()
+            .tokenize(&code, rt.current_file.clone())
+            .unwrap();
+        let crate::ast::stmt::Stmt::Fact(fact) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("fact")
+        };
+        assert!(
+            !rt.verify_fact(&fact, VerifyState::top_level())
+                .unwrap()
+                .is_failed(),
+            "{code}"
+        );
     }
     let wrong = "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x*y)=log(a,x)*log(a,y)\n";
     let mut rt = runtime(OutputLanguage::English);
@@ -236,9 +303,31 @@ fn inherited_ceiling_and_failed_publication_stay_bounded() {
     // Repeating the complete forall cites the stored proposition, rather
     // than instantiating it to a new atomic goal.
     assert!(contains_string(&reuse, "by_known_forall_fact"));
-    let statement = &original.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
-    let stored = statement.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap();
-    let source_id = stored[0].as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
+    let statement = &original
+        .as_object()
+        .unwrap()
+        .get("statement_results")
+        .unwrap()
+        .as_array()
+        .unwrap()[0];
+    let stored = statement
+        .as_object()
+        .unwrap()
+        .get("store_and_infer")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .get("stores")
+        .unwrap()
+        .as_array()
+        .unwrap();
+    let source_id = stored[0]
+        .as_object()
+        .unwrap()
+        .get("fact_id")
+        .unwrap()
+        .as_str()
+        .unwrap();
     assert!(contains_string(&reuse, source_id));
     check(&mut rt, wrong, false);
 }
@@ -246,10 +335,18 @@ fn inherited_ceiling_and_failed_publication_stay_bounded() {
 #[test]
 fn four_persistent_tracers_verify_without_trust() {
     for source in [
-        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/log_product_valid_base.lit"),
-        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/log_quotient_valid_base.lit"),
-        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/log_reciprocal_valid_base.lit"),
-        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/log_arg_power_valid_base.lit"),
+        include_str!(
+            "../../../../examples/proof_nodes/equal/by_builtin_rule/log_product_valid_base.lit"
+        ),
+        include_str!(
+            "../../../../examples/proof_nodes/equal/by_builtin_rule/log_quotient_valid_base.lit"
+        ),
+        include_str!(
+            "../../../../examples/proof_nodes/equal/by_builtin_rule/log_reciprocal_valid_base.lit"
+        ),
+        include_str!(
+            "../../../../examples/proof_nodes/equal/by_builtin_rule/log_arg_power_valid_base.lit"
+        ),
     ] {
         assert!(!source.contains("trust"));
         check(&mut runtime(OutputLanguage::English), source, true);

@@ -685,13 +685,17 @@ fn project_command(c: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
                 "eval",
                 super::project_detailed::project_verify_obj_wd(failed_wd, runtime),
             ),
-            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AlgorithmEquation(proof)) => failed_with_details(
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AlgorithmEquation(
+                proof,
+            )) => failed_with_details(
                 runtime,
                 "eval …",
                 "eval",
                 super::project_detailed::project_verify_fact(proof, runtime),
             ),
-            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::EvaluatedEqualityWellDefined(wd)) => failed_with_details(
+            ExecEvalStmtResult::Failed(
+                crate::execute::ExecEvalStmtFailed::EvaluatedEqualityWellDefined(wd),
+            ) => failed_with_details(
                 runtime,
                 "eval …",
                 "eval",

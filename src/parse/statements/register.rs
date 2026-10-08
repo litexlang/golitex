@@ -1,8 +1,8 @@
 use super::super::keywords::{REFLEXIVE, REGISTER, SYMMETRIC, TRANSITIVE};
 use crate::ast::line_file::SourceLine;
 use crate::ast::stmt::{
-    RegisterReflexivePropStmt, RegisterStmt, RegisterSymmetricPropStmt,
-    RegisterTransitivePropStmt, Stmt,
+    RegisterReflexivePropStmt, RegisterStmt, RegisterSymmetricPropStmt, RegisterTransitivePropStmt,
+    Stmt,
 };
 use crate::parse::prop_registration_shape::{
     reflexive_prop_name_from_forall, symmetric_prop_registration_from_forall,

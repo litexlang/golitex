@@ -27,9 +27,7 @@ use super::mount::{
 use super::paths::kb_dir;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::exec_env::session_view::ExecEnvSessionView;
-use crate::module_manager::{
-    parse_litex_config, ExportFileAndItsExecEnv, LitexConfig,
-};
+use crate::module_manager::{parse_litex_config, ExportFileAndItsExecEnv, LitexConfig};
 use crate::runtime::{CodeSource, GlobalIds};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;

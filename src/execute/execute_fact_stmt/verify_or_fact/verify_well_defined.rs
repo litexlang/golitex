@@ -16,7 +16,8 @@ impl Runtime {
     ) -> RuntimeResult<VerifyOrFactWellDefinedResult> {
         let mut succeeded_branches = Vec::with_capacity(fact.facts.len());
         for (failed_index, branch) in fact.facts.iter().enumerate() {
-            match self.verify_and_chain_atomic_fact_well_definedness(branch, verify_state.clone())?
+            match self
+                .verify_and_chain_atomic_fact_well_definedness(branch, verify_state.clone())?
             {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     succeeded_branches.push(proof);

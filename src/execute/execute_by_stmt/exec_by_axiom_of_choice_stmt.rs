@@ -1,7 +1,4 @@
-use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
-use super::helper::{
-    proof_verify_state, store_goal_fact, verify_goal_fact,
-};
+use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
 use super::result::{
     ExecReleaseAxiomOfChoiceStmtFailed, ExecReleaseAxiomOfChoiceStmtResult,
     ExecReleaseAxiomOfChoiceStmtSuccess,
@@ -11,19 +8,22 @@ use crate::ast::fact::{
     IsNonemptySetFact, IsSetFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::ast::line_file::SourceLine;
-use crate::ast::obj::{AnonymousFn, FamilyUnion, FnSet, IdentifierObj, Obj, FunctionSpace, SetOperator};
+use crate::ast::obj::{
+    AnonymousFn, FamilyUnion, FnSet, FunctionSpace, IdentifierObj, Obj, SetOperator,
+};
 use crate::ast::param::{
-    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
+    TypedParameterList,
 };
 use crate::ast::stmt::ReleaseAxiomOfChoiceStmt;
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub fn exec_release_axiom_of_choice_stmt(
     runtime: &mut Runtime,
     stmt: &ReleaseAxiomOfChoiceStmt,
 ) -> RuntimeResult<ExecReleaseAxiomOfChoiceStmtResult> {
-    let family_wd =
-        runtime.verify_obj_well_definedness(&stmt.family, proof_verify_state())?;
+    let family_wd = runtime.verify_obj_well_definedness(&stmt.family, proof_verify_state())?;
     if family_wd.is_failed() {
         return Ok(ExecReleaseAxiomOfChoiceStmtResult::Failed(
             ExecReleaseAxiomOfChoiceStmtFailed::FamilyWd(family_wd),

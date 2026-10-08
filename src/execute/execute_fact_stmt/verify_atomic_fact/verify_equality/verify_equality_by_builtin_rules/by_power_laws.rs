@@ -47,8 +47,16 @@ pub struct NegativeIntegerPowerReciprocalBuiltinRuleProof {
     pub base_nonzero: VerifyFactResult,
 }
 impl NegativeIntegerPowerReciprocalBuiltinRuleProof {
-    pub fn new(base_numeric: VerifyFactResult, exponent_integer: VerifyFactResult, base_nonzero: VerifyFactResult) -> Self {
-        Self { base_numeric, exponent_integer, base_nonzero }
+    pub fn new(
+        base_numeric: VerifyFactResult,
+        exponent_integer: VerifyFactResult,
+        base_nonzero: VerifyFactResult,
+    ) -> Self {
+        Self {
+            base_numeric,
+            exponent_integer,
+            base_nonzero,
+        }
     }
 }
 
@@ -77,24 +85,24 @@ impl Runtime {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(proof) = self.try_negative_integer_power_reciprocal(left, right, child)? {
-                return Ok(Some(PowerLawEqualityBuiltinRuleProof::NegativeIntegerPowerReciprocal(proof)));
+                return Ok(Some(
+                    PowerLawEqualityBuiltinRuleProof::NegativeIntegerPowerReciprocal(proof),
+                ));
             }
-            if let Some(proof) =
-                self.try_power_product_same_base(left, right, child.clone())?
-            {
-                return Ok(Some(PowerLawEqualityBuiltinRuleProof::PowerProductSameBase(
-                    proof,
-                )));
+            if let Some(proof) = self.try_power_product_same_base(left, right, child.clone())? {
+                return Ok(Some(
+                    PowerLawEqualityBuiltinRuleProof::PowerProductSameBase(proof),
+                ));
             }
             if let Some(proof) = self.try_power_of_power(left, right, child.clone())? {
                 return Ok(Some(PowerLawEqualityBuiltinRuleProof::PowerOfPower(proof)));
             }
             if let Some(proof) = self.try_power_of_product(left, right, child.clone())? {
-                return Ok(Some(PowerLawEqualityBuiltinRuleProof::PowerOfProduct(proof)));
+                return Ok(Some(PowerLawEqualityBuiltinRuleProof::PowerOfProduct(
+                    proof,
+                )));
             }
-            if let Some(proof) =
-                self.try_reciprocal_as_neg_one_power(left, right, child.clone())?
-            {
+            if let Some(proof) = self.try_reciprocal_as_neg_one_power(left, right, child.clone())? {
                 return Ok(Some(
                     PowerLawEqualityBuiltinRuleProof::ReciprocalAsNegOnePower(proof),
                 ));
@@ -111,23 +119,50 @@ impl Runtime {
     }
 
     fn try_negative_integer_power_reciprocal(
-        &mut self, left: &Obj, right: &Obj, state: VerifyState,
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        state: VerifyState,
     ) -> RuntimeResult<Option<NegativeIntegerPowerReciprocalBuiltinRuleProof>> {
-        let Some((base, negative_exponent)) = match_pow(left) else { return Ok(None); };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) = right else { return Ok(None); };
-        if !is_one_obj(&div.left) { return Ok(None); }
-        let Some((other_base, exponent)) = match_pow(&div.right) else { return Ok(None); };
-        let negated = Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg: Box::new(exponent.clone()) }));
-        if base.ir() != other_base.ir()
-            || !crate::rational_expression::objs_equal_by_rational_expression_evaluation(negative_exponent, &negated) {
+        let Some((base, negative_exponent)) = match_pow(left) else {
+            return Ok(None);
+        };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) = right else {
+            return Ok(None);
+        };
+        if !is_one_obj(&div.left) {
             return Ok(None);
         }
-        let Some(base_numeric) = self.verify_power_law_numeric_base(base, state)? else { return Ok(None); };
+        let Some((other_base, exponent)) = match_pow(&div.right) else {
+            return Ok(None);
+        };
+        let negated = Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
+            arg: Box::new(exponent.clone()),
+        }));
+        if base.ir() != other_base.ir()
+            || !crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                negative_exponent,
+                &negated,
+            )
+        {
+            return Ok(None);
+        }
+        let Some(base_numeric) = self.verify_power_law_numeric_base(base, state)? else {
+            return Ok(None);
+        };
         let exponent_integer = self.verify_in_standard_set(exponent, StandardSet::Z, state)?;
-        if exponent_integer.is_failed() { return Ok(None); }
+        if exponent_integer.is_failed() {
+            return Ok(None);
+        }
         let base_nonzero = self.verify_nonzero(base, state)?;
-        if base_nonzero.is_failed() { return Ok(None); }
-        Ok(Some(NegativeIntegerPowerReciprocalBuiltinRuleProof::new(base_numeric, exponent_integer, base_nonzero)))
+        if base_nonzero.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(NegativeIntegerPowerReciprocalBuiltinRuleProof::new(
+            base_numeric,
+            exponent_integer,
+            base_nonzero,
+        )))
     }
 
     fn try_power_product_same_base(
@@ -159,10 +194,30 @@ impl Runtime {
         };
 
         let candidates = [
-            (left_factor.as_ref(), right_factor.as_ref(), exp_left.as_ref(), exp_right.as_ref()),
-            (right_factor.as_ref(), left_factor.as_ref(), exp_left.as_ref(), exp_right.as_ref()),
-            (left_factor.as_ref(), right_factor.as_ref(), exp_right.as_ref(), exp_left.as_ref()),
-            (right_factor.as_ref(), left_factor.as_ref(), exp_right.as_ref(), exp_left.as_ref()),
+            (
+                left_factor.as_ref(),
+                right_factor.as_ref(),
+                exp_left.as_ref(),
+                exp_right.as_ref(),
+            ),
+            (
+                right_factor.as_ref(),
+                left_factor.as_ref(),
+                exp_left.as_ref(),
+                exp_right.as_ref(),
+            ),
+            (
+                left_factor.as_ref(),
+                right_factor.as_ref(),
+                exp_right.as_ref(),
+                exp_left.as_ref(),
+            ),
+            (
+                right_factor.as_ref(),
+                left_factor.as_ref(),
+                exp_right.as_ref(),
+                exp_left.as_ref(),
+            ),
         ];
         for (f1, f2, e1, e2) in candidates {
             let mut factors_match = true;
@@ -279,10 +334,30 @@ impl Runtime {
         };
 
         let candidates = [
-            (left_pow.as_ref(), right_pow.as_ref(), factor_a.as_ref(), factor_b.as_ref()),
-            (right_pow.as_ref(), left_pow.as_ref(), factor_a.as_ref(), factor_b.as_ref()),
-            (left_pow.as_ref(), right_pow.as_ref(), factor_b.as_ref(), factor_a.as_ref()),
-            (right_pow.as_ref(), left_pow.as_ref(), factor_b.as_ref(), factor_a.as_ref()),
+            (
+                left_pow.as_ref(),
+                right_pow.as_ref(),
+                factor_a.as_ref(),
+                factor_b.as_ref(),
+            ),
+            (
+                right_pow.as_ref(),
+                left_pow.as_ref(),
+                factor_a.as_ref(),
+                factor_b.as_ref(),
+            ),
+            (
+                left_pow.as_ref(),
+                right_pow.as_ref(),
+                factor_b.as_ref(),
+                factor_a.as_ref(),
+            ),
+            (
+                right_pow.as_ref(),
+                left_pow.as_ref(),
+                factor_b.as_ref(),
+                factor_a.as_ref(),
+            ),
         ];
         for (p1, p2, b1, b2) in candidates {
             let Some((base1, exp1)) = match_pow(p1) else {
@@ -299,7 +374,8 @@ impl Runtime {
             }
             let mut proofs = Vec::new();
             for base in [b1, b2] {
-                let Some(proof) = self.verify_power_law_numeric_base(base, verify_state.clone())? else {
+                let Some(proof) = self.verify_power_law_numeric_base(base, verify_state.clone())?
+                else {
                     proofs.clear();
                     break;
                 };
@@ -316,13 +392,16 @@ impl Runtime {
             if !exp_proof.is_failed() {
                 proofs.push(exp_proof);
             } else {
-                let integer = self.verify_in_standard_set(
-                    shared_exp.as_ref(), StandardSet::Z, verify_state,
-                )?;
-                if integer.is_failed() { continue; }
+                let integer =
+                    self.verify_in_standard_set(shared_exp.as_ref(), StandardSet::Z, verify_state)?;
+                if integer.is_failed() {
+                    continue;
+                }
                 let left_nonzero = self.verify_nonzero(b1, verify_state)?;
                 let right_nonzero = self.verify_nonzero(b2, verify_state)?;
-                if left_nonzero.is_failed() || right_nonzero.is_failed() { continue; }
+                if left_nonzero.is_failed() || right_nonzero.is_failed() {
+                    continue;
+                }
                 proofs.extend([integer, left_nonzero, right_nonzero]);
             }
             return Ok(Some(PowerOfProductBuiltinRuleProof {
@@ -387,7 +466,12 @@ impl Runtime {
                     left: mul_left,
                     right: mul_right,
                 })),
-            ) => (numer.as_ref(), denom.as_ref(), mul_left.as_ref(), mul_right.as_ref()),
+            ) => (
+                numer.as_ref(),
+                denom.as_ref(),
+                mul_left.as_ref(),
+                mul_right.as_ref(),
+            ),
             (
                 Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
                     left: mul_left,
@@ -397,7 +481,12 @@ impl Runtime {
                     left: numer,
                     right: denom,
                 })),
-            ) => (numer.as_ref(), denom.as_ref(), mul_left.as_ref(), mul_right.as_ref()),
+            ) => (
+                numer.as_ref(),
+                denom.as_ref(),
+                mul_left.as_ref(),
+                mul_right.as_ref(),
+            ),
             _ => return Ok(None),
         };
 
@@ -430,7 +519,8 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
         let mut proofs = Vec::new();
-        let Some(base_proof) = self.verify_power_law_numeric_base(base, verify_state.clone())? else {
+        let Some(base_proof) = self.verify_power_law_numeric_base(base, verify_state.clone())?
+        else {
             return Ok(None);
         };
         proofs.push(base_proof);
@@ -439,7 +529,9 @@ impl Runtime {
         let mut natural_exponents = Vec::new();
         for exp in exponents {
             let proof = self.verify_in_standard_set(exp, StandardSet::N, verify_state)?;
-            if proof.is_failed() { break; }
+            if proof.is_failed() {
+                break;
+            }
             natural_exponents.push(proof);
         }
         if natural_exponents.len() == exponents.len() {
@@ -447,11 +539,15 @@ impl Runtime {
             return Ok(Some(proofs));
         }
         let nonzero = self.verify_nonzero(base, verify_state)?;
-        if nonzero.is_failed() { return Ok(None); }
+        if nonzero.is_failed() {
+            return Ok(None);
+        }
         proofs.push(nonzero);
         for exp in exponents {
             let proof = self.verify_in_standard_set(exp, StandardSet::Z, verify_state)?;
-            if proof.is_failed() { return Ok(None); }
+            if proof.is_failed() {
+                return Ok(None);
+            }
             proofs.push(proof);
         }
         Ok(Some(proofs))
@@ -466,13 +562,26 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<VerifyFactResult>> {
         for carrier in [
-            StandardSet::C, StandardSet::R, StandardSet::RPos, StandardSet::RNeg,
-            StandardSet::RStar, StandardSet::CStar, StandardSet::Q, StandardSet::Z,
-            StandardSet::N, StandardSet::NPos, StandardSet::QPos, StandardSet::QNeg,
-            StandardSet::QStar, StandardSet::ZNeg, StandardSet::ZStar,
+            StandardSet::C,
+            StandardSet::R,
+            StandardSet::RPos,
+            StandardSet::RNeg,
+            StandardSet::RStar,
+            StandardSet::CStar,
+            StandardSet::Q,
+            StandardSet::Z,
+            StandardSet::N,
+            StandardSet::NPos,
+            StandardSet::QPos,
+            StandardSet::QNeg,
+            StandardSet::QStar,
+            StandardSet::ZNeg,
+            StandardSet::ZStar,
         ] {
             let proof = self.verify_in_standard_set(base, carrier, verify_state.clone())?;
-            if !proof.is_failed() { return Ok(Some(proof)); }
+            if !proof.is_failed() {
+                return Ok(Some(proof));
+            }
         }
         Ok(None)
     }

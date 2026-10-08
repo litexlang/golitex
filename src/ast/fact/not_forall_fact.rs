@@ -1,6 +1,6 @@
-use super::QuantifierFreeFact;
 use super::super::line_file::SourceLine;
 use super::super::param::TypedParameterList;
+use super::QuantifierFreeFact;
 use crate::runtime::FactId;
 
 // Negated universal: counterexample dual of an exist body.

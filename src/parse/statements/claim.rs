@@ -34,7 +34,7 @@ impl Runtime {
         Ok(Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(ClaimStmt {
             fact,
             proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone())
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

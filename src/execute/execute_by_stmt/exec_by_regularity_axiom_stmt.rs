@@ -15,8 +15,7 @@ pub fn exec_release_regularity_axiom_stmt(
     runtime: &mut Runtime,
     stmt: &ReleaseRegularityAxiomStmt,
 ) -> RuntimeResult<ExecReleaseRegularityAxiomStmtResult> {
-    let set_wd =
-        runtime.verify_obj_well_definedness(&stmt.set, proof_verify_state())?;
+    let set_wd = runtime.verify_obj_well_definedness(&stmt.set, proof_verify_state())?;
     if set_wd.is_failed() {
         return Ok(ExecReleaseRegularityAxiomStmtResult::Failed(
             ExecReleaseRegularityAxiomStmtFailed::SetWd(set_wd),

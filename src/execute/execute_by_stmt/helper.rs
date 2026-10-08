@@ -23,7 +23,10 @@ pub(super) fn assume_fact(
     if wd.is_failed() {
         return Ok(Err("assumption well-definedness failed".to_string()));
     }
-    Ok(Ok(runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?))
+    Ok(Ok(runtime.store_fact_and_infer(
+        fact,
+        crate::execute::execute_fact_stmt::VerifyState::top_level(),
+    )?))
 }
 
 pub(crate) fn verify_goal_fact(
@@ -41,7 +44,10 @@ pub(crate) fn store_goal_fact(
     if let VerifyFactWellDefinedResult::Failed(_) = &wd {
         return Ok(Err("goal well-definedness failed at store".to_string()));
     }
-    Ok(Ok(runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?))
+    Ok(Ok(runtime.store_fact_and_infer(
+        fact,
+        crate::execute::execute_fact_stmt::VerifyState::top_level(),
+    )?))
 }
 
 pub(super) fn close_by_contradiction(

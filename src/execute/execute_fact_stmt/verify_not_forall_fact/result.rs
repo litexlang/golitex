@@ -47,9 +47,7 @@ pub fn not_forall_fact_result_from_success(
 
 pub fn not_forall_fact_result_from_unsupported(fact: &NotForallFact) -> VerifyFactResult {
     VerifyFactResult::NotForall(Box::new(VerifyNotForallFactResult::Failed(
-        VerifyNotForallFactFailed::UnsupportedNegation {
-            fact: fact.clone(),
-        },
+        VerifyNotForallFactFailed::UnsupportedNegation { fact: fact.clone() },
     )))
 }
 

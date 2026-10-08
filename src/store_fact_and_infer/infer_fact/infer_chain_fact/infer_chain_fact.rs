@@ -8,7 +8,8 @@ impl Runtime {
     pub(crate) fn infer_chain_fact(
         &mut self,
         chain_fact: &ChainFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<InferChainFactResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<InferChainFactResult> {
         let adjacent_atomics = self.chain_adjacent_atomics(chain_fact)?;
         let mut adjacent_infers = Vec::with_capacity(adjacent_atomics.len());
         for atomic in &adjacent_atomics {

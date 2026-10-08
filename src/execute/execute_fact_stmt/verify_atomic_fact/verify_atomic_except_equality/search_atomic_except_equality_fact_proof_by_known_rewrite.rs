@@ -67,9 +67,11 @@ impl Runtime {
         }) {
             return Ok(None);
         }
-        Ok(Some(AtomicExceptEqualityFactSearchProofByKnownReflexivity {
-            cite_prop: normal.predicate.clone(),
-        }))
+        Ok(Some(
+            AtomicExceptEqualityFactSearchProofByKnownReflexivity {
+                cite_prop: normal.predicate.clone(),
+            },
+        ))
     }
 
     fn search_known_symmetry_rewrite(
@@ -82,9 +84,11 @@ impl Runtime {
         };
         let gathers = self.symmetric_gathers_for_prop(&normal.predicate);
         for gather in gathers {
-            let Some(alternate_atomic) =
-                reorder_normal_atomic_by_gather(normal, &gather, self.global_ids.allocate_fact_id())
-            else {
+            let Some(alternate_atomic) = reorder_normal_atomic_by_gather(
+                normal,
+                &gather,
+                self.global_ids.allocate_fact_id(),
+            ) else {
                 continue;
             };
             let residual_state = verify_state.without_rewrite();

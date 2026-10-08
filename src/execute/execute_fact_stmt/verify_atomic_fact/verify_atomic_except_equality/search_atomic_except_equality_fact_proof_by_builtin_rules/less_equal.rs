@@ -1,13 +1,11 @@
 use super::closed_subtraction_bound::ClosedSubtractionBoundCertificate;
 use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::LessEqualFact;
 use crate::ast::obj::{Literal, Number, Obj};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::rational_expression::{
-    compare_closed_numeric_objs, NumberCompareResult,
-};
+use crate::rational_expression::{compare_closed_numeric_objs, NumberCompareResult};
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
@@ -401,9 +399,6 @@ pub struct FiniteSetSizeSubsetLeBuiltinRuleProof {
     pub subset_proof: VerifyFactResult,
 }
 
-
-
-
 pub struct DivMonotoneWeakSameNegDivisorBuiltinRuleProof {
     pub divisor_neg_proof: VerifyFactResult,
     pub numerators_order_proof: VerifyFactResult,
@@ -480,7 +475,6 @@ pub struct FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof {
     pub domain_finite_proof: VerifyFactResult,
 }
 
-
 pub struct FromKnownGreaterEqualBuiltinRuleProof {
     pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
@@ -500,15 +494,29 @@ impl Runtime {
             return Ok(Some(proof));
         }
         // The principal complex modulus is nonnegative; whole-fact WD is prior.
-        if matches!(&fact.right, Obj::ComplexOperator(crate::ast::obj::ComplexOperator::ComplexAbs(_)))
-            && crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.left).is_some_and(|n| n.is_zero()) {
-            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative));
+        if matches!(
+            &fact.right,
+            Obj::ComplexOperator(crate::ast::obj::ComplexOperator::ComplexAbs(_))
+        ) && crate::rational_expression::exact_rational::EvalRational::from_obj(&fact.left)
+            .is_some_and(|n| n.is_zero())
+        {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative,
+            ));
         }
         if let Some(premise_proof) = self.known_greater_equal_proof(&fact.right, &fact.left) {
-            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqual(FromKnownGreaterEqualBuiltinRuleProof { premise_proof })));
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqual(
+                    FromKnownGreaterEqualBuiltinRuleProof { premise_proof },
+                ),
+            ));
         }
-        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
-            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        if let Some(proof) =
+            self.known_order_complement(fact.clone().into(), verify_state.clone())?
+        {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof),
+            ));
         }
         // B0 — non-shape
         if fact.left.ir() == fact.right.ir() {
@@ -526,9 +534,9 @@ impl Runtime {
             )));
         }
         if let Some(proof) = self.try_order_flip_mul_minus_one_to_less_equal(fact) {
-            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(
-                proof,
-            )));
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(proof),
+            ));
         }
         if let Some(proof) = self.try_order_sign_from_negative_literal_bound(fact) {
             return Ok(Some(
@@ -549,8 +557,14 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
-        if let Some(proof) = self.search_closed_subtraction_weak_bound(&fact.left, &fact.right, false) {
-            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(LessEqualClosedSubtractionBoundBuiltinRuleProof { bound: proof })));
+        if let Some(proof) =
+            self.search_closed_subtraction_weak_bound(&fact.left, &fact.right, false)
+        {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(
+                    LessEqualClosedSubtractionBoundBuiltinRuleProof { bound: proof },
+                ),
+            ));
         }
 
         if let Some(proof) = self.search_negative_common_factor_less_equal(fact, verify_state)? {
@@ -573,10 +587,22 @@ impl Runtime {
             }
         }
 
-        if let Some(proof)=self.search_rounding_order(fact,verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof)=super::complex_triangle::search_complex_triangle(fact) { return Ok(Some(proof)); }
-        if let Some(proof)=super::finite_sum_triangle::search_finite_sum_triangle(fact) { return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FiniteSetSumTriangle(proof))); }
-        if let Some(proof)=self.search_lcm_common_multiple_bound(fact,verify_state)? { return Ok(Some(LessEqualFactSearchProofByBuiltinRule::LcmCommonMultipleBound(proof))); }
+        if let Some(proof) = self.search_rounding_order(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = super::complex_triangle::search_complex_triangle(fact) {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = super::finite_sum_triangle::search_finite_sum_triangle(fact) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::FiniteSetSumTriangle(proof),
+            ));
+        }
+        if let Some(proof) = self.search_lcm_common_multiple_bound(fact, verify_state)? {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::LcmCommonMultipleBound(proof),
+            ));
+        }
         // Premise-producing / shape rules consume the builtin-rule budget.
         let child_state = verify_state.clone();
 
@@ -605,13 +631,25 @@ impl Runtime {
         }
 
         if let Some(proof) = self.search_factorial_weak_order(fact, verify_state)? {
-            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FactorialMonotone(proof)));
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::FactorialMonotone(proof),
+            ));
         }
-        if let Some(proof)=self.search_exp_ln_weak_order(fact,verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof) = self.search_additional_trig_less_equal(fact, verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof) = self.sqrt_monotone_from_defined_roots(fact,verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof) = self.search_scalar_less_equal_relation(fact,verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof)=self.scalar_extra_weak(fact,verify_state)? {return Ok(Some(proof));}
+        if let Some(proof) = self.search_exp_ln_weak_order(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.search_additional_trig_less_equal(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.sqrt_monotone_from_defined_roots(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.search_scalar_less_equal_relation(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.scalar_extra_weak(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
         Ok(None)
     }
 }

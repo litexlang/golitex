@@ -17,22 +17,39 @@ impl Runtime {
             (&fact.left, &fact.right, false),
             (&fact.right, &fact.left, true),
         ] {
-
             // A coordinate match is one option for an ordinary application.
             // A non-coordinate call must still reach tuple-value beta and eta.
             if let Obj::FnObj(application) = left {
                 if let Some(receiver) = self.finite_function_application_receiver(application) {
-                    if let Some(index) = literal_positive_usize(application.body.last().unwrap()[0].as_ref()) {
+                    if let Some(index) =
+                        literal_positive_usize(application.body.last().unwrap()[0].as_ref())
+                    {
                         for tuple in self.known_literal_tuple_candidates(&receiver) {
-                            let Some(component) = tuple.value.args.get(index - 1) else { continue; };
-                            let Some(equal) = self.lookup_known_obj_equality(component, right) else { continue; };
-                            return Ok(Some(EqualFactSearchProofByKnownSpecialProperty::TupleProjection(
-                                TupleProjectionKnownProof { reversed, index, tuple, component_equal: Box::new(equal) },
-                            )));
+                            let Some(component) = tuple.value.args.get(index - 1) else {
+                                continue;
+                            };
+                            let Some(equal) = self.lookup_known_obj_equality(component, right)
+                            else {
+                                continue;
+                            };
+                            return Ok(Some(
+                                EqualFactSearchProofByKnownSpecialProperty::TupleProjection(
+                                    TupleProjectionKnownProof {
+                                        reversed,
+                                        index,
+                                        tuple,
+                                        component_equal: Box::new(equal),
+                                    },
+                                ),
+                            ));
                         }
-                        for (subject_equal, function) in self.known_function_tuple_candidates(&receiver) {
+                        for (subject_equal, function) in
+                            self.known_function_tuple_candidates(&receiver)
+                        {
                             if let Some(component) = function.value.args.get(index - 1) {
-                                if let Some(equal) = self.lookup_known_obj_equality(component, right) {
+                                if let Some(equal) =
+                                    self.lookup_known_obj_equality(component, right)
+                                {
                                     return Ok(Some(EqualFactSearchProofByKnownSpecialProperty::FnTupleProjection(
                                         FnTupleProjectionKnownProof { reversed, index, subject_equal, function,
                                             component_equal: Box::new(equal) },
@@ -49,11 +66,16 @@ impl Runtime {
             for (subject_equal, function) in self.known_function_tuple_candidates(left) {
                 let value = Obj::ProductShape(ProductShape::Tuple(function.value.clone()));
                 if let Some(equal) = self.lookup_known_obj_equality(&value, right) {
-                    return Ok(Some(EqualFactSearchProofByKnownSpecialProperty::FnTupleValue(
-                        FnTupleValueKnownProof {
-                            reversed, subject_equal, function, value_equal: Box::new(equal),
-                        },
-                    )));
+                    return Ok(Some(
+                        EqualFactSearchProofByKnownSpecialProperty::FnTupleValue(
+                            FnTupleValueKnownProof {
+                                reversed,
+                                subject_equal,
+                                function,
+                                value_equal: Box::new(equal),
+                            },
+                        ),
+                    ));
                 }
             }
             // Eta: an exact finite function equals its n ordered calls.
@@ -111,7 +133,6 @@ pub enum EqualFactSearchProofByKnownSpecialProperty {
     TupleProjection(TupleProjectionKnownProof),
     FnTupleProjection(FnTupleProjectionKnownProof),
     FnTupleValue(FnTupleValueKnownProof),
-
 }
 
 pub struct TupleReconstructionKnownProof {
@@ -134,7 +155,6 @@ pub struct FnTupleProjectionKnownProof {
     pub function: KnownFunctionTupleValueProof,
     pub component_equal: Box<EqualFactSearchedProof>,
 }
-
 
 pub struct FnTupleValueKnownProof {
     pub reversed: bool,

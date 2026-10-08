@@ -40,11 +40,11 @@ pub use crate::execute::execute_fact_stmt::verify_not_forall_fact::{
 pub use crate::execute::execute_fact_stmt::verify_or_fact::{
     FailToVerifyOrFactWellDefinedResult, OrFactWellDefinedProof, VerifyOrFactWellDefinedResult,
 };
-pub use well_defined_result::{
-    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactWellDefinedResult,
-};
 pub use verify_obj::{
     fail_to_verify_obj_well_defined_others, FailToVerifyFnSetObjWellDefined,
     FailToVerifyFunctionSpaceObjWellDefinedResult, FailToVerifyObjWellDefinedResult,
     ObjWellDefinedProof, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
+};
+pub use well_defined_result::{
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactWellDefinedResult,
 };

@@ -13,7 +13,9 @@ impl Runtime {
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
         self.search_atomic_except_equality_fact_proof(
             fact,
-            verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty),
+            verify_state.capped_at(
+                crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty,
+            ),
         )
     }
 }

@@ -70,7 +70,10 @@ pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOu
             Ok(file_result) => {
                 if !file_result.run.success {
                     return Ok(MountCwdConfigOutcome::SessionError(
-                        file_result.run.session_error.unwrap_or(RunSessionError::FailToImport),
+                        file_result
+                            .run
+                            .session_error
+                            .unwrap_or(RunSessionError::FailToImport),
                     ));
                 }
             }

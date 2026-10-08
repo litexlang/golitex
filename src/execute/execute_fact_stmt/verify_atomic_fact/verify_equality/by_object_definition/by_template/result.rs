@@ -7,9 +7,7 @@ use super::by_have_obj_equal::ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefi
 // Variants mirror TemplateDefEnum have-fn / have-obj equality shapes.
 pub enum EqualitySearchProofByTemplateObjectDefinition {
     HaveObjEqual(ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof),
-    HaveFnEqualApplication(
-        ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof,
-    ),
+    HaveFnEqualApplication(ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof),
     HaveFnEqualCaseByCaseApplication(
         ByUnfoldInstantiatedTemplateHaveFnEqualCaseByCaseApplicationObjectDefinitionProof,
     ),

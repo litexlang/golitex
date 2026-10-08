@@ -113,17 +113,11 @@ impl StandardSetSupersetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "标准集超集",
-            "标准数集之间的固定超集关系",
-        )
+        text("标准集超集", "标准数集之间的固定超集关系")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "標準集合包含",
-            "由標準集合包含內建規則驗證",
-        )
+        text("標準集合包含", "由標準集合包含內建規則驗證")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -162,10 +156,7 @@ impl StandardSetSupersetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "표준 상위집합",
-            "표준 상위집합 내장 규칙으로 검증했습니다",
-        )
+        text("표준 상위집합", "표준 상위집합 내장 규칙으로 검증했습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -204,10 +195,7 @@ impl SupersetReflexivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "包含關係自反性",
-            "由包含關係自反性內建規則驗證",
-        )
+        text("包含關係自反性", "由包含關係自反性內建規則驗證")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {

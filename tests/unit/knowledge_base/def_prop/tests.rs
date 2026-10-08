@@ -4,9 +4,7 @@ use crate::ast::names::BoundName;
 use crate::ast::obj::{IdentifierObj, Literal, Number, Obj, StandardSet};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::DefPropStmt;
-use crate::knowledge_base::{
-    load_def_prop, read_def_prop, store_def_prop, write_def_prop,
-};
+use crate::knowledge_base::{load_def_prop, read_def_prop, store_def_prop, write_def_prop};
 use crate::runtime::runtime_ids::{FactId, IdentifierId};
 use crate::runtime::CodeSource;
 use std::fs;
@@ -28,19 +26,13 @@ fn sample_is_pos() -> DefPropStmt {
         },
         iff_facts: vec![Fact::AtomicFact(AtomicFact::GreaterFact(GreaterFact {
             fact_id: FactId::new(42),
-            left: Obj::Identifier(IdentifierObj::plain(
-                IdentifierId::new(7),
-                "x".to_string(),
-            )),
+            left: Obj::Identifier(IdentifierObj::plain(IdentifierId::new(7), "x".to_string())),
             right: Obj::Literal(Literal::Number(Number {
                 normalized_value: "0".to_string(),
             })),
             line_file: None,
         }))],
-        line_file: SourceLine::new(
-            1,
-            CodeSource::RootExport { export_file_id: 0 },
-        ),
+        line_file: SourceLine::new(1, CodeSource::RootExport { export_file_id: 0 }),
     }
 }
 
@@ -70,13 +62,22 @@ fn store_load_string_round_trip() {
 #[test]
 fn numeric_decoder_normalizes_old_spelling_and_preserves_hot_cold_identity() {
     let mut prop = sample_is_pos();
-    let Fact::AtomicFact(AtomicFact::GreaterFact(fact)) = &mut prop.iff_facts[0] else { panic!("greater"); };
-    fact.right = Obj::Literal(Literal::Number(Number { normalized_value: "2.400".into() }));
+    let Fact::AtomicFact(AtomicFact::GreaterFact(fact)) = &mut prop.iff_facts[0] else {
+        panic!("greater");
+    };
+    fact.right = Obj::Literal(Literal::Number(Number {
+        normalized_value: "2.400".into(),
+    }));
     let cold = load_def_prop(&store_def_prop(&prop).unwrap()).unwrap();
     let hot = load_def_prop(&store_def_prop(&cold).unwrap()).unwrap();
     assert_eq!(cold, hot);
-    let Fact::AtomicFact(AtomicFact::GreaterFact(fact)) = &cold.iff_facts[0] else { panic!("greater"); };
-    assert_eq!(fact.right.ir(), Obj::Literal(Literal::Number(Number::new("2.4".into()))).ir());
+    let Fact::AtomicFact(AtomicFact::GreaterFact(fact)) = &cold.iff_facts[0] else {
+        panic!("greater");
+    };
+    assert_eq!(
+        fact.right.ir(),
+        Obj::Literal(Literal::Number(Number::new("2.4".into()))).ir()
+    );
 }
 
 #[test]

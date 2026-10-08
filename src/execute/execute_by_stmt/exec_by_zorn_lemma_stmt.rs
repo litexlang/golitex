@@ -1,20 +1,17 @@
-use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
-use super::helper::{
-    proof_verify_state, store_goal_fact, verify_goal_fact,
-};
+use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
 use super::result::{
-    ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
-    ExecReleaseZornLemmaStmtSuccess,
+    ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult, ExecReleaseZornLemmaStmtSuccess,
 };
 use crate::ast::fact::{
-    AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact,
-    NormalAtomicFact, OrFact, PlainExistFact, QuantifierFreeFact,
+    AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
+    IsNonemptySetFact, NormalAtomicFact, OrFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::{AtomicName, BoundName};
 use crate::ast::obj::{IdentifierObj, Obj, PowerSet, SetOperator};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::ast::stmt::{ReleaseZornLemmaStmt, DefPropStmt};
+use crate::ast::stmt::{DefPropStmt, ReleaseZornLemmaStmt};
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::parse::prop_registration_shape::plain_prop_name;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -121,7 +118,10 @@ fn validate_upper_bound_prop(
     stmt: &ReleaseZornLemmaStmt,
 ) -> Result<(), String> {
     let ub_name = plain_prop_name(&stmt.upper_bound_prop_name);
-    let Some(ub_def) = runtime.def_prop_visible(&stmt.upper_bound_prop_name).cloned() else {
+    let Some(ub_def) = runtime
+        .def_prop_visible(&stmt.upper_bound_prop_name)
+        .cloned()
+    else {
         return Err(format!(
             "release zorn_lemma: upper-bound `{ub_name}` must be a concrete named prop"
         ));
@@ -189,10 +189,7 @@ fn validate_upper_bound_prop(
     Ok(())
 }
 
-fn validate_maximal_prop(
-    runtime: &mut Runtime,
-    stmt: &ReleaseZornLemmaStmt,
-) -> Result<(), String> {
+fn validate_maximal_prop(runtime: &mut Runtime, stmt: &ReleaseZornLemmaStmt) -> Result<(), String> {
     let max_name = plain_prop_name(&stmt.maximal_prop_name);
     let Some(max_def) = runtime.def_prop_visible(&stmt.maximal_prop_name).cloned() else {
         return Err(format!(
@@ -557,4 +554,3 @@ fn prop_atom(
     }
     .into()
 }
-

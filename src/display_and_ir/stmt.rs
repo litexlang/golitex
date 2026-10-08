@@ -12,9 +12,7 @@ macro_rules! impl_display_pair {
 
         // Human-facing: IR text with `#id#` wrappers stripped.
         pub fn readable_string(&self) -> String {
-            crate::display_and_ir::readable_string_from_ir_text(
-                self.ir().as_str(),
-            )
+            crate::display_and_ir::readable_string_from_ir_text(self.ir().as_str())
         }
     };
 }
@@ -218,11 +216,7 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
 impl HaveObjEqualStmt {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
-        let objs: Vec<_> = self
-            .objs_equal_to
-            .iter()
-            .map(|o| o.ir())
-            .collect();
+        let objs: Vec<_> = self.objs_equal_to.iter().map(|o| o.ir()).collect();
         out.push_str(&format!(
             "{} {} {} {}",
             HAVE,
@@ -239,11 +233,7 @@ impl HaveObjEqualStmt {
 impl HaveObjByExistFactsStmt {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
-        let facts: Vec<_> = self
-            .facts
-            .iter()
-            .map(|fact| fact.ir())
-            .collect();
+        let facts: Vec<_> = self.facts.iter().map(|fact| fact.ir()).collect();
         out.push_str(&format!(
             "{} {}{}\n{}",
             HAVE,
@@ -277,15 +267,10 @@ impl TrustHaveStmt {
                 param_str,
                 COLON,
                 indent!(
-                    &self
-                        .facts
-                        .iter()
-                        .map(|f| f.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &self.facts.iter().map(|f| f.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     1
                 )
             ));
@@ -300,26 +285,17 @@ impl TrustStmt {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         if self.facts.len() == 1 {
-            out.push_str(&format!(
-                "{} {}",
-                TRUST,
-                &self.facts[0].ir()
-            ));
+            out.push_str(&format!("{} {}", TRUST, &self.facts[0].ir()));
         } else {
             out.push_str(&format!(
                 "{}{}\n{}",
                 TRUST,
                 COLON,
                 indent!(
-                    &self
-                        .facts
-                        .iter()
-                        .map(|f| f.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &self.facts.iter().map(|f| f.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     1
                 )
             ));
@@ -335,7 +311,11 @@ impl ObtainObjFromExistFact {
         StmtIR(format!(
             "{} {} {} {}",
             OBTAIN,
-            self.equal_tos.iter().map(|bound| bound.ir_string()).collect::<Vec<_>>().join(", "),
+            self.equal_tos
+                .iter()
+                .map(|bound| bound.ir_string())
+                .collect::<Vec<_>>()
+                .join(", "),
             FROM,
             self.fact.ir()
         ))
@@ -348,7 +328,11 @@ impl ObtainObjFromAtomicFact {
         StmtIR(format!(
             "{} {} {} {}",
             OBTAIN,
-            self.equal_tos.iter().map(|bound| bound.ir_string()).collect::<Vec<_>>().join(", "),
+            self.equal_tos
+                .iter()
+                .map(|bound| bound.ir_string())
+                .collect::<Vec<_>>()
+                .join(", "),
             FROM,
             self.fact.ir()
         ))
@@ -363,7 +347,11 @@ impl HaveByPreimageStmt {
             HAVE,
             BY,
             FN_PREIMAGE,
-            self.preimage_names.iter().map(|bound| bound.ir_string()).collect::<Vec<_>>().join(", "),
+            self.preimage_names
+                .iter()
+                .map(|bound| bound.ir_string())
+                .collect::<Vec<_>>()
+                .join(", "),
             FROM,
             self.range_membership.ir()
         ))
@@ -397,11 +385,7 @@ impl FnSetClause {
             .iter()
             .map(|g| g.ir())
             .collect();
-        let dom: Vec<_> = self
-            .dom_facts
-            .iter()
-            .map(|d| d.ir())
-            .collect();
+        let dom: Vec<_> = self.dom_facts.iter().map(|d| d.ir()).collect();
         let mut out = format!("{} ", FN);
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
@@ -431,11 +415,7 @@ impl HaveFnEqualStmt {
             .iter()
             .map(|g| g.ir())
             .collect();
-        let dom: Vec<_> = body
-            .dom_facts
-            .iter()
-            .map(|d| d.ir())
-            .collect();
+        let dom: Vec<_> = body.dom_facts.iter().map(|d| d.ir()).collect();
         let mut out = format!("{} {} {}", HAVE, FN, self.name.ir_string());
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
@@ -464,11 +444,7 @@ impl HaveFnEqualStmt {
             .iter()
             .map(|g| g.display_string())
             .collect();
-        let dom: Vec<_> = body
-            .dom_facts
-            .iter()
-            .map(|d| d.display_string())
-            .collect();
+        let dom: Vec<_> = body.dom_facts.iter().map(|d| d.display_string()).collect();
         let mut out = format!("{} {} {}", HAVE, FN, self.name.name);
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
@@ -536,13 +512,7 @@ impl HaveFnEqualCaseByCaseStmt {
             COLON
         ));
         for (i, case) in self.cases.iter().enumerate() {
-            let line = format!(
-                "{} {}{} {}",
-                CASE,
-                case.ir(),
-                COLON,
-                self.equal_tos[i].ir()
-            );
+            let line = format!("{} {}{} {}", CASE, case.ir(), COLON, self.equal_tos[i].ir());
             out.push_str(&indent!(&line, 1));
             if i + 1 < self.cases.len() {
                 out.push_str("\n");
@@ -556,12 +526,7 @@ impl HaveFnEqualCaseByCaseStmt {
 impl HaveFnByInducCase {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
-        out.push_str(&format!(
-            "{} {}{}",
-            CASE,
-            &self.case_fact.ir(),
-            COLON
-        ));
+        out.push_str(&format!("{} {}{}", CASE, &self.case_fact.ir(), COLON));
         match &self.body {
             HaveFnByInducCaseBody::EqualTo(obj) => {
                 out.push_str(&format!(" {}", obj.ir()));
@@ -639,10 +604,7 @@ impl HaveFnByForallExistUniqueStmt {
             BY,
             EXIST_BANG,
             COLON,
-            indent!(
-                &format!("{} {}", QUESTION_GOAL, self.forall.ir()),
-                1
-            )
+            indent!(&format!("{} {}", QUESTION_GOAL, self.forall.ir()), 1)
         ))
     }
     impl_display_pair!();
@@ -652,11 +614,7 @@ impl DefPropStmt {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!("{} {}{}", PROP, self.name, LEFT_PAREN));
-        out.push_str(&format!(
-            "{}{}",
-            self.typed_parameters.ir(),
-            RIGHT_PAREN
-        ));
+        out.push_str(&format!("{}{}", self.typed_parameters.ir(), RIGHT_PAREN));
         if !self.iff_facts.is_empty() {
             out.push_str(&format!(
                 "{}\n{}",
@@ -713,18 +671,9 @@ impl TemplateDefEnum {
 
 impl DefTemplateStmt {
     pub fn ir(&self) -> StmtIR {
-        let mut out = format!(
-            "{}{}{}",
-            TEMPLATE,
-            LESS,
-            self.template_arg_def.ir()
-        );
+        let mut out = format!("{}{}{}", TEMPLATE, LESS, self.template_arg_def.ir());
         if !self.template_arg_dom.is_empty() {
-            let dom: Vec<_> = self
-                .template_arg_dom
-                .iter()
-                .map(|d| d.ir())
-                .collect();
+            let dom: Vec<_> = self.template_arg_dom.iter().map(|d| d.ir()).collect();
             out.push_str(&format!("{} {}", COLON, dom.join(", ")));
         }
         out.push_str(&format!(
@@ -741,11 +690,7 @@ impl DefTemplateStmt {
 
 impl StructFieldDef {
     pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {}",
-            self.binding.name,
-            &self.field_type.ir()
-        ))
+        StmtIR(format!("{} {}", self.binding.name, &self.field_type.ir()))
     }
     impl_display_pair!();
 }
@@ -753,21 +698,16 @@ impl StructFieldDef {
 impl DefStructStmt {
     pub fn ir(&self) -> StmtIR {
         match &self.param_def_with_dom {
-            Some((param_def, _)) => {
-                StmtIR(format!(
-                    "{} {}{}{}{}{}",
-                    STRUCT,
-                    self.name,
-                    LESS,
-                    param_def.ir(),
-                    GREATER,
-                    COLON
-                ))
-            }
-            None => StmtIR(format!(
-                "{} {}{}",
-                STRUCT, self.name, COLON
+            Some((param_def, _)) => StmtIR(format!(
+                "{} {}{}{}{}{}",
+                STRUCT,
+                self.name,
+                LESS,
+                param_def.ir(),
+                GREATER,
+                COLON
             )),
+            None => StmtIR(format!("{} {}{}", STRUCT, self.name, COLON)),
         }
     }
     impl_display_pair!();
@@ -810,13 +750,7 @@ impl DefAlgoByCasesStmt {
             COLON
         ));
         for (i, case) in self.cases.iter().enumerate() {
-            let line = format!(
-                "{} {}{} {}",
-                CASE,
-                case.ir(),
-                COLON,
-                self.equal_tos[i].ir()
-            );
+            let line = format!("{} {}{} {}", CASE, case.ir(), COLON, self.equal_tos[i].ir());
             out.push_str(&indent!(&line, 1));
             if i + 1 < self.cases.len() {
                 out.push_str("\n");
@@ -882,10 +816,7 @@ impl DefThmStmt {
             THM,
             self.name,
             COLON,
-            indent!(
-                &format!("{} {}", QUESTION_GOAL, &self.fact.ir()),
-                1
-            )
+            indent!(&format!("{} {}", QUESTION_GOAL, &self.fact.ir()), 1)
         ));
         if !self.prove_process.is_empty() {
             out.push_str(&format!(
@@ -916,14 +847,7 @@ impl AxiomStmt {
             AXIOM,
             self.name,
             COLON,
-            indent!(
-                &format!(
-                    "{} {}",
-                    QUESTION_GOAL,
-                    self.forall_fact.ir()
-                ),
-                1
-            )
+            indent!(&format!("{} {}", QUESTION_GOAL, self.forall_fact.ir()), 1)
         ))
     }
     impl_display_pair!();
@@ -937,14 +861,7 @@ impl DefStrategyStmt {
             STRATEGY,
             self.name,
             COLON,
-            indent!(
-                &format!(
-                    "{} {}",
-                    QUESTION_GOAL,
-                    self.forall_fact.ir()
-                ),
-                1
-            )
+            indent!(&format!("{} {}", QUESTION_GOAL, self.forall_fact.ir()), 1)
         ));
         if !self.prove_process.is_empty() {
             out.push_str(&format!(
@@ -974,20 +891,12 @@ impl ClaimStmt {
             "{}{}\n{}\n{}",
             CLAIM,
             COLON,
+            indent!(&format!("{} {}", QUESTION_GOAL, &self.fact.ir()), 1),
             indent!(
-                &format!("{} {}", QUESTION_GOAL, &self.fact.ir()),
-                1
-            ),
-            indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
+                &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                    "
 "
-                    ),
+                ),
                 1
             )
         ))
@@ -1002,15 +911,10 @@ impl SketchStmt {
             SKETCH,
             COLON,
             indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
+                &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                    "
 "
-                    ),
+                ),
                 1
             )
         ))
@@ -1020,12 +924,7 @@ impl SketchStmt {
 
 impl ReleaseThmStmt {
     pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {}",
-            RELEASE,
-            THM,
-            self.call.ir()
-        ))
+        StmtIR(format!("{} {} {}", RELEASE, THM, self.call.ir()))
     }
     impl_display_pair!();
 }
@@ -1080,14 +979,10 @@ fn witness_ir_with_optional_proof(header: &str, proof: &[Stmt]) -> StmtIR {
     if proof.is_empty() {
         return StmtIR(header.to_string());
     }
-    let body = proof
-        .iter()
-        .map(|s| s.ir())
-        .collect::<Vec<_>>()
-        .join(
-            "
+    let body = proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+        "
 ",
-        );
+    );
     StmtIR(format!("{}{}\n{}", header, COLON, indent!(&body, 1)))
 }
 
@@ -1107,17 +1002,9 @@ impl ByCasesStmt {
             .zip(self.impossible_facts.iter())
         {
             if let Some(impossible_fact) = impossible_fact {
-                let case_header = format!(
-                    "{} {}{}",
-                    indent!(CASE, 1),
-                    case.ir(),
-                    COLON
-                );
-                let impossible_line = format!(
-                    "{} {}",
-                    indent!(IMPOSSIBLE, 2),
-                    impossible_fact.ir()
-                );
+                let case_header = format!("{} {}{}", indent!(CASE, 1), case.ir(), COLON);
+                let impossible_line =
+                    format!("{} {}", indent!(IMPOSSIBLE, 2), impossible_fact.ir());
                 if proof.is_empty() {
                     case_blocks.push(format!("{}\n{}", case_header, impossible_line));
                 } else {
@@ -1125,25 +1012,17 @@ impl ByCasesStmt {
                         "{}\n{}\n{}",
                         case_header,
                         indent!(
-                            &proof
-                                .iter()
-                                .map(|s| s.ir())
-                                .collect::<Vec<_>>()
-                                .join(
-                                    "
+                            &proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                                "
 "
-                                ),
+                            ),
                             2
                         ),
                         impossible_line
                     ));
                 }
             } else if proof.is_empty() {
-                case_blocks.push(format!(
-                    "{} {}",
-                    indent!(CASE, 1),
-                    case.ir()
-                ));
+                case_blocks.push(format!("{} {}", indent!(CASE, 1), case.ir()));
             } else {
                 case_blocks.push(format!(
                     "{} {}{}\n{}",
@@ -1151,14 +1030,10 @@ impl ByCasesStmt {
                     case.ir(),
                     COLON,
                     indent!(
-                        &proof
-                            .iter()
-                            .map(|s| s.ir())
-                            .collect::<Vec<_>>()
-                            .join(
-                                "
+                        &proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                            "
 "
-                            ),
+                        ),
                         2
                     )
                 ));
@@ -1195,27 +1070,15 @@ impl ByContraStmt {
             BY,
             CONTRA,
             COLON,
-            indent!(
-                &format!(
-                    "{} {}",
-                    QUESTION_GOAL,
-                    self.to_prove.ir()
-                ),
-                1
-            )
+            indent!(&format!("{} {}", QUESTION_GOAL, self.to_prove.ir()), 1)
         );
         if !self.proof.is_empty() {
             out.push_str("\n");
             out.push_str(&indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
+                &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                    "
 "
-                    ),
+                ),
                 1
             ));
         }
@@ -1238,14 +1101,7 @@ macro_rules! impl_register_prop_goal_only {
 {}",
                     REGISTER,
                     $prop,
-                    indent!(
-                        &format!(
-                            "{} {}",
-                            QUESTION_GOAL,
-                            self.forall_fact.ir()
-                        ),
-                        1
-                    )
+                    indent!(&format!("{} {}", QUESTION_GOAL, self.forall_fact.ir()), 1)
                 ))
             }
             impl_display_pair!();
@@ -1264,27 +1120,15 @@ impl ByForStmt {
 {}",
             BY,
             FOR,
-            indent!(
-                &format!(
-                    "{} {}",
-                    QUESTION_GOAL,
-                    self.forall_fact.ir()
-                ),
-                1
-            )
+            indent!(&format!("{} {}", QUESTION_GOAL, self.forall_fact.ir()), 1)
         );
         if !self.proof.is_empty() {
             out.push_str("\n");
             out.push_str(&indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
+                &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                    "
 "
-                    ),
+                ),
                 1
             ));
         }
@@ -1301,28 +1145,16 @@ impl ByEnumerateFiniteSetStmt {
             BY,
             ENUMERATE,
             FINITE_SET,
-            indent!(
-                &format!(
-                    "{} {}",
-                    QUESTION_GOAL,
-                    self.forall_fact.ir()
-                ),
-                1
-            )
+            indent!(&format!("{} {}", QUESTION_GOAL, self.forall_fact.ir()), 1)
         ));
         if !self.proof.is_empty() {
             out.push_str(&format!(
                 "\n{}",
                 indent!(
-                    &self
-                        .proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     1
                 )
             ));
@@ -1355,15 +1187,10 @@ impl ByExtensionStmt {
             out.push_str(&format!(
                 "\n{}",
                 indent!(
-                    &self
-                        .proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     1
                 )
             ));
@@ -1396,15 +1223,10 @@ impl ByFnExtensionStmt {
             out.push_str(&format!(
                 "\n{}",
                 indent!(
-                    &self
-                        .proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     1
                 )
             ));
@@ -1417,12 +1239,8 @@ impl ByFnExtensionStmt {
 impl ClosedRangeOrRange {
     pub fn ir(&self) -> StmtIR {
         match self {
-            ClosedRangeOrRange::ClosedRange(x) => {
-                StmtIR(x.ir().0)
-            }
-            ClosedRangeOrRange::Range(x) => {
-                StmtIR(x.ir().0)
-            }
+            ClosedRangeOrRange::ClosedRange(x) => StmtIR(x.ir().0),
+            ClosedRangeOrRange::Range(x) => StmtIR(x.ir().0),
         }
     }
     impl_display_pair!();
@@ -1452,26 +1270,14 @@ impl ByDefStmt {
 
 impl ReleaseStructDefStmt {
     pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {}",
-            RELEASE,
-            STRUCT,
-            DEF,
-            &self.obj.ir()
-        ))
+        StmtIR(format!("{} {} {} {}", RELEASE, STRUCT, DEF, &self.obj.ir()))
     }
     impl_display_pair!();
 }
 
 impl ReleaseObjDefStmt {
     pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {}",
-            RELEASE,
-            OBJ,
-            DEF,
-            self.name.ir()
-        ))
+        StmtIR(format!("{} {} {} {}", RELEASE, OBJ, DEF, self.name.ir()))
     }
     impl_display_pair!();
 }
@@ -1564,15 +1370,10 @@ impl ReleaseZornLemmaStmt {
                 "{}\n{}",
                 COLON,
                 indent!(
-                    &self
-                        .proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     1
                 )
             ));
@@ -1593,28 +1394,20 @@ impl ByInducStmt {
         if has_structured {
             let base_proof = match &self.base_proof {
                 Some(proof) => indent!(
-                    &proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     2
                 ),
                 None => String::new(),
             };
             let step_proof = match &self.step_proof {
                 Some(proof) => indent!(
-                    &proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     2
                 ),
                 None => String::new(),
@@ -1672,15 +1465,10 @@ impl ByInducStmt {
         if !self.proof.is_empty() {
             out.push_str("\n");
             out.push_str(&indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
+                &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                    "
 "
-                    ),
+                ),
                 1
             ));
         }
@@ -1700,28 +1488,20 @@ impl ByStrongInducStmt {
         if has_structured {
             let base_proof = match &self.base_proof {
                 Some(proof) => indent!(
-                    &proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     2
                 ),
                 None => String::new(),
             };
             let step_proof = match &self.step_proof {
                 Some(proof) => indent!(
-                    &proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
+                    &proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                        "
 "
-                        ),
+                    ),
                     2
                 ),
                 None => String::new(),
@@ -1779,15 +1559,10 @@ impl ByStrongInducStmt {
         if !self.proof.is_empty() {
             out.push_str("\n");
             out.push_str(&indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
+                &self.proof.iter().map(|s| s.ir()).collect::<Vec<_>>().join(
+                    "
 "
-                    ),
+                ),
                 1
             ));
         }
@@ -1797,11 +1572,15 @@ impl ByStrongInducStmt {
 }
 
 impl ReleaseCartDefStmt {
-    pub fn ir(&self) -> StmtIR { StmtIR(format!("release cart def {}", self.cart.ir())) }
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!("release cart def {}", self.cart.ir()))
+    }
     impl_display_pair!();
 }
 
 impl ReleaseTupleDefStmt {
-    pub fn ir(&self) -> StmtIR { StmtIR(format!("release tuple def {}", self.obj.ir())) }
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!("release tuple def {}", self.obj.ir()))
+    }
     impl_display_pair!();
 }

@@ -2,9 +2,7 @@ use super::result::ProofBlockBodyFailed;
 use crate::ast::fact::Fact;
 use crate::ast::stmt::Stmt;
 use crate::execute::exec_stmt_result::ExecStmtResult;
-use crate::execute::execute_by_stmt::{
-    proof_verify_state, store_goal_fact, verify_goal_fact,
-};
+use crate::execute::execute_by_stmt::{proof_verify_state, store_goal_fact, verify_goal_fact};
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;

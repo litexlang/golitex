@@ -1,7 +1,9 @@
 use crate::ast::fact::{AtomicFact, EqualFact, ExistShapedFact, Fact, OrFact};
 use crate::ast::names::AtomicName;
-use crate::ast::obj::{AnonymousFn, FnSet, Obj, SetBuilder, FunctionSpace, SetFormer};
-use crate::exec_env::exist_shaped_fact_index_key::{exist_shaped_fact_index_key, ExistShapedFactIndexKey};
+use crate::ast::obj::{AnonymousFn, FnSet, FunctionSpace, Obj, SetBuilder, SetFormer};
+use crate::exec_env::exist_shaped_fact_index_key::{
+    exist_shaped_fact_index_key, ExistShapedFactIndexKey,
+};
 use crate::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
 use crate::runtime::FactId;
 use std::collections::{HashMap, HashSet};
@@ -172,13 +174,15 @@ impl KnownEqualToObjWithFreeParamsMemory {
 
 pub(crate) fn free_params_shape_from_obj(obj: &Obj) -> Option<KnownEqualToObjWithFreeParamsShape> {
     match obj {
-        Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => Some(KnownEqualToObjWithFreeParamsShape::FnSet(fn_set.clone())),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
-            Some(KnownEqualToObjWithFreeParamsShape::AnonymousFn(anon.clone()))
+        Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => {
+            Some(KnownEqualToObjWithFreeParamsShape::FnSet(fn_set.clone()))
         }
-        Obj::SetFormer(SetFormer::SetBuilder(set_builder)) => {
-            Some(KnownEqualToObjWithFreeParamsShape::SetBuilder(set_builder.clone()))
-        }
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(
+            KnownEqualToObjWithFreeParamsShape::AnonymousFn(anon.clone()),
+        ),
+        Obj::SetFormer(SetFormer::SetBuilder(set_builder)) => Some(
+            KnownEqualToObjWithFreeParamsShape::SetBuilder(set_builder.clone()),
+        ),
         _ => None,
     }
 }

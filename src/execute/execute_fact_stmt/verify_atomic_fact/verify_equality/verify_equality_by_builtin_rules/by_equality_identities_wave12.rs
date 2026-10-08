@@ -118,9 +118,11 @@ impl Runtime {
                 ));
             }
             if re_of_imaginary_unit_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave12BuiltinRuleProof::ReOfImaginaryUnit(
-                    ReOfImaginaryUnitBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave12BuiltinRuleProof::ReOfImaginaryUnit(
+                        ReOfImaginaryUnitBuiltinRuleProof {},
+                    ),
+                ));
             }
             if img_of_imaginary_unit_shape(left, right) {
                 return Ok(Some(
@@ -144,14 +146,18 @@ impl Runtime {
                 ));
             }
             if re_of_real_plus_i_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave12BuiltinRuleProof::ReOfRealPlusI(
-                    ReOfRealPlusIBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave12BuiltinRuleProof::ReOfRealPlusI(
+                        ReOfRealPlusIBuiltinRuleProof {},
+                    ),
+                ));
             }
             if img_of_real_plus_i_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave12BuiltinRuleProof::ImgOfRealPlusI(
-                    ImgOfRealPlusIBuiltinRuleProof {},
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave12BuiltinRuleProof::ImgOfRealPlusI(
+                        ImgOfRealPlusIBuiltinRuleProof {},
+                    ),
+                ));
             }
             if complex_abs_of_imaginary_unit_shape(left, right) {
                 return Ok(Some(
@@ -162,15 +168,13 @@ impl Runtime {
             }
             if let Some(p) = self.try_mod_nested_divisible_absorption(left, right, child.clone())? {
                 return Ok(Some(
-                    EqualityIdentitiesWave12BuiltinRuleProof::ModNestedDivisibleAbsorption(
-                        p,
-                    ),
+                    EqualityIdentitiesWave12BuiltinRuleProof::ModNestedDivisibleAbsorption(p),
                 ));
             }
             if let Some(p) = self.try_sum_split_last_term(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave12BuiltinRuleProof::SumSplitLastTerm(
-                    p,
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave12BuiltinRuleProof::SumSplitLastTerm(p),
+                ));
             }
             if let Some(p) = self.try_product_split_last_term(left, right, child.clone())? {
                 return Ok(Some(
@@ -182,7 +186,8 @@ impl Runtime {
                     EqualityIdentitiesWave12BuiltinRuleProof::FiniteSetSumListExpansion(p),
                 ));
             }
-            if let Some(p) = self.try_finite_set_product_list_expansion(left, right, child.clone())?
+            if let Some(p) =
+                self.try_finite_set_product_list_expansion(left, right, child.clone())?
             {
                 return Ok(Some(
                     EqualityIdentitiesWave12BuiltinRuleProof::FiniteSetProductListExpansion(p),
@@ -206,7 +211,8 @@ impl Runtime {
             element: multiplier.clone(),
             set: Obj::StandardSet(StandardSet::Z),
             line_file: None,
-        }.into();
+        }
+        .into();
         let multiplier_in_z = self.verify_builtin_rule_premise(&requirement, verify_state)?;
         if multiplier_in_z.is_failed() {
             return Ok(None);
@@ -228,7 +234,10 @@ impl Runtime {
         let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) = add_side else {
             return Ok(None);
         };
-        for (pre_side, tail) in [(left.as_ref(), right.as_ref()), (right.as_ref(), left.as_ref())] {
+        for (pre_side, tail) in [
+            (left.as_ref(), right.as_ref()),
+            (right.as_ref(), left.as_ref()),
+        ] {
             let Some(pre) = match_sum(pre_side) else {
                 continue;
             };
@@ -241,7 +250,8 @@ impl Runtime {
             if !end_is_predecessor_plus_one(full.end.as_ref(), pre.end.as_ref()) {
                 continue;
             }
-            let Some(applied) = apply_fn_one_arg(full.func.as_ref(), full.end.as_ref().clone()) else {
+            let Some(applied) = apply_fn_one_arg(full.func.as_ref(), full.end.as_ref().clone())
+            else {
                 continue;
             };
             let premise = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
@@ -273,7 +283,10 @@ impl Runtime {
         let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) = mul_side else {
             return Ok(None);
         };
-        for (pre_side, tail) in [(left.as_ref(), right.as_ref()), (right.as_ref(), left.as_ref())] {
+        for (pre_side, tail) in [
+            (left.as_ref(), right.as_ref()),
+            (right.as_ref(), left.as_ref()),
+        ] {
             let Some(pre) = match_product(pre_side) else {
                 continue;
             };
@@ -286,7 +299,8 @@ impl Runtime {
             if !end_is_predecessor_plus_one(full.end.as_ref(), pre.end.as_ref()) {
                 continue;
             }
-            let Some(applied) = apply_fn_one_arg(full.func.as_ref(), full.end.as_ref().clone()) else {
+            let Some(applied) = apply_fn_one_arg(full.func.as_ref(), full.end.as_ref().clone())
+            else {
                 continue;
             };
             let premise = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
@@ -368,7 +382,8 @@ impl Runtime {
         }
         let mut proofs = Vec::with_capacity(list.len());
         for (elem, leaf) in list.iter().zip(leaves.iter()) {
-            let Some(applied) = apply_fn_one_arg(product.func.as_ref(), elem.as_ref().clone()) else {
+            let Some(applied) = apply_fn_one_arg(product.func.as_ref(), elem.as_ref().clone())
+            else {
                 return Ok(None);
             };
             let premise = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
@@ -539,8 +554,10 @@ fn union_set_minus_decomposition_shape(decomposed: &Obj, original: &Obj) -> bool
     let Some(o) = match_union(original) else {
         return false;
     };
-    for (plain, difference) in [(d.left.as_ref(), d.right.as_ref()), (d.right.as_ref(), d.left.as_ref())]
-    {
+    for (plain, difference) in [
+        (d.left.as_ref(), d.right.as_ref()),
+        (d.right.as_ref(), d.left.as_ref()),
+    ] {
         let Some(diff) = match_set_minus(difference) else {
             continue;
         };
@@ -686,7 +703,6 @@ fn collect_left_assoc_add_leaves(obj: &Obj) -> Vec<Obj> {
     }
 }
 
-
 fn collect_left_assoc_mul_leaves(obj: &Obj) -> Vec<Obj> {
     match obj {
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) => {
@@ -710,13 +726,20 @@ mod nested_mod_integer_multiple_tests {
 
     fn runtime() -> Runtime {
         Runtime::new(LaunchCommand::Eval {
-            code: String::new(), session: false, strict: true, language: OutputLanguage::English,
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
         })
     }
 
     fn check(rt: &mut Runtime, code: &str, expected: bool) -> JsonValue {
         let run = rt.run_litex_code(code).expect("public Runtime");
-        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
         assert_eq!(run.success, expected, "{code}");
         project_run_detailed(&run, rt, "eval", None)
     }
@@ -724,10 +747,15 @@ mod nested_mod_integer_multiple_tests {
     fn find_rule(value: &JsonValue) -> Option<&JsonValue> {
         match value {
             JsonValue::Object(fields) => {
-                if fields.get("rule").and_then(|value| value.as_str().ok()) == Some("ModNestedDivisibleAbsorption") {
+                if fields.get("rule").and_then(|value| value.as_str().ok())
+                    == Some("ModNestedDivisibleAbsorption")
+                {
                     return Some(value);
                 }
-                fields.keys_in_order().into_iter().find_map(|key| find_rule(fields.get(&key).unwrap()))
+                fields
+                    .keys_in_order()
+                    .into_iter()
+                    .find_map(|key| find_rule(fields.get(&key).unwrap()))
             }
             JsonValue::Array(items) => items.iter().find_map(find_rule),
             _ => None,
@@ -736,15 +764,31 @@ mod nested_mod_integer_multiple_tests {
 
     #[test]
     fn nested_mod_integer_multiple_tracer_and_integer_domains() {
-        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/proof_nodes/equal/by_builtin_rule/nested_mod_integer_multiple.lit"));
+        let source = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/nested_mod_integer_multiple.lit"
+        ));
         let json = check(&mut runtime(), source, true);
         let rule = find_rule(&json).expect("actual winning rule");
-        let requirements = rule.as_object().unwrap().get("proof_of_requirement_facts").unwrap();
-        let JsonValue::Array(requirements) = requirements else { panic!("requirements array") };
+        let requirements = rule
+            .as_object()
+            .unwrap()
+            .get("proof_of_requirement_facts")
+            .unwrap();
+        let JsonValue::Array(requirements) = requirements else {
+            panic!("requirements array")
+        };
         assert_eq!(requirements.len(), 1);
-        assert_eq!(requirements[0].as_object().unwrap().get("success"), Some(&JsonValue::Bool(true)));
+        assert_eq!(
+            requirements[0].as_object().unwrap().get("success"),
+            Some(&JsonValue::Bool(true))
+        );
         assert!(requirements[0].stringify().contains("k $in Z"));
-        check(&mut runtime(), "forall a Z,m N+:\n    (a%(2*m))%m=a%m\n", true);
+        check(
+            &mut runtime(),
+            "forall a Z,m N+:\n    (a%(2*m))%m=a%m\n",
+            true,
+        );
         check(&mut runtime(), "(3%((-2)*4))%4=3%4\n", true);
     }
 
@@ -766,19 +810,58 @@ mod nested_mod_integer_multiple_tests {
 
     #[test]
     fn nested_mod_integer_multiple_retains_actual_integer_premise_citation() {
-        let code = "forall a Z,k R,m N+:\n    k $in Z\n    k*m $in N+\n    =>:\n        (a%(k*m))%m=a%m\n";
+        let code =
+            "forall a Z,k R,m N+:\n    k $in Z\n    k*m $in N+\n    =>:\n        (a%(k*m))%m=a%m\n";
         let json = check(&mut runtime(), code, true);
-        let statement = &json.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
-        let verify = statement.as_object().unwrap().get("verify").unwrap().as_object().unwrap();
+        let statement = &json
+            .as_object()
+            .unwrap()
+            .get("statement_results")
+            .unwrap()
+            .as_array()
+            .unwrap()[0];
+        let verify = statement
+            .as_object()
+            .unwrap()
+            .get("verify")
+            .unwrap()
+            .as_object()
+            .unwrap();
         let assumption = &verify.get("assumed_dom_facts").unwrap().as_array().unwrap()[0];
-        let source = &assumption.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap()[0];
-        let source_id = source.as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
-        let rule = find_rule(&json).expect("actual winning rule").as_object().unwrap();
-        let premise = &rule.get("proof_of_requirement_facts").unwrap().as_array().unwrap()[0];
+        let source = &assumption
+            .as_object()
+            .unwrap()
+            .get("store_and_infer")
+            .unwrap()
+            .as_object()
+            .unwrap()
+            .get("stores")
+            .unwrap()
+            .as_array()
+            .unwrap()[0];
+        let source_id = source
+            .as_object()
+            .unwrap()
+            .get("fact_id")
+            .unwrap()
+            .as_str()
+            .unwrap();
+        let rule = find_rule(&json)
+            .expect("actual winning rule")
+            .as_object()
+            .unwrap();
+        let premise = &rule
+            .get("proof_of_requirement_facts")
+            .unwrap()
+            .as_array()
+            .unwrap()[0];
         let premise = premise.as_object().unwrap();
         assert_eq!(premise.get("fact").unwrap().as_str().unwrap(), "k $in Z");
         let proof = premise.get("searched_proof").unwrap().as_object().unwrap();
-        assert_eq!(proof.get("cite_fact_id").unwrap().as_str().unwrap(), source_id);
+        assert_eq!(
+            proof.get("cite_fact_id").unwrap().as_str().unwrap(),
+            source_id
+        );
     }
 
     #[test]
@@ -788,12 +871,25 @@ mod nested_mod_integer_multiple_tests {
         // Check the enclosing operator domains first, so this test isolates
         // truth-search permissions rather than unrelated low-ceiling WD.
         check(&mut rt, "k*m $in Z\nk*m!=0\na%(k*m) $in Z\nm!=0\n", true);
-        let tokens = Tokenizer::new().tokenize("(a%(k*m))%m=a%m", rt.current_file.clone()).unwrap();
-        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact") };
-        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty] {
-            assert!(rt.verify_fact(&goal, VerifyState::new(level)).unwrap().is_failed());
+        let tokens = Tokenizer::new()
+            .tokenize("(a%(k*m))%m=a%m", rt.current_file.clone())
+            .unwrap();
+        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("fact")
+        };
+        for level in [
+            VerifyStateLevel::Direct,
+            VerifyStateLevel::KnownSpecialProperty,
+        ] {
+            assert!(rt
+                .verify_fact(&goal, VerifyState::new(level))
+                .unwrap()
+                .is_failed());
         }
-        assert!(!rt.verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule)).unwrap().is_failed());
+        assert!(!rt
+            .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+            .unwrap()
+            .is_failed());
     }
 
     #[test]

@@ -97,7 +97,8 @@ impl Runtime {
             Some(SharedHaveDefinition::HaveByReplacementAxiom(Rc::new(
                 stmt.clone(),
             ))),
-         crate::execute::execute_fact_stmt::VerifyState::top_level());
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        );
         let store = match store {
             Ok(s) => s,
             Err(e) => {
@@ -112,12 +113,18 @@ impl Runtime {
         let elim = self.replacement_elim_forall(stmt, &img);
         let mut stored_fact_ids = store.stored_fact_ids;
         stored_fact_ids.extend(
-            self.store_fact_and_infer(&Fact::ForallFact(intro), crate::execute::execute_fact_stmt::VerifyState::top_level())?
-                .stored_fact_ids(),
+            self.store_fact_and_infer(
+                &Fact::ForallFact(intro),
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?
+            .stored_fact_ids(),
         );
         stored_fact_ids.extend(
-            self.store_fact_and_infer(&Fact::ForallFact(elim), crate::execute::execute_fact_stmt::VerifyState::top_level())?
-                .stored_fact_ids(),
+            self.store_fact_and_infer(
+                &Fact::ForallFact(elim),
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?
+            .stored_fact_ids(),
         );
 
         Ok(ExecHaveByReplacementAxiomStmtResult::Success(
@@ -144,7 +151,12 @@ impl Runtime {
 
     fn known_replacement_uniqueness(&self, prop_name: &AtomicName, source_set: &Obj) -> bool {
         for env in self.execution_environments_stack.iter().rev() {
-            for cite in env.facts.known_forall_conclusions.by_equal.parameter_pair_cites() {
+            for cite in env
+                .facts
+                .known_forall_conclusions
+                .by_equal
+                .parameter_pair_cites()
+            {
                 let Some(Fact::ForallFact(forall)) = env.facts.facts_by_id.get(&cite.fact_id)
                 else {
                     continue;

@@ -7,9 +7,8 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 
-const FIXTURE: &str = include_str!(
-    "../../../../examples/knowledge_base/def_struct/point.def_struct.json"
-);
+const FIXTURE: &str =
+    include_str!("../../../../examples/knowledge_base/def_struct/point.def_struct.json");
 
 fn sample() -> DefStructStmt {
     DefStructStmt {

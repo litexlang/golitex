@@ -35,7 +35,9 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         if is_one_obj(&fact.left) {
-            if let Some(premise_proof) = self.search_in_positive_natural_premise(&fact.right, verify_state)? {
+            if let Some(premise_proof) =
+                self.search_in_positive_natural_premise(&fact.right, verify_state)?
+            {
                 return Ok(Some(
                     LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(
                         FromKnownInPositiveNaturalBuiltinRuleProof { premise_proof },
@@ -102,8 +104,8 @@ impl Runtime {
                 self.even_pow_nonnegative_proof(base.as_ref(), verify_state)
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow { base, exponent })) => {
-                if let Some(proof) = self
-                    .pow_nonneg_from_positive_base_proof(base.as_ref(), verify_state.clone())?
+                if let Some(proof) =
+                    self.pow_nonneg_from_positive_base_proof(base.as_ref(), verify_state.clone())?
                 {
                     return Ok(Some(proof));
                 }
@@ -200,13 +202,12 @@ impl Runtime {
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt { arg })) => {
                 self.sqrt_positive_proof(arg.as_ref(), verify_state)
             }
-            Obj::ExpLogOperator(ExpLogOperator::Log(Log { base, arg })) => {
-                self.log_positive_from_base_and_arg_gt_one_proof(
+            Obj::ExpLogOperator(ExpLogOperator::Log(Log { base, arg })) => self
+                .log_positive_from_base_and_arg_gt_one_proof(
                     base.as_ref(),
                     arg.as_ref(),
                     verify_state,
-                )
-            }
+                ),
             _ => Ok(None),
         }
     }
@@ -315,8 +316,7 @@ impl Runtime {
         if base_gt_one_proof.is_failed() {
             return Ok(None);
         }
-        let left_arg_positive_proof =
-            self.verify_order_positive(left_arg, verify_state.clone())?;
+        let left_arg_positive_proof = self.verify_order_positive(left_arg, verify_state.clone())?;
         if left_arg_positive_proof.is_failed() {
             return Ok(None);
         }
@@ -376,9 +376,11 @@ impl Runtime {
         if base_in_real_proof.is_failed() {
             return Ok(None);
         }
-        Ok(Some(LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
-            EvenPowNonnegativeBuiltinRuleProof { base_in_real_proof },
-        )))
+        Ok(Some(
+            LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(
+                EvenPowNonnegativeBuiltinRuleProof { base_in_real_proof },
+            ),
+        ))
     }
 
     fn verify_even_power_real_base(
@@ -423,9 +425,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(LessFactSearchProofByBuiltinRule::SqrtPositive(
-            SqrtPositiveBuiltinRuleProof {
-                arg_positive_proof,
-            },
+            SqrtPositiveBuiltinRuleProof { arg_positive_proof },
         )))
     }
 
@@ -472,8 +472,7 @@ impl Runtime {
         if base_gt_one_proof.is_failed() {
             return Ok(None);
         }
-        let left_arg_positive_proof =
-            self.verify_order_positive(left_arg, verify_state.clone())?;
+        let left_arg_positive_proof = self.verify_order_positive(left_arg, verify_state.clone())?;
         if left_arg_positive_proof.is_failed() {
             return Ok(None);
         }
@@ -562,14 +561,30 @@ impl Runtime {
         // Accept actual weak/strict sources at the same ceiling. A strict
         // positive fact is a sufficient guard; preserve that fact unchanged.
         let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
-        if !proof.is_failed() { return Ok(proof); }
+        if !proof.is_failed() {
+            return Ok(proof);
+        }
         for requirement in [
-            crate::ast::fact::GreaterEqualFact { fact_id: self.global_ids.allocate_fact_id(), left: obj.clone(), right: zero_obj(), line_file: None }.into(),
+            crate::ast::fact::GreaterEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: obj.clone(),
+                right: zero_obj(),
+                line_file: None,
+            }
+            .into(),
             make_less_fact(&zero_obj(), obj, self),
-            crate::ast::fact::GreaterFact { fact_id: self.global_ids.allocate_fact_id(), left: obj.clone(), right: zero_obj(), line_file: None }.into(),
+            crate::ast::fact::GreaterFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: obj.clone(),
+                right: zero_obj(),
+                line_file: None,
+            }
+            .into(),
         ] {
             let result = self.verify_builtin_rule_premise(&requirement, verify_state)?;
-            if !result.is_failed() { return Ok(result); }
+            if !result.is_failed() {
+                return Ok(result);
+            }
         }
         Ok(proof)
     }
@@ -581,14 +596,30 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_equal_fact(obj, &zero_obj(), self);
         let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
-        if !proof.is_failed() { return Ok(proof); }
+        if !proof.is_failed() {
+            return Ok(proof);
+        }
         for requirement in [
-            crate::ast::fact::GreaterEqualFact { fact_id: self.global_ids.allocate_fact_id(), left: zero_obj(), right: obj.clone(), line_file: None }.into(),
+            crate::ast::fact::GreaterEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: zero_obj(),
+                right: obj.clone(),
+                line_file: None,
+            }
+            .into(),
             make_less_fact(obj, &zero_obj(), self),
-            crate::ast::fact::GreaterFact { fact_id: self.global_ids.allocate_fact_id(), left: zero_obj(), right: obj.clone(), line_file: None }.into(),
+            crate::ast::fact::GreaterFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: zero_obj(),
+                right: obj.clone(),
+                line_file: None,
+            }
+            .into(),
         ] {
             let result = self.verify_builtin_rule_premise(&requirement, verify_state)?;
-            if !result.is_failed() { return Ok(result); }
+            if !result.is_failed() {
+                return Ok(result);
+            }
         }
         Ok(proof)
     }
@@ -600,10 +631,16 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(&zero_obj(), obj, self);
         let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
-        if !proof.is_failed() { return Ok(proof); }
+        if !proof.is_failed() {
+            return Ok(proof);
+        }
         let reverse: Fact = crate::ast::fact::GreaterFact {
-            fact_id: self.global_ids.allocate_fact_id(), left: obj.clone(), right: zero_obj(), line_file: None,
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: obj.clone(),
+            right: zero_obj(),
+            line_file: None,
+        }
+        .into();
         self.verify_builtin_rule_premise(&reverse, verify_state)
     }
 
@@ -614,10 +651,16 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(obj, &zero_obj(), self);
         let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
-        if !proof.is_failed() { return Ok(proof); }
+        if !proof.is_failed() {
+            return Ok(proof);
+        }
         let reverse: Fact = crate::ast::fact::GreaterFact {
-            fact_id: self.global_ids.allocate_fact_id(), left: zero_obj(), right: obj.clone(), line_file: None,
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: zero_obj(),
+            right: obj.clone(),
+            line_file: None,
+        }
+        .into();
         self.verify_builtin_rule_premise(&reverse, verify_state)
     }
 
@@ -657,8 +700,6 @@ impl Runtime {
         }));
         self.verify_builtin_rule_premise(&goal, verify_state)
     }
-
-
 }
 
 fn make_less_equal_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {

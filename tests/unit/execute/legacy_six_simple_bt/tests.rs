@@ -126,7 +126,6 @@ fn actual_rules_are_available_in_all_output_locales() {
     }
 }
 
-
 #[test]
 fn fixed_argument_monotonicity_and_reverse_spellings() {
     for code in [

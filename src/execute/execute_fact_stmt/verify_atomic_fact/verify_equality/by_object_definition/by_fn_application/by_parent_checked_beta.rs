@@ -1,16 +1,18 @@
 //! Beta substitution using the parent's checked application domain.
 
 use crate::ast::fact::EqualFact;
-use crate::ast::stmt::TemplateDefEnum;
 use crate::ast::obj::{AnonymousFn, FnObjHead, FnSet, FunctionSpace, Obj};
+use crate::ast::stmt::TemplateDefEnum;
+use crate::execute::execute_fact_stmt::function_domain::function_domains_alpha_equal;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
+    FnObjDomainFnSetEvidence, ObjWellDefinedProofByDef,
+};
+use crate::execute::execute_fact_stmt::ObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::execute::execute_fact_stmt::function_domain::function_domains_alpha_equal;
-use crate::execute::execute_fact_stmt::ObjWellDefinedProof;
-use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{FnObjDomainFnSetEvidence, ObjWellDefinedProofByDef};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 
 use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 
@@ -38,7 +40,8 @@ pub struct ParentCheckedBetaTwoSidesProof {
 
 pub enum ParentCheckedBetaFunctionBody {
     KnownFiniteFunctionCoordinate {
-        source: Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>,
+        source:
+            Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>,
         index: usize,
     },
     ReturnedFiniteFunctionCoordinate {
@@ -75,7 +78,9 @@ pub enum ParentCheckedBetaFunctionBody {
 // Recheck only the declared template's arguments/guards in that case; retain
 // every checked child and requirement without changing the WD memo contract.
 pub enum TemplateApplicationDomainProof {
-    Parent { checked_domain: FnSet },
+    Parent {
+        checked_domain: FnSet,
+    },
     Rechecked {
         checked_domain: FnSet,
         argument_well_defined: Vec<Box<ObjWellDefinedProof>>,
@@ -101,110 +106,193 @@ impl Runtime {
         if parent_wd.left.obj() != &fact.left || parent_wd.right.obj() != &fact.right {
             return Ok(None);
         }
-        if let (Some((left_function_body, left_expanded_body)), Some((right_function_body, right_expanded_body))) = (
+        if let (
+            Some((left_function_body, left_expanded_body)),
+            Some((right_function_body, right_expanded_body)),
+        ) = (
             self.parent_checked_beta_body(&fact.left, &parent_wd.left, state)?,
             self.parent_checked_beta_body(&fact.right, &parent_wd.right, state)?,
         ) {
             let residual_equal = EqualFact {
-                fact_id: self.global_ids.allocate_fact_id(), left: left_expanded_body.clone(),
-                right: right_expanded_body.clone(), line_file: fact.line_file.clone(),
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: left_expanded_body.clone(),
+                right: right_expanded_body.clone(),
+                line_file: fact.line_file.clone(),
             };
             if let Some(residual_proof) = self.search_equal_fact_proof(&residual_equal, child)? {
-                return Ok(Some(ByParentCheckedBetaObjectDefinitionProof::TwoSides(ParentCheckedBetaTwoSidesProof {
-                    left_function_body, left_expanded_body, right_function_body, right_expanded_body,
-                    residual_equal, residual_proof: Box::new(residual_proof),
-                })));
+                return Ok(Some(ByParentCheckedBetaObjectDefinitionProof::TwoSides(
+                    ParentCheckedBetaTwoSidesProof {
+                        left_function_body,
+                        left_expanded_body,
+                        right_function_body,
+                        right_expanded_body,
+                        residual_equal,
+                        residual_proof: Box::new(residual_proof),
+                    },
+                )));
             }
         }
         for (app_side, other_side, app_wd, side) in [
-            (&fact.left, &fact.right, &parent_wd.left, ParentEqualitySide::Left),
-            (&fact.right, &fact.left, &parent_wd.right, ParentEqualitySide::Right),
+            (
+                &fact.left,
+                &fact.right,
+                &parent_wd.left,
+                ParentEqualitySide::Left,
+            ),
+            (
+                &fact.right,
+                &fact.left,
+                &parent_wd.right,
+                ParentEqualitySide::Right,
+            ),
         ] {
-            let Some((function_body, expanded_body)) = self.parent_checked_beta_body(app_side, app_wd, state)?
-            else { continue; };
+            let Some((function_body, expanded_body)) =
+                self.parent_checked_beta_body(app_side, app_wd, state)?
+            else {
+                continue;
+            };
             let residual_equal = EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
-                left: expanded_body.clone(), right: other_side.clone(), line_file: fact.line_file.clone(),
+                left: expanded_body.clone(),
+                right: other_side.clone(),
+                line_file: fact.line_file.clone(),
             };
             // Both arguments and guards were checked by the parent; only the
             // residual truth uses the ordinary restricted definition ceiling.
-            let Some(residual_proof) = self.search_equal_fact_proof(&residual_equal, child)? else { continue; };
-            return Ok(Some(ByParentCheckedBetaObjectDefinitionProof::OneSide(ParentCheckedBetaOneSideProof {
-                parent_well_defined_side: side, function_body, expanded_body,
-                residual_equal, residual_proof: Box::new(residual_proof),
-            })));
+            let Some(residual_proof) = self.search_equal_fact_proof(&residual_equal, child)? else {
+                continue;
+            };
+            return Ok(Some(ByParentCheckedBetaObjectDefinitionProof::OneSide(
+                ParentCheckedBetaOneSideProof {
+                    parent_well_defined_side: side,
+                    function_body,
+                    expanded_body,
+                    residual_equal,
+                    residual_proof: Box::new(residual_proof),
+                },
+            )));
         }
         Ok(None)
     }
 
     pub(in crate::execute) fn parent_checked_beta_body(
-        &mut self, side: &Obj, app_wd: &ObjWellDefinedProof, state: VerifyState,
+        &mut self,
+        side: &Obj,
+        app_wd: &ObjWellDefinedProof,
+        state: VerifyState,
     ) -> RuntimeResult<Option<(ParentCheckedBetaFunctionBody, Obj)>> {
-            if app_wd.obj() != side { return Ok(None); }
-            let Obj::FnObj(app) = side else { return Ok(None); };
-            if let Some(receiver) = self.finite_function_application_receiver(app) {
-                if let Some(index) = crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize(&app.body.last().unwrap()[0]) {
-                    for source in self.finite_function_signatures(&receiver) {
-                        let crate::execute::execute_fact_stmt::known_tuple::KnownTupleShapeProof::TupleEquality(value) = &source.source else { continue; };
-                        let Some(coordinate) = value.value.args.get(index - 1) else { continue; };
-                        let coordinate = coordinate.as_ref().clone();
-                        return Ok(Some((ParentCheckedBetaFunctionBody::KnownFiniteFunctionCoordinate {
-                            source: Box::new(source), index,
-                        }, coordinate)));
-                    }
-                    // Descend through a strictly shorter receiver application.
-                    // Its checked beta value must be an actual tuple, rather
-                    // than merely a common return-set upper bound.
-                    if matches!(&receiver, Obj::FnObj(_)) {
-                        let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(receiver_well_defined) =
-                            self.verify_obj_well_definedness(&receiver, state)?
-                        else { return Ok(None); };
-                        if let Some((receiver_function_body, Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(returned_tuple)))) =
-                            self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)? {
-                            if let Some(coordinate) = returned_tuple.args.get(index - 1) {
-                                let coordinate = coordinate.as_ref().clone();
-                                return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedFiniteFunctionCoordinate {
+        if app_wd.obj() != side {
+            return Ok(None);
+        }
+        let Obj::FnObj(app) = side else {
+            return Ok(None);
+        };
+        if let Some(receiver) = self.finite_function_application_receiver(app) {
+            if let Some(index) =
+                crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize(
+                    &app.body.last().unwrap()[0],
+                )
+            {
+                for source in self.finite_function_signatures(&receiver) {
+                    let crate::execute::execute_fact_stmt::known_tuple::KnownTupleShapeProof::TupleEquality(value) = &source.source else { continue; };
+                    let Some(coordinate) = value.value.args.get(index - 1) else {
+                        continue;
+                    };
+                    let coordinate = coordinate.as_ref().clone();
+                    return Ok(Some((
+                        ParentCheckedBetaFunctionBody::KnownFiniteFunctionCoordinate {
+                            source: Box::new(source),
+                            index,
+                        },
+                        coordinate,
+                    )));
+                }
+                // Descend through a strictly shorter receiver application.
+                // Its checked beta value must be an actual tuple, rather
+                // than merely a common return-set upper bound.
+                if matches!(&receiver, Obj::FnObj(_)) {
+                    let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(
+                        receiver_well_defined,
+                    ) = self.verify_obj_well_definedness(&receiver, state)?
+                    else {
+                        return Ok(None);
+                    };
+                    if let Some((
+                        receiver_function_body,
+                        Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(returned_tuple)),
+                    )) =
+                        self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)?
+                    {
+                        if let Some(coordinate) = returned_tuple.args.get(index - 1) {
+                            let coordinate = coordinate.as_ref().clone();
+                            return Ok(Some((
+                                ParentCheckedBetaFunctionBody::ReturnedFiniteFunctionCoordinate {
                                     receiver_well_defined: Box::new(receiver_well_defined),
-                                    receiver_function_body: Box::new(receiver_function_body), returned_tuple, index,
-                                }, coordinate)));
-                            }
+                                    receiver_function_body: Box::new(receiver_function_body),
+                                    returned_tuple,
+                                    index,
+                                },
+                                coordinate,
+                            )));
                         }
                     }
                 }
             }
-            // A tuple coordinate may itself be an anonymous function. The
-            // complete application WD checked its last argument group and
-            // guards; unfold the strictly shorter receiver before applying
-            // that actual returned value. Example: `(fn(x R) R {x},0)(1)(2)`.
-            if app.body.len() > 1 {
-                let receiver = Obj::FnObj(crate::ast::obj::FnObj {
-                    head: app.head.clone(), body: app.body[..app.body.len()-1].to_vec(),
-                });
-                if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(receiver_well_defined) =
-                    self.verify_obj_well_definedness(&receiver, state)? {
-                    if let Some((receiver_function_body, returned_value)) =
-                        self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)? {
-                        if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(returned_function)) = returned_value {
-                            let args: Vec<Obj> = app.body.last().unwrap().iter().map(|arg| arg.as_ref().clone()).collect();
-                            if args.len() == set_bound_parameter_count(&returned_function.body.set_bound_parameters) {
-                                let subst = set_bound_params_to_arg_map(&returned_function.body.set_bound_parameters, &args);
-                                if let Ok(expanded_body) = self.inst_obj(returned_function.equal_to.as_ref(), &subst) {
-                                    return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication {
+        }
+        // A tuple coordinate may itself be an anonymous function. The
+        // complete application WD checked its last argument group and
+        // guards; unfold the strictly shorter receiver before applying
+        // that actual returned value. Example: `(fn(x R) R {x},0)(1)(2)`.
+        if app.body.len() > 1 {
+            let receiver = Obj::FnObj(crate::ast::obj::FnObj {
+                head: app.head.clone(),
+                body: app.body[..app.body.len() - 1].to_vec(),
+            });
+            if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(
+                receiver_well_defined,
+            ) = self.verify_obj_well_definedness(&receiver, state)?
+            {
+                if let Some((receiver_function_body, returned_value)) =
+                    self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)?
+                {
+                    if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(returned_function)) =
+                        returned_value
+                    {
+                        let args: Vec<Obj> = app
+                            .body
+                            .last()
+                            .unwrap()
+                            .iter()
+                            .map(|arg| arg.as_ref().clone())
+                            .collect();
+                        if args.len()
+                            == set_bound_parameter_count(
+                                &returned_function.body.set_bound_parameters,
+                            )
+                        {
+                            let subst = set_bound_params_to_arg_map(
+                                &returned_function.body.set_bound_parameters,
+                                &args,
+                            );
+                            if let Ok(expanded_body) =
+                                self.inst_obj(returned_function.equal_to.as_ref(), &subst)
+                            {
+                                return Ok(Some((ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication {
                                     receiver_well_defined: Box::new(receiver_well_defined),
                                     receiver_function_body: Box::new(receiver_function_body), returned_function,
                                     }, expanded_body)));
-                                }
                             }
-                        } else if !matches!(&returned_value, Obj::FnObj(_)) {
-                            // A named/field/template value uses its existing
-                            // call verifier. This one-group application cannot
-                            // reenter the multi-group receiver branch; no alias
-                            // graph traversal or new search permission is added.
-                            let application = Obj::FnObj(crate::ast::obj::FnObj {
-                                head: Box::new(FnObjHead::from_obj(returned_value)),
-                                body: vec![app.body.last().unwrap().clone()],
-                            });
-                            if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(application_well_defined) =
+                        }
+                    } else if !matches!(&returned_value, Obj::FnObj(_)) {
+                        // A named/field/template value uses its existing
+                        // call verifier. This one-group application cannot
+                        // reenter the multi-group receiver branch; no alias
+                        // graph traversal or new search permission is added.
+                        let application = Obj::FnObj(crate::ast::obj::FnObj {
+                            head: Box::new(FnObjHead::from_obj(returned_value)),
+                            body: vec![app.body.last().unwrap().clone()],
+                        });
+                        if let crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult::Success(application_well_defined) =
                                 self.verify_obj_well_definedness(&application, state)? {
                                 if let Some((application_function_body, expanded_body)) =
                                     self.parent_checked_beta_body(&application, &application_well_defined, state)? {
@@ -216,79 +304,126 @@ impl Runtime {
                                     }, expanded_body)));
                                 }
                             }
-                        }
                     }
                 }
             }
-            let (literal, function_body) = match app.head.as_ref() {
-                FnObjHead::AnonymousFnLiteral(literal) =>
-                    (literal.as_ref().clone(), ParentCheckedBetaFunctionBody::AnonymousLiteral),
-                FnObjHead::InstantiatedTemplateObj(instance) => {
-                    // A checked template declaration supplies its body. The
-                    // parent checked every template argument and the actual
-                    // call domain/guards; match that complete domain before
-                    // substituting, rather than rechecking an invented lambda.
-                    // Example: \inverse_part<S,T,f>(B) = {x S: f(x) $in B}.
-                    if app.body.len() != 1 { return Ok(None); }
-                    let Some(definition) = self.def_template_visible(&instance.template_name) else { return Ok(None); };
-                    let TemplateDefEnum::HaveFnEqualStmt(definition_body) = &definition.template_def_stmt else { return Ok(None); };
-                    let ids = definition.template_arg_def.ordered_param_ids();
-                    if ids.len() != instance.args.len() { return Ok(None); }
-                    let substitution = ids.into_iter().zip(instance.args.iter().cloned()).collect();
-                    let body = Obj::FunctionSpace(FunctionSpace::AnonymousFn(definition_body.equal_to_anonymous_fn.clone()));
-                    let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal))) = self.inst_obj(&body, &substitution) else { return Ok(None); };
-                    let domain = if let Some(checked_domain) = checked_application_domain(app_wd) {
-                        if !function_domains_alpha_equal(&literal.body, checked_domain) { return Ok(None); }
-                        TemplateApplicationDomainProof::Parent { checked_domain: checked_domain.clone() }
-                    } else {
-                        let Some(child) = state.for_premises(VerifyStateLevel::DefinitionAndForall) else { return Ok(None); };
-                        let Ok(verification) = self.try_verify_fn_obj_against_fn_set(app, &literal.body, child)? else { return Ok(None); };
-                        if !verification.is_fully_known() { return Ok(None); }
-                        let (argument_well_defined, requirement_fact_verified) = verification.into_success_child_proofs();
-                        TemplateApplicationDomainProof::Rechecked {
-                            checked_domain: literal.body.clone(), argument_well_defined, requirement_fact_verified,
-                        }
-                    };
-                    let source = ParentCheckedBetaFunctionBody::TemplateAnonymousFunction {
-                        template_instance: Obj::InstantiatedTemplateObj(instance.clone()),
-                        function: literal.clone(), domain,
-                    };
-                    (literal, source)
+        }
+        let (literal, function_body) = match app.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(literal) => (
+                literal.as_ref().clone(),
+                ParentCheckedBetaFunctionBody::AnonymousLiteral,
+            ),
+            FnObjHead::InstantiatedTemplateObj(instance) => {
+                // A checked template declaration supplies its body. The
+                // parent checked every template argument and the actual
+                // call domain/guards; match that complete domain before
+                // substituting, rather than rechecking an invented lambda.
+                // Example: \inverse_part<S,T,f>(B) = {x S: f(x) $in B}.
+                if app.body.len() != 1 {
+                    return Ok(None);
                 }
-                FnObjHead::Identifier(head) => {
-                    // The actual parent application proof identifies the
-                    // selected domain. Mere cached WD does not identify it.
-                    let Some(checked_domain) = checked_application_domain(app_wd) else { return Ok(None); };
-                    let peers = self.exact_property_object_values(&Obj::Identifier(head.clone()));
-                    let Some((literal, path)) = peers.into_iter().find_map(|(peer, path)| {
-                        let Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal)) = peer else { return None; };
-                        function_domains_alpha_equal(&literal.body, checked_domain).then_some((literal, path))
-                    }) else { return Ok(None); };
-                    let source = ParentCheckedBetaFunctionBody::KnownAnonymousFunction {
-                        function: literal.clone(), function_equal: KnownEqualityPathProof::new(path),
+                let Some(definition) = self.def_template_visible(&instance.template_name) else {
+                    return Ok(None);
+                };
+                let TemplateDefEnum::HaveFnEqualStmt(definition_body) =
+                    &definition.template_def_stmt
+                else {
+                    return Ok(None);
+                };
+                let ids = definition.template_arg_def.ordered_param_ids();
+                if ids.len() != instance.args.len() {
+                    return Ok(None);
+                }
+                let substitution = ids.into_iter().zip(instance.args.iter().cloned()).collect();
+                let body = Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+                    definition_body.equal_to_anonymous_fn.clone(),
+                ));
+                let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal))) =
+                    self.inst_obj(&body, &substitution)
+                else {
+                    return Ok(None);
+                };
+                let domain = if let Some(checked_domain) = checked_application_domain(app_wd) {
+                    if !function_domains_alpha_equal(&literal.body, checked_domain) {
+                        return Ok(None);
+                    }
+                    TemplateApplicationDomainProof::Parent {
                         checked_domain: checked_domain.clone(),
+                    }
+                } else {
+                    let Some(child) = state.for_premises(VerifyStateLevel::DefinitionAndForall)
+                    else {
+                        return Ok(None);
                     };
-                    (literal, source)
-                }
-                _ => return Ok(None),
-            };
-            if app.body.len() != 1 {
-                return Ok(None);
+                    let Ok(verification) =
+                        self.try_verify_fn_obj_against_fn_set(app, &literal.body, child)?
+                    else {
+                        return Ok(None);
+                    };
+                    if !verification.is_fully_known() {
+                        return Ok(None);
+                    }
+                    let (argument_well_defined, requirement_fact_verified) =
+                        verification.into_success_child_proofs();
+                    TemplateApplicationDomainProof::Rechecked {
+                        checked_domain: literal.body.clone(),
+                        argument_well_defined,
+                        requirement_fact_verified,
+                    }
+                };
+                let source = ParentCheckedBetaFunctionBody::TemplateAnonymousFunction {
+                    template_instance: Obj::InstantiatedTemplateObj(instance.clone()),
+                    function: literal.clone(),
+                    domain,
+                };
+                (literal, source)
             }
-            let args: Vec<Obj> = app.body[0].iter().map(|v| v.as_ref().clone()).collect();
-            if args.len() != set_bound_parameter_count(&literal.body.set_bound_parameters) {
-                return Ok(None);
+            FnObjHead::Identifier(head) => {
+                // The actual parent application proof identifies the
+                // selected domain. Mere cached WD does not identify it.
+                let Some(checked_domain) = checked_application_domain(app_wd) else {
+                    return Ok(None);
+                };
+                let peers = self.exact_property_object_values(&Obj::Identifier(head.clone()));
+                let Some((literal, path)) = peers.into_iter().find_map(|(peer, path)| {
+                    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal)) = peer else {
+                        return None;
+                    };
+                    function_domains_alpha_equal(&literal.body, checked_domain)
+                        .then_some((literal, path))
+                }) else {
+                    return Ok(None);
+                };
+                let source = ParentCheckedBetaFunctionBody::KnownAnonymousFunction {
+                    function: literal.clone(),
+                    function_equal: KnownEqualityPathProof::new(path),
+                    checked_domain: checked_domain.clone(),
+                };
+                (literal, source)
             }
-            let subst = set_bound_params_to_arg_map(&literal.body.set_bound_parameters, &args);
-            let Ok(expanded_body) = self.inst_obj(literal.equal_to.as_ref(), &subst) else {
-                return Ok(None);
-            };
-            Ok(Some((function_body, expanded_body)))
+            _ => return Ok(None),
+        };
+        if app.body.len() != 1 {
+            return Ok(None);
+        }
+        let args: Vec<Obj> = app.body[0].iter().map(|v| v.as_ref().clone()).collect();
+        if args.len() != set_bound_parameter_count(&literal.body.set_bound_parameters) {
+            return Ok(None);
+        }
+        let subst = set_bound_params_to_arg_map(&literal.body.set_bound_parameters, &args);
+        let Ok(expanded_body) = self.inst_obj(literal.equal_to.as_ref(), &subst) else {
+            return Ok(None);
+        };
+        Ok(Some((function_body, expanded_body)))
     }
 }
 
 fn checked_application_domain(proof: &ObjWellDefinedProof) -> Option<&FnSet> {
-    let ObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FnObj(proof), .. } = proof else {
+    let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::FnObj(proof),
+        ..
+    } = proof
+    else {
         return None;
     };
     match proof.domain_fn_set.as_ref()? {

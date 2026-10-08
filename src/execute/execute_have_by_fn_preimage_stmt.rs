@@ -95,17 +95,25 @@ impl Runtime {
         let (renamed_params, subst, preimage_objs) =
             self.build_fn_preimage_params_and_subst(stmt, &body)?;
 
-        let mut store_and_infer_result =
-            self.define_typed_parameters_in_current_env(&renamed_params, None, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
+            &renamed_params,
+            None,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         for dom_fact in &body.dom_facts {
-            let instantiated = self.inst_quantifier_free_fact(dom_fact, &subst).map_err(|e| {
-                RuntimeError::InternalBug(format!(
-                    "have by fn_preimage: failed to instantiate domain fact: {e}"
-                ))
-            })?;
+            let instantiated = self
+                .inst_quantifier_free_fact(dom_fact, &subst)
+                .map_err(|e| {
+                    RuntimeError::InternalBug(format!(
+                        "have by fn_preimage: failed to instantiate domain fact: {e}"
+                    ))
+                })?;
             let as_fact = quantifier_free_fact_to_fact(instantiated);
-            let stored = self.store_fact_and_infer(&as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let stored = self.store_fact_and_infer(
+                &as_fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());
@@ -123,7 +131,10 @@ impl Runtime {
             right: application,
             line_file: stmt.range_membership.line_file.clone(),
         }));
-        let stored = self.store_fact_and_infer(&equality, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let stored = self.store_fact_and_infer(
+            &equality,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
         store_and_infer_result
             .stored_fact_ids
             .extend(stored.stored_fact_ids());

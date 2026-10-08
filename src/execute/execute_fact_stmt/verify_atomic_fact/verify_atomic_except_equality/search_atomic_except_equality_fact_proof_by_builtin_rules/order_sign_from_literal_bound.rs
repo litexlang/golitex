@@ -63,9 +63,7 @@ impl Runtime {
                                 return Some(g.fact_id);
                             }
                         }
-                        crate::ast::fact::AtomicFact::GreaterFact(g)
-                            if g.left.ir() == x.ir() =>
-                        {
+                        crate::ast::fact::AtomicFact::GreaterFact(g) if g.left.ir() == x.ir() => {
                             if bound_is_nonnegative(self, &g.right) {
                                 return Some(g.fact_id);
                             }
@@ -77,9 +75,7 @@ impl Runtime {
                                 return Some(l.fact_id);
                             }
                         }
-                        crate::ast::fact::AtomicFact::LessFact(l)
-                            if l.right.ir() == x.ir() =>
-                        {
+                        crate::ast::fact::AtomicFact::LessFact(l) if l.right.ir() == x.ir() => {
                             if bound_is_nonnegative(self, &l.left) {
                                 return Some(l.fact_id);
                             }
@@ -98,16 +94,12 @@ impl Runtime {
             for ((_, _), knowns) in facts.iter() {
                 for known in knowns {
                     match known {
-                        crate::ast::fact::AtomicFact::LessEqualFact(l)
-                            if l.left.ir() == x.ir() =>
-                        {
+                        crate::ast::fact::AtomicFact::LessEqualFact(l) if l.left.ir() == x.ir() => {
                             if bound_is_strictly_negative(self, &l.right) {
                                 return Some(l.fact_id);
                             }
                         }
-                        crate::ast::fact::AtomicFact::LessFact(l)
-                            if l.left.ir() == x.ir() =>
-                        {
+                        crate::ast::fact::AtomicFact::LessFact(l) if l.left.ir() == x.ir() => {
                             if bound_is_nonpositive(self, &l.right) {
                                 return Some(l.fact_id);
                             }
@@ -119,9 +111,7 @@ impl Runtime {
                                 return Some(g.fact_id);
                             }
                         }
-                        crate::ast::fact::AtomicFact::GreaterFact(g)
-                            if g.right.ir() == x.ir() =>
-                        {
+                        crate::ast::fact::AtomicFact::GreaterFact(g) if g.right.ir() == x.ir() => {
                             if bound_is_nonpositive(self, &g.left) {
                                 return Some(g.fact_id);
                             }
@@ -162,12 +152,7 @@ fn bound_is_nonnegative(runtime: &Runtime, obj: &Obj) -> bool {
 fn bound_is_strictly_negative(runtime: &Runtime, obj: &Obj) -> bool {
     runtime
         .resolve_obj_to_normalized_number(obj)
-        .map(|n| {
-            matches!(
-                compare_number_strings(&n, "0"),
-                NumberCompareResult::Less
-            )
-        })
+        .map(|n| matches!(compare_number_strings(&n, "0"), NumberCompareResult::Less))
         .unwrap_or(false)
 }
 

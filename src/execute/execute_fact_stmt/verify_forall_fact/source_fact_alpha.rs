@@ -20,7 +20,10 @@ pub(super) fn same_source_fact(rt: &mut Runtime, source: &Fact, goal: &Fact) -> 
     if let (Fact::ForallFact(source), Fact::ForallFact(goal)) = (source, goal) {
         return same_nested_forall(rt, source, goal);
     }
-    match (exist_shaped_fact_from_fact(source), exist_shaped_fact_from_fact(goal)) {
+    match (
+        exist_shaped_fact_from_fact(source),
+        exist_shaped_fact_from_fact(goal),
+    ) {
         (Some(source), Some(goal)) => plain_exist_facts_alpha_equal(
             crate::exec_env::exist_shaped_fact_index_key::plain_exist_fact(&source),
             crate::exec_env::exist_shaped_fact_index_key::plain_exist_fact(&goal),
@@ -54,23 +57,37 @@ fn same_nested_forall(rt: &mut Runtime, source: &ForallFact, goal: &ForallFact) 
         subst.insert(source.id, value);
     }
     for ((_, source), (_, goal)) in source_params.iter().zip(&goal_params) {
-        let Ok(inst) = rt.inst_param_type(source, &subst) else { return false; };
+        let Ok(inst) = rt.inst_param_type(source, &subst) else {
+            return false;
+        };
         let same = match (&inst, *goal) {
-            (ParamType::Obj(source), ParamType::Obj(goal)) => compound_objs_alpha_equal(source, goal),
+            (ParamType::Obj(source), ParamType::Obj(goal)) => {
+                compound_objs_alpha_equal(source, goal)
+            }
             (ParamType::Set(_), ParamType::Set(_))
             | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
             | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
             _ => false,
         };
-        if !same { return false; }
+        if !same {
+            return false;
+        }
     }
     for (source, goal) in source.dom_facts.iter().zip(&goal.dom_facts) {
-        let Ok(inst) = rt.inst_fact(source, &subst) else { return false; };
-        if !same_source_fact(rt, &inst, goal) { return false; }
+        let Ok(inst) = rt.inst_fact(source, &subst) else {
+            return false;
+        };
+        if !same_source_fact(rt, &inst, goal) {
+            return false;
+        }
     }
     for (source, goal) in source.then_facts.iter().zip(&goal.then_facts) {
-        let Ok(inst) = rt.inst_fact(&Fact::from(source.clone()), &subst) else { return false; };
-        if !same_source_fact(rt, &inst, &Fact::from(goal.clone())) { return false; }
+        let Ok(inst) = rt.inst_fact(&Fact::from(source.clone()), &subst) else {
+            return false;
+        };
+        if !same_source_fact(rt, &inst, &Fact::from(goal.clone())) {
+            return false;
+        }
     }
     true
 }

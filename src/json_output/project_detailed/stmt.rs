@@ -773,9 +773,10 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                         ),
                         (
                             "projected_exist",
-                            string(crate::ast::fact::exist_shaped_fact_to_fact(
-                                &s.projected_exist,
-                            ).readable_string()),
+                            string(
+                                crate::ast::fact::exist_shaped_fact_to_fact(&s.projected_exist)
+                                    .readable_string(),
+                            ),
                         ),
                         (
                             "exist_fact_well_defined",
@@ -1233,7 +1234,10 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                 ("success", bool_value(true)),
                 ("kind", string("by_thm")),
                 ("thm_name", string(s.call.name.local_name().to_string())),
-                ("call", super::theorem::project_theorem_call(&s.call, runtime)),
+                (
+                    "call",
+                    super::theorem::project_theorem_call(&s.call, runtime),
+                ),
                 (
                     "builtin",
                     super::theorem::project_builtin_application(&s.builtin, runtime),
@@ -1243,7 +1247,13 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                     super::theorem::project_conclusions_wd(&s.conclusions_wd, runtime),
                 ),
                 ("type_proofs", project_verify_facts(&s.type_proofs, runtime)),
-                ("function_domain", s.function_domain.as_ref().map(|p| super::theorem::project_builtin_function_domain(p, runtime)).unwrap_or(JsonValue::Null)),
+                (
+                    "function_domain",
+                    s.function_domain
+                        .as_ref()
+                        .map(|p| super::theorem::project_builtin_function_domain(p, runtime))
+                        .unwrap_or(JsonValue::Null),
+                ),
                 ("dom_proofs", project_verify_facts(&s.dom_proofs, runtime)),
                 (
                     "selected_proof",
@@ -1583,7 +1593,10 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                         ),
                     ),
                     ("source_object", string(s.source_object.readable_string())),
-                    ("cite", super::aggregate_evaluation::cites(&s.cited_equal_fact_ids)),
+                    (
+                        "cite",
+                        super::aggregate_evaluation::cites(&s.cited_equal_fact_ids),
+                    ),
                     (
                         "source_well_defined",
                         project_obj_wd_proof(&s.source_well_defined, runtime),
@@ -1596,13 +1609,43 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                         "evaluated_object",
                         string(s.evaluated_object.readable_string()),
                     ),
-                    ("fact", string(crate::ast::fact::Fact::from(s.evaluated_equal_fact.clone()).readable_string())),
-                    ("fact_id", string(s.evaluated_equal_fact.fact_id.to_string())),
-                    ("well_defined", object_for(runtime, vec![
-                        ("left", project_obj_wd_proof(&s.evaluated_equal_well_defined.left, runtime)),
-                        ("right", project_obj_wd_proof(&s.evaluated_equal_well_defined.right, runtime)),
-                    ])),
-                    ("store_and_infer", project_store_and_infer(&s.store_and_infer_result, runtime)),
+                    (
+                        "fact",
+                        string(
+                            crate::ast::fact::Fact::from(s.evaluated_equal_fact.clone())
+                                .readable_string(),
+                        ),
+                    ),
+                    (
+                        "fact_id",
+                        string(s.evaluated_equal_fact.fact_id.to_string()),
+                    ),
+                    (
+                        "well_defined",
+                        object_for(
+                            runtime,
+                            vec![
+                                (
+                                    "left",
+                                    project_obj_wd_proof(
+                                        &s.evaluated_equal_well_defined.left,
+                                        runtime,
+                                    ),
+                                ),
+                                (
+                                    "right",
+                                    project_obj_wd_proof(
+                                        &s.evaluated_equal_well_defined.right,
+                                        runtime,
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ),
+                    (
+                        "store_and_infer",
+                        project_store_and_infer(&s.store_and_infer_result, runtime),
+                    ),
                 ],
             ),
             ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::WellDefined(failed)) => {
@@ -1618,13 +1661,28 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                     ],
                 )
             }
-            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AlgorithmEquation(proof)) => object_for(
-                runtime, vec![("success", bool_value(false)), ("kind", string("eval")),
-                    ("verify", super::verify::project_verify_fact(proof, runtime))],
+            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::AlgorithmEquation(
+                proof,
+            )) => object_for(
+                runtime,
+                vec![
+                    ("success", bool_value(false)),
+                    ("kind", string("eval")),
+                    ("verify", super::verify::project_verify_fact(proof, runtime)),
+                ],
             ),
-            ExecEvalStmtResult::Failed(crate::execute::ExecEvalStmtFailed::EvaluatedEqualityWellDefined(wd)) => object_for(
-                runtime, vec![("success", bool_value(false)), ("kind", string("eval")),
-                    ("well_defined", super::wd::project_verify_equal_wd(wd, runtime))],
+            ExecEvalStmtResult::Failed(
+                crate::execute::ExecEvalStmtFailed::EvaluatedEqualityWellDefined(wd),
+            ) => object_for(
+                runtime,
+                vec![
+                    ("success", bool_value(false)),
+                    ("kind", string("eval")),
+                    (
+                        "well_defined",
+                        super::wd::project_verify_equal_wd(wd, runtime),
+                    ),
+                ],
             ),
             ExecEvalStmtResult::Failed(
                 crate::execute::ExecEvalStmtFailed::AggregateBudgetExceeded,
@@ -1738,59 +1796,177 @@ pub(in crate::json_output) fn project_release_cart_def(
     result: &crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    use crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::VerifyEqualityFailed;
+    use crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult;
     match result {
-        ExecReleaseCartDefStmtResult::Success(s) => object_for(runtime, vec![
-            ("success", bool_value(true)), ("kind", string("release_cart_def")),
-            ("statement", string(s.statement.readable_string())),
-            ("fact", string(crate::ast::fact::Fact::from(s.verification.fact.clone()).readable_string())),
-            ("fact_id", string(s.verification.fact.fact_id.to_string())),
-            ("well_defined", super::wd::project_equal_wd_proof(&s.verification.well_defined_proof, runtime)),
-            ("searched_proof", super::searched::project_equal_searched(&s.verification.searched_proof, runtime)),
-            ("store_and_infer", super::store::project_store_and_infer(&s.store_and_infer, runtime)),
-        ]),
+        ExecReleaseCartDefStmtResult::Success(s) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(true)),
+                ("kind", string("release_cart_def")),
+                ("statement", string(s.statement.readable_string())),
+                (
+                    "fact",
+                    string(
+                        crate::ast::fact::Fact::from(s.verification.fact.clone()).readable_string(),
+                    ),
+                ),
+                ("fact_id", string(s.verification.fact.fact_id.to_string())),
+                (
+                    "well_defined",
+                    super::wd::project_equal_wd_proof(&s.verification.well_defined_proof, runtime),
+                ),
+                (
+                    "searched_proof",
+                    super::searched::project_equal_searched(
+                        &s.verification.searched_proof,
+                        runtime,
+                    ),
+                ),
+                (
+                    "store_and_infer",
+                    super::store::project_store_and_infer(&s.store_and_infer, runtime),
+                ),
+            ],
+        ),
         ExecReleaseCartDefStmtResult::Failed(reason) => {
             let (phase, details) = match reason {
-                VerifyEqualityFailed::FailToVerifyWellDefined(f) => ("well_defined", super::wd_failure::project_obj_wd_failure(&f.reason, runtime)),
-                VerifyEqualityFailed::FailToSearchProof { fact, well_defined_proof } => ("search_proof", object_for(runtime, vec![
-                    ("fact", string(crate::ast::fact::Fact::from(fact.clone()).readable_string())),
-                    ("well_defined", super::wd::project_equal_wd_proof(well_defined_proof, runtime)),
-                ])),
+                VerifyEqualityFailed::FailToVerifyWellDefined(f) => (
+                    "well_defined",
+                    super::wd_failure::project_obj_wd_failure(&f.reason, runtime),
+                ),
+                VerifyEqualityFailed::FailToSearchProof {
+                    fact,
+                    well_defined_proof,
+                } => (
+                    "search_proof",
+                    object_for(
+                        runtime,
+                        vec![
+                            (
+                                "fact",
+                                string(
+                                    crate::ast::fact::Fact::from(fact.clone()).readable_string(),
+                                ),
+                            ),
+                            (
+                                "well_defined",
+                                super::wd::project_equal_wd_proof(well_defined_proof, runtime),
+                            ),
+                        ],
+                    ),
+                ),
             };
-            object_for(runtime, vec![("success", bool_value(false)), ("kind", string("release_cart_def")), ("phase", string(phase)), ("failure", details)])
+            object_for(
+                runtime,
+                vec![
+                    ("success", bool_value(false)),
+                    ("kind", string("release_cart_def")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
         }
     }
 }
-
 
 pub(in crate::json_output) fn project_release_tuple_def(
     result: &crate::execute::execute_release_tuple_def_stmt::ExecReleaseTupleDefStmtResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    use crate::execute::execute_release_tuple_def_stmt::{ExecReleaseTupleDefStmtResult as R, ExecReleaseTupleDefStmtFailed as F};
+    use crate::execute::execute_release_tuple_def_stmt::{
+        ExecReleaseTupleDefStmtFailed as F, ExecReleaseTupleDefStmtResult as R,
+    };
     match result {
-        R::Success(s) => object_for(runtime, vec![
-            ("success", bool_value(true)), ("kind", string("release_tuple_def")),
-            ("statement", string(s.statement.readable_string())),
-            ("shape", super::function_domain::project_finite_function_source(&s.shape, runtime)),
-            ("complete_domain", super::function_domain::project_function_domain(&s.domain, runtime)),
-            ("membership_rule", super::theorem::project_builtin_application_value(&s.membership_rule, runtime)),
-            ("return_proofs", project_verify_facts(&s.return_proofs, runtime)),
-            ("membership_well_defined", project_fact_wd_proof(&s.membership_wd, runtime)),
-            ("coordinate_proofs", project_verify_facts(&s.coordinate_proofs, runtime)),
-            ("stored", JsonValue::Array(s.stored.iter().map(|store| project_store_and_infer(store, runtime)).collect())),
-        ]),
+        R::Success(s) => object_for(
+            runtime,
+            vec![
+                ("success", bool_value(true)),
+                ("kind", string("release_tuple_def")),
+                ("statement", string(s.statement.readable_string())),
+                (
+                    "shape",
+                    super::function_domain::project_finite_function_source(&s.shape, runtime),
+                ),
+                (
+                    "complete_domain",
+                    super::function_domain::project_function_domain(&s.domain, runtime),
+                ),
+                (
+                    "membership_rule",
+                    super::theorem::project_builtin_application_value(&s.membership_rule, runtime),
+                ),
+                (
+                    "return_proofs",
+                    project_verify_facts(&s.return_proofs, runtime),
+                ),
+                (
+                    "membership_well_defined",
+                    project_fact_wd_proof(&s.membership_wd, runtime),
+                ),
+                (
+                    "coordinate_proofs",
+                    project_verify_facts(&s.coordinate_proofs, runtime),
+                ),
+                (
+                    "stored",
+                    JsonValue::Array(
+                        s.stored
+                            .iter()
+                            .map(|store| project_store_and_infer(store, runtime))
+                            .collect(),
+                    ),
+                ),
+            ],
+        ),
         R::Failed(failure) => {
             let (phase, details) = match failure {
-                F::Shape => ("shape", object_for(runtime, vec![("reason", string("no_checked_tuple_shape"))])),
-                F::Domain(f) => ("complete_domain", super::function_domain::project_function_domain_failure(f, runtime)),
-                F::Requirements(message) => ("return_requirements", object_for(runtime, vec![("message", string(message))])),
-                F::Return { fact, result } => ("return_bound", object_for(runtime, vec![("fact", string(fact.readable_string())), ("verification", project_verify_fact(result, runtime))])),
-                F::MembershipWd(result) => ("membership_well_defined", project_verify_fact_wd_result(result, runtime)),
-                F::Coordinate { fact, result } => ("coordinate", object_for(runtime, vec![("fact", string(fact.readable_string())), ("verification", project_verify_fact(result, runtime))])),
+                F::Shape => (
+                    "shape",
+                    object_for(runtime, vec![("reason", string("no_checked_tuple_shape"))]),
+                ),
+                F::Domain(f) => (
+                    "complete_domain",
+                    super::function_domain::project_function_domain_failure(f, runtime),
+                ),
+                F::Requirements(message) => (
+                    "return_requirements",
+                    object_for(runtime, vec![("message", string(message))]),
+                ),
+                F::Return { fact, result } => (
+                    "return_bound",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("fact", string(fact.readable_string())),
+                            ("verification", project_verify_fact(result, runtime)),
+                        ],
+                    ),
+                ),
+                F::MembershipWd(result) => (
+                    "membership_well_defined",
+                    project_verify_fact_wd_result(result, runtime),
+                ),
+                F::Coordinate { fact, result } => (
+                    "coordinate",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("fact", string(fact.readable_string())),
+                            ("verification", project_verify_fact(result, runtime)),
+                        ],
+                    ),
+                ),
             };
-            object_for(runtime, vec![("success", bool_value(false)), ("kind", string("release_tuple_def")), ("phase", string(phase)), ("failure", details)])
+            object_for(
+                runtime,
+                vec![
+                    ("success", bool_value(false)),
+                    ("kind", string("release_tuple_def")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
         }
     }
 }

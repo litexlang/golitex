@@ -31,16 +31,37 @@ impl NotEqualFactSearchProofByBuiltinRule {
         match self {
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
-            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
-            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
-            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
-            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text(
+                "SinNonzeroIntegerPiShift",
+                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+            ),
+            Self::CosNonzeroIntegerPiShift(_) => text(
+                "CosNonzeroIntegerPiShift",
+                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+            ),
+            Self::TanNonzeroFromSin(_) => text(
+                "TanNonzeroFromSin",
+                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+            ),
+            Self::CotNonzeroFromCos(_) => text(
+                "CotNonzeroFromCos",
+                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+            ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
-            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => {
+                text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
             Self::ExpNonzero(_) => text("Exponential is nonzero", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => text("Factorial is nonzero", "n in N: factorial(n)>0 => factorial(n)!=0"),
-            Self::SignNonzeroFromArgument(_) => text("Nonzero sign from argument", "x in R, x!=0 => sign(x)!=0"),
-            Self::SignNonzeroReflection(_) => text("Nonzero sign reflection", "x in R, sign(x)!=0 => x!=0"),
+            Self::FactorialNonzero(_) => text(
+                "Factorial is nonzero",
+                "n in N: factorial(n)>0 => factorial(n)!=0",
+            ),
+            Self::SignNonzeroFromArgument(_) => {
+                text("Nonzero sign from argument", "x in R, x!=0 => sign(x)!=0")
+            }
+            Self::SignNonzeroReflection(_) => {
+                text("Nonzero sign reflection", "x in R, sign(x)!=0 => x!=0")
+            }
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -108,15 +129,33 @@ impl NotEqualFactSearchProofByBuiltinRule {
         match self {
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
-            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
-            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
-            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
-            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text(
+                "SinNonzeroIntegerPiShift",
+                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+            ),
+            Self::CosNonzeroIntegerPiShift(_) => text(
+                "CosNonzeroIntegerPiShift",
+                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+            ),
+            Self::TanNonzeroFromSin(_) => text(
+                "TanNonzeroFromSin",
+                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+            ),
+            Self::CotNonzeroFromCos(_) => text(
+                "CotNonzeroFromCos",
+                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+            ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
-            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => {
+                text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
             Self::ExpNonzero(_) => text("指数函数非零", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => text("阶乘非零", "n in N: factorial(n)>0 => factorial(n)!=0"),
-            Self::SignNonzeroFromArgument(_) => text("非零参数的 sign 非零", "x in R, x!=0 => sign(x)!=0"),
+            Self::FactorialNonzero(_) => {
+                text("阶乘非零", "n in N: factorial(n)>0 => factorial(n)!=0")
+            }
+            Self::SignNonzeroFromArgument(_) => {
+                text("非零参数的 sign 非零", "x in R, x!=0 => sign(x)!=0")
+            }
             Self::SignNonzeroReflection(_) => text("sign 的非零反射", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
@@ -128,35 +167,21 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "由带符号界推出非零",
                 "已验证的界使该值严格大于零或严格小于零",
             ),
-            Self::ImaginaryUnitNonzero(_) => text(
-                "虚数单位非零",
-                "内建虚数单位满足 i² = -1，因而不等于零",
-            ),
-            Self::InequalityFromDifferenceNonzero(_) => text(
-                "差非零推出不相等",
-                "已验证的差非零说明两个操作数不相等",
-            ),
+            Self::ImaginaryUnitNonzero(_) => {
+                text("虚数单位非零", "内建虚数单位满足 i² = -1，因而不等于零")
+            }
+            Self::InequalityFromDifferenceNonzero(_) => {
+                text("差非零推出不相等", "已验证的差非零说明两个操作数不相等")
+            }
             Self::InequalityFromSumNonzero(_) => text(
                 "和非零排除互为相反数",
                 "已验证的和非零说明两个操作数不互为相反数",
             ),
-            Self::ComplexModulusNonzero(_) => text(
-                "非零复数的模非零",
-                "非零复数的模不等于零",
-            ),
-            Self::PiNonzero(_) => text(
-                "圆周率非零",
-                "圆周率严格为正，因此不等于零",
-            ),
+            Self::ComplexModulusNonzero(_) => text("非零复数的模非零", "非零复数的模不等于零"),
+            Self::PiNonzero(_) => text("圆周率非零", "圆周率严格为正，因此不等于零"),
             Self::ClosedDecimal(p) => p.rule_name_and_message_zh(),
-            Self::ClosedRational(_) => text(
-                "精确分数不等",
-                "两边的精确分数规范化后不同",
-            ),
-            Self::ClosedComplex(_) => text(
-                "精确复数不等",
-                "精确实部或虚部不同",
-            ),
+            Self::ClosedRational(_) => text("精确分数不等", "两边的精确分数规范化后不同"),
+            Self::ClosedComplex(_) => text("精确复数不等", "精确实部或虚部不同"),
             Self::NotEqualSymmetry(p) => p.rule_name_and_message_zh(),
             Self::ListSetDifferentLength(p) => p.rule_name_and_message_zh(),
             Self::FromKnownStrictOrder(p) => p.rule_name_and_message_zh(),
@@ -185,15 +210,33 @@ impl NotEqualFactSearchProofByBuiltinRule {
         match self {
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
-            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
-            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
-            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
-            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text(
+                "SinNonzeroIntegerPiShift",
+                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+            ),
+            Self::CosNonzeroIntegerPiShift(_) => text(
+                "CosNonzeroIntegerPiShift",
+                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+            ),
+            Self::TanNonzeroFromSin(_) => text(
+                "TanNonzeroFromSin",
+                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+            ),
+            Self::CotNonzeroFromCos(_) => text(
+                "CotNonzeroFromCos",
+                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+            ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
-            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => {
+                text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
             Self::ExpNonzero(_) => text("指數函數非零", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => text("階乘非零", "n in N: factorial(n)>0 => factorial(n)!=0"),
-            Self::SignNonzeroFromArgument(_) => text("非零參數的 sign 非零", "x in R, x!=0 => sign(x)!=0"),
+            Self::FactorialNonzero(_) => {
+                text("階乘非零", "n in N: factorial(n)>0 => factorial(n)!=0")
+            }
+            Self::SignNonzeroFromArgument(_) => {
+                text("非零參數的 sign 非零", "x in R, x!=0 => sign(x)!=0")
+            }
             Self::SignNonzeroReflection(_) => text("sign 的非零反射", "x in R, sign(x)!=0 => x!=0"),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh_hant(),
@@ -205,35 +248,21 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "由帶符號界推出非零",
                 "已驗證的界使該值嚴格大於零或嚴格小於零",
             ),
-            Self::ImaginaryUnitNonzero(_) => text(
-                "虛數單位非零",
-                "保留的虛數單位滿足 i² = -1 且非零",
-            ),
-            Self::InequalityFromDifferenceNonzero(_) => text(
-                "差非零推出不相等",
-                "已驗證的差非零說明兩個運算元不相等",
-            ),
+            Self::ImaginaryUnitNonzero(_) => {
+                text("虛數單位非零", "保留的虛數單位滿足 i² = -1 且非零")
+            }
+            Self::InequalityFromDifferenceNonzero(_) => {
+                text("差非零推出不相等", "已驗證的差非零說明兩個運算元不相等")
+            }
             Self::InequalityFromSumNonzero(_) => text(
                 "和非零排除互為相反數",
                 "已驗證的和非零說明兩個運算元不互為相反數",
             ),
-            Self::ComplexModulusNonzero(_) => text(
-                "非零複數的模非零",
-                "非零複數的模不等於零",
-            ),
-            Self::PiNonzero(_) => text(
-                "圓周率非零",
-                "圓周率嚴格為正，因此不等於零",
-            ),
+            Self::ComplexModulusNonzero(_) => text("非零複數的模非零", "非零複數的模不等於零"),
+            Self::PiNonzero(_) => text("圓周率非零", "圓周率嚴格為正，因此不等於零"),
             Self::ClosedDecimal(p) => p.rule_name_and_message_zh_hant(),
-            Self::ClosedRational(_) => text(
-                "精確有理數不等",
-                "精確封閉分數的正規化值不同",
-            ),
-            Self::ClosedComplex(_) => text(
-                "精確複數不等",
-                "精確實部或虛部座標不同",
-            ),
+            Self::ClosedRational(_) => text("精確有理數不等", "精確封閉分數的正規化值不同"),
+            Self::ClosedComplex(_) => text("精確複數不等", "精確實部或虛部座標不同"),
             Self::NotEqualSymmetry(p) => p.rule_name_and_message_zh_hant(),
             Self::ListSetDifferentLength(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownStrictOrder(p) => p.rule_name_and_message_zh_hant(),
@@ -412,16 +441,37 @@ impl NotEqualFactSearchProofByBuiltinRule {
         match self {
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
-            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
-            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
-            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
-            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text(
+                "SinNonzeroIntegerPiShift",
+                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+            ),
+            Self::CosNonzeroIntegerPiShift(_) => text(
+                "CosNonzeroIntegerPiShift",
+                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+            ),
+            Self::TanNonzeroFromSin(_) => text(
+                "TanNonzeroFromSin",
+                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+            ),
+            Self::CotNonzeroFromCos(_) => text(
+                "CotNonzeroFromCos",
+                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+            ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
-            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => {
+                text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
             Self::ExpNonzero(_) => text("الدالة الأسية غير صفرية", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => text("المضروب غير صفري", "n in N: factorial(n)>0 => factorial(n)!=0"),
-            Self::SignNonzeroFromArgument(_) => text("إشارة وسيط غير صفري", "x in R, x!=0 => sign(x)!=0"),
-            Self::SignNonzeroReflection(_) => text("انعكاس الإشارة غير الصفرية", "x in R, sign(x)!=0 => x!=0"),
+            Self::FactorialNonzero(_) => text(
+                "المضروب غير صفري",
+                "n in N: factorial(n)>0 => factorial(n)!=0",
+            ),
+            Self::SignNonzeroFromArgument(_) => {
+                text("إشارة وسيط غير صفري", "x in R, x!=0 => sign(x)!=0")
+            }
+            Self::SignNonzeroReflection(_) => {
+                text("انعكاس الإشارة غير الصفرية", "x in R, sign(x)!=0 => x!=0")
+            }
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ar(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -448,10 +498,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "مقياس غير صفري لعدد مركب غير صفري",
                 "العدد المركب غير الصفري له مقياس غير صفري",
             ),
-            Self::PiNonzero(_) => text(
-                "باي غير صفري",
-                "باي موجب تمامًا ولذلك لا يمكن أن يساوي صفرًا",
-            ),
+            Self::PiNonzero(_) => text("باي غير صفري", "باي موجب تمامًا ولذلك لا يمكن أن يساوي صفرًا"),
             Self::ClosedDecimal(p) => p.rule_name_and_message_ar(),
             Self::ClosedRational(_) => text(
                 "عدم مساواة نسبية دقيقة",
@@ -489,16 +536,39 @@ impl NotEqualFactSearchProofByBuiltinRule {
         match self {
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
-            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
-            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
-            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
-            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text(
+                "SinNonzeroIntegerPiShift",
+                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+            ),
+            Self::CosNonzeroIntegerPiShift(_) => text(
+                "CosNonzeroIntegerPiShift",
+                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+            ),
+            Self::TanNonzeroFromSin(_) => text(
+                "TanNonzeroFromSin",
+                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+            ),
+            Self::CotNonzeroFromCos(_) => text(
+                "CotNonzeroFromCos",
+                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+            ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
-            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => {
+                text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
             Self::ExpNonzero(_) => text("指数関数はゼロでない", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => text("階乗はゼロでない", "n in N: factorial(n)>0 => factorial(n)!=0"),
-            Self::SignNonzeroFromArgument(_) => text("引数がゼロでなければ符号もゼロでない", "x in R, x!=0 => sign(x)!=0"),
-            Self::SignNonzeroReflection(_) => text("符号がゼロでなければ引数もゼロでない", "x in R, sign(x)!=0 => x!=0"),
+            Self::FactorialNonzero(_) => text(
+                "階乗はゼロでない",
+                "n in N: factorial(n)>0 => factorial(n)!=0",
+            ),
+            Self::SignNonzeroFromArgument(_) => text(
+                "引数がゼロでなければ符号もゼロでない",
+                "x in R, x!=0 => sign(x)!=0",
+            ),
+            Self::SignNonzeroReflection(_) => text(
+                "符号がゼロでなければ引数もゼロでない",
+                "x in R, sign(x)!=0 => x!=0",
+            ),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ja(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -525,10 +595,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "非零の複素数の絶対値の非零性",
                 "零でない複素数の絶対値は零ではありません",
             ),
-            Self::PiNonzero(_) => text(
-                "円周率の非零性",
-                "円周率は正なので零にはなりません",
-            ),
+            Self::PiNonzero(_) => text("円周率の非零性", "円周率は正なので零にはなりません"),
             Self::ClosedDecimal(p) => p.rule_name_and_message_ja(),
             Self::ClosedRational(_) => text(
                 "有理数の正確な不等性",
@@ -566,16 +633,37 @@ impl NotEqualFactSearchProofByBuiltinRule {
         match self {
             Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
             Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
-            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
-            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
-            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
-            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text(
+                "SinNonzeroIntegerPiShift",
+                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+            ),
+            Self::CosNonzeroIntegerPiShift(_) => text(
+                "CosNonzeroIntegerPiShift",
+                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+            ),
+            Self::TanNonzeroFromSin(_) => text(
+                "TanNonzeroFromSin",
+                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+            ),
+            Self::CotNonzeroFromCos(_) => text(
+                "CotNonzeroFromCos",
+                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+            ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
-            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => {
+                text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
             Self::ExpNonzero(_) => text("지수 함수는 영이 아님", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => text("팩토리얼은 영이 아님", "n in N: factorial(n)>0 => factorial(n)!=0"),
-            Self::SignNonzeroFromArgument(_) => text("영이 아닌 인수의 부호", "x in R, x!=0 => sign(x)!=0"),
-            Self::SignNonzeroReflection(_) => text("영이 아닌 부호의 반영", "x in R, sign(x)!=0 => x!=0"),
+            Self::FactorialNonzero(_) => text(
+                "팩토리얼은 영이 아님",
+                "n in N: factorial(n)>0 => factorial(n)!=0",
+            ),
+            Self::SignNonzeroFromArgument(_) => {
+                text("영이 아닌 인수의 부호", "x in R, x!=0 => sign(x)!=0")
+            }
+            Self::SignNonzeroReflection(_) => {
+                text("영이 아닌 부호의 반영", "x in R, sign(x)!=0 => x!=0")
+            }
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_ko(),
             Self::PeriodicTrigNonzero(_) => text(
@@ -602,10 +690,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "영이 아닌 복소수 절댓값의 비영성",
                 "영이 아닌 복소수의 절댓값은 영이 아닙니다",
             ),
-            Self::PiNonzero(_) => text(
-                "원주율의 비영성",
-                "원주율은 양수이므로 영일 수 없습니다",
-            ),
+            Self::PiNonzero(_) => text("원주율의 비영성", "원주율은 양수이므로 영일 수 없습니다"),
             Self::ClosedDecimal(p) => p.rule_name_and_message_ko(),
             Self::ClosedRational(_) => text(
                 "정확한 유리수 불일치",
@@ -706,7 +791,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
-            Self::SinNonzeroNegation(_) | Self::CosNonzeroNegation(_) | Self::SinNonzeroIntegerPiShift(_) | Self::CosNonzeroIntegerPiShift(_) | Self::TanNonzeroFromSin(_) | Self::CotNonzeroFromCos(_) | Self::EulerNonunit(_) | Self::ProductFactorNonzeroWithZeroAlias(_) => None,
+            Self::SinNonzeroNegation(_)
+            | Self::CosNonzeroNegation(_)
+            | Self::SinNonzeroIntegerPiShift(_)
+            | Self::CosNonzeroIntegerPiShift(_)
+            | Self::TanNonzeroFromSin(_)
+            | Self::CotNonzeroFromCos(_)
+            | Self::EulerNonunit(_)
+            | Self::ProductFactorNonzeroWithZeroAlias(_) => None,
             Self::NonzeroFromSignedBound(p) => Some(p.cite_fact_id),
             Self::FromKnownStrictOrder(p) => p.premise_proof.cite_fact_id(),
             Self::InequalityFromDifferenceNonzero(p) => p.premise_proof.cite_fact_id(),
@@ -725,17 +817,11 @@ impl ClosedDecimalNotEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "封闭数值不等",
-            "两边算出不同的封闭数",
-        )
+        text("封闭数值不等", "两边算出不同的封闭数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "封閉十進位不等",
-            "兩邊算出不同的封閉數值",
-        )
+        text("封閉十進位不等", "兩邊算出不同的封閉數值")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -767,10 +853,7 @@ impl ClosedDecimalNotEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "閉じた小数値の不等性",
-            "両辺の評価値は異なる閉じた数値です",
-        )
+        text("閉じた小数値の不等性", "両辺の評価値は異なる閉じた数値です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -841,24 +924,15 @@ impl NotEqualSymmetryBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "تناظر عدم المساواة",
-            "عدم المساواة متناظرة في طرفيها",
-        )
+        text("تناظر عدم المساواة", "عدم المساواة متناظرة في طرفيها")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "非等値関係の対称性",
-            "非等値関係は両辺について対称です",
-        )
+        text("非等値関係の対称性", "非等値関係は両辺について対称です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "불일치 대칭성",
-            "같지 않음 관계는 양변에 대해 대칭입니다",
-        )
+        text("불일치 대칭성", "같지 않음 관계는 양변에 대해 대칭입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -893,17 +967,11 @@ impl ListSetDifferentLengthBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "列表集因长度不等",
-            "不同长度的列表集不等",
-        )
+        text("列表集因长度不等", "不同长度的列表集不等")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由長度得列表集合不等",
-            "長度不同的列表集合不相等",
-        )
+        text("由長度得列表集合不等", "長度不同的列表集合不相等")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -980,17 +1048,11 @@ impl FromKnownStrictOrderBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由已知严格序",
-            "不等关系由已知严格序事实推出",
-        )
+        text("由已知严格序", "不等关系由已知严格序事实推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由已知嚴格序",
-            "不等由已知嚴格序命題得出",
-        )
+        text("由已知嚴格序", "不等由已知嚴格序命題得出")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1067,17 +1129,11 @@ impl CosNonzeroOnOpenHalfPiBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "cos 在 (-π/2,π/2) 非零",
-            "余弦在开半 π 区间上非零",
-        )
+        text("cos 在 (-π/2,π/2) 非零", "余弦在开半 π 区间上非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "(-π/2,π/2) 上 cos ≠ 0",
-            "餘弦在開半 pi 區間上非零",
-        )
+        text("(-π/2,π/2) 上 cos ≠ 0", "餘弦在開半 pi 區間上非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1147,10 +1203,7 @@ impl CosNonzeroOnOpenHalfPiBuiltinRuleProof {
 
 impl CosNonzeroAtZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Cosine is nonzero at zero",
-            "cosine is nonzero at zero",
-        )
+        text("Cosine is nonzero at zero", "cosine is nonzero at zero")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -1162,21 +1215,18 @@ impl CosNonzeroAtZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Cosinus non nul en zéro",
-            "Le cosinus est non nul en zéro",
-        )
+        text("Cosinus non nul en zéro", "Le cosinus est non nul en zéro")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Косинус ненулевой при нулевом аргументе", "Косинус ненулевой в нуле")
+        text(
+            "Косинус ненулевой при нулевом аргументе",
+            "Косинус ненулевой в нуле",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Coseno no nulo en cero",
-            "El coseno es no nulo en cero",
-        )
+        text("Coseno no nulo en cero", "El coseno es no nulo en cero")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
@@ -1191,10 +1241,7 @@ impl CosNonzeroAtZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "영에서 코사인의 비영성",
-            "코사인은 0에서 0이 아닙니다",
-        )
+        text("영에서 코사인의 비영성", "코사인은 0에서 0이 아닙니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -1226,17 +1273,11 @@ impl SinNonzeroOnOpenPiBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "sin 在 (0,π) 非零",
-            "正弦在开 π 区间上非零",
-        )
+        text("sin 在 (0,π) 非零", "正弦在开 π 区间上非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "(0,π) 上 sin ≠ 0",
-            "正弦在開 pi 區間上非零",
-        )
+        text("(0,π) 上 sin ≠ 0", "正弦在開 pi 區間上非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1261,31 +1302,19 @@ impl SinNonzeroOnOpenPiBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "sin ≠ 0 على (0,π)",
-            "الجيب غير صفري على فترة pi المفتوحة",
-        )
+        text("sin ≠ 0 على (0,π)", "الجيب غير صفري على فترة pi المفتوحة")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "(0,π) 上で sin ≠ 0",
-            "正弦は開いた pi 区間上で非ゼロです",
-        )
+        text("(0,π) 上で sin ≠ 0", "正弦は開いた pi 区間上で非ゼロです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "(0,π)에서 sin ≠ 0",
-            "사인은 열린 pi 구간에서 0이 아닙니다",
-        )
+        text("(0,π)에서 sin ≠ 0", "사인은 열린 pi 구간에서 0이 아닙니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "sin ≠ 0 trên (0,π)",
-            "Sin khác không trên khoảng pi mở",
-        )
+        text("sin ≠ 0 trên (0,π)", "Sin khác không trên khoảng pi mở")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1306,10 +1335,7 @@ impl SinNonzeroOnOpenPiBuiltinRuleProof {
 
 impl SinNonzeroAtHalfPiBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Sine is nonzero at half pi",
-            "sine is nonzero at half pi",
-        )
+        text("Sine is nonzero at half pi", "sine is nonzero at half pi")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -1342,17 +1368,11 @@ impl SinNonzeroAtHalfPiBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "الجيب غير صفري عند نصف باي",
-            "الجيب غير صفري عند نصف pi",
-        )
+        text("الجيب غير صفري عند نصف باي", "الجيب غير صفري عند نصف pi")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "二分のπにおける正弦の非零性",
-            "正弦は半 pi で非ゼロです",
-        )
+        text("二分のπにおける正弦の非零性", "正弦は半 pi で非ゼロです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -1394,17 +1414,11 @@ impl AbsNonzeroFromArgBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "非零参数的绝对值非零",
-            "当参数非零时绝对值非零",
-        )
+        text("非零参数的绝对值非零", "当参数非零时绝对值非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非零引數的絕對值非零",
-            "引數非零時絕對值非零",
-        )
+        text("非零引數的絕對值非零", "引數非零時絕對值非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1481,17 +1495,11 @@ impl DiffNonzeroFromInequalityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "不相等的数之差非零",
-            "两边不等则差非零",
-        )
+        text("不相等的数之差非零", "两边不等则差非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "不相等的數之差非零",
-            "運算元不等時差非零",
-        )
+        text("不相等的數之差非零", "運算元不等時差非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1523,10 +1531,7 @@ impl DiffNonzeroFromInequalityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "異なる数の差の非零性",
-            "被演算子が異なれば差は非ゼロです",
-        )
+        text("異なる数の差の非零性", "被演算子が異なれば差は非ゼロです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -1561,10 +1566,7 @@ impl DiffNonzeroFromInequalityBuiltinRuleProof {
 
 impl EmptySetFromNonemptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "∅ ≠ nonempty",
-            "The empty set is unequal to a nonempty set",
-        )
+        text("∅ ≠ nonempty", "The empty set is unequal to a nonempty set")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -1572,10 +1574,7 @@ impl EmptySetFromNonemptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "∅ 不等於非空集合",
-            "空集合不等於非空集合",
-        )
+        text("∅ 不等於非空集合", "空集合不等於非空集合")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1607,10 +1606,7 @@ impl EmptySetFromNonemptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "∅ ≠ 空でない集合",
-            "空集合は空でない集合と等しくありません",
-        )
+        text("∅ ≠ 空でない集合", "空集合は空でない集合と等しくありません")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -1621,10 +1617,7 @@ impl EmptySetFromNonemptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "∅ ≠ tập không rỗng",
-            "Tập rỗng không bằng tập không rỗng",
-        )
+        text("∅ ≠ tập không rỗng", "Tập rỗng không bằng tập không rỗng")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1743,10 +1736,7 @@ impl PowNonzeroFromBaseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由底數非零得冪非零",
-            "底數非零時冪非零",
-        )
+        text("由底數非零得冪非零", "底數非零時冪非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1778,10 +1768,7 @@ impl PowNonzeroFromBaseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "底から冪 ≠ 0",
-            "底が非ゼロなら冪は非ゼロです",
-        )
+        text("底から冪 ≠ 0", "底が非ゼロなら冪は非ゼロです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -1823,17 +1810,11 @@ impl DivNonzeroFromFactorsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由因子得 a/b ≠ 0",
-            "分子分母都非零则商非零",
-        )
+        text("由因子得 a/b ≠ 0", "分子分母都非零则商非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由因子非零得 a/b ≠ 0",
-            "分子與分母非零時商非零",
-        )
+        text("由因子非零得 a/b ≠ 0", "分子與分母非零時商非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1865,10 +1846,7 @@ impl DivNonzeroFromFactorsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "因子から a/b ≠ 0",
-            "分子と分母が非ゼロなら商は非ゼロです",
-        )
+        text("因子から a/b ≠ 0", "分子と分母が非ゼロなら商は非ゼロです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -1910,17 +1888,11 @@ impl ProductComponentNonzeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由分量得积 ≠ 0",
-            "在同伴非零时，分量非零则积非零",
-        )
+        text("由分量得积 ≠ 0", "在同伴非零时，分量非零则积非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由分量非零得乘積非零",
-            "一因子非零且其他因子非零時乘積非零",
-        )
+        text("由分量非零得乘積非零", "一因子非零且其他因子非零時乘積非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1997,17 +1969,11 @@ impl SqrtNonzeroFromPositiveArgBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由正参数得 √ ≠ 0",
-            "当参数为正时平方根非零",
-        )
+        text("由正参数得 √ ≠ 0", "当参数为正时平方根非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由正引數得 √ 非零",
-            "引數正時平方根非零",
-        )
+        text("由正引數得 √ 非零", "引數正時平方根非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2039,17 +2005,11 @@ impl SqrtNonzeroFromPositiveArgBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "正の引数から √ ≠ 0",
-            "引数が正なら平方根は非ゼロです",
-        )
+        text("正の引数から √ ≠ 0", "引数が正なら平方根は非ゼロです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "양수 인수로 √ ≠ 0",
-            "인수가 양수이면 제곱근은 0이 아닙니다",
-        )
+        text("양수 인수로 √ ≠ 0", "인수가 양수이면 제곱근은 0이 아닙니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -2084,17 +2044,11 @@ impl SquareSumNonzeroFromComponentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "实数分量非零则平方和非零",
-            "分量非零则平方和非零",
-        )
+        text("实数分量非零则平方和非零", "分量非零则平方和非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "實數分量非零則平方和非零",
-            "一分量非零時平方和非零",
-        )
+        text("實數分量非零則平方和非零", "一分量非零時平方和非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2171,17 +2125,11 @@ impl AddNonzeroFromNotEqualNegationBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "非互为相反数的加数之和非零",
-            "加数互不为相反数则和非零",
-        )
+        text("非互为相反数的加数之和非零", "加数互不为相反数则和非零")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非互為相反數的加數之和非零",
-            "加數不是互為相反數時和非零",
-        )
+        text("非互為相反數的加數之和非零", "加數不是互為相反數時和非零")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2258,17 +2206,11 @@ impl MembershipContradictionBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "成员关系矛盾",
-            "冲突的成员关系推出不等",
-        )
+        text("成员关系矛盾", "冲突的成员关系推出不等")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "成員關係矛盾",
-            "衝突的成員關係得出不等",
-        )
+        text("成員關係矛盾", "衝突的成員關係得出不等")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2300,17 +2242,11 @@ impl MembershipContradictionBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "所属の矛盾",
-            "矛盾する所属命題から不等性を導きます",
-        )
+        text("所属の矛盾", "矛盾する所属命題から不等性を導きます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "소속 모순",
-            "상충하는 소속 명제로 불일치를 도출합니다",
-        )
+        text("소속 모순", "상충하는 소속 명제로 불일치를 도출합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {

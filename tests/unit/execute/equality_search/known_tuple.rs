@@ -52,18 +52,26 @@ fn known(rt: &mut Runtime, goal: &str) -> Known {
 // not claim a fresh complex goal's WD is available at the SP ceiling.
 fn known_with_wd(rt: &mut Runtime, goal: &str) -> VerifyEqualityResult {
     let fact = equal(rt, goal);
-    let wd = match rt.verify_equal_fact_well_definedness(&fact, VerifyState::top_level()).unwrap() {
+    let wd = match rt
+        .verify_equal_fact_well_definedness(&fact, VerifyState::top_level())
+        .unwrap()
+    {
         super::super::well_defined_result::VerifyEqualFactWellDefinedResult::Success(wd) => wd,
         super::super::well_defined_result::VerifyEqualFactWellDefinedResult::Failed(reason) => {
-            return VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(reason));
+            return VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(
+                reason,
+            ));
         }
     };
     match rt.search_equal_fact_proof(&fact, known_state()).unwrap() {
         Some(searched_proof) => VerifyEqualityResult::Success(VerifyEqualitySuccess {
-            fact, well_defined_proof: wd, searched_proof,
+            fact,
+            well_defined_proof: wd,
+            searched_proof,
         }),
         None => VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof {
-            fact, well_defined_proof: wd,
+            fact,
+            well_defined_proof: wd,
         }),
     }
 }
@@ -154,7 +162,10 @@ fn function_projection_and_wd_work_fresh_cached_and_in_strategy() {
         let fact = equal(&mut rt, "vec(a,b)(1) = b(1)-a(1)");
         let before = store_sizes(&rt);
         let result = rt
-            .verify_fact(&fact.clone().into(), VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
+            .verify_fact(
+                &fact.clone().into(),
+                VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
+            )
             .unwrap();
         assert_eq!(before, store_sizes(&rt));
         let VerifyFactResult::Equality(result) = result else {
@@ -167,7 +178,10 @@ fn function_projection_and_wd_work_fresh_cached_and_in_strategy() {
             result.searched_proof,
             EqualFactSearchedProof::ByKnownSpecialProperty(_)
         ));
-        assert!(rt.search_equal_fact_proof(&fact, known_state()).unwrap().is_some());
+        assert!(rt
+            .search_equal_fact_proof(&fact, known_state())
+            .unwrap()
+            .is_some());
         assert!(matches!(
             known_with_wd(&mut rt, "vec(a,b)(1) = b(2)-a(2)"),
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof { .. })
@@ -242,18 +256,20 @@ fn proof_output_and_strict_conversion_keep_the_new_route() {
     };
     let EqualFactSearchedProof::ByEquivalenceClass(
         EqualFactSearchedProofByEquivalenceClass::KnownPath(path),
-    ) = stored.searched_proof else {
+    ) = stored.searched_proof
+    else {
         panic!("reconstruction must reuse its stored evidence")
     };
     check_path(&rt, &path, &goal.left, &goal.right);
-    let proof = rt.search_equal_fact_proof_by_known_special_property(&goal).unwrap()
+    let proof = rt
+        .search_equal_fact_proof_by_known_special_property(&goal)
+        .unwrap()
         .expect("exact Cartesian element domain supplies the reconstruction certificate");
     assert_eq!(store_sizes(&rt), before);
     assert!(matches!(
         strict_equal_arg_proof_from_searched(EqualFactSearchedProof::ByKnownSpecialProperty(proof)),
         Some(StrictEqualArgProof::ByKnownSpecialProperty(_))
     ));
-
 }
 
 #[test]
@@ -303,34 +319,65 @@ fn stored_equality_cycle_terminates_and_function_proof_serializes_its_domain_evi
 fn run_examples_template_aliases_and_named_results_retain_tuple_value_paths() {
     use crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleApplicability;
     let mut rt = runtime();
-    exec_ok(&mut rt, "struct Triple<X set>:\n    first X\n    second X\n    third X");
-    exec_ok(&mut rt, "template<X set>:\n    have fn triple(a,b,c X) &Triple<X> = (a,b,c)");
+    exec_ok(
+        &mut rt,
+        "struct Triple<X set>:\n    first X\n    second X\n    third X",
+    );
+    exec_ok(
+        &mut rt,
+        "template<X set>:\n    have fn triple(a,b,c X) &Triple<X> = (a,b,c)",
+    );
     exec_ok(&mut rt, "let alias = \\triple<R>");
     exec_ok(&mut rt, "let second_alias = alias");
     exec_ok(&mut rt, "second_alias = \\triple<R>");
-    let Known::FnTupleValue(value) = known(&mut rt, "second_alias(4,5,6) = (4,5,6)") else { panic!("tuple value") };
+    let Known::FnTupleValue(value) = known(&mut rt, "second_alias(4,5,6) = (4,5,6)") else {
+        panic!("tuple value")
+    };
     assert_eq!(value.function.function_equal.path.len(), 1);
     for (_, _, id) in &value.function.function_equal.path {
         assert!(rt.fact_by_id_in_stack(*id).is_some());
     }
-    assert!(matches!(value.function.applicability, KnownFunctionTupleApplicability::TemplateDefinition { .. }));
+    assert!(matches!(
+        value.function.applicability,
+        KnownFunctionTupleApplicability::TemplateDefinition { .. }
+    ));
     exec_ok(&mut rt, "let chosen = second_alias(1,2,3)");
     exec_ok(&mut rt, "have chosen_struct &Triple<R> = chosen");
     exec_ok(&mut rt, "chosen_struct = second_alias(1,2,3)");
     // Truth lookup must not publish an intermediate chosen=(1,2,3) fact.
-    let Known::FnTupleProjection(projection) = known(&mut rt, "chosen_struct(1) = 1") else { panic!("projection") };
+    let Known::FnTupleProjection(projection) = known(&mut rt, "chosen_struct(1) = 1") else {
+        panic!("projection")
+    };
     assert_eq!(projection.subject_equal.path.len(), 1);
     for (_, _, id) in &projection.subject_equal.path {
         assert!(rt.fact_by_id_in_stack(*id).is_some());
     }
-    for code in ["chosen_struct.first = 1", "chosen_struct.second = 2", "chosen_struct.third = 3"] {
+    for code in [
+        "chosen_struct.first = 1",
+        "chosen_struct.second = 2",
+        "chosen_struct.third = 3",
+    ] {
         exec_ok(&mut rt, code);
     }
-    assert!(matches!(known(&mut rt, "chosen = (1,2,3)"), Known::FnTupleValue(_)));
-    for wrong in ["chosen_struct.first = 2", "chosen_struct.second = 1", "chosen = (3,2,1)", "chosen = (1,2)"] {
-        assert!(verify(&mut rt, wrong, VerifyState::top_level()).is_failed(), "{wrong}");
+    assert!(matches!(
+        known(&mut rt, "chosen = (1,2,3)"),
+        Known::FnTupleValue(_)
+    ));
+    for wrong in [
+        "chosen_struct.first = 2",
+        "chosen_struct.second = 1",
+        "chosen = (3,2,1)",
+        "chosen = (1,2)",
+    ] {
+        assert!(
+            verify(&mut rt, wrong, VerifyState::top_level()).is_failed(),
+            "{wrong}"
+        );
     }
-    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/stmt_nodes/definition/template_alias_struct_tuple.lit"));
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/examples/stmt_nodes/definition/template_alias_struct_tuple.lit"
+    ));
     assert!(runtime().run_litex_code(source).unwrap().success);
 }
 
@@ -342,11 +389,22 @@ fn template_tuple_aliases_keep_function_domains_and_header_guards() {
     exec_ok(&mut rt, "let second_alias = alias");
     exec_ok(&mut rt, "second_alias = \\positive_pair<R>");
     known(&mut rt, "second_alias(2) = (2,2)");
-    for wrong in ["second_alias(-1) = (-1,-1)", "second_alias(0) = (0,0)", "second_alias(2,3) = (2,3)", "\\positive_pair<{}>(2) = (2,2)", "\\positive_pair<R,1>(2) = (2,2)"] {
-        assert!(verify(&mut rt, wrong, VerifyState::top_level()).is_failed(), "{wrong}");
+    for wrong in [
+        "second_alias(-1) = (-1,-1)",
+        "second_alias(0) = (0,0)",
+        "second_alias(2,3) = (2,3)",
+        "\\positive_pair<{}>(2) = (2,2)",
+        "\\positive_pair<R,1>(2) = (2,2)",
+    ] {
+        assert!(
+            verify(&mut rt, wrong, VerifyState::top_level()).is_failed(),
+            "{wrong}"
+        );
     }
     let before = store_sizes(&rt);
-    let failed = rt.run_litex_code("let invalid = \\positive_pair<{}>\n").unwrap();
+    let failed = rt
+        .run_litex_code("let invalid = \\positive_pair<{}>\n")
+        .unwrap();
     assert!(!failed.success && failed.session_error.is_none());
     assert_eq!(before, store_sizes(&rt));
     assert!(!rt.run_litex_code("invalid(2) = (2,2)\n").unwrap().success);
@@ -355,20 +413,56 @@ fn template_tuple_aliases_keep_function_domains_and_header_guards() {
 #[test]
 fn template_tuple_output_keeps_alias_and_subject_citations() {
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
-        let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language });
-        for source in ["template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)", "let alias = \\pair<R>", "let value = alias(2)", "have typed cart(R,R) = value", "typed = alias(2)"] {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        });
+        for source in [
+            "template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)",
+            "let alias = \\pair<R>",
+            "let value = alias(2)",
+            "have typed cart(R,R) = value",
+            "typed = alias(2)",
+        ] {
             exec_ok(&mut rt, source);
         }
         let result = exec_ok(&mut rt, "typed(1) = 2");
         let json = project_stmt_detailed(&result, &rt).stringify();
-        let subject_path = if language == OutputLanguage::English { "subject_equal" } else { "对象等式路径" };
-        for field in ["FnTupleProjection", subject_path, "function_equal", "template_definition", "instance", "signature_match", "expanded_body"] {
+        let subject_path = if language == OutputLanguage::English {
+            "subject_equal"
+        } else {
+            "对象等式路径"
+        };
+        for field in [
+            "FnTupleProjection",
+            subject_path,
+            "function_equal",
+            "template_definition",
+            "instance",
+            "signature_match",
+            "expanded_body",
+        ] {
             assert!(json.contains(field), "{field}: {json}");
         }
         let result = exec_ok(&mut rt, "value = (2,2)");
-        assert!(project_stmt_detailed(&result, &rt).stringify().contains("FnTupleValue"));
+        assert!(project_stmt_detailed(&result, &rt)
+            .stringify()
+            .contains("FnTupleValue"));
         let output = project_stmt_normal(&result, &rt).stringify();
-        assert!(output.contains(if language == OutputLanguage::English { "Equivalence class" } else { "等价类" }) || output.contains(if language == OutputLanguage::English { "known_special_property" } else { "已知特殊属性" }), "{output}");
+        assert!(
+            output.contains(if language == OutputLanguage::English {
+                "Equivalence class"
+            } else {
+                "等价类"
+            }) || output.contains(if language == OutputLanguage::English {
+                "known_special_property"
+            } else {
+                "已知特殊属性"
+            }),
+            "{output}"
+        );
     }
 }
 
@@ -394,7 +488,10 @@ fn homogeneous_cart_coordinate_rejects_wrong_carrier_and_invalid_index() {
         "forall p cart(R,R), j R:\n    1 <= j\n    j <= 2\n    =>:\n        p(j) $in R",
         "forall p set, j closed_range(1,2):\n    p(j) $in R",
     ] {
-        assert!(!runtime().run_litex_code(source).unwrap().success, "{source}");
+        assert!(
+            !runtime().run_litex_code(source).unwrap().success,
+            "{source}"
+        );
     }
 }
 
@@ -406,21 +503,29 @@ fn homogeneous_cart_coordinate_keeps_all_factor_and_shape_evidence_read_only() {
     exec_ok(&mut rt, "have A nonempty_set = R");
     exec_ok(&mut rt, "have p cart(R,A)");
     exec_ok(&mut rt, "have j closed_range(1,2)");
-    let Stmt::Fact(Fact::AtomicFact(AtomicFact::InFact(fact))) = parse(&mut rt, "p(j) $in A") else {
+    let Stmt::Fact(Fact::AtomicFact(AtomicFact::InFact(fact))) = parse(&mut rt, "p(j) $in A")
+    else {
         panic!("membership")
     };
-    assert!(!rt.verify_fact_well_definedness(
-        &Fact::AtomicFact(AtomicFact::InFact(fact.clone())), VerifyState::top_level(),
-    ).unwrap().is_failed());
+    assert!(!rt
+        .verify_fact_well_definedness(
+            &Fact::AtomicFact(AtomicFact::InFact(fact.clone())),
+            VerifyState::top_level(),
+        )
+        .unwrap()
+        .is_failed());
     let before = store_sizes(&rt);
     let Some(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(proof)) =
-        rt.search_in_fact_proof_by_known_special_property(&fact) else {
-            panic!("homogeneous coordinate leaf")
-        };
+        rt.search_in_fact_proof_by_known_special_property(&fact)
+    else {
+        panic!("homogeneous coordinate leaf")
+    };
     assert_eq!(before, store_sizes(&rt));
     assert_eq!(proof.carrier_equals.len(), 2);
     assert_eq!(proof.shape.dimension(), 2);
-    assert!(rt.fact_by_id_in_stack(proof.shape.cite_fact_id().unwrap()).is_some());
+    assert!(rt
+        .fact_by_id_in_stack(proof.shape.cite_fact_id().unwrap())
+        .is_some());
     let result = exec_ok(&mut rt, "p(j) $in A");
     let json = project_stmt_detailed(&result, &rt).stringify();
     assert!(json.contains("HomogeneousTupleCoordinate"), "{json}");
@@ -456,23 +561,34 @@ fn known_cart_index_upper_bound_preserves_read_only_source_evidence() {
     exec_ok(&mut rt, "have c nonempty_set = cart(R,R,R)");
     exec_ok(&mut rt, "have p c");
     exec_ok(&mut rt, "have j closed_range(1,3)");
-    let Stmt::Fact(Fact::AtomicFact(AtomicFact::InFact(fact))) = parse(&mut rt, "p(j) $in R") else {
+    let Stmt::Fact(Fact::AtomicFact(AtomicFact::InFact(fact))) = parse(&mut rt, "p(j) $in R")
+    else {
         panic!("coordinate membership")
     };
-    assert!(!rt.verify_fact_well_definedness(
-        &Fact::AtomicFact(AtomicFact::InFact(fact.clone())), VerifyState::top_level(),
-    ).unwrap().is_failed());
+    assert!(!rt
+        .verify_fact_well_definedness(
+            &Fact::AtomicFact(AtomicFact::InFact(fact.clone())),
+            VerifyState::top_level(),
+        )
+        .unwrap()
+        .is_failed());
     let before = store_sizes(&rt);
     let Some(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(proof)) =
-        rt.search_in_fact_proof_by_known_special_property(&fact) else {
-            panic!("known complete-domain coordinate leaf")
-        };
+        rt.search_in_fact_proof_by_known_special_property(&fact)
+    else {
+        panic!("known complete-domain coordinate leaf")
+    };
     assert_eq!(before, store_sizes(&rt));
     assert_eq!(proof.shape.dimension(), 3);
     assert_eq!(proof.carrier_equals.len(), 3);
-    assert!(rt.fact_by_id_in_stack(proof.shape.cite_fact_id().unwrap()).is_some());
+    assert!(rt
+        .fact_by_id_in_stack(proof.shape.cite_fact_id().unwrap())
+        .is_some());
     let result = exec_ok(&mut rt, "p(j) $in R");
     let json = project_stmt_detailed(&result, &rt).stringify();
     assert!(json.contains("HomogeneousTupleCoordinate"), "{json}");
-    assert!(json.contains("carrier_equals") && json.contains("cite_fact_id"), "{json}");
+    assert!(
+        json.contains("carrier_equals") && json.contains("cite_fact_id"),
+        "{json}"
+    );
 }

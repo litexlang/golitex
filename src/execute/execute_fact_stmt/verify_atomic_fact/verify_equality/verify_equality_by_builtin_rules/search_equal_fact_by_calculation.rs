@@ -2,8 +2,9 @@ use super::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculati
 use crate::ast::fact::EqualFact;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::{
-    algebraic_normalization_nonzero_requirements, evaluate_obj_to_normalized_decimal_number,
-    objs_equal_by_rational_expression_evaluation, objs_equal_by_complex_expression_evaluation, contains_imaginary_unit,
+    algebraic_normalization_nonzero_requirements, contains_imaginary_unit,
+    evaluate_obj_to_normalized_decimal_number, objs_equal_by_complex_expression_evaluation,
+    objs_equal_by_rational_expression_evaluation,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -54,8 +55,11 @@ impl Runtime {
         // denominators remain owned by the strategy with explicit premises.
         let complex_requirements_are_closed_nonzero =
             algebraic_normalization_nonzero_requirements(&fact.left, &fact.right)
-                .iter().all(|obj| evaluate_obj_to_normalized_decimal_number(obj)
-                    .is_some_and(|number| number.normalized_value != "0"));
+                .iter()
+                .all(|obj| {
+                    evaluate_obj_to_normalized_decimal_number(obj)
+                        .is_some_and(|number| number.normalized_value != "0")
+                });
         if (contains_imaginary_unit(&fact.left) || contains_imaginary_unit(&fact.right))
             && complex_requirements_are_closed_nonzero
             && objs_equal_by_complex_expression_evaluation(&fact.left, &fact.right)

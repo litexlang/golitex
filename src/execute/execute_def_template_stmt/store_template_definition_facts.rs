@@ -32,7 +32,8 @@ impl Runtime {
         template: &DefTemplateStmt,
         body: &ExecTemplateDefBodyResult,
         local_env: &ExecEnv,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreTemplateDefinitionFactResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<StoreTemplateDefinitionFactResult>> {
         let (binding_id, source_ids) = definition_binding_and_fact_ids(body);
         let args = template
             .template_arg_def

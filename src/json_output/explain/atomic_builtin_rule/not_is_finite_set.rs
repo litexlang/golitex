@@ -197,10 +197,7 @@ impl SetMinusInfiniteOfInfiniteFiniteBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "无穷减有限仍无穷",
-            "无穷集减去有限集仍无穷",
-        )
+        text("无穷减有限仍无穷", "无穷集减去有限集仍无穷")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {

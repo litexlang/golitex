@@ -5,8 +5,8 @@ use crate::execute::execute_fact_stmt::verify_forall_fact::well_defined_result::
     VerifyForallFactWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    FactWellDefinedProof, fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult, VerifyFactWellDefinedResult,
-    VerifyObjWellDefinedResult,
+    fail_to_verify_obj_well_defined_others, FactWellDefinedProof, FailToVerifyObjWellDefinedResult,
+    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -24,17 +24,15 @@ impl Runtime {
             rt.verify_forall_fact_well_definedness_in_local(fact, verify_state.clone())
         })?;
         match stages {
-            Ok((param_type_well_defined, auto_opened_struct_layers, dom, then)) => {
-                Ok(VerifyForallFactWellDefinedResult::Success(
-                    ForallFactWellDefinedProof {
-                        param_type_well_defined,
-                        auto_opened_struct_layers,
-                        dom,
-                        then,
-                        local_env,
-                    },
-                ))
-            }
+            Ok((param_type_well_defined, auto_opened_struct_layers, dom, then)) => Ok(
+                VerifyForallFactWellDefinedResult::Success(ForallFactWellDefinedProof {
+                    param_type_well_defined,
+                    auto_opened_struct_layers,
+                    dom,
+                    then,
+                    local_env,
+                }),
+            ),
             Err(reason) => Ok(VerifyForallFactWellDefinedResult::Failed(reason)),
         }
     }
@@ -54,10 +52,9 @@ impl Runtime {
             FailToVerifyForallFactWellDefinedResult,
         >,
     > {
-        let param_type_well_defined = match self.verify_and_define_wd_parameters(
-            &fact.typed_parameters,
-            verify_state.clone(),
-        )? {
+        let param_type_well_defined = match self
+            .verify_and_define_wd_parameters(&fact.typed_parameters, verify_state.clone())?
+        {
             Ok(proofs) => proofs,
             Err(failed) => {
                 return Ok(Err(FailToVerifyForallFactWellDefinedResult::ParamType(
@@ -69,13 +66,15 @@ impl Runtime {
         // A direct &Struct binder carries its definition-owned laws during
         // WD as it does during proof introduction. Keep the same one-layer
         // boundary: nested struct fields still require explicit release.
-        let auto_opened_struct_layers = match self.auto_open_struct_layers_for_typed_parameters(
-            &fact.typed_parameters, verify_state,
-        )? {
+        let auto_opened_struct_layers = match self
+            .auto_open_struct_layers_for_typed_parameters(&fact.typed_parameters, verify_state)?
+        {
             Ok(opened) => opened,
-            Err((_, failed)) => return Ok(Err(
-                FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
-            )),
+            Err((_, failed)) => {
+                return Ok(Err(
+                    FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
+                ))
+            }
         };
 
         let mut succeeded_dom = Vec::with_capacity(fact.dom_facts.len());
@@ -115,15 +114,20 @@ impl Runtime {
             }
         }
 
-        Ok(Ok((param_type_well_defined, auto_opened_struct_layers, succeeded_dom, succeeded_then)))
+        Ok(Ok((
+            param_type_well_defined,
+            auto_opened_struct_layers,
+            succeeded_dom,
+            succeeded_then,
+        )))
     }
 }
 
 fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
     match failed {
         VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
-        _ => fail_to_verify_obj_well_defined_others(
-            "param type well-definedness failed".to_string(),
-        ),
+        _ => {
+            fail_to_verify_obj_well_defined_others("param type well-definedness failed".to_string())
+        }
     }
 }

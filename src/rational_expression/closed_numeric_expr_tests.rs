@@ -1,6 +1,6 @@
 use crate::ast::obj::{
-    Abs, Add, ArithmeticOperator, Div, ExpLogOperator, Factorial, Floor, IntegerOperator,
-    Literal, Log, Max, Min, Mod, Mul, Number, Obj, Pow, Sign, Sqrt,
+    Abs, Add, ArithmeticOperator, Div, ExpLogOperator, Factorial, Floor, IntegerOperator, Literal,
+    Log, Max, Min, Mod, Mul, Number, Obj, Pow, Sign, Sqrt,
 };
 use crate::rational_expression::{is_closed_numeric_expr, ClosedNumericExpr};
 
@@ -42,10 +42,7 @@ fn abs_min_max_floor_sign_of_numbers_are_closed() {
     }));
     assert!(is_closed_numeric_expr(&abs));
     assert_eq!(
-        ClosedNumericExpr::try_from_obj(&abs)
-            .unwrap()
-            .to_obj()
-            .ir(),
+        ClosedNumericExpr::try_from_obj(&abs).unwrap().to_obj().ir(),
         abs.ir()
     );
 
@@ -80,10 +77,7 @@ fn unary_neg_of_number_is_closed() {
     }));
     assert!(is_closed_numeric_expr(&neg));
     assert_eq!(
-        ClosedNumericExpr::try_from_obj(&neg)
-            .unwrap()
-            .to_obj()
-            .ir(),
+        ClosedNumericExpr::try_from_obj(&neg).unwrap().to_obj().ir(),
         neg.ir()
     );
 }
@@ -130,12 +124,13 @@ fn identifier_is_not_closed() {
 
 #[test]
 fn decimal_constructor_and_legacy_literal_evaluation_share_canonical_keys() {
-    for (raw, expected) in [("2.400", "2.4"), ("0002.000", "2"), ("-0.000", "0") ] {
+    for (raw, expected) in [("2.400", "2.4"), ("0002.000", "2"), ("-0.000", "0")] {
         let canonical = Obj::Literal(Literal::Number(Number::new(raw.into())));
         let expected_obj = n(expected);
         assert_eq!(canonical.ir(), expected_obj.ir());
         // Old in-memory builders may still supply a noncanonical literal.
-        let evaluated = crate::rational_expression::evaluate_obj_to_normalized_decimal_number(&n(raw)).unwrap();
+        let evaluated =
+            crate::rational_expression::evaluate_obj_to_normalized_decimal_number(&n(raw)).unwrap();
         assert_eq!(evaluated.normalized_value, expected);
     }
 }

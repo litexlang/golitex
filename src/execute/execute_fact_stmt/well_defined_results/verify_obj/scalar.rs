@@ -2,9 +2,16 @@
 //! Ported from verification/well_definedness/object/scalar.rs.
 
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
-use crate::ast::fact::{AndChainAtomicFact, AtomicFact, GreaterFact, LessEqualFact, NotEqualFact, OrFact, QuantifierFreeFact};
+use crate::ast::fact::{
+    AndChainAtomicFact, AtomicFact, GreaterFact, LessEqualFact, NotEqualFact, OrFact,
+    QuantifierFreeFact,
+};
 use crate::ast::obj::StandardSet;
-use crate::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Neg, Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, IntegerOperator, Literal, TrigOperator};
+use crate::ast::obj::{
+    Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial,
+    Floor, Gcd, ImaginaryPart, IntegerOperator, Lcm, Literal, Ln, Log, Max, Min, Mod, Mul, Neg,
+    Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, TrigOperator,
+};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::exact_rational::EvalRational;
@@ -68,8 +75,8 @@ impl Runtime {
         value: &Neg,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let proof =
-            self.verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let req = self.require_obj_in_c(value.arg.as_ref(), verify_state)?;
         Ok(self.with_requirements(proof, vec![req]))
     }
@@ -139,7 +146,10 @@ impl Runtime {
             verify_state.clone(),
             "mod modulus must belong to Z".to_string(),
         )?);
-        if !matches!(value.right.as_ref(), Obj::IntegerOperator(IntegerOperator::Gcd(_))) {
+        if !matches!(
+            value.right.as_ref(),
+            Obj::IntegerOperator(IntegerOperator::Gcd(_))
+        ) {
             let zero = Obj::Literal(Literal::Number(Number {
                 normalized_value: "0".to_string(),
             }));
@@ -230,12 +240,14 @@ impl Runtime {
         for (first, second) in [(&left_nz, &right_nz), (&right_nz, &left_nz)] {
             let non_all_zero = QuantifierFreeFact::OrFact(OrFact {
                 fact_id: self.global_ids.allocate_fact_id(),
-                facts: vec![AndChainAtomicFact::AtomicFact(first.clone()), AndChainAtomicFact::AtomicFact(second.clone())],
+                facts: vec![
+                    AndChainAtomicFact::AtomicFact(first.clone()),
+                    AndChainAtomicFact::AtomicFact(second.clone()),
+                ],
                 line_file: None,
             });
-            let disjunction = self.verify_required_quantifier_free_fact(
-                non_all_zero, verify_state.clone(),
-            )?;
+            let disjunction =
+                self.verify_required_quantifier_free_fact(non_all_zero, verify_state.clone())?;
             if !disjunction.is_failed() {
                 reqs.push(disjunction);
                 return Ok(self.with_requirements(proof, reqs));
@@ -449,7 +461,8 @@ impl Runtime {
         if reqs_positive.iter().all(|r| !r.is_failed()) {
             return Ok(self.with_requirements(proof, reqs_positive));
         }
-        let reqs_nonnegative = self.try_pow_domain_nonnegative_real_positive(value, verify_state)?;
+        let reqs_nonnegative =
+            self.try_pow_domain_nonnegative_real_positive(value, verify_state)?;
         if reqs_nonnegative.iter().all(|r| !r.is_failed()) {
             return Ok(self.with_requirements(proof, reqs_nonnegative));
         }
@@ -614,7 +627,10 @@ impl Runtime {
             "tan argument must belong to R".to_string(),
         )?);
         // Principal arctan range is open around ±pi/2, so cos(arctan(x)) != 0.
-        if matches!(value.arg.as_ref(), Obj::TrigOperator(TrigOperator::Arctan(_))) {
+        if matches!(
+            value.arg.as_ref(),
+            Obj::TrigOperator(TrigOperator::Arctan(_))
+        ) {
             return Ok(self.with_requirements(proof, reqs));
         }
         let denom = Obj::TrigOperator(TrigOperator::Cos(Cos {
@@ -652,7 +668,10 @@ impl Runtime {
             "cot argument must belong to R".to_string(),
         )?);
         // Principal arccot range is (0, pi), so sin(arccot(x)) != 0.
-        if matches!(value.arg.as_ref(), Obj::TrigOperator(TrigOperator::Arccot(_))) {
+        if matches!(
+            value.arg.as_ref(),
+            Obj::TrigOperator(TrigOperator::Arccot(_))
+        ) {
             return Ok(self.with_requirements(proof, reqs));
         }
         let denom = Obj::TrigOperator(TrigOperator::Sin(Sin {
@@ -970,11 +989,15 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Vec<VerifyFactResult>> {
         let base = self.require_obj_in_standard_set(
-            value.base.as_ref(), StandardSet::RPos, verify_state,
+            value.base.as_ref(),
+            StandardSet::RPos,
+            verify_state,
             "real power base must belong to R+".to_string(),
         )?;
         let exponent = self.require_obj_in_standard_set(
-            value.exponent.as_ref(), StandardSet::R, verify_state,
+            value.exponent.as_ref(),
+            StandardSet::R,
+            verify_state,
             "real power exponent must belong to R".to_string(),
         )?;
         Ok(vec![base, exponent])
@@ -986,12 +1009,16 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Vec<VerifyFactResult>> {
         let base = self.require_obj_in_standard_set(
-            value.base.as_ref(), StandardSet::R, verify_state,
+            value.base.as_ref(),
+            StandardSet::R,
+            verify_state,
             "nonnegative power base must belong to R".to_string(),
         )?;
         let nonnegative_fact = LessEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: Obj::Literal(Literal::Number(Number { normalized_value: "0".into() })),
+            left: Obj::Literal(Literal::Number(Number {
+                normalized_value: "0".into(),
+            })),
             right: value.base.as_ref().clone(),
             line_file: None,
         };
@@ -1001,7 +1028,9 @@ impl Runtime {
             "power base must be nonnegative".to_string(),
         )?;
         let exponent = self.require_obj_in_standard_set(
-            value.exponent.as_ref(), StandardSet::RPos, verify_state,
+            value.exponent.as_ref(),
+            StandardSet::RPos,
+            verify_state,
             "nonnegative-base power exponent must belong to R+".to_string(),
         )?;
         Ok(vec![base, nonnegative, exponent])

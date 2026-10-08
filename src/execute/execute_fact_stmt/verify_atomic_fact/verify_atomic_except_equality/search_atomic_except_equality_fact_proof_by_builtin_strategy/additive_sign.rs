@@ -113,11 +113,21 @@ fn add_summands(obj: &Obj) -> Option<(Obj, Obj)> {
 
 fn positive_sum_goal_summands(fact: &AtomicFact) -> Option<(Obj, Obj, Option<SourceLine>)> {
     match fact {
-        AtomicFact::GreaterFact(GreaterFact { left, right, line_file, .. }) if is_zero_obj(right) => {
+        AtomicFact::GreaterFact(GreaterFact {
+            left,
+            right,
+            line_file,
+            ..
+        }) if is_zero_obj(right) => {
             let (l, r) = add_summands(left)?;
             Some((l, r, line_file.clone()))
         }
-        AtomicFact::LessFact(LessFact { left, right, line_file, .. }) if is_zero_obj(left) => {
+        AtomicFact::LessFact(LessFact {
+            left,
+            right,
+            line_file,
+            ..
+        }) if is_zero_obj(left) => {
             let (l, r) = add_summands(right)?;
             Some((l, r, line_file.clone()))
         }
@@ -127,15 +137,21 @@ fn positive_sum_goal_summands(fact: &AtomicFact) -> Option<(Obj, Obj, Option<Sou
 
 fn nonnegative_sum_goal_summands(fact: &AtomicFact) -> Option<(Obj, Obj, Option<SourceLine>)> {
     match fact {
-        AtomicFact::GreaterEqualFact(GreaterEqualFact { left, right, line_file, .. })
-            if is_zero_obj(right) =>
-        {
+        AtomicFact::GreaterEqualFact(GreaterEqualFact {
+            left,
+            right,
+            line_file,
+            ..
+        }) if is_zero_obj(right) => {
             let (l, r) = add_summands(left)?;
             Some((l, r, line_file.clone()))
         }
-        AtomicFact::LessEqualFact(LessEqualFact { left, right, line_file, .. })
-            if is_zero_obj(left) =>
-        {
+        AtomicFact::LessEqualFact(LessEqualFact {
+            left,
+            right,
+            line_file,
+            ..
+        }) if is_zero_obj(left) => {
             let (l, r) = add_summands(right)?;
             Some((l, r, line_file.clone()))
         }

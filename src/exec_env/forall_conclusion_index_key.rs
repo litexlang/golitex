@@ -18,9 +18,7 @@ pub fn and_forall_conclusion_index_key(and_fact: &AndFact) -> AndForallConclusio
     }
 }
 
-pub fn chain_forall_conclusion_index_key(
-    chain_fact: &ChainFact,
-) -> ChainForallConclusionIndexKey {
+pub fn chain_forall_conclusion_index_key(chain_fact: &ChainFact) -> ChainForallConclusionIndexKey {
     ChainForallConclusionIndexKey {
         n_objs: chain_fact.objs.len(),
         props: chain_fact.prop_names.clone(),

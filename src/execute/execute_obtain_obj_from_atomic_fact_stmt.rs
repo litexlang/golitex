@@ -18,7 +18,7 @@
 use std::collections::HashMap;
 
 use crate::ast::fact::{
-    exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact
+    exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact,
 };
 use crate::ast::obj::Obj;
 use crate::ast::stmt::ObtainObjFromAtomicFact;
@@ -33,19 +33,19 @@ pub enum ExecObtainObjFromAtomicFactStmtFailed {
     BadDefinition(String),
     AtomicVerifyFailed(VerifyFactResult),
     Instantiate(String),
-    Apply(ExecObtainObjFromExistFactStmtFailed)
+    Apply(ExecObtainObjFromExistFactStmtFailed),
 }
 
 pub struct ExecObtainObjFromAtomicFactStmtSuccessResult {
     pub statement: ObtainObjFromAtomicFact,
     pub verify_atomic: VerifyFactResult,
     pub projected_exist: ExistShapedFact,
-    pub store_and_infer_result: StoreHaveObjAndInferResult
+    pub store_and_infer_result: StoreHaveObjAndInferResult,
 }
 
 pub enum ExecObtainObjFromAtomicFactStmtResult {
     Success(ExecObtainObjFromAtomicFactStmtSuccessResult),
-    Failed(ExecObtainObjFromAtomicFactStmtFailed)
+    Failed(ExecObtainObjFromAtomicFactStmtFailed),
 }
 
 impl ExecObtainObjFromAtomicFactStmtResult {
@@ -62,7 +62,10 @@ impl Runtime {
         stmt: &ObtainObjFromAtomicFact,
     ) -> RuntimeResult<ExecObtainObjFromAtomicFactStmtResult> {
         let prop_name = stmt.fact.predicate.local_name();
-        if self.def_abstract_prop_visible(&stmt.fact.predicate).is_some() {
+        if self
+            .def_abstract_prop_visible(&stmt.fact.predicate)
+            .is_some()
+        {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::AbstractProp,
             ));
@@ -130,18 +133,19 @@ impl Runtime {
         match self.apply_obtain_from_known_exist_family(
             &projected_exist,
             &stmt.equal_tos,
-         crate::execute::execute_fact_stmt::VerifyState::top_level())? {
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
                 ExecObtainObjFromAtomicFactStmtSuccessResult {
                     statement: stmt.clone(),
                     verify_atomic,
                     projected_exist,
-                    store_and_infer_result
+                    store_and_infer_result,
                 },
             )),
             Err(failed) => Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::Apply(failed),
-            ))
+            )),
         }
     }
 }
@@ -158,12 +162,12 @@ pub(in crate::execute) fn project_sole_positive_exist_clause(
     match exist_shaped_fact_from_fact(&iff_facts[0]) {
         Some(ExistShapedFact::Exist(p)) => Ok(ExistShapedFact::Exist(p)),
         Some(ExistShapedFact::ExistUnique(p)) => Ok(ExistShapedFact::ExistUnique(p)),
-        Some(ExistShapedFact::NotExist(_)) => Err(
-            "obtain from `$P` cannot eliminate a `not exist` definition clause".to_string(),
-        ),
+        Some(ExistShapedFact::NotExist(_)) => {
+            Err("obtain from `$P` cannot eliminate a `not exist` definition clause".to_string())
+        }
         None => Err(
             "obtain from `$P` requires the sole definition clause to be `exist` or `exist!`"
                 .to_string(),
-        )
+        ),
     }
 }

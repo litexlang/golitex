@@ -173,19 +173,33 @@ fn known_path_keeps_oriented_fact_ids_and_needs_no_peer_search() {
 fn direct_lookup_does_not_discover_alpha_bridges_between_stored_classes() {
     let mut runtime = runtime();
     for code in [
-        "let a = fn(x R) R", "let b = a",
-        "let c = fn(y R) R", "let d = c",
+        "let a = fn(x R) R",
+        "let b = a",
+        "let c = fn(y R) R",
+        "let d = c",
     ] {
         exec_ok(&mut runtime, code);
     }
     let goal = equal(&mut runtime, "b = d");
     let before = store_sizes(&runtime);
-    assert!(runtime.lookup_known_obj_equality(&goal.left, &goal.right).is_none());
-    assert!(runtime.search_equal_fact_proof(
-        &goal, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct),
-    ).unwrap().is_none());
-    assert_eq!(store_sizes(&runtime), before, "a miss must not publish facts or WD");
-    assert!(runtime.equivalence_class_path(&goal.left, &goal.right).is_none());
+    assert!(runtime
+        .lookup_known_obj_equality(&goal.left, &goal.right)
+        .is_none());
+    assert!(runtime
+        .search_equal_fact_proof(
+            &goal,
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct),
+        )
+        .unwrap()
+        .is_none());
+    assert_eq!(
+        store_sizes(&runtime),
+        before,
+        "a miss must not publish facts or WD"
+    );
+    assert!(runtime
+        .equivalence_class_path(&goal.left, &goal.right)
+        .is_none());
 }
 
 #[test]
@@ -296,10 +310,18 @@ fn membership_lookup_keeps_pairwise_alpha_without_graph_endpoint_search() {
     assert!(runtime.lookup_known_atomic_fact(&aliased).is_none());
     let result = exec_ok(&mut runtime, "f $in fn(u R) R");
     let json = project_stmt_detailed(&result, &runtime).stringify();
-    for marker in ["by_they_are_the_same", "same_free_param_shape", "fn_set", "cite_fact_id"] {
+    for marker in [
+        "by_they_are_the_same",
+        "same_free_param_shape",
+        "fn_set",
+        "cite_fact_id",
+    ] {
         assert!(json.contains(marker), "missing {marker} in {json}");
     }
-    assert!(!json.contains("alpha_endpoints") && !json.contains("alpha_paths"), "{json}");
+    assert!(
+        !json.contains("alpha_endpoints") && !json.contains("alpha_paths"),
+        "{json}"
+    );
     assert!(exec(&mut runtime, "f $in fn(u R) N").is_failed());
 }
 
@@ -538,23 +560,34 @@ fn explicit_theorem_selection_reuses_alpha_renamed_endpoints_without_graph_searc
     // The assumption is deliberately recorded in ordinary mode, then selected
     // explicitly. Its real returned equality remains the certificate source.
     let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(), session: false, strict: false, language: OutputLanguage::English,
+        code: String::new(),
+        session: false,
+        strict: false,
+        language: OutputLanguage::English,
     });
     exec_ok(&mut rt, "have a R, b R");
     exec_ok(&mut rt, "axiom stored:\n    ? forall u, v R:\n        sum(1, 2, fn(x Z) R {x + u}) = sum(1, 2, fn(y Z) R {y + v})");
     exec_ok(&mut rt, "release thm stored(a, b)");
     let goal = "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})";
     let fact = equal(&mut rt, goal);
-    assert!(rt.lookup_known_obj_equality(&fact.left, &fact.right).is_none());
+    assert!(rt
+        .lookup_known_obj_equality(&fact.left, &fact.right)
+        .is_none());
     let result = exec_ok(&mut rt, &format!("by thm stored(a, b) => {goal}"));
     let json = project_stmt_detailed(&result, &rt).stringify();
-    assert!(json.contains("alpha_endpoints") && json.contains("cite_fact_id"), "{json}");
+    assert!(
+        json.contains("alpha_endpoints") && json.contains("cite_fact_id"),
+        "{json}"
+    );
     for goal in [
         "sum(1, 3, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + b})",
         "sum(1, 2, fn(k Z) R {k + a}) = sum(1, 2, fn(t Z) R {t + a + 1})",
         "sum(1, 2, fn(k Z) R {k + b}) = sum(1, 2, fn(t Z) R {t + a})",
     ] {
-        assert!(exec(&mut rt, &format!("by thm stored(a, b) => {goal}")).is_failed(), "{goal}");
+        assert!(
+            exec(&mut rt, &format!("by thm stored(a, b) => {goal}")).is_failed(),
+            "{goal}"
+        );
     }
 }
 

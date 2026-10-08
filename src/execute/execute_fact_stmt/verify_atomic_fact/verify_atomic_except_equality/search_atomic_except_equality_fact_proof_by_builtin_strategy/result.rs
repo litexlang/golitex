@@ -1,5 +1,7 @@
 pub use super::preimage::FunctionPreimageInputView;
-use super::preimage::{PreimageMembershipStrategySingleStep, PreimageSetMembershipStrategySingleStep};
+use super::preimage::{
+    PreimageMembershipStrategySingleStep, PreimageSetMembershipStrategySingleStep,
+};
 use crate::ast::fact::Fact;
 use crate::ast::obj::StandardSet;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -170,18 +172,30 @@ pub struct FieldArithmeticCarrierClosureStrategySingleStep {
 }
 
 pub enum FieldArithmeticCarrierConstructorTree {
-    Leaf { requirement_index: usize },
-    Add { left: Box<Self>, right: Box<Self> },
-    Sub { left: Box<Self>, right: Box<Self> },
-    Neg { argument: Box<Self> },
-    Mul { left: Box<Self>, right: Box<Self> },
+    Leaf {
+        requirement_index: usize,
+    },
+    Add {
+        left: Box<Self>,
+        right: Box<Self>,
+    },
+    Sub {
+        left: Box<Self>,
+        right: Box<Self>,
+    },
+    Neg {
+        argument: Box<Self>,
+    },
+    Mul {
+        left: Box<Self>,
+        right: Box<Self>,
+    },
     Div {
         left: Box<Self>,
         right: Box<Self>,
         nonzero_requirement_index: usize,
     },
 }
-
 
 // Strategy: strict positive sum
 // Mathematical property: a>0,b>0 => a+b>0
@@ -1308,7 +1322,8 @@ pub struct CartNonemptyFromAllFactorsStrategySingleStep {
 //   $is_nonempty_set(fn(x R) R)
 pub struct FnSetNonemptyFromCodomainStrategySingleStep {
     pub signature: crate::ast::obj::FnSet,
-    pub codomain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
+    pub codomain_nonempty:
+        crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
 }
 
 // Strategy: anon fn nonempty
@@ -1318,7 +1333,8 @@ pub struct FnSetNonemptyFromCodomainStrategySingleStep {
 //   $is_nonempty_set(fn(x R) R {x})
 pub struct FunctionGraphNonemptyFromDomainStrategySingleStep {
     pub source: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
-    pub domain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyProof,
+    pub domain_nonempty:
+        crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyProof,
 }
 
 pub struct FunctionSpaceNonemptyFromEmptyDomainStrategySingleStep {
@@ -1332,7 +1348,8 @@ pub struct FunctionSpaceNonemptyFromEmptyDomainStrategySingleStep {
 //   $is_nonempty_set(finite_seq(R,2))
 pub struct FiniteSeqSetNonemptyFromCodomainStrategySingleStep {
     pub signature: crate::ast::obj::FnSet,
-    pub codomain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
+    pub codomain_nonempty:
+        crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
 }
 
 // Strategy: seq nonempty
@@ -1342,5 +1359,6 @@ pub struct FiniteSeqSetNonemptyFromCodomainStrategySingleStep {
 //   $is_nonempty_set(seq(R))
 pub struct SeqSetNonemptyFromCodomainStrategySingleStep {
     pub signature: crate::ast::obj::FnSet,
-    pub codomain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
+    pub codomain_nonempty:
+        crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
 }

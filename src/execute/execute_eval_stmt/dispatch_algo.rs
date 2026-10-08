@@ -50,13 +50,19 @@ pub fn evaluate_fn_obj_with_algo(
     }
     active_calls.insert(call_key.clone());
     let outcome = (|| {
-        let return_expr = match dispatch_algo_return_expr(runtime, &fn_name, &normalized_args, active_calls.function_proof_state)? {
+        let return_expr = match dispatch_algo_return_expr(
+            runtime,
+            &fn_name,
+            &normalized_args,
+            active_calls.function_proof_state,
+        )? {
             Ok(expr) => expr,
             Err(failed) => return Ok(Err(failed)),
         };
         let definition_evidence = if active_calls.proof_mode {
             let state = &active_calls.function_proof_state;
-            if !state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
+            if !state
+                .allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
             {
                 return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
             }
@@ -66,9 +72,7 @@ pub fn evaluate_fn_obj_with_algo(
                 right: return_expr.clone(),
                 line_file: None,
             };
-            let wd = match runtime
-                .verify_equal_fact_well_definedness(&equal, *state)?
-            {
+            let wd = match runtime.verify_equal_fact_well_definedness(&equal, *state)? {
                 crate::execute::execute_fact_stmt::VerifyEqualFactWellDefinedResult::Success(p) => {
                     p
                 }
@@ -90,7 +94,8 @@ pub fn evaluate_fn_obj_with_algo(
         // it for sibling terms after the returned expression has been checked.
         let caller_state = active_calls.function_proof_state.clone();
         if active_calls.proof_mode {
-            active_calls.function_proof_state = caller_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
+            active_calls.function_proof_state = caller_state
+                .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         }
         let evaluated_return =
             super::evaluate_obj::evaluate_obj(runtime, &return_expr, depth + 1, active_calls);

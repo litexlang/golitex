@@ -2,9 +2,9 @@ use crate::ast::fact::AtomicFact;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::VerifyEqualFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
-    AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
+    AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult, PredicateDomainProof,
     PredicateSignatureWellDefinedFailure, PredicateSignatureWellDefinedProof,
-    VerifyAtomicFactWellDefinedResult, PredicateDomainProof,
+    VerifyAtomicFactWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::VerifyObjWellDefinedResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -105,11 +105,13 @@ impl Runtime {
             _ => PredicateSignatureWellDefinedProof::Builtin,
         };
         if let Some(cite) = self.lookup_known_atomic_fact(fact) {
-            return Ok(VerifyAtomicFactWellDefinedResult::Success(AtomicFactWellDefinedProof {
-                well_defined_of_each_parameter: succeeded_args,
-                predicate_signature,
-                predicate_domain: PredicateDomainProof::ByKnownFact(cite),
-            }));
+            return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                AtomicFactWellDefinedProof {
+                    well_defined_of_each_parameter: succeeded_args,
+                    predicate_signature,
+                    predicate_domain: PredicateDomainProof::ByKnownFact(cite),
+                },
+            ));
         }
         let mut first_failure = None;
         for requirements in self.atomic_predicate_domain_requirement_routes(fact) {
@@ -118,9 +120,8 @@ impl Runtime {
             for requirement in requirements {
                 // Domain obligations inherit the caller's ceiling; peer/strategy
                 // expansion cannot be reopened while checking a predicate domain.
-                let domain_state = verify_state.capped_at(
-                    crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
-                );
+                let domain_state = verify_state
+                    .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
                 let result = self.verify_fact(&requirement, domain_state)?;
                 if result.is_failed() {
                     failed = Some((requirement, result));
@@ -160,8 +161,6 @@ impl Runtime {
         ))
     }
 
-
-
     // For and/chain mixed storage: EqualFact uses equality WD then converts;
     // other atomics use atomic-except-equality WD.
     pub(crate) fn verify_atomic_component_well_definedness(
@@ -196,14 +195,19 @@ impl Runtime {
         use crate::ast::obj::{FamilyUnion, SetOperator};
         let primary = self.atomic_predicate_domain_requirements(fact);
         if let Some((domain, codomain, function)) = function_property_signature_args(fact) {
-            return self.callable_signature_requirement_routes(domain, codomain, function)
+            return self
+                .callable_signature_requirement_routes(domain, codomain, function)
                 .into_iter()
                 .map(|route| primary[..2].iter().cloned().chain(route).collect())
                 .collect();
         }
         let choice = match fact {
-            AtomicFact::IsChoiceFunctionForFact(f) => Some((&f.index, &f.set, &f.family, &f.choice)),
-            AtomicFact::NotIsChoiceFunctionForFact(f) => Some((&f.index, &f.set, &f.family, &f.choice)),
+            AtomicFact::IsChoiceFunctionForFact(f) => {
+                Some((&f.index, &f.set, &f.family, &f.choice))
+            }
+            AtomicFact::NotIsChoiceFunctionForFact(f) => {
+                Some((&f.index, &f.set, &f.family, &f.choice))
+            }
             _ => None,
         };
         if let Some((index, set, family, choice)) = choice {
@@ -215,9 +219,14 @@ impl Runtime {
             let mut routes = Vec::new();
             for family_route in families {
                 for choice_route in &choices {
-                    routes.push(primary[..2].iter().cloned()
-                        .chain(family_route.iter().cloned())
-                        .chain(choice_route.iter().cloned()).collect());
+                    routes.push(
+                        primary[..2]
+                            .iter()
+                            .cloned()
+                            .chain(family_route.iter().cloned())
+                            .chain(choice_route.iter().cloned())
+                            .collect(),
+                    );
                 }
             }
             return routes;
@@ -235,7 +244,9 @@ impl Runtime {
         function: &Obj,
     ) -> Vec<Vec<crate::ast::fact::Fact>> {
         use crate::ast::fact::{EqualFact, Fact, InFact, QuantifierFreeFact};
-        use crate::ast::obj::{FunctionSpace, IdentifierObj, Literal, Number, SetFormer, StandardSet};
+        use crate::ast::obj::{
+            FunctionSpace, IdentifierObj, Literal, Number, SetFormer, StandardSet,
+        };
         let signature = self.predicate_unary_fn_set(domain, codomain);
         let mut routes = vec![vec![Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -243,29 +254,50 @@ impl Runtime {
             set: signature,
             line_file: None,
         }))]];
-        let mut signatures: Vec<_> = self.collect_in_function_set_candidates(function)
-            .into_iter().map(|(signature, _)| signature).collect();
+        let mut signatures: Vec<_> = self
+            .collect_in_function_set_candidates(function)
+            .into_iter()
+            .map(|(signature, _)| signature)
+            .collect();
         if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(value)) = function {
             signatures.push(value.body.clone());
         }
         for signature in signatures {
-            let [group] = signature.set_bound_parameters.groups.as_slice() else { continue; };
-            let [param] = group.params.as_slice() else { continue; };
+            let [group] = signature.set_bound_parameters.groups.as_slice() else {
+                continue;
+            };
+            let [param] = group.params.as_slice() else {
+                continue;
+            };
             let carrier_pairs = if signature.dom_facts.is_empty() {
                 vec![(group.param_type.as_ref().clone(), domain.clone())]
             } else {
-                let Obj::SetFormer(SetFormer::ClosedRange(range)) = domain else { continue; };
-                if !matches!(group.param_type.as_ref(), Obj::StandardSet(StandardSet::NPos)) {
+                let Obj::SetFormer(SetFormer::ClosedRange(range)) = domain else {
+                    continue;
+                };
+                if !matches!(
+                    group.param_type.as_ref(),
+                    Obj::StandardSet(StandardSet::NPos)
+                ) {
                     continue;
                 }
                 let [QuantifierFreeFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
-                    signature.dom_facts.as_slice() else { continue; };
+                    signature.dom_facts.as_slice()
+                else {
+                    continue;
+                };
                 if bound.left != Obj::Identifier(IdentifierObj::from_bound_name(param)) {
                     continue;
                 }
-                vec![(range.start.as_ref().clone(), Obj::Literal(Literal::Number(Number {
-                    normalized_value: "1".to_string(),
-                }))), (range.end.as_ref().clone(), bound.right.clone())]
+                vec![
+                    (
+                        range.start.as_ref().clone(),
+                        Obj::Literal(Literal::Number(Number {
+                            normalized_value: "1".to_string(),
+                        })),
+                    ),
+                    (range.end.as_ref().clone(), bound.right.clone()),
+                ]
             };
             let return_set = signature.ret_set.as_ref().clone();
             let mut requirements = vec![Fact::AtomicFact(AtomicFact::InFact(InFact {
@@ -274,9 +306,15 @@ impl Runtime {
                 set: Obj::FunctionSpace(FunctionSpace::FnSet(signature)),
                 line_file: None,
             }))];
-            for (left, right) in carrier_pairs.into_iter().chain([(return_set, codomain.clone())]) {
+            for (left, right) in carrier_pairs
+                .into_iter()
+                .chain([(return_set, codomain.clone())])
+            {
                 requirements.push(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(), left, right, line_file: None,
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left,
+                    right,
+                    line_file: None,
                 })));
             }
             routes.push(requirements);

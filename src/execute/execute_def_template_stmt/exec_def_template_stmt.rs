@@ -20,12 +20,16 @@ use crate::execute::execute_fact_stmt::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, StoreFactAndInferResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
-use crate::execute::execute_have_fn_by_induc_stmt::{
-    ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult,
+use crate::execute::execute_have_by_replacement_axiom_stmt::{
+    ExecHaveByReplacementAxiomStmtFailed, ExecHaveByReplacementAxiomStmtResult,
+    ExecHaveByReplacementAxiomStmtSuccessResult,
 };
 use crate::execute::execute_have_fn_by_forall_exist_unique_stmt::{
     ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
     ExecHaveFnByForallExistUniqueStmtSuccessResult,
+};
+use crate::execute::execute_have_fn_by_induc_stmt::{
+    ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult,
 };
 use crate::execute::execute_have_fn_equal_case_by_case_stmt::{
     ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
@@ -38,9 +42,12 @@ use crate::execute::execute_have_obj_by_exist_facts_stmt::{
     ExecHaveObjByExistFactsStmtFailed, ExecHaveObjByExistFactsStmtResult,
     ExecHaveObjByExistFactsStmtSuccessResult,
 };
-use crate::execute::execute_have_by_replacement_axiom_stmt::{
-    ExecHaveByReplacementAxiomStmtFailed, ExecHaveByReplacementAxiomStmtResult,
-    ExecHaveByReplacementAxiomStmtSuccessResult,
+use crate::execute::execute_have_obj_equal_stmt::{
+    ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,
+};
+use crate::execute::execute_have_obj_in_nonempty_set_stmt::{
+    ExecHaveObjInNonemptySetStmtFailed, ExecHaveObjInNonemptySetStmtResult,
+    ExecHaveObjInNonemptySetStmtSuccessResult,
 };
 use crate::execute::execute_obtain_obj_from_atomic_fact_stmt::{
     ExecObtainObjFromAtomicFactStmtFailed, ExecObtainObjFromAtomicFactStmtResult,
@@ -50,19 +57,10 @@ use crate::execute::execute_obtain_obj_from_exist_fact_stmt::{
     ExecObtainObjFromExistFactStmtFailed, ExecObtainObjFromExistFactStmtResult,
     ExecObtainObjFromExistFactStmtSuccessResult,
 };
-use crate::execute::execute_have_obj_equal_stmt::{
-    ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,
-};
-use crate::execute::execute_have_obj_in_nonempty_set_stmt::{
-    ExecHaveObjInNonemptySetStmtFailed, ExecHaveObjInNonemptySetStmtResult,
-    ExecHaveObjInNonemptySetStmtSuccessResult,
-};
 use crate::execute::execute_unsafe_stmt::{
     ExecTrustHaveStmtFailed, ExecTrustHaveStmtResult, ExecTrustHaveStmtSuccessResult,
 };
-use crate::execute::{
-    IntroduceTypedParametersFailed, IntroduceTypedParametersResult,
-};
+use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::parse::keywords::TEMPLATE;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -143,9 +141,8 @@ impl Runtime {
     ) -> RuntimeResult<ExecDefTemplateStmtResult> {
         self.ensure_def_template_name_free(&def_template.template_name)?;
 
-        let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.exec_def_template_stmt_in_local(def_template)
-        })?;
+        let (local_outcome, local_env) = self
+            .run_in_local_env_and_take_env(|rt| rt.exec_def_template_stmt_in_local(def_template))?;
 
         let parts = match local_outcome {
             Ok(parts) => parts,
@@ -155,8 +152,12 @@ impl Runtime {
         self.top_exec_env_mut()
             .store_def_template(def_template.clone());
 
-        let definition_facts =
-            self.store_template_definition_facts(def_template, &parts.body, &local_env, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let definition_facts = self.store_template_definition_facts(
+            def_template,
+            &parts.body,
+            &local_env,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         Ok(ExecDefTemplateStmtResult::Success(
             ExecDefTemplateStmtSuccessResult {
@@ -200,14 +201,17 @@ impl Runtime {
         let mut assumed_dom_facts = Vec::with_capacity(def_template.template_arg_dom.len());
         for dom in &def_template.template_arg_dom {
             let fact = quantifier_free_fact_to_fact(dom.clone());
-            let well_defined = match self.verify_fact_well_definedness(&fact, verify_state.clone())?
-            {
-                VerifyFactWellDefinedResult::Success(proof) => proof,
-                VerifyFactWellDefinedResult::Failed(reason) => {
-                    return Ok(Err(ExecDefTemplateStmtFailed::DomainFact(reason)));
-                }
-            };
-            let store_and_infer = self.store_fact_and_infer(&fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let well_defined =
+                match self.verify_fact_well_definedness(&fact, verify_state.clone())? {
+                    VerifyFactWellDefinedResult::Success(proof) => proof,
+                    VerifyFactWellDefinedResult::Failed(reason) => {
+                        return Ok(Err(ExecDefTemplateStmtFailed::DomainFact(reason)));
+                    }
+                };
+            let store_and_infer = self.store_fact_and_infer(
+                &fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             assumed_dom_facts.push(AssumedTemplateDomFactResult {
                 well_defined,
                 store_and_infer,
@@ -271,16 +275,14 @@ impl Runtime {
                     )),
                 }
             }
-            TemplateDefEnum::HaveFnEqualStmt(stmt) => {
-                match self.exec_have_fn_equal_stmt(stmt)? {
-                    ExecHaveFnEqualStmtResult::Success(ok) => {
-                        Ok(Ok(ExecTemplateDefBodyResult::HaveFnEqual(ok)))
-                    }
-                    ExecHaveFnEqualStmtResult::Failed(failed) => {
-                        Ok(Err(ExecDefTemplateStmtFailed::BodyHaveFnEqual(failed)))
-                    }
+            TemplateDefEnum::HaveFnEqualStmt(stmt) => match self.exec_have_fn_equal_stmt(stmt)? {
+                ExecHaveFnEqualStmtResult::Success(ok) => {
+                    Ok(Ok(ExecTemplateDefBodyResult::HaveFnEqual(ok)))
                 }
-            }
+                ExecHaveFnEqualStmtResult::Failed(failed) => {
+                    Ok(Err(ExecDefTemplateStmtFailed::BodyHaveFnEqual(failed)))
+                }
+            },
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => {
                 match self.exec_have_fn_equal_case_by_case_stmt(stmt)? {
                     ExecHaveFnEqualCaseByCaseStmtResult::Success(ok) => {
@@ -293,9 +295,9 @@ impl Runtime {
             }
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
                 match self.exec_have_fn_by_forall_exist_unique_stmt(stmt)? {
-                    ExecHaveFnByForallExistUniqueStmtResult::Success(ok) => Ok(Ok(
-                        ExecTemplateDefBodyResult::HaveFnByForallExistUnique(ok),
-                    )),
+                    ExecHaveFnByForallExistUniqueStmtResult::Success(ok) => {
+                        Ok(Ok(ExecTemplateDefBodyResult::HaveFnByForallExistUnique(ok)))
+                    }
                     ExecHaveFnByForallExistUniqueStmtResult::Failed(failed) => Ok(Err(
                         ExecDefTemplateStmtFailed::BodyHaveFnByForallExistUnique(failed),
                     )),

@@ -6,18 +6,28 @@ use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime(language: OutputLanguage) -> Runtime {
-    Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language })
+    Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language,
+    })
 }
 
 fn execute(rt: &mut Runtime, code: &str) -> ExecStmtResult {
-    let tokens = Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+    let tokens = Tokenizer::new()
+        .tokenize(code, rt.current_file.clone())
+        .unwrap();
     let mut statements = rt.parse(&tokens).unwrap();
     assert_eq!(statements.len(), 1, "{code}");
     rt.exec_stmt(&statements.remove(0)).unwrap()
 }
 
 fn facts(rt: &Runtime) -> usize {
-    rt.execution_environments_stack.iter().map(|env| env.facts.facts_by_id.len()).sum()
+    rt.execution_environments_stack
+        .iter()
+        .map(|env| env.facts.facts_by_id.len())
+        .sum()
 }
 
 #[test]
@@ -59,13 +69,19 @@ fn cart_empty_function_boundaries_reject_wrong_domains_and_false_empty_graphs() 
         ("have outer fn(x R) fn(k {}) R", "outer={}"),
         ("1=1", "fn(k R) R={()}"),
         ("1=1", "cart(Z)={()}"),
-        ("1=1", "release thm cart_member_from_coordinates(tuple(7),cart())"),
+        (
+            "1=1",
+            "release thm cart_member_from_coordinates(tuple(7),cart())",
+        ),
         ("cart({},R)={}\ncart({},R,Z)={}", "2=3"),
     ] {
         let mut rt = runtime(OutputLanguage::English);
         assert!(rt.run_litex_code(setup).unwrap().success, "{setup}");
         let before = facts(&rt);
-        assert!(execute(&mut rt, target).is_failed(), "accepted false target: {setup}\n{target}");
+        assert!(
+            execute(&mut rt, target).is_failed(),
+            "accepted false target: {setup}\n{target}"
+        );
         assert_eq!(facts(&rt), before, "failed target published: {target}");
         assert!(!execute(&mut rt, "1=1").is_failed());
     }
@@ -77,15 +93,29 @@ fn cart_empty_function_boundaries_project_real_domain_sources_in_all_languages()
         let mut rt = runtime(language);
         for (code, label, source) in [
             ("()={}", "EmptyFunctionGraph", "empty_integer_range_carrier"),
-            ("cart()={()}", "EmptyDomainFunctionSpaceSingleton", "empty_integer_range_carrier"),
-            ("tuple(7) $in cart(Z)", "CartMembership", "domain_alpha_equivalent"),
+            (
+                "cart()={()}",
+                "EmptyDomainFunctionSpaceSingleton",
+                "empty_integer_range_carrier",
+            ),
+            (
+                "tuple(7) $in cart(Z)",
+                "CartMembership",
+                "domain_alpha_equivalent",
+            ),
         ] {
             let result = execute(&mut rt, code);
             assert!(!result.is_failed(), "{language:?}: {code}");
             let detailed = project_stmt_detailed(&result, &rt).stringify();
             assert!(detailed.contains(label), "{language:?}: {detailed}");
-            assert!(detailed.contains(source), "missing domain proof: {detailed}");
-            assert!(!detailed.contains("shape_and_dimension_checked"), "old opaque proof: {detailed}");
+            assert!(
+                detailed.contains(source),
+                "missing domain proof: {detailed}"
+            );
+            assert!(
+                !detailed.contains("shape_and_dimension_checked"),
+                "old opaque proof: {detailed}"
+            );
         }
     }
 }

@@ -35,8 +35,7 @@ impl Runtime {
             ));
         }
 
-        let iff_implies_then =
-            self.verify_forall_fact(&iff_implies_then_goal, verify_state)?;
+        let iff_implies_then = self.verify_forall_fact(&iff_implies_then_goal, verify_state)?;
         if iff_implies_then.is_failed() {
             return Ok(forall_fact_with_iff_result_from_iff_implies_then_fail(
                 fact,
@@ -58,10 +57,7 @@ impl Runtime {
         forall_iff: &ForallFactWithIff,
     ) -> (ForallFact, ForallFact) {
         let f = &forall_iff.forall_fact;
-        let line_file = forall_iff
-            .line_file
-            .clone()
-            .or_else(|| f.line_file.clone());
+        let line_file = forall_iff.line_file.clone().or_else(|| f.line_file.clone());
 
         let mut dom_then = f.dom_facts.clone();
         for then in &f.then_facts {

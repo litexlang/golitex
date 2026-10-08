@@ -78,9 +78,13 @@ fn run_json_preserves_named_declarations_and_complete_theorem_calls() {
             super::project_run_detailed(&run, &runtime, "eval", None),
         ] {
             let projected_statements = object_field(&projected, "statement_results")
-                .as_array().unwrap();
+                .as_array()
+                .unwrap();
             for (normal, projected) in statements.iter().zip(projected_statements) {
-                assert_eq!(object_field(normal, "statement"), object_field(projected, "statement"));
+                assert_eq!(
+                    object_field(normal, "statement"),
+                    object_field(projected, "statement")
+                );
             }
         }
     }
@@ -147,9 +151,13 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
             super::project_run_detailed(&run, &runtime, "eval", None),
         ] {
             let projected_statements = object_field(&projected, &key("statement_results"))
-                .as_array().unwrap();
+                .as_array()
+                .unwrap();
             for (normal, projected) in statements.iter().zip(projected_statements) {
-                assert_eq!(object_field(normal, &key("statement")), object_field(projected, &key("statement")));
+                assert_eq!(
+                    object_field(normal, &key("statement")),
+                    object_field(projected, &key("statement"))
+                );
             }
         }
     }
@@ -165,7 +173,9 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
         .as_array()
         .expect("stores array");
     assert!(
-        stores.iter().any(|s| s.as_str().unwrap_or("").contains("$in N")),
+        stores
+            .iter()
+            .any(|s| s.as_str().unwrap_or("").contains("$in N")),
         "have k N should store membership: {have_json:?}"
     );
 
@@ -187,7 +197,10 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
         why.get("message").and_then(|v| v.as_str().ok()),
         Some("The opposite-direction comparison is already known")
     );
-    assert!(why.get("rule").is_none(), "Normal JSON must not print rule_id");
+    assert!(
+        why.get("rule").is_none(),
+        "Normal JSON must not print rule_id"
+    );
     let cite = why.get("cite").and_then(|v| v.as_str().ok()).unwrap_or("");
     // `have k N` already inferred the checked opposite-direction comparison.
     assert_eq!(cite, "0 <= k");
@@ -302,8 +315,6 @@ fn normal_json_search_proof_failure() {
         why.get("phase").and_then(|v| v.as_str().ok()),
         Some("search_proof")
     );
-    let stores = object_field(&json, "stores")
-        .as_array()
-        .expect("stores");
+    let stores = object_field(&json, "stores").as_array().expect("stores");
     assert!(stores.is_empty());
 }

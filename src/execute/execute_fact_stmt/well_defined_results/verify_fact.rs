@@ -27,10 +27,20 @@ impl Runtime {
             Fact::AndFact(and_fact) => Ok(self.wrap_and_fact_wd(and_fact, verify_state)?),
             Fact::ChainFact(chain_fact) => Ok(self.wrap_chain_fact_wd(chain_fact, verify_state)?),
             Fact::OrFact(or_fact) => Ok(self.wrap_or_fact_wd(or_fact, verify_state)?),
-            Fact::ExistFact(exist_fact) => Ok(self.wrap_exist_fact_wd(&ExistShapedFact::Exist(exist_fact.clone()), verify_state)?),
-            Fact::ExistUniqueFact(exist_fact) => Ok(self.wrap_exist_fact_wd(&ExistShapedFact::ExistUnique(exist_fact.clone()), verify_state)?),
-            Fact::NotExistFact(exist_fact) => Ok(self.wrap_exist_fact_wd(&ExistShapedFact::NotExist(exist_fact.clone()), verify_state)?),
-            Fact::ForallFact(forall_fact) => Ok(self.wrap_forall_fact_wd(forall_fact, verify_state)?),
+            Fact::ExistFact(exist_fact) => Ok(
+                self.wrap_exist_fact_wd(&ExistShapedFact::Exist(exist_fact.clone()), verify_state)?
+            ),
+            Fact::ExistUniqueFact(exist_fact) => Ok(self.wrap_exist_fact_wd(
+                &ExistShapedFact::ExistUnique(exist_fact.clone()),
+                verify_state,
+            )?),
+            Fact::NotExistFact(exist_fact) => Ok(self.wrap_exist_fact_wd(
+                &ExistShapedFact::NotExist(exist_fact.clone()),
+                verify_state,
+            )?),
+            Fact::ForallFact(forall_fact) => {
+                Ok(self.wrap_forall_fact_wd(forall_fact, verify_state)?)
+            }
             Fact::ForallFactWithIff(forall_iff) => {
                 Ok(self.wrap_forall_fact_with_iff_wd(forall_iff, verify_state)?)
             }
@@ -48,22 +58,18 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactWellDefinedResult> {
         match fact {
-            AtomicFact::EqualFact(equal_fact) => {
-                Ok(
-                    match self.verify_equal_fact_well_definedness(equal_fact, verify_state)? {
-                        VerifyEqualFactWellDefinedResult::Success(proof) => {
-                            VerifyFactWellDefinedResult::Success(FactWellDefinedProof::Equality(
-                                proof,
-                            ))
-                        }
-                        VerifyEqualFactWellDefinedResult::Failed(reason) => {
-                            VerifyFactWellDefinedResult::Failed(
-                                FailToVerifyFactWellDefinedResult::Equality(reason),
-                            )
-                        }
-                    },
-                )
-            }
+            AtomicFact::EqualFact(equal_fact) => Ok(
+                match self.verify_equal_fact_well_definedness(equal_fact, verify_state)? {
+                    VerifyEqualFactWellDefinedResult::Success(proof) => {
+                        VerifyFactWellDefinedResult::Success(FactWellDefinedProof::Equality(proof))
+                    }
+                    VerifyEqualFactWellDefinedResult::Failed(reason) => {
+                        VerifyFactWellDefinedResult::Failed(
+                            FailToVerifyFactWellDefinedResult::Equality(reason),
+                        )
+                    }
+                },
+            ),
             _ => Ok(
                 match self.verify_atomic_fact_well_definedness(fact, verify_state)? {
                     VerifyAtomicFactWellDefinedResult::Success(proof) => {
@@ -128,16 +134,18 @@ impl Runtime {
         fact: &crate::ast::fact::OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactWellDefinedResult> {
-        Ok(match self.verify_or_fact_well_definedness(fact, verify_state)? {
-            VerifyOrFactWellDefinedResult::Success(proof) => {
-                VerifyFactWellDefinedResult::Success(FactWellDefinedProof::OrFact(proof))
-            }
-            VerifyOrFactWellDefinedResult::Failed(reason) => {
-                VerifyFactWellDefinedResult::Failed(FailToVerifyFactWellDefinedResult::OrFact(
-                    reason,
-                ))
-            }
-        })
+        Ok(
+            match self.verify_or_fact_well_definedness(fact, verify_state)? {
+                VerifyOrFactWellDefinedResult::Success(proof) => {
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::OrFact(proof))
+                }
+                VerifyOrFactWellDefinedResult::Failed(reason) => {
+                    VerifyFactWellDefinedResult::Failed(FailToVerifyFactWellDefinedResult::OrFact(
+                        reason,
+                    ))
+                }
+            },
+        )
     }
 
     pub(crate) fn wrap_exist_fact_wd(
@@ -226,12 +234,14 @@ impl Runtime {
     pub(crate) fn store_inferred_fact_and_infer(
         &mut self,
         fact: &Fact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<crate::store_fact_and_infer::StoreFactAndInferResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<crate::store_fact_and_infer::StoreFactAndInferResult> {
         match self.try_store_inferred_fact_and_infer(fact, verify_state)? {
             Some(ok) => Ok(ok),
-            None => Err(crate::runtime::RuntimeError::InternalBug(
-                format!("inferred fact {} failed well-definedness check", fact.ir()),
-            )),
+            None => Err(crate::runtime::RuntimeError::InternalBug(format!(
+                "inferred fact {} failed well-definedness check",
+                fact.ir()
+            ))),
         }
     }
 
@@ -240,9 +250,8 @@ impl Runtime {
     pub(crate) fn try_store_inferred_fact_and_infer(
         &mut self,
         fact: &Fact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<
-        Option<crate::store_fact_and_infer::StoreFactAndInferResult>,
-    > {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<crate::store_fact_and_infer::StoreFactAndInferResult>> {
         let wd = self.verify_fact_well_definedness(fact, verify_state)?;
         if wd.is_failed() {
             return Ok(None);

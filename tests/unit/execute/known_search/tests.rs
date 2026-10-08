@@ -25,10 +25,19 @@ fn stored_atomic_lookup_precedes_parameter_special_property_search() {
         panic!("cartesian membership already stored its coordinate carrier")
     };
     use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
-    assert!(proof.why_parameters_of_known_fact_are_equal_to_givens.iter().all(|proof| {
-        matches!(proof, EqualFactSearchedProof::ByTheyAreTheSame(_)
-            | EqualFactSearchedProof::ByEquivalenceClass(_))
-    }), "stored candidate must win without a new coordinate proof");
+    assert!(
+        proof
+            .why_parameters_of_known_fact_are_equal_to_givens
+            .iter()
+            .all(|proof| {
+                matches!(
+                    proof,
+                    EqualFactSearchedProof::ByTheyAreTheSame(_)
+                        | EqualFactSearchedProof::ByEquivalenceClass(_)
+                )
+            }),
+        "stored candidate must win without a new coordinate proof"
+    );
     assert!(rt.fact_by_id_in_stack(proof.cite_fact_id).is_some());
     assert_eq!(memory_sizes(&rt), before);
 }
@@ -73,15 +82,13 @@ fn cached_literal_application_uses_definition_without_reproving_the_domain() {
 
 #[test]
 fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
-
     let mut rt = runtime();
     exec_ok(&mut rt, "have fn id(x R) R = x");
     exec_ok(&mut rt, "have fn pair(x, y R) R = x");
     exec_ok(&mut rt, "have a R");
     exec_ok(&mut rt, "id(a) = id(a)");
     exec_ok(&mut rt, "fn_range(id) = fn_range(id)");
-    let targets = ["id(a) $in R", "id(a) $in fn_range(id)"]
-        .map(|code| atomic(&mut rt, code));
+    let targets = ["id(a) $in R", "id(a) $in fn_range(id)"].map(|code| atomic(&mut rt, code));
     let AtomicFact::InFact(id_signature) = atomic(&mut rt, "id $in fn(x R) R") else {
         panic!("id signature")
     };
@@ -108,10 +115,13 @@ fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
         let proof = rt
             .search_atomic_except_equality_fact_proof_by_known_special_property(&target)
             .expect("later applicable definition must still be considered");
-        let source = rt.fact_by_id_in_stack(proof.cite_property_fact_id().unwrap()).unwrap();
+        let source = rt
+            .fact_by_id_in_stack(proof.cite_property_fact_id().unwrap())
+            .unwrap();
         assert!(source.readable_string().contains("id $in fn"));
         assert_special(
-            rt.verify_fact(&Fact::AtomicFact(target), builtin_disabled()).unwrap(),
+            rt.verify_fact(&Fact::AtomicFact(target), builtin_disabled())
+                .unwrap(),
             "later applicable definition",
         );
     }
@@ -127,8 +137,11 @@ fn stored_fact_wins_over_definition_property_in_both_entries() {
     for strategy in [false, true] {
         let target = Fact::AtomicFact(atomic(&mut rt, "id(a) $in R"));
         let result = if strategy {
-            rt.verify_fact(&target, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
-                .unwrap()
+            rt.verify_fact(
+                &target,
+                VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
+            )
+            .unwrap()
         } else {
             rt.verify_fact(&target, builtin_disabled()).unwrap()
         };
@@ -152,7 +165,10 @@ fn zero_strategy_depth_uses_the_same_known_special_property_phase() {
     exec_ok(&mut rt, "have a R = 1");
     let target = Fact::AtomicFact(atomic(&mut rt, "id(a) $in R"));
     let result = rt
-        .verify_fact(&target, VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule))
+        .verify_fact(
+            &target,
+            VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
+        )
         .unwrap();
     assert_special(result, "strategy depth zero");
 }
@@ -187,17 +203,29 @@ fn exact_property_rows_require_publication_before_signature_consumption() {
     exec_ok(&mut rt, "alias $in fn(x R) R");
     exec_ok(&mut rt, "alias(a) = alias(a)");
     let target = atomic(&mut rt, "alias(a) $in R");
-    let AtomicFact::InFact(fact) = &target else { panic!("membership") };
-    let crate::ast::obj::Obj::FnObj(application) = &fact.element else { panic!("application") };
-    let crate::ast::obj::FnObjHead::Identifier(head) = application.head.as_ref() else { panic!("head") };
+    let AtomicFact::InFact(fact) = &target else {
+        panic!("membership")
+    };
+    let crate::ast::obj::Obj::FnObj(application) = &fact.element else {
+        panic!("application")
+    };
+    let crate::ast::obj::FnObjHead::Identifier(head) = application.head.as_ref() else {
+        panic!("head")
+    };
     let head = crate::ast::obj::Obj::Identifier(head.clone());
-    assert!(rt.known_special_properties_of(&head).iter().any(|property| property.function_signature().is_some()));
+    assert!(rt
+        .known_special_properties_of(&head)
+        .iter()
+        .any(|property| property.function_signature().is_some()));
     let before = memory_sizes(&rt);
     let Some(super::search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
         super::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof),
     )) = rt.search_atomic_except_equality_fact_proof_by_known_special_property(&target) else { panic!("checked alias source") };
     assert!(proof.function_equal.path.is_empty());
-    assert!(rt.known_special_properties_of(&head).iter().any(|property| property.function_signature().is_some()));
+    assert!(rt
+        .known_special_properties_of(&head)
+        .iter()
+        .any(|property| property.function_signature().is_some()));
     assert_eq!(memory_sizes(&rt), before);
 }
 
@@ -366,7 +394,12 @@ fn scoped_definitions_expire_when_their_environment_is_popped() {
 #[test]
 fn known_codomain_alias_retains_its_selected_signature_and_equality_citations() {
     let mut rt = runtime();
-    for code in ["have fn id(x R) R = x", "let alias = id", "alias $in fn(x R) R", "have a R"] {
+    for code in [
+        "have fn id(x R) R = x",
+        "let alias = id",
+        "alias $in fn(x R) R",
+        "have a R",
+    ] {
         exec_ok(&mut rt, code);
     }
     let target = atomic(&mut rt, "alias(a) $in R");
@@ -374,10 +407,7 @@ fn known_codomain_alias_retains_its_selected_signature_and_equality_citations() 
         .search_atomic_except_equality_fact_proof_by_known_special_property(&target)
         .is_some());
     let result = rt
-        .verify_fact(
-            &Fact::AtomicFact(target),
-            VerifyState::top_level(),
-        )
+        .verify_fact(&Fact::AtomicFact(target), VerifyState::top_level())
         .unwrap();
     let VerifyFactResult::AtomicExceptEquality(result) = result else {
         panic!("atomic")
@@ -385,27 +415,45 @@ fn known_codomain_alias_retains_its_selected_signature_and_equality_citations() 
     let VerifyAtomicExceptEqualityFactResult::Success(result) = *result else {
         panic!("codomain")
     };
-    use super::search_atomic_except_equality_fact_proof_by_known_special_property::{AtomicExceptEqualityFactSearchProofByKnownSpecialProperty, InFactSearchProofByKnownSpecialProperty};
+    use super::search_atomic_except_equality_fact_proof_by_known_special_property::{
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty,
+        InFactSearchProofByKnownSpecialProperty,
+    };
     let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
-        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)),
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+            InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof),
+        ),
     ) = result.searched_proof
     else {
         panic!("checked alias source")
     };
-    let signature = rt
-        .fact_by_id_in_stack(proof.cite_property_fact_id)
-        .unwrap();
+    let signature = rt.fact_by_id_in_stack(proof.cite_property_fact_id).unwrap();
     // The unified index may cite either membership or the concrete function
     // equality. Check the cited subject and signature, not iteration order.
     let property = match signature {
-        Fact::AtomicFact(AtomicFact::InFact(fact)) => crate::exec_env::SpecialProperty::Membership(fact.clone()),
-        Fact::AtomicFact(AtomicFact::EqualFact(fact)) => crate::exec_env::SpecialProperty::Equality(fact.clone()),
-        _ => panic!("not a function signature citation: {}", signature.readable_string()),
+        Fact::AtomicFact(AtomicFact::InFact(fact)) => {
+            crate::exec_env::SpecialProperty::Membership(fact.clone())
+        }
+        Fact::AtomicFact(AtomicFact::EqualFact(fact)) => {
+            crate::exec_env::SpecialProperty::Equality(fact.clone())
+        }
+        _ => panic!(
+            "not a function signature citation: {}",
+            signature.readable_string()
+        ),
     };
-    let AtomicFact::InFact(expected) = atomic(&mut rt, "id $in fn(x R) R") else { panic!("membership") };
-    assert!(rt.lookup_known_obj_equality(property.function_subject().unwrap(), &expected.element).is_some());
-    let signature = crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(property.function_signature().unwrap()));
-    assert!(rt.lookup_known_obj_equality(&signature, &expected.set).is_some());
+    let AtomicFact::InFact(expected) = atomic(&mut rt, "id $in fn(x R) R") else {
+        panic!("membership")
+    };
+    assert!(rt
+        .lookup_known_obj_equality(property.function_subject().unwrap(), &expected.element)
+        .is_some());
+    let signature = crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(
+        property.function_signature().unwrap(),
+    ));
+    assert!(rt
+        .lookup_known_obj_equality(&signature, &expected.set)
+        .is_some());
     assert!(!proof.signature_uses.is_empty());
     assert!(proof.function_equal.path.is_empty());
     let stmt_result = exec_ok(&mut rt, "alias(a) $in R");
@@ -415,8 +463,8 @@ fn known_codomain_alias_retains_its_selected_signature_and_equality_citations() 
 
 #[test]
 fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
-    use crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactResult;
     use super::search_atomic_except_equality_fact_proof_by_builtin_strategy::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
+    use crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactResult;
 
     let mut rt = runtime();
     exec_ok(&mut rt, "struct Bundle:\n    f fn(x R) R\n    tag N");
@@ -425,7 +473,9 @@ fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
     let Stmt::Fact(fact) = parse(&mut rt, "forall b &Bundle, narrow fn(x R: x > 0) N, a R:\n    b.f = narrow\n    a > 0\n    =>:\n        b.f $in fn(x R: x > 0) N\n        b.f(a) $in N") else {
         panic!("forall fact")
     };
-    let VerifyFactResult::ForallFact(result) = rt.verify_fact(&fact, VerifyState::top_level()).unwrap() else {
+    let VerifyFactResult::ForallFact(result) =
+        rt.verify_fact(&fact, VerifyState::top_level()).unwrap()
+    else {
         panic!("forall result")
     };
     let VerifyForallFactResult::Success(result) = *result else {
@@ -434,7 +484,9 @@ fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
     let crate::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactProof::ByLocalIntroduction(mut result) = result else {
         panic!("fresh forall must use local introduction");
     };
-    let VerifyFactResult::AtomicExceptEquality(conclusion) = result.proved_then_facts.remove(1).verify_result else {
+    let VerifyFactResult::AtomicExceptEquality(conclusion) =
+        result.proved_then_facts.remove(1).verify_result
+    else {
         panic!("membership")
     };
     let VerifyAtomicExceptEqualityFactResult::Success(conclusion) = *conclusion else {
@@ -442,18 +494,33 @@ fn field_function_codomain_strategy_retains_signature_and_domain_evidence() {
     };
     let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnApplicationInCodomain(proof),
-    ) = conclusion.searched_proof else {
+    ) = conclusion.searched_proof
+    else {
         panic!("bounded codomain strategy")
     };
-    let signature = result.local_env.facts.facts_by_id.get(&proof.cite_signature_fact_id).unwrap();
+    let signature = result
+        .local_env
+        .facts
+        .facts_by_id
+        .get(&proof.cite_signature_fact_id)
+        .unwrap();
     let signature_text = signature.readable_string();
     assert!(signature_text.contains("b.f $in fn"), "{signature_text}");
     assert!(signature_text.contains(" > 0"), "{signature_text}");
     assert_eq!(proof.requirement_facts.len(), 2);
     assert_eq!(proof.proof_of_requirement_facts.len(), 2);
-    assert!(proof.proof_of_requirement_facts.iter().all(|p| !p.is_failed()));
-    assert!(matches!(&proof.requirement_facts[0], Fact::AtomicFact(AtomicFact::InFact(_))));
-    assert!(matches!(&proof.requirement_facts[1], Fact::AtomicFact(AtomicFact::GreaterFact(_))));
+    assert!(proof
+        .proof_of_requirement_facts
+        .iter()
+        .all(|p| !p.is_failed()));
+    assert!(matches!(
+        &proof.requirement_facts[0],
+        Fact::AtomicFact(AtomicFact::InFact(_))
+    ));
+    assert!(matches!(
+        &proof.requirement_facts[1],
+        Fact::AtomicFact(AtomicFact::GreaterFact(_))
+    ));
 }
 
 #[test]
@@ -475,8 +542,13 @@ fn field_function_codomain_rejects_inapplicable_signatures() {
         let mut rt = runtime();
         exec_ok(&mut rt, "struct Bundle:\n    f fn(x R) R\n    tag N");
         let stmt = parse(&mut rt, code);
-        let result = rt.exec_stmt(&stmt).expect("invalid membership must fail normally");
-        assert!(result.is_failed(), "accepted an inapplicable signature: {code}");
+        let result = rt
+            .exec_stmt(&stmt)
+            .expect("invalid membership must fail normally");
+        assert!(
+            result.is_failed(),
+            "accepted an inapplicable signature: {code}"
+        );
     }
 }
 
@@ -580,7 +652,8 @@ fn runtime() -> Runtime {
 }
 
 fn builtin_disabled() -> VerifyState {
-    VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
+    VerifyState::top_level()
+        .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty)
 }
 
 fn parse(rt: &mut Runtime, code: &str) -> Stmt {
@@ -629,10 +702,7 @@ fn memory_sizes(rt: &Runtime) -> Vec<(usize, usize, usize)> {
             (
                 env.facts.facts_by_id.len(),
                 env.well_defined_objects.object_to_wd_id.len(),
-                env.special_properties
-                    .values()
-                    .map(Vec::len)
-                    .sum(),
+                env.special_properties.values().map(Vec::len).sum(),
             )
         })
         .collect()

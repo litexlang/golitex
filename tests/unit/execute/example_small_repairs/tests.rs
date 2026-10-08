@@ -141,7 +141,11 @@ fn example_small_finite_eval_keeps_exact_values_and_stores_the_equality() {
     ] {
         let (normal, _) = check(code, true);
         assert!(normal.contains(&format!("\"evaluated_object\": \"{value}\"")));
-        let equality = format!("\"{}={}\"", code.trim_start_matches("eval ").replace(' ', ""), value.replace(' ', ""));
+        let equality = format!(
+            "\"{}={}\"",
+            code.trim_start_matches("eval ").replace(' ', ""),
+            value.replace(' ', "")
+        );
         assert!(normal.replace(' ', "").contains(&equality), "{normal}");
     }
     for code in [

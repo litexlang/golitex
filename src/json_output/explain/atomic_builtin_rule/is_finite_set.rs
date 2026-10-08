@@ -35,10 +35,9 @@ impl IsFiniteSetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
-            Self::FunctionRangeOfFiniteDomain(_) => text(
-                "有限函数像",
-                "已验证函数在有限定义域上的像是有限集",
-            ),
+            Self::FunctionRangeOfFiniteDomain(_) => {
+                text("有限函数像", "已验证函数在有限定义域上的像是有限集")
+            }
             Self::SurjectiveImageOfFiniteSet(_) => text(
                 "有限集合满射像的有限性",
                 "经验证的满射若定义域有限，则陪域也有限",
@@ -54,10 +53,9 @@ impl IsFiniteSetFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
-            Self::FunctionRangeOfFiniteDomain(_) => text(
-                "有限函數值域",
-                "經驗證的有限定義域函數之值域有限",
-            ),
+            Self::FunctionRangeOfFiniteDomain(_) => {
+                text("有限函數值域", "經驗證的有限定義域函數之值域有限")
+            }
             Self::SurjectiveImageOfFiniteSet(_) => text(
                 "有限集合滿射像的有限性",
                 "經驗證的滿射若定義域有限，則陪域也有限",
@@ -242,11 +240,17 @@ impl ListSetFiniteBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("显式列举的集合是有限集", "由有限个元素列举而成的集合是有限集")
+        text(
+            "显式列举的集合是有限集",
+            "由有限个元素列举而成的集合是有限集",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("顯式列舉的集合是有限集", "由有限個元素列舉而成的集合是有限集")
+        text(
+            "顯式列舉的集合是有限集",
+            "由有限個元素列舉而成的集合是有限集",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -323,11 +327,17 @@ impl ClosedRangeFiniteBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("有界整数区间是有限集", "经检查的有限整数端点之间只含有限个整数")
+        text(
+            "有界整数区间是有限集",
+            "经检查的有限整数端点之间只含有限个整数",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("有界整數區間是有限集", "經檢查的有限整數端點之間只含有限個整數")
+        text(
+            "有界整數區間是有限集",
+            "經檢查的有限整數端點之間只含有限個整數",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -397,15 +407,24 @@ impl ClosedRangeFiniteBuiltinRuleProof {
 
 impl RangeFiniteBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Finiteness of a bounded integer range", "A range between checked finite integer endpoints contains only finitely many integers")
+        text(
+            "Finiteness of a bounded integer range",
+            "A range between checked finite integer endpoints contains only finitely many integers",
+        )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("有界整数区间是有限集", "经检查的有限整数端点之间只含有限个整数")
+        text(
+            "有界整数区间是有限集",
+            "经检查的有限整数端点之间只含有限个整数",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("有界整數區間是有限集", "經檢查的有限整數端點之間只含有限個整數")
+        text(
+            "有界整數區間是有限集",
+            "經檢查的有限整數端點之間只含有限個整數",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -427,15 +446,24 @@ impl RangeFiniteBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("انتهاء المجال الصحيح المحدود", "المجال بين طرفين صحيحين منتهيين متحقق منهما يحتوي عددًا منتهيًا من الأعداد الصحيحة")
+        text(
+            "انتهاء المجال الصحيح المحدود",
+            "المجال بين طرفين صحيحين منتهيين متحقق منهما يحتوي عددًا منتهيًا من الأعداد الصحيحة",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("有界な整数範囲の有限性", "確認済みの有限な整数の両端の間には有限個の整数しかありません")
+        text(
+            "有界な整数範囲の有限性",
+            "確認済みの有限な整数の両端の間には有限個の整数しかありません",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("유계 정수 범위의 유한성", "검사된 유한한 정수 양 끝점 사이에는 유한 개의 정수만 있습니다")
+        text(
+            "유계 정수 범위의 유한성",
+            "검사된 유한한 정수 양 끝점 사이에는 유한 개의 정수만 있습니다",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -470,10 +498,7 @@ impl FiniteSeqZeroLengthFiniteBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "零长度有限序列",
-            "零长度有限序列载体有限",
-        )
+        text("零长度有限序列", "零长度有限序列载体有限")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -557,17 +582,11 @@ impl FiniteSeqFromFiniteCodomainBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "有限陪域的有限序列",
-            "有限陪域上的定长序列载体有限",
-        )
+        text("有限陪域的有限序列", "有限陪域上的定长序列载体有限")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "有限陪域的有限序列",
-            "有限陪域 ⇒ 長度 n 的序列載體有限",
-        )
+        text("有限陪域的有限序列", "有限陪域 ⇒ 長度 n 的序列載體有限")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {

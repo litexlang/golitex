@@ -6,8 +6,8 @@ use super::entry::ObjWellDefinedProof;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result::FactWellDefinedProof;
 use crate::runtime::FactId;
 
@@ -111,10 +111,6 @@ pub enum SetFormerObjWellDefinedProofByDef {
 pub enum ProductShapeObjWellDefinedProofByDef {
     Cart(CartObjWellDefinedProof),
     Tuple(TupleObjWellDefinedProof),
-
-
-
-
 }
 
 pub enum FunctionSpaceObjWellDefinedProofByDef {
@@ -147,7 +143,9 @@ pub enum StructishObjWellDefinedProofByDef {
 pub struct IdentifierObjWellDefinedProof {}
 
 impl IdentifierObjWellDefinedProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 // Which FnSet supplied the domain check for a successful FnObj application.
@@ -155,7 +153,9 @@ impl IdentifierObjWellDefinedProof {
 // their own body. Templates may read a checked declaration after instance WD,
 // including nested checks where signature caching is disabled.
 pub enum FnObjDomainFnSetEvidence {
-    FiniteFunction(Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>),
+    FiniteFunction(
+        Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>,
+    ),
     InFunctionSet {
         fn_set: FnSet,
         fact_id: FactId,
@@ -180,7 +180,8 @@ pub struct FnObjObjWellDefinedProof {
 
 impl FnObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             domain_fn_set: None,
             child_obj_well_defined,
@@ -192,25 +193,33 @@ impl FnObjObjWellDefinedProof {
 pub struct NumberObjWellDefinedProof {}
 
 impl NumberObjWellDefinedProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 pub struct ImaginaryUnitObjWellDefinedProof {}
 
 impl ImaginaryUnitObjWellDefinedProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 pub struct EulerNumberObjWellDefinedProof {}
 
 impl EulerNumberObjWellDefinedProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 pub struct PiObjWellDefinedProof {}
 
 impl PiObjWellDefinedProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 pub struct AddObjWellDefinedProof {
@@ -220,7 +229,8 @@ pub struct AddObjWellDefinedProof {
 
 impl AddObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -235,7 +245,8 @@ pub struct SubObjWellDefinedProof {
 
 impl SubObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -250,7 +261,8 @@ pub struct NegObjWellDefinedProof {
 
 impl NegObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -265,7 +277,8 @@ pub struct MulObjWellDefinedProof {
 
 impl MulObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -280,7 +293,8 @@ pub struct DivObjWellDefinedProof {
 
 impl DivObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -295,7 +309,8 @@ pub struct ModObjWellDefinedProof {
 
 impl ModObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -310,7 +325,8 @@ pub struct QuotObjWellDefinedProof {
 
 impl QuotObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -325,7 +341,8 @@ pub struct GcdObjWellDefinedProof {
 
 impl GcdObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -340,7 +357,8 @@ pub struct LcmObjWellDefinedProof {
 
 impl LcmObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -355,7 +373,8 @@ pub struct FloorObjWellDefinedProof {
 
 impl FloorObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -370,7 +389,8 @@ pub struct CeilObjWellDefinedProof {
 
 impl CeilObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -385,7 +405,8 @@ pub struct MinObjWellDefinedProof {
 
 impl MinObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -400,7 +421,8 @@ pub struct MaxObjWellDefinedProof {
 
 impl MaxObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -415,7 +437,8 @@ pub struct ExpObjWellDefinedProof {
 
 impl ExpObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -430,7 +453,8 @@ pub struct LnObjWellDefinedProof {
 
 impl LnObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -445,7 +469,8 @@ pub struct SignObjWellDefinedProof {
 
 impl SignObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -460,7 +485,8 @@ pub struct FactorialObjWellDefinedProof {
 
 impl FactorialObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -475,7 +501,8 @@ pub struct PowObjWellDefinedProof {
 
 impl PowObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -490,7 +517,8 @@ pub struct AbsObjWellDefinedProof {
 
 impl AbsObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -505,7 +533,8 @@ pub struct SinObjWellDefinedProof {
 
 impl SinObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -520,7 +549,8 @@ pub struct ArcsinObjWellDefinedProof {
 
 impl ArcsinObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -535,7 +565,8 @@ pub struct ArccosObjWellDefinedProof {
 
 impl ArccosObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -550,7 +581,8 @@ pub struct ArctanObjWellDefinedProof {
 
 impl ArctanObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -565,7 +597,8 @@ pub struct ArccotObjWellDefinedProof {
 
 impl ArccotObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -580,7 +613,8 @@ pub struct CosObjWellDefinedProof {
 
 impl CosObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -595,7 +629,8 @@ pub struct TanObjWellDefinedProof {
 
 impl TanObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -610,7 +645,8 @@ pub struct CotObjWellDefinedProof {
 
 impl CotObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -625,7 +661,8 @@ pub struct RealPartObjWellDefinedProof {
 
 impl RealPartObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -640,7 +677,8 @@ pub struct ImaginaryPartObjWellDefinedProof {
 
 impl ImaginaryPartObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -655,7 +693,8 @@ pub struct ComplexAbsObjWellDefinedProof {
 
 impl ComplexAbsObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -670,7 +709,8 @@ pub struct SqrtObjWellDefinedProof {
 
 impl SqrtObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -685,7 +725,8 @@ pub struct LogObjWellDefinedProof {
 
 impl LogObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -700,7 +741,8 @@ pub struct UnionObjWellDefinedProof {
 
 impl UnionObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -715,7 +757,8 @@ pub struct IntersectObjWellDefinedProof {
 
 impl IntersectObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -730,7 +773,8 @@ pub struct SetMinusObjWellDefinedProof {
 
 impl SetMinusObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -745,7 +789,8 @@ pub struct FamilyUnionObjWellDefinedProof {
 
 impl FamilyUnionObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -760,7 +805,8 @@ pub struct FamilyIntersectObjWellDefinedProof {
 
 impl FamilyIntersectObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -775,7 +821,8 @@ pub struct IndexUnionObjWellDefinedProof {
 
 impl IndexUnionObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -790,7 +837,8 @@ pub struct IndexIntersectObjWellDefinedProof {
 
 impl IndexIntersectObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -805,7 +853,8 @@ pub struct PowerSetObjWellDefinedProof {
 
 impl PowerSetObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -820,7 +869,8 @@ pub struct IndexCartObjWellDefinedProof {
 
 impl IndexCartObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -835,7 +885,8 @@ pub struct ListSetObjWellDefinedProof {
 
 impl ListSetObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -867,7 +918,9 @@ pub struct AnonymousFnObjWellDefinedProof {
 
 pub enum AnonymousFnBodyInReturnSetProof {
     CheckedMembership(VerifyFactResult),
-    EmptyCompleteDomain(crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof),
+    EmptyCompleteDomain(
+        crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof,
+    ),
 }
 
 pub struct CartObjWellDefinedProof {
@@ -877,14 +930,14 @@ pub struct CartObjWellDefinedProof {
 
 impl CartObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
         }
     }
 }
-
 
 pub struct TupleObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
@@ -893,7 +946,8 @@ pub struct TupleObjWellDefinedProof {
 
 impl TupleObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -908,7 +962,8 @@ pub struct FiniteSetSizeObjWellDefinedProof {
 
 impl FiniteSetSizeObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -923,7 +978,8 @@ pub struct FiniteSetMaxObjWellDefinedProof {
 
 impl FiniteSetMaxObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -938,7 +994,8 @@ pub struct FiniteSetMinObjWellDefinedProof {
 
 impl FiniteSetMinObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -949,19 +1006,26 @@ impl FiniteSetMinObjWellDefinedProof {
 pub struct FnRangeObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
-    pub function_domains: Vec<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
+    pub function_domains:
+        Vec<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
 }
 
 impl FnRangeObjWellDefinedProof {
     pub fn from_checked_domains(
         stages: ObjWellDefinedByDefCommonStages,
-        function_domains: Vec<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
+        function_domains: Vec<
+            crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+        >,
     ) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
-        Self { child_obj_well_defined, requirement_fact_verified, function_domains }
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+            function_domains,
+        }
     }
 }
-
 
 pub struct SumObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
@@ -970,7 +1034,8 @@ pub struct SumObjWellDefinedProof {
 
 impl SumObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -985,7 +1050,8 @@ pub struct SumOfFiniteSetObjWellDefinedProof {
 
 impl SumOfFiniteSetObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1000,7 +1066,8 @@ pub struct ProductObjWellDefinedProof {
 
 impl ProductObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1015,7 +1082,8 @@ pub struct ProductOfFiniteSetObjWellDefinedProof {
 
 impl ProductOfFiniteSetObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1030,7 +1098,8 @@ pub struct ReduceObjWellDefinedProof {
 
 impl ReduceObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1045,7 +1114,8 @@ pub struct FiniteSetReduceObjWellDefinedProof {
 
 impl FiniteSetReduceObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1060,7 +1130,8 @@ pub struct RangeObjWellDefinedProof {
 
 impl RangeObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1075,7 +1146,8 @@ pub struct ClosedRangeObjWellDefinedProof {
 
 impl ClosedRangeObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1090,7 +1162,8 @@ pub struct FiniteSeqSetObjWellDefinedProof {
 
 impl FiniteSeqSetObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1105,7 +1178,8 @@ pub struct SeqSetObjWellDefinedProof {
 
 impl SeqSetObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1113,11 +1187,12 @@ impl SeqSetObjWellDefinedProof {
     }
 }
 
-
 pub struct StandardSetObjWellDefinedProof {}
 
 impl StandardSetObjWellDefinedProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 pub struct StructObjObjWellDefinedProof {
@@ -1127,7 +1202,8 @@ pub struct StructObjObjWellDefinedProof {
 
 impl StructObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1142,7 +1218,8 @@ pub struct FieldAccessObjWellDefinedProof {
 
 impl FieldAccessObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1157,7 +1234,8 @@ pub struct InstantiatedTemplateObjObjWellDefinedProof {
 
 impl InstantiatedTemplateObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1172,7 +1250,8 @@ pub struct OneSideInfinityIntervalObjObjWellDefinedProof {
 
 impl OneSideInfinityIntervalObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1187,7 +1266,8 @@ pub struct IntervalObjObjWellDefinedProof {
 
 impl IntervalObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        let (child_obj_well_defined, requirement_fact_verified) = stages.into_success_child_proofs();
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
         Self {
             child_obj_well_defined,
             requirement_fact_verified,
@@ -1195,15 +1275,16 @@ impl IntervalObjObjWellDefinedProof {
     }
 }
 
-
 pub struct PreimageObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
-    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub construction:
+        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
 }
 
 pub struct PreimageSetObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
-    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub construction:
+        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
 }

@@ -1,30 +1,15 @@
-pub mod by_range_size;
-pub mod by_function_domain_image;
-pub mod by_empty_function_graph;
-pub mod by_euclidean_remainder;
-pub mod by_factorial_divisibility;
-pub mod by_finite_set_product_reindex;
-pub mod by_finite_set_reduce_reindex;
-pub(in crate::execute::execute_fact_stmt::verify_atomic_fact) mod helper;
-pub mod by_integer_range_builder;
-pub mod by_scalar_identities;
-pub mod by_elementary_arithmetic;
-pub mod by_trig_complex_identities;
-pub mod by_periodic_trig;
-pub mod by_numeric_complex_modulus;
-pub mod by_reduce_product;
-pub mod by_reduce_last_step;
-pub mod by_reduce_partition;
-pub mod by_reduce_first_step;
-pub mod by_reduce_translation;
-pub mod by_reduce_pointwise;
-pub mod reduce_rule_helper;
+pub mod aggregate_identity_builtin_rule_proof;
 pub mod by_cartesian_size;
-pub mod by_finite_map_size;
+pub mod by_closed_trig;
+pub mod by_elementary_arithmetic;
+pub mod by_empty_function_graph;
 pub mod by_equal_from_known_difference_zero;
-pub mod by_finite_subset_size;
-pub mod by_inverse_trig;
-pub mod by_power_laws;
+pub mod by_equality_identities_wave10;
+pub mod by_equality_identities_wave11;
+pub mod by_equality_identities_wave12;
+pub mod by_equality_identities_wave13;
+pub mod by_equality_identities_wave14;
+pub mod by_equality_identities_wave15;
 pub mod by_equality_identities_wave2;
 pub mod by_equality_identities_wave3;
 pub mod by_equality_identities_wave4;
@@ -33,24 +18,39 @@ pub mod by_equality_identities_wave6;
 pub mod by_equality_identities_wave7;
 pub mod by_equality_identities_wave8;
 pub mod by_equality_identities_wave9;
-pub mod by_equality_identities_wave10;
-pub mod by_equality_identities_wave11;
-pub mod by_equality_identities_wave12;
-pub mod by_equality_identities_wave13;
-pub mod by_equality_identities_wave14;
-pub mod by_equality_identities_wave15;
-pub mod by_closed_trig;
-pub mod search_equal_fact_by_calculation;
-pub mod search_equal_fact_by_aggregate_calculation;
-pub mod aggregate_identity_builtin_rule_proof;
-mod search_equal_fact_by_aggregate_identities;
+pub mod by_euclidean_remainder;
+pub mod by_factorial_divisibility;
+pub mod by_finite_map_size;
+pub mod by_finite_set_product_reindex;
+pub mod by_finite_set_reduce_reindex;
+pub mod by_finite_subset_size;
+pub mod by_function_domain_image;
+pub mod by_integer_range_builder;
+pub mod by_inverse_trig;
+pub mod by_numeric_complex_modulus;
+pub mod by_periodic_trig;
+pub mod by_power_laws;
+pub mod by_range_size;
+pub mod by_reduce_first_step;
+pub mod by_reduce_last_step;
+pub mod by_reduce_partition;
+pub mod by_reduce_pointwise;
+pub mod by_reduce_product;
+pub mod by_reduce_translation;
+pub mod by_scalar_identities;
+pub mod by_trig_complex_identities;
+pub(in crate::execute::execute_fact_stmt::verify_atomic_fact) mod helper;
+pub mod reduce_rule_helper;
 pub mod search_equal_fact_builtin_rule;
 pub mod search_equal_fact_builtin_rule_result;
+pub mod search_equal_fact_by_aggregate_calculation;
+mod search_equal_fact_by_aggregate_identities;
+pub mod search_equal_fact_by_calculation;
 
 pub use search_equal_fact_builtin_rule_result::EqualitySearchProofByBuiltinRule;
 
-pub mod by_native_fixed_base;
 pub mod by_elementary_definitions;
+pub mod by_native_fixed_base;
 
 pub mod log_algebra_base_proof;
 
@@ -61,10 +61,10 @@ mod by_trig_quotient_relations;
 #[path = "../../../../../../tests/unit/execute/trig_quotient_relations/tests.rs"]
 mod trig_quotient_relations_tests;
 
-pub(in crate::execute) mod verify_trig_interval_bound;
 #[cfg(test)]
 #[path = "../../../../../../tests/unit/execute/trig_interval_bound_spellings/tests.rs"]
 mod trig_interval_bound_spellings_tests;
+pub(in crate::execute) mod verify_trig_interval_bound;
 
 pub mod by_scalar_division_relations;
 

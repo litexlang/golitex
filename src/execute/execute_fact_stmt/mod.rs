@@ -3,12 +3,12 @@
 //! local inference — not a second open-ended proof search.
 
 mod exec_fact_stmt;
-mod helper;
+pub(crate) mod finite_function;
 pub(crate) mod function_domain;
 pub(crate) mod function_preimage;
-pub(crate) mod finite_function;
-mod negate_quantifier_free_conjunction;
+mod helper;
 pub(crate) mod known_tuple;
+mod negate_quantifier_free_conjunction;
 mod result;
 mod verify;
 pub mod verify_and_fact;
@@ -29,6 +29,7 @@ pub use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 pub use crate::store_fact_and_infer::StoreFactAndInferResult;
 pub use result::{ExecFactStmtResult, ExecFactStmtSuccessResult};
 pub use verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRule;
+pub use verify_atomic_fact::verify_equality::by_they_are_the_same::helper::fn_sets_alpha_equal;
 pub use verify_exist_shaped_fact::{
     VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
     VerifyExistUniqueFactSuccess, VerifyPlainExistFactResult, VerifyPlainExistFactSuccess,
@@ -40,8 +41,8 @@ pub use verify_forall_fact::{
 };
 pub use verify_or_fact::{
     OrBuiltinRealLineTrichotomyEqLessGreater, OrBuiltinRealLineTrichotomyGreaterEqLess,
-    OrBuiltinRealLineTrichotomyLessEqGreater, OrFactSearchProofByBuiltinRule,
-    OrFactSearchedProof, VerifyOrFactFailed, VerifyOrFactResult, VerifyOrFactSuccess,
+    OrBuiltinRealLineTrichotomyLessEqGreater, OrFactSearchProofByBuiltinRule, OrFactSearchedProof,
+    VerifyOrFactFailed, VerifyOrFactResult, VerifyOrFactSuccess,
 };
 pub use verify_state::{VerifyState, VerifyStateLevel};
 pub use well_defined_results::{
@@ -54,4 +55,3 @@ pub use well_defined_results::{
     VerifyEqualFactWellDefinedResult, VerifyExistShapedFactWellDefinedResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyOrFactWellDefinedResult,
 };
-pub use verify_atomic_fact::verify_equality::by_they_are_the_same::helper::fn_sets_alpha_equal;

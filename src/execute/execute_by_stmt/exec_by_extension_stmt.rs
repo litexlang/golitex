@@ -1,13 +1,11 @@
-use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
-use super::helper::{
-    proof_verify_state, store_goal_fact, verify_goal_fact,
-};
+use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
 use super::result::{
     ExecByExtensionStmtFailed, ExecByExtensionStmtResult, ExecByExtensionStmtSuccess,
     ExecByStmtResult,
 };
 use crate::ast::fact::{EqualFact, Fact, SubsetFact};
 use crate::ast::stmt::ByExtensionStmt;
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::runtime::{Runtime, RuntimeResult};
 
 // `by extension`: prove equality from both subset directions (pure-set object equality).
@@ -25,9 +23,9 @@ pub fn exec_by_extension_stmt(
 
     let goal_wd = runtime.verify_fact_well_definedness(&goal, proof_verify_state())?;
     if goal_wd.is_failed() {
-        return Ok(ExecByStmtResult::Extension(ExecByExtensionStmtResult::Failed(
-            ExecByExtensionStmtFailed::GoalWd(goal_wd),
-        )));
+        return Ok(ExecByStmtResult::Extension(
+            ExecByExtensionStmtResult::Failed(ExecByExtensionStmtFailed::GoalWd(goal_wd)),
+        ));
     }
 
     let left_to_right: Fact = SubsetFact {
@@ -52,11 +50,15 @@ pub fn exec_by_extension_stmt(
         };
         let left_to_right_proof = verify_goal_fact(rt, &left_to_right)?;
         if left_to_right_proof.is_failed() {
-            return Ok(Err(ExecByExtensionStmtFailed::LeftToRight(left_to_right_proof)));
+            return Ok(Err(ExecByExtensionStmtFailed::LeftToRight(
+                left_to_right_proof,
+            )));
         }
         let right_to_left_proof = verify_goal_fact(rt, &right_to_left)?;
         if right_to_left_proof.is_failed() {
-            return Ok(Err(ExecByExtensionStmtFailed::RightToLeft(right_to_left_proof)));
+            return Ok(Err(ExecByExtensionStmtFailed::RightToLeft(
+                right_to_left_proof,
+            )));
         }
         Ok(Ok((proof_steps, left_to_right_proof, right_to_left_proof)))
     })?;
@@ -64,29 +66,29 @@ pub fn exec_by_extension_stmt(
     let (proof_steps, left_to_right_proof, right_to_left_proof) = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
-            return Ok(ExecByStmtResult::Extension(ExecByExtensionStmtResult::Failed(
-                failed,
-            )));
+            return Ok(ExecByStmtResult::Extension(
+                ExecByExtensionStmtResult::Failed(failed),
+            ));
         }
     };
 
     let stored = match store_goal_fact(runtime, &goal)? {
         Ok(s) => s,
         Err(msg) => {
-            return Ok(ExecByStmtResult::Extension(ExecByExtensionStmtResult::Failed(
-                ExecByExtensionStmtFailed::Store(msg),
-            )));
+            return Ok(ExecByStmtResult::Extension(
+                ExecByExtensionStmtResult::Failed(ExecByExtensionStmtFailed::Store(msg)),
+            ));
         }
     };
 
-    Ok(ExecByStmtResult::Extension(ExecByExtensionStmtResult::Success(
-        ExecByExtensionStmtSuccess {
+    Ok(ExecByStmtResult::Extension(
+        ExecByExtensionStmtResult::Success(ExecByExtensionStmtSuccess {
             goal_wd,
             proof_steps,
             left_to_right: left_to_right_proof,
             right_to_left: right_to_left_proof,
             local_env,
             stored,
-        },
-    )))
+        }),
+    ))
 }

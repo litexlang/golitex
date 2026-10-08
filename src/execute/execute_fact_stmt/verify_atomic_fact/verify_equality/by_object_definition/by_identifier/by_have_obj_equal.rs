@@ -35,12 +35,9 @@ impl Runtime {
         )? {
             return Ok(Some(proof));
         }
-        if let Some(proof) = self.try_have_obj_equal_object_definition(
-            &fact.right,
-            &fact.left,
-            fact,
-            verify_state,
-        )? {
+        if let Some(proof) =
+            self.try_have_obj_equal_object_definition(&fact.right, &fact.left, fact, verify_state)?
+        {
             return Ok(Some(proof));
         }
         Ok(None)
@@ -88,7 +85,6 @@ impl Runtime {
         }))
     }
 }
-
 
 fn rhs_of_have_obj_equal_for_name(name: &str, stmt: &HaveObjEqualStmt) -> Option<Obj> {
     let mut index = 0;

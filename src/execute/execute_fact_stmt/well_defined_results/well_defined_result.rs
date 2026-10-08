@@ -1,10 +1,10 @@
+use crate::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
     EqualFactWellDefinedProof, FailToVerifyEqualFactWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
 };
-use crate::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_chain_fact::FailToVerifyChainFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,

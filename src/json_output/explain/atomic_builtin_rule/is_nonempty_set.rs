@@ -141,10 +141,7 @@ impl StandardSetNonemptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "標準集合非空",
-            "由標準集合非空內建規則驗證",
-        )
+        text("標準集合非空", "由標準集合非空內建規則驗證")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -221,17 +218,11 @@ impl LiteralListSetNonemptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "字面列表集非空",
-            "非空字面列表集非空",
-        )
+        text("字面列表集非空", "非空字面列表集非空")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "字面列表集合非空",
-            "由字面列表集合非空內建規則驗證",
-        )
+        text("字面列表集合非空", "由字面列表集合非空內建規則驗證")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -389,17 +380,11 @@ impl OneSideInfinityIntervalNonemptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "单侧无穷区间非空",
-            "单侧无穷实区间非空",
-        )
+        text("单侧无穷区间非空", "单侧无穷实区间非空")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "單側無限區間非空",
-            "由單側無限區間非空內建規則驗證",
-        )
+        text("單側無限區間非空", "由單側無限區間非空內建規則驗證")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {

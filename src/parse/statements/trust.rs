@@ -1,6 +1,6 @@
 use super::super::keywords::{COLON, HAVE, TRUST};
 use crate::ast::line_file::SourceLine;
-use crate::ast::stmt::{Stmt, TrustHaveStmt, TrustStmt, TrustBoundaryStmt};
+use crate::ast::stmt::{Stmt, TrustBoundaryStmt, TrustHaveStmt, TrustStmt};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
@@ -76,10 +76,12 @@ impl Runtime {
         for identifier in &identifiers {
             self.occupy_bound_name_as_parse(block, identifier)?;
         }
-        Ok(Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(TrustHaveStmt {
-            param_def,
-            facts,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
+        Ok(Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(
+            TrustHaveStmt {
+                param_def,
+                facts,
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
+            },
+        )))
     }
 }

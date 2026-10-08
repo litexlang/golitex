@@ -21,7 +21,7 @@ impl Runtime {
         let proof = proof?;
         Ok(Stmt::ProofBlock(ProofBlockStmt::SketchStmt(SketchStmt {
             proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone())
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

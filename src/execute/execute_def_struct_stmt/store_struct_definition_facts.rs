@@ -20,20 +20,26 @@ impl Runtime {
     pub(super) fn store_struct_definition_facts(
         &mut self,
         definition: &DefStructStmt,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<StoreStructDefinitionFactResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<StoreStructDefinitionFactResult>> {
         let (mut parameters, domains) = match &definition.param_def_with_dom {
             Some((parameters, domains)) => (parameters.clone(), domains.clone()),
             None => (TypedParameterList { groups: Vec::new() }, Vec::new()),
         };
-        let arguments = parameters.groups.iter().flat_map(|g| &g.params)
-            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p))).collect();
+        let arguments = parameters
+            .groups
+            .iter()
+            .flat_map(|g| &g.params)
+            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p)))
+            .collect();
         let carrier = StructObj {
             name: self.atomic_name_for_plain_prop_ref(definition.name.clone()),
             params: arguments,
         };
         let instance = self.fresh_internal_param();
         let instance_obj = Obj::Identifier(IdentifierObj::from_bound_name(&instance));
-        let substitution = self.struct_release_subst(&instance_obj, &carrier, definition)
+        let substitution = self
+            .struct_release_subst(&instance_obj, &carrier, definition)
             .map_err(RuntimeError::InternalBug)?;
         parameters.groups.push(TypedParameterGroup {
             params: vec![instance],
@@ -41,7 +47,10 @@ impl Runtime {
                 StructAndFieldAccessObj::StructObj(carrier),
             )),
         });
-        let domains: Vec<Fact> = domains.into_iter().map(quantifier_free_fact_to_fact).collect();
+        let domains: Vec<Fact> = domains
+            .into_iter()
+            .map(quantifier_free_fact_to_fact)
+            .collect();
         let mut published = Vec::new();
         for source in &definition.equivalent_facts {
             // NotForall is not an existing forall conclusion shape. Preserve
@@ -50,11 +59,11 @@ impl Runtime {
             if matches!(source, Fact::NotForall(_)) {
                 continue;
             }
-            let instantiated = self.inst_fact(source, &substitution)
-                .map_err(|err| RuntimeError::InternalBug(format!("struct law substitution: {err}")))?;
-            let quantified = self.quantify_struct_definition_fact(
-                &parameters, &domains, instantiated,
-            )?;
+            let instantiated = self.inst_fact(source, &substitution).map_err(|err| {
+                RuntimeError::InternalBug(format!("struct law substitution: {err}"))
+            })?;
+            let quantified =
+                self.quantify_struct_definition_fact(&parameters, &domains, instantiated)?;
             let store_and_infer = self.store_fact_and_infer(&quantified, verify_state)?;
             published.push(StoreStructDefinitionFactResult {
                 source_fact_id: source.fact_id(),
@@ -98,7 +107,9 @@ impl Runtime {
                     Fact::ExistFact(f) => ExistOrAndChainAtomicFact::ExistFact(f),
                     Fact::ExistUniqueFact(f) => ExistOrAndChainAtomicFact::ExistUniqueFact(f),
                     Fact::NotExistFact(f) => ExistOrAndChainAtomicFact::NotExistFact(f),
-                    Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => unreachable!(),
+                    Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
+                        unreachable!()
+                    }
                 };
                 Fact::ForallFact(ForallFact {
                     fact_id: self.global_ids.allocate_fact_id(),
@@ -117,9 +128,15 @@ impl Runtime {
         // Type premises are already required by the binders. Exposing them in
         // the premise list lets existing bounded matching recover parameters
         // used only in carriers (e.g. A from s $in &Op<A>), without guessing.
-        let args: Vec<Obj> = universal.typed_parameters.groups.iter().flat_map(|g| &g.params)
-            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p))).collect();
-        let type_facts = self.type_facts_for_typed_arguments(&universal.typed_parameters, &args)
+        let args: Vec<Obj> = universal
+            .typed_parameters
+            .groups
+            .iter()
+            .flat_map(|g| &g.params)
+            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p)))
+            .collect();
+        let type_facts = self
+            .type_facts_for_typed_arguments(&universal.typed_parameters, &args)
             .map_err(RuntimeError::InternalBug)?;
         universal.dom_facts.extend(type_facts);
         Ok(quantified)

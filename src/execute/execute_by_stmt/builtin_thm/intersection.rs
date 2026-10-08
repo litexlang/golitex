@@ -22,12 +22,21 @@ pub(super) fn prepare_intersection(
             let family = family.left.as_ref().clone();
             // Absolute empty intersection is not a set equal to {}. These
             // set-valued contracts deliberately require a nonempty family.
-            let mut requirements = vec![is_set(rt, family.clone()).into(), nonempty(rt, family.clone()).into()];
+            let mut requirements = vec![
+                is_set(rt, family.clone()).into(),
+                nonempty(rt, family.clone()).into(),
+            ];
             let factor = rt.fresh_internal_param();
             let factor_obj = identifier(&factor);
             let set_fact = is_set(rt, factor_obj.clone());
             let in_factor = atomic_in(rt, element, factor_obj);
-            let pointwise = forall(rt, factor, family.clone(), vec![set_fact.into()], vec![in_factor]);
+            let pointwise = forall(
+                rt,
+                factor,
+                family.clone(),
+                vec![set_fact.into()],
+                vec![in_factor],
+            );
             if id == BuiltinTheoremId::FamilyIntersectionMemberFacts {
                 requirements.push(member.into());
                 Ok((requirements, vec![pointwise]))
@@ -48,8 +57,17 @@ pub(super) fn prepare_intersection(
             let index = rt.fresh_internal_param();
             let value = apply(&indexed.family_fn, vec![identifier(&index)])?;
             let in_fiber = atomic_in(rt, element.clone(), value);
-            let pointwise = forall(rt, index, indexed.index_set.as_ref().clone(), vec![], vec![in_fiber]);
-            let requirements = vec![atomic_in(rt, element, indexed.ambient_set.as_ref().clone()).into(), pointwise];
+            let pointwise = forall(
+                rt,
+                index,
+                indexed.index_set.as_ref().clone(),
+                vec![],
+                vec![in_fiber],
+            );
+            let requirements = vec![
+                atomic_in(rt, element, indexed.ambient_set.as_ref().clone()).into(),
+                pointwise,
+            ];
             Ok((requirements, vec![member.into()]))
         }
         _ => unreachable!(),

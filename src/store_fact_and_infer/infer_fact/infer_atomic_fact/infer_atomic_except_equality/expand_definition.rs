@@ -14,7 +14,8 @@ impl Runtime {
     pub(super) fn infer_normal_atomic_fact_rules(
         &mut self,
         normal: &NormalAtomicFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
         if let Some(param_types) = self.infer_normal_atomic_param_types(normal, verify_state)? {
             rules.push(InferAtomicExceptEqualityResult::NormalAtomicParamTypes(
@@ -22,9 +23,7 @@ impl Runtime {
             ));
         }
         if let Some(expand) = self.infer_normal_atomic_expand_definition(normal, verify_state)? {
-            rules.push(InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(
-                expand,
-            ));
+            rules.push(InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(expand));
         }
         Ok(rules)
     }
@@ -38,7 +37,8 @@ impl Runtime {
     fn infer_normal_atomic_param_types(
         &mut self,
         normal: &NormalAtomicFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferNormalAtomicParamTypesProjectedResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferNormalAtomicParamTypesProjectedResult>> {
         if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
         }
@@ -59,8 +59,7 @@ impl Runtime {
             let Ok(inst_type) = self.inst_param_type(param_type, &subst) else {
                 continue;
             };
-            let Some(obligation) =
-                type_obligation_fact(arg, &inst_type, &mut self.global_ids)
+            let Some(obligation) = type_obligation_fact(arg, &inst_type, &mut self.global_ids)
             else {
                 continue;
             };
@@ -77,7 +76,8 @@ impl Runtime {
     fn infer_normal_atomic_expand_definition(
         &mut self,
         normal: &NormalAtomicFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferExpandDefinitionResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferExpandDefinitionResult>> {
         if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
         }
@@ -120,10 +120,7 @@ impl Runtime {
 
 fn flatten_typed_param_types(
     list: &TypedParameterList,
-) -> Vec<(
-    crate::ast::names::BoundName,
-    ParamType,
-)> {
+) -> Vec<(crate::ast::names::BoundName, ParamType)> {
     let mut out = Vec::new();
     for group in &list.groups {
         for param in &group.params {

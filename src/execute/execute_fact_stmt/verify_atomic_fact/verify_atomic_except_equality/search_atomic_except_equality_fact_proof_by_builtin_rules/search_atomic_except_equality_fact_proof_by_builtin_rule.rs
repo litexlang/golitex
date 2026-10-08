@@ -1,8 +1,8 @@
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, InjectiveFact, IsChoiceFunctionForFact,
-    NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotInjectiveFact,     NotIsChoiceFunctionForFact, NotIsSetFact, NotPrimeFact, NotProperSubsetFact,
-    NotProperSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
-    SurjectiveFact,
+    NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotInjectiveFact, NotIsChoiceFunctionForFact,
+    NotIsSetFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSurjectiveFact,
+    PrimeFact, ProperSubsetFact, ProperSupersetFact, SurjectiveFact,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -13,8 +13,8 @@ use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
     InjectiveFactSearchProofByBuiltinRule, IsChoiceFunctionForFactSearchProofByBuiltinRule,
     NotBijectiveFactSearchProofByBuiltinRule, NotCoprimeFactSearchProofByBuiltinRule,
     NotDvdFactSearchProofByBuiltinRule, NotInjectiveFactSearchProofByBuiltinRule,
-    NotIsChoiceFunctionForFactSearchProofByBuiltinRule,
-    NotIsSetFactSearchProofByBuiltinRule,     NotPrimeFactSearchProofByBuiltinRule, NotProperSubsetFactSearchProofByBuiltinRule,
+    NotIsChoiceFunctionForFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
+    NotPrimeFactSearchProofByBuiltinRule, NotProperSubsetFactSearchProofByBuiltinRule,
     NotProperSupersetFactSearchProofByBuiltinRule, NotSurjectiveFactSearchProofByBuiltinRule,
     PrimeFactSearchProofByBuiltinRule, ProperSubsetFactSearchProofByBuiltinRule,
     ProperSupersetFactSearchProofByBuiltinRule, SurjectiveFactSearchProofByBuiltinRule,
@@ -277,5 +277,4 @@ impl Runtime {
     ) -> RuntimeResult<Option<NotIsSetFactSearchProofByBuiltinRule>> {
         Ok(None)
     }
-
 }

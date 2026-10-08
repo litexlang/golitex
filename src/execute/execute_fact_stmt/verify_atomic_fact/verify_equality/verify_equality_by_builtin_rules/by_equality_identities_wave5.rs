@@ -36,11 +36,19 @@ pub struct LcmIdempotentAbsBuiltinRuleProof {}
 // Parent equality WD owns integer operands and the nonzero abs modulus.
 // Example: a in Z*, b in Z implies lcm(a,b)%abs(a)=0.
 pub struct LcmLeftAbsDivisibilityProof {}
-impl LcmLeftAbsDivisibilityProof { pub fn new() -> Self { Self {} } }
+impl LcmLeftAbsDivisibilityProof {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 // Example: a in Z, b in Z* implies lcm(a,b)%abs(b)=0.
 pub struct LcmRightAbsDivisibilityProof {}
-impl LcmRightAbsDivisibilityProof { pub fn new() -> Self { Self {} } }
+impl LcmRightAbsDivisibilityProof {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 // --- gcd ---
 
@@ -99,13 +107,19 @@ impl Runtime {
                 return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::QuotByOne(p)));
             }
             if let Some(p) = self.try_quot_self_one(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::QuotSelfOne(p)));
+                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::QuotSelfOne(
+                    p,
+                )));
             }
             if let Some(p) = self.try_lcm_commutative(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::LcmCommutative(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave5BuiltinRuleProof::LcmCommutative(p),
+                ));
             }
             if let Some(p) = self.try_lcm_idempotent_abs(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::LcmIdempotentAbs(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave5BuiltinRuleProof::LcmIdempotentAbs(p),
+                ));
             }
             // A well-defined lcm is a multiple of each nonzero input's abs.
             // Match only the selected operand; unrelated divisors do not qualify.
@@ -115,29 +129,41 @@ impl Runtime {
                         (match_lcm(&rem.left), match_abs(&rem.right))
                     {
                         if divisor.ir() == a.ir() {
-                            return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::LcmLeftAbsDivisibility(
-                                LcmLeftAbsDivisibilityProof::new(),
-                            )));
+                            return Ok(Some(
+                                EqualityIdentitiesWave5BuiltinRuleProof::LcmLeftAbsDivisibility(
+                                    LcmLeftAbsDivisibilityProof::new(),
+                                ),
+                            ));
                         }
                         if divisor.ir() == b.ir() {
-                            return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::LcmRightAbsDivisibility(
-                                LcmRightAbsDivisibilityProof::new(),
-                            )));
+                            return Ok(Some(
+                                EqualityIdentitiesWave5BuiltinRuleProof::LcmRightAbsDivisibility(
+                                    LcmRightAbsDivisibilityProof::new(),
+                                ),
+                            ));
                         }
                     }
                 }
             }
             if let Some(p) = self.try_gcd_commutative(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::GcdCommutative(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave5BuiltinRuleProof::GcdCommutative(p),
+                ));
             }
             if let Some(p) = self.try_gcd_idempotent_abs(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::GcdIdempotentAbs(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave5BuiltinRuleProof::GcdIdempotentAbs(p),
+                ));
             }
             if let Some(p) = self.try_gcd_right_zero_abs(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::GcdRightZeroAbs(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave5BuiltinRuleProof::GcdRightZeroAbs(p),
+                ));
             }
             if let Some(p) = self.try_gcd_left_zero_abs(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave5BuiltinRuleProof::GcdLeftZeroAbs(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave5BuiltinRuleProof::GcdLeftZeroAbs(p),
+                ));
             }
             if let Some(p) = self.try_factorial_successor(left, right, child.clone())? {
                 return Ok(Some(

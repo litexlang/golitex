@@ -333,10 +333,7 @@ impl StandardSetSubsetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "標準集合子集關係",
-            "標準數集間的固定包含關係",
-        )
+        text("標準集合子集關係", "標準數集間的固定包含關係")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -368,10 +365,7 @@ impl StandardSetSubsetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "標準集合の包含関係",
-            "標準的な数集合間の固定の包含関係",
-        )
+        text("標準集合の包含関係", "標準的な数集合間の固定の包含関係")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -413,10 +407,7 @@ impl IntersectSubsetLeftBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "交是左因子的子集",
-            "交是左因子的子集",
-        )
+        text("交是左因子的子集", "交是左因子的子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -500,10 +491,7 @@ impl IntersectSubsetRightBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "交是右因子的子集",
-            "交是右因子的子集",
-        )
+        text("交是右因子的子集", "交是右因子的子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -755,10 +743,7 @@ impl SetMinusSubsetLeftBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "差集是左因子的子集",
-            "差集是左因子的子集",
-        )
+        text("差集是左因子的子集", "差集是左因子的子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -835,24 +820,15 @@ impl SetMinusSubsetLeftBuiltinRuleProof {
 
 impl RealIntervalSubsetRealBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Real Interval Subset Real",
-            "Real intervals inhabit R",
-        )
+        text("Real Interval Subset Real", "Real intervals inhabit R")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "实区间是 R 的子集",
-            "实区间是实数集的子集",
-        )
+        text("实区间是 R 的子集", "实区间是实数集的子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "實數區間為實數集子集",
-            "實數區間包含於 R",
-        )
+        text("實數區間為實數集子集", "實數區間包含於 R")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -884,17 +860,11 @@ impl RealIntervalSubsetRealBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "実数区間の実数集合への包含",
-            "実数区間は R に含まれます",
-        )
+        text("実数区間の実数集合への包含", "実数区間は R に含まれます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "실수 구간의 실수 집합 포함",
-            "실수 구간은 R에 포함됩니다",
-        )
+        text("실수 구간의 실수 집합 포함", "실수 구간은 R에 포함됩니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -929,10 +899,7 @@ impl SetBuilderSubsetOfParamSetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "集合构造子集于参数集",
-            "集合构造式是参数集的子集",
-        )
+        text("集合构造子集于参数集", "集合构造式是参数集的子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1009,10 +976,7 @@ impl SetBuilderSubsetOfParamSetBuiltinRuleProof {
 
 impl SubsetReflexivityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Subset Reflexivity",
-            "Reflexivity: `A $subset A`",
-        )
+        text("Subset Reflexivity", "Reflexivity: `A $subset A`")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -1020,38 +984,23 @@ impl SubsetReflexivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "子集關係自反性",
-            "自反性：`A $subset A`",
-        )
+        text("子集關係自反性", "自反性：`A $subset A`")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Réflexivité de l'inclusion",
-            "Réflexivité : `A $subset A`",
-        )
+        text("Réflexivité de l'inclusion", "Réflexivité : `A $subset A`")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Рефлексивность включения",
-            "Рефлексивность: `A $subset A`",
-        )
+        text("Рефлексивность включения", "Рефлексивность: `A $subset A`")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Reflexividad de inclusión",
-            "Reflexividad: `A $subset A`",
-        )
+        text("Reflexividad de inclusión", "Reflexividad: `A $subset A`")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "انعكاسية الاحتواء الجزئي",
-            "الانعكاسية: `A $subset A`",
-        )
+        text("انعكاسية الاحتواء الجزئي", "الانعكاسية: `A $subset A`")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -1059,17 +1008,11 @@ impl SubsetReflexivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "부분집합 반사성",
-            "반사성: `A $subset A`",
-        )
+        text("부분집합 반사성", "반사성: `A $subset A`")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tính phản xạ của tập con",
-            "Tính phản xạ: `A $subset A`",
-        )
+        text("Tính phản xạ của tập con", "Tính phản xạ: `A $subset A`")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1097,10 +1040,7 @@ impl UnionSubsetFromBothOperandsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "两边子集推出并是子集",
-            "两边都是子集则其并也是子集",
-        )
+        text("两边子集推出并是子集", "两边都是子集则其并也是子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1184,10 +1124,7 @@ impl IntersectSubsetFromLeftUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "左上界推出交是子集",
-            "左因子是子集则交也是子集",
-        )
+        text("左上界推出交是子集", "左因子是子集则交也是子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1271,10 +1208,7 @@ impl IntersectSubsetFromRightUpperBoundBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "右上界推出交是子集",
-            "右因子是子集则交也是子集",
-        )
+        text("右上界推出交是子集", "右因子是子集则交也是子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1358,10 +1292,7 @@ impl ListSetSubsetFromMembersBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "列表元素推出列表集是子集",
-            "各元素属于则列表集是子集",
-        )
+        text("列表元素推出列表集是子集", "各元素属于则列表集是子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1445,10 +1376,7 @@ impl UnionSubsetFromComponentwiseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "分量子集推出并是子集",
-            "分量子集推出并集子集",
-        )
+        text("分量子集推出并是子集", "分量子集推出并集子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1532,10 +1460,7 @@ impl IntegerRangeSubsetNumericCarrierBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "整数区间属于数值载体",
-            "整数区间落在其数值载体中",
-        )
+        text("整数区间属于数值载体", "整数区间落在其数值载体中")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1619,10 +1544,7 @@ impl SubsetPowerSetMonotoneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "幂集对子集单调",
-            "子集关系在幂集上单调",
-        )
+        text("幂集对子集单调", "子集关系在幂集上单调")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1706,10 +1628,7 @@ impl SubsetSetMinusCommonRightMonotoneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "同右差集对子集单调",
-            "同右差集保持子集关系",
-        )
+        text("同右差集对子集单调", "同右差集保持子集关系")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1793,10 +1712,7 @@ impl SubsetCartComponentwiseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "笛卡尔积分量子集",
-            "分量子集推出笛卡尔积子集",
-        )
+        text("笛卡尔积分量子集", "分量子集推出笛卡尔积子集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1957,43 +1873,73 @@ impl SubsetTransitivityBuiltinRuleProof {
 
 impl FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Preimage input carrier", "A certified point or set preimage is contained in its complete input carrier.")
+        text(
+            "Preimage input carrier",
+            "A certified point or set preimage is contained in its complete input carrier.",
+        )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("逆像输入母集合", "已检查的点逆像或集合逆像包含于其完整输入母集合。")
+        text(
+            "逆像输入母集合",
+            "已检查的点逆像或集合逆像包含于其完整输入母集合。",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("逆像輸入母集合", "已檢查的點逆像或集合逆像包含於其完整輸入母集合。")
+        text(
+            "逆像輸入母集合",
+            "已檢查的點逆像或集合逆像包含於其完整輸入母集合。",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Ensemble des entrées de la préimage", "Une préimage vérifiée est incluse dans son ensemble complet des entrées.")
+        text(
+            "Ensemble des entrées de la préimage",
+            "Une préimage vérifiée est incluse dans son ensemble complet des entrées.",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Множество входов прообраза", "Проверенный прообраз содержится в полном множестве допустимых входов.")
+        text(
+            "Множество входов прообраза",
+            "Проверенный прообраз содержится в полном множестве допустимых входов.",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Conjunto de entradas de la preimagen", "Una preimagen verificada está contenida en su conjunto completo de entradas.")
+        text(
+            "Conjunto de entradas de la preimagen",
+            "Una preimagen verificada está contenida en su conjunto completo de entradas.",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("مجموعة مدخلات الصورة العكسية", "الصورة العكسية المتحقق منها محتواة في مجموعة مدخلاتها الكاملة.")
+        text(
+            "مجموعة مدخلات الصورة العكسية",
+            "الصورة العكسية المتحقق منها محتواة في مجموعة مدخلاتها الكاملة.",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("逆像の入力集合", "検証済みの点または集合の逆像は完全な入力集合に含まれます。")
+        text(
+            "逆像の入力集合",
+            "検証済みの点または集合の逆像は完全な入力集合に含まれます。",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("역상의 입력 집합", "검증된 점 또는 집합의 역상은 완전한 입력 집합에 포함됩니다.")
+        text(
+            "역상의 입력 집합",
+            "검증된 점 또는 집합의 역상은 완전한 입력 집합에 포함됩니다.",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tập đầu vào của nghịch ảnh", "Nghịch ảnh đã kiểm tra là tập con của toàn bộ tập đầu vào của nó.")
+        text(
+            "Tập đầu vào của nghịch ảnh",
+            "Nghịch ảnh đã kiểm tra là tập con của toàn bộ tập đầu vào của nó.",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

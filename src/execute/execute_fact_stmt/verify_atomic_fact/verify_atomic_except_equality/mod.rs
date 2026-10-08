@@ -1,18 +1,18 @@
-pub mod result;
-pub mod lookup_known_atomic_fact;
-mod known_premises;
-pub mod search_atomic_except_equality_fact_proof_by_known;
-pub mod search_atomic_except_equality_fact_proof_by_known_special_property;
-pub mod helper;
 pub mod builtin_prop_definition;
+pub mod helper;
+mod known_premises;
+pub mod lookup_known_atomic_fact;
+pub mod result;
 pub mod search_atomic_except_equality_fact_proof;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_rewrite;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_rules;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_strategy;
 pub mod search_atomic_except_equality_fact_proof_by_definition;
-pub mod search_atomic_except_equality_fact_proof_by_known_rewrite;
+pub mod search_atomic_except_equality_fact_proof_by_known;
 pub mod search_atomic_except_equality_fact_proof_by_known_atomic_fact;
 pub mod search_atomic_except_equality_fact_proof_by_known_forall_fact;
+pub mod search_atomic_except_equality_fact_proof_by_known_rewrite;
+pub mod search_atomic_except_equality_fact_proof_by_known_special_property;
 pub mod search_atomic_except_equality_fact_proof_by_known_strategy;
 pub mod verify_atomic_except_equality;
 
@@ -30,7 +30,7 @@ pub use result::{
 
 pub use search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty;
 
+pub mod known_fn_standard_return;
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/known_search/tests.rs"]
 mod known_search_tests;
-pub mod known_fn_standard_return;

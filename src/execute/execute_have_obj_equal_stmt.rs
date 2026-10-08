@@ -6,15 +6,15 @@ use crate::ast::obj::Obj;
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::HaveObjEqualStmt;
 use crate::exec_env::exec_env::ExecEnv;
-use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::execute::introduce_typed_parameters::SharedHaveDefinition;
+use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::runtime::{Runtime, RuntimeResult};
-use std::rc::Rc;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub enum ExecHaveObjEqualStmtFailed {
     ParamCountMismatch,
@@ -32,8 +32,7 @@ pub struct ExecHaveObjEqualStmtSuccessResult {
     pub equal_to_well_defined: Vec<VerifyObjWellDefinedResult>,
     pub membership_checks: Vec<VerifyFactResult>,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
-    pub auto_opened_struct_layers:
-        Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecHaveObjEqualStmtResult {
@@ -96,63 +95,71 @@ impl Runtime {
         let mut earlier_values = HashMap::new();
         let mut value_index = 0;
         for group in &stmt.param_def.groups {
-            let param_type = self.inst_param_type(&group.param_type, &earlier_values)
-                .map_err(|e| crate::runtime::RuntimeError::InternalBug(format!("have equal carrier instantiate: {e}")))?;
+            let param_type = self
+                .inst_param_type(&group.param_type, &earlier_values)
+                .map_err(|e| {
+                    crate::runtime::RuntimeError::InternalBug(format!(
+                        "have equal carrier instantiate: {e}"
+                    ))
+                })?;
             for binding in &group.params {
-            let obj = &stmt.objs_equal_to[value_index];
-            let type_fact = match &param_type {
-                ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    element: obj.clone(),
-                    set: param_set.clone(),
-                    line_file: Some(stmt.line_file.clone()),
-                })),
-                ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    set: obj.clone(),
-                    line_file: Some(stmt.line_file.clone()),
-                })),
-                ParamType::NonemptySet(_) => {
-                    Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
+                let obj = &stmt.objs_equal_to[value_index];
+                let type_fact = match &param_type {
+                    ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        element: obj.clone(),
+                        set: param_set.clone(),
+                        line_file: Some(stmt.line_file.clone()),
+                    })),
+                    ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
                         fact_id: self.global_ids.allocate_fact_id(),
                         set: obj.clone(),
                         line_file: Some(stmt.line_file.clone()),
-                    }))
+                    })),
+                    ParamType::NonemptySet(_) => {
+                        Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
+                            fact_id: self.global_ids.allocate_fact_id(),
+                            set: obj.clone(),
+                            line_file: Some(stmt.line_file.clone()),
+                        }))
+                    }
+                    ParamType::FiniteSet(_) => {
+                        Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
+                            fact_id: self.global_ids.allocate_fact_id(),
+                            set: obj.clone(),
+                            line_file: Some(stmt.line_file.clone()),
+                        }))
+                    }
+                };
+                let checked = self.verify_fact(&type_fact, verify_state.clone())?;
+                if checked.is_failed() {
+                    return Ok(ExecHaveObjEqualStmtResult::Failed(
+                        ExecHaveObjEqualStmtFailed::Membership(checked),
+                    ));
                 }
-                ParamType::FiniteSet(_) => {
-                    Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
-                        fact_id: self.global_ids.allocate_fact_id(),
-                        set: obj.clone(),
-                        line_file: Some(stmt.line_file.clone()),
-                    }))
-                }
-            };
-            let checked = self.verify_fact(&type_fact, verify_state.clone())?;
-            if checked.is_failed() {
-                return Ok(ExecHaveObjEqualStmtResult::Failed(
-                    ExecHaveObjEqualStmtFailed::Membership(checked),
-                ));
-            }
-            membership_checks.push(checked);
-            earlier_values.insert(binding.id, obj.clone());
-            value_index += 1;
+                membership_checks.push(checked);
+                earlier_values.insert(binding.id, obj.clone());
+                value_index += 1;
             }
         }
 
         let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
             &stmt.param_def,
             Some(SharedHaveDefinition::HaveObjEqual(Rc::new(stmt.clone()))),
-         crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
-        let auto_opened_struct_layers =
-            match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def, crate::execute::execute_fact_stmt::VerifyState::top_level())? {
-                Ok(layers) => layers,
-                Err((_, failed)) => {
-                    return Ok(ExecHaveObjEqualStmtResult::Failed(
-                        ExecHaveObjEqualStmtFailed::AutoOpenStructLayer(failed),
-                    ));
-                }
-            };
+        let auto_opened_struct_layers = match self.auto_open_struct_layers_for_typed_parameters(
+            &stmt.param_def,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )? {
+            Ok(layers) => layers,
+            Err((_, failed)) => {
+                return Ok(ExecHaveObjEqualStmtResult::Failed(
+                    ExecHaveObjEqualStmtFailed::AutoOpenStructLayer(failed),
+                ));
+            }
+        };
 
         for (binding, obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
             let (name, _) = binding;
@@ -164,7 +171,10 @@ impl Runtime {
                 right: obj.clone(),
                 line_file: Some(stmt.line_file.clone()),
             }));
-            let stored = self.store_fact_and_infer(&equal_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let stored = self.store_fact_and_infer(
+                &equal_fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());

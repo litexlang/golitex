@@ -23,7 +23,8 @@ impl Runtime {
         stmt: &DefAbstractPropStmt,
     ) -> RuntimeResult<ExecDefAbstractPropStmtSuccessResult> {
         self.ensure_def_abstract_prop_name_free(&stmt.name)?;
-        self.top_exec_env_mut().store_def_abstract_prop(stmt.clone());
+        self.top_exec_env_mut()
+            .store_def_abstract_prop(stmt.clone());
         Ok(ExecDefAbstractPropStmtSuccessResult {
             statement: stmt.clone(),
         })

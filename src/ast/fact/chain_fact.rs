@@ -1,7 +1,7 @@
-use super::{AtomicFact, Fact};
 use super::super::line_file::SourceLine;
 use super::super::names::AtomicName;
 use super::super::obj::Obj;
+use super::{AtomicFact, Fact};
 use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

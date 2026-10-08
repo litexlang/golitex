@@ -89,16 +89,18 @@ pub(super) fn equal_abs_equals_neg_arg(eq: &EqualFact) -> Option<Obj> {
 
 // Pure shape: `abs(x) = x or abs(x) = (-x)` in either branch order.
 pub(super) fn match_abs_sign_split_arg(first: &EqualFact, second: &EqualFact) -> Option<Obj> {
-    if let (Some(arg_self), Some(arg_neg)) =
-        (equal_abs_equals_arg(first), equal_abs_equals_neg_arg(second))
-    {
+    if let (Some(arg_self), Some(arg_neg)) = (
+        equal_abs_equals_arg(first),
+        equal_abs_equals_neg_arg(second),
+    ) {
         if objs_same(&arg_self, &arg_neg) {
             return Some(arg_self);
         }
     }
-    if let (Some(arg_neg), Some(arg_self)) =
-        (equal_abs_equals_neg_arg(first), equal_abs_equals_arg(second))
-    {
+    if let (Some(arg_neg), Some(arg_self)) = (
+        equal_abs_equals_neg_arg(first),
+        equal_abs_equals_arg(second),
+    ) {
         if objs_same(&arg_self, &arg_neg) {
             return Some(arg_self);
         }
@@ -188,9 +190,7 @@ pub(super) fn weak_bound_needed_by_equality_and_strict(
         return None;
     };
     match strict {
-        AtomicFact::LessFact(l)
-            if equal_matches_pair(eq, &l.left, &l.right) =>
-        {
+        AtomicFact::LessFact(l) if equal_matches_pair(eq, &l.left, &l.right) => {
             Some(AtomicFact::LessEqualFact(LessEqualFact {
                 fact_id: FactId::new(0),
                 left: l.left.clone(),
@@ -198,9 +198,7 @@ pub(super) fn weak_bound_needed_by_equality_and_strict(
                 line_file: l.line_file.clone(),
             }))
         }
-        AtomicFact::GreaterFact(g)
-            if equal_matches_pair(eq, &g.left, &g.right) =>
-        {
+        AtomicFact::GreaterFact(g) if equal_matches_pair(eq, &g.left, &g.right) => {
             Some(AtomicFact::GreaterEqualFact(GreaterEqualFact {
                 fact_id: FactId::new(0),
                 left: g.left.clone(),
@@ -246,7 +244,9 @@ pub(super) fn match_equality_plus_strict_covers_weak(
 
 fn number_normalized_value(obj: &Obj) -> Option<&str> {
     match obj {
-        Obj::Literal(Literal::Number(Number { normalized_value })) => Some(normalized_value.as_str()),
+        Obj::Literal(Literal::Number(Number { normalized_value })) => {
+            Some(normalized_value.as_str())
+        }
         _ => None,
     }
 }
@@ -288,20 +288,30 @@ fn mod_subject_modulus_residue(atomic: &AtomicFact) -> Option<(Obj, Obj, Obj)> {
             if number_normalized_value(residue).is_some()
                 && number_normalized_value(right.as_ref()).is_some() =>
         {
-            Some((left.as_ref().clone(), right.as_ref().clone(), residue.clone()))
+            Some((
+                left.as_ref().clone(),
+                right.as_ref().clone(),
+                residue.clone(),
+            ))
         }
         (residue, Obj::IntegerOperator(IntegerOperator::Mod(Mod { left, right })))
             if number_normalized_value(residue).is_some()
                 && number_normalized_value(right.as_ref()).is_some() =>
         {
-            Some((left.as_ref().clone(), right.as_ref().clone(), residue.clone()))
+            Some((
+                left.as_ref().clone(),
+                right.as_ref().clone(),
+                residue.clone(),
+            ))
         }
         _ => None,
     }
 }
 
 // Pure shape: `n % m = 0 or … or n % m = m-1` for positive literal m, all residues once.
-pub(super) fn match_complete_residues(or_branches: &[crate::ast::fact::AndChainAtomicFact]) -> Option<(Obj, Obj)> {
+pub(super) fn match_complete_residues(
+    or_branches: &[crate::ast::fact::AndChainAtomicFact],
+) -> Option<(Obj, Obj)> {
     use crate::ast::fact::AndChainAtomicFact;
     if or_branches.is_empty() {
         return None;
@@ -309,7 +319,9 @@ pub(super) fn match_complete_residues(or_branches: &[crate::ast::fact::AndChainA
     let AndChainAtomicFact::AtomicFact(first_atomic) = &or_branches[0] else {
         return None;
     };
-    let Some((first_subject, first_modulus, first_residue)) = mod_subject_modulus_residue(first_atomic) else {
+    let Some((first_subject, first_modulus, first_residue)) =
+        mod_subject_modulus_residue(first_atomic)
+    else {
         return None;
     };
     let Some(modulus_value) = positive_integer_literal_to_usize(&first_modulus) else {
@@ -378,9 +390,7 @@ fn strict_tail_matches_subject_value(atomic: &AtomicFact, subject: &Obj, tail_va
         AtomicFact::GreaterFact(g) => {
             objs_same(&g.left, subject) && objs_same(&g.right, tail_value)
         }
-        AtomicFact::LessFact(l) => {
-            objs_same(&l.right, subject) && objs_same(&l.left, tail_value)
-        }
+        AtomicFact::LessFact(l) => objs_same(&l.right, subject) && objs_same(&l.left, tail_value),
         _ => false,
     }
 }
