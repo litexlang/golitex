@@ -271,6 +271,14 @@ jobs:
       - name: Init WiX
         run: cargo wix init --force
 
+      - name: Generate WiX std fragment
+        shell: bash
+        run: |
+          python .github/scripts/release/generate_wix_std.py
+          test -f wix/std.wxs
+          grep -F 'Source="std\basics\litex.config"' wix/std.wxs
+          grep -F 'FeatureRef Id="Binaries"' wix/std.wxs
+
       - name: Build .msi
         shell: bash
         run: |
@@ -293,8 +301,10 @@ jobs:
           }
           $smokeDir = Join-Path $env:TEMP ("litex-msi-smoke-" + [guid]::NewGuid())
           New-Item -ItemType Directory -Path $smokeDir | Out-Null
-          $env:LITEX_STD_PATH = Join-Path (Split-Path (Split-Path $binary -Parent) -Parent) 'std'
+          $installRoot = Split-Path (Split-Path $binary -Parent) -Parent
+          $env:LITEX_STD_PATH = Join-Path $installRoot 'std'
           if (-not (Test-Path (Join-Path $env:LITEX_STD_PATH 'basics\litex.config'))) {
+            Get-ChildItem -Recurse -Force $installRoot | Select-Object -ExpandProperty FullName
             throw "MSI did not install std at $env:LITEX_STD_PATH"
           }
           Push-Location $smokeDir

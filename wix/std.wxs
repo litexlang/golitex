@@ -3,12 +3,18 @@
   <Fragment>
     <DirectoryRef Id="APPLICATIONFOLDER">
       <Directory Id="StandardLibrary" Name="std">
-        <Directory Id="StandardLibraryBasics" Name="basics">
-          <Component Id="StandardLibraryBasicsConfig" Guid="*">
-            <File Id="StandardLibraryBasicsConfigFile" Source="..\std\basics\litex.config" KeyPath="yes" />
+        <Directory Id="StdDir_basics" Name="basics">
+          <Component Id="StdComp_basics_README.md" Guid="*">
+            <File Id="StdFile_basics_README.md" Source="std\basics\README.md" KeyPath="yes" />
           </Component>
-          <Component Id="StandardLibraryBasicsMain" Guid="*">
-            <File Id="StandardLibraryBasicsMainFile" Source="..\std\basics\main.lit" KeyPath="yes" />
+          <Component Id="StdComp_basics_litex.config" Guid="*">
+            <File Id="StdFile_basics_litex.config" Source="std\basics\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_basics_main.lit" Guid="*">
+            <File Id="StdFile_basics_main.lit" Source="std\basics\main.lit" KeyPath="yes" />
+          </Component>
+          <Component Id="StdComp_basics_math_collections.md" Guid="*">
+            <File Id="StdFile_basics_math_collections.md" Source="std\basics\math_collections.md" KeyPath="yes" />
           </Component>
         </Directory>
       </Directory>
@@ -17,8 +23,10 @@
 
   <Fragment>
     <FeatureRef Id="Binaries">
-      <ComponentRef Id="StandardLibraryBasicsConfig" />
-      <ComponentRef Id="StandardLibraryBasicsMain" />
+      <ComponentRef Id="StdComp_basics_README.md" />
+      <ComponentRef Id="StdComp_basics_litex.config" />
+      <ComponentRef Id="StdComp_basics_main.lit" />
+      <ComponentRef Id="StdComp_basics_math_collections.md" />
     </FeatureRef>
   </Fragment>
 </Wix>
