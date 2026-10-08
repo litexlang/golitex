@@ -69,6 +69,12 @@ pub(super) fn project_parent_checked_function_body(
             ("application_well_defined", super::wd::project_obj_wd_proof(application_well_defined, runtime)),
             ("application_function_body", project_parent_checked_function_body(application_function_body, runtime)),
         ]),
+        ParentCheckedBetaFunctionBody::TemplateAnonymousFunction { template_instance, function, checked_domain } => object_for(runtime, vec![
+            ("type", string("template_anonymous_function")),
+            ("template_instance", string(template_instance.readable_string())),
+            ("function", string(Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.clone())).readable_string())),
+            ("checked_domain", string(Obj::FunctionSpace(FunctionSpace::FnSet(checked_domain.clone())).readable_string())),
+        ]),
         ParentCheckedBetaFunctionBody::AnonymousLiteral => object_for(runtime, vec![("type", string("anonymous_literal"))]),
         ParentCheckedBetaFunctionBody::KnownAnonymousFunction { function, function_equal, checked_domain } => object_for(runtime, vec![
             ("type", string("known_anonymous_function")),

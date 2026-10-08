@@ -28,3 +28,18 @@ thm two_point_min_stability:
         union({x},{y}) $subset R
         =>:
             abs(finite_set_min(union({u},{v}))-finite_set_min(union({x},{y}))) <= epsilon
+
+# A displayed pair keeps the original pairwise-distinctness WD guard.
+forall a,b,x,y R, epsilon R+:
+    a!=b
+    x!=y
+    abs(a-x)<=epsilon
+    abs(b-y)<=epsilon
+    $is_finite_set({a,b})
+    $is_nonempty_set({a,b})
+    {a,b} $subset R
+    $is_finite_set({x,y})
+    $is_nonempty_set({x,y})
+    {x,y} $subset R
+    =>:
+        abs(finite_set_min({a,b})-finite_set_min({x,y}))<=epsilon

@@ -14,3 +14,12 @@ have common_radius R+ = min(first_radius,c)
 
 forall lower_radius,upper_radius R+:
     min(lower_radius,upper_radius) $in R+
+
+# A positive displayed pair, with its ordinary finite-set domains.
+forall left_radius,right_radius R+:
+    left_radius!=right_radius
+    $is_finite_set({left_radius,right_radius})
+    $is_nonempty_set({left_radius,right_radius})
+    {left_radius,right_radius} $subset R
+    =>:
+        finite_set_min({left_radius,right_radius}) $in R+

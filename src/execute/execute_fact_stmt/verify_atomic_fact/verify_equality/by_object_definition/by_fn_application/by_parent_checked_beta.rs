@@ -1,6 +1,7 @@
 //! Beta substitution using the parent's checked application domain.
 
 use crate::ast::fact::EqualFact;
+use crate::ast::stmt::TemplateDefEnum;
 use crate::ast::obj::{AnonymousFn, FnObjHead, FnSet, FunctionSpace, Obj};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
@@ -56,6 +57,11 @@ pub enum ParentCheckedBetaFunctionBody {
         receiver_function_body: Box<ParentCheckedBetaFunctionBody>,
         application_well_defined: Box<ObjWellDefinedProof>,
         application_function_body: Box<ParentCheckedBetaFunctionBody>,
+    },
+    TemplateAnonymousFunction {
+        template_instance: Obj,
+        function: AnonymousFn,
+        checked_domain: FnSet,
     },
     AnonymousLiteral,
     KnownAnonymousFunction {
@@ -205,6 +211,27 @@ impl Runtime {
             let (literal, function_body) = match app.head.as_ref() {
                 FnObjHead::AnonymousFnLiteral(literal) =>
                     (literal.as_ref().clone(), ParentCheckedBetaFunctionBody::AnonymousLiteral),
+                FnObjHead::InstantiatedTemplateObj(instance) => {
+                    // A checked template declaration supplies its body. The
+                    // parent checked every template argument and the actual
+                    // call domain/guards; match that complete domain before
+                    // substituting, rather than rechecking an invented lambda.
+                    // Example: \inverse_part<S,T,f>(B) = {x S: f(x) $in B}.
+                    let Some(checked_domain) = checked_application_domain(app_wd) else { return Ok(None); };
+                    let Some(definition) = self.def_template_visible(&instance.template_name) else { return Ok(None); };
+                    let TemplateDefEnum::HaveFnEqualStmt(definition_body) = &definition.template_def_stmt else { return Ok(None); };
+                    let ids = definition.template_arg_def.ordered_param_ids();
+                    if ids.len() != instance.args.len() { return Ok(None); }
+                    let substitution = ids.into_iter().zip(instance.args.iter().cloned()).collect();
+                    let body = Obj::FunctionSpace(FunctionSpace::AnonymousFn(definition_body.equal_to_anonymous_fn.clone()));
+                    let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal))) = self.inst_obj(&body, &substitution) else { return Ok(None); };
+                    if !function_domains_alpha_equal(&literal.body, checked_domain) { return Ok(None); }
+                    let source = ParentCheckedBetaFunctionBody::TemplateAnonymousFunction {
+                        template_instance: Obj::InstantiatedTemplateObj(instance.clone()),
+                        function: literal.clone(), checked_domain: checked_domain.clone(),
+                    };
+                    (literal, source)
+                }
                 FnObjHead::Identifier(head) => {
                     // The actual parent application proof identifies the
                     // selected domain. Mere cached WD does not identify it.

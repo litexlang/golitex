@@ -1,5 +1,9 @@
 # Learn Litex: from a checked fact to your own mathematical file
 
+Website: https://litexlang.com/doc/Learn_Litex
+
+Chinese version: https://litexlang.com/doc/学习Litex
+
 Write `1 + 1 = 2`, check it, and grow that same habit into a definition and a
 proof. This course takes you through the decisions needed to make a small
 mathematical development in Litex: what the objects are, where they are defined,
