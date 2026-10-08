@@ -19,6 +19,7 @@ PRIVATE_ROOT = REPOSITORY_ROOT / "private"
 PRIVATE_ROOT.mkdir(parents=True, exist_ok=True)
 sys.path.insert(0, str(SCRIPT_DIRECTORY))
 
+import generate_wix_std  # noqa: E402
 import preflight  # noqa: E402
 
 
@@ -175,6 +176,29 @@ class ReleasePreflightTest(unittest.TestCase):
                 self.assertNotIn(obsolete, workflow)
         self.assertIn('assert_equal "Litex #{version}\\n", version_output', workflow)
         self.assertIn("LITEX_STD_PATH=/usr/share/litex/std", workflow)
+        self.assertIn("generate_wix_std.py", workflow)
+        self.assertIn('Source="std\\basics\\litex.config"', workflow)
+
+    def test_generate_wix_std_uses_package_root_sources(self) -> None:
+        with tempfile.TemporaryDirectory(
+            prefix="release-preflight-test.", dir=PRIVATE_ROOT
+        ) as temporary_directory:
+            root = Path(temporary_directory)
+            std = root / "std"
+            (std / "basics").mkdir(parents=True)
+            (std / "basics" / "litex.config").write_text("[export]\n", encoding="utf-8")
+            (std / "basics" / "main.lit").write_text("# empty\n", encoding="utf-8")
+            (std / "basics" / "todo.md").write_text("skip\n", encoding="utf-8")
+            output = root / "wix" / "std.wxs"
+            count = generate_wix_std.generate(std, output)
+            text = output.read_text(encoding="utf-8")
+            self.assertEqual(count, 2)
+            self.assertIn('Source="std\\basics\\litex.config"', text)
+            self.assertIn('Source="std\\basics\\main.lit"', text)
+            self.assertNotIn(r'Source="..\std', text)
+            self.assertIn('FeatureRef Id="Binaries"', text)
+            self.assertIn('Directory Id="StandardLibrary" Name="std"', text)
+            self.assertNotIn("todo.md", text)
 
 
 if __name__ == "__main__":

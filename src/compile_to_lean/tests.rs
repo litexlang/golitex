@@ -1327,10 +1327,10 @@ fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
     let expected = let_definition(&result.statement_results[0])
         .stored_fact_ids
         .clone();
-    let expected_closed = let_definition(&result.statement_results[0])
+    let expected_closed_ir = let_definition(&result.statement_results[0])
         .statement
         .value
-        .clone();
+        .ir();
     match atomic_rewrite_mut(&mut result.statement_results[1]) {
         AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
             proof,
@@ -1338,7 +1338,7 @@ fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
             assert_eq!(proof.cited_equal_fact_ids, expected);
             match &proof.rewritten_fact {
                 Fact::AtomicFact(AtomicFact::InFact(fact)) => {
-                    assert_eq!(fact.element.ir(), expected_closed.ir())
+                    assert_eq!(fact.element.ir(), expected_closed_ir)
                 }
                 _ => panic!("actual closed membership residual"),
             }
@@ -1350,7 +1350,6 @@ fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
     assert!(output.contains("Litex.inOfSame"));
     assert!(output.contains("Litex.sameRefl (Litex.add"));
     assert!(!output.contains("NativeBridge.sameOfDenoteNumber"));
-    println!("{output}");
 }
 
 #[test]

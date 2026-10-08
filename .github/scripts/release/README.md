@@ -81,9 +81,14 @@ These runtime checks cannot be replaced by a successful macOS preflight.
 
 MSI is optional (`continue-on-error: true`) and is not downloaded or attached by
 the GitHub Release job. Its WiX build and installation still need a Windows
-runner. macOS artifacts cover ARM only; the generated Homebrew formula has no
-Intel macOS artifact selection. Toolchain, runner, `cross`, and `cargo-wix`
-versions are not all pinned, so a rerun may use newer build tools.
+runner. After `cargo wix init --force`, the workflow regenerates `wix/std.wxs`
+with `.github/scripts/release/generate_wix_std.py` so `File/@Source` paths are
+package-root relative (`std\...`) and every shipped `std/` file is attached to
+the `Binaries` feature. A hand-written `..\std\...` fragment relative to
+`wix/std.wxs` does not install into `Program Files\litex-lang\std`. macOS
+artifacts cover ARM only; the generated Homebrew formula has no Intel macOS
+artifact selection. Toolchain, runner, `cross`, and `cargo-wix` versions are
+not all pinned, so a rerun may use newer build tools.
 
 On 2026-10-08 the local release audit passed Rust formatting, nine Python
 preflight tests, 1,260 release-mode Rust tests at the 1.0.2-beta source snapshot,
