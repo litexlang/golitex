@@ -426,3 +426,32 @@ fn field_rec(value: &JsonValue, name: &str) -> Option<JsonValue> {
         _ => None,
     }
 }
+
+#[test]
+fn function_body_template_set_return_keeps_binder_and_domain_evidence() {
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
+        "/examples/proof_nodes/equal/by_object_definition/by_template/set_valued_application.lit"));
+    let mut rt = runtime();
+    let run = rt.run_litex_code(source).unwrap();
+    assert!(run.success && run.session_error.is_none());
+    let evidence = crate::json_output::project_run_detailed(&run, &rt, "eval", None).stringify();
+    assert!(evidence.contains("template_anonymous_function"));
+    assert!(evidence.contains("template_instance"));
+    assert!(evidence.contains("checked_domain"));
+    assert!(evidence.contains("residual_proof"));
+}
+
+#[test]
+fn function_body_template_set_return_rejects_changed_free_values_and_guards() {
+    let mut rt = runtime();
+    assert!(rt.run_litex_code("template<S, T set, f fn(x S) T>:\n    have fn inverse_part(B power_set(T)) power_set(S) = {x S: f(x) $in B}\ntemplate<c R>:\n    have fn reciprocal_shift(x R: x != c) R = 1 / (x - c)\n").unwrap().success);
+    for target in [
+        "claim:\n    ? forall S, T set, f, g fn(x S) T, B power_set(T):\n        \\inverse_part<S, T, f>(B) = {x S: g(x) $in B}\n",
+        "\\reciprocal_shift<2>(2) = 0",
+        "\\reciprocal_shift<2>(3) = 2",
+    ] {
+        let run = rt.run_litex_code(target).unwrap();
+        assert!(!run.success && run.session_error.is_none(), "{target}");
+        assert!(rt.run_litex_code("\\reciprocal_shift<2>(3) = 1").unwrap().success);
+    }
+}

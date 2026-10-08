@@ -15,6 +15,15 @@ universe u v w
 
 namespace Litex
 
+open Lean Elab Tactic in
+/-- Complete only the already selected rational-normalization adapter. The
+fixed denominator step may close the goal itself; otherwise its remaining
+polynomial equality is checked by `ring`. No target shape or theorem search
+selects between alternative proof routes. -/
+elab (name := finishNormalization) "litex_finish_normalization" : tactic => do
+  if !(← getGoals).isEmpty then
+    evalTactic (← `(tactic| ring))
+
 inductive StandardSetValue where
   | natural
   | integer
@@ -392,6 +401,36 @@ def powIntInC {M : Semantics.{u}} {α : Type v} {β : Type w}
     (heValue : Same e (number (z : ℂ))) : In (powInt a e z haC heZ ha0 heValue) C :=
   pow_int_closed a e z haC ha0 heValue
 
+/-- Replay the structural C-membership rule using its actual two children.
+The parent's certified domain still determines whether zero bases are legal;
+the structural integer representative is checked against that domain's exact
+exponent value before the corresponding numeric law is applied. -/
+theorem powStructuralInC {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β))
+    (haC : In p.val.base C) (heZ : In p.val.exponent Z) : In p C := by
+  obtain ⟨z, hz⟩ := (M.integer_members (denote p.val.exponent)).mp heZ
+  have hdom : PowDomain p.val := p.wd
+  change M.mem (M.powValue (denote p.val.base) (denote p.val.exponent))
+    (M.standard .complex)
+  rcases hdom with ⟨_haR, n, _heN, heValue⟩ |
+    ⟨_wdC, n, _heN, heValue⟩ | ⟨_wdC, k, _heZ, ha0, heValue⟩
+  · change denote p.val.exponent = M.number (n : ℂ) at heValue
+    have agreement : (z : ℂ) = (n : ℂ) :=
+      M.number_injective (hz.symm.trans heValue)
+    exact pow_nat_closed p.val.base p.val.exponent n haC
+      (hz.trans (congrArg M.number agreement))
+  · change denote p.val.exponent = M.number (n : ℂ) at heValue
+    have agreement : (z : ℂ) = (n : ℂ) :=
+      M.number_injective (hz.symm.trans heValue)
+    exact pow_nat_closed p.val.base p.val.exponent n haC
+      (hz.trans (congrArg M.number agreement))
+  · change denote p.val.exponent = M.number (k : ℂ) at heValue
+    have agreement : (z : ℂ) = (k : ℂ) :=
+      M.number_injective (hz.symm.trans heValue)
+    exact pow_int_closed p.val.base p.val.exponent k haC ha0
+      (hz.trans (congrArg M.number agreement))
+
 theorem addInR {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
     (a : Obj (M := M) α) (b : Obj (M := M) β) (haR : In a R) (hbR : In b R) :
@@ -485,6 +524,15 @@ theorem sameOfDenoteNumber {α : Type v} {β : Type w}
     (ha : denote a = M.number x) (hb : denote b = M.number y)
     (hxy : x = y) : Same a b :=
   ha.trans ((congrArg M.number hxy).trans hb.symm)
+
+/-- Equality eliminates to native complex values only after both objects have
+faithful numeric denotation witnesses. The objects' host carriers stay generic. -/
+theorem nativeEqOfDenoteNumber {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (x y : ℂ)
+    (ha : denote a = M.number x) (hb : denote b = M.number y)
+    (hSame : Same a b) : x = y :=
+  M.number_injective (ha.symm.trans (hSame.trans hb))
 
 theorem nativeNonzeroOfDenote {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (x : ℂ) (ha : denote a = M.number x)

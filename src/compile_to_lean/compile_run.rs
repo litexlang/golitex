@@ -153,8 +153,8 @@ impl LeanCompiler {
                                 "Equality/SameFreeParamShape",
                             ))
                         }
-                        EqualFactSearchedProof::ByClosedCalculation(_) => {
-                            return Err(LeanCompileError::unsupported("Equality/ClosedCalculation"))
+                        EqualFactSearchedProof::ByClosedCalculation(proof) => {
+                            self.compile_closed_equality(&success.fact, proof)?
                         }
                         EqualFactSearchedProof::ByKnownSpecialProperty(_) => {
                             return Err(LeanCompileError::unsupported(
@@ -166,6 +166,11 @@ impl LeanCompiler {
                                 EqualitySearchProofByCalculation::Rational {},
                             ),
                         ) => self.compile_rational(&success.fact, &[], &[], false, runtime)?,
+                        EqualFactSearchedProof::ByBuiltinRule(
+                            EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
+                        ) => {
+                            self.compile_scalar_division_relation(&success.fact, proof, runtime)?
+                        }
                         EqualFactSearchedProof::ByBuiltinRule(_) => {
                             return Err(LeanCompileError::unsupported("Equality/BuiltinRule"))
                         }
@@ -189,11 +194,12 @@ impl LeanCompiler {
                         EqualFactSearchedProof::ByBuiltinStrategy(_) => {
                             return Err(LeanCompileError::unsupported("Equality/BuiltinStrategy"))
                         }
-                        EqualFactSearchedProof::ByMatchingOneArgByOne(_) => {
-                            return Err(LeanCompileError::unsupported(
-                                "Equality/MatchingOneArgByOne",
-                            ))
-                        }
+                        EqualFactSearchedProof::ByMatchingOneArgByOne(proof) => self
+                            .compile_arithmetic_congruence(
+                                &success.fact,
+                                &proof.corresponding_arg_equal_proofs,
+                                runtime,
+                            )?,
                         EqualFactSearchedProof::ByKnownForallFact(_) => {
                             return Err(LeanCompileError::unsupported("Equality/KnownForallFact"))
                         }
@@ -352,6 +358,297 @@ impl LeanCompiler {
         }
     }
 
+    fn compile_closed_equality(
+        &self,
+        fact: &EqualFact,
+        proof: &ClosedEqualityCalculationProof,
+    ) -> Result<String, LeanCompileError> {
+        let left = EvalRational::from_obj(&fact.left)
+            .ok_or_else(|| LeanCompileError::unsupported("ClosedEquality/Expression"))?;
+        let right = EvalRational::from_obj(&fact.right)
+            .ok_or_else(|| LeanCompileError::unsupported("ClosedEquality/Expression"))?;
+        let matching = match &proof.values {
+            ClosedValuePair::Decimal { left: a, right: b } => {
+                scalar_decimal(a)? == left && scalar_decimal(b)? == right
+            }
+            ClosedValuePair::Rational { left: a, right: b } => a == &left && b == &right,
+            ClosedValuePair::Complex {
+                left_real: a,
+                left_imaginary: ai,
+                right_real: b,
+                right_imaginary: bi,
+            } => a == &left && b == &right && ai.is_zero() && bi.is_zero(),
+            ClosedValuePair::Radical { .. } => {
+                return Err(LeanCompileError::unsupported("ClosedEquality/Radical"))
+            }
+        };
+        if !matching || left != right {
+            return Err(LeanCompileError::new("ClosedEquality/Values", "Closed equality values differ from their exact source endpoints or from each other."));
+        }
+        let x = self.numeric_term(&fact.left)?;
+        let y = self.numeric_term(&fact.right)?;
+        Ok(format!(
+            "(Litex.NativeBridge.sameOfDenoteNumber {} {} {} {} {} {} (by norm_num))",
+            self.object_term(&fact.left)?,
+            self.object_term(&fact.right)?,
+            x.value,
+            y.value,
+            x.denotation,
+            y.denotation
+        ))
+    }
+
+    fn compile_arithmetic_congruence(
+        &mut self,
+        fact: &EqualFact,
+        children: &[VerifyFactResult],
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (operation, pairs) = match (&fact.left, &fact.right) {
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(a)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(b)),
+            ) => (
+                "addValue",
+                vec![
+                    (a.left.as_ref(), b.left.as_ref()),
+                    (a.right.as_ref(), b.right.as_ref()),
+                ],
+            ),
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(b)),
+            ) => (
+                "subValue",
+                vec![
+                    (a.left.as_ref(), b.left.as_ref()),
+                    (a.right.as_ref(), b.right.as_ref()),
+                ],
+            ),
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(b)),
+            ) => (
+                "mulValue",
+                vec![
+                    (a.left.as_ref(), b.left.as_ref()),
+                    (a.right.as_ref(), b.right.as_ref()),
+                ],
+            ),
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Div(a)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Div(b)),
+            ) => (
+                "divValue",
+                vec![
+                    (a.left.as_ref(), b.left.as_ref()),
+                    (a.right.as_ref(), b.right.as_ref()),
+                ],
+            ),
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Pow(a)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Pow(b)),
+            ) => (
+                "powValue",
+                vec![
+                    (a.base.as_ref(), b.base.as_ref()),
+                    (a.exponent.as_ref(), b.exponent.as_ref()),
+                ],
+            ),
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Neg(b)),
+            ) => ("negValue", vec![(a.arg.as_ref(), b.arg.as_ref())]),
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "Equality/MatchingOneArgByOne/Constructor",
+                ))
+            }
+        };
+        if children.len() != pairs.len() {
+            return Err(LeanCompileError::new(
+                "ArithmeticCongruence/Children",
+                "Constructor congruence has the wrong ordered child arity.",
+            ));
+        }
+        let mut compiled = Vec::new();
+        for (child, (left, right)) in children.iter().zip(pairs) {
+            let child = self.compile_verify(child, runtime)?;
+            match &child.fact {
+                Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                    if eq.left.ir() == left.ir() && eq.right.ir() == right.ir() => {}
+                _ => {
+                    return Err(LeanCompileError::new(
+                        "ArithmeticCongruence/ChildSubject",
+                        "Congruence child does not prove this exact ordered operand pair.",
+                    ))
+                }
+            }
+            compiled.push(child.proof);
+        }
+        if compiled.len() == 1 {
+            Ok(format!("(congrArg M.{operation} {})", compiled[0]))
+        } else {
+            Ok(format!(
+                "(congrArg₂ M.{operation} {} {})",
+                compiled[0], compiled[1]
+            ))
+        }
+    }
+
+    fn compile_scalar_division_relation(
+        &mut self,
+        fact: &EqualFact,
+        proof: &ScalarDivisionRelationProof,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (child, product_from_division) = match proof {
+            ScalarDivisionRelationProof::ProductFromDivision(p) => (&p.division_equation, true),
+            ScalarDivisionRelationProof::DivisionFromProduct(p) => (&p.product_equation, false),
+        };
+        let compiled = self.compile_verify(child, runtime)?;
+        let equation = match &compiled.fact {
+            Fact::AtomicFact(AtomicFact::EqualFact(x)) => x,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "ScalarDivisionRelation/Child",
+                    "The source equation is not an equality.",
+                ))
+            }
+        };
+        let (_numerator, denominator, factor, quotient, reversed, commuted) =
+            if product_from_division {
+                let quotient = match &equation.left {
+                    Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => x,
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "ScalarDivisionRelation/DivisionSubject",
+                            "ProductFromDivision must cite a quotient equation.",
+                        ))
+                    }
+                };
+                let mut matched = None;
+                for (other, product, reversed) in [
+                    (&fact.left, &fact.right, false),
+                    (&fact.right, &fact.left, true),
+                ] {
+                    if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(p)) = product {
+                        if other.ir() != quotient.left.ir() {
+                            continue;
+                        }
+                        if p.left.ir() == equation.right.ir() && p.right.ir() == quotient.right.ir()
+                        {
+                            matched = Some((reversed, false));
+                            break;
+                        }
+                        if p.right.ir() == equation.right.ir() && p.left.ir() == quotient.right.ir()
+                        {
+                            matched = Some((reversed, true));
+                            break;
+                        }
+                    }
+                }
+                let (reversed, commuted) = matched.ok_or_else(|| LeanCompileError::new("ScalarDivisionRelation/ParentSubject", "The source quotient equation does not describe the parent product endpoints."))?;
+                (
+                    quotient.left.as_ref(),
+                    quotient.right.as_ref(),
+                    &equation.right,
+                    &equation.left,
+                    reversed,
+                    commuted,
+                )
+            } else {
+                let mut matched = None;
+                for (quotient_obj, factor, reversed) in [
+                    (&fact.left, &fact.right, false),
+                    (&fact.right, &fact.left, true),
+                ] {
+                    if let Obj::ArithmeticOperator(ArithmeticOperator::Div(q)) = quotient_obj {
+                        if equation.left.ir() != q.left.ir() {
+                            continue;
+                        }
+                        if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(p)) = &equation.right
+                        {
+                            if p.left.ir() == factor.ir() && p.right.ir() == q.right.ir() {
+                                matched = Some((q, factor, quotient_obj, reversed, false));
+                                break;
+                            }
+                            if p.right.ir() == factor.ir() && p.left.ir() == q.right.ir() {
+                                matched = Some((q, factor, quotient_obj, reversed, true));
+                                break;
+                            }
+                        }
+                    }
+                }
+                let (q, factor, quotient_obj, reversed, commuted) = matched.ok_or_else(|| LeanCompileError::new("ScalarDivisionRelation/ParentSubject", "The source product equation does not describe the parent quotient endpoints."))?;
+                (
+                    q.left.as_ref(),
+                    q.right.as_ref(),
+                    factor,
+                    quotient_obj,
+                    reversed,
+                    commuted,
+                )
+            };
+        let b = self.numeric_term(denominator)?;
+        let c = self.numeric_term(factor)?;
+        let x = self.numeric_term(&equation.left)?;
+        let y = self.numeric_term(&equation.right)?;
+        let source_eq = format!(
+            "(Litex.NativeBridge.nativeEqOfDenoteNumber {} {} {} {} {} {} {})",
+            self.object_term(&equation.left)?,
+            self.object_term(&equation.right)?,
+            x.value,
+            y.value,
+            x.denotation,
+            y.denotation,
+            compiled.proof
+        );
+        let guard = format!(
+            "(Litex.NativeBridge.nativeNonzeroOfDenote {} {} {} ({}).wd.2.2)",
+            self.object_term(denominator)?,
+            b.value,
+            b.denotation,
+            self.object_term(quotient)?
+        );
+        let native_proof = if product_from_division {
+            let product = format!("((div_eq_iff {guard}).mp {source_eq})");
+            let oriented = if commuted {
+                format!("({product}.trans (mul_comm {} {}))", c.value, b.value)
+            } else {
+                product
+            };
+            if reversed {
+                format!("({oriented}.symm)")
+            } else {
+                oriented
+            }
+        } else {
+            let product = if commuted {
+                format!("({source_eq}.trans (mul_comm {} {}))", b.value, c.value)
+            } else {
+                source_eq
+            };
+            let quotient = format!("((div_eq_iff {guard}).mpr {product})");
+            if reversed {
+                format!("({quotient}.symm)")
+            } else {
+                quotient
+            }
+        };
+        let left = self.numeric_term(&fact.left)?;
+        let right = self.numeric_term(&fact.right)?;
+        Ok(format!(
+            "(Litex.NativeBridge.sameOfDenoteNumber {} {} {} {} {} {} {native_proof})",
+            self.object_term(&fact.left)?,
+            self.object_term(&fact.right)?,
+            left.value,
+            right.value,
+            left.denotation,
+            right.denotation
+        ))
+    }
+
     fn compile_rational(
         &mut self,
         fact: &EqualFact,
@@ -395,13 +692,12 @@ impl LeanCompiler {
             let guard_names = (0..native_guards.len())
                 .map(|i| format!("_litex_nz_{i}"))
                 .collect::<Vec<_>>();
-            let names = guard_names.join(", ");
             let exact_guards = guard_names
                 .iter()
                 .map(|n| format!("exact {n}"))
                 .collect::<Vec<_>>()
                 .join(" | ");
-            format!("(by\n  {}\n  field_simp (disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero) only [{names}] <;> ring\n)", native_guards.join("\n  "))
+            format!("(by\n  {}\n  field_simp (disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero) <;> ring\n)", native_guards.join("\n  "))
         } else {
             "(by ring)".to_string()
         };
@@ -1309,10 +1605,13 @@ impl LeanCompiler {
                         "Power membership changes its operand or integer carrier.",
                     ));
                 }
-                self.compile_structural(base, runtime)?;
-                self.compile_structural(exponent, runtime)?;
+                let ha_c = self.compile_structural(base, runtime)?;
+                let he_z = self.compile_structural(exponent, runtime)?;
                 match proof.set {
-                    StandardSet::C => Ok(self.numeric_term(&proof.element)?.member),
+                    StandardSet::C => Ok(format!(
+                        "(Litex.powStructuralInC {} {ha_c} {he_z})",
+                        self.object_term(&proof.element)?
+                    )),
                     _ => Err(LeanCompileError::unsupported(
                         "StructuralMembership/PowCarrier",
                     )),
