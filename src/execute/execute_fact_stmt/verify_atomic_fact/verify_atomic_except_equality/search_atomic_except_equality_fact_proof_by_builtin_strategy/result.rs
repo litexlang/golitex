@@ -1,3 +1,5 @@
+pub use super::preimage::FunctionPreimageInputView;
+use super::preimage::{PreimageMembershipStrategySingleStep, PreimageSetMembershipStrategySingleStep};
 use crate::ast::fact::Fact;
 use crate::ast::obj::StandardSet;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -100,6 +102,8 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     ClosedRangeMembership(ClosedRangeMembershipStrategySingleStep),
     IntervalMembership(IntervalMembershipStrategySingleStep),
     SetBuilderMembership(SetBuilderMembershipStrategySingleStep),
+    PreimageMembership(PreimageMembershipStrategySingleStep),
+    PreimageSetMembership(PreimageSetMembershipStrategySingleStep),
     StandardSetSubsetMembership(StandardSetSubsetMembershipStrategySingleStep),
     FnApplicationInCodomain(FnApplicationInCodomainStrategySingleStep),
     ListSetSubsetFromMembers(ListSetSubsetFromMembersStrategySingleStep),

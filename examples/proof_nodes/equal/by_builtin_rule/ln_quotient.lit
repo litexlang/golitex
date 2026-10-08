@@ -1,0 +1,2 @@
+forall a,b R+:
+    ln(a/b)=ln(a)-ln(b)

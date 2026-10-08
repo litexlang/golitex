@@ -2399,7 +2399,11 @@ release thm add_zero(2)
 #### Theorem fact shapes and call spelling
 
 `thm` proves and names one reusable `Fact`, using the same goal shapes as
-`claim` except that a root `forall ... <=>:` fact is not accepted. A universal
+`claim`. Both reject a root `forall ... <=>:` goal before WD or proof execution,
+with a `goal_unsupported` user diagnostic; this is not an internal error.
+For an equivalence, prove the two directions as separate ordinary `forall`
+theorems. See the [theorem-goal boundary tracer](../examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit).
+A universal
 theorem is available both for explicit theorem calls and ordinary
 known-`forall` matching. `axiom` remains universal-only and gives the same
 parenthesized call interface to a trusted fact without proving it.
@@ -6142,6 +6146,35 @@ constant(2) $in fn_range(constant)
 **Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs); `O81` in the [inventory and verification record](audits/reference-inventory-2026-10-06.json).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
+
+### Preview Point and set preimages
+
+**Public forms:** `preimage(f, y)` and `preimage_set(f, Y)`.
+
+Both objects are sets of legal input assignments in the complete domain of `f`, including every declared guard. The point form selects inputs with `f(x) = y`; the set form selects inputs with `f(x) $in Y`. A point target can itself be a set. Neither form chooses a root or requires an injective or surjective function. Targets need not lie in the declared return bound; proving an empty fiber is a separate obligation.
+
+WD checks both operands and a checked complete callable domain. The set form also checks target sethood. Multiple parameters use an ordered input tuple of exactly that arity; unary tuple arguments and returned functions retain their original call shape. Membership verification checks the input conditions and output condition; stored membership supplies those facts for later use.
+
+```litex
+have fn square(x R) R = x^2
+square(2) = 4
+square(-2) = 4
+2 $in preimage(square, 4)
+-2 $in preimage(square, 4)
+2 $in preimage_set(square, {4})
+
+forall x preimage(square, 4):
+    x $in R
+    square(x) = 4
+
+forall x preimage_set(square, {4}):
+    x $in R
+    square(x) $in {4}
+```
+
+**Nearest boundaries:** a noncallable function or an ill-defined target rejects even with an empty target set. A function alias needs its own published callable interface: `have alias fn(x R) R = square` provides one; `let alias = square` alone does not authorize reading a neighbor's function signature. Wrong input arity and guard violations remain rejected.
+
+**Source and evidence:** [bounded construction](../src/execute/execute_fact_stmt/function_preimage.rs), [maintained strict example](../examples/wd/function_preimages.lit), and `cargo test --release function_preimages`. `have by fn_preimage` continues to extract witnesses from known function-range membership.
 
 ### O82. Sums over integer ranges
 

@@ -244,6 +244,8 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         (Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(r))) => objs_alpha_equal(&l.set, &r.set, map),
         (Obj::SetFormer(SetFormer::SeqSet(l)), Obj::SetFormer(SetFormer::SeqSet(r))) => objs_alpha_equal(&l.set, &r.set, map),
         (Obj::FunctionSpace(FunctionSpace::FnRange(l)), Obj::FunctionSpace(FunctionSpace::FnRange(r))) => objs_alpha_equal(&l.function, &r.function, map),
+        (Obj::FunctionSpace(FunctionSpace::Preimage(l)), Obj::FunctionSpace(FunctionSpace::Preimage(r))) => objs_alpha_equal(&l.function, &r.function, map) && objs_alpha_equal(&l.value, &r.value, map),
+        (Obj::FunctionSpace(FunctionSpace::PreimageSet(l)), Obj::FunctionSpace(FunctionSpace::PreimageSet(r))) => objs_alpha_equal(&l.function, &r.function, map) && objs_alpha_equal(&l.target_set, &r.target_set, map),
         (Obj::IteratedOperator(IteratedOperator::Sum(l)), Obj::IteratedOperator(IteratedOperator::Sum(r))) => {
             objs_alpha_equal(&l.start, &r.start, map)
                 && objs_alpha_equal(&l.end, &r.end, map)

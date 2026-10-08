@@ -60,6 +60,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | [definition/template_definition_facts.lit](definition/template_definition_facts.lit) | Publish template definition facts | `forall` over template arguments, with body and header premises retained |
 | [definition/template_alias_struct_tuple.lit](definition/template_alias_struct_tuple.lit) | Template aliases and named tuple results | Checked callable signatures and stored value paths reach struct fields |
 | `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |
+| [definition/def_thm_forall_iff_boundary.lit](definition/def_thm_forall_iff_boundary.lit) | Named-theorem goal boundary | Root quantified iff rejects with `goal_unsupported`; separate ordinary forall directions pass |
 | `definition/axiom.lit` | Named axiom (trusted forall) | `axiom name: ? forall …` |
 | [definition/strict_axiom_policy.lit](definition/strict_axiom_policy.lit) | Strict user-axiom policy | ordinary mode accepts the explicit assumption; strict rejects before publication |
 | `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof; later `$P` via known_strategy |

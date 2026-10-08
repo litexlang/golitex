@@ -1,0 +1,7 @@
+# Stored set-preimage membership supplies the input domain, guard and output membership.
+# Run: target/release/litex -strict -f examples/infer/atomic/in_preimage_set_projects_domain_and_membership.lit
+have fn reciprocal(x R: x != 0) R = 1 / x
+forall x preimage_set(reciprocal, {2, 3}):
+    x $in R
+    x != 0
+    reciprocal(x) $in {2, 3}

@@ -34,6 +34,7 @@ pub struct ExecDefThmStmtSuccess {
 
 pub enum ExecDefThmStmtFailed {
     NameClash(String),
+    GoalUnsupported(String),
     GoalWd(VerifyFactWellDefinedResult),
     Introduce(String),
     ProofBody(ProofBlockBodyFailed),
@@ -61,6 +62,15 @@ pub fn exec_def_thm_stmt(
         return Ok(ExecDefThmStmtResult::Failed(ExecDefThmStmtFailed::NameClash(
             format!("thm `{}` is already defined", stmt.name),
         )));
+    }
+
+    if matches!(stmt.fact, Fact::ForallFactWithIff(_)) {
+        return Ok(
+            ExecDefThmStmtFailed::GoalUnsupported(
+                "thm: forall ... <=> goals are not supported".to_string(),
+            )
+            .into(),
+        );
     }
 
     let goal_wd =
@@ -161,3 +171,13 @@ fn exec_def_thm_forall_body(
 
     Ok(Ok((proof_steps, conclusion_proofs)))
 }
+
+impl From<ExecDefThmStmtFailed> for ExecDefThmStmtResult {
+    fn from(failed: ExecDefThmStmtFailed) -> Self {
+        Self::Failed(failed)
+    }
+}
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/def_thm_goal_boundary/tests.rs"]
+mod def_thm_goal_boundary_tests;

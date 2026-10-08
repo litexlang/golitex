@@ -1,0 +1,5 @@
+forall a,x R+,n Z:
+    a!=1
+    a^n=x
+    =>:
+        log(a,x)=n

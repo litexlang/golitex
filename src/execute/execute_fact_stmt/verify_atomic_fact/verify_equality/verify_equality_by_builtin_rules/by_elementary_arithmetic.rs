@@ -7,6 +7,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equi
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ElementaryArithmeticProof {
+    SqrtSquareNonpositive(SqrtSquareNonpositiveProof),
     ModNegation {
         requirements: Vec<VerifyFactResult>,
     },
@@ -27,9 +28,16 @@ pub enum ElementaryArithmeticProof {
         requirements: Vec<VerifyFactResult>,
     },
 }
+pub struct SqrtSquareNonpositiveProof {
+    pub nonpositive_argument: VerifyFactResult,
+}
+impl SqrtSquareNonpositiveProof {
+    pub fn new(nonpositive_argument: VerifyFactResult) -> Self { Self { nonpositive_argument } }
+}
 impl ElementaryArithmeticProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::SqrtSquareNonpositive(_) => "SqrtSquareNonpositive",
             Self::ModNegation { .. } => "ModNegation",
             Self::ModNaturalPower { .. } => "ModNaturalPower",
             Self::AbsEvenPower => "AbsEvenPower",
@@ -47,6 +55,18 @@ impl Runtime {
     ) -> RuntimeResult<Option<ElementaryArithmeticProof>> {
         use ElementaryArithmeticProof as P;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            // Principal sqrt(x^2)=-x when x<=0; no arbitrary abs rewrite.
+            if let Obj::ExpLogOperator(ExpLogOperator::Sqrt(root)) = left {
+                if let Some((base, exponent)) = pow_args(&root.arg) {
+                    let negative = Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg { arg: Box::new(base.clone()) }));
+                    if is_number(exponent, "2") && crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &negative) {
+                        let nonpositive_argument = self.verify_order_nonpositive(base, state)?;
+                        if !nonpositive_argument.is_failed() {
+                            return Ok(Some(P::SqrtSquareNonpositive(SqrtSquareNonpositiveProof::new(nonpositive_argument))));
+                        }
+                    }
+                }
+            }
             // Positive modulus: (-a)%m = (m-a%m)%m.
             if let (Some((dividend, m)), Some((other, modulus))) = (mod_args(left), mod_args(right))
             {

@@ -1528,6 +1528,20 @@
               "def_thm"
             ]
           }
+        },
+        {
+          "name": "forall-iff-goal",
+          "file": "negative/def_thm_stmt/forall-iff-goal.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "def_thm"
+            ]
+          }
         }
       ]
     },

@@ -133,6 +133,12 @@ impl Runtime {
             Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(a)) => {
                 self.inst_finite_set_min_obj(a, param_to_arg_map)
             }
+            Obj::FunctionSpace(FunctionSpace::Preimage(a)) => {
+                Ok(crate::ast::obj::Preimage::new(self.inst_obj_rec(&a.function, param_to_arg_map)?, self.inst_obj_rec(&a.value, param_to_arg_map)?).into())
+            }
+            Obj::FunctionSpace(FunctionSpace::PreimageSet(a)) => {
+                Ok(crate::ast::obj::PreimageSet::new(self.inst_obj_rec(&a.function, param_to_arg_map)?, self.inst_obj_rec(&a.target_set, param_to_arg_map)?).into())
+            }
             Obj::FunctionSpace(FunctionSpace::FnRange(a)) => {
                 self.inst_fn_range_obj(a, param_to_arg_map)
             }

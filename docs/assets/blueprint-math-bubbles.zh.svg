@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 410" width="880" height="410" role="img" aria-labelledby="blueprint-bubbles-title-zh" style="display:block;max-width:100%;height:auto;margin:12px auto;">
+<title id="blueprint-bubbles-title-zh">定义、定理与事实的局部数学关系</title>
+<defs><marker id="blueprint-bubbles-arrow-zh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 1 L 8 5 L 0 9" fill="none" stroke="#92a6ae" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<filter id="blueprint-bubbles-shadow-zh" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#28434b" flood-opacity="0.07"/></filter></defs>
+<rect x="1" y="1" width="878" height="408" rx="22" fill="#fafcfb" stroke="#e7eeeb"/>
+<g font-family="Arial, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, sans-serif">
+<circle cx="40" cy="382" r="5" fill="#386b53"/><text x="54" y="387" font-size="13" fill="#667b74">定义</text>
+<circle cx="164" cy="382" r="5" fill="#66538e"/><text x="178" y="387" font-size="13" fill="#667b74">定理</text>
+<circle cx="284" cy="382" r="5" fill="#3f6b8e"/><text x="298" y="387" font-size="13" fill="#667b74">事实</text>
+<path data-from="declaration:1" data-to="declaration:0" data-kind="uses_definition" d="M200 231 C239 227 257 226 299 224" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-zh)"/>
+<path data-from="declaration:1" data-to="fact:f1161" data-kind="uses_definition" d="M180 184 C203 158 222 148 238 135" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-zh)"/>
+<path data-from="declaration:0" data-to="fact:f810" data-kind="theorem_instance" d="M472 197 C523 180 576 159 632 151" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-zh)"/>
+<path data-from="declaration:0" data-to="fact:f977" data-kind="theorem_instance" d="M473 244 C527 258 580 277 638 285" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-zh)"/>
+<text x="247" y="211" text-anchor="middle" font-size="12" fill="#83949a">使用定义</text>
+<text x="548" y="161" text-anchor="middle" font-size="12" fill="#83949a">定理应用</text>
+<text x="551" y="283" text-anchor="middle" font-size="12" fill="#83949a">定理应用</text>
+<g data-source-id="declaration:1" data-node-kind="definition"><circle cx="122" cy="236" r="78" fill="#e8f5ef" stroke="#b5d6c4" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-zh)"/>
+<text x="122" y="213" text-anchor="middle" font-size="12" fill="#386b53">定义</text>
+<text x="122" y="241" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(x) = x²</text>
+<text x="122" y="267" text-anchor="middle" font-size="12" fill="#70817e">x ∈ ℝ</text>
+</g>
+<g data-source-id="declaration:0" data-node-kind="theorem"><circle cx="389" cy="221" r="87" fill="#eee9f8" stroke="#cbbde8" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-zh)"/>
+<text x="389" y="198" text-anchor="middle" font-size="12" fill="#66538e">定理</text>
+<text x="389" y="226" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(x) ≥ 0</text>
+<text x="389" y="252" text-anchor="middle" font-size="12" fill="#70817e">任意实数 x</text>
+</g>
+<g data-source-id="fact:f1161" data-node-kind="fact"><circle cx="286" cy="93" r="62" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-zh)"/>
+<text x="286" y="80" text-anchor="middle" font-size="12" fill="#3f6b8e">事实</text>
+<text x="286" y="107" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(2) = 4</text>
+</g>
+<g data-source-id="fact:f810" data-node-kind="fact"><circle cx="703" cy="130" r="72" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-zh)"/>
+<text x="703" y="117" text-anchor="middle" font-size="12" fill="#3f6b8e">事实</text>
+<text x="703" y="144" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(2) ≥ 0</text>
+</g>
+<g data-source-id="fact:f977" data-node-kind="fact"><circle cx="711" cy="305" r="72" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-zh)"/>
+<text x="711" y="292" text-anchor="middle" font-size="12" fill="#3f6b8e">事实</text>
+<text x="711" y="319" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(−2) ≥ 0</text>
+</g>
+</g></svg>

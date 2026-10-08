@@ -492,6 +492,20 @@ pub(super) fn project_atomic_builtin_strategy(
             ("strategy", string("IntervalMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageMembership(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("PreimageMembership")),
+            ("construction", super::wd_by_def::project_preimage_construction(&p.construction, runtime)),
+            ("input_view", project_preimage_input_view(&p.input_view, runtime)),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageSetMembership(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("PreimageSetMembership")),
+            ("construction", super::wd_by_def::project_preimage_construction(&p.construction, runtime)),
+            ("input_view", project_preimage_input_view(&p.input_view, runtime)),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SetBuilderMembership")),
@@ -664,6 +678,21 @@ fn project_field_arithmetic_tree(tree: &FieldArithmeticCarrierConstructorTree, r
             ("left", project_field_arithmetic_tree(left, runtime)),
             ("right", project_field_arithmetic_tree(right, runtime)),
             ("nonzero_requirement_index", JsonValue::Number(*nonzero_requirement_index as f64)),
+        ]),
+    }
+}
+
+
+fn project_preimage_input_view(
+    view: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionPreimageInputView,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionPreimageInputView;
+    match view {
+        FunctionPreimageInputView::BoundedAssignment => string("bounded_assignment"),
+        FunctionPreimageInputView::LiteralTuple { tuple, input_equal } => object_for(runtime, vec![
+            ("type", string("literal_tuple")), ("tuple", string(crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(tuple.clone())).readable_string())),
+            ("input_equal", super::searched::project_known_equality_path(input_equal, runtime)),
         ]),
     }
 }

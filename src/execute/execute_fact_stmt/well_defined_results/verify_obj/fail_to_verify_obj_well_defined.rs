@@ -119,6 +119,8 @@ pub enum FailToVerifyFunctionSpaceObjWellDefinedResult {
     FnSet(FailToVerifyFnSetObjWellDefined),
     AnonymousFn(FailToVerifyAnonymousFnObjWellDefined),
     FnRange(FailToVerifyFnRangeObjWellDefined),
+    Preimage(FailToVerifyPreimageObjWellDefined),
+    PreimageSet(FailToVerifyPreimageSetObjWellDefined),
 }
 
 pub enum FailToVerifyIteratedOperatorObjWellDefinedResult {
@@ -414,3 +416,14 @@ pub struct FailToVerifyOneSideInfinityIntervalObjObjWellDefined(pub FailToVerify
 
 pub struct FailToVerifyIntervalObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
+
+
+pub enum FailToVerifyPreimageObjWellDefined {
+    Domain(FailToVerifyObjWellDefinedByDefCommon),
+    Construction(crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure),
+}
+
+pub enum FailToVerifyPreimageSetObjWellDefined {
+    Domain(FailToVerifyObjWellDefinedByDefCommon),
+    Construction(crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure),
+}

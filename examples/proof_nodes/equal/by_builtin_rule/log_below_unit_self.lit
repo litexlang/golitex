@@ -1,0 +1,4 @@
+forall a R+:
+    a<1
+    =>:
+        log(a,a)=1

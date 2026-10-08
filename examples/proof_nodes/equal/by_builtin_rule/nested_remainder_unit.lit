@@ -1,0 +1,2 @@
+forall a Z,m N+:
+    (a%m)%1=a%1

@@ -1,0 +1,4 @@
+forall x,y R:
+    exp(x)=exp(y)
+    =>:
+        x=y

@@ -1,0 +1,5 @@
+# Proof node: PreimageMembership, checked domain and output equality.
+# Run: target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_strategy/preimage_membership.lit
+have fn square(x R) R = x^2
+square(2) = 4
+2 $in preimage(square, 4)

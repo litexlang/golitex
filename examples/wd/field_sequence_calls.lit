@@ -1,0 +1,21 @@
+# Declared sequence fields retain their exact callable domains.
+# Formerly rejected with "no matching function signature":
+# template<n N+>:
+#     have fn finite_first(value &SequenceFields<n>) R = value.finite(1)
+# Run: target/release/litex -strict -f examples/wd/field_sequence_calls.lit
+# Boundary: zero/out-of-range indices and nonfunction fields remain rejected.
+
+struct SequenceFields<n N+>:
+    finite finite_seq(R, n)
+    infinite seq(R)
+
+template<n N+>:
+    have fn finite_first(value &SequenceFields<n>) R = value.finite(1)
+
+template<n N+>:
+    have fn infinite_first(value &SequenceFields<n>) R = value.infinite(1)
+
+claim:
+    ? forall n N+, value &SequenceFields<n>:
+        value.finite(1) $in R
+        value.infinite(1) $in R

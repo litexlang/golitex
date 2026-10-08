@@ -261,7 +261,7 @@ impl Runtime {
         Ok(None)
     }
 
-    fn verify_closed_interval_premises(
+    pub(super) fn verify_closed_interval_premises(
         &mut self,
         value: &Obj,
         lower: &Obj,

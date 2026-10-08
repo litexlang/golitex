@@ -1,0 +1,14 @@
+claim:
+    ? forall a,b R:
+        a!=0 or b!=0
+        =>:
+            a^2+b^2!=0
+    by cases:
+        ? a^2+b^2!=0
+        case a!=0
+        case b!=0
+
+forall a,b R:
+    a!=0 or b!=0
+    =>:
+        a^2+b^2!=0

@@ -1,6 +1,150 @@
 # Litex compilation to Lean design
 
-This proposal preserves Litex's pure-set mathematics while making ordinary numeric, set and function results usable in Lean and Mathlib. The recommended architecture keeps native Lean representations and proves their correspondence with a concrete set-theoretic model. The architecture and numeric encoding policy remain open user decisions. No compiler or semantic change is implemented by this document.
+This proposal preserves Litex's pure-set mathematics while making its results usable in Lean and Mathlib. The user's latest October 8 direction preserves native numeric values and selects Litex-owned representations, constructors and operations for everything else. Native sets, arrows, products and raw arithmetic are external adapter views, not the primary nonnumeric object model. No compiler or semantic change is implemented by this document. Complete mathematical interpretation remains a proof obligation.
+
+The current object-model design is collected in [Litex object model for Lean](litex-lean-minimal-core-design-2026-10-08.md). Specify which objects exist and their basic semantics before execution or proof replay. Keep generic source representatives and ordinary Same/In/IsSet facts. The separate `Litex.Num` proposal is withdrawn. Internal operations stay Litex-owned even when numeric storage or an implementation uses native values. The previously proposed native guarded function arrow is withdrawn as an internal representation; it is only an external adapter view. Earlier alternatives and legacy audits below are historical background.
+
+## Current priority: object contracts before proof replay
+
+Use the retained legacy object-model concepts as a reference and the current source semantics as authority. Current equality classes own equality evidence; how to compile their proof paths is a later design problem. Do not derive the new execution design from retained Core rule registries or historical generated files.
+
+The immediate deliverable is a per-family Litex representation and mathematical contract: construction and admissibility, membership/sethood, equality meaning and external adapters. Function spaces, function values, application expressions and images are distinct Litex-owned objects/interfaces. Internal function construction retains the source signature and body operations; internal application retains each source argument layer. A native map is a secondary adapter view. The current equality-class pipeline later supplies the proofs required by those mathematical contracts.
+
+The source `FnObj` is an application expression, not a function-value declaration. Its target stays behind Litex application operations/objects. `f(a,b)(c)` retains two application layers. A function value has exact-domain graph identity; written return bounds are output constraints, not graph identity labels. The current source fixes parameter domains and return sets relative to their own binders; guards and bodies can depend on those binders. The object card records Litex-owned function interfaces without specifying verifier search or Result emission.
+
+## Retained baseline and historical audit
+
+The retained v2 header already has native N/Z/Q/R/C carriers, generic heterogeneous membership, exact-carrier representative extraction, numeric cast bridges and faithful native equality elimination. A source object may remain `a : α` while `In a R` and `In a C` are facts. These are useful existing contracts, not provisional deficiencies. Preserve them unless a specific source-semantic mismatch requires a change.
+
+The first repair is genuine IsSet evidence and coherent set views. `lean/Litex/Core.lean` currently mentions IsSet without defining it; retained example 1 erases sethood assertions to True. Every supported WD object, including numbers, must obtain sethood with the source's meaning. A separate number wrapper would not solve this obligation.
+
+Two further mathematical gaps need bounded repairs before their affected source rules are supported. First, `In a C` stores a no-observation Same witness, while native equality elimination consumes an observed witness; the current extensible bridge classes do not by themselves prove uniqueness of every numeric member representative. Second, general Same between set objects must preserve their membership extensions; the current header explicitly does not derive SetEquivalent from arbitrary Same. Restricting bridge admission and proving the appropriate coherence laws may change Core internals, but preserves the useful public concepts.
+
+Function support later requires calls to respect Same inputs and exact-carrier calls to agree with ordinary calls. Full pure-set graph identity, foundational releases and general set constructions are a larger, separate mathematical extension. The current object/reflexivity/R-to-C MVP does not justify requiring a complete rewrite before showing a working slice.
+
+The current Rust checkout has no active statement-result Lean compiler module or executable. Restoring the producer against current Result types is real implementation work; it is not evidence that the old representation architecture needs replacement. Retained examples and README coverage are historical assets, not a running compiler gate.
+
+Four handwritten interface checks importing the retained Litex library passed Lean 4.31.0 via stdin: generic reflexivity, generic R-to-C membership, native complex one reflexivity and native complex one membership in R. Each reported only propext, Classical.choice and Quot.sound. This validates those retained library interfaces; it does not validate IsSet, the missing coherence laws or a current compiler.
+
+## Semantic arithmetic API and native adapters
+
+The current recommendation is to give Litex its own semantic operation API and prove native-operation correspondence in Core, while retaining native numeric results. A generator spelling `Litex.add` need not create a new universal object type or a second expression AST. Internally the operation may use Mathlib's native arithmetic once its source admission and interpretation are proved.
+
+There are three materially different alternatives:
+
+| Approach | Meaning and tradeoff |
+| --- | --- |
+| Emit native operators directly | Concise, but the compiler must choose the correct operand interpretations and source operation branch before each emission |
+| Emit Litex semantic operators and use proved native bridges | Recommended: Core owns admission, value meaning and congruence; the compiler replays WD and rule evidence; an adapter exposes native Mathlib operations |
+| Introduce uninterpreted operations and algebra axioms | Does not establish that actual Litex operations correspond to the intended mathematics; do not use for proof-only compilation |
+
+The intended mathematical API has this shape; the result carrier is deliberately not selected by this sketch:
+
+```lean
+-- Proposed operation and theorem contracts.
+Litex.add a b haC hbC
+Litex.add_in_C : In (Litex.add a b haC hbC) C
+
+observeC (Litex.add a b haC hbC) Litex.add_in_C =
+  observeC a haC + observeC b hbC
+```
+
+The inputs may have independent host types `α` and `β`. Their C-memberships are ordinary source facts supplied by the actual WD Result. The mathematical value returned by the operation does not change when the caller uses another proof of those same facts or a Same representative of either input. Prove result membership/sethood, the observation equation, input congruence and proof/view independence before claiming support.
+
+Subtraction, multiplication and division follow the same source-owned contract. Division additionally consumes the verified source condition:
+
+```lean
+-- Proposed checked call shape.
+Litex.div a b haC hbC (hb0 : ¬ Litex.Same b (Litex.numeral 0))
+```
+
+The adapter must convert that exact semantic nonzero evidence to the native denominator condition. A total native division operation does not authorize a source division by zero. Lean proof arguments implement external WD evidence; they do not add mathematical inputs to the source function.
+
+Native bridges must preserve the source operation, not select an arbitrary operator called `+`, `-`, `*` or `/`. Real and complex views can expose their reviewed native operations. A natural-number view does not support unconditional source subtraction or field division: native `Nat.sub` and `Nat.div` would turn the source values `1 - 2` and `1 / 2` into zero. Use proved preservation laws and the exact source domain conditions for every specialization. The [Mathlib homomorphism definition](https://github.com/leanprover-community/mathlib4/blob/master/Mathlib/Algebra/Ring/Hom/Defs.lean) illustrates the relevant operation-preservation contract; it does not supply Litex's correspondence proof automatically.
+
+Source literals may similarly be exposed through `Litex.numeral`/exact-rational constructor interfaces. For example, `1=1` would ask for `Same (numeral 1) (numeral 1)`, and `$is_set(1)` would ask for `IsSet (numeral 1)`. Their actual result representation may initially use native complex values. Creating a separate number wrapper solely to rename ℂ is unnecessary; choose a separate carrier only when it owns an independently justified invariant or semantic responsibility.
+
+This API does not resolve arbitrary-host interpretation by itself. Operators, literals, membership and equality all still use the one coherent object model. Keeping operands in a payload-only `AddExpr` and proving reflexivity would not establish mathematical addition; an AST representation would also need a proved evaluator and denotation laws. The intended first implementation is semantic functions with proved native bridges, not a duplicate target AST.
+
+## Object meaning and numeric representation
+
+The recommended policy distinguishes the source mathematical object, its Lean representative, and facts about that object. Each Lean term has a fixed host type, while source mathematical classification accumulates through ordinary propositions. `In`, equality and user predicates all belong to this fact layer; membership must not mutate the representative or its host type.
+
+Native numeric representations are now the selected baseline. Preserve the legacy numeral lowering and reviewed native carriers rather than adding a separate `Num` record. The retained generated numeral examples use native `ℂ`; N/Z/Q/R/C expose their existing native carriers. This does not authorize arbitrarily selecting Nat arithmetic for an operation with different source semantics. The recommended public operation API remains Litex-owned, with proved native bridges. The table records native lowering and later interpretation obligations, not a selected production set encoding. Keep the notation distinction: Lean `ℂ` is a type; source `C` is a mathematical set object. Do not put `: Litex.C` on a numeral as though the source set itself were a Lean type.
+
+| Source object | Recommended representative |
+| --- | --- |
+| Integer literal `1243` | `(1243 : ℂ)` |
+| Exact decimal `1.25` | `((5 : ℂ) / 4)` |
+| `i`, `e`, `pi` | Canonical complex constants, with their reviewed mathematical meaning |
+| A fresh or quantified identifier `a` | `a : α`, with a fixed interpretation and independent source facts |
+| `a + b`, scalar division and other intrinsic numeric results | New canonical complex value, after consuming the exact WD evidence and native views |
+| Integer operations such as remainder or gcd | Reviewed native integer computation, then canonical embedding into `ℂ` |
+| `N`, `Z`, `Q`, `R`, `C` and constructed sets | Litex-owned set objects and membership laws; exact native carriers are adapter views |
+| Tuples | Litex-owned one-based finite-function objects, with optional native product adapters |
+| Named/anonymous functions and function spaces | Litex-owned construction, signature, application and graph semantics; native callable forms are adapters |
+| Structs and templates | Litex definition-owned objects/fields and declaration families; native records are adapters |
+
+The first invariant is coherent meaning: facts and views cannot change the value represented by a term. One possible way to prove the full pure-set obligations is a fixed interpretation into a concrete model. The following is an alternative mathematical schema, not standalone Lean source or a newly selected public ABI:
+
+```lean
+meaningα : α → ZFSet
+Same a b := meaningα a = meaningβ b
+In a A := meaningα a ∈ meaningβ A
+IsSet a := ∃ s : ZFSet, meaningα a = s
+```
+
+Here interpretations are target compilation data, not source typing or numeric membership assumptions. A bare arbitrary Lean type does not supply a mathematical interpretation by itself; previous generic signatures suppress this metadata. A complete implementation must supply it through a fixed Core interpretation context or a coherent representation interface. It must not choose a new map each time it proves membership. In a shared context, equal values of the same native carrier use the same interpretation. The canonical complex interpretation is always the one fixed injective complex encoding; a generic carrier later instantiated as `ℂ` must remain compatible with it. Conflicting interpretations need distinct certified host representations, never a changed meaning for the same value.
+
+This model makes `In` an ordinary binary proposition, exactly like a concrete predicate on the two interpreted objects. A source predicate may be defined on model values, or provide a proved Same-congruence theorem for its native representation. Predicate implementations cannot distinguish irrelevant host metadata when source equality identifies the represented objects. Equality transport in both membership arguments follows from equality of meanings. Native equality lifts within the fixed interpretation; native equality is recovered from Same only at a proved faithful presentation.
+
+For constants, fix `meaningℂ z := encodeComplex z`. Then the two requested examples have distinct evidence routes:
+
+```lean
+-- Intended compiled statements and adapters, not generated output.
+-- Source: 1 = 1
+Litex.Same (1 : ℂ) (1 : ℂ)
+-- Proof adapter: semantic reflexivity.
+
+-- Source: $is_set(1)
+Litex.IsSet (1 : ℂ)
+-- Proof adapter: encodeComplex 1 is an actual model set.
+```
+
+The second proof may be elementary in a pure-set model, but its justification is the actual denotation `encodeComplex 1`, not the mere existence of a Lean type and not an unproved compiler axiom. Both facts retain their source FactIds. `1 $in R` and `1 $in C` then add separate propositions about the same unchanged `(1 : ℂ)` representative.
+
+Standard sets are encoded ranges over that shared complex code. R membership exposes a real representative, and C membership exposes a complex representative. Their public contracts remain polymorphic in the original object's host type:
+
+```lean
+-- Proposed semantic contracts.
+In a C ↔ ∃ z : ℂ, Same a z
+In a R ↔ ∃ r : ℝ, Same a (r : ℂ)
+```
+
+R-to-C transport adds knowledge about `a`; it does not change `α`. Native complex membership in R can additionally eliminate to zero imaginary part. The exact native carriers of N/Z/Q/R are useful views for Mathlib and integer-specific operations, while emitted source numeric constants and intrinsic results still have the canonical complex representation.
+
+For an arbitrary source identifier used in arithmetic, the current verifier already checks membership as a fact. The following exact source was accepted by the installed release binary:
+
+```litex
+have a R
+a + 1 = a + 1
+```
+
+The target construction is schematically:
+
+```lean
+-- Proposed lowering; a : α remains unchanged.
+let haC := Litex.in_C_of_in_R haR
+let one := Litex.numeral 1
+let sum := Litex.add a one haC hOneC
+-- Core's proved bridge opens sum to the corresponding native addition.
+```
+
+The new `sum` is the representation of the compound expression; it is not a replacement binding for `a`. Core must prove that a numeric observation z satisfies `Same a z`, uniqueness of z, agreement between R and C views, and congruence of the numeric operation. Division also consumes the source nonzero proof and opens it into the native denominator condition. The [current Add WD](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs) retains child WD results and both `In(_, C)` requirements in `AddObjWellDefinedProof`, so the compiler can consume the verifier-selected facts instead of inferring a new source type.
+
+All other construction families follow the same principle: choose a useful native representation, establish its one fixed pure-set meaning, prove the constructor/member/application laws, and expose native data only through checked facts. For sets, an exact presentation must cover precisely their members and count semantic duplicates once. For functions, graph identity retains complete domains and source application layers while ignoring return upper-bound labels. Tuples and empty functions share the ordinary empty-set identity when their graphs are empty. Source structs retain their definition-owned coordinate and law interfaces. This policy does not authorize representing unsupported constructions as opaque syntax containers and claiming semantic support.
+
+The October 8 scalar baseline also accepted `1 = 1`, `$is_set(1)`, `1 $in R`, `1 $in C` and `1243 $in C`. The observed equality route was same-object reflexivity, sethood used AlwaysTrue after WD, and numeric memberships used closed calculation. Production interpretation metadata, canonical numeric lowering and the generic public bridges still need implementation and kernel validation.
 
 ## First MVP scope
 
@@ -147,13 +291,13 @@ The current Rust crate exposes no Lean compiler module or compiler binary. The r
 
 Current CLI uses `-strict -f` and emits Normal JSON with top-level `success`. Old skill commands containing `-compact -runner` were rejected with exit 2 in this task. The successful reciprocal JSON also renders its definition without the return annotation in `statement`, although its stored function membership retains `R`; display text is therefore unsuitable as compiler input.
 
-## Why a common mathematical denotation is necessary
+## Full pure-set correspondence: a candidate model backend
 
 The old representation `Set { Carrier : Type }` and heterogeneous equality carry useful ideas, but they do not by themselves model all objects as sets. The current [set WD](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs) checks only child WD for operations such as `power_set`. Thus an expression such as `power_set(1)` needs a mathematical interpretation under the existing contract, even though it is not a common numeric use case.
 
 Giving each numeric value an empty membership extension would make all numbers equal by global extensionality. Adding an unconstrained bridge relation would instead make equality transport unsafe. The retained Core also distinguishes object equality from a separate `SetEquivalent`; the new model must establish both argument positions of membership congruence.
 
-The recommended mathematical contract is the following schema. These are proposed interfaces, not complete Lean declarations:
+A candidate mathematical contract for the full pure-set extension is the following schema. It is one way to discharge coherence, not a required replacement for the retained public interfaces. These are proposed interfaces, not complete Lean declarations:
 
 ```lean
 Representation α: a fixed map denoteα : α → ZFSet.{u}
@@ -167,7 +311,7 @@ This definition gives one semantic equality and proves symmetry, transitivity, m
 
 `ZFSet` is Mathlib's existing mathematical model, constructed as an extensional quotient of pre-sets. It supplies definitions and proved interfaces for powersets, images, well-founded membership and function graphs. It is a candidate semantic foundation, not an invented `axiom LitexObject : Type`. See the [Mathlib ZFC documentation](https://leanprover-community.github.io/mathlib4_docs/Mathlib/SetTheory/ZFC/Basic.html). Its presence does not automatically prove the numeric and function correspondence needed here.
 
-For unrestricted source `forall A set`, the model-backed translation quantifies `A : ZFSet.{u}`. It must not narrow the quantifier to a package of native element types. Sethood may reduce to a trivial proposition in a pure-set model, but only because every denoted value is actually a set; its source FactId remains bound to the corresponding proof. This is different from erasing sethood while leaving numeric and function objects uninterpreted as sets.
+For unrestricted source `forall A set`, the public translation retains a generic representative A and an IsSet fact, with fixed interpretation metadata. A model-backed adapter can expose `A`'s `ZFSet` view. It must not force the public source-object binder to that host type or narrow it to a package of native element types. Sethood may reduce to an elementary proposition in a pure-set model, but only because every denoted value is actually a set; its source FactId remains bound to the corresponding proof. This is different from erasing sethood while leaving numeric and function objects uninterpreted as sets.
 
 ## Native presentations and universe constraints
 
@@ -189,7 +333,7 @@ Ordinary numerical subsets can use native predicates and subtypes. Mixed sets ma
 
 ## Numeric hierarchy and operator contracts
 
-Choose and prove one injective complex encoding `encodeC : ℂ → ZFSet`. Define the other number representations through the native embeddings:
+For this candidate model backend, choose and prove one injective complex encoding `encodeC : ℂ → ZFSet`. Define the other number representations through the native embeddings:
 
 ```lean
 -- Proposed mathematical definitions.
@@ -212,10 +356,10 @@ An encoding of complex numbers into well-founded sets is a substantive Lean cons
 
 ## Functions and other object families
 
-For one source layer, combine its fixed domains into an input product and apply the guard as a predicate on that product. A native presentation has the shape:
+For one source layer, retain fixed parameter domains, guards, return bound and Litex-owned body/application operations. Combining native domains into an input product is allowed only in an external function adapter. Such an adapter may have the shape:
 
 ```lean
--- Proposed unary guarded presentation.
+-- Optional external adapter view, not the internal function representation.
 {x : DomainCarrier // Guard x} → ReturnCarrier
 ```
 
@@ -333,10 +477,10 @@ The dependencies run from source semantics to model definitions and representati
 
 ## Implementation phases and acceptance
 
-1. **Fix the foundation decisions.** Choose model-backed native generation versus all-model generation, choose numeric encoding visibility, and settle source operations with incomplete meanings. Record actual CLI and existing-result boundaries. The current source and old generated examples are separate baselines.
-2. **Build a small complete Core.** Demonstrate an actual complex encoding, the shared numeric hierarchy, a finite/predicate set presentation, equality/membership transport and faithful native equality elimination. Include one extensionality example and the empty graph identity. No project axioms or proof holes.
-3. **Complete one evidence path.** Preserve source declarations, theorem binders, exact assumptions, definition infer results and WD registration for the reciprocal path. Reuse current source-semantic result types. Test both valid and missing-guard paths and scope rollback.
-4. **Compile the reciprocal source.** Generate declarations from successful execution results and verify them with the pinned Lean/Mathlib toolchain. Add a same-name source/generated pair only after both stages are genuinely supported. A handwritten adapter supplies a native consumer without a second proof of the mathematical goal.
+1. **Specify the objects and their semantics.** Keep native numeric values, heterogeneous Same/In and generic source parameters. Use Litex-owned representations and operations for the other object families, including FnSet, function values, FnObj applications and images. Native presentations are secondary adapters. Use the new equality-class semantics; do not preserve the old proof pipeline as an implementation requirement.
+2. **Implement the supported object contracts.** Establish genuine sethood, equality/membership laws and the native views needed by the first consumer. Retained reflexivity and R-to-C mathematics can be reused without preserving their historical evidence route. No project axioms or proof holes. The larger graph/foundation extension is not a prerequisite for the initial slice.
+3. **Complete the initial evidence path.** Preserve source declarations, generic binders, exact membership and sethood FactIds, scope ownership and original statement capture. Compile the minimal have/reflexivity/R-to-C sources from actual successful Results.
+4. **Check the initial export, then extend to arithmetic and reciprocal.** Run the generated Lean and a native consumer. Add a same-name source/generated pair only after all stages work. Subsequently complete guarded application, function coherence and the reciprocal path; test valid and missing-guard cases. A handwritten adapter consumes the generated proof without reproving the mathematical goal.
 5. **Add logical and mathematical families.** First exact citations, definitions, quantifiers, conjunction/disjunction, existential witnesses, cases, contradiction and induction. Then function equality, sets, images, replacement, choice, regularity and Zorn. Expand arithmetic and aggregate rules by reviewed evidence families, not by raw object-count coverage.
 6. **Stabilize export and maintenance.** Specify versioned representation/rule contracts, generated drift checks, exact declaration preservation, unsupported diagnostics and native-consumer gates. Add full serialization only when an external certificate consumer requires it.
 
@@ -372,9 +516,9 @@ codeComplex x ∈ codeComplex y ↔ (@WellOrderingRel ℂ) x y
 
 Thus numeric interiors become a choice-selected well order, rather than conventional number constructions. Injectivity alone does not establish a model of every Litex builtin, all structural/numeric equalities or the published von Neumann convention. The choice graph theorem supplies graph uniqueness and element selection; connecting it to Litex's exact `IsChoiceFunctionFor` predicate, application WD and stored source FactIds remains compiler/Core work.
 
-## Decisions still open
+## Remaining later-slice questions
 
-**Generation architecture.** Native values with proved set denotations preserve useful Lean interfaces but front-load correspondence proofs. Generating only `ZFSet` terms gives direct set-theoretic reasoning but needs more adapter work for every native consumer. Both preserve the source pure-set model. Changing later will affect public generated interfaces and proof adapters; choose before building the first Core.
+**Generation architecture is settled for the baseline.** The user's latest direction keeps the retained native representations. All-model generation remains background analysis, not a pending choice or a reason to delay the initial slice. The internal method for proving full pure-set correspondence still requires mathematical work.
 
 **Numeric interiors.** An implementation-fixed complex set encoding can remain outside the public source rules while supporting native arithmetic. Alternatively, publish the von Neumann natural-number convention, including `0 = {}` and `0 $in 1`, and require every larger numeric domain to reuse those same objects. Neither convention follows merely from the current `AlwaysTrue` sethood rule. Publishing a convention increases future compatibility obligations.
 
@@ -389,4 +533,4 @@ family_intersect({})
 
 However, current intersection membership rules require nonempty families, and one equality-rule comment describes empty absolute intersection as a universe class. A universal class cannot be an internal set in this model. Choose either a nonempty-family WD requirement or an explicit totalized set value, such as the empty set with suitably restricted laws. This is an unsettled denotation contract, not a demonstrated soundness failure. Keep it unsupported in the compiler until the source decision is fixed. Existing `index_intersect(I, X, A)` has an explicit ambient set and separate obligations; it does not silently settle this absolute operator's meaning.
 
-The immediate next implementation slice should begin only after the architecture and numeric policy are chosen. It should prove the foundational correspondence and make the reciprocal source genuinely exportable; broader object and rule coverage follows those contracts.
+The immediate implementation scope is the minimal object/reflexivity/sethood/R-to-C slice above, retaining native representations. Prove its exact missing contracts and reconnect it to current Results before expanding to reciprocal or foundational rules. A passing partial slice must not be described as support for the entire pure-set system.

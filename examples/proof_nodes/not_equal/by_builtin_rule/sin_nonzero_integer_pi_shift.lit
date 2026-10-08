@@ -1,0 +1,4 @@
+forall x R:
+    sin(x)!=0
+    =>:
+        sin(x+pi)!=0

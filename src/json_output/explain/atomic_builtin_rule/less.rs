@@ -31,6 +31,12 @@ use crate::json_output::explain::text::text;
 impl LessFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_en(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_en(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_en(),
@@ -105,6 +111,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_zh(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_zh(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_zh(),
@@ -179,6 +191,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_zh_hant(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_zh_hant(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_zh_hant(),
@@ -253,6 +271,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_fr(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_fr(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_fr(),
@@ -327,6 +351,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ru(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ru(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ru(),
@@ -401,6 +431,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_es(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_es(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_es(),
@@ -475,6 +511,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ar(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ar(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ar(),
@@ -549,6 +591,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ja(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ja(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ja(),
@@ -623,6 +671,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_ko(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_ko(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_ko(),
@@ -697,6 +751,12 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+Self::ProductPositiveNegativeStrict(_) => text("ProductPositiveNegativeStrict","Apply the fixed scalar sign property with checked guards"),
+Self::LnPositiveAboveOne(_) => text("LnPositiveAboveOne","Apply the fixed scalar sign property with checked guards"),
+Self::LnNegativeBelowOne(_) => text("LnNegativeBelowOne","Apply the fixed scalar sign property with checked guards"),
+            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
+            Self::NegationNegativeFromLiteralBound(_) => text("NegationNegativeFromLiteralBound", "x>=k>0 or x>k>=0 => -x<0"),
+            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_vi(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_vi(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_vi(),
@@ -786,6 +846,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+Self::ProductPositiveNegativeStrict(_) | Self::LnPositiveAboveOne(_) | Self::LnNegativeBelowOne(_) => None,
+            Self::NegationStrictOrder(_) | Self::NegationNegativeFromLiteralBound(_) | Self::SumStrictOperands(_) => None,
             Self::MulLeftNegativeReversesStrictLess(_) => None,
             Self::MulRightNegativeReversesStrictLess(_) => None,
             Self::MulLeftRightNegativeReversesStrictLess(_) => None,

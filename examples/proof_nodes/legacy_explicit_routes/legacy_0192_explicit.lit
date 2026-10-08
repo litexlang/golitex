@@ -1,0 +1,9 @@
+claim:
+    ? forall a,b,c,d R*:
+        (a*b)*(c*d)!=0
+    a*b!=0
+    c*d!=0
+    (a*b)*(c*d)!=0
+
+forall a,b,c,d R*:
+    (a*b)*(c*d)!=0

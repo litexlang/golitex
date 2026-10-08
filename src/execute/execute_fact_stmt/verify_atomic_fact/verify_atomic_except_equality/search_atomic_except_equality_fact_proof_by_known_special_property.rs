@@ -21,6 +21,7 @@ pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::PositiveRealFromKnownStrictOrder(p)) => p.positive_order.cite_fact_id(),
             Self::InFact(InFactSearchProofByKnownSpecialProperty::StandardNumericSuperset(p)) => p.source_membership_proof.cite_fact_id(),
             Self::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(_)) => None,
@@ -48,6 +49,7 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 }
 
 pub enum InFactSearchProofByKnownSpecialProperty {
+    PositiveRealFromKnownStrictOrder(PositiveRealFromKnownStrictOrderProof),
     StandardNumericSuperset(StandardNumericSupersetKnownProof),
     FoldInCarrier(FoldInCarrierProof),
     AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof),
@@ -78,6 +80,8 @@ pub struct AnonymousFnInFiniteSeqProof {
     pub declared_signature: FnSet,
     pub signature_match: EqualFactSearchedProof,
 }
+
+pub struct PositiveRealFromKnownStrictOrderProof { pub positive_order: AtomicExceptEqualityFactKnownProof }
 
 pub struct StandardNumericSupersetKnownProof {
     pub source_set: StandardSet,
@@ -236,6 +240,15 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        // A stored strict real comparison already owns its endpoint domains.
+        // This is a fixed refinement consumer, with no recursive proof search.
+        if matches!(fact.set,Obj::StandardSet(StandardSet::RPos)) {
+            let zero=Obj::Literal(Literal::Number(Number::new("0".into())));
+            if let Some(positive_order)=self.known_less_proof(&zero,&fact.element)
+                .or_else(||self.known_greater_proof(&fact.element,&zero)) {
+                return Some(InFactSearchProofByKnownSpecialProperty::PositiveRealFromKnownStrictOrder(PositiveRealFromKnownStrictOrderProof::new(positive_order)));
+            }
+        }
         if let (Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)),
                 Obj::SetFormer(crate::ast::obj::SetFormer::FiniteSeqSet(_))) =
             (&fact.element, &fact.set)
@@ -391,9 +404,8 @@ impl Runtime {
             ));
         }
         if let FnObjHead::FieldAccess(access) = application.head.as_ref() {
-            if let Some(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
-                self.resolve_field_access_field_type(access)
-            {
+            if let Some(field_type) = self.resolve_field_access_field_type(access) {
+                if let Some(signature) = self.function_space_signature(&field_type) {
                 if let Some(applied_return_set) = self.applied_fn_set_return_set(application, &signature) {
                     if let Some(return_set_match) = self.lookup_exact_property_obj_equality(&applied_return_set, &fact.set) {
                         let head = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access.clone()));
@@ -408,6 +420,7 @@ impl Runtime {
                         ));
                     }
                 }
+            }
             }
         }
         let head = match application.head.as_ref() {
@@ -624,3 +637,5 @@ mod template_function_declared_type_tests {
         assert!(!run.success && run.session_error.is_none());
     }
 }
+
+impl PositiveRealFromKnownStrictOrderProof { pub fn new(positive_order:AtomicExceptEqualityFactKnownProof)->Self {Self {positive_order}} }

@@ -14,6 +14,8 @@ pub enum InferAtomicExceptEqualityResult {
     NormalAtomicExpandDefinition(InferExpandDefinitionResult),
     // `x $in {y S: …}` → base membership + filters.
     InFactSetBuilder(InferSetBuilderMembershipProjectionResult),
+    InFactPreimage(InferInFactPreimageResult),
+    InFactPreimageSet(InferInFactPreimageSetResult),
     // `A $in power_set(B)` → `A $subset B`.
     InFactPowerSet(InferPowerSetMembershipProjectionResult),
     // `x $in {a}` → `x = a`.
@@ -273,6 +275,8 @@ impl InferAtomicExceptEqualityResult {
                 }
                 ids
             }
+            Self::InFactPreimage(r) => r.derived.iter().flat_map(|proof| proof.stored_fact_ids()).collect(),
+            Self::InFactPreimageSet(r) => r.derived.iter().flat_map(|proof| proof.stored_fact_ids()).collect(),
             Self::InFactSetBuilder(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
@@ -385,4 +389,19 @@ impl InferAtomicExceptEqualityResult {
             Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),
         }
     }
+}
+
+
+pub struct InferInFactPreimageResult {
+    pub source_fact_id: FactId,
+    pub source_equal: KnownEqualityPathProof,
+    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactPreimageSetResult {
+    pub source_fact_id: FactId,
+    pub source_equal: KnownEqualityPathProof,
+    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub derived: Vec<StoreFactAndInferResult>,
 }

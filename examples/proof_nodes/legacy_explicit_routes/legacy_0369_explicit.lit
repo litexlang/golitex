@@ -1,0 +1,16 @@
+claim:
+    ? forall a,b,c R:
+        a>0
+        b>0
+        c>0
+        =>:
+            0<a*(b*c)
+    0<b*c
+    0<a*(b*c)
+
+forall a,b,c R:
+    a>0
+    b>0
+    c>0
+    =>:
+        0<a*(b*c)

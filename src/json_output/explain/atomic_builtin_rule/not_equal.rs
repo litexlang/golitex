@@ -29,6 +29,14 @@ use crate::json_output::explain::text::text;
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("Exponential is nonzero", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Factorial is nonzero", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Nonzero sign from argument", "x in R, x!=0 => sign(x)!=0"),
@@ -98,6 +106,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("指数函数非零", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("阶乘非零", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("非零参数的 sign 非零", "x in R, x!=0 => sign(x)!=0"),
@@ -167,6 +183,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("指數函數非零", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("階乘非零", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("非零參數的 sign 非零", "x in R, x!=0 => sign(x)!=0"),
@@ -236,6 +260,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("Exponentielle non nulle", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Factorielle non nulle", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Signe non nul de l’argument", "x in R, x!=0 => sign(x)!=0"),
@@ -278,6 +310,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("Экспонента не равна нулю", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Факториал не равен нулю", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Ненулевой знак аргумента", "x in R, x!=0 => sign(x)!=0"),
@@ -320,6 +360,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("Exponencial no nula", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Factorial no nulo", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Signo no nulo del argumento", "x in R, x!=0 => sign(x)!=0"),
@@ -362,6 +410,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("الدالة الأسية غير صفرية", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("المضروب غير صفري", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("إشارة وسيط غير صفري", "x in R, x!=0 => sign(x)!=0"),
@@ -431,6 +487,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("指数関数はゼロでない", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("階乗はゼロでない", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("引数がゼロでなければ符号もゼロでない", "x in R, x!=0 => sign(x)!=0"),
@@ -500,6 +564,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("지수 함수는 영이 아님", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("팩토리얼은 영이 아님", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("영이 아닌 인수의 부호", "x in R, x!=0 => sign(x)!=0"),
@@ -569,6 +641,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroIntegerPiShift(_) => text("SinNonzeroIntegerPiShift", "sin(x)!=0, k integer => sin(x+k*pi)!=0"),
+            Self::CosNonzeroIntegerPiShift(_) => text("CosNonzeroIntegerPiShift", "cos(x)!=0, k integer => cos(x+k*pi)!=0"),
+            Self::TanNonzeroFromSin(_) => text("TanNonzeroFromSin", "Defined tan(x), sin(x)!=0 => tan(x)!=0"),
+            Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
+            Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
+            Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
             Self::ExpNonzero(_) => text("Hàm mũ khác không", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Giai thừa khác không", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Dấu của đối số khác không", "x in R, x!=0 => sign(x)!=0"),
@@ -626,6 +706,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::SinNonzeroNegation(_) | Self::CosNonzeroNegation(_) | Self::SinNonzeroIntegerPiShift(_) | Self::CosNonzeroIntegerPiShift(_) | Self::TanNonzeroFromSin(_) | Self::CotNonzeroFromCos(_) | Self::EulerNonunit(_) | Self::ProductFactorNonzeroWithZeroAlias(_) => None,
             Self::NonzeroFromSignedBound(p) => Some(p.cite_fact_id),
             Self::FromKnownStrictOrder(p) => p.premise_proof.cite_fact_id(),
             Self::InequalityFromDifferenceNonzero(p) => p.premise_proof.cite_fact_id(),

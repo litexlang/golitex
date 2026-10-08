@@ -1,0 +1,3 @@
+# Point targets must be WD even when the desired preimage could be empty.
+have fn square(x R) R = x^2
+let bad = preimage(square, 1 / 0)

@@ -20,6 +20,12 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    LnNegativeBelowOne(super::scalar_extra_sign::LnNegativeBelowOneProof),
+    LnPositiveAboveOne(super::scalar_extra_sign::LnPositiveAboveOneProof),
+    ProductPositiveNegativeStrict(super::scalar_extra_sign::ProductPositiveNegativeStrictProof),
+    SumStrictOperands(super::scalar_order_relations::SumStrictOperandsProof),
+    NegationNegativeFromLiteralBound(super::scalar_order_relations::NegationNegativeFromLiteralBoundProof),
+    NegationStrictOrder(super::scalar_order_relations::NegationStrictOrderProof),
     CosPositiveOnOpenHalfPi(super::trig_additional_interval_order::CosPositiveOnOpenHalfPiProof),
     SinNegativeOnOpenNegativePi(super::trig_additional_interval_order::SinNegativeOnOpenNegativePiProof),
     TanNegativeOnOpenNegativeHalfPi(super::trig_additional_interval_order::TanNegativeOnOpenNegativeHalfPiProof),
@@ -595,6 +601,8 @@ impl Runtime {
             return Ok(Some(LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(proof)));
         }
         if let Some(proof)=self.search_exp_ln_strict_order(fact,verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof) = self.search_scalar_less_relation(fact)? { return Ok(Some(proof)); }
+        if let Some(proof)=self.scalar_extra_less(fact,verify_state)? {return Ok(Some(proof));}
         Ok(None)
     }
 

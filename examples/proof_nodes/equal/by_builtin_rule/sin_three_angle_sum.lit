@@ -1,0 +1,2 @@
+forall x,y,z R:
+    sin(x+y+z)=sin(x)*cos(y)*cos(z)+cos(x)*sin(y)*cos(z)+cos(x)*cos(y)*sin(z)-sin(x)*sin(y)*sin(z)

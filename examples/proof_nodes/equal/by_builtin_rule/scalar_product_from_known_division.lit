@@ -1,0 +1,5 @@
+forall a,b,c R:
+    b!=0
+    a/b=c
+    =>:
+        a=c*b

@@ -1,0 +1,17 @@
+claim:
+    ? forall a,b,x,y R+:
+        1<a
+        a=b
+        x<y
+        =>:
+            log(a,x)<log(b,y)
+    log(b,y)=log(a,y)
+    log(a,x)<log(a,y)
+    log(a,x)<log(b,y)
+
+forall a,b,x,y R+:
+    1<a
+    a=b
+    x<y
+    =>:
+        log(a,x)<log(b,y)

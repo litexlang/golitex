@@ -1,0 +1,5 @@
+forall a,b,c,d R:
+    b>a
+    d>c
+    =>:
+        a+c<b+d

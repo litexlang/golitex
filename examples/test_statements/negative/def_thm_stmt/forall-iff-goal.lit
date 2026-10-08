@@ -1,0 +1,8 @@
+# Root quantified iff is outside the named-theorem goal contract.
+# Both directions are true; unsupported input must still be rejected.
+thm equality_iff:
+    ? forall x, y R:
+        =>:
+            x = y
+        <=>:
+            y = x

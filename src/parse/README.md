@@ -482,6 +482,7 @@ Precedence low → high:
 | template instance | `\Name<args>` (angles required) |
 | interval literals | `'[a,b]` `'(a,b)` `'[a,b)` `'(a,b]` ; rays `'(,a]` `'[a,)` … |
 | fn_range | `fn_range(f)` |
+| preimages | `preimage(f, y)`, `preimage_set(f, Y)` (exactly two operands) |
 | factorial | `factorial(n)` and postfix `n!` |
 
 ### Keyword primaries that are **not** parse-wired yet

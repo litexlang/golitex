@@ -1,0 +1,2 @@
+# A WD object without a checked callable domain cannot form a point preimage.
+let bad = preimage(1, 2)

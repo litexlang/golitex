@@ -1,0 +1,4 @@
+forall x R:
+    cos(x)!=0
+    =>:
+        cos(x+2*pi)!=0

@@ -42,6 +42,12 @@ types use the selected struct's actual parameters. This does not open nested
 struct laws; argument carriers and callable guards remain mandatory. Executable
 negative controls live in `tests/unit/execute/struct_field_instantiation/tests.rs`.
 
+[Declared sequence fields](field_sequence_calls.lit) use the exact declared
+finite_seq/seq signature for field-headed calls and their returned carrier.
+Receiver and argument WD remain mandatory. The `field_sequence_calls` tests
+reject finite index zero/overflow, infinite index zero, and nonfunction fields,
+and continue in the same runtime after each ordinary failure.
+
 [Finite extrema](finite_extrema_real_carrier.lit) require all three conditions:
 finiteness, nonemptiness, and `S $subset R`. Real literals, aliases and checked
 generic domains remain valid; `{i}` is rejected by the
@@ -194,3 +200,10 @@ zero-negative, false-value, permission and rollback controls are in
 `tests/unit/execute/exact_rational_powers/tests.rs`.
 The [acceptance record](experience/problem_notes/pow-real-domains-2026-10-06.md)
 links the before receipts, persistent session, output checks and cold gates.
+
+[Point and set preimages](function_preimages.lit) check both target roles against
+the complete guarded callable domain. They return input subsets, including
+multiple-parameter tuples, and expose domain/guard/output facts from membership.
+The `function_preimages` Rust tests cover bad inputs, ill-defined children,
+empty/outside targets, typed aliases, set-valued targets and failed-statement
+isolation. Noncallable and ill-defined-target fixtures are in `../wd_negative/`.

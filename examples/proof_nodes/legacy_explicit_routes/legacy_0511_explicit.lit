@@ -1,0 +1,14 @@
+claim:
+    ? forall a,b R:
+        a<=b or b>=a
+        =>:
+            not a>b
+    by cases:
+        ? not a>b
+        case a<=b
+        case b>=a
+
+forall a,b R:
+    a<=b or b>=a
+    =>:
+        not a>b

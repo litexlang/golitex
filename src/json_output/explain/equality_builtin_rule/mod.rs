@@ -24,6 +24,8 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "Factorial predecessor recurrence".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_en(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_en(),
@@ -255,6 +257,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "阶乘前项递推".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_zh(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_zh(),
@@ -486,6 +490,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "阶乘前项递推".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_zh_hant(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_zh_hant(),
@@ -717,6 +723,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_fr(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_fr(),
@@ -948,6 +956,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ru(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ru(),
@@ -1179,6 +1189,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_es(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_es(),
@@ -1410,6 +1422,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ar(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ar(),
@@ -1641,6 +1655,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ja(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ja(),
@@ -1872,6 +1888,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_ko(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_ko(),
@@ -2103,6 +2121,8 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+Self::ScalarExtra(p) => BuiltinRuleText {rule_name:p.rule_id().into(),message:"Apply the fixed scalar identity with its checked premises and domains".into()},
+            Self::IntegerInterval(_) => BuiltinRuleText {rule_name:"Integer singleton interval".into(),message:"Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into()},
             Self::FactorialPredecessor(_) => BuiltinRuleText { rule_name: "factorial(n)=n*factorial(n-1)".into(), message: "n $in N+: factorial(n)=n*factorial(n-1)".into() },
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_vi(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_vi(),

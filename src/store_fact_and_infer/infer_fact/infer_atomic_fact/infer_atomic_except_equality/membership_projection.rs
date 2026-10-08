@@ -85,6 +85,9 @@ impl Runtime {
         rules.extend(self.infer_in_fact_list_set_ops_rules(in_fact, verify_state)?);
         rules.extend(self.infer_in_fact_cart_interval_rules(in_fact, verify_state)?);
         rules.extend(self.infer_in_fact_signed_standard_set_rules(in_fact, verify_state)?);
+        if let Some(rule) = self.infer_in_fact_preimage(in_fact, verify_state)? {
+            rules.push(rule);
+        }
         rules.extend(self.infer_in_fact_fn_rules(in_fact, verify_state)?);
         rules.extend(self.infer_in_fact_index_family_rules(in_fact, verify_state)?);
         Ok(rules)

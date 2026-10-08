@@ -21,6 +21,14 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    ProductFactorNonzeroWithZeroAlias(super::scalar_nonzero_relations::ProductFactorNonzeroWithZeroAliasProof),
+    EulerNonunit(super::scalar_nonzero_relations::EulerNonunitProof),
+    CotNonzeroFromCos(super::scalar_nonzero_relations::CotNonzeroFromCosProof),
+    TanNonzeroFromSin(super::scalar_nonzero_relations::TanNonzeroFromSinProof),
+    CosNonzeroIntegerPiShift(super::scalar_nonzero_relations::CosNonzeroIntegerPiShiftProof),
+    SinNonzeroIntegerPiShift(super::scalar_nonzero_relations::SinNonzeroIntegerPiShiftProof),
+    CosNonzeroNegation(super::scalar_nonzero_relations::CosNonzeroNegationProof),
+    SinNonzeroNegation(super::scalar_nonzero_relations::SinNonzeroNegationProof),
     ExpNonzero(ExpNonzeroProof),
     FactorialNonzero(FactorialNonzeroProof),
     SignNonzeroFromArgument(SignNonzeroFromArgumentProof),
@@ -679,6 +687,7 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
+        if let Some(proof) = self.search_scalar_nonzero_relation(fact)? { return Ok(Some(proof)); }
         Ok(None)
     }
 

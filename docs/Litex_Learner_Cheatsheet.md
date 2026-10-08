@@ -294,6 +294,7 @@ proof debt rather than repairing a verification route.
 | Sets | `{1, 2}`, `{x R: x > 0}`, `union(A, B)`, `power_set(S)`; a builder is bounded by its carrier. |
 | Membership and inclusion | `x $in S`, `A $subset B`; inclusion and equality have different obligations. |
 | Functions | `fn(x R) R`, guarded domains, `fn_range(f)`; carriers and guards constrain each call. |
+| Preimages | `preimage(f, y)` collects inputs with output equal to the obj `y`; `preimage_set(f, Y)` collects inputs with output in `Y`. Both return sets and retain the complete input domain and guards. [Preview contract](Manual.md#preview-point-and-set-preimages). |
 | Tuples/sequences | `(a, b)`, `cart(R, R)`, `finite_seq(S,n)`, `seq(S)`; indices start at 1. `release tuple def t` publishes the exact finite-sequence membership and coordinates; `release cart def cart(A,B)` publishes the complete set definition. See [S52](Manual.md#s52-release-a-tuple-definition). |
 | Exact computation | `eval expression` checks domains and publishes the verified source/result equality. |
 

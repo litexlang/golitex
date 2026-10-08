@@ -1,0 +1,7 @@
+forall x,y R:
+    cos(x)!=0
+    cos(y)!=0
+    cos(x+y)!=0
+    1-tan(x)*tan(y)!=0
+    =>:
+        tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))

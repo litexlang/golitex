@@ -724,6 +724,18 @@ impl Runtime {
                 }
             }
         }
+        // Opposite written directions retain their actual source fact ids.
+        for env in self.execution_environments_stack.iter().rev() {
+            for knowns in env.facts.known_atomic_except_equality_facts.by_prop.values() {
+                for known in knowns {
+                    match known {
+                        AtomicFact::GreaterFact(f) => edges.push((f.fact_id,f.right.clone(),f.left.clone(),true)),
+                        AtomicFact::GreaterEqualFact(f) => edges.push((f.fact_id,f.right.clone(),f.left.clone(),false)),
+                        _ => {},
+                    }
+                }
+            }
+        }
         edges
     }
 }

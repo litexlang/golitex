@@ -1,0 +1,5 @@
+forall x,y R:
+    0<=x
+    x<=y
+    =>:
+        sqrt(x)<=sqrt(y)
