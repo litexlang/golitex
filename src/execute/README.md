@@ -137,6 +137,33 @@ ordinary known-forall fact.
 
 ## Result shape
 
+### Named theorem evidence
+
+`ExecDefThmStmtSuccess` retains the original `DefThmStmt`, outer goal WD,
+the successful body route, its local environment, and the actual enclosing
+store result. `ExecDefThmBodyProof` distinguishes `NonForall` from `Forall`:
+direct goals keep their single verified conclusion, while forall goals keep
+the executed parameter introduction, ordered domain WD/store pairs, proof
+steps and verified conclusions. Non-forall includes existing compound goals;
+this distinction does not narrow source execution.
+
+`ForallFactWellDefinedProof` retains its own full
+`IntroduceTypedParametersResult` and ordered `AssumeDomFactResult` entries.
+These own the actual IDs produced in the WD scope. The theorem body's
+introduction is a separate execution in a separate retained scope; replay
+must not substitute one introduction's fact IDs for the other's. Capturing
+these results adds no introduction, verification, store or search operation.
+
+An explicit theorem call retains `ResolvedTheoremCallee`, captured by the
+existing resolution branch as a user theorem, user axiom or builtin. User
+declarations preserve their original subject and identity; builtin application
+evidence stays in its existing payload. `ExecByThmStmtSuccess` additionally
+retains each actual `returned_conclusions` store in execution order before
+`selected_proof`. The selected atomic citation can therefore be registered
+from its producer rather than recovered from a local-environment scan.
+This evidence does not change strict selection or add compiler support for
+axioms or builtins.
+
 ### Dual consumers and evidence granularity
 
 Name clarification: `RuntimeResult<T>` is only `Result<T, RuntimeError>`
