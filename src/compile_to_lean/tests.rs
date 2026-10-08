@@ -1697,3 +1697,648 @@ fn forall_proof_mut(result: &mut ExecStmtResult) -> &mut VerifyForallFactSuccess
         _ => panic!("successful fact"),
     }
 }
+
+// These sources are the independently verified phase-2 drafts, kept inline so
+// a public Rust test does not depend on the ignored local scripts workspace.
+const PHASE2_HALF: &str = "have half Q = 1 / 2\nhalf + half = 1\n";
+const PHASE2_HIERARCHY: &str = "forall n N:\n    n $in Z\nforall z Z:\n    z $in Q\nforall q Q:\n    q $in R\nforall r R:\n    r $in C\n";
+const PHASE2_DIVISION: &str = "forall a,b Q:\n    b != 0\n    =>:\n        a / b $in Q\n";
+const PHASE2_SQUARES: &str = "forall x R:\n    0 <= x^2\nforall x R:\n    x^2 >= 0\n";
+const PHASE2_TRANS: &str = "forall a,b,c R:\n    a <= b\n    b <= c\n    =>:\n        a <= c\n";
+const PHASE2_MONOTONE: &str = "forall a,b,t R:\n    a <= b\n    =>:\n        a + t <= b + t\n";
+const PHASE2_HAVE: &str = "have arbitrary_real R\narbitrary_real = arbitrary_real\narbitrary_real + 0 = arbitrary_real\narbitrary_real >= arbitrary_real\n";
+const PHASE2_Q_TRANSPORT: &str =
+    "forall u,v C:\n    u = v\n    u $in Q\n    =>:\n        v $in Q\n";
+const PHASE2_CLOSED_ORDER: &str = "1 / 3 < 1 / 2\n2 >= 1\n";
+
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::{
+    ClosedNumericEqualSubstitutionBuiltinRewriteProof, EqualitySearchProofByBuiltinRewrite,
+};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule;
+
+#[test]
+fn phase2_all_verified_problem_profiles_emit_replayed_artifacts() {
+    let cases = [
+        ("numeric_hierarchy", PHASE2_HIERARCHY),
+        (
+            "exact_fractions_and_decimals",
+            "1 / 3 + 1 / 6 = 1 / 2\n0.5 = 1 / 2\n1 / 3 != 0.333\n",
+        ),
+        ("nonzero_rational_division", PHASE2_DIVISION),
+        ("real_squares_nonnegative", PHASE2_SQUARES),
+        ("weak_order_transitivity", PHASE2_TRANS),
+        ("addition_preserves_weak_order", PHASE2_MONOTONE),
+        (
+            "weak_order_duality",
+            "forall a,b R:\n    a <= b\n    =>:\n        b >= a\n",
+        ),
+        ("rational_membership_transport", PHASE2_Q_TRANSPORT),
+        ("arbitrary_real_laws", PHASE2_HAVE),
+        ("typed_rational_half", PHASE2_HALF),
+        (
+            "positive_real_is_nonzero",
+            "forall positive_real R:\n    positive_real > 0\n    =>:\n        positive_real != 0\n",
+        ),
+        ("closed_real_order", PHASE2_CLOSED_ORDER),
+    ];
+    for (name, source) in cases {
+        let (result, runtime) = execute(source);
+        let output = compile_run(&result, &runtime, &format!("phase2_{name}"))
+            .unwrap_or_else(|error| panic!("{name}: {error:?}"));
+        assert!(!output.contains("sorry"));
+        assert!(!output.contains("admit"));
+        if let Some(directory) = std::env::var_os("LITEX_LEAN_PHASE2_OUTPUT_DIR") {
+            let directory = std::path::PathBuf::from(directory);
+            assert!(
+                directory.is_absolute(),
+                "explicit Lean gate directory must be absolute"
+            );
+            std::fs::create_dir_all(&directory).expect("create requested phase2 gate directory");
+            std::fs::write(directory.join(format!("{name}.lean")), output)
+                .expect("write requested actual compiler artifact");
+        }
+    }
+}
+
+#[test]
+fn phase2_typed_half_uses_the_actual_closed_substitution_and_closed_child() {
+    let (mut result, runtime) = execute(PHASE2_HALF);
+    let equality_id = have_equal_mut(&mut result.statement_results[0])
+        .store_and_infer_result
+        .stored_fact_ids[1];
+    let proof = phase2_half_rewrite_mut(&mut result.statement_results[1]);
+    assert_eq!(proof.cited_equal_fact_ids, vec![equality_id]);
+    let child = equality_proof(&proof.residual_equal);
+    assert_eq!(child.fact.left.ir(), proof.rewritten_left.ir());
+    assert_eq!(child.fact.right.ir(), proof.rewritten_right.ir());
+    assert!(matches!(
+        &child.searched_proof,
+        EqualFactSearchedProof::ByClosedCalculation(_)
+    ));
+    assert!(compile_run(&result, &runtime, "phase2_half_exact_route").is_ok());
+}
+
+#[test]
+fn phase2_half_substitution_rejects_deleted_duplicate_wrong_and_unused_citations() {
+    let source = "let other_value = 2\nhave half Q = 1 / 2\nhalf + half = 1\n";
+    for change in ["deleted", "duplicate", "wrong", "unused"] {
+        let (mut result, runtime) = execute(source);
+        let other = let_definition(&result.statement_results[0]).stored_fact_ids[0];
+        let ids =
+            &mut phase2_half_rewrite_mut(&mut result.statement_results[2]).cited_equal_fact_ids;
+        match change {
+            "deleted" => ids.clear(),
+            "duplicate" => ids.push(ids[0]),
+            "wrong" => ids[0] = other,
+            "unused" => ids.push(other),
+            _ => unreachable!(),
+        }
+        phase2_rejected(&result, &runtime, change, &["EqualityRewrite/", "FactId/"]);
+    }
+}
+
+#[test]
+fn phase2_two_closed_aliases_preserve_source_substitution_order() {
+    let source =
+        "have first_half Q = 1 / 2\nhave second_half Q = 1 / 2\nfirst_half + second_half = 1\n";
+    let (mut result, runtime) = execute(source);
+    assert!(compile_run(&result, &runtime, "phase2_two_half_aliases").is_ok());
+    let ids = &mut phase2_half_rewrite_mut(&mut result.statement_results[2]).cited_equal_fact_ids;
+    assert_eq!(ids.len(), 2);
+    ids.swap(0, 1);
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_reordered_half_substitution",
+        &["EqualityRewrite/CitationOrder"],
+    );
+}
+
+#[test]
+fn phase2_half_substitution_requires_exact_residual_and_scalar_evidence() {
+    let (mut result, runtime) = execute(PHASE2_HALF);
+    phase2_half_rewrite_mut(&mut result.statement_results[1]).rewritten_left = number_object("2");
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_half_residual",
+        &["EqualityRewrite/Residual"],
+    );
+
+    let (mut result, runtime) = execute(PHASE2_HALF);
+    let child = equality_proof_mut(
+        &mut phase2_half_rewrite_mut(&mut result.statement_results[1]).residual_equal,
+    );
+    match &mut child.searched_proof {
+        EqualFactSearchedProof::ByClosedCalculation(proof) => match &mut proof.values {
+            ClosedValuePair::Decimal { right, .. } => *right = "2".into(),
+            _ => panic!("actual half-sum decimal certificate"),
+        },
+        _ => panic!("actual closed residual child"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_half_scalar",
+        &["ClosedEquality/"],
+    );
+}
+
+#[test]
+fn phase2_half_substitution_cannot_replace_its_child_by_an_unrelated_true_equality() {
+    let source = "2 = 2\n2 = 2\nhave half Q = 1 / 2\nhalf + half = 1\n";
+    let (mut result, runtime) = execute(source);
+    let unrelated = match result.statement_results.remove(1) {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof.verify_result,
+        _ => panic!("actual unrelated equality"),
+    };
+    phase2_half_rewrite_mut(&mut result.statement_results[2]).residual_equal = unrelated;
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_unrelated_half_child",
+        &["EqualityRewrite/Residual"],
+    );
+}
+
+#[test]
+fn phase2_half_substitution_rejects_a_closed_scope_equality_origin() {
+    let source = "forall local_value Q:\n    local_value = 1 / 2\n    =>:\n        local_value = local_value\nhave half Q = 1 / 2\nhalf + half = 1\n";
+    let (mut result, runtime) = execute(source);
+    let closed_id = forall_proof(&result.statement_results[0]).assumed_dom_facts[0]
+        .store_and_infer
+        .primary_fact_id();
+    phase2_half_rewrite_mut(&mut result.statement_results[2]).cited_equal_fact_ids[0] = closed_id;
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_closed_half_origin",
+        &["FactId/Resolution"],
+    );
+}
+
+#[test]
+fn phase2_typed_half_preserves_the_original_division_wd_guard() {
+    let (mut result, runtime) = execute(PHASE2_HALF);
+    let value_wd = &mut have_equal_mut(&mut result.statement_results[0]).equal_to_well_defined[0];
+    match value_wd {
+        VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::ArithmeticOperator(
+                    ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
+                ),
+            ..
+        }) => {
+            proof.requirement_fact_verified.remove(0);
+        }
+        _ => panic!("actual rational-half division WD"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_missing_half_division_guard",
+        &["WD/Arithmetic"],
+    );
+}
+
+#[test]
+fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
+    let (mut result, runtime) = execute(PHASE2_HIERARCHY);
+    for statement in &result.statement_results {
+        let proof = phase2_atomic(&forall_proof(statement).proved_then_facts[0].verify_result);
+        assert!(matches!(
+            &proof.searched_proof,
+            AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(
+                StructuralMembershipProof {
+                    reason: StructuralMembershipReason::StandardSuperset(_),
+                    ..
+                }
+            )
+        ));
+    }
+    phase2_structural_mut(
+        &mut forall_proof_mut(&mut result.statement_results[1]).proved_then_facts[0].verify_result,
+    )
+    .set = StandardSet::C;
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_hierarchy_set",
+        &["StructuralMembership/", "StructuralMembership"],
+    );
+
+    let (mut result, runtime) = execute(PHASE2_DIVISION);
+    let structural = phase2_structural_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    );
+    match &mut structural.reason {
+        StructuralMembershipReason::Div { left, .. } => left.set = StandardSet::R,
+        _ => panic!("actual rational field division closure"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_rational_operand_domain",
+        &["StructuralMembership/", "StructuralMembership"],
+    );
+}
+
+#[test]
+fn phase2_rational_division_closure_cannot_discard_denominator_legality() {
+    let (mut result, runtime) = execute(PHASE2_DIVISION);
+    let goal = atomic_proof_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    );
+    match &mut goal.well_defined_proof.well_defined_of_each_parameter[0] {
+        ObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::ArithmeticOperator(
+                    ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
+                ),
+            ..
+        } => {
+            proof.requirement_fact_verified.remove(0);
+        }
+        _ => panic!("actual rational quotient object WD"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_missing_rational_guard",
+        &["WD/Arithmetic"],
+    );
+}
+
+#[test]
+fn phase2_arbitrary_have_retains_generic_input_and_its_nonempty_evidence() {
+    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let have = phase2_have_mut(&mut result.statement_results[0]);
+    assert!(matches!(
+        &have.groups[0].nonempty_check,
+        ParamTypeFactCheckResult::Obj(_)
+    ));
+    assert_eq!(
+        have.groups[0].defined_params.store_and_infer_results.len(),
+        1
+    );
+    assert!(std::rc::Rc::ptr_eq(
+        &have.groups[0].defined_params.store_and_infer_results[0],
+        &have.store_and_infer_result.store_and_infer_results[0]
+    ));
+    let output = compile_run(&result, &runtime, "phase2_generic_real_context")
+        .expect("arbitrary real context");
+    assert!(output.contains("Litex.Representation"));
+    assert!(output.contains("Litex.Obj"));
+    assert!(!output.contains("noncomputable def _object_"));
+    // The real value is an exported context input. Zero occurs only as the
+    // certified additive identity and the nonempty-carrier witness.
+    assert!(output.contains("variable {_Host"));
+}
+
+#[test]
+fn phase2_arbitrary_have_rejects_missing_and_wrong_nonempty_checks() {
+    let (mut result, runtime) = execute(PHASE2_HAVE);
+    phase2_have_mut(&mut result.statement_results[0]).groups[0].nonempty_check =
+        ParamTypeFactCheckResult::Set;
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_missing_nonempty",
+        &["Have/NonemptyCheck"],
+    );
+
+    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let have = phase2_have_mut(&mut result.statement_results[0]);
+    match &mut have.groups[0].nonempty_check {
+        ParamTypeFactCheckResult::Obj(result) => match &mut atomic_proof_mut(result).searched_proof
+        {
+            AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(
+                    IsNonemptySetFactSearchProofByBuiltinRule::StandardSetNonempty(proof),
+                ),
+            ) => proof.target_set = StandardSet::Q,
+            _ => panic!("actual real-standard-set nonempty proof"),
+        },
+        _ => panic!("actual numeric nonempty check"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_wrong_nonempty_carrier",
+        &["Nonempty/", "Have/Nonempty", "Atomic/"],
+    );
+}
+
+#[test]
+fn phase2_arbitrary_have_rejects_missing_store_trees_and_divergent_views() {
+    for change in [
+        "aggregate_ids",
+        "group_ids",
+        "aggregate_tree",
+        "both_trees",
+        "both_ids",
+    ] {
+        let (mut result, runtime) = execute(PHASE2_HAVE);
+        let have = phase2_have_mut(&mut result.statement_results[0]);
+        match change {
+            "aggregate_ids" => have.store_and_infer_result.stored_fact_ids.clear(),
+            "group_ids" => have.groups[0].defined_params.stored_fact_ids.clear(),
+            "aggregate_tree" => have.store_and_infer_result.store_and_infer_results.clear(),
+            "both_trees" => {
+                have.groups[0]
+                    .defined_params
+                    .store_and_infer_results
+                    .clear();
+                have.store_and_infer_result.store_and_infer_results.clear();
+            }
+            "both_ids" => {
+                have.groups[0].defined_params.stored_fact_ids.clear();
+                have.store_and_infer_result.stored_fact_ids.clear();
+            }
+            _ => unreachable!(),
+        }
+        phase2_rejected(&result, &runtime, change, &["Have/", "Parameters/"]);
+    }
+}
+
+#[test]
+fn phase2_arbitrary_have_header_identity_must_match_its_actual_store() {
+    let (mut result, runtime) = execute(PHASE2_HAVE);
+    phase2_have_mut(&mut result.statement_results[0])
+        .statement
+        .param_def
+        .groups[0]
+        .params[0]
+        .id = IdentifierId::new(u64::MAX);
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_have_header",
+        &["Parameters/Subject"],
+    );
+}
+
+#[test]
+fn phase2_natural_parameter_cannot_lose_a_captured_inference_identity() {
+    let (mut result, runtime) = execute(PHASE2_HIERARCHY);
+    let parameters = &mut forall_proof_mut(&mut result.statement_results[0])
+        .introduced_params
+        .defined_params;
+    assert!(
+        parameters.stored_fact_ids.len() > 1,
+        "actual natural membership has a nonnegative inference projection"
+    );
+    parameters.stored_fact_ids.pop();
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_deleted_natural_inference_id",
+        &["Parameters/StoreCapture", "Forall/"],
+    );
+}
+
+#[test]
+fn phase2_closed_order_consumes_actual_comparison_certificates() {
+    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let proof =
+        atomic_proof_mut(&mut fact_statement_mut(&mut result.statement_results[0]).verify_result);
+    match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
+            ClosedAtomicExceptEqualityCalculationProof::Less(proof),
+        ) => {
+            proof.comparison = crate::rational_expression::NumberCompareResult::Greater;
+        }
+        _ => panic!("actual closed exact rational order certificate"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_comparison_direction",
+        &["Closed", "Order/", "Atomic/"],
+    );
+
+    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let proof =
+        atomic_proof_mut(&mut fact_statement_mut(&mut result.statement_results[1]).verify_result);
+    match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
+            ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(proof),
+        ) => proof.left_normal = "0".into(),
+        _ => panic!("actual closed weak-order certificate"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_closed_order_value",
+        &["Closed", "Order/", "Atomic/"],
+    );
+}
+
+#[test]
+fn phase2_closed_order_rejects_a_changed_fact_family_even_with_true_value_payload() {
+    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let source =
+        match &phase2_atomic(&fact_statement(&result.statement_results[0]).verify_result).fact {
+            AtomicFact::LessFact(fact) => fact.clone(),
+            _ => panic!("closed less source"),
+        };
+    let statement = fact_statement_mut(&mut result.statement_results[0]);
+    let changed = AtomicFact::GreaterFact(GreaterFact {
+        fact_id: source.fact_id,
+        left: source.left,
+        right: source.right,
+        line_file: source.line_file,
+    });
+    atomic_proof_mut(&mut statement.verify_result).fact = changed.clone();
+    match &mut statement.store_and_infer_result.store {
+        StoreFactResult::AtomicFact(store) => store.fact = changed,
+        _ => panic!("atomic store"),
+    };
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_order_family",
+        &["Closed", "Order/", "Atomic/", "WD/"],
+    );
+}
+
+#[test]
+fn phase2_order_transitivity_replays_oriented_actual_premise_ids() {
+    let (mut result, runtime) = execute(PHASE2_TRANS);
+    let proof = atomic_proof_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    );
+    match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(proof),
+            ),
+        ) => std::mem::swap(
+            &mut proof.left_to_mid_cite_fact_id,
+            &mut proof.mid_to_right_cite_fact_id,
+        ),
+        _ => panic!("actual weak transitivity route"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_reversed_transitivity_citations",
+        &["Order/", "Atomic/", "FactId/"],
+    );
+}
+
+#[test]
+fn phase2_order_addition_requires_its_original_order_premise() {
+    let (mut result, runtime) = execute(PHASE2_MONOTONE);
+    let proof = atomic_proof_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    );
+    let premise = match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                LessEqualFactSearchProofByBuiltinRule::AddRightCongruence(proof),
+            ),
+        ) => &mut proof.premise_proof,
+        _ => panic!("actual add-right monotonicity proof"),
+    };
+    match &mut atomic_proof_mut(premise).searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => {
+            proof.cite_fact_id = FactId::new(u64::MAX)
+        }
+        _ => panic!("actual stored order premise citation"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_missing_addition_premise",
+        &["FactId/Resolution"],
+    );
+}
+
+#[test]
+fn phase2_square_rule_cannot_lose_its_real_base_citation() {
+    let (mut result, runtime) = execute(PHASE2_SQUARES);
+    let proof = atomic_proof_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    );
+    let real = match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(proof),
+            ),
+        ) => &mut proof.base_in_real_proof,
+        _ => panic!("actual even-power nonnegative primitive"),
+    };
+    match &mut atomic_proof_mut(real).searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => {
+            proof.cite_fact_id = FactId::new(u64::MAX)
+        }
+        _ => panic!("actual base-real citation"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_missing_square_real_proof",
+        &["FactId/Resolution"],
+    );
+}
+
+#[test]
+fn phase2_order_reflexivity_uses_the_recorded_same_object() {
+    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let proof =
+        atomic_proof_mut(&mut fact_statement_mut(&mut result.statement_results[3]).verify_result);
+    match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+                GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(proof),
+            ),
+        ) => proof.repeated_object = number_object("0"),
+        _ => panic!("actual generic real >= reflexivity"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_changed_reflexive_subject",
+        &["Order/", "Atomic/"],
+    );
+}
+
+#[test]
+fn phase2_q_membership_transport_cannot_drop_its_known_fact_citation() {
+    let (mut result, runtime) = execute(PHASE2_Q_TRANSPORT);
+    let proof = atomic_proof_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    );
+    match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => {
+            proof.cite_fact_id = FactId::new(u64::MAX)
+        }
+        _ => panic!("actual rational-membership equality transport citation"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_missing_q_transport_fact",
+        &["FactId/Resolution"],
+    );
+}
+
+fn phase2_rejected(result: &RunLitexCodeResult, runtime: &Runtime, name: &str, families: &[&str]) {
+    let error = compile_run(result, runtime, "phase2_changed_evidence").expect_err(name);
+    assert!(
+        families
+            .iter()
+            .any(|prefix| error.route.starts_with(prefix)),
+        "{name}: {error:?}"
+    );
+}
+
+fn phase2_atomic(result: &VerifyFactResult) -> &VerifyAtomicExceptEqualityFactSuccess {
+    match result {
+        VerifyFactResult::AtomicExceptEquality(result) => match result.as_ref() {
+            VerifyAtomicExceptEqualityFactResult::Success(proof) => proof,
+            _ => panic!("successful atomic evidence"),
+        },
+        _ => panic!("atomic evidence"),
+    }
+}
+
+fn phase2_structural_mut(result: &mut VerifyFactResult) -> &mut StructuralMembershipProof {
+    match &mut atomic_proof_mut(result).searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) => proof,
+        _ => panic!("actual source structural membership"),
+    }
+}
+
+fn phase2_half_rewrite_mut(
+    statement: &mut ExecStmtResult,
+) -> &mut ClosedNumericEqualSubstitutionBuiltinRewriteProof {
+    match &mut equality_proof_mut(&mut fact_statement_mut(statement).verify_result).searched_proof {
+        EqualFactSearchedProof::ByBuiltinRewrite(
+            EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(proof),
+        ) => proof,
+        _ => panic!("actual closed numeric equality substitution"),
+    }
+}
+
+fn phase2_have_mut(
+    statement: &mut ExecStmtResult,
+) -> &mut ExecHaveObjInNonemptySetStmtSuccessResult {
+    match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(proof),
+            ),
+        )) => proof,
+        _ => panic!("actual arbitrary-have result"),
+    }
+}
+
+fn fact_statement_mut(statement: &mut ExecStmtResult) -> &mut ExecFactStmtSuccessResult {
+    match statement {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
+        _ => panic!("successful fact statement"),
+    }
+}

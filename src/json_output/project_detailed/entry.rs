@@ -1,7 +1,7 @@
 //! Entry points for Detailed JSON projection.
 
 use super::stmt::project_stmt_detailed;
-use super::store::{project_have_store_ids, project_store_and_infer};
+use super::store::{project_have_store_and_infer, project_store_and_infer};
 use super::verify::project_verify_fact;
 use super::wd::{project_param_type_wd, project_verify_obj_wd};
 use crate::ast::fact::AtomicFact;
@@ -140,11 +140,45 @@ pub(super) fn project_have_in_nonempty_only(
                     ),
                 ),
                 (
-                    "store_and_infer",
-                    project_have_store_ids(
-                        &success.store_and_infer_result.stored_fact_ids,
-                        runtime,
+                    "groups",
+                    JsonValue::Array(
+                        success
+                            .groups
+                            .iter()
+                            .map(|group| {
+                                object_for(
+                                    runtime,
+                                    vec![
+                                        (
+                                            "param_type_well_defined",
+                                            project_param_type_wd(
+                                                &group.param_type_well_defined,
+                                                runtime,
+                                            ),
+                                        ),
+                                        (
+                                            "nonempty_check",
+                                            project_param_type_fact_check(
+                                                &group.nonempty_check,
+                                                runtime,
+                                            ),
+                                        ),
+                                        (
+                                            "defined_params",
+                                            project_have_store_and_infer(
+                                                &group.defined_params,
+                                                runtime,
+                                            ),
+                                        ),
+                                    ],
+                                )
+                            })
+                            .collect(),
                     ),
+                ),
+                (
+                    "store_and_infer",
+                    project_have_store_and_infer(&success.store_and_infer_result, runtime),
                 ),
             ],
         ),
@@ -213,10 +247,7 @@ pub(super) fn project_have_equal_only(
                 ),
                 (
                     "store_and_infer",
-                    project_have_store_ids(
-                        &success.store_and_infer_result.stored_fact_ids,
-                        runtime,
-                    ),
+                    project_have_store_and_infer(&success.store_and_infer_result, runtime),
                 ),
             ],
         ),

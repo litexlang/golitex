@@ -9,6 +9,7 @@ import sys
 import tarfile
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from pathlib import Path
 
@@ -178,6 +179,8 @@ class ReleasePreflightTest(unittest.TestCase):
         self.assertIn("LITEX_STD_PATH=/usr/share/litex/std", workflow)
         self.assertIn("generate_wix_std.py", workflow)
         self.assertIn('Source="std\\basics\\litex.config"', workflow)
+        self.assertIn('ComponentGroup Id="LitexStd"', workflow)
+        self.assertIn('ComponentGroupRef Id="LitexStd"', workflow)
 
     def test_generate_wix_std_uses_package_root_sources(self) -> None:
         with tempfile.TemporaryDirectory(
@@ -196,9 +199,66 @@ class ReleasePreflightTest(unittest.TestCase):
             self.assertIn('Source="std\\basics\\litex.config"', text)
             self.assertIn('Source="std\\basics\\main.lit"', text)
             self.assertNotIn(r'Source="..\std', text)
-            self.assertIn('FeatureRef Id="Binaries"', text)
+            self.assertIn('ComponentGroup Id="LitexStd"', text)
+            self.assertNotIn("FeatureRef", text)
             self.assertIn('Directory Id="StandardLibrary" Name="std"', text)
             self.assertNotIn("todo.md", text)
+
+    def test_wix_cli_links_every_std_component_from_product(self) -> None:
+        with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+            root = Path(temporary_directory)
+            std = root / "std"
+            (std / "basics").mkdir(parents=True)
+            (std / "basics" / "litex.config").write_text("[export]\n")
+            (std / "basics" / "main.lit").write_text("# empty\n")
+            main = root / "main.wxs"
+            original = '''<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?if $(sys.BUILDARCH) = x64?>
+  <?define PlatformProgramFilesFolder = "ProgramFiles64Folder"?>
+  <?endif?>
+  <Product Id="*">
+    <Feature Id="Binaries" Level="1">
+      <ComponentRef Id="binary0" />
+    </Feature>
+  </Product>
+</Wix>
+'''
+            main.write_text(original)
+            output = root / "std.wxs"
+            command = [sys.executable, str(SCRIPT_DIRECTORY / "generate_wix_std.py"),
+                       "--std", str(std), "--main", str(main), "--output", str(output)]
+            subprocess.run(command, check=True, capture_output=True, text=True)
+            ns = {"w": generate_wix_std.WIX_NAMESPACE}
+            product = ET.fromstring(main.read_text())
+            feature = product.find('./w:Product/w:Feature[@Id="Binaries"]', ns)
+            self.assertIsNotNone(feature.find('w:ComponentRef[@Id="binary0"]', ns))
+            refs = feature.findall("w:ComponentGroupRef", ns)
+            self.assertEqual([ref.get("Id") for ref in refs], ["LitexStd"])
+            fragment = ET.parse(output)
+            group = fragment.find('./w:Fragment/w:ComponentGroup[@Id="LitexStd"]', ns)
+            component_ids = {node.get("Id") for node in fragment.findall(".//w:Component", ns)}
+            self.assertEqual(len(component_ids), 2)
+            self.assertEqual({node.get("Id") for node in group}, component_ids)
+            directory = fragment.find('./w:Fragment/w:DirectoryRef', ns)
+            self.assertEqual(directory.get("Id"), "APPLICATIONFOLDER")
+            self.assertEqual(directory.find("w:Directory", ns).get("Name"), "std")
+            modified = main.read_text()
+            self.assertEqual(modified.replace('\n            <ComponentGroupRef Id="LitexStd" />', ""), original)
+            subprocess.run(command, check=True, capture_output=True, text=True)
+            self.assertEqual(main.read_text(), modified)
+
+    def test_wix_attachment_rejects_missing_or_ambiguous_product_feature(self) -> None:
+        for body in ('<Feature Id="Other" />',
+                     '<FeatureRef Id="Binaries" />',
+                     '<Feature Id="Binaries"></Feature>' * 2):
+            with self.subTest(body=body), tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+                main = Path(temporary_directory) / "main.wxs"
+                original = f'<Wix xmlns="{generate_wix_std.WIX_NAMESPACE}"><Product>{body}</Product></Wix>'
+                main.write_text(original)
+                with self.assertRaisesRegex(SystemExit, "expected one Product/Binaries"):
+                    generate_wix_std.attach_std_feature(main)
+                self.assertEqual(main.read_text(), original)
 
 
 if __name__ == "__main__":

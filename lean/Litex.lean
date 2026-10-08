@@ -52,6 +52,7 @@ structure Semantics where
   complex_members : ∀ x, mem x (standard .complex) ↔ ∃ z, x = number z
   natural_members : ∀ x, mem x (standard .natural) ↔ ∃ n : ℕ, x = number (n : ℂ)
   integer_members : ∀ x, mem x (standard .integer) ↔ ∃ z : ℤ, x = number (z : ℂ)
+  rational_members : ∀ x, mem x (standard .rational) ↔ ∃ q : ℚ, x = number (q : ℂ)
   real_members : ∀ x, mem x (standard .real) ↔ ∃ r : ℝ, x = number (r : ℂ)
   real_subset_complex : ∀ x, mem x (standard .real) → mem x (standard .complex)
   member_isSet : ∀ {x A}, mem x A → isSet x
@@ -106,6 +107,27 @@ def In {M : Semantics.{u}} {α : Type v} {β : Type w}
 def IsSet {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) : Prop :=
   M.isSet (denote a)
+
+/-- Source nonemptiness is existence in the semantic universe. It does not
+choose a host representation or turn a fresh declaration into a number. -/
+def IsNonempty {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (A : Obj (M := M) α) : Prop :=
+  ∃ a : M.Value, M.mem a (denote A)
+
+/-- Owned real comparisons use faithful real denotation witnesses. Membership
+remains an ordinary fact, and a generic object's carrier does not change. In
+particular these predicates do not install an order on arbitrary complex values. -/
+def Le {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) : Prop :=
+  ∃ r s : ℝ, denote a = M.number (r : ℂ) ∧
+    denote b = M.number (s : ℂ) ∧ r ≤ s
+
+def Lt {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) : Prop :=
+  ∃ r s : ℝ, denote a = M.number (r : ℂ) ∧
+    denote b = M.number (s : ℂ) ∧ r < s
 
 def isSet {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) : IsSet a :=
@@ -195,6 +217,37 @@ def integerToReal {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haZ : In a Z) : In a R := by
   obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
   exact (M.real_members (denote a)).mpr ⟨(z : ℝ), by simpa only [Complex.ofReal_intCast] using hz⟩
+
+def naturalToRational {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haN : In a N) : In a Q := by
+  obtain ⟨n, hn⟩ := (M.natural_members (denote a)).mp haN
+  exact (M.rational_members (denote a)).mpr ⟨(n : ℚ), by
+    simpa only [Rat.cast_natCast] using hn⟩
+
+def integerToRational {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haZ : In a Z) : In a Q := by
+  obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
+  exact (M.rational_members (denote a)).mpr ⟨(z : ℚ), by
+    simpa only [Rat.cast_intCast] using hz⟩
+
+def rationalToReal {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haQ : In a Q) : In a R := by
+  obtain ⟨q, hq⟩ := (M.rational_members (denote a)).mp haQ
+  exact (M.real_members (denote a)).mpr ⟨(q : ℝ), by
+    simpa only [Complex.ofReal_ratCast] using hq⟩
+
+def rationalToComplex {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haQ : In a Q) : In a C :=
+  realToComplex a (rationalToReal a haQ)
+
+theorem standardNonempty {M : Semantics.{u}} (A : StandardSetValue) :
+    IsNonempty (standardSet (M := M) A) := by
+  cases A with
+  | natural => exact ⟨M.number (0 : ℂ), (M.natural_members _).mpr ⟨0, by simp⟩⟩
+  | integer => exact ⟨M.number (0 : ℂ), (M.integer_members _).mpr ⟨0, by simp⟩⟩
+  | rational => exact ⟨M.number (0 : ℂ), (M.rational_members _).mpr ⟨0, by simp⟩⟩
+  | real => exact ⟨M.number (0 : ℂ), (M.real_members _).mpr ⟨0, by simp⟩⟩
+  | complex => exact ⟨M.number (0 : ℂ), (M.complex_members _).mpr ⟨0, rfl⟩⟩
 
 end Litex
 
@@ -507,6 +560,56 @@ theorem divInR {M : Semantics.{u}} {α : Type v} {β : Type w}
     change M.divValue (denote a) (denote b) = _
     rw [hx, hy, M.div_numbers _ _ hy0, Complex.ofReal_div]⟩
 
+theorem addInQ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haQ : In a Q) (hbQ : In b Q) :
+    In (add a b (rationalToComplex a haQ) (rationalToComplex b hbQ)) Q := by
+  obtain ⟨x, hx⟩ := (M.rational_members (denote a)).mp haQ
+  obtain ⟨y, hy⟩ := (M.rational_members (denote b)).mp hbQ
+  exact (M.rational_members _).mpr ⟨x + y, by
+    change M.addValue (denote a) (denote b) = _
+    rw [hx, hy, M.add_numbers, Rat.cast_add]⟩
+
+theorem subInQ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haQ : In a Q) (hbQ : In b Q) :
+    In (sub a b (rationalToComplex a haQ) (rationalToComplex b hbQ)) Q := by
+  obtain ⟨x, hx⟩ := (M.rational_members (denote a)).mp haQ
+  obtain ⟨y, hy⟩ := (M.rational_members (denote b)).mp hbQ
+  exact (M.rational_members _).mpr ⟨x - y, by
+    change M.subValue (denote a) (denote b) = _
+    rw [hx, hy, M.sub_numbers, Rat.cast_sub]⟩
+
+theorem mulInQ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haQ : In a Q) (hbQ : In b Q) :
+    In (mul a b (rationalToComplex a haQ) (rationalToComplex b hbQ)) Q := by
+  obtain ⟨x, hx⟩ := (M.rational_members (denote a)).mp haQ
+  obtain ⟨y, hy⟩ := (M.rational_members (denote b)).mp hbQ
+  exact (M.rational_members _).mpr ⟨x * y, by
+    change M.mulValue (denote a) (denote b) = _
+    rw [hx, hy, M.mul_numbers, Rat.cast_mul]⟩
+
+theorem negInQ {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haQ : In a Q) :
+    In (neg a (rationalToComplex a haQ)) Q := by
+  obtain ⟨q, hq⟩ := (M.rational_members (denote a)).mp haQ
+  exact (M.rational_members _).mpr ⟨-q, by
+    change M.negValue (denote a) = _
+    rw [hq, M.neg_numbers, Rat.cast_neg]⟩
+
+theorem divInQ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haQ : In a Q) (hbQ : In b Q) (hb0 : ¬ Same b (number 0)) :
+    In (div a b (rationalToComplex a haQ) (rationalToComplex b hbQ) hb0) Q := by
+  obtain ⟨x, hx⟩ := (M.rational_members (denote a)).mp haQ
+  obtain ⟨y, hy⟩ := (M.rational_members (denote b)).mp hbQ
+  have hy0 : (y : ℂ) ≠ 0 := fun h => hb0 (hy.trans (congrArg M.number h))
+  exact (M.rational_members _).mpr ⟨x / y, by
+    change M.divValue (denote a) (denote b) = _
+    rw [hx, hy, M.div_numbers _ _ hy0, Rat.cast_div]⟩
+
 theorem negInZ {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haZ : In a Z) : In (neg a (integerToComplex a haZ)) Z := by
   obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
@@ -524,6 +627,48 @@ theorem powNatRealInR {M : Semantics.{u}} {α : Type v} {β : Type w}
   exact (M.real_members _).mpr ⟨x ^ n, by
     change M.powValue (denote a) (denote e) = _
     rw [hx, heValue, M.pow_numbers_nat, Complex.ofReal_pow]⟩
+
+/-- Real closure consumes the owned power object's actual WD alternatives,
+including their exact exponent witness and the integer branch's nonzero guard. -/
+theorem powStructuralInR {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β)) (haR : In p.val.base R) : In p R := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote p.val.base)).mp haR
+  rcases p.wd with ⟨_haR, n, _heN, he⟩ | ⟨_haC, n, _heN, he⟩ |
+    ⟨_haC, z, _heZ, ha0, he⟩
+  · exact (M.real_members _).mpr ⟨r ^ n, by
+      change denote p.val.exponent = M.number (n : ℂ) at he
+      change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+      rw [hr, he, M.pow_numbers_nat, Complex.ofReal_pow]⟩
+  · exact (M.real_members _).mpr ⟨r ^ n, by
+      change denote p.val.exponent = M.number (n : ℂ) at he
+      change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+      rw [hr, he, M.pow_numbers_nat, Complex.ofReal_pow]⟩
+  · have hr0 : (r : ℂ) ≠ 0 := fun h => ha0 (hr.trans (congrArg M.number h))
+    exact (M.real_members _).mpr ⟨r ^ z, by
+      change denote p.val.exponent = M.number (z : ℂ) at he
+      change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+      rw [hr, he, M.pow_numbers_int _ _ hr0, Complex.ofReal_zpow]⟩
+
+theorem powStructuralInQ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β)) (haQ : In p.val.base Q) : In p Q := by
+  obtain ⟨q, hq⟩ := (M.rational_members (denote p.val.base)).mp haQ
+  rcases p.wd with ⟨_haR, n, _heN, he⟩ | ⟨_haC, n, _heN, he⟩ |
+    ⟨_haC, z, _heZ, ha0, he⟩
+  · exact (M.rational_members _).mpr ⟨q ^ n, by
+      change denote p.val.exponent = M.number (n : ℂ) at he
+      change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+      rw [hq, he, M.pow_numbers_nat, Rat.cast_pow]⟩
+  · exact (M.rational_members _).mpr ⟨q ^ n, by
+      change denote p.val.exponent = M.number (n : ℂ) at he
+      change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+      rw [hq, he, M.pow_numbers_nat, Rat.cast_pow]⟩
+  · have hq0 : (q : ℂ) ≠ 0 := fun h => ha0 (hq.trans (congrArg M.number h))
+    exact (M.rational_members _).mpr ⟨q ^ z, by
+      change denote p.val.exponent = M.number (z : ℂ) at he
+      change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+      rw [hq, he, M.pow_numbers_int _ _ hq0, Rat.cast_zpow]⟩
 
 end Litex
 
@@ -596,6 +741,9 @@ def numberInN (n : ℕ) : In (number (M := M) (n : ℂ)) N :=
 def numberInZ (z : ℤ) : In (number (M := M) (z : ℂ)) Z :=
   (M.integer_members (M.number (z : ℂ))).mpr ⟨z, rfl⟩
 
+def numberInQ (q : ℚ) : In (number (M := M) (q : ℂ)) Q :=
+  (M.rational_members (M.number (q : ℂ))).mpr ⟨q, rfl⟩
+
 def numberInROfEq (z : ℂ) (r : ℝ) (hz : z = (r : ℂ)) : In (number (M := M) z) R :=
   (M.real_members (M.number z)).mpr ⟨r, congrArg M.number hz⟩
 
@@ -604,6 +752,14 @@ def numberInNOfEq (z : ℂ) (n : ℕ) (hz : z = (n : ℂ)) : In (number (M := M)
 
 def numberInZOfEq (z : ℂ) (k : ℤ) (hz : z = (k : ℂ)) : In (number (M := M) z) Z :=
   (M.integer_members (M.number z)).mpr ⟨k, congrArg M.number hz⟩
+
+def numberInQOfEq (z : ℂ) (q : ℚ) (hz : z = (q : ℂ)) : In (number (M := M) z) Q :=
+  (M.rational_members (M.number z)).mpr ⟨q, congrArg M.number hz⟩
+
+theorem numberRationalInQ (n d : ℤ) :
+    In (number (M := M) ((n : ℂ) / (d : ℂ))) Q := by
+  apply numberInQOfEq _ ((n : ℚ) / (d : ℚ))
+  simp only [Rat.cast_div, Rat.cast_intCast]
 
 theorem numberRationalInR (n d : ℤ) :
     In (number (M := M) ((n : ℂ) / (d : ℂ))) R := by
@@ -727,9 +883,197 @@ theorem same_iff_asComplex {α : Type v} {β : Type w}
   rw [asComplex_spec a haC, asComplex_spec b hbC]
   exact M.number_injective.eq_iff
 
+noncomputable def asReal {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) : ℝ :=
+  Classical.choose ((M.real_members (denote a)).mp haR)
+
+theorem asReal_spec {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) :
+    denote a = M.number (asReal a haR : ℂ) :=
+  Classical.choose_spec ((M.real_members (denote a)).mp haR)
+
+theorem asReal_proofIndependent {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h₁ h₂ : In a R) :
+    asReal a h₁ = asReal a h₂ :=
+  Complex.ofReal_injective
+    (M.number_injective ((asReal_spec a h₁).symm.trans (asReal_spec a h₂)))
+
+theorem asComplex_eq_asReal {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haC : In a C) (haR : In a R) :
+    asComplex a haC = (asReal a haR : ℂ) :=
+  M.number_injective ((asComplex_spec a haC).symm.trans (asReal_spec a haR))
+
+/-- A complex representative of a source-real object is its native real part.
+The real-membership evidence is essential; this is not a global complex cast. -/
+theorem denoteRealOfDenoteNumber {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (z : ℂ) (haR : In a R)
+    (ha : denote a = M.number z) : denote a = M.number (z.re : ℂ) := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote a)).mp haR
+  have hz : z = (r : ℂ) := M.number_injective (ha.symm.trans hr)
+  simpa only [hz, Complex.ofReal_re] using hr
+
+theorem leOfDenoteReal {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (r s : ℝ)
+    (ha : denote a = M.number (r : ℂ)) (hb : denote b = M.number (s : ℂ))
+    (h : r ≤ s) : Le a b :=
+  ⟨r, s, ha, hb, h⟩
+
+theorem ltOfDenoteReal {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (r s : ℝ)
+    (ha : denote a = M.number (r : ℂ)) (hb : denote b = M.number (s : ℂ))
+    (h : r < s) : Lt a b :=
+  ⟨r, s, ha, hb, h⟩
+
+theorem le_iff_ofDenoteReal {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (r s : ℝ)
+    (ha : denote a = M.number (r : ℂ)) (hb : denote b = M.number (s : ℂ)) :
+    Le a b ↔ r ≤ s := by
+  constructor
+  · rintro ⟨r', s', ha', hb', h⟩
+    have hr : r' = r := Complex.ofReal_injective (M.number_injective (ha'.symm.trans ha))
+    have hs : s' = s := Complex.ofReal_injective (M.number_injective (hb'.symm.trans hb))
+    simpa only [hr, hs] using h
+  · exact leOfDenoteReal a b r s ha hb
+
+theorem lt_iff_ofDenoteReal {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (r s : ℝ)
+    (ha : denote a = M.number (r : ℂ)) (hb : denote b = M.number (s : ℂ)) :
+    Lt a b ↔ r < s := by
+  constructor
+  · rintro ⟨r', s', ha', hb', h⟩
+    have hr : r' = r := Complex.ofReal_injective (M.number_injective (ha'.symm.trans ha))
+    have hs : s' = s := Complex.ofReal_injective (M.number_injective (hb'.symm.trans hb))
+    simpa only [hr, hs] using h
+  · exact ltOfDenoteReal a b r s ha hb
+
+theorem le_iff_asReal {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haR : In a R) (hbR : In b R) :
+    Le a b ↔ asReal a haR ≤ asReal b hbR :=
+  le_iff_ofDenoteReal a b _ _ (asReal_spec a haR) (asReal_spec b hbR)
+
+theorem lt_iff_asReal {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haR : In a R) (hbR : In b R) :
+    Lt a b ↔ asReal a haR < asReal b hbR :=
+  lt_iff_ofDenoteReal a b _ _ (asReal_spec a haR) (asReal_spec b hbR)
+
 end Litex.NativeBridge
 
 namespace Litex
+
+theorem leOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β]
+    [Representation M γ] [Representation M δ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (c : Obj (M := M) γ) (d : Obj (M := M) δ)
+    (hab : Same a b) (hcd : Same c d) (hac : Le a c) : Le b d := by
+  obtain ⟨r, s, hr, hs, h⟩ := hac
+  exact ⟨r, s, hab.symm.trans hr, hcd.symm.trans hs, h⟩
+
+theorem ltOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β]
+    [Representation M γ] [Representation M δ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (c : Obj (M := M) γ) (d : Obj (M := M) δ)
+    (hab : Same a b) (hcd : Same c d) (hac : Lt a c) : Lt b d := by
+  obtain ⟨r, s, hr, hs, h⟩ := hac
+  exact ⟨r, s, hab.symm.trans hr, hcd.symm.trans hs, h⟩
+
+theorem leRefl {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) : Le a a := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote a)).mp haR
+  exact ⟨r, r, hr, hr, le_refl r⟩
+
+theorem naturalNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haN : In a N) : Le (number 0) a := by
+  obtain ⟨n, hn⟩ := (M.natural_members (denote a)).mp haN
+  refine ⟨0, (n : ℝ), ?_, ?_, Nat.cast_nonneg n⟩
+  · simp only [denote, number, Representation.denote, Complex.ofReal_zero]
+  · simpa only [Complex.ofReal_natCast] using hn
+
+theorem ltToLe {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (hab : Lt a b) : Le a b := by
+  obtain ⟨r, s, hr, hs, h⟩ := hab
+  exact ⟨r, s, hr, hs, le_of_lt h⟩
+
+theorem ltNotSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (hab : Lt a b) : ¬ Same a b := by
+  obtain ⟨r, s, hr, hs, h⟩ := hab
+  intro equal
+  exact (ne_of_lt h)
+    (Complex.ofReal_injective (M.number_injective (hr.symm.trans (equal.trans hs))))
+
+theorem leTrans {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
+    (hab : Le a b) (hbc : Le b c) : Le a c := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := hab
+  obtain ⟨s', t, hs', ht, hst⟩ := hbc
+  have middle : s = s' := Complex.ofReal_injective (M.number_injective (hs.symm.trans hs'))
+  exact ⟨r, t, hr, ht, le_trans hrs (middle ▸ hst)⟩
+
+theorem leAdd {M : Semantics.{u}} {α : Type v} {β : Type w}
+    {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β]
+    [Representation M γ] [Representation M δ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (c : Obj (M := M) γ) (d : Obj (M := M) δ)
+    (haC : In a C) (hbC : In b C) (hcC : In c C) (hdC : In d C)
+    (hab : Le a b) (hcd : Le c d) :
+    Le (add a c haC hcC) (add b d hbC hdC) := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := hab
+  obtain ⟨t, v, ht, hv, htv⟩ := hcd
+  refine ⟨r + t, s + v, ?_, ?_, add_le_add hrs htv⟩
+  · change M.addValue (denote a) (denote c) = _
+    rw [hr, ht, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote b) (denote d) = _
+    rw [hs, hv, M.add_numbers, Complex.ofReal_add]
+
+theorem leAddRight {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
+    (haC : In a C) (hbC : In b C) (hcC : In c C) (hcR : In c R)
+    (hab : Le a b) : Le (add a c haC hcC) (add b c hbC hcC) :=
+  leAdd a b c c haC hbC hcC hcC hab (leRefl c hcR)
+
+theorem leAddLeft {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
+    (haC : In a C) (hbC : In b C) (hcC : In c C) (hcR : In c R)
+    (hab : Le a b) : Le (add c a hcC haC) (add c b hcC hbC) :=
+  leAdd c c a b hcC hcC haC hbC (leRefl c hcR) hab
+
+theorem mulSelfNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) :
+    Le (number 0) (mul a a (realToComplex a haR) (realToComplex a haR)) := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote a)).mp haR
+  refine ⟨0, r * r, ?_, ?_, mul_self_nonneg r⟩
+  · simp only [denote, number, Representation.denote, Complex.ofReal_zero]
+  · change M.mulValue (denote a) (denote a) = _
+    rw [hr, M.mul_numbers, Complex.ofReal_mul]
+
+/-- Replay the exact even natural exponent independently of which supported
+power WD alternative certified the owned object. -/
+theorem powStructuralNonnegativeOfEven {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β)) (haR : In p.val.base R)
+    (n : ℕ) (heValue : Same p.val.exponent (number (n : ℂ))) (hEven : Even n) :
+    Le (number 0) p := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote p.val.base)).mp haR
+  refine ⟨0, r ^ n, ?_, ?_, hEven.pow_nonneg r⟩
+  · simp only [denote, number, Representation.denote, Complex.ofReal_zero]
+  · change denote p.val.exponent = M.number (n : ℂ) at heValue
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    rw [hr, heValue, M.pow_numbers_nat, Complex.ofReal_pow]
 
 theorem mulNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
@@ -810,6 +1154,15 @@ theorem integer_members (x : ZFSet.{0}) :
     exact ⟨z, hz.symm⟩
   · rintro ⟨z, hz⟩
     exact ⟨z, hz.symm⟩
+
+theorem rational_members (x : ZFSet.{0}) :
+    x ∈ standardSet .rational ↔ ∃ q : ℚ, x = codeComplex (q : ℂ) := by
+  simp only [standardSet, ZFSet.mem_range]
+  constructor
+  · rintro ⟨q, hq⟩
+    exact ⟨q, hq.symm⟩
+  · rintro ⟨q, hq⟩
+    exact ⟨q, hq.symm⟩
 
 theorem real_members (x : ZFSet.{0}) :
     x ∈ standardSet .real ↔ ∃ r : ℝ, x = codeComplex (r : ℂ) := by
@@ -913,6 +1266,7 @@ noncomputable def model : Semantics.{1} where
   complex_members := complex_members
   natural_members := natural_members
   integer_members := integer_members
+  rational_members := rational_members
   real_members := real_members
   real_subset_complex := real_subset_complex
   member_isSet := fun _ => True.intro

@@ -655,10 +655,7 @@ pub(super) fn project_introduced_params(
             ),
             (
                 "defined_params",
-                super::store::project_have_store_ids(
-                    &introduced.defined_params.stored_fact_ids,
-                    runtime,
-                ),
+                super::store::project_have_store_and_infer(&introduced.defined_params, runtime),
             ),
             (
                 "auto_opened_struct_layers",

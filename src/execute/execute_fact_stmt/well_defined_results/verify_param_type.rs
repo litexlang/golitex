@@ -15,7 +15,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<IntroduceTypedParametersResult, VerifyObjWellDefinedResult>> {
         let mut proofs = Vec::with_capacity(parameters.groups.len());
-        let mut stored_fact_ids = Vec::new();
+        let mut defined_params = StoreHaveObjAndInferResult::new(Vec::new());
         for group in &parameters.groups {
             let one = TypedParameterList {
                 groups: vec![group.clone()],
@@ -27,11 +27,11 @@ impl Runtime {
                 Err(failed) => return Ok(Err(failed)),
             }
             let defined = self.define_typed_parameters_in_current_env(&one, None, verify_state)?;
-            stored_fact_ids.extend(defined.stored_fact_ids);
+            defined_params.extend(defined);
         }
         Ok(Ok(IntroduceTypedParametersResult {
             param_type_well_defined: proofs,
-            defined_params: StoreHaveObjAndInferResult { stored_fact_ids },
+            defined_params,
             auto_opened_struct_layers: None,
         }))
     }

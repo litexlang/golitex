@@ -114,9 +114,7 @@ impl Runtime {
                 &as_fact,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
-            store_and_infer_result
-                .stored_fact_ids
-                .extend(stored.stored_fact_ids());
+            store_and_infer_result.push(stored);
         }
 
         let Some(application) = fn_preimage_application_obj(&function, &preimage_objs) else {
@@ -135,9 +133,7 @@ impl Runtime {
             &equality,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )?;
-        store_and_infer_result
-            .stored_fact_ids
-            .extend(stored.stored_fact_ids());
+        store_and_infer_result.push(stored);
 
         Ok(ExecHaveByFnPreimageStmtResult::Success(
             ExecHaveByFnPreimageStmtSuccessResult {

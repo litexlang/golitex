@@ -3,7 +3,10 @@
 use super::induction::{
     project_by_induc, project_by_strong_induc, project_induc_algo, project_induc_definition,
 };
-use super::store::{project_have_store_ids, project_store_and_infer, project_verify_facts};
+use super::store::{
+    project_have_store_and_infer, project_have_store_ids, project_store_and_infer,
+    project_verify_facts,
+};
 use super::verify::project_verify_fact;
 use super::wd::{
     project_fact_wd_proof, project_obj_wd_proof, project_param_type_wd,
@@ -386,10 +389,7 @@ fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> Js
                                         ),
                                         (
                                             "local_definition",
-                                            project_have_store_ids(
-                                                &proof.defined.stored_fact_ids,
-                                                runtime,
-                                            ),
+                                            project_have_store_and_infer(&proof.defined, runtime),
                                         ),
                                     ],
                                 )
@@ -518,7 +518,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ("statement", string(s.statement.readable_string())),
                     (
                         "store_and_infer",
-                        project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
+                        project_have_store_and_infer(&s.store_and_infer_result, runtime),
                     ),
                 ],
             ),
@@ -539,7 +539,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ("statement", string(s.statement.readable_string())),
                     (
                         "store_and_infer",
-                        project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
+                        project_have_store_and_infer(&s.store_and_infer_result, runtime),
                     ),
                 ],
             ),
@@ -560,7 +560,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ("statement", string(s.statement.readable_string())),
                     (
                         "store_and_infer",
-                        project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
+                        project_have_store_and_infer(&s.store_and_infer_result, runtime),
                     ),
                 ],
             ),
@@ -581,7 +581,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ("statement", string(s.statement.readable_string())),
                     (
                         "store_and_infer",
-                        project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
+                        project_have_store_and_infer(&s.store_and_infer_result, runtime),
                     ),
                 ],
             ),
@@ -665,7 +665,7 @@ fn project_def_prop(result: &ExecDefPropStmtResult, runtime: &Runtime) -> JsonVa
                 ),
                 (
                     "defined_params",
-                    project_have_store_ids(&s.defined_params.stored_fact_ids, runtime),
+                    project_have_store_and_infer(&s.defined_params, runtime),
                 ),
                 (
                     "iff_fact_well_defined",
@@ -955,10 +955,7 @@ fn project_trust(result: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> Jso
                     ("statement", string(s.statement.readable_string())),
                     (
                         "defined_param_store_and_infer",
-                        project_have_store_ids(
-                            &s.defined_param_store_and_infer.stored_fact_ids,
-                            runtime,
-                        ),
+                        project_have_store_and_infer(&s.defined_param_store_and_infer, runtime),
                     ),
                     (
                         "body_facts_well_defined",

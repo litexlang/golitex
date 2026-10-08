@@ -41,6 +41,14 @@ actual `returned_conclusions` stores before its selected citation. These
 fields project the executed result; they do not resolve the callee again,
 scan the retained local environment or expand the allowed selection routes.
 
+Detailed have output retains its existing flattened `stores` / `infers` fields
+and adds ordered `store_and_infer_results` under the same store node. Ordinary
+have also exposes each source group's WD, nonempty check and actual definition
+stores under `groups`; its existing parallel WD/check arrays remain available.
+Parameter introductions use the same store projection. Closed comparisons add
+typed-calculation `values` while retaining `left_normal`, `right_normal` and
+`comparison`. Normal and Compact presentation remains unchanged.
+
 ```rust
 pub enum OutputDetail {
     Compact,   // thin: success + statement (+ fail_reason)

@@ -175,9 +175,7 @@ impl Runtime {
                 &equal_fact,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
-            store_and_infer_result
-                .stored_fact_ids
-                .extend(stored.stored_fact_ids());
+            store_and_infer_result.push(stored);
         }
 
         Ok(ExecHaveObjEqualStmtResult::Success(
