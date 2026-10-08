@@ -5,6 +5,7 @@ use super::wd::{project_fact_wd_proof, project_verify_fact_wd_result};
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::execute::execute_by_stmt::{
     BuiltinThmApplication, ExecByThmStmtFailed, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult,
+    ResolvedTheoremCallee,
 };
 use crate::json_output::helper::{bool_value, object_for, string};
 use crate::knowledge_base::JsonValue;
@@ -150,6 +151,31 @@ pub(in crate::json_output) fn project_by_thm_failure(
         ExecByThmStmtFailed::Store { theorem, message } => object_for(rt, vec![("phase", string("store")), ("thm_name", string(theorem.clone())), ("message", string(message.clone()))]),
     }
 }
+pub(super) fn project_resolved_theorem_callee(
+    callee: &ResolvedTheoremCallee,
+    rt: &Runtime,
+) -> JsonValue {
+    match callee {
+        ResolvedTheoremCallee::UserTheorem(stmt) => object_for(
+            rt,
+            vec![
+                ("kind", string("user_theorem")),
+                ("statement", string(stmt.readable_string())),
+                ("fact_id", string(stmt.fact.fact_id().to_string())),
+            ],
+        ),
+        ResolvedTheoremCallee::UserAxiom(stmt) => object_for(
+            rt,
+            vec![
+                ("kind", string("user_axiom")),
+                ("statement", string(stmt.readable_string())),
+                ("fact_id", string(stmt.forall_fact.fact_id.to_string())),
+            ],
+        ),
+        ResolvedTheoremCallee::Builtin => object_for(rt, vec![("kind", string("builtin"))]),
+    }
+}
+
 pub(super) fn project_builtin_application(
     application: &Option<BuiltinThmApplication>,
     rt: &Runtime,
@@ -228,6 +254,7 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
                 ("kind", string("release_thm")),
                 ("thm_name", string(s.call.name.local_name().to_string())),
                 ("call", project_theorem_call(&s.call, rt)),
+                ("callee", project_resolved_theorem_callee(&s.callee, rt)),
                 ("builtin", project_builtin_application(&s.builtin, rt)),
                 (
                     "type_proofs",

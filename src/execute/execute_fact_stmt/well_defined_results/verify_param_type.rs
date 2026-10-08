@@ -2,6 +2,8 @@ use crate::ast::param::{ParamType, TypedParameterList};
 use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
+use crate::execute::IntroduceTypedParametersResult;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -11,8 +13,9 @@ impl Runtime {
         &mut self,
         parameters: &TypedParameterList,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<Vec<ParamTypeWellDefinedProof>, VerifyObjWellDefinedResult>> {
+    ) -> RuntimeResult<Result<IntroduceTypedParametersResult, VerifyObjWellDefinedResult>> {
         let mut proofs = Vec::with_capacity(parameters.groups.len());
+        let mut stored_fact_ids = Vec::new();
         for group in &parameters.groups {
             let one = TypedParameterList {
                 groups: vec![group.clone()],
@@ -23,9 +26,14 @@ impl Runtime {
                 Ok(mut group_proofs) => proofs.append(&mut group_proofs),
                 Err(failed) => return Ok(Err(failed)),
             }
-            self.define_typed_parameters_in_current_env(&one, None, verify_state)?;
+            let defined = self.define_typed_parameters_in_current_env(&one, None, verify_state)?;
+            stored_fact_ids.extend(defined.stored_fact_ids);
         }
-        Ok(Ok(proofs))
+        Ok(Ok(IntroduceTypedParametersResult {
+            param_type_well_defined: proofs,
+            defined_params: StoreHaveObjAndInferResult { stored_fact_ids },
+            auto_opened_struct_layers: None,
+        }))
     }
 
     // One entry per TypedParameterGroup, in source order.

@@ -119,7 +119,10 @@ pub use execute_def_template_stmt::{
     AssumedTemplateDomFactResult, ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
     ExecDefTemplateStmtSuccessResult, ExecTemplateDefBodyResult,
 };
-pub use execute_def_thm_stmt::{ExecDefThmStmtFailed, ExecDefThmStmtResult, ExecDefThmStmtSuccess};
+pub use execute_def_thm_stmt::{
+    ExecDefThmBodyProof, ExecDefThmForallProof, ExecDefThmNonForallProof, ExecDefThmStmtFailed,
+    ExecDefThmStmtResult, ExecDefThmStmtSuccess,
+};
 pub use execute_eval_stmt::{
     ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecEvalStmtSuccess,
 };

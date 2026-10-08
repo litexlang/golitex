@@ -333,9 +333,24 @@ pub(super) fn project_forall_wd(
         vec![
             ("type", string("forall")),
             (
+                "introduced_params",
+                super::verify::project_introduced_params(&proof.introduced_params, runtime),
+            ),
+            (
+                "assumed_dom_facts",
+                JsonValue::Array(
+                    proof
+                        .assumed_dom_facts
+                        .iter()
+                        .map(|a| super::verify::project_assume_dom(a, runtime))
+                        .collect(),
+                ),
+            ),
+            (
                 "param_type_well_defined",
                 JsonValue::Array(
                     proof
+                        .introduced_params
                         .param_type_well_defined
                         .iter()
                         .map(|p| project_param_type_wd(p, runtime))
@@ -346,6 +361,7 @@ pub(super) fn project_forall_wd(
                 "auto_opened_struct_layers",
                 JsonValue::Array(
                     proof
+                        .introduced_params
                         .auto_opened_struct_layers
                         .iter()
                         .flatten()
@@ -379,9 +395,9 @@ pub(super) fn project_forall_wd(
                 "dom",
                 JsonValue::Array(
                     proof
-                        .dom
+                        .assumed_dom_facts
                         .iter()
-                        .map(|f| project_fact_wd_proof(f, runtime))
+                        .map(|f| project_fact_wd_proof(&f.well_defined, runtime))
                         .collect(),
                 ),
             ),

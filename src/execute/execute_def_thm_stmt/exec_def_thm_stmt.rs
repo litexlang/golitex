@@ -3,8 +3,11 @@ use crate::ast::stmt::{DefThmStmt, Stmt};
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ExecStmtResult;
 use crate::execute::execute_by_stmt::{proof_verify_state, store_goal_fact, verify_goal_fact};
-use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyFactWellDefinedResult};
+use crate::execute::execute_fact_stmt::{
+    AssumeDomFactResult, VerifyFactResult, VerifyFactWellDefinedResult,
+};
 use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
+use crate::execute::IntroduceTypedParametersResult;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -17,11 +20,30 @@ pub enum ExecDefThmStmtResult {
 }
 
 pub struct ExecDefThmStmtSuccess {
+    pub statement: DefThmStmt,
     pub goal_wd: VerifyFactWellDefinedResult,
-    pub proof_steps: Vec<ExecStmtResult>,
-    pub conclusion_proofs: Vec<VerifyFactResult>,
+    pub body: ExecDefThmBodyProof,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
+}
+
+// Non-forall goals already include compound facts. Preserve that existing
+// execution boundary rather than falsely classifying every direct goal atomic.
+pub enum ExecDefThmBodyProof {
+    NonForall(ExecDefThmNonForallProof),
+    Forall(ExecDefThmForallProof),
+}
+
+pub struct ExecDefThmNonForallProof {
+    pub proof_steps: Vec<ExecStmtResult>,
+    pub conclusion_proof: VerifyFactResult,
+}
+
+pub struct ExecDefThmForallProof {
+    pub introduced_params: IntroduceTypedParametersResult,
+    pub assumed_dom_facts: Vec<AssumeDomFactResult>,
+    pub proof_steps: Vec<ExecStmtResult>,
+    pub conclusion_proofs: Vec<VerifyFactResult>,
 }
 
 pub enum ExecDefThmStmtFailed {
@@ -85,11 +107,11 @@ pub fn exec_def_thm_stmt(
                         result: proof,
                     }));
                 }
-                Ok(Ok((proof_steps, vec![proof])))
+                Ok(Ok(ExecDefThmNonForallProof::new(proof_steps, proof).into()))
             }
         })?;
 
-    let (proof_steps, conclusion_proofs) = match local_outcome {
+    let body = match local_outcome {
         Ok(v) => v,
         Err(failed) => return Ok(ExecDefThmStmtResult::Failed(failed)),
     };
@@ -105,40 +127,42 @@ pub fn exec_def_thm_stmt(
         }
     };
 
-    Ok(ExecDefThmStmtResult::Success(ExecDefThmStmtSuccess {
-        goal_wd,
-        proof_steps,
-        conclusion_proofs,
-        local_env,
-        stored,
-    }))
+    Ok(ExecDefThmStmtSuccess::new(stmt.clone(), goal_wd, body, local_env, stored).into())
 }
 
 fn exec_def_thm_forall_body(
     runtime: &mut Runtime,
     forall: &ForallFact,
     proof: &[Stmt],
-) -> RuntimeResult<Result<(Vec<ExecStmtResult>, Vec<VerifyFactResult>), ExecDefThmStmtFailed>> {
-    if runtime
-        .introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())?
-        .is_err()
-    {
-        return Ok(Err(ExecDefThmStmtFailed::Introduce(
-            "thm: failed to introduce forall parameters".to_string(),
-        )));
-    }
+) -> RuntimeResult<Result<ExecDefThmBodyProof, ExecDefThmStmtFailed>> {
+    let introduced_params =
+        match runtime.introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())? {
+            Ok(introduced) => introduced,
+            Err(_) => {
+                return Ok(Err(ExecDefThmStmtFailed::Introduce(
+                    "thm: failed to introduce forall parameters".to_string(),
+                )))
+            }
+        };
 
+    let mut assumed_dom_facts = Vec::with_capacity(forall.dom_facts.len());
     for dom in &forall.dom_facts {
-        let wd = runtime.verify_fact_well_definedness(dom, proof_verify_state())?;
-        if wd.is_failed() {
-            return Ok(Err(ExecDefThmStmtFailed::Introduce(
-                "thm: forall domain fact is not well-defined".to_string(),
-            )));
-        }
-        let _ = runtime.store_fact_and_infer(
+        let well_defined = match runtime.verify_fact_well_definedness(dom, proof_verify_state())? {
+            VerifyFactWellDefinedResult::Success(proof) => proof,
+            VerifyFactWellDefinedResult::Failed(_) => {
+                return Ok(Err(ExecDefThmStmtFailed::Introduce(
+                    "thm: forall domain fact is not well-defined".to_string(),
+                )))
+            }
+        };
+        let store_and_infer = runtime.store_fact_and_infer(
             dom,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )?;
+        assumed_dom_facts.push(AssumeDomFactResult {
+            well_defined,
+            store_and_infer,
+        });
     }
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {
@@ -159,7 +183,74 @@ fn exec_def_thm_forall_body(
         conclusion_proofs.push(proof);
     }
 
-    Ok(Ok((proof_steps, conclusion_proofs)))
+    Ok(Ok(ExecDefThmForallProof::new(
+        introduced_params,
+        assumed_dom_facts,
+        proof_steps,
+        conclusion_proofs,
+    )
+    .into()))
+}
+
+impl ExecDefThmStmtSuccess {
+    pub fn new(
+        statement: DefThmStmt,
+        goal_wd: VerifyFactWellDefinedResult,
+        body: ExecDefThmBodyProof,
+        local_env: Box<ExecEnv>,
+        stored: StoreFactAndInferResult,
+    ) -> Self {
+        Self {
+            statement,
+            goal_wd,
+            body,
+            local_env,
+            stored,
+        }
+    }
+}
+
+impl ExecDefThmNonForallProof {
+    pub fn new(proof_steps: Vec<ExecStmtResult>, conclusion_proof: VerifyFactResult) -> Self {
+        Self {
+            proof_steps,
+            conclusion_proof,
+        }
+    }
+}
+
+impl ExecDefThmForallProof {
+    pub fn new(
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        proof_steps: Vec<ExecStmtResult>,
+        conclusion_proofs: Vec<VerifyFactResult>,
+    ) -> Self {
+        Self {
+            introduced_params,
+            assumed_dom_facts,
+            proof_steps,
+            conclusion_proofs,
+        }
+    }
+}
+
+impl From<ExecDefThmStmtSuccess> for ExecDefThmStmtResult {
+    fn from(success: ExecDefThmStmtSuccess) -> Self {
+        Self::Success(success)
+    }
+}
+
+impl From<ExecDefThmNonForallProof> for ExecDefThmBodyProof {
+    fn from(proof: ExecDefThmNonForallProof) -> Self {
+        Self::NonForall(proof)
+    }
+}
+
+impl From<ExecDefThmForallProof> for ExecDefThmBodyProof {
+    fn from(proof: ExecDefThmForallProof) -> Self {
+        Self::Forall(proof)
+    }
 }
 
 impl From<ExecDefThmStmtFailed> for ExecDefThmStmtResult {
@@ -171,3 +262,7 @@ impl From<ExecDefThmStmtFailed> for ExecDefThmStmtResult {
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/def_thm_goal_boundary/tests.rs"]
 mod def_thm_goal_boundary_tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/def_thm_result_capture/tests.rs"]
+mod def_thm_result_capture_tests;

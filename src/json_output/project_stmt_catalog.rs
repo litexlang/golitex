@@ -202,8 +202,13 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ExecDefThmStmtResult::Success(s) => {
                 let stores = store_fact_texts(&s.stored.store);
                 let infers = infer_fact_texts_from_store_and_infer(runtime, &s.stored);
-                let statement = stores.first().cloned().unwrap_or_else(|| "thm".to_string());
-                success_parts(runtime, statement, "def_thm", stores, infers)
+                success_parts(
+                    runtime,
+                    s.statement.readable_string(),
+                    "def_thm",
+                    stores,
+                    infers,
+                )
             }
             ExecDefThmStmtResult::Failed(f) => failed_with_details(
                 runtime,

@@ -636,7 +636,7 @@ fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonVal
     }
 }
 
-fn project_introduced_params(
+pub(super) fn project_introduced_params(
     introduced: &IntroduceTypedParametersResult,
     runtime: &Runtime,
 ) -> JsonValue {
@@ -695,7 +695,7 @@ fn project_introduced_params(
     )
 }
 
-fn project_assume_dom(assumed: &AssumeDomFactResult, runtime: &Runtime) -> JsonValue {
+pub(super) fn project_assume_dom(assumed: &AssumeDomFactResult, runtime: &Runtime) -> JsonValue {
     object_for(
         runtime,
         vec![
