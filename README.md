@@ -7,22 +7,22 @@
 
 Created and maintained by Jiachen Shen.
 
-Litex is designed as an everyday formal language for everyone who wants to
-write and understand checkable mathematics.
-
-Write the next mathematical fact directly; Litex checks it and shows the
-grounds it found or where checking stopped.
-
 _“Language is an instrument of human reason, and not merely a medium for the expression of thought.”_
 
 _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
-[Try Litex online](https://litexlang.com) ·
+[Official Website (官网)](https://litexlang.com) ·
 [Read the Blueprint](docs/Litex_Blueprint.md) ·
 [阅读中文蓝图](docs/Litex中文蓝图.md)
 </div>
 
 ## Write a fact and see what it leaves behind
+
+Litex is designed as an everyday formal language for everyone who wants to
+write and understand checkable mathematics.
+
+Write the next mathematical fact directly; Litex checks it and shows the
+grounds it found or where checking stopped.
 
 ```litex
 1 + 1 = 2
