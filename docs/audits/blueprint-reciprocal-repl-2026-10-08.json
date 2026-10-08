@@ -1,0 +1,86 @@
+{
+  "binary_sha256": "804bbe70f02cb76543c49bdd6361edc403412da5263fa864ac31fc64258fd9a2",
+  "checks": [
+    {
+      "name": "positive",
+      "exit_code": 0,
+      "success": true,
+      "kind": "run",
+      "session_error": null,
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "tmp/2026-10-08/blueprint-math-workflow/reciprocal-repl-positive.lit"
+      ]
+    },
+    {
+      "name": "zero",
+      "exit_code": 1,
+      "success": false,
+      "kind": "run",
+      "session_error": null,
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "tmp/2026-10-08/blueprint-math-workflow/reciprocal-repl-zero.lit"
+      ]
+    }
+  ],
+  "date": "2026-10-08",
+  "task": "simplify overview REPL to a reciprocal function",
+  "source": "Blueprint overview REPL example",
+  "problem": "A reciprocal function with an explicit nonzero real domain",
+  "proof_idea": "For a nonzero real x, 1/x is real. Verify the concrete reciprocal at 2, reject zero at the function requirement, and check a valid negative input after rejection.",
+  "litex_code": "have fn f(x R: x != 0) R = 1 / x\nf(2) = 1 / 2\nf(0) = 0",
+  "session_controls": [
+    {
+      "code": "have fn f(x R: x != 0) R = 1 / x",
+      "status": "accepted"
+    },
+    {
+      "code": "f(2) = 1 / 2",
+      "status": "accepted"
+    },
+    {
+      "code": "f(0) = 0",
+      "status": "expected_rejection"
+    },
+    {
+      "code": "f(-2) = -1 / 2",
+      "status": "accepted"
+    }
+  ],
+  "documents": {
+    "docs/Litex中文蓝图.md": {
+      "before_sha256": "8a65aa6db1c74993527bc4a1164c355829dcb52d1d186084827d7bca7ee4dc35",
+      "after_sha256": "8a15b75ebb63564cce80e2caa967334c14e60dca6ab960ae922f2de9acc52d02",
+      "other_content_preserved": true,
+      "public_inputs_match_checked_session": true,
+      "fresh_session_and_diagnostic_label": "passed",
+      "anchors_and_fences": "passed"
+    },
+    "docs/Litex_Blueprint.md": {
+      "before_sha256": "c583cb981ce4c7ca47d0b1788f3fa2badc0da4c6f02e3d226c207bc671d4c52c",
+      "after_sha256": "88ef7414a1bc8ee15c645e7dd2d71d80aacd7458d9f3fa9384968c85cfcadae1",
+      "other_content_preserved": true,
+      "public_inputs_match_checked_session": true,
+      "fresh_session_and_diagnostic_label": "passed",
+      "anchors_and_fences": "passed"
+    }
+  },
+  "comments": {
+    "impact": "L0 executable documentation",
+    "scope": "Only the overview REPL paragraph and transcript are replaced; other paragraphs and body chapters are preserved byte-for-byte.",
+    "fresh_session": "Explicitly avoids collision with the earlier square function named f.",
+    "negative_control": "f(0)=0 isolates the input-condition rejection; 1/0 would add an undefined RHS.",
+    "diagnostic": "The public text is a summary of the observed well_defined / FnObj / requirement failure, whose unmet fact is 0 != 0.",
+    "journal": "tmp/2026-10-08/blueprint-math-workflow/reciprocal-repl-journal.json",
+    "skipped": "Kernel changes, source rebuild, whole-doc/Rust/Lean suites."
+  }
+}

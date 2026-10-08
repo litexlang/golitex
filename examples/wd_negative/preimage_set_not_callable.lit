@@ -1,0 +1,2 @@
+# An empty target does not waive the checked callable-domain requirement.
+let bad = preimage_set(1, {})

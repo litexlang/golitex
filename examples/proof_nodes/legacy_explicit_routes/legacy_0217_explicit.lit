@@ -1,0 +1,9 @@
+claim:
+    ? forall a,b,c,d N+:
+        (a+b)*(c+d) $in N+
+    a+b $in N+
+    c+d $in N+
+    (a+b)*(c+d) $in N+
+
+forall a,b,c,d N+:
+    (a+b)*(c+d) $in N+

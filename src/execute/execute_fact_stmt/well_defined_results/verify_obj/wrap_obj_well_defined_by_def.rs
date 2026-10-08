@@ -120,6 +120,7 @@ fn pack_success_by_def(
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetSize(FiniteSetSizeObjWellDefinedProof::from_stages(stages))),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetMax(FiniteSetMaxObjWellDefinedProof::from_stages(stages))),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetMin(FiniteSetMinObjWellDefinedProof::from_stages(stages))),
+        Obj::FunctionSpace(FunctionSpace::Preimage(_)) | Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => unreachable!("preimages use dedicated WD pipelines"),
         Obj::FunctionSpace(FunctionSpace::FnRange(_)) => unreachable!("FnRange WD requires checked complete function domains"),
         Obj::IteratedOperator(IteratedOperator::Sum(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::Sum(SumObjWellDefinedProof::from_stages(stages))),
         Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::SumOfFiniteSet(SumOfFiniteSetObjWellDefinedProof::from_stages(stages))),
@@ -336,6 +337,7 @@ pub(super) fn wrap_common_fail(
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(_)) => FailToVerifyObjWellDefinedResult::FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult::FiniteSetMin(
             FailToVerifyFiniteSetMinObjWellDefined(common),
         )),
+        Obj::FunctionSpace(FunctionSpace::Preimage(_)) | Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => unreachable!("preimages use dedicated WD pipelines"),
         Obj::FunctionSpace(FunctionSpace::FnRange(_)) => FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(
             FailToVerifyFnRangeObjWellDefined::Domain(common),
         )),

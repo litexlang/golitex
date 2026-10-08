@@ -1,0 +1,314 @@
+{
+  "task": "Reject root quantified-iff named theorem goals as unsupported user input",
+  "date": "2026-10-08",
+  "contract": "Both claim and thm reject root forall ... <=> before goal WD/proof. General iff verification and inferred-fact invariants are unchanged.",
+  "impact": "L3 bounded named-theorem result and Normal/Detailed JSON diagnostic contract",
+  "acceptance_file": "examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit",
+  "negative_fixture": "examples/test_statements/negative/def_thm_stmt/forall-iff-goal.lit",
+  "before": [
+    {
+      "name": "provable_iff",
+      "source": "thm bad:\n    ? forall x R:\n        =>:\n            x = x\n        <=>:\n            x = x\n",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "thm bad:\n    ? forall x R:\n        =>:\n            x = x\n        <=>:\n            x = x",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall x R:\n    =>:\n        x = x\n    <=>:\n        x = x"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "name": "c2_reduced_context",
+      "source": "prop partial_order_laws(s set, le_rel power_set(cart(s, s))):\n    forall x s:\n        (x, x) $in le_rel\n    forall x, y, z s:\n        (x, y) $in le_rel\n        (y, z) $in le_rel\n        =>:\n            (x, z) $in le_rel\n    forall x, y s:\n        (x, y) $in le_rel\n        (y, x) $in le_rel\n        =>:\n            x = y\n\ntemplate<s set>:\n    have PartialOrder set = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}\n\n# In a generic partial-order object, strict comparison means non-strict\n# comparison together with inequality.\nprop is_less_than_in_order(A set, order \\PartialOrder<A>, x, y A):\n    (x, y) $in order\n    x != y\n\nthm strict_order_iff:\n    ? forall A set, order \\PartialOrder<A>, x, y A:\n        =>:\n            $is_less_than_in_order(A, order, x, y)\n        <=>:\n            (x, y) $in order\n            x != y\n",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "prop partial_order_laws(s set, le_rel power_set(cart(s, s))):\n    forall x s:\n        (x, x) $in le_rel\n    forall x, y, z s:\n        (x, y) $in le_rel\n        (y, z) $in le_rel\n        =>:\n            (x, z) $in le_rel\n    forall x, y s:\n        (x, y) $in le_rel\n        (y, x) $in le_rel\n        =>:\n            x = y",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define prop",
+              "message": "Define a predicate"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "template<s set>:\n    have PartialOrder set = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define template",
+              "message": "Define a reusable template"
+            },
+            "stores": [
+              "forall s set:\n    $is_set(\\PartialOrder<s>)",
+              "forall s set:\n    \\PartialOrder<s> = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "prop is_less_than_in_order(A set, order \\PartialOrder<A>, x, y A):\n    (x, y) $in order\n    x != y",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define prop",
+              "message": "Define a predicate"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "thm strict_order_iff:\n    ? forall A set, order \\PartialOrder<A>, x, y A:\n        =>:\n            $is_less_than_in_order(A, order, x, y)\n        <=>:\n            (x, y) $in order\n            x != y",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall A set, order \\PartialOrder<A>, x, y A:\n    =>:\n        $is_less_than_in_order(A, order, x, y)\n    <=>:\n        (x, y) $in order\n        x != y"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    }
+  ],
+  "after": [
+    {
+      "name": "provable_iff",
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": false,
+            "statement": "thm bad:\n    ? forall x R:\n        =>:\n            x = x\n        <=>:\n            x = x",
+            "why_failed": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem",
+              "phase": "def_thm",
+              "failure": {
+                "phase": "goal_unsupported",
+                "message": "thm: forall ... <=> goals are not supported"
+              }
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "name": "c2_reduced_context",
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "prop partial_order_laws(s set, le_rel power_set(cart(s, s))):\n    forall x s:\n        (x, x) $in le_rel\n    forall x, y, z s:\n        (x, y) $in le_rel\n        (y, z) $in le_rel\n        =>:\n            (x, z) $in le_rel\n    forall x, y s:\n        (x, y) $in le_rel\n        (y, x) $in le_rel\n        =>:\n            x = y",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define prop",
+              "message": "Define a predicate"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "template<s set>:\n    have PartialOrder set = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define template",
+              "message": "Define a reusable template"
+            },
+            "stores": [
+              "forall s set:\n    $is_set(\\PartialOrder<s>)",
+              "forall s set:\n    \\PartialOrder<s> = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "prop is_less_than_in_order(A set, order \\PartialOrder<A>, x, y A):\n    (x, y) $in order\n    x != y",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define prop",
+              "message": "Define a predicate"
+            },
+            "stores": [],
+            "infers": []
+          },
+          {
+            "success": false,
+            "statement": "thm strict_order_iff:\n    ? forall A set, order \\PartialOrder<A>, x, y A:\n        =>:\n            $is_less_than_in_order(A, order, x, y)\n        <=>:\n            (x, y) $in order\n            x != y",
+            "why_failed": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem",
+              "phase": "def_thm",
+              "failure": {
+                "phase": "goal_unsupported",
+                "message": "thm: forall ... <=> goals are not supported"
+              }
+            },
+            "stores": [],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "name": "acceptance_file",
+      "command": [
+        "target/release/litex",
+        "-strict",
+        "-f",
+        "examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit"
+      ],
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "thm equality_forward:\n    ? forall x, y R:\n        x = y\n        =>:\n            y = x",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall x, y R:\n    x = y\n    =>:\n        y = x"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "thm equality_reverse:\n    ? forall x, y R:\n        y = x\n        =>:\n            x = y",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall x, y R:\n    y = x\n    =>:\n        x = y"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "by thm equality_forward(2, 2) => 2 = 2",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By theorem",
+              "message": "Apply a recorded theorem"
+            },
+            "stores": [
+              "2 = 2"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "by thm equality_reverse(3, 3) => 3 = 3",
+            "proof_method": {
+              "type": "by",
+              "rule_name": "By theorem",
+              "message": "Apply a recorded theorem"
+            },
+            "stores": [
+              "3 = 3"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "name": "same_session_correction",
+      "command": [
+        "target/release/litex",
+        "-strict",
+        "-f",
+        "examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit",
+        "-session"
+      ],
+      "stdin": "thm equality_iff:\n    ? forall x, y R:\n        =>:\n            x = y\n        <=>:\n            y = x\n\nthm equality_iff:\n    ? forall x, y R:\n        x = y\n        =>:\n            y = x\n\nby thm equality_iff(1, 1) => 1 = 1\nexit\n",
+      "exit_code": 0,
+      "stdout": "Litex REPL 1.0.0-beta\ntype `exit` or Ctrl-D to quit; end a block with a blank line\nlitex> ... ... ... ... ... ... {\n  \"kind\": \"run\",\n  \"success\": false,\n  \"target\": \"repl\",\n  \"path\": null,\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": false,\n      \"statement\": \"thm equality_iff:\\n    ? forall x, y R:\\n        =>:\\n            x = y\\n        <=>:\\n            y = x\",\n      \"why_failed\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\",\n        \"phase\": \"def_thm\",\n        \"failure\": {\n          \"phase\": \"goal_unsupported\",\n          \"message\": \"thm: forall ... <=> goals are not supported\"\n        }\n      },\n      \"stores\": [],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\nlitex> ... ... ... ... ... success\nlitex> success\nlitex> {\n  \"kind\": \"run\",\n  \"success\": true,\n  \"target\": \"file\",\n  \"path\": \"examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit\",\n  \"detail\": \"normal\",\n  \"language\": \"en\",\n  \"statement_results\": [\n    {\n      \"success\": true,\n      \"statement\": \"thm equality_forward:\\n    ? forall x, y R:\\n        x = y\\n        =>:\\n            y = x\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall x, y R:\\n    x = y\\n    =>:\\n        y = x\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"thm equality_reverse:\\n    ? forall x, y R:\\n        y = x\\n        =>:\\n            x = y\",\n      \"proof_method\": {\n        \"type\": \"definition\",\n        \"rule_name\": \"Define theorem\",\n        \"message\": \"Record a theorem\"\n      },\n      \"stores\": [\n        \"forall x, y R:\\n    y = x\\n    =>:\\n        x = y\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"by thm equality_forward(2, 2) => 2 = 2\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"2 = 2\"\n      ],\n      \"infers\": []\n    },\n    {\n      \"success\": true,\n      \"statement\": \"by thm equality_reverse(3, 3) => 3 = 3\",\n      \"proof_method\": {\n        \"type\": \"by\",\n        \"rule_name\": \"By theorem\",\n        \"message\": \"Apply a recorded theorem\"\n      },\n      \"stores\": [\n        \"3 = 3\"\n      ],\n      \"infers\": []\n    }\n  ],\n  \"session_error\": null\n}\n",
+      "stderr": ""
+    }
+  ],
+  "rust_gate": {
+    "command": "cargo test --release --lib def_thm_goal_boundary -- --nocapture",
+    "exit_code": 0,
+    "passed": 4,
+    "failed": 0
+  },
+  "statement_leaf_gate": {
+    "command": "python3 examples/test_statements/run.py --leaf DefThmStmt",
+    "exit_code": 0,
+    "checks": 7,
+    "unexpected_failures": 0,
+    "known_gaps": 0
+  },
+  "historical_error_boundary": "The reduced C2 baseline was accepted by the current pre-change release. Its old internal_bug was not reproduced; the full historical prefix was not replayed.",
+  "authoring_debt": "The textbook strict-order trust was not removed. Its todo now records a supported-formulation proof obligation instead of a request to enable forbidden theorem goals.",
+  "test_import_drift": "The skill template crate::prelude does not exist in the current crate (E0432). Tests use the established LaunchCommand/OutputLanguage/Runtime imports.",
+  "skipped_gates": [
+    "whole-book",
+    "full-kernel",
+    "To-Lean"
+  ]
+}

@@ -1,0 +1,51 @@
+# Tracer: point and set preimages retain the complete guarded input domain.
+# Before (unsupported objects):
+# 2 $in preimage(reciprocal, 1 / 2)
+# 2 $in preimage_set(reciprocal, {1 / 2})
+# Former behavior: preimage/preimage_set were not object constructors.
+# Now: both constructors check their bounded domain and expose member facts.
+# Boundary: wrong values and inputs violating a function guard reject.
+# Run: target/release/litex -strict -lang en -f examples/wd/function_preimages.lit
+
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+reciprocal(2) = 1 / 2
+
+2 $in preimage(reciprocal, 1 / 2)
+
+2 $in preimage_set(reciprocal, {1 / 2})
+
+forall x preimage(reciprocal, 1 / 2):
+    x $in R
+    x != 0
+    reciprocal(x) = 1 / 2
+
+forall x preimage_set(reciprocal, {1 / 2}):
+    x $in R
+    x != 0
+    reciprocal(x) $in {1 / 2}
+
+have fn square(x R) R = x^2
+
+square(2) = 4
+
+square(-2) = 4
+
+let fiber = preimage(square, 4)
+
+2 $in fiber
+
+-2 $in fiber
+
+have fn divide(a, b R: b != 0) R = a / b
+
+divide(6, 2) = 3
+
+(6, 2) $in preimage(divide, 3)
+
+(6, 2) $in preimage_set(divide, {3, 4})
+
+forall p preimage(divide, 3):
+    p $in cart(R, R)
+    p(2) != 0
+    divide(p(1), p(2)) = 3

@@ -9,6 +9,68 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::ScalarExtra(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_extra::ScalarExtraEqualityProof as P;
+            let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
+            match p {
+                P::SqrtProductFromKnownArgument(p) => {
+                    entries.push(("argument_equality",super::searched::project_equal_searched(&p.argument_equality,runtime)));
+                },
+                P::SqrtQuotientFromKnownArgument(p) => {
+                    entries.push(("argument_equality",super::searched::project_equal_searched(&p.argument_equality,runtime)));
+                },
+                P::ArcsinFromKnownSine(p) => {
+                    entries.push(("principal_bounds",project_verify_facts(&p.principal_bounds,runtime)));
+                    entries.push(("sine_equality",super::searched::project_equal_searched(&p.sine_equality,runtime)));
+                },
+                P::RealLogFromKnownPower(p) => {
+                    entries.push(("base_guard",project_log_algebra_base(&p.base_guard,runtime)));
+                    entries.push(("exponent_real",project_verify_fact(&p.exponent_real,runtime)));
+                    entries.push(("power_equality",super::searched::project_equal_searched(&p.power_equality,runtime)));
+                },
+                P::PositivePowerLogInverse(p) => {
+                    entries.push(("base_guard",project_log_algebra_base(&p.base_guard,runtime)));
+                },
+                P::PositivePowerReciprocalRoot(p) => {
+                    entries.push(("base_positive",project_verify_fact(&p.base_positive,runtime)));
+                    entries.push(("exponent_positive_natural",project_verify_fact(&p.exponent_positive_natural,runtime)));
+                },
+                P::PositiveIntegerPowerInjective(p) => {
+                    entries.push(("left_positive",project_verify_fact(&p.left_positive,runtime)));
+                    entries.push(("right_positive",project_verify_fact(&p.right_positive,runtime)));
+                    entries.push(("exponent_integer",project_verify_fact(&p.exponent_integer,runtime)));
+                    entries.push(("exponent_nonzero",project_verify_fact(&p.exponent_nonzero,runtime)));
+                    entries.push(("power_equality",super::searched::project_equal_searched(&p.power_equality,runtime)));
+                },
+                P::NestedRemainderUnit(_) => {
+                },
+            }
+            object_for(runtime,entries)
+        },
+
+        EqualitySearchProofByBuiltinRule::IntegerInterval(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_integer_interval::{IntegerIntervalEqualityProof as P,IntegerBoundaryProof as B};
+            let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
+            let (variable,boundary)=match p {
+                P::SingletonAtLower(p)=>{
+                    entries.push(("lower_weak",super::searched::project_known_premise(&p.lower_weak,runtime)));
+                    entries.push(("upper_strict",super::searched::project_known_premise(&p.upper_strict,runtime)));
+                    (&p.variable_integer,&p.boundary_integer)
+                },
+                P::SingletonAtUpper(p)=>{
+                    entries.push(("lower_strict",super::searched::project_known_premise(&p.lower_strict,runtime)));
+                    entries.push(("upper_weak",super::searched::project_known_premise(&p.upper_weak,runtime)));
+                    (&p.variable_integer,&p.boundary_integer)
+                },
+            };
+            entries.push(("variable_integer",project_verify_fact(variable,runtime)));
+            entries.push(("boundary_integer",match boundary {
+                B::Membership(p)=>project_verify_fact(p,runtime),
+                B::Successor{predecessor,predecessor_integer}=>object_for(runtime,vec![("type",string("integer_successor")),("predecessor",string(predecessor.readable_string())),("predecessor_integer",project_verify_fact(predecessor_integer,runtime))]),
+            }));
+            object_for(runtime,entries)
+        },
+
         EqualitySearchProofByBuiltinRule::FactorialPredecessor(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("FactorialPredecessor")),
             ("positive_natural", project_verify_fact(&p.positive_natural, runtime)),
@@ -134,6 +196,7 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::SqrtSquareNonpositive(p) => entries.push(("nonpositive_argument",project_verify_fact(&p.nonpositive_argument,runtime))),
                 P::ModNegation {requirements} | P::ModNaturalPower {requirements} => entries.push(("requirements",project_verify_facts(requirements,runtime))),
                 P::PositivePowerZero {premise,requirements} | P::PositivePowerCancellation {premise,requirements} | P::SqrtKnownSquare {premise,requirements} => {
                     entries.push(("premise",super::searched::project_equal_searched(premise,runtime)));
@@ -146,6 +209,12 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof as P;
             let mut entries=vec![("type",string("builtin_rule")),("rule",string(p.rule_id()))];
             match p {
+                P::SinThreeAngleSum(p) => {
+                    entries.push(("first",string(p.first.readable_string())));
+                    entries.push(("second",string(p.second.readable_string())));
+                    entries.push(("third",string(p.third.readable_string())));
+                },
+                P::TanAddition(_) => {},
                 P::ComplexModulusCoordinates(_) | P::RealPartQuotient(_) | P::ImaginaryPartQuotient(_) => {},
                 P::TanCotProduct(p) => entries.push(("angle", string(p.angle.readable_string()))),
                 P::TanSquareReciprocalCosine(p) => entries.push(("angle", string(p.angle.readable_string()))),

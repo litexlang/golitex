@@ -4,6 +4,7 @@ pub mod expand_definition;
 pub mod infer_atomic_except_equality;
 pub mod membership_cart_interval;
 pub mod membership_fn;
+mod membership_preimage;
 pub mod membership_index_family;
 pub mod membership_list_set_ops;
 pub mod membership_projection;

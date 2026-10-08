@@ -1,0 +1,183 @@
+{
+  "date": "2026-10-08",
+  "task": "comfortable overview paragraphs with one example per workflow capability",
+  "source": [
+    "docs/Litex中文蓝图.md",
+    "docs/Litex_Blueprint.md"
+  ],
+  "problem": "Overview item 3 compressed REPL, reuse, graph, execution and communication into one dense paragraph.",
+  "proof_idea": "Use existing checked Newton context for the three-statement REPL control and a short recorded theorem application. Confirm one actual theorem-instance edge, a generated Python numeric call and an exact LaTeX fragment.",
+  "litex_code": "release obj def newton::newton_sqrt_two\nrelease thm newton::fixed_point(sqrt(2))",
+  "binary_sha256": "804bbe70f02cb76543c49bdd6361edc403412da5263fa864ac31fc64258fd9a2",
+  "checks": [
+    {
+      "name": "comfort-module",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "tmp/2026-10-08/blueprint-math-workflow/comfort-project/example.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "success": true
+    },
+    {
+      "name": "comfort-graph",
+      "command": [
+        "target/release/litex",
+        "-graph",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "tmp/2026-10-08/blueprint-math-workflow/comfort-project/example.lit"
+      ],
+      "exit_code": 0,
+      "kind": "math_graph",
+      "success": true,
+      "relationship": "thm fixed_point -> its accepted sqrt(2) instance"
+    },
+    {
+      "name": "comfort-python",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-extractpython",
+        "-f",
+        "tmp/2026-10-08/blueprint-math-workflow/extract.lit"
+      ],
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "call": "newton_sqrt_two_step(1.0)",
+      "value": 1.5
+    },
+    {
+      "name": "comfort-c",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-extractc",
+        "-f",
+        "tmp/2026-10-08/blueprint-math-workflow/extract.lit"
+      ],
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true
+    },
+    {
+      "name": "comfort-latex-zh",
+      "command": [
+        "target/release/litex",
+        "-latex",
+        "-lang",
+        "zh",
+        "-e",
+        "1 + 1 = 2"
+      ],
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "content": "\\[\n1 + 1 = 2\n\\]\n\n"
+    },
+    {
+      "name": "comfort-latex-en",
+      "command": [
+        "target/release/litex",
+        "-latex",
+        "-lang",
+        "en",
+        "-e",
+        "1 + 1 = 2"
+      ],
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "content": "\\[\n1 + 1 = 2\n\\]\n\n"
+    }
+  ],
+  "documents": {
+    "docs/Litex中文蓝图.md": {
+      "before_sha256": "4e1640822effbb03a2538d253263b9a71e01f6094bf4d56d38ea7913b1cecf84",
+      "after_sha256": "8a65aa6db1c74993527bc4a1164c355829dcb52d1d186084827d7bca7ee4dc35",
+      "short_paragraphs": [
+        "边写边检查。",
+        "把知识保存下来，在其他文件中使用。",
+        "看清知识之间的联系。",
+        "让成果用于计算。",
+        "把数学写成便于阅读的文稿。"
+      ],
+      "example_languages": [
+        "text",
+        "litex",
+        "mermaid",
+        "text",
+        "latex"
+      ],
+      "other_content_unchanged": true,
+      "all_previous_code_fences_preserved": true,
+      "anchors_and_five_feature_structure": "passed"
+    },
+    "docs/Litex_Blueprint.md": {
+      "before_sha256": "d30f9ba96f2a9df622e750c670d315ab4b7726c8d2bf98075a162becb4a12878",
+      "after_sha256": "c583cb981ce4c7ca47d0b1788f3fa2badc0da4c6f02e3d226c207bc671d4c52c",
+      "short_paragraphs": [
+        "Check as I write.",
+        "Save knowledge for use in another file.",
+        "See how knowledge connects.",
+        "Put results to work in a calculation.",
+        "Write mathematics for others to read."
+      ],
+      "example_languages": [
+        "text",
+        "litex",
+        "mermaid",
+        "text",
+        "latex"
+      ],
+      "other_content_unchanged": true,
+      "all_previous_code_fences_preserved": true,
+      "anchors_and_five_feature_structure": "passed"
+    }
+  },
+  "comments": {
+    "impact": "L0 executable documentation; no implementation changes.",
+    "layout": "Five short bold-led paragraphs, each immediately followed by a small example; examples use text, Litex, Mermaid, Python transcript and LaTeX source.",
+    "scope": "Only the quoted dense overview paragraph is replaced. The supporting design principle, other four characteristics and every body chapter remain byte-for-byte unchanged.",
+    "context": "The new Litex fence is a project-context excerpt. It is skipped by the standalone collector and verified against the complete configured two-file example.",
+    "graph": "Mermaid is a schematic of one real theorem_instance relation, not a full export or independent proof replay.",
+    "latex": "Both locales return the displayed fragment with verified=false.",
+    "skipped": "Full source build, full docs/Rust/Lean gates and website wiring.",
+    "journal": "tmp/2026-10-08/blueprint-math-workflow/overview-comfort-journal.json",
+    "draft_area": "tmp/2026-10-08/blueprint-math-workflow/"
+  },
+  "session_controls": [
+    {
+      "code": "newton_sqrt_two(1) = 3 / 2",
+      "status": "accepted"
+    },
+    {
+      "code": "newton_sqrt_two(0) = 1",
+      "status": "expected_rejection"
+    },
+    {
+      "code": "newton_sqrt_two(3 / 2) = 17 / 12",
+      "status": "accepted"
+    },
+    {
+      "code": "release obj def newton::newton_sqrt_two",
+      "status": "accepted"
+    },
+    {
+      "code": "release thm newton::fixed_point(sqrt(2))",
+      "status": "accepted"
+    }
+  ]
+}

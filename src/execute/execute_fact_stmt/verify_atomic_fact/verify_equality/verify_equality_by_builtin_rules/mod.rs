@@ -71,3 +71,7 @@ pub mod by_scalar_division_relations;
 pub mod by_exponential_logarithm_identities;
 
 pub mod by_factorial_predecessor;
+
+pub mod by_integer_interval;
+
+pub mod by_scalar_extra;

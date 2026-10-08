@@ -324,6 +324,12 @@ impl Runtime {
         if let Some(proof) = self.search_interval_membership_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntervalMembership(proof)));
         }
+        if let Some(proof) = self.search_preimage_membership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageMembership(proof)));
+        }
+        if let Some(proof) = self.search_preimage_set_membership_strategy(fact, ctx)? {
+            return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PreimageSetMembership(proof)));
+        }
         if let Some(proof) = self.search_set_builder_membership_strategy(fact, ctx)? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderMembership(proof)));
         }

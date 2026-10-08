@@ -8,6 +8,7 @@ pub mod structural_order_strict;
 pub mod numeric_carrier;
 mod search_field_arithmetic_carrier_strategy;
 pub mod set_membership;
+mod preimage;
 mod function_membership;
 mod finite_function_membership;
 pub mod subset;

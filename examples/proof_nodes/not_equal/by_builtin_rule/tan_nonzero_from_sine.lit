@@ -1,0 +1,5 @@
+forall x R:
+    sin(x)!=0
+    cos(x)!=0
+    =>:
+        tan(x)!=0

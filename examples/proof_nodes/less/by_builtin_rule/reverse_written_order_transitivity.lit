@@ -1,0 +1,5 @@
+forall a,b,c R:
+    b>a
+    c>=b
+    =>:
+        c>a

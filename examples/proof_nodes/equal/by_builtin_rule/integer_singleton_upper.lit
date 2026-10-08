@@ -1,0 +1,5 @@
+forall x,n N:
+    n<x
+    x<=n+1
+    =>:
+        x=n+1

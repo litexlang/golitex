@@ -1,0 +1,4 @@
+forall a R+,n Z:
+    a<1
+    =>:
+        log(a,a^n)=n

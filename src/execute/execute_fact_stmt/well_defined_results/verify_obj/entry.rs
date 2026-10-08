@@ -120,6 +120,13 @@ impl Runtime {
             }
         }
 
+        if let Obj::FunctionSpace(FunctionSpace::Preimage(value)) = obj {
+            return self.verify_preimage_obj_well_definedness(value, verify_state);
+        }
+        if let Obj::FunctionSpace(FunctionSpace::PreimageSet(value)) = obj {
+            return self.verify_preimage_set_obj_well_definedness(value, verify_state);
+        }
+
         // fn_range(f): requires f registered in some FnSet.
         if let Obj::FunctionSpace(FunctionSpace::FnRange(value)) = obj {
             return self.verify_fn_range_obj_well_definedness(value, verify_state);
@@ -342,6 +349,7 @@ impl Runtime {
             Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(value)) => {
                 self.verify_finite_set_min_obj_well_definedness_by_def(value, verify_state)
             }
+            Obj::FunctionSpace(FunctionSpace::Preimage(_)) | Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => unreachable!("preimages use dedicated WD pipelines"),
             Obj::FunctionSpace(FunctionSpace::FnRange(_)) => {
                 unreachable!("FnRange WD uses verify_fn_range_obj_well_definedness")
             }

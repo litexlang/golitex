@@ -306,7 +306,7 @@ impl Runtime {
     }
 
     // `p.f(a)`: WD the FieldAccess head, then domain-check args against the field's
-    // declared FnSet type (or a stored InFunctionSet on the field object).
+    // declared exact function/sequence signature (or stored membership).
     // Example: after `struct Bundle: f fn(x R) R` and `forall p &Bundle:`, WD of `p.f(0)`.
     pub(super) fn verify_field_access_headed_fn_obj_well_definedness(
         &mut self,
@@ -351,11 +351,14 @@ impl Runtime {
             .collect();
         if let Some(field_type) = self.resolve_field_access_field_type(access) {
             match field_type {
-                Obj::FunctionSpace(FunctionSpace::FnSet(fs)) => candidate_spaces.push(fs),
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
                     candidate_spaces.push(anon.body)
                 }
-                _ => {}
+                _ => {
+                    if let Some(signature) = self.function_space_signature(&field_type) {
+                        candidate_spaces.push(signature);
+                    }
+                }
             }
         }
         if candidate_spaces.is_empty() {
@@ -671,3 +674,7 @@ impl Runtime {
         !self.collect_in_function_set_candidates(obj).is_empty()
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/field_sequence_calls/tests.rs"]
+mod field_sequence_calls_tests;

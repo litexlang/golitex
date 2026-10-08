@@ -232,6 +232,10 @@ impl Runtime {
         if let Some(proof) = self.search_factorial_predecessor(fact, verify_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FactorialPredecessor(proof)));
         }
+        if let Some(proof) = self.search_integer_interval_equality(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerInterval(proof)));
+        }
+        if let Some(proof)=self.scalar_extra_equality(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarExtra(proof))); }
         if let Some(proof) = super::by_native_fixed_base::native_fixed_base(fact) {
             return Ok(Some(proof));
         }

@@ -1,0 +1,5 @@
+forall a,b,z R:
+    z=0
+    a*b!=z
+    =>:
+        a!=0

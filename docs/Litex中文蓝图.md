@@ -11,17 +11,20 @@
 ## 目录
 
 - [0. Litex 蓝图总览](#overview)
-  - [0.1 五条主线：Litex是怎么工作的](#overview-spine)
+  - [0.1 五个特点：Litex是怎么工作的](#overview-spine)
 - [1. 写下事实，看到成立的依据](#fact-oriented)
   - [1.1 事实导向：把“什么成立”写进源码](#fact-oriented-interface)
   - [1.2 每句话都留下什么：可检查知识记录](#execution-model)
-- [2. 从熟悉的数学世界开始：Litex 的集合论基础](#set-theory)
+- [2. 从熟悉的数学公理和符号开始：Litex 的集合论基础](#set-theory)
   - [2.1 设计难处：把具体的数学写法做成工作语言](#design-difficulty)
-- [3. 让已建立的知识继续生长：自下而上的证明](#bottom-up)
+- [3. 让形式化融入数学工作流](#mathematical-workflow)
+  - [3.1 每一步，都留下可以继续使用的知识](#workflow-principle)
+  - [3.2 边想边写，边写边检查](#workflow-exploration)
+  - [3.3 把今天的成果，留给下一次探索](#workflow-reuse)
+  - [3.4 让数学成果用于计算与交流](#workflow-use)
 - [4. 人、AI 与 Litex 共同推进证明](#interaction-loop)
 - [5. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）](#compatibility)
 - [6. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
-  - [6.1 把证明编译成可执行代码（Python / C）（Experimental）](#executable-code)
 - [7. 追寻与众不同的艺术](#conclusions)
   - [特别感谢](#special-thanks)
 - [附录：编程、数学与Litex形式化](#overview-readers)
@@ -36,29 +39,23 @@ _“语言是人类理性的工具，而不只是表达思想的媒介。”_
 
 _— George Boole，《思维的规律》（1854），第 II 章（节选）_
 
-*Litex 始于 2024 年，想回答一个问题：形式化语言能否成为每个愿意学习的人都能日常使用的数学语言，既贴近熟悉的数学表达，又接受严格检查？它希望成为形式化语言里的 Python，让更多人逐步成为形式化专家。*
+*Litex 始于 2024 年，是一门以集合与事实组织日常数学的形式化语言。它希望成为形式化语言里的 Python，让更多人逐步成为形式化专家。*
 
-**促进理解，是 Litex 的核心追求。** 数学帮助我们理解世界；AI 时代，尤其需要珍惜对数学本身的理解。这一追求体现在两个相连的方面。
+**促进理解，是 Litex 的核心追求。** 在 AI 时代，这一品质尤为珍贵。Litex 希望保留日常数学的对象与写法，降低形式化的学习和阅读成本；同时借助源码与验证依据，帮助读者看清定义、前提与结论的联系，[加深理解](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)并获得灵感。
 
-**一方面，让数学以熟悉的面貌出现。** Litex 尽量沿用日常数学中的对象和书写习惯：用集合、元素、函数和关系组织数学，直接陈述条件、事实与结论。目的是让读者沿用已有的数学直觉，降低学习和理解形式化表达的门槛与成本。
+**普通事实自动触发局部验证，是 Litex 的默认证明接口。** 作者选择定义、构造和中间结论；语言查找受支持的依据，返回结构化反馈，并把通过的事实存入上下文。这些结果可供 AI 读取，用于修复尝试、复用知识和积累可检查的推理数据。[第 1.1 节](#fact-oriented-interface)给出具体例子。
 
-**另一方面，让数学的结构更清楚。** 对照源码与验证记录，读者可以追问定义、条件和结论怎样相互依赖，一项知识如何建立，又怎样成为后续推理的依据。Litex 希望由此帮助人们在形式化的过程中[加深理解](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)、发现联系并获得灵感。
-
-写出可检查的证明，除了理解数学，还常要知道该引用哪条定理、怎样调用证明工具。Litex 把许多常见步骤的验证方法交给语言选择和组合：作者写下定义、构造和中间结论，语言从当前知识、内置规则和定义中寻找局部依据，并检查适用条件。
-
-作者可以先写出本步应当成立的事实，再看语言找到的依据或指出的停止位置。通过验证的事实会留下来，供后面的推理使用。Litex 用集合、元素、函数和关系组织这些内容，让人和 AI 能围绕明确的反馈协作。数学路线由作者决定；语言在支持范围内处理方法选择、前提检查和验证步骤的组合。[第 1.1 节](#fact-oriented-interface)用例子说明这种分工，以及它需要怎样的验证实现。
-
-这条路径的下一站是 Lean。Litex 到 Lean 的编译器尚未接入当前构建，预计在 2026 年底完成。它的目标是把支持范围内的 Litex 证明交给 Lean 独立复核，让读者从熟悉的数学表达走进现有的形式化生态。
+Litex 到 Lean 的编译器预计在 2026 年底完成，目前尚未接入构建。它的目标是让支持范围内的证明接受 Lean 独立复核，并连接现有形式化生态。
 
 <a id="overview-spine"></a>
 
-### 0.1 五条主线：Litex是怎么工作的
+### 0.1 五个特点：Litex是怎么工作的
 
-**这五条主线说明 Litex 如何逐步建立可检查的数学知识，并将其用于 Math for AI。**
+**这五个特点围绕一个问题：以事实和反馈组织知识，能否降低人和 AI 构造、理解、审阅与复用可检查数学的成本？**
 
-**1. 我写下要证明什么，语言告诉我为什么成立。**
+**1. 我可以用数学事实来写证明。**
 
-我仍然需要思考证明、选择构造和中间结论。但对于可以从当前知识中找到的局部依据，我希望语言能主动完成检查，并向我解释它找到了什么。
+我仍然需要思考证明，选择构造和中间结论，并写下接下来应当成立的数学事实。对于当前知识能够支持的局部步骤，Litex 会检查条件与依据，再向我解释它找到了什么。这是它的事实导向（fact-oriented）证明接口。
 
 例如，我可以直接写下一条计算事实：
 
@@ -129,9 +126,9 @@ $is_odd(3)
 
 **多语种验证反馈。** CLI 可以用多种语言呈现这些 JSON 验证反馈。同一段源码执行 `litex -lang zh -e '1 + 1 = 2'`，会得到中文字段名与说明；选用 `-lang fr` 则得到法文反馈。感谢 AI 工具在翻译上的协助，使多语种验证说明成为可能；选择输出语言不会改变 Litex 源码或验证结果。当前支持的输出语言代码是 `en`、`zh`、`zh-hant`、`fr`、`ru`、`es`、`ar`、`ja`、`ko` 和 `vi`。
 
-**2. 我可以从已经熟悉的数学世界开始。**
+**2. 我可以从熟悉的数学公理和符号开始。**
 
-Litex 以 ZFC 为基础，用集合、元素、函数与关系组织数学。我希望读者学习形式化时，能尽可能继续使用原有的数学直觉与表达习惯。
+Litex 以 ZFC 集合论公理为基础，用集合、元素、函数与关系组织数学。成员关系、子集和交集可以沿用熟悉的 `∈`、`⊆`、`∩` 等符号，让读者学习形式化时，尽可能继续使用原有的数学直觉与表达习惯。
 
 例如，把实数、集合、函数和关系放在同一个小例子里：
 
@@ -150,53 +147,69 @@ $is_less(2, 4)
 
 `have a R = 2` 同时引入了 `a $in R` 和 `a = 2`。`S` 是正实数集合，`f` 是实数上的平方函数，`is_less` 表达两个实数之间的小于关系；最后一句验证了具体关系 `2 < 4`。这些对象沿用日常数学中的组织方式。
 
-**3. 我们已经建立的知识，语言能够记住并继续使用。**
+**3. 形式化可以顺着我的数学工作流展开。**
 
-证明每前进一步，都应留下后面可以依赖的东西。对象、定义与已验证事实共同构成当前的数学背景，让新的推理在这个背景上继续生长。
+数学工作常从一个小问题开始：写下定义，试几个例子，检查条件，再把有用的结论留下来。我希望形式化能融入这个过程，让已经做过的工作成为继续探索的起点。背后的设计原则是：让已接受的数学语句留下后续可以依赖的知识。
 
-例如，我们可以自己证明康托尔定理：每个函数 \(f:X\to\mathcal P(X)\) 都会漏掉某个子集，因此不可能是满射。下面先定义“一个子集没有原像”，再用对角集合证明一般结论，最后把它用于一个具体函数。整段代码不使用 `trust`：
+**边写边检查。** 在一个新的 REPL 会话中，我可以写下定义，再检查具体输入。下面的倒数函数只接收非零实数；输入 `2` 可以通过，输入 `0` 则在条件检查时被拒绝。失败行概括了诊断：
 
-```litex
-prop has_no_preimage(X set, f fn(x X) power_set(X), D power_set(X)):
-    forall a X:
-        D != f(a)
-
-thm cantor:
-    ? forall X set, f fn(x X) power_set(X):
-        exist D power_set(X) st {$has_no_preimage(X, f, D)}
-
-    have D power_set(X) = {x X: not x $in f(x)}
-
-    thm diagonal_nonmembership:
-        ? forall a X:
-            D = f(a)
-            =>:
-                not a $in f(a)
-        by contra:
-            ? not a $in f(a)
-            a $in D
-            impossible a $in f(a)
-
-    claim:
-        ? forall a X:
-            D != f(a)
-        by contra:
-            ? D != f(a)
-            not a $in f(a)
-            a $in D
-            a $in f(a)
-            impossible a $in f(a)
-
-    by def $has_no_preimage(X, f, D)
-    witness exist E power_set(X) st {$has_no_preimage(X, f, E)} from D
-
-have fn singleton(n N) power_set(N) = {n}
-release thm cantor(N, singleton)
-obtain missing from exist S power_set(N) st {$has_no_preimage(N, singleton, S)}
-missing != singleton(0)
+```text
+litex> have fn f(x R: x != 0) R = 1 / x
+success
+litex> f(2) = 1 / 2
+success
+litex> f(0) = 0
+失败：输入 0 不满足 x != 0 的条件。
+litex> f(4) = 1 / 4
+success
 ```
 
-这个例子展示了知识怎样在证明中积累并继续使用。定义概念、证明康托尔定理之后，这些成果就成为当前数学背景的一部分。引入具体函数 `singleton` 后，Litex 能继续使用已经证明的一般结论，得到新的对象与事实，供后续推理依赖。
+**把知识保存下来，在其他文件中使用。** 在后文的[牛顿更新例子](#workflow-exploration)中，我把函数定义与不动点定理保存在 `newton.lit`。按[第 3.3 节](#workflow-reuse)组织项目后，我可以在另一个文件中直接引用已有成果：
+
+<!-- litex:skip-test -->
+```litex
+release obj def newton::newton_sqrt_two
+release thm newton::fixed_point(sqrt(2))
+```
+
+**让成果用于计算。** 支持范围内的计算片段可以抽取为 Python 或 C。比如，下面的绝对值分段定义，可以转换为右侧的 Python 代码：
+
+<table data-blueprint-conversion="python" style="table-layout:fixed;width:100%;border-collapse:collapse;">
+<thead>
+<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex 源码</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">Python 代码</th></tr>
+</thead>
+<tbody>
+<tr>
+<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>algo absolute(x R) R by cases:
+    case x &gt;= 0: x
+    case x &lt; 0: -x</code></pre></td>
+<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>def absolute(x):
+    if x &gt;= 0.0:
+        return x
+    elif x &lt; 0.0:
+        return (0.0 - x)
+    raise AssertionError(&quot;unreachable verified Litex cases&quot;)</code></pre></td>
+</tr>
+</tbody>
+</table>
+
+**把数学写成便于阅读的文稿。** 数学源码也可以转换为 LaTeX，用于讲义和文稿。左侧是一条数学事实，右侧是实际生成的排版源码；转换负责呈现，数学验证另行进行：
+
+<table data-blueprint-conversion="latex" style="table-layout:fixed;width:100%;border-collapse:collapse;">
+<thead>
+<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex 源码</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">LaTeX 源码</th></tr>
+</thead>
+<tbody>
+<tr>
+<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>1 + 1 = 2</code></pre></td>
+<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>\[
+1 + 1 = 2
+\]</code></pre></td>
+</tr>
+</tbody>
+</table>
+
+完整的定义、证明与项目配置，见[第 3 节](#mathematical-workflow)。
 
 **4. AI 可以和人一起，在明确反馈中推进证明。**
 
@@ -235,7 +248,7 @@ theorem one_add_one : Litex.Same ((1 : ℂ) + (1 : ℂ)) (2 : ℂ) := by
 
 无论你是数学家、程序员，还是 Lean 用户，都可以从 Litex 中发现新的知识与视角；感兴趣的话，可以继续阅读文末的[编程、数学与Litex形式化](#overview-readers)。
 
-后文依次展开这五条主线，最后讨论语言生态；读者比较与更多源码例子放在附录。
+后文依次展开这五个特点，再讨论语言生态；读者比较与更多源码例子放在附录。
 
 <a id="fact-oriented"></a>
 
@@ -751,7 +764,7 @@ JSON 直接从内部执行结果生成，呈现本步检查的摘要。关系图
 
 <a id="set-theory"></a>
 
-## 2. 从熟悉的数学世界开始：Litex 的集合论基础
+## 2. 从熟悉的数学公理和符号开始：Litex 的集合论基础
 
 _“语言设计，是宏大思想与繁琐细节的一种奇妙混合。”_
 
@@ -956,22 +969,35 @@ Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系�
 
 </details>
 
-<a id="bottom-up"></a>
+<a id="mathematical-workflow"></a>
 
-## 3. 让已建立的知识继续生长：自下而上的证明
+## 3. 让形式化融入数学工作流
 
 _“如果我看得更远，那是因为我站在巨人的肩上。”_
 
 _— Isaac Newton，致 Robert Hooke 的信（1676）_
 
-在 Litex 中，证明通常从已有的条件和事实向前推进。每一个通过验证的步骤都会留下后面可以使用的知识。即使最终目标尚未完成，已经建立的中间结论也可以继续使用。
+做数学时，我们会在定义、例子与证明之间往返。一个计算引出猜想，一次检查让条件变得清楚，一个证明又为下一个问题留下可用的结论。Litex 希望让这些动作在形式化中自然衔接。
 
-Lean 的典型 tactic 交互先给出目标，再把它化为子目标。这里比较的是写作与交互的默认方向：Litex 常问“已知事实还支持什么”，Lean tactic 常问“当前目标还需什么”；两者都须严格检查所得结论。
+以牛顿法逼近 √2 的单步更新为例。我们先探索它，再保存一个已经证明的性质，最后看看这份数学成果怎样用于计算与交流。
+
+<a id="workflow-principle"></a>
+<a id="bottom-up"></a>
+
+### 3.1 每一步，都留下可以继续使用的知识
+
+支撑这条工作流的是一个贯穿 Litex 设计的原则：**每条已接受的数学语句，都应在自己的作用域内为后续工作留下可用的知识。**
+
+定义建立对象与词汇，证明积累已接受的事实。我们从已有的条件向前推进，每一个成立的中间结论都为下一步增加可用的依据。只要相应语句已经被接受，即使整体问题尚未解决，这些中间成果也可以继续使用。
+
+REPL 中已接受的上下文、文件与模块中的定义和定理，都服务于这种积累。依赖记录帮助读者回看它们的联系；代码抽取与排版转换则为已有成果提供进一步的用途。
 
 <a id="two-directions"></a>
 
 <details>
 <summary><strong>小例子：同一条代数等式的自上而下与自下而上写法</strong></summary>
+
+Lean 的典型 tactic 交互先给出目标，再把它化为子目标。这里比较的是写作与交互的默认方向：Litex 常问“已知事实还支持什么”，Lean tactic 常问“当前目标还需什么”；两者都须严格检查所得结论。
 
 这个例子展示同一等式的两种推进方向。Lean 从目标出发，每条 `rw` 指定事实、匹配方向和替换：
 
@@ -1007,6 +1033,208 @@ claim:
 Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步检查，因此“自下而上”并非 Litex 独有。Litex 检验的是组合：普通事实自动触发局部验证，通过后扩展上下文，同时让已接受或停下来的路径保持可见，供用户或人工智能检查和修复；只有常规验证不足时才写显式证明结构。更完整的比较见第 1 节的小结“Litex 与 Naproche——相近目标，不同核心接口”。
 
 </details>
+
+<a id="workflow-exploration"></a>
+
+### 3.2 边想边写，边写边检查
+
+从一个正数 `x` 出发，更新公式是 `(x + 2 / x) / 2`。这里的“正数”有实际作用：它保证除法有意义，也让更新后的数仍然为正。先检查这件事，再定义函数：
+
+```litex
+claim:
+    ? forall x R+:
+        (x + 2 / x) / 2 $in R+
+    2 / x > 0
+    x + 2 / x > 0
+    (x + 2 / x) / 2 > 0
+
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+```
+
+现在可以试几个具体值。把上面的代码成功加载到 REPL 后，下面三句依次在同一个会话中输入；失败行概括了 JSON 中的诊断：
+
+```text
+litex> newton_sqrt_two(1) = 3 / 2
+success
+litex> newton_sqrt_two(0) = 1
+失败：无法证明 0 $in R+，函数调用的条件不满足。
+litex> newton_sqrt_two(3 / 2) = 17 / 12
+success
+```
+
+第二句停在条件检查：零不属于这个函数的定义域。我们修正输入后，可以沿着此前已经接受的定义和事实继续探索。普通验证失败会丢弃失败语句自身的候选状态，保留已经接受的上下文；进程退出后，则需要重新加载或重放这些成果。
+
+这让反馈直接回到数学问题：输入是否满足条件？下一步能否成立？人和 AI 都可以据此调整下一次尝试。REPL 的启动与恢复方式见 [CLI 文档](cli.md#session-flag)。
+
+<a id="workflow-reuse"></a>
+
+### 3.3 把今天的成果，留给下一次探索
+
+算出几个值之后，我们可以证明一个一般性质：如果正数 `x` 满足 `x^2 = 2`，牛顿更新就保持它不变。这一步把具体尝试推进为可以再次引用的数学知识。
+
+<details>
+<summary><strong>看一个两文件例子：这里证明，那里使用</strong></summary>
+
+把上一节的函数定义连同它前面的正性证明保存为 `newton.lit`，再在同一文件中加入下面的定理。等式链先得到 `x = 2 / x`，再代入更新公式：
+
+<!-- litex:skip-test -->
+```litex
+thm fixed_point:
+    ? forall x R+:
+        x^2 = 2
+        =>:
+            newton_sqrt_two(x) = x
+    x = x * x / x = x^2 / x = 2 / x
+    newton_sqrt_two(x) = (x + 2 / x) / 2 = (x + x) / 2 = x
+```
+
+在 `litex.config` 中按数学依赖顺序组织两个文件：
+
+```toml
+[export]
+newton = "./newton.lit"
+example = "./example.lit"
+```
+
+另一个文件 `example.lit` 取用函数定义，再把已经证明的定理用于 √2：
+
+<!-- litex:skip-test -->
+```litex
+release obj def newton::newton_sqrt_two
+by thm newton::fixed_point(sqrt(2)) => newton::newton_sqrt_two(sqrt(2)) = sqrt(2)
+```
+
+运行 `litex -strict -f example.lit` 会先加载前面的 `newton.lit`，再检查这个应用。这里的两个片段按上述项目上下文验证；它们不作为独立文件运行。
+
+</details>
+
+<details>
+<summary><strong>另一个例子：把康托尔定理用于后续推理</strong></summary>
+
+例如，我们可以自己证明康托尔定理：每个函数 \(f:X\to\mathcal P(X)\) 都会漏掉某个子集，因此不可能是满射。下面先定义“一个子集没有原像”，再用对角集合证明一般结论，最后把它用于一个具体函数。整段代码不使用 `trust`：
+
+```litex
+prop has_no_preimage(X set, f fn(x X) power_set(X), D power_set(X)):
+    forall a X:
+        D != f(a)
+
+thm cantor:
+    ? forall X set, f fn(x X) power_set(X):
+        exist D power_set(X) st {$has_no_preimage(X, f, D)}
+
+    have D power_set(X) = {x X: not x $in f(x)}
+
+    thm diagonal_nonmembership:
+        ? forall a X:
+            D = f(a)
+            =>:
+                not a $in f(a)
+        by contra:
+            ? not a $in f(a)
+            a $in D
+            impossible a $in f(a)
+
+    claim:
+        ? forall a X:
+            D != f(a)
+        by contra:
+            ? D != f(a)
+            not a $in f(a)
+            a $in D
+            a $in f(a)
+            impossible a $in f(a)
+
+    by def $has_no_preimage(X, f, D)
+    witness exist E power_set(X) st {$has_no_preimage(X, f, E)} from D
+
+have fn singleton(n N) power_set(N) = {n}
+release thm cantor(N, singleton)
+obtain missing from exist S power_set(N) st {$has_no_preimage(N, singleton, S)}
+missing != singleton(0)
+```
+
+这个例子展示了知识怎样在证明中积累并继续使用。定义概念、证明康托尔定理之后，这些成果就成为当前数学背景的一部分。引入具体函数 `singleton` 后，Litex 能继续使用已经证明的一般结论，得到新的对象与事实，供后续推理依赖。
+
+</details>
+
+后一个文件沿用已有定理，继续处理自己的问题。随着这样的成果逐渐积累，定义、构造和定理可以组织为模块，供同一项目或其他项目使用。读者得到的也就不止是一篇完成的证明，还有下一次工作可以依赖的数学词汇与知识。
+
+积累之后，还需要看清联系。新版 CLI 的 `-graph` 可以展示定义、定理与已接受事实之间的数学依赖。例如，上面定理在新文件中的应用，会连接到原来的定理，便于读者回看它使用了什么。图的查看方式见 [依赖图指南](cli.md#mathematical-dependency-graphs-preview)。
+
+*当前 CLI 已提供原生数学依赖图；网页目前展示的是 Normal JSON 的关系投影，原生图尚未接入。依赖图用于查看知识关系，独立证明复核仍是第 5 节讨论的另一项工作。*
+
+<a id="workflow-use"></a>
+<a id="executable-code"></a>
+
+### 3.4 让数学成果用于计算与交流
+
+保存和复用之外，数学成果还可以继续用于计算，也可以写成供别人阅读的文稿。Litex 正在提供这两种出口，让形式化源码与日常数学工作发生更多联系。
+
+**用于计算。** 在目前支持的实验范围内，已检查的数值定义与 `algo` 片段可以抽取为 Python 或 C。牛顿更新可以写成一个执行入口，并证明它在正数输入上与前面的数学函数一致：
+
+<details>
+<summary><strong>展开查看：同一个牛顿更新，转为 Python / C</strong></summary>
+
+下面是完整的独立片段。`# [-extract]` 与 `# [end of -extract]` 选择文件中要抽取的部分；其他语句用于普通验证。执行入口对零输入明确返回 `1`；与正数函数的一致性只在 `x R+` 上证明。
+
+```litex
+claim:
+    ? forall x R+:
+        (x + 2 / x) / 2 $in R+
+    2 / x > 0
+    x + 2 / x > 0
+    (x + 2 / x) / 2 > 0
+
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+
+# [-extract]
+algo newton_sqrt_two_step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
+# [end of -extract]
+
+claim:
+    ? forall x R+:
+        newton_sqrt_two_step(x) = newton_sqrt_two(x)
+    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
+```
+
+用 `-extractpython -f` 抽取后得到：
+
+```python
+def newton_sqrt_two_step(x):
+    if x == 0.0:
+        return 1.0
+    elif x != 0.0:
+        return ((x + (2.0 / x)) / 2.0)
+    raise AssertionError("unreachable verified Litex cases")
+```
+
+同一片段用 `-extractc -f` 可以得到 C：
+
+```c
+#include <stdlib.h>
+
+double newton_sqrt_two_step(double x) {
+    if (x == 0.0) {
+        return 1.0;
+    }
+    else if (x != 0.0) {
+        return ((x + (2.0 / x)) / 2.0);
+    }
+    abort();
+}
+```
+
+Python/C 抽取仍限于支持的计算片段。生成代码使用浮点数；Litex 检查的是源码中的数学关系，浮点舍入与溢出还需要另行分析。具体支持范围见 [代码抽取指南](../src/extract_executable_code/README.md)。
+
+</details>
+
+**用于阅读与交流。** 数学源码也可以转换为 LaTeX，让定义、公式和证明步骤进入讲义或文稿。例如，可以对上面的两文件项目使用 `-latex -document -lang zh -f example.lit`，得到可继续编辑的 LaTeX 文稿。
+
+LaTeX 转换负责呈现数学源码，数学验证需要单独运行。格式与使用方式见 [LaTeX 转换指南](cli.md#latex-conversion-preview)。
+
+从一次探索到一个可复用的定理，再到计算和交流，这是第三个特点希望连接起来的数学工作流。一次证明的完成，也应当成为下一次数学工作的开始。
 
 <a id="interaction-loop"></a>
 
@@ -1367,7 +1595,7 @@ Litex 希望让同一份经过验证的源码和结果，用于人的阅读、AI
 | 可读推理的前端 | 人可以直接审核的数学对象、条件、中间事实和结论 |
 | 可信推理数据的生产层 | 经过机器检查的事实与验证来源、明确的停止边界，以及被显式标出的可信边界 |
 | 现有生态的接入层 | 从一开始的设计上即面向 Lean 编译与复核（第 5 节，Experimental）；早期 Lean 产物仅记录实验覆盖，当前 `src/` 未接入编译器；以及明确分离、由 AI 或人类编写的新增 Lean/Mathlib adapter |
-| 证明 → 可执行代码（Experimental） | 把已检查的计算片段转化成可运行的 Python / C（第 6.1 节） |
+| 证明 → 可执行代码（Experimental） | 把已检查的计算片段转化成可运行的 Python / C（第 3.4 节） |
 
 当前验证器与工具已具备相当规模，但可用性、领域覆盖与实际采用仍须由带日期的例子和使用结果证明。对这些方向感兴趣，可以联系 litexlang@outlook.com。
 
@@ -1377,64 +1605,6 @@ Litex 希望让同一份经过验证的源码和结果，用于人的阅读、AI
 这条路线有一个规模矛盾：对象、事实、证明与可信边界需要少数设计者持续统筹，才能保持语义一致；实现却涉及大量规则、良定义性路径、证据结果、失败诊断、例子和测试。以 2026 年 10 月 4 日工作树中的已跟踪文件计，当前 `src/` 有 631 个 Rust 文件、约 13.7 万物理行。全仓库的 Rust 文件约 41.9 万行，但其中包含 `scripts/` 下的历史与实验实现，不能都算作当前验证器。这些数字说明工程规模，不证明数学覆盖或正确性。
 
 AI 工具改变的是小团队编写、检查和迭代大量实现工作的成本；它不替人决定数学语义、可信边界或验收标准。集合论式语言、自然可读的证明和局部自动化也各有先例。Litex 要检验的是：把这些选择放进同一个默认工作界面，在新的工程条件下能否形成可读、可检查、可持续扩展的数学工作流。
-
-</details>
-
-<a id="executable-code"></a>
-
-### 6.1 把证明编译成可执行代码（Python / C）（Experimental）
-
-Litex 还在实验把已验证的计算片段转化成可运行的 Python 或 C。目前主要处理支持范围内的数值定义与 `algo` 片段，让同一份经过检查的计算写法也能用于执行。
-
-这条路线刻意做窄，且标明实验性。它不是整门 Litex 到 Python/C 的编译器；覆盖限于可抽取定义。命令行见 CLI 文档中的 `-extractpython` / `-extractc`。
-
-<details>
-<summary><strong>示意：牛顿法逼近 √2 的单步 → Python / C</strong></summary>
-
-同一份用于科学计算的 Litex 证明，可以转化成可执行代码。例如牛顿法逼近 √2 的单步更新：
-
-> **迁移示例：** 当前 `src/` 检查停在 `parse_error: undefined name newton_sqrt_two_step`；以下保留写法不算已验证结果。
-
-<!-- litex:skip-test -->
-```litex
-have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
-
-claim:
-    ? forall x R+:
-        newton_sqrt_two_step(x) = newton_sqrt_two(x)
-    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
-
-algo newton_sqrt_two_step(x R) R by cases:
-    case x = 0: 1
-    case x != 0: (x + 2 / x) / 2
-```
-
-转化为 Python：
-
-```python
-def newton_sqrt_two_step(x):
-    if x == 0.0:
-        return 1.0
-    elif x != 0.0:
-        return ((x + (2.0 / x)) / 2.0)
-    raise AssertionError("unreachable verified Litex cases")
-```
-
-转化为 C：
-
-```c
-#include <stdlib.h>
-
-double newton_sqrt_two_step(double x) {
-    if (x == 0.0) {
-        return 1.0;
-    }
-    else if (x != 0.0) {
-        return ((x + (2.0 / x)) / 2.0);
-    }
-    abort();
-}
-```
 
 </details>
 
@@ -1491,7 +1661,7 @@ Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu
 
 ## 附录：编程、数学与Litex形式化
 
-这一节从 Lean 用户、数学从业者、程序员和其他知识领域读者的经验出发，讨论 Litex 可能带来的知识与视角。您可以选择感兴趣的部分阅读，也可以回到[五条主线](#overview-spine)继续了解语言设计。
+这一节从 Lean 用户、数学从业者、程序员和其他知识领域读者的经验出发，讨论 Litex 可能带来的知识与视角。您可以选择感兴趣的部分阅读，也可以回到[五个特点](#overview-spine)继续了解语言设计。
 
 ### 写给 Lean 用户
 
@@ -1679,7 +1849,7 @@ Litex:             多集合归属    ≈ dynamic（偏 Python）
 
 事实表与规则表把一部分依据检索工作从作者转移给语言；[第 1 节](#fact-oriented)说明这条默认路径的搜索边界，[验证实现的分工](#automation-implementation)解释相应的工程成本。作者能少写许多操作，是因为每条受支持的路径都在实现中处理了前提、结果与失败反馈。
 
-还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 6.1 节）——同样标明实验性，且范围很窄，不是整门语言的后端。
+还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 3.4 节）——同样标明实验性，且范围很窄，不是整门语言的后端。
 
 ### 写给其他知识领域的读者
 

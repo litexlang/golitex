@@ -1,0 +1,5 @@
+forall x,n Z:
+    n<=x
+    x<n+1
+    =>:
+        n=x

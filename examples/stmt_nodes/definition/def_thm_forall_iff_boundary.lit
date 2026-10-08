@@ -1,0 +1,32 @@
+# Tracer: named theorems reject root quantified equivalence goals.
+#
+# Before (incorrectly accepted by the 2026-10-08 baseline):
+# thm bad:
+#     ? forall x R:
+#         =>:
+#             x = x
+#         <=>:
+#             x = x
+#
+# Now: the unsupported declaration fails with goal_unsupported before WD/proof.
+# Its executable rejection is tested in def_thm_goal_boundary_tests.
+# Separate ordinary forall theorem goals retain the supported proof interface.
+thm equality_forward:
+    ? forall x, y R:
+        x = y
+        =>:
+            y = x
+
+thm equality_reverse:
+    ? forall x, y R:
+        y = x
+        =>:
+            x = y
+
+by thm equality_forward(2, 2) => 2 = 2
+by thm equality_reverse(3, 3) => 3 = 3
+
+# Boundary: root forall ... <=> goals reject in both thm and claim,
+# even when both directions are provable. General iff fact verification is unchanged.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/definition/def_thm_forall_iff_boundary.lit
+# Negative: examples/test_statements/negative/def_thm_stmt/forall-iff-goal.lit

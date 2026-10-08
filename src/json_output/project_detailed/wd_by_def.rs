@@ -104,6 +104,8 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
                             ];
             object_for(runtime, entries)
         },
+        ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::Preimage(p)) => project_preimage_wd(obj, "Preimage", &p.child_obj_well_defined, &p.requirement_fact_verified, &p.construction, runtime),
+        ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::PreimageSet(p)) => project_preimage_wd(obj, "PreimageSet", &p.child_obj_well_defined, &p.requirement_fact_verified, &p.construction, runtime),
         ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("FunctionSpace")), ("kind", string("FnRange")),
             ("obj", string(obj.readable_string())),
@@ -171,4 +173,31 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
         ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sin(p)) => project_common_by_def(obj, "TrigOperator", "Sin", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Tan(p)) => project_common_by_def(obj, "TrigOperator", "Tan", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
     }
+}
+
+
+pub(super) fn project_preimage_construction(
+    proof: &crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(runtime, vec![
+        ("source", super::function_domain::project_source(&proof.source, runtime)),
+        ("bounded_subset", string(Obj::SetFormer(crate::ast::obj::SetFormer::SetBuilder(proof.builder.clone())).readable_string())),
+        ("builder_well_defined", project_obj_wd_proof(&proof.builder_well_defined, runtime)),
+    ])
+}
+
+fn project_preimage_wd(
+    obj: &Obj, kind: &str, children: &[Box<ObjWellDefinedProof>],
+    requirements: &[crate::execute::execute_fact_stmt::VerifyFactResult],
+    construction: &crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(runtime, vec![
+        ("type", string("by_def")), ("family", string("FunctionSpace")), ("kind", string(kind)),
+        ("obj", string(obj.readable_string())),
+        ("child_obj_well_defined", JsonValue::Array(children.iter().map(|proof| project_obj_wd_proof(proof, runtime)).collect())),
+        ("requirement_fact_verified", project_verify_facts(requirements, runtime)),
+        ("construction", project_preimage_construction(construction, runtime)),
+    ])
 }

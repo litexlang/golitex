@@ -193,6 +193,8 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("Complex modulus coordinates", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("Real part of a quotient", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("Imaginary part of a quotient", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -217,6 +219,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("复数模的坐标公式", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("复数商的实部", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("复数商的虚部", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -241,6 +245,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("複數模的座標公式", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("複數商的實部", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("複數商的虛部", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -265,6 +271,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("Coordonnées du module complexe", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("Partie réelle du quotient", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("Partie imaginaire du quotient", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -289,6 +297,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("Координаты модуля комплексного числа", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("Действительная часть частного", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("Мнимая часть частного", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -313,6 +323,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("Coordenadas del módulo complejo", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("Parte real de un cociente", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("Parte imaginaria de un cociente", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -337,6 +349,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("إحداثيات معيار العدد المركب", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("الجزء الحقيقي للقسمة", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("الجزء التخيلي للقسمة", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -361,6 +375,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("複素数の絶対値の座標式", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("複素数の商の実部", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("複素数の商の虚部", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -385,6 +401,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("복소수 절댓값의 좌표식", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("복소수 몫의 실수부", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("복소수 몫의 허수부", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),
@@ -409,6 +427,8 @@ Self::SinNegation | Self::CosNegation | Self::SinPiShift | Self::CosPiShift | Se
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         let (name, message) = match self {
+            Self::SinThreeAngleSum(_) => ("SinThreeAngleSum", "Fixed three-angle sine addition formula"),
+            Self::TanAddition(_) => ("TanAddition", "Defined tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y))"),
             Self::ComplexModulusCoordinates(_) => ("Tọa độ môđun số phức", "z in C: C_abs(z)=sqrt(re(z)^2+img(z)^2)"),
             Self::RealPartQuotient(_) => ("Phần thực của thương", "z,w in C, w!=0: re(z/w)=(re(z)*re(w)+img(z)*img(w))/C_abs(w)^2"),
             Self::ImaginaryPartQuotient(_) => ("Phần ảo của thương", "z,w in C, w!=0: img(z/w)=(img(z)*re(w)-re(z)*img(w))/C_abs(w)^2"),

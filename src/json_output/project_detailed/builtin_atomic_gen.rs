@@ -17,6 +17,94 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ProductNonnegativeNegativeWeak(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ProductNonnegativeNegativeWeak")),
+("nonnegative_factor",project_verify_fact(&p.nonnegative_factor,runtime)),
+("negative_factor",project_verify_fact(&p.negative_factor,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LnNegativeBelowOne(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("LnNegativeBelowOne")),
+("below_one",super::searched::project_known_premise(&p.below_one,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::LnPositiveAboveOne(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("LnPositiveAboveOne")),
+("above_one",super::searched::project_known_premise(&p.above_one,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ProductPositiveNegativeStrict(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ProductPositiveNegativeStrict")),
+("positive_factor",project_verify_fact(&p.positive_factor,runtime)),
+("negative_factor",project_verify_fact(&p.negative_factor,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SqrtMonotoneFromDefinedRoots(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("SqrtMonotoneFromDefinedRoots")),
+            ("arguments_order", project_verify_fact(&p.arguments_order,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsFromIntervalBounds(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("AbsFromIntervalBounds")),
+            ("lower_bound", super::searched::project_known_premise(&p.lower_bound,runtime)),
+            ("upper_bound", super::searched::project_known_premise(&p.upper_bound,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NegationWeakOrder(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("NegationWeakOrder")),
+            ("argument_order", super::searched::project_known_premise(&p.argument_order,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorGap(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("IntegerSuccessorGap")),
+            ("left_integer", project_verify_fact(&p.left_integer,runtime)),
+            ("right_integer", project_verify_fact(&p.right_integer,runtime)),
+            ("strict_order", super::searched::project_known_premise(&p.strict_order,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LiteralWeakBound(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("LiteralWeakBound")),
+            ("source_order", super::searched::project_known_premise(&p.source_order,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::SumStrictOperands(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("SumStrictOperands")),
+            ("first_order", super::searched::project_known_premise(&p.first_order,runtime)),
+            ("second_order", super::searched::project_known_premise(&p.second_order,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::NegationNegativeFromLiteralBound(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("NegationNegativeFromLiteralBound")),
+            ("positive_source", super::searched::project_known_premise(&p.positive_source,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::NegationStrictOrder(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("NegationStrictOrder")),
+            ("argument_order", super::searched::project_known_premise(&p.argument_order,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ProductFactorNonzeroWithZeroAlias(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ProductFactorNonzeroWithZeroAlias")),
+            ("product_nonzero", super::searched::project_known_premise(&p.product_nonzero,runtime)),
+            ("zero_equality", super::searched::project_equal_searched(&p.zero_equality,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::EulerNonunit(_)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("EulerNonunit")),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CotNonzeroFromCos(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CotNonzeroFromCos")),
+            ("numerator_nonzero", super::searched::project_known_premise(&p.numerator_nonzero,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::TanNonzeroFromSin(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("TanNonzeroFromSin")),
+            ("numerator_nonzero", super::searched::project_known_premise(&p.numerator_nonzero,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroIntegerPiShift(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CosNonzeroIntegerPiShift")),
+            ("source_nonzero", super::searched::project_known_premise(&p.source_nonzero,runtime)),
+            ("coefficient", string(p.coefficient.readable_string())),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroIntegerPiShift(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("SinNonzeroIntegerPiShift")),
+            ("source_nonzero", super::searched::project_known_premise(&p.source_nonzero,runtime)),
+            ("coefficient", string(p.coefficient.readable_string())),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroNegation(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("CosNonzeroNegation")),
+            ("source_nonzero", super::searched::project_known_premise(&p.source_nonzero,runtime)),
+        ]),
+
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroNegation(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("SinNonzeroNegation")),
+            ("source_nonzero", super::searched::project_known_premise(&p.source_nonzero,runtime)),
+        ]),
+
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NonzeroRationalQuotient(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("NonzeroRationalQuotient")),
             ("numerator_nonzero_rational", project_verify_fact(&p.numerator_nonzero_rational, runtime)),
             ("denominator_nonzero_rational", project_verify_fact(&p.denominator_nonzero_rational, runtime)),

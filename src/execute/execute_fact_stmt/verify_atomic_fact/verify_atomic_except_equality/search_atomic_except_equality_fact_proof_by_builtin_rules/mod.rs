@@ -62,3 +62,11 @@ pub mod order_negative_common_factor;
 pub mod signed_difference;
 
 pub mod trig_additional_interval_order;
+
+pub mod scalar_nonzero_relations;
+
+pub mod scalar_order_relations;
+
+pub mod sqrt_defined_order;
+
+pub mod scalar_extra_sign;

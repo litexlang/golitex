@@ -9,6 +9,8 @@ use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum TrigComplexIdentityProof {
+    SinThreeAngleSum(SinThreeAngleSumProof),
+    TanAddition(TanAdditionProof),
     ComplexModulusCoordinates(ComplexModulusCoordinatesProof),
     RealPartQuotient(RealPartQuotientProof),
     ImaginaryPartQuotient(ImaginaryPartQuotientProof),
@@ -49,6 +51,17 @@ pub enum TrigComplexIdentityProof {
         domains: Vec<VerifyFactResult>,
     },
 }
+// Fixed three-angle expansion; this does not reintroduce recursive trig search.
+pub struct SinThreeAngleSumProof {
+    pub first: Obj,
+    pub second: Obj,
+    pub third: Obj,
+}
+impl SinThreeAngleSumProof {
+    pub fn new(first: Obj, second: Obj, third: Obj) -> Self { Self { first, second, third } }
+}
+// Parent WD owns cos(x), cos(y), cos(x+y) and the tangent-sum denominator.
+pub struct TanAdditionProof;
 // Parent equality WD checks z in C and the principal-root radicand.
 // Example: C_abs(z)=sqrt(re(z)^2+img(z)^2).
 pub struct ComplexModulusCoordinatesProof;
@@ -89,6 +102,8 @@ impl CosHalfPiReflectionBuiltinRuleProof {
 impl TrigComplexIdentityProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::SinThreeAngleSum(_) => "SinThreeAngleSum",
+            Self::TanAddition(_) => "TanAddition",
             Self::ComplexModulusCoordinates(_) => "ComplexModulusCoordinates",
             Self::RealPartQuotient(_) => "RealPartQuotient",
             Self::ImaginaryPartQuotient(_) => "ImaginaryPartQuotient",
@@ -134,6 +149,42 @@ impl Runtime {
             return Ok(Some(P::NumericComplexModulus(proof)));
         }
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            // sin(x+y+z) has a fixed four-term expansion for real arguments.
+            // Support the two explicit Add-tree associations, not longer sums.
+            if let Obj::TrigOperator(T::Sin(sine)) = left {
+                if let Obj::ArithmeticOperator(A::Add(sum)) = &*sine.arg {
+                    let triple = match (&*sum.left, &*sum.right) {
+                        (Obj::ArithmeticOperator(A::Add(pair)), third) => Some((&*pair.left, &*pair.right, third)),
+                        (first, Obj::ArithmeticOperator(A::Add(pair))) => Some((first, &*pair.left, &*pair.right)),
+                        _ => None,
+                    };
+                    if let Some((x,y,z)) = triple {
+                        let first = mul(mul(sin(x),cos(y)),cos(z));
+                        let second = mul(mul(cos(x),sin(y)),cos(z));
+                        let third = mul(mul(cos(x),cos(y)),sin(z));
+                        let negative = mul(mul(sin(x),sin(y)),sin(z));
+                        let expected = subtract(add(add(first,second),third),negative);
+                        if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right,&expected) {
+                            return Ok(Some(P::SinThreeAngleSum(SinThreeAngleSumProof::new(x.clone(),y.clone(),z.clone()))));
+                        }
+                    }
+                }
+            }
+            // tan(x+y)=(tan(x)+tan(y))/(1-tan(x)*tan(y)).
+            if let Obj::TrigOperator(T::Tan(tangent)) = left {
+                if let Obj::ArithmeticOperator(A::Add(sum)) = &*tangent.arg {
+                    let x = Obj::TrigOperator(T::Tan(crate::ast::obj::Tan { arg: sum.left.clone() }));
+                    let y = Obj::TrigOperator(T::Tan(crate::ast::obj::Tan { arg: sum.right.clone() }));
+                    let expected = Obj::ArithmeticOperator(A::Div(crate::ast::obj::Div {
+                        left: Box::new(add(x.clone(),y.clone())),
+                        right: Box::new(subtract(number("1"),mul(x,y))),
+                    }));
+                    if crate::rational_expression::objs_equal_by_rational_expression_evaluation(right,&expected) {
+                        return Ok(Some(P::TanAddition(TanAdditionProof)));
+                    }
+                }
+            }
+
             if let Some(proof) = super::by_trig_quotient_relations::trig_quotient_relation(left, right) {
                 return Ok(Some(proof));
             }
@@ -515,4 +566,8 @@ fn cos(x: &Obj) -> Obj {
 }
 fn modulus(x: &Obj) -> Obj {
     Obj::ComplexOperator(C::ComplexAbs(ComplexAbs { arg: Box::new(x.clone()) }))
+}
+
+fn add(left: Obj, right: Obj) -> Obj {
+    Obj::ArithmeticOperator(A::Add(crate::ast::obj::Add { left: Box::new(left), right: Box::new(right) }))
 }

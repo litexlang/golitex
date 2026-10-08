@@ -1,6 +1,18 @@
 //! Enum wrapping conversions for facts.
 //! Prefer `leaf.into()` / `atomic.into()` over `AtomicFact::Variant(leaf)`.
 
+impl From<crate::ast::obj::Preimage> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Preimage) -> Self {
+        Self::FunctionSpace(crate::ast::obj::FunctionSpace::Preimage(value))
+    }
+}
+
+impl From<crate::ast::obj::PreimageSet> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::PreimageSet) -> Self {
+        Self::FunctionSpace(crate::ast::obj::FunctionSpace::PreimageSet(value))
+    }
+}
+
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, ExistOrAndChainAtomicFact, Fact,
     GreaterEqualFact, GreaterFact, InFact, InjectiveFact, IsChoiceFunctionForFact,

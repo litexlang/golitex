@@ -261,6 +261,12 @@ pub enum FunctionSpace {
     // Image of a function (range as a set). Example: `fn_range(f)`.
     // See Manual § Functions, application, and range.
     FnRange(FnRange),
+
+    // Input fiber of a value. Example: `preimage(f, y)`.
+    Preimage(Preimage),
+
+    // Inputs whose outputs belong to a set. Example: `preimage_set(f, Y)`.
+    PreimageSet(PreimageSet),
 }
 
 // Indexed sums / products and folds over integer ranges or finite sets.
@@ -864,6 +870,30 @@ pub struct FiniteSetMin {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnRange {
     pub function: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Preimage {
+    pub function: Box<Obj>,
+    pub value: Box<Obj>,
+}
+
+impl Preimage {
+    pub fn new(function: Obj, value: Obj) -> Self {
+        Self { function: Box::new(function), value: Box::new(value) }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PreimageSet {
+    pub function: Box<Obj>,
+    pub target_set: Box<Obj>,
+}
+
+impl PreimageSet {
+    pub fn new(function: Obj, target_set: Obj) -> Self {
+        Self { function: Box::new(function), target_set: Box::new(target_set) }
+    }
 }
 
 // Sum of f(i) over a closed integer index range [start, end]. Example: `sum(1, n, f)`.

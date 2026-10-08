@@ -1,0 +1,6 @@
+forall x,y R:
+    0<=x
+    0<=y
+    x=y^2
+    =>:
+        sqrt(x)=y

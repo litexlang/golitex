@@ -33,6 +33,7 @@ pub const FINITE_SEQ: &str = "finite_seq";
 pub const MATRIX: &str = "matrix";
 pub const FN: &str = "fn";
 pub const PREIMAGE: &str = "preimage";
+pub const PREIMAGE_SET: &str = "preimage_set";
 pub const FN_PREIMAGE: &str = "fn_preimage";
 pub const CASES: &str = "cases";
 pub const CASE: &str = "case";

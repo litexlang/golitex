@@ -121,6 +121,8 @@ pub enum FunctionSpaceObjWellDefinedProofByDef {
     FnSet(FnSetObjWellDefinedProof),
     AnonymousFn(AnonymousFnObjWellDefinedProof),
     FnRange(FnRangeObjWellDefinedProof),
+    Preimage(PreimageObjWellDefinedProof),
+    PreimageSet(PreimageSetObjWellDefinedProof),
 }
 
 pub enum IteratedOperatorObjWellDefinedProofByDef {
@@ -1191,4 +1193,17 @@ impl IntervalObjObjWellDefinedProof {
             requirement_fact_verified,
         }
     }
+}
+
+
+pub struct PreimageObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+}
+
+pub struct PreimageSetObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub construction: crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
 }

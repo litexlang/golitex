@@ -5,6 +5,7 @@
 mod exec_fact_stmt;
 mod helper;
 pub(crate) mod function_domain;
+pub(crate) mod function_preimage;
 pub(crate) mod finite_function;
 mod negate_quantifier_free_conjunction;
 pub(crate) mod known_tuple;

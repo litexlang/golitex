@@ -12,6 +12,12 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    ProductNonnegativeNegativeWeak(super::scalar_extra_sign::ProductNonnegativeNegativeWeakProof),
+    SqrtMonotoneFromDefinedRoots(super::sqrt_defined_order::SqrtMonotoneFromDefinedRootsProof),
+    AbsFromIntervalBounds(super::scalar_order_relations::AbsFromIntervalBoundsProof),
+    NegationWeakOrder(super::scalar_order_relations::NegationWeakOrderProof),
+    IntegerSuccessorGap(super::scalar_order_relations::IntegerSuccessorGapProof),
+    LiteralWeakBound(super::scalar_order_relations::LiteralWeakBoundProof),
     SignLowerBound(super::sign_extremum_order::SignLowerBoundProof),
     SignUpperBound(super::sign_extremum_order::SignUpperBoundProof),
     SignWeakMonotone(super::sign_extremum_order::SignWeakMonotoneProof),
@@ -597,6 +603,9 @@ impl Runtime {
         }
         if let Some(proof)=self.search_exp_ln_weak_order(fact,verify_state)? { return Ok(Some(proof)); }
         if let Some(proof) = self.search_additional_trig_less_equal(fact, verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof) = self.sqrt_monotone_from_defined_roots(fact,verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof) = self.search_scalar_less_equal_relation(fact,verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof)=self.scalar_extra_weak(fact,verify_state)? {return Ok(Some(proof));}
         Ok(None)
     }
 }

@@ -1,0 +1,4 @@
+forall x,y R+:
+    ln(x)=ln(y)
+    =>:
+        x=y

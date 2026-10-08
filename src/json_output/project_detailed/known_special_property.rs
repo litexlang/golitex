@@ -13,6 +13,10 @@ pub(super) fn project_known_special_property(
     runtime: &Runtime,
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::PositiveRealFromKnownStrictOrder(p)) => return object_for(runtime,vec![
+            ("type",string("by_known_special_property")),("rule",string("PositiveRealFromKnownStrictOrder")),
+            ("positive_order",super::searched::project_known_premise(&p.positive_order,runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnInFiniteSeq(p)) => return object_for(runtime, vec![
             ("type", string("by_known_special_property")),
             ("rule", string("AnonymousFnInFiniteSeq")),

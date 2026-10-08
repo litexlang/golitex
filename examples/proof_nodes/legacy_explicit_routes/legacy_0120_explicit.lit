@@ -1,0 +1,14 @@
+claim:
+    ? forall a,b R:
+        a-b<0 or 0<b-a
+        =>:
+            b>a
+    by cases:
+        ? b>a
+        case a-b<0
+        case 0<b-a
+
+forall a,b R:
+    a-b<0 or 0<b-a
+    =>:
+        b>a

@@ -1,0 +1,7 @@
+# Stored point-preimage membership supplies the input domain, guard and value.
+# Run: target/release/litex -strict -f examples/infer/atomic/in_preimage_projects_domain_and_value.lit
+have fn reciprocal(x R: x != 0) R = 1 / x
+forall x preimage(reciprocal, 2):
+    x $in R
+    x != 0
+    reciprocal(x) = 2

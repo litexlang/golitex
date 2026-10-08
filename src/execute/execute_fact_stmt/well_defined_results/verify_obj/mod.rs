@@ -5,6 +5,7 @@
 
 mod binder;
 mod core;
+mod preimage;
 mod entry;
 pub(crate) mod fail_to_verify_obj_well_defined;
 mod helper;

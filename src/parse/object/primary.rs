@@ -7,7 +7,7 @@ use crate::ast::obj::{
     Gcd, IdentifierObj, ImaginaryPart, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
     InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
     IteratedOperator, Lcm, ListSet, Literal, Ln, Log, Max, Min, Number, Obj,
-    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pi, PowerSet, Product,
+    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pi, PowerSet, Preimage, PreimageSet, Product,
     ProductOfFiniteSet, ProductShape, Quot, Range, RealPart, Reduce, SeqSet, SetBuilder,
     SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet, StructAndFieldAccessObj,
     StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, Union,
@@ -20,7 +20,7 @@ use crate::parse::keywords::{
     FINITE_SET_SUM, FLOOR, FN, FN_RANGE, GCD, GREATER, IMG, INDEX_CART, INDEX_INTERSECT, INDEX_UNION,
     INTERSECT, INTERVAL_LITERAL_PREFIX, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, LOG,
     MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PRODUCT, PROJ, Q, QUOT, Q_NEG, Q_POS,
-    Q_STAR, R, RANGE, RE, REDUCE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
+    Q_STAR, R, RANGE, RE, REDUCE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, PREIMAGE, PREIMAGE_SET,
     SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, SUM, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE,
     TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
@@ -675,6 +675,12 @@ fn try_parse_keyword_primary(
             Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
                 function: Box::new(function),
             }))
+        })?)),
+        PREIMAGE => Ok(Some(parse_binary_keyword(rt, tb, PREIMAGE, |function, value| {
+            Preimage::new(function, value).into()
+        })?)),
+        PREIMAGE_SET => Ok(Some(parse_binary_keyword(rt, tb, PREIMAGE_SET, |function, target_set| {
+            PreimageSet::new(function, target_set).into()
         })?)),
         // Finite sequences of length n in S. Example: `finite_seq(R, 3)`.
         FINITE_SEQ => Ok(Some(parse_binary_keyword(rt, tb, FINITE_SEQ, |set, n| {

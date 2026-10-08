@@ -1,0 +1,5 @@
+forall b R+,x R,y R+:
+    b!=1
+    b^x=y
+    =>:
+        log(b,y)=x

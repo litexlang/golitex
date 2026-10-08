@@ -72,6 +72,12 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("Lower bound of sign", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("Upper bound of sign", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("Weak monotonicity of sign", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -173,6 +179,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("sign 的下界", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("sign 的上界", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -280,6 +292,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("sign 的下界", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("sign 的上界", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -387,6 +405,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("Borne inférieure du signe", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("Borne supérieure du signe", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("Monotonie faible du signe", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -488,6 +512,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("Нижняя граница знака", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("Верхняя граница знака", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("Неубывание знака", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -589,6 +619,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("Cota inferior del signo", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("Cota superior del signo", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("Monotonía débil del signo", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -690,6 +726,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("الحد الأدنى للإشارة", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("الحد الأعلى للإشارة", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("الرتابة الضعيفة للإشارة", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -797,6 +839,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("符号の下界", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("符号の上界", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("符号の単調性", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -904,6 +952,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("부호의 하한", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("부호의 상한", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("부호의 단조성", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -1011,6 +1065,12 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
+            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
+            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
+            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
+            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
+            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
             Self::SignLowerBound(_) => text("Cận dưới của dấu", "x in R: -1<=sign(x)"),
             Self::SignUpperBound(_) => text("Cận trên của dấu", "x in R: sign(x)<=1"),
             Self::SignWeakMonotone(_) => text("Tính đơn điệu yếu của dấu", "a,b in R, a<=b => sign(a)<=sign(b)"),
@@ -1133,6 +1193,8 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+Self::ProductNonnegativeNegativeWeak(_) => None,
+            Self::LiteralWeakBound(_) | Self::IntegerSuccessorGap(_) | Self::NegationWeakOrder(_) | Self::AbsFromIntervalBounds(_) | Self::SqrtMonotoneFromDefinedRoots(_) => None,
             Self::MulLeftNonpositiveReversesWeakLessEqual(_) => None,
             Self::MulRightNonpositiveReversesWeakLessEqual(_) => None,
             Self::MulLeftRightNonpositiveReversesWeakLessEqual(_) => None,

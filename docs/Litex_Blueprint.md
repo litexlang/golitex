@@ -11,17 +11,20 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 ## Table of Contents
 
 - [0. Litex Blueprint Overview](#overview)
-  - [0.1 Five Main Threads: How Litex Works](#overview-spine)
+  - [0.1 Five Characteristics: How Litex Works](#overview-spine)
 - [1. Write Facts and See Why They Hold](#fact-oriented)
   - [1.1 Fact-Oriented: Writing “What Holds” into the Source](#fact-oriented-interface)
   - [1.2 What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
-- [2. Start from Familiar Mathematics: Litex’s Set-Theoretic Foundation](#set-theory)
+- [2. Start from Familiar Mathematical Axioms and Notation: Litex’s Set-Theoretic Foundation](#set-theory)
   - [2.1 The Design Difficulty: Making Concrete Mathematics a Working Language](#design-difficulty)
-- [3. Let Established Knowledge Grow: Bottom-Up Proofs](#bottom-up)
+- [3. Let Formalization Fit the Mathematical Workflow](#mathematical-workflow)
+  - [3.1 Each Step Leaves Knowledge for the Next](#workflow-principle)
+  - [3.2 Think, Write, and Check as You Go](#workflow-exploration)
+  - [3.3 Keep Today’s Results for the Next Exploration](#workflow-reuse)
+  - [3.4 Use Mathematical Results for Computation and Communication](#workflow-use)
 - [4. Humans, AI, and Litex Advance Proofs Together](#interaction-loop)
 - [5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)](#compatibility)
 - [6. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
-  - [6.1 Compiling Proofs to Executable Code (Python / C) (Experimental)](#executable-code)
 - [7. The Art of Seeking What Is Different](#conclusions)
   - [Special Thanks](#special-thanks)
 - [Appendix: Programming, Mathematics, and Formalization with Litex](#overview-readers)
@@ -36,29 +39,23 @@ _“Language is an instrument of human reason, and not merely a medium for the e
 
 _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
-*Begun in 2024, Litex asks whether a formal language can become an everyday mathematical language for anyone willing to learn it: close to familiar mathematical expression, yet rigorously checked. It hopes to become a Python for formal languages, helping more people gradually become formalization experts.*
+*Started in 2024, Litex is a formal language that organizes everyday mathematics around sets and facts. It hopes to become a Python for formal languages, helping more people gradually become formalization experts.*
 
-**Fostering understanding is at the heart of Litex.** Mathematics helps us understand the world; mathematical understanding itself deserves particular care in the AI era. This aim has two connected aspects.
+**Fostering understanding is at the heart of Litex.** This quality is especially precious in the AI era. Litex hopes to reduce the effort of learning and reading formal mathematics through familiar objects and ways of writing, while helping readers use source and verification grounds to see connections between definitions, premises, and conclusions, [deepen their understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/), and find inspiration.
 
-**First, retain familiar mathematical concepts and ways of writing.** Litex seeks to preserve the objects and habits of everyday mathematical writing: sets, elements, functions, relations, and direct statements of conditions, facts, and conclusions. The aim is to let readers draw on their existing mathematical intuition and lower the barriers and costs of learning and understanding formal expression.
+**Ordinary facts trigger local verification by default in Litex.** Authors choose definitions, constructions, and intermediate conclusions; the language finds supported grounds, returns structured feedback, and stores accepted facts in the context. AI can use these results to repair attempts, reuse knowledge, and collect checkable reasoning data. [Section 1.1](#fact-oriented-interface) gives concrete examples.
 
-**Second, make the structure of mathematics easier to see.** By comparing source and verification records, readers can ask how definitions, conditions, and conclusions depend on each other, how a piece of knowledge is established, and how it supports further reasoning. Litex hopes this will help people [deepen their understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/), discover connections, and find inspiration through formalization.
-
-Writing a checkable proof often requires both understanding the mathematics and knowing which theorem to cite or which proof tool to use. Litex makes the selection and combination of many routine verification methods part of the language: authors write definitions, constructions, and intermediate conclusions, while the language finds local grounds in current knowledge, builtin rules, and definitions, and checks their conditions.
-
-Authors can state the fact that should hold next, then inspect the grounds the language found or the point where checking stopped. Verified facts remain available to later reasoning. Litex organizes this work around sets, elements, functions, and relations, with clear feedback that people and AI can use together. Authors choose the mathematical route; within its supported scope, the language selects methods, checks premises, and combines verification steps. [Section 1.1](#fact-oriented-interface) illustrates this division of work and the implementation it requires.
-
-The next step on this path is Lean. The Litex-to-Lean compiler is not yet integrated into the current build and is expected to be completed by the end of 2026. Its goal is to let Lean independently recheck supported Litex proofs, connecting familiar mathematical expression to the existing formalization ecosystem.
+The Litex-to-Lean compiler is expected to be completed by the end of 2026 and is not yet integrated into the build. Its goal is independent Lean rechecking of supported proofs and connection to the existing formalization ecosystem.
 
 <a id="overview-spine"></a>
 
-### 0.1 Five Main Threads: How Litex Works
+### 0.1 Five Characteristics: How Litex Works
 
-**These five threads show how Litex can build checkable mathematical knowledge step by step and put it to work for Math for AI.**
+**These five characteristics explore one question: can organizing knowledge around facts and feedback lower the cost for people and AI to construct, understand, review, and reuse checkable mathematics?**
 
-**1. I write what I want to prove, and the language explains why it holds.**
+**1. I can write proofs in terms of mathematical facts.**
 
-I still need to think through the proof and choose constructions and intermediate results. For local steps whose grounds can be found in the current knowledge, I want the language to carry out the checks and explain what it found.
+I still need to think through the proof, choose constructions and intermediate results, and state the mathematical fact that should hold next. For local steps supported by current knowledge, Litex checks the conditions and grounds, then explains what it found. This is its fact-oriented proof interface.
 
 For example, I can state an arithmetic fact directly:
 
@@ -129,9 +126,9 @@ These records let both people and AI see whether a statement passed, what kind o
 
 **Multilingual feedback.** The CLI can present this JSON feedback in multiple languages. The same source can be checked with `litex -lang zh -e '1 + 1 = 2'` for Chinese field names and explanations, or with `-lang fr` for French. Thanks in part to AI-assisted translation, this multilingual explanatory copy became feasible; choosing an output language does not change the Litex source or its verification. The current output locales are `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, and `vi`.
 
-**2. I can start from a mathematical world I already know.**
+**2. I can start from familiar mathematical axioms and notation.**
 
-Litex is based on ZFC and organizes mathematics through sets, elements, functions, and relations. I want readers learning formalization to keep using their mathematical intuition and familiar ways of expressing ideas as far as possible.
+Litex takes the ZFC axioms of set theory as its foundation and organizes mathematics through sets, elements, functions, and relations. It also accepts familiar symbols such as `∈`, `⊆`, and `∩`, so readers learning formalization can keep using their mathematical intuition and familiar notation as far as possible.
 
 For example, real numbers, sets, functions, and relations can appear together in one small example:
 
@@ -150,53 +147,111 @@ $is_less(2, 4)
 
 `have a R = 2` introduces both `a $in R` and `a = 2`. `S` is the set of positive real numbers, `f` is the square function on the reals, and `is_less` expresses strict inequality between two reals. The final statement verifies the concrete relation `2 < 4`. These objects follow the organization of everyday mathematics.
 
-**3. The language can retain the knowledge we have established and use it again.**
+**3. Formalization can follow the way I work through mathematics.**
 
-Every step forward in a proof should leave something that later steps can depend on. Objects, definitions, and verified facts together form the current mathematical context, on which new reasoning can continue to grow.
+Mathematical work often begins with a small question: write a definition, try a few examples, check the conditions, and keep the useful results. I want formalization to fit into that process, so work already done becomes a starting point for further exploration. The underlying design principle is to let accepted mathematical statements leave knowledge that later work can depend on.
 
-For example, we can prove Cantor's theorem ourselves: every function \(f:X\to\mathcal P(X)\) misses some subset and therefore cannot be surjective. The code below first defines what it means for a subset to have no preimage, proves the general result using a diagonal set, and then applies it to a concrete function. The whole example uses no `trust`:
+**Check as I write.** In a fresh REPL session, I can write a definition and check concrete inputs. The reciprocal function below accepts nonzero real numbers: input `2` passes, while input `0` is rejected during the condition check. The failure line summarizes the diagnostic:
 
-```litex
-prop has_no_preimage(X set, f fn(x X) power_set(X), D power_set(X)):
-    forall a X:
-        D != f(a)
-
-thm cantor:
-    ? forall X set, f fn(x X) power_set(X):
-        exist D power_set(X) st {$has_no_preimage(X, f, D)}
-
-    have D power_set(X) = {x X: not x $in f(x)}
-
-    thm diagonal_nonmembership:
-        ? forall a X:
-            D = f(a)
-            =>:
-                not a $in f(a)
-        by contra:
-            ? not a $in f(a)
-            a $in D
-            impossible a $in f(a)
-
-    claim:
-        ? forall a X:
-            D != f(a)
-        by contra:
-            ? D != f(a)
-            not a $in f(a)
-            a $in D
-            a $in f(a)
-            impossible a $in f(a)
-
-    by def $has_no_preimage(X, f, D)
-    witness exist E power_set(X) st {$has_no_preimage(X, f, E)} from D
-
-have fn singleton(n N) power_set(N) = {n}
-release thm cantor(N, singleton)
-obtain missing from exist S power_set(N) st {$has_no_preimage(N, singleton, S)}
-missing != singleton(0)
+```text
+litex> have fn f(x R: x != 0) R = 1 / x
+success
+litex> f(2) = 1 / 2
+success
+litex> f(0) = 0
+Failed: input 0 does not satisfy x != 0.
+litex> f(4) = 1 / 4
+success
 ```
 
-This example shows how knowledge accumulates during a proof and remains available for further use. Once we have defined the concept and proved Cantor's theorem, those results become part of the current mathematical context. When we introduce the concrete function `singleton`, Litex can use the general conclusion already proved to obtain new objects and facts for subsequent reasoning.
+**Save knowledge for use in another file.** In the later [Newton-update example](#workflow-exploration), I save the function definition and fixed-point theorem in `newton.lit`. With the project organized as in [Section 3.3](#workflow-reuse), I can cite the established result from another file:
+
+<!-- litex:skip-test -->
+```litex
+release obj def newton::newton_sqrt_two
+release thm newton::fixed_point(sqrt(2))
+```
+
+**See how knowledge connects.** The CLI's mathematical dependency graph connects definitions, theorems, and accepted facts. These bubbles show a local view of a square function: its definition supports a nonnegativity theorem, which can then be applied to concrete inputs.
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 410" width="880" height="410" role="img" aria-labelledby="blueprint-bubbles-title-en" style="display:block;max-width:100%;height:auto;margin:12px auto;">
+<title id="blueprint-bubbles-title-en">A local view of definitions, theorems and facts</title>
+<defs><marker id="blueprint-bubbles-arrow-en" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 1 L 8 5 L 0 9" fill="none" stroke="#92a6ae" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<filter id="blueprint-bubbles-shadow-en" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#28434b" flood-opacity="0.07"/></filter></defs>
+<rect x="1" y="1" width="878" height="408" rx="22" fill="#fafcfb" stroke="#e7eeeb"/>
+<g font-family="Arial, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, sans-serif">
+<circle cx="40" cy="382" r="5" fill="#386b53"/><text x="54" y="387" font-size="13" fill="#667b74">Definition</text>
+<circle cx="164" cy="382" r="5" fill="#66538e"/><text x="178" y="387" font-size="13" fill="#667b74">Theorem</text>
+<circle cx="284" cy="382" r="5" fill="#3f6b8e"/><text x="298" y="387" font-size="13" fill="#667b74">Fact</text>
+<path data-from="declaration:1" data-to="declaration:0" data-kind="uses_definition" d="M200 231 C239 227 257 226 299 224" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
+<path data-from="declaration:1" data-to="fact:f1161" data-kind="uses_definition" d="M180 184 C203 158 222 148 238 135" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
+<path data-from="declaration:0" data-to="fact:f810" data-kind="theorem_instance" d="M472 197 C523 180 576 159 632 151" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
+<path data-from="declaration:0" data-to="fact:f977" data-kind="theorem_instance" d="M473 244 C527 258 580 277 638 285" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
+<text x="247" y="211" text-anchor="middle" font-size="12" fill="#83949a">Uses definition</text>
+<text x="548" y="161" text-anchor="middle" font-size="12" fill="#83949a">Theorem instance</text>
+<text x="551" y="283" text-anchor="middle" font-size="12" fill="#83949a">Theorem instance</text>
+<g data-source-id="declaration:1" data-node-kind="definition"><circle cx="122" cy="236" r="78" fill="#e8f5ef" stroke="#b5d6c4" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
+<text x="122" y="213" text-anchor="middle" font-size="12" fill="#386b53">Definition</text>
+<text x="122" y="241" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(x) = x²</text>
+<text x="122" y="267" text-anchor="middle" font-size="12" fill="#70817e">x ∈ ℝ</text>
+</g>
+<g data-source-id="declaration:0" data-node-kind="theorem"><circle cx="389" cy="221" r="87" fill="#eee9f8" stroke="#cbbde8" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
+<text x="389" y="198" text-anchor="middle" font-size="12" fill="#66538e">Theorem</text>
+<text x="389" y="226" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(x) ≥ 0</text>
+<text x="389" y="252" text-anchor="middle" font-size="12" fill="#70817e">for every real x</text>
+</g>
+<g data-source-id="fact:f1161" data-node-kind="fact"><circle cx="286" cy="93" r="62" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
+<text x="286" y="80" text-anchor="middle" font-size="12" fill="#3f6b8e">Fact</text>
+<text x="286" y="107" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(2) = 4</text>
+</g>
+<g data-source-id="fact:f810" data-node-kind="fact"><circle cx="703" cy="130" r="72" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
+<text x="703" y="117" text-anchor="middle" font-size="12" fill="#3f6b8e">Fact</text>
+<text x="703" y="144" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(2) ≥ 0</text>
+</g>
+<g data-source-id="fact:f977" data-node-kind="fact"><circle cx="711" cy="305" r="72" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
+<text x="711" y="292" text-anchor="middle" font-size="12" fill="#3f6b8e">Fact</text>
+<text x="711" y="319" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(−2) ≥ 0</text>
+</g>
+</g></svg>
+
+**Put results to work in a calculation.** Supported computational fragments can be extracted as Python or C. For example, this piecewise definition of absolute value produces the Python code alongside it:
+
+<table data-blueprint-conversion="python" style="table-layout:fixed;width:100%;border-collapse:collapse;">
+<thead>
+<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex source</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">Python code</th></tr>
+</thead>
+<tbody>
+<tr>
+<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>algo absolute(x R) R by cases:
+    case x &gt;= 0: x
+    case x &lt; 0: -x</code></pre></td>
+<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>def absolute(x):
+    if x &gt;= 0.0:
+        return x
+    elif x &lt; 0.0:
+        return (0.0 - x)
+    raise AssertionError(&quot;unreachable verified Litex cases&quot;)</code></pre></td>
+</tr>
+</tbody>
+</table>
+
+**Write mathematics for others to read.** Mathematical source can also be converted to LaTeX for lecture notes or a manuscript. A mathematical fact appears on the left and its actual typesetting source on the right. Conversion handles presentation; mathematical verification is a separate step:
+
+<table data-blueprint-conversion="latex" style="table-layout:fixed;width:100%;border-collapse:collapse;">
+<thead>
+<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex source</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">LaTeX source</th></tr>
+</thead>
+<tbody>
+<tr>
+<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>1 + 1 = 2</code></pre></td>
+<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>\[
+1 + 1 = 2
+\]</code></pre></td>
+</tr>
+</tbody>
+</table>
+
+See [Section 3](#mathematical-workflow) for the complete definitions, proofs, and project setup.
 
 **4. AI can work with people to advance proofs through explicit feedback.**
 
@@ -235,7 +290,7 @@ theorem one_add_one : Litex.Same ((1 : ℂ) + (1 : ℂ)) (2 : ℂ) := by
 
 Whether you are a mathematician, a programmer, or a Lean user, Litex can offer new knowledge and perspectives; if you are interested, continue with [Programming, Mathematics, and Formalization with Litex](#overview-readers) at the end of this document.
 
-The following chapters develop these five threads in order, then discuss the language ecosystem; reader comparisons and further source examples appear in the appendices.
+The following chapters develop these five characteristics in order, then discuss the language ecosystem; reader comparisons and further source examples appear in the appendices.
 
 <a id="fact-oriented"></a>
 
@@ -759,7 +814,7 @@ JSON is generated directly from internal execution results and summarizes the ch
 
 <a id="set-theory"></a>
 
-## 2. Start from Familiar Mathematics: Litex’s Set-Theoretic Foundation
+## 2. Start from Familiar Mathematical Axioms and Notation: Litex’s Set-Theoretic Foundation
 
 _“Language design is a curious mixture of grand ideas and fiddly details.”_
 
@@ -971,22 +1026,35 @@ universes first?
 
 </details>
 
-<a id="bottom-up"></a>
+<a id="mathematical-workflow"></a>
 
-## 3. Let Established Knowledge Grow: Bottom-Up Proofs
+## 3. Let Formalization Fit the Mathematical Workflow
 
 _“If I have seen further it is by standing on the shoulders of Giants.”_
 
 _— Isaac Newton, letter to Robert Hooke (1676)_
 
-In Litex, a proof usually moves forward from known conditions and facts. Each accepted step leaves knowledge that later steps can use. Established intermediate conclusions remain available even when the final goal has not yet been proved.
+In mathematics, we move between definitions, examples, and proofs. A calculation suggests a conjecture, a check clarifies its conditions, and a proof leaves a result for the next problem. Litex aims to connect these activities naturally within formal work.
 
-Typical Lean tactic interaction starts with a goal and reduces it to subgoals. This compares default writing and interaction directions: Litex often asks “what else do the known facts support?” while Lean tactics often ask “what does the current goal still need?” Both must check their conclusions rigorously.
+Consider one Newton update toward √2. We will explore it, save a proved property, and then see how the resulting mathematics can be used for computation and communication.
+
+<a id="workflow-principle"></a>
+<a id="bottom-up"></a>
+
+### 3.1 Each Step Leaves Knowledge for the Next
+
+A principle running through Litex's design supports this workflow: **each accepted mathematical statement should leave knowledge that later work can use within its scope.**
+
+Definitions introduce objects and vocabulary; proofs accumulate accepted facts. We move forward from known conditions, and each established intermediate conclusion gives the next step more grounds to work with. Once their statements have been accepted, those results remain usable even when the overall problem has not yet been solved.
+
+Accepted REPL context, definitions, and theorems kept in files and modules all serve this accumulation. Dependency records help readers revisit their connections; code extraction and typesetting give established results further uses.
 
 <a id="two-directions"></a>
 
 <details>
 <summary><strong>Small example: top-down and bottom-up writings of the same algebraic equality</strong></summary>
+
+Typical Lean tactic interaction starts with a goal and reduces it to subgoals. This compares default writing and interaction directions: Litex often asks “what else do the known facts support?” while Lean tactics often ask “what does the current goal still need?” Both must check their conclusions rigorously.
 
 This example shows two directions of progress for the same equality. Lean starts from the goal; each `rw` specifies a fact, a matching direction, and a replacement:
 
@@ -1022,6 +1090,208 @@ The chain reassociates the product, substitutes `a * b = c * d`, substitutes `g 
 Mizar, Isar, ACL2, and Naproche already support forward text, theorem accumulation, or stepwise checking, so “bottom-up” is not unique to Litex. Litex tests a combination: ordinary facts automatically trigger local verification, extend the context when they succeed, and keep accepted or stopped paths visible for humans or AI to inspect and repair; explicit proof structure is written only when ordinary verification is insufficient. A fuller comparison appears in Section 1's summary “Litex and Naproche—Similar Goals, Different Core Interfaces.”
 
 </details>
+
+<a id="workflow-exploration"></a>
+
+### 3.2 Think, Write, and Check as You Go
+
+Starting from a positive number `x`, the update is `(x + 2 / x) / 2`. Positivity matters: it makes the division meaningful and keeps the updated number positive. We first check that property, then define the function:
+
+```litex
+claim:
+    ? forall x R+:
+        (x + 2 / x) / 2 $in R+
+    2 / x > 0
+    x + 2 / x > 0
+    (x + 2 / x) / 2 > 0
+
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+```
+
+We can now try concrete values. After successfully loading the code above into the REPL, enter the following three statements in the same session. The failure line summarizes the JSON diagnostic:
+
+```text
+litex> newton_sqrt_two(1) = 3 / 2
+success
+litex> newton_sqrt_two(0) = 1
+Failed: cannot prove 0 $in R+; the function's argument condition is unmet.
+litex> newton_sqrt_two(3 / 2) = 17 / 12
+success
+```
+
+The second statement stops at the condition check: zero is outside this function's domain. After correcting the input, we can continue from the definitions and facts already accepted. An ordinary verification failure discards the failing statement's candidate state and retains accepted context; after the process exits, that work must be loaded or replayed.
+
+Feedback returns directly to the mathematical question: does the input meet the conditions, and does the next step hold? People and AI can use the answers to revise their next attempt. See the [CLI guide](cli.md#session-flag) for starting and restoring a REPL.
+
+<a id="workflow-reuse"></a>
+
+### 3.3 Keep Today's Results for the Next Exploration
+
+After calculating a few values, we can prove a general property: if a positive `x` satisfies `x^2 = 2`, the Newton update leaves it unchanged. A concrete experiment has led to mathematical knowledge that can be cited again.
+
+<details>
+<summary><strong>A two-file example: prove it here, use it there</strong></summary>
+
+Save the previous function definition and its preceding positivity proof as `newton.lit`, then add this theorem in the same file. The equality chain first establishes `x = 2 / x`, then substitutes it into the update:
+
+<!-- litex:skip-test -->
+```litex
+thm fixed_point:
+    ? forall x R+:
+        x^2 = 2
+        =>:
+            newton_sqrt_two(x) = x
+    x = x * x / x = x^2 / x = 2 / x
+    newton_sqrt_two(x) = (x + 2 / x) / 2 = (x + x) / 2 = x
+```
+
+Organize the two files in mathematical dependency order in `litex.config`:
+
+```toml
+[export]
+newton = "./newton.lit"
+example = "./example.lit"
+```
+
+A second file, `example.lit`, makes the function definition available and applies the theorem already proved to √2:
+
+<!-- litex:skip-test -->
+```litex
+release obj def newton::newton_sqrt_two
+by thm newton::fixed_point(sqrt(2)) => newton::newton_sqrt_two(sqrt(2)) = sqrt(2)
+```
+
+Running `litex -strict -f example.lit` loads the preceding `newton.lit` and checks this application. These two excerpts are verified in the project context described above; they are not standalone files.
+
+</details>
+
+<details>
+<summary><strong>Another example: using Cantor's theorem in later reasoning</strong></summary>
+
+For example, we can prove Cantor's theorem ourselves: every function \(f:X\to\mathcal P(X)\) misses some subset and therefore cannot be surjective. The code below first defines what it means for a subset to have no preimage, proves the general result using a diagonal set, and then applies it to a concrete function. The whole example uses no `trust`:
+
+```litex
+prop has_no_preimage(X set, f fn(x X) power_set(X), D power_set(X)):
+    forall a X:
+        D != f(a)
+
+thm cantor:
+    ? forall X set, f fn(x X) power_set(X):
+        exist D power_set(X) st {$has_no_preimage(X, f, D)}
+
+    have D power_set(X) = {x X: not x $in f(x)}
+
+    thm diagonal_nonmembership:
+        ? forall a X:
+            D = f(a)
+            =>:
+                not a $in f(a)
+        by contra:
+            ? not a $in f(a)
+            a $in D
+            impossible a $in f(a)
+
+    claim:
+        ? forall a X:
+            D != f(a)
+        by contra:
+            ? D != f(a)
+            not a $in f(a)
+            a $in D
+            a $in f(a)
+            impossible a $in f(a)
+
+    by def $has_no_preimage(X, f, D)
+    witness exist E power_set(X) st {$has_no_preimage(X, f, E)} from D
+
+have fn singleton(n N) power_set(N) = {n}
+release thm cantor(N, singleton)
+obtain missing from exist S power_set(N) st {$has_no_preimage(N, singleton, S)}
+missing != singleton(0)
+```
+
+This example shows how knowledge accumulates during a proof and remains available for further use. Once we have defined the concept and proved Cantor's theorem, those results become part of the current mathematical context. When we introduce the concrete function `singleton`, Litex can use the general conclusion already proved to obtain new objects and facts for subsequent reasoning.
+
+</details>
+
+The later file uses an established theorem to continue its own work. As results accumulate, definitions, constructions, and theorems can be organized into modules for use within the same project or in other projects. A finished proof leaves mathematical vocabulary and knowledge that the next piece of work can depend on.
+
+As knowledge grows, its connections matter too. The current CLI's `-graph` shows mathematical dependencies between definitions, theorems, and accepted facts. In this example, applying the theorem from a new file creates a connection to the original theorem, helping readers look back at what was used. See the [dependency graph guide](cli.md#mathematical-dependency-graphs-preview) for viewing it.
+
+*The CLI provides native mathematical dependency graphs. The website currently displays a projection of Normal JSON; the native graph is not yet connected there. A dependency graph helps inspect knowledge relationships; independent proof rechecking is the separate work discussed in Section 5.*
+
+<a id="workflow-use"></a>
+<a id="executable-code"></a>
+
+### 3.4 Use Mathematical Results for Computation and Communication
+
+Beyond saving and reusing results, we can put them to work in a calculation or write them up for others to read. Litex is developing both routes to connect formal source with everyday mathematical work.
+
+**For computation.** Within the current experimental subset, checked numeric definitions and `algo` fragments can be extracted as Python or C. We can give the Newton update an executable entrypoint and prove that it agrees with the earlier mathematical function on positive inputs:
+
+<details>
+<summary><strong>The same Newton update, extracted as Python / C</strong></summary>
+
+The following is a complete standalone fragment. `# [-extract]` and `# [end of -extract]` select the part of a file to extract; the other statements belong to ordinary verification. This entrypoint explicitly returns `1` at zero. Agreement with the positive-domain function is proved only for `x R+`.
+
+```litex
+claim:
+    ? forall x R+:
+        (x + 2 / x) / 2 $in R+
+    2 / x > 0
+    x + 2 / x > 0
+    (x + 2 / x) / 2 > 0
+
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+
+# [-extract]
+algo newton_sqrt_two_step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
+# [end of -extract]
+
+claim:
+    ? forall x R+:
+        newton_sqrt_two_step(x) = newton_sqrt_two(x)
+    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
+```
+
+Extraction with `-extractpython -f` produces:
+
+```python
+def newton_sqrt_two_step(x):
+    if x == 0.0:
+        return 1.0
+    elif x != 0.0:
+        return ((x + (2.0 / x)) / 2.0)
+    raise AssertionError("unreachable verified Litex cases")
+```
+
+The same fragment with `-extractc -f` produces C:
+
+```c
+#include <stdlib.h>
+
+double newton_sqrt_two_step(double x) {
+    if (x == 0.0) {
+        return 1.0;
+    }
+    else if (x != 0.0) {
+        return ((x + (2.0 / x)) / 2.0);
+    }
+    abort();
+}
+```
+
+Python/C extraction remains limited to supported computational fragments. The emitted code uses floating-point arithmetic: Litex checks the source mathematics, while rounding and overflow require separate analysis. See the [extraction guide](../src/extract_executable_code/README.md) for the supported subset.
+
+</details>
+
+**For reading and sharing.** Mathematical source can also be converted to LaTeX, bringing definitions, formulas, and proof steps into lecture notes or a manuscript. For example, `-latex -document -lang en -f example.lit` converts the two-file project above into an editable LaTeX document.
+
+LaTeX conversion presents the mathematical source; mathematical verification must be run separately. See the [LaTeX guide](cli.md#latex-conversion-preview) for formats and usage.
+
+From an exploration to a reusable theorem, then to computation and communication: this is the mathematical workflow the third characteristic aims to connect. A finished proof should give the next piece of mathematics a place to begin.
 
 <a id="interaction-loop"></a>
 
@@ -1398,7 +1668,7 @@ Litex hopes to use the same verified source and results for human reading, AI-as
 | Readable reasoning front end | Mathematical objects, conditions, intermediate facts, and conclusions that people can inspect directly |
 | Checkable reasoning data layer | Machine-checked facts and verification grounds, clear stopping points, and explicitly marked trust boundaries |
 | Connection to existing ecosystems | Designed toward Lean compilation and rechecking (Section 5, experimental); early Lean artifacts document only experimental coverage, and the current `src/` has no compiler; new Lean/Mathlib adapters remain separate, handwritten work |
-| Proof to executable code (experimental) | Convert checked computational fragments into runnable Python or C (Section 6.1) |
+| Proof to executable code (experimental) | Convert checked computational fragments into runnable Python or C (Section 3.4) |
 
 The current verifier and tools are substantial, but usability, domain coverage, and adoption still require dated examples and real use results. For discussion, contact litexlang@outlook.com.
 
@@ -1408,66 +1678,6 @@ The current verifier and tools are substantial, but usability, domain coverage, 
 This route has a scale tension. A few designers need to coordinate objects, facts, proofs, and trust boundaries to keep the semantics coherent, while implementation spans many rules, well-definedness paths, evidence results, failure diagnostics, examples, and tests. As of October 4, 2026, tracked `src/` contains 631 Rust files and roughly 137,000 physical lines. The repository has about 419,000 physical Rust lines in all, including historical and experimental implementations under `scripts/`; that total is not the size of the current verifier. These counts show engineering scale, not mathematical coverage or correctness.
 
 AI tools can change the cost for a small team to write, inspect, and iterate on that implementation. They do not decide mathematical semantics, trust boundaries, or acceptance standards for people. Set-theoretic presentation, readable proof text, and local automation each have precedents. Litex tests whether combining them in one default interface can yield a readable, checkable, and sustainably extensible mathematical workflow under these engineering conditions.
-
-</details>
-
-<a id="executable-code"></a>
-
-### 6.1 Compiling Proofs to Executable Code (Python / C) (Experimental)
-
-Litex is also experimenting with translating checked computational fragments into runnable Python or C. This currently focuses on supported numeric definitions and `algo` fragments, so the same checked description of a computation can also be used for execution.
-
-This route is deliberately narrow and experimental. It is not a whole-Litex-to-Python/C compiler; coverage is limited to extractable definitions. For the CLI surface, see `-extractpython` / `-extractc` in the CLI docs.
-
-<details>
-<summary><strong>Sketch: Newton step for √2 → Python / C</strong></summary>
-
-The same Litex proof used for scientific computing can become executable code. For example, one Newton step toward √2:
-
-```litex
-claim:
-    ? forall x R+:
-        (x + 2 / x) / 2 $in R+
-    2 / x > 0
-    x + 2 / x > 0
-    (x + 2 / x) / 2 > 0
-
-have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
-algo newton_sqrt_two_step(x R) R by cases:
-    case x = 0: 1
-    case x != 0: (x + 2 / x) / 2
-claim:
-    ? forall x R+:
-        newton_sqrt_two_step(x) = newton_sqrt_two(x)
-    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
-```
-
-To Python:
-
-```python
-def newton_sqrt_two_step(x):
-    if x == 0.0:
-        return 1.0
-    elif x != 0.0:
-        return ((x + (2.0 / x)) / 2.0)
-    raise AssertionError("unreachable verified Litex cases")
-```
-
-To C:
-
-```c
-#include <stdlib.h>
-
-double newton_sqrt_two_step(double x) {
-    if (x == 0.0) {
-        return 1.0;
-    }
-    else if (x != 0.0) {
-        return ((x + (2.0 / x)) / 2.0);
-    }
-    abort();
-}
-```
 
 </details>
 
@@ -1531,7 +1741,7 @@ choice-backed product nonemptiness identifies its axiom-of-choice provenance.
 
 ## Appendix: Programming, Mathematics, and Formalization with Litex
 
-This section draws on the experience of Lean users, mathematicians, programmers, and readers in other knowledge domains to discuss the knowledge and perspectives Litex may offer. You can choose the parts that interest you, or return to the [five main threads](#overview-spine) to continue exploring the language design.
+This section draws on the experience of Lean users, mathematicians, programmers, and readers in other knowledge domains to discuss the knowledge and perspectives Litex may offer. You can choose the parts that interest you, or return to the [five characteristics](#overview-spine) to continue exploring the language design.
 
 ### For Lean users
 
@@ -1719,7 +1929,7 @@ Litex:                many-set membership ≈ dynamic (Python-like)
 
 Fact and rule tables transfer some grounds retrieval from the author to the language. [Section 1](#fact-oriented) explains the boundaries of that default search path, and the [division of verification responsibilities](#automation-implementation) explains the engineering cost. Authors can omit many operations because each supported path handles premises, results, and failure feedback in the implementation.
 
-There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 6.1)—again experimental, and narrow, not a full language backend.
+There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 3.4)—again experimental, and narrow, not a full language backend.
 
 ### For readers in other knowledge domains
 
