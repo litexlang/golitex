@@ -84,11 +84,12 @@ impl Runtime {
                 Some(STRUCT) => self.parse_release_struct_def_stmt(block),
                 Some(OBJ) => self.parse_release_obj_def_stmt(block),
                 Some(CART) => self.parse_release_cart_def_stmt(block),
+                Some(TUPLE) => self.parse_release_tuple_def_stmt(block),
                 Some(ZORN_LEMMA) => self.parse_release_zorn_lemma_stmt(block),
                 Some(AXIOM_OF_CHOICE) => self.parse_release_axiom_of_choice_stmt(block),
                 Some(REGULARITY_AXIOM) => self.parse_release_regularity_axiom_stmt(block),
                 _ => Err(RuntimeParseError::new(
-                    "release: expected `thm …`, `struct def …`, `obj def …`, `cart def cart(…)`, `zorn_lemma: …`, `axiom_of_choice: …`, or `regularity_axiom(…)`",
+                    "release: expected `thm …`, `struct def …`, `obj def …`, `cart def cart(…)`, `tuple def …`, `zorn_lemma: …`, `axiom_of_choice: …`, or `regularity_axiom(…)`",
                     block.line,
                     block.source_path.clone(),
                 )

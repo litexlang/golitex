@@ -47,6 +47,10 @@ pub(in crate::json_output) fn project_by_thm_failure(failed: &ExecByThmStmtFaile
 }
 pub(super) fn project_builtin_application(application: &Option<BuiltinThmApplication>, rt: &Runtime) -> JsonValue {
     let Some(p) = application else { return JsonValue::Null; };
+    project_builtin_application_value(p, rt)
+}
+
+pub(super) fn project_builtin_application_value(p: &BuiltinThmApplication, rt: &Runtime) -> JsonValue {
     let provenance = if matches!(p.theorem, BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromFamily | BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromPointwise) { "axiom_of_choice" } else { "builtin_theorem" };
     object_for(rt, vec![
         ("theorem", string(p.theorem.as_str())),

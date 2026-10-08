@@ -101,7 +101,15 @@ impl Runtime {
             let Ok(instantiated) = self.inst_fact(iff_fact, &subst) else {
                 continue;
             };
-            derived.push(self.store_inferred_fact_and_infer(&instantiated, verify_state)?);
+            // Definition expansion is an optional consequence of a checked seed.
+            // A lower caller ceiling can leave child WD unavailable (for example,
+            // an existential over finite_seq(R, 1)); do not commit that child or
+            // abort the seed. Explicit definition proofs retain their WD checks.
+            if let Some(stored) =
+                self.try_store_inferred_fact_and_infer(&instantiated, verify_state)?
+            {
+                derived.push(stored);
+            }
         }
         if derived.is_empty() {
             return Ok(None);
@@ -159,3 +167,7 @@ fn type_obligation_fact(
         ))),
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/normal_atomic_expand_bounded_wd/tests.rs"]
+mod normal_atomic_expand_bounded_wd_tests;

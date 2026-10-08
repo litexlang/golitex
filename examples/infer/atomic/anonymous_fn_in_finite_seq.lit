@@ -1,0 +1,26 @@
+# Exact anonymous-function membership in a finite sequence.
+# Formerly rejected at the constructor's bounded field-membership obligation:
+# struct List<n N>:
+#     length N
+#     entries finite_seq(R, n)
+#     <=>:
+#         length = n
+# template<n N>:
+#     have fn repeat(value R) &List<n> = (n, fn(k closed_range(1, n)) R {value})
+# Run: target/release/litex -strict -f examples/infer/atomic/anonymous_fn_in_finite_seq.lit
+# Boundary: exact signature only; extra index zero and undefined bodies reject.
+
+struct List<n N>:
+    length N
+    entries finite_seq(R, n)
+    <=>:
+        length = n
+
+template<n N>:
+    have fn repeat(value R) &List<n> = (n, fn(k closed_range(1, n)) R {value})
+
+claim:
+    ? forall n N, value R:
+        fn(j closed_range(1, n)) R {value} $in finite_seq(R, n)
+
+fn(k closed_range(1, 0)) R {0} $in finite_seq(R, 0)

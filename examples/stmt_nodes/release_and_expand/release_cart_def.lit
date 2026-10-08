@@ -2,7 +2,7 @@
 # Before (rejected by the parser):
 # release cart def cart(R,Z)
 # Now: the complete checked equality is published and reusable.
-# Boundary: cart(R,2), missing a coordinate, wrong order and wrong length reject.
+# Boundary: cart(R,1/0), missing a coordinate, wrong order and wrong length reject.
 # Gate: release litex -strict -f this file.
 
 release cart def cart(R,Z)

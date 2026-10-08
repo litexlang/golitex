@@ -125,6 +125,20 @@ impl Runtime {
         ))
     }
 
+    pub(in super::super) fn parse_release_tuple_def_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+        let mut tb = block.clone();
+        tb.expect(RELEASE)?;
+        tb.expect(crate::parse::keywords::TUPLE)?;
+        tb.expect(DEF)?;
+        let obj = parse_obj(self, &mut tb)?;
+        if !tb.exceed_end_of_head() || !tb.body.is_empty() {
+            return Err(tb.parse_error("release tuple def expects one object and no body"));
+        }
+        Ok(Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseTupleDefStmt(
+            crate::ast::stmt::ReleaseTupleDefStmt { obj, line_file: SourceLine::new(block.line, self.code_source.clone()) },
+        )))
+    }
+
     pub(in super::super) fn parse_release_cart_def_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(RELEASE)?;

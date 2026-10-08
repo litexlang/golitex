@@ -45,6 +45,10 @@ use crate::json_output::explain::text::text;
 impl InFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_en(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_en(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_en(),
@@ -96,6 +100,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_zh(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_zh(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_zh(),
@@ -168,6 +176,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_zh_hant(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_zh_hant(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_zh_hant(),
@@ -240,6 +252,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_fr(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_fr(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_fr(),
@@ -291,6 +307,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_ru(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_ru(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_ru(),
@@ -342,6 +362,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_es(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_es(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_es(),
@@ -393,6 +417,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_ar(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_ar(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_ar(),
@@ -444,6 +472,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_ja(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_ja(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_ja(),
@@ -513,6 +545,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_ko(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_ko(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_ko(),
@@ -564,6 +600,10 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
+            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
+            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
+            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_vi(),
             Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_vi(),
             Self::RealTrigClosure(p) => p.rule_name_and_message_vi(),
@@ -630,6 +670,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::PositiveRealProduct(_) | Self::PositiveRealQuotient(_) | Self::NonzeroRationalProduct(_) | Self::NonzeroRationalQuotient(_) => None,
             Self::ClosedNumericMembership(_) => None,
             Self::ComplexArithmeticClosure(_) => None,
             Self::RealTrigClosure(_) => None,

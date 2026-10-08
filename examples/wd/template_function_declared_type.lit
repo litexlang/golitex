@@ -1,0 +1,24 @@
+# A checked template function keeps its declared full function type when the
+# bound parameter is renamed, including inside builtin property domains.
+template<Domain, Codomain set, map fn(x Domain) Codomain>:
+    have fn through(x Domain) Codomain by cases:
+        case x = x: map(x)
+
+forall Domain, Codomain set, map fn(x Domain) Codomain:
+    \through<Domain, Codomain, map> $in fn(renamed Domain) Codomain
+
+thm through_injective:
+    ? forall Domain, Codomain set, map fn(x Domain) Codomain:
+        $injective(Domain, Codomain, map)
+        =>:
+            $injective(Domain, Codomain, \through<Domain, Codomain, map>)
+    claim:
+        ? forall left, right Domain:
+            \through<Domain, Codomain, map>(left) = \through<Domain, Codomain, map>(right)
+            =>:
+                left = right
+        \through<Domain, Codomain, map>(left) = map(left)
+        \through<Domain, Codomain, map>(right) = map(right)
+        map(left) = map(right)
+        left = right
+    by def $injective(Domain, Codomain, \through<Domain, Codomain, map>)

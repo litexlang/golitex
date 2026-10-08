@@ -46,6 +46,28 @@ Retrying `$ready(8)` still fails. If you restart with only the same
 has the predicate's signature but lacks the old process's axiom. Replaying the
 accepted statements restores that missing context.
 
+Here is that fresh-process comparison explicitly. Start the same command
+again, then enter each statement separately:
+
+```text
+litex> $ready(7)
+{"success": false, ..., "session_error": null}
+litex> axiom ready_at_seven:
+...     ? forall n N:
+...         n = 7
+...         =>:
+...             $ready(n)
+...
+success
+litex> $ready(7)
+success
+```
+
+The extra replay is the work a restart creates. Keep the live Session after
+an ordinary failed candidate; preserve a journal so an unavoidable restart
+can restore the accepted prefix. Failed candidates themselves are not part
+of that prefix.
+
 The practical comparison is:
 
 | After a candidate fails | Next attempt |
@@ -131,6 +153,8 @@ the artificial axiom above is deliberately rejected in strict mode. Reserve
 | Repository authorization and local-only boundaries | [AGENTS.md](../AGENTS.md) and the applicable repository policy skill |
 
 Verified example and controls: [2026-10-07 receipt](../tests/tooling/acceptance/agent-session-guide-2026-10-07.json).
+The explicit fresh-process replay was also rechecked with the current worktree
+release build: [recheck receipt](../tests/tooling/acceptance/agent-session-guide-recheck-2026-10-07.json).
 The checks cover same-process retention, a fresh-process rejection, failed
 compound-statement rollback, per-statement commit in a mixed frame, hard-error
 termination, and the axiom's strict-mode rejection. They change no kernel

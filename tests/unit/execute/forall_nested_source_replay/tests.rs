@@ -32,8 +32,8 @@ fn nested_source_tracer_reuses_the_actual_claim_in_ten_languages() {
         let VerifyFactResult::ForallFact(result) = &last.verify_result else { panic!("forall result"); };
         let VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) = result.as_ref() else { panic!("actual whole-source citation"); };
         let Fact::ForallFact(source) = rt.fact_by_id_in_stack(proof.cite_fact_id).unwrap() else { panic!("stored source"); };
-        assert_eq!(source.dom_facts.len(),2);
-        assert_eq!(proof.parameter_renamings.len(),5);
+        assert_eq!(source.dom_facts.len(),4);
+        assert_eq!(proof.parameter_renamings.len(),7);
         let detail = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
         assert!(detail.contains("by_known_forall_fact") && detail.contains(&proof.cite_fact_id.to_string()));
         crate::json_output::project_stmt_normal(run.statement_results.last().unwrap(), &rt);
@@ -45,11 +45,11 @@ fn nested_source_tracer_reuses_the_actual_claim_in_ten_languages() {
 fn dependent_nested_conditions_match_without_publication_and_keep_wd_ceiling() {
     let mut rt = runtime(OutputLanguage::English);
     assert!(rt.run_litex_code(prefix()).unwrap().success);
-    let code="forall A finite_set,m N+,h fn(z A)R,p,q fn(t closed_range(1,m))A:\n    forall w A:\n        exist! r closed_range(1,m) st {p(r)=w}\n    forall w A:\n        exist! r closed_range(1,m) st {q(r)=w}\n    =>:\n        sum(1,m,fn(r closed_range(1,m))R{h(p(r))})=sum(1,m,fn(s closed_range(1,m))R{h(q(s))})\n";
+    let code="forall A finite_set,m N+,h fn(z A)R,p,q fn(t closed_range(1,m))A,left,right fn(t closed_range(1,m))R:\n    forall w A:\n        exist! r closed_range(1,m) st {p(r)=w}\n    forall w A:\n        exist! r closed_range(1,m) st {q(r)=w}\n    left=fn(r closed_range(1,m))R{h(p(r))}\n    right=fn(s closed_range(1,m))R{h(q(s))}\n    =>:\n        sum(1,m,left)=sum(1,m,right)\n";
     let goal = parse(&mut rt,code);
     let before=sizes(&rt);
     let (cite,renamings)=rt.match_known_forall_source(&goal).expect("nested scoped identity");
-    assert_eq!(renamings.len(),5);
+    assert_eq!(renamings.len(),7);
     assert_eq!(before,sizes(&rt));
     let direct=rt.verify_fact(&Fact::ForallFact(goal.clone()),VerifyState::new(VerifyStateLevel::Direct)).unwrap();
     let VerifyFactResult::ForallFact(direct)=direct else { panic!("forall"); };

@@ -17,6 +17,22 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NonzeroRationalQuotient(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("NonzeroRationalQuotient")),
+            ("numerator_nonzero_rational", project_verify_fact(&p.numerator_nonzero_rational, runtime)),
+            ("denominator_nonzero_rational", project_verify_fact(&p.denominator_nonzero_rational, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NonzeroRationalProduct(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("NonzeroRationalProduct")),
+            ("left_nonzero_rational", project_verify_fact(&p.left_nonzero_rational, runtime)),
+            ("right_nonzero_rational", project_verify_fact(&p.right_nonzero_rational, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::PositiveRealQuotient(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("PositiveRealQuotient")),
+            ("numerator_positive", project_verify_fact(&p.numerator_positive, runtime)),
+            ("denominator_positive", project_verify_fact(&p.denominator_positive, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::PositiveRealProduct(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("PositiveRealProduct")),
+            ("left_positive", project_verify_fact(&p.left_positive, runtime)),
+            ("right_positive", project_verify_fact(&p.right_positive, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SignLowerBound(_)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("SignLowerBound")),
         ]),

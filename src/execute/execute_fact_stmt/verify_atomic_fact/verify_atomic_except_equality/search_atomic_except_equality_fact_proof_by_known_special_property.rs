@@ -1,11 +1,12 @@
 use super::known_fn_standard_return::FnApplicationInStandardSupersetProof;
-use crate::ast::fact::{AtomicFact, InFact, LessEqualFact};
+use crate::ast::fact::{AtomicFact, EqualFact, InFact, LessEqualFact};
 use crate::ast::obj::{FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, IteratedOperator, Obj, StandardSet, StructAndFieldAccessObj};
 use super::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
 use super::result::AtomicExceptEqualityFactKnownProof;
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 use crate::runtime::{FactId, Runtime};
 use crate::ast::obj::{ProductShape, Literal, Number};
 use crate::execute::execute_fact_stmt::known_tuple::{literal_positive_usize, KnownTupleShapeProof};
@@ -24,6 +25,8 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
             Self::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(_)) => None,
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(_)) => None,
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnInFiniteSeq(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FieldInDeclaredSet(_)) => None,
             Self::InFact(InFactSearchProofByKnownSpecialProperty::FoldInCarrier(p)) => match &p.operation_signature {
                 FoldOperationSignatureProof::Literal(_) => None,
@@ -50,12 +53,30 @@ pub enum InFactSearchProofByKnownSpecialProperty {
     AnonymousFnApplicationInCodomain(AnonymousFnApplicationInCodomainProof),
     FieldApplicationInDeclaredCodomain(FieldApplicationInDeclaredCodomainProof),
     TemplateApplicationInDeclaredCodomain(TemplateApplicationInDeclaredCodomainProof),
+    TemplateFunctionInDeclaredFnSet(TemplateFunctionInDeclaredFnSetProof),
+    AnonymousFnInFiniteSeq(AnonymousFnInFiniteSeqProof),
     FieldInDeclaredSet(FieldInDeclaredSetProof),
     FnApplicationInCodomain(FnApplicationInCodomainKnownSpecialPropertyProof),
     FnApplicationInStandardSuperset(FnApplicationInStandardSupersetProof),
     FnApplicationInFnRange(FnApplicationInFnRangeKnownSpecialPropertyProof),
     TupleCoordinate(TupleCoordinateKnownProof),
     HomogeneousTupleCoordinate(HomogeneousTupleCoordinateKnownProof),
+}
+
+// The enclosing atomic WD has checked every template argument and guard.
+// The declared complete FnSet must match the target by identity/alpha only;
+// no domain widening, return coercion, or equality-graph search is performed.
+pub struct TemplateFunctionInDeclaredFnSetProof {
+    pub instance: InstantiatedTemplateObj,
+    pub declared_signature: FnSet,
+    pub signature_match: EqualFactSearchedProof,
+}
+
+// Object WD checks the literal's body and the finite-sequence carrier first.
+// The complete declared signature must then match by alpha identity only.
+pub struct AnonymousFnInFiniteSeqProof {
+    pub declared_signature: FnSet,
+    pub signature_match: EqualFactSearchedProof,
 }
 
 pub struct StandardNumericSupersetKnownProof {
@@ -215,6 +236,46 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        if let (Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)),
+                Obj::SetFormer(crate::ast::obj::SetFormer::FiniteSeqSet(_))) =
+            (&fact.element, &fact.set)
+        {
+            let target_signature = self.function_space_signature(&fact.set)?;
+            let comparison = EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: Obj::FunctionSpace(FunctionSpace::FnSet(function.body.clone())),
+                right: Obj::FunctionSpace(FunctionSpace::FnSet(target_signature)),
+                line_file: fact.line_file.clone(),
+            };
+            if let Some(signature_match) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
+                return Some(InFactSearchProofByKnownSpecialProperty::AnonymousFnInFiniteSeq(
+                    AnonymousFnInFiniteSeqProof {
+                        declared_signature: function.body.clone(),
+                        signature_match: signature_match.into(),
+                    },
+                ));
+            }
+        }
+        if let (Obj::InstantiatedTemplateObj(instance), Obj::FunctionSpace(FunctionSpace::FnSet(_))) =
+            (&fact.element, &fact.set)
+        {
+            if let Some(declared_signature) = self.instantiated_template_function_signature(instance) {
+                let comparison = EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: Obj::FunctionSpace(FunctionSpace::FnSet(declared_signature.clone())),
+                    right: fact.set.clone(),
+                    line_file: fact.line_file.clone(),
+                };
+                if let Some(signature_match) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
+                    return Some(InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(
+                        TemplateFunctionInDeclaredFnSetProof {
+                            instance: instance.clone(), declared_signature,
+                            signature_match: signature_match.into(),
+                        },
+                    ));
+                }
+            }
+        }
         // A stored numeric carrier supplies its intrinsic standard supersets.
         // Example: known x in Z establishes x in R without a new child search.
         if let Obj::StandardSet(target) = &fact.set {
@@ -501,3 +562,65 @@ impl Runtime {
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/known_numeric_carrier/tests.rs"]
 mod known_numeric_carrier_tests;
+
+#[cfg(test)]
+mod template_function_declared_type_tests {
+    use crate::launch_command::{LaunchCommand, OutputLanguage};
+    use crate::runtime::Runtime;
+
+    fn runtime() -> Runtime {
+        Runtime::new(LaunchCommand::Eval {
+            code: String::new(), session: false, strict: true,
+            language: OutputLanguage::English,
+        })
+    }
+
+    const PIECEWISE: &str = "template<a R>:\n    have fn identity(x R) R by cases:\n        case x < a: x\n        case x >= a: x\n";
+
+    #[test]
+    fn template_function_declared_type_accepts_bound_parameter_renaming_with_evidence() {
+        let mut rt = runtime();
+        assert!(rt.run_litex_code(PIECEWISE).unwrap().success);
+        let code = "\\identity<0> $in fn(renamed R) R";
+        let tokens = crate::tokenize::Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+        let crate::ast::stmt::Stmt::Fact(crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::InFact(goal))) = rt.parse(&tokens).unwrap().remove(0)
+        else { panic!("function-space membership") };
+        assert!(!rt.verify_obj_well_definedness(&goal.element, crate::execute::execute_fact_stmt::VerifyState::top_level()).unwrap().is_failed());
+        assert!(!rt.verify_obj_well_definedness(&goal.set, crate::execute::execute_fact_stmt::VerifyState::top_level()).unwrap().is_failed());
+        let Some(super::InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(proof)) = rt.search_in_fact_proof_by_known_special_property(&goal)
+        else { panic!("declared template type evidence") };
+        assert!(matches!(proof.signature_match, super::EqualFactSearchedProof::ByTheyAreTheSame(_)));
+        let run = rt.run_litex_code(code).unwrap();
+        assert!(run.success && run.session_error.is_none());
+    }
+
+    #[test]
+    fn template_function_declared_type_rejects_different_domain_and_return_set() {
+        for target in ["fn(renamed N) R", "fn(renamed R) N"] {
+            let run = runtime().run_litex_code(&format!("{PIECEWISE}\\identity<0> $in {target}\n")).unwrap();
+            assert!(!run.success && run.session_error.is_none(), "{target}");
+        }
+    }
+
+    #[test]
+    fn template_function_declared_type_preserves_domain_conditions_and_free_values() {
+        let definition = "template<a R>:\n    have fn above(x R: x > a) R = x\n";
+        let run = runtime().run_litex_code(&format!("{definition}\\above<0> $in fn(renamed R: renamed > 0) R\n")).unwrap();
+        assert!(run.success && run.session_error.is_none());
+        for target in ["fn(renamed R) R", "fn(renamed R: renamed > 1) R"] {
+            let run = runtime().run_litex_code(&format!("{definition}\\above<0> $in {target}\n")).unwrap();
+            assert!(!run.success && run.session_error.is_none(), "{target}");
+        }
+    }
+
+    #[test]
+    fn template_function_declared_type_requires_template_argument_wd_and_function_witness() {
+        let guarded = "template<Guard set, marker Guard>:\n    have fn identity(n N) N = n\n";
+        let run = runtime().run_litex_code(&format!("{guarded}\\identity<{{1}}, 1> $in fn(renamed N) N\n")).unwrap();
+        assert!(run.success && run.session_error.is_none());
+        let run = runtime().run_litex_code(&format!("{guarded}\\identity<{{1}}, 2> $in fn(renamed N) N\n")).unwrap();
+        assert!(!run.success && run.session_error.is_none());
+        let run = runtime().run_litex_code("template<a R>:\n    have scalar R = a\n\\scalar<0> $in fn(renamed R) R\n").unwrap();
+        assert!(!run.success && run.session_error.is_none());
+    }
+}

@@ -1,0 +1,37 @@
+# Tracer: explicitly release the exact finite-sequence contract of a tuple.
+# Before (parser rejected the command):
+# let t=(1,2)
+# release tuple def t
+# Former result: release expected thm/struct/obj/cart; tuple branch absent.
+# Now: check the entire package and publish ordinary reusable facts.
+let t=(1,2)
+release tuple def t
+t $in finite_seq(union({1},{2}),2)
+t(1)=1
+t(2)=2
+
+# Repeated values do not change the complete domain.
+release tuple def (1,1)
+(1,1) $in finite_seq(union({1},{1}),2)
+release tuple def ()
+() $in finite_seq({},0)
+release tuple def tuple(7)
+tuple(7) $in finite_seq({7},1)
+tuple(7)(1)=7
+release tuple def (R,1)
+(R,1) $in finite_seq(union({R},{1}),2)
+(R,1)(1)=R
+
+# A checked Cartesian member releases the union carrier and factor bounds.
+have p cart(R,Z)
+release tuple def p
+p $in finite_seq(union(R,Z),2)
+p(1) $in R
+p(2) $in Z
+
+# Boundary: scalar targets, invalid WD, infinite domains, wrong lengths and
+# out-of-domain coordinates reject; failed statements/sketches publish nothing.
+# The command uses known tuple values/aliases or checked Cartesian membership.
+# It does not discover arbitrary function bodies as tuple definitions.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/release_tuple_def.lit
+# Executable controls: tests/unit/execute/release_tuple_def/tests.rs

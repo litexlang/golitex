@@ -13,7 +13,7 @@ checks that each currently wired statement kind can execute end-to-end.
 target/release/litex -f <this-file>
 ```
 
-Exit 0 is enough. Stub / not-yet-wired stmt arms are **omitted**.
+Require exit 0 and parsed JSON with `kind: run`, `success: true`, and `session_error: null`. Stub / not-yet-wired stmt arms are **omitted**.
 
 ## Layout
 
@@ -66,6 +66,8 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | `definition/def_strategy_peel_sum.lit` | known_strategy peel | binary `$is_pos(a+b)` package → `$is_pos(a+b+c+d)` without intermediate sums |
 | `definition/release_*.lit` | Unpack packaged facts | `release thm` / `struct def` / `obj def` |
 | `definition/theorem_call_typed_arguments.lit` | Check explicit theorem argument types | `release thm` / `by thm … =>` with typed binders |
+| [release_and_expand/release_tuple_def.lit](release_and_expand/release_tuple_def.lit) | Release an individual tuple's exact contract | `release tuple def t` checks full domain, return bounds and coordinates before ordinary publication |
+| [release_and_expand/release_cart_def.lit](release_and_expand/release_cart_def.lit) | Release the complete Cartesian set definition | `release cart def cart(A,B)` stores the finite-sequence carrier and every factor clause |
 | `release_and_expand/` | Expand range / release axioms | `expand:` / `release axiom_of_choice` / `release regularity_axiom` / `release zorn_lemma` |
 | `unsafe/` | Trust boundary | `trust:` / `trust have …:` |
 | `register/` | Prop rewrite laws | `register reflexive\|symmetric\|transitive:` |

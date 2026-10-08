@@ -101,3 +101,11 @@ comparison WD shape. The focused `weak_integer_lower_bound_in_n` tests retain
 both premise proofs and citations, reject missing-domain/negative-bound/strict
 carrier conclusions, and check local scope, failed-statement rollback and
 ordinary/strong induction.
+
+`atomic/normal_atomic_expand_bounded_wd.lit` constructs a set whose defining
+predicate contains a finite-sequence existential. Optional definition children
+whose WD is unavailable at the caller ceiling are skipped; that does not abort
+the already checked seed or increase its permissions. The focused
+`normal_atomic_expand_bounded_wd` Rust tests retain invalid-call and false-fact
+rejection, renamed-carrier parameter projection, and the original Direct-level
+WD boundary.

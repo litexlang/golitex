@@ -527,6 +527,7 @@ pub enum ReleaseAndExpandStmt {
     // Example: `release obj def f`.
     ReleaseObjDefStmt(ReleaseObjDefStmt),
     ReleaseCartDefStmt(ReleaseCartDefStmt),
+    ReleaseTupleDefStmt(ReleaseTupleDefStmt),
     // Expand numeric-range membership into equality cases.
     // Example: `expand: x $in range(1, 3)` stores `x = 1 or x = 2`.
     ExpandRangeStmt(ExpandRangeStmt),
@@ -544,6 +545,12 @@ pub enum ReleaseAndExpandStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ReleaseCartDefStmt {
     pub cart: crate::ast::obj::Cart,
+    pub line_file: SourceLine,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReleaseTupleDefStmt {
+    pub obj: Obj,
     pub line_file: SourceLine,
 }
 

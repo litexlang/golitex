@@ -65,3 +65,9 @@ pub(in crate::execute) mod verify_trig_interval_bound;
 #[cfg(test)]
 #[path = "../../../../../../tests/unit/execute/trig_interval_bound_spellings/tests.rs"]
 mod trig_interval_bound_spellings_tests;
+
+pub mod by_scalar_division_relations;
+
+pub mod by_exponential_logarithm_identities;
+
+pub mod by_factorial_predecessor;
