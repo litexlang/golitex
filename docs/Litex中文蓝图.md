@@ -195,7 +195,7 @@ release thm newton::fixed_point(sqrt(2))
 
 想了解抽取过程与支持范围，可以查看 [Python/C 抽取实现](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code)。
 
-**把数学变成一张关系图。** Litex 可以把定义、定理和已验证事实组织成关系图：节点表示数学内容，连线展示它们之间的依赖，帮助读者追溯一项结论使用了什么。可以到 [litexlang.com](https://litexlang.com) 试用 Litex 生成的可交互关系图，探索数学源码中的知识与联系。图的生成与查看方式见 [关系图实现](https://github.com/litexlang/golitex/tree/main/src/graph)。
+**让自己的工具使用数学内容。** `litex -lang en -f example.lit` 输出 JSON，包含语句文本、存储的事实、推导的事实和证明摘要。用户可以提取这些内容，自行建立索引和可视化；官网 [litexlang.com](https://litexlang.com) 首页就有一个可交互的数学概念关系图例子。普通 JSON 概括验证结果，没有记录每一条依赖。字段和边界见 [JSON 输出约定](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract)。
 
 **把数学写成便于阅读的文稿。** 数学源码也可以转换为 LaTeX，用于讲义和文稿。左侧是一条数学事实，右侧是实际生成的排版源码；转换负责呈现，数学验证另行进行：
 
@@ -1166,7 +1166,7 @@ missing != singleton(0)
 
 后一个文件沿用已有定理，继续处理自己的问题。随着这样的成果逐渐积累，定义、构造和定理可以组织为模块，供同一项目或其他项目使用。读者得到的也就不止是一篇完成的证明，还有下一次工作可以依赖的数学词汇与知识。
 
-积累之后，还需要看清联系。新版 CLI 的 `-graph` 可以展示定义、定理与已接受事实之间的数学依赖。例如，上面定理在新文件中的应用，会连接到原来的定理，便于读者回看它使用了什么。
+积累之后，用户可以通过 Litex 的普通 JSON 自行组织数学内容。例如，上面定理的调用会在语句文本中保留名称、参数和选定结论，已接受的事实则记录在 `stores` 和 `infers` 中。这些数据可以用于自己的展示工具；简洁的普通输出并没有记录所有依赖关系。
 
 *当前 CLI 已提供原生数学依赖图；网页目前展示的是 Normal JSON 的关系投影，原生图尚未接入。依赖图用于查看知识关系，独立证明复核仍是第 5 节讨论的另一项工作。*
 

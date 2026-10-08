@@ -23,12 +23,28 @@ fn combined_unit_preserves_only_legal_scope_dependencies() {
 }
 
 #[test]
-fn available_lean_identity_does_not_replace_an_unsupported_winning_route() {
+fn selected_rational_route_uses_normalization_adapter() {
     let (result, runtime) = execute("1 = 1\nforall a C:\n    a + 0 = a\n");
-    let error = compile_run(&result, &runtime, "unsupported_add_zero")
-        .expect_err("Rational evidence is not implemented");
+    let success = forall_proof(&result.statement_results[1]);
+    assert!(matches!(
+        &equality_proof(&success.proved_then_facts[0].verify_result).searched_proof,
+        EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+            EqualitySearchProofByCalculation::Rational {}
+        ))
+    ));
+    let output = compile_run(&result, &runtime, "add_zero").expect("selected Rational adapter");
+    assert!(output.contains("NativeBridge.sameOfDenoteNumber"));
+    assert!(output.contains("(by ring)"));
+    assert!(!output.contains("Litex.addZero"));
+}
+
+#[test]
+fn unsupported_constructor_after_supported_prefix_rejects_complete_artifact() {
+    let (result, runtime) = execute("1 = 1\nforall a R:\n    sin(a) + 0 = sin(a)\n");
+    let error = compile_run(&result, &runtime, "unsupported_trig")
+        .expect_err("trig denotation is outside the integer arithmetic adapter");
     assert_eq!(error.statement_index, Some(2));
-    assert_eq!(error.route, "Equality/BuiltinRule");
+    assert_eq!(error.route, "WD/TrigOperator");
 }
 
 #[test]
@@ -210,6 +226,280 @@ fn known_membership_replays_all_argument_identity_evidence() {
     let error = compile_run(&result, &runtime, "missing_argument_evidence")
         .expect_err("a citation must not discard its transport evidence");
     assert_eq!(error.route, "KnownAtomic");
+}
+
+#[test]
+fn arithmetic_family_preserves_owned_constructors_and_generic_carriers() {
+    let cases = [
+        (
+            "forall a C, b C, c C:\n    a * (b + c) = a * b + a * c\n",
+            "Litex.mul",
+        ),
+        ("forall a C, b C:\n    -(a + b) = -a - b\n", "Litex.neg"),
+        (
+            "forall a C:\n    (a + 1) * (a - 1) = a^2 - 1\n",
+            "Litex.powNat",
+        ),
+        (
+            "forall a R:\n    (a + 1) * (a - 1) = a^2 - 1\n",
+            "Litex.powNatReal",
+        ),
+        (
+            "forall a C:\n    0.125 * a + 0.125 * a = 0.25 * a\n",
+            "(0.125 : ℂ)",
+        ),
+    ];
+    for (source, constructor) in cases {
+        let (result, runtime) = execute(source);
+        let output = compile_run(&result, &runtime, "arithmetic_family").expect(source);
+        assert!(output.contains(constructor), "{source}");
+        assert!(output.contains("Litex.Obj (M := M) _Host_"));
+        assert!(output.contains("NativeBridge.sameOfDenoteNumber"));
+    }
+}
+
+#[test]
+fn guarded_rational_replays_exact_strategy_and_child_guards() {
+    let source = "forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n";
+    let (result, runtime) = execute(source);
+    let success = forall_proof(&result.statement_results[0]);
+    assert!(matches!(
+        &equality_proof(&success.proved_then_facts[0].verify_result).searched_proof,
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(_)
+        )
+    ));
+    let output = compile_run(&result, &runtime, "guarded_rational").expect("guarded rational");
+    assert!(output.contains("only [_litex_nz_0, _litex_nz_1]"));
+    assert!(output.contains("nativeNonzeroOfDenote"));
+}
+
+#[test]
+fn guarded_requirements_cannot_be_deleted_or_reordered() {
+    let source = "forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n";
+    for delete in [true, false] {
+        let (mut result, runtime) = execute(source);
+        assert!(compile_run(&result, &runtime, "complete_guards").is_ok());
+        let forall = forall_proof_mut(&mut result.statement_results[0]);
+        let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
+        match &mut equality.searched_proof {
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
+            ) => {
+                if delete {
+                    proof.requirement_facts.pop();
+                    proof.proof_of_requirement_facts.pop();
+                } else {
+                    proof.requirement_facts.swap(0, 1);
+                    proof.proof_of_requirement_facts.swap(0, 1);
+                }
+            }
+            _ => panic!("selected guarded normalization"),
+        }
+        let error = compile_run(&result, &runtime, "tampered_guards")
+            .expect_err("guard order and arity are source evidence");
+        assert_eq!(
+            error.route,
+            if delete {
+                "Rational/Requirements"
+            } else {
+                "Arithmetic/NonzeroSubject"
+            }
+        );
+    }
+}
+
+#[test]
+fn guarded_route_cannot_be_retagged_as_zero_premise_rational() {
+    let (mut result, runtime) = execute("forall a C:\n    a != 0\n    =>:\n        a / a = 1\n");
+    let forall = forall_proof_mut(&mut result.statement_results[0]);
+    let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
+    equality.searched_proof =
+        EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+            EqualitySearchProofByCalculation::Rational {},
+        ));
+    let error = compile_run(&result, &runtime, "forged_zero_premise")
+        .expect_err("cancellation has recorded obligations");
+    assert_eq!(error.route, "Rational/Requirements");
+}
+
+#[test]
+fn nonzero_product_guard_replays_actual_factor_children() {
+    let source = "forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n";
+    let (mut result, runtime) = execute(source);
+    let output =
+        compile_run(&result, &runtime, "product_guard").expect("guarded denominator product");
+    assert!(output.contains("mul_ne_zero"));
+    let forall = forall_proof_mut(&mut result.statement_results[0]);
+    let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
+    let div = match &mut equality.well_defined_proof.right {
+        ObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::ArithmeticOperator(
+                    ArithmeticOperatorObjWellDefinedProofByDef::Div(p),
+                ),
+            ..
+        } => p,
+        _ => panic!("right division WD"),
+    };
+    let guard = atomic_proof_mut(&mut div.requirement_fact_verified[0]);
+    match &mut guard.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
+            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(p),
+        ) => {
+            p.proof_of_requirement_facts.pop();
+        }
+        _ => panic!("actual product nonzero route"),
+    }
+    let error = compile_run(&result, &runtime, "missing_factor_guard")
+        .expect_err("a product guard has two proven factors");
+    assert_eq!(error.route, "NonzeroProduct/Requirements");
+}
+
+#[test]
+fn closed_integer_power_keeps_exponent_object_and_source_domain() {
+    for exponent in ["-2", "-(1 + 1)", "-4 / 2"] {
+        let source = format!("forall a C:\n    a != 0\n    =>:\n        a^({exponent}) + a^({exponent}) = 2 * a^({exponent})\n");
+        let (result, runtime) = execute(&source);
+        let output = compile_run(&result, &runtime, "integer_power").expect(&source);
+        assert!(output.contains("Litex.powInt"));
+        assert!(output.contains("Litex.neg"));
+        assert!(output.contains("(-2 : ℤ)"));
+        assert!(output.contains("(by norm_num)"));
+    }
+}
+
+#[test]
+fn existing_large_integer_literal_profile_does_not_inherit_i128_limits() {
+    let numeral = "123456789012345678901234567890123456789012345678901234567890";
+    let source =
+        format!("{numeral} = {numeral}\n$is_set({numeral})\n{numeral} $in R\n{numeral} $in C\n");
+    let (result, runtime) = execute(&source);
+    assert!(compile_run(&result, &runtime, "large_literal").is_ok());
+}
+
+#[test]
+fn rational_guard_replays_its_actual_fact_id() {
+    let (mut result, runtime) =
+        execute("forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n");
+    let forall = forall_proof_mut(&mut result.statement_results[0]);
+    let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
+    let child = match &mut equality.searched_proof {
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(p),
+        ) => &mut p.proof_of_requirement_facts[0],
+        _ => panic!("guarded normalization"),
+    };
+    match &mut atomic_proof_mut(child).searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
+            p.cite_fact_id = FactId::new(u64::MAX)
+        }
+        _ => panic!("actual guard citation"),
+    }
+    let error = compile_run(&result, &runtime, "missing_guard_citation")
+        .expect_err("matching guard subjects cannot repair a missing source citation");
+    assert_eq!(error.route, "FactId/Resolution");
+}
+
+#[test]
+fn integer_value_does_not_override_a_changed_power_domain() {
+    let (mut result, runtime) = execute("forall a C:\n    (a + 1) * (a - 1) = a^2 - 1\n");
+    let (external, _) = execute("2 $in C\n");
+    let truthful_c = match external
+        .statement_results
+        .into_iter()
+        .next()
+        .expect("membership")
+    {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) => p.verify_result,
+        _ => panic!("successful membership"),
+    };
+    let forall = forall_proof_mut(&mut result.statement_results[0]);
+    let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
+    let subtraction = match &mut equality.well_defined_proof.right {
+        ObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::ArithmeticOperator(
+                    ArithmeticOperatorObjWellDefinedProofByDef::Sub(p),
+                ),
+            ..
+        } => p,
+        _ => panic!("right subtraction WD"),
+    };
+    let power = match subtraction.child_obj_well_defined[0].as_mut() {
+        ObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::ArithmeticOperator(
+                    ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
+                ),
+            ..
+        } => p,
+        _ => panic!("power WD"),
+    };
+    power.requirement_fact_verified[1] = truthful_c;
+    let error = compile_run(&result, &runtime, "changed_power_domain")
+        .expect_err("an integer payload cannot invent the recorded natural-domain proof");
+    assert_eq!(error.route, "WD/Pow/Domain");
+}
+
+#[test]
+fn numeric_child_congruence_is_not_replaced_with_parent_normalization() {
+    let (result, runtime) = execute("forall a C:\n    a + 0.125 = a + 1 / 8\n");
+    let success = forall_proof(&result.statement_results[0]);
+    assert!(matches!(
+        &equality_proof(&success.proved_then_facts[0].verify_result).searched_proof,
+        EqualFactSearchedProof::ByMatchingOneArgByOne(_)
+    ));
+    let error = compile_run(&result, &runtime, "numeric_child_congruence")
+        .expect_err("selected congruence is a later evidence family");
+    assert_eq!(error.route, "Equality/MatchingOneArgByOne");
+}
+
+fn forall_proof(result: &ExecStmtResult) -> &VerifyForallFactSuccess {
+    match result {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) => {
+            match &success.verify_result {
+                VerifyFactResult::ForallFact(proof) => match proof.as_ref() {
+                    VerifyForallFactResult::Success(
+                        VerifyForallFactProof::ByLocalIntroduction(proof),
+                    ) => proof,
+                    _ => panic!("local-introduction forall"),
+                },
+                _ => panic!("forall result"),
+            }
+        }
+        _ => panic!("successful fact"),
+    }
+}
+
+fn equality_proof(result: &VerifyFactResult) -> &VerifyEqualitySuccess {
+    match result {
+        VerifyFactResult::Equality(proof) => match proof.as_ref() {
+            VerifyEqualityResult::Success(proof) => proof,
+            VerifyEqualityResult::Failed(_) => panic!("verified equality"),
+        },
+        _ => panic!("equality result"),
+    }
+}
+
+fn equality_proof_mut(result: &mut VerifyFactResult) -> &mut VerifyEqualitySuccess {
+    match result {
+        VerifyFactResult::Equality(proof) => match proof.as_mut() {
+            VerifyEqualityResult::Success(proof) => proof,
+            VerifyEqualityResult::Failed(_) => panic!("verified equality"),
+        },
+        _ => panic!("equality result"),
+    }
+}
+
+fn atomic_proof_mut(result: &mut VerifyFactResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
+    match result {
+        VerifyFactResult::AtomicExceptEquality(proof) => match proof.as_mut() {
+            VerifyAtomicExceptEqualityFactResult::Success(proof) => proof,
+            VerifyAtomicExceptEqualityFactResult::Failed(_) => panic!("verified atomic"),
+        },
+        _ => panic!("atomic result"),
+    }
 }
 
 fn forall_proof_mut(result: &mut ExecStmtResult) -> &mut VerifyForallFactSuccess {

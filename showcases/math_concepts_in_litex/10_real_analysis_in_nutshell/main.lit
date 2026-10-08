@@ -74,18 +74,9 @@ thm sequence_limit_unique:
                 0 < abs(L1 - L2)
         0 < abs(L1 - L2) / 3
         abs(L1 - L2) / 3 $in R+
-        $has_eventual_closeness_to(a, L1, abs(L1 - L2) / 3)
-        $has_eventual_closeness_to(a, L2, abs(L1 - L2) / 3)
         obtain n1 from $has_eventual_closeness_to(a, L1, abs(L1 - L2) / 3)
         obtain n2 from $has_eventual_closeness_to(a, L2, abs(L1 - L2) / 3)
-        let n0 = n1 + n2
-        n0 $in N+
-        0 <= n1
-        0 <= n2
-        n1 <= n1 + n2
-        n2 <= n1 + n2
-        n1 <= n0
-        n2 <= n0
+        have n0 N+ = n1 + n2
         n0 >= n1
         n0 >= n2
         abs(a(n0) - L1) < abs(L1 - L2) / 3
@@ -93,19 +84,14 @@ thm sequence_limit_unique:
         abs(L1 - a(n0)) = abs(a(n0) - L1)
         abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
         abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2) / 3 + abs(L1 - L2) / 3
-        2 * abs(L1 - L2) < 3 * abs(L1 - L2)
-        2 * abs(L1 - L2) / 3 < 3 * abs(L1 - L2) / 3
-        abs(L1 - L2) / 3 + abs(L1 - L2) / 3 = 2 * abs(L1 - L2) / 3
-        3 * abs(L1 - L2) / 3 = abs(L1 - L2)
-        abs(L1 - L2) / 3 + abs(L1 - L2) / 3 < abs(L1 - L2)
-        abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2)
+        2 / 3 < 1
+        abs(L1 - L2) / 3 + abs(L1 - L2) / 3 = (2 / 3) * abs(L1 - L2) < 1 * abs(L1 - L2) = abs(L1 - L2)
         abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2)
         by contra:
             ? L1 = L2
             impossible abs(L1 - L2) = abs(L1 - L2)
     by contra:
         ? L1 = L2
-        L1 = L2
         impossible L1 != L2
 
 claim:

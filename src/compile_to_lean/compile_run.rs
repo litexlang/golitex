@@ -45,6 +45,14 @@ pub fn compile_run(
 struct ObjectTerm {
     object: Obj,
     term: String,
+    numeric: Option<NumericTerm>,
+}
+
+#[derive(Clone)]
+struct NumericTerm {
+    value: String,
+    denotation: String,
+    member: String,
 }
 
 #[derive(Clone)]
@@ -153,6 +161,11 @@ impl LeanCompiler {
                                 "Equality/KnownSpecialProperty",
                             ))
                         }
+                        EqualFactSearchedProof::ByBuiltinRule(
+                            EqualitySearchProofByBuiltinRule::Calculation(
+                                EqualitySearchProofByCalculation::Rational {},
+                            ),
+                        ) => self.compile_rational(&success.fact, &[], &[], false, runtime)?,
                         EqualFactSearchedProof::ByBuiltinRule(_) => {
                             return Err(LeanCompileError::unsupported("Equality/BuiltinRule"))
                         }
@@ -162,6 +175,17 @@ impl LeanCompiler {
                         EqualFactSearchedProof::ByObjectDefinition(_) => {
                             return Err(LeanCompileError::unsupported("Equality/ObjectDefinition"))
                         }
+                        EqualFactSearchedProof::ByBuiltinStrategy(
+                            EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(
+                                proof,
+                            ),
+                        ) => self.compile_rational(
+                            &success.fact,
+                            &proof.requirement_facts,
+                            &proof.proof_of_requirement_facts,
+                            true,
+                            runtime,
+                        )?,
                         EqualFactSearchedProof::ByBuiltinStrategy(_) => {
                             return Err(LeanCompileError::unsupported("Equality/BuiltinStrategy"))
                         }
@@ -193,11 +217,16 @@ impl LeanCompiler {
                     "Failed verification is not proof evidence.",
                 )),
             },
-            VerifyFactResult::AtomicExceptEquality(result) => match result.as_ref() {
-                VerifyAtomicExceptEqualityFactResult::Success(success) => {
-                    self.compile_atomic_wd(&success.well_defined_proof, &success.fact, runtime)?;
-                    let proposition = self.atomic_proposition(&success.fact)?;
-                    let proof = match &success.searched_proof {
+            VerifyFactResult::AtomicExceptEquality(result) => {
+                match result.as_ref() {
+                    VerifyAtomicExceptEqualityFactResult::Success(success) => {
+                        self.compile_atomic_wd(
+                            &success.well_defined_proof,
+                            &success.fact,
+                            runtime,
+                        )?;
+                        let proposition = self.atomic_proposition(&success.fact)?;
+                        let proof = match &success.searched_proof {
                         AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) => {
                             match &success.fact {
                                 AtomicFact::InFact(fact)
@@ -226,6 +255,8 @@ impl LeanCompiler {
                                 ))
                             }
                         },
+                        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(ClosedAtomicExceptEqualityCalculationProof::NotEqual(proof)) =>
+                            self.compile_closed_not_equal(&success.fact, proof)?,
                         AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_) => {
                             return Err(LeanCompileError::unsupported(
                                 "Atomic/ClosedCalculationNonMembership",
@@ -255,6 +286,8 @@ impl LeanCompiler {
                                 "Atomic/KnownSpecialProperty",
                             ))
                         }
+                        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)) =>
+                            self.compile_nonzero_product(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, runtime)?,
                         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
                             return Err(LeanCompileError::unsupported("Atomic/BuiltinStrategy"))
                         }
@@ -274,17 +307,23 @@ impl LeanCompiler {
                             return Err(LeanCompileError::unsupported("Atomic/KnownRewrite"))
                         }
                     };
-                    Ok(FactTerm {
-                        fact: Fact::AtomicFact(success.fact.clone()),
-                        proposition,
-                        proof,
-                    })
+                        if let AtomicFact::InFact(member) = &success.fact {
+                            if member.set == Obj::StandardSet(StandardSet::C) {
+                                self.remember_complex_member(&member.element, &proof)?;
+                            }
+                        }
+                        Ok(FactTerm {
+                            fact: Fact::AtomicFact(success.fact.clone()),
+                            proposition,
+                            proof,
+                        })
+                    }
+                    VerifyAtomicExceptEqualityFactResult::Failed(_) => Err(LeanCompileError::new(
+                        "Atomic/Failed",
+                        "Failed verification is not proof evidence.",
+                    )),
                 }
-                VerifyAtomicExceptEqualityFactResult::Failed(_) => Err(LeanCompileError::new(
-                    "Atomic/Failed",
-                    "Failed verification is not proof evidence.",
-                )),
-            },
+            }
             VerifyFactResult::ForallFact(result) => match result.as_ref() {
                 VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(
                     proof,
@@ -311,6 +350,190 @@ impl LeanCompiler {
             }
             VerifyFactResult::NotForall(_) => Err(LeanCompileError::unsupported("NotForall")),
         }
+    }
+
+    fn compile_rational(
+        &mut self,
+        fact: &EqualFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        guarded: bool,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        validate_arithmetic_expression(&fact.left)?;
+        validate_arithmetic_expression(&fact.right)?;
+        let expected = normalization_nonzero_subjects(&fact.left, &fact.right)?;
+        if requirements.len() != expected.len()
+            || proofs.len() != expected.len()
+            || guarded != !expected.is_empty()
+        {
+            return Err(LeanCompileError::new("Rational/Requirements", "The selected normalization family or ordered guard arity differs from the source expression."));
+        }
+        let mut native_guards = Vec::new();
+        for (index, ((requirement, proof), object)) in
+            requirements.iter().zip(proofs).zip(expected).enumerate()
+        {
+            ensure_nonzero_subject(requirement, &object)?;
+            let proved = self.compile_verify(proof, runtime)?;
+            if &proved.fact != requirement {
+                return Err(LeanCompileError::new(
+                    "Rational/RequirementSubject",
+                    "A guard's verify result differs from its exact ordered requirement.",
+                ));
+            }
+            let term = self.object_term(&object)?;
+            let native = self.numeric_term(&object)?;
+            native_guards.push(format!("have _litex_nz_{index} : {} ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote {term} {} {} {}", native.value, native.value, native.denotation, proved.proof));
+        }
+        let left = self.object_term(&fact.left)?;
+        let right = self.object_term(&fact.right)?;
+        let x = self.numeric_term(&fact.left)?;
+        let y = self.numeric_term(&fact.right)?;
+        // The empty Rational tag contains no monomial trace. The Lean kernel
+        // checks the fixed normalization proof, including forged false tags.
+        let normalization = if guarded {
+            let guard_names = (0..native_guards.len())
+                .map(|i| format!("_litex_nz_{i}"))
+                .collect::<Vec<_>>();
+            let names = guard_names.join(", ");
+            let exact_guards = guard_names
+                .iter()
+                .map(|n| format!("exact {n}"))
+                .collect::<Vec<_>>()
+                .join(" | ");
+            format!("(by\n  {}\n  field_simp (disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero) only [{names}] <;> ring\n)", native_guards.join("\n  "))
+        } else {
+            "(by ring)".to_string()
+        };
+        Ok(format!(
+            "(Litex.NativeBridge.sameOfDenoteNumber {left} {right} {} {} {} {} {normalization})",
+            x.value, y.value, x.denotation, y.denotation
+        ))
+    }
+
+    fn compile_nonzero_product(
+        &mut self,
+        fact: &AtomicFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let goal = match fact {
+            AtomicFact::NotEqualFact(x) => x,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "NonzeroProduct/Subject",
+                    "Product nonzero evidence has another fact family.",
+                ))
+            }
+        };
+        let (expression, reversed) = if is_zero(&goal.right) {
+            (&goal.left, false)
+        } else if is_zero(&goal.left) {
+            (&goal.right, true)
+        } else {
+            return Err(LeanCompileError::new(
+                "NonzeroProduct/Subject",
+                "The product guard does not compare with zero.",
+            ));
+        };
+        let product = match expression {
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => x,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "NonzeroProduct/Subject",
+                    "The certified nonzero object is not a product.",
+                ))
+            }
+        };
+        if requirements.len() != 2 || proofs.len() != 2 {
+            return Err(LeanCompileError::new(
+                "NonzeroProduct/Requirements",
+                "The product needs two ordered factor proofs.",
+            ));
+        }
+        let mut compiled = Vec::new();
+        for ((requirement, proof), child) in requirements
+            .iter()
+            .zip(proofs)
+            .zip([product.left.as_ref(), product.right.as_ref()])
+        {
+            ensure_nonzero_subject(requirement, child)?;
+            let proved = self.compile_verify(proof, runtime)?;
+            if &proved.fact != requirement {
+                return Err(LeanCompileError::new(
+                    "NonzeroProduct/RequirementSubject",
+                    "A factor proof differs from its ordered requirement.",
+                ));
+            }
+            let native = self.numeric_term(child)?;
+            compiled.push(format!(
+                "(Litex.NativeBridge.nativeNonzeroOfDenote {} {} {} {})",
+                self.object_term(child)?,
+                native.value,
+                native.denotation,
+                proved.proof
+            ));
+        }
+        let native = self.numeric_term(expression)?;
+        let proof = format!("(Litex.NativeBridge.notSameOfDenoteNumber {} (Litex.number (M := M) (0 : ℂ)) {} (0 : ℂ) {} (Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ)) (mul_ne_zero {} {}))", self.object_term(expression)?, native.value, native.denotation, compiled[0], compiled[1]);
+        Ok(if reversed {
+            format!("(fun h => {proof} h.symm)")
+        } else {
+            proof
+        })
+    }
+
+    fn compile_closed_not_equal(
+        &self,
+        fact: &AtomicFact,
+        proof: &ClosedNotEqualCalculationProof,
+    ) -> Result<String, LeanCompileError> {
+        let goal = match fact {
+            AtomicFact::NotEqualFact(x) => x,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "ClosedNotEqual/Subject",
+                    "Closed inequality evidence has another fact family.",
+                ))
+            }
+        };
+        let left = EvalRational::from_obj(&goal.left)
+            .ok_or_else(|| LeanCompileError::unsupported("ClosedNotEqual/Expression"))?;
+        let right = EvalRational::from_obj(&goal.right)
+            .ok_or_else(|| LeanCompileError::unsupported("ClosedNotEqual/Expression"))?;
+        let matching = match &proof.values {
+            ClosedValuePair::Decimal { left: a, right: b } => {
+                scalar_decimal(a)? == left && scalar_decimal(b)? == right
+            }
+            ClosedValuePair::Rational { left: a, right: b } => a == &left && b == &right,
+            ClosedValuePair::Complex {
+                left_real: a,
+                left_imaginary: ai,
+                right_real: b,
+                right_imaginary: bi,
+            } => a == &left && b == &right && ai.is_zero() && bi.is_zero(),
+            ClosedValuePair::Radical { .. } => {
+                return Err(LeanCompileError::unsupported("ClosedNotEqual/Radical"))
+            }
+        };
+        if !matching || left == right {
+            return Err(LeanCompileError::new(
+                "ClosedNotEqual/Values",
+                "Closed scalar values differ from the source endpoints or are equal.",
+            ));
+        }
+        let x = self.numeric_term(&goal.left)?;
+        let y = self.numeric_term(&goal.right)?;
+        Ok(format!(
+            "(Litex.NativeBridge.notSameOfDenoteNumber {} {} {} {} {} {} (by norm_num))",
+            self.object_term(&goal.left)?,
+            self.object_term(&goal.right)?,
+            x.value,
+            y.value,
+            x.denotation,
+            y.denotation
+        ))
     }
 
     fn compile_forall(
@@ -391,6 +614,7 @@ impl LeanCompiler {
                 let term = ObjectTerm {
                     object: object.clone(),
                     term: value.clone(),
+                    numeric: None,
                 };
                 let scope = self.scopes.last_mut().expect("compiler scope");
                 if scope.identifiers.insert(id, term.clone()).is_some() {
@@ -419,6 +643,9 @@ impl LeanCompiler {
                 let proposition = self.atomic_proposition(&atomic)?;
                 binders.push(format!("({hypothesis} : {proposition})"));
                 introductions.push(hypothesis.clone());
+                if set == &Obj::StandardSet(StandardSet::C) {
+                    self.remember_complex_member(&object, &hypothesis)?;
+                }
                 self.remember_fact(FactTerm {
                     fact,
                     proposition,
@@ -526,56 +753,115 @@ impl LeanCompiler {
                     ObjectTerm {
                         object: obj.clone(),
                         term: term.clone(),
+                        numeric: None,
                     },
                 );
                 Ok(term)
             }
             ObjWellDefinedProof::ByDef { obj, proof } => {
-                let term = match (obj, proof) {
+                let (term, numeric) = match (obj, proof) {
                     (
                         Obj::Identifier(IdentifierObj::Plain { id, .. }),
                         ObjWellDefinedProofByDef::Identifier(_),
-                    ) => self.identifier_term(*id)?,
+                    ) => (self.identifier_term(*id)?, None),
                     (
                         Obj::Literal(Literal::Number(number)),
                         ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Number(
                             _,
                         )),
-                    ) => format!("(Litex.number (M := M) ({} : ℂ))", integer_literal(number)?),
+                    ) => {
+                        let value = number_literal(number, "ℂ")?;
+                        (
+                            format!("(Litex.number (M := M) {value})"),
+                            Some(NumericTerm {
+                                denotation: format!(
+                                    "(Litex.NativeBridge.denoteNumber (M := M) {value})"
+                                ),
+                                member: format!("(Litex.numberInC (M := M) {value})"),
+                                value,
+                            }),
+                        )
+                    }
                     (Obj::StandardSet(set), ObjWellDefinedProofByDef::StandardSet(_)) => {
-                        standard_term(set)?
+                        (standard_term(set)?, None)
                     }
                     (
-                        Obj::ArithmeticOperator(ArithmeticOperator::Add(add)),
-                        ObjWellDefinedProofByDef::ArithmeticOperator(
-                            ArithmeticOperatorObjWellDefinedProofByDef::Add(proof),
-                        ),
-                    ) => self.compile_binary_wd(
-                        &add.left,
-                        &add.right,
-                        &proof.child_obj_well_defined,
-                        &proof.requirement_fact_verified,
-                        false,
-                        runtime,
-                    )?,
-                    (
-                        Obj::ArithmeticOperator(ArithmeticOperator::Div(div)),
-                        ObjWellDefinedProofByDef::ArithmeticOperator(
-                            ArithmeticOperatorObjWellDefinedProofByDef::Div(proof),
-                        ),
-                    ) => self.compile_binary_wd(
-                        &div.left,
-                        &div.right,
-                        &proof.child_obj_well_defined,
-                        &proof.requirement_fact_verified,
-                        true,
-                        runtime,
-                    )?,
+                        Obj::ArithmeticOperator(operator),
+                        ObjWellDefinedProofByDef::ArithmeticOperator(wd),
+                    ) => {
+                        let (term, numeric) = match (operator, wd) {
+                            (
+                                ArithmeticOperator::Add(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Add(p),
+                            ) => self.compile_binary_wd(
+                                &x.left,
+                                &x.right,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                BinaryArithmetic::Add,
+                                runtime,
+                            )?,
+                            (
+                                ArithmeticOperator::Sub(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Sub(p),
+                            ) => self.compile_binary_wd(
+                                &x.left,
+                                &x.right,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                BinaryArithmetic::Sub,
+                                runtime,
+                            )?,
+                            (
+                                ArithmeticOperator::Mul(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Mul(p),
+                            ) => self.compile_binary_wd(
+                                &x.left,
+                                &x.right,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                BinaryArithmetic::Mul,
+                                runtime,
+                            )?,
+                            (
+                                ArithmeticOperator::Div(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Div(p),
+                            ) => self.compile_binary_wd(
+                                &x.left,
+                                &x.right,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                BinaryArithmetic::Div,
+                                runtime,
+                            )?,
+                            (
+                                ArithmeticOperator::Neg(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Neg(p),
+                            ) => self.compile_neg_wd(
+                                &x.arg,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                runtime,
+                            )?,
+                            (
+                                ArithmeticOperator::Pow(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
+                            ) => self.compile_pow_wd(
+                                &x.base,
+                                &x.exponent,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                runtime,
+                            )?,
+                            _ => {
+                                return Err(LeanCompileError::unsupported("WD/ArithmeticOperator"))
+                            }
+                        };
+                        (term, Some(numeric))
+                    }
                     (_, unsupported) => return Err(unsupported_wd_definition(unsupported)),
                 };
-                // Closed factory certificates do not depend on a binder scope.
-                // Retain an actually replayed leaf for later WD-id citations;
-                // never hoist generic operands, arithmetic terms or local facts.
+                // Only replayed closed leaves leave a binder scope.
                 let closed_leaf =
                     matches!(obj, Obj::Literal(Literal::Number(_)) | Obj::StandardSet(_));
                 let scope = if closed_leaf {
@@ -586,6 +872,7 @@ impl LeanCompiler {
                 let entry = scope.objects.entry(obj.ir()).or_insert(ObjectTerm {
                     object: obj.clone(),
                     term,
+                    numeric,
                 });
                 Ok(entry.term.clone())
             }
@@ -598,9 +885,10 @@ impl LeanCompiler {
         right: &Obj,
         children: &[Box<ObjWellDefinedProof>],
         requirements: &[VerifyFactResult],
-        division: bool,
+        operation: BinaryArithmetic,
         runtime: &Runtime,
-    ) -> Result<String, LeanCompileError> {
+    ) -> Result<(String, NumericTerm), LeanCompileError> {
+        let division = matches!(operation, BinaryArithmetic::Div);
         if children.len() != 2 || requirements.len() != if division { 3 } else { 2 } {
             return Err(LeanCompileError::new(
                 "WD/Arithmetic",
@@ -615,30 +903,144 @@ impl LeanCompiler {
         for requirement in requirements {
             proofs.push(self.compile_verify(requirement, runtime)?);
         }
-        let membership_offset = if division { 1 } else { 0 };
-        ensure_complex_member(&proofs[membership_offset].fact, left)?;
-        ensure_complex_member(&proofs[membership_offset + 1].fact, right)?;
-        if division {
-            match &proofs[0].fact {
-                Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero))
-                    if nonzero.left.ir() == right.ir() && is_zero(&nonzero.right) => {}
-                _ => {
-                    return Err(LeanCompileError::new(
-                        "WD/Div",
-                        "The first division requirement must certify this divisor is nonzero.",
-                    ))
-                }
-            }
-            Ok(format!(
-                "(Litex.div {a} {b} {} {} {})",
-                proofs[1].proof, proofs[2].proof, proofs[0].proof
-            ))
+        let offset = usize::from(division);
+        ensure_complex_member(&proofs[offset].fact, left)?;
+        ensure_complex_member(&proofs[offset + 1].fact, right)?;
+        let guard = if division {
+            ensure_nonzero_subject(&proofs[0].fact, right)?;
+            format!(" {}", proofs[0].proof)
         } else {
-            Ok(format!(
-                "(Litex.add {a} {b} {} {})",
-                proofs[0].proof, proofs[1].proof
-            ))
+            String::new()
+        };
+        let (name, symbol, bridge) = match operation {
+            BinaryArithmetic::Add => ("add", "+", "Add"),
+            BinaryArithmetic::Sub => ("sub", "-", "Sub"),
+            BinaryArithmetic::Mul => ("mul", "*", "Mul"),
+            BinaryArithmetic::Div => ("div", "/", "Div"),
+        };
+        let arguments = format!(
+            "{a} {b} {} {}{guard}",
+            proofs[offset].proof,
+            proofs[offset + 1].proof
+        );
+        let x = self.numeric_term(left)?;
+        let y = self.numeric_term(right)?;
+        Ok((
+            format!("(Litex.{name} {arguments})"),
+            NumericTerm {
+                value: format!("({} {symbol} {})", x.value, y.value),
+                denotation: format!(
+                    "(Litex.NativeBridge.denote{bridge} {arguments} {} {} {} {})",
+                    x.value, y.value, x.denotation, y.denotation
+                ),
+                member: format!("(Litex.{name}InC {arguments})"),
+            },
+        ))
+    }
+
+    fn compile_neg_wd(
+        &mut self,
+        argument: &Obj,
+        children: &[Box<ObjWellDefinedProof>],
+        requirements: &[VerifyFactResult],
+        runtime: &Runtime,
+    ) -> Result<(String, NumericTerm), LeanCompileError> {
+        if children.len() != 1 || requirements.len() != 1 {
+            return Err(LeanCompileError::new(
+                "WD/Neg",
+                "Negation evidence has the wrong stage arity.",
+            ));
         }
+        ensure_object(argument, &children[0])?;
+        let a = self.compile_wd(&children[0], runtime)?;
+        let member = self.compile_verify(&requirements[0], runtime)?;
+        ensure_complex_member(&member.fact, argument)?;
+        let x = self.numeric_term(argument)?;
+        Ok((
+            format!("(Litex.neg {a} {})", member.proof),
+            NumericTerm {
+                value: format!("(- {})", x.value),
+                denotation: format!(
+                    "(Litex.NativeBridge.denoteNeg {a} {} {} {})",
+                    member.proof, x.value, x.denotation
+                ),
+                member: format!("(Litex.negInC {a} {})", member.proof),
+            },
+        ))
+    }
+
+    fn compile_pow_wd(
+        &mut self,
+        base: &Obj,
+        exponent: &Obj,
+        children: &[Box<ObjWellDefinedProof>],
+        requirements: &[VerifyFactResult],
+        runtime: &Runtime,
+    ) -> Result<(String, NumericTerm), LeanCompileError> {
+        if children.len() != 2 || !(requirements.len() == 2 || requirements.len() == 3) {
+            return Err(LeanCompileError::new(
+                "WD/Pow",
+                "Integer-power evidence has the wrong stage arity.",
+            ));
+        }
+        ensure_object(base, &children[0])?;
+        ensure_object(exponent, &children[1])?;
+        let a = self.compile_wd(&children[0], runtime)?;
+        let e = self.compile_wd(&children[1], runtime)?;
+        let integer = closed_integer(exponent)
+            .ok_or_else(|| LeanCompileError::unsupported("WD/Pow/NonClosedIntegerExponent"))?;
+        let mut proved = Vec::new();
+        for requirement in requirements {
+            proved.push(self.compile_verify(requirement, runtime)?);
+        }
+        let base_set = membership_subject(&proved[0].fact, base)?;
+        let exponent_set = membership_subject(&proved[1].fact, exponent)?;
+        let (name, bridge, exponent_value) =
+            match (base_set.clone(), exponent_set, requirements.len()) {
+                (StandardSet::R, StandardSet::N, 2) if integer >= 0 => {
+                    ("powNatReal", "PowNatReal", format!("({integer} : ℕ)"))
+                }
+                (StandardSet::C, StandardSet::N, 2) if integer >= 0 => {
+                    ("powNat", "PowNat", format!("({integer} : ℕ)"))
+                }
+                (StandardSet::C, StandardSet::Z, 3) => {
+                    ensure_nonzero_subject(&proved[2].fact, base)?;
+                    ("powInt", "PowInt", format!("({integer} : ℤ)"))
+                }
+                _ => return Err(LeanCompileError::unsupported("WD/Pow/Domain")),
+            };
+        if base_set == StandardSet::R {
+            self.remember_complex_member(
+                base,
+                &format!("(Litex.realToComplex {a} {})", proved[0].proof),
+            )?;
+        }
+        // The exponent remains its own owned object; this proof connects its
+        // checked closed arithmetic denotation to the exact integer argument.
+        let exp_native = self.numeric_term(exponent)?;
+        let integer_complex = format!("({exponent_value} : ℂ)");
+        let he_value = format!("(Litex.NativeBridge.sameOfDenoteNumber {e} (Litex.number (M := M) {integer_complex}) {} {integer_complex} {} (Litex.NativeBridge.denoteNumber (M := M) {integer_complex}) (by norm_num))", exp_native.value, exp_native.denotation);
+        let guard = if requirements.len() == 3 {
+            format!(" {}", proved[2].proof)
+        } else {
+            String::new()
+        };
+        let arguments = format!(
+            "{a} {e} {exponent_value} {} {}{guard} {he_value}",
+            proved[0].proof, proved[1].proof
+        );
+        let x = self.numeric_term(base)?;
+        Ok((
+            format!("(Litex.{name} {arguments})"),
+            NumericTerm {
+                value: format!("({} ^ {exponent_value})", x.value),
+                denotation: format!(
+                    "(Litex.NativeBridge.denote{bridge} {arguments} {} {})",
+                    x.value, x.denotation
+                ),
+                member: format!("(Litex.{name}InC {arguments})"),
+            },
+        ))
     }
 
     fn compile_atomic_wd(
@@ -804,46 +1206,191 @@ impl LeanCompiler {
                 closed,
             ),
             StructuralMembershipReason::StandardSuperset(child) => {
-                if proof.set != StandardSet::C
-                    || child.set != StandardSet::R
-                    || child.element.ir() != proof.element.ir()
-                {
-                    return Err(LeanCompileError::unsupported(
-                        "StructuralMembership/StandardSupersetOutsideRtoC",
+                if child.element.ir() != proof.element.ir() {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/SupersetSubject",
+                        "Standard inclusion evidence changes its element.",
                     ));
                 }
+                let bridge = match (&child.set, &proof.set) {
+                    (StandardSet::R, StandardSet::C) => "realToComplex",
+                    (StandardSet::Z, StandardSet::C) => "integerToComplex",
+                    (StandardSet::N, StandardSet::C) => "naturalToComplex",
+                    (StandardSet::N, StandardSet::Z) => "naturalToInteger",
+                    (StandardSet::N, StandardSet::R) => "naturalToReal",
+                    (StandardSet::Z, StandardSet::R) => "integerToReal",
+                    _ => {
+                        return Err(LeanCompileError::unsupported(
+                            "StructuralMembership/StandardSuperset",
+                        ))
+                    }
+                };
                 let child = self.compile_structural(child, runtime)?;
                 Ok(format!(
-                    "(Litex.realToComplex {} {child})",
+                    "(Litex.{bridge} {} {child})",
                     self.object_term(&proof.element)?
                 ))
             }
             StructuralMembershipReason::KnownSubset(_) => Err(LeanCompileError::unsupported(
                 "StructuralMembership/KnownSubset",
             )),
-            StructuralMembershipReason::Add { .. } => {
-                Err(LeanCompileError::unsupported("StructuralMembership/Add"))
+            StructuralMembershipReason::Add { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Add, runtime)
             }
-            StructuralMembershipReason::Sub { .. } => {
-                Err(LeanCompileError::unsupported("StructuralMembership/Sub"))
+            StructuralMembershipReason::Sub { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Sub, runtime)
             }
-            StructuralMembershipReason::Mul { .. } => {
-                Err(LeanCompileError::unsupported("StructuralMembership/Mul"))
+            StructuralMembershipReason::Mul { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Mul, runtime)
             }
-            StructuralMembershipReason::Div { .. } => {
-                Err(LeanCompileError::unsupported("StructuralMembership/Div"))
+            StructuralMembershipReason::Div { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Div, runtime)
             }
-            StructuralMembershipReason::Neg { .. } => {
-                Err(LeanCompileError::unsupported("StructuralMembership/Neg"))
+            StructuralMembershipReason::Neg { argument } => {
+                let operand = match &proof.element {
+                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => x.arg.as_ref(),
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "StructuralMembership/NegSubject",
+                            "Negation membership evidence has another constructor.",
+                        ))
+                    }
+                };
+                if operand.ir() != argument.element.ir() || proof.set != argument.set {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/NegChild",
+                        "Negation membership changes its operand or carrier.",
+                    ));
+                }
+                let child = self.compile_structural(argument, runtime)?;
+                match proof.set {
+                    StandardSet::C => Ok(format!(
+                        "(Litex.negInC {} {child})",
+                        self.object_term(operand)?
+                    )),
+                    StandardSet::R => Ok(format!(
+                        "(Litex.negInR {} {child})",
+                        self.object_term(operand)?
+                    )),
+                    StandardSet::Z => Ok(format!(
+                        "(Litex.negInZ {} {child})",
+                        self.object_term(operand)?
+                    )),
+                    _ => Err(LeanCompileError::unsupported(
+                        "StructuralMembership/NegCarrier",
+                    )),
+                }
             }
             StructuralMembershipReason::Abs { .. } => {
                 Err(LeanCompileError::unsupported("StructuralMembership/Abs"))
             }
-            StructuralMembershipReason::Pow { .. } => {
-                Err(LeanCompileError::unsupported("StructuralMembership/Pow"))
+            StructuralMembershipReason::Pow { base, exponent } => {
+                let power = match &proof.element {
+                    Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => x,
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "StructuralMembership/PowSubject",
+                            "Power membership evidence has another constructor.",
+                        ))
+                    }
+                };
+                let expected_exponent = if matches!(proof.set, StandardSet::N | StandardSet::Z) {
+                    StandardSet::N
+                } else {
+                    StandardSet::Z
+                };
+                if power.base.ir() != base.element.ir()
+                    || power.exponent.ir() != exponent.element.ir()
+                    || base.set != proof.set
+                    || exponent.set != expected_exponent
+                {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/PowChild",
+                        "Power membership changes its operand or integer carrier.",
+                    ));
+                }
+                self.compile_structural(base, runtime)?;
+                self.compile_structural(exponent, runtime)?;
+                match proof.set {
+                    StandardSet::C => Ok(self.numeric_term(&proof.element)?.member),
+                    _ => Err(LeanCompileError::unsupported(
+                        "StructuralMembership/PowCarrier",
+                    )),
+                }
             }
             StructuralMembershipReason::Intrinsic(_) => Err(LeanCompileError::unsupported(
                 "StructuralMembership/Intrinsic",
+            )),
+        }
+    }
+
+    fn compile_structural_binary(
+        &mut self,
+        root: &StructuralMembershipProof,
+        left: &StructuralMembershipProof,
+        right: &StructuralMembershipProof,
+        operation: BinaryArithmetic,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (a, b, name) = match (&root.element, operation) {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Add(x)), BinaryArithmetic::Add) => {
+                (x.left.as_ref(), x.right.as_ref(), "add")
+            }
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)), BinaryArithmetic::Sub) => {
+                (x.left.as_ref(), x.right.as_ref(), "sub")
+            }
+            (Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)), BinaryArithmetic::Mul) => {
+                (x.left.as_ref(), x.right.as_ref(), "mul")
+            }
+            (Obj::ArithmeticOperator(ArithmeticOperator::Div(x)), BinaryArithmetic::Div) => {
+                (x.left.as_ref(), x.right.as_ref(), "div")
+            }
+            _ => {
+                return Err(LeanCompileError::new(
+                    "StructuralMembership/ArithmeticSubject",
+                    "Arithmetic membership evidence has another constructor.",
+                ))
+            }
+        };
+        if left.element.ir() != a.ir()
+            || right.element.ir() != b.ir()
+            || left.set != root.set
+            || right.set != root.set
+        {
+            return Err(LeanCompileError::new(
+                "StructuralMembership/ArithmeticChild",
+                "Arithmetic membership changes its exact children or carrier.",
+            ));
+        }
+        let ha = self.compile_structural(left, runtime)?;
+        let hb = self.compile_structural(right, runtime)?;
+        match root.set {
+            StandardSet::C => {
+                let guard = if matches!(operation, BinaryArithmetic::Div) {
+                    format!(" ({}).wd.2.2", self.object_term(&root.element)?)
+                } else {
+                    String::new()
+                };
+                Ok(format!(
+                    "(Litex.{name}InC {} {} {ha} {hb}{guard})",
+                    self.object_term(a)?,
+                    self.object_term(b)?
+                ))
+            }
+            StandardSet::R => {
+                let guard = if matches!(operation, BinaryArithmetic::Div) {
+                    format!(" ({}).wd.2.2", self.object_term(&root.element)?)
+                } else {
+                    String::new()
+                };
+                Ok(format!(
+                    "(Litex.{name}InR {} {} {ha} {hb}{guard})",
+                    self.object_term(a)?,
+                    self.object_term(b)?
+                ))
+            }
+            _ => Err(LeanCompileError::unsupported(
+                "StructuralMembership/ArithmeticCarrier",
             )),
         }
     }
@@ -854,45 +1401,125 @@ impl LeanCompiler {
         set: &Obj,
         proof: &ClosedMembershipCalculationProof,
     ) -> Result<String, LeanCompileError> {
-        let number = match element {
-            Obj::Literal(Literal::Number(number)) => integer_literal(number)?,
-            _ => return Err(LeanCompileError::unsupported("ClosedMembership/NonLiteral")),
+        let (value, target) = match proof {
+            ClosedMembershipCalculationProof::StandardSet { value, set: target }
+                if set.ir() == Obj::StandardSet(target.clone()).ir() =>
+            {
+                (value, target)
+            }
+            ClosedMembershipCalculationProof::StandardSet { .. } => {
+                return Err(LeanCompileError::new(
+                    "ClosedMembership/Set",
+                    "Closed membership changes the target set.",
+                ))
+            }
+            ClosedMembershipCalculationProof::IntegerRange { .. } => {
+                return Err(LeanCompileError::unsupported(
+                    "ClosedMembership/IntegerRange",
+                ))
+            }
         };
-        match proof {
-            ClosedMembershipCalculationProof::StandardSet {
-                value: ClosedScalarValue::Decimal(value),
-                set: target,
-            } if value == &number && set.ir() == Obj::StandardSet(target.clone()).ir() => {
-                match target {
-                    StandardSet::R => Ok(format!(
-                        "(Litex.NativeBridge.numberInR (M := M) ({number} : ℝ))"
-                    )),
-                    StandardSet::C => Ok(format!("(Litex.numberInC (M := M) ({number} : ℂ))")),
-                    StandardSet::NPos
-                    | StandardSet::N
-                    | StandardSet::Q
-                    | StandardSet::Z
-                    | StandardSet::QPos
-                    | StandardSet::RPos
-                    | StandardSet::QNeg
-                    | StandardSet::ZNeg
-                    | StandardSet::RNeg
-                    | StandardSet::QStar
-                    | StandardSet::ZStar
-                    | StandardSet::RStar
-                    | StandardSet::CStar => {
-                        Err(LeanCompileError::unsupported("ClosedMembership/Carrier"))
+        // Existing literal membership is unbounded integer syntax. It must not
+        // inherit the i128 bound of the new closed-arithmetic evaluator.
+        if let (Obj::Literal(Literal::Number(number)), ClosedScalarValue::Decimal(recorded)) =
+            (element, value)
+        {
+            if &number.normalized_value != recorded {
+                return Err(LeanCompileError::new(
+                    "ClosedMembership/Value",
+                    "The literal certificate records another numeric payload.",
+                ));
+            }
+            let native = self.numeric_term(element)?;
+            if *target == StandardSet::C {
+                return Ok(format!("(Litex.numberInC (M := M) {})", native.value));
+            }
+            let (bridge, representative) = match target {
+                StandardSet::R => ("numberInROfEq", number_literal(number, "ℝ")?),
+                StandardSet::N | StandardSet::Z => {
+                    let value = &number.normalized_value;
+                    let unsigned = value.strip_prefix('-').unwrap_or(value);
+                    if !unsigned.bytes().all(|b| b.is_ascii_digit())
+                        || (*target == StandardSet::N && value.starts_with('-'))
+                    {
+                        return Err(LeanCompileError::unsupported(
+                            "ClosedMembership/IntegerLiteral",
+                        ));
+                    }
+                    if *target == StandardSet::N {
+                        ("numberInNOfEq", format!("({value} : ℕ)"))
+                    } else {
+                        ("numberInZOfEq", format!("({value} : ℤ)"))
                     }
                 }
-            }
-            ClosedMembershipCalculationProof::StandardSet { .. } => Err(LeanCompileError::new(
-                "ClosedMembership",
-                "Only the matching exact integer literal certificate is supported.",
-            )),
-            ClosedMembershipCalculationProof::IntegerRange { .. } => Err(
-                LeanCompileError::unsupported("ClosedMembership/IntegerRange"),
-            ),
+                _ => return Err(LeanCompileError::unsupported("ClosedMembership/Carrier")),
+            };
+            return Ok(format!("(Litex.NativeBridge.inOfDenoteNumber {} {} {} {} (Litex.NativeBridge.{bridge} {} {representative} (by norm_num)))", self.object_term(element)?, native.value, standard_term(target)?, native.denotation, native.value));
         }
+        let calculated = EvalRational::from_obj(element)
+            .ok_or_else(|| LeanCompileError::unsupported("ClosedMembership/Expression"))?;
+        let scalar = match value {
+            ClosedScalarValue::Decimal(value) => scalar_decimal(value)?,
+            ClosedScalarValue::ExactComplex { real, imaginary } if imaginary.is_zero() => {
+                real.clone()
+            }
+            ClosedScalarValue::ExactComplex { .. } => {
+                return Err(LeanCompileError::unsupported(
+                    "ClosedMembership/ComplexScalar",
+                ))
+            }
+        };
+        if calculated != scalar {
+            return Err(LeanCompileError::new(
+                "ClosedMembership/Value",
+                "The recorded exact scalar differs from its source arithmetic.",
+            ));
+        }
+        let object = self.object_term(element)?;
+        let native = self.numeric_term(element)?;
+        if *target == StandardSet::C {
+            let scalar = exact_rational_literal(&scalar, "ℂ")?;
+            let denotation = format!(
+                "({}).trans (congrArg M.number (by norm_num : {} = {scalar}))",
+                native.denotation, native.value
+            );
+            return Ok(format!("(Litex.NativeBridge.inOfDenoteNumber {object} {scalar} {} ({denotation}) (Litex.numberInC (M := M) {scalar}))", standard_term(target)?));
+        }
+        let (bridge, representative) = match target {
+            StandardSet::N => {
+                let integer = scalar
+                    .to_i128_if_integer()
+                    .filter(|n| *n >= 0)
+                    .ok_or_else(|| {
+                        LeanCompileError::new(
+                            "ClosedMembership/N",
+                            "A natural certificate has no exact natural value.",
+                        )
+                    })?;
+                ("numberInNOfEq", format!("({integer} : ℕ)"))
+            }
+            StandardSet::Z => {
+                let integer = scalar.to_i128_if_integer().ok_or_else(|| {
+                    LeanCompileError::new(
+                        "ClosedMembership/Z",
+                        "An integer certificate has no exact integer value.",
+                    )
+                })?;
+                ("numberInZOfEq", format!("({integer} : ℤ)"))
+            }
+            StandardSet::R => ("numberInROfEq", exact_rational_literal(&scalar, "ℝ")?),
+            _ => return Err(LeanCompileError::unsupported("ClosedMembership/Carrier")),
+        };
+        let number_member = format!(
+            "(Litex.NativeBridge.{bridge} {} {representative} (by norm_num))",
+            native.value
+        );
+        Ok(format!(
+            "(Litex.NativeBridge.inOfDenoteNumber {object} {} {} {} {number_member})",
+            native.value,
+            standard_term(target)?,
+            native.denotation
+        ))
     }
 
     fn atomic_proposition(&self, fact: &AtomicFact) -> Result<String, LeanCompileError> {
@@ -986,6 +1613,44 @@ impl LeanCompiler {
         Ok(())
     }
 
+    fn remember_complex_member(
+        &mut self,
+        object: &Obj,
+        member: &str,
+    ) -> Result<(), LeanCompileError> {
+        for scope in self.scopes.iter_mut().rev() {
+            if let Some(entry) = scope.objects.get_mut(&object.ir()) {
+                if entry.numeric.is_none() {
+                    entry.numeric = Some(NumericTerm {
+                        value: format!("(Litex.NativeBridge.asComplex {} {member})", entry.term),
+                        denotation: format!(
+                            "(Litex.NativeBridge.asComplex_spec {} {member})",
+                            entry.term
+                        ),
+                        member: member.to_string(),
+                    });
+                }
+                return Ok(());
+            }
+        }
+        Err(LeanCompileError::new(
+            "Arithmetic/Producer",
+            "A membership proof has no previously certified object.",
+        ))
+    }
+
+    fn numeric_term(&self, object: &Obj) -> Result<NumericTerm, LeanCompileError> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(entry) = scope.objects.get(&object.ir()) {
+                return entry.numeric.clone().ok_or_else(|| LeanCompileError::new("Arithmetic/NumericEvidence", "No recorded numeric construction or C-membership proof supplies this denotation."));
+            }
+        }
+        Err(LeanCompileError::new(
+            "Arithmetic/Producer",
+            "No replayed object supplies this numeric denotation.",
+        ))
+    }
+
     fn remember_fact(&mut self, fact: FactTerm) {
         self.scopes
             .last_mut()
@@ -1072,6 +1737,177 @@ impl LeanCompiler {
     }
 }
 
+#[derive(Clone, Copy)]
+enum BinaryArithmetic {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+fn ensure_nonzero_subject(fact: &Fact, object: &Obj) -> Result<(), LeanCompileError> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::NotEqualFact(x)) if x.left.ir() == object.ir() && is_zero(&x.right) => Ok(()),
+        _ => Err(LeanCompileError::new("Arithmetic/NonzeroSubject", "The requirement must be this exact object's inequality with zero, in source orientation.")),
+    }
+}
+
+fn membership_subject(fact: &Fact, object: &Obj) -> Result<StandardSet, LeanCompileError> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::InFact(x)) if x.element.ir() == object.ir() => match &x.set {
+            Obj::StandardSet(set) => Ok(set.clone()),
+            _ => Err(LeanCompileError::unsupported(
+                "Arithmetic/NonstandardDomain",
+            )),
+        },
+        _ => Err(LeanCompileError::new(
+            "Arithmetic/MembershipSubject",
+            "Membership evidence describes another operand.",
+        )),
+    }
+}
+
+fn closed_integer(object: &Obj) -> Option<i128> {
+    EvalRational::from_obj(object)?.to_i128_if_integer()
+}
+
+fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCompileError> {
+    match object {
+        Obj::Identifier(IdentifierObj::Plain { .. }) => Ok(()),
+        Obj::Literal(Literal::Number(n)) => number_literal(n, "ℂ").map(|_| ()),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
+            validate_arithmetic_expression(&x.left)?;
+            validate_arithmetic_expression(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => {
+            validate_arithmetic_expression(&x.left)?;
+            validate_arithmetic_expression(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => {
+            validate_arithmetic_expression(&x.left)?;
+            validate_arithmetic_expression(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => {
+            validate_arithmetic_expression(&x.left)?;
+            validate_arithmetic_expression(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => {
+            validate_arithmetic_expression(&x.arg)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
+            validate_arithmetic_expression(&x.base)?;
+            validate_arithmetic_expression(&x.exponent)?;
+            closed_integer(&x.exponent)
+                .ok_or_else(|| LeanCompileError::unsupported("Rational/NonClosedIntegerPower"))?;
+            Ok(())
+        }
+        _ => Err(LeanCompileError::unsupported("Rational/ExpressionDomain")),
+    }
+}
+
+fn normalization_nonzero_subjects(left: &Obj, right: &Obj) -> Result<Vec<Obj>, LeanCompileError> {
+    fn collect(object: &Obj, subjects: &mut Vec<Obj>) -> Result<(), LeanCompileError> {
+        match object {
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
+                collect(&x.left, subjects)?;
+                collect(&x.right, subjects)?;
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => {
+                collect(&x.left, subjects)?;
+                collect(&x.right, subjects)?;
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => {
+                collect(&x.left, subjects)?;
+                collect(&x.right, subjects)?;
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => {
+                collect(&x.left, subjects)?;
+                collect(&x.right, subjects)?;
+                if !subjects.iter().any(|o| o.ir() == x.right.ir()) {
+                    subjects.push(x.right.as_ref().clone());
+                }
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => collect(&x.arg, subjects)?,
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
+                collect(&x.base, subjects)?;
+                collect(&x.exponent, subjects)?;
+                let value = evaluate_obj_to_normalized_decimal_number(&x.exponent)
+                    .and_then(|n| n.normalized_value.parse::<i128>().ok());
+                if closed_integer(&x.exponent).is_some_and(|z| z < 0) && value.is_none() {
+                    return Err(LeanCompileError::unsupported(
+                        "Rational/NegativePowerGuardProfile",
+                    ));
+                }
+                if value.is_some_and(|z| z < 0) && !subjects.iter().any(|o| o.ir() == x.base.ir()) {
+                    subjects.push(x.base.as_ref().clone());
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+    fn factors(object: &Obj, result: &mut Vec<Obj>) {
+        if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) = object {
+            factors(&x.left, result);
+            factors(&x.right, result);
+        } else if !result.iter().any(|o| o.ir() == object.ir()) {
+            result.push(object.clone());
+        }
+    }
+    let mut subjects = Vec::new();
+    collect(left, &mut subjects)?;
+    collect(right, &mut subjects)?;
+    let mut result = Vec::new();
+    for subject in subjects {
+        factors(&subject, &mut result);
+    }
+    Ok(result)
+}
+
+fn exact_rational_literal(value: &EvalRational, ty: &str) -> Result<String, LeanCompileError> {
+    match value.to_obj() {
+        Obj::Literal(Literal::Number(n)) => number_literal(&n, ty),
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => match (*x.left, *x.right) {
+            (Obj::Literal(Literal::Number(a)), Obj::Literal(Literal::Number(b))) => Ok(format!(
+                "({} / {})",
+                number_literal(&a, ty)?,
+                number_literal(&b, ty)?
+            )),
+            _ => Err(LeanCompileError::new(
+                "Number/ExactRational",
+                "The exact scalar has an unexpected canonical shape.",
+            )),
+        },
+        _ => Err(LeanCompileError::new(
+            "Number/ExactRational",
+            "The exact scalar has an unexpected canonical shape.",
+        )),
+    }
+}
+
+fn scalar_decimal(value: &str) -> Result<EvalRational, LeanCompileError> {
+    let number = Number::new(value.to_string());
+    number_literal(&number, "ℂ")?;
+    EvalRational::from_obj(&Obj::Literal(Literal::Number(number)))
+        .ok_or_else(|| LeanCompileError::unsupported("Number/ExactEvaluationBound"))
+}
+
+fn number_literal(number: &Number, ty: &str) -> Result<String, LeanCompileError> {
+    let value = &number.normalized_value;
+    let unsigned = value.strip_prefix('-').unwrap_or(value);
+    let mut parts = unsigned.split('.');
+    let whole = parts.next().unwrap_or("");
+    let fractional = parts.next();
+    if whole.is_empty()
+        || !whole.bytes().all(|b| b.is_ascii_digit())
+        || fractional.is_some_and(|s| s.is_empty() || !s.bytes().all(|b| b.is_ascii_digit()))
+        || parts.next().is_some()
+    {
+        return Err(LeanCompileError::unsupported("Number/FiniteDecimalLiteral"));
+    }
+    Ok(format!("({value} : {ty})"))
+}
+
 fn ensure_object(object: &Obj, proof: &ObjWellDefinedProof) -> Result<(), LeanCompileError> {
     if object.ir() != proof.obj().ir() {
         return Err(LeanCompileError::new(
@@ -1107,18 +1943,6 @@ fn same_atomic_subject(left: &AtomicFact, right: &AtomicFact) -> bool {
             .iter()
             .zip(right)
             .all(|(left, right)| left.ir() == right.ir())
-}
-
-fn integer_literal(number: &Number) -> Result<String, LeanCompileError> {
-    if number.normalized_value.is_empty()
-        || !number
-            .normalized_value
-            .bytes()
-            .all(|byte| byte.is_ascii_digit())
-    {
-        return Err(LeanCompileError::unsupported("Number/NonIntegerLiteral"));
-    }
-    Ok(number.normalized_value.clone())
 }
 
 fn is_zero(object: &Obj) -> bool {

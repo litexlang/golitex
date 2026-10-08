@@ -1,4 +1,6 @@
 import Mathlib.Data.Complex.Basic
+import Mathlib.Algebra.Order.Archimedean.Real.Basic
+import Mathlib.Tactic.FieldSimp
 import Mathlib.SetTheory.ZFC.Ordinal
 
 /-! Litex object semantics, certified constructors, and native numeric bridges.
@@ -30,15 +32,27 @@ structure Semantics where
   number : ℂ → Value
   standard : StandardSetValue → Value
   addValue : Value → Value → Value
+  subValue : Value → Value → Value
+  mulValue : Value → Value → Value
+  negValue : Value → Value
   divValue : Value → Value → Value
+  powValue : Value → Value → Value
   number_injective : Function.Injective number
   complex_members : ∀ x, mem x (standard .complex) ↔ ∃ z, x = number z
+  natural_members : ∀ x, mem x (standard .natural) ↔ ∃ n : ℕ, x = number (n : ℂ)
+  integer_members : ∀ x, mem x (standard .integer) ↔ ∃ z : ℤ, x = number (z : ℂ)
   real_members : ∀ x, mem x (standard .real) ↔ ∃ r : ℝ, x = number (r : ℂ)
   real_subset_complex : ∀ x, mem x (standard .real) → mem x (standard .complex)
   member_isSet : ∀ {x A}, mem x A → isSet x
   standard_isSet : ∀ A, isSet (standard A)
   add_numbers : ∀ a b, addValue (number a) (number b) = number (a + b)
+  sub_numbers : ∀ a b, subValue (number a) (number b) = number (a - b)
+  mul_numbers : ∀ a b, mulValue (number a) (number b) = number (a * b)
+  neg_numbers : ∀ a, negValue (number a) = number (-a)
   div_numbers : ∀ a b, b ≠ 0 → divValue (number a) (number b) = number (a / b)
+  pow_numbers_nat : ∀ a (n : ℕ), powValue (number a) (number (n : ℂ)) = number (a ^ n)
+  pow_numbers_int : ∀ a (z : ℤ), a ≠ 0 →
+    powValue (number a) (number (z : ℂ)) = number (a ^ z)
   add_closed : ∀ {a b},
     mem a (standard .complex) → mem b (standard .complex) →
     mem (addValue a b) (standard .complex)
@@ -121,7 +135,56 @@ def realToComplex {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haR : In a R) : In a C :=
   M.real_subset_complex (denote a) haR
 
+def naturalToComplex {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haN : In a N) : In a C := by
+  obtain ⟨n, hn⟩ := (M.natural_members (denote a)).mp haN
+  exact (M.complex_members (denote a)).mpr ⟨(n : ℂ), hn⟩
+
+def integerToComplex {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haZ : In a Z) : In a C := by
+  obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
+  exact (M.complex_members (denote a)).mpr ⟨(z : ℂ), hz⟩
+
+def naturalToInteger {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haN : In a N) : In a Z := by
+  obtain ⟨n, hn⟩ := (M.natural_members (denote a)).mp haN
+  exact (M.integer_members (denote a)).mpr ⟨(n : ℤ), by simpa only [Int.cast_natCast] using hn⟩
+
+def naturalToReal {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haN : In a N) : In a R := by
+  obtain ⟨n, hn⟩ := (M.natural_members (denote a)).mp haN
+  exact (M.real_members (denote a)).mpr ⟨(n : ℝ), by simpa only [Complex.ofReal_natCast] using hn⟩
+
+def integerToReal {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haZ : In a Z) : In a R := by
+  obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
+  exact (M.real_members (denote a)).mpr ⟨(z : ℝ), by simpa only [Complex.ofReal_intCast] using hz⟩
+
 end Litex
+
+namespace Litex.Semantics
+
+theorem sub_closed {M : Semantics.{u}} {a b : M.Value}
+    (ha : M.mem a (M.standard .complex)) (hb : M.mem b (M.standard .complex)) :
+    M.mem (M.subValue a b) (M.standard .complex) := by
+  obtain ⟨x, rfl⟩ := (M.complex_members a).mp ha
+  obtain ⟨y, rfl⟩ := (M.complex_members b).mp hb
+  exact (M.complex_members _).mpr ⟨x - y, M.sub_numbers x y⟩
+
+theorem mul_closed {M : Semantics.{u}} {a b : M.Value}
+    (ha : M.mem a (M.standard .complex)) (hb : M.mem b (M.standard .complex)) :
+    M.mem (M.mulValue a b) (M.standard .complex) := by
+  obtain ⟨x, rfl⟩ := (M.complex_members a).mp ha
+  obtain ⟨y, rfl⟩ := (M.complex_members b).mp hb
+  exact (M.complex_members _).mpr ⟨x * y, M.mul_numbers x y⟩
+
+theorem neg_closed {M : Semantics.{u}} {a : M.Value}
+    (ha : M.mem a (M.standard .complex)) :
+    M.mem (M.negValue a) (M.standard .complex) := by
+  obtain ⟨x, rfl⟩ := (M.complex_members a).mp ha
+  exact (M.complex_members _).mpr ⟨-x, M.neg_numbers x⟩
+
+end Litex.Semantics
 
 namespace Litex
 
@@ -134,6 +197,85 @@ structure DivObj {M : Semantics.{u}} (α : Type v) (β : Type w)
     [Representation M α] [Representation M β] where
   left : Obj (M := M) α
   right : Obj (M := M) β
+
+structure SubObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+structure MulObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+structure NegObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+structure PowObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  base : Obj (M := M) α
+  exponent : Obj (M := M) β
+
+instance subRepresentation {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] :
+    Representation M (SubObj (M := M) α β) where
+  wd a := In a.left C ∧ In a.right C
+  denote a := M.subValue (denote a.left) (denote a.right)
+  wd_isSet h := M.member_isSet (Semantics.sub_closed h.1 h.2)
+
+instance mulRepresentation {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] :
+    Representation M (MulObj (M := M) α β) where
+  wd a := In a.left C ∧ In a.right C
+  denote a := M.mulValue (denote a.left) (denote a.right)
+  wd_isSet h := M.member_isSet (Semantics.mul_closed h.1 h.2)
+
+instance negRepresentation {M : Semantics.{u}} {α : Type v} [Representation M α] :
+    Representation M (NegObj (M := M) α) where
+  wd a := In a.arg C
+  denote a := M.negValue (denote a.arg)
+  wd_isSet h := M.member_isSet (Semantics.neg_closed h)
+
+/-- The three supported integer-power domains are separate proof alternatives.
+The source exponent remains an object, and its exact numeric value is certified.
+None of these witnesses selects the object's denotation. -/
+def PowDomain {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] (a : PowObj (M := M) α β) : Prop :=
+  (In a.base R ∧ ∃ n : ℕ, In a.exponent N ∧ Same a.exponent (number (n : ℂ))) ∨
+  (In a.base C ∧ ∃ n : ℕ, In a.exponent N ∧ Same a.exponent (number (n : ℂ))) ∨
+  (In a.base C ∧ ∃ z : ℤ, In a.exponent Z ∧
+    ¬ Same a.base (number 0) ∧ Same a.exponent (number (z : ℂ)))
+
+private theorem pow_nat_closed {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haC : In a C) (heValue : Same e (number (n : ℂ))) :
+    M.mem (M.powValue (denote a) (denote e)) (M.standard .complex) := by
+  obtain ⟨x, hx⟩ := (M.complex_members (denote a)).mp haC
+  change denote e = M.number (n : ℂ) at heValue
+  exact (M.complex_members _).mpr ⟨x ^ n, by rw [hx, heValue, M.pow_numbers_nat]⟩
+
+private theorem pow_int_closed {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (z : ℤ)
+    (haC : In a C) (ha0 : ¬ Same a (number 0))
+    (heValue : Same e (number (z : ℂ))) :
+    M.mem (M.powValue (denote a) (denote e)) (M.standard .complex) := by
+  obtain ⟨x, hx⟩ := (M.complex_members (denote a)).mp haC
+  have hx0 : x ≠ 0 := fun h => ha0 (hx.trans (congrArg M.number h))
+  change denote e = M.number (z : ℂ) at heValue
+  exact (M.complex_members _).mpr ⟨x ^ z, by rw [hx, heValue, M.pow_numbers_int x z hx0]⟩
+
+instance powRepresentation {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β] :
+    Representation M (PowObj (M := M) α β) where
+  wd := PowDomain
+  denote a := M.powValue (denote a.base) (denote a.exponent)
+  wd_isSet h := M.member_isSet (by
+    rcases h with ⟨haR, n, _heN, he⟩ | ⟨haC, n, _heN, he⟩ | ⟨haC, z, _heZ, ha0, he⟩
+    · exact pow_nat_closed _ _ n (realToComplex _ haR) he
+    · exact pow_nat_closed _ _ n haC he
+    · exact pow_int_closed _ _ z haC ha0 he)
 
 instance addRepresentation {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β] :
@@ -163,6 +305,43 @@ def div {M : Semantics.{u}} {α : Type v} {β : Type w}
     Obj (M := M) (DivObj (M := M) α β) :=
   ⟨⟨a, b⟩, ⟨haC, hbC, hb0⟩⟩
 
+def sub {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) : Obj (M := M) (SubObj (M := M) α β) :=
+  ⟨⟨a, b⟩, ⟨haC, hbC⟩⟩
+
+def mul {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) : Obj (M := M) (MulObj (M := M) α β) :=
+  ⟨⟨a, b⟩, ⟨haC, hbC⟩⟩
+
+def neg {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haC : In a C) : Obj (M := M) (NegObj (M := M) α) :=
+  ⟨⟨a⟩, haC⟩
+
+def powNatReal {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haR : In a R) (heN : In e N) (heValue : Same e (number (n : ℂ))) :
+    Obj (M := M) (PowObj (M := M) α β) :=
+  ⟨⟨a, e⟩, Or.inl ⟨haR, n, heN, heValue⟩⟩
+
+def powNat {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haC : In a C) (heN : In e N) (heValue : Same e (number (n : ℂ))) :
+    Obj (M := M) (PowObj (M := M) α β) :=
+  ⟨⟨a, e⟩, Or.inr (Or.inl ⟨haC, n, heN, heValue⟩)⟩
+
+def powInt {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (z : ℤ)
+    (haC : In a C) (heZ : In e Z) (ha0 : ¬ Same a (number 0))
+    (heValue : Same e (number (z : ℂ))) : Obj (M := M) (PowObj (M := M) α β) :=
+  ⟨⟨a, e⟩, Or.inr (Or.inr ⟨haC, z, heZ, ha0, heValue⟩)⟩
+
 def addInC {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
     (a : Obj (M := M) α) (b : Obj (M := M) β)
@@ -175,6 +354,110 @@ def divInC {M : Semantics.{u}} {α : Type v} {β : Type w}
     (haC : In a C) (hbC : In b C) (hb0 : ¬ Same b (number 0)) :
     In (div a b haC hbC hb0) C :=
   M.div_closed haC hbC hb0
+
+def subInC {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) : In (sub a b haC hbC) C :=
+  Semantics.sub_closed haC hbC
+
+def mulInC {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) : In (mul a b haC hbC) C :=
+  Semantics.mul_closed haC hbC
+
+def negInC {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haC : In a C) : In (neg a haC) C :=
+  Semantics.neg_closed haC
+
+def powNatRealInC {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haR : In a R) (heN : In e N) (heValue : Same e (number (n : ℂ))) :
+    In (powNatReal a e n haR heN heValue) C :=
+  pow_nat_closed a e n (realToComplex a haR) heValue
+
+def powNatInC {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haC : In a C) (heN : In e N) (heValue : Same e (number (n : ℂ))) :
+    In (powNat a e n haC heN heValue) C :=
+  pow_nat_closed a e n haC heValue
+
+def powIntInC {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (z : ℤ)
+    (haC : In a C) (heZ : In e Z) (ha0 : ¬ Same a (number 0))
+    (heValue : Same e (number (z : ℂ))) : In (powInt a e z haC heZ ha0 heValue) C :=
+  pow_int_closed a e z haC ha0 heValue
+
+theorem addInR {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haR : In a R) (hbR : In b R) :
+    In (add a b (realToComplex a haR) (realToComplex b hbR)) R := by
+  obtain ⟨x, hx⟩ := (M.real_members (denote a)).mp haR
+  obtain ⟨y, hy⟩ := (M.real_members (denote b)).mp hbR
+  exact (M.real_members _).mpr ⟨x + y, by
+    change M.addValue (denote a) (denote b) = _
+    rw [hx, hy, M.add_numbers, Complex.ofReal_add]⟩
+
+theorem subInR {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haR : In a R) (hbR : In b R) :
+    In (sub a b (realToComplex a haR) (realToComplex b hbR)) R := by
+  obtain ⟨x, hx⟩ := (M.real_members (denote a)).mp haR
+  obtain ⟨y, hy⟩ := (M.real_members (denote b)).mp hbR
+  exact (M.real_members _).mpr ⟨x - y, by
+    change M.subValue (denote a) (denote b) = _
+    rw [hx, hy, M.sub_numbers, Complex.ofReal_sub]⟩
+
+theorem mulInR {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haR : In a R) (hbR : In b R) :
+    In (mul a b (realToComplex a haR) (realToComplex b hbR)) R := by
+  obtain ⟨x, hx⟩ := (M.real_members (denote a)).mp haR
+  obtain ⟨y, hy⟩ := (M.real_members (denote b)).mp hbR
+  exact (M.real_members _).mpr ⟨x * y, by
+    change M.mulValue (denote a) (denote b) = _
+    rw [hx, hy, M.mul_numbers, Complex.ofReal_mul]⟩
+
+theorem negInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) : In (neg a (realToComplex a haR)) R := by
+  obtain ⟨x, hx⟩ := (M.real_members (denote a)).mp haR
+  exact (M.real_members _).mpr ⟨-x, by
+    change M.negValue (denote a) = _
+    rw [hx, M.neg_numbers, Complex.ofReal_neg]⟩
+
+theorem divInR {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haR : In a R) (hbR : In b R) (hb0 : ¬ Same b (number 0)) :
+    In (div a b (realToComplex a haR) (realToComplex b hbR) hb0) R := by
+  obtain ⟨x, hx⟩ := (M.real_members (denote a)).mp haR
+  obtain ⟨y, hy⟩ := (M.real_members (denote b)).mp hbR
+  have hy0 : (y : ℂ) ≠ 0 := fun h => hb0 (hy.trans (congrArg M.number h))
+  exact (M.real_members _).mpr ⟨x / y, by
+    change M.divValue (denote a) (denote b) = _
+    rw [hx, hy, M.div_numbers _ _ hy0, Complex.ofReal_div]⟩
+
+theorem negInZ {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haZ : In a Z) : In (neg a (integerToComplex a haZ)) Z := by
+  obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
+  exact (M.integer_members _).mpr ⟨-z, by
+    change M.negValue (denote a) = _
+    rw [hz, M.neg_numbers, Int.cast_neg]⟩
+
+theorem powNatRealInR {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haR : In a R) (heN : In e N) (heValue : Same e (number (n : ℂ))) :
+    In (powNatReal a e n haR heN heValue) R := by
+  obtain ⟨x, hx⟩ := (M.real_members (denote a)).mp haR
+  change denote e = M.number (n : ℂ) at heValue
+  exact (M.real_members _).mpr ⟨x ^ n, by
+    change M.powValue (denote a) (denote e) = _
+    rw [hx, heValue, M.pow_numbers_nat, Complex.ofReal_pow]⟩
 
 end Litex
 
@@ -194,8 +477,135 @@ namespace Litex.NativeBridge
 
 variable {M : Semantics.{u}}
 
+theorem denoteNumber (z : ℂ) : denote (number (M := M) z) = M.number z := rfl
+
+theorem sameOfDenoteNumber {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (x y : ℂ)
+    (ha : denote a = M.number x) (hb : denote b = M.number y)
+    (hxy : x = y) : Same a b :=
+  ha.trans ((congrArg M.number hxy).trans hb.symm)
+
+theorem nativeNonzeroOfDenote {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (x : ℂ) (ha : denote a = M.number x)
+    (ha0 : ¬ Same a (number 0)) : x ≠ 0 :=
+  fun hx => ha0 (ha.trans (congrArg M.number hx))
+
+theorem notSameOfNativeNonzero {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (x : ℂ) (ha : denote a = M.number x)
+    (hx0 : x ≠ 0) : ¬ Same a (number 0) := by
+  intro h
+  exact hx0 (M.number_injective (ha.symm.trans h))
+
+theorem notSameOfDenoteNumber {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (x y : ℂ)
+    (ha : denote a = M.number x) (hb : denote b = M.number y)
+    (hxy : x ≠ y) : ¬ Same a b :=
+  fun h => hxy (M.number_injective (ha.symm.trans (h.trans hb)))
+
+theorem inOfDenoteNumber {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (x : ℂ) (A : Obj (M := M) β)
+    (ha : denote a = M.number x) (hxA : In (number x) A) : In a A := by
+  change M.mem (denote a) (denote A)
+  rw [ha]
+  exact hxA
+
 def numberInR (r : ℝ) : In (number (M := M) (r : ℂ)) R :=
   (M.real_members (M.number (r : ℂ))).mpr ⟨r, rfl⟩
+
+def numberInN (n : ℕ) : In (number (M := M) (n : ℂ)) N :=
+  (M.natural_members (M.number (n : ℂ))).mpr ⟨n, rfl⟩
+
+def numberInZ (z : ℤ) : In (number (M := M) (z : ℂ)) Z :=
+  (M.integer_members (M.number (z : ℂ))).mpr ⟨z, rfl⟩
+
+def numberInROfEq (z : ℂ) (r : ℝ) (hz : z = (r : ℂ)) : In (number (M := M) z) R :=
+  (M.real_members (M.number z)).mpr ⟨r, congrArg M.number hz⟩
+
+def numberInNOfEq (z : ℂ) (n : ℕ) (hz : z = (n : ℂ)) : In (number (M := M) z) N :=
+  (M.natural_members (M.number z)).mpr ⟨n, congrArg M.number hz⟩
+
+def numberInZOfEq (z : ℂ) (k : ℤ) (hz : z = (k : ℂ)) : In (number (M := M) z) Z :=
+  (M.integer_members (M.number z)).mpr ⟨k, congrArg M.number hz⟩
+
+theorem numberRationalInR (n d : ℤ) :
+    In (number (M := M) ((n : ℂ) / (d : ℂ))) R := by
+  apply numberInROfEq _ ((n : ℝ) / (d : ℝ))
+  simp only [Complex.ofReal_div, Complex.ofReal_intCast]
+
+theorem denoteAdd {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) (x y : ℂ)
+    (ha : denote a = M.number x) (hb : denote b = M.number y) :
+    denote (add a b haC hbC) = M.number (x + y) := by
+  change M.addValue (denote a) (denote b) = _
+  rw [ha, hb, M.add_numbers]
+
+theorem denoteSub {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) (x y : ℂ)
+    (ha : denote a = M.number x) (hb : denote b = M.number y) :
+    denote (sub a b haC hbC) = M.number (x - y) := by
+  change M.subValue (denote a) (denote b) = _
+  rw [ha, hb, M.sub_numbers]
+
+theorem denoteMul {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) (x y : ℂ)
+    (ha : denote a = M.number x) (hb : denote b = M.number y) :
+    denote (mul a b haC hbC) = M.number (x * y) := by
+  change M.mulValue (denote a) (denote b) = _
+  rw [ha, hb, M.mul_numbers]
+
+theorem denoteNeg {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haC : In a C) (x : ℂ)
+    (ha : denote a = M.number x) : denote (neg a haC) = M.number (-x) := by
+  change M.negValue (denote a) = _
+  rw [ha, M.neg_numbers]
+
+theorem denoteDiv {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C) (hb0 : ¬ Same b (number 0)) (x y : ℂ)
+    (ha : denote a = M.number x) (hb : denote b = M.number y) :
+    denote (div a b haC hbC hb0) = M.number (x / y) := by
+  change M.divValue (denote a) (denote b) = _
+  rw [ha, hb, M.div_numbers x y (nativeNonzeroOfDenote b y hb hb0)]
+
+theorem denotePowNatReal {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haR : In a R) (heN : In e N) (heValue : Same e (number (n : ℂ)))
+    (x : ℂ) (ha : denote a = M.number x) :
+    denote (powNatReal a e n haR heN heValue) = M.number (x ^ n) := by
+  change denote e = M.number (n : ℂ) at heValue
+  change M.powValue (denote a) (denote e) = _
+  rw [ha, heValue, M.pow_numbers_nat]
+
+theorem denotePowNat {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (n : ℕ)
+    (haC : In a C) (heN : In e N) (heValue : Same e (number (n : ℂ)))
+    (x : ℂ) (ha : denote a = M.number x) :
+    denote (powNat a e n haC heN heValue) = M.number (x ^ n) := by
+  change denote e = M.number (n : ℂ) at heValue
+  change M.powValue (denote a) (denote e) = _
+  rw [ha, heValue, M.pow_numbers_nat]
+
+theorem denotePowInt {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (e : Obj (M := M) β) (z : ℤ)
+    (haC : In a C) (heZ : In e Z) (ha0 : ¬ Same a (number 0))
+    (heValue : Same e (number (z : ℂ))) (x : ℂ) (ha : denote a = M.number x) :
+    denote (powInt a e z haC heZ ha0 heValue) = M.number (x ^ z) := by
+  change denote e = M.number (z : ℂ) at heValue
+  change M.powValue (denote a) (denote e) = _
+  rw [ha, heValue, M.pow_numbers_int x z (nativeNonzeroOfDenote a x ha ha0)]
 
 theorem complexEq {z w : ℂ}
     (h : Same (number (M := M) z) (number w)) : z = w :=
@@ -244,6 +654,25 @@ theorem same_iff_asComplex {α : Type v} {β : Type w}
 
 end Litex.NativeBridge
 
+namespace Litex
+
+theorem mulNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C)
+    (ha0 : ¬ Same a (number 0)) (hb0 : ¬ Same b (number 0)) :
+    ¬ Same (mul a b haC hbC) (number 0) := by
+  let x := NativeBridge.asComplex a haC
+  let y := NativeBridge.asComplex b hbC
+  have hx := NativeBridge.asComplex_spec a haC
+  have hy := NativeBridge.asComplex_spec b hbC
+  exact NativeBridge.notSameOfNativeNonzero _ (x * y)
+    (NativeBridge.denoteMul a b haC hbC x y hx hy)
+    (mul_ne_zero (NativeBridge.nativeNonzeroOfDenote a x hx ha0)
+      (NativeBridge.nativeNonzeroOfDenote b y hy hb0))
+
+end Litex
+
 namespace Litex.NumericModel
 
 /-- An example-only encoding through a chosen well-order, not a selected
@@ -289,6 +718,24 @@ theorem complex_members (x : ZFSet.{0}) :
   · rintro ⟨z, hz⟩
     exact ⟨z, hz.symm⟩
 
+theorem natural_members (x : ZFSet.{0}) :
+    x ∈ standardSet .natural ↔ ∃ n : ℕ, x = codeComplex (n : ℂ) := by
+  simp only [standardSet, ZFSet.mem_range]
+  constructor
+  · rintro ⟨n, hn⟩
+    exact ⟨n, hn.symm⟩
+  · rintro ⟨n, hn⟩
+    exact ⟨n, hn.symm⟩
+
+theorem integer_members (x : ZFSet.{0}) :
+    x ∈ standardSet .integer ↔ ∃ z : ℤ, x = codeComplex (z : ℂ) := by
+  simp only [standardSet, ZFSet.mem_range]
+  constructor
+  · rintro ⟨z, hz⟩
+    exact ⟨z, hz.symm⟩
+  · rintro ⟨z, hz⟩
+    exact ⟨z, hz.symm⟩
+
 theorem real_members (x : ZFSet.{0}) :
     x ∈ standardSet .real ↔ ∃ r : ℝ, x = codeComplex (r : ℂ) := by
   simp only [standardSet, ZFSet.mem_range]
@@ -306,16 +753,52 @@ theorem real_subset_complex (x : ZFSet.{0})
 noncomputable def addValue (a b : ZFSet.{0}) : ZFSet.{0} :=
   codeComplex (decodeComplex a + decodeComplex b)
 
+noncomputable def subValue (a b : ZFSet.{0}) : ZFSet.{0} :=
+  codeComplex (decodeComplex a - decodeComplex b)
+
+noncomputable def mulValue (a b : ZFSet.{0}) : ZFSet.{0} :=
+  codeComplex (decodeComplex a * decodeComplex b)
+
+noncomputable def negValue (a : ZFSet.{0}) : ZFSet.{0} :=
+  codeComplex (-decodeComplex a)
+
 noncomputable def divValue (a b : ZFSet.{0}) : ZFSet.{0} :=
   codeComplex (decodeComplex a / decodeComplex b)
+
+/-- Totalization outside the certified integer-power domain belongs only to
+this explicit candidate model. The public constructor retains the exponent
+object and evidence identifying it with an exact integer. -/
+noncomputable def powValue (a e : ZFSet.{0}) : ZFSet.{0} :=
+  codeComplex (decodeComplex a ^ (⌊(decodeComplex e).re⌋ : ℤ))
 
 theorem add_numbers (a b : ℂ) :
     addValue (codeComplex a) (codeComplex b) = codeComplex (a + b) := by
   simp only [addValue, decodeComplex_codeComplex]
 
+theorem sub_numbers (a b : ℂ) :
+    subValue (codeComplex a) (codeComplex b) = codeComplex (a - b) := by
+  simp only [subValue, decodeComplex_codeComplex]
+
+theorem mul_numbers (a b : ℂ) :
+    mulValue (codeComplex a) (codeComplex b) = codeComplex (a * b) := by
+  simp only [mulValue, decodeComplex_codeComplex]
+
+theorem neg_numbers (a : ℂ) :
+    negValue (codeComplex a) = codeComplex (-a) := by
+  simp only [negValue, decodeComplex_codeComplex]
+
 theorem div_numbers (a b : ℂ) (_hb : b ≠ 0) :
     divValue (codeComplex a) (codeComplex b) = codeComplex (a / b) := by
   simp only [divValue, decodeComplex_codeComplex]
+
+theorem pow_numbers_nat (a : ℂ) (n : ℕ) :
+    powValue (codeComplex a) (codeComplex (n : ℂ)) = codeComplex (a ^ n) := by
+  simp only [powValue, decodeComplex_codeComplex, Complex.natCast_re, Int.floor_natCast,
+    zpow_natCast]
+
+theorem pow_numbers_int (a : ℂ) (z : ℤ) (_ha : a ≠ 0) :
+    powValue (codeComplex a) (codeComplex (z : ℂ)) = codeComplex (a ^ z) := by
+  simp only [powValue, decodeComplex_codeComplex, Complex.intCast_re, Int.floor_intCast]
 
 theorem add_closed {a b : ZFSet.{0}}
     (ha : a ∈ standardSet .complex) (hb : b ∈ standardSet .complex) :
@@ -346,15 +829,26 @@ noncomputable def model : Semantics.{1} where
   number := codeComplex
   standard := standardSet
   addValue := addValue
+  subValue := subValue
+  mulValue := mulValue
+  negValue := negValue
   divValue := divValue
+  powValue := powValue
   number_injective := codeComplex_injective
   complex_members := complex_members
+  natural_members := natural_members
+  integer_members := integer_members
   real_members := real_members
   real_subset_complex := real_subset_complex
   member_isSet := fun _ => True.intro
   standard_isSet := fun _ => True.intro
   add_numbers := add_numbers
+  sub_numbers := sub_numbers
+  mul_numbers := mul_numbers
+  neg_numbers := neg_numbers
   div_numbers := div_numbers
+  pow_numbers_nat := pow_numbers_nat
+  pow_numbers_int := pow_numbers_int
   add_closed := add_closed
   div_closed := div_closed
 
