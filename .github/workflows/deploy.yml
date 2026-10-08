@@ -224,7 +224,7 @@ jobs:
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
           SMOKE_FILE="$(mktemp)"
           printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
-          if ! OUTPUT=$(litex -isolated -graph -f "${SMOKE_FILE}"); then
+          if ! OUTPUT=$(litex -lang en -f "${SMOKE_FILE}"); then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -563,7 +563,7 @@ jobs:
           SMOKE_FILE="$(mktemp)"
           trap 'rm -f "${SMOKE_FILE}"' EXIT
           printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
-          if ! OUTPUT=$(docker run --rm -v "${SMOKE_FILE}:/tmp/litex-smoke.lit:ro" "ghcr.io/litexlang/litex:${VERSION}" -isolated -graph -f /tmp/litex-smoke.lit); then
+          if ! OUTPUT=$(docker run --rm -v "${SMOKE_FILE}:/tmp/litex-smoke.lit:ro" "ghcr.io/litexlang/litex:${VERSION}" -lang en -f /tmp/litex-smoke.lit); then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -614,7 +614,7 @@ jobs:
             SMOKE_FILE="$(mktemp)"
             trap 'rm -f "${SMOKE_FILE}"' EXIT
             printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
-            if ! OUTPUT=$(litex -isolated -graph -f "${SMOKE_FILE}"); then
+            if ! OUTPUT=$(litex -lang en -f "${SMOKE_FILE}"); then
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi

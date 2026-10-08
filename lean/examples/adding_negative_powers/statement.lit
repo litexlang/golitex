@@ -1,0 +1,6 @@
+# Adding two identical negative integer powers equals twice that power.
+
+forall a C:
+    a != 0
+    =>:
+        a^(-2)+a^(-2)=2*a^(-2)

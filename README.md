@@ -57,11 +57,11 @@ translation, this multilingual explanatory copy became feasible; the language
 setting changes the feedback, not the mathematical statement being checked.
 See the [CLI language options](docs/cli.md#basic-shape).
 
-**Mathematical relationship graphs (preview).** `litex -graph -f example.lit`
-maps definitions, theorems and accepted facts to their dependencies. Theorem
-calls appear as relationships rather than separate execution nodes. Open the
-JSON in the [local graph viewer](docs/assets/math_graph_viewer.html), or create
-a standalone HTML view using the [graph guide](src/graph/README.md).
+**Mathematical content for your tools.** `litex -lang en -f example.lit`
+emits JSON with statement text, stored facts, inferred facts and proof summaries.
+Use it to build your own indexes or visualizations. Normal JSON summarizes
+verification and does not expose every dependency; see the
+[JSON output contract](docs/cli.md#json-output-contract).
 
 **LaTeX export (preview).** `litex -latex -document -lang zh -f example.lit`
 compiles parsed source into mathematical LaTeX with prose in any of the ten

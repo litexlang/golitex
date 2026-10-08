@@ -1,0 +1,6 @@
+# Every nonzero complex object divided by itself equals one.
+
+forall a C:
+    a != 0
+    =>:
+        a/a=1

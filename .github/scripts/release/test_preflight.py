@@ -45,36 +45,32 @@ class ReleasePreflightTest(unittest.TestCase):
             "litex.exe",
         )
 
-    def test_result_graph_contract_requires_exit_zero_and_top_level_ok(self) -> None:
+    def test_run_contract_requires_exit_zero_and_successful_statements(self) -> None:
         successful = json.dumps(
             {
-                "kind": "artifact",
-                "ok": True,
-                "artifact": "result_graph",
-                "format": "json",
+                "kind": "run",
+                "success": True,
+                "detail": "normal",
                 "target": "file",
                 "path": "smoke.lit",
-                "output_path": None,
-                "content": {
-                    "graph": "litex-result-graph",
-                    "graph_version": "3",
-                    "result": "success",
-                    "ok": True,
-                    "target": {"kind": "file"},
-                },
-                "error": None,
+                "statement_results": [{"success": True, "statement": "1 = 1"}],
+                "session_error": None,
             }
         )
-        preflight.validate_result_graph_output(successful, 0)
+        preflight.validate_run_output(successful, 0)
         with self.assertRaises(preflight.PreflightError):
-            preflight.validate_result_graph_output(successful, 1)
-        with self.assertRaises(preflight.PreflightError):
-            preflight.validate_result_graph_output(
-                json.dumps(
-                    {"graph": "litex-result-graph", "result": "error", "ok": False}
-                ),
-                1,
-            )
+            preflight.validate_run_output(successful, 1)
+        for change in [
+            {"success": False},
+            {"session_error": {"type": "parse_error"}},
+            {"statement_results": []},
+            {"statement_results": [{"success": False}]},
+            {"kind": "artifact"},
+        ]:
+            failed = json.loads(successful)
+            failed.update(change)
+            with self.subTest(change=change), self.assertRaises(preflight.PreflightError):
+                preflight.validate_run_output(json.dumps(failed), 0)
 
     def test_version_contract_requires_minimal_json_envelope(self) -> None:
         successful = json.dumps({"kind": "version", "ok": True, "version": "1.2.3"})

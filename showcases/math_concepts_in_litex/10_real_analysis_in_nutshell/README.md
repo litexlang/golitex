@@ -19,7 +19,7 @@ inequality. The published Litex file contains no direct trust or local axiom.
 The sequence carrier is written explicitly as `fn(index N+) R`, preserving
 the original one-based indexing. The constant proof establishes the tail
 before choosing its witness. Uniqueness uses `n1 + n2` as a common tail index,
-then explicit absolute-value and triangle-inequality steps. All five formerly
+then direct absolute-difference symmetry and triangle facts. All five formerly
 failing statements now pass; see
 [`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md) for evidence.
 The Lean comparison was not rerun.
@@ -32,3 +32,11 @@ and functional analysis are separate slices, not completion requirements here.
 ## Current callable interfaces
 
 Constant sequences use the named function template `\constant_sequence<c>` with value `c` at every positive index. The epsilon-tail proof and unique limit selector remain constructive.
+
+
+The 2026-10-08 builtin update verifies those two distance facts directly and
+binds the common positive tail index as `have n0 N+ = n1 + n2`. The uniqueness
+proof retains its hypotheses and conclusion while removing 24 administrative
+source lines. Its complete registered `main.lit` passed a clean strict `-f`
+gate. [Implementation and verification receipt](../../../tests/tooling/acceptance/bt-rule-corpus-implementation-2026-10-08.json)
+records the focused tests and boundary controls.

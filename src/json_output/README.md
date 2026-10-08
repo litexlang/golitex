@@ -23,7 +23,7 @@ subject, including owner-qualified name and arguments. Normal keeps its
 existing short-name/source-statement presentation. Detailed adds `call`:
 the name has `plain`, `export` or `module_export` identity, and the arguments
 distinguish a bare call (`null`) from parentheses (an array). This preserves
-two modules' same-named theorems for consumers such as mathematical graphs;
+two modules' same-named theorems for downstream tools;
 the AST, verification, publication and search behavior are unchanged.
 
 ```rust
@@ -945,4 +945,4 @@ The source/citation and Normal/Detailed/ten-language producer contract is
 `trig_additional_interval_order_tests`.
 
 
-The local scalar migration rules retain dedicated IDs for negative integer reciprocal powers, symbolic complex modulus/quotient coordinates, intrinsic exp/factorial nonzero values, sign and binary extrema. `NegativeIntegerPowerReciprocal` exposes `base_numeric`, `exponent_integer`, and `base_nonzero`. Sign reflection retains its actual equality/nonzero citation and real-domain evidence. Weak monotonicity exposes each argument order; a fixed argument is `same_argument`, while an unequal pair projects its actual checked order. Intrinsic formula/nonzero leaves rely on the enclosing fact's WD certificate, rather than fabricating premise citations. The focused `legacy_six_simple_bt_tests` producer/consumer gate checks these fields and the graph's two extremum-order dependency edges.
+The local scalar migration rules retain dedicated IDs for negative integer reciprocal powers, symbolic complex modulus/quotient coordinates, intrinsic exp/factorial nonzero values, sign and binary extrema. `NegativeIntegerPowerReciprocal` exposes `base_numeric`, `exponent_integer`, and `base_nonzero`. Sign reflection retains its actual equality/nonzero citation and real-domain evidence. Weak monotonicity exposes each argument order; a fixed argument is `same_argument`, while an unequal pair projects its actual checked order. Intrinsic formula/nonzero leaves rely on the enclosing fact's WD certificate, rather than fabricating premise citations. The focused `legacy_six_simple_bt_tests` producer/consumer gate checks these fields and the actual extremum-order premise evidence.

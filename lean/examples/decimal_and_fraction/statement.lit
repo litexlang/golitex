@@ -1,0 +1,4 @@
+# The exact decimal one eighth equals the corresponding fraction inside a sum.
+
+forall a C:
+    a+0.125=a+1/8

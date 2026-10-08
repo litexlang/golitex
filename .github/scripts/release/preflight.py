@@ -266,14 +266,14 @@ def check_archive(
     smoke_file = extracted / "smoke.lit"
     smoke_file.write_text(SMOKE_SOURCE, encoding="utf-8")
     smoke_result = subprocess.run(
-        [str(binary), "-isolated", "-graph", "-f", smoke_file.name],
+        [str(binary), "-lang", "en", "-f", smoke_file.name],
         cwd=extracted,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         check=False,
     )
-    validate_result_graph_output(smoke_result.stdout, smoke_result.returncode)
+    validate_run_output(smoke_result.stdout, smoke_result.returncode)
     print(
         "PREFLIGHT smoke: import std basics + "
         "native quot(-7, 3) and $dvd(12, 3) -> ok",
@@ -305,39 +305,27 @@ def validate_archive_member(name: str, is_link: bool) -> None:
         raise PreflightError(f"macOS metadata must not be shipped: {name!r}")
 
 
-def validate_result_graph_output(output: str, returncode: int) -> None:
+def validate_run_output(output: str, returncode: int) -> None:
     try:
         envelope = json.loads(output)
     except json.JSONDecodeError as error:
-        raise PreflightError(f"smoke test did not return result-graph JSON:\n{output}") from error
+        raise PreflightError(f"smoke test did not return run JSON:\n{output}") from error
     if returncode != 0:
         raise PreflightError(f"smoke test exited with {returncode}:\n{output}")
     if not isinstance(envelope, dict):
-        raise PreflightError("smoke test result-graph artifact is not an object")
-    if envelope.get("kind") != "artifact":
-        raise PreflightError("smoke test output kind is not artifact")
-    if envelope.get("artifact") != "result_graph":
-        raise PreflightError("smoke test artifact is not result_graph")
-    if envelope.get("format") != "json":
-        raise PreflightError("smoke test result-graph artifact format is not json")
+        raise PreflightError("smoke test run output is not an object")
+    if envelope.get("kind") != "run" or envelope.get("detail") != "normal":
+        raise PreflightError("smoke test output is not a Normal run")
     if envelope.get("target") != "file" or not isinstance(envelope.get("path"), str):
-        raise PreflightError("smoke test result-graph artifact target is not a file")
-    if envelope.get("output_path") is not None:
-        raise PreflightError("smoke test result-graph artifact has an output path")
-    if envelope.get("ok") is not True or envelope.get("error") is not None:
+        raise PreflightError("smoke test run target is not a file")
+    if envelope.get("success") is not True or envelope.get("session_error") is not None:
         raise PreflightError(f"smoke test did not verify successfully:\n{output}")
-    graph = envelope.get("content")
-    if not isinstance(graph, dict):
-        raise PreflightError("smoke test result-graph content is not an object")
-    if graph.get("graph") != "litex-result-graph":
-        raise PreflightError("smoke test output is not a Litex result graph")
-    if graph.get("graph_version") != "3":
-        raise PreflightError("smoke test returned an unsupported result-graph version")
-    target = graph.get("target")
-    if not isinstance(target, dict) or target.get("kind") != "file":
-        raise PreflightError("smoke test result-graph target is not a file")
-    if graph.get("result") != "success" or graph.get("ok") is not True:
-        raise PreflightError(f"smoke test did not verify successfully:\n{output}")
+    statements = envelope.get("statement_results")
+    if not isinstance(statements, list) or not statements or any(
+        not isinstance(statement, dict) or statement.get("success") is not True
+        for statement in statements
+    ):
+        raise PreflightError("smoke test did not retain successful statement results")
 
 
 def validate_version_output(output: str, returncode: int, version: str) -> None:

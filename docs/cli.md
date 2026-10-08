@@ -74,7 +74,6 @@ Shared flags outside command operands may appear before or after the command:
 |------|---------|
 | `-strict` | Forbid user `trust`, `trust have`, and `axiom`; allow abstract predicate declarations and named foundation releases. |
 | `-session` | After a successful `-e` / `-f` / `-r` run, keep the Runtime open and continue as REPL. |
-| `-graph` | With `-e` / `-f` / `-r`, emit mathematical dependency JSON instead of Normal output; excludes `-session`. |
 | `-lang <tok>` | Output language for JSON verification feedback: `en` (default), `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, or `vi`. Does not change Litex source or verification. |
 
 Examples:
@@ -225,6 +224,27 @@ published facts belong in `stores`. For `1 / 0 = 0`, the failed statement stays
 `1 / 0 = 0`; `why_failed.phase` is `well_defined` and its message says that
 well-definedness could not be proved. This is a proof failure, not an assertion
 that every unproved expression is mathematically undefined.
+
+### Custom indexes and visualizations
+
+Save the ordinary file output for a downstream tool:
+
+```bash
+litex -lang en -f example.lit > result.json
+```
+
+Use successful entries in `statement_results` to read declarations and theorem
+calls from `statement`, and accepted mathematical facts from `stores` and
+`infers`. `proof_method` provides a summary and includes readable citations for
+some verification routes. These fields can support custom indexes and
+visualizations without a separate graph output format.
+
+Normal JSON does not contain every verification child or FactId citation, so
+it cannot guarantee reconstruction of the complete dependency graph. The Rust
+Detailed projection exposes more typed proof evidence; it is an API, not a CLI
+flag. The `-r` Normal summary has an empty `statement_results` array; use `-f`
+for the statement output of each target file. A failed file's successful
+statement entries do not mean the file was published as a completed export.
 
 ### Chinese output
 
@@ -453,37 +473,6 @@ litex -r examples/module_manager/repo
 litex -strict -f examples/tmp.lit
 litex -session -f examples/tmp.lit
 ```
-
-## Mathematical dependency graphs (preview)
-
-Use `-graph` with `-e`, `-f` or `-r` to emit one mathematical dependency JSON
-document. Nodes are definitions, reusable theorems and accepted facts. Calls
-such as `by thm` contribute relationships and source details, not nodes.
-
-```bash
-litex -graph -strict -f examples/stmt_nodes/graph/math_dependencies.lit > graph.json
-python3 src/graph/render_html.py graph.json graph.html
-```
-
-Open `graph.html` in a browser, or open
-[`math_graph_viewer.html`](assets/math_graph_viewer.html) and select the JSON.
-Inferred/local facts are folded by default and can be expanded. Selecting a
-node shows its mathematical statement and related facts; selecting an edge
-shows its source and premise group. Time order is not a dependency.
-
-`-strict` retains its ordinary verification meaning. Schema keys, relationship
-types and IDs are independent of `-lang`; IDs belong to this run. The viewer
-has English/Chinese interface copy and uses source mathematics as labels.
-Other selected output locales preserve the same data with the English viewer
-interface. Successful graphs have `success: true` and exit 0. Verification or
-input failures exit 1, retain available history and diagnostics, and never
-publish failed facts. Invalid launch combinations exit 2. `-graph` excludes
-REPL/`-session`, LaTeX conversion and executable extraction.
-
-Local assumptions remain scoped; trust and external records retain their
-origin. A cached interface can be available without the original proof
-history. Graph output is a dependency view, not an independent proof replay.
-See the [schema and ownership guide](../src/graph/README.md).
 
 ## LaTeX conversion (preview)
 

@@ -1,0 +1,4 @@
+# Multiplication distributes over the sum of two complex objects.
+
+forall a,b,c C:
+    a*(b+c)=a*b+a*c

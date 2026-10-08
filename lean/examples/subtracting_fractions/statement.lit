@@ -1,0 +1,7 @@
+# Subtracting fractions with nonzero denominators can use a common denominator.
+
+forall a,b,c,d C:
+    b != 0
+    d != 0
+    =>:
+        a/b-c/d=(a*d-c*b)/(b*d)

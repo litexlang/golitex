@@ -195,7 +195,7 @@ release thm newton::fixed_point(sqrt(2))
 
 For extraction details and supported forms, see the [Python/C extraction implementation](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code).
 
-**Turn mathematics into a graph of relationships.** Litex can organize definitions, theorems, and verified facts into a graph: nodes represent mathematical content, and edges show dependencies, helping readers trace what a conclusion relies on. Visit [litexlang.com](https://litexlang.com) to try Litex-generated interactive graphs and explore the knowledge and connections in mathematical source. See the [graph implementation](https://github.com/litexlang/golitex/tree/main/src/graph) for how these relationships are exported and viewed.
+**Use mathematical content in your own tools.** `litex -lang en -f example.lit` emits JSON containing statement text, stored facts, inferred facts, and proof summaries. Readers can extract that content for their own indexes and visualizations. Normal JSON summarizes verification rather than recording every dependency. See the [JSON output contract](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract) for its fields and limits.
 
 **Write mathematics for others to read.** Mathematical source can also be converted to LaTeX for lecture notes or a manuscript. A mathematical fact appears on the left and its actual typesetting source on the right. Conversion handles presentation; mathematical verification is a separate step:
 
@@ -1189,7 +1189,7 @@ This example shows how knowledge accumulates during a proof and remains availabl
 
 The later file uses an established theorem to continue its own work. As results accumulate, definitions, constructions, and theorems can be organized into modules for use within the same project or in other projects. A finished proof leaves mathematical vocabulary and knowledge that the next piece of work can depend on.
 
-As knowledge grows, its connections matter too. The current CLI's `-graph` shows mathematical dependencies between definitions, theorems, and accepted facts. In this example, applying the theorem from a new file creates a connection to the original theorem, helping readers look back at what was used.
+As knowledge grows, downstream tools can organize the mathematical content in Litex's ordinary JSON. In this example, a theorem call retains its name, arguments and selected conclusion in the statement text, while accepted facts appear in `stores` and `infers`. This supports custom views; the concise Normal output does not record every dependency.
 
 *The CLI provides native mathematical dependency graphs. The website currently displays a projection of Normal JSON; the native graph is not yet connected there. A dependency graph helps inspect knowledge relationships; independent proof rechecking is the separate work discussed in Section 5.*
 

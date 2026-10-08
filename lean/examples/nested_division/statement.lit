@@ -1,0 +1,7 @@
+# Two successive divisions equal division by the product of nonzero divisors.
+
+forall a,b,c C:
+    b != 0
+    c != 0
+    =>:
+        (a/b)/c=a/(b*c)

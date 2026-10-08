@@ -1,0 +1,268 @@
+{
+  "kind": "graph_feature_removal_acceptance",
+  "date": "2026-10-08",
+  "status": "verified",
+  "baseline_head": "098616b73840156c1c9e4f88577e8581b8299431",
+  "observed_head_at_completion": "57b4215b8d1155f75bab5a698d743c2f16c74d99",
+  "user_contract": "Remove the entire current -graph feature and keep ordinary JSON as the tooling interface.",
+  "tracer": {
+    "source": "have x R = 2\nx > 0",
+    "before_command": "target/release/litex -graph -strict -e <source>",
+    "before_result": {
+      "exit": 0,
+      "kind": "math_graph"
+    },
+    "after_removed_command_result": {
+      "exit": 2,
+      "stderr": "launch_error: supported-command usage",
+      "stdout": ""
+    },
+    "current_command": "target/release/litex -lang en -strict -e <source>",
+    "current_result": {
+      "exit": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    },
+    "normal_json_unchanged": true
+  },
+  "removal": {
+    "paths": [
+      "src/graph/",
+      "src/run/run_graph.rs",
+      "examples/stmt_nodes/graph/"
+    ],
+    "wiring": "Removed collector parameters and forwarding wrappers; ordinary execution and live JSON capture retained.",
+    "source_delta_paths": [
+      "src/main.rs",
+      "src/lib.rs",
+      "src/run/mod.rs",
+      "src/run/run_eval.rs",
+      "src/run/run_command.rs",
+      "src/run/run_graph.rs",
+      "src/run_module/mod.rs",
+      "src/run_module/run_export_file.rs",
+      "src/run_module/run_file_with_config.rs",
+      "src/run_module/run_project.rs",
+      "src/run_module/run_import_module.rs",
+      "src/run_module/mount_cwd_config.rs",
+      "README.md",
+      "docs/cli.md",
+      "docs/Litex_Blueprint.md",
+      "docs/Litex中文蓝图.md",
+      "src/json_output/README.md",
+      "tests/integration/cli_feedback.rs",
+      "tests/unit/execute/release_tuple_def/tests.rs",
+      "tests/unit/execute/legacy_remaining_local_migration/tests.rs",
+      "tests/unit/execute/legacy_six_simple_bt/tests.rs",
+      "tests/unit/execute/real_metric_bounds/tests.rs",
+      ".github/scripts/release/preflight.py",
+      ".github/scripts/release/test_preflight.py",
+      ".github/workflows/deploy.yml"
+    ],
+    "graph_only_tests_removed": 4,
+    "old_viewer_template": "docs/assets/math_graph_viewer.html was already absent before this task."
+  },
+  "json_contract": {
+    "content": [
+      "statement_results[].statement",
+      "stores",
+      "infers",
+      "proof_method"
+    ],
+    "limits": [
+      "Normal JSON summarizes verification and does not expose every dependency or FactId.",
+      "Detailed is a Rust projection API, not a CLI flag; its projection omits retained local environments.",
+      "The current -r Normal summary has an empty statement_results array; use -f for each target.",
+      "Accepted statements inside a failed file do not establish publication of that file."
+    ]
+  },
+  "verification": {
+    "impact": "L3 public output/consumer removal",
+    "build": {
+      "command": "cargo build --release",
+      "exit": 0
+    },
+    "cli": {
+      "command": "cargo test --release --test cli_feedback",
+      "exit": 0,
+      "passed": 15
+    },
+    "focused_rust": {
+      "command": "cargo test --release --lib -- run_module:: run::binding_lifecycle_tests json_output::project_ release_tuple_def_tests legacy_remaining_local_migration_tests legacy_six_simple_bt_tests real_metric_bounds_tests",
+      "exit": 0,
+      "passed": 107,
+      "coverage": "Module runner/import/cache contracts, run binding lifecycle, Normal/Compact/Detailed projections and four producer families formerly coupled to graph tests."
+    },
+    "release_smoke_consumer": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 .github/scripts/release/test_preflight.py ReleasePreflightTest.test_run_contract_requires_exit_zero_and_successful_statements",
+      "exit": 0,
+      "passed": 1,
+      "actual_file_json_accepted": true
+    },
+    "actual_cli": {
+      "binary_sha256": "dfd24ba5335119b30659eeee75b8ac9f39aa908edc6ab4e777b6eaae3c35416d",
+      "ordinary_tracer_json_unchanged": true,
+      "help_has_no_graph_flag": true,
+      "preflight_consumer_accepts_actual_file_json": true,
+      "cases": [
+        {
+          "case": "normal",
+          "args": [
+            "-lang",
+            "en",
+            "-strict",
+            "-e",
+            "have x R = 2\nx > 0"
+          ],
+          "exit": 0,
+          "kind": "run",
+          "success": true,
+          "statements": 2
+        },
+        {
+          "case": "graph-6-0",
+          "args": [
+            "-graph",
+            "-e",
+            "1 = 1"
+          ],
+          "exit": 2,
+          "launch_error": true
+        },
+        {
+          "case": "graph-6-1",
+          "args": [
+            "-e",
+            "1 = 1",
+            "-graph"
+          ],
+          "exit": 2,
+          "launch_error": true
+        },
+        {
+          "case": "graph-7-0",
+          "args": [
+            "--graph",
+            "-e",
+            "1 = 1"
+          ],
+          "exit": 2,
+          "launch_error": true
+        },
+        {
+          "case": "graph-7-1",
+          "args": [
+            "-e",
+            "1 = 1",
+            "--graph"
+          ],
+          "exit": 2,
+          "launch_error": true
+        },
+        {
+          "case": "source-operand",
+          "args": [
+            "-e",
+            "-graph"
+          ],
+          "exit": 1,
+          "kind": "run",
+          "success": false,
+          "statements": 0
+        },
+        {
+          "case": "wd-failure",
+          "args": [
+            "-lang",
+            "en",
+            "-e",
+            "1 / 0 = 0"
+          ],
+          "exit": 1,
+          "kind": "run",
+          "success": false,
+          "statements": 1
+        },
+        {
+          "case": "file",
+          "args": [
+            "-lang",
+            "en",
+            "-strict",
+            "-f",
+            "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/remove-graph/tracer.lit"
+          ],
+          "exit": 0,
+          "kind": "run",
+          "success": true,
+          "statements": 2
+        },
+        {
+          "case": "repo",
+          "args": [
+            "-lang",
+            "en",
+            "-strict",
+            "-r",
+            "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/remove-graph/project"
+          ],
+          "exit": 0,
+          "kind": "run",
+          "success": true,
+          "statements": 0
+        },
+        {
+          "case": "project-file",
+          "args": [
+            "-lang",
+            "en",
+            "-strict",
+            "-f",
+            "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/remove-graph/project/next.lit"
+          ],
+          "exit": 0,
+          "kind": "run",
+          "success": true,
+          "statements": 2
+        },
+        {
+          "case": "original-mathematical-source",
+          "args": [
+            "-lang",
+            "en",
+            "-strict",
+            "-f",
+            "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/remove-graph/before/examples/stmt_nodes/graph/math_dependencies.lit"
+          ],
+          "exit": 0,
+          "kind": "run",
+          "success": true,
+          "statements": 7
+        }
+      ]
+    },
+    "same_live_session_probe": [
+      "release obj def base::x -> success",
+      "base::x > 0 -> success"
+    ],
+    "scoped_whitespace_check": "passed",
+    "live_source_docs_feature_reference_audit": "passed"
+  },
+  "boundaries": {
+    "protected_owner_changes": false,
+    "verifier_rule_changes": false,
+    "json_schema_changes": false,
+    "historical_acceptance_records": "Preserved; earlier graph command captures remain historical evidence.",
+    "concurrent_work": "Preserved independent Lean/builtin/docs changes; another local commit incorporated part of the source removal during the task.",
+    "not_run": [
+      "full kernel",
+      "real Lean",
+      "textbooks",
+      "package/release preflight"
+    ],
+    "package_preflight_limit": "Only the touched Normal-output consumer was tested; unrelated existing version-output validation was not changed."
+  },
+  "draft_area": "tmp/2026-10-08/remove-graph/",
+  "supersedes": "The preceding latest-knowledge-view-only rollback task; the user subsequently requested removal of the entire feature."
+}

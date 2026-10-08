@@ -1,0 +1,4 @@
+# The product of a complex object plus one and minus one is its square minus one.
+
+forall a C:
+    (a+1)*(a-1)=a^2-1

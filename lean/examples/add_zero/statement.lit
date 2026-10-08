@@ -1,0 +1,4 @@
+# Adding zero leaves every complex object unchanged.
+
+forall a C:
+    a + 0 = a

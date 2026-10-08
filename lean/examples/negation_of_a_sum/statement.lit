@@ -1,0 +1,4 @@
+# Negating a sum is the difference of the negated first term and the second term.
+
+forall a,b C:
+    -(a+b)=-a-b

@@ -1,0 +1,4 @@
+# The difference of squares identity also respects the real-domain power constructor.
+
+forall a R:
+    (a+1)*(a-1)=a^2-1

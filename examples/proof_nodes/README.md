@@ -38,8 +38,8 @@ Analysis Chapter 6's finite-extremum theorem interfaces.
 consumes both positive-real memberships. Nested minima may use typed
 intermediates. These fixed leaves retain parent WD and the inherited premise
 ceiling; the focused `real_metric_bounds_tests` cover false or missing
-conditions, unsupported domains, rollback, Detailed/Normal output, graph
-citations and unsupported Lean routes.
+conditions, unsupported domains, rollback, Detailed/Normal premise evidence
+and unsupported Lean routes.
 
 ## Fixed real trigonometric reflections and double angle
 
