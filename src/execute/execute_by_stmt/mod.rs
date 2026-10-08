@@ -42,9 +42,10 @@ pub use result::{
     ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult, ExecByFnExtensionStmtResult,
     ExecByForStmtResult, ExecByInducStmtFailed, ExecByInducStmtResult, ExecByStmtResult,
     ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult, ExecByThmStmtFailed,
-    ExecByThmStmtResult, ExecExpandRangeStmtResult, ExecReleaseAxiomOfChoiceStmtResult,
-    ExecReleaseRegularityAxiomStmtResult, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult,
-    ExecReleaseZornLemmaStmtResult, ResolvedTheoremCallee,
+    ExecByThmStmtResult, ExecByThmStmtSuccess, ExecExpandRangeStmtResult,
+    ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseRegularityAxiomStmtResult,
+    ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseZornLemmaStmtResult,
+    ResolvedTheoremCallee,
 };
 pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 // Existing failure IR consumed by the crate's Normal/Detailed JSON projection.

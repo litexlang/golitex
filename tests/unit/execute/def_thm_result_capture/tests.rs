@@ -1,7 +1,6 @@
 use crate::execute::execute_by_stmt::{
     ExecByStmtResult, ExecByThmStmtResult, ExecReleaseThmStmtResult, ResolvedTheoremCallee,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::EqualFactSearchedProofByEquivalenceClass;
 use crate::execute::{
     ExecDefThmBodyProof, ExecDefThmStmtResult, ExecDefThmStmtSuccess, ExecDefinitionStmtResult,
     ExecReleaseAndExpandStmtResult,
@@ -79,6 +78,59 @@ fn forall_retains_actual_binder_producers_and_ordered_domain_wd_stores() {
         ExecDefThmBodyProof::Forall(p) => p,
         _ => panic!("forall success captures its stages"),
     };
+    let goal_wd = match &proof.goal_wd {
+        VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ForallFact(p)) => p,
+        _ => panic!("outer goal retains its own forall WD scope"),
+    };
+    assert_eq!(goal_wd.introduced_params.param_type_well_defined.len(), 2);
+    assert_eq!(
+        goal_wd
+            .introduced_params
+            .defined_params
+            .stored_fact_ids
+            .len(),
+        2
+    );
+    for (wd_id, body_id) in goal_wd
+        .introduced_params
+        .defined_params
+        .stored_fact_ids
+        .iter()
+        .zip(&body.introduced_params.defined_params.stored_fact_ids)
+    {
+        assert_ne!(
+            wd_id, body_id,
+            "WD and proof introductions are distinct executions"
+        );
+        let wd_fact = goal_wd.local_env.facts.facts_by_id.get(wd_id).unwrap();
+        let body_fact = proof.local_env.facts.facts_by_id.get(body_id).unwrap();
+        match (wd_fact, body_fact) {
+            (
+                Fact::AtomicFact(AtomicFact::InFact(wd)),
+                Fact::AtomicFact(AtomicFact::InFact(body)),
+            ) => {
+                assert_eq!(wd.element.ir(), body.element.ir());
+                assert_eq!(wd.set, body.set);
+            }
+            _ => panic!("both captured producers introduce the same formal membership"),
+        }
+    }
+    assert_eq!(
+        goal_wd.assumed_dom_facts.len(),
+        source_forall.dom_facts.len()
+    );
+    for (captured, dom) in goal_wd
+        .assumed_dom_facts
+        .iter()
+        .zip(&source_forall.dom_facts)
+    {
+        assert_eq!(captured.store_and_infer.primary_fact_id(), dom.fact_id());
+        assert_eq!(
+            goal_wd.local_env.facts.facts_by_id.get(&dom.fact_id()),
+            Some(dom)
+        );
+    }
+    assert_eq!(goal_wd.then.len(), source_forall.then_facts.len());
     assert_eq!(body.introduced_params.param_type_well_defined.len(), 2);
     assert_eq!(
         body.introduced_params.defined_params.stored_fact_ids.len(),
@@ -124,9 +176,49 @@ fn forall_retains_actual_binder_producers_and_ordered_domain_wd_stores() {
     assert_eq!(body.proof_steps.len(), 1);
     assert!(!body.proof_steps[0].is_failed());
     assert_eq!(body.conclusion_proofs.len(), 1);
-    let detail =
-        crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
-    assert!(detail.contains("introduced_params") && detail.contains("assumed_dom_facts"));
+    let detail = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt);
+    let wd_detail = detail
+        .as_object()
+        .unwrap()
+        .get("goal_well_defined")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .get("proof")
+        .unwrap()
+        .as_object()
+        .unwrap();
+    let introduced = wd_detail
+        .get("introduced_params")
+        .unwrap()
+        .as_object()
+        .unwrap();
+    assert_eq!(
+        wd_detail.get("param_type_well_defined"),
+        introduced.get("param_type_well_defined")
+    );
+    assert_eq!(
+        wd_detail.get("auto_opened_struct_layers"),
+        introduced.get("auto_opened_struct_layers")
+    );
+    let assumed = wd_detail
+        .get("assumed_dom_facts")
+        .unwrap()
+        .as_array()
+        .unwrap();
+    let old_dom = wd_detail.get("dom").unwrap().as_array().unwrap();
+    assert_eq!(assumed.len(), old_dom.len());
+    for (captured, projected_wd) in assumed.iter().zip(old_dom) {
+        assert_eq!(
+            captured.as_object().unwrap().get("well_defined"),
+            Some(projected_wd)
+        );
+        assert!(captured
+            .as_object()
+            .unwrap()
+            .get("store_and_infer")
+            .is_some());
+    }
 }
 
 #[test]

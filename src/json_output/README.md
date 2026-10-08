@@ -26,6 +26,21 @@ distinguish a bare call (`null`) from parentheses (an array). This preserves
 two modules' same-named theorems for downstream tools;
 the AST, verification, publication and search behavior are unchanged.
 
+Detailed named theorem declarations retain their original `statement` and
+mirror `body.kind: non_forall | forall`. A forall body contains the actual
+`introduced_params`, ordered `assumed_dom_facts`, proof steps and conclusion
+proofs; a non-forall body contains proof steps and its single conclusion
+proof. The goal WD remains a separate stage. Detailed forall WD exposes
+the same introduction/domain producer fields; its existing
+`param_type_well_defined`, `auto_opened_struct_layers` and `dom` fields remain
+derived views of those owners.
+
+Detailed explicit theorem calls add `callee`, distinguishing the resolved
+user theorem, user axiom and builtin. Successful `by thm` also retains the
+actual `returned_conclusions` stores before its selected citation. These
+fields project the executed result; they do not resolve the callee again,
+scan the retained local environment or expand the allowed selection routes.
+
 ```rust
 pub enum OutputDetail {
     Compact,   // thin: success + statement (+ fail_reason)

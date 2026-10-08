@@ -1,6 +1,12 @@
 pub(crate) use crate::ast::fact::*;
 pub(crate) use crate::ast::obj::*;
 pub(crate) use crate::ast::param::*;
+pub(crate) use crate::ast::names::{AtomicName, BoundName};
+pub(crate) use crate::ast::stmt::{DefThmStmt, TheoremCallArguments, Stmt, DefinitionStmt, DefineObjStmt, ByStmt};
+pub(crate) use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult, ExecReleaseAndExpandStmtResult};
+pub(crate) use crate::execute::{ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult, ExecLetObjStmtResult, ExecLetObjStmtSuccessResult, IntroduceTypedParametersResult};
+pub(crate) use crate::execute::execute_def_thm_stmt::{ExecDefThmStmtResult, ExecDefThmStmtSuccess, ExecDefThmBodyProof};
+pub(crate) use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult, ExecByThmStmtSuccess, ExecReleaseThmStmtResult, ResolvedTheoremCallee};
 pub(crate) use crate::exec_env::exec_env::ExecEnv;
 pub(crate) use crate::exec_env::known_fact_memory::ObjIR;
 pub(crate) use crate::execute::{ExecStmtResult, ParamTypeWellDefinedProof};
@@ -8,6 +14,7 @@ pub(crate) use crate::execute::execute_fact_stmt::*;
 pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact::{
     VerifyForallFactProof, VerifyForallFactSuccess,
 };
+pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof;
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
     AtomicFactWellDefinedProof, PredicateSignatureWellDefinedProof, PredicateDomainProof,
 };

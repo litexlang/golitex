@@ -1,18 +1,4 @@
 use super::LeanCompileError;
-use crate::ast::names::{AtomicName, BoundName};
-use crate::ast::stmt::{DefThmStmt, TheoremCallArguments};
-use crate::execute::exec_stmt_result::{ExecDefineObjStmtResult, ExecDefinitionStmtResult};
-use crate::execute::execute_by_stmt::{
-    ExecByStmtResult, ExecByThmStmtResult, ExecByThmStmtSuccess, ResolvedTheoremCallee,
-};
-use crate::execute::execute_def_thm_stmt::{
-    ExecDefThmBodyProof, ExecDefThmStmtResult, ExecDefThmStmtSuccess,
-};
-use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
-use crate::execute::{
-    ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult, ExecLetObjStmtResult,
-    ExecLetObjStmtSuccessResult, IntroduceTypedParametersResult,
-};
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -533,6 +519,208 @@ impl LeanCompiler {
             proposition,
             proof: format!("(by\n  {}\n)", statements.join("\n").replace('\n', "\n  ")),
         })
+    }
+
+    fn compile_by_theorem(
+        &mut self,
+        proof: &ExecByThmStmtSuccess,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        let declaration = match &proof.callee {
+            ResolvedTheoremCallee::UserTheorem(declaration) => declaration,
+            _ => return Err(LeanCompileError::unsupported("ByThm/Callee")),
+        };
+        let source_name = match &proof.call.name {
+            AtomicName::Plain { name } => name,
+            _ => return Err(LeanCompileError::unsupported("ByThm/QualifiedCallee")),
+        };
+        let registered = self
+            .scopes
+            .iter()
+            .rev()
+            .find_map(|scope| scope.theorems.get(source_name))
+            .cloned()
+            .ok_or_else(|| {
+                LeanCompileError::new(
+                    "ByThm/Producer",
+                    "The named theorem has no earlier compiled declaration in scope.",
+                )
+            })?;
+        if &registered.declaration != declaration
+            || source_name != &declaration.name
+            || proof.builtin.is_some()
+            || proof.function_domain.is_some()
+        {
+            return Err(LeanCompileError::new(
+                "ByThm/Callee",
+                "The resolved declaration differs from the cited compiled theorem.",
+            ));
+        }
+        self.scopes.push(CompilerScope {
+            env: Some(proof.local_env.clone()),
+            ..CompilerScope::default()
+        });
+        let compiled = self.compile_by_theorem_body(proof, &registered, runtime);
+        self.scopes.pop();
+        let compiled = compiled?;
+        self.validate_store(&proof.stored, &compiled.fact)?;
+        Ok(compiled)
+    }
+
+    fn compile_by_theorem_body(
+        &mut self,
+        proof: &ExecByThmStmtSuccess,
+        registered: &NamedTheorem,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        let mut substitution = HashMap::new();
+        let mut application_arguments = Vec::new();
+        let (domains, conclusions) = match (&registered.declaration.fact, &proof.call.arguments) {
+            (Fact::ForallFact(fact), TheoremCallArguments::Parenthesized(args)) => {
+                let parameters: Vec<_> = fact
+                    .typed_parameters
+                    .groups
+                    .iter()
+                    .flat_map(|group| &group.params)
+                    .collect();
+                if args.len() != parameters.len() || proof.type_proofs.len() != parameters.len() {
+                    return Err(LeanCompileError::new(
+                        "ByThm/Arguments",
+                        "The invocation has different arguments or type-proof arity.",
+                    ));
+                }
+                for (parameter, arg) in parameters.iter().zip(args) {
+                    substitution.insert(parameter.id, arg.clone());
+                }
+                let mut offset = 0;
+                for group in &fact.typed_parameters.groups {
+                    let set = match &group.param_type {
+                        ParamType::Obj(set) => set,
+                        _ => return Err(LeanCompileError::unsupported("ByThm/ParameterKind")),
+                    };
+                    for _ in &group.params {
+                        let arg = &args[offset];
+                        let member = self.compile_verify(&proof.type_proofs[offset], runtime)?;
+                        match &member.fact {
+                            Fact::AtomicFact(AtomicFact::InFact(f))
+                                if f.element.ir() == arg.ir()
+                                    && instantiated_object_matches(set, &f.set, &substitution) => {}
+                            _ => {
+                                return Err(LeanCompileError::new(
+                                    "ByThm/TypeProof",
+                                    "The membership proves another parameter or carrier.",
+                                ))
+                            }
+                        }
+                        application_arguments.push(self.object_term(arg)?);
+                        application_arguments.push(member.proof);
+                        offset += 1;
+                    }
+                }
+                let conclusions = fact
+                    .then_facts
+                    .iter()
+                    .map(|fact| match fact {
+                        ExistOrAndChainAtomicFact::AtomicFact(atomic) => {
+                            Ok(Fact::AtomicFact(atomic.clone()))
+                        }
+                        _ => Err(LeanCompileError::unsupported("ByThm/CompoundConclusion")),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                (fact.dom_facts.iter().collect::<Vec<_>>(), conclusions)
+            }
+            (Fact::AtomicFact(_), TheoremCallArguments::Bare) if proof.type_proofs.is_empty() => {
+                (Vec::new(), vec![registered.declaration.fact.clone()])
+            }
+            _ => return Err(LeanCompileError::unsupported("ByThm/CallShape")),
+        };
+        if domains.len() != proof.dom_proofs.len()
+            || conclusions.len() != proof.returned_conclusions.len()
+            || conclusions.len() != proof.conclusions_wd.len()
+            || conclusions.is_empty()
+        {
+            return Err(LeanCompileError::new(
+                "ByThm/Stages",
+                "The invocation has different premise, returned-store or WD stages.",
+            ));
+        }
+        for (domain, result) in domains.iter().zip(&proof.dom_proofs) {
+            let compiled = self.compile_verify(result, runtime)?;
+            if !instantiated_fact_matches(domain, &compiled.fact, &substitution) {
+                return Err(LeanCompileError::new(
+                    "ByThm/Domain",
+                    "A premise proves another instantiated source requirement.",
+                ));
+            }
+            application_arguments.push(compiled.proof.clone());
+            self.remember_fact(compiled);
+        }
+        let application = if application_arguments.is_empty() {
+            registered.term.clone()
+        } else {
+            format!("({} {})", registered.term, application_arguments.join(" "))
+        };
+        for (index, ((expected, stored), wd)) in conclusions
+            .iter()
+            .zip(&proof.returned_conclusions)
+            .zip(&proof.conclusions_wd)
+            .enumerate()
+        {
+            let fact = match &stored.store {
+                StoreFactResult::AtomicFact(stored) => Fact::AtomicFact(stored.fact.clone()),
+                _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
+            };
+            self.validate_store(stored, &fact)?;
+            if !instantiated_fact_matches(expected, &fact, &substitution) {
+                return Err(LeanCompileError::new(
+                    "ByThm/ReturnedSubject",
+                    "The returned producer differs from this theorem instance.",
+                ));
+            }
+            self.compile_fact_wd(wd, &fact, runtime)?;
+            self.remember_fact(FactTerm {
+                proposition: self.fact_proposition(&fact)?,
+                fact,
+                proof: conjunction_projection(&application, index, conclusions.len()),
+            });
+        }
+        let returned_ids: Vec<_> = proof
+            .returned_conclusions
+            .iter()
+            .map(StoreFactAndInferResult::primary_fact_id)
+            .collect();
+        let allowed = match &proof.selected_proof {
+            VerifyFactResult::Equality(result) => match result.as_ref() {
+                VerifyEqualityResult::Success(selected) => match &selected.searched_proof {
+                    EqualFactSearchedProof::ByEquivalenceClass(
+                        EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(p),
+                    ) => !p.reversed && returned_ids.contains(&p.cited.fact_id),
+                    _ => false,
+                },
+                _ => false,
+            },
+            VerifyFactResult::AtomicExceptEquality(result) => match result.as_ref() {
+                VerifyAtomicExceptEqualityFactResult::Success(selected) => {
+                    match &selected.searched_proof {
+                        AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
+                            returned_ids.contains(&p.cite_fact_id)
+                                && p.why_parameters_of_known_fact_are_equal_to_givens
+                                    .iter()
+                                    .all(|proof| {
+                                        matches!(proof, EqualFactSearchedProof::ByTheyAreTheSame(_))
+                                    })
+                        }
+                        _ => false,
+                    }
+                }
+                _ => false,
+            },
+            _ => false,
+        };
+        if !allowed {
+            return Err(LeanCompileError::new("ByThm/SelectionProvenance", "The selection does not directly cite an unreversed atom returned by this invocation."));
+        }
+        self.compile_verify(&proof.selected_proof, runtime)
     }
 
     fn compile_verify(
@@ -1299,7 +1487,7 @@ impl LeanCompiler {
                 "Domain evidence has the wrong arity.",
             ));
         }
-        for (fact, assumed) in fact.dom_facts.iter().zip(&assumed) {
+        for (fact, assumed) in fact.dom_facts.iter().zip(assumed) {
             self.compile_fact_wd(&assumed.well_defined, fact, runtime)?;
             self.validate_store(&assumed.store_and_infer, fact)?;
             let atomic = match fact {
@@ -1785,17 +1973,67 @@ impl LeanCompiler {
                 "WD/Fact",
                 "Atomic WD has another subject.",
             )),
+            (FactWellDefinedProof::ForallFact(proof), Fact::ForallFact(fact)) => {
+                self.compile_forall_wd(fact, proof, runtime)
+            }
+            (FactWellDefinedProof::ForallFact(_), _) => Err(LeanCompileError::new(
+                "WD/ForallSubject",
+                "Quantified WD evidence has another source fact family.",
+            )),
             (
                 FactWellDefinedProof::AndFact { .. }
                 | FactWellDefinedProof::ChainFact { .. }
                 | FactWellDefinedProof::OrFact(_)
                 | FactWellDefinedProof::ExistFact(_)
-                | FactWellDefinedProof::ForallFact(_)
                 | FactWellDefinedProof::ForallFactWithIff(_)
                 | FactWellDefinedProof::NotForall(_),
                 _,
             ) => Err(LeanCompileError::unsupported("WD/CompoundFact")),
         }
+    }
+
+    // The goal's WD scope predates the named theorem's separate truth scope.
+    // Its actual parameter/domain producers cannot be replaced by body IDs.
+    fn compile_forall_wd(
+        &mut self,
+        fact: &ForallFact,
+        proof: &ForallFactWellDefinedProof,
+        runtime: &Runtime,
+    ) -> Result<(), LeanCompileError> {
+        self.scopes.push(CompilerScope {
+            env: Some(proof.local_env.clone()),
+            ..CompilerScope::default()
+        });
+        let compiled = self.compile_forall_wd_body(fact, proof, runtime);
+        self.scopes.pop();
+        compiled
+    }
+
+    fn compile_forall_wd_body(
+        &mut self,
+        fact: &ForallFact,
+        proof: &ForallFactWellDefinedProof,
+        runtime: &Runtime,
+    ) -> Result<(), LeanCompileError> {
+        // Reuse the same binder/domain replay, but emit no declaration or
+        // truth proof. In particular, then-WD never assumes a conclusion.
+        self.compile_forall_head(
+            fact,
+            &proof.introduced_params,
+            &proof.assumed_dom_facts,
+            runtime,
+        )?;
+        if proof.then.len() != fact.then_facts.len() {
+            return Err(LeanCompileError::new(
+                "WD/ForallThenArity",
+                "Quantified conclusion WD has the wrong ordered stage arity.",
+            ));
+        }
+        for (fact, wd) in fact.then_facts.iter().zip(&proof.then) {
+            let fact: Fact = fact.clone().into();
+            self.compile_fact_wd(wd, &fact, runtime)?;
+        }
+        Ok(())
     }
 
     // Endpoints have already been certified by the owning verify/argument stage.
@@ -2109,6 +2347,12 @@ impl LeanCompiler {
         goal: &AtomicFact,
         runtime: &Runtime,
     ) -> Result<String, LeanCompileError> {
+        if matches!(goal, AtomicFact::EqualFact(_)) {
+            return Err(LeanCompileError::new(
+                "KnownAtomic/Family",
+                "Non-equality citation evidence cannot select the equality family.",
+            ));
+        }
         let resolved = self.resolve_fact(proof.cite_fact_id, runtime)?;
         let cited = match &resolved {
             Fact::AtomicFact(cited) => cited,
@@ -3084,6 +3328,200 @@ fn unsupported_atomic_builtin(
             LeanCompileError::unsupported("Atomic/BuiltinRule")
         }
     }
+}
+
+fn success_object_wd<'a>(
+    result: &'a VerifyObjWellDefinedResult,
+    expected: &Obj,
+) -> Result<&'a ObjWellDefinedProof, LeanCompileError> {
+    match result {
+        VerifyObjWellDefinedResult::Success(wd) => {
+            ensure_object(expected, wd)?;
+            Ok(wd)
+        }
+        VerifyObjWellDefinedResult::Failed { .. } => Err(LeanCompileError::new(
+            "Declaration/WD",
+            "A successful declaration has failed value WD.",
+        )),
+    }
+}
+
+fn alias_equality_subject<'a>(
+    fact: &'a Fact,
+    parameter: &BoundName,
+    value: &Obj,
+) -> Result<&'a Obj, LeanCompileError> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::EqualFact(equal)) if equal.right.ir() == value.ir() => {
+            match &equal.left {
+                Obj::Identifier(IdentifierObj::Plain { id, name })
+                    if *id == parameter.id && name == &parameter.name =>
+                {
+                    Ok(&equal.left)
+                }
+                _ => Err(LeanCompileError::new(
+                    "Declaration/StoreSubject",
+                    "The stored equality names another declaration.",
+                )),
+            }
+        }
+        _ => Err(LeanCompileError::new(
+            "Declaration/StoreSubject",
+            "The stored equality has another value or orientation.",
+        )),
+    }
+}
+
+fn verified_subject(result: &VerifyFactResult) -> Option<Fact> {
+    match result {
+        VerifyFactResult::Equality(result) => match result.as_ref() {
+            VerifyEqualityResult::Success(proof) => {
+                Some(Fact::AtomicFact(AtomicFact::EqualFact(proof.fact.clone())))
+            }
+            _ => None,
+        },
+        VerifyFactResult::AtomicExceptEquality(result) => match result.as_ref() {
+            VerifyAtomicExceptEqualityFactResult::Success(proof) => {
+                Some(Fact::AtomicFact(proof.fact.clone()))
+            }
+            _ => None,
+        },
+        VerifyFactResult::ForallFact(result) => match result.as_ref() {
+            VerifyForallFactResult::Success(proof) => Some(Fact::ForallFact(proof.fact().clone())),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn validate_statement_capture(
+    source: &Stmt,
+    result: &ExecStmtResult,
+) -> Result<(), LeanCompileError> {
+    let matches = match (source, result) {
+        (Stmt::Fact(fact), ExecStmtResult::Fact(ExecFactStmtResult::Success(proof))) => {
+            verified_subject(&proof.verify_result).as_ref() == Some(fact)
+        }
+        (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(stmt))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(proof)),
+            )),
+        ) => stmt == &proof.statement,
+        (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjEqualStmt(stmt))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(proof)),
+            )),
+        ) => stmt == &proof.statement,
+        (
+            Stmt::By(ByStmt::ByThmStmt(stmt)),
+            ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))),
+        ) => {
+            stmt.call == proof.call
+                && verified_subject(&proof.selected_proof).as_ref()
+                    == Some(&Fact::AtomicFact(stmt.selected_fact.clone()))
+        }
+        _ => return Err(LeanCompileError::unsupported("Theorem/ProofStepCapture")),
+    };
+    if matches {
+        Ok(())
+    } else {
+        Err(LeanCompileError::new(
+            "Theorem/ProofStepCapture",
+            "The executed statement differs from this source proof step.",
+        ))
+    }
+}
+
+// Validate substitution against captured objects only. This neither creates
+// fresh source IDs nor invokes Runtime instantiation or verification.
+fn instantiated_object_matches(
+    expected: &Obj,
+    actual: &Obj,
+    substitution: &HashMap<IdentifierId, Obj>,
+) -> bool {
+    if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = expected {
+        if let Some(argument) = substitution.get(id) {
+            return argument.ir() == actual.ir();
+        }
+    }
+    match (expected, actual) {
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(b)),
+        ) => {
+            instantiated_object_matches(&a.left, &b.left, substitution)
+                && instantiated_object_matches(&a.right, &b.right, substitution)
+        }
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(b)),
+        ) => {
+            instantiated_object_matches(&a.base, &b.base, substitution)
+                && instantiated_object_matches(&a.exponent, &b.exponent, substitution)
+        }
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        _ => expected.ir() == actual.ir(),
+    }
+}
+
+fn instantiated_fact_matches(
+    expected: &Fact,
+    actual: &Fact,
+    substitution: &HashMap<IdentifierId, Obj>,
+) -> bool {
+    match (expected, actual) {
+        (Fact::AtomicFact(expected), Fact::AtomicFact(actual))
+            if expected.prop_name() == actual.prop_name()
+                && atomic_fact_has_positive_polarity(expected)
+                    == atomic_fact_has_positive_polarity(actual) =>
+        {
+            let left = atomic_fact_args_ref(expected);
+            let right = atomic_fact_args_ref(actual);
+            left.len() == right.len()
+                && left
+                    .iter()
+                    .zip(right)
+                    .all(|(a, b)| instantiated_object_matches(a, b, substitution))
+        }
+        _ => false,
+    }
+}
+
+fn conjunction_projection(proof: &str, index: usize, count: usize) -> String {
+    let mut proof = proof.to_string();
+    for _ in 0..index {
+        proof = format!("(And.right {proof})");
+    }
+    if index + 1 < count {
+        proof = format!("(And.left {proof})");
+    }
+    proof
 }
 
 fn validate_namespace(value: &str) -> Result<(), LeanCompileError> {
