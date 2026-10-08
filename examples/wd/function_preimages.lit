@@ -49,3 +49,13 @@ forall p preimage(divide, 3):
     p $in cart(R, R)
     p(2) != 0
     divide(p(1), p(2)) = 3
+
+# A singleton target connects the two distinct constructors.
+
+forall q preimage(square, 4):
+    q $in preimage_set(square, {4})
+
+forall q preimage_set(square, {4}):
+    q $in preimage(square, 4)
+
+by extension preimage(square, 4) = preimage_set(square, {4})

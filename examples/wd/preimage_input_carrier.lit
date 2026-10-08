@@ -1,0 +1,26 @@
+# Tracer: certified preimages remain subsets of their complete input carrier.
+# Before (missing bounded subset route):
+# preimage_set(square, {4}) $in power_set(R)
+# Former behavior: no proof of the required preimage subset at the WD ceiling.
+# Now: domain construction evidence supplies this same inclusion.
+# Boundary: this does not widen R to N or omit callable guards/target WD.
+# Run: target/release/litex -strict -lang en -f examples/wd/preimage_input_carrier.lit
+
+have fn square(x R) R = x^2
+preimage(square, 4) $subset R
+preimage_set(square, {4}) $subset R
+preimage_set(square, {4}) $in power_set(R)
+
+have fn reciprocal(x R: x != 0) R = 1 / x
+preimage(reciprocal, 0) $subset R
+preimage_set(reciprocal, {}) $in power_set(R)
+
+have fn divide(a, b R: b != 0) R = a / b
+preimage_set(divide, {3}) $subset cart(R, R)
+preimage_set(divide, {3}) $in power_set(cart(R, R))
+
+template<I, S, T set, map fn(x S) T, family fn(index I) power_set(T)>:
+    have fn inverse_images(index I) power_set(S) = preimage_set(map, family(index))
+
+forall I, S, T set, map fn(x S) T, family fn(index I) power_set(T), index I:
+    \inverse_images<I, S, T, map, family>(index) $in power_set(S)

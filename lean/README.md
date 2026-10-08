@@ -1,490 +1,114 @@
-# StmtResult-to-Lean Compiler
+# Initial Litex Lean object interface
 
-`StmtResultToLeanCompiler` is the only active Litex-to-Lean implementation. Its
-Rust implementation is the root-crate module and binary under
-`../src/stmt_result_to_lean_compiler/`; this directory owns the Lean ABI, generated
-examples, and the stable `stmt_result_to_lean_compiler.sh` entrypoint. The compiler reads
-the kernel's recursive `StmtResult`; it does not use the old universal-object
-output stage. That legacy implementation is archived under
-`../tmp/compile_to_lean_legacy/` and is not part of the Rust build. Both
-The single-file `litex -isolated -f <input> -lean <output>` command routes
-through the active compiler. Markdown-bundle compilation remains available as
-a Rust API rather than a CLI command.
-Source-level migration from that archive is tracked explicitly in
-[`legacy_parity.md`](legacy_parity.md); archived Rust and its universal-object
-ABI are never copied as implementation dependencies.
+This directory implements the initial object construction interface and a
+checked numeric interoperability example. A Litex-to-Lean compiler, proof
+replay engine and complete source mathematical model remain unimplemented.
 
-The package retains the established `Litex` namespace and reports
-`Litex.abiVersion = 2` to distinguish the current wrapper ABI from the archived
-universal-object ABI.
+The accepted object, compilation and native-consumer contracts are recorded
+in [DESIGN.md](DESIGN.md), including the current verified scope and next work.
 
-`Litex/Core.lean` is the single semantic bridge header. It defines every
-compiler concept that interprets Litex through Lean and Mathlib, including
-`Same`, `Set`, `In`, numeric carriers, `AsReal`, `Lt`, and `Le` together with
-their bridge/transport interface. `Litex/Rules.lean` contains only concrete
-theorems selected by verifier certificates; it introduces no second semantic
-layer. `Litex.lean` is the public umbrella module: generated files import only
-`Litex`, while this file gathers `Core`, `Rules`, and future supported modules
-such as theorem or strategy libraries.
-
-## Semantic Identity Is Not Host Equality
-
-Litex uses **membership-oriented, representation-independent semantics**.
-Lean's `Eq` is homogeneous: `x = y` requires `x` and `y` to inhabit the same
-Lean type, after which equality supports native rewriting and dependent
-transport. `Litex.Same` is instead heterogeneous semantic equality across
-representations. It can relate values carried by different Lean types when a
-reviewed bridge establishes that they denote the same mathematical value.
-It is not simply `HEq`: `Same` deliberately includes mathematical
-identifications such as compatible natural, integer, real, and complex
-representations.
-
-`Litex.In x S` classifies the value represented by `x`: it says that this
-semantic value has a `Same` representative in the exact carrier `S.Carrier`.
-Proving another membership adds knowledge about `x`; it does not retype or
-replace `x`. Conceptually, one Litex mathematical value may therefore be
-viewed as an equivalence class of host representations under `Same`, although
-the implementation keeps representatives and evidence explicit rather than
-constructing that quotient.
-
-The global identity relation is:
-
-```text
-Lean Eq ⊆ Litex.Same  via Same.ofEq
-Litex.Same --reviewed same-carrier, injective observation--> Lean Eq
-```
-
-The inclusion is strict in general. Having the same Lean host type makes
-native equality well-formed, but does not make it follow from `Same`. For
-example, two `Litex.Set` structures may be extensionally `Same` while their
-exact `Carrier` fields differ, so they need not be equal Lean structures. By
-contrast, `Same.complexNativeEq` recovers `x = y` from `Same x y` when
-`x y : ℂ` because the native complex observation is faithful. No global
-`Same → Eq` rule exists, so heterogeneous semantic equality cannot silently
-become a native Lean rewrite. See the
-[compiler semantic contract](../src/stmt_result_to_lean_compiler/README.md#membership-oriented-semantics-and-domain-directed-host-carriers)
-for the complete binder and evidence policy.
-
-## Set-Kind Parameters (Target ABI)
-
-Litex distinguishes an ordinary set domain from the special `set` parameter
-kind:
-
-```text
-forall x S    means  x $in S
-forall A set  means  $is_set(A)
-```
-
-The second line does not mean `A $in Litex.Set`. `Litex.Set` is the Lean
-structure that packages one exact carrier; it is not a source-level universal
-set of all sets. The source runtime already retains `InFact(x, S)` for the
-first form and `IsSetFact(A)` for the second.
-
-The next incompatible compiler ABI must preserve that evidence explicitly:
+Every object has a host payload and its own WD proof:
 
 ```lean
-Litex.IsSet A
-Litex.IsSet.rep A hA : Litex.Set
+structure Obj {M : Semantics} (α : Type) [Representation M α] where
+  val : α
+  wd : WD (M := M) val
 ```
 
-For the current universe-zero set slice, the intended binder translation is:
+The actual source is universe-polymorphic. The semantic parameter M is fixed
+for a compiled unit. Representation fixes a carrier's meaning and admissibility;
+there is no default instance for arbitrary Lean types. These parameters are
+visible obligations, not global project axioms. The example-only
+`InteropExamples/NumericModel.lean` supplies a concrete instance of the current
+numeric contract; it does not establish correctness of a complete Litex model
+or select the production numeric encoding.
 
-```litex
-forall A set, x A:
-    x = x
-```
+## Files
+
+- `Litex/Semantics.lean`: standard-set tags and the explicit model contract.
+- `Litex/Objects.lean`: Representation, WD, mandatory Obj, heterogeneous Same,
+  membership, sethood, native complex leaves and standard-set objects.
+- `Litex/Arithmetic.lean`: owned AddObj/DivObj payloads and constructors.
+- `Litex/NumericRules.lean`: a proved addition-by-zero rule from the model contract.
+- `Litex/NativeBridge.lean`: domain-restricted, faithful native numeric conversions.
+- `Litex.lean`: public import.
+- `examples/ObjectMvp.lean`: number, R/C, generic object, addition, division
+  and nested division constructions under supplied facts.
+- `InteropExamples/`: paired source/expected targets, numeric model, adapter
+  and native consumer; see [its README](InteropExamples/README.md).
+- `tests/`: interface/interop checks and four intentionally rejected inputs.
+- `check.py`: reproducible focused checks with local output files.
+
+Core N/Z/Q have standard-set leaves; their full exported membership hierarchy
+is future work. The example model interprets all five as actual numeric range
+sets. R/C have explicit semantic membership and inclusion contracts.
+Numeric leaves currently use native ℂ payloads. Decimal lowering, other native
+numeric carriers, tuples, finite sets and functions follow later.
+
+## Object construction
+
+Under the fixed M and registered host representations:
 
 ```lean
-∀ {αA : Type 1} (A : αA) (hA : Litex.IsSet A)
-  {αx : Type} (x : αx)
-  (hx : Litex.In x (Litex.IsSet.rep A hA)),
-  Litex.Same x x
+Litex.number (M := M) (1 : ℂ)
+Litex.add a b haC hbC
+Litex.div a b haC hbC hb0
 ```
 
-Set operations consume the exact representative selected by `hA`; source
-identity remains `Litex.Same A B`. Core must additionally prove that `Same`
-set objects have extensionally equivalent selected representatives. A bare
-existential representative is not an adequate interface without this
-coherence law.
+Operands already carry WD. Addition's root WD stores the two C-memberships;
+division additionally stores semantic nonzero. Returned objects contain that
+WD. Domain proofs do not enter the payload or select the mathematical meaning.
+Same compares fixed mathematical denotations, not the raw host values or WD
+proofs. Membership observes both represented arguments.
 
-The same property governs `have A set`, but construction differs from
-quantification. A checked definition such as `have A set = R` may use the
-compiler-owned exact representation `A : Litex.Set := Litex.R` and then retain
-`IsSet.own A`. A bare `have A set` remains fail-closed until compiler has a
-kernel-checked fresh-set construction that exposes only `IsSet A`; it must not
-silently make `A` the empty set or introduce an axiom.
+An identifier stays Obj α after obtaining R/C membership. An arithmetic
+expression returns Obj (AddObj α β) or Obj (DivObj α β), rather than native
+arithmetic replacing the owned representation. Native numeric correspondence
+is part of the explicit Semantics contract and is instantiated in the example
+model for a checked native consumer.
 
-This section specifies the target, not current implementation. The v2 emitter
-still narrows `forall A set` to `(A : Litex.Set)` and erases its retained
-`IsSetFact` to `True`. Migrating Core, every set-kind compiler path, generated
-examples, and the Lean gates together will require an `abiVersion` bump.
+## Check
 
-The wrapper library itself is axiom-free. Example 25 is the only intentional
-generated trust boundary: source `abstract_prop` creates its exact opaque
-predicate interface and explicit source `trust` creates its exact proposition
-axiom. Both declarations remain visibly spelled `axiom` inside the generated
-file's source namespace; no verifier inference or ordinary proof route can
-manufacture one.
-
-The implemented scope is deliberately small:
-
-- primitive cross-carrier and native-operation representation edges are
-  compiler-owned and private to `Core.lean`;
-- `Litex.Same` is the public heterogeneous relation generated by those
-  closed edges plus reflexivity, symmetry, and transitivity;
-- `Litex.Set` packages the exact carrier of a Litex set;
-- `Litex.In` defines heterogeneous membership through `Same`;
-- `Litex.Fn s S` is one unary proof-carrying function layer whose domain and
-  codomain may inhabit different Lean universes;
-- `Litex.fnSet s S` packages that carrier as an exact Litex set, including
-  function-valued codomains used by multi-layer application;
-- `Litex.fnApply f hf x hx` consumes both function and argument membership;
-- `Litex.fnApplyOwn f hf x hx` is the exact-carrier path used by compiler-
-  constructed named functions while retaining both checked memberships;
-- `Litex.FnWhere`, `fnSetWhere`, `fnApplyWhere`, and
-  `fnApplyWhereOwn` retain source-domain clauses as explicit call proofs;
-- `Litex.FnTelescope` retains every parameter, membership proof, ordered
-  domain requirement, and exact codomain of one multi-parameter source layer;
-- `fnTelescopeSet`, `fnTelescopeApply`, and `fnTelescopeApplyOwn` preserve that
-  layer without target-language currying;
-- `N`, `Z`, `Q`, `R`, and `C` use Mathlib's native carriers;
-- `NPos` is the exact subtype `{n : ℕ // 0 < n}` rather than an alias of `N`;
-- `RPos` is the exact subtype `{r : ℝ // 0 < r}` rather than an alias of `R`;
-- `ZStar`, `QStar`, `RStar`, and `CStar` are exact certified complex-source
-  subtypes retaining base membership and semantic nonzero evidence;
-- verifier-selected membership widens constructively through
-  `N → Z → Q → R → C` without changing the source value's Lean type;
-- `setBuilder` represents a predicate-defined subset by a subtype carrier;
-- `AsReal x r` means that `r : ℝ` is a real representative of `x`;
-- `OrderValue z := z.re` is the single canonical Mathlib-ordered observation
-  of the compiler's numeric `ℂ` carrier;
-- custom `Litex.Lt` and `Litex.Le` reduce to native real `<` and `≤` through
-  `OrderValue`; verifier-owned `R` evidence controls source admission.
-
-The declaration-preserving compiler showcase is executable in
-[`showcases/litex_to_lean_mathlib_pipeline`](../showcases/litex_to_lean_mathlib_pipeline/README.md).
-It proves that the first `n` positive odd integers sum to `n^2` and compiles
-the source Result only into the declarations represented by the `.lit` file.
-The same showcase now includes a verifier-complete `property_flow.lit`
-companion that defines `is_square_of`, proves a general nonnegativity law,
-constructs the odd-sum instance, and composes a new conclusion. It is kept out
-of generated output until named predicate consumers are supported. A separate,
-non-generated adapter authored outside ToLean mirrors that property over the
-native integer/`Finset.Icc` interface, and a downstream consumer specializes
-it at `n = 100`. Run the real kernel gate with:
+The package pins Lean and Mathlib v4.31.0. In an initialized Lake project, run:
 
 ```sh
-lake build LitexToMathlibPipeline
+cd lean
+lake build Litex
+python3 check.py
 ```
 
-Both Litex induction cases are inline: there is no singleton, sum-step, or
-square-step wrapper theorem and no explicit theorem-invocation command. The
-generated module contains no source-less `Native` theorem, certificate, or
-consumer. Mathlib API design is owned by external AI or human-authored adapter
-files, not the compiler.
-
-Every compiler example is a checked-in generated pair:
-
-```text
-examples/<name>.lit   authoritative verified Litex source
-examples/<name>.lean  generated compiler output; never hand-edited
-```
-
-The current record has 67 pairs and extends through Example 68 (number 42 is
-intentionally absent). Examples 67 and 68 are the analysis-facing additions:
-local use of the general real least-upper-bound theorem and membership through
-a transparent local typed set definition.
-
-`./stmt_result_to_lean_compiler.sh generate examples` executes every source, reads its
-recursive Result, and refreshes the paired Lean file. `./stmt_result_to_lean_compiler.sh check
-examples` recompiles each source in memory, rejects checked-in drift, and
-submits every generated file to the real Lean kernel.
-
-Library callers that need diagnostics without a partial proof artifact use
-`compile_litex_source_to_lean_compilation_report`. Successful
-whole-file construction returns `Complete`; an unsupported Result route returns
-`Incomplete` with one structured diagnostic
-and an import-only Lean file marked unusable as a proof artifact. Verification
-or Result-to-Lean construction failure remains an error, and file commands continue to
-preserve any existing output on failure.
-
-To refresh one pair after editing its Litex source, pass only the source path;
-compiler infers the same-name `.lean` output:
+For an existing pinned Mathlib cache, check without rebuilding or modifying it:
 
 ```sh
-./stmt_result_to_lean_compiler.sh compile examples/1_SetSystem.lit
+python3 lean/check.py --packages-dir /path/to/cached/lake/packages
 ```
 
-The first executable example translates the intended source shape
+The script checks the pinned Mathlib revision, compiles to local
+`lean/.lake/build/lib/lean`, verifies objects and the native consumer, requires
+four negative inputs to fail, and audits 19 public declarations for project
+axioms and proof holes. It also verifies the compiled adapter consumes its
+expected target theorem and does not import archived Litex outputs. The negative fixtures
+are intentionally invalid and must not be treated as ordinary build targets.
 
-```text
-have A set = R
-have B set = C
-forall a A, b B:
-    a = b
-    =>:
-        b $in A
-        a $in B
-```
+Core laws remain model/representation parameters. The closed native example
+discharges its model parameters with NumericModel; it adds no hidden model
+hypotheses to the native theorem. No automated theorem replay, source proof
+search or full-system mathematical soundness is established by this gate.
 
-to two checked named-set aliases, two complex-valued binders, separate
-membership hypotheses, and one heterogeneous `Litex.Same` hypothesis. Because
-this tracer is a source `sketch`, compiler emits it inside `__Sketch01`, nested
-under the namespace derived from the source filename. The theorem retains the
-`__fact0` and `__h0_*` naming convention:
+The initial check on October 8, 2026 passed with Lean 4.31.0: all six source
+modules/examples/checks compiled with warnings as errors, all three negative
+fixtures were rejected, and the eight audited declarations used only
+`propext`, `Classical.choice` and `Quot.sound`. A separate stdin `import Litex`
+check resolved the new Obj/add/div interfaces from local outputs.
 
-```lean
-theorem __fact0 :
-  ∀ (a : ℂ) (__h0_1 : Litex.In a A)
-    (b : ℂ) (__h0_2 : Litex.In b B)
-    (__h0_3 : Litex.Same a b),
-    Litex.In b A ∧ Litex.In a B
-```
+The subsequent interoperability gate passed all 14 Lean files, four negative
+fixtures, 19 axiom audits and the compiled adapter's live target-proof dependency.
+The native Final file also passed through normal `lake env lean`.
+All seven paired source statements passed the separate strict Litex gate.
 
-See `examples/1_SetSystem.lit` and its generated
-`examples/1_SetSystem.lean`. Compiler examples live exclusively in that
-directory.
+## Legacy archive
 
-The comparison tracer in `examples/2_OrderSystem.lit` translates
-
-```text
-forall a, b R:
-    a < b
-    =>:
-        a <= b
-```
-
-as complex-valued binders with `In`, `Lt`, and `Le` propositions.  The proof
-is the ordinary real theorem `< → ≤` on the canonical `Complex.re` view.
-The same tracer includes `a < b`, `b < c → a < c`; compiler consumes the
-stable verifier `OrderTransitivity` certificate and calls `Litex.Lt.trans`.
-
-The first non-`sketch` tracer is `examples/3_AtomicEquality.lit`:
-
-```text
-1 = 1
-2 + 3 = 5
-```
-
-Both are ordinary top-level facts. Numerals and `+` lower to native `ℂ`
-expressions, while equality lowers to `Litex.Same`. Reflexivity consumes the
-verifier's `ObjectReflexivity` certificate. Closed addition consumes a checked
-rational-normalization certificate, replays its numeric WD membership facts,
-and invokes `norm_num` only after compiler independently validates that exact
-source equality with Litex's rational-expression evaluator.
-
-The first function tracer is `examples/4_FunctionSet.lit`:
-
-```text
-forall s, S set, x s, f fn(y s) S:
-    f(x) = f(x)
-```
-
-The current v2 emitter makes the set parameters `s S : Litex.Set`; this is the
-legacy lowering identified in the target-ABI section above, not the final
-source-semantic contract. The values `x` and `f` keep independent Lean
-carriers rather than being retyped to those sets. Their source parameter facts
-become `hx : Litex.In x s` and `hf : Litex.In f (Litex.fnSet s S)`. Each
-application is emitted as
-`Litex.fnApply f hf x hx`, using the exact function-membership FactId and the
-exact argument-membership WD edge selected by the verifier. The result already
-has carrier `S.Carrier`; no transport back to a native predicate is added.
-
-The named-function adapter supports real-valued unary functions and one
-multi-parameter source layer. Example 12 keeps the identity path and adds `inc(x R) = x + 1` plus
-`reciprocal(x R: x != 0) = 1 / x`. Total definitions use `Litex.Fn`;
-domain-constrained definitions use `Litex.FnWhere`. Calls consume the exact
-function membership, argument membership, and ordered domain-clause WD proofs
-selected by the verifier. Their results are native `ℝ` carrier values, while
-the checked reduction back to the source `ℂ` expression uses the closed
-`Same.realAddComplex` / `Same.realDivComplex` congruence routes. Example 23
-uses `FnTelescope` for quantified and named `f(a,b)`, including ordered domain
-requirements, and keeps the whole named carrier as `@f`. Example 24 adds
-dependent parameter and return carriers plus compound anonymous `R -> R`
-values in the former source language. Its first two source declarations now
-fail parsing under the fixed-function-carrier rule; the paired generated Lean
-file remains historical compilation evidence. Anonymous bodies replay their exact occurrence, owned binder scope,
-parameter premise, and typed return-membership closure; direct calls also
-validate the verifier's exact `FunctionHead` child. Other construction
-carriers and operators outside `+`, `-`, `*`, and `/` remain fail-closed.
-
-The second statement tranche is recorded by examples 8–11. Source `thm`,
-`claim`, and `example` blocks compile to ordinary Lean proof scopes. `by cases`
-and `by contra` replay their verifier-owned branch and contradiction evidence
-without target-side proof search. A one-witness positive existential becomes
-an ordinary Lean `Exists` package containing both explicit `Litex.In` and the
-body proof. For a user set, the existential quantifies an independent Lean
-carrier; for the standard numeric sets, the current numeric representation is
-`ℂ`. Elimination uses classical choice already provided by Lean and projects
-the two retained roles; there is no wrapper-to-native inverse transport API.
-
-Minimal `let x = value` and `have x S = value` statements now create ordinary
-Lean definitions. Their stored facts still use `Litex.Same` and `Litex.In`, so
-Lean's inferred type never substitutes for the Litex membership check.
-
-Example 13 adds concrete predicate definitions. A generated Lean predicate
-contains both the source parameter-membership requirements and its defining
-clauses. Direct reduction and `by def` replay the verifier's ordered parameter
-and clause proofs; bodyless and abstract predicates remain unsupported.
-
-Example 14 adds predicate-defined set aliases and nonempty choice. A set
-builder is the exact subtype carrier already defined by `Litex.setBuilder`.
-The membership constructor transports a whole-side equality such as `x = 1`
-from the source value to its exact base representative. It also supports a
-one-parameter concrete predicate such as `is_one(x)`: construction unfolds
-the checked predicate components, and inferred reuse projects the predicate
-through `SetBuilderPredicateProjection`. Base membership still uses
-`Litex.Rules.inBaseOfInSetBuilder`. `have x S` produces an `S.Carrier`
-value only after replaying `Litex.Set.Nonempty S`; it does not transport a
-wrapper value back to another Lean type.
-
-Example 15 preserves every verifier-selected builtin-strategy layer around
-its concrete proof tree. Real `+`, `-`, `*`, and `/` membership call separate
-proved `Litex.Rules.complex*InR` adapters; division keeps its denominator WD
-evidence outside the proof-free native term. Nonnegative addition and the two
-strict variants call separate proved rules, including both direct
-`AddPositiveRightStrict` evidence and the fingerprinted registered
-`order.add_positive_of_nonnegative_positive` route. Nonnegative
-multiplication and division now have separate nonnegative and strict adapters.
-They lower zero-ended comparisons to `Positive` / `Nonnegative`, use Mathlib's
-canonical real zero, and therefore require no `RealCoherence` axiom.
-
-Example 16 adds the standard numeric-set membership hierarchy. A premise such
-as `Litex.In n Litex.N` is replayed through proved adjacent rules
-`inZOfInN`, `inQOfInZ`, `inROfInQ`, and `inCOfInR`; wider targets compose
-those fixed bridges in order. The generated binder remains `n : ℂ` with its
-original membership proof. This base hierarchy does not erase refined-set
-predicates; Example 20 adds the first reviewed refined carrier separately.
-
-Example 17 adds base numeric-carrier arithmetic closure. Complex `+`, `-`,
-`*`, and `/` target `C` through the verifier's zero-child closure certificate;
-the source WD graph still retains the operand memberships and division domain
-check. Integer `+`, `-`, and `*` consume the verifier's ordered conjunction of
-two `Z` memberships, select native integer witnesses, and construct the result
-witness through proved `Same` bridges. Integer remainder remains fail-closed
-because a complex-valued source term has no reviewed native `%` representation.
-
-Example 18 adds rational `+`, `-`, `*`, `/` and natural `+`, `*` closure.
-Each verifier route now records an operator-specific certificate rather than a
-generic explanation label. Rational proofs choose native `ℚ` witnesses;
-natural proofs choose native `ℕ` witnesses. Both families perform the native
-operation and rebuild the exact result membership while leaving the source
-binder in `ℂ`. Rational integer power remains fail-closed even though its exact
-`Pow` certificate is retained, because the source power term has no reviewed
-compiler representation yet.
-
-Example 19 restores native mathematical constants without a universal object
-carrier. Source `i`, `e`, and `pi` lower respectively to `Complex.I`, the
-complex embedding of `Real.exp 1`, and the complex embedding of `Real.pi`.
-Verifier-selected rules prove `i $in C` and `e, pi $in R`; complex membership
-for the two real constants reuses those exact FactIds through `inCOfInR`.
-Example 21 additionally gives `e` and `pi` exact positive-real constructors.
-
-Example 20 adds the first exact refined numeric carrier. `Litex.NPos` is the
-subtype of native naturals satisfying `0 < n`; a checked positive numeral
-constructs that subtype through `complexEqNatInNPos`, and `N+ → N` uses the
-generic subtype-to-base projection through `inNOfInNPos`. Other refined sets,
-including `Q+`, remain fail-closed instead of inheriting this predicate by
-analogy.
-
-Example 21 adds the exact positive-real carrier and restores the archived
-compiler's `PositiveRealMembership` elimination without its universal object.
-Closed `1`, `e`, and `pi` construct `Litex.RPos`; `R+ → R → C` uses proved
-membership projections; and a verifier-inferred positivity FactId is
-materialized as `positiveOfInRPos`. The reverse generic constructor from an
-independent `In r R` proof and `Lt 0 r` remains fail-closed because those
-premises may choose different real representatives.
-
-Example 22 adds exact nonzero numeric carriers for `Z*`, `Q*`, `R*`, and
-`C*`. Each carrier retains a complex source representative together with its
-base-set membership and `¬ Litex.Same source 0` certificates. The four
-constructors consume the verifier's ordered base-membership and `!= 0`
-premises; projections recover both nonzero and base/supercarrier facts; and
-adjacent widening composes `Z* → Q* → R* → C*`. Forall construction
-materializes each verifier-inferred nonzero FactId as a local proved `have`.
-No `RealCoherence` premise or new `Same` edge is introduced. Standalone closed
-reflection such as `1 $in Z*` remains fail-closed because closed `!=` replay is
-still outside the reviewed comparison proof constructor.
-
-Example 23 adds exact multi-layer unary application. Source `g(a)(b)` remains
-two application layers in IR and generated Lean. The first layer consumes the
-stored membership of `g` plus `a $in S`, then binds its exact result once as
-`__fn_layer1`. The verifier-owned prefix node certifies that this result has
-carrier `Litex.Fn T U`; the second layer calls `fnApplyOwn` with
-`In.own (fnSet T U) __fn_layer1` and the separate proof of `b $in T`. The
-compiler follows the same prefix DAG recursively, so a three-layer Rust
-regression is accepted without a two-layer special case. A single source
-layer with multiple parameters, such as `f(a, b)`, remains fail-closed and is
-never translated as Lean currying.
-
-Example 54 adds an exact complex-algebraic equality adapter. Source `i` remains
-native `Complex.I`; the verifier-owned certificate fixes the exact equality,
-and generated Lean closes the corresponding native equality before lifting it
-with `Litex.Same.ofEq`. The reviewed surface covers `+`, `-`, `*`, and closed
-denominators such as `1 / i`. Powers and symbolic denominators remain
-fail-closed; no new `Same` edge, axiom, or semantic header theorem is added.
-
-Sketch is a real source scope, not an example-file wrapper. Each top-level
-sketch is constructed as `__Sketch01`, `__Sketch02`, and so on. Its compiler environment
-starts with the facts and symbols visible outside the sketch, but definitions
-and FactIds created inside it do not leak back out. Facts written directly at
-file level, including the function tracer above, remain direct declarations in
-the file namespace.
-
-Build and audit with:
-
-```sh
-lake build
-./stmt_result_to_lean_compiler.sh compile examples/1_SetSystem.lit
-./stmt_result_to_lean_compiler.sh check examples
-```
-
-Generated files contain no `sorry`. The compiler Rust tests also pass a
-Litex-verified but unsupported proof route and require compilation to fail
-closed. This project declares no new Lean axioms.
-
-The representation registry is closed: downstream Lean code cannot install a
-new primitive or derived `Same` edge. Ordinary source equality also never
-creates such an edge. General order never compares independently selected
-`AsReal` witnesses: it observes the current numeric term through
-`OrderValue : ℂ → ℝ`, so `Lt → Le`, irrefl, and transitivity are direct
-Mathlib theorems. No coherence certificate or project axiom is declared.
-
-`universe u` and `Litex.u := Type u` use Lean's ordinary universe hierarchy;
-they do not create a separate Litex universe. Mathlib's usual numeric carriers
-therefore work directly. `Same` currently relates different carriers at the
-same Lean universe level; cross-universe edges are not part of this slice.
-This does not prevent higher-order sets: `Litex.Set.{0}` lives in `Type 1`, so
-it can be the carrier of `Litex.Set.{1}`. Only the real-comparison layer is
-confined to ordinary `Type`, since its representatives are Mathlib values in
-universe zero. A generated example for higher-order set construction is
-deferred until the Result reader and Lean-source constructor support its Litex statement form; it is
-not represented by hand-written code under `examples/`.
-
-The compiler currently constructs Lean source only for the reviewed Result routes exercised by the
-twenty-two numbered examples. Checked named aliases of `R` and `C`, top-level atomic
-equality, nonnegative integer numerals, addition, legacy-v2 arbitrary set
-parameters,
-unary function sets, named unary application, basic proof scopes,
-case/contradiction proofs, one-witness positive existentials, minimal native
-object definitions, unary real named functions with `+`, `-`, `*`, `/`
-and source-domain clauses, concrete predicate reduction, whole-side equality
-and one-parameter concrete-predicate set-builder membership, and checked
-nonempty choice are supported. Real `+`, `-`, `*`, `/` carrier closure and
-additive nonnegative/one-strict sign strategies are also supported, as is
-standard membership widening through `N → Z → Q → R → C`. Complex and
-rational carrier closure support all four basic operators; integer closure
-supports `+`, `-`, and `*`; natural closure supports `+` and `*`. Other atomic
-predicates and arithmetic operators are not implemented yet. Native `i`, `e`,
-and `pi` terms and their base-carrier memberships are supported, as are the
-exact positive-natural carrier, closed positive numerals, and `N+ → N`.
-The exact positive-real carrier supports closed positive numerals, `e`, `pi`,
-`R+ → R/C`, and elimination to strict positivity.
-The exact nonzero numeric carriers support construction from base membership
-plus source non-equality, elimination back to source non-equality, base and
-supercarrier projection, and `Z* → Q* → R* → C*` widening.
-Remaining boundaries include integer remainder, rational power, the remaining
-positive/negative refined numeric carriers, closed non-equality reflection,
-bare arbitrary-set choices (`have A set`), multi-parameter or
-multi-layer functions, nested set-builder binder expressions, richer set
-constructors, and broader production code-generation are not implemented yet.
+The former `lean/` project and `litex_semantics_in_lean/` draft were moved intact
+to the local ignored workspace `scripts/legacy_to_lean/`. Old generated proofs,
+receipts and tools are historical material; their original paths/commands are
+not current build instructions. The archive is not part of the public tree.

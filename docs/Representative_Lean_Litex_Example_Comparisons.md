@@ -34,8 +34,10 @@ either project may continue to evolve.
 For the larger design argument, see the [Litex
 Blueprint](https://litexlang.com/doc/Litex_Blueprint). For language details,
 see the [Manual](Manual.md) and [CLI reference](cli.md). The current
-`src/` build has no Lean compiler entrypoint. The [Lean artifacts](../lean/)
-and the semantic discussion below describe an earlier experiment and design
+`src/` build has no Lean compiler entrypoint. The [Lean object interface](../lean/)
+is an initial bootstrap, without a compiler or theorem replay. Earlier material
+is archived locally under `scripts/legacy_to_lean/`, which is excluded from Git.
+The semantic discussion below describes that earlier experiment and design
 target; this page does not certify current compiler coverage.
 
 The complete `Group` comparison is kept in the Blueprint rather than repeated
@@ -792,6 +794,5 @@ example collection:
   and the complete `Group` comparison;
 - [Manual](https://litexlang.com/doc/Manual): syntax and proof forms;
 - [CLI reference](cli.md): current entrypoints, output, sessions, and modules;
-- [Litex-to-Lean compiler
-  README](../lean/README.md):
-  retained experimental ABI notes; see the [current build boundary](cli.md#lean-compiler-boundary).
+- [Lean object interface README](../lean/README.md):
+  initial object-interface work; see the [current build boundary](cli.md#lean-compiler-boundary).

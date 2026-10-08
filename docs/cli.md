@@ -422,10 +422,11 @@ Mount soft Failed → session `FailToImport`. For `-f`, soft Failed on the
 
 The current Cargo build registers only the `litex` binary and does not include
 the earlier `stmt_result_to_lean_compiler` Rust module. There is no working
-Lean compilation command in this CLI. The wrapper and generated examples in
-[`lean/`](../lean/) are retained experimental artifacts; the wrapper refers
-to a binary target that is absent from the current build. They are not
-acceptance evidence for a current `src/` verification run.
+Lean compilation command in this CLI. [`lean/`](../lean/) contains an initial
+Lean object interface, without a compiler or theorem replay. The earlier
+wrapper and generated examples are archived locally under
+`scripts/legacy_to_lean/`, which is excluded from Git. They are not acceptance
+evidence for a current `src/` verification run.
 
 ## Practical Recipes
 

@@ -2209,6 +2209,15 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("SubsetFact")),
+                ("rule", string("FunctionPreimageSubsetOfInputCarrier")),
+                ("construction", super::wd_by_def::project_preimage_construction(&p.construction, runtime)),
+                ("carrier_match", super::searched::project_equal_searched(&p.carrier_match, runtime)),
+            ])
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

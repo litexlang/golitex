@@ -6151,6 +6151,8 @@ constant(2) $in fn_range(constant)
 
 **Public forms:** `preimage(f, y)` and `preimage_set(f, Y)`.
 
+The names `preimage` and `preimage_set` belong to these binary object constructors. Use another name, such as `source_input`, for a proof witness or variable.
+
 Both objects are sets of legal input assignments in the complete domain of `f`, including every declared guard. The point form selects inputs with `f(x) = y`; the set form selects inputs with `f(x) $in Y`. A point target can itself be a set. Neither form chooses a root or requires an injective or surjective function. Targets need not lie in the declared return bound; proving an empty fiber is a separate obligation.
 
 WD checks both operands and a checked complete callable domain. The set form also checks target sethood. Multiple parameters use an ordered input tuple of exactly that arity; unary tuple arguments and returned functions retain their original call shape. Membership verification checks the input conditions and output condition; stored membership supplies those facts for later use.
@@ -11964,8 +11966,10 @@ foundation and are allowed under strict mode.
 
 Lean rechecking is a separate experimental direction. The current `src/lib.rs`
 and `Cargo.toml` do not build a Litex-to-Lean compiler, and the current CLI has
-no Lean output flag. The [Lean artifacts](../lean/) preserve an earlier
-compiler/ABI experiment; their presence does not certify a run of this kernel.
+no Lean output flag. The [Lean object interface](../lean/) is an initial
+bootstrap, without a compiler or theorem replay. Earlier compiler/ABI material
+is archived locally under `scripts/legacy_to_lean/`, which is excluded from Git;
+it does not certify a run of this kernel.
 
 ### Documentation and test contract
 

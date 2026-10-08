@@ -193,6 +193,8 @@ release thm newton::fixed_point(sqrt(2))
 </tbody>
 </table>
 
+**把数学变成一张关系图。** Litex 可以把定义、定理和已验证事实组织成关系图：节点表示数学内容，连线展示它们之间的依赖，帮助读者追溯一项结论使用了什么。可以到 [litexlang.com](https://litexlang.com) 试用 Litex 生成的可交互关系图，探索数学源码中的知识与联系。
+
 **把数学写成便于阅读的文稿。** 数学源码也可以转换为 LaTeX，用于讲义和文稿。左侧是一条数学事实，右侧是实际生成的排版源码；转换负责呈现，数学验证另行进行：
 
 <table data-blueprint-conversion="latex" style="table-layout:fixed;width:100%;border-collapse:collapse;">
@@ -214,6 +216,8 @@ release thm newton::fixed_point(sqrt(2))
 **4. AI 可以和人一起，在明确反馈中推进证明。**
 
 AI 可以协助尝试不同思路、补充步骤和修正错误；人关注问题本身与数学意义；Litex 提供验证反馈。三者共同工作的过程，应当能够积累可检查的成果。
+
+![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
 
 ```mermaid
 flowchart LR
@@ -320,28 +324,22 @@ $is_positive(a)
 `sin(x)!=0`、`cos(x)!=0` 证据，再匹配同一个角度。`TanCotProduct` 叶子
 不另开前提搜索；Detailed 同时保留它与外层良定义的真实引用。
 `TanSquareReciprocalCosine` 对应 `1+tan(x)^2=1/cos(x)^2`，需要
-`cos(x)!=0`。这两条固定规律没有恢复一般三角展开器，
-[持久例子](../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
-保存了迁移前后的行为。
+`cos(x)!=0`。这两条固定规律没有恢复一般三角展开器。
 
 负或非正公共因子的反序规则分两步：验证因子符号，再验证反向的参数序。
 四种比较、四种乘法位置各有独立证据，共16个叶子。固定的反写或更强
 前提候选沿用调用权限，并保留实际验证结果；没有新增全局规范化或搜索
-阶段，既有正/非负路线仍优先。[弱序例子](../examples/proof_nodes/atomic/by_builtin_rule/nonpositive_common_factor_weak_order.lit)
-保留了严格序不能使用零因子的边界。
+阶段，既有正/非负路线仍优先。严格不等式的反序不能使用零因子。
 
 第一象限规则读取实际的严格条件 `0<x<pi/2`，保留两个来源引用。两条
 非零规则供正切、余切既有的良定义检查消费；四个独立的 Less/Greater
-叶子在良定义之后证明正性。没有新增搜索阶段或持久状态，
-[持久例子](../examples/proof_nodes/atomic/by_builtin_rule/trig_first_quadrant.lit)
-检查了这些生产和消费路线。
+叶子在良定义之后证明正性。没有新增搜索阶段或持久状态。
 
 固定区间检查接受负半圆周端点的四种字面写法及比较的两个方向，保留实际
 验证的条件。已存数字等式的替换沿原标量表达式遍历：先匹配整个已知值，
 再处理子项；处理子项后形成的父表达式也可匹配已知值。选中的等式都有
 真实引用，剩余目标沿用既有权限，表项顺序不会决定原子项是否仍可匹配。
-[数字替换例子](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
-记录了这个行为，搜索阶段与持久状态保持原合同。
+搜索阶段与持久状态保持原合同。
 
 | 作者的数学工作 | Litex 的常规验证工作 |
 | --- | --- |
@@ -498,7 +496,7 @@ forall x, y R:
 <details>
 <summary><strong>例子 2：Lean 与 Litex 如何复用一条全称事实</strong></summary>
 
-**用户提供的全称事实。** 已证明的 `forall` 事实会进入上下文；遇到同形目标时，Litex 匹配参数并检查实例化后的前提。 整条来源复用也会对齐嵌套 `forall` 前提和 `exist!` witness 中的绑定变量；完整载体、条件和自由对象身份必须保持，WD 仍按调用者原权限检查。这是结构比较，不增加搜索路线。[嵌套来源例子](../examples/proof_nodes/forall/known_source_nested_unique.lit)保存了实际存储事实的引用。
+**用户提供的全称事实。** 已证明的 `forall` 事实会进入上下文；遇到同形目标时，Litex 匹配参数并检查实例化后的前提。 整条来源复用也会对齐嵌套 `forall` 前提和 `exist!` witness 中的绑定变量；完整载体、条件和自由对象身份必须保持，WD 仍按调用者原权限检查。这是结构比较，不增加搜索路线。验证记录保留实际存储事实的引用。
 
 第二个数学事实是：若实数 `a > 10`，则存在一个正实数严格小于 `a`。前面建立的全称事实随后可直接用于具体的 `a`。
 
@@ -1064,7 +1062,7 @@ success
 
 第二句停在条件检查：零不属于这个函数的定义域。我们修正输入后，可以沿着此前已经接受的定义和事实继续探索。普通验证失败会丢弃失败语句自身的候选状态，保留已经接受的上下文；进程退出后，则需要重新加载或重放这些成果。
 
-这让反馈直接回到数学问题：输入是否满足条件？下一步能否成立？人和 AI 都可以据此调整下一次尝试。REPL 的启动与恢复方式见 [CLI 文档](cli.md#session-flag)。
+这让反馈直接回到数学问题：输入是否满足条件？下一步能否成立？人和 AI 都可以据此调整下一次尝试。
 
 <a id="workflow-reuse"></a>
 
@@ -1159,7 +1157,7 @@ missing != singleton(0)
 
 后一个文件沿用已有定理，继续处理自己的问题。随着这样的成果逐渐积累，定义、构造和定理可以组织为模块，供同一项目或其他项目使用。读者得到的也就不止是一篇完成的证明，还有下一次工作可以依赖的数学词汇与知识。
 
-积累之后，还需要看清联系。新版 CLI 的 `-graph` 可以展示定义、定理与已接受事实之间的数学依赖。例如，上面定理在新文件中的应用，会连接到原来的定理，便于读者回看它使用了什么。图的查看方式见 [依赖图指南](cli.md#mathematical-dependency-graphs-preview)。
+积累之后，还需要看清联系。新版 CLI 的 `-graph` 可以展示定义、定理与已接受事实之间的数学依赖。例如，上面定理在新文件中的应用，会连接到原来的定理，便于读者回看它使用了什么。
 
 *当前 CLI 已提供原生数学依赖图；网页目前展示的是 Normal JSON 的关系投影，原生图尚未接入。依赖图用于查看知识关系，独立证明复核仍是第 5 节讨论的另一项工作。*
 
@@ -1226,13 +1224,13 @@ double newton_sqrt_two_step(double x) {
 }
 ```
 
-Python/C 抽取仍限于支持的计算片段。生成代码使用浮点数；Litex 检查的是源码中的数学关系，浮点舍入与溢出还需要另行分析。具体支持范围见 [代码抽取指南](../src/extract_executable_code/README.md)。
+Python/C 抽取仍限于支持的计算片段。生成代码使用浮点数；Litex 检查的是源码中的数学关系，浮点舍入与溢出还需要另行分析。
 
 </details>
 
 **用于阅读与交流。** 数学源码也可以转换为 LaTeX，让定义、公式和证明步骤进入讲义或文稿。例如，可以对上面的两文件项目使用 `-latex -document -lang zh -f example.lit`，得到可继续编辑的 LaTeX 文稿。
 
-LaTeX 转换负责呈现数学源码，数学验证需要单独运行。格式与使用方式见 [LaTeX 转换指南](cli.md#latex-conversion-preview)。
+LaTeX 转换负责呈现数学源码，数学验证需要单独运行。
 
 从一次探索到一个可复用的定理，再到计算和交流，这是第三个特点希望连接起来的数学工作流。一次证明的完成，也应当成为下一次数学工作的开始。
 

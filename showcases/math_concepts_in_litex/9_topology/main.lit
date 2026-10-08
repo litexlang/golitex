@@ -1,36 +1,36 @@
 template<X, Y set, f fn(x X) Y, U power_set(Y)>:
-    have preimage power_set(X) = {x X: f(x) $in U}
+    have inverse_image power_set(X) = {x X: f(x) $in U}
 
 thm preimage_carrier:
-    ? forall X, Y set, f fn(x X) Y, U power_set(Y), p \preimage<X,Y,f,U>:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y), p \inverse_image<X,Y,f,U>:
         p $in X
-    \preimage<X,Y,f,U> = {x X: f(x) $in U}
-    p $in \preimage<X,Y,f,U>
+    \inverse_image<X,Y,f,U> = {x X: f(x) $in U}
+    p $in \inverse_image<X,Y,f,U>
     p $in X
 
 thm preimage_value:
     ? forall X, Y set, f fn(x X) Y, U power_set(Y), p X:
-        p $in \preimage<X,Y,f,U>
+        p $in \inverse_image<X,Y,f,U>
         =>:
             f(p) $in U
-    \preimage<X,Y,f,U> = {x X: f(x) $in U}
-    p $in \preimage<X,Y,f,U>
+    \inverse_image<X,Y,f,U> = {x X: f(x) $in U}
+    p $in \inverse_image<X,Y,f,U>
     f(p) $in U
 
 thm preimage_intro:
     ? forall X, Y set, f fn(x X) Y, U power_set(Y), p X:
         f(p) $in U
         =>:
-            p $in \preimage<X,Y,f,U>
-    \preimage<X,Y,f,U> = {x X: f(x) $in U}
-    p $in \preimage<X,Y,f,U>
+            p $in \inverse_image<X,Y,f,U>
+    \inverse_image<X,Y,f,U> = {x X: f(x) $in U}
+    p $in \inverse_image<X,Y,f,U>
 
-thm preimage_set:
+thm preimage_powerset:
     ? forall X, Y set, f fn(x X) Y, U power_set(Y):
-        \preimage<X,Y,f,U> $in power_set(X)
-    \preimage<X,Y,f,U> = {x X: f(x) $in U}
-    \preimage<X,Y,f,U> $subset X
-    \preimage<X,Y,f,U> $in power_set(X)
+        \inverse_image<X,Y,f,U> $in power_set(X)
+    \inverse_image<X,Y,f,U> = {x X: f(x) $in U}
+    \inverse_image<X,Y,f,U> $subset X
+    \inverse_image<X,Y,f,U> $in power_set(X)
 
 template<A, B, CarrierC set, f fn(x A) B, g fn(y B) CarrierC>:
     have fn composition(x A) CarrierC = g(f(x))
@@ -148,7 +148,7 @@ prop TopologicalMapSetting(X set, open_sets_X power_set(power_set(X)), Y set, op
 prop ContinuousMapSetting(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
     $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
     forall open_Y open_sets_Y:
-        \preimage<X,Y,f,open_Y> $in open_sets_X
+        \inverse_image<X,Y,f,open_Y> $in open_sets_X
 
 prop is_continuous(X set, open_sets_X power_set(power_set(X)), Y set, open_sets_Y power_set(power_set(Y)), f fn(x X) Y):
     $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
@@ -158,9 +158,9 @@ prop ContinuousCompositionSetting(A set, open_sets_A power_set(power_set(A)), B 
     $TopologicalSpaceSetting(B, open_sets_B)
     $TopologicalSpaceSetting(CarrierC, open_sets_C)
     forall open_B open_sets_B:
-        \preimage<A,B,f,open_B> $in open_sets_A
+        \inverse_image<A,B,f,open_B> $in open_sets_A
     forall open_C open_sets_C:
-        \preimage<B,CarrierC,g,open_C> $in open_sets_B
+        \inverse_image<B,CarrierC,g,open_C> $in open_sets_B
 
 # Tracer theorem: settings carry the ambient hypotheses; the proof works with
 # the native preimage set builders directly.
@@ -171,12 +171,12 @@ thm continuous_composition:
             $is_continuous(A, open_sets_A, CarrierC, open_sets_C, \composition<A,B,CarrierC,f,g>)
     claim:
         ? forall target_open open_sets_C:
-            \preimage<A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open> $in open_sets_A
-        have middle_open open_sets_B = \preimage<B,CarrierC,g,target_open>
-        have nested_preimage open_sets_A = \preimage<A,B,f,middle_open>
+            \inverse_image<A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open> $in open_sets_A
+        have middle_open open_sets_B = \inverse_image<B,CarrierC,g,target_open>
+        have nested_preimage open_sets_A = \inverse_image<A,B,f,middle_open>
         release thm composition_type(A,B,CarrierC,f,g)
-        release thm preimage_set(A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open)
-        have direct_preimage power_set(A) = \preimage<A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open>
+        release thm preimage_powerset(A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open)
+        have direct_preimage power_set(A) = \inverse_image<A,CarrierC,\composition<A,B,CarrierC,f,g>,target_open>
         by extension:
             ? nested_preimage = direct_preimage
             claim:
@@ -219,35 +219,35 @@ prop has_closed_preimages(X set, open_sets_X power_set(power_set(X)), Y set, ope
     forall F power_set(Y):
         $is_closed(Y, open_sets_Y, F)
         =>:
-            $is_closed(X, open_sets_X, \preimage<X,Y,f,F>)
+            $is_closed(X, open_sets_X, \inverse_image<X,Y,f,F>)
 
 thm preimage_of_relative_complement:
     ? forall X, Y set, f fn(x X) Y, F power_set(Y):
-        \preimage<X,Y,f,set_minus(Y, F)> = set_minus(X, \preimage<X,Y,f,F>)
+        \inverse_image<X,Y,f,set_minus(Y, F)> = set_minus(X, \inverse_image<X,Y,f,F>)
     by extension:
-        ? \preimage<X,Y,f,set_minus(Y, F)> = set_minus(X, \preimage<X,Y,f,F>)
+        ? \inverse_image<X,Y,f,set_minus(Y, F)> = set_minus(X, \inverse_image<X,Y,f,F>)
         claim:
-            ? forall point \preimage<X,Y,f,set_minus(Y, F)>:
-                point $in set_minus(X, \preimage<X,Y,f,F>)
+            ? forall point \inverse_image<X,Y,f,set_minus(Y, F)>:
+                point $in set_minus(X, \inverse_image<X,Y,f,F>)
             release thm preimage_carrier(X,Y,f,set_minus(Y,F),point)
             release thm preimage_value(X,Y,f,set_minus(Y,F),point)
             point $in X
             f(point) $in set_minus(Y, F)
             not f(point) $in F
             claim:
-                ? not point $in \preimage<X,Y,f,F>
+                ? not point $in \inverse_image<X,Y,f,F>
                 by contra:
-                    ? not point $in \preimage<X,Y,f,F>
-                    point $in \preimage<X,Y,f,F>
+                    ? not point $in \inverse_image<X,Y,f,F>
+                    point $in \inverse_image<X,Y,f,F>
                     f(point) $in F
                     impossible not f(point) $in F
-            point $in set_minus(X, \preimage<X,Y,f,F>)
-        by def \preimage<X,Y,f,set_minus(Y,F)> $subset set_minus(X,\preimage<X,Y,f,F>)
+            point $in set_minus(X, \inverse_image<X,Y,f,F>)
+        by def \inverse_image<X,Y,f,set_minus(Y,F)> $subset set_minus(X,\inverse_image<X,Y,f,F>)
         claim:
-            ? forall point set_minus(X, \preimage<X,Y,f,F>):
-                point $in \preimage<X,Y,f,set_minus(Y, F)>
+            ? forall point set_minus(X, \inverse_image<X,Y,f,F>):
+                point $in \inverse_image<X,Y,f,set_minus(Y, F)>
             point $in X
-            not point $in \preimage<X,Y,f,F>
+            not point $in \inverse_image<X,Y,f,F>
             f(point) $in Y
             claim:
                 ? not f(point) $in F
@@ -255,12 +255,12 @@ thm preimage_of_relative_complement:
                     ? not f(point) $in F
                     f(point) $in F
                     release thm preimage_intro(X,Y,f,F,point)
-                    point $in \preimage<X,Y,f,F>
-                    impossible not point $in \preimage<X,Y,f,F>
+                    point $in \inverse_image<X,Y,f,F>
+                    impossible not point $in \inverse_image<X,Y,f,F>
             f(point) $in set_minus(Y, F)
             release thm preimage_intro(X,Y,f,set_minus(Y, F),point)
-            point $in \preimage<X,Y,f,set_minus(Y, F)>
-        by def set_minus(X,\preimage<X,Y,f,F>) $subset \preimage<X,Y,f,set_minus(Y,F)>
+            point $in \inverse_image<X,Y,f,set_minus(Y, F)>
+        by def set_minus(X,\inverse_image<X,Y,f,F>) $subset \inverse_image<X,Y,f,set_minus(Y,F)>
 
 # Together, these two directional theorems are the closed-set
 # characterization of continuity.
@@ -273,13 +273,13 @@ thm continuous_map_has_closed_preimages:
         ? forall F power_set(Y):
             $is_closed(Y, open_sets_Y, F)
             =>:
-                $is_closed(X, open_sets_X, \preimage<X,Y,f,F>)
+                $is_closed(X, open_sets_X, \inverse_image<X,Y,f,F>)
         set_minus(Y, F) $in open_sets_Y
-        \preimage<X,Y,f,set_minus(Y, F)> $in open_sets_X
+        \inverse_image<X,Y,f,set_minus(Y, F)> $in open_sets_X
         release thm preimage_of_relative_complement(X, Y, f, F)
-        \preimage<X,Y,f,set_minus(Y, F)> = set_minus(X, \preimage<X,Y,f,F>)
-        set_minus(X, \preimage<X,Y,f,F>) $in open_sets_X
-        by def $is_closed(X, open_sets_X, \preimage<X,Y,f,F>)
+        \inverse_image<X,Y,f,set_minus(Y, F)> = set_minus(X, \inverse_image<X,Y,f,F>)
+        set_minus(X, \inverse_image<X,Y,f,F>) $in open_sets_X
+        by def $is_closed(X, open_sets_X, \inverse_image<X,Y,f,F>)
     by def $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
 
 thm closed_preimages_imply_continuous:
@@ -290,37 +290,37 @@ thm closed_preimages_imply_continuous:
             $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
     claim:
         ? forall U open_sets_Y:
-            \preimage<X,Y,f,U> $in open_sets_X
+            \inverse_image<X,Y,f,U> $in open_sets_X
         U $in power_set(Y)
         U $subset Y
         set_minus(Y, set_minus(Y, U)) = U
         set_minus(Y, set_minus(Y, U)) $in open_sets_Y
         by def $is_closed(Y, open_sets_Y, set_minus(Y, U))
-        $is_closed(X, open_sets_X, \preimage<X,Y,f,set_minus(Y, U)>)
-        set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>) $in open_sets_X
+        $is_closed(X, open_sets_X, \inverse_image<X,Y,f,set_minus(Y, U)>)
+        set_minus(X, \inverse_image<X,Y,f,set_minus(Y, U)>) $in open_sets_X
         claim:
-            ? \preimage<X,Y,f,U> = set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
+            ? \inverse_image<X,Y,f,U> = set_minus(X, \inverse_image<X,Y,f,set_minus(Y, U)>)
             by extension:
-                ? \preimage<X,Y,f,U> = set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
+                ? \inverse_image<X,Y,f,U> = set_minus(X, \inverse_image<X,Y,f,set_minus(Y, U)>)
                 claim:
-                    ? forall point \preimage<X,Y,f,U>:
-                        point $in set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
+                    ? forall point \inverse_image<X,Y,f,U>:
+                        point $in set_minus(X, \inverse_image<X,Y,f,set_minus(Y, U)>)
                     point $in X
                     f(point) $in U
                     claim:
-                        ? not point $in \preimage<X,Y,f,set_minus(Y, U)>
+                        ? not point $in \inverse_image<X,Y,f,set_minus(Y, U)>
                         by contra:
-                            ? not point $in \preimage<X,Y,f,set_minus(Y, U)>
-                            point $in \preimage<X,Y,f,set_minus(Y, U)>
+                            ? not point $in \inverse_image<X,Y,f,set_minus(Y, U)>
+                            point $in \inverse_image<X,Y,f,set_minus(Y, U)>
                             f(point) $in set_minus(Y, U)
                             not f(point) $in U
                             impossible f(point) $in U
-                    point $in set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>)
+                    point $in set_minus(X, \inverse_image<X,Y,f,set_minus(Y, U)>)
                 claim:
-                    ? forall point set_minus(X, \preimage<X,Y,f,set_minus(Y, U)>):
-                        point $in \preimage<X,Y,f,U>
+                    ? forall point set_minus(X, \inverse_image<X,Y,f,set_minus(Y, U)>):
+                        point $in \inverse_image<X,Y,f,U>
                     point $in X
-                    not point $in \preimage<X,Y,f,set_minus(Y, U)>
+                    not point $in \inverse_image<X,Y,f,set_minus(Y, U)>
                     f(point) $in Y
                     claim:
                         ? f(point) $in U
@@ -329,11 +329,11 @@ thm closed_preimages_imply_continuous:
                             not f(point) $in U
                             f(point) $in set_minus(Y, U)
                             release thm preimage_intro(X,Y,f,set_minus(Y, U),point)
-                            point $in \preimage<X,Y,f,set_minus(Y, U)>
-                            impossible not point $in \preimage<X,Y,f,set_minus(Y, U)>
+                            point $in \inverse_image<X,Y,f,set_minus(Y, U)>
+                            impossible not point $in \inverse_image<X,Y,f,set_minus(Y, U)>
                     release thm preimage_intro(X,Y,f,U,point)
-                    point $in \preimage<X,Y,f,U>
-        \preimage<X,Y,f,U> $in open_sets_X
+                    point $in \inverse_image<X,Y,f,U>
+        \inverse_image<X,Y,f,U> $in open_sets_X
     by def $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
     by def $is_continuous(X, open_sets_X, Y, open_sets_Y, f)
 
@@ -356,7 +356,7 @@ thm continuous_image_of_compact_is_compact:
             fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(cover))
             =>:
                 exist J power_set(Index) st {$is_finite_set(J), fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))}
-        have fn pullback_cover(index Index) open_sets_X = \preimage<X,Y,f,cover(index)>
+        have fn pullback_cover(index Index) open_sets_X = \inverse_image<X,Y,f,cover(index)>
         claim:
             ? K $subset family_union(fn_range(pullback_cover))
             claim:
@@ -372,7 +372,7 @@ thm continuous_image_of_compact_is_compact:
                 target_open = cover(selected_index)
                 f(point) $in cover(selected_index)
                 release thm preimage_intro(X,Y,f,cover(selected_index),point)
-                point $in \preimage<X,Y,f,cover(selected_index)>
+                point $in \inverse_image<X,Y,f,cover(selected_index)>
                 point $in pullback_cover(selected_index)
                 pullback_cover(selected_index) $in fn_range(pullback_cover)
                 point $in family_union(fn_range(pullback_cover))
@@ -404,9 +404,9 @@ thm continuous_image_of_compact_is_compact:
                     \restricted<Index,open_sets_X,pullback_cover,J>(selected_index) = pullback_cover(selected_index)
                     source_point $in pullback_cover(selected_index)
                     cover(selected_index) $in open_sets_Y
-                    \preimage<X,Y,f,cover(selected_index)> $in open_sets_X
-                    pullback_cover(selected_index) = \preimage<X,Y,f,cover(selected_index)>
-                    source_point $in \preimage<X,Y,f,cover(selected_index)>
+                    \inverse_image<X,Y,f,cover(selected_index)> $in open_sets_X
+                    pullback_cover(selected_index) = \inverse_image<X,Y,f,cover(selected_index)>
+                    source_point $in \inverse_image<X,Y,f,cover(selected_index)>
                     release thm preimage_value(X,Y,f,cover(selected_index),source_point)
                     f(source_point) $in cover(selected_index)
                     \restricted<Index,open_sets_Y,cover,J>(selected_index) $in fn_range(\restricted<Index,open_sets_Y,cover,J>)

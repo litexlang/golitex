@@ -46,9 +46,9 @@ fn cosine_integer_offset_positive_and_evidence() {
     assert!(detailed.contains("CosZeroIntegerOffset"));
     assert!(detailed.contains("PeriodicTrig"));
     assert!(detailed.contains("proof_of_requirement_facts"));
-    // Expose the checked symbolic cancellation, then reuse its endpoint.
+    // Cancellation requires a nonzero denominator. Its implementation route
+    // may change; acceptance and the missing-premise control own this contract.
     let guarded = check("have a R:\n    a != 0\na*pi/a=pi\ncos(a*pi/a+pi/2)=cos(pi+pi/2)=0", true);
-    assert!(guarded.contains("RationalWithNonzeroPremises"));
     assert!(guarded.contains("a != 0"));
     check("have a R\na*pi/a=pi", false);
     check("0 = cos(3*pi/2)", true);

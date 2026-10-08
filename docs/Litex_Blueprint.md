@@ -172,48 +172,6 @@ release obj def newton::newton_sqrt_two
 release thm newton::fixed_point(sqrt(2))
 ```
 
-**See how knowledge connects.** The CLI's mathematical dependency graph connects definitions, theorems, and accepted facts. These bubbles show a local view of a square function: its definition supports a nonnegativity theorem, which can then be applied to concrete inputs.
-
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 410" width="880" height="410" role="img" aria-labelledby="blueprint-bubbles-title-en" style="display:block;max-width:100%;height:auto;margin:12px auto;">
-<title id="blueprint-bubbles-title-en">A local view of definitions, theorems and facts</title>
-<defs><marker id="blueprint-bubbles-arrow-en" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 1 L 8 5 L 0 9" fill="none" stroke="#92a6ae" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
-<filter id="blueprint-bubbles-shadow-en" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#28434b" flood-opacity="0.07"/></filter></defs>
-<rect x="1" y="1" width="878" height="408" rx="22" fill="#fafcfb" stroke="#e7eeeb"/>
-<g font-family="Arial, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, sans-serif">
-<circle cx="40" cy="382" r="5" fill="#386b53"/><text x="54" y="387" font-size="13" fill="#667b74">Definition</text>
-<circle cx="164" cy="382" r="5" fill="#66538e"/><text x="178" y="387" font-size="13" fill="#667b74">Theorem</text>
-<circle cx="284" cy="382" r="5" fill="#3f6b8e"/><text x="298" y="387" font-size="13" fill="#667b74">Fact</text>
-<path data-from="declaration:1" data-to="declaration:0" data-kind="uses_definition" d="M200 231 C239 227 257 226 299 224" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
-<path data-from="declaration:1" data-to="fact:f1161" data-kind="uses_definition" d="M180 184 C203 158 222 148 238 135" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
-<path data-from="declaration:0" data-to="fact:f810" data-kind="theorem_instance" d="M472 197 C523 180 576 159 632 151" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
-<path data-from="declaration:0" data-to="fact:f977" data-kind="theorem_instance" d="M473 244 C527 258 580 277 638 285" fill="none" stroke="#a4b8bd" stroke-width="1.7" stroke-linecap="round" marker-end="url(#blueprint-bubbles-arrow-en)"/>
-<text x="247" y="211" text-anchor="middle" font-size="12" fill="#83949a">Uses definition</text>
-<text x="548" y="161" text-anchor="middle" font-size="12" fill="#83949a">Theorem instance</text>
-<text x="551" y="283" text-anchor="middle" font-size="12" fill="#83949a">Theorem instance</text>
-<g data-source-id="declaration:1" data-node-kind="definition"><circle cx="122" cy="236" r="78" fill="#e8f5ef" stroke="#b5d6c4" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
-<text x="122" y="213" text-anchor="middle" font-size="12" fill="#386b53">Definition</text>
-<text x="122" y="241" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(x) = x²</text>
-<text x="122" y="267" text-anchor="middle" font-size="12" fill="#70817e">x ∈ ℝ</text>
-</g>
-<g data-source-id="declaration:0" data-node-kind="theorem"><circle cx="389" cy="221" r="87" fill="#eee9f8" stroke="#cbbde8" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
-<text x="389" y="198" text-anchor="middle" font-size="12" fill="#66538e">Theorem</text>
-<text x="389" y="226" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(x) ≥ 0</text>
-<text x="389" y="252" text-anchor="middle" font-size="12" fill="#70817e">for every real x</text>
-</g>
-<g data-source-id="fact:f1161" data-node-kind="fact"><circle cx="286" cy="93" r="62" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
-<text x="286" y="80" text-anchor="middle" font-size="12" fill="#3f6b8e">Fact</text>
-<text x="286" y="107" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(2) = 4</text>
-</g>
-<g data-source-id="fact:f810" data-node-kind="fact"><circle cx="703" cy="130" r="72" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
-<text x="703" y="117" text-anchor="middle" font-size="12" fill="#3f6b8e">Fact</text>
-<text x="703" y="144" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(2) ≥ 0</text>
-</g>
-<g data-source-id="fact:f977" data-node-kind="fact"><circle cx="711" cy="305" r="72" fill="#e9f2fa" stroke="#b8d1e6" stroke-width="1.2" filter="url(#blueprint-bubbles-shadow-en)"/>
-<text x="711" y="292" text-anchor="middle" font-size="12" fill="#3f6b8e">Fact</text>
-<text x="711" y="319" text-anchor="middle" font-size="20" font-weight="500" fill="#30444a">g(−2) ≥ 0</text>
-</g>
-</g></svg>
-
 **Put results to work in a calculation.** Supported computational fragments can be extracted as Python or C. For example, this piecewise definition of absolute value produces the Python code alongside it:
 
 <table data-blueprint-conversion="python" style="table-layout:fixed;width:100%;border-collapse:collapse;">
@@ -234,6 +192,8 @@ release thm newton::fixed_point(sqrt(2))
 </tr>
 </tbody>
 </table>
+
+**Turn mathematics into a graph of relationships.** Litex can organize definitions, theorems, and verified facts into a graph: nodes represent mathematical content, and edges show dependencies, helping readers trace what a conclusion relies on. Visit [litexlang.com](https://litexlang.com) to try Litex-generated interactive graphs and explore the knowledge and connections in mathematical source.
 
 **Write mathematics for others to read.** Mathematical source can also be converted to LaTeX for lecture notes or a manuscript. A mathematical fact appears on the left and its actual typesetting source on the right. Conversion handles presentation; mathematical verification is a separate step:
 
@@ -256,6 +216,8 @@ See [Section 3](#mathematical-workflow) for the complete definitions, proofs, an
 **4. AI can work with people to advance proofs through explicit feedback.**
 
 AI can help try different approaches, fill in steps, and correct errors. People focus on the problem and its mathematical meaning; Litex provides verification feedback. Their shared work should accumulate checkable results.
+
+![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
 
 ```mermaid
 flowchart LR
@@ -513,24 +475,20 @@ and the actual `sin(x)!=0` and `cos(x)!=0` evidence. The identity leaf then
 matches the same angle without another premise search. Detailed output keeps
 both the `TanCotProduct` leaf and the enclosing WD citations. The analogous
 `TanSquareReciprocalCosine` leaf needs `cos(x)!=0`. These are bounded fixed
-laws; they do not restore a general trigonometric normalizer. The
-[product tracer](../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
-records the before/after behavior.
+laws; they do not restore a general trigonometric normalizer.
 
 Negative/nonpositive common-factor rules are fixed order leaves with two
 mandatory stages: checked sign, then checked reversed argument comparison.
 Sixteen dedicated payloads cover four comparison targets and four product
 placements. Fixed converse/stronger-premise alternatives retain the inherited
 ceiling and chosen proof; no global normalization or search stage is added.
-Positive/nonnegative routes keep precedence. The [weak-order tracer](../examples/proof_nodes/atomic/by_builtin_rule/nonpositive_common_factor_weak_order.lit)
-also preserves the strict-versus-zero boundary.
+Positive/nonnegative routes keep precedence. Strict order reversal excludes a zero factor.
 
 First-quadrant leaves read the actual strict bounds `0<x<pi/2`, retaining
 both source citations. Two nonzero leaves supply the existing sine/cosine
 requirements during tangent/cotangent WD; four separate Less/Greater leaves
 certify positivity after WD. No new search stage or persistent state is
-introduced. The [quadrant tracer](../examples/proof_nodes/atomic/by_builtin_rule/trig_first_quadrant.lit)
-checks these producer and consumer paths.
+introduced.
 
 The fixed interval checker accepts four literal forms of the negative half-pi
 endpoint and both comparison directions, keeping the actually checked source
@@ -538,15 +496,14 @@ fact. Closed numeric equality substitution uses a single scalar-tree pass:
 whole known values win before children, and a rebuilt parent may use its
 known value. It cites the chosen equalities and keeps the residual verifier's
 permissions; table iteration order does not choose which original subterms
-remain visible. The [numeric tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
-checks this behavior without changing search stages or persistent state.
+remain visible. Search stages and persistent state keep their existing contracts.
 
 </details>
 
 <details>
 <summary><strong>Example 2: how Lean and Litex reuse a universal fact</strong></summary>
 
-**User-supplied universal facts.** A proved `forall` fact enters the context; when a same-shaped goal appears, Litex matches parameters and checks the instantiated premises. Whole-source replay also renames bound variables inside nested `forall` premises and `exist!` witness carriers. It preserves complete carriers, conditions and free owners, then checks WD under the caller's existing permissions. This is a structural comparison, without opening another search route. The [nested-source tracer](../examples/proof_nodes/forall/known_source_nested_unique.lit) records the actual stored-fact citation.
+**User-supplied universal facts.** A proved `forall` fact enters the context; when a same-shaped goal appears, Litex matches parameters and checks the instantiated premises. Whole-source replay also renames bound variables inside nested `forall` premises and `exist!` witness carriers. It preserves complete carriers, conditions and free owners, then checks WD under the caller's existing permissions. This is a structural comparison, without opening another search route. Verification records retain the actual stored-fact citation.
 
 The second mathematical fact is: if a real `a > 10`, then there exists a positive real strictly less than `a`. The earlier universal fact can then be used directly for a concrete `a`.
 
@@ -1121,7 +1078,7 @@ success
 
 The second statement stops at the condition check: zero is outside this function's domain. After correcting the input, we can continue from the definitions and facts already accepted. An ordinary verification failure discards the failing statement's candidate state and retains accepted context; after the process exits, that work must be loaded or replayed.
 
-Feedback returns directly to the mathematical question: does the input meet the conditions, and does the next step hold? People and AI can use the answers to revise their next attempt. See the [CLI guide](cli.md#session-flag) for starting and restoring a REPL.
+Feedback returns directly to the mathematical question: does the input meet the conditions, and does the next step hold? People and AI can use the answers to revise their next attempt.
 
 <a id="workflow-reuse"></a>
 
@@ -1216,7 +1173,7 @@ This example shows how knowledge accumulates during a proof and remains availabl
 
 The later file uses an established theorem to continue its own work. As results accumulate, definitions, constructions, and theorems can be organized into modules for use within the same project or in other projects. A finished proof leaves mathematical vocabulary and knowledge that the next piece of work can depend on.
 
-As knowledge grows, its connections matter too. The current CLI's `-graph` shows mathematical dependencies between definitions, theorems, and accepted facts. In this example, applying the theorem from a new file creates a connection to the original theorem, helping readers look back at what was used. See the [dependency graph guide](cli.md#mathematical-dependency-graphs-preview) for viewing it.
+As knowledge grows, its connections matter too. The current CLI's `-graph` shows mathematical dependencies between definitions, theorems, and accepted facts. In this example, applying the theorem from a new file creates a connection to the original theorem, helping readers look back at what was used.
 
 *The CLI provides native mathematical dependency graphs. The website currently displays a projection of Normal JSON; the native graph is not yet connected there. A dependency graph helps inspect knowledge relationships; independent proof rechecking is the separate work discussed in Section 5.*
 
@@ -1283,13 +1240,13 @@ double newton_sqrt_two_step(double x) {
 }
 ```
 
-Python/C extraction remains limited to supported computational fragments. The emitted code uses floating-point arithmetic: Litex checks the source mathematics, while rounding and overflow require separate analysis. See the [extraction guide](../src/extract_executable_code/README.md) for the supported subset.
+Python/C extraction remains limited to supported computational fragments. The emitted code uses floating-point arithmetic: Litex checks the source mathematics, while rounding and overflow require separate analysis.
 
 </details>
 
 **For reading and sharing.** Mathematical source can also be converted to LaTeX, bringing definitions, formulas, and proof steps into lecture notes or a manuscript. For example, `-latex -document -lang en -f example.lit` converts the two-file project above into an editable LaTeX document.
 
-LaTeX conversion presents the mathematical source; mathematical verification must be run separately. See the [LaTeX guide](cli.md#latex-conversion-preview) for formats and usage.
+LaTeX conversion presents the mathematical source; mathematical verification must be run separately.
 
 From an exploration to a reusable theorem, then to computation and communication: this is the mathematical workflow the third characteristic aims to connect. A finished proof should give the next piece of mathematics a place to begin.
 

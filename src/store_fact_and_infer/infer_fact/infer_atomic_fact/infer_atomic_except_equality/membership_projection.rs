@@ -100,7 +100,7 @@ impl Runtime {
     // second carrier). Skip repeated storage, while the local projection queue
     // still visits known carriers whose defining conditions arrived later.
     // This guard belongs to this projection rule, not to truth search/store.
-    fn store_new_set_builder_projection(
+    pub(super) fn store_new_set_builder_projection(
         &mut self,
         projected: &Fact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,

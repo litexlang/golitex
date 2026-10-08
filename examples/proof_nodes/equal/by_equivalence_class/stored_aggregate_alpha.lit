@@ -1,0 +1,15 @@
+# Stored aggregate equality survives bound-variable renaming.
+# Before: the same premise with freshly parsed summand binders was rejected.
+# forall f, g fn(index Z) R, m, n Z:
+#     m <= n
+#     sum(m, n, fn(source_index Z) R {f(source_index)}) = sum(m, n, fn(target_index Z) R {g(target_index)})
+#     =>:
+#         sum(m, n, fn(x Z) R {f(x)}) = sum(m, n, fn(y Z) R {g(y)})
+# Now: cite the original equality and structural alpha identities at both ends.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_equivalence_class/stored_aggregate_alpha.lit
+# Changed free functions, bodies, bounds and carriers are rejected by Rust controls.
+forall f, g fn(index Z) R, m, n Z:
+    m <= n
+    sum(m, n, fn(source_index Z) R {f(source_index)}) = sum(m, n, fn(target_index Z) R {g(target_index)})
+    =>:
+        sum(m, n, fn(x Z) R {f(x)}) = sum(m, n, fn(y Z) R {g(y)})
