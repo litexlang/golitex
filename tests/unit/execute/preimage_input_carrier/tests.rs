@@ -40,7 +40,7 @@ fn preimage_input_carrier_projects_construction_and_matching_evidence() {
     let mut rt = runtime();
     let run = rt.run_litex_code("have fn square(x R) R = x^2\npreimage_set(square, {4}) $subset R\n").unwrap();
     assert!(run.success);
-    let output = crate::json_output::project_run_normal(&run, &rt, "eval", None).stringify();
+    let output = crate::json_output::project_run_detailed(&run, &rt, "eval", None).stringify();
     assert!(output.contains("FunctionPreimageSubsetOfInputCarrier"));
     assert!(output.contains("construction"));
     assert!(output.contains("carrier_match"));

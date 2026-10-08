@@ -52,7 +52,7 @@ fn print_help_message() -> RuntimeResult<Vec<String>> {
         format!("{} -e <code>", bin),
         format!("{} -f <file>", bin),
         format!("{} -r <repository>", bin),
-        format!("{} -graph -f <file>", bin),
+        format!("{} -lean -f <file>", bin),
         format!("{} -extractpython <code>", bin),
         format!("{} -extractpython -f <file>", bin),
         format!("{} -extractpython -r <repository>", bin),
@@ -70,7 +70,7 @@ fn print_help_message() -> RuntimeResult<Vec<String>> {
         format!("{} -version", bin),
     ];
     let notes = vec![
-        "-graph with -e/-f/-r emits mathematical dependency JSON: definitions, theorems and accepted facts; proof commands are edge details.".to_string(),
+        "-lean -f emits Lean source by replaying supported successful verification results; standalone files only.".to_string(),
         "-session keeps the Runtime env open and continues as REPL after -e/-f/-r.".to_string(),
         "-strict forbids `trust` / `trust have` / user `axiom`; abstract predicate declarations and named foundation releases are allowed.".to_string(),
         "-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi selects JSON output language (default en; English language names also accepted).".to_string(),

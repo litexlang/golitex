@@ -9,6 +9,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     ListSetSubsetFromMembersBuiltinRuleProof,
     RealIntervalSubsetRealBuiltinRuleProof,
     SetBuilderSubsetOfParamSetBuiltinRuleProof,
+    FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof,
     SetMinusSubsetLeftBuiltinRuleProof,
     StandardSetSubsetBuiltinRuleProof,
     SubsetCartComponentwiseBuiltinRuleProof,
@@ -38,6 +39,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_en(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_en(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_en(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_en(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_en(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_en(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_en(),
@@ -62,6 +64,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_zh(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_zh(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_zh(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_zh(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_zh(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_zh(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_zh(),
@@ -86,6 +89,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_zh_hant(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_zh_hant(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_zh_hant(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_zh_hant(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_zh_hant(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_zh_hant(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_zh_hant(),
@@ -110,6 +114,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_fr(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_fr(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_fr(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_fr(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_fr(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_fr(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_fr(),
@@ -134,6 +139,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_ru(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_ru(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_ru(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_ru(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_ru(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_ru(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_ru(),
@@ -158,6 +164,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_es(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_es(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_es(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_es(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_es(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_es(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_es(),
@@ -182,6 +189,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_ar(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_ar(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_ar(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_ar(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_ar(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_ar(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_ar(),
@@ -206,6 +214,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_ja(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_ja(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_ja(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_ja(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_ja(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_ja(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_ja(),
@@ -230,6 +239,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_ko(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_ko(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_ko(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_ko(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_ko(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_ko(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_ko(),
@@ -254,6 +264,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(p) => p.rule_name_and_message_vi(),
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_vi(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_vi(),
+            Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_vi(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_vi(),
             Self::UnionSubsetFromBothOperands(p) => p.rule_name_and_message_vi(),
             Self::IntersectSubsetFromLeftUpperBound(p) => p.rule_name_and_message_vi(),
@@ -293,6 +304,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetMinusSubsetLeft(_) => None,
             Self::RealIntervalSubsetReal(_) => None,
             Self::SetBuilderSubsetOfParamSet(_) => None,
+            Self::FunctionPreimageSubsetOfInputCarrier(_) => None,
             Self::SubsetReflexivity(_) => None,
             Self::UnionSubsetFromBothOperands(_) => None,
             Self::IntersectSubsetFromLeftUpperBound(_) => None,
@@ -1925,6 +1937,63 @@ impl SubsetTransitivityBuiltinRuleProof {
             "Tính bắc cầu của tập con",
             "Tính bắc cầu qua tập trung gian đã biết: `A $subset B`, `B $subset C`",
         )
+    }
+
+    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_name_and_message_en(),
+            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
+            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
+            OutputLanguage::French => self.rule_name_and_message_fr(),
+            OutputLanguage::Russian => self.rule_name_and_message_ru(),
+            OutputLanguage::Spanish => self.rule_name_and_message_es(),
+            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
+            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
+            OutputLanguage::Korean => self.rule_name_and_message_ko(),
+            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
+        }
+    }
+}
+
+impl FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof {
+    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
+        text("Preimage input carrier", "A certified point or set preimage is contained in its complete input carrier.")
+    }
+
+    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
+        text("逆像输入母集合", "已检查的点逆像或集合逆像包含于其完整输入母集合。")
+    }
+
+    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
+        text("逆像輸入母集合", "已檢查的點逆像或集合逆像包含於其完整輸入母集合。")
+    }
+
+    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
+        text("Ensemble des entrées de la préimage", "Une préimage vérifiée est incluse dans son ensemble complet des entrées.")
+    }
+
+    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
+        text("Множество входов прообраза", "Проверенный прообраз содержится в полном множестве допустимых входов.")
+    }
+
+    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
+        text("Conjunto de entradas de la preimagen", "Una preimagen verificada está contenida en su conjunto completo de entradas.")
+    }
+
+    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
+        text("مجموعة مدخلات الصورة العكسية", "الصورة العكسية المتحقق منها محتواة في مجموعة مدخلاتها الكاملة.")
+    }
+
+    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
+        text("逆像の入力集合", "検証済みの点または集合の逆像は完全な入力集合に含まれます。")
+    }
+
+    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
+        text("역상의 입력 집합", "검증된 점 또는 집합의 역상은 완전한 입력 집합에 포함됩니다.")
+    }
+
+    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
+        text("Tập đầu vào của nghịch ảnh", "Nghịch ảnh đã kiểm tra là tập con của toàn bộ tập đầu vào của nó.")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

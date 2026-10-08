@@ -45,6 +45,7 @@ use crate::json_output::explain::text::text;
 impl InFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("Positive minimum", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -100,6 +101,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("正实数的最小值", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -176,6 +178,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("正實數的最小值", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -252,6 +255,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("Minimum positif", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -307,6 +311,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("Положительный минимум", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -362,6 +367,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("Mínimo positivo", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -417,6 +423,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("القيمة الصغرى موجبة", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -472,6 +479,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("正の実数の最小値", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -545,6 +553,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("양의 실수의 최솟값", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -600,6 +609,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => text("Giá trị nhỏ nhất dương", "a,b $in R+ => min(a,b) $in R+"),
             Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
             Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
             Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
@@ -670,6 +680,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::MinPreservesPositiveCarrier(_) => None,
             Self::PositiveRealProduct(_) | Self::PositiveRealQuotient(_) | Self::NonzeroRationalProduct(_) | Self::NonzeroRationalQuotient(_) => None,
             Self::ClosedNumericMembership(_) => None,
             Self::ComplexArithmeticClosure(_) => None,

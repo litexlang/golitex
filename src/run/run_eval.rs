@@ -1,16 +1,12 @@
 use super::run_command_outcome::{RunEvalResult, RunLitexCodeResult, RunSessionError};
 use super::run_repl::run_repl_loop;
 use crate::launch_command::LaunchCommand;
-use crate::run_module::{mount_cwd_config_with_graph, MountCwdConfigOutcome};
+use crate::run_module::{mount_cwd_config, MountCwdConfigOutcome};
 use crate::runtime::{RealOrVirtualPath, Runtime, RuntimeResult};
 
 /// `-e <code>`: mount cwd `litex.config` when present (else empty), then eval.
 /// With `session`, a successful eval keeps the env open and enters REPL.
 pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
-    run_eval_with_graph(command, None)
-}
-
-pub(crate) fn run_eval_with_graph(command: LaunchCommand, mut graph: Option<&mut crate::graph::MathGraph>) -> RuntimeResult<RunEvalResult> {
     let LaunchCommand::Eval { code, session, .. } = &command else {
         panic!("run_eval expects LaunchCommand::Eval");
     };
@@ -21,7 +17,7 @@ pub(crate) fn run_eval_with_graph(command: LaunchCommand, mut graph: Option<&mut
     // Drop placeholder Eval env so mount can open export files.
     runtime.abort_file();
 
-    match mount_cwd_config_with_graph(&mut runtime, graph.as_deref_mut())? {
+    match mount_cwd_config(&mut runtime)? {
         MountCwdConfigOutcome::Done => {}
         MountCwdConfigOutcome::SessionError(session_error) => {
             let mut code_result = RunLitexCodeResult::new(Vec::new(), Some(session_error));
@@ -43,7 +39,6 @@ pub(crate) fn run_eval_with_graph(command: LaunchCommand, mut graph: Option<&mut
         }
     };
     code_result.attach_normal_json(&runtime, "eval", None);
-    if let Some(graph) = graph { graph.collect_run(&code_result, &runtime, "<eval>"); }
 
     if !code_result.success {
         runtime.abort_file();

@@ -16,6 +16,7 @@ Self::FloorIntegerTranslation(_) => ("Integer translation of floor", "An integer
 Self::CeilIntegerTranslation(_) => ("Integer translation of ceiling", "An integer shift commutes with ceiling"),
 Self::MinMaxAbsorption(_) => ("Minimum absorbs maximum", "min(a, max(a, b)) = a for real operands"),
 Self::MaxMinAbsorption(_) => ("Maximum absorbs minimum", "max(a, min(a, b)) = a for real operands"),
+            Self::AbsDifferenceSymmetry(_) => ("Symmetry of real distance", "abs(a-b)=abs(b-a), a,b $in R"),
 Self::LcmZero(_) => ("Zero argument of lcm", "The least common multiple is zero when either integer argument is zero"),
 };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -33,6 +34,7 @@ Self::FloorIntegerTranslation(_) => ("向下取整的整数平移", "经验证�
 Self::CeilIntegerTranslation(_) => ("向上取整的整数平移", "经验证的整数位移可移出 ceil"),
 Self::MinMaxAbsorption(_) => ("最小值吸收最大值", "实数操作数满足 min(a, max(a, b)) = a"),
 Self::MaxMinAbsorption(_) => ("最大值吸收最小值", "实数操作数满足 max(a, min(a, b)) = a"),
+            Self::AbsDifferenceSymmetry(_) => ("实数距离的对称性", "abs(a-b)=abs(b-a), a,b $in R"),
 Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，结果为零"),
 };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -50,6 +52,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("向上取整的整數平移", "整數位移可移出 ceil"),
             Self::MinMaxAbsorption(_) => ("最小值吸收最大值", "實數運算元滿足 min(a, max(a, b)) = a"),
             Self::MaxMinAbsorption(_) => ("最大值吸收最小值", "實數運算元滿足 max(a, min(a, b)) = a"),
+            Self::AbsDifferenceSymmetry(_) => ("實數距離的對稱性", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("lcm 的零引數", "任一整數引數為零時，最小公倍數為零"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -67,6 +70,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("Translation entière de la partie entière supérieure", "Une translation entière commute avec ceil"),
             Self::MinMaxAbsorption(_) => ("Le minimum absorbe le maximum", "min(a, max(a, b)) = a pour des opérandes réels"),
             Self::MaxMinAbsorption(_) => ("Le maximum absorbe le minimum", "max(a, min(a, b)) = a pour des opérandes réels"),
+            Self::AbsDifferenceSymmetry(_) => ("Symétrie de la distance réelle", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("Argument nul de lcm", "Le plus petit commun multiple est nul si l'un des arguments entiers est nul"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -84,6 +88,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("Целочисленный сдвиг округления вверх", "Округление вверх после целочисленного сдвига равно округлению вверх исходного числа плюс этот сдвиг"),
             Self::MinMaxAbsorption(_) => ("Минимум поглощает максимум", "min(a, max(a, b)) = a для вещественных операндов"),
             Self::MaxMinAbsorption(_) => ("Максимум поглощает минимум", "max(a, min(a, b)) = a для вещественных операндов"),
+            Self::AbsDifferenceSymmetry(_) => ("Симметрия вещественного расстояния", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("Нулевой аргумент lcm", "Наименьшее общее кратное равно нулю, если один из целых аргументов равен нулю"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -101,6 +106,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("Traslación entera del techo", "Una traslación entera conmuta con ceil"),
             Self::MinMaxAbsorption(_) => ("El mínimo absorbe el máximo", "min(a, max(a, b)) = a para operandos reales"),
             Self::MaxMinAbsorption(_) => ("El máximo absorbe el mínimo", "max(a, min(a, b)) = a para operandos reales"),
+            Self::AbsDifferenceSymmetry(_) => ("Simetría de la distancia real", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("Argumento cero de lcm", "El mínimo común múltiplo es cero si cualquiera de los argumentos enteros es cero"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -118,6 +124,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("إزاحة صحيحة للتقريب لأعلى", "التقريب لأعلى بعد إزاحة صحيحة يساوي التقريب لأعلى للقيمة الأصلية مضافًا إليه مقدار الإزاحة"),
             Self::MinMaxAbsorption(_) => ("القيمة الصغرى تمتص القيمة العظمى", "min(a, max(a, b)) = a للمعاملات الحقيقية"),
             Self::MaxMinAbsorption(_) => ("القيمة العظمى تمتص القيمة الصغرى", "max(a, min(a, b)) = a للمعاملات الحقيقية"),
+            Self::AbsDifferenceSymmetry(_) => ("تناظر المسافة الحقيقية", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("وسيط صفري لـ lcm", "المضاعف المشترك الأصغر يساوي صفرًا إذا كان أحد الوسيطين الصحيحين صفرًا"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -135,6 +142,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("天井関数の整数平行移動", "整数の平行移動は ceil と可換です"),
             Self::MinMaxAbsorption(_) => ("最小値による最大値の吸収", "実数の被演算子について min(a, max(a, b)) = a"),
             Self::MaxMinAbsorption(_) => ("最大値による最小値の吸収", "実数の被演算子について max(a, min(a, b)) = a"),
+            Self::AbsDifferenceSymmetry(_) => ("実数距離の対称性", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("lcm のゼロ引数", "整数引数のいずれかがゼロなら最小公倍数はゼロです"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -152,6 +160,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("천장 함수의 정수 평행이동", "정수 평행이동은 ceil과 교환됩니다"),
             Self::MinMaxAbsorption(_) => ("최솟값의 최댓값 흡수", "실수 피연산자에 대해 min(a, max(a, b)) = a"),
             Self::MaxMinAbsorption(_) => ("최댓값의 최솟값 흡수", "실수 피연산자에 대해 max(a, min(a, b)) = a"),
+            Self::AbsDifferenceSymmetry(_) => ("실수 거리의 대칭성", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("lcm의 0 인수", "정수 인수 중 하나가 0이면 최소공배수는 0입니다"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}
@@ -169,6 +178,7 @@ Self::LcmZero(_) => ("lcm 的零参数", "lcm 的任一整数参数为零时，�
             Self::CeilIntegerTranslation(_) => ("Tịnh tiến nguyên của hàm trần", "Tịnh tiến nguyên giao hoán với ceil"),
             Self::MinMaxAbsorption(_) => ("Giá trị nhỏ nhất hấp thụ giá trị lớn nhất", "min(a, max(a, b)) = a với các toán hạng thực"),
             Self::MaxMinAbsorption(_) => ("Giá trị lớn nhất hấp thụ giá trị nhỏ nhất", "max(a, min(a, b)) = a với các toán hạng thực"),
+            Self::AbsDifferenceSymmetry(_) => ("Tính đối xứng của khoảng cách thực", "abs(a-b)=abs(b-a), a,b $in R"),
             Self::LcmZero(_) => ("Đối số không của lcm", "Bội chung nhỏ nhất bằng không khi một trong hai đối số nguyên bằng không"),
         };
         BuiltinRuleText {rule_name: name.into(), message: message.into()}

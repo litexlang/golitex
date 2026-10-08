@@ -207,3 +207,5 @@ multiple-parameter tuples, and expose domain/guard/output facts from membership.
 The `function_preimages` Rust tests cover bad inputs, ill-defined children,
 empty/outside targets, typed aliases, set-valued targets and failed-statement
 isolation. Noncallable and ill-defined-target fixtures are in `../wd_negative/`.
+
+[Preimage input carriers](preimage_input_carrier.lit) retain point/set inverse images inside the certified input carrier, including guarded Cartesian inputs and set-valued indexed families. Wrong-carrier and malformed-input controls are in `tests/unit/execute/preimage_input_carrier/tests.rs`.

@@ -90,17 +90,7 @@ thm sequence_limit_unique:
         n0 >= n2
         abs(a(n0) - L1) < abs(L1 - L2) / 3
         abs(a(n0) - L2) < abs(L1 - L2) / 3
-        L1 - a(n0) = (0 - (a(n0) - L1))
-        abs(L1 - a(n0)) = abs((0 - (a(n0) - L1)))
-        abs((0 - (a(n0) - L1))) = abs(a(n0) - L1)
         abs(L1 - a(n0)) = abs(a(n0) - L1)
-        L1 - L2 = (L1 - a(n0)) + (a(n0) - L2)
-        a(n0) $in R
-        L1 - a(n0) $in R
-        a(n0) - L2 $in R
-        (L1 - a(n0)) + (a(n0) - L2) $in R
-        abs((L1 - a(n0)) + (a(n0) - L2)) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
-        abs(L1 - L2) = abs((L1 - a(n0)) + (a(n0) - L2))
         abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
         abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2) / 3 + abs(L1 - L2) / 3
         2 * abs(L1 - L2) < 3 * abs(L1 - L2)

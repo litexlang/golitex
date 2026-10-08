@@ -162,7 +162,14 @@ facts, or prove mathematical equivalence between different bodies.
 
 `search_equal_fact_proof_by_equivalence_class` builds one local snapshot of the
 visible generating-edge graph. It first searches for a stored path connecting
-the goal endpoints. If that fails and peer comparison is allowed, BFS collects
+the goal endpoints. If no exact path exists, it can cite one visible stored
+equality whose two endpoints are structurally alpha-identical to the goal
+endpoints, in either orientation. AlphaEndpoints retains that original
+FactId and both identity certificates; free identifiers, carriers and bodies
+remain exact. This read-only matcher does not normalize stored keys, merge
+classes, or run another truth search. The visible generating edges are scanned
+once, deduplicated by FactId, before fresh peer comparison.
+If that also fails and peer comparison is allowed, BFS collects
 one oriented path to each distinct IR member of each class. Candidates are
 tried in this order: left-only, right-only, then both endpoints replaced.
 Each list includes its starting object; the unchanged goal pair is skipped.
@@ -261,7 +268,7 @@ edges already provide the needed shapes and complete citation paths.
 
 Normal JSON reports identity as `they_are_the_same` and class proofs as
 `equivalence_class`. Detailed JSON uses `by_they_are_the_same` with `kind` and
-optional `shape`, or `by_equivalence_class` with `kind: known_path | via_peers`.
+optional `shape`, or `by_equivalence_class` with `kind: known_path | alpha_endpoints | alpha_paths | via_peers`.
 The latter keeps both paths and the bridge's WD and truth proof. Known-atomic
 Detailed output also preserves each parameter's equality proof, so the above
 membership explanation includes its complete transport chain.
@@ -359,3 +366,5 @@ evaluation. See `tests/unit/execute/closed_exact_elementary_calculation/tests.rs
 and the four `closed_*_calculation.lit` tracers.
 
 Power-set membership now has a local known-subset route: both fixed subset arguments are the already checked membership element and PowerSet base. `PowerSetMembershipSubsetProof::KnownSubset` retains the queried subset and the existing read-only cite/argument-identity proofs. `VerifiedSubset` keeps the former independent successful verifier route and unchanged premise ceiling. This does not change raw known lookup, atomic WD, caching, publication or search permissions. The maintained tracer is `examples/proof_nodes/atomic/by_builtin_rule/in_power_set_from_restricted_image.lit`.
+
+Focused alpha-reuse acceptance: [2026-10-08 receipt](../../../../../tests/tooling/acceptance/stored-equality-alpha-2026-10-08.json) records the equality-family tests, strict aggregate premise tracer, assumption-replay boundary and executable documentation gate.

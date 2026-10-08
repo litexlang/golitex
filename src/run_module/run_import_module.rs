@@ -2,7 +2,7 @@
 
 use super::import_kb::{try_finish_import_from_kb, write_kb_after_cold_import, ImportKbHit};
 use super::load_config::{load_config, normalize_module_dir};
-use super::run_export_file::run_export_file_with_graph;
+use super::run_export_file::run_export_file;
 use crate::run::run_command_outcome::{RunFileResult, RunSessionError};
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashSet;
@@ -32,19 +32,6 @@ pub fn run_import_module(
     running: &mut HashSet<PathBuf>,
     file_results: &mut Vec<RunFileResult>,
 ) -> RuntimeResult<RunImportModuleOutcome> {
-    run_import_module_with_graph(runtime, module_dir, alias, std_root, done, running, file_results, None)
-}
-
-pub(crate) fn run_import_module_with_graph(
-    runtime: &mut Runtime,
-    module_dir: &Path,
-    alias: &str,
-    std_root: &Path,
-    done: &mut HashSet<PathBuf>,
-    running: &mut HashSet<PathBuf>,
-    file_results: &mut Vec<RunFileResult>,
-    mut graph: Option<&mut crate::graph::MathGraph>,
-) -> RuntimeResult<RunImportModuleOutcome> {
     let key = normalize_module_dir(module_dir);
     if done.contains(&key) {
         return Ok(RunImportModuleOutcome::Done);
@@ -73,7 +60,7 @@ pub(crate) fn run_import_module_with_graph(
     };
 
     for import in &config.imports {
-        match run_import_module_with_graph(
+        match run_import_module(
             runtime,
             &import.path,
             &import.alias,
@@ -81,7 +68,6 @@ pub(crate) fn run_import_module_with_graph(
             done,
             running,
             file_results,
-            graph.as_deref_mut(),
         )? {
             RunImportModuleOutcome::Done => {}
             outcome @ RunImportModuleOutcome::SessionError(_) => {
@@ -128,7 +114,7 @@ pub(crate) fn run_import_module_with_graph(
     }
 
     for (export_file_id, export) in exports.iter().enumerate() {
-        let file_result = match run_export_file_with_graph(
+        let file_result = match run_export_file(
             runtime,
             &export.name,
             &export.path,
@@ -139,7 +125,6 @@ pub(crate) fn run_import_module_with_graph(
                 export_file_id,
             },
             false,
-            graph.as_deref_mut(),
         ) {
             Ok(file_result) => file_result,
             Err(error) => {

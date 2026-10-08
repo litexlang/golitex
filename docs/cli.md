@@ -100,7 +100,7 @@ passes `-strict` to the Litex parser and fails as invalid source; it does not
 enable strict mode or start a REPL.
 
 The current whitelist does not include `-compact`, `-detailed`, `-runner`,
-`-before`, `-isolated`, `-factgraph`, `-defgraph`, or `-lean`. Those older command recipes
+`-before`, `-isolated`, `-factgraph`, or `-defgraph`. Those older command recipes
 are not entrypoints for this build. Rust projection APIs are separate from CLI flags.
 
 `-strict` rejects user `trust`, `trust have`, and `axiom` when executed,
@@ -119,6 +119,7 @@ environments and re-execute dependency sources with the same policy. See the
 | `litex -e <code>` | Mount `cwd/litex.config` when present, then run the source string. |
 | `litex -f <file>` | Mount `parent(file)/litex.config` when present; otherwise run the file alone. |
 | `litex -r <directory>` | Require `<directory>/litex.config`, mount all imports, then run all exports. |
+| `litex -lean -f <file>` | Verify a standalone file and replay supported typed results into Lean source on stdout (preview). |
 | `litex -extractpython <code\|-f\|-r>` | Verify extractable fragments, then emit a Python `extracted_code` artifact (experimental). |
 | `litex -extractc <code\|-f\|-r>` | Same as above, emitting a C99 fragment (experimental). |
 | `litex -help` | Print usage text. |
@@ -420,13 +421,28 @@ Mount soft Failed → session `FailToImport`. For `-f`, soft Failed on the
 
 ## Lean compiler boundary
 
-The current Cargo build registers only the `litex` binary and does not include
-the earlier `stmt_result_to_lean_compiler` Rust module. There is no working
-Lean compilation command in this CLI. [`lean/`](../lean/) contains an initial
-Lean object interface, without a compiler or theorem replay. The earlier
-wrapper and generated examples are archived locally under
-`scripts/legacy_to_lean/`, which is excluded from Git. They are not acceptance
-evidence for a current `src/` verification run.
+`litex -lean -f <file>` is a preview output mode of the ordinary `litex` binary.
+It verifies a complete standalone file once, then consumes typed winning
+results, object WD and scoped citations. Success writes only Lean source to
+stdout. Verification or unsupported-compilation failures return nonzero,
+write diagnostics to stderr and emit no partial Lean artifact.
+
+```sh
+litex -strict -lean -f lean/examples/real_is_complex/statement.lit
+```
+
+The initial slice covers reflexivity, sethood, exact integer R/C membership,
+ordinary forall introduction, R-to-C membership and certified add/div objects.
+Support depends on the actual proof route. Rational normalization and other
+unsupported routes fail even if another Core theorem could prove the conclusion.
+Sessions, repository mode, other output modes and module configurations/imports
+are not supported by this first slice.
+
+The final artifacts are [lean/Litex.lean](../lean/Litex.lean) and
+[lean/examples/](../lean/examples/), with a problem folder per source/generated
+pair. Development tools and plans are local-only in `scripts/litex_to_lean/`;
+older material remains in `scripts/legacy_to_lean/`. Emission is distinct from
+Lean kernel checking, and the numeric model does not yet interpret all Litex.
 
 ## Practical Recipes
 

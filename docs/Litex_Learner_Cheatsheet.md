@@ -99,6 +99,20 @@ A bare `forall` body contains facts. Commands such as `witness`, `by def`, and
 parameters; consult the [fact contracts](Manual.md#factual-statements) before
 nesting quantifiers. Flat `and`/`or` forms are not an arbitrary Boolean grammar.
 
+For real-distance calculations, state symmetry and the triangle directly:
+
+```litex
+forall x,y,z R:
+    abs(x-y) = abs(y-x)
+    abs(x-z) <= abs(x-y)+abs(y-z)
+```
+
+Two coordinate error bounds also bound the difference of two minima or maxima.
+To choose a common positive radius, write `have delta R+ = min(a,b)` when
+`a,b R+` are already checked. See the
+[distance and extrema preview](Manual.md#r10-expose-absolute-value-bounds)
+for self-contained examples and the fixed premise boundary.
+
 ## Definition → theorem → use
 
 The reciprocal's nonzero condition belongs to its callable domain. The named

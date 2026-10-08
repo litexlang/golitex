@@ -98,21 +98,6 @@ fn release_tuple_def_parser_rejects_extra_tokens_and_bodies() {
     }
 }
 
-#[test]
-fn release_tuple_def_graph_retains_checked_rule_and_is_read_only() {
-    let mut rt = runtime(OutputLanguage::English);
-    let run = rt.run_litex_code("let t=(1,2)\nrelease tuple def t\nt $in finite_seq(union({1},{2}),2)").unwrap();
-    assert!(run.success && run.session_error.is_none());
-    let before = facts(&rt);
-    let ids = rt.global_ids.clone();
-    let mut graph = crate::graph::MathGraph::new(OutputLanguage::English);
-    graph.collect_run(&run, &rt, "<tuple-release>");
-    let json = graph.json(true, "tuple-release", None);
-    assert!(json.contains("fn_set_member"), "{json}");
-    assert!(json.contains("t $in finite_seq"), "{json}");
-    assert_eq!(facts(&rt), before);
-    assert_eq!(rt.global_ids, ids);
-}
 
 
 #[test]

@@ -24,6 +24,23 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+## Real distance and binary extrema
+
+[Distance symmetry](equal/by_builtin_rule/abs_difference_symmetry.lit) and
+[distance triangle](atomic/by_builtin_rule/abs_difference_triangle.lit) check
+real absolute differences directly. [Maximum](atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit)
+and [minimum](atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit)
+Lipschitz bounds retain both checked coordinate-error premises, including
+strict and reverse-written source comparisons. The paired examples preserve
+Analysis Chapter 6's finite-extremum theorem interfaces.
+
+[Positive minimum](atomic/by_builtin_rule/min_preserves_positive_carrier.lit)
+consumes both positive-real memberships. Nested minima may use typed
+intermediates. These fixed leaves retain parent WD and the inherited premise
+ceiling; the focused `real_metric_bounds_tests` cover false or missing
+conditions, unsupported domains, rollback, Detailed/Normal output, graph
+citations and unsupported Lean routes.
+
 ## Fixed real trigonometric reflections and double angle
 
 [Cosine double angle](equal/by_builtin_rule/cos_double_angle.lit) supports

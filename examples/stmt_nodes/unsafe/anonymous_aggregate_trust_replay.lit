@@ -1,0 +1,19 @@
+# Explicit assumption replay only; this is not a proof of the scalar sum law.
+# Before: the trust statement passed but the same displayed theorem conclusion
+# was rejected after its anonymous-function binders were parsed again.
+# thm scalar_sum_replay:
+#     ? forall a fn(input_index N+) R, c R, m, n N+:
+#         m <= n
+#         =>:
+#             sum(m, n, fn(source_index N+) R {c * a(source_index)}) = c * sum(m, n, fn(target_index N+) R {a(target_index)})
+#     trust sum(m, n, fn(source_index N+) R {c * a(source_index)}) = c * sum(m, n, fn(target_index N+) R {a(target_index)})
+# Now: the same assumed equality can be cited with structural endpoint identities.
+# Run: target/release/litex -lang en -f examples/stmt_nodes/unsafe/anonymous_aggregate_trust_replay.lit
+# Strict mode deliberately rejects the trust; free-symbol/body/carrier changes
+# remain rejected by the paired equality-search regressions.
+thm scalar_sum_replay:
+    ? forall a fn(input_index N+) R, c R, m, n N+:
+        m <= n
+        =>:
+            sum(m, n, fn(source_index N+) R {c * a(source_index)}) = c * sum(m, n, fn(target_index N+) R {a(target_index)})
+    trust sum(m, n, fn(source_index N+) R {c * a(source_index)}) = c * sum(m, n, fn(target_index N+) R {a(target_index)})

@@ -6,7 +6,7 @@ mod well_defined_result;
 pub use result::{
     AssumeDomFactResult, ProveAndStoreThenFactResult,
     VerifyForallFactFailed, VerifyForallFactResult,
-    VerifyForallFactProof, VerifyKnownForallFactProof, ForallParameterRenaming,
+    VerifyForallFactProof, VerifyForallFactSuccess, VerifyKnownForallFactProof, ForallParameterRenaming,
     VerifyEmptyParameterDomainForallProof,
 };
 pub use well_defined_result::{

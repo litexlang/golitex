@@ -149,7 +149,7 @@ That tree is **one IR with two consumers**, not two parallel logs:
 1. **Human / AI output** — JSON / `statement_results`: what each statement
    did, which route succeeded or soft-failed, what was inferred or stored.
    Source states *what*; results explain *how*.
-2. **Litex-to-Lean replay** — `stmt_result_to_lean_compiler` walks the same
+2. **Litex-to-Lean replay** — `compile_to_lean` walks supported routes in the same
    winning evidence and emits Lean tactics / proof steps. Do not reconstruct
    the proof from display text or ask Lean to search a different proof.
 
@@ -176,7 +176,7 @@ explain this step from the JSON, and can the Lean compiler map this field to
 a tactic without re-searching?
 
 Product prose: `docs/Litex_Blueprint.md` (Section 4). Compiler consumption:
-`src/stmt_result_to_lean_compiler/README.md`. Agent constraint when reshaping
+[`src/compile_to_lean/`](../compile_to_lean/). Agent constraint when reshaping
 types: `.cursor/skills/litex-pipeline-result-types/SKILL.md`.
 
 ### Proof vs Result (hard convention)
