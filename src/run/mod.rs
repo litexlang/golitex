@@ -22,7 +22,7 @@ pub use crate::launch_command::{
 };
 pub use run_command::{run_command, VERSION};
 pub use run_command_outcome::{
-    CompileToLatexResult, ExtractExecutableCodeResult, HelpResult, RunCommandOutcome,
-    RunEvalResult, RunFileResult, RunLitexCodeResult, RunRepoResult, RunSessionError,
-    VersionResult,
+    CompileToLatexResult, CompileToLeanResult, ExtractExecutableCodeResult, HelpResult,
+    RunCommandOutcome, RunEvalResult, RunFileResult, RunLitexCodeResult, RunRepoResult,
+    RunSessionError, VersionResult,
 };

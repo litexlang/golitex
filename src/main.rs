@@ -47,35 +47,14 @@ fn run_launch() {
             })
         })
         .collect::<Vec<_>>();
-    match litex::run::run_compile_to_lean::parse_lean_command(&args) {
-        Ok(Some(command)) => {
-            match litex::run::run_compile_to_lean::run_compile_to_lean(command) {
-                Ok(source) => {
-                    if let Err(error) = litex::run::output::write_stdout(format_args!("{source}")) {
-                        let _ = writeln!(std::io::stderr().lock(), "phase=compile: {error}");
-                        process::exit(1);
-                    }
-                }
-                Err(error) => {
-                    let _ = writeln!(std::io::stderr().lock(), "{error}");
-                    process::exit(1);
-                }
-            }
-            return;
-        }
-        Ok(None) => {}
-        Err(error) => report_error(None, &error),
-    }
     let command = match parse_launch_command(&args) {
         Ok(command) => command,
         Err(error) => report_error(None, &error),
     };
     match run_command(command.clone()) {
         Ok(outcome) => {
-            if let Some(json) = outcome.normal_json() {
-                if let Err(error) = litex::run::output::write_stdout(format_args!("{}\n", json)) {
-                    report_error(None, &error);
-                }
+            if let Err(error) = litex::run::output::write_command_outcome(&outcome) {
+                report_error(Some(&command), &error);
             }
             if outcome.process_failed() {
                 process::exit(1);
@@ -86,16 +65,8 @@ fn run_launch() {
 }
 
 fn report_error(command: Option<&LaunchCommand>, error: &RuntimeError) -> ! {
-    match command.and_then(|command| litex::json_output::emit_command_error(command, error)) {
-        Some(json) => {
-            if let Err(output_error) = litex::run::output::write_stdout(format_args!("{}\n", json))
-            {
-                let _ = writeln!(std::io::stderr().lock(), "{}; {}", output_error, error);
-            }
-        }
-        None => {
-            let _ = writeln!(std::io::stderr().lock(), "{}", error);
-        }
+    if let Err(output_error) = litex::run::output::write_command_error(command, error) {
+        let _ = writeln!(std::io::stderr().lock(), "{}; {}", output_error, error);
     }
     let code = match error {
         RuntimeError::InvalidArguments(_) => 2,

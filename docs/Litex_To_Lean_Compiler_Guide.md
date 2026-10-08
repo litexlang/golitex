@@ -60,6 +60,50 @@ verifiable in Litex while its particular evidence route is outside the current
 compiler. Such a route needs an explicit adapter before compilation can accept
 it.
 
+## Definitions and named theorem citations
+
+The [named add-zero example](../lean/examples/named_add_zero/statement.lit)
+combines a proved interface, a typed value and an expression alias:
+
+```litex
+thm add_zero:
+    ? forall x R:
+        x + 0 = x
+
+have offset R = 2
+let shifted = offset + 0
+by thm add_zero(offset) => offset + 0 = offset
+shifted = offset
+```
+
+Its [generated file](../lean/examples/named_add_zero/statement.lean) defines the
+certified alias objects and emits a named theorem. The explicit call applies
+that earlier theorem and its source argument-membership proof, then selects the
+actual returned equality. The last line follows the recorded equality path
+through the alias and the proved result. Compilation does not replace the call
+with a fresh arithmetic proof.
+
+The source theorem's goal WD and proof body have separate captured scopes.
+Replaying both preserves their actual parameter and premise producers; local
+proof definitions do not become later global declarations. Repeated forall
+facts use their recorded earlier theorem and binder renaming when that is the
+source's selected route.
+
+The [equality transport example](../lean/examples/equality_membership_transport/statement.lit)
+shows another use of citations:
+
+```litex
+forall u,v C:
+    u = v
+    u $in R
+    =>:
+        v $in R
+```
+
+The proof consumes the given equality and real-membership fact. It transports
+membership through denotation equality while retaining both objects' generic
+host representations.
+
 ## Membership preserves the object's representation
 
 The [generic complex-object example](../lean/examples/complex_object_equals_itself/statement.lit)

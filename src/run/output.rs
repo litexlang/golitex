@@ -18,3 +18,44 @@ pub fn write_stdout(text: Arguments<'_>) -> RuntimeResult<()> {
         }),
     }
 }
+
+/// Render each command's output contract through the common CLI entrypoint.
+pub fn write_command_outcome(outcome: &crate::run::RunCommandOutcome) -> RuntimeResult<()> {
+    match outcome {
+        crate::run::RunCommandOutcome::CompileToLean(result) => {
+            write_stdout(format_args!("{}", result.source))
+        }
+        _ => {
+            if let Some(json) = outcome.normal_json() {
+                write_stdout(format_args!("{json}\n"))?;
+            }
+            Ok(())
+        }
+    }
+}
+
+/// Keep command-specific error presentation alongside successful output.
+pub fn write_command_error(
+    command: Option<&crate::launch_command::LaunchCommand>,
+    error: &RuntimeError,
+) -> RuntimeResult<()> {
+    if let Some(json) =
+        command.and_then(|command| crate::json_output::emit_command_error(command, error))
+    {
+        return write_stdout(format_args!("{json}\n"));
+    }
+    let diagnostic = match (command, error) {
+        (
+            Some(crate::launch_command::LaunchCommand::CompileToLean { .. }),
+            RuntimeError::Unsupported(message),
+        ) => message.clone(),
+        (Some(crate::launch_command::LaunchCommand::CompileToLean { .. }), _) => {
+            format!("phase=compile: {error}")
+        }
+        _ => error.to_string(),
+    };
+    writeln!(io::stderr().lock(), "{diagnostic}").map_err(|error| RuntimeError::Io {
+        path: PathBuf::from("<stderr>"),
+        message: error.to_string(),
+    })
+}

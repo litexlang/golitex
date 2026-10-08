@@ -8,11 +8,13 @@ use crate::execute::{
 use crate::prelude::*;
 
 fn runtime(strict: bool) -> Runtime {
-    let mut arguments = vec!["-e".to_string(), String::new()];
-    if strict {
-        arguments.push("-strict".to_string());
-    }
-    Runtime::new(parse_launch_command(&arguments).expect("test launch command"))
+    // Empty code is fine on LaunchCommand::Eval; CLI `-e` rejects empty operands.
+    Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict,
+        language: OutputLanguage::English,
+    })
 }
 
 fn theorem(result: &ExecStmtResult) -> &ExecDefThmStmtSuccess {

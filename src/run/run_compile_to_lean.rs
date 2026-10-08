@@ -2,52 +2,16 @@ use crate::prelude::*;
 use std::fs;
 use std::path::Path;
 
-pub fn parse_lean_command(args: &[String]) -> RuntimeResult<Option<LaunchCommand>> {
-    let mut ordinary = Vec::new();
-    let mut lean = false;
-    let mut index = 0;
-    while index < args.len() {
-        let arg = &args[index];
-        if arg == "-lean" {
-            if lean {
-                return Err(RuntimeError::InvalidArguments(
-                    "`-lean` may appear only once".into(),
-                ));
-            }
-            lean = true;
-            index += 1;
-            continue;
-        }
-        ordinary.push(arg.clone());
-        index += 1;
-        let operand = matches!(arg.as_str(), "-e" | "-f" | "-r" | "-lang" | "--lang")
-            || (matches!(arg.as_str(), "-extractpython" | "-extractc")
-                && !matches!(args.get(index).map(String::as_str), Some("-f" | "-r")));
-        if operand && index < args.len() {
-            ordinary.push(args[index].clone());
-            index += 1;
-        }
-    }
-    if !lean {
-        return Ok(None);
-    }
-    let command = parse_launch_command(&ordinary)?;
-    match &command {
-        LaunchCommand::File { session: false, .. } => Ok(Some(command)),
-        _ => Err(RuntimeError::InvalidArguments(
-            "`-lean` currently requires standalone -f and does not take -session or other output modes".into(),
-        )),
-    }
+pub fn run_compile_to_lean(
+    command: LaunchCommand,
+) -> RuntimeResult<crate::run::CompileToLeanResult> {
+    let source = compile_source(command).map_err(RuntimeError::Unsupported)?;
+    Ok(crate::run::CompileToLeanResult::new(source))
 }
 
-pub fn run_compile_to_lean(command: LaunchCommand) -> Result<String, String> {
-    let LaunchCommand::File {
-        path,
-        session: false,
-        ..
-    } = &command
-    else {
-        return Err("phase=launch: `-lean` requires standalone -f".into());
+fn compile_source(command: LaunchCommand) -> Result<String, String> {
+    let LaunchCommand::CompileToLean { path, .. } = &command else {
+        return Err("phase=launch: run_compile_to_lean expects CompileToLean".into());
     };
     let path = path.clone();
     if path
@@ -111,3 +75,7 @@ fn artifact_namespace(path: &Path) -> String {
     }
     safe
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/run/lean_command/tests.rs"]
+mod tests;

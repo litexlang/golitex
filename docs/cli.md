@@ -470,8 +470,12 @@ older material remains in `scripts/legacy_to_lean/`. Emission is distinct from
 Lean kernel checking, and the numeric model does not yet interpret all Litex.
 The empty `Rational {}` result tag records a successful normalization family,
 not a monomial derivation: the generated normalization proof must pass Lean.
-General equality-class paths, named declarations, function/set constructors
-and replay of forward-inference branches remain outside this slice.
+The declaration slice adds let and typed RHS-have aliases, named theorems and
+explicit theorem selections. Equality-class paths, supported argument transport
+and whole-forall reuse retain exact recorded citations. Bounded atomic rewrites
+support whole-argument aliases and certified closed representatives. Arbitrary
+have, Q/order, function/set constructors, compound subterm rewrites and general
+forward-inference replay remain outside the current compiler profile.
 
 ## Practical Recipes
 

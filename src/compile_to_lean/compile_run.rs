@@ -1,5 +1,7 @@
 use super::LeanCompileError;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
+use crate::rational_expression::ClosedNumericExpr;
 use std::collections::HashMap;
 
 /// Replay a successful typed execution result while its citation context is live.
@@ -613,7 +615,8 @@ impl LeanCompiler {
                             }
                         }
                         application_arguments.push(self.object_term(arg)?);
-                        application_arguments.push(member.proof);
+                        application_arguments.push(member.proof.clone());
+                        self.remember_fact(member);
                         offset += 1;
                     }
                 }
@@ -834,9 +837,8 @@ impl LeanCompiler {
                         AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(_) => {
                             return Err(LeanCompileError::unsupported("Atomic/KnownForallFact"))
                         }
-                        AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(_) => {
-                            return Err(LeanCompileError::unsupported("Atomic/BuiltinRewrite"))
-                        }
+                        AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(proof) =>
+                            self.compile_atomic_builtin_rewrite(&success.fact, proof, runtime)?,
                         AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(_) => {
                             return Err(LeanCompileError::unsupported("Atomic/KnownRewrite"))
                         }
@@ -862,9 +864,9 @@ impl LeanCompiler {
                 VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(
                     proof,
                 )) => self.compile_forall(proof, runtime),
-                VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(_)) => {
-                    Err(LeanCompileError::unsupported("Forall/KnownForallFact"))
-                }
+                VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(
+                    proof,
+                )) => self.compile_known_forall(proof, runtime),
                 VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(
                     _,
                 )) => Err(LeanCompileError::unsupported("Forall/EmptyParameterDomain")),
@@ -1362,6 +1364,192 @@ impl LeanCompiler {
             x.denotation,
             y.denotation
         ))
+    }
+
+    fn compile_known_forall(
+        &mut self,
+        proof: &VerifyKnownForallFactProof,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        let resolved = self.resolve_fact(proof.cite_fact_id, runtime)?;
+        let source = match &resolved {
+            Fact::ForallFact(source) if source.fact_id == proof.cite_fact_id => source,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "KnownForall/Citation",
+                    "The whole-proposition citation is not this source forall identity.",
+                ))
+            }
+        };
+        let registered = self.fact_term(proof.cite_fact_id)?.clone();
+        if registered.fact != resolved {
+            return Err(LeanCompileError::new(
+                "KnownForall/Producer",
+                "The source forall differs from its active compiled producer.",
+            ));
+        }
+        let source_parameters: Vec<_> = source
+            .typed_parameters
+            .groups
+            .iter()
+            .flat_map(|group| group.params.iter().map(|param| (param, &group.param_type)))
+            .collect();
+        let target_parameters: Vec<_> = proof
+            .fact
+            .typed_parameters
+            .groups
+            .iter()
+            .flat_map(|group| group.params.iter().map(|param| (param, &group.param_type)))
+            .collect();
+        if source_parameters.len() != target_parameters.len()
+            || proof.parameter_renamings.len() != source_parameters.len()
+            || source.dom_facts.len() != proof.fact.dom_facts.len()
+            || source.then_facts.len() != proof.fact.then_facts.len()
+            || source.then_facts.is_empty()
+        {
+            return Err(LeanCompileError::new(
+                "KnownForall/Arity",
+                "Whole-forall reuse has different ordered parameter, premise or conclusion arity.",
+            ));
+        }
+        let mut substitution = HashMap::new();
+        let mut targets = std::collections::HashSet::new();
+        for (((source, _), (target, _)), renaming) in source_parameters
+            .iter()
+            .zip(&target_parameters)
+            .zip(&proof.parameter_renamings)
+        {
+            if renaming.source != source.id
+                || renaming.target != target.id
+                || substitution
+                    .insert(
+                        source.id,
+                        Obj::Identifier(IdentifierObj::from_bound_name(target)),
+                    )
+                    .is_some()
+                || !targets.insert(target.id)
+            {
+                return Err(LeanCompileError::new(
+                    "KnownForall/Renaming",
+                    "The recorded renaming must be the exact ordered bijection of declared binders.",
+                ));
+            }
+        }
+        for ((_, source), (_, target)) in source_parameters.iter().zip(&target_parameters) {
+            match (source, target) {
+                (ParamType::Obj(source), ParamType::Obj(target))
+                    if instantiated_object_matches(source, target, &substitution) => {}
+                (ParamType::Obj(_), ParamType::Obj(_)) => {
+                    return Err(LeanCompileError::new(
+                        "KnownForall/Carrier",
+                        "A parameter carrier changes under the recorded renaming.",
+                    ))
+                }
+                _ => return Err(LeanCompileError::unsupported("KnownForall/ParameterKind")),
+            }
+        }
+        for (source, target) in source.dom_facts.iter().zip(&proof.fact.dom_facts) {
+            if !instantiated_fact_matches(source, target, &substitution) {
+                return Err(LeanCompileError::new(
+                    "KnownForall/Domain",
+                    "A domain proposition changes under the recorded exact renaming.",
+                ));
+            }
+        }
+        for (source, target) in source.then_facts.iter().zip(&proof.fact.then_facts) {
+            if !instantiated_fact_matches(
+                &source.clone().into(),
+                &target.clone().into(),
+                &substitution,
+            ) {
+                return Err(LeanCompileError::new(
+                    "KnownForall/Conclusion",
+                    "A conclusion or free reference changes under the recorded exact renaming.",
+                ));
+            }
+        }
+        self.scopes.push(CompilerScope {
+            env: Some(proof.well_defined.local_env.clone()),
+            ..CompilerScope::default()
+        });
+        let compiled = self.compile_known_forall_body(proof, &registered, runtime);
+        self.scopes.pop();
+        compiled
+    }
+
+    fn compile_known_forall_body(
+        &mut self,
+        proof: &VerifyKnownForallFactProof,
+        registered: &FactTerm,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        let (binders, introductions) = self.compile_forall_head(
+            &proof.fact,
+            &proof.well_defined.introduced_params,
+            &proof.well_defined.assumed_dom_facts,
+            runtime,
+        )?;
+        if proof.well_defined.then.len() != proof.fact.then_facts.len() {
+            return Err(LeanCompileError::new(
+                "KnownForall/ConclusionWD",
+                "The recorded whole-proposition WD omits or adds a conclusion stage.",
+            ));
+        }
+        let mut propositions = Vec::new();
+        for (source, wd) in proof.fact.then_facts.iter().zip(&proof.well_defined.then) {
+            let fact: Fact = source.clone().into();
+            self.compile_fact_wd(wd, &fact, runtime)?;
+            propositions.push(self.fact_proposition(&fact)?);
+        }
+        let mut arguments = Vec::new();
+        let mut offset = 0;
+        let ids = &proof
+            .well_defined
+            .introduced_params
+            .defined_params
+            .stored_fact_ids;
+        for group in &proof.fact.typed_parameters.groups {
+            for parameter in &group.params {
+                let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+                arguments.push(self.object_term(&object)?);
+                arguments.push(self.fact_term(ids[offset])?.proof.clone());
+                offset += 1;
+            }
+        }
+        for domain in &proof.fact.dom_facts {
+            let registered = self.fact_term(domain.fact_id())?;
+            if registered.fact != *domain {
+                return Err(LeanCompileError::new(
+                    "KnownForall/DomainProducer",
+                    "A domain hypothesis differs from the current scoped source requirement.",
+                ));
+            }
+            arguments.push(registered.proof.clone());
+        }
+        let application = if arguments.is_empty() {
+            registered.proof.clone()
+        } else {
+            format!("({} {})", registered.proof, arguments.join(" "))
+        };
+        let mut conclusion = propositions.pop().expect("validated nonempty conclusions");
+        while let Some(left) = propositions.pop() {
+            conclusion = format!("({left} ∧ {conclusion})");
+        }
+        let proposition = if binders.is_empty() {
+            conclusion
+        } else {
+            format!("∀ {}, {conclusion}", binders.join(" "))
+        };
+        let introduction = if introductions.is_empty() {
+            String::new()
+        } else {
+            format!("  intro {}\n", introductions.join(" "))
+        };
+        Ok(FactTerm {
+            fact: Fact::ForallFact(proof.fact.clone()),
+            proposition,
+            proof: format!("(by\n{introduction}  exact {application}\n)"),
+        })
     }
 
     fn compile_forall(
@@ -2117,60 +2305,6 @@ impl LeanCompiler {
         Ok(proof)
     }
 
-    fn compile_strict_equality_search(
-        &mut self,
-        fact: &EqualFact,
-        proof: &StrictEqualArgProof,
-        runtime: &Runtime,
-    ) -> Result<String, LeanCompileError> {
-        self.object_term(&fact.left)?;
-        self.object_term(&fact.right)?;
-        match proof {
-            StrictEqualArgProof::ByTheyAreTheSame(proof) => {
-                self.compile_identity(&fact.left, &fact.right, proof)
-            }
-            StrictEqualArgProof::ByClosedCalculation(proof) => {
-                self.compile_closed_equality(fact, proof)
-            }
-            StrictEqualArgProof::ByEquivalenceClass(proof) => {
-                self.compile_equivalence_class(fact, proof, runtime)
-            }
-            StrictEqualArgProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
-                EqualitySearchProofByCalculation::Rational {},
-            )) => self.compile_rational(fact, &[], &[], false, runtime),
-            StrictEqualArgProof::ByBuiltinRule(
-                EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
-            ) => self.compile_scalar_division_relation(fact, proof, runtime),
-            StrictEqualArgProof::ByBuiltinRule(_) => {
-                Err(LeanCompileError::unsupported("StrictEquality/BuiltinRule"))
-            }
-            StrictEqualArgProof::ByBuiltinStrategy(
-                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
-            ) => self.compile_rational(
-                fact,
-                &proof.requirement_facts,
-                &proof.proof_of_requirement_facts,
-                true,
-                runtime,
-            ),
-            StrictEqualArgProof::ByBuiltinStrategy(_) => Err(LeanCompileError::unsupported(
-                "StrictEquality/BuiltinStrategy",
-            )),
-            StrictEqualArgProof::ByMatchingOneArgByOne(proof) => self
-                .compile_arithmetic_congruence(
-                    fact,
-                    &proof.corresponding_arg_equal_proofs,
-                    runtime,
-                ),
-            StrictEqualArgProof::ByKnownSpecialProperty(_) => Err(LeanCompileError::unsupported(
-                "StrictEquality/KnownSpecialProperty",
-            )),
-            StrictEqualArgProof::ByObjectDefinition(_) => Err(LeanCompileError::unsupported(
-                "StrictEquality/ObjectDefinition",
-            )),
-        }
-    }
-
     fn compile_identity(
         &self,
         left: &Obj,
@@ -2338,6 +2472,232 @@ impl LeanCompiler {
                 "Equality/PathSubject",
                 "The cited equality does not prove the recorded oriented edge.",
             ))
+        }
+    }
+
+    fn compile_atomic_builtin_rewrite(
+        &mut self,
+        goal: &AtomicFact,
+        proof: &AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        match proof {
+            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(proof) =>
+                self.compile_atomic_equality_rewrite(
+                    goal,
+                    &proof.rewritten_fact,
+                    &proof.cited_equal_fact_ids,
+                    &proof.proof_of_rewritten_fact,
+                    true,
+                    runtime,
+                ),
+            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::KnownEqualObjSubstitution(proof) =>
+                self.compile_atomic_equality_rewrite(
+                    goal,
+                    &proof.rewritten_fact,
+                    &proof.cited_equal_fact_ids,
+                    &proof.proof_of_rewritten_fact,
+                    false,
+                    runtime,
+                ),
+            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(_) =>
+                Err(LeanCompileError::unsupported("Atomic/BuiltinRewrite/FnUnfold")),
+            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(_) =>
+                Err(LeanCompileError::unsupported("Atomic/BuiltinRewrite/OrderDual")),
+        }
+    }
+
+    fn compile_atomic_equality_rewrite(
+        &mut self,
+        goal: &AtomicFact,
+        rewritten: &Fact,
+        cited_ids: &[FactId],
+        child: &VerifyFactResult,
+        closed_numeric: bool,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        if !matches!(
+            goal,
+            AtomicFact::InFact(_) | AtomicFact::IsSetFact(_) | AtomicFact::NotEqualFact(_)
+        ) {
+            return Err(LeanCompileError::unsupported(
+                "Atomic/BuiltinRewrite/PredicateTransport",
+            ));
+        }
+        let residual = match rewritten {
+            Fact::AtomicFact(fact) if same_atomic_family(goal, fact) => fact,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "AtomicRewrite/Family",
+                    "The residual changes the source predicate family, polarity or arity.",
+                ))
+            }
+        };
+        if cited_ids.is_empty()
+            || cited_ids
+                .iter()
+                .enumerate()
+                .any(|(index, id)| cited_ids[..index].contains(id))
+        {
+            return Err(LeanCompileError::new(
+                "AtomicRewrite/Citations",
+                "A substitution needs nonempty, nonduplicated recorded equality citations.",
+            ));
+        }
+        let mut equalities = Vec::new();
+        for id in cited_ids {
+            let fact = self.resolve_fact(*id, runtime)?;
+            let equality = match &fact {
+                Fact::AtomicFact(AtomicFact::EqualFact(equality)) if equality.fact_id == *id => {
+                    equality
+                }
+                _ => {
+                    return Err(LeanCompileError::new(
+                        "AtomicRewrite/CitationFamily",
+                        "A substitution citation is not the recorded source equality.",
+                    ))
+                }
+            };
+            if self.fact_term(*id)?.fact != fact {
+                return Err(LeanCompileError::new(
+                    "AtomicRewrite/CitationProducer",
+                    "A substitution equality differs from its active compiled producer.",
+                ));
+            }
+            equalities.push(equality.clone());
+        }
+        let child = self.compile_verify(child, runtime)?;
+        if child.fact != *rewritten {
+            return Err(LeanCompileError::new(
+                "AtomicRewrite/ChildSubject",
+                "The successful child does not prove the exact recorded residual fact.",
+            ));
+        }
+        let original_args = atomic_fact_args_ref(goal);
+        let residual_args = atomic_fact_args_ref(residual);
+        let changed = original_args
+            .iter()
+            .zip(&residual_args)
+            .filter(|(original, residual)| original.ir() != residual.ir())
+            .count();
+        if changed == 0 || (!closed_numeric && changed != 1) {
+            return Err(LeanCompileError::new(
+                "AtomicRewrite/ChangedArguments",
+                "The selected substitution has no changed argument or changes more than its one recorded path.",
+            ));
+        }
+        let mut arguments = Vec::new();
+        let mut used_ids = Vec::new();
+        for (original, residual) in original_args.iter().zip(&residual_args) {
+            if original.ir() == residual.ir() {
+                arguments.push(format!("(Litex.sameRefl {})", self.object_term(residual)?));
+                continue;
+            }
+            if closed_numeric {
+                // A whole-argument alias keeps the exact closed endpoint of
+                // its selected source equality. The source producer preserves
+                // that closed AST rather than replacing it by a computed value.
+                if ClosedNumericExpr::try_from_obj(original).is_some()
+                    || ClosedNumericExpr::try_from_obj(residual).is_none()
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "AtomicRewrite/ClosedTopLevelSubject",
+                    ));
+                }
+                let matching: Vec<_> = equalities
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, equality)| {
+                        (equality.left.ir() == original.ir()
+                            && equality.right.ir() == residual.ir())
+                            || (equality.right.ir() == original.ir()
+                                && equality.left.ir() == residual.ir())
+                    })
+                    .collect();
+                if matching.len() != 1 {
+                    return Err(LeanCompileError::new(
+                        "AtomicRewrite/ClosedTopLevelCitation",
+                        "A changed whole argument needs one selected equality with those exact original and closed residual endpoints.",
+                    ));
+                }
+                let id = cited_ids[matching[0].0];
+                if !used_ids.contains(&id) {
+                    used_ids.push(id);
+                }
+                arguments.push(self.compile_registered_equality(id, residual, original, runtime)?);
+            } else {
+                // KnownEqualObj records one ordered path for one top-level
+                // argument. Only its listed edges can choose the next endpoint.
+                let mut current: Obj = (**original).clone();
+                let mut path = format!("(Litex.sameRefl {})", self.object_term(original)?);
+                for (id, equality) in cited_ids.iter().zip(&equalities) {
+                    let next = if equality.left.ir() == current.ir() {
+                        &equality.right
+                    } else if equality.right.ir() == current.ir() {
+                        &equality.left
+                    } else {
+                        return Err(LeanCompileError::new(
+                            "AtomicRewrite/PathOrder",
+                            "The recorded equality does not continue the ordered substitution path.",
+                        ));
+                    };
+                    if next.ir() == current.ir() {
+                        return Err(LeanCompileError::new(
+                            "AtomicRewrite/PathProgress",
+                            "A substitution path edge does not change its source endpoint.",
+                        ));
+                    }
+                    let edge = self.compile_registered_equality(*id, &current, next, runtime)?;
+                    path = format!("(({path}).trans {edge})");
+                    current = next.clone();
+                    used_ids.push(*id);
+                }
+                if current.ir() != residual.ir() {
+                    return Err(LeanCompileError::new(
+                        "AtomicRewrite/PathEndpoint",
+                        "The recorded substitution path does not end at this residual argument.",
+                    ));
+                }
+                arguments.push(format!("({path}).symm"));
+            }
+        }
+        if used_ids.as_slice() != cited_ids {
+            return Err(LeanCompileError::new(
+                "AtomicRewrite/CitationOrder",
+                "Every recorded equality must be used in its source substitution order.",
+            ));
+        }
+        match (residual, goal) {
+            (AtomicFact::InFact(from), AtomicFact::InFact(to)) => Ok(format!(
+                "(Litex.inOfSame {} {} {} {} {} {} {})",
+                self.object_term(&from.element)?,
+                self.object_term(&to.element)?,
+                self.object_term(&from.set)?,
+                self.object_term(&to.set)?,
+                arguments[0],
+                arguments[1],
+                child.proof,
+            )),
+            (AtomicFact::IsSetFact(from), AtomicFact::IsSetFact(to)) => Ok(format!(
+                "(Litex.isSetOfSame {} {} {} {})",
+                self.object_term(&from.set)?,
+                self.object_term(&to.set)?,
+                arguments[0],
+                child.proof,
+            )),
+            (AtomicFact::NotEqualFact(from), AtomicFact::NotEqualFact(to)) => Ok(format!(
+                "(Litex.notSameOfSame {} {} {} {} {} {} {})",
+                self.object_term(&from.left)?,
+                self.object_term(&to.left)?,
+                self.object_term(&from.right)?,
+                self.object_term(&to.right)?,
+                arguments[0],
+                arguments[1],
+                child.proof,
+            )),
+            _ => Err(LeanCompileError::unsupported(
+                "Atomic/BuiltinRewrite/PredicateTransport",
+            )),
         }
     }
 
@@ -2719,7 +3079,9 @@ impl LeanCompiler {
             };
             return Ok(format!("(Litex.NativeBridge.inOfDenoteNumber {} {} {} {} (Litex.NativeBridge.{bridge} {} {representative} (by norm_num)))", self.object_term(element)?, native.value, standard_term(target)?, native.denotation, native.value));
         }
-        let calculated = EvalRational::from_obj(element)
+        let calculated = self
+            .numeric_term(element)?
+            .closed
             .ok_or_else(|| LeanCompileError::unsupported("ClosedMembership/Expression"))?;
         let scalar = match value {
             ClosedScalarValue::Decimal(value) => scalar_decimal(value)?,
@@ -2957,7 +3319,10 @@ impl LeanCompiler {
         }
         Err(LeanCompileError::new(
             "FactId/Producer",
-            "The cited fact has no compiled proof or active source assumption.",
+            &format!(
+                "FactId {} has no compiled proof or active source assumption.",
+                id.value()
+            ),
         ))
     }
 

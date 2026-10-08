@@ -1,4 +1,5 @@
 use super::compile_run;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
 fn execute(source: &str) -> (RunLitexCodeResult, Runtime) {
@@ -637,6 +638,1000 @@ fn forged_false_rational_claim_requires_kernel_validation() {
             "the explicit gate output path must be absolute"
         );
         std::fs::write(path, output).expect("write requested negative kernel fixture");
+    }
+}
+
+const PHASE1_ADD_ZERO: &str = "thm add_zero:\n    ? forall x R:\n        x + 0 = x\n";
+const PHASE1_NAMED_ALIAS: &str = "thm add_zero:\n    ? forall x R:\n        x + 0 = x\nhave offset R = 2\nlet shifted = offset + 0\nby thm add_zero(offset) => offset + 0 = offset\nshifted = offset\nlet actual_argument_alias = offset\nby thm add_zero(actual_argument_alias) => actual_argument_alias + 0 = actual_argument_alias\n";
+const PHASE1_GUARDED_THEOREM: &str = "thm guarded_self:\n    ? forall x C:\n        x != 0\n        =>:\n            x / x = x / x\n";
+const PHASE1_TRANSITIVITY: &str = "forall a,b,c R:\n    a = b\n    b = c\n    =>:\n        a = c\n        c = a\n        a + 1 = c + 1\n";
+
+#[test]
+fn phase1_numeric_and_typed_aliases_replay_actual_definition_evidence() {
+    let sources = [
+        ("let numeric_alias = 2 + 3\nnumeric_alias = 5\n5 = numeric_alias\n", 1),
+        ("have typed_offset R = 2\nlet typed_alias = typed_offset\ntyped_alias = 2\ntyped_alias $in R\n", 2),
+    ];
+    for (source, equality_index) in sources {
+        let (result, runtime) = execute(source);
+        let output = compile_run(&result, &runtime, "phase1_aliases").expect(source);
+        assert!(output.contains("noncomputable def _object_i"));
+        assert!(output.contains("Litex.sameRefl"));
+        assert!(matches!(
+            &equality_proof(
+                &fact_statement(&result.statement_results[equality_index]).verify_result
+            )
+            .searched_proof,
+            EqualFactSearchedProof::ByEquivalenceClass(_)
+        ));
+    }
+}
+
+#[test]
+fn phase1_named_theorem_uses_the_actual_alias_argument_and_returned_citation() {
+    let (result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    if let Ok(path) = std::env::var("LITEX_LEAN_PHASE1_TRACE") {
+        std::fs::write(
+            path,
+            crate::json_output::emit_run_detailed(&result, &runtime, "phase1", None),
+        )
+        .expect("write selected-result audit");
+    }
+    let call = by_theorem(&result.statement_results[6]);
+    let returned_id = call.returned_conclusions[0].primary_fact_id();
+    match &equality_proof(&call.selected_proof).searched_proof {
+        EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof),
+        ) => {
+            assert!(!proof.reversed);
+            assert_eq!(proof.cited.fact_id, returned_id);
+        }
+        _ => panic!("source theorem selection must directly cite its returned equality"),
+    }
+    let output = compile_run(&result, &runtime, "phase1_named_alias").expect("named alias tracer");
+    assert!(output.contains("theorem named_thm_1"));
+    assert!(output.contains("named_thm_1 (M := M)"));
+    let alias = &let_definition(&result.statement_results[5]).statement.name;
+    assert!(output.contains(&format!("(_object_i{} (M := M))", alias.id.value())));
+}
+
+#[test]
+fn phase1_equality_paths_preserve_orientation_and_transport() {
+    let (result, runtime) = execute(PHASE1_TRANSITIVITY);
+    let proof = forall_proof(&result.statement_results[0]);
+    for conclusion in &proof.proved_then_facts[..2] {
+        assert!(matches!(
+            &equality_proof(&conclusion.verify_result).searched_proof,
+            EqualFactSearchedProof::ByEquivalenceClass(
+                EqualFactSearchedProofByEquivalenceClass::KnownPath(_)
+            )
+        ));
+    }
+    let output = compile_run(&result, &runtime, "phase1_paths").expect("oriented equality paths");
+    assert!(output.contains(".trans"));
+    assert!(output.contains(".symm"));
+    assert!(output.contains("congrArg₂ M.addValue"));
+}
+
+#[test]
+fn phase1_membership_and_nonzero_transport_consume_cited_argument_equalities() {
+    let cases = [
+        (
+            "forall u,v C:\n    u = v\n    u $in R\n    =>:\n        v $in R\n",
+            "Litex.inOfSame",
+        ),
+        (
+            "forall x,y C:\n    x = y\n    x != 0\n    =>:\n        y != 0\n",
+            "Litex.notSameOfSame",
+        ),
+    ];
+    for (source, bridge) in cases {
+        let (result, runtime) = execute(source);
+        let output = compile_run(&result, &runtime, "phase1_predicate_transport").expect(source);
+        assert!(output.contains(bridge));
+    }
+}
+
+#[test]
+fn phase1_theorem_body_replays_local_alias_and_typed_definition() {
+    let source = "thm alias_in_body:\n    ? forall x R:\n        x + 0 = x\n    let temporary = x + 0\n    have body_zero R = 0\n    temporary = x\n";
+    let (result, runtime) = execute(source);
+    let output =
+        compile_run(&result, &runtime, "phase1_local_definitions").expect("local body definitions");
+    assert!(output.contains("let _object_i"));
+    assert!(output.contains("have _fact_f"));
+    assert!(!output.contains("noncomputable def _object_i"));
+}
+
+#[test]
+fn phase1_missing_alias_producer_is_not_recovered_from_runtime_definitions() {
+    let (mut result, runtime) = execute("let alias = 2\nalias = alias\n");
+    result.statement_results.remove(0);
+    let error = compile_run(&result, &runtime, "phase1_missing_alias")
+        .expect_err("source alias needs a compiled producer");
+    assert_eq!(error.route, "Identifier/Producer");
+}
+
+#[test]
+fn phase1_local_theorem_alias_cannot_escape_into_a_later_statement() {
+    let source = "thm alias_in_body:\n    ? forall x R:\n        x + 0 = x\n    let temporary = x + 0\n    have body_zero R = 0\n    temporary = x\n1 = 1\n";
+    let (mut result, runtime) = execute(source);
+    let temporary = match &named_theorem_mut(&mut result.statement_results[0]).body {
+        ExecDefThmBodyProof::Forall(body) => Obj::Identifier(IdentifierObj::from_bound_name(
+            &let_definition(&body.proof_steps[0]).statement.name,
+        )),
+        _ => panic!("forall theorem body"),
+    };
+    let later = match &mut result.statement_results[1] {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
+        _ => panic!("later successful fact"),
+    };
+    let equality = equality_proof_mut(&mut later.verify_result);
+    equality.fact.left = temporary.clone();
+    equality.well_defined_proof.left = ObjWellDefinedProof::ByDef {
+        obj: temporary,
+        proof: ObjWellDefinedProofByDef::Identifier(
+            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IdentifierObjWellDefinedProof::new(),
+        ),
+    };
+    let changed = equality.fact.clone();
+    match &mut later.store_and_infer_result.store {
+        StoreFactResult::AtomicFact(stored) => stored.fact = AtomicFact::EqualFact(changed),
+        _ => panic!("atomic later store"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_escaped_body_alias")
+        .expect_err("the theorem's local alias producer was closed before this statement");
+    assert_eq!(error.route, "Identifier/Producer");
+}
+
+#[test]
+fn phase1_alias_statement_identity_and_value_must_match_its_stored_equality() {
+    let (mut result, runtime) = execute("let alias = 2\n");
+    let_definition_mut(&mut result.statement_results[0])
+        .statement
+        .name
+        .id = IdentifierId::new(u64::MAX);
+    let error = compile_run(&result, &runtime, "phase1_wrong_alias_id")
+        .expect_err("stored alias identity must be exact");
+    assert_eq!(error.route, "Declaration/StoreSubject");
+
+    let (mut result, runtime) = execute("let alias = 2\n");
+    let_definition_mut(&mut result.statement_results[0])
+        .statement
+        .value = number_object("3");
+    let error = compile_run(&result, &runtime, "phase1_wrong_alias_value")
+        .expect_err("literal WD cannot certify another value");
+    assert_eq!(error.route, "WD/Subject");
+}
+
+#[test]
+fn phase1_alias_requires_its_own_store_and_source_orientation() {
+    let (mut result, runtime) = execute("let alias = 2\n2 = alias\n");
+    let reversed = fact_statement(&result.statement_results[1])
+        .store_and_infer_result
+        .primary_fact_id();
+    let_definition_mut(&mut result.statement_results[0]).stored_fact_ids[0] = reversed;
+    let error = compile_run(&result, &runtime, "phase1_reversed_alias_store")
+        .expect_err("alias storage requires name equals value");
+    assert_eq!(error.route, "Declaration/StoreSubject");
+
+    let (mut result, runtime) = execute("let alias = 2\n");
+    let_definition_mut(&mut result.statement_results[0])
+        .stored_fact_ids
+        .clear();
+    let error = compile_run(&result, &runtime, "phase1_missing_alias_store")
+        .expect_err("alias storage stage cannot disappear");
+    assert_eq!(error.route, "Let/Inference");
+}
+
+#[test]
+fn phase1_typed_alias_requires_all_membership_stages() {
+    let (mut result, runtime) = execute("have offset R = 2\n");
+    have_equal_mut(&mut result.statement_results[0])
+        .membership_checks
+        .clear();
+    let error = compile_run(&result, &runtime, "phase1_missing_have_member")
+        .expect_err("typed definition cannot skip its carrier proof");
+    assert_eq!(error.route, "HaveEqual/Stages");
+}
+
+#[test]
+fn phase1_missing_and_wrong_equality_edges_are_not_repaired_by_search() {
+    let (mut result, runtime) = execute(PHASE1_TRANSITIVITY);
+    equality_path_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    )
+    .path
+    .pop();
+    let error = compile_run(&result, &runtime, "phase1_missing_path_edge")
+        .expect_err("ordered path must reach its source endpoint");
+    assert_eq!(error.route, "Equality/PathEndpoint");
+
+    let (mut result, runtime) = execute(PHASE1_TRANSITIVITY);
+    let path = equality_path_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    );
+    assert_eq!(path.path.len(), 2);
+    path.path[1].2 = path.path[0].2;
+    let error = compile_run(&result, &runtime, "phase1_wrong_path_citation")
+        .expect_err("first equality does not prove the second edge");
+    assert_eq!(error.route, "Equality/PathSubject");
+
+    let (mut result, runtime) = execute(PHASE1_TRANSITIVITY);
+    equality_path_mut(
+        &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
+    )
+    .path
+    .swap(0, 1);
+    let error = compile_run(&result, &runtime, "phase1_reordered_path")
+        .expect_err("valid edges cannot be consumed out of order");
+    assert_eq!(error.route, "Equality/PathOrder");
+}
+
+#[test]
+fn phase1_invocation_requires_the_earlier_named_declaration() {
+    let source = format!("{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
+    let (mut result, runtime) = execute(&source);
+    result.statement_results.remove(0);
+    let error = compile_run(&result, &runtime, "phase1_missing_theorem")
+        .expect_err("runtime declaration is not compiled evidence");
+    assert_eq!(error.route, "ByThm/Producer");
+
+    let (mut result, runtime) = execute(&source);
+    match &mut by_theorem_mut(&mut result.statement_results[1]).callee {
+        ResolvedTheoremCallee::UserTheorem(declaration) => declaration.name.push_str("_other"),
+        _ => panic!("actual user theorem callee"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_corrupt_callee")
+        .expect_err("captured callee must equal compiled declaration");
+    assert_eq!(error.route, "ByThm/Callee");
+}
+
+#[test]
+fn phase1_theorem_goal_wd_requires_its_own_parameter_producers() {
+    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
+        .introduced_params
+        .defined_params
+        .stored_fact_ids
+        .clear();
+    let error = compile_run(&result, &runtime, "phase1_missing_goal_parameter")
+        .expect_err("goal WD binder introductions are a required stage");
+    assert_eq!(error.route, "Forall/ParameterInference");
+
+    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
+        .introduced_params
+        .defined_params
+        .stored_fact_ids[0] = FactId::new(u64::MAX);
+    let error = compile_run(&result, &runtime, "phase1_wrong_goal_parameter")
+        .expect_err("goal WD cannot use a nonexistent introducing membership");
+    assert_eq!(error.route, "FactId/Resolution");
+}
+
+#[test]
+fn phase1_named_declaration_binder_identity_cannot_change_behind_goal_wd() {
+    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    match &mut named_theorem_mut(&mut result.statement_results[0])
+        .statement
+        .fact
+    {
+        Fact::ForallFact(fact) => {
+            fact.typed_parameters.groups[0].params[0].id = IdentifierId::new(u64::MAX)
+        }
+        _ => panic!("forall theorem interface"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_corrupt_declaration_binder")
+        .expect_err("declaration and goal-WD binder identities must agree");
+    assert_eq!(error.route, "Forall/ParameterFact");
+}
+
+#[test]
+fn phase1_guarded_theorem_goal_wd_replays_the_exact_domain_store() {
+    let (result, runtime) = execute(PHASE1_GUARDED_THEOREM);
+    assert!(compile_run(&result, &runtime, "phase1_guarded_goal").is_ok());
+
+    let (mut result, runtime) = execute(PHASE1_GUARDED_THEOREM);
+    let wd = theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]));
+    match &mut wd.assumed_dom_facts[0].store_and_infer.store {
+        StoreFactResult::AtomicFact(stored) => stored.fact_id = FactId::new(u64::MAX),
+        _ => panic!("atomic nonzero domain store"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_corrupt_goal_domain_store")
+        .expect_err("domain assumption must own its exact primary store");
+    assert_eq!(error.route, "Store/Subject");
+}
+
+#[test]
+fn phase1_theorem_goal_wd_checks_every_exact_then_subject() {
+    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
+        .then
+        .clear();
+    let error = compile_run(&result, &runtime, "phase1_missing_goal_then_wd")
+        .expect_err("goal formation cannot skip a conclusion");
+    assert_eq!(error.route, "WD/ForallThenArity");
+
+    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    match &mut theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0])).then[0] {
+        FactWellDefinedProof::Equality(wd) => replace_wd_subject(&mut wd.left, number_object("9")),
+        _ => panic!("equality goal WD"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_goal_then_wd")
+        .expect_err("another object's WD is not this conclusion's WD");
+    assert_eq!(error.route, "WD/Subject");
+}
+
+#[test]
+fn phase1_theorem_body_source_steps_cannot_be_replaced_by_other_definitions() {
+    let source = "thm alias_in_body:\n    ? forall x R:\n        x + 0 = x\n    let temporary = x + 0\n    have body_zero R = 0\n    temporary = x\n";
+    let (mut result, runtime) = execute(source);
+    let theorem = named_theorem_mut(&mut result.statement_results[0]);
+    match &mut theorem.body {
+        ExecDefThmBodyProof::Forall(body) => {
+            let_definition_mut(&mut body.proof_steps[0])
+                .statement
+                .name
+                .id = IdentifierId::new(u64::MAX);
+        }
+        _ => panic!("forall body"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_body_capture")
+        .expect_err("captured result must belong to its source statement");
+    assert_eq!(error.route, "Theorem/ProofStepCapture");
+}
+
+#[test]
+fn phase1_invocation_cannot_delete_a_returned_producer() {
+    let source = format!("{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
+    let (mut result, runtime) = execute(&source);
+    by_theorem_mut(&mut result.statement_results[1])
+        .returned_conclusions
+        .clear();
+    let error = compile_run(&result, &runtime, "phase1_deleted_return")
+        .expect_err("selected proof needs the invocation's actual returned producer");
+    assert_eq!(error.route, "ByThm/Stages");
+}
+
+#[test]
+fn phase1_explicit_selection_cannot_be_replaced_by_an_unrelated_ambient_truth() {
+    let source = format!("1 = 1\n1 = 1\n{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
+    let (mut result, runtime) = execute(&source);
+    let ambient = match result.statement_results.remove(1) {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(ambient)) => ambient,
+        _ => panic!("actual independently verified ambient truth"),
+    };
+    let call = by_theorem_mut(&mut result.statement_results[2]);
+    call.selected_proof = ambient.verify_result;
+    call.stored = ambient.store_and_infer_result;
+    let error = compile_run(&result, &runtime, "phase1_ambient_selection")
+        .expect_err("a true ambient proof does not select a returned theorem atom");
+    assert_eq!(error.route, "ByThm/SelectionProvenance");
+}
+
+#[test]
+fn phase1_explicit_selection_rejects_ambient_citations_even_with_the_right_alpha_shape() {
+    let source = format!("1 = 1\n1 = 1\n{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
+    let (mut result, runtime) = execute(&source);
+    let registered = equality_proof(&fact_statement(&result.statement_results[0]).verify_result)
+        .fact
+        .clone();
+    let ambient = match result.statement_results.remove(1) {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(ambient)) => ambient,
+        _ => panic!("independent truth"),
+    };
+    let mut ambient_proof = match ambient.verify_result {
+        VerifyFactResult::Equality(proof) => match *proof {
+            VerifyEqualityResult::Success(proof) => proof,
+            _ => panic!("successful ambient equality"),
+        },
+        _ => panic!("ambient equality"),
+    };
+    let call = by_theorem_mut(&mut result.statement_results[2]);
+    let selected = equality_proof_mut(&mut call.selected_proof);
+    std::mem::swap(
+        &mut selected.well_defined_proof,
+        &mut ambient_proof.well_defined_proof,
+    );
+    selected.fact = ambient_proof.fact;
+    match &mut selected.searched_proof {
+        EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof),
+        ) => proof.cited = registered,
+        _ => panic!("actual exact selected alpha shape"),
+    }
+    call.stored = ambient.store_and_infer_result;
+    let error = compile_run(&result, &runtime, "phase1_ambient_alpha_selection")
+        .expect_err("a correctly shaped citation must still originate in this return list");
+    assert_eq!(error.route, "ByThm/SelectionProvenance");
+}
+
+#[test]
+fn phase1_explicit_selection_cannot_reverse_a_directly_returned_equality() {
+    let source = format!("{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
+    let (mut result, runtime) = execute(&source);
+    let call = by_theorem_mut(&mut result.statement_results[1]);
+    let selected = equality_proof_mut(&mut call.selected_proof);
+    std::mem::swap(&mut selected.fact.left, &mut selected.fact.right);
+    std::mem::swap(
+        &mut selected.well_defined_proof.left,
+        &mut selected.well_defined_proof.right,
+    );
+    match &mut selected.searched_proof {
+        EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof),
+        ) => proof.reversed = true,
+        _ => panic!("actual exact selected alpha shape"),
+    }
+    let reversed = selected.fact.clone();
+    match &mut call.stored.store {
+        StoreFactResult::AtomicFact(stored) => stored.fact = AtomicFact::EqualFact(reversed),
+        _ => panic!("atomic selected store"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_reversed_selection")
+        .expect_err("equality symmetry is not direct theorem selection");
+    assert_eq!(error.route, "ByThm/SelectionProvenance");
+}
+
+const PHASE1_KNOWN_FORALL: &str = "forall a,b,c R:\n    a = b\n    =>:\n        b = a\nforall p,q,r R:\n    p = q\n    =>:\n        q = p\n";
+
+#[test]
+fn phase1_known_forall_reuses_the_exact_producer_with_all_binders_including_unused() {
+    let (result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let source = forall_proof(&result.statement_results[0]);
+    let target = known_forall(&result.statement_results[1]);
+    assert_eq!(target.cite_fact_id, source.fact.fact_id);
+    assert_eq!(target.parameter_renamings.len(), 3);
+    for ((source, target), renaming) in source.fact.typed_parameters.groups[0]
+        .params
+        .iter()
+        .zip(&target.fact.typed_parameters.groups[0].params)
+        .zip(&target.parameter_renamings)
+    {
+        assert_eq!(renaming.source, source.id);
+        assert_eq!(renaming.target, target.id);
+    }
+    let output = compile_run(&result, &runtime, "phase1_whole_forall")
+        .expect("whole-proposition alpha reuse");
+    assert!(output.contains("fact_1 (M := M)"));
+    assert!(output.contains("theorem fact_2"));
+    assert!(!output.contains("(by ring)"));
+}
+
+#[test]
+fn phase1_known_forall_cannot_omit_or_add_even_an_unused_binder_renaming() {
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    known_forall_mut(&mut result.statement_results[1])
+        .parameter_renamings
+        .pop();
+    let error = compile_run(&result, &runtime, "phase1_missing_unused_renaming")
+        .expect_err("unused binder still owns one positional renaming");
+    assert_eq!(error.route, "KnownForall/Arity");
+
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let proof = known_forall_mut(&mut result.statement_results[1]);
+    let first = &proof.parameter_renamings[0];
+    let extra = crate::execute::execute_fact_stmt::verify_forall_fact::ForallParameterRenaming {
+        source: first.source,
+        target: first.target,
+    };
+    proof.parameter_renamings.push(extra);
+    let error = compile_run(&result, &runtime, "phase1_extra_renaming")
+        .expect_err("an additional mapping cannot alter source binder arity");
+    assert_eq!(error.route, "KnownForall/Arity");
+}
+
+#[test]
+fn phase1_known_forall_requires_an_ordered_bijection_without_duplicate_ids() {
+    for change in [
+        "wrong_source",
+        "wrong_target",
+        "reordered",
+        "duplicate_source",
+        "duplicate_target",
+    ] {
+        let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+        let renamings = &mut known_forall_mut(&mut result.statement_results[1]).parameter_renamings;
+        match change {
+            "wrong_source" => renamings[0].source = IdentifierId::new(u64::MAX),
+            "wrong_target" => renamings[0].target = IdentifierId::new(u64::MAX),
+            "reordered" => renamings.swap(0, 1),
+            "duplicate_source" => renamings[1].source = renamings[0].source,
+            "duplicate_target" => renamings[1].target = renamings[0].target,
+            _ => unreachable!(),
+        }
+        let error = compile_run(&result, &runtime, "phase1_changed_renaming").expect_err(change);
+        assert_eq!(error.route, "KnownForall/Renaming", "{change}");
+    }
+}
+
+#[test]
+fn phase1_known_forall_needs_an_earlier_compiled_producer() {
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    result.statement_results.remove(0);
+    let error = compile_run(&result, &runtime, "phase1_missing_whole_forall_producer")
+        .expect_err("runtime source fact does not replace its removed proof producer");
+    assert_eq!(error.route, "FactId/Producer");
+}
+
+#[test]
+fn phase1_known_forall_rejects_missing_wrong_family_and_closed_scope_citations() {
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    known_forall_mut(&mut result.statement_results[1]).cite_fact_id = FactId::new(u64::MAX);
+    let error = compile_run(&result, &runtime, "phase1_missing_whole_forall_cite")
+        .expect_err("missing source citation cannot be searched again");
+    assert_eq!(error.route, "FactId/Resolution");
+
+    let source = format!("1 = 1\n{PHASE1_KNOWN_FORALL}");
+    let (mut result, runtime) = execute(&source);
+    let atomic_id = fact_statement(&result.statement_results[0])
+        .store_and_infer_result
+        .primary_fact_id();
+    known_forall_mut(&mut result.statement_results[2]).cite_fact_id = atomic_id;
+    let error = compile_run(&result, &runtime, "phase1_wrong_whole_forall_family")
+        .expect_err("an atomic theorem is not the cited whole forall");
+    assert_eq!(error.route, "KnownForall/Citation");
+
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let closed_id = forall_proof(&result.statement_results[0]).assumed_dom_facts[0]
+        .store_and_infer
+        .primary_fact_id();
+    known_forall_mut(&mut result.statement_results[1]).cite_fact_id = closed_id;
+    let error = compile_run(&result, &runtime, "phase1_closed_whole_forall_cite")
+        .expect_err("a previous forall's local premise has left the active scope");
+    assert_eq!(error.route, "FactId/Resolution");
+}
+
+#[test]
+fn phase1_known_forall_cannot_change_parameter_carriers() {
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    known_forall_mut(&mut result.statement_results[1])
+        .fact
+        .typed_parameters
+        .groups[0]
+        .param_type = ParamType::Obj(Obj::StandardSet(StandardSet::C));
+    let error = compile_run(&result, &runtime, "phase1_changed_whole_forall_carrier")
+        .expect_err("alpha renaming cannot change R into C");
+    assert_eq!(error.route, "KnownForall/Carrier");
+}
+
+#[test]
+fn phase1_known_forall_cannot_change_domain_or_conclusion_subjects() {
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    match &mut known_forall_mut(&mut result.statement_results[1])
+        .fact
+        .dom_facts[0]
+    {
+        Fact::AtomicFact(AtomicFact::EqualFact(fact)) => fact.right = number_object("0"),
+        _ => panic!("guard equality"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_whole_forall_domain")
+        .expect_err("recorded binder bijection does not justify another premise");
+    assert_eq!(error.route, "KnownForall/Domain");
+
+    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    match &mut known_forall_mut(&mut result.statement_results[1])
+        .fact
+        .then_facts[0]
+    {
+        ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(fact)) => {
+            fact.right = number_object("0")
+        }
+        _ => panic!("conclusion equality"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_whole_forall_conclusion")
+        .expect_err("recorded binder bijection does not justify another conclusion");
+    assert_eq!(error.route, "KnownForall/Conclusion");
+}
+
+#[test]
+fn phase1_second_theorem_call_needs_its_own_argument_type_proof_identity() {
+    let (mut result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    by_theorem_mut(&mut result.statement_results[6])
+        .type_proofs
+        .clear();
+    let error = compile_run(&result, &runtime, "phase1_deleted_second_type_proof")
+        .expect_err("the alias call cannot skip its argument membership stage");
+    assert_eq!(error.route, "ByThm/Arguments");
+
+    let (mut result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    let proof = &mut by_theorem_mut(&mut result.statement_results[6]).type_proofs[0];
+    match &mut atomic_proof_mut(proof).fact {
+        AtomicFact::InFact(fact) => fact.fact_id = FactId::new(u64::MAX),
+        _ => panic!("actual alias argument membership proof"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_second_type_proof_id")
+        .expect_err("returned WD cites this exact checked type producer's original identity");
+    assert_eq!(error.route, "FactId/Producer");
+}
+
+#[test]
+fn phase1_second_call_return_wd_cannot_cite_a_closed_first_call_type_proof() {
+    let (mut result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    let closed =
+        atomic_proof_mut(&mut by_theorem_mut(&mut result.statement_results[3]).type_proofs[0])
+            .fact
+            .fact_id();
+    let call = by_theorem_mut(&mut result.statement_results[6]);
+    let add = match &mut call.conclusions_wd[0] {
+        FactWellDefinedProof::Equality(wd) => match &mut wd.left {
+            ObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::ArithmeticOperator(
+                        ArithmeticOperatorObjWellDefinedProofByDef::Add(proof),
+                    ),
+                ..
+            } => proof,
+            _ => panic!("actual alias-plus-zero conclusion construction"),
+        },
+        _ => panic!("returned equality WD"),
+    };
+    let requirement = atomic_proof_mut(&mut add.requirement_fact_verified[0]);
+    match &mut requirement.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) => {
+            structural_known_citation_mut(proof).cite_fact_id = closed
+        }
+        _ => panic!("actual standard numeric-superset operand requirement"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_closed_call_type_producer")
+        .expect_err("the first invocation's fresh membership producer is closed");
+    assert_eq!(error.route, "FactId/Resolution");
+}
+
+fn structural_known_citation_mut(
+    proof: &mut StructuralMembershipProof,
+) -> &mut AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
+    match &mut proof.reason {
+        StructuralMembershipReason::Known(proof) => proof,
+        StructuralMembershipReason::StandardSuperset(proof) => structural_known_citation_mut(proof),
+        _ => panic!("actual captured known membership under standard supersets"),
+    }
+}
+
+fn known_forall(result: &ExecStmtResult) -> &VerifyKnownForallFactProof {
+    match &fact_statement(result).verify_result {
+        VerifyFactResult::ForallFact(proof) => match proof.as_ref() {
+            VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) => {
+                proof
+            }
+            _ => panic!("actual whole-forall source replay"),
+        },
+        _ => panic!("forall result"),
+    }
+}
+
+fn known_forall_mut(result: &mut ExecStmtResult) -> &mut VerifyKnownForallFactProof {
+    let fact = match result {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
+        _ => panic!("successful forall fact statement"),
+    };
+    match &mut fact.verify_result {
+        VerifyFactResult::ForallFact(proof) => match proof.as_mut() {
+            VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) => {
+                proof
+            }
+            _ => panic!("actual whole-forall source replay"),
+        },
+        _ => panic!("forall result"),
+    }
+}
+
+const PHASE1_COMPUTED_REWRITE: &str =
+    "let computed = 2 + 3\ncomputed $in C\ncomputed + 1 = computed + 1\n";
+const PHASE1_CARRIER_REWRITE: &str =
+    "let base_carrier = R\nlet carrier_alias = base_carrier\n1 $in carrier_alias\n";
+
+#[test]
+fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
+    let (mut result, runtime) = execute(PHASE1_COMPUTED_REWRITE);
+    let expected = let_definition(&result.statement_results[0])
+        .stored_fact_ids
+        .clone();
+    let expected_closed = let_definition(&result.statement_results[0])
+        .statement
+        .value
+        .clone();
+    match atomic_rewrite_mut(&mut result.statement_results[1]) {
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
+            proof,
+        ) => {
+            assert_eq!(proof.cited_equal_fact_ids, expected);
+            match &proof.rewritten_fact {
+                Fact::AtomicFact(AtomicFact::InFact(fact)) => {
+                    assert_eq!(fact.element.ir(), expected_closed.ir())
+                }
+                _ => panic!("actual closed membership residual"),
+            }
+        }
+        _ => panic!("actual computed alias ClosedNumeric winning route"),
+    }
+    let output = compile_run(&result, &runtime, "phase1_computed_alias")
+        .expect("computed alias membership and arithmetic WD");
+    assert!(output.contains("Litex.inOfSame"));
+    assert!(output.contains("Litex.sameRefl (Litex.add"));
+    assert!(!output.contains("NativeBridge.sameOfDenoteNumber"));
+    println!("{output}");
+}
+
+#[test]
+fn phase1_carrier_alias_membership_consumes_its_actual_ordered_known_equality_path() {
+    let (mut result, runtime) = execute(PHASE1_CARRIER_REWRITE);
+    let expected = vec![
+        let_definition(&result.statement_results[1]).stored_fact_ids[0],
+        let_definition(&result.statement_results[0]).stored_fact_ids[0],
+    ];
+    match atomic_rewrite_mut(&mut result.statement_results[2]) {
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::KnownEqualObjSubstitution(proof) => {
+            assert_eq!(proof.cited_equal_fact_ids, expected)
+        }
+        _ => panic!("actual carrier KnownEqual winning route"),
+    }
+    let output = compile_run(&result, &runtime, "phase1_carrier_alias")
+        .expect("carrier alias equality path");
+    assert!(output.contains("Litex.inOfSame"));
+    assert!(output.contains(".trans"));
+}
+
+#[test]
+fn phase1_atomic_rewrite_needs_nonempty_nonduplicated_citations() {
+    for duplicate in [false, true] {
+        let (mut result, runtime) = execute(PHASE1_COMPUTED_REWRITE);
+        let ids = atomic_rewrite_cites_mut(atomic_rewrite_mut(&mut result.statement_results[1]));
+        if duplicate {
+            ids.push(ids[0]);
+        } else {
+            ids.clear();
+        }
+        let error = compile_run(&result, &runtime, "phase1_changed_rewrite_cites")
+            .expect_err("recorded rewrite citations cannot disappear or duplicate");
+        assert_eq!(error.route, "AtomicRewrite/Citations");
+    }
+}
+
+#[test]
+fn phase1_closed_atomic_rewrite_rejects_wrong_and_unused_source_equalities() {
+    let source = "let computed = 2 + 3\nlet other_offset = 3\ncomputed $in C\n";
+    for unused in [false, true] {
+        let (mut result, runtime) = execute(source);
+        let other = let_definition(&result.statement_results[1]).stored_fact_ids[0];
+        let ids = atomic_rewrite_cites_mut(atomic_rewrite_mut(&mut result.statement_results[2]));
+        if unused {
+            ids.push(other);
+        } else {
+            ids[0] = other;
+        }
+        let error = compile_run(&result, &runtime, "phase1_unrelated_rewrite_equality")
+            .expect_err("rewrite must consume exactly its recorded source equalities");
+        assert_eq!(
+            error.route,
+            if unused {
+                "AtomicRewrite/CitationOrder"
+            } else {
+                "AtomicRewrite/ClosedTopLevelCitation"
+            }
+        );
+    }
+}
+
+#[test]
+fn phase1_known_atomic_rewrite_rejects_discontinuous_incomplete_and_reordered_paths() {
+    for change in ["reorder", "missing_first", "missing_last"] {
+        let (mut result, runtime) = execute(PHASE1_CARRIER_REWRITE);
+        let ids = atomic_rewrite_cites_mut(atomic_rewrite_mut(&mut result.statement_results[2]));
+        assert_eq!(ids.len(), 2);
+        match change {
+            "reorder" => ids.swap(0, 1),
+            "missing_first" => {
+                ids.remove(0);
+            }
+            "missing_last" => {
+                ids.pop();
+            }
+            _ => unreachable!(),
+        }
+        let error =
+            compile_run(&result, &runtime, "phase1_changed_known_rewrite_path").expect_err(change);
+        assert_eq!(
+            error.route,
+            if change == "missing_last" {
+                "AtomicRewrite/PathEndpoint"
+            } else {
+                "AtomicRewrite/PathOrder"
+            }
+        );
+    }
+}
+
+#[test]
+fn phase1_atomic_rewrite_requires_the_exact_residual_family_and_child_subject() {
+    let (mut result, runtime) = execute("5 != 0\nlet computed = 2 + 3\ncomputed $in C\n");
+    let other_family = atomic_fact_from_statement(&result.statement_results[0]);
+    match atomic_rewrite_mut(&mut result.statement_results[2]) {
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
+            proof,
+        ) => proof.rewritten_fact = Fact::AtomicFact(other_family),
+        _ => panic!("closed alias rewrite"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_rewrite_family")
+        .expect_err("membership rewrite cannot become inequality");
+    assert_eq!(error.route, "AtomicRewrite/Family");
+
+    let (mut result, runtime) = execute(PHASE1_COMPUTED_REWRITE);
+    match atomic_rewrite_mut(&mut result.statement_results[1]) {
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
+            proof,
+        ) => match &mut proof.rewritten_fact {
+            Fact::AtomicFact(AtomicFact::InFact(fact)) => fact.element = number_object("6"),
+            _ => panic!("membership residual"),
+        },
+        _ => panic!("closed alias rewrite"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_rewrite_residual")
+        .expect_err("genuine residual proof for five does not certify six");
+    assert_eq!(error.route, "AtomicRewrite/ChildSubject");
+}
+
+#[test]
+fn phase1_computed_rhs_rewrite_requires_the_actual_closed_endpoint() {
+    let (mut result, runtime) = execute("let computed = 2 + 3\n6 $in C\ncomputed $in C\n");
+    let six = match result.statement_results.remove(1) {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
+        _ => panic!("genuine primitive six-membership proof"),
+    };
+    let residual = Fact::AtomicFact(match &six.verify_result {
+        VerifyFactResult::AtomicExceptEquality(proof) => match proof.as_ref() {
+            VerifyAtomicExceptEqualityFactResult::Success(proof) => proof.fact.clone(),
+            _ => panic!("six member success"),
+        },
+        _ => panic!("atomic six membership"),
+    });
+    match atomic_rewrite_mut(&mut result.statement_results[1]) {
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
+            proof,
+        ) => {
+            proof.rewritten_fact = residual;
+            proof.proof_of_rewritten_fact = six.verify_result;
+        }
+        _ => panic!("computed alias closed rewrite"),
+    }
+    let error = compile_run(&result, &runtime, "phase1_changed_closed_endpoint").expect_err(
+        "a genuine proof that six is complex cannot replace the selected closed endpoint two plus three",
+    );
+    assert_eq!(error.route, "AtomicRewrite/ClosedTopLevelCitation");
+}
+
+#[test]
+fn phase1_computed_value_equality_preserves_the_unsupported_selected_rewrite_boundary() {
+    let (result, runtime) = execute("let computed = 2 + 3\ncomputed + 1 = 6\n");
+    assert!(matches!(
+        &equality_proof(&fact_statement(&result.statement_results[1]).verify_result).searched_proof,
+        EqualFactSearchedProof::ByBuiltinRewrite(_)
+    ));
+    let error = compile_run(&result, &runtime, "phase1_composite_equality_boundary").expect_err(
+        "atomic whole-argument support does not reroute a selected composite equality rewrite",
+    );
+    assert_eq!(error.route, "Equality/BuiltinRewrite");
+}
+
+fn atomic_fact_from_statement(result: &ExecStmtResult) -> AtomicFact {
+    match &fact_statement(result).verify_result {
+        VerifyFactResult::AtomicExceptEquality(proof) => match proof.as_ref() {
+            VerifyAtomicExceptEqualityFactResult::Success(proof) => proof.fact.clone(),
+            _ => panic!("successful atomic fact"),
+        },
+        _ => panic!("atomic result"),
+    }
+}
+
+fn atomic_rewrite_mut(
+    result: &mut ExecStmtResult,
+) -> &mut AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
+    let fact = match result {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
+        _ => panic!("successful atomic statement"),
+    };
+    match &mut atomic_proof_mut(&mut fact.verify_result).searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(proof) => proof,
+        _ => panic!("actual atomic builtin rewrite winner"),
+    }
+}
+
+fn atomic_rewrite_cites_mut(
+    proof: &mut AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
+) -> &mut Vec<FactId> {
+    match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
+            proof,
+        ) => &mut proof.cited_equal_fact_ids,
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::KnownEqualObjSubstitution(proof) => {
+            &mut proof.cited_equal_fact_ids
+        }
+        _ => panic!("bounded equality rewrite adapter"),
+    }
+}
+
+fn number_object(value: &str) -> Obj {
+    Obj::Literal(Literal::Number(Number::new(value.to_string())))
+}
+
+fn replace_wd_subject(wd: &mut ObjWellDefinedProof, replacement: Obj) {
+    match wd {
+        ObjWellDefinedProof::ByKnown { obj, .. } | ObjWellDefinedProof::ByDef { obj, .. } => {
+            *obj = replacement
+        }
+    }
+}
+
+fn fact_statement(result: &ExecStmtResult) -> &ExecFactStmtSuccessResult {
+    match result {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
+        _ => panic!("successful fact statement"),
+    }
+}
+
+fn let_definition(result: &ExecStmtResult) -> &ExecLetObjStmtSuccessResult {
+    match result {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(proof)),
+        )) => proof,
+        _ => panic!("successful let definition"),
+    }
+}
+
+fn let_definition_mut(result: &mut ExecStmtResult) -> &mut ExecLetObjStmtSuccessResult {
+    match result {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(proof)),
+        )) => proof,
+        _ => panic!("successful let definition"),
+    }
+}
+
+fn have_equal_mut(result: &mut ExecStmtResult) -> &mut ExecHaveObjEqualStmtSuccessResult {
+    match result {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(proof)),
+        )) => proof,
+        _ => panic!("successful typed value definition"),
+    }
+}
+
+fn named_theorem_mut(result: &mut ExecStmtResult) -> &mut ExecDefThmStmtSuccess {
+    match result {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(proof),
+        )) => proof,
+        _ => panic!("successful named theorem"),
+    }
+}
+
+fn theorem_goal_wd_mut(proof: &mut ExecDefThmStmtSuccess) -> &mut ForallFactWellDefinedProof {
+    match &mut proof.goal_wd {
+        VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ForallFact(proof)) => proof,
+        _ => panic!("actual forall goal formation"),
+    }
+}
+
+fn by_theorem(result: &ExecStmtResult) -> &ExecByThmStmtSuccess {
+    match result {
+        ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => proof,
+        _ => panic!("successful explicit theorem selection"),
+    }
+}
+
+fn by_theorem_mut(result: &mut ExecStmtResult) -> &mut ExecByThmStmtSuccess {
+    match result {
+        ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => proof,
+        _ => panic!("successful explicit theorem selection"),
+    }
+}
+
+fn equality_path_mut(result: &mut VerifyFactResult) -> &mut KnownEqualityPathProof {
+    match &mut equality_proof_mut(result).searched_proof {
+        EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::KnownPath(proof),
+        ) => proof,
+        _ => panic!("actual known oriented equality path"),
     }
 }
 
