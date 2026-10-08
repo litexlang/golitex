@@ -2,7 +2,7 @@
 
 > **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
 
-> **2026-10-06 当前契约：** 结构信息查找只消费声明和精确对象的 special_properties，不遍历等价类。正式套件 85/85 保持通过；T05 的原直写法现已接受，其余原片段仍独立观测。显式发布所需 body/签名/载体后再使用。[实现和最新门禁](experience/problem_notes/exact-property-structural-lookup-2026-10-06.md)。下方 2026-10-04 验收保留为历史。
+> **2026-10-06 当前契约：** 结构信息查找只消费声明和精确对象的 special_properties，不遍历等价类。正式套件 85/85 保持通过；T05 的原直写法现已接受，其余原片段仍独立观测。显式发布所需 body/签名/载体后再使用。实现和最新门禁 (historical task record; retired)。下方 2026-10-04 验收保留为历史。
 
 This standalone corpus checks function sets, template instantiation, callable
 struct fields, function-valued returns and template failure diagnostics.
@@ -61,7 +61,7 @@ unchanged; the old fn-set positive is replaced by a valid fixed-carrier family,
 with its invalid original signature retained as N27.
 
 Persistent strict REPL evidence is in
-[proof_journals/cleanup_2026-10-04.json](proof_journals/cleanup_2026-10-04.json).
+proof_journals/cleanup_2026-10-04.json (historical task record; retired).
 The current CLI lacks `try:`, `-runner`, `-compact` and `-before`; session probes
 use discarded `sketch:` frames and clean gates check `success`/`session_error`.
 Both raw field-premise orderings are recorded separately. A typed local `&Box`
@@ -76,9 +76,9 @@ Historical receipts remain intact:
 and [existing_regressions.json](existing_regressions.json). Their dated
 identities describe earlier observations, not current-version assertions.
 Earlier source attempts remain in
-[proof_journals/2026-10-04.json](proof_journals/2026-10-04.json),
-[proof_journals/numeric_evaluation_2026-10-04.json](proof_journals/numeric_evaluation_2026-10-04.json)
-and [proof_journals/explicit_bridges_2026-10-04.json](proof_journals/explicit_bridges_2026-10-04.json).
+proof_journals/2026-10-04.json (historical task record; retired),
+proof_journals/numeric_evaluation_2026-10-04.json (historical task record; retired)
+and proof_journals/explicit_bridges_2026-10-04.json (historical task record; retired).
 
 This suite certifies these CLI verification and well-definedness observations.
 It does not certify extracted programs, Lean output, performance, all examples

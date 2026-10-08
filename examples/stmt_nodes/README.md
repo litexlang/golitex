@@ -177,6 +177,6 @@ atomic predicate with a local proof, dependent witness types, nonempty-set
 membership, explicit unique witnesses, and a real function-space member.
 Detailed retains the actual successful argument/WD/type/proof/body checks,
 and the actual nonempty failure stage and child. Normal and execution verdicts
-are unchanged; local_env remains omitted. The [source-owned note](experience/problem_notes/witness-detailed-evidence-2026-10-05.md)
+are unchanged; local_env remains omitted. The source-owned note (historical task record; retired)
 records the strict file gate, focused tests and deliberate exclusion of the
 legacy wrong-witness function-space shortcut.

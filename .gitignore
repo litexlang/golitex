@@ -78,3 +78,12 @@ pending_showcase
 
 # The entire root scripts workspace is local-only, with no publication exceptions.
 /scripts/
+
+# Local process records and generated module caches.
+**/.draft/
+**/proof_journals/
+**/experience/
+**/bugs/
+/docs/audits/
+/tests/tooling/acceptance/
+**/__litex_knowledge_base__/

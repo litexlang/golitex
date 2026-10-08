@@ -5,7 +5,7 @@
 - Task: explain the three Obj examples selected by the user and assess finite-sum evaluation.
 - Scope: Number equality/inequality, complex division WD and proof search, sum expansion and `eval`.
 - Related workspace: golitex, `examples/test_objs`.
-- Date: 2026-10-02. The observations below were executed after a successful current-source release build. [Structured diagnostic probes](proof_journals/diagnosis_2026-10-02.json) record source/executable hashes, complete envelopes and exit codes, with both source and binary stable during the gate. Kernel changes were not made by this diagnosis.
+- Date: 2026-10-02. The observations below were executed after a successful current-source release build. Structured diagnostic probes (historical task record; retired) record source/executable hashes, complete envelopes and exit codes, with both source and binary stable during the gate. Kernel changes were not made by this diagnosis.
 
 ## Decimal spelling is not normalized at construction
 

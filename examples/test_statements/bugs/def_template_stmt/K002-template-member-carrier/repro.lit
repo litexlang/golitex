@@ -1,7 +1,0 @@
-# Known gap: K002
-# Desired success: true
-# See todo.md; runner checks observed behavior explicitly.
-
-template<S nonempty_set>:
-    have member S
-\member<R> $in R

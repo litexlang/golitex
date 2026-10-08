@@ -401,7 +401,7 @@ All leaves inherit the caller's bounded premise state. Whole-fact WD precedes
 truth search and owns numeric domains, actual callable signatures and fold
 laws. These changes add no AST or runtime-state representation.
 
-See [the source-owned acceptance record](../../examples/test_objs/experience/problem_notes/thirteen_builtin_rules_2026-10-05.md)
+See the source-owned acceptance record (historical task record; retired)
 and the original fifteen [proof-node capabilities](../../examples/proof_nodes/README.md).
 Cartesian reconstruction now consumes the complete set definition; its old
 constructor-shape leaf was removed, and its positive/negative and output/scope

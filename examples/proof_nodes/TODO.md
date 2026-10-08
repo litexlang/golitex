@@ -4,8 +4,8 @@
 
 - Task: closed calculation and legacy builtin prop/thm migration requested on 2026-10-03, including explanation of the struct failures.
 - Scope: one-field struct representation and symbolic finite-set consumers left after the bounded repairs.
-- Related workspace: golitex; [audit](../../docs/audits/builtin-prop-thm-migration-2026-10-03.md), [proof journal](proof_journals/builtin-prop-thm-migration-2026-10-03.json).
-- Follow-up: the 2026-10-04 local template/alias repair is verified and archived in [the solution record](experience/problem_notes/template-alias-struct-tuple-2026-10-04.md).
+- Related workspace: golitex; [audit](../../docs/audits/builtin-prop-thm-migration-2026-10-03.md), proof journal (historical task record; retired).
+- Follow-up: the 2026-10-04 local template/alias repair is verified and archived in the solution record (historical task record; retired).
 - User ownership: complete local authoring/Rust repairs; keep unsettled representation or global search-policy changes for discussion.
 
 ## kernel_problem
@@ -31,6 +31,6 @@ forall A, B set, F finite_set:
         $is_finite_set(A)
 ```
 
-Observed: strict CLI rejection; the corresponding direct finite upper-set case passes. Additional exact Rust cardinality cases fail at their recorded checkpoint. Existing source-owned [Rust failure records](../../tests/unit/execute/finite_set_cardinality_rules/bugs/src-basic-release-audit-2026-10-03.md) preserve the four test failures. A combined CLI proof and its Runtime-based Rust fixture have differed, so source/binary and entry-context comparisons must precede causal claims.
+Observed: strict CLI rejection; the corresponding direct finite upper-set case passes. Additional exact Rust cardinality cases fail at their recorded checkpoint. Existing source-owned Rust failure records (historical task record; retired) preserve the four test failures. A combined CLI proof and its Runtime-based Rust fixture have differed, so source/binary and entry-context comparisons must precede causal claims.
 
 Classification: verification/WD/search composition or harness/environment drift, exact root not established. Repair ownership provisional; global permissions, state lifetime and protected structure changes require discussion. Next action: reproduce the exact Runtime entry and CLI entry at one stable build, retain detailed first-failure evidence, then repair the established local owner. Acceptance: all seven `cargo test --release --lib finite_set_cardinality_rule` tests and the unchanged CLI cases pass, with their existing false-premise, false-equality and scope controls.

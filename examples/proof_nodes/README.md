@@ -6,7 +6,7 @@ File names mirror Rust variants / structs for easy cross-check.
 When a kernel feature is **new** or an existing surface is **updated /
 widened**, add a **new** `.lit` here (or under the matching
 `../wd` / `../stmt_nodes` / `../wd_negative` / `../infer` folder) in the same turn.
-Do not leave acceptance only in `examples/tmp.lit`.
+Do not leave acceptance only in `examples/claim_obtain_scope.lit`.
 
 ## Writing style
 
@@ -56,7 +56,7 @@ the leaves generate no search obligations or recursive trig expansions.
 Focused `trig_reflections_double_angle_tests` retain cold acceptance,
 false sign/angle/coefficient controls, partial-call and complex-domain WD,
 actual stored-fact reuse, Detailed evidence and ten-language Normal output.
-The [acceptance record](experience/problem_notes/trig-reflections-double-angle-2026-10-05.md)
+The acceptance record (historical task record; retired)
 links fixed source/binary receipts and the before/after journal.
 
 ## Sequence and struct contracts
@@ -668,7 +668,7 @@ checked universal/witness and callable-carrier evidence. Mapping publication
 has separate [injective](../infer/atomic/injective_definition.lit) and
 [surjective](../infer/atomic/surjective_definition.lit) consumers.
 [Migration record](../../docs/audits/builtin-prop-thm-migration-2026-10-03.md)
-and [journal](proof_journals/builtin-prop-thm-migration-2026-10-03.json)
+and journal (historical task record; retired)
 retain inventories, false/domain controls and unresolved struct/finite-set cases.
 
 [Maximum membership](atomic/by_builtin_rule/in_finite_set_max_member.lit) and
@@ -692,7 +692,7 @@ The [stored function return superset](atomic/by_known_special_property/function_
 
 [Rigid application alias transport](equal/by_known_forall/rigid_application_alias.lit)
 reuses the existing whole-value `f(0)=g(0)` equality inside a stored forall
-argument match. The [acceptance record](experience/problem_notes/forall-equality-index-2026-10-06.md)
+argument match. The acceptance record (historical task record; retired)
 covers conservative constructor indexing, parameter/domain boundaries, real
 source evidence and scoped storage.
 
@@ -749,7 +749,7 @@ negative controls; failed releases publish no target equality.
 
 Nested modulus integer-multiple reduction has a dedicated
 [tracer](equal/by_builtin_rule/nested_mod_integer_multiple.lit) and
-[solved guard note](experience/problem_notes/nested-mod-integer-guard-2026-10-05.md).
+solved guard note (historical task record; retired).
 The rule retains the actual multiplier-in-Z proof; product/modulus WD alone
 does not certify divisibility. Nonzero signed integer moduli remain legal.
 
@@ -758,7 +758,7 @@ The factorial migration audit retains complete checked author routes for
 and [divisibility after a proved positive/nonzero theorem](equal/by_builtin_rule/factorial_divisibility_from_positive.lit).
 These use existing rules; the bare predecessor/nonzero short forms and the
 separate monotonicity/lcm findings are classified in the
-[source-owned record](../test_objs/experience/problem_notes/legacy-factorial-gcd-lcm-audit-2026-10-05.md).
+source-owned record (historical task record; retired).
 
 
 ## Native exp/ln/sign author proofs (2026-10-05)
@@ -771,7 +771,7 @@ Complete checked routes using current rules are retained for
 [sign zero/nonzero](equal/by_builtin_rule/sign_zero_nonzero_from_magnitude.lit),
 and [sign bounds and weak order](equal/by_builtin_rule/sign_order_from_cases.lit).
 Each complete file passes strict verification. The
-[source-owned audit](../test_objs/experience/problem_notes/legacy-exp-sign-audit-2026-10-05.md)
+source-owned audit (historical task record; retired)
 classifies automatic shortcuts separately from the two unimplemented native
 order/canonical-base candidates and the unresolved real-power domain.
 
@@ -783,7 +783,7 @@ allow zero factors/numerators while keeping quotient denominators positive.
 The existing leaf family retains checked nonnegative or stronger positive
 premises. Six focused tests cover citations, search ceilings, false targets,
 illegal root inputs, and reuse; the
-[solved record](experience/problem_notes/principal-root-nonnegative-algebra-2026-10-05.md)
+solved record (historical task record; retired)
 retains the initial failed guard replacement.
 [Root equal-argument author proofs](equal/by_builtin_rule/principal_root_known_equality_author_routes.lit)
 and [positive integer-power author proofs](equal/by_builtin_rule/positive_integer_power_known_equality_author_routes.lit)
@@ -805,7 +805,7 @@ available. Dedicated proof payloads and Detailed output retain actual real
 membership and sum/component citations.
 The [explicit nonzero OR proof](atomic/by_builtin_rule/square_sum_nonzero_from_cases.lit)
 checks the original real-domain goal by ordinary cases. Both complete files
-pass strict verification; the [solved record](experience/problem_notes/square-sum-real-domain-guards-2026-10-05.md)
+pass strict verification; the solved record (historical task record; retired)
 links the negative controls and frozen verification scope.
 
 
@@ -814,7 +814,7 @@ links the negative controls and frozen verification scope.
 The [complete author examples](equal/by_builtin_rule/division_product_explicit_author_routes.lit)
 use existing arithmetic identities to prove and reuse both conversion directions
 over R/C/Q/Z, alongside checked alias, cancellation, and cross-product examples.
-The [source-owned audit note](experience/problem_notes/legacy-division-product-author-routes-2026-10-05.md)
+The source-owned audit note (historical task record; retired)
 separates optional short-form automation from the still-open composite-divisor
 branch. The strict file passes; false controls reject and the valid open branch
 still fails, so no new builtin capability is claimed.
@@ -824,7 +824,7 @@ still fails, so no new builtin capability is claimed.
 
 The [nine complete author proofs](equal/by_builtin_rule/integer_singleton_interval_author_routes.lit)
 first publish the missing integer weak bound, then use existing known-bound
-antisymmetry and reuse the original full goal. The [source-owned note](experience/problem_notes/integer-singleton-interval-author-routes-2026-10-05.md)
+antisymmetry and reuse the original full goal. The source-owned note (historical task record; retired)
 separates optional singleton automation from existing source-direction bridges,
 real-domain false controls, and persistent-context reuse. Both legacy/current
 whole strict files pass; no new builtin or recursive search is implemented.
@@ -838,7 +838,7 @@ orientations and guarded cancellation. ProductComponentNonzero retains the
 actual known source and citation in Detailed. The [two full alias proofs](atomic/by_builtin_rule/zero_alias_nonzero_author_routes.lit)
 explicitly publish product!=0 before component reflection and exact reuse;
 the bare alias shortcut remains optional and unimplemented. The
-[source-owned note](experience/problem_notes/zero-nonzero-reflection-2026-10-05.md)
+source-owned note (historical task record; retired)
 records cold versus valid prior-context reuse and excludes false old accepts.
 
 
@@ -853,7 +853,7 @@ input leaves remain distinct. The [full author tracer](atomic/by_builtin_rule/fa
 publishes an inner factorial order before the bounded outer rule, and retains
 the two positive-integer spelling bridges already checkable before the shortcut.
 All three whole strict files pass current and legacy. The
-[source-owned record](experience/problem_notes/factorial-lcm-leaf-repair-2026-10-05.md)
+source-owned record (historical task record; retired)
 separates missing leaves, optional authors, first failure phases and cold versus
 valid prior-forall reuse; no recursive search or domain contract is broadened.
 
@@ -877,14 +877,14 @@ The [author file](atomic/by_builtin_rule/exp_ln_order_author_routes.lit) keeps
 fourteen unchanged full targets and exact reuse, including strong-to-weak,
 ln sign and nested exp. The [positive image carrier](../wd/ln_positive_image_carrier.lit)
 passes, while the same helper's nested-ln comparison domain consumer stays
-pending. [Source-owned record](experience/problem_notes/exp-ln-order-repair-2026-10-05.md)
+pending. Source-owned record (historical task record; retired)
 distinguishes this WD boundary and optional shortcuts. Exp R / Ln R+ and
 inherited source-premise permissions are unchanged; no full replay claim.
 
 
 ## Legal fixed-base bridges
 
-[LnAsEulerLog](equal/by_builtin_rule/ln_as_euler_log.lit) and [ExpAsEulerPower](equal/by_builtin_rule/exp_as_euler_integer_power.lit) retain exact former failures as comments. Two pure typed identities keep all native/log/power guards in parent equality WD. The [author file](equal/by_builtin_rule/native_fixed_base_author_routes.lit) verifies five unchanged original targets and exact reuse: two aliases, two composite inverses and ln order through base-e log. The original fixed-base record covers integer powers. The subsequent [real-power WD extension](../wd/pow_real_domains.lit) also checks `exp(x)=e^x` for real x; individual shortcut coverage remains separate. [Source record](experience/problem_notes/fixed-base-bridge-repair-2026-10-05.md) links owner, language/Detailed and negative gates; no global search or domain expansion.
+[LnAsEulerLog](equal/by_builtin_rule/ln_as_euler_log.lit) and [ExpAsEulerPower](equal/by_builtin_rule/exp_as_euler_integer_power.lit) retain exact former failures as comments. Two pure typed identities keep all native/log/power guards in parent equality WD. The [author file](equal/by_builtin_rule/native_fixed_base_author_routes.lit) verifies five unchanged original targets and exact reuse: two aliases, two composite inverses and ln order through base-e log. The original fixed-base record covers integer powers. The subsequent [real-power WD extension](../wd/pow_real_domains.lit) also checks `exp(x)=e^x` for real x; individual shortcut coverage remains separate. Source record (historical task record; retired) links owner, language/Detailed and negative gates; no global search or domain expansion.
 
 
 ## Elementary object definitions
@@ -898,19 +898,19 @@ Each mathematical rule has a separate typed leaf. The
 [finite-extremum member bounds](atomic/by_builtin_rule/finite_extremum_member_bounds.lit)
 reuse the existing order leaves after adding checked real codomains and a
 one-edge stored-subset carrier citation. The
-[source record](experience/problem_notes/obj-definition-builtin-rules-2026-10-05.md)
+source record (historical task record; retired)
 links strict CLI, exact negative boundaries, ten-language output and bounded
 carrier/publication gates.
 
 
 ## Composite-divisor explicit authors
 
-[15 same-target authors](equal/by_builtin_rule/composite_divisor_explicit_author_routes.lit) retain the exact former failed shortcut as comments and check original domains/premises/targets. An explicit whole-denominator nonzero proof makes existing rational cancellation checkable; three-factor divisors use an independently proved matching whole-product helper before source WD. Cold automatic conversion remains optional AU64. [Source record](experience/problem_notes/composite-divisor-author-routes-2026-10-05.md) keeps pending conditional nested-ln WD, mathematical false controls and expected parser rejection separate; no kernel/search/domain expansion.
+[15 same-target authors](equal/by_builtin_rule/composite_divisor_explicit_author_routes.lit) retain the exact former failed shortcut as comments and check original domains/premises/targets. An explicit whole-denominator nonzero proof makes existing rational cancellation checkable; three-factor divisors use an independently proved matching whole-product helper before source WD. Cold automatic conversion remains optional AU64. Source record (historical task record; retired) keeps pending conditional nested-ln WD, mathematical false controls and expected parser rejection separate; no kernel/search/domain expansion.
 
 
 ## Log unit-interval order
 
-[Strict](atomic/by_builtin_rule/log_strict_decreasing_unit_interval.lit) and [weak](atomic/by_builtin_rule/log_weak_decreasing_unit_interval.lit) tracers preserve original former cold failures as comments and now check same-base order reversal under 0<a<1 and positive real arguments. Strict is old-positive convenience; weak nearby originals also failed legacy. Each typed leaf retains four actual guards and the reversed argument comparison, including real opposite-written source citations. [Source record](experience/problem_notes/log-unit-interval-order-repair-2026-10-05.md) links L3 gates, shared exp/ln regression, explicit strong-to-weak author and still-pending nested-ln WD. Existing increasing routes and inherited ceilings are retained.
+[Strict](atomic/by_builtin_rule/log_strict_decreasing_unit_interval.lit) and [weak](atomic/by_builtin_rule/log_weak_decreasing_unit_interval.lit) tracers preserve original former cold failures as comments and now check same-base order reversal under 0<a<1 and positive real arguments. Strict is old-positive convenience; weak nearby originals also failed legacy. Each typed leaf retains four actual guards and the reversed argument comparison, including real opposite-written source citations. Source record (historical task record; retired) links L3 gates, shared exp/ln regression, explicit strong-to-weak author and still-pending nested-ln WD. Existing increasing routes and inherited ceilings are retained.
 
 
 ## Zero/one Cartesian functions and empty graph identity
@@ -942,15 +942,15 @@ The guarded-empty tracer also constructs named functions with an empty return ca
 
 ## Valid-base logarithm algebra
 
-[Product](equal/by_builtin_rule/log_product_valid_base.lit), [quotient](equal/by_builtin_rule/log_quotient_valid_base.lit), [reciprocal](equal/by_builtin_rule/log_reciprocal_valid_base.lit) and [integer argument power](equal/by_builtin_rule/log_arg_power_valid_base.lit) preserve the old exact below-one failures as comments and check positive nonunit bases. The [acceptance note](experience/problem_notes/log-algebra-valid-base-acceptance-2026-10-06.md) records real three-route guard proofs, named mandatory argument evidence, ten-language output, false/domain controls and stored-forall citations. Reverse-written positivity under integer-power log WD remains a separate pending case.
+[Product](equal/by_builtin_rule/log_product_valid_base.lit), [quotient](equal/by_builtin_rule/log_quotient_valid_base.lit), [reciprocal](equal/by_builtin_rule/log_reciprocal_valid_base.lit) and [integer argument power](equal/by_builtin_rule/log_arg_power_valid_base.lit) preserve the old exact below-one failures as comments and check positive nonunit bases. The acceptance note (historical task record; retired) records real three-route guard proofs, named mandatory argument evidence, ten-language output, false/domain controls and stored-forall citations. Reverse-written positivity under integer-power log WD remains a separate pending case.
 
 
-The [fresh finite-product insertion tracer](equal/by_builtin_rule/finite_product_fresh_insertion.lit) keeps the source function on its complete union domain and uses an actual union-member proof for the inserted argument. It no longer asks that source to inhabit the smaller function domain. [Branch audit evidence](experience/problem_notes/finite-product-branches-2026-10-06.md) covers member-removal multiplication including zero factors and keeps the unresolved division goal distinct from false/domain controls.
+The [fresh finite-product insertion tracer](equal/by_builtin_rule/finite_product_fresh_insertion.lit) keeps the source function on its complete union domain and uses an actual union-member proof for the inserted argument. It no longer asks that source to inhabit the smaller function domain. Branch audit evidence (historical task record; retired) covers member-removal multiplication including zero factors and keeps the unresolved division goal distinct from false/domain controls.
 
 
 ## Whole-source replay with nested unique conditions
 
-[The nested unique-source tracer](forall/known_source_nested_unique.lit) proves a unique-preimage bijection, checks the native two-enumeration sum theorem, stores the exact forall and repeats it. Replay renames nested universal/witness binders while keeping complete carriers, conditions, existential polarity and free identities. [Acceptance evidence](experience/problem_notes/unique-enumerator-source-reuse-2026-10-06.md) preserves Direct WD rejection, actual source FactId and false/missing-coverage controls.
+[The nested unique-source tracer](forall/known_source_nested_unique.lit) proves a unique-preimage bijection, checks the native two-enumeration sum theorem, stores the exact forall and repeats it. Replay renames nested universal/witness binders while keeping complete carriers, conditions, existential polarity and free identities. Acceptance evidence (historical task record; retired) preserves Direct WD rejection, actual source FactId and false/missing-coverage controls.
 
 [Tangent/cotangent product](equal/by_builtin_rule/tan_cot_product.lit) and
 [tangent square](equal/by_builtin_rule/tan_square_reciprocal_cosine.lit)
@@ -960,10 +960,10 @@ citations. The focused `trig_quotient_relations_tests` exercise both equality
 directions, product/sum order, repeated-multiplication squares, ten languages,
 failure isolation and stored-forall reuse. Missing guards, poles, wrong signs,
 different angles and complex inputs still reject. See the
-[acceptance note](experience/problem_notes/trig-quotient-relations-2026-10-06.md).
+acceptance note (historical task record; retired).
 
 
-[Principal-bound spellings](equal/by_builtin_rule/arcsin_principal_bound_spellings.lit) and [their nonzero/WD consumer](atomic/by_builtin_rule/cos_nonzero_principal_bound_spellings.lit) preserve original actual bound citations at inherited permissions. [Whole numeric subterm priority](atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit) verifies a formerly intermittent cosine-endpoint comparison. Focused tests exercise all row permutations, rebuilt parents, the preserved single-key wrapper, ten languages, equality/eval, false conclusions and actual source reuse. See [acceptance](experience/problem_notes/trig-order-nonzero-2026-10-06.md).
+[Principal-bound spellings](equal/by_builtin_rule/arcsin_principal_bound_spellings.lit) and [their nonzero/WD consumer](atomic/by_builtin_rule/cos_nonzero_principal_bound_spellings.lit) preserve original actual bound citations at inherited permissions. [Whole numeric subterm priority](atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit) verifies a formerly intermittent cosine-endpoint comparison. Focused tests exercise all row permutations, rebuilt parents, the preserved single-key wrapper, ten languages, equality/eval, false conclusions and actual source reuse. See acceptance (historical task record; retired).
 
 [First-quadrant facts](atomic/by_builtin_rule/trig_first_quadrant.lit) and
 [quotient WD](equal/by_builtin_rule/trig_first_quadrant_quotient_wd.lit) preserve

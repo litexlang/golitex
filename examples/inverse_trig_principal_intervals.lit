@@ -1,0 +1,57 @@
+# Inverse trig acceptance probes.
+# Run: target/release/litex -f examples/inverse_trig_principal_intervals.lit
+# Before the local dispatch repair, the left-zero branch hid the existing
+# arccos principal lower-bound rule: `0 <= arccos(x)` failed on [-1, 1].
+# The unchanged forall below now checks the full principal interval.
+
+arcsin(0) = 0
+arcsin(1) = pi / 2
+arcsin(-1) = -pi / 2
+arccos(1) = 0
+arccos(0) = pi / 2
+arccos(-1) = pi
+arctan(0) = 0
+arccot(0) = pi / 2
+
+forall x R:
+    (-1) <= x
+    x <= 1
+    =>:
+        arcsin(x) $in R
+        arccos(x) $in R
+        sin(arcsin(x)) = x
+        cos(arccos(x)) = x
+        -pi / 2 <= arcsin(x) <= pi / 2
+        0 <= arccos(x) <= pi
+
+forall x R:
+    arctan(x) $in R
+    arccot(x) $in R
+    tan(arctan(x)) = x
+    cot(arccot(x)) = x
+    -pi / 2 < arctan(x) < pi / 2
+    0 < arccot(x) < pi
+
+forall y R:
+    -pi / 2 <= y
+    y <= pi / 2
+    =>:
+        arcsin(sin(y)) = y
+
+forall y R:
+    0 <= y
+    y <= pi
+    =>:
+        arccos(cos(y)) = y
+
+forall y R:
+    -pi / 2 < y
+    y < pi / 2
+    =>:
+        arctan(tan(y)) = y
+
+forall y R:
+    0 < y
+    y < pi
+    =>:
+        arccot(cot(y)) = y

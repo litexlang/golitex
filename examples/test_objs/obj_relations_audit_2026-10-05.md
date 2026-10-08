@@ -1,7 +1,7 @@
 # Common Obj relations: final audit, 2026-10-05
 
 Follow-up: the user subsequently authorized implementing the selected simple
-interfaces. The [completion record](../proof_nodes/experience/problem_notes/common-obj-relations-2026-10-05.md)
+interfaces. The completion record (historical task record; retired)
 tracks gcd/lcm divisibility, the checked factorial/product theorem, both selected
 sine intervals, and positive nonunit logarithm-base relations. The report below
 retains the original audit snapshot and its original failure observations;
@@ -39,7 +39,7 @@ bridges as convenient named theorems rather than repeatedly rebuilding them.
   the false powerset/union distribution law.
 - All sources, failed variants, exact outputs, build fingerprints, and final
   diagnostic probes are in the
-  [journal](proof_journals/obj_relations_final_2026-10-05.json).
+  journal (historical task record; retired).
 
 The first build was stable, but shared source changed during the audit. A
 second `cargo build --release --offline --lib --bin litex` succeeded on a stable

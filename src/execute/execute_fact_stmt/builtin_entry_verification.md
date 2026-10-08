@@ -178,7 +178,7 @@ state, storage transaction, or equality-peer expansion policy was changed.
 The runnable acceptance file is
 [`builtin_entry_boolean.lit`](../../../examples/proof_nodes/atomic/by_builtin_rule/builtin_entry_boolean.lit).
 Its source-order native persistent session and clean strict run both succeed.
-The source-owned [journal](../../../examples/proof_nodes/proof_journals/builtin_entry_boolean.json)
+The source-owned journal (historical task record; retired)
 records the accepted blocks, negative boundaries, CLI compatibility drift and
 before/after evidence.
 

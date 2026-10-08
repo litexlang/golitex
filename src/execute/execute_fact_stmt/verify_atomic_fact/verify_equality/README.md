@@ -28,7 +28,7 @@ needed for identity and peer comparison.
 
 ## Entry and search order
 
-The [geo CPU stage diagnosis](../../../../../examples/proof_nodes/experience/problem_notes/geo-stage-cost-2026-10-06.md)
+The geo CPU stage diagnosis (historical task record; retired)
 measured ordinary stored-fact argument matching repeatedly entering graph-level
 alpha endpoint scans. The user subsequently approved removing that implicit
 discovery capability: Direct now compares the submitted pair by exact IR or
@@ -44,7 +44,7 @@ introduced. The existing Strategy-level peer comparison retains its ceiling
 and can compare reachable class members locally. The new
 [tracer](../../../../../examples/proof_nodes/equal/by_they_are_the_same/local_alpha_without_graph_scan.lit)
 and regression sources are added but **not run**, as requested by the user.
-The [implementation note](../../../../../examples/proof_nodes/experience/problem_notes/geo-local-alpha-only-2026-10-06.md)
+The implementation note (historical task record; retired)
 records the reduced Direct capability and distinguishes historical diagnostic
 timings from this untested implementation.
 
@@ -367,7 +367,7 @@ and the four `closed_*_calculation.lit` tracers.
 
 Power-set membership now has a local known-subset route: both fixed subset arguments are the already checked membership element and PowerSet base. `PowerSetMembershipSubsetProof::KnownSubset` retains the queried subset and the existing read-only cite/argument-identity proofs. `VerifiedSubset` keeps the former independent successful verifier route and unchanged premise ceiling. This does not change raw known lookup, atomic WD, caching, publication or search permissions. The maintained tracer is `examples/proof_nodes/atomic/by_builtin_rule/in_power_set_from_restricted_image.lit`.
 
-Focused alpha-reuse acceptance: [2026-10-08 receipt](../../../../../tests/tooling/acceptance/stored-equality-alpha-2026-10-08.json) records the equality-family tests, strict aggregate premise tracer, assumption-replay boundary and executable documentation gate.
+Focused alpha-reuse acceptance: 2026-10-08 receipt (historical task record; retired) records the equality-family tests, strict aggregate premise tracer, assumption-replay boundary and executable documentation gate.
 
 ### Parent-checked template beta
 

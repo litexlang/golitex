@@ -8,24 +8,24 @@ multiple runnable scenarios. There are 174 positive scenarios,
 K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
-The [2026-10-06 tuple/cart acceptance](../proof_nodes/experience/problem_notes/tuple-cart-local-call-eval-2026-10-06.md)
+The 2026-10-06 tuple/cart acceptance (historical task record; retired)
 checks the then-current 51 statement leaves in 383 CLI checks and passes the
 actual-AST integration. Its separate basics gate passes 175 checks. The
 [2026-10-03 audit](audit_2026-10-03.md) is a dated 377-check baseline;
 separate kernel observations and semantic boundaries remain in that report.
 
-The [2026-10-04 CLI/strict acceptance](experience/problem_notes/cli-source-strict-abstract.md)
+The 2026-10-04 CLI/strict acceptance (historical task record; retired)
 allows pure abstract predicates in strict mode and fixes negative-leading `-e`
 source. Its scoped tests preserve unproved-instance, WD, arity and trust rejection.
 The dated 377-check scan above predates the added boundary.
 
-The [eval publication acceptance](../test_objs/experience/problem_notes/eval_store_result_2026-10-04.md)
+The eval publication acceptance (historical task record; retired)
 updates successful eval to store the checked source/result equality. The
 [boundary fixture](boundaries/evaluation-stores-result.lit) and recursive/named
 EvalStmt scenarios consume that fact. The three focused statement groups pass
 25 checks; this does not replace the dated full-suite scan above.
 
-The [field-function and square-inference repair](experience/problem_notes/field-preimage-and-power-2026-10-04.md)
+The field-function and square-inference repair (historical task record; retired)
 passes a fresh scoped CLI gate of 378 Stmt checks and 175 basics, plus 46
 relevant Rust tests. Its new tracers live with their Stmt/infer owners; this
 is not a full release or independent-replay claim.
@@ -68,7 +68,7 @@ The ordinary runner prints every `KNOWN` gap and succeeds only when current
 observations match all explicit expectations. **This does not close those
 issues.** `--require-no-gaps` exits 1 while the recorded gaps remain. A gap
 changing behavior also fails the ordinary runner, prompting review and removal
-of its stale issue record. See the [issue index](bugs/README.md) for per-statement
+of its stale issue record. See the issue index (historical task record; retired) for per-statement
 folders containing exact reproductions, captured output, checked controls, and
 repair acceptance commands. The index links the resolved trust-have display defect
 D001 and its fresh-parser replay acceptance.
@@ -76,11 +76,11 @@ D001 and its fresh-parser replay acceptance.
 `--report <path>` saves the complete structured result; `--binary <path>` tests
 another release binary. Neither option changes fixtures or expectations.
 
-K003 uses the accepted explicit equality chain [`f(2) = f(2 - 1) = f(1) = 0`](boundaries/recursive-equation-explicit-chain.lit). It is recorded as a [current proof-search limitation](experience/problem_notes/K003-explicit-recursive-equation-chain.md), not an open bug.
+K003 uses the accepted explicit equality chain [`f(2) = f(2 - 1) = f(1) = 0`](boundaries/recursive-equation-explicit-chain.lit). It is recorded as a current proof-search limitation (historical task record; retired), not an open bug.
 
-K004 uses the user's [explicit arithmetic chain](boundaries/recursive-increment-explicit-chain.lit). K010's [original arithmetic enumeration](boundaries/finite-numeric-enumeration.lit) now succeeds using finite-carrier membership evidence. Both are ordinary successful coverage. [Focused acceptance](proof_journals/k004_k010_d001_acceptance.json) also records D001's output replay.
+K004 uses the user's [explicit arithmetic chain](boundaries/recursive-increment-explicit-chain.lit). K010's [original arithmetic enumeration](boundaries/finite-numeric-enumeration.lit) now succeeds using finite-carrier membership evidence. Both are ordinary successful coverage. Focused acceptance (historical task record; retired) also records D001's output replay.
 
-K005 now uses [enumeration plus explicit by-contra](boundaries/finite-negated-existence-by-contra.lit). Its [solution and controls](experience/problem_notes/K005-classified-negative-existence-contra.md) preserve the original conclusion. Remaining all-fact command work is listed [by statement](bugs/by_contra_stmt/limitations.md).
+K005 now uses [enumeration plus explicit by-contra](boundaries/finite-negated-existence-by-contra.lit). Its solution and controls (historical task record; retired) preserve the original conclusion. Remaining all-fact command work is listed by statement (historical task record; retired).
 
 ## First acceptance example
 
@@ -198,4 +198,4 @@ recursive `.lit` file in this directory as a positive example.
 
 The added `release_cart_def_stmt.lit` covers the approved complete Cartesian-definition command and reuses its stored equality.
 
-The added [release_tuple_def_stmt.lit](release_tuple_def_stmt.lit) covers the exact finite-sequence bridge for an individual tuple. Its four executable negative fixtures preserve infinite-domain, scalar, WD and body rejection; native controls also check coordinate bounds and rollback. See [2026-10-08 acceptance](../stmt_nodes/experience/problem_notes/release_tuple_def_2026-10-08.md).
+The added [release_tuple_def_stmt.lit](release_tuple_def_stmt.lit) covers the exact finite-sequence bridge for an individual tuple. Its four executable negative fixtures preserve infinite-domain, scalar, WD and body rejection; native controls also check coordinate bounds and rollback. See 2026-10-08 acceptance (historical task record; retired).

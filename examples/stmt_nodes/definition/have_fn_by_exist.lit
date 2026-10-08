@@ -1,6 +1,6 @@
 # Stmt: Definition.HaveFnByForallExistUniqueStmt → exec_have_fn_by_forall_exist_unique_stmt
 # Run: litex -f examples/stmt_nodes/definition/have_fn_by_exist.lit
-# Also see examples/tmp_have_fn_by_exist.lit for release + template def-check boundaries.
+# Also see examples/have_fn_by_unique_existence.lit for release + template def-check boundaries.
 
 prop F(x, y R):
     y = x

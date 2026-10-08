@@ -403,4 +403,4 @@ For larger developments, follow the relevant module's `README.md` and
 [math showcases](../showcases/math_concepts_in_litex/README.md).
 
 Verification of this revision is recorded in the
-[focused audit](audits/learner-cheatsheet-redesign-2026-10-07.json).
+focused audit (historical task record; retired).

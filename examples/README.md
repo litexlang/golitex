@@ -15,7 +15,7 @@ examples/
   module_manager/       -r / -f / litex.config mount
   knowledge_base/       persist / restore goldens
   _internal/            fixtures / drafts / non-public regressions
-  tmp.lit               scratch
+  *.lit                focused standalone regressions
 ```
 
 ## Acceptance
@@ -29,7 +29,7 @@ Exit 0 (or intentional non-zero for `wd_negative` / `equal_negative`) is the gat
 Each subdirectory README has a `find … | sort` run-all snippet.
 
 One user-visible kernel stage → one subdirectory. Prefer a **new** `.lit` for a
-new/widened rule; do not leave acceptance only in `tmp.lit`.
+new/widened rule; use a descriptive filename in the matching phase directory.
 
 Finite-set inclusion tracers:
 
@@ -44,3 +44,11 @@ Finite-set inclusion tracers:
   not the public reading path.
 - Earlier Litex-to-Lean pairs are archived locally under
   `scripts/legacy_to_lean/lean/examples/`, which is excluded from Git.
+
+Standalone regression examples:
+
+- [Claim/obtain scope](claim_obtain_scope.lit).
+- [Nonempty-set property arguments](nonempty_set_property_arguments.lit).
+- [Function construction by unique existence](have_fn_by_unique_existence.lit).
+- [Object-definition equalities](object_definition_equalities.lit).
+- [Inverse trigonometric principal intervals](inverse_trig_principal_intervals.lit).
