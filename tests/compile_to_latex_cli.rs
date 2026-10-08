@@ -40,6 +40,22 @@ fn every_locale_runs_through_the_real_binary() {
             .contains(r"\begin{document}"));
     }
 }
+
+#[test]
+fn function_preimages_render_distinct_operator_names_without_double_escaping() {
+    for lang in ["en", "zh"] {
+        let (ok, json) = convert(&[
+            "-latex", "-lang", lang, "-f", "examples/wd/function_preimages.lit",
+        ]);
+        assert!(ok, "{json:?}");
+        let map = json.as_object().unwrap();
+        assert_eq!(map.get("verified"), Some(&JsonValue::Bool(false)));
+        let content = map.get("content").unwrap().as_str().unwrap();
+        assert!(content.contains(r"\operatorname{preimage}\left("));
+        assert!(content.contains(r"\operatorname{preimage\_set}\left("));
+        assert!(!content.contains(r"\textbackslash{}"));
+    }
+}
 #[test]
 fn false_facts_convert_but_invalid_syntax_fails() {
     let (ok, json) = convert(&["-latex", "-e", "1 = 2"]);

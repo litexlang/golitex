@@ -1,6 +1,0 @@
-# `setting` is elaboration-only. The first Result is a checked pass-through;
-# the following forall Result already owns the fresh binder and its evidence.
-setting RealElement(x R)
-
-forall [RealElement]:
-    x = x

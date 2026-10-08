@@ -1,0 +1,21 @@
+# Basic facts about numbers and complex arithmetic.
+
+1 = 1
+
+$is_set(1)
+
+1 $in R
+
+forall a C:
+    a = a
+
+forall a R:
+    a $in C
+
+forall a C:
+    a + 0 = a
+
+forall a C, b C:
+    b != 0
+    =>:
+        a / b = a / b

@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-08",
+  "requested_four_tests_result": "passed",
+  "full_rust_result": "failed_with_two_concurrently_added_tests",
+  "scope": "Repair four misleading test expectations. No AST, Runtime/Env, proof-search, storage, WD or mathematical verification logic changed.",
+  "changes": [
+    {
+      "test": "builtin_theorem_examples_verify_including_supplementary_tracers",
+      "before": "Every .lit stem had to name a reserved builtin, with a fixed total of 29.",
+      "after": "Runs all directory examples including supplementary tracers; checks ID round trips only for registered names and rejects empty selections.",
+      "coverage": "Current directory inventory, not automatic complete enum coverage."
+    },
+    {
+      "test": "cosine_integer_offset_positive_and_evidence",
+      "before": "Detailed proof had to contain the implementation name RationalWithNonzeroPremises.",
+      "after": "Checks guarded cancellation/cosine acceptance, retained nonzero fact, and missing-nonzero rejection. No preferred arithmetic implementation route is required."
+    },
+    {
+      "test": "compact_subcover_reuses_declared_interface_and_requires_both_hypotheses",
+      "before": "A diagnostic experiment required an anonymous-function target to match a template-spelled stored existential; it manually inspected local storage and printed investigation details.",
+      "after": "Ordinary Runtime execution consumes the declared restricted interface and checks positive reuse, missing compactness, missing coverage, and context liveness.",
+      "coverage": "No automatic conversion from a template to an anonymous function is claimed. That comparison requires a separate equality proof."
+    },
+    {
+      "test": "every_literal_builtin_explanation_has_complete_nonempty_payloads",
+      "before": "Guessed linguistic quality from scripts/word lengths, forbade shared formula messages, and fixed an inventory-size threshold.",
+      "after": "Checks nonempty literal payloads and equal branch coverage across locale methods. Existing ownership/selector and actual localized power-product tests remain.",
+      "coverage": "Readability and translation quality require review; public test documentation now states this limitation."
+    }
+  ],
+  "gates": [
+    {
+      "command": "cargo test --release --no-fail-fast",
+      "exit_code": 101,
+      "lib_passed": 1214,
+      "lib_failed": 2,
+      "lib_ignored": 0,
+      "lib_filtered": 0,
+      "selected_four_passed": [
+        "builtin_theorem_examples_verify_including_supplementary_tracers",
+        "cosine_integer_offset_positive_and_evidence",
+        "compact_subcover_reuses_declared_interface_and_requires_both_hypotheses",
+        "every_literal_builtin_explanation_has_complete_nonempty_payloads"
+      ],
+      "integration_results": [
+        {
+          "target": "cli_feedback",
+          "passed": 14
+        },
+        {
+          "target": "compile_to_latex_cli",
+          "passed": 7
+        },
+        {
+          "target": "test_statements",
+          "passed": 1
+        }
+      ]
+    },
+    {
+      "command": "cargo test --release --lib -- --skip builtin_theorem_examples_verify_including_supplementary_tracers",
+      "exit_code": 101,
+      "purpose": "Earlier partial diagnostic run, not full acceptance. The subsequent unfiltered run includes the catalogue."
+    },
+    {
+      "command": "target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/named_enumeration_callbacks.lit",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "examples/stmt_nodes/release_and_expand/builtin_thm/named_enumeration_callbacks.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "thm named_enumeration:\n    ? forall f fn (t {1, 2}) R, e1, e2 fn (u closed_range(1, 2)) {1, 2}, left_fn, right_fn fn (k closed_range(1, 2)) R:\n        $bijective(closed_range(1, 2), {1, 2}, e1)\n        $bijective(closed_range(1, 2), {1, 2}, e2)\n        left_fn = fn (k closed_range(1, 2)) R{f(e1(k))}\n        right_fn = fn (k closed_range(1, 2)) R{f(e2(k))}\n        =>:\n            sum(1, 2, left_fn) = sum(1, 2, right_fn)\n    by thm sum_over_bijective_finite_set_enumerations(sum(1, 2, left_fn), sum(1, 2, right_fn)) => sum(1, 2, left_fn) = sum(1, 2, right_fn)",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall f fn (t {1, 2}) R, e1, e2 fn (u closed_range(1, 2)) {1, 2}, left_fn, right_fn fn (k closed_range(1, 2)) R:\n    $bijective(closed_range(1, 2), {1, 2}, e1)\n    $bijective(closed_range(1, 2), {1, 2}, e2)\n    left_fn = fn (k closed_range(1, 2)) R{f(e1(k))}\n    right_fn = fn (k closed_range(1, 2)) R{f(e2(k))}\n    =>:\n        sum(1, 2, left_fn) = sum(1, 2, right_fn)"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "proof_journal": "examples/proof_nodes/proof_journals/test-contract-cleanup-2026-10-08.json",
+  "remaining_full_failures": [
+    {
+      "test": "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::stored_alpha::same_anonymous_aggregate_trust_can_close_theorem_and_wd_still_rejects",
+      "output": "thread 'execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::stored_alpha::same_anonymous_aggregate_trust_can_close_theorem_and_wd_still_rejects' (90974334) panicked at src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/../../../../../tests/unit/execute/equality_search/stored_alpha.rs:54:5:\nsame checked fact must be reusable\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "test": "execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::stored_alpha::strict_aggregate_alpha_premise_tracer",
+      "output": "thread 'execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equality_search_tests::stored_alpha::strict_aggregate_alpha_premise_tracer' (90974338) panicked at src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/../../../../../tests/unit/execute/equality_search/stored_alpha.rs:62:5:\nassertion failed: run.success && run.session_error.is_none()"
+    }
+  ],
+  "concurrent_changes": "During this cleanup the workspace added stored_alpha.rs, its stored_aggregate_alpha.lit tracer, and a change to search_equal_fact_proof_by_equivalence_class.rs. Three new tests appeared; two failed. Those changes are outside the four requested repairs and were preserved.",
+  "coverage_limits": [
+    "No docs/Lean/textbook/packaging gate: production syntax/proof behavior and executable documentation unchanged.",
+    "The global source audit no longer claims linguistic quality."
+  ],
+  "source_sha256": {
+    "src/execute/execute_by_stmt/builtin_thm/tests.rs": "06aa1e8ccfcffec50936fe8aa290c72f402cdf6e06937092a4e34bfb30f1c879",
+    "tests/unit/execute/builtin_theorem_catalogue/tests.rs": "9e48319defb9d6755e0e02738badade3c23c2837bc9e2e72302fae99d2210298",
+    "tests/unit/execute/showcase_local_rules/tests.rs": "a92f0e9f8ed50580181ef125a430e64f834bb5ed7f01847df0123909d8291c5b",
+    "tests/unit/execute/forall_exist_instantiation/tests.rs": "c11691a0ed491081d88114033fe22a253d448d58a2e83d542c253357b662bbdc",
+    "src/json_output/rule_language_methods_tests.rs": "74031dd2000d5ae6ef2bcfe71891b6936495f456ad29141474d906374042c089",
+    "src/json_output/README.md": "149f3a87066131f829850f15fbd7be2441f8f3c5aa6e6b698707ef93f8ae5126"
+  }
+}

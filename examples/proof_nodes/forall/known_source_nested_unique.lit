@@ -25,8 +25,8 @@ claim:
     claim:
         ? forall x X:
             exist y Y st {x=g(y)}
-        obtain preimage from exist! y Y st {g(y)=x}
-        witness exist y Y st {x=g(y)} from preimage
+        obtain source_input from exist! y Y st {g(y)=x}
+        witness exist y Y st {x=g(y)} from source_input
     by def $surjective(Y,X,g)
     by def $bijective(Y,X,g)
 claim:

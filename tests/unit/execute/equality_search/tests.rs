@@ -15,6 +15,9 @@ mod known_tuple;
 #[path = "stored_known_first.rs"]
 mod stored_known_first;
 
+#[path = "stored_alpha.rs"]
+mod stored_alpha;
+
 #[test]
 fn identity_and_alpha_work_without_builtin_entry() {
     for (code, shape) in [

@@ -1,8 +1,0 @@
-# `eval` is an execution statement, not merely a display command. Its Result
-# owns the recursive computation `2 + 3 -> 5`, then its store layer publishes
-# the evaluated equality under an exact FactId in the compiler environment.
-eval 2 + 3
-
-# This statement must cite the equality installed by the preceding eval Result;
-# the compiler does not recompute the expression or look in Runtime.
-2 + 3 = 5

@@ -3,7 +3,9 @@ use crate::runtime::Runtime;
 
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
-        code: String::new(), session: false, strict: true,
+        code: String::new(),
+        session: false,
+        strict: true,
         language: OutputLanguage::English,
     })
 }
@@ -15,13 +17,19 @@ fn accepts(rt: &mut Runtime, code: &str) {
 
 #[test]
 fn function_preimages_run_the_durable_guarded_tracer() {
-    accepts(&mut runtime(), include_str!("../../../../examples/wd/function_preimages.lit"));
+    accepts(
+        &mut runtime(),
+        include_str!("../../../../examples/wd/function_preimages.lit"),
+    );
 }
 
 #[test]
 fn function_preimages_reject_bad_members_and_keep_the_session() {
     let mut rt = runtime();
-    accepts(&mut rt, "have fn reciprocal(x R: x != 0) R = 1 / x\nreciprocal(2) = 1 / 2\n");
+    accepts(
+        &mut rt,
+        "have fn reciprocal(x R: x != 0) R = 1 / x\nreciprocal(2) = 1 / 2\n",
+    );
     for code in [
         "0 $in preimage(reciprocal, 1 / 2)",
         "3 $in preimage(reciprocal, 1 / 2)",
@@ -77,7 +85,24 @@ fn function_preimages_returned_and_literal_functions() {
 
 #[test]
 fn function_preimages_do_not_hide_malformed_constructor_calls() {
-    for code in ["preimage(1)", "preimage_set(1)", "preimage(1, 2, 3)", "preimage_set(1, {}, {})"] {
+    for code in [
+        "preimage(1)",
+        "preimage_set(1)",
+        "preimage(1, 2, 3)",
+        "preimage_set(1, {}, {})",
+    ] {
+        let run = runtime().run_litex_code(code).unwrap();
+        assert!(!run.success && run.session_error.is_some(), "{code}");
+    }
+}
+
+#[test]
+fn function_preimages_own_their_names_and_migrated_witnesses_work() {
+    accepts(
+        &mut runtime(),
+        "witness exist x R st {x = 2} from 2\nobtain source_input from exist x R st {x = 2}\nsource_input = 2\nhave target_value R = 3\nsource_input + target_value = 5\nhave fn square(x R) R = x^2\nsquare(2) = 4\n2 $in preimage(square, 4)\n2 $in preimage_set(square, {4})\n",
+    );
+    for code in ["preimage = 2", "preimage_set = 3"] {
         let run = runtime().run_litex_code(code).unwrap();
         assert!(!run.success && run.session_error.is_some(), "{code}");
     }
@@ -86,8 +111,14 @@ fn function_preimages_do_not_hide_malformed_constructor_calls() {
 #[test]
 fn function_preimages_keep_unpublished_function_alias_boundary() {
     let mut rt = runtime();
-    accepts(&mut rt, "have fn square(x R) R = x^2\nlet opaque_alias = square\n");
-    for code in ["let bad = preimage(opaque_alias, 4)", "let bad = preimage_set(opaque_alias, {4})"] {
+    accepts(
+        &mut rt,
+        "have fn square(x R) R = x^2\nlet opaque_alias = square\n",
+    );
+    for code in [
+        "let bad = preimage(opaque_alias, 4)",
+        "let bad = preimage_set(opaque_alias, {4})",
+    ] {
         let run = rt.run_litex_code(code).unwrap();
         assert!(!run.success && run.session_error.is_none(), "{code}");
         assert!(!rt.plain_atom_is_visible("bad"));
@@ -96,7 +127,7 @@ fn function_preimages_keep_unpublished_function_alias_boundary() {
 
 #[test]
 fn function_preimages_fields_and_templates_keep_their_signatures() {
-    accepts(&mut runtime(), "struct Ops:\n    op fn(x R) R\n    tag N\nhave fn shift(x R) R = x + 1\nhave ops &Ops = (shift, 0)\nops.op(2) = shift(2) = 3\n2 $in preimage(ops.op, 3)\n2 $in preimage_set(ops.op, {3})\ntemplate<S set>:\n    have fn identity(x S) S = x\n\\identity<R>(2) = 2\n2 $in preimage(\\identity<R>, 2)\n2 $in preimage_set(\\identity<R>, {2})\n");
+    accepts(&mut runtime(), "struct Ops:\n    op fn(x R) R\n    tag N\nhave fn shift(x R) R = x + 1\nhave ops &Ops = (shift, 0)\n2 $in preimage(ops.op, ops.op(2))\n2 $in preimage_set(ops.op, {ops.op(2)})\ntemplate<S set>:\n    have fn identity(x S) S = x\n\\identity<R>(2) = 2\n2 $in preimage(\\identity<R>, 2)\n2 $in preimage_set(\\identity<R>, {2})\n");
 }
 
 #[test]
@@ -117,4 +148,17 @@ fn function_preimages_run_specific_strategy_and_infer_examples() {
         let run = runtime().run_litex_code(source).unwrap();
         assert!(!run.success && run.session_error.is_none());
     }
+}
+
+#[test]
+fn function_preimages_self_domain_aliases_expand_once_and_keep_context() {
+    let mut rt = runtime();
+    accepts(&mut rt, "forall S set, f fn(t S) S, x S:\n    S = preimage_set(f, S)\n    =>:\n        f(x) $in S\n");
+    accepts(
+        &mut rt,
+        "have fn square(x R) R = x^2\nsquare(2) = 4\n2 $in preimage(square, 4)\n",
+    );
+    let run = rt.run_litex_code("3 $in preimage(square, 4)").unwrap();
+    assert!(!run.success && run.session_error.is_none());
+    accepts(&mut rt, "2 $in preimage_set(square, {4})");
 }

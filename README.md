@@ -166,8 +166,10 @@ reciprocal(2) = 1 / 2
 ## Independent Lean rechecking is a goal
 
 Litex currently checks supported source with its own verifier. The current
-build has **no Litex-to-Lean compiler entrypoint**; `lean/` retains earlier
-experimental artifacts. A future handoff must preserve the mathematical
+build has **no Litex-to-Lean compiler entrypoint**. [`lean/`](lean/) contains
+an initial Lean object interface. Earlier compiler material is archived locally
+under `scripts/legacy_to_lean/`, which is excluded from Git. A future handoff
+must preserve the mathematical
 statement, produce a proof without holes, and pass Lean's kernel before it can
 serve as independent rechecking or connect to Mathlib. See the
 [Blueprint's Lean section](docs/Litex_Blueprint.md#compatibility).

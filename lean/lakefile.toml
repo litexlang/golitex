@@ -1,4 +1,4 @@
-name = "stmt_result_to_lean_compiler"
+name = "litex_object_core"
 version = "0.1.0"
 defaultTargets = ["Litex"]
 
@@ -11,9 +11,4 @@ rev = "v4.31.0"
 name = "Litex"
 
 [[lean_lib]]
-name = "LitexGenerate"
-srcDir = "../showcases/litex_to_lean_mathlib_pipeline/showcase2"
-
-[[lean_lib]]
-name = "LitexToMathlib"
-srcDir = "../showcases/litex_to_lean_mathlib_pipeline/showcase2"
+name = "InteropExamples"

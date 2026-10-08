@@ -737,8 +737,8 @@ For example, `PowerProductSameBaseBuiltinRuleProof` retains the equation
 `a^m · a^n = a^(m+n)` in every locale, but also names and explains the rule in
 that locale: Chinese says `同底数幂相乘` and explains that the exponents are
 added; Japanese says `同じ底の累乗の積` and gives the same mathematical meaning.
-The proof type identifies this rule. Formula notation alone is insufficient
-for either the human-facing name or message.
+The proof type identifies this rule. Mathematical notation may be shared
+across locales; readable wording and translation quality require review.
 
 `ArcsinExactZero` similarly names the value of the inverse sine at zero and
 explains that the value is zero before giving `arcsin(0) = 0`. Keep identities,
@@ -750,11 +750,11 @@ square root, `(sqrt(x))^2 = x` for nonnegative real `x`;
 
 `rule_language_methods_tests` audits every impl in the atomic/equality rule
 explanation directories for this method contract and selector shape, and
-checks the power-product method API directly. It also scans all maintained
-literal builtin names/messages for human prose in the selected language,
-matching each impl's locale branches with its English branches without string
-rule IDs. This guards against formula-only copy and whole English sentences
-in locales with different scripts; it is not a grammar checker. Semantic regression tests
+checks the power-product method API directly. It also checks that maintained
+literal builtin names/messages are nonempty and that each locale covers the
+same branches as English. It does not infer translation quality from Unicode
+scripts, word lengths, or whether a mathematical formula is shared across
+languages. Semantic regression tests
 cover the inverse-sine tracer, principal inverse interval, square-root and
 set-difference identities, and natural-number nonzero conclusion.
 The equality acceptance inventory

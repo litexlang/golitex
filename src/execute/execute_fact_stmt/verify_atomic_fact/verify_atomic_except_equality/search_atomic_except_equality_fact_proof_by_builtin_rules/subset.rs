@@ -1,6 +1,9 @@
-use crate::ast::fact::{AtomicFact, Fact, InFact, SubsetFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, SubsetFact};
 use crate::ast::names::AtomicName;
-use crate::ast::obj::{Cart, Obj, ProductShape, SetFormer, SetOperator, StandardSet, Union};
+use crate::ast::obj::{Cart, FunctionSpace, Obj, ProductShape, SetFormer, SetOperator, StandardSet, Union};
+use crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::parse::keywords::SUBSET;
@@ -32,6 +35,9 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     // `{x S: P…} $subset S`.
     // Example: prove `{x R: x > 0} $subset R`.
     SetBuilderSubsetOfParamSet(SetBuilderSubsetOfParamSetBuiltinRuleProof),
+    // A certified point/set preimage is a subset of its complete input carrier.
+    // Example: preimage_set(square, {4}) $subset R for square : R -> R.
+    FunctionPreimageSubsetOfInputCarrier(FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof),
     // Reflexivity: `A $subset A`.
     // Example: prove `{1, 2} $subset {1, 2}`.
     SubsetReflexivity(SubsetReflexivityBuiltinRuleProof),
@@ -84,6 +90,19 @@ pub struct SubsetUnionRightBuiltinRuleProof {}
 pub struct SetMinusSubsetLeftBuiltinRuleProof {}
 pub struct RealIntervalSubsetRealBuiltinRuleProof {}
 pub struct SetBuilderSubsetOfParamSetBuiltinRuleProof {}
+pub struct FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof {
+    pub construction: FunctionPreimageConstructionProof,
+    pub carrier_match: EqualFactSearchedProof,
+}
+
+impl FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof {
+    pub fn new(
+        construction: FunctionPreimageConstructionProof,
+        carrier_match: EqualFactSearchedProof,
+    ) -> Self {
+        Self { construction, carrier_match }
+    }
+}
 pub struct SubsetReflexivityBuiltinRuleProof {}
 
 pub struct UnionSubsetFromBothOperandsBuiltinRuleProof {
@@ -146,6 +165,9 @@ impl Runtime {
 
         // A — shape dispatch
         let shape = match (&fact.left, &fact.right) {
+            (Obj::FunctionSpace(FunctionSpace::Preimage(_) | FunctionSpace::PreimageSet(_)), _) => {
+                self.function_preimage_subset_input_carrier_proof(fact, verify_state)
+            }
             (Obj::StandardSet(left), Obj::StandardSet(right)) => {
                 if standard_set_is_subset_eq(left, right) {
                     return Ok(Some(SubsetFactSearchProofByBuiltinRule::StandardSetSubset(
@@ -614,6 +636,38 @@ impl Runtime {
         Ok(None)
     }
 }
+
+impl Runtime {
+    // Consume the existing checked bounded builder; do not search for a wider
+    // input domain or infer arbitrary subset relationships.
+    fn function_preimage_subset_input_carrier_proof(
+        &mut self,
+        fact: &SubsetFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
+        let Ok(construction) = self.verify_function_preimage_construction(&fact.left, state)? else {
+            return Ok(None);
+        };
+        let comparison = EqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: construction.builder.param_set.as_ref().clone(),
+            right: fact.right.clone(),
+            line_file: fact.line_file.clone(),
+        };
+        let Some(carrier_match) = search_equal_fact_proof_by_they_are_the_same(&comparison) else {
+            return Ok(None);
+        };
+        Ok(Some(SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(
+            FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof::new(
+                construction, carrier_match.into(),
+            ),
+        )))
+    }
+}
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/preimage_input_carrier/tests.rs"]
+mod preimage_input_carrier_tests;
 
 pub(crate) fn standard_set_is_subset_eq(left: &StandardSet, right: &StandardSet) -> bool {
     matches!(

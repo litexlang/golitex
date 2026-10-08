@@ -8,8 +8,9 @@ reading path.
   test. A fixture is not a standalone tutorial.
 - `drafts/` contains exploratory Litex developments whose names state the
   mathematical or diagnostic topic instead of using `tmp*` names.
-- Litex-to-Lean compiler tracers live as generated `.lit`/`.lean` pairs under
-  `lean/examples/`.
+- Earlier Litex-to-Lean compiler tracers are archived locally as generated
+  `.lit`/`.lean` pairs under `scripts/legacy_to_lean/lean/examples/`, which is
+  excluded from Git.
 
 These files support implementation and regression coverage; they are not part
 of the public reading path.

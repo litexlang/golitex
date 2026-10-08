@@ -1,0 +1,548 @@
+{
+  "schema_version": 1,
+  "target": "lean/InteropExamples/Statements.lit",
+  "date": "2026-10-08",
+  "classification": "checkable",
+  "binary_sha256": "d353874a3cadc3898c573c13117a08a116c77d0af8b45a18b6f75f390c33ed55",
+  "source_sha256": "533ccd4d7136899d58e8b965d1dc96d7cdb9b41fb17a403fd65261afa1bf912f",
+  "session_command": "target/release/litex -strict -lang en -session -e '1 = 1'",
+  "session_cwd": "tmp/2026-10-08/lean-native-interop-examples",
+  "authoring_contract": "docs/AgentGuide.md: one top-level statement per frame; current CLI does not use try, -before, -runner or -compact.",
+  "proof_spine": [
+    "Check literal equality, sethood and real membership.",
+    "State generic reflexivity and real-to-complex inclusion as direct universal facts.",
+    "State complex addition by zero and division reflexivity under its nonzero guard."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "The literal one equals itself.",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "1 = 1",
+          "result": "passed",
+          "verifier_evidence": {
+            "command": "target/release/litex -strict -lang en -e '1 = 1'",
+            "exit_code": 0,
+            "output": {
+              "kind": "run",
+              "success": true,
+              "target": "eval",
+              "path": null,
+              "detail": "normal",
+              "language": "en",
+              "statement_results": [
+                {
+                  "success": true,
+                  "statement": "1 = 1",
+                  "proof_method": {
+                    "type": "they_are_the_same",
+                    "rule_name": "Same object",
+                    "message": "Both sides have identical IR or alpha-equivalent binder structure"
+                  },
+                  "stores": [
+                    "1 = 1"
+                  ],
+                  "infers": []
+                }
+              ],
+              "session_error": null
+            }
+          }
+        }
+      ],
+      "accepted_litex": "1 = 1",
+      "reusable_lesson": "An identical literal expression uses the ordinary same-object equality route.",
+      "session_position": "The first statement initialized the live Session via -e; a separate strict single-statement run supplies the JSON receipt.",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "The well-defined number one is a set.",
+      "dependencies": [
+        "Literal object well-definedness"
+      ],
+      "attempts": [
+        {
+          "candidate": "$is_set(1)",
+          "result": "passed",
+          "verifier_evidence": {
+            "mode": "persistent_session",
+            "frame_statement_count": 1,
+            "output": "$is_set(1)\r\nsuccess\r\nlitex> "
+          }
+        }
+      ],
+      "accepted_litex": "$is_set(1)",
+      "reusable_lesson": "Source sethood uses the ordinary builtin predicate spelling $is_set(...).",
+      "status": "materialized"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "The literal one belongs to the real numbers.",
+      "dependencies": [
+        "Standard numeric membership"
+      ],
+      "attempts": [
+        {
+          "candidate": "1 $in R",
+          "result": "passed",
+          "verifier_evidence": {
+            "mode": "persistent_session",
+            "frame_statement_count": 1,
+            "output": "1 $in R\r\nsuccess\r\nlitex> "
+          }
+        }
+      ],
+      "accepted_litex": "1 $in R",
+      "reusable_lesson": "Ordinary $in facts classify numeric objects without changing their representations.",
+      "status": "materialized"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "intent": "Every object known to belong to C equals itself.",
+      "dependencies": [
+        "Generic object reflexivity"
+      ],
+      "attempts": [
+        {
+          "candidate": "forall a C:\n    a = a",
+          "result": "passed",
+          "verifier_evidence": {
+            "mode": "persistent_session",
+            "frame_statement_count": 1,
+            "output": "forall a C:\r\n    a = a\r\n\r\n... ... success\r\nlitex> "
+          }
+        }
+      ],
+      "accepted_litex": "forall a C:\n    a = a",
+      "reusable_lesson": "A premise-free universal fact needs no empty =>: or theorem wrapper.",
+      "status": "materialized"
+    },
+    {
+      "id": "B005",
+      "source_order": 5,
+      "intent": "Every real number belongs to C.",
+      "dependencies": [
+        "Standard set hierarchy R subset C"
+      ],
+      "attempts": [
+        {
+          "candidate": "forall a R:\n    a $in C",
+          "result": "passed",
+          "verifier_evidence": {
+            "mode": "persistent_session",
+            "frame_statement_count": 1,
+            "output": "forall a R:\r\n    a $in C\r\n\r\n... ... success\r\nlitex> "
+          }
+        }
+      ],
+      "accepted_litex": "forall a R:\n    a $in C",
+      "reusable_lesson": "A real binder retains an ordinary member fact that supports its complex membership.",
+      "status": "materialized"
+    },
+    {
+      "id": "B006",
+      "source_order": 6,
+      "intent": "Adding zero preserves an arbitrary complex object.",
+      "dependencies": [
+        "Complex addition well-definedness",
+        "Addition by zero"
+      ],
+      "attempts": [
+        {
+          "candidate": "forall a C:\n    a + 0 = a",
+          "result": "passed",
+          "verifier_evidence": {
+            "mode": "persistent_session",
+            "frame_statement_count": 1,
+            "output": "forall a C:\r\n    a + 0 = a\r\n\r\n... ... success\r\nlitex> "
+          }
+        }
+      ],
+      "accepted_litex": "forall a C:\n    a + 0 = a",
+      "reusable_lesson": "Routine arithmetic identities can be stated directly as universal facts.",
+      "status": "materialized"
+    },
+    {
+      "id": "B007",
+      "source_order": 7,
+      "intent": "A quotient equals itself when its denominator is nonzero.",
+      "dependencies": [
+        "Complex operand membership",
+        "Nonzero denominator",
+        "Generic object reflexivity"
+      ],
+      "attempts": [
+        {
+          "candidate": "forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b",
+          "result": "passed",
+          "verifier_evidence": {
+            "mode": "persistent_session",
+            "frame_statement_count": 1,
+            "output": "forall a C, b C:\r\n    b != 0\r\n    =>:\r\n        a / b = a / b\r\n\r\n... ... ... ... success\r\nlitex> "
+          }
+        }
+      ],
+      "accepted_litex": "forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b",
+      "reusable_lesson": "Division reflexivity still requires denominator nonzero because object well-definedness precedes equality checking.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "B001",
+      "B002",
+      "B003",
+      "B004",
+      "B005",
+      "B006",
+      "B007"
+    ],
+    "file_gate_command": "target/release/litex -strict -lang en -f lean/InteropExamples/Statements.lit",
+    "file_gate_result": "passed",
+    "exit_code": 0,
+    "statement_result_count": 7,
+    "per_statement_success": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "output": {
+      "kind": "run",
+      "success": true,
+      "target": "file",
+      "path": "lean/InteropExamples/Statements.lit",
+      "detail": "normal",
+      "language": "en",
+      "statement_results": [
+        {
+          "success": true,
+          "statement": "1 = 1",
+          "proof_method": {
+            "type": "they_are_the_same",
+            "rule_name": "Same object",
+            "message": "Both sides have identical IR or alpha-equivalent binder structure"
+          },
+          "stores": [
+            "1 = 1"
+          ],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "$is_set(1)",
+          "proof_method": {
+            "type": "builtin_rule",
+            "rule_name": "Always True",
+            "message": "Verified by the always True builtin rule"
+          },
+          "stores": [
+            "$is_set(1)"
+          ],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "1 $in R",
+          "proof_method": {
+            "type": "by_closed_calculation",
+            "rule_name": "Closed calculation",
+            "message": "Exact evaluation of closed expressions without proof search"
+          },
+          "stores": [
+            "1 $in R"
+          ],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "forall a C:\n    a = a",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall a C:\n    a = a"
+          ],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "forall a R:\n    a $in C",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall a R:\n    a $in C"
+          ],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "forall a C:\n    a + 0 = a",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall a C:\n    a + 0 = a"
+          ],
+          "infers": []
+        },
+        {
+          "success": true,
+          "statement": "forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b",
+          "proof_method": {
+            "type": "compound_fact",
+            "rule_name": "Universal",
+            "message": "Verified as a forall fact (details omitted in Normal)"
+          },
+          "stores": [
+            "forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b"
+          ],
+          "infers": []
+        }
+      ],
+      "session_error": null
+    }
+  },
+  "unresolved_issues": [],
+  "independent_statement_gates": [
+    {
+      "id": "B001",
+      "command": "target/release/litex -strict -lang en -e '1 = 1'",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "1 = 1",
+            "proof_method": {
+              "type": "they_are_the_same",
+              "rule_name": "Same object",
+              "message": "Both sides have identical IR or alpha-equivalent binder structure"
+            },
+            "stores": [
+              "1 = 1"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "id": "B002",
+      "command": "target/release/litex -strict -lang en -e '$is_set(1)'",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "$is_set(1)",
+            "proof_method": {
+              "type": "builtin_rule",
+              "rule_name": "Always True",
+              "message": "Verified by the always True builtin rule"
+            },
+            "stores": [
+              "$is_set(1)"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "id": "B003",
+      "command": "target/release/litex -strict -lang en -e '1 $in R'",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "1 $in R",
+            "proof_method": {
+              "type": "by_closed_calculation",
+              "rule_name": "Closed calculation",
+              "message": "Exact evaluation of closed expressions without proof search"
+            },
+            "stores": [
+              "1 $in R"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "id": "B004",
+      "command": "target/release/litex -strict -lang en -e 'forall a C:\n    a = a'",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a C:\n    a = a",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a C:\n    a = a"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "id": "B005",
+      "command": "target/release/litex -strict -lang en -e 'forall a R:\n    a $in C'",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a R:\n    a $in C",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a R:\n    a $in C"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "id": "B006",
+      "command": "target/release/litex -strict -lang en -e 'forall a C:\n    a + 0 = a'",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a C:\n    a + 0 = a",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a C:\n    a + 0 = a"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    },
+    {
+      "id": "B007",
+      "command": "target/release/litex -strict -lang en -e 'forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b'",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "eval",
+        "path": null,
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      }
+    }
+  ],
+  "per_statement_result_counts": [1, 1, 1, 1, 1, 1, 1],
+  "proof_liveness_audit": {
+    "classification": "source_required",
+    "reason": "All seven facts are requested demonstration targets, and each independently passes without the preceding statements.",
+    "helper_declarations": 0,
+    "proof_body_lines": 0,
+    "trust_or_axiom_statements": 0
+  },
+  "boundary": "These are strict current-source verifier receipts; this task does not implement source-to-Lean proof replay.",
+  "launch_attempts": [
+    {
+      "command": "target/release/litex -strict -lang en -session -e ''",
+      "exit_code": 2,
+      "result": "launch_error",
+      "diagnosis": "The current CLI rejects an empty -e argument.",
+      "resolution": "Initialize the Session with the first requested statement instead.",
+      "resolved": true
+    }
+  ]
+}

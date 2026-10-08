@@ -5686,6 +5686,11 @@ pub(super) fn walk_sqrt_monotone_from_defined_roots_proof(value: &crate::execute
     walk_verify_fact_result(&value.arguments_order, graph, runtime, locals, refs, outputs);
 }
 
+pub(super) fn walk_function_preimage_subset_of_input_carrier_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
+    walk_function_preimage_construction_proof(&value.construction, graph, runtime, locals, refs, outputs);
+    walk_equal_fact_searched_proof(&value.carrier_match, graph, runtime, locals, refs, outputs);
+}
+
 pub(super) fn walk_integer_range_subset_numeric_carrier_builtin_rule_proof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::IntegerRangeSubsetNumericCarrierBuiltinRuleProof, graph: &mut MathGraph, runtime: &Runtime, locals: &[&ExecEnv], refs: &mut Vec<GraphReference>, outputs: &mut Vec<String>) {
     for child199 in (&value.proof_of_requirement_facts).iter() {
         walk_verify_fact_result(child199, graph, runtime, locals, refs, outputs);
@@ -5729,6 +5734,9 @@ pub(super) fn walk_subset_fact_search_proof_by_builtin_rule(value: &crate::execu
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::RealIntervalSubsetReal(p0) => {
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(p0) => {
+        }
+        crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(p0) => {
+            walk_function_preimage_subset_of_input_carrier_builtin_rule_proof(p0, graph, runtime, locals, refs, outputs);
         }
         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(p0) => {
         }

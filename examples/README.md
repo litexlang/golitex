@@ -42,4 +42,5 @@ Finite-set inclusion tracers:
 
 - `_internal/` is developer material (including larger case-study regressions),
   not the public reading path.
-- Litex-to-Lean pairs live under [`lean/examples/`](../lean/examples/).
+- Earlier Litex-to-Lean pairs are archived locally under
+  `scripts/legacy_to_lean/lean/examples/`, which is excluded from Git.

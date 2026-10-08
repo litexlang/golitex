@@ -24,7 +24,11 @@
     "let alias_fiber = preimage(typed_alias, 4)",
     "2 $in alias_fiber",
     "forall x alias_fiber:\n    x $in R\n    typed_alias(x) = 4",
-    "forall y R:\n    preimage(square, y) = preimage(square, y)"
+    "forall y R:\n    preimage(square, y) = preimage(square, y)",
+    "2 $in preimage(reciprocal, 1 / 2)",
+    "forall q preimage(square, 4):\n    q $in preimage_set(square, {4})",
+    "forall q preimage_set(square, {4}):\n    q $in preimage(square, 4)",
+    "by extension preimage(square, 4) = preimage_set(square, {4})"
   ],
   "attempts": [
     {
@@ -208,8 +212,49 @@
       "session": 52150,
       "success": false,
       "note": "Author used unsupported legacy prove keyword inside claim; parser stopped Session as documented. Restart and replay required."
+    },
+    {
+      "code": "0 $in preimage(reciprocal, 1 / 2)",
+      "output": "0 $in preimage(reciprocal, 1 / 2)\r\n{\r\n  \"kind\": \"run\",\r\n  \"success\": false,\r\n  \"target\": \"repl\",\r\n  \"path\": null,\r\n  \"detail\": \"normal\",\r\n  \"language\": \"en\",\r\n  \"statement_results\": [\r\n    {\r\n      \"success\": false,\r\n      \"statement\": \"0 $in preimage(reciprocal, 1 / 2)\",\r\n      \"why_failed\": {\r\n        \"phase\": \"search_proof\",\r\n        \"goal\": \"0 $in preimage(reciprocal, 1 / 2)\"\r\n      },\r\n      \"stores\": [],\r\n      \"infers\": []\r\n    }\r\n  ],\r\n  \"session_error\": null\r\n}\r\nlitex> ",
+      "phase": "final_session"
+    },
+    {
+      "code": "2 $in preimage(reciprocal, 1 / 2)",
+      "output": "2 $in preimage(reciprocal, 1 / 2)\r\nsuccess\r\nlitex> ",
+      "phase": "final_session"
+    },
+    {
+      "code": "forall q preimage(square, 4):\n    q $in preimage_set(square, {4})",
+      "output": "forall q preimage(square, 4):\r\n    q $in preimage_set(square, {4})\r\n\r\n... ... success\r\nlitex> ",
+      "phase": "final_session"
+    },
+    {
+      "code": "forall q preimage_set(square, {4}):\n    q $in preimage(square, 4)",
+      "output": "forall q preimage_set(square, {4}):\r\n    q $in preimage(square, 4)\r\n\r\n... ... success\r\nlitex> ",
+      "phase": "final_session"
+    },
+    {
+      "code": "by extension preimage(square, 4) = preimage_set(square, {4})",
+      "output": "by extension preimage(square, 4) = preimage_set(square, {4})\r\nsuccess\r\nlitex> ",
+      "phase": "final_session"
     }
   ],
-  "restart_reason": "Kernel implementation changed; accepted prefix deliberately reduced to delete the redundant output-membership bridge; three prefix statements replayed successfully.",
-  "current_checkpoint": "Point, set, aliases, and multiple-parameter member/projection tracer accepted in current-source release Session."
+  "restart_reason": "Final session reloaded the maintained accepted tracer after the earlier author parse error; ordinary negative attempt kept this same process alive.",
+  "current_checkpoint": "Preimage Obj and migration gates remain accepted. Four earlier full-suite failures were repaired as test-contract issues. The later unfiltered run picked up two failing concurrently added aggregate-alpha tests; see cleanup receipt.",
+  "maintained_tracer": "examples/wd/function_preimages.lit",
+  "maintained_tracer_note": "The maintained file contains the 17 original tracer statements followed by the two singleton-target membership directions and by-extension equality. Typed-alias and other accepted Session probes remain journal evidence.",
+  "final_session_id": 69850,
+  "acceptance_receipt": "tests/tooling/acceptance/function-preimages-2026-10-08.json",
+  "semantic_corrections": [
+    {
+      "date": "2026-10-08",
+      "instruction": "New preimage/preimage_set Obj syntax owns both names. Migrate conflicting old examples.",
+      "removed": "Parenthesis lookahead fallback to ordinary identifiers.",
+      "migration": "preimage witness -> source_input in known_source_nested_unique.lit",
+      "verification": "passed",
+      "additional_migration": "Topology template preimage -> inverse_image; theorem preimage_set -> preimage_powerset."
+    }
+  ],
+  "keyword_ownership_receipt": "tests/tooling/acceptance/function-preimages-2026-10-08.json",
+  "test_contract_cleanup_receipt": "tests/tooling/acceptance/test-contract-cleanup-2026-10-08.json"
 }

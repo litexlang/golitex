@@ -300,24 +300,8 @@ fn exact_function_empty_domain_universals_do_not_publish_their_conclusions() {
     assert!(execute(&mut rt,"forall x {0}:\n    2=3").is_failed(),"nonempty-domain universal cannot be vacuous");
 }
 
-#[test]
-fn builtin_theorem_catalogue_has_twenty_nine_native_tracers() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/stmt_nodes/release_and_expand/builtin_thm");
-    let mut count = 0;
-    for entry in std::fs::read_dir(dir).unwrap() {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|x| x.to_str()) != Some("lit") { continue; }
-        let name = path.file_stem().unwrap().to_str().unwrap();
-        let id = BuiltinTheoremId::from_name(name).expect("each file names a builtin theorem");
-        assert_eq!(id.as_str(), name);
-        let code = std::fs::read_to_string(&path).unwrap();
-        let mut rt = runtime();
-        let result = rt.run_litex_code(&code).unwrap();
-        assert!(result.session_error.is_none() && result.success, "{}\n{}", path.display(), crate::json_output::emit_run_detailed(&result, &rt, "test", None));
-        count += 1;
-    }
-    assert_eq!(count, 29);
-}
+#[path = "../../../../tests/unit/execute/builtin_theorem_catalogue/tests.rs"]
+mod catalogue_tests;
 
 #[test]
 fn finite_set_reduce_singleton_checks_set_carrier_laws_and_rollback() {
