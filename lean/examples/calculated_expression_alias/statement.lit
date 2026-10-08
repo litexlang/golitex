@@ -1,0 +1,7 @@
+# Compute a numerical alias and use the same equality in both directions.
+
+let numeric_alias = 2 + 3
+
+numeric_alias = 5
+
+5 = numeric_alias

@@ -10,6 +10,7 @@ pub enum RunCommandOutcome {
     RunRepo(RunRepoResult),
     ExtractExecutableCode(ExtractExecutableCodeResult),
     CompileToLatex(CompileToLatexResult),
+    CompileToLean(CompileToLeanResult),
     /// Interactive REPL: prints each step; no accumulated payload.
     RunRepl,
     Help(HelpResult),
@@ -84,6 +85,17 @@ pub struct ExtractExecutableCodeResult {
 pub struct CompileToLatexResult {
     pub json: String,
     pub success: bool,
+}
+
+/// Complete Lean artifact; failures return through RuntimeResult.
+pub struct CompileToLeanResult {
+    pub source: String,
+}
+
+impl CompileToLeanResult {
+    pub fn new(source: String) -> Self {
+        Self { source }
+    }
 }
 
 fn failed_indices(statement_results: &[ExecStmtResult]) -> Option<Vec<usize>> {
@@ -260,6 +272,7 @@ impl RunCommandOutcome {
             Self::RunRepo(r) => r.process_failed(),
             Self::ExtractExecutableCode(r) => r.process_failed(),
             Self::CompileToLatex(r) => r.process_failed(),
+            Self::CompileToLean(_) => false,
             Self::RunRepl | Self::Help(_) | Self::Version(_) => false,
         }
     }
@@ -271,7 +284,7 @@ impl RunCommandOutcome {
             Self::RunRepo(r) => r.run.normal_json.as_deref(),
             Self::ExtractExecutableCode(r) => Some(r.json.as_str()),
             Self::CompileToLatex(r) => Some(r.json.as_str()),
-            Self::RunRepl | Self::Help(_) | Self::Version(_) => None,
+            Self::CompileToLean(_) | Self::RunRepl | Self::Help(_) | Self::Version(_) => None,
         }
     }
 }

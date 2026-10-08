@@ -1,0 +1,19 @@
+# Compose two real equalities, reverse the conclusion, and transport it through addition.
+
+forall a,b,c R:
+    a = b
+    b = c
+    =>:
+        a = c
+        c = a
+        a + 1 = c + 1
+
+forall p,q R:
+    p = q
+    =>:
+        q = p
+
+forall d,g R:
+    d = g
+    =>:
+        g = d

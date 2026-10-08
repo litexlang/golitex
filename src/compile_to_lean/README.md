@@ -23,8 +23,13 @@ pub fn compile_run(
 | [lean_compile_error.rs](lean_compile_error.rs) | Report the source statement index, evidence route, and rejection reason. |
 | [tests.rs](tests.rs) | Exercise supported replay and reject missing, changed, or out-of-scope evidence. |
 | [mod.rs](mod.rs) | Declare the module and export its public API. |
-| [../run/run_compile_to_lean.rs](../run/run_compile_to_lean.rs) | Parse the preview mode, verify standalone source once, and invoke this module while Runtime remains live. |
+| [../run/run_compile_to_lean.rs](../run/run_compile_to_lean.rs) | Execute `LaunchCommand::CompileToLean`, verify standalone source once, and return `CompileToLeanResult` while Runtime remains live. |
 | [../../lean/Litex.lean](../../lean/Litex.lean) | Define object semantics, certified constructors, and proved native bridges used by emitted terms. |
+
+`parse_launch_command` parses `-lean -f` into `LaunchCommand::CompileToLean`;
+`run_command` dispatches it and returns `RunCommandOutcome::CompileToLean`.
+The shared CLI output writer emits Lean source on stdout or a phase diagnostic
+on stderr. `main` uses the same entrypoint for every command.
 
 `Runtime` is borrowed for citation resolution. It does not run a second proof
 search for the compiler. Display strings and presentation JSON are not replay
@@ -34,8 +39,23 @@ inputs.
 
 `compile_run` rejects a failed or incomplete source run, then visits
 `statement_results` in order. It returns the assembled artifact only after
-every statement succeeds. `compile_statement` currently accepts successful
-fact statements; other statement families have explicit unsupported branches.
+every statement succeeds. It accepts supported fact statements, `let`, typed
+RHS `have`, named `thm`, and explicit `by thm` selections. Other statement and
+object families retain explicit unsupported branches.
+
+Aliases keep their source IdentifierIds and actual stored defining equalities.
+Their Lean definitions retain the certified RHS object rather than choosing a
+new carrier. A typed definition first replays the RHS membership proof. The
+current plain numeric profile rejects dependent carriers, struct opening and
+uncaptured inference producers.
+
+Named theorem results retain the original declaration, separate goal-formation
+WD scope, actual body parameter/domain introduction, ordered proof steps and
+conclusion proofs. Compilation checks this capture against the source statement
+and closes the local scope before publishing its theorem. Calls require the
+earlier compiled callee, validated parameter/domain proofs and the actual
+returned stores. Only direct, unreversed returned-atom selection is accepted;
+an independently true ambient goal cannot replace that citation.
 
 For each fact, `compile_verify` dispatches on the successful `VerifyFactResult`
 and its selected `searched_proof`. It replays object WD before the truth proof,
@@ -48,15 +68,19 @@ a supported replayed producer is rejected.
 environment, introduces binders and assumptions, replays the body, and pops
 the scope on either success or error. Generic binders retain their host type,
 `Litex.Representation`, certified `Litex.Obj`, and membership hypotheses.
+Whole-forall reuse instead applies its recorded earlier producer after checking
+the exact ordered binder bijection, carriers, premises, conclusions and fixed
+free references. Its captured WD scope is replayed without searching its
+conclusions again.
 
 ## Internal representations
 
 | Type | Role |
 | --- | --- |
 | `ObjectTerm` | Source object and its emitted certified Lean term, with optional numeric bridge evidence. |
-| `NumericTerm` | Native numeric value, its denotation proof, and complex-membership proof. |
+| `NumericTerm` | Native numeric value, denotation/member evidence and optional exact closed scalar derived from certified numeric constructors or definitions. |
 | `FactTerm` | Exact source fact, emitted proposition, and emitted proof. |
-| `CompilerScope` | Active identifier, object, fact-ID, and WD-ID registries plus an optional captured environment. |
+| `CompilerScope` | Active identifier, object, fact-ID, WD-ID and named-theorem registries plus an optional captured environment. |
 
 Identifier IDs preserve binder identity, FactIds preserve citations, and
 WellDefinednessIds preserve cached construction dependencies. Object IR keys
@@ -72,6 +96,16 @@ Reflexivity emits `Litex.sameRefl`; closed numeric calculations validate their
 exact endpoint certificates; rational normalization validates the supported
 expression domain and ordered nonzero requirements before emitting a native
 normalization proof through `Litex.NativeBridge`.
+
+Equality-class replay checks ordered path edges, their exact active producers,
+orientations and endpoint identities; peer bridges replay their own WD and
+selected proof. Supported known atomic facts transport In, IsSet and inequality
+through their recorded argument equalities. Atomic builtin rewrite accepts
+bounded whole-argument numeric/known-equality substitution with its exact
+residual child and citations; compound subterm rewrites, function unfolding and
+order duality remain unsupported. Numeric substitution preserves the recorded
+closed-expression endpoint and its source equality citation; a different closed
+residual is rejected rather than normalized into a replacement proof.
 
 The rational adapter uses fixed `ring` or guarded `field_simp`/`ring` output.
 The empty Rational tag contains no monomial trace: Lean checks the emitted

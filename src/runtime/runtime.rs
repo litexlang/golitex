@@ -54,6 +54,7 @@ impl Runtime {
             LaunchCommand::Eval { .. } => CodeSource::Eval,
             LaunchCommand::Repl { .. } => CodeSource::Repl,
             LaunchCommand::File { .. }
+            | LaunchCommand::CompileToLean { .. }
             | LaunchCommand::Repository { .. }
             | LaunchCommand::ExtractExecutableCode {
                 input:
@@ -91,6 +92,7 @@ impl Runtime {
                 ..
             } => RealOrVirtualPath::Eval,
             LaunchCommand::File { path, .. }
+            | LaunchCommand::CompileToLean { path, .. }
             | LaunchCommand::Repository { path, .. }
             | LaunchCommand::ExtractExecutableCode {
                 input:

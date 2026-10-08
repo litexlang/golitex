@@ -1,0 +1,12 @@
+# Transport real membership across complex equality and safely reuse forall binder names.
+
+forall u,v C:
+    u = v
+    u $in R
+    =>:
+        v $in R
+
+forall u,v C:
+    u = v
+    =>:
+        v = u

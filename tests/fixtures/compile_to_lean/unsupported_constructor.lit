@@ -1,0 +1,4 @@
+# Verification succeeds, but this constructor has no Lean replay adapter.
+1 = 1
+forall a R:
+    sin(a) + 0 = sin(a)

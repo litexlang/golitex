@@ -1,0 +1,17 @@
+# Apply a named add-zero theorem to a defined real number and an explicit alias argument.
+
+thm add_zero:
+    ? forall x R:
+        x + 0 = x
+
+have offset R = 2
+
+let shifted = offset + 0
+
+by thm add_zero(offset) => offset + 0 = offset
+
+shifted = offset
+
+let actual_argument_alias = offset
+
+by thm add_zero(actual_argument_alias) => actual_argument_alias + 0 = actual_argument_alias

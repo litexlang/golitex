@@ -133,6 +133,11 @@ pub enum LaunchCommand {
         input: ExtractInput,
         language: OutputLanguage,
     },
+    CompileToLean {
+        path: PathBuf,
+        strict: bool,
+        language: OutputLanguage,
+    },
     CompileToLatex {
         input: LatexInput,
         language: OutputLanguage,
@@ -146,7 +151,8 @@ impl LaunchCommand {
             LaunchCommand::Repl { strict, .. }
             | LaunchCommand::Eval { strict, .. }
             | LaunchCommand::File { strict, .. }
-            | LaunchCommand::Repository { strict, .. } => *strict,
+            | LaunchCommand::Repository { strict, .. }
+            | LaunchCommand::CompileToLean { strict, .. } => *strict,
             LaunchCommand::Help { .. }
             | LaunchCommand::Version { .. }
             | LaunchCommand::ExtractExecutableCode { .. }
@@ -163,7 +169,8 @@ impl LaunchCommand {
             | LaunchCommand::File { language, .. }
             | LaunchCommand::Repository { language, .. }
             | LaunchCommand::ExtractExecutableCode { language, .. }
-            | LaunchCommand::CompileToLatex { language, .. } => *language,
+            | LaunchCommand::CompileToLatex { language, .. }
+            | LaunchCommand::CompileToLean { language, .. } => *language,
         }
     }
 }
@@ -172,6 +179,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
     let mut session = false;
     let mut strict = false;
     let mut language = OutputLanguage::English;
+    let mut lean = false;
     let mut latex = false;
     let mut document = false;
     let mut rest = Vec::new();
@@ -190,6 +198,14 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
                 rest.push(code.clone());
                 i += 1;
             }
+        } else if arg == "-lean" {
+            if lean {
+                return Err(RuntimeError::InvalidArguments(
+                    "`-lean` may appear only once".into(),
+                ));
+            }
+            lean = true;
+            i += 1;
         } else if arg == "-latex" || arg == "--latex" {
             if latex {
                 return Err(RuntimeError::InvalidArguments(
@@ -225,6 +241,26 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             rest.push(arg.clone());
             i += 1;
         }
+    }
+
+    if lean {
+        if session || latex || document {
+            return Err(RuntimeError::InvalidArguments(
+                "`-lean` currently requires standalone -f and does not take -session or other output modes".into(),
+            ));
+        }
+        return match rest.as_slice() {
+            [flag, value] if flag == "-f" && !value.is_empty() => {
+                Ok(LaunchCommand::CompileToLean {
+                    path: PathBuf::from(value),
+                    strict,
+                    language,
+                })
+            }
+            _ => Err(RuntimeError::InvalidArguments(
+                "`-lean` currently requires standalone -f and does not take -session or other output modes".into(),
+            )),
+        };
     }
 
     if latex {
@@ -332,7 +368,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             })
         }
         _ => Err(RuntimeError::InvalidArguments(
-            "supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, `-latex` with -e / -f / -r and optional -document, optional `-session` / `-strict` / `-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>`, `-help`, `-version`"
+            "supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-extractpython` / `-extractc` with code / `-f` / `-r`, `-latex` with -e / -f / -r and optional -document, `-lean -f <file>`, optional `-session` / `-strict` / `-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>`, `-help`, `-version`"
                 .to_string(),
         )),
     }

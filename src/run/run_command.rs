@@ -38,6 +38,10 @@ pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
             let result = run_extract_executable_code::run_extract_executable_code(command)?;
             Ok(RunCommandOutcome::ExtractExecutableCode(result))
         }
+        command @ LaunchCommand::CompileToLean { .. } => {
+            let result = super::run_compile_to_lean::run_compile_to_lean(command)?;
+            Ok(RunCommandOutcome::CompileToLean(result))
+        }
         command @ LaunchCommand::CompileToLatex { .. } => {
             let result = run_compile_to_latex::run_compile_to_latex(command)?;
             Ok(RunCommandOutcome::CompileToLatex(result))

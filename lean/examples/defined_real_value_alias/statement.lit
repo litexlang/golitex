@@ -1,0 +1,9 @@
+# Name the real number 2, alias it, and retain its value and real membership.
+
+have typed_offset R = 2
+
+let typed_alias = typed_offset
+
+typed_alias = 2
+
+typed_alias $in R

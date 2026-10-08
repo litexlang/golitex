@@ -1,0 +1,2 @@
+# A failed verification must emit no Lean artifact.
+1 = 2
