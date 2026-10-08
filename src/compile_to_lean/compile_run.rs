@@ -134,84 +134,11 @@ impl LeanCompiler {
                     let right = self.compile_wd(&success.well_defined_proof.right, runtime)?;
                     ensure_object(&success.fact.left, &success.well_defined_proof.left)?;
                     ensure_object(&success.fact.right, &success.well_defined_proof.right)?;
-                    let proof = match &success.searched_proof {
-                        EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(
-                            _,
-                        )) => {
-                            if success.fact.left.ir() != success.fact.right.ir() {
-                                return Err(LeanCompileError::new(
-                                    "SameIr",
-                                    "Identity evidence has different endpoints.",
-                                ));
-                            }
-                            format!("(Litex.sameRefl {left})")
-                        }
-                        EqualFactSearchedProof::ByTheyAreTheSame(
-                            TheyAreTheSameProof::SameFreeParamShape(_),
-                        ) => {
-                            return Err(LeanCompileError::unsupported(
-                                "Equality/SameFreeParamShape",
-                            ))
-                        }
-                        EqualFactSearchedProof::ByClosedCalculation(proof) => {
-                            self.compile_closed_equality(&success.fact, proof)?
-                        }
-                        EqualFactSearchedProof::ByKnownSpecialProperty(_) => {
-                            return Err(LeanCompileError::unsupported(
-                                "Equality/KnownSpecialProperty",
-                            ))
-                        }
-                        EqualFactSearchedProof::ByBuiltinRule(
-                            EqualitySearchProofByBuiltinRule::Calculation(
-                                EqualitySearchProofByCalculation::Rational {},
-                            ),
-                        ) => self.compile_rational(&success.fact, &[], &[], false, runtime)?,
-                        EqualFactSearchedProof::ByBuiltinRule(
-                            EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
-                        ) => {
-                            self.compile_scalar_division_relation(&success.fact, proof, runtime)?
-                        }
-                        EqualFactSearchedProof::ByBuiltinRule(_) => {
-                            return Err(LeanCompileError::unsupported("Equality/BuiltinRule"))
-                        }
-                        EqualFactSearchedProof::ByEquivalenceClass(_) => {
-                            return Err(LeanCompileError::unsupported("Equality/EquivalenceClass"))
-                        }
-                        EqualFactSearchedProof::ByObjectDefinition(_) => {
-                            return Err(LeanCompileError::unsupported("Equality/ObjectDefinition"))
-                        }
-                        EqualFactSearchedProof::ByBuiltinStrategy(
-                            EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(
-                                proof,
-                            ),
-                        ) => self.compile_rational(
-                            &success.fact,
-                            &proof.requirement_facts,
-                            &proof.proof_of_requirement_facts,
-                            true,
-                            runtime,
-                        )?,
-                        EqualFactSearchedProof::ByBuiltinStrategy(_) => {
-                            return Err(LeanCompileError::unsupported("Equality/BuiltinStrategy"))
-                        }
-                        EqualFactSearchedProof::ByMatchingOneArgByOne(proof) => self
-                            .compile_arithmetic_congruence(
-                                &success.fact,
-                                &proof.corresponding_arg_equal_proofs,
-                                runtime,
-                            )?,
-                        EqualFactSearchedProof::ByKnownForallFact(_) => {
-                            return Err(LeanCompileError::unsupported("Equality/KnownForallFact"))
-                        }
-                        EqualFactSearchedProof::ByKnownForallFactViaSymmetry(_) => {
-                            return Err(LeanCompileError::unsupported(
-                                "Equality/KnownForallFactViaSymmetry",
-                            ))
-                        }
-                        EqualFactSearchedProof::ByBuiltinRewrite(_) => {
-                            return Err(LeanCompileError::unsupported("Equality/BuiltinRewrite"))
-                        }
-                    };
+                    let proof = self.compile_equality_search(
+                        &success.fact,
+                        &success.searched_proof,
+                        runtime,
+                    )?;
                     Ok(FactTerm {
                         fact: Fact::AtomicFact(AtomicFact::EqualFact(success.fact.clone())),
                         proposition: format!("Litex.Same {left} {right}"),
@@ -1420,6 +1347,316 @@ impl LeanCompiler {
                 | FactWellDefinedProof::NotForall(_),
                 _,
             ) => Err(LeanCompileError::unsupported("WD/CompoundFact")),
+        }
+    }
+
+    // Endpoints have already been certified by the owning verify/argument stage.
+    // Reuse the exact selected search route, never another proof of its target.
+    fn compile_equality_search(
+        &mut self,
+        fact: &EqualFact,
+        proof: &EqualFactSearchedProof,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let left = self.object_term(&fact.left)?;
+        self.object_term(&fact.right)?;
+        let proof = match proof {
+            EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(
+                _,
+            )) => {
+                if fact.left.ir() != fact.right.ir() {
+                    return Err(LeanCompileError::new(
+                        "SameIr",
+                        "Identity evidence has different endpoints.",
+                    ));
+                }
+                format!("(Litex.sameRefl {left})")
+            }
+            EqualFactSearchedProof::ByTheyAreTheSame(
+                TheyAreTheSameProof::SameFreeParamShape(_),
+            ) => {
+                return Err(LeanCompileError::unsupported(
+                    "Equality/SameFreeParamShape",
+                ))
+            }
+            EqualFactSearchedProof::ByClosedCalculation(proof) => {
+                self.compile_closed_equality(fact, proof)?
+            }
+            EqualFactSearchedProof::ByKnownSpecialProperty(_) => {
+                return Err(LeanCompileError::unsupported(
+                    "Equality/KnownSpecialProperty",
+                ))
+            }
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::Calculation(
+                    EqualitySearchProofByCalculation::Rational {},
+                ),
+            ) => self.compile_rational(fact, &[], &[], false, runtime)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
+            ) => {
+                self.compile_scalar_division_relation(fact, proof, runtime)?
+            }
+            EqualFactSearchedProof::ByBuiltinRule(_) => {
+                return Err(LeanCompileError::unsupported("Equality/BuiltinRule"))
+            }
+            EqualFactSearchedProof::ByEquivalenceClass(proof) => {
+                self.compile_equivalence_class(fact, proof, runtime)?
+            }
+            EqualFactSearchedProof::ByObjectDefinition(_) => {
+                return Err(LeanCompileError::unsupported("Equality/ObjectDefinition"))
+            }
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(
+                    proof,
+                ),
+            ) => self.compile_rational(
+                fact,
+                &proof.requirement_facts,
+                &proof.proof_of_requirement_facts,
+                true,
+                runtime,
+            )?,
+            EqualFactSearchedProof::ByBuiltinStrategy(_) => {
+                return Err(LeanCompileError::unsupported("Equality/BuiltinStrategy"))
+            }
+            EqualFactSearchedProof::ByMatchingOneArgByOne(proof) => self
+                .compile_arithmetic_congruence(
+                    fact,
+                    &proof.corresponding_arg_equal_proofs,
+                    runtime,
+                )?,
+            EqualFactSearchedProof::ByKnownForallFact(_) => {
+                return Err(LeanCompileError::unsupported("Equality/KnownForallFact"))
+            }
+            EqualFactSearchedProof::ByKnownForallFactViaSymmetry(_) => {
+                return Err(LeanCompileError::unsupported(
+                    "Equality/KnownForallFactViaSymmetry",
+                ))
+            }
+            EqualFactSearchedProof::ByBuiltinRewrite(_) => {
+                return Err(LeanCompileError::unsupported("Equality/BuiltinRewrite"))
+            }
+        };
+        Ok(proof)
+    }
+
+    fn compile_strict_equality_search(
+        &mut self,
+        fact: &EqualFact,
+        proof: &StrictEqualArgProof,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        self.object_term(&fact.left)?;
+        self.object_term(&fact.right)?;
+        match proof {
+            StrictEqualArgProof::ByTheyAreTheSame(proof) => {
+                self.compile_identity(&fact.left, &fact.right, proof)
+            }
+            StrictEqualArgProof::ByClosedCalculation(proof) => {
+                self.compile_closed_equality(fact, proof)
+            }
+            StrictEqualArgProof::ByEquivalenceClass(proof) => {
+                self.compile_equivalence_class(fact, proof, runtime)
+            }
+            StrictEqualArgProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::Calculation(
+                    EqualitySearchProofByCalculation::Rational {},
+                ),
+            ) => self.compile_rational(fact, &[], &[], false, runtime),
+            StrictEqualArgProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
+            ) => self.compile_scalar_division_relation(fact, proof, runtime),
+            StrictEqualArgProof::ByBuiltinRule(_) => {
+                Err(LeanCompileError::unsupported("StrictEquality/BuiltinRule"))
+            }
+            StrictEqualArgProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
+            ) => self.compile_rational(
+                fact,
+                &proof.requirement_facts,
+                &proof.proof_of_requirement_facts,
+                true,
+                runtime,
+            ),
+            StrictEqualArgProof::ByBuiltinStrategy(_) => {
+                Err(LeanCompileError::unsupported("StrictEquality/BuiltinStrategy"))
+            }
+            StrictEqualArgProof::ByMatchingOneArgByOne(proof) => {
+                self.compile_arithmetic_congruence(
+                    fact,
+                    &proof.corresponding_arg_equal_proofs,
+                    runtime,
+                )
+            }
+            StrictEqualArgProof::ByKnownSpecialProperty(_) => {
+                Err(LeanCompileError::unsupported("StrictEquality/KnownSpecialProperty"))
+            }
+            StrictEqualArgProof::ByObjectDefinition(_) => {
+                Err(LeanCompileError::unsupported("StrictEquality/ObjectDefinition"))
+            }
+        }
+    }
+
+    fn compile_identity(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        proof: &TheyAreTheSameProof,
+    ) -> Result<String, LeanCompileError> {
+        match proof {
+            TheyAreTheSameProof::SameIr(_) if left.ir() == right.ir() => {
+                Ok(format!("(Litex.sameRefl {})", self.object_term(left)?))
+            }
+            TheyAreTheSameProof::SameIr(_) => Err(LeanCompileError::new(
+                "Equality/IdentitySubject",
+                "Exact identity evidence has different source endpoints.",
+            )),
+            TheyAreTheSameProof::SameFreeParamShape(_) => Err(LeanCompileError::unsupported(
+                "Equality/SameFreeParamShape",
+            )),
+        }
+    }
+
+    fn compile_equivalence_class(
+        &mut self,
+        fact: &EqualFact,
+        proof: &EqualFactSearchedProofByEquivalenceClass,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        match proof {
+            EqualFactSearchedProofByEquivalenceClass::KnownPath(path) => {
+                self.compile_equality_path(&fact.left, &fact.right, path, runtime)
+            }
+            EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof) => {
+                let resolved = self.resolve_fact(proof.cited.fact_id, runtime)?;
+                if resolved != Fact::AtomicFact(AtomicFact::EqualFact(proof.cited.clone())) {
+                    return Err(LeanCompileError::new(
+                        "Equality/AlphaCitation",
+                        "Alpha endpoint evidence changes its cited source equality.",
+                    ));
+                }
+                let (left, right) = if proof.reversed {
+                    (&proof.cited.right, &proof.cited.left)
+                } else {
+                    (&proof.cited.left, &proof.cited.right)
+                };
+                let cited = self.compile_registered_equality(
+                    proof.cited.fact_id,
+                    left,
+                    right,
+                    runtime,
+                )?;
+                let left_identity = self.compile_identity(left, &fact.left, &proof.left_identity)?;
+                let right_identity = self.compile_identity(right, &fact.right, &proof.right_identity)?;
+                Ok(format!("(({left_identity}).symm.trans (({cited}).trans {right_identity}))"))
+            }
+            EqualFactSearchedProofByEquivalenceClass::AlphaPaths(proof) => {
+                let left_path = self.compile_equality_path(
+                    &fact.left,
+                    &proof.left,
+                    &proof.left_path,
+                    runtime,
+                )?;
+                let identity = self.compile_identity(&proof.left, &proof.right, &proof.identity)?;
+                let right_path = self.compile_equality_path(
+                    &proof.right,
+                    &fact.right,
+                    &proof.right_path,
+                    runtime,
+                )?;
+                Ok(format!("(({left_path}).trans (({identity}).trans {right_path}))"))
+            }
+            EqualFactSearchedProofByEquivalenceClass::ViaPeers(proof) => {
+                ensure_object(&proof.bridge.fact.left, &proof.bridge.well_defined_proof.left)?;
+                ensure_object(&proof.bridge.fact.right, &proof.bridge.well_defined_proof.right)?;
+                self.compile_wd(&proof.bridge.well_defined_proof.left, runtime)?;
+                self.compile_wd(&proof.bridge.well_defined_proof.right, runtime)?;
+                let left_path = self.compile_equality_path(
+                    &fact.left,
+                    &proof.bridge.fact.left,
+                    &proof.left_path,
+                    runtime,
+                )?;
+                let bridge = self.compile_equality_search(
+                    &proof.bridge.fact,
+                    &proof.bridge.searched_proof,
+                    runtime,
+                )?;
+                let right_path = self.compile_equality_path(
+                    &proof.bridge.fact.right,
+                    &fact.right,
+                    &proof.right_path,
+                    runtime,
+                )?;
+                Ok(format!("(({left_path}).trans (({bridge}).trans {right_path}))"))
+            }
+        }
+    }
+
+    fn compile_equality_path(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        proof: &KnownEqualityPathProof,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let mut current = left;
+        let mut compiled = format!("(Litex.sameRefl {})", self.object_term(left)?);
+        self.object_term(right)?;
+        for (from, to, id) in &proof.path {
+            if from.ir() != current.ir() {
+                return Err(LeanCompileError::new(
+                    "Equality/PathOrder",
+                    "An equality edge does not continue the recorded ordered path.",
+                ));
+            }
+            let step = self.compile_registered_equality(*id, from, to, runtime)?;
+            compiled = format!("(({compiled}).trans {step})");
+            current = to;
+        }
+        if current.ir() != right.ir() {
+            return Err(LeanCompileError::new(
+                "Equality/PathEndpoint",
+                "The recorded equality path does not end at the requested endpoint.",
+            ));
+        }
+        Ok(compiled)
+    }
+
+    fn compile_registered_equality(
+        &self,
+        id: FactId,
+        from: &Obj,
+        to: &Obj,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let resolved = self.resolve_fact(id, runtime)?;
+        let equality = match &resolved {
+            Fact::AtomicFact(AtomicFact::EqualFact(equal)) if equal.fact_id == id => equal,
+            _ => return Err(LeanCompileError::new(
+                "Equality/PathCitation",
+                "The equality path cites another fact family or identity.",
+            )),
+        };
+        let registered = self.fact_term(id)?;
+        if registered.fact != resolved {
+            return Err(LeanCompileError::new(
+                "Equality/PathProducer",
+                "The cited equality differs from its active compiled producer.",
+            ));
+        }
+        self.object_term(from)?;
+        self.object_term(to)?;
+        if equality.left.ir() == from.ir() && equality.right.ir() == to.ir() {
+            Ok(registered.proof.clone())
+        } else if equality.right.ir() == from.ir() && equality.left.ir() == to.ir() {
+            Ok(format!("({}).symm", registered.proof))
+        } else {
+            Err(LeanCompileError::new(
+                "Equality/PathSubject",
+                "The cited equality does not prove the recorded oriented edge.",
+            ))
         }
     }
 

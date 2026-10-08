@@ -11,7 +11,7 @@ generic, and source equality and membership use their fixed denotations.
 a default model or a completed model of all Litex objects and rules.
 -/
 
-universe u v w
+universe u v w x
 
 namespace Litex
 
@@ -114,6 +114,31 @@ def isSet {M : Semantics.{u}} {α : Type v} [Representation M α]
 def sameRefl {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) : Same a a :=
   rfl
+
+/-- Predicate transport uses denotation equality across host representations. -/
+theorem inOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β]
+    [Representation M γ] [Representation M δ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (A : Obj (M := M) γ) (B : Obj (M := M) δ)
+    (hab : Same a b) (hAB : Same A B) (haA : In a A) : In b B :=
+  Eq.mp (congrArg₂ M.mem hab hAB) haA
+
+theorem isSetOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (hab : Same a b) (ha : IsSet a) : IsSet b :=
+  Eq.mp (congrArg M.isSet hab) ha
+
+theorem notSameOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β]
+    [Representation M γ] [Representation M δ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (c : Obj (M := M) γ) (d : Obj (M := M) δ)
+    (hab : Same a b) (hcd : Same c d) (hac : ¬ Same a c) : ¬ Same b d :=
+  fun hbd => hac (hab.trans (hbd.trans hcd.symm))
 
 instance complexRepresentation (M : Semantics.{u}) : Representation M ℂ where
   wd _ := True

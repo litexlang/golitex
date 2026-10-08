@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 
@@ -72,13 +74,21 @@ class ReleasePreflightTest(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(preflight.PreflightError):
                 preflight.validate_run_output(json.dumps(failed), 0)
 
-    def test_version_contract_requires_minimal_json_envelope(self) -> None:
-        successful = json.dumps({"kind": "version", "ok": True, "version": "1.2.3"})
-        preflight.validate_version_output(successful, 0, "1.2.3")
+    def test_version_contract_requires_matching_plain_text_and_exit_zero(self) -> None:
+        version = "1.0.1-beta"
+        for ending in ("", "\n", "\r\n"):
+            preflight.validate_version_output(f"Litex {version}{ending}", 0, version)
+        for output in (
+            "Litex 1.0.0-beta\n",
+            "Litex Kernel: litex 1.0.1-beta\n",
+            json.dumps({"kind": "version", "ok": True, "version": version}),
+            "",
+            f"Litex {version}\nextra output\n",
+        ):
+            with self.subTest(output=output), self.assertRaises(preflight.PreflightError):
+                preflight.validate_version_output(output, 0, version)
         with self.assertRaises(preflight.PreflightError):
-            preflight.validate_version_output("Litex Kernel: litex 1.2.3", 0, "1.2.3")
-        with self.assertRaises(preflight.PreflightError):
-            preflight.validate_version_output(successful, 1, "1.2.3")
+            preflight.validate_version_output(f"Litex {version}\n", 1, version)
 
     def test_tar_archive_contains_only_root_binary_and_std(self) -> None:
         with tempfile.TemporaryDirectory(
@@ -111,6 +121,34 @@ class ReleasePreflightTest(unittest.TestCase):
                 with self.assertRaises(preflight.PreflightError):
                     preflight.validate_archive_member(name, is_link)
 
+    def test_archive_smoke_uses_shipped_std_despite_inherited_env(self) -> None:
+        with tempfile.TemporaryDirectory(
+            prefix="release-preflight-test.", dir=PRIVATE_ROOT
+        ) as temporary_directory:
+            root = Path(temporary_directory)
+            package = root / "package"
+            (package / "std" / "basics").mkdir(parents=True)
+            (package / "litex").write_text("binary", encoding="utf-8")
+            for filename in ("litex.config", "main.lit"):
+                (package / "std" / "basics" / filename).write_text("", encoding="utf-8")
+            archive = root / "litex_1.0.1-beta_darwin_arm64.tar.gz"
+            preflight.create_archive(package, archive)
+            run_json = json.dumps({
+                "kind": "run", "detail": "normal", "target": "file",
+                "path": "smoke.lit", "success": True, "session_error": None,
+                "statement_results": [{"success": True}],
+            })
+            responses = [
+                subprocess.CompletedProcess([], 0, "Litex 1.0.1-beta\n"),
+                subprocess.CompletedProcess([], 0, run_json),
+            ]
+            with patch.dict(preflight.os.environ, {"LITEX_STD_PATH": str(root / "wrong-std")}), \
+                    patch.object(preflight.subprocess, "run", side_effect=responses) as run, \
+                    patch("builtins.print"):
+                preflight.check_archive(root, archive, "1.0.1-beta")
+            smoke_env = run.call_args_list[1].kwargs["env"]
+            self.assertEqual(smoke_env["LITEX_STD_PATH"], str(root / "extracted" / "std"))
+
     def test_workflow_archive_smokes_use_shared_preflight(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text(
             encoding="utf-8"
@@ -122,6 +160,21 @@ class ReleasePreflightTest(unittest.TestCase):
         self.assertNotIn(
             "basics::finite_set_has_bijective_index", workflow
         )
+
+    def test_workflow_smokes_follow_current_cli_contract(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text(
+            encoding="utf-8"
+        )
+        for obsolete in (
+            "import std basics",
+            "-isolated",
+            "grep -F '\"success\": true'",
+            "assert_match '\"success\": true', version_output",
+        ):
+            with self.subTest(obsolete=obsolete):
+                self.assertNotIn(obsolete, workflow)
+        self.assertIn('assert_equal "Litex #{version}\\n", version_output', workflow)
+        self.assertIn("LITEX_STD_PATH=/usr/share/litex/std", workflow)
 
 
 if __name__ == "__main__":

@@ -39,7 +39,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if [[ "$VERSION" == *-beta* || "$VERSION" == *-alpha* || "$VERSION" == *-rc* ]]; then
+          if [[ "${VERSION%%+*}" == *-* ]]; then
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
@@ -73,6 +73,9 @@ jobs:
 
       - name: Rust formatting
         run: cargo fmt --all -- --check
+
+      - name: Release preflight contract tests
+        run: python3 .github/scripts/release/test_preflight.py
 
       - name: Release tests
         run: cargo test --release --all-targets --locked
@@ -222,13 +225,16 @@ jobs:
         if: matrix.arch == 'amd64'
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
-          SMOKE_FILE="$(mktemp)"
-          printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
-          if ! OUTPUT=$(litex -lang en -f "${SMOKE_FILE}"); then
+          SMOKE_DIR="$(mktemp -d)"
+          trap 'rm -f "${SMOKE_DIR}/smoke.lit" "${SMOKE_DIR}/litex.config"; rmdir "${SMOKE_DIR}"' EXIT
+          printf '%s\n' '[import std]' 'basics' '[export]' 'smoke = "./smoke.lit"' > "${SMOKE_DIR}/litex.config"
+          printf '%s\n' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_DIR}/smoke.lit"
+          cd "${SMOKE_DIR}"
+          if ! OUTPUT=$(LITEX_STD_PATH=/usr/share/litex/std litex -lang en -f smoke.lit); then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
-          if ! printf '%s\n' "${OUTPUT}" | grep -F '"success": true' > /dev/null; then
+          if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["success"] is True and r["session_error"] is None'; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -285,14 +291,26 @@ jobs:
           if (-not (Test-Path $binary)) {
             throw "MSI did not install the Litex binary at $binary"
           }
-          $smokeFile = Join-Path $env:TEMP "litex-msi-smoke.lit"
-          Set-Content -Path $smokeFile -Value "import std basics`nquot(-7, 3) = -3`n`$dvd(12, 3)"
-          $output = & $binary -isolated -f $smokeFile
-          $outputText = $output -join "`n"
-          Remove-Item -Force $smokeFile
-          if ($LASTEXITCODE -ne 0 -or $outputText.Contains('"result": "error"') -or -not $outputText.Contains('quot(-7, 3) = -3')) {
-            $outputText
-            throw "MSI smoke test failed"
+          $smokeDir = Join-Path $env:TEMP ("litex-msi-smoke-" + [guid]::NewGuid())
+          New-Item -ItemType Directory -Path $smokeDir | Out-Null
+          $env:LITEX_STD_PATH = Join-Path (Split-Path (Split-Path $binary -Parent) -Parent) 'std'
+          if (-not (Test-Path (Join-Path $env:LITEX_STD_PATH 'basics\litex.config'))) {
+            throw "MSI did not install std at $env:LITEX_STD_PATH"
+          }
+          Push-Location $smokeDir
+          try {
+            Set-Content -Encoding utf8NoBOM -Path litex.config -Value '[import std]', 'basics', '[export]', 'smoke = "./smoke.lit"'
+            Set-Content -Encoding utf8NoBOM -Path smoke.lit -Value 'quot(-7, 3) = -3', '$dvd(12, 3)'
+            $output = & $binary -lang en -f smoke.lit
+            $exitCode = $LASTEXITCODE
+            $result = ($output -join "`n") | ConvertFrom-Json
+            if ($exitCode -ne 0 -or $result.kind -ne 'run' -or $result.success -ne $true -or $null -ne $result.session_error) {
+              $output
+              throw "MSI smoke test failed"
+            }
+          } finally {
+            Pop-Location
+            Remove-Item -Recurse -Force $smokeDir
           }
 
       - name: Upload .msi
@@ -390,6 +408,8 @@ jobs:
       - name: Update formula
         run: |
           cat > homebrew-tap/litex.rb << 'FORMULA'
+          require "json"
+
           class Litex < Formula
             desc "A simple formal proof language and verifier"
             homepage "https://litexlang.com"
@@ -418,12 +438,14 @@ jobs:
 
             test do
               version_output = shell_output("#{bin}/litex -version")
-              assert_match '"success": true', version_output
-              assert_match %Q{"version": "#{version}"}, version_output
-              (testpath/"test.lit").write "import std basics\nquot(-7, 3) = -3\n$dvd(12, 3)\n"
-              output = shell_output("#{bin}/litex -isolated -f #{testpath}/test.lit")
-              assert_match 'quot(-7, 3) = -3', output
-              refute_match '"result": "error"', output
+              assert_equal "Litex #{version}\n", version_output
+              (testpath/"litex.config").write "[import std]\nbasics\n[export]\ntest = \"./test.lit\"\n"
+              (testpath/"test.lit").write "quot(-7, 3) = -3\n$dvd(12, 3)\n"
+              ENV["LITEX_STD_PATH"] = (bin/"std").to_s
+              output = JSON.parse(shell_output("#{bin}/litex -lang en -f #{testpath}/test.lit"))
+              assert_equal "run", output.fetch("kind")
+              assert_equal true, output.fetch("success")
+              assert_nil output.fetch("session_error")
             end
           end
           FORMULA
@@ -501,7 +523,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add litex.json
-          git commit -m "Update litex to ${VERSION}"
+          if ! git diff --cached --quiet; then
+            git commit -m "Update litex to ${VERSION}"
+          fi
           git push
 
   # ─────────────────────────────────────────────
@@ -560,14 +584,15 @@ jobs:
 
       - name: Smoke test Docker image
         run: |
-          SMOKE_FILE="$(mktemp)"
-          trap 'rm -f "${SMOKE_FILE}"' EXIT
-          printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
-          if ! OUTPUT=$(docker run --rm -v "${SMOKE_FILE}:/tmp/litex-smoke.lit:ro" "ghcr.io/litexlang/litex:${VERSION}" -lang en -f /tmp/litex-smoke.lit); then
+          SMOKE_DIR="$(mktemp -d)"
+          trap 'rm -f "${SMOKE_DIR}/smoke.lit" "${SMOKE_DIR}/litex.config"; rmdir "${SMOKE_DIR}"' EXIT
+          printf '%s\n' '[import std]' 'basics' '[export]' 'smoke = "./smoke.lit"' > "${SMOKE_DIR}/litex.config"
+          printf '%s\n' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_DIR}/smoke.lit"
+          if ! OUTPUT=$(docker run --rm -v "${SMOKE_DIR}:/work:ro" -w /work "ghcr.io/litexlang/litex:${VERSION}" -lang en -f smoke.lit); then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
-          if ! printf '%s\n' "${OUTPUT}" | grep -F '"success": true' > /dev/null; then
+          if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["success"] is True and r["session_error"] is None'; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -611,14 +636,16 @@ jobs:
             sudo dpkg -i /tmp/litex.deb
             rm -f /tmp/litex.deb
             litex -version
-            SMOKE_FILE="$(mktemp)"
-            trap 'rm -f "${SMOKE_FILE}"' EXIT
-            printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
-            if ! OUTPUT=$(litex -lang en -f "${SMOKE_FILE}"); then
+            SMOKE_DIR="$(mktemp -d)"
+            trap 'rm -f "${SMOKE_DIR}/smoke.lit" "${SMOKE_DIR}/litex.config"; rmdir "${SMOKE_DIR}"' EXIT
+            printf '%s\n' '[import std]' 'basics' '[export]' 'smoke = "./smoke.lit"' > "${SMOKE_DIR}/litex.config"
+            printf '%s\n' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_DIR}/smoke.lit"
+            cd "${SMOKE_DIR}"
+            if ! OUTPUT=$(LITEX_STD_PATH=/usr/share/litex/std litex -lang en -f smoke.lit); then
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi
-            if ! printf '%s\n' "${OUTPUT}" | grep -F '"success": true' > /dev/null; then
+            if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["success"] is True and r["session_error"] is None'; then
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi
