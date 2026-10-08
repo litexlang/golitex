@@ -1,5 +1,5 @@
+use super::result::AssumeDomFactResult;
 use crate::ast::fact::{Fact, ForallFact};
-use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_forall_fact::well_defined_result::{
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,
     VerifyForallFactWellDefinedResult,
@@ -9,6 +9,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::IntroduceTypedParametersResult;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -24,11 +25,10 @@ impl Runtime {
             rt.verify_forall_fact_well_definedness_in_local(fact, verify_state.clone())
         })?;
         match stages {
-            Ok((param_type_well_defined, auto_opened_struct_layers, dom, then)) => Ok(
+            Ok((introduced_params, assumed_dom_facts, then)) => Ok(
                 VerifyForallFactWellDefinedResult::Success(ForallFactWellDefinedProof {
-                    param_type_well_defined,
-                    auto_opened_struct_layers,
-                    dom,
+                    introduced_params,
+                    assumed_dom_facts,
                     then,
                     local_env,
                 }),
@@ -44,15 +44,14 @@ impl Runtime {
     ) -> RuntimeResult<
         Result<
             (
-                Vec<ParamTypeWellDefinedProof>,
-                Option<Vec<crate::execute::release_one_struct_layer::ReleaseOneStructLayerProof>>,
-                Vec<FactWellDefinedProof>,
+                IntroduceTypedParametersResult,
+                Vec<AssumeDomFactResult>,
                 Vec<FactWellDefinedProof>,
             ),
             FailToVerifyForallFactWellDefinedResult,
         >,
     > {
-        let param_type_well_defined = match self
+        let mut introduced_params = match self
             .verify_and_define_wd_parameters(&fact.typed_parameters, verify_state.clone())?
         {
             Ok(proofs) => proofs,
@@ -66,7 +65,7 @@ impl Runtime {
         // A direct &Struct binder carries its definition-owned laws during
         // WD as it does during proof introduction. Keep the same one-layer
         // boundary: nested struct fields still require explicit release.
-        let auto_opened_struct_layers = match self
+        introduced_params.auto_opened_struct_layers = match self
             .auto_open_struct_layers_for_typed_parameters(&fact.typed_parameters, verify_state)?
         {
             Ok(opened) => opened,
@@ -83,14 +82,17 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Assume each dom before then-WD so domain-restricted
                     // applications (e.g. `f(x)` under `x > 0`) can pass.
-                    let _ = self.store_fact_and_infer(dom, verify_state)?;
-                    succeeded_dom.push(proof);
+                    let store_and_infer = self.store_fact_and_infer(dom, verify_state)?;
+                    succeeded_dom.push(AssumeDomFactResult {
+                        well_defined: proof,
+                        store_and_infer,
+                    });
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
                     return Ok(Err(FailToVerifyForallFactWellDefinedResult::DomFact {
                         failed_index,
-                        param_type_well_defined,
-                        succeeded_dom,
+                        param_type_well_defined: introduced_params.param_type_well_defined,
+                        succeeded_dom: succeeded_dom.into_iter().map(|a| a.well_defined).collect(),
                         failed_dom: Box::new(failed_dom),
                     }));
                 }
@@ -105,8 +107,8 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Failed(failed_then) => {
                     return Ok(Err(FailToVerifyForallFactWellDefinedResult::ThenFact {
                         failed_index,
-                        param_type_well_defined,
-                        succeeded_dom,
+                        param_type_well_defined: introduced_params.param_type_well_defined,
+                        succeeded_dom: succeeded_dom.into_iter().map(|a| a.well_defined).collect(),
                         succeeded_then,
                         failed_then: Box::new(failed_then),
                     }));
@@ -114,12 +116,7 @@ impl Runtime {
             }
         }
 
-        Ok(Ok((
-            param_type_well_defined,
-            auto_opened_struct_layers,
-            succeeded_dom,
-            succeeded_then,
-        )))
+        Ok(Ok((introduced_params, succeeded_dom, succeeded_then)))
     }
 }
 

@@ -1,8 +1,10 @@
+use super::result::AssumeDomFactResult;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult,
 };
+use crate::execute::IntroduceTypedParametersResult;
 
 pub enum FailToVerifyForallFactWellDefinedResult {
     ParamType(FailToVerifyObjWellDefinedResult),
@@ -24,10 +26,8 @@ pub enum FailToVerifyForallFactWellDefinedResult {
 
 // Stage order: param types/bindings → one struct layer → dom facts → then facts.
 pub struct ForallFactWellDefinedProof {
-    pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
-    pub auto_opened_struct_layers:
-        Option<Vec<crate::execute::release_one_struct_layer::ReleaseOneStructLayerProof>>,
-    pub dom: Vec<FactWellDefinedProof>,
+    pub introduced_params: IntroduceTypedParametersResult,
+    pub assumed_dom_facts: Vec<AssumeDomFactResult>,
     pub then: Vec<FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
 }

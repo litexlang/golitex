@@ -53,7 +53,7 @@ impl Runtime {
         let param_type_well_defined = match self
             .verify_and_define_wd_parameters(&fact.typed_parameters, verify_state.clone())?
         {
-            Ok(proofs) => proofs,
+            Ok(introduced) => introduced.param_type_well_defined,
             Err(failed) => {
                 return Ok(Err(FailToVerifyNotForallFactWellDefinedResult::ParamType(
                     extract_obj_wd_fail(failed),

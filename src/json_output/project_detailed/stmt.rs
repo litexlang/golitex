@@ -24,7 +24,7 @@ use crate::execute::execute_witness_stmt::ExecWitnessStmtResult;
 use crate::execute::{
     ExecAxiomStmtResult, ExecCommandStmtResult, ExecDefAbstractPropStmtSuccessResult,
     ExecDefAlgoByCasesStmtResult, ExecDefPropStmtResult, ExecDefStrategyStmtResult,
-    ExecDefStructStmtResult, ExecDefTemplateStmtResult, ExecDefThmStmtResult,
+    ExecDefStructStmtResult, ExecDefTemplateStmtResult, ExecDefThmBodyProof, ExecDefThmStmtResult,
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecEvalStmtResult,
     ExecHaveByFnPreimageStmtResult, ExecHaveByReplacementAxiomStmtResult,
     ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnByInducStmtResult,
@@ -246,23 +246,12 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
             vec![
                 ("success", bool_value(true)),
                 ("kind", string("def_thm")),
+                ("statement", string(s.statement.readable_string())),
                 (
                     "goal_well_defined",
                     project_verify_fact_wd_result(&s.goal_wd, runtime),
                 ),
-                (
-                    "proof_steps",
-                    JsonValue::Array(
-                        s.proof_steps
-                            .iter()
-                            .map(|step| project_stmt_detailed(step, runtime))
-                            .collect(),
-                    ),
-                ),
-                (
-                    "conclusion_proofs",
-                    project_verify_facts(&s.conclusion_proofs, runtime),
-                ),
+                ("body", project_def_thm_body(&s.body, runtime)),
                 (
                     "store_and_infer",
                     project_store_and_infer(&s.stored, runtime),
@@ -277,6 +266,54 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
                 (
                     "failure",
                     super::theorem::project_def_thm_failure(f, runtime),
+                ),
+            ],
+        ),
+    }
+}
+
+fn project_def_thm_body(body: &ExecDefThmBodyProof, runtime: &Runtime) -> JsonValue {
+    let steps = |proof_steps: &[ExecStmtResult]| {
+        JsonValue::Array(
+            proof_steps
+                .iter()
+                .map(|step| project_stmt_detailed(step, runtime))
+                .collect(),
+        )
+    };
+    match body {
+        ExecDefThmBodyProof::NonForall(p) => object_for(
+            runtime,
+            vec![
+                ("kind", string("non_forall")),
+                ("proof_steps", steps(&p.proof_steps)),
+                (
+                    "conclusion_proof",
+                    project_verify_fact(&p.conclusion_proof, runtime),
+                ),
+            ],
+        ),
+        ExecDefThmBodyProof::Forall(p) => object_for(
+            runtime,
+            vec![
+                ("kind", string("forall")),
+                (
+                    "introduced_params",
+                    super::verify::project_introduced_params(&p.introduced_params, runtime),
+                ),
+                (
+                    "assumed_dom_facts",
+                    JsonValue::Array(
+                        p.assumed_dom_facts
+                            .iter()
+                            .map(|dom| super::verify::project_assume_dom(dom, runtime))
+                            .collect(),
+                    ),
+                ),
+                ("proof_steps", steps(&p.proof_steps)),
+                (
+                    "conclusion_proofs",
+                    project_verify_facts(&p.conclusion_proofs, runtime),
                 ),
             ],
         ),
@@ -1239,6 +1276,10 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                     super::theorem::project_theorem_call(&s.call, runtime),
                 ),
                 (
+                    "callee",
+                    super::theorem::project_resolved_theorem_callee(&s.callee, runtime),
+                ),
+                (
                     "builtin",
                     super::theorem::project_builtin_application(&s.builtin, runtime),
                 ),
@@ -1255,6 +1296,15 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                         .unwrap_or(JsonValue::Null),
                 ),
                 ("dom_proofs", project_verify_facts(&s.dom_proofs, runtime)),
+                (
+                    "returned_conclusions",
+                    JsonValue::Array(
+                        s.returned_conclusions
+                            .iter()
+                            .map(|stored| project_store_and_infer(stored, runtime))
+                            .collect(),
+                    ),
+                ),
                 (
                     "selected_proof",
                     project_verify_fact(&s.selected_proof, runtime),

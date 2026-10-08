@@ -1,4 +1,18 @@
 use super::LeanCompileError;
+use crate::ast::names::{AtomicName, BoundName};
+use crate::ast::stmt::{DefThmStmt, TheoremCallArguments};
+use crate::execute::exec_stmt_result::{ExecDefineObjStmtResult, ExecDefinitionStmtResult};
+use crate::execute::execute_by_stmt::{
+    ExecByStmtResult, ExecByThmStmtResult, ExecByThmStmtSuccess, ResolvedTheoremCallee,
+};
+use crate::execute::execute_def_thm_stmt::{
+    ExecDefThmBodyProof, ExecDefThmStmtResult, ExecDefThmStmtSuccess,
+};
+use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
+use crate::execute::{
+    ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult, ExecLetObjStmtResult,
+    ExecLetObjStmtSuccessResult, IntroduceTypedParametersResult,
+};
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -53,6 +67,13 @@ struct NumericTerm {
     value: String,
     denotation: String,
     member: String,
+    closed: Option<EvalRational>,
+}
+
+#[derive(Clone)]
+struct NamedTheorem {
+    declaration: DefThmStmt,
+    term: String,
 }
 
 #[derive(Clone)]
@@ -69,6 +90,7 @@ struct CompilerScope {
     objects: HashMap<ObjIR, ObjectTerm>,
     facts: HashMap<FactId, FactTerm>,
     wds: HashMap<WellDefinednessId, ObjectTerm>,
+    theorems: HashMap<String, NamedTheorem>,
 }
 
 struct LeanCompiler {
@@ -90,28 +112,49 @@ impl LeanCompiler {
         runtime: &Runtime,
         index: usize,
     ) -> Result<String, LeanCompileError> {
+        self.compile_statement_in_scope(result, runtime, index, false)
+    }
+
+    fn compile_statement_in_scope(
+        &mut self,
+        result: &ExecStmtResult,
+        runtime: &Runtime,
+        index: usize,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
         match result {
             ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) => {
                 let compiled = self.compile_verify(&success.verify_result, runtime)?;
                 self.validate_store(&success.store_and_infer_result, &compiled.fact)?;
-                let name = format!("fact_{index}");
-                let declaration = format!(
-                    "theorem {name} : {} :=\n  {}",
-                    compiled.proposition,
-                    compiled.proof.replace('\n', "\n  ")
-                );
-                let mut exported = compiled;
-                exported.proof = format!("({name} (M := M))");
-                self.remember_fact(exported);
-                Ok(declaration)
+                Ok(self.emit_fact(compiled, index, local))
             }
             ExecStmtResult::Fact(ExecFactStmtResult::Failed(_)) => Err(LeanCompileError::new(
                 "Fact/Failed",
                 "A failed fact is not proof evidence.",
             )),
-            ExecStmtResult::Definition(_) => Err(LeanCompileError::unsupported("Definition")),
+            ExecStmtResult::Definition(result) => match result {
+                ExecDefinitionStmtResult::DefineObj(result) => match result {
+                    ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(proof)) => {
+                        self.compile_let(proof, runtime, local)
+                    }
+                    ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(
+                        proof,
+                    )) => self.compile_have_equal(proof, runtime, local),
+                    _ => Err(LeanCompileError::unsupported("Definition/DefineObj")),
+                },
+                ExecDefinitionStmtResult::DefThm(ExecDefThmStmtResult::Success(proof))
+                    if !local =>
+                {
+                    self.compile_named_theorem(proof, runtime, index)
+                }
+                _ => Err(LeanCompileError::unsupported("Definition")),
+            },
             ExecStmtResult::Witness(_) => Err(LeanCompileError::unsupported("Witness")),
             ExecStmtResult::Trust(_) => Err(LeanCompileError::unsupported("Trust")),
+            ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => {
+                let compiled = self.compile_by_theorem(proof, runtime)?;
+                Ok(self.emit_fact(compiled, index, local))
+            }
             ExecStmtResult::By(_) => Err(LeanCompileError::unsupported("By")),
             ExecStmtResult::Register(_) => Err(LeanCompileError::unsupported("Register")),
             ExecStmtResult::ReleaseAndExpand(_) => {
@@ -120,6 +163,376 @@ impl LeanCompiler {
             ExecStmtResult::ProofBlock(_) => Err(LeanCompileError::unsupported("ProofBlock")),
             ExecStmtResult::Command(_) => Err(LeanCompileError::unsupported("Command")),
         }
+    }
+
+    fn emit_fact(&mut self, mut fact: FactTerm, index: usize, local: bool) -> String {
+        let name = if local {
+            format!("_fact_f{}", fact.fact.fact_id().value())
+        } else {
+            format!("fact_{index}")
+        };
+        let kind = if local { "have" } else { "theorem" };
+        let declaration = format!(
+            "{kind} {name} : {} :=\n  {}",
+            fact.proposition,
+            fact.proof.replace('\n', "\n  ")
+        );
+        fact.proof = if local {
+            name
+        } else {
+            format!("({name} (M := M))")
+        };
+        self.remember_fact(fact);
+        declaration
+    }
+
+    fn compile_let(
+        &mut self,
+        proof: &ExecLetObjStmtSuccessResult,
+        runtime: &Runtime,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
+        let wd = success_object_wd(&proof.value_well_defined, &proof.statement.value)?;
+        let value = self.compile_wd(wd, runtime)?;
+        if proof.stored_fact_ids.len() != 1 {
+            return Err(LeanCompileError::unsupported("Let/Inference"));
+        }
+        let fact = self.resolve_fact(proof.stored_fact_ids[0], runtime)?;
+        let left = alias_equality_subject(&fact, &proof.statement.name, &proof.statement.value)?;
+        let declaration = self.bind_alias(
+            &proof.statement.name,
+            left,
+            &proof.statement.value,
+            &value,
+            local,
+        )?;
+        let compiled = FactTerm {
+            proposition: self.fact_proposition(&fact)?,
+            fact,
+            proof: format!("(Litex.sameRefl {value})"),
+        };
+        self.remember_fact(compiled);
+        Ok(declaration)
+    }
+
+    fn compile_have_equal(
+        &mut self,
+        proof: &ExecHaveObjEqualStmtSuccessResult,
+        runtime: &Runtime,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
+        let groups = &proof.statement.param_def.groups;
+        let parameters: Vec<_> = groups.iter().flat_map(|group| &group.params).collect();
+        let count = parameters.len();
+        if count == 0
+            || count != proof.statement.objs_equal_to.len()
+            || count != proof.equal_to_well_defined.len()
+            || count != proof.membership_checks.len()
+            || proof.type_preflight.param_type_well_defined.len() != groups.len()
+            || proof.type_preflight.auto_opened_struct_layers.is_some()
+            || proof.auto_opened_struct_layers.is_some()
+        {
+            return Err(LeanCompileError::new(
+                "HaveEqual/Stages",
+                "Typed definition evidence has different parameter, value or membership stages.",
+            ));
+        }
+        if proof.store_and_infer_result.stored_fact_ids.len() != 2 * count {
+            return Err(LeanCompileError::unsupported("HaveEqual/Inference"));
+        }
+        self.scopes.push(CompilerScope {
+            env: Some(proof.type_local_env.clone()),
+            ..CompilerScope::default()
+        });
+        let type_check = (|| {
+            for (group, wd) in groups
+                .iter()
+                .zip(&proof.type_preflight.param_type_well_defined)
+            {
+                match (&group.param_type, wd) {
+                    (ParamType::Obj(set), ParamTypeWellDefinedProof::Obj(result)) => {
+                        self.compile_wd(success_object_wd(result, set)?, runtime)?;
+                        standard_term(match set {
+                            Obj::StandardSet(set) => set,
+                            _ => {
+                                return Err(LeanCompileError::unsupported(
+                                    "HaveEqual/DependentCarrier",
+                                ))
+                            }
+                        })?;
+                    }
+                    _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
+                }
+            }
+            Ok(())
+        })();
+        self.scopes.pop();
+        type_check?;
+        let mut values = Vec::new();
+        for (value, wd) in proof
+            .statement
+            .objs_equal_to
+            .iter()
+            .zip(&proof.equal_to_well_defined)
+        {
+            values.push(self.compile_wd(success_object_wd(wd, value)?, runtime)?);
+        }
+        let mut members = Vec::new();
+        let mut offset = 0;
+        for group in groups {
+            let set = match &group.param_type {
+                ParamType::Obj(set) => set,
+                _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
+            };
+            for _ in &group.params {
+                let member = self.compile_verify(&proof.membership_checks[offset], runtime)?;
+                match &member.fact {
+                    Fact::AtomicFact(AtomicFact::InFact(f))
+                        if f.element.ir() == proof.statement.objs_equal_to[offset].ir()
+                            && f.set.ir() == set.ir() => {}
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "HaveEqual/Membership",
+                            "The value proof does not certify the declared value and carrier.",
+                        ))
+                    }
+                }
+                members.push(member);
+                offset += 1;
+            }
+        }
+        let mut declarations = Vec::new();
+        for (index, parameter) in parameters.iter().enumerate() {
+            let equal = self.resolve_fact(
+                proof.store_and_infer_result.stored_fact_ids[count + index],
+                runtime,
+            )?;
+            let left =
+                alias_equality_subject(&equal, parameter, &proof.statement.objs_equal_to[index])?;
+            declarations.push(self.bind_alias(
+                parameter,
+                left,
+                &proof.statement.objs_equal_to[index],
+                &values[index],
+                local,
+            )?);
+            let member_fact =
+                self.resolve_fact(proof.store_and_infer_result.stored_fact_ids[index], runtime)?;
+            match (&member_fact, &members[index].fact) {
+                (
+                    Fact::AtomicFact(AtomicFact::InFact(stored)),
+                    Fact::AtomicFact(AtomicFact::InFact(checked)),
+                ) if stored.element.ir() == left.ir() && stored.set.ir() == checked.set.ir() => {}
+                _ => {
+                    return Err(LeanCompileError::new(
+                        "HaveEqual/Store",
+                        "The stored member does not belong to this declaration.",
+                    ))
+                }
+            }
+            self.remember_fact(FactTerm {
+                proposition: self.fact_proposition(&member_fact)?,
+                fact: member_fact,
+                proof: members[index].proof.clone(),
+            });
+            self.remember_fact(FactTerm {
+                proposition: self.fact_proposition(&equal)?,
+                fact: equal,
+                proof: format!("(Litex.sameRefl {})", values[index]),
+            });
+        }
+        Ok(declarations.join("\n"))
+    }
+
+    fn bind_alias(
+        &mut self,
+        parameter: &BoundName,
+        object: &Obj,
+        value_object: &Obj,
+        value: &str,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
+        let name = format!("_object_i{}", parameter.id.value());
+        let numeric = self
+            .scopes
+            .iter()
+            .rev()
+            .find_map(|scope| scope.objects.get(&value_object.ir()))
+            .and_then(|entry| entry.numeric.clone());
+        let term = if local {
+            name.clone()
+        } else {
+            format!("({name} (M := M))")
+        };
+        let alias = ObjectTerm {
+            object: object.clone(),
+            term,
+            numeric,
+        };
+        let scope = self.scopes.last_mut().expect("compiler scope");
+        if scope.identifiers.contains_key(&parameter.id) || scope.objects.contains_key(&object.ir())
+        {
+            return Err(LeanCompileError::new(
+                "Declaration/Identity",
+                "The declaration identifier already has a compiled producer.",
+            ));
+        }
+        scope.identifiers.insert(parameter.id, alias.clone());
+        scope.objects.insert(object.ir(), alias);
+        Ok(if local {
+            format!("let {name} := {value}")
+        } else {
+            format!("noncomputable def {name} := {value}")
+        })
+    }
+
+    fn fact_proposition(&self, fact: &Fact) -> Result<String, LeanCompileError> {
+        match fact {
+            Fact::AtomicFact(atomic) => self.atomic_proposition(atomic),
+            _ => Err(LeanCompileError::unsupported("Declaration/CompoundFact")),
+        }
+    }
+
+    fn compile_named_theorem(
+        &mut self,
+        proof: &ExecDefThmStmtSuccess,
+        runtime: &Runtime,
+        index: usize,
+    ) -> Result<String, LeanCompileError> {
+        let goal_wd = match &proof.goal_wd {
+            VerifyFactWellDefinedResult::Success(wd) => wd,
+            VerifyFactWellDefinedResult::Failed(_) => {
+                return Err(LeanCompileError::new(
+                    "Theorem/GoalWD",
+                    "A successful theorem has failed goal-formation evidence.",
+                ))
+            }
+        };
+        self.compile_fact_wd(goal_wd, &proof.statement.fact, runtime)?;
+        self.scopes.push(CompilerScope {
+            env: Some(proof.local_env.clone()),
+            ..CompilerScope::default()
+        });
+        let compiled = self.compile_named_theorem_body(proof, runtime);
+        self.scopes.pop();
+        let mut compiled = compiled?;
+        self.validate_store(&proof.stored, &compiled.fact)?;
+        let name = format!("named_thm_{index}");
+        let declaration = format!(
+            "theorem {name} : {} :=\n  {}",
+            compiled.proposition,
+            compiled.proof.replace('\n', "\n  ")
+        );
+        let term = format!("({name} (M := M))");
+        let scope = self.scopes.last_mut().expect("compiler scope");
+        if scope
+            .theorems
+            .insert(
+                proof.statement.name.clone(),
+                NamedTheorem {
+                    declaration: proof.statement.clone(),
+                    term: term.clone(),
+                },
+            )
+            .is_some()
+        {
+            return Err(LeanCompileError::new(
+                "Theorem/Identity",
+                "The named theorem already has a compiled declaration.",
+            ));
+        }
+        compiled.proof = term;
+        self.remember_fact(compiled);
+        Ok(declaration)
+    }
+
+    fn compile_named_theorem_body(
+        &mut self,
+        proof: &ExecDefThmStmtSuccess,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        let (binders, introductions, steps, results, expected) =
+            match (&proof.statement.fact, &proof.body) {
+                (Fact::ForallFact(fact), ExecDefThmBodyProof::Forall(body)) => {
+                    let (binders, introductions) = self.compile_forall_head(
+                        fact,
+                        &body.introduced_params,
+                        &body.assumed_dom_facts,
+                        runtime,
+                    )?;
+                    let expected = fact
+                        .then_facts
+                        .iter()
+                        .map(|fact| match fact {
+                            ExistOrAndChainAtomicFact::AtomicFact(atomic) => {
+                                Ok(Fact::AtomicFact(atomic.clone()))
+                            }
+                            _ => Err(LeanCompileError::unsupported("Theorem/CompoundThen")),
+                        })
+                        .collect::<Result<Vec<_>, _>>()?;
+                    (
+                        binders,
+                        introductions,
+                        &body.proof_steps,
+                        body.conclusion_proofs.iter().collect::<Vec<_>>(),
+                        expected,
+                    )
+                }
+                (Fact::AtomicFact(_), ExecDefThmBodyProof::NonForall(body)) => (
+                    Vec::new(),
+                    Vec::new(),
+                    &body.proof_steps,
+                    vec![&body.conclusion_proof],
+                    vec![proof.statement.fact.clone()],
+                ),
+                _ => return Err(LeanCompileError::unsupported("Theorem/GoalBodyShape")),
+            };
+        if steps.len() != proof.statement.prove_process.len()
+            || results.len() != expected.len()
+            || results.is_empty()
+        {
+            return Err(LeanCompileError::new(
+                "Theorem/Stages",
+                "The theorem body has different source steps or conclusion arity.",
+            ));
+        }
+        let mut body_text = Vec::new();
+        for (index, (source, step)) in proof.statement.prove_process.iter().zip(steps).enumerate() {
+            validate_statement_capture(source, step)?;
+            body_text.push(self.compile_statement_in_scope(step, runtime, index + 1, true)?);
+        }
+        let mut conclusions = Vec::new();
+        for (expected, result) in expected.iter().zip(results) {
+            let compiled = self.compile_verify(result, runtime)?;
+            if &compiled.fact != expected {
+                return Err(LeanCompileError::new(
+                    "Theorem/Conclusion",
+                    "The proof has another source conclusion.",
+                ));
+            }
+            conclusions.push(compiled);
+        }
+        let mut conclusion = conclusions.pop().expect("nonempty conclusions");
+        while let Some(left) = conclusions.pop() {
+            conclusion.proposition = format!("({} ∧ {})", left.proposition, conclusion.proposition);
+            conclusion.proof = format!("(And.intro {} {})", left.proof, conclusion.proof);
+        }
+        let proposition = if binders.is_empty() {
+            conclusion.proposition
+        } else {
+            format!("∀ {}, {}", binders.join(" "), conclusion.proposition)
+        };
+        let mut statements = Vec::new();
+        if !introductions.is_empty() {
+            statements.push(format!("intro {}", introductions.join(" ")));
+        }
+        statements.extend(body_text);
+        statements.push(format!("exact {}", conclusion.proof));
+        Ok(FactTerm {
+            fact: proof.statement.fact.clone(),
+            proposition,
+            proof: format!("(by\n  {}\n)", statements.join("\n").replace('\n', "\n  ")),
+        })
     }
 
     fn compile_verify(
@@ -290,9 +703,13 @@ impl LeanCompiler {
         fact: &EqualFact,
         proof: &ClosedEqualityCalculationProof,
     ) -> Result<String, LeanCompileError> {
-        let left = EvalRational::from_obj(&fact.left)
+        let left = self
+            .numeric_term(&fact.left)?
+            .closed
             .ok_or_else(|| LeanCompileError::unsupported("ClosedEquality/Expression"))?;
-        let right = EvalRational::from_obj(&fact.right)
+        let right = self
+            .numeric_term(&fact.right)?
+            .closed
             .ok_or_else(|| LeanCompileError::unsupported("ClosedEquality/Expression"))?;
         let matching = match &proof.values {
             ClosedValuePair::Decimal { left: a, right: b } => {
@@ -774,14 +1191,16 @@ impl LeanCompiler {
         compiled
     }
 
-    fn compile_forall_body(
+    fn compile_forall_head(
         &mut self,
-        proof: &VerifyForallFactSuccess,
+        fact: &ForallFact,
+        introduced: &IntroduceTypedParametersResult,
+        assumed: &[AssumeDomFactResult],
         runtime: &Runtime,
-    ) -> Result<FactTerm, LeanCompileError> {
-        let groups = &proof.fact.typed_parameters.groups;
-        if proof.introduced_params.param_type_well_defined.len() != groups.len()
-            || proof.introduced_params.auto_opened_struct_layers.is_some()
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        let groups = &fact.typed_parameters.groups;
+        if introduced.param_type_well_defined.len() != groups.len()
+            || introduced.auto_opened_struct_layers.is_some()
         {
             return Err(LeanCompileError::new(
                 "Forall/Parameters",
@@ -789,17 +1208,14 @@ impl LeanCompiler {
             ));
         }
         let expected_count: usize = groups.iter().map(|group| group.params.len()).sum();
-        let stored_ids = &proof.introduced_params.defined_params.stored_fact_ids;
+        let stored_ids = &introduced.defined_params.stored_fact_ids;
         if stored_ids.len() != expected_count {
             return Err(LeanCompileError::unsupported("Forall/ParameterInference"));
         }
         let mut binders = Vec::new();
         let mut introductions = Vec::new();
         let mut offset = 0;
-        for (group, wd) in groups
-            .iter()
-            .zip(&proof.introduced_params.param_type_well_defined)
-        {
+        for (group, wd) in groups.iter().zip(&introduced.param_type_well_defined) {
             let set = match &group.param_type {
                 ParamType::Obj(set) => set,
                 ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
@@ -877,13 +1293,13 @@ impl LeanCompiler {
                 offset += 1;
             }
         }
-        if proof.assumed_dom_facts.len() != proof.fact.dom_facts.len() {
+        if assumed.len() != fact.dom_facts.len() {
             return Err(LeanCompileError::new(
                 "Forall/Domain",
                 "Domain evidence has the wrong arity.",
             ));
         }
-        for (fact, assumed) in proof.fact.dom_facts.iter().zip(&proof.assumed_dom_facts) {
+        for (fact, assumed) in fact.dom_facts.iter().zip(&assumed) {
             self.compile_fact_wd(&assumed.well_defined, fact, runtime)?;
             self.validate_store(&assumed.store_and_infer, fact)?;
             let atomic = match fact {
@@ -900,6 +1316,20 @@ impl LeanCompiler {
                 proof: hypothesis,
             });
         }
+        Ok((binders, introductions))
+    }
+
+    fn compile_forall_body(
+        &mut self,
+        proof: &VerifyForallFactSuccess,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        let (binders, introductions) = self.compile_forall_head(
+            &proof.fact,
+            &proof.introduced_params,
+            &proof.assumed_dom_facts,
+            runtime,
+        )?;
         if proof.proved_then_facts.len() != proof.fact.then_facts.len()
             || proof.proved_then_facts.is_empty()
         {
@@ -997,6 +1427,7 @@ impl LeanCompiler {
                         (
                             format!("(Litex.number (M := M) {value})"),
                             Some(NumericTerm {
+                                closed: EvalRational::from_obj(obj),
                                 denotation: format!(
                                     "(Litex.NativeBridge.denoteNumber (M := M) {value})"
                                 ),
@@ -1151,6 +1582,15 @@ impl LeanCompiler {
         Ok((
             format!("(Litex.{name} {arguments})"),
             NumericTerm {
+                closed: match (&x.closed, &y.closed) {
+                    (Some(x), Some(y)) => match operation {
+                        BinaryArithmetic::Add => x.add(y),
+                        BinaryArithmetic::Sub => x.sub(y),
+                        BinaryArithmetic::Mul => x.mul(y),
+                        BinaryArithmetic::Div => x.div(y),
+                    },
+                    _ => None,
+                },
                 value: format!("({} {symbol} {})", x.value, y.value),
                 denotation: format!(
                     "(Litex.NativeBridge.denote{bridge} {arguments} {} {} {} {})",
@@ -1182,6 +1622,10 @@ impl LeanCompiler {
         Ok((
             format!("(Litex.neg {a} {})", member.proof),
             NumericTerm {
+                closed: x
+                    .closed
+                    .as_ref()
+                    .and_then(|value| EvalRational::new(0, 1)?.sub(value)),
                 value: format!("(- {})", x.value),
                 denotation: format!(
                     "(Litex.NativeBridge.denoteNeg {a} {} {} {})",
@@ -1256,6 +1700,10 @@ impl LeanCompiler {
         Ok((
             format!("(Litex.{name} {arguments})"),
             NumericTerm {
+                closed: x
+                    .closed
+                    .as_ref()
+                    .and_then(|value| value.pow_integer(integer)),
                 value: format!("({} ^ {exponent_value})", x.value),
                 denotation: format!(
                     "(Litex.NativeBridge.denote{bridge} {arguments} {} {})",
@@ -1361,9 +1809,7 @@ impl LeanCompiler {
         let left = self.object_term(&fact.left)?;
         self.object_term(&fact.right)?;
         let proof = match proof {
-            EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(
-                _,
-            )) => {
+            EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_)) => {
                 if fact.left.ir() != fact.right.ir() {
                     return Err(LeanCompileError::new(
                         "SameIr",
@@ -1372,13 +1818,9 @@ impl LeanCompiler {
                 }
                 format!("(Litex.sameRefl {left})")
             }
-            EqualFactSearchedProof::ByTheyAreTheSame(
-                TheyAreTheSameProof::SameFreeParamShape(_),
-            ) => {
-                return Err(LeanCompileError::unsupported(
-                    "Equality/SameFreeParamShape",
-                ))
-            }
+            EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameFreeParamShape(
+                _,
+            )) => return Err(LeanCompileError::unsupported("Equality/SameFreeParamShape")),
             EqualFactSearchedProof::ByClosedCalculation(proof) => {
                 self.compile_closed_equality(fact, proof)?
             }
@@ -1394,9 +1836,7 @@ impl LeanCompiler {
             ) => self.compile_rational(fact, &[], &[], false, runtime)?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
-            ) => {
-                self.compile_scalar_division_relation(fact, proof, runtime)?
-            }
+            ) => self.compile_scalar_division_relation(fact, proof, runtime)?,
             EqualFactSearchedProof::ByBuiltinRule(_) => {
                 return Err(LeanCompileError::unsupported("Equality/BuiltinRule"))
             }
@@ -1407,9 +1847,7 @@ impl LeanCompiler {
                 return Err(LeanCompileError::unsupported("Equality/ObjectDefinition"))
             }
             EqualFactSearchedProof::ByBuiltinStrategy(
-                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(
-                    proof,
-                ),
+                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
             ) => self.compile_rational(
                 fact,
                 &proof.requirement_facts,
@@ -1459,11 +1897,9 @@ impl LeanCompiler {
             StrictEqualArgProof::ByEquivalenceClass(proof) => {
                 self.compile_equivalence_class(fact, proof, runtime)
             }
-            StrictEqualArgProof::ByBuiltinRule(
-                EqualitySearchProofByBuiltinRule::Calculation(
-                    EqualitySearchProofByCalculation::Rational {},
-                ),
-            ) => self.compile_rational(fact, &[], &[], false, runtime),
+            StrictEqualArgProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+                EqualitySearchProofByCalculation::Rational {},
+            )) => self.compile_rational(fact, &[], &[], false, runtime),
             StrictEqualArgProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
             ) => self.compile_scalar_division_relation(fact, proof, runtime),
@@ -1479,22 +1915,21 @@ impl LeanCompiler {
                 true,
                 runtime,
             ),
-            StrictEqualArgProof::ByBuiltinStrategy(_) => {
-                Err(LeanCompileError::unsupported("StrictEquality/BuiltinStrategy"))
-            }
-            StrictEqualArgProof::ByMatchingOneArgByOne(proof) => {
-                self.compile_arithmetic_congruence(
+            StrictEqualArgProof::ByBuiltinStrategy(_) => Err(LeanCompileError::unsupported(
+                "StrictEquality/BuiltinStrategy",
+            )),
+            StrictEqualArgProof::ByMatchingOneArgByOne(proof) => self
+                .compile_arithmetic_congruence(
                     fact,
                     &proof.corresponding_arg_equal_proofs,
                     runtime,
-                )
-            }
-            StrictEqualArgProof::ByKnownSpecialProperty(_) => {
-                Err(LeanCompileError::unsupported("StrictEquality/KnownSpecialProperty"))
-            }
-            StrictEqualArgProof::ByObjectDefinition(_) => {
-                Err(LeanCompileError::unsupported("StrictEquality/ObjectDefinition"))
-            }
+                ),
+            StrictEqualArgProof::ByKnownSpecialProperty(_) => Err(LeanCompileError::unsupported(
+                "StrictEquality/KnownSpecialProperty",
+            )),
+            StrictEqualArgProof::ByObjectDefinition(_) => Err(LeanCompileError::unsupported(
+                "StrictEquality/ObjectDefinition",
+            )),
         }
     }
 
@@ -1512,9 +1947,9 @@ impl LeanCompiler {
                 "Equality/IdentitySubject",
                 "Exact identity evidence has different source endpoints.",
             )),
-            TheyAreTheSameProof::SameFreeParamShape(_) => Err(LeanCompileError::unsupported(
-                "Equality/SameFreeParamShape",
-            )),
+            TheyAreTheSameProof::SameFreeParamShape(_) => {
+                Err(LeanCompileError::unsupported("Equality/SameFreeParamShape"))
+            }
         }
     }
 
@@ -1541,23 +1976,19 @@ impl LeanCompiler {
                 } else {
                     (&proof.cited.left, &proof.cited.right)
                 };
-                let cited = self.compile_registered_equality(
-                    proof.cited.fact_id,
-                    left,
-                    right,
-                    runtime,
-                )?;
-                let left_identity = self.compile_identity(left, &fact.left, &proof.left_identity)?;
-                let right_identity = self.compile_identity(right, &fact.right, &proof.right_identity)?;
-                Ok(format!("(({left_identity}).symm.trans (({cited}).trans {right_identity}))"))
+                let cited =
+                    self.compile_registered_equality(proof.cited.fact_id, left, right, runtime)?;
+                let left_identity =
+                    self.compile_identity(left, &fact.left, &proof.left_identity)?;
+                let right_identity =
+                    self.compile_identity(right, &fact.right, &proof.right_identity)?;
+                Ok(format!(
+                    "(({left_identity}).symm.trans (({cited}).trans {right_identity}))"
+                ))
             }
             EqualFactSearchedProofByEquivalenceClass::AlphaPaths(proof) => {
-                let left_path = self.compile_equality_path(
-                    &fact.left,
-                    &proof.left,
-                    &proof.left_path,
-                    runtime,
-                )?;
+                let left_path =
+                    self.compile_equality_path(&fact.left, &proof.left, &proof.left_path, runtime)?;
                 let identity = self.compile_identity(&proof.left, &proof.right, &proof.identity)?;
                 let right_path = self.compile_equality_path(
                     &proof.right,
@@ -1565,11 +1996,19 @@ impl LeanCompiler {
                     &proof.right_path,
                     runtime,
                 )?;
-                Ok(format!("(({left_path}).trans (({identity}).trans {right_path}))"))
+                Ok(format!(
+                    "(({left_path}).trans (({identity}).trans {right_path}))"
+                ))
             }
             EqualFactSearchedProofByEquivalenceClass::ViaPeers(proof) => {
-                ensure_object(&proof.bridge.fact.left, &proof.bridge.well_defined_proof.left)?;
-                ensure_object(&proof.bridge.fact.right, &proof.bridge.well_defined_proof.right)?;
+                ensure_object(
+                    &proof.bridge.fact.left,
+                    &proof.bridge.well_defined_proof.left,
+                )?;
+                ensure_object(
+                    &proof.bridge.fact.right,
+                    &proof.bridge.well_defined_proof.right,
+                )?;
                 self.compile_wd(&proof.bridge.well_defined_proof.left, runtime)?;
                 self.compile_wd(&proof.bridge.well_defined_proof.right, runtime)?;
                 let left_path = self.compile_equality_path(
@@ -1589,7 +2028,9 @@ impl LeanCompiler {
                     &proof.right_path,
                     runtime,
                 )?;
-                Ok(format!("(({left_path}).trans (({bridge}).trans {right_path}))"))
+                Ok(format!(
+                    "(({left_path}).trans (({bridge}).trans {right_path}))"
+                ))
             }
         }
     }
@@ -1634,10 +2075,12 @@ impl LeanCompiler {
         let resolved = self.resolve_fact(id, runtime)?;
         let equality = match &resolved {
             Fact::AtomicFact(AtomicFact::EqualFact(equal)) if equal.fact_id == id => equal,
-            _ => return Err(LeanCompileError::new(
-                "Equality/PathCitation",
-                "The equality path cites another fact family or identity.",
-            )),
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Equality/PathCitation",
+                    "The equality path cites another fact family or identity.",
+                ))
+            }
         };
         let registered = self.fact_term(id)?;
         if registered.fact != resolved {
@@ -1661,7 +2104,7 @@ impl LeanCompiler {
     }
 
     fn compile_known_atomic(
-        &self,
+        &mut self,
         proof: &AtomicExceptEqualityFactSearchProofByKnownAtomicFact,
         goal: &AtomicFact,
         runtime: &Runtime,
@@ -1676,11 +2119,11 @@ impl LeanCompiler {
                 ))
             }
         };
-        let registered = self.fact_term(proof.cite_fact_id)?;
-        if registered.fact != resolved || !same_atomic_subject(cited, goal) {
+        let registered = self.fact_term(proof.cite_fact_id)?.clone();
+        if registered.fact != resolved || !same_atomic_family(cited, goal) {
             return Err(LeanCompileError::new(
                 "KnownAtomic",
-                "Citation or its target differs from the registered proof.",
+                "Citation differs from its registered producer or target family.",
             ));
         }
         let cited_args = atomic_fact_args_ref(cited);
@@ -1688,25 +2131,67 @@ impl LeanCompiler {
         if proof.why_parameters_of_known_fact_are_equal_to_givens.len() != goal_args.len() {
             return Err(LeanCompileError::new(
                 "KnownAtomic",
-                "Argument identity evidence has the wrong arity.",
+                "Argument equality evidence has the wrong ordered arity.",
             ));
         }
-        for ((cited, goal), identity) in cited_args
+        let mut arguments = Vec::new();
+        let mut exact_identity = true;
+        for ((cited, given), equality) in cited_args
             .iter()
-            .zip(goal_args)
+            .zip(&goal_args)
             .zip(&proof.why_parameters_of_known_fact_are_equal_to_givens)
         {
-            match identity {
-                EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
-                    if cited.ir() == goal.ir() => {}
-                _ => {
-                    return Err(LeanCompileError::unsupported(
-                        "KnownAtomic/NonIdentityArgument",
-                    ))
-                }
-            }
+            // This source stage retains a winner rather than a second fact/WD
+            // wrapper. Its exact endpoints come from the citation and target.
+            // The local obligation view is never registered as a source fact.
+            let obligation = EqualFact {
+                fact_id: goal.fact_id(),
+                left: (*cited).clone(),
+                right: (*given).clone(),
+                line_file: None,
+            };
+            arguments.push(self.compile_equality_search(&obligation, equality, runtime)?);
+            exact_identity &= cited.ir() == given.ir()
+                && matches!(
+                    equality,
+                    EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
+                );
         }
-        Ok(registered.proof.clone())
+        if exact_identity {
+            return Ok(registered.proof);
+        }
+        match (cited, goal) {
+            (AtomicFact::InFact(known), AtomicFact::InFact(given)) => Ok(format!(
+                "(Litex.inOfSame {} {} {} {} {} {} {})",
+                self.object_term(&known.element)?,
+                self.object_term(&given.element)?,
+                self.object_term(&known.set)?,
+                self.object_term(&given.set)?,
+                arguments[0],
+                arguments[1],
+                registered.proof,
+            )),
+            (AtomicFact::IsSetFact(known), AtomicFact::IsSetFact(given)) => Ok(format!(
+                "(Litex.isSetOfSame {} {} {} {})",
+                self.object_term(&known.set)?,
+                self.object_term(&given.set)?,
+                arguments[0],
+                registered.proof,
+            )),
+            (AtomicFact::NotEqualFact(known), AtomicFact::NotEqualFact(given)) => Ok(format!(
+                "(Litex.notSameOfSame {} {} {} {} {} {} {})",
+                self.object_term(&known.left)?,
+                self.object_term(&given.left)?,
+                self.object_term(&known.right)?,
+                self.object_term(&given.right)?,
+                arguments[0],
+                arguments[1],
+                registered.proof,
+            )),
+            _ => Err(LeanCompileError::unsupported(
+                "KnownAtomic/PredicateTransport",
+            )),
+        }
     }
 
     fn compile_structural(
@@ -1716,22 +2201,20 @@ impl LeanCompiler {
     ) -> Result<String, LeanCompileError> {
         match &proof.reason {
             StructuralMembershipReason::Known(known) => {
-                let fact = self.resolve_fact(known.cite_fact_id, runtime)?;
-                let atomic = match &fact {
-                    Fact::AtomicFact(AtomicFact::InFact(fact))
-                        if fact.element.ir() == proof.element.ir()
-                            && fact.set.ir() == Obj::StandardSet(proof.set.clone()).ir() =>
-                    {
-                        AtomicFact::InFact(fact.clone())
-                    }
+                let mut fact = match self.resolve_fact(known.cite_fact_id, runtime)? {
+                    Fact::AtomicFact(AtomicFact::InFact(fact)) => fact,
                     _ => {
                         return Err(LeanCompileError::new(
                             "StructuralMembership/Known",
-                            "Cited member has another element or set.",
+                            "The structural citation is not a membership fact.",
                         ))
                     }
                 };
-                self.compile_known_atomic(known, &atomic, runtime)
+                // Known membership may target an equal alias. Replay the exact
+                // argument certificates against the structural node's subject.
+                fact.element = proof.element.clone();
+                fact.set = Obj::StandardSet(proof.set.clone());
+                self.compile_known_atomic(known, &AtomicFact::InFact(fact), runtime)
             }
             StructuralMembershipReason::Closed(closed) => self.compile_closed_membership(
                 &proof.element,
@@ -2158,6 +2641,7 @@ impl LeanCompiler {
             if let Some(entry) = scope.objects.get_mut(&object.ir()) {
                 if entry.numeric.is_none() {
                     entry.numeric = Some(NumericTerm {
+                        closed: None,
                         value: format!("(Litex.NativeBridge.asComplex {} {member})", entry.term),
                         denotation: format!(
                             "(Litex.NativeBridge.asComplex_spec {} {member})",
@@ -2468,17 +2952,11 @@ fn ensure_complex_member(fact: &Fact, object: &Obj) -> Result<(), LeanCompileErr
     }
 }
 
-fn same_atomic_subject(left: &AtomicFact, right: &AtomicFact) -> bool {
-    if std::mem::discriminant(left) != std::mem::discriminant(right) {
-        return false;
-    }
-    let left = atomic_fact_args_ref(left);
-    let right = atomic_fact_args_ref(right);
-    left.len() == right.len()
-        && left
-            .iter()
-            .zip(right)
-            .all(|(left, right)| left.ir() == right.ir())
+fn same_atomic_family(left: &AtomicFact, right: &AtomicFact) -> bool {
+    std::mem::discriminant(left) == std::mem::discriminant(right)
+        && left.prop_name() == right.prop_name()
+        && atomic_fact_has_positive_polarity(left) == atomic_fact_has_positive_polarity(right)
+        && atomic_fact_args_ref(left).len() == atomic_fact_args_ref(right).len()
 }
 
 fn is_zero(object: &Obj) -> bool {

@@ -2,6 +2,7 @@ use super::helper::{store_goal_fact, verify_goal_fact};
 use super::result::{
     ExecByStmtResult, ExecByThmStmtFailed, ExecByThmStmtResult, ExecByThmStmtSuccess,
     ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess,
+    ResolvedTheoremCallee,
 };
 use crate::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity, AtomicFact, EqualFact, Fact,
@@ -18,7 +19,7 @@ pub fn exec_release_thm_stmt(
     stmt: &ReleaseThmStmt,
 ) -> RuntimeResult<ExecReleaseThmStmtResult> {
     let thm_name = stmt.call.name.local_name().to_string();
-    let prepared = match prepare_release_conclusions(runtime, &stmt.call)? {
+    let (prepared, callee) = match prepare_release_conclusions(runtime, &stmt.call)? {
         Ok(p) => p,
         Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
     };
@@ -87,6 +88,7 @@ pub fn exec_release_thm_stmt(
     Ok(ExecReleaseThmStmtResult::Success(
         ExecReleaseThmStmtSuccess {
             call: stmt.call.clone(),
+            callee,
             builtin: prepared.builtin,
             type_proofs,
             function_domain,
@@ -103,7 +105,7 @@ pub fn exec_by_thm_stmt(
     stmt: &ByThmStmt,
 ) -> RuntimeResult<ExecByStmtResult> {
     let thm_name = stmt.call.name.local_name().to_string();
-    let prepared = match prepare_release_conclusions(runtime, &stmt.call)? {
+    let (prepared, callee) = match prepare_release_conclusions(runtime, &stmt.call)? {
         Ok(p) => p,
         Err(failed) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
@@ -148,6 +150,7 @@ pub fn exec_by_thm_stmt(
                 Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
             };
         let mut direct_conclusions = Vec::new();
+        let mut returned_conclusions = Vec::with_capacity(prepared.conclusions.len());
         for conclusion in &prepared.conclusions {
             let stored = rt.store_fact_and_infer(
                 conclusion,
@@ -158,6 +161,7 @@ pub fn exec_by_thm_stmt(
             for (_, atomic) in stored.atomic_components() {
                 direct_conclusions.push(atomic);
             }
+            returned_conclusions.push(stored);
         }
         let Some(selected_proof) =
             verify_selected_theorem_conclusion(rt, &stmt.selected_fact, &direct_conclusions)?
@@ -180,17 +184,24 @@ pub fn exec_by_thm_stmt(
             function_domain,
             dom_proofs,
             conclusions_wd,
+            returned_conclusions,
             selected_proof,
         )))
     })?;
 
-    let (type_proofs, function_domain, dom_proofs, conclusions_wd, selected_proof) =
-        match local_outcome {
-            Ok(v) => v,
-            Err(failed) => {
-                return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
-            }
-        };
+    let (
+        type_proofs,
+        function_domain,
+        dom_proofs,
+        conclusions_wd,
+        returned_conclusions,
+        selected_proof,
+    ) = match local_outcome {
+        Ok(v) => v,
+        Err(failed) => {
+            return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
+        }
+    };
 
     let stored = match store_goal_fact(runtime, &selected)? {
         Ok(s) => s,
@@ -207,11 +218,13 @@ pub fn exec_by_thm_stmt(
     Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(
         ExecByThmStmtSuccess {
             call: stmt.call.clone(),
+            callee,
             builtin: prepared.builtin,
             type_proofs,
             function_domain,
             dom_proofs,
             conclusions_wd,
+            returned_conclusions,
             selected_proof,
             local_env,
             stored,
@@ -320,13 +333,13 @@ pub(crate) struct PreparedRelease {
 pub(crate) fn prepare_release_conclusions(
     runtime: &mut Runtime,
     call: &TheoremCall,
-) -> RuntimeResult<Result<PreparedRelease, ExecReleaseThmStmtFailed>> {
+) -> RuntimeResult<Result<(PreparedRelease, ResolvedTheoremCallee), ExecReleaseThmStmtFailed>> {
     if let Some(prepared) = super::builtin_thm::prepare_builtin_thm(runtime, call)? {
-        return Ok(prepared);
+        return Ok(prepared.map(|p| (p, ResolvedTheoremCallee::Builtin)));
     }
     if let Some(def_thm) = runtime.def_thm_visible(&call.name).cloned() {
         let thm_name = call.name.local_name();
-        return match &def_thm.fact {
+        let prepared = match &def_thm.fact {
             Fact::ForallFact(forall) => prepare_forall_release(runtime, forall, &call.arguments),
             other => match &call.arguments {
                 TheoremCallArguments::Bare => Ok(Ok(PreparedRelease {
@@ -336,16 +349,16 @@ pub(crate) fn prepare_release_conclusions(
                     conclusions: vec![other.clone()],
                 })),
                 TheoremCallArguments::Parenthesized(_) => Ok(Err(ExecReleaseThmStmtFailed::Shape(
-                    format!(
-                        "release thm `{thm_name}`: non-forall theorem must be called without arguments"
-                    ),
+                    format!("release thm `{thm_name}`: non-forall theorem must be called without arguments"),
                 ))),
             },
-        };
+        }?;
+        return Ok(prepared.map(|p| (p, ResolvedTheoremCallee::UserTheorem(def_thm))));
     }
 
     if let Some(axiom) = runtime.axiom_visible(&call.name).cloned() {
-        return prepare_forall_release(runtime, &axiom.forall_fact, &call.arguments);
+        let prepared = prepare_forall_release(runtime, &axiom.forall_fact, &call.arguments)?;
+        return Ok(prepared.map(|p| (p, ResolvedTheoremCallee::UserAxiom(axiom))));
     }
 
     Ok(Err(ExecReleaseThmStmtFailed::ThmNotFound(

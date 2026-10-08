@@ -309,10 +309,19 @@ pub enum BuiltinFunctionDomainProof {
     },
 }
 
+// Captured at the existing callee-resolution branch, not recovered later from
+// a name scan. Builtin payloads remain in the existing application field.
+pub enum ResolvedTheoremCallee {
+    UserTheorem(crate::ast::stmt::DefThmStmt),
+    UserAxiom(crate::ast::stmt::AxiomStmt),
+    Builtin,
+}
+
 // Subject: preserve the resolved callee/arguments beyond the invocation.
 // Stage order: type_proofs → complete domain → dom_proofs → WD → store.
 pub struct ExecReleaseThmStmtSuccess {
     pub call: crate::ast::stmt::TheoremCall,
+    pub callee: ResolvedTheoremCallee,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
     pub function_domain: Option<BuiltinFunctionDomainProof>,
@@ -380,14 +389,16 @@ pub enum ExecByThmStmtResult {
 }
 
 // Subject: preserve the resolved callee/arguments beyond the invocation.
-// Stage order: type_proofs → complete domain → dom_proofs → WD → selected → store.
+// Stage order: type_proofs → complete domain → dom_proofs → WD → returned stores → selected → store.
 pub struct ExecByThmStmtSuccess {
     pub call: crate::ast::stmt::TheoremCall,
+    pub callee: ResolvedTheoremCallee,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
     pub function_domain: Option<BuiltinFunctionDomainProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
+    pub returned_conclusions: Vec<StoreFactAndInferResult>,
     pub selected_proof: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
