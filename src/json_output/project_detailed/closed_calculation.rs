@@ -114,6 +114,7 @@ fn project_comparison(
         vec![
             ("type", string("by_closed_calculation")),
             ("kind", string(kind)),
+            ("values", project_values(&proof.values, runtime)),
             ("left_normal", string(&proof.left_normal)),
             ("right_normal", string(&proof.right_normal)),
             ("comparison", string(comparison)),

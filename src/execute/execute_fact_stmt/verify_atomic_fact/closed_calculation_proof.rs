@@ -55,6 +55,8 @@ pub struct ClosedNotEqualCalculationProof {
 }
 
 pub struct ClosedComparisonCalculationProof {
+    // Exact calculation owner; normal strings below remain presentation views.
+    pub values: ClosedValuePair,
     pub left_normal: String,
     pub right_normal: String,
     pub comparison: NumberCompareResult,

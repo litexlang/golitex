@@ -47,3 +47,10 @@ pub(crate) use crate::rational_expression::exact_rational::EvalRational;
 pub(crate) use crate::rational_expression::evaluate_obj_to_normalized_decimal_number;
 
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_division_relations::ScalarDivisionRelationProof;
+
+pub(crate) use crate::execute::{
+    ExecHaveObjInNonemptySetStmtResult, ExecHaveObjInNonemptySetStmtSuccessResult,
+    ParamTypeFactCheckResult, StoreHaveObjAndInferResult,
+};
+
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule;

@@ -154,7 +154,7 @@ fn project_introduce_failure(
                 ),
                 (
                     "defined_params",
-                    super::store::project_have_store_ids(&defined_params.stored_fact_ids, rt),
+                    super::store::project_have_store_and_infer(defined_params, rt),
                 ),
                 (
                     "opened_before_fail",

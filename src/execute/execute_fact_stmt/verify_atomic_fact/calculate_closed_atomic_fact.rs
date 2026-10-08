@@ -141,13 +141,15 @@ fn calculate_comparison(
     accepted: &[NumberCompareResult],
 ) -> Option<ClosedComparisonCalculationProof> {
     let (values, _) = calculate_value_pair(left, right)?;
-    let (comparison, left_normal, right_normal) = match values {
+    let (comparison, left_normal, right_normal) = match &values {
         ClosedValuePair::Radical { .. } => return None,
-        ClosedValuePair::Decimal { left, right } => {
-            (compare_number_strings(&left, &right), left, right)
-        }
+        ClosedValuePair::Decimal { left, right } => (
+            compare_number_strings(left, right),
+            left.clone(),
+            right.clone(),
+        ),
         ClosedValuePair::Rational { left, right } => (
-            left.compare(&right)?,
+            left.compare(right)?,
             left.to_obj().readable_string(),
             right.to_obj().readable_string(),
         ),
@@ -161,7 +163,7 @@ fn calculate_comparison(
                 return None;
             }
             (
-                left_real.compare(&right_real)?,
+                left_real.compare(right_real)?,
                 left_real.to_obj().readable_string(),
                 right_real.to_obj().readable_string(),
             )
@@ -171,6 +173,7 @@ fn calculate_comparison(
         return None;
     }
     Some(ClosedComparisonCalculationProof {
+        values,
         left_normal,
         right_normal,
         comparison,

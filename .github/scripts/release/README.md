@@ -83,10 +83,19 @@ MSI is optional (`continue-on-error: true`) and is not downloaded or attached by
 the GitHub Release job. Its WiX build and installation still need a Windows
 runner. After `cargo wix init --force`, the workflow regenerates `wix/std.wxs`
 with `.github/scripts/release/generate_wix_std.py` so `File/@Source` paths are
-package-root relative (`std\...`) and every shipped `std/` file is attached to
-the `Binaries` feature. A hand-written `..\std\...` fragment relative to
-`wix/std.wxs` does not install into `Program Files\litex-lang\std`. macOS
-artifacts cover ARM only; the generated Homebrew formula has no Intel macOS
+package-root relative (`std\...`). The script also inserts
+`<ComponentGroupRef Id="LitexStd" />` into the generated `wix/main.wxs`
+`Product/Feature[@Id="Binaries"]`. That explicit incoming reference links the
+`LitexStd` component group and its entire std directory tree into the MSI.
+Previously, a standalone `FeatureRef Id="Binaries"` fragment referenced the
+product feature but the product never referenced that fragment; installation
+could succeed with only the binary and license. Merely compiling `std.wxs` or
+checking its source paths does not prove the std components are included.
+The generator rejects missing or ambiguous product features and preserves WiX
+preprocessor directives. Python tests exercise the CLI, resolve the product-to-group
+and group-to-component references, check repeat runs, and reject unexpected
+templates. The Windows install/import smoke remains the final runtime gate.
+macOS artifacts cover ARM only; the generated Homebrew formula has no Intel macOS
 artifact selection. Toolchain, runner, `cross`, and `cargo-wix` versions are
 not all pinned, so a rerun may use newer build tools.
 
@@ -104,3 +113,13 @@ SemVer prerelease suffix, and ignores hyphens in build metadata.
 Other work changed `src/prelude.rs` and `lean/Litex.lean` after the Rust test
 gate. Those changes are outside this audit's acceptance; formatting was checked
 again successfully. Run the quality gates against the final commit before tagging.
+
+MSI linkage repair: the local 12-test Python suite passed on 2026-10-08.
+The generated fragment includes all four currently shipped std files. Actual
+WiX linking and MSI installation were not run on this macOS host; validate
+the repaired workflow on Windows before calling the installer accepted.
+Package boundary and diff whitespace checks passed. The current worktree's
+broader release checks are not green: formatting reports pre-existing Rust
+edits, and Rust compilation reports `EvalRational::zero()` as unavailable in
+`src/compile_to_lean/compile_run.rs:309`. These files were already modified
+before the MSI repair and were not edited as part of it.

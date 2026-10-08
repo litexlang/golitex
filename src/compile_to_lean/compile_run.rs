@@ -2,6 +2,19 @@ use super::LeanCompileError;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 use crate::rational_expression::ClosedNumericExpr;
+use crate::store_fact_and_infer::{InferFactResult, InferAtomicFactResult, InferAtomicExceptEqualityResult};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinOrderDual;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
+    greater::GreaterFactSearchProofByBuiltinRule,
+    greater_equal::GreaterEqualFactSearchProofByBuiltinRule,
+    less::LessFactSearchProofByBuiltinRule,
+    less_equal::LessEqualFactSearchProofByBuiltinRule,
+    not_equal::NotEqualFactSearchProofByBuiltinRule,
+};
+use crate::rational_expression::NumberCompareResult;
+
 use std::collections::HashMap;
 
 /// Replay a successful typed execution result while its citation context is live.
@@ -79,11 +92,14 @@ struct CompilerScope {
     facts: HashMap<FactId, FactTerm>,
     wds: HashMap<WellDefinednessId, ObjectTerm>,
     theorems: HashMap<String, NamedTheorem>,
+    real_members: HashMap<ObjIR, String>,
 }
 
 struct LeanCompiler {
     scopes: Vec<CompilerScope>,
     universes: Vec<String>,
+    context_binders: Vec<String>,
+    context_arguments: Vec<String>,
 }
 
 impl LeanCompiler {
@@ -91,6 +107,8 @@ impl LeanCompiler {
         Self {
             scopes: vec![CompilerScope::default()],
             universes: Vec::new(),
+            context_binders: Vec::new(),
+            context_arguments: Vec::new(),
         }
     }
 
@@ -128,6 +146,9 @@ impl LeanCompiler {
                     ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(
                         proof,
                     )) => self.compile_have_equal(proof, runtime, local),
+                    ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                        ExecHaveObjInNonemptySetStmtResult::Success(proof),
+                    ) => self.compile_arbitrary_have(proof, runtime, local),
                     _ => Err(LeanCompileError::unsupported("Definition/DefineObj")),
                 },
                 ExecDefinitionStmtResult::DefThm(ExecDefThmStmtResult::Success(proof))
@@ -161,17 +182,308 @@ impl LeanCompiler {
         };
         let kind = if local { "have" } else { "theorem" };
         let declaration = format!(
-            "{kind} {name} : {} :=\n  {}",
+            "{kind} {name}{} : {} :=\n  {}",
+            if local {
+                String::new()
+            } else {
+                self.context_header()
+            },
             fact.proposition,
             fact.proof.replace('\n', "\n  ")
         );
         fact.proof = if local {
             name
         } else {
-            format!("({name} (M := M))")
+            self.context_application(&name)
         };
         self.remember_fact(fact);
         declaration
+    }
+
+    fn context_header(&self) -> String {
+        if self.context_binders.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", self.context_binders.join(" "))
+        }
+    }
+
+    fn context_application(&self, name: &str) -> String {
+        if self.context_arguments.is_empty() {
+            format!("({name} (M := M))")
+        } else {
+            format!("(@{name} M {})", self.context_arguments.join(" "))
+        }
+    }
+
+    fn compile_arbitrary_have(
+        &mut self,
+        proof: &ExecHaveObjInNonemptySetStmtSuccessResult,
+        runtime: &Runtime,
+        local: bool,
+    ) -> Result<String, LeanCompileError> {
+        if local
+            || self.scopes.len() != 1
+            || proof.auto_opened_struct_layers.is_some()
+            || proof.groups.len() != proof.statement.param_def.groups.len()
+        {
+            return Err(LeanCompileError::unsupported("Have/ContextProfile"));
+        }
+        let aggregate: Vec<_> = proof
+            .groups
+            .iter()
+            .flat_map(|g| g.defined_params.stored_fact_ids.iter().copied())
+            .collect();
+        if aggregate != proof.store_and_infer_result.stored_fact_ids {
+            return Err(LeanCompileError::new(
+                "Have/Aggregate",
+                "The group stores do not equal the ordered statement stores.",
+            ));
+        }
+        let grouped: Vec<_> = proof
+            .groups
+            .iter()
+            .flat_map(|g| &g.defined_params.store_and_infer_results)
+            .collect();
+        if grouped.len() != proof.store_and_infer_result.store_and_infer_results.len()
+            || grouped
+                .iter()
+                .zip(&proof.store_and_infer_result.store_and_infer_results)
+                .any(|(group, aggregate)| !std::rc::Rc::ptr_eq(group, aggregate))
+        {
+            return Err(LeanCompileError::new(
+                "Have/SharedStores",
+                "Group and aggregate capture do not refer to the same parameter-store executions.",
+            ));
+        }
+        self.validate_parameter_store_capture(&proof.store_and_infer_result)?;
+        let mut declarations = Vec::new();
+        for (group, captured) in proof.statement.param_def.groups.iter().zip(&proof.groups) {
+            let set = match &group.param_type {
+                ParamType::Obj(Obj::StandardSet(set)) => set,
+                _ => return Err(LeanCompileError::unsupported("Have/NumericCarrier")),
+            };
+            standard_term(set)?;
+            let carrier = Obj::StandardSet(set.clone());
+            match &captured.param_type_well_defined {
+                ParamTypeWellDefinedProof::Obj(wd) => {
+                    self.compile_wd(success_object_wd(wd, &carrier)?, runtime)?;
+                }
+                _ => return Err(LeanCompileError::unsupported("Have/CarrierWD")),
+            }
+            let nonempty = match &captured.nonempty_check {
+                ParamTypeFactCheckResult::Obj(result) => self.compile_verify(result, runtime)?,
+                _ => return Err(LeanCompileError::unsupported("Have/NonemptyCheck")),
+            };
+            match &nonempty.fact {
+                Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact))
+                    if fact.set.ir() == carrier.ir() => {}
+                _ => {
+                    return Err(LeanCompileError::new(
+                        "Have/NonemptySubject",
+                        "The captured nonempty check proves another carrier.",
+                    ))
+                }
+            }
+            let check_name = format!("_nonempty_f{}", nonempty.fact.fact_id().value());
+            declarations.push(format!(
+                "theorem {check_name}{} : {} := {}",
+                self.context_header(),
+                nonempty.proposition,
+                nonempty.proof
+            ));
+            self.validate_parameter_store_capture(&captured.defined_params)?;
+            if captured.defined_params.store_and_infer_results.len() != group.params.len() {
+                return Err(LeanCompileError::new(
+                    "Have/ParameterStores",
+                    "Each declared parameter needs its own actual store.",
+                ));
+            }
+            for (parameter, store) in group
+                .params
+                .iter()
+                .zip(&captured.defined_params.store_and_infer_results)
+            {
+                let (binders, arguments) =
+                    self.introduce_numeric_parameter(parameter, &carrier, store, runtime)?;
+                declarations.push(format!("variable {}", binders.join(" ")));
+                self.context_binders.extend(binders);
+                self.context_arguments.extend(arguments);
+            }
+        }
+        Ok(declarations.join("\n\n"))
+    }
+
+    fn validate_parameter_store_capture(
+        &self,
+        result: &StoreHaveObjAndInferResult,
+    ) -> Result<(), LeanCompileError> {
+        let ids: Vec<_> = result
+            .store_and_infer_results
+            .iter()
+            .flat_map(|store| store.stored_fact_ids())
+            .collect();
+        if ids != result.stored_fact_ids {
+            return Err(LeanCompileError::new(
+                "Parameters/StoreCapture",
+                "The actual ordered store trees do not match their ID view.",
+            ));
+        }
+        Ok(())
+    }
+
+    fn introduce_numeric_parameter(
+        &mut self,
+        parameter: &BoundName,
+        set: &Obj,
+        store: &StoreFactAndInferResult,
+        runtime: &Runtime,
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        let id = parameter.id;
+        let host = format!("_Host_i{}", id.value());
+        let universe = format!("v{}", id.value());
+        if !self.universes.contains(&universe) {
+            self.universes.push(universe.clone());
+        }
+        let instance = format!("_rep_i{}", id.value());
+        let value = format!("_value_i{}", id.value());
+        let hypothesis = format!("_h_param_i{}", id.value());
+        let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+        let fact = self.resolve_fact(store.primary_fact_id(), runtime)?;
+        match &fact {
+            Fact::AtomicFact(AtomicFact::InFact(f))
+                if f.element.ir() == object.ir() && f.set.ir() == set.ir() => {}
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Parameters/Subject",
+                    "The actual parameter store differs from its source header.",
+                ))
+            }
+        }
+        self.validate_store(store, &fact)?;
+        let term = ObjectTerm {
+            object: object.clone(),
+            term: value.clone(),
+            numeric: None,
+        };
+        let scope = self.scopes.last_mut().expect("compiler scope");
+        if scope.identifiers.contains_key(&id) || scope.objects.contains_key(&object.ir()) {
+            return Err(LeanCompileError::new(
+                "Parameters/Identity",
+                "Duplicate parameter identity.",
+            ));
+        }
+        scope.identifiers.insert(id, term.clone());
+        scope.objects.insert(object.ir(), term);
+        let proposition = self.fact_proposition(&fact)?;
+        if set == &Obj::StandardSet(StandardSet::C) {
+            self.remember_complex_member(&object, &hypothesis)?;
+        }
+        let member = FactTerm {
+            fact,
+            proposition: proposition.clone(),
+            proof: hypothesis.clone(),
+        };
+        self.remember_fact(member.clone());
+        if set == &Obj::StandardSet(StandardSet::R) {
+            self.remember_real_member(&object, &hypothesis);
+        }
+        self.compile_parameter_inferences(store, &member, runtime)?;
+        Ok((vec![format!("{{{host} : Type {universe}}} [{instance} : Litex.Representation M {host}] ({value} : Litex.Obj (M := M) {host})"), format!("({hypothesis} : {proposition})")], vec![host, instance, value, hypothesis]))
+    }
+
+    fn real_member(&self, object: &Obj) -> Result<String, LeanCompileError> {
+        self.scopes
+            .iter()
+            .rev()
+            .find_map(|scope| scope.real_members.get(&object.ir()).cloned())
+            .ok_or_else(|| {
+                LeanCompileError::new(
+                    "Real/Producer",
+                    "No real-membership certificate was replayed for this object.",
+                )
+            })
+    }
+
+    fn remember_real_member(&mut self, object: &Obj, proof: &str) {
+        self.scopes
+            .last_mut()
+            .expect("compiler scope")
+            .real_members
+            .insert(object.ir(), proof.to_string());
+    }
+
+    fn compile_parameter_inferences(
+        &mut self,
+        store: &StoreFactAndInferResult,
+        member: &FactTerm,
+        runtime: &Runtime,
+    ) -> Result<(), LeanCompileError> {
+        let rules = match &store.infer {
+            InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) => rules,
+            _ => return Ok(()),
+        };
+        for rule in rules {
+            if let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(sign) = rule {
+                let source = match &member.fact {
+                    Fact::AtomicFact(AtomicFact::InFact(f))
+                        if f.set == Obj::StandardSet(StandardSet::N) =>
+                    {
+                        f
+                    }
+                    _ => return Err(LeanCompileError::unsupported("Inference/SignedCarrier")),
+                };
+                if sign.derived.len() != 1 {
+                    return Err(LeanCompileError::new(
+                        "Inference/NaturalArity",
+                        "Natural membership has exactly one nonnegative projection.",
+                    ));
+                }
+                let derived = &sign.derived[0];
+                let fact = self.resolve_fact(derived.primary_fact_id(), runtime)?;
+                let bound = match &fact {
+                    Fact::AtomicFact(AtomicFact::LessEqualFact(f))
+                        if is_exact_zero(&f.left) && f.right.ir() == source.element.ir() =>
+                    {
+                        f
+                    }
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "Inference/NaturalSubject",
+                            "The natural nonnegative projection has another endpoint.",
+                        ))
+                    }
+                };
+                self.validate_store(derived, &fact)?;
+                let zero = bound.left.clone();
+                let term = "(Litex.number (M := M) (0 : ℂ))".to_string();
+                self.scopes
+                    .last_mut()
+                    .expect("compiler scope")
+                    .objects
+                    .entry(zero.ir())
+                    .or_insert(ObjectTerm {
+                        object: zero,
+                        term,
+                        numeric: Some(NumericTerm {
+                            value: "(0 : ℂ)".into(),
+                            denotation: "(Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))".into(),
+                            member: "(Litex.numberInC (M := M) (0 : ℂ))".into(),
+                            closed: Some(EvalRational::new(0, 1).expect("constant zero rational")),
+                        }),
+                    });
+                self.remember_fact(FactTerm {
+                    proposition: self.fact_proposition(&fact)?,
+                    fact,
+                    proof: format!(
+                        "(Litex.naturalNonnegative {} {})",
+                        self.object_term(&source.element)?,
+                        member.proof
+                    ),
+                });
+            }
+        }
+        Ok(())
     }
 
     fn compile_let(
@@ -225,8 +537,13 @@ impl LeanCompiler {
                 "Typed definition evidence has different parameter, value or membership stages.",
             ));
         }
-        if proof.store_and_infer_result.stored_fact_ids.len() != 2 * count {
-            return Err(LeanCompileError::unsupported("HaveEqual/Inference"));
+        self.validate_parameter_store_capture(&proof.store_and_infer_result)?;
+        let stores = &proof.store_and_infer_result.store_and_infer_results;
+        if stores.len() != 2 * count {
+            return Err(LeanCompileError::new(
+                "HaveEqual/Stores",
+                "Typed definitions need ordered membership and equality stores.",
+            ));
         }
         self.scopes.push(CompilerScope {
             env: Some(proof.type_local_env.clone()),
@@ -291,10 +608,8 @@ impl LeanCompiler {
         }
         let mut declarations = Vec::new();
         for (index, parameter) in parameters.iter().enumerate() {
-            let equal = self.resolve_fact(
-                proof.store_and_infer_result.stored_fact_ids[count + index],
-                runtime,
-            )?;
+            let equal = self.resolve_fact(stores[count + index].primary_fact_id(), runtime)?;
+            self.validate_store(&stores[count + index], &equal)?;
             let left =
                 alias_equality_subject(&equal, parameter, &proof.statement.objs_equal_to[index])?;
             declarations.push(self.bind_alias(
@@ -304,8 +619,7 @@ impl LeanCompiler {
                 &values[index],
                 local,
             )?);
-            let member_fact =
-                self.resolve_fact(proof.store_and_infer_result.stored_fact_ids[index], runtime)?;
+            let member_fact = self.resolve_fact(stores[index].primary_fact_id(), runtime)?;
             match (&member_fact, &members[index].fact) {
                 (
                     Fact::AtomicFact(AtomicFact::InFact(stored)),
@@ -318,11 +632,19 @@ impl LeanCompiler {
                     ))
                 }
             }
-            self.remember_fact(FactTerm {
+            self.validate_store(&stores[index], &member_fact)?;
+            let member = FactTerm {
                 proposition: self.fact_proposition(&member_fact)?,
                 fact: member_fact,
                 proof: members[index].proof.clone(),
-            });
+            };
+            self.remember_fact(member.clone());
+            if let Fact::AtomicFact(AtomicFact::InFact(f)) = &member.fact {
+                if f.set == Obj::StandardSet(StandardSet::R) {
+                    self.remember_real_member(&f.element, &member.proof);
+                }
+            }
+            self.compile_parameter_inferences(&stores[index], &member, runtime)?;
             self.remember_fact(FactTerm {
                 proposition: self.fact_proposition(&equal)?,
                 fact: equal,
@@ -350,7 +672,7 @@ impl LeanCompiler {
         let term = if local {
             name.clone()
         } else {
-            format!("({name} (M := M))")
+            self.context_application(&name)
         };
         let alias = ObjectTerm {
             object: object.clone(),
@@ -370,7 +692,10 @@ impl LeanCompiler {
         Ok(if local {
             format!("let {name} := {value}")
         } else {
-            format!("noncomputable def {name} := {value}")
+            format!(
+                "noncomputable def {name}{} := {value}",
+                self.context_header()
+            )
         })
     }
 
@@ -407,11 +732,12 @@ impl LeanCompiler {
         self.validate_store(&proof.stored, &compiled.fact)?;
         let name = format!("named_thm_{index}");
         let declaration = format!(
-            "theorem {name} : {} :=\n  {}",
+            "theorem {name}{} : {} :=\n  {}",
+            self.context_header(),
             compiled.proposition,
             compiled.proof.replace('\n', "\n  ")
         );
-        let term = format!("({name} (M := M))");
+        let term = self.context_application(&name);
         let scope = self.scopes.last_mut().expect("compiler scope");
         if scope
             .theorems
@@ -754,16 +1080,11 @@ impl LeanCompiler {
                     "Failed verification is not proof evidence.",
                 )),
             },
-            VerifyFactResult::AtomicExceptEquality(result) => {
-                match result.as_ref() {
-                    VerifyAtomicExceptEqualityFactResult::Success(success) => {
-                        self.compile_atomic_wd(
-                            &success.well_defined_proof,
-                            &success.fact,
-                            runtime,
-                        )?;
-                        let proposition = self.atomic_proposition(&success.fact)?;
-                        let proof = match &success.searched_proof {
+            VerifyFactResult::AtomicExceptEquality(result) => match result.as_ref() {
+                VerifyAtomicExceptEqualityFactResult::Success(success) => {
+                    self.compile_atomic_wd(&success.well_defined_proof, &success.fact, runtime)?;
+                    let proposition = self.atomic_proposition(&success.fact)?;
+                    let proof = match &success.searched_proof {
                         AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) => {
                             match &success.fact {
                                 AtomicFact::InFact(fact)
@@ -794,6 +1115,7 @@ impl LeanCompiler {
                         },
                         AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(ClosedAtomicExceptEqualityCalculationProof::NotEqual(proof)) =>
                             self.compile_closed_not_equal(&success.fact, proof)?,
+                        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(certificate @ (ClosedAtomicExceptEqualityCalculationProof::Less(_) | ClosedAtomicExceptEqualityCalculationProof::Greater(_) | ClosedAtomicExceptEqualityCalculationProof::LessEqual(_) | ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(_))) => self.compile_closed_order(&success.fact, certificate)?,
                         AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_) => {
                             return Err(LeanCompileError::unsupported(
                                 "Atomic/ClosedCalculationNonMembership",
@@ -816,6 +1138,15 @@ impl LeanCompiler {
                                     ))
                                 }
                             },
+                            AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(IsNonemptySetFactSearchProofByBuiltinRule::StandardSetNonempty(p)) => {
+                                match &success.fact {
+                                    AtomicFact::IsNonemptySetFact(f) if f.set == Obj::StandardSet(p.target_set.clone()) => {},
+                                    _ => return Err(LeanCompileError::new("Nonempty/Subject", "Standard nonempty evidence describes another target.")),
+                                }
+                                standard_term(&p.target_set)?;
+                                format!("(Litex.standardNonempty (M := M) Litex.StandardSetValue.{})", standard_value_constructor(&p.target_set)?)
+                            },
+                            rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, runtime)?,
                             other => return Err(unsupported_atomic_builtin(other)),
                         },
                         AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(_) => {
@@ -843,23 +1174,25 @@ impl LeanCompiler {
                             return Err(LeanCompileError::unsupported("Atomic/KnownRewrite"))
                         }
                     };
-                        if let AtomicFact::InFact(member) = &success.fact {
-                            if member.set == Obj::StandardSet(StandardSet::C) {
-                                self.remember_complex_member(&member.element, &proof)?;
-                            }
+                    if let AtomicFact::InFact(member) = &success.fact {
+                        if member.set == Obj::StandardSet(StandardSet::C) {
+                            self.remember_complex_member(&member.element, &proof)?;
                         }
-                        Ok(FactTerm {
-                            fact: Fact::AtomicFact(success.fact.clone()),
-                            proposition,
-                            proof,
-                        })
+                        if member.set == Obj::StandardSet(StandardSet::R) {
+                            self.remember_real_member(&member.element, &proof);
+                        }
                     }
-                    VerifyAtomicExceptEqualityFactResult::Failed(_) => Err(LeanCompileError::new(
-                        "Atomic/Failed",
-                        "Failed verification is not proof evidence.",
-                    )),
+                    Ok(FactTerm {
+                        fact: Fact::AtomicFact(success.fact.clone()),
+                        proposition,
+                        proof,
+                    })
                 }
-            }
+                VerifyAtomicExceptEqualityFactResult::Failed(_) => Err(LeanCompileError::new(
+                    "Atomic/Failed",
+                    "Failed verification is not proof evidence.",
+                )),
+            },
             VerifyFactResult::ForallFact(result) => match result.as_ref() {
                 VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(
                     proof,
@@ -938,67 +1271,10 @@ impl LeanCompiler {
         children: &[VerifyFactResult],
         runtime: &Runtime,
     ) -> Result<String, LeanCompileError> {
-        let (operation, pairs) = match (&fact.left, &fact.right) {
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Add(a)),
-                Obj::ArithmeticOperator(ArithmeticOperator::Add(b)),
-            ) => (
-                "addValue",
-                vec![
-                    (a.left.as_ref(), b.left.as_ref()),
-                    (a.right.as_ref(), b.right.as_ref()),
-                ],
-            ),
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)),
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(b)),
-            ) => (
-                "subValue",
-                vec![
-                    (a.left.as_ref(), b.left.as_ref()),
-                    (a.right.as_ref(), b.right.as_ref()),
-                ],
-            ),
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)),
-                Obj::ArithmeticOperator(ArithmeticOperator::Mul(b)),
-            ) => (
-                "mulValue",
-                vec![
-                    (a.left.as_ref(), b.left.as_ref()),
-                    (a.right.as_ref(), b.right.as_ref()),
-                ],
-            ),
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Div(a)),
-                Obj::ArithmeticOperator(ArithmeticOperator::Div(b)),
-            ) => (
-                "divValue",
-                vec![
-                    (a.left.as_ref(), b.left.as_ref()),
-                    (a.right.as_ref(), b.right.as_ref()),
-                ],
-            ),
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Pow(a)),
-                Obj::ArithmeticOperator(ArithmeticOperator::Pow(b)),
-            ) => (
-                "powValue",
-                vec![
-                    (a.base.as_ref(), b.base.as_ref()),
-                    (a.exponent.as_ref(), b.exponent.as_ref()),
-                ],
-            ),
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)),
-                Obj::ArithmeticOperator(ArithmeticOperator::Neg(b)),
-            ) => ("negValue", vec![(a.arg.as_ref(), b.arg.as_ref())]),
-            _ => {
-                return Err(LeanCompileError::unsupported(
-                    "Equality/MatchingOneArgByOne/Constructor",
-                ))
-            }
-        };
+        let (operation, pairs) =
+            arithmetic_constructor_pairs(&fact.left, &fact.right).ok_or_else(|| {
+                LeanCompileError::unsupported("Equality/MatchingOneArgByOne/Constructor")
+            })?;
         if children.len() != pairs.len() {
             return Err(LeanCompileError::new(
                 "ArithmeticCongruence/Children",
@@ -1584,9 +1860,13 @@ impl LeanCompiler {
             ));
         }
         let expected_count: usize = groups.iter().map(|group| group.params.len()).sum();
-        let stored_ids = &introduced.defined_params.stored_fact_ids;
-        if stored_ids.len() != expected_count {
-            return Err(LeanCompileError::unsupported("Forall/ParameterInference"));
+        self.validate_parameter_store_capture(&introduced.defined_params)?;
+        let stores = &introduced.defined_params.store_and_infer_results;
+        if stores.len() != expected_count {
+            return Err(LeanCompileError::new(
+                "Forall/ParameterStores",
+                "Parameter introduction needs its actual ordered stores.",
+            ));
         }
         let mut binders = Vec::new();
         let mut introductions = Vec::new();
@@ -1616,56 +1896,10 @@ impl LeanCompiler {
                 }
             }
             for parameter in &group.params {
-                let id = parameter.id;
-                let host = format!("_Host_i{}", id.value());
-                let universe = format!("v{}", id.value());
-                if !self.universes.contains(&universe) {
-                    self.universes.push(universe.clone());
-                }
-                let instance = format!("_rep_i{}", id.value());
-                let value = format!("_value_i{}", id.value());
-                let hypothesis = format!("_h_param_i{}", id.value());
-                let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-                let term = ObjectTerm {
-                    object: object.clone(),
-                    term: value.clone(),
-                    numeric: None,
-                };
-                let scope = self.scopes.last_mut().expect("compiler scope");
-                if scope.identifiers.insert(id, term.clone()).is_some() {
-                    return Err(LeanCompileError::new(
-                        "Forall/Parameters",
-                        "Duplicate parameter identity.",
-                    ));
-                }
-                scope.objects.insert(object.ir(), term);
-                binders.push(format!("{{{host} : Type {universe}}} [{instance} : Litex.Representation M {host}] ({value} : Litex.Obj (M := M) {host})"));
-                introductions.extend([host, instance, value]);
-                let fact = self.resolve_fact(stored_ids[offset], runtime)?;
-                let atomic = match &fact {
-                    Fact::AtomicFact(AtomicFact::InFact(fact))
-                        if fact.element.ir() == object.ir() && fact.set.ir() == set.ir() =>
-                    {
-                        AtomicFact::InFact(fact.clone())
-                    }
-                    _ => {
-                        return Err(LeanCompileError::new(
-                            "Forall/ParameterFact",
-                            "Stored parameter fact differs from the introducing header.",
-                        ))
-                    }
-                };
-                let proposition = self.atomic_proposition(&atomic)?;
-                binders.push(format!("({hypothesis} : {proposition})"));
-                introductions.push(hypothesis.clone());
-                if set == &Obj::StandardSet(StandardSet::C) {
-                    self.remember_complex_member(&object, &hypothesis)?;
-                }
-                self.remember_fact(FactTerm {
-                    fact,
-                    proposition,
-                    proof: hypothesis,
-                });
+                let (new_binders, new_arguments) =
+                    self.introduce_numeric_parameter(parameter, set, &stores[offset], runtime)?;
+                binders.extend(new_binders);
+                introductions.extend(new_arguments);
                 offset += 1;
             }
         }
@@ -2116,6 +2350,21 @@ impl LeanCompiler {
         }
         match &wd.predicate_domain {
             PredicateDomainProof::ByRequirements(requirements) => {
+                if matches!(
+                    fact,
+                    AtomicFact::LessFact(_)
+                        | AtomicFact::GreaterFact(_)
+                        | AtomicFact::LessEqualFact(_)
+                        | AtomicFact::GreaterEqualFact(_)
+                        | AtomicFact::NotLessFact(_)
+                        | AtomicFact::NotGreaterFact(_)
+                        | AtomicFact::NotLessEqualFact(_)
+                        | AtomicFact::NotGreaterEqualFact(_)
+                ) {
+                    if requirements.len() != 2 || requirements.iter().zip(&args).any(|(requirement, argument)| !matches!(&requirement.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == argument.ir() && f.set == Obj::StandardSet(StandardSet::R))) {
+                        return Err(LeanCompileError::new("WD/OrderRealDomain", "The order predicate needs its two exact ordered real-membership stages."));
+                    }
+                }
                 for requirement in requirements {
                     let compiled = self.compile_verify(&requirement.result, runtime)?;
                     if compiled.fact != requirement.requirement {
@@ -2127,7 +2376,12 @@ impl LeanCompiler {
                 }
             }
             PredicateDomainProof::ByKnownFact(proof) => {
-                self.compile_known_atomic(proof, fact, runtime)?;
+                let known = self.compile_known_atomic(proof, fact, runtime)?;
+                if source_order_parts(fact).is_ok() {
+                    let (left, right) = self.order_real_members_from_known(fact, &known)?;
+                    self.remember_real_member(args[0], &left);
+                    self.remember_real_member(args[1], &right);
+                }
             }
         }
         Ok(())
@@ -2298,9 +2552,9 @@ impl LeanCompiler {
                     "Equality/KnownForallFactViaSymmetry",
                 ))
             }
-            EqualFactSearchedProof::ByBuiltinRewrite(_) => {
-                return Err(LeanCompileError::unsupported("Equality/BuiltinRewrite"))
-            }
+            EqualFactSearchedProof::ByBuiltinRewrite(
+                EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(proof),
+            ) => self.compile_closed_equality_substitution(fact, proof, runtime)?,
         };
         Ok(proof)
     }
@@ -2475,6 +2729,131 @@ impl LeanCompiler {
         }
     }
 
+    fn compile_closed_equality_substitution(
+        &mut self,
+        goal: &EqualFact,
+        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        if proof.cited_equal_fact_ids.is_empty() {
+            return Err(LeanCompileError::new(
+                "EqualityRewrite/Citations",
+                "The selected substitution must cite a source equality.",
+            ));
+        }
+        let mut equalities = Vec::new();
+        for (index, id) in proof.cited_equal_fact_ids.iter().enumerate() {
+            if proof.cited_equal_fact_ids[..index].contains(id) {
+                return Err(LeanCompileError::new(
+                    "EqualityRewrite/Citations",
+                    "Substitution citations are unique in source order.",
+                ));
+            }
+            let resolved = self.resolve_fact(*id, runtime)?;
+            let equality = match &resolved {
+                Fact::AtomicFact(AtomicFact::EqualFact(eq)) if eq.fact_id == *id => eq,
+                _ => {
+                    return Err(LeanCompileError::new(
+                        "EqualityRewrite/CitationFamily",
+                        "Substitution cites another fact family or identity.",
+                    ))
+                }
+            };
+            if self.fact_term(*id)?.fact != resolved {
+                return Err(LeanCompileError::new(
+                    "EqualityRewrite/Producer",
+                    "The equality citation differs from its compiled producer.",
+                ));
+            }
+            equalities.push((*id, equality.clone()));
+        }
+        let residual = self.compile_verify(&proof.residual_equal, runtime)?;
+        match &residual.fact {
+            Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                if eq.left.ir() == proof.rewritten_left.ir()
+                    && eq.right.ir() == proof.rewritten_right.ir() => {}
+            _ => {
+                return Err(LeanCompileError::new(
+                    "EqualityRewrite/Residual",
+                    "The actual residual proof has different ordered endpoints.",
+                ))
+            }
+        }
+        let mut used = Vec::new();
+        let left = self.compile_cited_closed_substitution(
+            &goal.left,
+            &proof.rewritten_left,
+            &equalities,
+            &mut used,
+            runtime,
+        )?;
+        let right = self.compile_cited_closed_substitution(
+            &goal.right,
+            &proof.rewritten_right,
+            &equalities,
+            &mut used,
+            runtime,
+        )?;
+        if used != proof.cited_equal_fact_ids {
+            return Err(LeanCompileError::new(
+                "EqualityRewrite/CitationOrder",
+                "Every source equality must be used in the recorded substitution order.",
+            ));
+        }
+        Ok(format!(
+            "(({left}).trans (({}).trans ({right}).symm))",
+            residual.proof
+        ))
+    }
+
+    fn compile_cited_closed_substitution(
+        &self,
+        original: &Obj,
+        residual: &Obj,
+        equalities: &[(FactId, EqualFact)],
+        used: &mut Vec<FactId>,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        self.object_term(original)?;
+        self.object_term(residual)?;
+        if original.ir() == residual.ir() {
+            return Ok(format!("(Litex.sameRefl {})", self.object_term(original)?));
+        }
+        let direct: Vec<_> = equalities
+            .iter()
+            .filter(|(_, eq)| {
+                (eq.left.ir() == original.ir()
+                    && eq.right.ir() == residual.ir()
+                    && ClosedNumericExpr::try_from_obj(&eq.right).is_some())
+                    || (eq.right.ir() == original.ir()
+                        && eq.left.ir() == residual.ir()
+                        && ClosedNumericExpr::try_from_obj(&eq.left).is_some())
+            })
+            .collect();
+        if direct.len() > 1 {
+            return Err(LeanCompileError::new(
+                "EqualityRewrite/AmbiguousEndpoint",
+                "A changed subtree has multiple recorded source substitutions.",
+            ));
+        }
+        if let Some((id, _)) = direct.first() {
+            if !used.contains(id) {
+                used.push(*id);
+            }
+            return self.compile_registered_equality(*id, original, residual, runtime);
+        }
+        let (operation, pairs) = arithmetic_constructor_pairs(original, residual).ok_or_else(|| LeanCompileError::new("EqualityRewrite/Subterm", "The changed subtree has no exact recorded closed endpoint or matching owned arithmetic constructor."))?;
+        let mut children = Vec::new();
+        for (a, b) in pairs {
+            children.push(self.compile_cited_closed_substitution(a, b, equalities, used, runtime)?);
+        }
+        Ok(if children.len() == 1 {
+            format!("(congrArg M.{operation} {})", children[0])
+        } else {
+            format!("(congrArg₂ M.{operation} {} {})", children[0], children[1])
+        })
+    }
+
     fn compile_atomic_builtin_rewrite(
         &mut self,
         goal: &AtomicFact,
@@ -2502,8 +2881,7 @@ impl LeanCompiler {
                 ),
             AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(_) =>
                 Err(LeanCompileError::unsupported("Atomic/BuiltinRewrite/FnUnfold")),
-            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(_) =>
-                Err(LeanCompileError::unsupported("Atomic/BuiltinRewrite/OrderDual")),
+            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(proof) => self.compile_order_dual(goal, proof, runtime),
         }
     }
 
@@ -2792,6 +3170,21 @@ impl LeanCompiler {
                 arguments[1],
                 registered.proof,
             )),
+            (
+                known @ (AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_)),
+                given @ (AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_)),
+            ) => self.compile_order_known_atomic_transport(
+                known,
+                given,
+                &arguments,
+                &registered.proof,
+            ),
             _ => Err(LeanCompileError::unsupported(
                 "KnownAtomic/PredicateTransport",
             )),
@@ -2803,7 +3196,7 @@ impl LeanCompiler {
         proof: &StructuralMembershipProof,
         runtime: &Runtime,
     ) -> Result<String, LeanCompileError> {
-        match &proof.reason {
+        let compiled = match &proof.reason {
             StructuralMembershipReason::Known(known) => {
                 let mut fact = match self.resolve_fact(known.cite_fact_id, runtime)? {
                     Fact::AtomicFact(AtomicFact::InFact(fact)) => fact,
@@ -2839,6 +3232,10 @@ impl LeanCompiler {
                     (StandardSet::N, StandardSet::Z) => "naturalToInteger",
                     (StandardSet::N, StandardSet::R) => "naturalToReal",
                     (StandardSet::Z, StandardSet::R) => "integerToReal",
+                    (StandardSet::N, StandardSet::Q) => "naturalToRational",
+                    (StandardSet::Z, StandardSet::Q) => "integerToRational",
+                    (StandardSet::Q, StandardSet::R) => "rationalToReal",
+                    (StandardSet::Q, StandardSet::C) => "rationalToComplex",
                     _ => {
                         return Err(LeanCompileError::unsupported(
                             "StructuralMembership/StandardSuperset",
@@ -2892,6 +3289,10 @@ impl LeanCompiler {
                         "(Litex.negInR {} {child})",
                         self.object_term(operand)?
                     )),
+                    StandardSet::Q => Ok(format!(
+                        "(Litex.negInQ {} {child})",
+                        self.object_term(operand)?
+                    )),
                     StandardSet::Z => Ok(format!(
                         "(Litex.negInZ {} {child})",
                         self.object_term(operand)?
@@ -2936,6 +3337,16 @@ impl LeanCompiler {
                         "(Litex.powStructuralInC {} {ha_c} {he_z})",
                         self.object_term(&proof.element)?
                     )),
+                    StandardSet::R | StandardSet::Q => {
+                        let suffix = if proof.set == StandardSet::Q {
+                            "Q"
+                        } else {
+                            "R"
+                        };
+                        // Replay the actual integer-child certificate even though the
+                        // owned power WD already proves exponent identification.
+                        Ok(format!("(by\n  have _recorded_exp : Litex.In {} (Litex.Z (M := M)) := {he_z}\n  exact Litex.powStructuralIn{suffix} {} {ha_c}\n)", self.object_term(&power.exponent)?, self.object_term(&proof.element)?))
+                    }
                     _ => Err(LeanCompileError::unsupported(
                         "StructuralMembership/PowCarrier",
                     )),
@@ -2944,7 +3355,11 @@ impl LeanCompiler {
             StructuralMembershipReason::Intrinsic(_) => Err(LeanCompileError::unsupported(
                 "StructuralMembership/Intrinsic",
             )),
+        }?;
+        if proof.set == StandardSet::R {
+            self.remember_real_member(&proof.element, &compiled);
         }
+        Ok(compiled)
     }
 
     fn compile_structural_binary(
@@ -3000,14 +3415,15 @@ impl LeanCompiler {
                     self.object_term(b)?
                 ))
             }
-            StandardSet::R => {
+            StandardSet::R | StandardSet::Q => {
+                let suffix = if root.set == StandardSet::Q { "Q" } else { "R" };
                 let guard = if matches!(operation, BinaryArithmetic::Div) {
                     format!(" ({}).wd.2.2", self.object_term(&root.element)?)
                 } else {
                     String::new()
                 };
                 Ok(format!(
-                    "(Litex.{name}InR {} {} {ha} {hb}{guard})",
+                    "(Litex.{name}In{suffix} {} {} {ha} {hb}{guard})",
                     self.object_term(a)?,
                     self.object_term(b)?
                 ))
@@ -3059,6 +3475,7 @@ impl LeanCompiler {
             }
             let (bridge, representative) = match target {
                 StandardSet::R => ("numberInROfEq", number_literal(number, "ℝ")?),
+                StandardSet::Q => ("numberInQOfEq", number_literal(number, "ℚ")?),
                 StandardSet::N | StandardSet::Z => {
                     let value = &number.normalized_value;
                     let unsigned = value.strip_prefix('-').unwrap_or(value);
@@ -3133,6 +3550,7 @@ impl LeanCompiler {
                 ("numberInZOfEq", format!("({integer} : ℤ)"))
             }
             StandardSet::R => ("numberInROfEq", exact_rational_literal(&scalar, "ℝ")?),
+            StandardSet::Q => ("numberInQOfEq", exact_rational_literal(&scalar, "ℚ")?),
             _ => return Err(LeanCompileError::unsupported("ClosedMembership/Carrier")),
         };
         let number_member = format!(
@@ -3144,6 +3562,655 @@ impl LeanCompiler {
             native.value,
             standard_term(target)?,
             native.denotation
+        ))
+    }
+
+    fn compile_order_proposition(&self, fact: &AtomicFact) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(fact)?;
+        Ok(format!(
+            "Litex.{} {} {}",
+            if strict { "Lt" } else { "Le" },
+            self.object_term(low)?,
+            self.object_term(high)?
+        ))
+    }
+
+    fn compile_closed_order(
+        &self,
+        goal: &AtomicFact,
+        proof: &ClosedAtomicExceptEqualityCalculationProof,
+    ) -> Result<String, LeanCompileError> {
+        match (goal, proof) {
+            (AtomicFact::LessFact(_), ClosedAtomicExceptEqualityCalculationProof::Less(p))
+            | (
+                AtomicFact::GreaterFact(_),
+                ClosedAtomicExceptEqualityCalculationProof::Greater(p),
+            )
+            | (
+                AtomicFact::LessEqualFact(_),
+                ClosedAtomicExceptEqualityCalculationProof::LessEqual(p),
+            )
+            | (
+                AtomicFact::GreaterEqualFact(_),
+                ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(p),
+            ) => self.compile_closed_comparison(goal, p),
+            _ => Err(LeanCompileError::new(
+                "Order/ClosedFamily",
+                "The typed closed comparison variant has another source predicate family.",
+            )),
+        }
+    }
+
+    fn compile_closed_comparison(
+        &self,
+        goal: &AtomicFact,
+        proof: &ClosedComparisonCalculationProof,
+    ) -> Result<String, LeanCompileError> {
+        let (kind, left, right) = source_order_parts(goal)?;
+        let x = self.numeric_term(left)?;
+        let y = self.numeric_term(right)?;
+        let a = x
+            .closed
+            .as_ref()
+            .ok_or_else(|| LeanCompileError::unsupported("Order/ClosedExpression"))?;
+        let b = y
+            .closed
+            .as_ref()
+            .ok_or_else(|| LeanCompileError::unsupported("Order/ClosedExpression"))?;
+        // Exact typed values are the certificate owner. The normal strings are
+        // presentation fields, never proof subjects or evaluation instructions.
+        let values_match = match &proof.values {
+            ClosedValuePair::Decimal { left, right } => {
+                scalar_decimal(left)? == *a && scalar_decimal(right)? == *b
+            }
+            ClosedValuePair::Rational { left, right } => left == a && right == b,
+            ClosedValuePair::Complex {
+                left_real,
+                left_imaginary,
+                right_real,
+                right_imaginary,
+            } => {
+                left_real == a
+                    && right_real == b
+                    && left_imaginary.is_zero()
+                    && right_imaginary.is_zero()
+            }
+            ClosedValuePair::Radical { .. } => {
+                return Err(LeanCompileError::unsupported("Order/ClosedRadical"))
+            }
+        };
+        let comparison = a
+            .compare(b)
+            .ok_or_else(|| LeanCompileError::unsupported("Order/ClosedEvaluationBound"))?;
+        let true_order = match kind {
+            SourceOrderKind::Less => comparison == NumberCompareResult::Less,
+            SourceOrderKind::Greater => comparison == NumberCompareResult::Greater,
+            SourceOrderKind::LessEqual => comparison != NumberCompareResult::Greater,
+            SourceOrderKind::GreaterEqual => comparison != NumberCompareResult::Less,
+        };
+        if !values_match || comparison != proof.comparison || !true_order {
+            return Err(LeanCompileError::new(
+                "Order/ClosedValues",
+                "Typed comparison values, comparison tag or source orientation do not agree.",
+            ));
+        }
+        let r = exact_rational_literal(a, "ℝ")?;
+        let s = exact_rational_literal(b, "ℝ")?;
+        // These are the actual real-domain facts replayed before truth. A
+        // numeric view alone does not classify an arbitrary complex as real.
+        let ha = self.real_member(left)?;
+        let hb = self.real_member(right)?;
+        let lhs = self.object_term(left)?;
+        let rhs = self.object_term(right)?;
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let (low_r, high_r, low_value, high_value) = match kind {
+            SourceOrderKind::Less | SourceOrderKind::LessEqual => {
+                (&ha, &hb, "_litex_left_value", "_litex_right_value")
+            }
+            SourceOrderKind::Greater | SourceOrderKind::GreaterEqual => {
+                (&hb, &ha, "_litex_right_value", "_litex_left_value")
+            }
+        };
+        let observation = if strict {
+            "lt_iff_asReal"
+        } else {
+            "le_iff_asReal"
+        };
+        let relation = if strict { "<" } else { "≤" };
+        Ok(format!(
+            "((Litex.NativeBridge.{observation} {} {} {low_r} {high_r}).mpr (by\n  have _litex_left_value : Litex.NativeBridge.asReal {lhs} {ha} = {r} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {lhs} {ha}).symm.trans (({}).trans (congrArg M.number (by norm_num : {} = ({r} : ℂ)))))\n  have _litex_right_value : Litex.NativeBridge.asReal {rhs} {hb} = {s} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {rhs} {hb}).symm.trans (({}).trans (congrArg M.number (by norm_num : {} = ({s} : ℂ)))))\n  exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => _litex_r {relation} _litex_s) {low_value} {high_value}) (by norm_num)))",
+            self.object_term(low)?, self.object_term(high)?, x.denotation, x.value, y.denotation, y.value,
+        ))
+    }
+
+    fn compile_order_builtin(
+        &mut self,
+        goal: &AtomicFact,
+        rule: &AtomicExceptEqualityFactSearchProofByBuiltinRule,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        match (goal, rule) {
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
+            ) => match rule {
+                LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(p) => {
+                    self.compile_order_reflexivity(goal, &p.repeated_object)
+                }
+                LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqual(p) => self
+                    .compile_order_known_conversion(
+                        goal,
+                        &p.premise_proof,
+                        SourceOrderKind::GreaterEqual,
+                        false,
+                        runtime,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::FromKnownLess(p) => self
+                    .compile_order_known_conversion(
+                        goal,
+                        &p.premise_proof,
+                        SourceOrderKind::Less,
+                        true,
+                        runtime,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(p) => {
+                    self.compile_even_power_nonnegative(goal, &p.base_in_real_proof, runtime)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AddRightCongruence(p) => {
+                    self.compile_weak_add_congruence(goal, &p.premise_proof, false, runtime)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AddLeftCongruence(p) => {
+                    self.compile_weak_add_congruence(goal, &p.premise_proof, true, runtime)
+                }
+                LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(p) => self
+                    .compile_weak_order_transitivity(
+                        goal,
+                        p.left_to_mid_cite_fact_id,
+                        p.mid_to_right_cite_fact_id,
+                        runtime,
+                    ),
+                _ => Err(LeanCompileError::unsupported("Order/LessEqualBuiltin")),
+            },
+            (
+                AtomicFact::GreaterEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(rule),
+            ) => match rule {
+                GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(p) => {
+                    self.compile_order_reflexivity(goal, &p.repeated_object)
+                }
+                GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(p) => self
+                    .compile_order_known_conversion(
+                        goal,
+                        &p.premise_proof,
+                        SourceOrderKind::LessEqual,
+                        false,
+                        runtime,
+                    ),
+                GreaterEqualFactSearchProofByBuiltinRule::FromKnownGreater(p) => self
+                    .compile_order_known_conversion(
+                        goal,
+                        &p.premise_proof,
+                        SourceOrderKind::Greater,
+                        true,
+                        runtime,
+                    ),
+                _ => Err(LeanCompileError::unsupported("Order/GreaterEqualBuiltin")),
+            },
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::FromKnownGreater(p),
+                ),
+            ) => self.compile_order_known_conversion(
+                goal,
+                &p.premise_proof,
+                SourceOrderKind::Greater,
+                false,
+                runtime,
+            ),
+            (
+                AtomicFact::GreaterFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(
+                    GreaterFactSearchProofByBuiltinRule::FromKnownLess(p),
+                ),
+            ) => self.compile_order_known_conversion(
+                goal,
+                &p.premise_proof,
+                SourceOrderKind::Less,
+                false,
+                runtime,
+            ),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(p),
+                ),
+            ) => self.compile_not_equal_from_known_strict_order(goal, &p.premise_proof, runtime),
+            _ => Err(LeanCompileError::unsupported("Order/BuiltinFamilyOrRule")),
+        }
+    }
+
+    fn compile_order_reflexivity(
+        &self,
+        goal: &AtomicFact,
+        repeated: &Obj,
+    ) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(goal)?;
+        if strict || low.ir() != high.ir() || repeated.ir() != low.ir() {
+            return Err(LeanCompileError::new(
+                "Order/ReflexivitySubject",
+                "Reflexivity must repeat the exact weak-order source object.",
+            ));
+        }
+        Ok(format!(
+            "(Litex.leRefl {} {})",
+            self.object_term(low)?,
+            self.real_member(low)?
+        ))
+    }
+
+    fn compile_order_known_premise(
+        &mut self,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        source_order_parts(&premise.fact)?;
+        let proof = match premise.searched_proof.as_ref() {
+            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
+                self.compile_known_atomic(p, &premise.fact, runtime)?
+            }
+            _ => return Err(LeanCompileError::unsupported("Order/KnownPremiseRoute")),
+        };
+        Ok(FactTerm {
+            fact: Fact::AtomicFact(premise.fact.clone()),
+            proposition: self.compile_order_proposition(&premise.fact)?,
+            proof,
+        })
+    }
+
+    fn compile_order_known_conversion(
+        &mut self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        expected_kind: SourceOrderKind,
+        weaken: bool,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (kind, _, _) = source_order_parts(&premise.fact)?;
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let (known_low, known_high, known_strict) = source_order_oriented(&premise.fact)?;
+        if kind != expected_kind
+            || low.ir() != known_low.ir()
+            || high.ir() != known_high.ir()
+            || if weaken {
+                strict || !known_strict
+            } else {
+                strict != known_strict
+            }
+        {
+            return Err(LeanCompileError::new(
+                "Order/KnownPremiseSubject",
+                "The exact recorded converse or strict premise does not justify this source order.",
+            ));
+        }
+        let proved = self.compile_order_known_premise(premise, runtime)?;
+        if weaken {
+            Ok(format!(
+                "(Litex.ltToLe {} {} {})",
+                self.object_term(low)?,
+                self.object_term(high)?,
+                proved.proof
+            ))
+        } else {
+            Ok(proved.proof)
+        }
+    }
+
+    fn compile_even_power_nonnegative(
+        &mut self,
+        goal: &AtomicFact,
+        base_proof: &VerifyFactResult,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (zero, value, strict) = source_order_oriented(goal)?;
+        if strict || !is_zero(zero) {
+            return Err(LeanCompileError::new(
+                "Order/EvenPowerSubject",
+                "The selected certificate must prove the weak lower bound zero.",
+            ));
+        }
+        let base = match value {
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(p)) if p.left.ir() == p.right.ir() => {
+                p.left.as_ref()
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(p)) => p.base.as_ref(),
+            _ => return Err(LeanCompileError::unsupported("Order/EvenPowerConstructor")),
+        };
+        let proved = self.compile_verify(base_proof, runtime)?;
+        if membership_subject(&proved.fact, base)? != StandardSet::R {
+            return Err(LeanCompileError::new(
+                "Order/EvenPowerBase",
+                "The recorded child must prove this exact base belongs to R.",
+            ));
+        }
+        match value {
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) => Ok(format!(
+                "(Litex.mulSelfNonnegative {} {})",
+                self.object_term(base)?,
+                proved.proof
+            )),
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(p)) => {
+                if !matches!(p.exponent.as_ref(), Obj::Literal(Literal::Number(_))) {
+                    return Err(LeanCompileError::unsupported(
+                        "Order/EvenPowerLiteralExponent",
+                    ));
+                }
+                let n = closed_integer(&p.exponent)
+                    .filter(|n| *n >= 0 && n % 2 == 0)
+                    .ok_or_else(|| {
+                        LeanCompileError::new(
+                            "Order/EvenPowerExponent",
+                            "The exact source literal must be an even natural integer.",
+                        )
+                    })?;
+                let exponent = self.numeric_term(&p.exponent)?;
+                let he = format!("(Litex.NativeBridge.sameOfDenoteNumber {} (Litex.number (M := M) (({n} : ℕ) : ℂ)) {} (({n} : ℕ) : ℂ) {} (Litex.NativeBridge.denoteNumber (M := M) (({n} : ℕ) : ℂ)) (by norm_num))",
+                    self.object_term(&p.exponent)?, exponent.value, exponent.denotation);
+                Ok(format!(
+                    "(Litex.powStructuralNonnegativeOfEven {} {} ({n} : ℕ) {he} (by norm_num))",
+                    self.object_term(value)?,
+                    proved.proof
+                ))
+            }
+            _ => unreachable!("the supported constructor was checked before replaying its child"),
+        }
+    }
+
+    fn compile_weak_add_congruence(
+        &mut self,
+        goal: &AtomicFact,
+        premise: &VerifyFactResult,
+        common_left: bool,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(goal)?;
+        if strict {
+            return Err(LeanCompileError::unsupported("Order/StrictAddCongruence"));
+        }
+        let (lhs, rhs) = match (low, high) {
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(lhs)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(rhs)),
+            ) => (lhs, rhs),
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Order/AddConstructor",
+                    "The selected add congruence requires two exact owned Add constructions.",
+                ))
+            }
+        };
+        let (a, b, c, d) = if common_left {
+            (
+                lhs.right.as_ref(),
+                rhs.right.as_ref(),
+                lhs.left.as_ref(),
+                rhs.left.as_ref(),
+            )
+        } else {
+            (
+                lhs.left.as_ref(),
+                rhs.left.as_ref(),
+                lhs.right.as_ref(),
+                rhs.right.as_ref(),
+            )
+        };
+        if c.ir() != d.ir() {
+            return Err(LeanCompileError::new(
+                "Order/AddCommonArgument",
+                "The exact common source addend differs between the two sums.",
+            ));
+        }
+        let proved = self.compile_verify(premise, runtime)?;
+        match &proved.fact {
+            Fact::AtomicFact(AtomicFact::LessEqualFact(f)) if f.left.ir() == a.ir() && f.right.ir() == b.ir() =>
+                {},
+            _ => return Err(LeanCompileError::new("Order/AddPremise", "The recorded child must prove the exact ordered weak comparison between the noncommon addends.")),
+        };
+        // Parent predicate WD and its recursively replayed real membership
+        // children provide this common addend's real classification. Each
+        // complex certificate comes from an already certified operand object.
+        let function = if common_left {
+            "leAddLeft"
+        } else {
+            "leAddRight"
+        };
+        Ok(format!(
+            "(Litex.{function} {} {} {} {} {} {} {} {})",
+            self.object_term(a)?,
+            self.object_term(b)?,
+            self.object_term(c)?,
+            self.numeric_term(a)?.member,
+            self.numeric_term(b)?.member,
+            self.numeric_term(c)?.member,
+            self.real_member(c)?,
+            proved.proof
+        ))
+    }
+
+    fn order_real_members_from_known(
+        &self,
+        fact: &AtomicFact,
+        order_proof: &str,
+    ) -> Result<(String, String), LeanCompileError> {
+        // Use only at the actual predicate-domain ByKnownFact stage after its
+        // citation and argument transport have been replayed successfully.
+        let (kind, _, _) = source_order_parts(fact)?;
+        let (low, high, _) = source_order_oriented(fact)?;
+        let low_member = format!("(by obtain ⟨_litex_real, _, _litex_value, _, _⟩ := {order_proof}; exact (M.real_members (Litex.denote {})).mpr ⟨_litex_real, _litex_value⟩)", self.object_term(low)?);
+        let high_member = format!("(by obtain ⟨_, _litex_real, _, _litex_value, _⟩ := {order_proof}; exact (M.real_members (Litex.denote {})).mpr ⟨_litex_real, _litex_value⟩)", self.object_term(high)?);
+        match kind {
+            SourceOrderKind::Less | SourceOrderKind::LessEqual => Ok((low_member, high_member)),
+            SourceOrderKind::Greater | SourceOrderKind::GreaterEqual => {
+                Ok((high_member, low_member))
+            }
+        }
+    }
+
+    fn compile_registered_order(
+        &self,
+        id: FactId,
+        runtime: &Runtime,
+    ) -> Result<FactTerm, LeanCompileError> {
+        let fact = self.resolve_fact(id, runtime)?;
+        let atomic = match &fact {
+            Fact::AtomicFact(fact) if fact.fact_id() == id => fact,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Order/CitationFamily",
+                    "The recorded order citation has another fact family or identity.",
+                ))
+            }
+        };
+        source_order_parts(atomic)?;
+        let registered = self.fact_term(id)?;
+        if registered.fact != fact {
+            return Err(LeanCompileError::new(
+                "Order/CitationProducer",
+                "The order citation differs from its active compiled producer.",
+            ));
+        }
+        Ok(registered.clone())
+    }
+
+    fn compile_weak_order_transitivity(
+        &mut self,
+        goal: &AtomicFact,
+        first_id: FactId,
+        second_id: FactId,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (left, right, strict) = source_order_oriented(goal)?;
+        if strict {
+            return Err(LeanCompileError::unsupported("Order/StrictTransitivity"));
+        }
+        let first = self.compile_registered_order(first_id, runtime)?;
+        let second = self.compile_registered_order(second_id, runtime)?;
+        let first_atomic = match &first.fact {
+            Fact::AtomicFact(f) => f,
+            _ => unreachable!(),
+        };
+        let second_atomic = match &second.fact {
+            Fact::AtomicFact(f) => f,
+            _ => unreachable!(),
+        };
+        let (a, b, first_strict) = source_order_oriented(first_atomic)?;
+        let (b2, c, second_strict) = source_order_oriented(second_atomic)?;
+        if a.ir() != left.ir() || b.ir() != b2.ir() || c.ir() != right.ir() {
+            return Err(LeanCompileError::new("Order/TransitivitySubject", "The exact two recorded citations do not form this ordered left-middle-right chain."));
+        }
+        let first_proof = if first_strict {
+            format!(
+                "(Litex.ltToLe {} {} {})",
+                self.object_term(a)?,
+                self.object_term(b)?,
+                first.proof
+            )
+        } else {
+            first.proof
+        };
+        let second_proof = if second_strict {
+            format!(
+                "(Litex.ltToLe {} {} {})",
+                self.object_term(b2)?,
+                self.object_term(c)?,
+                second.proof
+            )
+        } else {
+            second.proof
+        };
+        Ok(format!(
+            "(Litex.leTrans {} {} {} {first_proof} {second_proof})",
+            self.object_term(a)?,
+            self.object_term(b)?,
+            self.object_term(c)?
+        ))
+    }
+
+    fn compile_order_dual(
+        &mut self,
+        goal: &AtomicFact,
+        proof: &AtomicExceptEqualityFactSearchProofByBuiltinOrderDual,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (kind, left, right) = source_order_parts(goal)?;
+        let alternate = match &proof.alternate_fact {
+            Fact::AtomicFact(f) => f,
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Order/DualFamily",
+                    "The recorded alternate is not an atomic order fact.",
+                ))
+            }
+        };
+        let (alternate_kind, alternate_left, alternate_right) = source_order_parts(alternate)?;
+        let expected = match kind {
+            SourceOrderKind::Less => SourceOrderKind::Greater,
+            SourceOrderKind::Greater => SourceOrderKind::Less,
+            SourceOrderKind::LessEqual => SourceOrderKind::GreaterEqual,
+            SourceOrderKind::GreaterEqual => SourceOrderKind::LessEqual,
+        };
+        if alternate_kind != expected
+            || left.ir() != alternate_right.ir()
+            || right.ir() != alternate_left.ir()
+        {
+            return Err(LeanCompileError::new(
+                "Order/DualSubject",
+                "The recorded alternate changes the exact transposed family or source endpoints.",
+            ));
+        }
+        let child = self.compile_verify(&proof.proof_of_alternate_fact, runtime)?;
+        if child.fact != proof.alternate_fact {
+            return Err(LeanCompileError::new(
+                "Order/DualChild",
+                "The successful child does not prove the exact recorded alternate fact.",
+            ));
+        }
+        Ok(child.proof)
+    }
+
+    fn compile_not_equal_from_known_strict_order(
+        &mut self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        runtime: &Runtime,
+    ) -> Result<String, LeanCompileError> {
+        let (left, right) = match goal {
+            AtomicFact::NotEqualFact(f) => (&f.left, &f.right),
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Order/NotEqualFamily",
+                    "Strict-order inequality evidence has another target predicate.",
+                ))
+            }
+        };
+        let (low, high, strict) = source_order_oriented(&premise.fact)?;
+        if !strict
+            || !((low.ir() == left.ir() && high.ir() == right.ir())
+                || (low.ir() == right.ir() && high.ir() == left.ir()))
+        {
+            return Err(LeanCompileError::new(
+                "Order/NotEqualPremise",
+                "The recorded strict-order premise must have exactly these two source endpoints.",
+            ));
+        }
+        let child = self.compile_order_known_premise(premise, runtime)?;
+        let inequality = format!(
+            "(Litex.ltNotSame {} {} {})",
+            self.object_term(low)?,
+            self.object_term(high)?,
+            child.proof
+        );
+        if low.ir() == left.ir() && high.ir() == right.ir() {
+            Ok(inequality)
+        } else {
+            Ok(format!(
+                "(fun _litex_equal => {inequality} _litex_equal.symm)"
+            ))
+        }
+    }
+
+    fn compile_order_known_atomic_transport(
+        &self,
+        cited: &AtomicFact,
+        goal: &AtomicFact,
+        argument_equalities: &[String],
+        citation_proof: &str,
+    ) -> Result<String, LeanCompileError> {
+        let (kind, _, _) = source_order_parts(cited)?;
+        let (goal_kind, _, _) = source_order_parts(goal)?;
+        if kind != goal_kind || argument_equalities.len() != 2 {
+            return Err(LeanCompileError::new(
+                "Order/KnownTransportFamily",
+                "Recorded order transport changes its source family or ordered argument arity.",
+            ));
+        }
+        let (old_low, old_high, strict) = source_order_oriented(cited)?;
+        let (new_low, new_high, _) = source_order_oriented(goal)?;
+        let (low_equality, high_equality) = match kind {
+            SourceOrderKind::Less | SourceOrderKind::LessEqual => {
+                (&argument_equalities[0], &argument_equalities[1])
+            }
+            SourceOrderKind::Greater | SourceOrderKind::GreaterEqual => {
+                (&argument_equalities[1], &argument_equalities[0])
+            }
+        };
+        Ok(format!(
+            "(Litex.{} {} {} {} {} {low_equality} {high_equality} {citation_proof})",
+            if strict { "ltOfSame" } else { "leOfSame" },
+            self.object_term(old_low)?,
+            self.object_term(new_low)?,
+            self.object_term(old_high)?,
+            self.object_term(new_high)?
         ))
     }
 
@@ -3167,12 +4234,34 @@ impl LeanCompiler {
             AtomicFact::IsSetFact(fact) => {
                 Ok(format!("Litex.IsSet {}", self.object_term(&fact.set)?))
             }
-            AtomicFact::NormalAtomicFact(_)
-            | AtomicFact::LessFact(_)
+            AtomicFact::LessFact(_)
             | AtomicFact::GreaterFact(_)
             | AtomicFact::LessEqualFact(_)
-            | AtomicFact::GreaterEqualFact(_)
-            | AtomicFact::IsNonemptySetFact(_)
+            | AtomicFact::GreaterEqualFact(_) => self.compile_order_proposition(fact),
+            AtomicFact::NotLessFact(f) => Ok(format!(
+                "¬ Litex.Lt {} {}",
+                self.object_term(&f.left)?,
+                self.object_term(&f.right)?
+            )),
+            AtomicFact::NotGreaterFact(f) => Ok(format!(
+                "¬ Litex.Lt {} {}",
+                self.object_term(&f.right)?,
+                self.object_term(&f.left)?
+            )),
+            AtomicFact::NotLessEqualFact(f) => Ok(format!(
+                "¬ Litex.Le {} {}",
+                self.object_term(&f.left)?,
+                self.object_term(&f.right)?
+            )),
+            AtomicFact::NotGreaterEqualFact(f) => Ok(format!(
+                "¬ Litex.Le {} {}",
+                self.object_term(&f.right)?,
+                self.object_term(&f.left)?
+            )),
+            AtomicFact::IsNonemptySetFact(f) => {
+                Ok(format!("Litex.IsNonempty {}", self.object_term(&f.set)?))
+            }
+            AtomicFact::NormalAtomicFact(_)
             | AtomicFact::IsFiniteSetFact(_)
             | AtomicFact::SubsetFact(_)
             | AtomicFact::SupersetFact(_)
@@ -3186,10 +4275,6 @@ impl LeanCompiler {
             | AtomicFact::BijectiveFact(_)
             | AtomicFact::IsChoiceFunctionForFact(_)
             | AtomicFact::NotNormalAtomicFact(_)
-            | AtomicFact::NotLessFact(_)
-            | AtomicFact::NotGreaterFact(_)
-            | AtomicFact::NotLessEqualFact(_)
-            | AtomicFact::NotGreaterEqualFact(_)
             | AtomicFact::NotIsSetFact(_)
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
@@ -3570,6 +4655,80 @@ fn same_atomic_family(left: &AtomicFact, right: &AtomicFact) -> bool {
 
 fn is_zero(object: &Obj) -> bool {
     matches!(object, Obj::Literal(Literal::Number(number)) if number.normalized_value == "0")
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SourceOrderKind {
+    Less,
+    Greater,
+    LessEqual,
+    GreaterEqual,
+}
+
+fn source_order_parts(
+    fact: &AtomicFact,
+) -> Result<(SourceOrderKind, &Obj, &Obj), LeanCompileError> {
+    match fact {
+        AtomicFact::LessFact(f) => Ok((SourceOrderKind::Less, &f.left, &f.right)),
+        AtomicFact::GreaterFact(f) => Ok((SourceOrderKind::Greater, &f.left, &f.right)),
+        AtomicFact::LessEqualFact(f) => Ok((SourceOrderKind::LessEqual, &f.left, &f.right)),
+        AtomicFact::GreaterEqualFact(f) => Ok((SourceOrderKind::GreaterEqual, &f.left, &f.right)),
+        _ => Err(LeanCompileError::unsupported("Order/PredicateFamily")),
+    }
+}
+
+fn source_order_oriented(fact: &AtomicFact) -> Result<(&Obj, &Obj, bool), LeanCompileError> {
+    let (kind, left, right) = source_order_parts(fact)?;
+    match kind {
+        SourceOrderKind::Less => Ok((left, right, true)),
+        SourceOrderKind::Greater => Ok((right, left, true)),
+        SourceOrderKind::LessEqual => Ok((left, right, false)),
+        SourceOrderKind::GreaterEqual => Ok((right, left, false)),
+    }
+}
+
+fn arithmetic_constructor_pairs<'a>(
+    left: &'a Obj,
+    right: &'a Obj,
+) -> Option<(&'static str, Vec<(&'a Obj, &'a Obj)>)> {
+    use ArithmeticOperator::*;
+    match (left, right) {
+        (Obj::ArithmeticOperator(Add(a)), Obj::ArithmeticOperator(Add(b))) => {
+            Some(("addValue", vec![(&a.left, &b.left), (&a.right, &b.right)]))
+        }
+        (Obj::ArithmeticOperator(Sub(a)), Obj::ArithmeticOperator(Sub(b))) => {
+            Some(("subValue", vec![(&a.left, &b.left), (&a.right, &b.right)]))
+        }
+        (Obj::ArithmeticOperator(Mul(a)), Obj::ArithmeticOperator(Mul(b))) => {
+            Some(("mulValue", vec![(&a.left, &b.left), (&a.right, &b.right)]))
+        }
+        (Obj::ArithmeticOperator(Div(a)), Obj::ArithmeticOperator(Div(b))) => {
+            Some(("divValue", vec![(&a.left, &b.left), (&a.right, &b.right)]))
+        }
+        (Obj::ArithmeticOperator(Pow(a)), Obj::ArithmeticOperator(Pow(b))) => Some((
+            "powValue",
+            vec![(&a.base, &b.base), (&a.exponent, &b.exponent)],
+        )),
+        (Obj::ArithmeticOperator(Neg(a)), Obj::ArithmeticOperator(Neg(b))) => {
+            Some(("negValue", vec![(&a.arg, &b.arg)]))
+        }
+        _ => None,
+    }
+}
+
+fn is_exact_zero(object: &Obj) -> bool {
+    matches!(object, Obj::Literal(Literal::Number(number)) if number.normalized_value == "0")
+}
+
+fn standard_value_constructor(set: &StandardSet) -> Result<&'static str, LeanCompileError> {
+    Ok(match set {
+        StandardSet::N => "natural",
+        StandardSet::Z => "integer",
+        StandardSet::Q => "rational",
+        StandardSet::R => "real",
+        StandardSet::C => "complex",
+        _ => return Err(LeanCompileError::unsupported("Standard/NumericCarrier")),
+    })
 }
 
 fn standard_term(set: &StandardSet) -> Result<String, LeanCompileError> {

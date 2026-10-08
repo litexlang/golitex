@@ -277,7 +277,8 @@ jobs:
           python .github/scripts/release/generate_wix_std.py
           test -f wix/std.wxs
           grep -F 'Source="std\basics\litex.config"' wix/std.wxs
-          grep -F 'FeatureRef Id="Binaries"' wix/std.wxs
+          grep -F 'ComponentGroup Id="LitexStd"' wix/std.wxs
+          grep -F 'ComponentGroupRef Id="LitexStd"' wix/main.wxs
 
       - name: Build .msi
         shell: bash

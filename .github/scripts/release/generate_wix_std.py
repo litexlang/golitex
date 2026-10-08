@@ -2,8 +2,8 @@
 """Generate wix/std.wxs so the MSI installs the whole std/ tree.
 
 cargo-wix compiles every .wxs under wix/. File/@Source paths must be relative
-to the package root (Cargo.toml), not relative to wix/std.wxs. A FeatureRef to
-Binaries attaches the harvested components to the default application feature.
+to the package root (Cargo.toml), not relative to wix/std.wxs. The generated
+main.wxs must reference the component group to pull the std fragments into MSI.
 """
 
 from __future__ import annotations
@@ -11,12 +11,15 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIRECTORY.parents[2]
 DEFAULT_STD = REPOSITORY_ROOT / "std"
 DEFAULT_OUTPUT = REPOSITORY_ROOT / "wix" / "std.wxs"
+DEFAULT_MAIN = REPOSITORY_ROOT / "wix" / "main.wxs"
+WIX_NAMESPACE = "http://schemas.microsoft.com/wix/2006/wi"
 
 SKIP_NAMES = {"todo.md", ".DS_Store"}
 
@@ -113,9 +116,9 @@ def render_wxs(std_root: Path, files: list[Path]) -> str:
   </Fragment>
 
   <Fragment>
-    <FeatureRef Id="Binaries">
+    <ComponentGroup Id="LitexStd">
 {refs}
-    </FeatureRef>
+    </ComponentGroup>
   </Fragment>
 </Wix>
 """
@@ -129,6 +132,24 @@ def generate(std_root: Path, output: Path) -> int:
     return len(files)
 
 
+def attach_std_feature(main_wxs: Path) -> None:
+    text = main_wxs.read_text(encoding="utf-8")
+    ns = {"w": WIX_NAMESPACE}
+    root = ET.fromstring(text)
+    features = root.findall('./w:Product/w:Feature[@Id="Binaries"]', ns)
+    if len(features) != 1:
+        raise SystemExit(f"expected one Product/Binaries feature in {main_wxs}")
+    if features[0].find('w:ComponentGroupRef[@Id="LitexStd"]', ns) is not None:
+        return
+    # Edit only the opening tag: XML reserialization can drop WiX preprocessor PIs.
+    openings = list(re.finditer(r'<Feature\b[^>]*\bId=[\"\']Binaries[\"\'][^>]*>', text))
+    if len(openings) != 1 or openings[0].group().endswith("/>"):
+        raise SystemExit(f"unexpected Binaries feature template in {main_wxs}")
+    end = openings[0].end()
+    text = text[:end] + '\n            <ComponentGroupRef Id="LitexStd" />' + text[end:]
+    main_wxs.write_text(text, encoding="utf-8", newline="\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -136,6 +157,12 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_STD,
         help="path to the std directory (default: repository std/)",
+    )
+    parser.add_argument(
+        "--main",
+        type=Path,
+        default=DEFAULT_MAIN,
+        help="cargo-wix product source to attach std to (default: wix/main.wxs)",
     )
     parser.add_argument(
         "--output",
@@ -148,7 +175,14 @@ def main(argv: list[str] | None = None) -> int:
     if not std_root.is_dir():
         print(f"std directory not found: {std_root}", file=sys.stderr)
         return 1
-    count = generate(std_root, args.output.resolve())
+    # Validate the inventory before modifying the product entry point.
+    files = collect_files(std_root)
+    text = render_wxs(std_root, files)
+    attach_std_feature(args.main.resolve())
+    output = args.output.resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(text, encoding="utf-8", newline="\n")
+    count = len(files)
     print(f"wrote {args.output} with {count} file(s)")
     return 0
 

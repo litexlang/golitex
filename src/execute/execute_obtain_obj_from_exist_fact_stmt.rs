@@ -142,17 +142,13 @@ impl Runtime {
                 })?;
             let as_fact = quantifier_free_fact_to_fact(instantiated);
             let stored = self.store_fact_and_infer(&as_fact, verify_state)?;
-            store_and_infer_result
-                .stored_fact_ids
-                .extend(stored.stored_fact_ids());
+            store_and_infer_result.push(stored);
         }
 
         if matches!(family, ExistShapedFact::ExistUnique(_)) {
             let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
             let stored = self.store_fact_and_infer(&Fact::ForallFact(uniqueness), verify_state)?;
-            store_and_infer_result
-                .stored_fact_ids
-                .extend(stored.stored_fact_ids());
+            store_and_infer_result.push(stored);
         }
 
         Ok(Ok(store_and_infer_result))

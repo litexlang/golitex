@@ -154,6 +154,22 @@ introduction is a separate execution in a separate retained scope; replay
 must not substitute one introduction's fact IDs for the other's. Capturing
 these results adds no introduction, verification, store or search operation.
 
+`StoreHaveObjAndInferResult` retains ordered shared references to the actual
+`StoreFactAndInferResult` payloads. Its existing flattened `stored_fact_ids`
+remains a compatibility view of those stores and their inference. Ordinary
+have groups and their whole-statement aggregate refer to the same payloads;
+introductions and typed RHS definitions preserve the same source order.
+For example, an N declaration retains the actual store that inferred
+`0 <= n`, so a later citation has a producer rather than only an ID.
+Consumers must still check the captured subjects and IDs: matching a flattened
+ID list alone does not validate a changed membership subject.
+
+Closed comparison calculations retain their actual `ClosedValuePair`, including
+exact fractions and complex coordinates. The existing normal strings remain
+presentation views of that calculation. Preserving the pair does not rerun
+evaluation or change which comparisons succeed; replay reads the typed values
+and validates the selected comparison independently of presentation text.
+
 An explicit theorem call retains `ResolvedTheoremCallee`, captured by the
 existing resolution branch as a user theorem, user axiom or builtin. User
 declarations preserve their original subject and identity; builtin application

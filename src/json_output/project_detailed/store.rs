@@ -1,6 +1,7 @@
 //! Store / infer helpers for Detailed projection (`local_env` omitted).
 
 use crate::execute::execute_fact_stmt::VerifyFactResult;
+use crate::execute::StoreHaveObjAndInferResult;
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::{FactId, Runtime};
@@ -60,6 +61,35 @@ pub(super) fn project_have_store_ids(fact_ids: &[FactId], runtime: &Runtime) -> 
         vec![
             ("stores", JsonValue::Array(stores)),
             ("infers", JsonValue::Array(Vec::new())),
+        ],
+    )
+}
+
+pub(super) fn project_have_store_and_infer(
+    result: &StoreHaveObjAndInferResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    let stores = result
+        .stored_fact_ids
+        .iter()
+        .copied()
+        .map(|id| fact_id_entry(runtime, id))
+        .collect();
+    object_for(
+        runtime,
+        vec![
+            ("stores", JsonValue::Array(stores)),
+            ("infers", JsonValue::Array(Vec::new())),
+            (
+                "store_and_infer_results",
+                JsonValue::Array(
+                    result
+                        .store_and_infer_results
+                        .iter()
+                        .map(|stored| project_store_and_infer(stored, runtime))
+                        .collect(),
+                ),
+            ),
         ],
     )
 }

@@ -22,11 +22,11 @@
   </Fragment>
 
   <Fragment>
-    <FeatureRef Id="Binaries">
+    <ComponentGroup Id="LitexStd">
       <ComponentRef Id="StdComp_basics_README.md" />
       <ComponentRef Id="StdComp_basics_litex.config" />
       <ComponentRef Id="StdComp_basics_main.lit" />
       <ComponentRef Id="StdComp_basics_math_collections.md" />
-    </FeatureRef>
+    </ComponentGroup>
   </Fragment>
 </Wix>

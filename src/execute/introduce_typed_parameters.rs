@@ -104,7 +104,7 @@ impl Runtime {
         shared_have: Option<SharedHaveDefinition>,
     ) -> RuntimeResult<Result<IntroduceTypedParametersResult, IntroduceTypedParametersFailed>> {
         let mut param_type_well_defined = Vec::new();
-        let mut stored_fact_ids = Vec::new();
+        let mut defined_params = StoreHaveObjAndInferResult::new(Vec::new());
         for group in &typed_parameters.groups {
             let one = TypedParameterList {
                 groups: vec![group.clone()],
@@ -128,10 +128,9 @@ impl Runtime {
                 shared_have.clone(),
                 verify_state,
             )?;
-            stored_fact_ids.extend(defined.stored_fact_ids);
+            defined_params.extend(defined);
         }
 
-        let defined_params = StoreHaveObjAndInferResult { stored_fact_ids };
         let auto_opened_struct_layers = match self
             .auto_open_struct_layers_for_typed_parameters(typed_parameters, verify_state)?
         {
@@ -196,7 +195,7 @@ impl Runtime {
         shared_have: Option<SharedHaveDefinition>,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<StoreHaveObjAndInferResult> {
-        let mut stored_fact_ids = Vec::new();
+        let mut stored = StoreHaveObjAndInferResult::new(Vec::new());
         for group in &typed_parameters.groups {
             for identifier in &group.params {
                 if self
@@ -258,10 +257,10 @@ impl Runtime {
                     }
                 };
                 let store_result = self.store_fact_and_infer(&type_fact, verify_state)?;
-                stored_fact_ids.extend(store_result.stored_fact_ids());
+                stored.push(store_result);
             }
         }
-        Ok(StoreHaveObjAndInferResult { stored_fact_ids })
+        Ok(stored)
     }
 
     // A typed definition selects the default field view; an ordinary membership does not.

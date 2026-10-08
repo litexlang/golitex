@@ -7,10 +7,44 @@ use crate::execute::execute_fact_stmt::{
 };
 use crate::execute::introduce_typed_parameters::SharedHaveDefinition;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::rc::Rc;
 
 pub struct StoreHaveObjAndInferResult {
+    pub store_and_infer_results: Vec<Rc<StoreFactAndInferResult>>,
     pub stored_fact_ids: Vec<FactId>,
+}
+
+impl StoreHaveObjAndInferResult {
+    // Actual ordered stores own the proof; IDs remain the existing flattened view.
+    pub fn new(store_and_infer_results: Vec<Rc<StoreFactAndInferResult>>) -> Self {
+        let stored_fact_ids = store_and_infer_results
+            .iter()
+            .flat_map(|stored| stored.stored_fact_ids())
+            .collect();
+        Self {
+            store_and_infer_results,
+            stored_fact_ids,
+        }
+    }
+
+    pub fn push(&mut self, stored: StoreFactAndInferResult) {
+        self.stored_fact_ids.extend(stored.stored_fact_ids());
+        self.store_and_infer_results.push(Rc::new(stored));
+    }
+
+    pub fn extend(&mut self, other: Self) {
+        self.stored_fact_ids.extend(other.stored_fact_ids);
+        self.store_and_infer_results
+            .extend(other.store_and_infer_results);
+    }
+
+    pub fn extend_shared(&mut self, other: &Self) {
+        self.stored_fact_ids
+            .extend(other.stored_fact_ids.iter().copied());
+        self.store_and_infer_results
+            .extend(other.store_and_infer_results.iter().map(Rc::clone));
+    }
 }
 
 pub enum ExecHaveObjInNonemptySetStmtFailed {
@@ -55,7 +89,7 @@ impl Runtime {
         let verify_state = VerifyState::top_level();
 
         let mut groups = Vec::with_capacity(stmt.param_def.groups.len());
-        let mut stored_fact_ids = Vec::new();
+        let mut store_and_infer_result = StoreHaveObjAndInferResult::new(Vec::new());
         let shared = Rc::new(stmt.clone());
         for group in &stmt.param_def.groups {
             let one = TypedParameterList {
@@ -83,15 +117,13 @@ impl Runtime {
                 )),
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
-            stored_fact_ids.extend(defined_params.stored_fact_ids.iter().copied());
+            store_and_infer_result.extend_shared(&defined_params);
             groups.push(HaveObjInNonemptySetGroupResult {
                 param_type_well_defined,
                 nonempty_check,
                 defined_params,
             });
         }
-        let store_and_infer_result = StoreHaveObjAndInferResult { stored_fact_ids };
-
         let auto_opened_struct_layers = match self.auto_open_struct_layers_for_typed_parameters(
             &stmt.param_def,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
@@ -151,3 +183,7 @@ impl Runtime {
 #[cfg(test)]
 #[path = "../../tests/unit/execute/dependent_have/tests.rs"]
 mod dependent_have_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/producer_numeric_capture/tests.rs"]
+mod producer_numeric_capture_tests;
