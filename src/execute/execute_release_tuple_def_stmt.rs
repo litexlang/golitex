@@ -39,54 +39,86 @@ pub enum ExecReleaseTupleDefStmtFailed {
     Shape,
     Domain(FunctionDomainMatchFailure),
     Requirements(String),
-    Return { fact: Fact, result: VerifyFactResult },
+    Return {
+        fact: Fact,
+        result: VerifyFactResult,
+    },
     MembershipWd(VerifyFactWellDefinedResult),
-    Coordinate { fact: Fact, result: VerifyFactResult },
+    Coordinate {
+        fact: Fact,
+        result: VerifyFactResult,
+    },
 }
 
 impl ExecReleaseTupleDefStmtResult {
-    pub fn is_failed(&self) -> bool { matches!(self, Self::Failed(_)) }
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
 }
 
 impl Runtime {
     pub(in crate::execute) fn exec_release_tuple_def_stmt(
-        &mut self, stmt: &ReleaseTupleDefStmt,
+        &mut self,
+        stmt: &ReleaseTupleDefStmt,
     ) -> RuntimeResult<ExecReleaseTupleDefStmtResult> {
         use ExecReleaseTupleDefStmtFailed as Failed;
-        let Some(shape) = self.finite_function_signatures(&stmt.obj).into_iter().next() else {
+        let Some(shape) = self
+            .finite_function_signatures(&stmt.obj)
+            .into_iter()
+            .next()
+        else {
             return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Shape));
         };
         let ctx = VerifyState::top_level();
         let domain = match self.verify_complete_function_domain(&stmt.obj, &shape.signature, ctx)? {
             Ok(proof) => proof,
-            Err(reason) => return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Domain(reason))),
+            Err(reason) => {
+                return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Domain(
+                    reason,
+                )))
+            }
         };
         let carrier = Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet {
             set: shape.signature.ret_set.clone(),
             n: Box::new(number(shape.source.dimension())),
         }));
         let membership: Fact = InFact {
-            fact_id: self.global_ids.allocate_fact_id(), element: stmt.obj.clone(),
-            set: carrier.clone(), line_file: Some(stmt.line_file.clone()),
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: stmt.obj.clone(),
+            set: carrier.clone(),
+            line_file: Some(stmt.line_file.clone()),
+        }
+        .into();
         // The registered fn_set_member rule requires exact domain matching
         // plus every return bound. Use its existing requirement builder and
         // top-level checker, without widening implicit membership search.
-        let requirements = match self.build_function_return_requirements(&stmt.obj, &shape.signature) {
-            Ok(facts) => facts,
-            Err(reason) => return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Requirements(reason))),
-        };
+        let requirements =
+            match self.build_function_return_requirements(&stmt.obj, &shape.signature) {
+                Ok(facts) => facts,
+                Err(reason) => {
+                    return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Requirements(
+                        reason,
+                    )))
+                }
+            };
         let mut return_proofs = Vec::new();
         for fact in &requirements {
             let result = self.verify_fact(fact, ctx)?;
             if result.is_failed() {
-                return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Return { fact: fact.clone(), result }));
+                return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Return {
+                    fact: fact.clone(),
+                    result,
+                }));
             }
             return_proofs.push(result);
         }
         let membership_wd = match self.verify_fact_well_definedness(&membership, ctx)? {
             VerifyFactWellDefinedResult::Success(proof) => proof,
-            failed => return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::MembershipWd(failed))),
+            failed => {
+                return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::MembershipWd(
+                    failed,
+                )))
+            }
         };
         let mut coordinates = Vec::new();
         let mut coordinate_proofs = Vec::new();
@@ -97,40 +129,64 @@ impl Runtime {
                 .expect("ordinary object application has no construction failure");
             let fact: Fact = match &shape.source {
                 KnownTupleShapeProof::TupleEquality(value) => EqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(), left: coordinate,
-                    right: value.value.args[index].as_ref().clone(), line_file: Some(stmt.line_file.clone()),
-                }.into(),
-                source => InFact {
-                    fact_id: self.global_ids.allocate_fact_id(), element: coordinate,
-                    set: source.cart().expect("nonliteral shape has a checked Cartesian contract").args[index].as_ref().clone(),
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: coordinate,
+                    right: value.value.args[index].as_ref().clone(),
                     line_file: Some(stmt.line_file.clone()),
-                }.into(),
+                }
+                .into(),
+                source => InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: coordinate,
+                    set: source
+                        .cart()
+                        .expect("nonliteral shape has a checked Cartesian contract")
+                        .args[index]
+                        .as_ref()
+                        .clone(),
+                    line_file: Some(stmt.line_file.clone()),
+                }
+                .into(),
             };
             let result = self.verify_fact(&fact, ctx)?;
             if result.is_failed() {
-                return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Coordinate { fact, result }));
+                return Ok(ExecReleaseTupleDefStmtResult::Failed(Failed::Coordinate {
+                    fact,
+                    result,
+                }));
             }
             coordinates.push(fact);
             coordinate_proofs.push(result);
         }
         let membership_rule = BuiltinThmApplication {
             theorem: BuiltinTheoremId::FunctionSetMember,
-            arguments: vec![stmt.obj.clone(), carrier], requirements,
+            arguments: vec![stmt.obj.clone(), carrier],
+            requirements,
             conclusions: vec![membership.clone()],
         };
         let mut stored = Vec::new();
         for fact in std::iter::once(&membership).chain(coordinates.iter()) {
             stored.push(self.store_fact_and_infer(fact, ctx)?);
         }
-        Ok(ExecReleaseTupleDefStmtResult::Success(ExecReleaseTupleDefStmtSuccess {
-            statement: stmt.clone(), shape, domain, membership_rule, return_proofs,
-            membership_wd, coordinate_proofs, stored,
-        }))
+        Ok(ExecReleaseTupleDefStmtResult::Success(
+            ExecReleaseTupleDefStmtSuccess {
+                statement: stmt.clone(),
+                shape,
+                domain,
+                membership_rule,
+                return_proofs,
+                membership_wd,
+                coordinate_proofs,
+                stored,
+            },
+        ))
     }
 }
 
 fn number(value: usize) -> Obj {
-    Obj::Literal(Literal::Number(Number { normalized_value: value.to_string() }))
+    Obj::Literal(Literal::Number(Number {
+        normalized_value: value.to_string(),
+    }))
 }
 
 #[cfg(test)]

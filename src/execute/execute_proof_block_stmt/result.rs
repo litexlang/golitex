@@ -1,8 +1,6 @@
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ExecStmtResult;
-use crate::execute::execute_fact_stmt::{
-    VerifyFactResult, VerifyFactWellDefinedResult,
-};
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyFactWellDefinedResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 // Dispatcher mirrors ProofBlockStmt (claim / sketch).

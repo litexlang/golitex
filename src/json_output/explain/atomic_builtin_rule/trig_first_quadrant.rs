@@ -78,4 +78,3 @@ impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText { text("제1사분면 삼각함수 사실", "제1사분면 삼각함수 사실: 0<x<pi/2 => cot(x)>0") }
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText { text("Mệnh đề lượng giác trong góc phần tư thứ nhất", "Mệnh đề lượng giác trong góc phần tư thứ nhất: 0<x<pi/2 => cot(x)>0") }
 }
-

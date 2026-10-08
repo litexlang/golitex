@@ -35,10 +35,7 @@ mod tests {
 
     #[test]
     fn strips_plain_identifier_id_wrappers() {
-        assert_eq!(
-            readable_string_from_ir_text("#1#k $in N"),
-            "k $in N"
-        );
+        assert_eq!(readable_string_from_ir_text("#1#k $in N"), "k $in N");
         assert_eq!(
             readable_string_from_ir_text("#2#a = 1 or #2#a = 2"),
             "a = 1 or a = 2"

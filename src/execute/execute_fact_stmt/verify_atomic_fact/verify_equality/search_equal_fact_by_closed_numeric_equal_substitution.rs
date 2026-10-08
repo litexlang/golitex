@@ -103,9 +103,10 @@ pub(crate) fn rewrite_closed_numeric_subterms(
     let mut cited = Vec::new();
     let rewritten = replace_scalar_subterms(obj, &mut |part, _| {
         let ir = part.ir();
-        let selected = entries.iter().find(|(from, value, _)| {
-            from == &ir && matches!(value, ClosedNumericExpr::Number(_))
-        }).or_else(|| entries.iter().find(|(from, _, _)| from == &ir));
+        let selected = entries
+            .iter()
+            .find(|(from, value, _)| from == &ir && matches!(value, ClosedNumericExpr::Number(_)))
+            .or_else(|| entries.iter().find(|(from, _, _)| from == &ir));
         let (_, value, id) = selected?;
         let value = value.to_obj();
         if value.ir() == ir {

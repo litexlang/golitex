@@ -1,10 +1,10 @@
 //! Actual source-direction evidence for elementary function order builtin leaves.
 use crate::ast::fact::{Fact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact};
-use crate::ast::obj::Obj;
 use crate::ast::line_file::SourceLine;
+use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
-use crate::runtime::{Runtime, RuntimeResult};
 use crate::prelude::*;
+use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn strict_order_premise(
@@ -93,22 +93,32 @@ pub(super) fn binary_extremum_operands(obj: &Obj) -> Option<(BinaryExtremumKind,
         Obj::ArithmeticOperator(ArithmeticOperator::Max(value)) => {
             return Some((BinaryExtremumKind::Maximum, &value.left, &value.right));
         }
-        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(value)) =>
-            (BinaryExtremumKind::Minimum, &*value.set),
-        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(value)) =>
-            (BinaryExtremumKind::Maximum, &*value.set),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(value)) => {
+            (BinaryExtremumKind::Minimum, &*value.set)
+        }
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(value)) => {
+            (BinaryExtremumKind::Maximum, &*value.set)
+        }
         _ => return None,
     };
     match set {
         Obj::SetOperator(SetOperator::Union(union)) => {
-            let (Obj::SetFormer(SetFormer::ListSet(left)), Obj::SetFormer(SetFormer::ListSet(right))) =
-                (&*union.left, &*union.right) else { return None; };
+            let (
+                Obj::SetFormer(SetFormer::ListSet(left)),
+                Obj::SetFormer(SetFormer::ListSet(right)),
+            ) = (&*union.left, &*union.right)
+            else {
+                return None;
+            };
             if left.list.len() == 1 && right.list.len() == 1 {
                 Some((kind, &left.list[0], &right.list[0]))
-            } else { None }
+            } else {
+                None
+            }
         }
-        Obj::SetFormer(SetFormer::ListSet(list)) if list.list.len() == 2 =>
-            Some((kind, &list.list[0], &list.list[1])),
+        Obj::SetFormer(SetFormer::ListSet(list)) if list.list.len() == 2 => {
+            Some((kind, &list.list[0], &list.list[1]))
+        }
         _ => None,
     }
 }

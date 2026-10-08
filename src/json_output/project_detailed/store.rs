@@ -40,10 +40,13 @@ pub(super) fn project_store_and_infer(
         .filter(|id| !store_ids.contains(id))
         .map(|id| fact_id_entry(runtime, id))
         .collect();
-    object_for(runtime, vec![
-        ("stores", JsonValue::Array(stores)),
-        ("infers", JsonValue::Array(infers)),
-    ])
+    object_for(
+        runtime,
+        vec![
+            ("stores", JsonValue::Array(stores)),
+            ("infers", JsonValue::Array(infers)),
+        ],
+    )
 }
 
 pub(super) fn project_have_store_ids(fact_ids: &[FactId], runtime: &Runtime) -> JsonValue {
@@ -52,8 +55,11 @@ pub(super) fn project_have_store_ids(fact_ids: &[FactId], runtime: &Runtime) -> 
         .copied()
         .map(|id| fact_id_entry(runtime, id))
         .collect();
-    object_for(runtime, vec![
-        ("stores", JsonValue::Array(stores)),
-        ("infers", JsonValue::Array(Vec::new())),
-    ])
+    object_for(
+        runtime,
+        vec![
+            ("stores", JsonValue::Array(stores)),
+            ("infers", JsonValue::Array(Vec::new())),
+        ],
+    )
 }

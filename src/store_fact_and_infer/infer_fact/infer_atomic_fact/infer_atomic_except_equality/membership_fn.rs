@@ -1,23 +1,19 @@
-use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, InFact, PlainExistFact, QuantifierFreeFact,
-};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, PlainExistFact, QuantifierFreeFact};
 use crate::ast::obj::{
-    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetFormer,
-    StructAndFieldAccessObj,
+    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetFormer, StructAndFieldAccessObj,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactEqualFnSetExpandResult,
-    InferInFactEqualFnSetTransport,
-    InferInFactFiniteSeqExpandResult, InferInFactFnRangeResult, InferInFactSeqExpandResult,
-    StoreFactAndInferResult,
+    InferInFactEqualFnSetTransport, InferInFactFiniteSeqExpandResult, InferInFactFnRangeResult,
+    InferInFactSeqExpandResult, StoreFactAndInferResult,
 };
 use std::collections::HashMap;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 
 impl Runtime {
     // When: `x $in fn(...)` peer / `fn_range(f)` / `finite_seq` / `seq`.
@@ -26,7 +22,8 @@ impl Runtime {
     pub(super) fn infer_in_fact_fn_rules(
         &mut self,
         in_fact: &InFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
         if let Some(r) = self.infer_in_fact_equal_fn_set_expand(in_fact, verify_state)? {
             rules.push(r);
@@ -52,7 +49,8 @@ impl Runtime {
     fn infer_in_fact_equal_fn_set_expand(
         &mut self,
         in_fact: &InFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         if matches!(
             &in_fact.set,
             Obj::FunctionSpace(FunctionSpace::FnSet(_))
@@ -63,8 +61,11 @@ impl Runtime {
         let mut transports = Vec::new();
         let peers = self.exact_property_object_values(&in_fact.set);
         for (peer, path) in peers {
-            if !matches!(&peer, Obj::FunctionSpace(FunctionSpace::FnSet(_))
-                | Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_))) {
+            if !matches!(
+                &peer,
+                Obj::FunctionSpace(FunctionSpace::FnSet(_))
+                    | Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_))
+            ) {
                 continue;
             }
             let fact_id = self.global_ids.allocate_fact_id();
@@ -100,7 +101,8 @@ impl Runtime {
     fn infer_in_fact_fn_range(
         &mut self,
         in_fact: &InFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::FunctionSpace(FunctionSpace::FnRange(fn_range)) = &in_fact.set else {
             return Ok(None);
         };
@@ -115,7 +117,8 @@ impl Runtime {
             set: body.ret_set.as_ref().clone(),
             line_file: in_fact.line_file.clone(),
         });
-        let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(codomain), verify_state)?
+        let Some(stored) =
+            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(codomain), verify_state)?
         else {
             return Ok(None);
         };
@@ -125,7 +128,9 @@ impl Runtime {
             if let Some(exist) =
                 self.preimage_exist_fact_from_fn_set(in_fact, fn_range.function.as_ref(), &body)?
             {
-                if let Some(stored) = self.try_store_inferred_fact_and_infer(&exist, verify_state)? {
+                if let Some(stored) =
+                    self.try_store_inferred_fact_and_infer(&exist, verify_state)?
+                {
                     derived.push(stored);
                 }
             }
@@ -141,11 +146,13 @@ impl Runtime {
     fn infer_in_fact_finite_seq_expand(
         &mut self,
         in_fact: &InFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::FiniteSeqSet(_)) = &in_fact.set else {
             return Ok(None);
         };
-        let fn_set = self.function_space_signature(&in_fact.set)
+        let fn_set = self
+            .function_space_signature(&in_fact.set)
             .expect("literal finite_seq has an exact function-space signature");
         let fact_id = self.global_ids.allocate_fact_id();
         let expanded = AtomicFact::InFact(InFact {
@@ -154,7 +161,8 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: in_fact.line_file.clone(),
         });
-        let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
+        let Some(stored) =
+            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
         else {
             return Ok(None);
         };
@@ -173,11 +181,13 @@ impl Runtime {
     fn infer_in_fact_seq_expand(
         &mut self,
         in_fact: &InFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::SeqSet(_)) = &in_fact.set else {
             return Ok(None);
         };
-        let fn_set = self.function_space_signature(&in_fact.set)
+        let fn_set = self
+            .function_space_signature(&in_fact.set)
             .expect("literal seq has an exact function-space signature");
         let fact_id = self.global_ids.allocate_fact_id();
         let expanded = AtomicFact::InFact(InFact {
@@ -186,7 +196,8 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: in_fact.line_file.clone(),
         });
-        let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
+        let Some(stored) =
+            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
         else {
             return Ok(None);
         };

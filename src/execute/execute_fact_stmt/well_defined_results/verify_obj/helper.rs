@@ -34,30 +34,38 @@ impl Runtime {
             if let Some(cart) = shape.cart() {
                 let set = Obj::ProductShape(crate::ast::obj::ProductShape::Cart(cart.clone()));
                 let signature = self.cart_function_signature(cart);
-                let membership = crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::InFact(
-                    crate::ast::fact::InFact {
-                        fact_id: self.global_ids.allocate_fact_id(), element: prefix.clone(),
-                        set, line_file: None,
-                    },
-                ));
+                let membership = crate::ast::fact::Fact::AtomicFact(
+                    crate::ast::fact::AtomicFact::InFact(crate::ast::fact::InFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        element: prefix.clone(),
+                        set,
+                        line_file: None,
+                    }),
+                );
                 let proof = self.verify_fact(&membership, verify_state)?;
                 if !proof.is_failed() {
-                    return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, source: proof }));
+                    return Ok(Some(CheckedFunctionPrefixSignatureProof {
+                        signature,
+                        source: proof,
+                    }));
                 }
             }
         }
         for (signature, _) in self.collect_in_function_set_candidates(prefix) {
-            let membership = crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::InFact(
-                crate::ast::fact::InFact {
+            let membership = crate::ast::fact::Fact::AtomicFact(
+                crate::ast::fact::AtomicFact::InFact(crate::ast::fact::InFact {
                     fact_id: self.global_ids.allocate_fact_id(),
                     element: prefix.clone(),
                     set: Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())),
                     line_file: None,
-                },
-            ));
+                }),
+            );
             let proof = self.verify_fact(&membership, verify_state)?;
             if !proof.is_failed() {
-                return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, source: proof }));
+                return Ok(Some(CheckedFunctionPrefixSignatureProof {
+                    signature,
+                    source: proof,
+                }));
             }
         }
         // A literal tuple's common return bound contains singleton values,
@@ -66,17 +74,34 @@ impl Runtime {
         // equality proof before consuming that value's complete domain.
         let super::entry::VerifyObjWellDefinedResult::Success(prefix_wd) =
             self.verify_obj_well_definedness(prefix, verify_state)?
-        else { return Ok(None); };
+        else {
+            return Ok(None);
+        };
         if let Some((_, value)) = self.parent_checked_beta_body(prefix, &prefix_wd, verify_state)? {
             let (signatures, intrinsic) = match &value {
-                Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => (vec![function.body.clone()], true),
-                Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(_)) =>
-                    (self.finite_function_signatures(&value).into_iter().map(|proof| proof.signature).collect(), true),
-                _ => (self.collect_in_function_set_candidates(&value).into_iter().map(|(signature,_)| signature).collect(), false),
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {
+                    (vec![function.body.clone()], true)
+                }
+                Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(_)) => (
+                    self.finite_function_signatures(&value)
+                        .into_iter()
+                        .map(|proof| proof.signature)
+                        .collect(),
+                    true,
+                ),
+                _ => (
+                    self.collect_in_function_set_candidates(&value)
+                        .into_iter()
+                        .map(|(signature, _)| signature)
+                        .collect(),
+                    false,
+                ),
             };
             for signature in signatures {
                 let equality = crate::ast::fact::EqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(), left: prefix.clone(), right: value.clone(),
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: prefix.clone(),
+                    right: value.clone(),
                     line_file: None,
                 };
                 let goal = if intrinsic {
@@ -86,16 +111,23 @@ impl Runtime {
                     // membership as well as the coordinate equality. Retain
                     // both certificates, rather than just copying a signature.
                     let member = crate::ast::fact::InFact {
-                        fact_id: self.global_ids.allocate_fact_id(), element: value.clone(),
-                        set: Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())), line_file: None,
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        element: value.clone(),
+                        set: Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())),
+                        line_file: None,
                     };
                     crate::ast::fact::Fact::AndFact(crate::ast::fact::AndFact {
-                        fact_id: self.global_ids.allocate_fact_id(), facts: vec![equality.into(),member.into()], line_file: None,
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        facts: vec![equality.into(), member.into()],
+                        line_file: None,
                     })
                 };
                 let proof = self.verify_fact(&goal, verify_state)?;
                 if !proof.is_failed() {
-                    return Ok(Some(CheckedFunctionPrefixSignatureProof { signature, source: proof }));
+                    return Ok(Some(CheckedFunctionPrefixSignatureProof {
+                        signature,
+                        source: proof,
+                    }));
                 }
             }
         }
@@ -202,7 +234,10 @@ impl Runtime {
 
     // Each field uses the selected carrier's actual arguments, e.g. Op<R>.add
     // has domain R, not the free parameter from struct Op<A>.
-    pub(in crate::execute) fn resolve_field_access_field_type(&mut self, access: &FieldAccess) -> Option<Obj> {
+    pub(in crate::execute) fn resolve_field_access_field_type(
+        &mut self,
+        access: &FieldAccess,
+    ) -> Option<Obj> {
         if access.fields.is_empty() {
             return None;
         }
@@ -220,12 +255,11 @@ impl Runtime {
                 }
                 _ => return None,
             }
-            receiver = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(
-                FieldAccess {
+            receiver =
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(FieldAccess {
                     obj: access.obj.clone(),
                     fields: access.fields[..=index].to_vec(),
-                },
-            ));
+                }));
         }
         None
     }
@@ -237,9 +271,12 @@ impl Runtime {
         field_name: &str,
     ) -> Option<Obj> {
         let def = self.def_struct_visible(&carrier.name)?;
-        let field_type = def.fields.iter()
+        let field_type = def
+            .fields
+            .iter()
             .find(|field| field.binding.name == field_name)?
-            .field_type.clone();
+            .field_type
+            .clone();
         // Keep parameter and dependent-field substitution identical to the
         // existing explicit release path; this does not release any facts.
         let subst = self.struct_release_subst(receiver, carrier, def).ok()?;
@@ -315,9 +352,7 @@ pub(super) fn set_bound_params_to_arg_map(
 // obey the fixed-carrier rule too; only `: dom_facts` and bodies cite parameters.
 //
 // Returns the failing group index when a citation is found.
-pub(super) fn set_bound_param_type_cites_binder(
-    list: &SetBoundParameterList,
-) -> Option<usize> {
+pub(super) fn set_bound_param_type_cites_binder(list: &SetBoundParameterList) -> Option<usize> {
     for (index, group) in list.groups.iter().enumerate() {
         if fn_carrier_parameter_reference(group.param_type.as_ref(), list).is_some() {
             return Some(index);

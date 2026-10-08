@@ -589,14 +589,28 @@ fn project_fail_to_verify_function_space_obj_well_defined_result(
             None,
             project_leaf_fail_to_verify_anonymous_fn_obj_well_defined(p, rt),
         ),
-        FailToVerifyFunctionSpaceObjWellDefinedResult::Preimage(p) => node(rt, "Preimage", None, match p {
-            FailToVerifyPreimageObjWellDefined::Domain(failed) => common(failed, rt),
-            FailToVerifyPreimageObjWellDefined::Construction(failed) => project_preimage_construction_failure(failed, rt),
-        }),
-        FailToVerifyFunctionSpaceObjWellDefinedResult::PreimageSet(p) => node(rt, "PreimageSet", None, match p {
-            FailToVerifyPreimageSetObjWellDefined::Domain(failed) => common(failed, rt),
-            FailToVerifyPreimageSetObjWellDefined::Construction(failed) => project_preimage_construction_failure(failed, rt),
-        }),
+        FailToVerifyFunctionSpaceObjWellDefinedResult::Preimage(p) => node(
+            rt,
+            "Preimage",
+            None,
+            match p {
+                FailToVerifyPreimageObjWellDefined::Domain(failed) => common(failed, rt),
+                FailToVerifyPreimageObjWellDefined::Construction(failed) => {
+                    project_preimage_construction_failure(failed, rt)
+                }
+            },
+        ),
+        FailToVerifyFunctionSpaceObjWellDefinedResult::PreimageSet(p) => node(
+            rt,
+            "PreimageSet",
+            None,
+            match p {
+                FailToVerifyPreimageSetObjWellDefined::Domain(failed) => common(failed, rt),
+                FailToVerifyPreimageSetObjWellDefined::Construction(failed) => {
+                    project_preimage_construction_failure(failed, rt)
+                }
+            },
+        ),
         FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(p) => node(
             rt,
             "FnRange",
@@ -930,16 +944,26 @@ fn project_leaf_fail_to_verify_anonymous_fn_obj_well_defined(
     }
 }
 
-
 fn project_preimage_construction_failure(
     failed: &crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure,
     rt: &Runtime,
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure;
     match failed {
-        FunctionPreimageConstructionFailure::NoCompleteDomain => message(rt, "preimage requires a checked complete function domain"),
-        FunctionPreimageConstructionFailure::Construction(failures) => object_for(rt, vec![
-            ("bounded_subset_failures", JsonValue::Array(failures.iter().map(|failure| super::wd::project_verify_obj_wd(failure, rt)).collect())),
-        ]),
+        FunctionPreimageConstructionFailure::NoCompleteDomain => {
+            message(rt, "preimage requires a checked complete function domain")
+        }
+        FunctionPreimageConstructionFailure::Construction(failures) => object_for(
+            rt,
+            vec![(
+                "bounded_subset_failures",
+                JsonValue::Array(
+                    failures
+                        .iter()
+                        .map(|failure| super::wd::project_verify_obj_wd(failure, rt))
+                        .collect(),
+                ),
+            )],
+        ),
     }
 }

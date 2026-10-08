@@ -18,8 +18,8 @@ use crate::ast::stmt::HaveFnEqualCaseByCaseStmt;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
 use crate::runtime::runtime_ids::IdentifierId;
+use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -99,7 +99,8 @@ impl Runtime {
             let Ok(inst_case) = self.inst_and_chain_atomic(case_fact, subst) else {
                 continue;
             };
-            let case_check = self.verify_fact(&and_chain_as_fact(&inst_case), case_guard_state.clone())?;
+            let case_check =
+                self.verify_fact(&and_chain_as_fact(&inst_case), case_guard_state.clone())?;
             if case_check.is_failed() {
                 continue;
             }

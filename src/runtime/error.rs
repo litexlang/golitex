@@ -1,6 +1,6 @@
 use super::real_or_virtual_path::RealOrVirtualPath;
-use std::path::PathBuf;
 use std::fmt;
+use std::path::PathBuf;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RuntimeError {
@@ -19,7 +19,9 @@ impl fmt::Display for RuntimeError {
             Self::InvalidArguments(message) => write!(f, "launch_error: {message}"),
             Self::Io { path, message } => write!(f, "io_error: {}: {message}", path.display()),
             Self::ParseError(error) => write!(
-                f, "parse_error: {} at line {} in {}", error.message, error.line, error.path,
+                f,
+                "parse_error: {} at line {} in {}",
+                error.message, error.line, error.path,
             ),
             Self::Unsupported(message) => write!(f, "unsupported: {message}"),
             Self::InternalBug(message) => write!(f, "internal_bug: Litex internal bug: {message}"),

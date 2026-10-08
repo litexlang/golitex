@@ -73,10 +73,9 @@ impl Runtime {
             for (id, arg) in template_param_ids.into_iter().zip(inst.args.iter()) {
                 subst.insert(id, arg.clone());
             }
-            for (id, arg) in set_bound_params_to_arg_map(
-                &stmt.fn_set_clause.set_bound_parameters,
-                &args,
-            ) {
+            for (id, arg) in
+                set_bound_params_to_arg_map(&stmt.fn_set_clause.set_bound_parameters, &args)
+            {
                 subst.insert(id, arg);
             }
             (stmt.clone(), subst)

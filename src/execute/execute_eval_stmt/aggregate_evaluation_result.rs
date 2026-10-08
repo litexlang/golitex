@@ -16,11 +16,11 @@ pub enum AggregateEvaluationResult {
 }
 
 pub struct FiniteSetReduceEvaluationResult {
-    pub source:Obj,
-    pub enumeration:FiniteSetEnumerationResult,
-    pub seed:Obj,
-    pub terms:Vec<ReduceTermEvaluationResult>,
-    pub value:Obj,
+    pub source: Obj,
+    pub enumeration: FiniteSetEnumerationResult,
+    pub seed: Obj,
+    pub terms: Vec<ReduceTermEvaluationResult>,
+    pub value: Obj,
 }
 
 pub struct RangeReduceEvaluationResult {

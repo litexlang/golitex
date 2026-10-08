@@ -1,18 +1,10 @@
 use crate::ast::fact::{Fact, ForallFact};
-use crate::ast::stmt::{
-    DefThmStmt, Stmt,
-};
+use crate::ast::stmt::{DefThmStmt, Stmt};
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ExecStmtResult;
-use crate::execute::execute_by_stmt::{
-    proof_verify_state, store_goal_fact, verify_goal_fact,
-};
-use crate::execute::execute_fact_stmt::{
-    VerifyFactResult, VerifyFactWellDefinedResult,
-};
-use crate::execute::execute_proof_block_stmt::{
-    run_proof_body_stmts, ProofBlockBodyFailed,
-};
+use crate::execute::execute_by_stmt::{proof_verify_state, store_goal_fact, verify_goal_fact};
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyFactWellDefinedResult};
+use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -59,33 +51,28 @@ pub fn exec_def_thm_stmt(
         || runtime.axiom_visible_in_stack(&stmt.name).is_some()
         || runtime.def_strategy_visible_in_stack(&stmt.name).is_some()
     {
-        return Ok(ExecDefThmStmtResult::Failed(ExecDefThmStmtFailed::NameClash(
-            format!("thm `{}` is already defined", stmt.name),
-        )));
+        return Ok(ExecDefThmStmtResult::Failed(
+            ExecDefThmStmtFailed::NameClash(format!("thm `{}` is already defined", stmt.name)),
+        ));
     }
 
     if matches!(stmt.fact, Fact::ForallFactWithIff(_)) {
-        return Ok(
-            ExecDefThmStmtFailed::GoalUnsupported(
-                "thm: forall ... <=> goals are not supported".to_string(),
-            )
-            .into(),
-        );
+        return Ok(ExecDefThmStmtFailed::GoalUnsupported(
+            "thm: forall ... <=> goals are not supported".to_string(),
+        )
+        .into());
     }
 
-    let goal_wd =
-        runtime.verify_fact_well_definedness(&stmt.fact, proof_verify_state())?;
+    let goal_wd = runtime.verify_fact_well_definedness(&stmt.fact, proof_verify_state())?;
     if goal_wd.is_failed() {
         return Ok(ExecDefThmStmtResult::Failed(ExecDefThmStmtFailed::GoalWd(
             goal_wd,
         )));
     }
 
-    let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        match &stmt.fact {
-            Fact::ForallFact(forall) => {
-                exec_def_thm_forall_body(rt, forall, &stmt.prove_process)
-            }
+    let (local_outcome, local_env) =
+        runtime.run_in_local_env_and_take_env(|rt| match &stmt.fact {
+            Fact::ForallFact(forall) => exec_def_thm_forall_body(rt, forall, &stmt.prove_process),
             _ => {
                 let proof_steps = match run_proof_body_stmts(rt, &stmt.prove_process)? {
                     Ok(steps) => steps,
@@ -100,9 +87,7 @@ pub fn exec_def_thm_stmt(
                 }
                 Ok(Ok((proof_steps, vec![proof])))
             }
-        }
-    })?;
-
+        })?;
 
     let (proof_steps, conclusion_proofs) = match local_outcome {
         Ok(v) => v,
@@ -133,8 +118,7 @@ fn exec_def_thm_forall_body(
     runtime: &mut Runtime,
     forall: &ForallFact,
     proof: &[Stmt],
-) -> RuntimeResult<Result<(Vec<ExecStmtResult>, Vec<VerifyFactResult>), ExecDefThmStmtFailed>>
-{
+) -> RuntimeResult<Result<(Vec<ExecStmtResult>, Vec<VerifyFactResult>), ExecDefThmStmtFailed>> {
     if runtime
         .introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())?
         .is_err()
@@ -151,7 +135,10 @@ fn exec_def_thm_forall_body(
                 "thm: forall domain fact is not well-defined".to_string(),
             )));
         }
-        let _ = runtime.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let _ = runtime.store_fact_and_infer(
+            dom,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
     }
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {
@@ -164,7 +151,10 @@ fn exec_def_thm_forall_body(
         let then_fact: Fact = then.clone().into();
         let proof = verify_goal_fact(runtime, &then_fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecDefThmStmtFailed::Conclusion { index, result: proof }));
+            return Ok(Err(ExecDefThmStmtFailed::Conclusion {
+                index,
+                result: proof,
+            }));
         }
         conclusion_proofs.push(proof);
     }

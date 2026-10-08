@@ -15,7 +15,10 @@ pub struct LogAlgebraBelowOneProof {
 }
 impl LogAlgebraBelowOneProof {
     pub fn new(positive_proof: VerifyFactResult, less_than_one_proof: VerifyFactResult) -> Self {
-        Self { positive_proof, less_than_one_proof }
+        Self {
+            positive_proof,
+            less_than_one_proof,
+        }
     }
 }
 
@@ -25,7 +28,10 @@ pub struct LogAlgebraPositiveNonunitProof {
 }
 impl LogAlgebraPositiveNonunitProof {
     pub fn new(positive_proof: VerifyFactResult, nonunit_proof: VerifyFactResult) -> Self {
-        Self { positive_proof, nonunit_proof }
+        Self {
+            positive_proof,
+            nonunit_proof,
+        }
     }
 }
 

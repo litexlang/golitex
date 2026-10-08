@@ -23,13 +23,18 @@ pub(super) fn prepare_singleton(
     // the fold's homogeneous carrier, seed, and associative/commutative laws.
     // Example: release thm finite_set_reduce_singleton(finite_set_reduce({2},
     // fn(x Z) Z{x}, fn(a,b Z) Z{a+b}, 0), 2).
-    Ok((vec![requirement], vec![equal(rt, args[0].clone(), value).into()]))
+    Ok((
+        vec![requirement],
+        vec![equal(rt, args[0].clone(), value).into()],
+    ))
 }
 
 fn apply_fold(function: &Obj, arguments: Vec<Obj>) -> Result<Obj, String> {
     if let Obj::FnObj(existing) = function {
         let mut application = existing.clone();
-        application.body.push(arguments.into_iter().map(Box::new).collect());
+        application
+            .body
+            .push(arguments.into_iter().map(Box::new).collect());
         Ok(Obj::FnObj(application))
     } else {
         apply(function, arguments)

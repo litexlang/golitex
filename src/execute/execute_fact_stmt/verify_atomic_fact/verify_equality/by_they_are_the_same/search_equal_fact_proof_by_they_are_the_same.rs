@@ -1,4 +1,7 @@
-use super::helper::{anonymous_fns_alpha_equal, fn_sets_alpha_equal, set_builders_alpha_equal, compound_objs_alpha_equal};
+use super::helper::{
+    anonymous_fns_alpha_equal, compound_objs_alpha_equal, fn_sets_alpha_equal,
+    set_builders_alpha_equal,
+};
 use super::result::*;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{FunctionSpace, Obj, SetFormer};
@@ -26,7 +29,9 @@ pub fn search_equal_fact_proof_by_they_are_the_same(
             Obj::SetFormer(SetFormer::SetBuilder(left)),
             Obj::SetFormer(SetFormer::SetBuilder(right)),
         ) if set_builders_alpha_equal(left, right) => SetBuilderAlphaProof::new().into(),
-        (left, right) if compound_objs_alpha_equal(left, right) => CompoundObjAlphaProof::new().into(),
+        (left, right) if compound_objs_alpha_equal(left, right) => {
+            CompoundObjAlphaProof::new().into()
+        }
         _ => return None,
     };
     Some(shape.into())

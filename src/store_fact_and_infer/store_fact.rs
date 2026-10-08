@@ -101,9 +101,7 @@ impl Runtime {
     fn index_forall_chain_components(&mut self, forall: &ForallFact) -> RuntimeResult<()> {
         let mut projections = Vec::new();
         for (then_index, then) in forall.then_facts.iter().enumerate() {
-            if let crate::ast::fact::ExistOrAndChainAtomicFact::ChainFact(chain) =
-                then
-            {
+            if let crate::ast::fact::ExistOrAndChainAtomicFact::ChainFact(chain) = then {
                 projections.push((then_index, self.chain_adjacent_atomics(chain)?));
             }
         }
@@ -283,13 +281,11 @@ impl Runtime {
         chain_fact: &ChainFact,
     ) -> RuntimeResult<Vec<AtomicFact>> {
         if chain_fact.objs.len() != chain_fact.prop_names.len() + 1 {
-            return Err(crate::runtime::RuntimeError::InternalBug(
-                format!(
-                    "chain fact object count {} != prop count {} + 1",
-                    chain_fact.objs.len(),
-                    chain_fact.prop_names.len()
-                ),
-            ));
+            return Err(crate::runtime::RuntimeError::InternalBug(format!(
+                "chain fact object count {} != prop count {} + 1",
+                chain_fact.objs.len(),
+                chain_fact.prop_names.len()
+            )));
         }
         let line_file = chain_line_file(chain_fact);
         let mut facts = Vec::with_capacity(chain_fact.prop_names.len());

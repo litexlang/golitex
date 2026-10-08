@@ -109,10 +109,6 @@ pub enum FailToVerifySetFormerObjWellDefinedResult {
 pub enum FailToVerifyProductShapeObjWellDefinedResult {
     Cart(FailToVerifyCartObjWellDefined),
     Tuple(FailToVerifyTupleObjWellDefined),
-
-
-
-
 }
 
 pub enum FailToVerifyFunctionSpaceObjWellDefinedResult {
@@ -365,7 +361,6 @@ pub enum FailToVerifyAnonymousFnObjWellDefined {
 
 pub struct FailToVerifyCartObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-
 pub struct FailToVerifyTupleObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifyFiniteSetSizeObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
@@ -379,7 +374,6 @@ pub enum FailToVerifyFnRangeObjWellDefined {
     NotInFunctionSet,
     Domain(FailToVerifyObjWellDefinedByDefCommon),
 }
-
 
 pub struct FailToVerifySumObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
@@ -401,7 +395,6 @@ pub struct FailToVerifyFiniteSeqSetObjWellDefined(pub FailToVerifyObjWellDefined
 
 pub struct FailToVerifySeqSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-
 pub enum FailToVerifyStandardSetObjWellDefined {
     Others(String),
 }
@@ -410,20 +403,26 @@ pub struct FailToVerifyStructObjObjWellDefined(pub FailToVerifyObjWellDefinedByD
 
 pub struct FailToVerifyFieldAccessObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyInstantiatedTemplateObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyInstantiatedTemplateObjObjWellDefined(
+    pub FailToVerifyObjWellDefinedByDefCommon,
+);
 
-pub struct FailToVerifyOneSideInfinityIntervalObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyOneSideInfinityIntervalObjObjWellDefined(
+    pub FailToVerifyObjWellDefinedByDefCommon,
+);
 
 pub struct FailToVerifyIntervalObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-
-
 pub enum FailToVerifyPreimageObjWellDefined {
     Domain(FailToVerifyObjWellDefinedByDefCommon),
-    Construction(crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure),
+    Construction(
+        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure,
+    ),
 }
 
 pub enum FailToVerifyPreimageSetObjWellDefined {
     Domain(FailToVerifyObjWellDefinedByDefCommon),
-    Construction(crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure),
+    Construction(
+        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure,
+    ),
 }

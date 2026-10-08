@@ -57,10 +57,12 @@ impl Runtime {
             .into());
         }
 
-        Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(LetObjStmt {
-            name,
-            value,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        }))))
+        Ok(Stmt::Definition(DefinitionStmt::DefineObj(
+            DefineObjStmt::LetObjStmt(LetObjStmt {
+                name,
+                value,
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
+            }),
+        )))
     }
 }

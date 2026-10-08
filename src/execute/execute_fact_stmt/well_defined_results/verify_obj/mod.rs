@@ -5,18 +5,18 @@
 
 mod binder;
 mod core;
-mod preimage;
 mod entry;
 pub(crate) mod fail_to_verify_obj_well_defined;
 mod helper;
 mod iterated;
-mod unordered_fold_laws;
 mod obj_well_defined_by_def_common;
 mod obj_well_defined_proof_by_def;
+mod preimage;
 mod requirement;
 mod scalar;
 mod sets;
 mod structs;
+mod unordered_fold_laws;
 mod wrap_obj_well_defined_by_def;
 
 pub use entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};

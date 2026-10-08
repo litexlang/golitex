@@ -1,9 +1,7 @@
 use crate::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::ast::param::{ParamType, TypedParameterList};
 use crate::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
-use crate::execute::exec_stmt_result::{
-    ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
-};
+use crate::execute::exec_stmt_result::{ParamTypeFactCheckResult, ParamTypeWellDefinedProof};
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
@@ -32,8 +30,7 @@ pub struct ExecHaveObjInNonemptySetStmtSuccessResult {
     pub statement: HaveObjInNonemptySetOrParamTypeStmt,
     pub groups: Vec<HaveObjInNonemptySetGroupResult>,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
-    pub auto_opened_struct_layers:
-        Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecHaveObjInNonemptySetStmtResult {
@@ -61,40 +58,51 @@ impl Runtime {
         let mut stored_fact_ids = Vec::new();
         let shared = Rc::new(stmt.clone());
         for group in &stmt.param_def.groups {
-            let one = TypedParameterList { groups: vec![group.clone()] };
+            let one = TypedParameterList {
+                groups: vec![group.clone()],
+            };
             let param_type_well_defined = match self
                 .verify_typed_parameters_well_definedness_or_fail(&one, verify_state.clone())?
             {
                 Ok(mut proofs) => proofs.remove(0),
-                Err(failed) => return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
-                    ExecHaveObjInNonemptySetStmtFailed::ParamType(failed),
-                )),
+                Err(failed) => {
+                    return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
+                        ExecHaveObjInNonemptySetStmtFailed::ParamType(failed),
+                    ))
+                }
             };
             let nonempty_check =
                 match self.verify_have_obj_nonempty_obligations(&one, verify_state.clone())? {
-                Ok(mut checks) => checks.remove(0),
-                Err(failed) => return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed)),
-            };
+                    Ok(mut checks) => checks.remove(0),
+                    Err(failed) => return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed)),
+                };
             let defined_params = self.define_typed_parameters_in_current_env(
                 &one,
-                Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(Rc::clone(&shared))),
-             crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+                Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(
+                    Rc::clone(&shared),
+                )),
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             stored_fact_ids.extend(defined_params.stored_fact_ids.iter().copied());
             groups.push(HaveObjInNonemptySetGroupResult {
-                param_type_well_defined, nonempty_check, defined_params,
+                param_type_well_defined,
+                nonempty_check,
+                defined_params,
             });
         }
         let store_and_infer_result = StoreHaveObjAndInferResult { stored_fact_ids };
 
-        let auto_opened_struct_layers =
-            match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def, crate::execute::execute_fact_stmt::VerifyState::top_level())? {
-                Ok(layers) => layers,
-                Err((_, failed)) => {
-                    return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
-                        ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed),
-                    ));
-                }
-            };
+        let auto_opened_struct_layers = match self.auto_open_struct_layers_for_typed_parameters(
+            &stmt.param_def,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )? {
+            Ok(layers) => layers,
+            Err((_, failed)) => {
+                return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
+                    ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed),
+                ));
+            }
+        };
 
         Ok(ExecHaveObjInNonemptySetStmtResult::Success(
             ExecHaveObjInNonemptySetStmtSuccessResult {

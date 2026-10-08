@@ -49,9 +49,9 @@ impl Runtime {
     ) -> RuntimeResult<Stmt> {
         tb.expect(REPLACEMENT_AXIOM)?;
         tb.expect(COLON)?;
-        let name_tok = tb.advance().map_err(|_| {
-            tb.parse_error("have by replacement_axiom: expected a name after `:`")
-        })?;
+        let name_tok = tb
+            .advance()
+            .map_err(|_| tb.parse_error("have by replacement_axiom: expected a name after `:`"))?;
         if !is_simple_name(&name_tok) {
             return Err(tb.parse_error(format!(
                 "have by replacement_axiom: invalid name `{name_tok}`"
@@ -78,16 +78,17 @@ impl Runtime {
                 ));
             }
             if !tb.body.is_empty() {
-                return Err(tb.parse_error(
-                    "`have by replacement_axiom` cannot have an indented body",
-                ));
+                return Err(
+                    tb.parse_error("`have by replacement_axiom` cannot have an indented body")
+                );
             }
             Ok((prop_name, source_set))
         })();
         self.pop_parse_scope();
         let (prop_name, source_set) = parsed?;
         self.occupy_bound_name_as_parse(block, &bound)?;
-        Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt {
+        Ok(Stmt::Definition(DefinitionStmt::DefineObj(
+            DefineObjStmt::HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt {
                 name: bound,
                 prop_name,
                 source_set,
@@ -110,27 +111,25 @@ impl Runtime {
             if tb.peek() == Some(FROM) {
                 break;
             }
-            let name = tb.advance().map_err(|_| {
-                tb.parse_error("have by fn_preimage: expected a name or `from`")
-            })?;
+            let name = tb
+                .advance()
+                .map_err(|_| tb.parse_error("have by fn_preimage: expected a name or `from`"))?;
             if !is_simple_name(&name) {
-                return Err(tb.parse_error(format!(
-                    "have by fn_preimage: invalid name `{name}`"
-                )));
+                return Err(tb.parse_error(format!("have by fn_preimage: invalid name `{name}`")));
             }
             preimage_names.push(name);
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;
             } else if tb.peek() != Some(FROM) {
-                return Err(tb.parse_error(
-                    "have by fn_preimage: expected `,` or `from` after each name",
-                ));
+                return Err(
+                    tb.parse_error("have by fn_preimage: expected `,` or `from` after each name")
+                );
             }
         }
         if preimage_names.is_empty() {
-            return Err(tb.parse_error(
-                "have by fn_preimage: expected at least one name before `from`",
-            ));
+            return Err(
+                tb.parse_error("have by fn_preimage: expected at least one name before `from`")
+            );
         }
         tb.expect(FROM)?;
         let atomic = self.parse_atomic_fact(tb, true)?;
@@ -140,25 +139,21 @@ impl Runtime {
             ));
         };
         if !tb.exceed_end_of_head() {
-            return Err(tb.parse_error(
-                "trailing tokens after `have by fn_preimage: … from …`",
-            ));
+            return Err(tb.parse_error("trailing tokens after `have by fn_preimage: … from …`"));
         }
         if !tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "`have by fn_preimage` cannot have an indented body",
-            ));
+            return Err(tb.parse_error("`have by fn_preimage` cannot have an indented body"));
         }
         let preimage_names = preimage_names
             .into_iter()
             .map(|name| self.define_plain_atom_as_parse(tb, name))
             .collect::<RuntimeResult<Vec<_>>>()?;
-        Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByPreimageStmt(
-            HaveByPreimageStmt {
+        Ok(Stmt::Definition(DefinitionStmt::DefineObj(
+            DefineObjStmt::HaveByPreimageStmt(HaveByPreimageStmt {
                 preimage_names,
                 range_membership,
                 line_file: SourceLine::new(block.line, self.code_source.clone()),
-            },
-        ))))
+            }),
+        )))
     }
 }

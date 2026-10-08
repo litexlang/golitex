@@ -3,9 +3,7 @@
 
 use super::super::keywords::{BY, CASE, CASES, COLON, EQUAL, EXIST, EXIST_BANG, FN, FROM, INDUC};
 use super::super::object::{is_simple_name, parse_obj};
-use crate::ast::fact::{
-    AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
-};
+use crate::ast::fact::{AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact};
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::BoundName;
 use crate::ast::obj::{AnonymousFn, FnSet, Obj};
@@ -70,9 +68,9 @@ impl Runtime {
                 if tb.peek() == Some(INDUC) {
                     return self.parse_have_fn_by_induc_tail(block, &mut tb, bound, fn_set_clause);
                 }
-                return Err(tb.parse_error(
-                    "have fn: expected `by cases` or `by induc` after signature",
-                ));
+                return Err(
+                    tb.parse_error("have fn: expected `by cases` or `by induc` after signature")
+                );
             }
 
             if tb.peek() == Some(COLON) {
@@ -239,9 +237,9 @@ impl Runtime {
             });
         }
         if arm.body.is_empty() {
-            return Err(arm.parse_error(
-                "case must end with a right-hand side or nested case blocks",
-            ));
+            return Err(
+                arm.parse_error("case must end with a right-hand side or nested case blocks")
+            );
         }
         let nested = self.parse_have_fn_by_induc_cases(&arm.body)?;
         Ok(HaveFnByInducCase {
@@ -309,7 +307,8 @@ impl Runtime {
         check_have_fn_by_exist_forall_shape(block, &forall)?;
         let name = self.define_plain_atom_as_parse(tb, name)?;
 
-        Ok(Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
+        Ok(Stmt::Definition(
+            DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
                 name,
                 forall,
                 line_file: SourceLine::new(block.line, self.code_source.clone()),
@@ -417,10 +416,21 @@ fn check_have_fn_by_exist_forall_shape(
             param_ids.insert(param.id);
         }
     }
-    for group in forall.typed_parameters.groups.iter().chain(&exist_body.typed_parameters.groups) {
-        let ParamType::Obj(carrier) = &group.param_type else { unreachable!() };
+    for group in forall
+        .typed_parameters
+        .groups
+        .iter()
+        .chain(&exist_body.typed_parameters.groups)
+    {
+        let ParamType::Obj(carrier) = &group.param_type else {
+            unreachable!()
+        };
         let mut free = std::collections::HashSet::new();
-        crate::instantiate::collect_free_plain_ids(carrier, &std::collections::HashSet::new(), &mut free);
+        crate::instantiate::collect_free_plain_ids(
+            carrier,
+            &std::collections::HashSet::new(),
+            &mut free,
+        );
         if !free.is_disjoint(&param_ids) {
             return Err(block.parse_error(
                 "`have fn … by exist!`: parameter domains and return set must not reference the function's parameters",

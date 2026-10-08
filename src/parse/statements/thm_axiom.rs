@@ -45,7 +45,7 @@ impl Runtime {
             name,
             fact,
             prove_process,
-            line_file: SourceLine::new(block.line, self.code_source.clone())
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -70,7 +70,7 @@ impl Runtime {
         Ok(Stmt::Definition(DefinitionStmt::AxiomStmt(AxiomStmt {
             name,
             forall_fact,
-            line_file: SourceLine::new(block.line, self.code_source.clone())
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

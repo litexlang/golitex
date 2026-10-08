@@ -1,11 +1,11 @@
-use crate::ast::obj::{Add, ImaginaryUnit, Mul, Number, Obj, Pow, Sub, ArithmeticOperator, Literal};
+use crate::ast::obj::{
+    Add, ArithmeticOperator, ImaginaryUnit, Literal, Mul, Number, Obj, Pow, Sub,
+};
 use crate::rational_expression::decimal_arithmetic::{
     add_signed_decimal_str, evaluate_obj_to_normalized_decimal_number, mul_signed_decimal_str,
     sub_signed_decimal_str,
 };
-use crate::rational_expression::helper::{
-    number_string_is_literal_integer_without_dot, obj_key,
-};
+use crate::rational_expression::helper::{number_string_is_literal_integer_without_dot, obj_key};
 use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::rational_expression::normalization::AlgebraicNormalizationMode;
 
@@ -15,10 +15,18 @@ pub fn collect_monomials_in_obj(
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {
         Obj::Literal(Literal::Number(number)) => from_number_obj_to_monomial(number),
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => collect_monomials_in_add(add, mode),
-        Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => collect_monomials_in_mul(mul, mode),
-        Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => collect_monomials_in_pow(pow, mode),
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => collect_monomials_in_sub(sub, mode),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {
+            collect_monomials_in_add(add, mode)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
+            collect_monomials_in_mul(mul, mode)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => {
+            collect_monomials_in_pow(pow, mode)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
+            collect_monomials_in_sub(sub, mode)
+        }
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => {
             // Treat unary minus like `0 - arg` for monomial collection.
             collect_monomials_in_sub(
@@ -50,9 +58,9 @@ fn collect_monomials_in_sub(
     sub: &Sub,
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub.clone())))
-    {
+    if let Some(normalized_calculated_value) = evaluate_obj_to_normalized_decimal_number(
+        &Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub.clone())),
+    ) {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
@@ -117,9 +125,9 @@ fn collect_monomials_in_add(
     add: &Add,
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Add(add.clone())))
-    {
+    if let Some(normalized_calculated_value) = evaluate_obj_to_normalized_decimal_number(
+        &Obj::ArithmeticOperator(ArithmeticOperator::Add(add.clone())),
+    ) {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
@@ -176,14 +184,13 @@ fn collect_monomials_in_mul(
     mul: &Mul,
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul.clone())))
-    {
+    if let Some(normalized_calculated_value) = evaluate_obj_to_normalized_decimal_number(
+        &Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul.clone())),
+    ) {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
-    if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&mul.left)
+    if let Some(normalized_calculated_value) = evaluate_obj_to_normalized_decimal_number(&mul.left)
     {
         let left = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_right = collect_monomials_in_obj(&mul.right, mode);
@@ -198,8 +205,7 @@ fn collect_monomials_in_mul(
         return result;
     }
 
-    if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&mul.right)
+    if let Some(normalized_calculated_value) = evaluate_obj_to_normalized_decimal_number(&mul.right)
     {
         let right = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_left = collect_monomials_in_obj(&mul.left, mode);
@@ -273,9 +279,9 @@ fn collect_monomials_in_pow(
     pow: &Pow,
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow.clone())))
-    {
+    if let Some(normalized_calculated_value) = evaluate_obj_to_normalized_decimal_number(
+        &Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow.clone())),
+    ) {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 

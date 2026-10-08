@@ -39,10 +39,7 @@ fn encode_axiom(stmt: &AxiomStmt) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         ("kind".into(), JsonValue::String("axiom".into())),
         ("name".into(), JsonValue::String(stmt.name.clone())),
-        (
-            "forall_fact".into(),
-            encode_forall_fact(&stmt.forall_fact)?,
-        ),
+        ("forall_fact".into(), encode_forall_fact(&stmt.forall_fact)?),
         ("line_file".into(), encode_line_file(&stmt.line_file)?),
     ]))
 }

@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::RationalWithNonzeroPremisesStrategySingleStep;
 use crate::ast::fact::{EqualFact, NotEqualFact};
-use crate::ast::obj::{ArithmeticOperator, Number, Obj, Literal};
+use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj};
 use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::rational_expression::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,

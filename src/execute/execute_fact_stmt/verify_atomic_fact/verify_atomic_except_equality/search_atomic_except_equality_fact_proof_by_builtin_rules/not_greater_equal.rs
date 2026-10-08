@@ -1,9 +1,7 @@
 use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 use crate::ast::fact::NotGreaterEqualFact;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::rational_expression::{
-    compare_closed_numeric_objs, NumberCompareResult,
-};
+use crate::rational_expression::{compare_closed_numeric_objs, NumberCompareResult};
 use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `not a >= b` (i.e. a < b on numbers).
@@ -28,8 +26,12 @@ impl Runtime {
         fact: &NotGreaterEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotGreaterEqualFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
-            return Ok(Some(NotGreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        if let Some(proof) =
+            self.known_order_complement(fact.clone().into(), verify_state.clone())?
+        {
+            return Ok(Some(
+                NotGreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof),
+            ));
         }
         let Some((cmp, left_normal, right_normal)) =
             compare_closed_numeric_objs(&fact.left, &fact.right)

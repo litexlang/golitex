@@ -1,8 +1,9 @@
 use super::verify_trig_interval_bound::TrigIntervalBoundSide;
-use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, LessEqualFact, LessFact,
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, LessEqualFact, LessFact};
+use crate::ast::obj::{
+    Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cos, Cot, Div, Literal, Number, Obj, Pi,
+    Sin, Tan, TrigOperator,
 };
-use crate::ast::obj::{Arccos, Arccot, Arcsin, Arctan, Cos, Cot, Div, Number, Obj, Pi, Sin, Tan, ArithmeticOperator, Literal, TrigOperator};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -119,38 +120,50 @@ impl Runtime {
     ) -> RuntimeResult<Option<InverseTrigEqualityBuiltinRuleProof>> {
         match left {
             Obj::TrigOperator(TrigOperator::Sin(Sin { arg })) => {
-                if let Obj::TrigOperator(TrigOperator::Arcsin(Arcsin { arg: inner })) = arg.as_ref() {
+                if let Obj::TrigOperator(TrigOperator::Arcsin(Arcsin { arg: inner })) = arg.as_ref()
+                {
                     if inner.ir() == right.ir() {
-                        return Ok(Some(InverseTrigEqualityBuiltinRuleProof::SinArcsinLeftInverse(
-                            SinArcsinLeftInverseBuiltinRuleProof {},
-                        )));
+                        return Ok(Some(
+                            InverseTrigEqualityBuiltinRuleProof::SinArcsinLeftInverse(
+                                SinArcsinLeftInverseBuiltinRuleProof {},
+                            ),
+                        ));
                     }
                 }
             }
             Obj::TrigOperator(TrigOperator::Cos(Cos { arg })) => {
-                if let Obj::TrigOperator(TrigOperator::Arccos(Arccos { arg: inner })) = arg.as_ref() {
+                if let Obj::TrigOperator(TrigOperator::Arccos(Arccos { arg: inner })) = arg.as_ref()
+                {
                     if inner.ir() == right.ir() {
-                        return Ok(Some(InverseTrigEqualityBuiltinRuleProof::CosArccosLeftInverse(
-                            CosArccosLeftInverseBuiltinRuleProof {},
-                        )));
+                        return Ok(Some(
+                            InverseTrigEqualityBuiltinRuleProof::CosArccosLeftInverse(
+                                CosArccosLeftInverseBuiltinRuleProof {},
+                            ),
+                        ));
                     }
                 }
             }
             Obj::TrigOperator(TrigOperator::Tan(Tan { arg })) => {
-                if let Obj::TrigOperator(TrigOperator::Arctan(Arctan { arg: inner })) = arg.as_ref() {
+                if let Obj::TrigOperator(TrigOperator::Arctan(Arctan { arg: inner })) = arg.as_ref()
+                {
                     if inner.ir() == right.ir() {
-                        return Ok(Some(InverseTrigEqualityBuiltinRuleProof::TanArctanLeftInverse(
-                            TanArctanLeftInverseBuiltinRuleProof {},
-                        )));
+                        return Ok(Some(
+                            InverseTrigEqualityBuiltinRuleProof::TanArctanLeftInverse(
+                                TanArctanLeftInverseBuiltinRuleProof {},
+                            ),
+                        ));
                     }
                 }
             }
             Obj::TrigOperator(TrigOperator::Cot(Cot { arg })) => {
-                if let Obj::TrigOperator(TrigOperator::Arccot(Arccot { arg: inner })) = arg.as_ref() {
+                if let Obj::TrigOperator(TrigOperator::Arccot(Arccot { arg: inner })) = arg.as_ref()
+                {
                     if inner.ir() == right.ir() {
-                        return Ok(Some(InverseTrigEqualityBuiltinRuleProof::CotArccotLeftInverse(
-                            CotArccotLeftInverseBuiltinRuleProof {},
-                        )));
+                        return Ok(Some(
+                            InverseTrigEqualityBuiltinRuleProof::CotArccotLeftInverse(
+                                CotArccotLeftInverseBuiltinRuleProof {},
+                            ),
+                        ));
                     }
                 }
             }
@@ -284,11 +297,18 @@ impl Runtime {
         })
         .into();
         let Some(lo_proof) = self.verify_trig_interval_bound(
-            &lo, TrigIntervalBoundSide::Lower, verify_state.clone(),
-        )? else { return Ok(None); };
-        let Some(hi_proof) = self.verify_trig_interval_bound(
-            &hi, TrigIntervalBoundSide::Upper, verify_state,
-        )? else { return Ok(None); };
+            &lo,
+            TrigIntervalBoundSide::Lower,
+            verify_state.clone(),
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(hi_proof) =
+            self.verify_trig_interval_bound(&hi, TrigIntervalBoundSide::Upper, verify_state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(vec![lo_proof, hi_proof]))
     }
 
@@ -315,7 +335,9 @@ impl Runtime {
         })
         .into();
         let mut lo_proof = self.verify_trig_interval_bound(
-            &lo, TrigIntervalBoundSide::Lower, verify_state.clone(),
+            &lo,
+            TrigIntervalBoundSide::Lower,
+            verify_state.clone(),
         )?;
         // The first quadrant is contained in arctan's principal interval.
         // Keep the actual stronger 0<x fact instead of fabricating -pi/2<x.
@@ -323,16 +345,25 @@ impl Runtime {
         if lo_proof.is_none() && lower.ir() == negative_half_pi().ir() {
             let positive: Fact = LessFact {
                 fact_id: self.global_ids.allocate_fact_id(),
-                left: zero_obj(), right: value.clone(), line_file: fact.line_file.clone(),
-            }.into();
+                left: zero_obj(),
+                right: value.clone(),
+                line_file: fact.line_file.clone(),
+            }
+            .into();
             lo_proof = self.verify_trig_interval_bound(
-                &positive, TrigIntervalBoundSide::Lower, verify_state.clone(),
+                &positive,
+                TrigIntervalBoundSide::Lower,
+                verify_state.clone(),
             )?;
         }
-        let Some(lo_proof) = lo_proof else { return Ok(None); };
-        let Some(hi_proof) = self.verify_trig_interval_bound(
-            &hi, TrigIntervalBoundSide::Upper, verify_state,
-        )? else { return Ok(None); };
+        let Some(lo_proof) = lo_proof else {
+            return Ok(None);
+        };
+        let Some(hi_proof) =
+            self.verify_trig_interval_bound(&hi, TrigIntervalBoundSide::Upper, verify_state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(vec![lo_proof, hi_proof]))
     }
 }
@@ -362,7 +393,9 @@ fn try_exact_inverse_trig_equality(
     right: &Obj,
 ) -> Option<InverseTrigEqualityBuiltinRuleProof> {
     match left {
-        Obj::TrigOperator(TrigOperator::Arcsin(Arcsin { arg })) if is_number(arg, "0") && is_number(right, "0") => {
+        Obj::TrigOperator(TrigOperator::Arcsin(Arcsin { arg }))
+            if is_number(arg, "0") && is_number(right, "0") =>
+        {
             Some(InverseTrigEqualityBuiltinRuleProof::ArcsinExactZero(
                 ArcsinExactZeroBuiltinRuleProof {},
             ))
@@ -381,7 +414,9 @@ fn try_exact_inverse_trig_equality(
                 ArcsinExactNegOneBuiltinRuleProof {},
             ))
         }
-        Obj::TrigOperator(TrigOperator::Arccos(Arccos { arg })) if is_number(arg, "1") && is_number(right, "0") => {
+        Obj::TrigOperator(TrigOperator::Arccos(Arccos { arg }))
+            if is_number(arg, "1") && is_number(right, "0") =>
+        {
             Some(InverseTrigEqualityBuiltinRuleProof::ArccosExactOne(
                 ArccosExactOneBuiltinRuleProof {},
             ))
@@ -400,7 +435,9 @@ fn try_exact_inverse_trig_equality(
                 ArccosExactNegOneBuiltinRuleProof {},
             ))
         }
-        Obj::TrigOperator(TrigOperator::Arctan(Arctan { arg })) if is_number(arg, "0") && is_number(right, "0") => {
+        Obj::TrigOperator(TrigOperator::Arctan(Arctan { arg }))
+            if is_number(arg, "0") && is_number(right, "0") =>
+        {
             Some(InverseTrigEqualityBuiltinRuleProof::ArctanExactZero(
                 ArctanExactZeroBuiltinRuleProof {},
             ))

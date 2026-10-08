@@ -1,7 +1,7 @@
 use crate::ast::fact::{AtomicFact, Fact, OrFact};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::ast::obj::Obj;
 use crate::exec_env::exec_env::ExecEnv;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::verify_or_fact::well_defined_result::{

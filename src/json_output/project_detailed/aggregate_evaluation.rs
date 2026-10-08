@@ -12,16 +12,32 @@ pub(super) fn project_aggregate_evaluations(
             .iter()
             .map(|p| {
                 let (kind, source, domain, terms, value) = match p {
-                    AggregateEvaluationResult::FiniteSetReduce(p) => return object_for(runtime,vec![
-                        ("kind",string("finite_set_reduce")),("source",string(p.source.readable_string())),
-                        ("enumeration",project_enumeration(&p.enumeration,runtime)),("seed",string(p.seed.readable_string())),
-                        ("terms",project_reduce_terms(&p.terms,runtime)),("value",string(p.value.readable_string())),
-                    ]),
-                    AggregateEvaluationResult::Reduce(p) => return object_for(runtime,vec![
-                        ("kind",string("reduce")),("source",string(p.source.readable_string())),
-                        ("enumeration",project_bounds(&p.bounds,runtime)),("seed",string(p.seed.readable_string())),
-                        ("terms",project_reduce_terms(&p.terms,runtime)),("value",string(p.value.readable_string())),
-                    ]),
+                    AggregateEvaluationResult::FiniteSetReduce(p) => {
+                        return object_for(
+                            runtime,
+                            vec![
+                                ("kind", string("finite_set_reduce")),
+                                ("source", string(p.source.readable_string())),
+                                ("enumeration", project_enumeration(&p.enumeration, runtime)),
+                                ("seed", string(p.seed.readable_string())),
+                                ("terms", project_reduce_terms(&p.terms, runtime)),
+                                ("value", string(p.value.readable_string())),
+                            ],
+                        )
+                    }
+                    AggregateEvaluationResult::Reduce(p) => {
+                        return object_for(
+                            runtime,
+                            vec![
+                                ("kind", string("reduce")),
+                                ("source", string(p.source.readable_string())),
+                                ("enumeration", project_bounds(&p.bounds, runtime)),
+                                ("seed", string(p.seed.readable_string())),
+                                ("terms", project_reduce_terms(&p.terms, runtime)),
+                                ("value", string(p.value.readable_string())),
+                            ],
+                        )
+                    }
                     AggregateEvaluationResult::Sum(p) => (
                         "sum",
                         &p.source,
@@ -71,13 +87,29 @@ pub(super) fn project_aggregate_evaluations(
     )
 }
 
-fn project_reduce_terms(terms:&[ReduceTermEvaluationResult],runtime:&Runtime)->JsonValue {
-    JsonValue::Array(terms.iter().map(|term|object_for(runtime,vec![
-        ("argument",string(term.argument.readable_string())),
-        ("term",project_function_evaluation(&term.term,runtime)),
-        ("operation",project_function_evaluation(&term.operation,runtime)),
-        ("accumulated_value",string(term.accumulated_value.readable_string())),
-    ])).collect())
+fn project_reduce_terms(terms: &[ReduceTermEvaluationResult], runtime: &Runtime) -> JsonValue {
+    JsonValue::Array(
+        terms
+            .iter()
+            .map(|term| {
+                object_for(
+                    runtime,
+                    vec![
+                        ("argument", string(term.argument.readable_string())),
+                        ("term", project_function_evaluation(&term.term, runtime)),
+                        (
+                            "operation",
+                            project_function_evaluation(&term.operation, runtime),
+                        ),
+                        (
+                            "accumulated_value",
+                            string(term.accumulated_value.readable_string()),
+                        ),
+                    ],
+                )
+            })
+            .collect(),
+    )
 }
 
 fn project_bounds(p: &AggregateRangeBoundsResult, runtime: &Runtime) -> JsonValue {
@@ -160,25 +192,39 @@ pub(super) fn project_function_evaluations(
     JsonValue::Array(
         proofs
             .iter()
-            .map(|p| project_function_evaluation(p,runtime))
+            .map(|p| project_function_evaluation(p, runtime))
             .collect(),
     )
 }
-fn project_function_evaluation(p: &FunctionApplicationEvaluationResult, runtime: &Runtime) -> JsonValue {
+fn project_function_evaluation(
+    p: &FunctionApplicationEvaluationResult,
+    runtime: &Runtime,
+) -> JsonValue {
     let mut fields = vec![
         ("application", string(p.application.readable_string())),
-        ("application_well_defined", super::wd::project_obj_wd_proof(&p.application_well_defined, runtime)),
+        (
+            "application_well_defined",
+            super::wd::project_obj_wd_proof(&p.application_well_defined, runtime),
+        ),
     ];
     match &p.expansion {
         FunctionApplicationExpansionProof::Anonymous(proof) => fields.push((
-            "function_equal", super::searched::project_known_equality_path(&proof.function_equal, runtime),
+            "function_equal",
+            super::searched::project_known_equality_path(&proof.function_equal, runtime),
         )),
         FunctionApplicationExpansionProof::CheckedBeta(proof) => fields.push((
-            "function_body", super::function_body::project_parent_checked_function_body(&proof.function_body, runtime),
+            "function_body",
+            super::function_body::project_parent_checked_function_body(
+                &proof.function_body,
+                runtime,
+            ),
         )),
     }
     fields.extend([
-        ("expanded_body", string(p.expansion.expanded_body().readable_string())),
+        (
+            "expanded_body",
+            string(p.expansion.expanded_body().readable_string()),
+        ),
         ("value", string(p.value.readable_string())),
     ]);
     object_for(runtime, fields)

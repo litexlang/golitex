@@ -7,6 +7,7 @@ mod builtin_atomic_gen;
 mod entry;
 mod equality_builtin_gen;
 mod exist_builtin_gen;
+mod function_domain;
 mod induction;
 mod known_special_property;
 mod known_tuple;
@@ -18,7 +19,6 @@ mod stmt;
 mod store;
 mod strategy_gen;
 mod theorem;
-mod function_domain;
 mod verify;
 mod wd;
 mod wd_by_def;
@@ -36,8 +36,8 @@ pub(in crate::json_output) use theorem::{
 
 pub(in crate::json_output) use stmt::{project_cases_definition_failure, project_def_prop_failure};
 pub(in crate::json_output) use verify::project_verify_fact;
-pub(in crate::json_output) use wd::project_verify_obj_wd;
 pub(in crate::json_output) use wd::project_verify_equal_wd;
+pub(in crate::json_output) use wd::project_verify_obj_wd;
 
 mod closed_calculation;
 

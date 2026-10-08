@@ -59,7 +59,10 @@ impl Runtime {
 
         let mut store_and_infer_results = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
-            store_and_infer_results.push(self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?);
+            store_and_infer_results.push(self.store_fact_and_infer(
+                fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?);
         }
 
         Ok(ExecTrustStmtResult::Success(ExecTrustStmtSuccessResult {

@@ -43,7 +43,9 @@ impl Runtime {
         fact: &LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        if let Some(p) = self.div_monotone_weak_same_neg_divisor_proof(fact, verify_state.clone())? {
+        if let Some(p) =
+            self.div_monotone_weak_same_neg_divisor_proof(fact, verify_state.clone())?
+        {
             return Ok(Some(p));
         }
         if let Some(p) =
@@ -59,8 +61,8 @@ impl Runtime {
         if let Some(p) = self.numeric_lower_bound_weaken_le_proof(fact)? {
             return Ok(Some(p));
         }
-        if let Some(p) = self
-            .numeric_lower_bound_from_strict_predecessor_le_proof(fact, verify_state.clone())?
+        if let Some(p) =
+            self.numeric_lower_bound_from_strict_predecessor_le_proof(fact, verify_state.clone())?
         {
             return Ok(Some(p));
         }
@@ -132,7 +134,8 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_equal_fact(right_num, left_num, self);
-        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
+        let numerators_order_proof =
+            self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -167,7 +170,8 @@ impl Runtime {
             return Ok(None);
         }
         let numerators_order = make_less_fact(right_num, left_num, self);
-        let numerators_order_proof = self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
+        let numerators_order_proof =
+            self.verify_builtin_rule_premise(&numerators_order, verify_state)?;
         if numerators_order_proof.is_failed() {
             return Ok(None);
         }
@@ -200,7 +204,8 @@ impl Runtime {
             mul_obj(&fact.left, denominator),
         ] {
             let bound = make_less_equal_fact(&product, numerator, self);
-            let product_bound_proof = self.verify_builtin_rule_premise(&bound, verify_state.clone())?;
+            let product_bound_proof =
+                self.verify_builtin_rule_premise(&bound, verify_state.clone())?;
             if product_bound_proof.is_failed() {
                 continue;
             }
@@ -227,13 +232,15 @@ impl Runtime {
             return Ok(None);
         };
         for (denominator, other) in [(left_factor, right_factor), (right_factor, left_factor)] {
-            let divisor_pos_proof = self.verify_order_positive(denominator, verify_state.clone())?;
+            let divisor_pos_proof =
+                self.verify_order_positive(denominator, verify_state.clone())?;
             if divisor_pos_proof.is_failed() {
                 continue;
             }
             let quotient = div_obj(&fact.left, denominator);
             let bound = make_less_equal_fact(&quotient, other, self);
-            let quotient_bound_proof = self.verify_builtin_rule_premise(&bound, verify_state.clone())?;
+            let quotient_bound_proof =
+                self.verify_builtin_rule_premise(&bound, verify_state.clone())?;
             if quotient_bound_proof.is_failed() {
                 continue;
             }
@@ -355,7 +362,11 @@ impl Runtime {
             let Some(known) = literal_integer_value(&bound) else {
                 continue;
             };
-            let ok = if strict { target <= known } else { target < known };
+            let ok = if strict {
+                target <= known
+            } else {
+                target < known
+            };
             if ok {
                 return Ok(Some(
                     LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt(
@@ -383,7 +394,11 @@ impl Runtime {
             let Some(known) = literal_integer_value(&bound) else {
                 continue;
             };
-            let ok = if strict { known <= target } else { known < target };
+            let ok = if strict {
+                known <= target
+            } else {
+                known < target
+            };
             if ok {
                 return Ok(Some(
                     LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt(
@@ -557,14 +572,12 @@ impl Runtime {
         if even_proof.is_failed() {
             return Ok(None);
         }
-        Ok(Some(
-            LessFactSearchProofByBuiltinRule::PositiveEvenGtOne(
-                PositiveEvenGtOneBuiltinRuleProof {
-                    in_n_pos_proof,
-                    even_proof,
-                },
-            ),
-        ))
+        Ok(Some(LessFactSearchProofByBuiltinRule::PositiveEvenGtOne(
+            PositiveEvenGtOneBuiltinRuleProof {
+                in_n_pos_proof,
+                even_proof,
+            },
+        )))
     }
 
     // Members sit below the finite-set maximum.

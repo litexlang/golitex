@@ -1,13 +1,13 @@
 //! Local scalar identities with checked domain and premise evidence.
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::obj::{
-    Abs, Add, ArithmeticOperator as A, Ceil, Floor, IntegerOperator, Lcm, Literal, Neg, Number,
-    Obj, StandardSet, Sub, FiniteSetStat, SetFormer,
+    Abs, Add, ArithmeticOperator as A, Ceil, FiniteSetStat, Floor, IntegerOperator, Lcm, Literal,
+    Neg, Number, Obj, SetFormer, StandardSet, Sub,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
-use crate::runtime::{Runtime, RuntimeResult};
 use crate::rational_expression::{exact_rational::EvalRational, NumberCompareResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ScalarIdentityBuiltinRuleProof {
     AbsDifferenceSymmetry(AbsDifferenceSymmetryProof),
@@ -25,7 +25,9 @@ pub enum ScalarIdentityBuiltinRuleProof {
 }
 pub struct AbsDifferenceSymmetryProof {}
 impl AbsDifferenceSymmetryProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 // sign(x)=0 implies x=0 for real x; retain the actual stored equality.
 pub struct SignZeroReflectionProof {
@@ -34,7 +36,10 @@ pub struct SignZeroReflectionProof {
 }
 impl SignZeroReflectionProof {
     pub fn new(real_proof: VerifyFactResult, premise_proof: EqualFactSearchedProof) -> Self {
-        Self { real_proof, premise_proof: Box::new(premise_proof) }
+        Self {
+            real_proof,
+            premise_proof: Box::new(premise_proof),
+        }
     }
 }
 pub struct AbsZeroArgumentBuiltinRuleProof {
@@ -69,8 +74,18 @@ pub struct ExactExtremumComparison {
     pub ordering: NumberCompareResult,
 }
 impl ExactExtremumComparison {
-    fn new(member: Obj, member_normal: Obj, selected_normal: Obj, ordering: NumberCompareResult) -> Self {
-        Self { member, member_normal, selected_normal, ordering }
+    fn new(
+        member: Obj,
+        member_normal: Obj,
+        selected_normal: Obj,
+        ordering: NumberCompareResult,
+    ) -> Self {
+        Self {
+            member,
+            member_normal,
+            selected_normal,
+            ordering,
+        }
     }
 }
 impl ScalarIdentityBuiltinRuleProof {
@@ -101,10 +116,16 @@ impl Runtime {
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             // Real absolute difference is symmetric: abs(a-b)=abs(b-a).
             // Parent equality WD owns both real domains; this leaf adds no search.
-            if let (Obj::ArithmeticOperator(A::Abs(left)), Obj::ArithmeticOperator(A::Abs(right))) = (left, right) {
-                if let (Obj::ArithmeticOperator(A::Sub(a)), Obj::ArithmeticOperator(A::Sub(b))) = (&*left.arg, &*right.arg) {
+            if let (Obj::ArithmeticOperator(A::Abs(left)), Obj::ArithmeticOperator(A::Abs(right))) =
+                (left, right)
+            {
+                if let (Obj::ArithmeticOperator(A::Sub(a)), Obj::ArithmeticOperator(A::Sub(b))) =
+                    (&*left.arg, &*right.arg)
+                {
                     if a.left.ir() == b.right.ir() && a.right.ir() == b.left.ir() {
-                        return Ok(Some(P::AbsDifferenceSymmetry(AbsDifferenceSymmetryProof::new())));
+                        return Ok(Some(P::AbsDifferenceSymmetry(
+                            AbsDifferenceSymmetryProof::new(),
+                        )));
                     }
                 }
             }
@@ -115,26 +136,39 @@ impl Runtime {
                 if let Some((selected_index, selected_member, comparisons)) =
                     exact_extremum_selection(&extremum.set, right, NumberCompareResult::Greater)
                 {
-                    return Ok(Some(P::FiniteSetMaxSelection(FiniteSetMaxSelectionBuiltinRuleProof {
-                        selected_index, selected_member, comparisons,
-                    })));
+                    return Ok(Some(P::FiniteSetMaxSelection(
+                        FiniteSetMaxSelectionBuiltinRuleProof {
+                            selected_index,
+                            selected_member,
+                            comparisons,
+                        },
+                    )));
                 }
             }
             if let Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(extremum)) = left {
                 if let Some((selected_index, selected_member, comparisons)) =
                     exact_extremum_selection(&extremum.set, right, NumberCompareResult::Less)
                 {
-                    return Ok(Some(P::FiniteSetMinSelection(FiniteSetMinSelectionBuiltinRuleProof {
-                        selected_index, selected_member, comparisons,
-                    })));
+                    return Ok(Some(P::FiniteSetMinSelection(
+                        FiniteSetMinSelectionBuiltinRuleProof {
+                            selected_index,
+                            selected_member,
+                            comparisons,
+                        },
+                    )));
                 }
             }
             if is_zero(right) {
-                let sign = Obj::ArithmeticOperator(A::Sign(crate::ast::obj::Sign { arg: Box::new(left.clone()) }));
+                let sign = Obj::ArithmeticOperator(A::Sign(crate::ast::obj::Sign {
+                    arg: Box::new(left.clone()),
+                }));
                 if let Some(premise_proof) = self.lookup_exact_property_obj_equality(&sign, right) {
                     let real_proof = self.scalar_member(left, StandardSet::R, state)?;
                     if !real_proof.is_failed() {
-                        return Ok(Some(P::SignZeroReflection(SignZeroReflectionProof::new(real_proof, premise_proof))));
+                        return Ok(Some(P::SignZeroReflection(SignZeroReflectionProof::new(
+                            real_proof,
+                            premise_proof,
+                        ))));
                     }
                 }
                 let abs = Obj::ArithmeticOperator(A::Abs(Abs {
@@ -279,7 +313,9 @@ fn exact_extremum_selection(
     target: &Obj,
     preferred: NumberCompareResult,
 ) -> Option<(usize, Obj, Vec<ExactExtremumComparison>)> {
-    let Obj::SetFormer(SetFormer::ListSet(list)) = set else { return None; };
+    let Obj::SetFormer(SetFormer::ListSet(list)) = set else {
+        return None;
+    };
     let first = list.list.first()?;
     let mut selected_index = 0;
     let mut selected_value = EvalRational::from_obj(first)?;
@@ -290,15 +326,26 @@ fn exact_extremum_selection(
             selected_value = value;
         }
     }
-    if EvalRational::from_obj(target)? != selected_value { return None; }
+    if EvalRational::from_obj(target)? != selected_value {
+        return None;
+    }
     let mut comparisons = Vec::new();
     for member in &list.list {
         let value = EvalRational::from_obj(member)?;
         let ordering = value.compare(&selected_value)?;
-        if ordering == preferred { return None; }
+        if ordering == preferred {
+            return None;
+        }
         comparisons.push(ExactExtremumComparison::new(
-            member.as_ref().clone(), value.to_obj(), selected_value.to_obj(), ordering,
+            member.as_ref().clone(),
+            value.to_obj(),
+            selected_value.to_obj(),
+            ordering,
         ));
     }
-    Some((selected_index, list.list[selected_index].as_ref().clone(), comparisons))
+    Some((
+        selected_index,
+        list.list[selected_index].as_ref().clone(),
+        comparisons,
+    ))
 }

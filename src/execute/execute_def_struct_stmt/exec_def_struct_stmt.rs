@@ -20,6 +20,7 @@
 //!           x = x
 //!   // R WD; fields bound in field scope; <=>: WD; Point stored globally
 
+use super::store_struct_definition_facts::StoreStructDefinitionFactResult;
 use crate::ast::fact::{Fact, QuantifierFreeFact};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::{DefStructStmt, StructFieldDef};
@@ -29,13 +30,10 @@ use crate::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
-use crate::execute::{
-    IntroduceTypedParametersFailed, IntroduceTypedParametersResult,
-};
+use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::parse::keywords::STRUCT;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactResult;
-use super::store_struct_definition_facts::StoreStructDefinitionFactResult;
 
 pub enum ExecDefStructStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
@@ -97,17 +95,19 @@ impl Runtime {
     ) -> RuntimeResult<ExecDefStructStmtResult> {
         self.ensure_def_struct_name_free(&def_struct.name)?;
 
-        let (local_outcome, local_env) = self
-            .run_in_local_env_and_take_env(|rt| rt.exec_def_struct_stmt_in_local(def_struct))?;
+        let (local_outcome, local_env) =
+            self.run_in_local_env_and_take_env(|rt| rt.exec_def_struct_stmt_in_local(def_struct))?;
 
         let parts = match local_outcome {
             Ok(parts) => parts,
             Err(failed) => return Ok(ExecDefStructStmtResult::Failed(failed)),
         };
 
-        self.top_exec_env_mut()
-            .store_def_struct(def_struct.clone());
-        let definition_facts = self.store_struct_definition_facts(def_struct, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        self.top_exec_env_mut().store_def_struct(def_struct.clone());
+        let definition_facts = self.store_struct_definition_facts(
+            def_struct,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         Ok(ExecDefStructStmtResult::Success(
             ExecDefStructStmtSuccessResult {
@@ -198,7 +198,13 @@ impl Runtime {
         fields: &[StructFieldDef],
         equivalent_facts: &[Fact],
     ) -> RuntimeResult<
-        Result<(Vec<StructFieldWellDefinedAndIntroduced>, Vec<StructEquivalentFactWellDefinedProof>), ExecDefStructStmtFailed>,
+        Result<
+            (
+                Vec<StructFieldWellDefinedAndIntroduced>,
+                Vec<StructEquivalentFactWellDefinedProof>,
+            ),
+            ExecDefStructStmtFailed,
+        >,
     > {
         let verify_state = VerifyState::top_level();
 
@@ -206,15 +212,20 @@ impl Runtime {
         for field in fields {
             // The current field is not in scope until its type has passed WD.
             // Earlier field assumptions remain confined to this field scope.
-            let well_defined = match self.verify_obj_well_definedness(&field.field_type, verify_state)? {
-                VerifyObjWellDefinedResult::Success(proof) => proof,
-                failed @ VerifyObjWellDefinedResult::Failed { .. } => {
-                    return Ok(Err(ExecDefStructStmtFailed::FieldType(failed)));
-                }
-            };
+            let well_defined =
+                match self.verify_obj_well_definedness(&field.field_type, verify_state)? {
+                    VerifyObjWellDefinedResult::Success(proof) => proof,
+                    failed @ VerifyObjWellDefinedResult::Failed { .. } => {
+                        return Ok(Err(ExecDefStructStmtFailed::FieldType(failed)));
+                    }
+                };
             let field_params = field_typed_parameters(std::slice::from_ref(field));
-            let defined = self.define_typed_parameters_in_current_env(&field_params, None, verify_state)?;
-            introduced_fields.push(StructFieldWellDefinedAndIntroduced { well_defined, defined });
+            let defined =
+                self.define_typed_parameters_in_current_env(&field_params, None, verify_state)?;
+            introduced_fields.push(StructFieldWellDefinedAndIntroduced {
+                well_defined,
+                defined,
+            });
         }
 
         let mut checked = Vec::with_capacity(equivalent_facts.len());

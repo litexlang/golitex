@@ -3,18 +3,14 @@
 //! Does not touch Runtime or ExecEnv ownership. Caller supplies watermarks and
 //! later inserts remapped `DefinitionMemory` into the live module manager.
 
-use super::definitions_memory_codec::{
-    read_definition_memory, write_definition_memory,
-};
 use super::def_prop_codec::KbCodecError;
+use super::definitions_memory_codec::{read_definition_memory, write_definition_memory};
 use super::json_mini::JsonValue;
 use super::manifest::{
     decode_manifest, encode_manifest, GlobalIdsDeltas, GlobalIdsSnapshot, KbManifest,
     ManifestExportEntry,
 };
-use super::paths::{
-    export_definitions_path, kb_dir, manifest_path, KB_ABI, KB_DIR_NAME,
-};
+use super::paths::{export_definitions_path, kb_dir, manifest_path, KB_ABI, KB_DIR_NAME};
 use super::remap::{remap_definition_memory, RemapPlan};
 use crate::exec_env::exec_env::DefinitionMemory;
 use std::collections::{BTreeMap, HashMap};
@@ -23,12 +19,24 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug)]
 pub enum KbMountMiss {
-    MissingDir { path: PathBuf },
-    MissingManifest { path: PathBuf },
-    FingerprintMismatch { expected: String, found: String },
-    AbiMismatch { file_abi: String },
+    MissingDir {
+        path: PathBuf,
+    },
+    MissingManifest {
+        path: PathBuf,
+    },
+    FingerprintMismatch {
+        expected: String,
+        found: String,
+    },
+    AbiMismatch {
+        file_abi: String,
+    },
     Corrupt(KbCodecError),
-    ExportCountMismatch { manifest: usize, on_disk_hint: String },
+    ExportCountMismatch {
+        manifest: usize,
+        on_disk_hint: String,
+    },
 }
 
 impl std::fmt::Display for KbMountMiss {
@@ -41,7 +49,10 @@ impl std::fmt::Display for KbMountMiss {
                 write!(f, "kb missing manifest {}", path.display())
             }
             KbMountMiss::FingerprintMismatch { expected, found } => {
-                write!(f, "kb fingerprint mismatch expected={expected} found={found}")
+                write!(
+                    f,
+                    "kb fingerprint mismatch expected={expected} found={found}"
+                )
             }
             KbMountMiss::AbiMismatch { file_abi } => {
                 write!(f, "kb abi mismatch file={file_abi} code={KB_ABI}")
@@ -171,9 +182,9 @@ pub fn try_mount_module(
             message: error.to_string(),
         })
     })?;
-    let manifest = decode_manifest(&JsonValue::parse(&text).map_err(|e| {
-        KbMountMiss::Corrupt(KbCodecError::Json(e.0))
-    })?)
+    let manifest = decode_manifest(
+        &JsonValue::parse(&text).map_err(|e| KbMountMiss::Corrupt(KbCodecError::Json(e.0)))?,
+    )
     .map_err(KbMountMiss::Corrupt)?;
 
     if manifest.abi != KB_ABI {

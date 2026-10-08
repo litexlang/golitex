@@ -125,7 +125,10 @@ impl Runtime {
         ))
     }
 
-    pub(in super::super) fn parse_release_tuple_def_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_release_tuple_def_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(RELEASE)?;
         tb.expect(crate::parse::keywords::TUPLE)?;
@@ -134,12 +137,18 @@ impl Runtime {
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
             return Err(tb.parse_error("release tuple def expects one object and no body"));
         }
-        Ok(Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseTupleDefStmt(
-            crate::ast::stmt::ReleaseTupleDefStmt { obj, line_file: SourceLine::new(block.line, self.code_source.clone()) },
-        )))
+        Ok(Stmt::ReleaseAndExpand(
+            ReleaseAndExpandStmt::ReleaseTupleDefStmt(crate::ast::stmt::ReleaseTupleDefStmt {
+                obj,
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
+            }),
+        ))
     }
 
-    pub(in super::super) fn parse_release_cart_def_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_release_cart_def_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(RELEASE)?;
         tb.expect(crate::parse::keywords::CART)?;
@@ -151,9 +160,12 @@ impl Runtime {
         let Obj::ProductShape(crate::ast::obj::ProductShape::Cart(cart)) = obj else {
             return Err(tb.parse_error("release cart def expects a cart(...) constructor"));
         };
-        Ok(Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseCartDefStmt(
-            crate::ast::stmt::ReleaseCartDefStmt { cart, line_file: SourceLine::new(block.line, self.code_source.clone()) },
-        )))
+        Ok(Stmt::ReleaseAndExpand(
+            ReleaseAndExpandStmt::ReleaseCartDefStmt(crate::ast::stmt::ReleaseCartDefStmt {
+                cart,
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
+            }),
+        ))
     }
 
     pub(in super::super) fn parse_release_regularity_axiom_stmt(
@@ -171,14 +183,12 @@ impl Runtime {
             )));
         }
         if !tb.exceed_end_of_head() {
-            return Err(tb.parse_error(
-                "release regularity_axiom: unexpected token after argument",
-            ));
+            return Err(tb.parse_error("release regularity_axiom: unexpected token after argument"));
         }
         if !tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "release regularity_axiom: does not accept an indented body",
-            ));
+            return Err(
+                tb.parse_error("release regularity_axiom: does not accept an indented body")
+            );
         }
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(ReleaseRegularityAxiomStmt {
@@ -203,7 +213,8 @@ impl Runtime {
         tb.expect(COLON)?;
         tb.expect(SET)?;
         let family = parse_obj(self, &mut tb)?;
-        let has_proof_body = parse_optional_trailing_proof_colon(&mut tb, "release axiom_of_choice")?;
+        let has_proof_body =
+            parse_optional_trailing_proof_colon(&mut tb, "release axiom_of_choice")?;
         let proof = if has_proof_body {
             self.push_parse_scope();
             let proof = self.parse_body_stmts(&tb.body);
@@ -279,9 +290,7 @@ impl Runtime {
     fn parse_release_atomic_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
         let name = tb.advance()?;
         if !is_simple_name(&name) {
-            return Err(tb.parse_error(format!(
-                "expected a simple prop name, got `{name}`"
-            )));
+            return Err(tb.parse_error(format!("expected a simple prop name, got `{name}`")));
         }
         Ok(AtomicName::plain(name))
     }

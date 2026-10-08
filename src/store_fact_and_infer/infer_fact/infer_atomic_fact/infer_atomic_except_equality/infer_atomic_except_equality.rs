@@ -1,7 +1,14 @@
 use crate::ast::fact::AtomicFact;
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::{InferInjectiveDefinitionResult, InferSurjectiveDefinitionResult};
-use crate::store_fact_and_infer::{InferAtomicExceptEqualityResult, InferBuiltinDefinitionResult, InferPrimeDefinitionResult, InferCoprimeDefinitionResult, InferProperSubsetDefinitionResult, InferProperSupersetDefinitionResult, InferDvdDefinitionResult, InferBijectiveDefinitionResult, InferChoiceFunctionDefinitionResult};
+use crate::store_fact_and_infer::{
+    InferAtomicExceptEqualityResult, InferBijectiveDefinitionResult, InferBuiltinDefinitionResult,
+    InferChoiceFunctionDefinitionResult, InferCoprimeDefinitionResult, InferDvdDefinitionResult,
+    InferPrimeDefinitionResult, InferProperSubsetDefinitionResult,
+    InferProperSupersetDefinitionResult,
+};
+use crate::store_fact_and_infer::{
+    InferInjectiveDefinitionResult, InferSurjectiveDefinitionResult,
+};
 
 impl Runtime {
     // Collect every non-equal atomic infer rule that fires for this fact.
@@ -9,7 +16,8 @@ impl Runtime {
     pub(crate) fn infer_atomic_except_equality(
         &mut self,
         atomic_fact: &AtomicFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(
@@ -39,75 +47,118 @@ impl Runtime {
             // A checked mapping property publishes its quantified definition,
             // as legacy did: surjective(A,B,f) gives every y in B a preimage.
             AtomicFact::InjectiveFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::Injective(InferInjectiveDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::Injective(InferInjectiveDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
                 ));
             }
             AtomicFact::SurjectiveFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::Surjective(InferSurjectiveDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::Surjective(InferSurjectiveDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
                 ));
             }
             AtomicFact::PrimeFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::Prime(InferPrimeDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::Prime(InferPrimeDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
                 ));
             }
             AtomicFact::CoprimeFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::Coprime(InferCoprimeDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::Coprime(InferCoprimeDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
                 ));
             }
             AtomicFact::ProperSubsetFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::ProperSubset(InferProperSubsetDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::ProperSubset(InferProperSubsetDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
                 ));
             }
             AtomicFact::ProperSupersetFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::ProperSuperset(InferProperSupersetDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::ProperSuperset(
+                        InferProperSupersetDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived,
+                        },
+                    ),
                 ));
             }
             AtomicFact::DvdFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::Dvd(InferDvdDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::Dvd(InferDvdDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
                 ));
             }
             AtomicFact::BijectiveFact(f) => {
-                let derived = self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::Bijective(InferBijectiveDefinitionResult { source_fact_id: f.fact_id, derived }),
+                    InferBuiltinDefinitionResult::Bijective(InferBijectiveDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
                 ));
             }
             // A checked choice certificate releases its defining pointwise
             // membership universal, using the same builder as `by def`.
             AtomicFact::IsChoiceFunctionForFact(f) => {
-                let derived=self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
+                let derived =
+                    self.store_builtin_definition_consequences(atomic_fact, verify_state)?;
                 rules.push(InferAtomicExceptEqualityResult::BuiltinDefinition(
-                    InferBuiltinDefinitionResult::ChoiceFunction(InferChoiceFunctionDefinitionResult {source_fact_id:f.fact_id,derived}),
+                    InferBuiltinDefinitionResult::ChoiceFunction(
+                        InferChoiceFunctionDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived,
+                        },
+                    ),
                 ));
             }
             AtomicFact::LessFact(_) | AtomicFact::GreaterFact(_) => {
-                if let Some(r) = self.infer_strict_lower_bound_positive(atomic_fact, verify_state)? {
+                if let Some(r) =
+                    self.infer_strict_lower_bound_positive(atomic_fact, verify_state)?
+                {
                     rules.push(InferAtomicExceptEqualityResult::StrictLowerBoundPositive(r));
                 }
             }
             AtomicFact::LessEqualFact(_) | AtomicFact::GreaterEqualFact(_) => {
-                if let Some(r) = self.infer_weak_integer_lower_bound_in_n(atomic_fact, verify_state)? {
+                if let Some(r) =
+                    self.infer_weak_integer_lower_bound_in_n(atomic_fact, verify_state)?
+                {
                     rules.push(InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(r));
                 }
             }
             AtomicFact::IsSetFact(_)
             | AtomicFact::IsNonemptySetFact(_)
             | AtomicFact::IsFiniteSetFact(_)
-
             | AtomicFact::NotNormalAtomicFact(_)
             | AtomicFact::NotEqualFact(_)
             | AtomicFact::NotLessFact(_)
@@ -118,8 +169,6 @@ impl Runtime {
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
             | AtomicFact::NotInFact(_)
-
-
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
             | AtomicFact::NotProperSubsetFact(_)
@@ -134,13 +183,15 @@ impl Runtime {
         }
         Ok(rules)
     }
-    fn store_builtin_definition_consequences(&mut self, fact: &AtomicFact, verify_state: crate::execute::execute_fact_stmt::VerifyState)
-        -> RuntimeResult<Vec<crate::store_fact_and_infer::StoreFactAndInferResult>> {
-        let mut derived=Vec::new();
+    fn store_builtin_definition_consequences(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::StoreFactAndInferResult>> {
+        let mut derived = Vec::new();
         for consequence in self.builtin_atomic_definition_consequences(fact) {
             derived.push(self.store_inferred_fact_and_infer(&consequence, verify_state)?);
         }
         Ok(derived)
     }
-
 }

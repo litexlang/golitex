@@ -288,10 +288,7 @@ fn c_double_literal(value: &str) -> String {
     format!("{}.0", value)
 }
 
-fn validate_c_name(
-    name: &str,
-    line_file: &crate::ast::line_file::SourceLine,
-) -> RuntimeResult<()> {
+fn validate_c_name(name: &str, line_file: &crate::ast::line_file::SourceLine) -> RuntimeResult<()> {
     if is_c_identifier(name) {
         return Ok(());
     }

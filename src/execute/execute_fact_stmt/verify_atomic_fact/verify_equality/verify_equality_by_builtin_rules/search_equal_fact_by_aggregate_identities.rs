@@ -31,10 +31,14 @@ impl Runtime {
             if let Some(p) = self.aggregate_partition_identity(&aggregate, other, fact, &state)? {
                 return Ok(Some(p));
             }
-            if let Some(p) = self.aggregate_product_fresh_insertion(&aggregate, other, fact, &state)? {
+            if let Some(p) =
+                self.aggregate_product_fresh_insertion(&aggregate, other, fact, &state)?
+            {
                 return Ok(Some(p));
             }
-            if let Some(p) = self.aggregate_product_member_removal(&aggregate, other, fact, &state)? {
+            if let Some(p) =
+                self.aggregate_product_member_removal(&aggregate, other, fact, &state)?
+            {
                 return Ok(Some(p));
             }
             if let Some(p) = self.aggregate_linearity_identity(&aggregate, other, fact, &state)? {
@@ -287,7 +291,12 @@ impl Runtime {
         }
         if matches!(aggregate.domain, AggregationDomain::Range(..)) {
             for part in &parts {
-                goals.push(equality(self, aggregate.func.clone(), part.func.clone(), fact));
+                goals.push(equality(
+                    self,
+                    aggregate.func.clone(),
+                    part.func.clone(),
+                    fact,
+                ));
             }
         }
         let Some(premises) = self.aggregate_identity_premises(goals, state)? else {
@@ -298,10 +307,19 @@ impl Runtime {
         let mut callbacks = Vec::new();
         if matches!(aggregate.domain, AggregationDomain::FiniteSet(..)) {
             for part in &parts {
-                let AggregationDomain::FiniteSet(domain) = part.domain else { return Ok(None); };
+                let AggregationDomain::FiniteSet(domain) = part.domain else {
+                    return Ok(None);
+                };
                 let Some(proof) = self.finite_aggregate_callback_agreement(
-                    aggregate.func, part.func, domain, fact, state,
-                )? else { return Ok(None); };
+                    aggregate.func,
+                    part.func,
+                    domain,
+                    fact,
+                    state,
+                )?
+                else {
+                    return Ok(None);
+                };
                 callbacks.push(proof);
             }
         }
@@ -318,12 +336,18 @@ impl Runtime {
             }
             (AggregationDomain::FiniteSet(..), false) => {
                 AggregateIdentityBuiltinRuleProof::FiniteSetSumDisjointUnion(
-                    FiniteSetSumDisjointUnionBuiltinRuleProof { premises, callbacks },
+                    FiniteSetSumDisjointUnionBuiltinRuleProof {
+                        premises,
+                        callbacks,
+                    },
                 )
             }
             (AggregationDomain::FiniteSet(..), true) => {
                 AggregateIdentityBuiltinRuleProof::FiniteSetProductDisjointUnion(
-                    FiniteSetProductDisjointUnionBuiltinRuleProof { premises, callbacks },
+                    FiniteSetProductDisjointUnionBuiltinRuleProof {
+                        premises,
+                        callbacks,
+                    },
                 )
             }
         }))
@@ -338,34 +362,79 @@ impl Runtime {
     ) -> RuntimeResult<Option<AggregateIdentityBuiltinRuleProof>> {
         // Product over S union {a} factors into the product over S and f(a)
         // when a is fresh. Restricted callbacks must agree on every x in S.
-        if !aggregate.product { return Ok(None); }
-        let AggregationDomain::FiniteSet(Obj::SetOperator(SetOperator::Union(union))) = aggregate.domain else { return Ok(None); };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) = other else { return Ok(None); };
+        if !aggregate.product {
+            return Ok(None);
+        }
+        let AggregationDomain::FiniteSet(Obj::SetOperator(SetOperator::Union(union))) =
+            aggregate.domain
+        else {
+            return Ok(None);
+        };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) = other else {
+            return Ok(None);
+        };
         for (set, singleton) in [(&*union.left, &*union.right), (&*union.right, &*union.left)] {
-            let Obj::SetFormer(SetFormer::ListSet(list)) = singleton else { continue; };
-            if list.list.len() != 1 { continue; }
+            let Obj::SetFormer(SetFormer::ListSet(list)) = singleton else {
+                continue;
+            };
+            if list.list.len() != 1 {
+                continue;
+            }
             let element = &*list.list[0];
             for (base, factor) in [(&*mul.left, &*mul.right), (&*mul.right, &*mul.left)] {
-                let Some(base) = aggregate_view(base) else { continue; };
-                if !base.product { continue; }
-                let AggregationDomain::FiniteSet(base_set) = base.domain else { continue; };
+                let Some(base) = aggregate_view(base) else {
+                    continue;
+                };
+                if !base.product {
+                    continue;
+                }
+                let AggregationDomain::FiniteSet(base_set) = base.domain else {
+                    continue;
+                };
                 let fresh: Fact = NotInFact {
-                    fact_id: self.global_ids.allocate_fact_id(), element: element.clone(), set: set.clone(),
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: element.clone(),
+                    set: set.clone(),
                     line_file: fact.line_file.clone(),
-                }.into();
+                }
+                .into();
                 let same_set = equality(self, set.clone(), base_set.clone(), fact);
-                let Some(premises) = self.aggregate_identity_premises(vec![fresh, same_set], state)? else { continue; };
+                let Some(premises) =
+                    self.aggregate_identity_premises(vec![fresh, same_set], state)?
+                else {
+                    continue;
+                };
                 let Some(pointwise) = self.finite_aggregate_callback_agreement(
-                    aggregate.func, base.func, base_set, fact, state,
-                )? else { continue; };
+                    aggregate.func,
+                    base.func,
+                    base_set,
+                    fact,
+                    state,
+                )?
+                else {
+                    continue;
+                };
                 let mut factor_expansions = Vec::new();
-                let Some(value) = function_at(self, aggregate.func, element, &mut factor_expansions)? else { continue; };
+                let Some(value) =
+                    function_at(self, aggregate.func, element, &mut factor_expansions)?
+                else {
+                    continue;
+                };
                 let goal = equality(self, value, factor.clone(), fact);
                 let factor_equal = self.verify_builtin_rule_premise(&goal, state.clone())?;
-                if factor_equal.is_failed() { continue; }
-                return Ok(Some(AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(
-                    FiniteSetProductFreshInsertionProof { premises, pointwise, factor_expansions, factor_equal },
-                )));
+                if factor_equal.is_failed() {
+                    continue;
+                }
+                return Ok(Some(
+                    AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(
+                        FiniteSetProductFreshInsertionProof {
+                            premises,
+                            pointwise,
+                            factor_expansions,
+                            factor_equal,
+                        },
+                    ),
+                ));
             }
         }
         Ok(None)
@@ -380,31 +449,77 @@ impl Runtime {
     ) -> RuntimeResult<Option<AggregateIdentityBuiltinRuleProof>> {
         // For a in S, product(S,f)=product(S\{a},g)*f(a), where g=f on S\{a}.
         // This multiplication identity remains valid when f(a)=0.
-        if !aggregate.product { return Ok(None); }
-        let AggregationDomain::FiniteSet(set) = aggregate.domain else { return Ok(None); };
-        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) = other else { return Ok(None); };
+        if !aggregate.product {
+            return Ok(None);
+        }
+        let AggregationDomain::FiniteSet(set) = aggregate.domain else {
+            return Ok(None);
+        };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) = other else {
+            return Ok(None);
+        };
         for (base_obj, factor) in [(&*mul.left, &*mul.right), (&*mul.right, &*mul.left)] {
-            let Some(base) = aggregate_view(base_obj) else { continue; };
-            if !base.product { continue; }
-            let AggregationDomain::FiniteSet(base_set) = base.domain else { continue; };
-            let Obj::SetOperator(SetOperator::SetMinus(minus)) = base_set else { continue; };
-            let Obj::SetFormer(SetFormer::ListSet(list)) = &*minus.right else { continue; };
-            if list.list.len() != 1 { continue; }
+            let Some(base) = aggregate_view(base_obj) else {
+                continue;
+            };
+            if !base.product {
+                continue;
+            }
+            let AggregationDomain::FiniteSet(base_set) = base.domain else {
+                continue;
+            };
+            let Obj::SetOperator(SetOperator::SetMinus(minus)) = base_set else {
+                continue;
+            };
+            let Obj::SetFormer(SetFormer::ListSet(list)) = &*minus.right else {
+                continue;
+            };
+            if list.list.len() != 1 {
+                continue;
+            }
             let element = &*list.list[0];
-            let member: Fact = InFact { fact_id: self.global_ids.allocate_fact_id(), element: element.clone(), set: set.clone(), line_file: fact.line_file.clone() }.into();
+            let member: Fact = InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: element.clone(),
+                set: set.clone(),
+                line_file: fact.line_file.clone(),
+            }
+            .into();
             let same_set = equality(self, set.clone(), *minus.left.clone(), fact);
-            let Some(premises) = self.aggregate_identity_premises(vec![member, same_set], state)? else { continue; };
+            let Some(premises) = self.aggregate_identity_premises(vec![member, same_set], state)?
+            else {
+                continue;
+            };
             let Some(pointwise) = self.finite_aggregate_callback_agreement(
-                aggregate.func, base.func, base_set, fact, state,
-            )? else { continue; };
+                aggregate.func,
+                base.func,
+                base_set,
+                fact,
+                state,
+            )?
+            else {
+                continue;
+            };
             let mut factor_expansions = Vec::new();
-            let Some(value) = function_at(self, aggregate.func, element, &mut factor_expansions)? else { continue; };
+            let Some(value) = function_at(self, aggregate.func, element, &mut factor_expansions)?
+            else {
+                continue;
+            };
             let goal = equality(self, value, factor.clone(), fact);
             let factor_equal = self.verify_builtin_rule_premise(&goal, *state)?;
-            if factor_equal.is_failed() { continue; }
-            return Ok(Some(AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(
-                FiniteSetProductMemberRemovalProof { premises, pointwise, factor_expansions, factor_equal },
-            )));
+            if factor_equal.is_failed() {
+                continue;
+            }
+            return Ok(Some(
+                AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(
+                    FiniteSetProductMemberRemovalProof {
+                        premises,
+                        pointwise,
+                        factor_expansions,
+                        factor_equal,
+                    },
+                ),
+            ));
         }
         Ok(None)
     }
@@ -424,19 +539,36 @@ impl Runtime {
             return Ok(Some(FinitePartitionCallbackAgreementProof::SameFunction(FinitePartitionSameFunctionProof {})));
         }
         if super::helper::finite_restriction_matches(restricted, domain, source) {
-            return Ok(Some(FinitePartitionCallbackAgreementProof::LiteralRestriction(FinitePartitionLiteralRestrictionProof {})));
+            return Ok(Some(
+                FinitePartitionCallbackAgreementProof::LiteralRestriction(
+                    FinitePartitionLiteralRestrictionProof {},
+                ),
+            ));
         }
         // Keep the checked whole-function equality route for actual aliases.
         let same_function = equality(self, source.clone(), restricted.clone(), fact);
         let equality = self.verify_builtin_rule_premise(&same_function, *state)?;
         if !equality.is_failed() {
-            return Ok(Some(FinitePartitionCallbackAgreementProof::EqualFunctions(FinitePartitionEqualFunctionsProof { equality })));
+            return Ok(Some(FinitePartitionCallbackAgreementProof::EqualFunctions(
+                FinitePartitionEqualFunctionsProof { equality },
+            )));
         }
-        Ok(self.aggregate_pointwise_proof(AggregationDomain::FiniteSet(domain), fact, state, |rt, index, expansions| {
-            let Some(left) = function_at(rt, source, index, expansions)? else { return Ok(None); };
-            let Some(right) = function_at(rt, restricted, index, expansions)? else { return Ok(None); };
-            Ok(Some((left, right)))
-        })?.map(FinitePartitionCallbackAgreementProof::Pointwise))
+        Ok(self
+            .aggregate_pointwise_proof(
+                AggregationDomain::FiniteSet(domain),
+                fact,
+                state,
+                |rt, index, expansions| {
+                    let Some(left) = function_at(rt, source, index, expansions)? else {
+                        return Ok(None);
+                    };
+                    let Some(right) = function_at(rt, restricted, index, expansions)? else {
+                        return Ok(None);
+                    };
+                    Ok(Some((left, right)))
+                },
+            )?
+            .map(FinitePartitionCallbackAgreementProof::Pointwise))
     }
 
     fn aggregate_linearity_identity(
@@ -823,13 +955,12 @@ impl Runtime {
             }
             // This rule explicitly consumes a known pointwise forall. It does
             // not restart general definition/strategy/rewrite truth search.
-            if !state.allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
+            if !state
+                .allows(crate::execute::execute_fact_stmt::VerifyStateLevel::DefinitionAndForall)
             {
                 return Ok(None);
             }
-            let wd = match rt
-                .verify_equal_fact_well_definedness(&goal, *state)?
-            {
+            let wd = match rt.verify_equal_fact_well_definedness(&goal, *state)? {
                 VerifyEqualFactWellDefinedResult::Success(p) => p,
                 _ => return Ok(None),
             };

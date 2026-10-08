@@ -159,11 +159,26 @@ fn detailed_output_keeps_one_equality_or_all_disequality_certificates() {
         let children: Vec<&JsonValue> = if let Some(equal) = proof.get("equality_proof") {
             vec![equal]
         } else {
-            proof.get("disequality_proofs").unwrap().as_array().unwrap().iter().collect()
+            proof
+                .get("disequality_proofs")
+                .unwrap()
+                .as_array()
+                .unwrap()
+                .iter()
+                .collect()
         };
         assert_eq!(children.len(), requirements.len());
         for (child, requirement) in children.iter().zip(&requirements) {
-            assert_eq!(child.as_object().unwrap().get("fact").unwrap().as_str().unwrap(), *requirement);
+            assert_eq!(
+                child
+                    .as_object()
+                    .unwrap()
+                    .get("fact")
+                    .unwrap()
+                    .as_str()
+                    .unwrap(),
+                *requirement
+            );
         }
         for child in children {
             assert!(
@@ -173,18 +188,29 @@ fn detailed_output_keeps_one_equality_or_all_disequality_certificates() {
             );
         }
         use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::AtomicExceptEqualityFactSearchProofByBuiltinStrategy as S;
-        let Fact::AtomicFact(atomic) = fact(&mut rt, code) else { panic!("atomic") };
-        let strategy = rt.search_atomic_except_equality_fact_proof_by_builtin_strategy(
-            &atomic, VerifyState::new(VerifyStateLevel::BuiltinRule),
-        ).unwrap().unwrap();
+        let Fact::AtomicFact(atomic) = fact(&mut rt, code) else {
+            panic!("atomic")
+        };
+        let strategy = rt
+            .search_atomic_except_equality_fact_proof_by_builtin_strategy(
+                &atomic,
+                VerifyState::new(VerifyStateLevel::BuiltinRule),
+            )
+            .unwrap()
+            .unwrap();
         let (facts, proofs) = match strategy {
             S::ListSetMembership(p) => (p.requirement_facts, p.proof_of_requirement_facts),
             S::ListSetNonMembership(p) => (p.requirement_facts, p.proof_of_requirement_facts),
             _ => panic!("list strategy"),
         };
-        assert_eq!(facts.iter().map(|f| f.readable_string()).collect::<Vec<_>>(), requirements);
+        assert_eq!(
+            facts
+                .iter()
+                .map(|f| f.readable_string())
+                .collect::<Vec<_>>(),
+            requirements
+        );
         assert_eq!(proofs.len(), facts.len());
         assert!(proofs.iter().all(|p| !p.is_failed()));
-
     }
 }

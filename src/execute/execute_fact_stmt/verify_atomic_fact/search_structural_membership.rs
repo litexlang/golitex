@@ -56,7 +56,9 @@ impl Runtime {
         }
         if let Some(proof) = self.lookup_structural_known_subset_membership(&goal) {
             return Some(StructuralMembershipProof::new(
-                element.clone(), target.clone(), P::KnownSubset(proof),
+                element.clone(),
+                target.clone(),
+                P::KnownSubset(proof),
             ));
         }
         if let Some((source, rule)) = intrinsic_codomain(element) {
@@ -162,14 +164,17 @@ impl Runtime {
         let mut source_limit = sources.len();
         let mut adjacency = None;
         for known in candidates {
-            let Some(element_equal) = self.lookup_known_obj_equality_with_graph(&known.element, element, &mut adjacency)
+            let Some(element_equal) =
+                self.lookup_known_obj_equality_with_graph(&known.element, element, &mut adjacency)
             else {
                 continue;
             };
             for (index, source) in sources.iter().enumerate().take(source_limit) {
-                let Some(set_equal) =
-                    self.lookup_known_obj_equality_with_graph(&known.set, &Obj::StandardSet(source.clone()), &mut adjacency)
-                else {
+                let Some(set_equal) = self.lookup_known_obj_equality_with_graph(
+                    &known.set,
+                    &Obj::StandardSet(source.clone()),
+                    &mut adjacency,
+                ) else {
                     continue;
                 };
                 best = Some((

@@ -1,8 +1,8 @@
-use crate::ast::fact::{
-    AndChainAtomicFact, EqualFact, Fact, ForallFact, InFact, OrFact,
-};
+use crate::ast::fact::{AndChainAtomicFact, EqualFact, Fact, ForallFact, InFact, OrFact};
 use crate::ast::line_file::SourceLine;
-use crate::ast::obj::{ClosedRange, IdentifierObj, ListSet, Number, Obj, Range, Literal, SetFormer};
+use crate::ast::obj::{
+    ClosedRange, IdentifierObj, ListSet, Literal, Number, Obj, Range, SetFormer,
+};
 use crate::ast::param::ParamType;
 use crate::ast::stmt::ClosedRangeOrRange;
 use crate::rational_expression::exact_rational::evaluate_obj_to_exact_rational_for_eval;
@@ -35,8 +35,8 @@ pub(super) fn expand_closed_range_values(range: &ClosedRange) -> Result<Vec<Obj>
 pub(super) fn expand_range_values(range: &Range) -> Result<Vec<Obj>, String> {
     let start = obj_to_i128(&range.start)
         .ok_or_else(|| "range start is not a concrete integer".to_string())?;
-    let end = obj_to_i128(&range.end)
-        .ok_or_else(|| "range end is not a concrete integer".to_string())?;
+    let end =
+        obj_to_i128(&range.end).ok_or_else(|| "range end is not a concrete integer".to_string())?;
     if end <= start {
         return Ok(Vec::new());
     }

@@ -4,13 +4,12 @@
 //! `AtomicExceptEqualityFactSearchProofByBuiltinRule`. Each family enum and
 //! leaf proof owns its copy here (not in `project_normal`).
 
-mod common_obj_relations;
-mod exp_ln_order;
-mod log_unit_interval_order;
-mod factorial_order;
-mod constructor_order;
-mod finite_aggregate;
 mod cite;
+mod common_obj_relations;
+mod constructor_order;
+mod exp_ln_order;
+mod factorial_order;
+mod finite_aggregate;
 mod greater;
 mod greater_equal;
 mod in_fact;
@@ -18,8 +17,8 @@ mod is_finite_set;
 mod is_nonempty_set;
 mod is_set;
 mod less;
-mod rounding_definition_bounds;
 mod less_equal;
+mod log_unit_interval_order;
 mod misc_result;
 mod not_equal;
 mod not_greater;
@@ -31,6 +30,7 @@ mod not_less;
 mod not_less_equal;
 mod not_subset;
 mod not_superset;
+mod rounding_definition_bounds;
 mod subset;
 mod superset;
 

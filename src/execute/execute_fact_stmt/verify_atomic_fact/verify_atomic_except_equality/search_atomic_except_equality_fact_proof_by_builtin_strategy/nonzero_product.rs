@@ -11,7 +11,13 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<NonzeroProductStrategySingleStep>> {
-        let AtomicFact::NotEqualFact(NotEqualFact { left, right, line_file, .. }) = fact else {
+        let AtomicFact::NotEqualFact(NotEqualFact {
+            left,
+            right,
+            line_file,
+            ..
+        }) = fact
+        else {
             return Ok(None);
         };
         let expression = if is_zero_obj(right) {
@@ -25,8 +31,16 @@ impl Runtime {
             return Ok(None);
         };
         let requirements = vec![
-            self.strategy_not_equal_fact(product.left.as_ref().clone(), zero_obj(), line_file.clone()),
-            self.strategy_not_equal_fact(product.right.as_ref().clone(), zero_obj(), line_file.clone()),
+            self.strategy_not_equal_fact(
+                product.left.as_ref().clone(),
+                zero_obj(),
+                line_file.clone(),
+            ),
+            self.strategy_not_equal_fact(
+                product.right.as_ref().clone(),
+                zero_obj(),
+                line_file.clone(),
+            ),
         ];
         let Some((requirement_facts, proof_of_requirement_facts)) =
             self.verify_strategy_requirements(requirements, ctx)?

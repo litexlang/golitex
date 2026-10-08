@@ -23,9 +23,9 @@ mod param;
 #[cfg(test)]
 mod tests;
 
+pub(crate) use capture::collect_free_plain_ids;
 pub use error::InstError;
 pub use fact::quantifier_free_fact_to_fact;
-pub(crate) use capture::collect_free_plain_ids;
 
 use std::collections::HashMap;
 

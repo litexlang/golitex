@@ -8,19 +8,27 @@ use crate::tokenize::Tokenizer;
 
 fn runtime(language: OutputLanguage) -> Runtime {
     Runtime::new(LaunchCommand::Eval {
-        code: String::new(), session: false, strict: true, language,
+        code: String::new(),
+        session: false,
+        strict: true,
+        language,
     })
 }
 
 fn execute(rt: &mut Runtime, source: &str) -> ExecStmtResult {
-    let tokens = Tokenizer::new().tokenize(source, rt.current_file.clone()).unwrap();
+    let tokens = Tokenizer::new()
+        .tokenize(source, rt.current_file.clone())
+        .unwrap();
     let mut statements = rt.parse(&tokens).unwrap();
     assert_eq!(statements.len(), 1, "{source}");
     rt.exec_stmt(&statements.remove(0)).unwrap()
 }
 
 fn fact_count(rt: &Runtime) -> usize {
-    rt.execution_environments_stack.iter().map(|env| env.facts.facts_by_id.len()).sum()
+    rt.execution_environments_stack
+        .iter()
+        .map(|env| env.facts.facts_by_id.len())
+        .sum()
 }
 
 fn assert_no_retired_product_facts(rt: &Runtime) {
@@ -29,7 +37,13 @@ fn assert_no_retired_product_facts(rt: &Runtime) {
     for env in &rt.execution_environments_stack {
         for fact in env.facts.facts_by_id.values() {
             let text = fact.readable_string();
-            for retired in ["cart_dim(", "tuple_dim(", "proj(", "$is_tuple(", "$is_cart("] {
+            for retired in [
+                "cart_dim(",
+                "tuple_dim(",
+                "proj(",
+                "$is_tuple(",
+                "$is_cart(",
+            ] {
                 assert!(!text.contains(retired), "retired fact published: {text}");
             }
         }
@@ -81,11 +95,25 @@ fn finite_function_coordinates_nested_beta_retains_actual_sources_and_inner_doma
         let mut rt = runtime(language);
         let run = rt.run_litex_code("have fn next(x R) R=x+1\nhave operations cart(fn(x R) R,Z)=(next,7)\noperations(1)(2)=3").unwrap();
         assert!(run.success && run.session_error.is_none(), "{language:?}");
-        let detailed = project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
-        assert!(detailed.contains("finite_function_coordinate"), "{detailed}");
-        assert!(detailed.contains("application_well_defined") && detailed.contains("body_application_well_defined"), "missing real coordinate or selected-body WD: {detailed}");
-        assert!(detailed.contains("continued_body") && detailed.contains("next(2)"), "missing continued ordinary call: {detailed}");
-        assert!(detailed.contains("function_equal"), "missing actual function equality source: {detailed}");
+        let detailed =
+            project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
+        assert!(
+            detailed.contains("finite_function_coordinate"),
+            "{detailed}"
+        );
+        assert!(
+            detailed.contains("application_well_defined")
+                && detailed.contains("body_application_well_defined"),
+            "missing real coordinate or selected-body WD: {detailed}"
+        );
+        assert!(
+            detailed.contains("continued_body") && detailed.contains("next(2)"),
+            "missing continued ordinary call: {detailed}"
+        );
+        assert!(
+            detailed.contains("function_equal"),
+            "missing actual function equality source: {detailed}"
+        );
         let before = fact_count(&rt);
         assert!(execute(&mut rt, "operations(1)(2)=4").is_failed());
         assert_eq!(fact_count(&rt), before);
@@ -130,43 +158,106 @@ fn finite_function_coordinates_reject_wrong_fields_domains_and_guards_without_pu
 fn finite_function_coordinates_local_struct_bridge_output_uses_ordinary_applications() {
     for language in OutputLanguage::ALL {
         let mut rt = runtime(language);
-        assert!(rt.run_litex_code("struct Pair:\n    first R\n    second Z").unwrap().success);
-        let result = execute(&mut rt, "forall p &Pair:\n    p.first=p(1)\n    p.second=p(2)\n    p(2) $in Z");
+        assert!(
+            rt.run_litex_code("struct Pair:\n    first R\n    second Z")
+                .unwrap()
+                .success
+        );
+        let result = execute(
+            &mut rt,
+            "forall p &Pair:\n    p.first=p(1)\n    p.second=p(2)\n    p(2) $in Z",
+        );
         assert!(!result.is_failed(), "{language:?}");
         let detailed = project_stmt_detailed(&result, &rt).stringify();
-        assert!(detailed.contains("auto_opened_struct_layers"), "{language:?}: {detailed}");
-        assert!(detailed.contains("p.first = p(1)") && detailed.contains("p.second = p(2)"), "missing actual field bridges: {detailed}");
+        assert!(
+            detailed.contains("auto_opened_struct_layers"),
+            "{language:?}: {detailed}"
+        );
+        assert!(
+            detailed.contains("p.first = p(1)") && detailed.contains("p.second = p(2)"),
+            "missing actual field bridges: {detailed}"
+        );
         for retired in ["tuple_dim", "cart_dim", "$is_tuple", "p[1]", "p[2]"] {
-            assert!(!detailed.contains(retired), "retired bridge in Detailed: {retired}");
+            assert!(
+                !detailed.contains(retired),
+                "retired bridge in Detailed: {retired}"
+            );
         }
-        assert!(project_stmt_normal(&result, &rt).stringify().contains("p(2)"));
+        assert!(project_stmt_normal(&result, &rt)
+            .stringify()
+            .contains("p(2)"));
         assert_eq!(rt.execution_environments_stack.len(), 1);
         assert_no_retired_product_facts(&rt);
     }
 }
 
 #[test]
-fn finite_function_coordinates_nested_tuple_call_preserves_coordinate_carriers_and_domain_boundaries() {
+fn finite_function_coordinates_nested_tuple_call_preserves_coordinate_carriers_and_domain_boundaries(
+) {
     let mut rt = runtime(OutputLanguage::English);
-    let run = rt.run_litex_code("have outer cart(cart(R,Z),R)=((1/2,2),3)\nouter(1)(2) $in Z\nouter(1)(2)=2").unwrap();
-    assert!(run.success && run.session_error.is_none(), "{}", crate::json_output::emit_run_detailed(&run, &rt, "nested-tuple", None));
-    assert!(rt.run_litex_code("let alias=outer\nalias(1)(2)=2").unwrap().success);
+    let run = rt
+        .run_litex_code(
+            "have outer cart(cart(R,Z),R)=((1/2,2),3)\nouter(1)(2) $in Z\nouter(1)(2)=2",
+        )
+        .unwrap();
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{}",
+        crate::json_output::emit_run_detailed(&run, &rt, "nested-tuple", None)
+    );
+    assert!(
+        rt.run_litex_code("let alias=outer\nalias(1)(2)=2")
+            .unwrap()
+            .success
+    );
     let detailed = project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
-    assert!(detailed.contains("returned_finite_function_coordinate"), "{detailed}");
-    for goal in ["outer(1)(3)=3", "outer(2)(1)=3", "outer(1)(1) $in Z", "outer(1)(2)=4", "outer(3)(1)=1", "outer(1)(0)=1", "outer(1)(1,2)=2"] {
+    assert!(
+        detailed.contains("returned_finite_function_coordinate"),
+        "{detailed}"
+    );
+    for goal in [
+        "outer(1)(3)=3",
+        "outer(2)(1)=3",
+        "outer(1)(1) $in Z",
+        "outer(1)(2)=4",
+        "outer(3)(1)=1",
+        "outer(1)(0)=1",
+        "outer(1)(1,2)=2",
+    ] {
         let before = fact_count(&rt);
         assert!(execute(&mut rt, goal).is_failed(), "{goal}");
-        assert_eq!(fact_count(&rt), before, "failed nested application published: {goal}");
+        assert_eq!(
+            fact_count(&rt),
+            before,
+            "failed nested application published: {goal}"
+        );
     }
     let run = rt.run_litex_code("have deep cart(cart(cart(R,Z),R),R)=(((1/2,2),3),4)\ndeep(1)(1)(2) $in Z\ndeep(1)(1)(2)=2").unwrap();
-    assert!(run.success && run.session_error.is_none(), "{}", crate::json_output::emit_run_detailed(&run, &rt, "deep-tuple", None));
-    for goal in ["deep(1)(1)(3)=3", "deep(1)(2)(1)=1", "deep(2)(1)(1)=1", "deep(1)(1)(1) $in Z"] {
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{}",
+        crate::json_output::emit_run_detailed(&run, &rt, "deep-tuple", None)
+    );
+    for goal in [
+        "deep(1)(1)(3)=3",
+        "deep(1)(2)(1)=1",
+        "deep(2)(1)(1)=1",
+        "deep(1)(1)(1) $in Z",
+    ] {
         let before = fact_count(&rt);
         assert!(execute(&mut rt, goal).is_failed(), "{goal}");
         assert_eq!(fact_count(&rt), before);
     }
-    assert!(rt.run_litex_code("let literal_outer=((1,2),3)\nliteral_outer(1)(2)=2").unwrap().success);
-    for goal in ["literal_outer(1)(3)=3", "literal_outer(2)(1)=1", "literal_outer(1)(2)=3"] {
+    assert!(
+        rt.run_litex_code("let literal_outer=((1,2),3)\nliteral_outer(1)(2)=2")
+            .unwrap()
+            .success
+    );
+    for goal in [
+        "literal_outer(1)(3)=3",
+        "literal_outer(2)(1)=1",
+        "literal_outer(1)(2)=3",
+    ] {
         let before = fact_count(&rt);
         assert!(execute(&mut rt, goal).is_failed(), "{goal}");
         assert_eq!(fact_count(&rt), before);

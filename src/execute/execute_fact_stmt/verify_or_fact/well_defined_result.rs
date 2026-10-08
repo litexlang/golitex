@@ -1,5 +1,5 @@
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    FailToVerifyFactWellDefinedResult, FactWellDefinedProof,
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult,
 };
 
 pub struct FailToVerifyOrFactWellDefinedResult {

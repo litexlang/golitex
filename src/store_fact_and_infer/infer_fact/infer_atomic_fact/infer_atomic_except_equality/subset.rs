@@ -3,9 +3,11 @@ use crate::ast::fact::{
 };
 use crate::ast::obj::{IdentifierObj, Obj, SetFormer};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::{InferSubsetElementwiseMembershipResult, InferSubsetFiniteUpperBoundResult};
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
+use crate::runtime::{Runtime, RuntimeResult};
+use crate::store_fact_and_infer::{
+    InferSubsetElementwiseMembershipResult, InferSubsetFiniteUpperBoundResult,
+};
 
 impl Runtime {
     // A stored inclusion with an already available finite upper bound publishes
@@ -22,7 +24,8 @@ impl Runtime {
             fact_id: self.global_ids.allocate_fact_id(),
             set: subset.right.clone(),
             line_file: subset.line_file.clone(),
-        }.into();
+        }
+        .into();
         let upper_finite_proof = self.verify_fact(
             &upper_finite,
             verify_state.capped_at(VerifyStateLevel::KnownSpecialProperty),
@@ -34,7 +37,8 @@ impl Runtime {
             fact_id: self.global_ids.allocate_fact_id(),
             set: subset.left.clone(),
             line_file: subset.line_file.clone(),
-        }.into();
+        }
+        .into();
         let derived = Box::new(self.store_inferred_fact_and_infer(&finite, verify_state)?);
         Ok(Some(InferSubsetFiniteUpperBoundResult {
             source_fact_id: subset.fact_id,
@@ -47,7 +51,8 @@ impl Runtime {
     pub(super) fn infer_subset_elementwise_membership(
         &mut self,
         subset: &SubsetFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferSubsetElementwiseMembershipResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferSubsetElementwiseMembershipResult>> {
         if self.set_is_or_equals_set_builder(&subset.left) {
             return Ok(None);
         }
@@ -71,7 +76,8 @@ impl Runtime {
             ))],
             line_file: subset.line_file.clone(),
         };
-        let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
+        let derived =
+            Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
         Ok(Some(InferSubsetElementwiseMembershipResult { derived }))
     }
 
@@ -80,7 +86,9 @@ impl Runtime {
             return true;
         }
         for (value, _) in self.exact_property_object_values(set) {
-            if matches!(value, Obj::SetFormer(SetFormer::SetBuilder(_))) { return true; }
+            if matches!(value, Obj::SetFormer(SetFormer::SetBuilder(_))) {
+                return true;
+            }
         }
         false
     }

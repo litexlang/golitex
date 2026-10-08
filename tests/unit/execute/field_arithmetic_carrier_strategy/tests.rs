@@ -254,10 +254,12 @@ fn detailed_field_tree_and_exact_coordinates_are_real_proof_evidence() {
     let run = rt.run_litex_code("have a Q\n(3*a+2)/5 $in Q\n").unwrap();
     assert!(run.success);
     let detail = crate::json_output::project_stmt_detailed(&run.statement_results[1], &rt);
-    let proof = find(&detail, "kind", "div")
-        .unwrap_or_else(|| panic!("{}", detail.stringify()));
+    let proof = find(&detail, "kind", "div").unwrap_or_else(|| panic!("{}", detail.stringify()));
     assert_eq!(proof.get("set"), Some(&JsonValue::String("Q".into())));
-    assert_eq!(proof.get("domain_evidence"), Some(&JsonValue::String("enclosing_object_wd".into())));
+    assert_eq!(
+        proof.get("domain_evidence"),
+        Some(&JsonValue::String("enclosing_object_wd".into()))
+    );
     let left = proof.get("left").unwrap();
     assert!(find(left, "kind", "add").is_some());
     assert!(find(left, "kind", "mul").is_some());
@@ -266,14 +268,30 @@ fn detailed_field_tree_and_exact_coordinates_are_real_proof_evidence() {
 
     // Keep direct coverage of the higher strategy and its nonzero obligation,
     // even though the ordinary dispatcher now selects Direct first.
-    let Fact::AtomicFact(goal) = fact(&mut rt, "(3*a+2)/5 $in Q") else { panic!() };
-    let strategy = rt.search_field_arithmetic_carrier_strategy(
-        &goal, VerifyState::new(VerifyStateLevel::BuiltinRule),
-    ).unwrap().unwrap();
+    let Fact::AtomicFact(goal) = fact(&mut rt, "(3*a+2)/5 $in Q") else {
+        panic!()
+    };
+    let strategy = rt
+        .search_field_arithmetic_carrier_strategy(
+            &goal,
+            VerifyState::new(VerifyStateLevel::BuiltinRule),
+        )
+        .unwrap()
+        .unwrap();
     let expected = ["3 $in Q", "a $in Q", "2 $in Q", "5 $in Q", "5 != 0"];
-    assert_eq!(strategy.requirement_facts.iter().map(|f| f.readable_string()).collect::<Vec<_>>(), expected);
+    assert_eq!(
+        strategy
+            .requirement_facts
+            .iter()
+            .map(|f| f.readable_string())
+            .collect::<Vec<_>>(),
+        expected
+    );
     assert_eq!(strategy.proof_of_requirement_facts.len(), expected.len());
-    assert!(strategy.proof_of_requirement_facts.iter().all(|p| !p.is_failed()));
+    assert!(strategy
+        .proof_of_requirement_facts
+        .iter()
+        .all(|p| !p.is_failed()));
 
     let run = rt.run_litex_code("i^2 $in Z").unwrap();
     assert!(run.success);

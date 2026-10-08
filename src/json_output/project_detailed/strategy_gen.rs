@@ -654,34 +654,60 @@ pub(super) fn project_atomic_builtin_strategy(
     }
 }
 
-fn project_field_arithmetic_tree(tree: &FieldArithmeticCarrierConstructorTree, runtime: &Runtime) -> JsonValue {
+fn project_field_arithmetic_tree(
+    tree: &FieldArithmeticCarrierConstructorTree,
+    runtime: &Runtime,
+) -> JsonValue {
     use FieldArithmeticCarrierConstructorTree::*;
-    let binary = |kind, left, right| object_for(runtime, vec![
-        ("constructor", string(kind)),
-        ("left", project_field_arithmetic_tree(left, runtime)),
-        ("right", project_field_arithmetic_tree(right, runtime)),
-    ]);
+    let binary = |kind, left, right| {
+        object_for(
+            runtime,
+            vec![
+                ("constructor", string(kind)),
+                ("left", project_field_arithmetic_tree(left, runtime)),
+                ("right", project_field_arithmetic_tree(right, runtime)),
+            ],
+        )
+    };
     match tree {
-        Leaf { requirement_index } => object_for(runtime, vec![
-            ("constructor", string("leaf")),
-            ("requirement_index", JsonValue::Number(*requirement_index as f64)),
-        ]),
+        Leaf { requirement_index } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("leaf")),
+                (
+                    "requirement_index",
+                    JsonValue::Number(*requirement_index as f64),
+                ),
+            ],
+        ),
         Add { left, right } => binary("add", left, right),
         Sub { left, right } => binary("sub", left, right),
-        Neg { argument } => object_for(runtime, vec![
-            ("constructor", string("neg")),
-            ("argument", project_field_arithmetic_tree(argument, runtime)),
-        ]),
+        Neg { argument } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("neg")),
+                ("argument", project_field_arithmetic_tree(argument, runtime)),
+            ],
+        ),
         Mul { left, right } => binary("mul", left, right),
-        Div { left, right, nonzero_requirement_index } => object_for(runtime, vec![
-            ("constructor", string("div")),
-            ("left", project_field_arithmetic_tree(left, runtime)),
-            ("right", project_field_arithmetic_tree(right, runtime)),
-            ("nonzero_requirement_index", JsonValue::Number(*nonzero_requirement_index as f64)),
-        ]),
+        Div {
+            left,
+            right,
+            nonzero_requirement_index,
+        } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("div")),
+                ("left", project_field_arithmetic_tree(left, runtime)),
+                ("right", project_field_arithmetic_tree(right, runtime)),
+                (
+                    "nonzero_requirement_index",
+                    JsonValue::Number(*nonzero_requirement_index as f64),
+                ),
+            ],
+        ),
     }
 }
-
 
 fn project_preimage_input_view(
     view: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionPreimageInputView,
@@ -690,9 +716,24 @@ fn project_preimage_input_view(
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionPreimageInputView;
     match view {
         FunctionPreimageInputView::BoundedAssignment => string("bounded_assignment"),
-        FunctionPreimageInputView::LiteralTuple { tuple, input_equal } => object_for(runtime, vec![
-            ("type", string("literal_tuple")), ("tuple", string(crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(tuple.clone())).readable_string())),
-            ("input_equal", super::searched::project_known_equality_path(input_equal, runtime)),
-        ]),
+        FunctionPreimageInputView::LiteralTuple { tuple, input_equal } => object_for(
+            runtime,
+            vec![
+                ("type", string("literal_tuple")),
+                (
+                    "tuple",
+                    string(
+                        crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(
+                            tuple.clone(),
+                        ))
+                        .readable_string(),
+                    ),
+                ),
+                (
+                    "input_equal",
+                    super::searched::project_known_equality_path(input_equal, runtime),
+                ),
+            ],
+        ),
     }
 }

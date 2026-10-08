@@ -1,4 +1,3 @@
-use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use super::helper::{
     assume_fact, close_by_contradiction, negate_fact_for_contra, proof_verify_state,
     store_goal_fact,
@@ -7,14 +6,14 @@ use super::result::{
     ExecByContraStmtFailed, ExecByContraStmtResult, ExecByContraStmtSuccess, ExecByStmtResult,
 };
 use crate::ast::stmt::ByContraStmt;
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub fn exec_by_contra_stmt(
     runtime: &mut Runtime,
     stmt: &ByContraStmt,
 ) -> RuntimeResult<ExecByStmtResult> {
-    let goal_wd =
-        runtime.verify_fact_well_definedness(&stmt.to_prove, proof_verify_state())?;
+    let goal_wd = runtime.verify_fact_well_definedness(&stmt.to_prove, proof_verify_state())?;
     if goal_wd.is_failed() {
         return Ok(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(
             ExecByContraStmtFailed::GoalWd(goal_wd),

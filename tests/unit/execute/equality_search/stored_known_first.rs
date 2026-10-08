@@ -20,21 +20,32 @@ fn stored_equality_precedes_calculation_and_special_property_in_both_entries() {
             let result = if strategy {
                 rt.verify_fact(
                     &Fact::AtomicFact(goal.clone().into()),
-                    VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule),
+                    VerifyState::new(
+                        crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+                    ),
                 )
             } else {
                 rt.verify_equal_fact(&goal, VerifyState::top_level())
             }
             .unwrap();
-            let VerifyFactResult::Equality(result) = result else { panic!("equality") };
-            let VerifyEqualityResult::Success(result) = *result else { panic!("{code}") };
+            let VerifyFactResult::Equality(result) = result else {
+                panic!("equality")
+            };
+            let VerifyEqualityResult::Success(result) = *result else {
+                panic!("{code}")
+            };
             let EqualFactSearchedProof::ByEquivalenceClass(
                 EqualFactSearchedProofByEquivalenceClass::KnownPath(path),
-            ) = result.searched_proof else {
+            ) = result.searched_proof
+            else {
                 panic!("already proved goal must cite its stored path: {code}, strategy={strategy}")
             };
             check_path(&rt, &path, &goal.left, &goal.right);
-            assert_eq!(store_sizes(&rt), before, "known hit must not publish new evidence");
+            assert_eq!(
+                store_sizes(&rt),
+                before,
+                "known hit must not publish new evidence"
+            );
         }
     }
 }
@@ -46,7 +57,11 @@ fn raw_known_equality_does_not_prove_a_new_structural_or_numeric_goal() {
     let before = store_sizes(&rt);
     for code in ["p = (p(1),p(2))", "1 + 1 = 2", "1 + 1 = 3"] {
         let goal = equal(&mut rt, code);
-        assert!(rt.lookup_known_obj_equality(&goal.left, &goal.right).is_none(), "{code}");
+        assert!(
+            rt.lookup_known_obj_equality(&goal.left, &goal.right)
+                .is_none(),
+            "{code}"
+        );
     }
     assert_eq!(store_sizes(&rt), before);
     assert!(verify(&mut rt, "1 + 1 = 3", VerifyState::top_level()).is_failed());

@@ -10,7 +10,7 @@ use crate::ast::fact::{
     and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AtomicFact, EqualFact,
     ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, OrFact,
 };
-use crate::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj, FunctionSpace};
+use crate::ast::obj::{FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj};
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -91,8 +91,10 @@ impl Runtime {
         }
 
         let fn_set = fn_set_from_clause(&stmt.fn_set_clause);
-        let fn_set_well_defined =
-            self.verify_obj_well_definedness(&Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())), verify_state.clone())?;
+        let fn_set_well_defined = self.verify_obj_well_definedness(
+            &Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
+            verify_state.clone(),
+        )?;
         if fn_set_well_defined.is_failed() {
             return Ok(ExecHaveFnEqualCaseByCaseStmtResult::Failed(
                 ExecHaveFnEqualCaseByCaseStmtFailed::FnSetWellDefined(fn_set_well_defined),
@@ -130,7 +132,11 @@ impl Runtime {
             }
         }
 
-        let store_and_infer_result = self.store_have_fn_case_by_case_facts(stmt, &fn_set, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let store_and_infer_result = self.store_have_fn_case_by_case_facts(
+            stmt,
+            &fn_set,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         Ok(ExecHaveFnEqualCaseByCaseStmtResult::Success(
             ExecHaveFnEqualCaseByCaseStmtSuccessResult {
@@ -218,20 +224,22 @@ impl Runtime {
             let assumed_fact = and_chain_as_fact(assumed);
             let _ = rt.store_fact_and_infer(&assumed_fact, verify_state)?;
             for atom in flatten_and_chain_atoms(rt, other)? {
-                let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id()) else {
+                let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id())
+                else {
                     continue;
                 };
-                let checked = rt.verify_fact(
-                    &Fact::AtomicFact(negated.clone()),
-                    verify_state.clone(),
-                )?;
+                let checked =
+                    rt.verify_fact(&Fact::AtomicFact(negated.clone()), verify_state.clone())?;
                 if !checked.is_failed() {
                     return Ok(true);
                 }
                 // Strict order implies the weak opposite of the other branch.
                 // Example: assumed `x > 0`, other `x < 0` → prove `x >= 0` (= not x < 0).
-                if let Some(weak) = weak_order_from_strict_assumption(assumed, &atom, rt.global_ids.allocate_fact_id())
-                {
+                if let Some(weak) = weak_order_from_strict_assumption(
+                    assumed,
+                    &atom,
+                    rt.global_ids.allocate_fact_id(),
+                ) {
                     let weak_checked =
                         rt.verify_fact(&Fact::AtomicFact(weak), verify_state.clone())?;
                     if !weak_checked.is_failed() {
@@ -276,12 +284,10 @@ impl Runtime {
             }));
             let body_in_ret_set = rt.verify_fact(&in_fact, verify_state.clone())?;
             if body_in_ret_set.is_failed() {
-                return Ok(Err(
-                    ExecHaveFnEqualCaseByCaseStmtFailed::CaseBodyInRetSet(
-                        case_index,
-                        body_in_ret_set,
-                    ),
-                ));
+                return Ok(Err(ExecHaveFnEqualCaseByCaseStmtFailed::CaseBodyInRetSet(
+                    case_index,
+                    body_in_ret_set,
+                )));
             }
 
             Ok(Ok((body_well_defined, body_in_ret_set)))
@@ -300,11 +306,13 @@ impl Runtime {
     pub(crate) fn introduce_fn_set_clause_binders(
         &mut self,
         clause: &FnSetClause,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<()> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<()> {
         let typed = set_bound_to_typed(&clause.set_bound_parameters);
         let _ = self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
         for dom in &clause.dom_facts {
-            let _ = self.store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()), verify_state)?;
+            let _ = self
+                .store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()), verify_state)?;
         }
         Ok(())
     }
@@ -313,7 +321,8 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set: &FnSet,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
         if self.identifier_defined_in_stack(&stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
@@ -336,9 +345,9 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set: &FnSet,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
-        let function_ident =
-            self.identifier_obj_for_stored_mention(&stmt.name);
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
+        let function_ident = self.identifier_obj_for_stored_mention(&stmt.name);
         let function_obj = Obj::Identifier(function_ident.clone());
 
         let membership_fact_id = self.global_ids.allocate_fact_id();
@@ -348,7 +357,9 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self.store_fact_and_infer(&membership, verify_state)?.stored_fact_ids();
+        let mut stored_fact_ids = self
+            .store_fact_and_infer(&membership, verify_state)?
+            .stored_fact_ids();
 
         let typed = set_bound_to_typed(&stmt.fn_set_clause.set_bound_parameters);
         let mut args = Vec::new();
@@ -426,7 +437,10 @@ pub(crate) fn set_bound_to_typed(list: &SetBoundParameterList) -> TypedParameter
     }
 }
 
-fn flatten_and_chain_atoms(runtime: &mut Runtime, fact: &AndChainAtomicFact) -> RuntimeResult<Vec<AtomicFact>> {
+fn flatten_and_chain_atoms(
+    runtime: &mut Runtime,
+    fact: &AndChainAtomicFact,
+) -> RuntimeResult<Vec<AtomicFact>> {
     match fact {
         AndChainAtomicFact::AtomicFact(a) => Ok(vec![a.clone()]),
         AndChainAtomicFact::AndFact(a) => Ok(a.facts.clone()),
@@ -441,9 +455,7 @@ fn weak_order_from_strict_assumption(
     other_atom: &AtomicFact,
     new_fact_id: FactId,
 ) -> Option<AtomicFact> {
-    use crate::ast::fact::{
-        GreaterEqualFact, LessEqualFact,
-    };
+    use crate::ast::fact::{GreaterEqualFact, LessEqualFact};
     let AndChainAtomicFact::AtomicFact(assumed_atom) = assumed else {
         return None;
     };

@@ -73,10 +73,12 @@ impl Runtime {
         if residual_equal.is_failed() {
             return Ok(None);
         }
-        Ok(Some(ByUnfoldHaveFnByInducApplicationObjectDefinitionProof {
-            expanded_body,
-            residual_equal,
-        }))
+        Ok(Some(
+            ByUnfoldHaveFnByInducApplicationObjectDefinitionProof {
+                expanded_body,
+                residual_equal,
+            },
+        ))
     }
 
     // Shared with template have-fn-by-induc unfold: `subst` may already include
@@ -94,7 +96,8 @@ impl Runtime {
             let Ok(inst_case) = self.inst_and_chain_atomic(&case.case_fact, subst) else {
                 continue;
             };
-            let case_check = self.verify_fact(&and_chain_as_fact(&inst_case), case_guard_state.clone())?;
+            let case_check =
+                self.verify_fact(&and_chain_as_fact(&inst_case), case_guard_state.clone())?;
             if case_check.is_failed() {
                 continue;
             }

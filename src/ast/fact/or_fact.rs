@@ -1,5 +1,5 @@
-use super::{AndFact, AtomicFact, ChainFact};
 use super::super::line_file::SourceLine;
+use super::{AndFact, AtomicFact, ChainFact};
 use crate::runtime::FactId;
 
 // Or branches are only atomic / flat and / chain (not nested or).

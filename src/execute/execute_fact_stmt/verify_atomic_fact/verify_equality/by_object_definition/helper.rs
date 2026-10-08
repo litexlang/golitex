@@ -18,12 +18,7 @@ pub(super) fn fn_app_args(fn_obj: &FnObj) -> Option<Vec<Obj>> {
     if fn_obj.body.len() != 1 {
         return None;
     }
-    Some(
-        fn_obj.body[0]
-            .iter()
-            .map(|a| a.as_ref().clone())
-            .collect(),
-    )
+    Some(fn_obj.body[0].iter().map(|a| a.as_ref().clone()).collect())
 }
 
 pub(in crate::execute) fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {

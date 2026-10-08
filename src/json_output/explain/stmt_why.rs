@@ -1644,9 +1644,10 @@ pub fn explain_stmt_kind(kind: &str, lang: OutputLanguage) -> StmtWhyText {
             "Release object def",
             "Release an object definition",
         ),
-        ("release_obj" | "release_cart_def" | "release_tuple_def", OutputLanguage::ChineseTraditional) => {
-            ("釋放", "釋放物件定義", "釋放物件定義")
-        }
+        (
+            "release_obj" | "release_cart_def" | "release_tuple_def",
+            OutputLanguage::ChineseTraditional,
+        ) => ("釋放", "釋放物件定義", "釋放物件定義"),
         ("release_obj" | "release_cart_def" | "release_tuple_def", OutputLanguage::French) => (
             "Libération",
             "Libération de définition d'objet",
@@ -1679,7 +1680,9 @@ pub fn explain_stmt_kind(kind: &str, lang: OutputLanguage) -> StmtWhyText {
             "Giải phóng định nghĩa đối tượng",
         ),
 
-        ("release_obj" | "release_cart_def" | "release_tuple_def", OutputLanguage::Chinese) => ("释放", "释放对象定义", "释放对象定义"),
+        ("release_obj" | "release_cart_def" | "release_tuple_def", OutputLanguage::Chinese) => {
+            ("释放", "释放对象定义", "释放对象定义")
+        }
         ("expand_range", OutputLanguage::English) => (
             "release",
             "Expand range",
@@ -1925,11 +1928,9 @@ pub fn explain_stmt_kind(kind: &str, lang: OutputLanguage) -> StmtWhyText {
             "Evaluación",
             "Evaluar exactamente una expresión y guardar su igualdad con el resultado",
         ),
-        ("eval", OutputLanguage::Arabic) => (
-            "أمر",
-            "تقييم",
-            "تقييم التعبير بدقة وحفظ مساواته بالنتيجة",
-        ),
+        ("eval", OutputLanguage::Arabic) => {
+            ("أمر", "تقييم", "تقييم التعبير بدقة وحفظ مساواته بالنتيجة")
+        }
         ("eval", OutputLanguage::Japanese) => (
             "コマンド",
             "評価",
@@ -1946,9 +1947,7 @@ pub fn explain_stmt_kind(kind: &str, lang: OutputLanguage) -> StmtWhyText {
             "Tính chính xác biểu thức và lưu đẳng thức với kết quả",
         ),
 
-        ("eval", OutputLanguage::Chinese) => {
-            ("命令", "求值", "精确求值并存储原表达式与结果的等式")
-        }
+        ("eval", OutputLanguage::Chinese) => ("命令", "求值", "精确求值并存储原表达式与结果的等式"),
 
         (_, OutputLanguage::English) => ("stmt", kind, "Statement completed"),
         (_, OutputLanguage::ChineseTraditional) => ("語句", kind, "語句執行完成"),

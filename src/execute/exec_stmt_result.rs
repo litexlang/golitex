@@ -16,41 +16,41 @@
 //! table for that scope. Resolve id cites through it; do not scrape it to
 //! rediscover the proof route (see `execute_by_stmt/result.rs`).
 
+use crate::execute::execute_axiom_stmt::ExecAxiomStmtResult;
 use crate::execute::execute_by_stmt::ExecByStmtResult;
 use crate::execute::execute_by_stmt::ExecReleaseThmStmtResult;
 use crate::execute::execute_by_stmt::{
     ExecExpandRangeStmtResult, ExecReleaseAxiomOfChoiceStmtResult,
     ExecReleaseRegularityAxiomStmtResult, ExecReleaseZornLemmaStmtResult,
 };
-use crate::execute::execute_eval_stmt::ExecCommandStmtResult;
-use crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
-use crate::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::execute::execute_def_algo_by_cases_stmt::ExecDefAlgoByCasesStmtResult;
 use crate::execute::execute_def_algo_by_induc_stmt::ExecDefAlgoByInducStmtResult;
 use crate::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
+use crate::execute::execute_def_strategy_stmt::ExecDefStrategyStmtResult;
 use crate::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 use crate::execute::execute_def_template_stmt::ExecDefTemplateStmtResult;
 use crate::execute::execute_def_thm_stmt::ExecDefThmStmtResult;
-use crate::execute::execute_def_strategy_stmt::ExecDefStrategyStmtResult;
-use crate::execute::execute_axiom_stmt::ExecAxiomStmtResult;
+use crate::execute::execute_eval_stmt::ExecCommandStmtResult;
 use crate::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
+use crate::execute::execute_have_by_fn_preimage_stmt::ExecHaveByFnPreimageStmtResult;
+use crate::execute::execute_have_by_replacement_axiom_stmt::ExecHaveByReplacementAxiomStmtResult;
 use crate::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
 use crate::execute::execute_have_fn_by_induc_stmt::ExecHaveFnByInducStmtResult;
 use crate::execute::execute_have_fn_equal_case_by_case_stmt::ExecHaveFnEqualCaseByCaseStmtResult;
 use crate::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
 use crate::execute::execute_have_obj_by_exist_facts_stmt::ExecHaveObjByExistFactsStmtResult;
-use crate::execute::execute_have_by_fn_preimage_stmt::ExecHaveByFnPreimageStmtResult;
-use crate::execute::execute_have_by_replacement_axiom_stmt::ExecHaveByReplacementAxiomStmtResult;
-use crate::execute::execute_obtain_obj_from_atomic_fact_stmt::ExecObtainObjFromAtomicFactStmtResult;
-use crate::execute::execute_obtain_obj_from_exist_fact_stmt::ExecObtainObjFromExistFactStmtResult;
 use crate::execute::execute_have_obj_equal_stmt::ExecHaveObjEqualStmtResult;
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::ExecHaveObjInNonemptySetStmtResult;
 use crate::execute::execute_let_stmt::ExecLetObjStmtResult;
-use crate::execute::execute_release_struct_def_stmt::ExecReleaseStructDefStmtResult;
+use crate::execute::execute_obtain_obj_from_atomic_fact_stmt::ExecObtainObjFromAtomicFactStmtResult;
+use crate::execute::execute_obtain_obj_from_exist_fact_stmt::ExecObtainObjFromExistFactStmtResult;
+use crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
+use crate::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult;
+use crate::execute::execute_release_struct_def_stmt::ExecReleaseStructDefStmtResult;
 use crate::execute::execute_unsafe_stmt::ExecTrustBoundaryStmtResult;
 use crate::execute::execute_witness_stmt::ExecWitnessStmtResult;
 

@@ -28,9 +28,11 @@ impl Runtime {
             TrustBoundaryStmt::TrustStmt(trust_stmt) => Ok(ExecTrustBoundaryStmtResult::TrustStmt(
                 self.exec_trust_stmt(trust_stmt)?,
             )),
-            TrustBoundaryStmt::TrustHaveStmt(trust_have_stmt) => Ok(ExecTrustBoundaryStmtResult::TrustHaveStmt(
-                self.exec_trust_have_stmt(trust_have_stmt)?,
-            )),
+            TrustBoundaryStmt::TrustHaveStmt(trust_have_stmt) => {
+                Ok(ExecTrustBoundaryStmtResult::TrustHaveStmt(
+                    self.exec_trust_have_stmt(trust_have_stmt)?,
+                ))
+            }
         }
     }
 }

@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use crate::ast::fact::{AtomicFact, EqualFact, QuantifierFreeFact};
-use crate::ast::obj::{IdentifierObj, Number, Obj, SetBuilder, Literal};
 use crate::ast::names::BoundName;
+use crate::ast::obj::{IdentifierObj, Literal, Number, Obj, SetBuilder};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
-use crate::runtime::Runtime;
 use crate::runtime::runtime_ids::IdentifierId;
+use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn test_runtime() -> Runtime {
@@ -27,21 +27,33 @@ fn inst_function_value_parameter_composes_returned_application_groups() {
 have fn dot(u,v cart(R,R)) R = u(1)*v(1)+u(2)*v(2)\n\
 have a,b cart(R,R)\n\
 dot(vec(a,b),vec(a,b)) = vec(a,b)(1)*vec(a,b)(1)+vec(a,b)(2)*vec(a,b)(2)\n";
-    let tokens = Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+    let tokens = Tokenizer::new()
+        .tokenize(code, rt.current_file.clone())
+        .unwrap();
     let stmts = rt.parse(&tokens).unwrap();
     let Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(dot)) = &stmts[1] else {
         panic!("dot definition");
     };
-    let Stmt::Fact(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(goal))) = &stmts[3] else {
+    let Stmt::Fact(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(goal))) = &stmts[3]
+    else {
         panic!("dot expansion equality");
     };
-    let Obj::FnObj(FnObj { body, .. }) = &goal.left else { panic!("dot call"); };
-    let subst = dot.equal_to_anonymous_fn.body.set_bound_parameters.groups.iter()
+    let Obj::FnObj(FnObj { body, .. }) = &goal.left else {
+        panic!("dot call");
+    };
+    let subst = dot
+        .equal_to_anonymous_fn
+        .body
+        .set_bound_parameters
+        .groups
+        .iter()
         .flat_map(|group| &group.params)
         .zip(&body[0])
         .map(|(param, arg)| (param.id, arg.as_ref().clone()))
         .collect();
-    let actual = rt.inst_obj(&dot.equal_to_anonymous_fn.equal_to, &subst).unwrap();
+    let actual = rt
+        .inst_obj(&dot.equal_to_anonymous_fn.equal_to, &subst)
+        .unwrap();
     assert_eq!(actual, goal.right);
 }
 
@@ -55,19 +67,28 @@ fn inst_returned_application_preserves_simultaneous_substitution_and_argument_gr
 have p fn(x,y R) R\n\
 have a R\n\
 p(a,2) = F(a)(7,2)\n";
-    let tokens = Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+    let tokens = Tokenizer::new()
+        .tokenize(code, rt.current_file.clone())
+        .unwrap();
     let stmts = rt.parse(&tokens).unwrap();
-    let Stmt::Fact(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(goal))) = &stmts[3] else {
+    let Stmt::Fact(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(goal))) = &stmts[3]
+    else {
         panic!("application equality");
     };
-    let Obj::FnObj(original) = &goal.left else { panic!("original call"); };
-    let FnObjHead::Identifier(IdentifierObj::Plain { id: p_id, .. }) = original.head.as_ref() else {
+    let Obj::FnObj(original) = &goal.left else {
+        panic!("original call");
+    };
+    let FnObjHead::Identifier(IdentifierObj::Plain { id: p_id, .. }) = original.head.as_ref()
+    else {
         panic!("function parameter");
     };
-    let Obj::Identifier(IdentifierObj::Plain { id: a_id, .. }) = original.body[0][0].as_ref() else {
+    let Obj::Identifier(IdentifierObj::Plain { id: a_id, .. }) = original.body[0][0].as_ref()
+    else {
         panic!("argument parameter");
     };
-    let Obj::FnObj(expected) = &goal.right else { panic!("composed call"); };
+    let Obj::FnObj(expected) = &goal.right else {
+        panic!("composed call");
+    };
     let mut replacement = expected.clone();
     replacement.body.truncate(1);
     let subst = HashMap::from([

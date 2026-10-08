@@ -5,8 +5,8 @@ use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::well_defined
     VerifyForallFactWithIffWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    FactWellDefinedProof, fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult, VerifyFactWellDefinedResult,
-    VerifyObjWellDefinedResult,
+    fail_to_verify_obj_well_defined_others, FactWellDefinedProof, FailToVerifyObjWellDefinedResult,
+    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -54,15 +54,16 @@ impl Runtime {
         >,
     > {
         let inner = &fact.forall_fact;
-        let param_type_well_defined = match self.verify_and_define_wd_parameters(
-            &inner.typed_parameters,
-            verify_state.clone(),
-        )? {
+        let param_type_well_defined = match self
+            .verify_and_define_wd_parameters(&inner.typed_parameters, verify_state.clone())?
+        {
             Ok(proofs) => proofs,
             Err(failed) => {
-                return Ok(Err(FailToVerifyForallFactWithIffWellDefinedResult::ParamType(
-                    extract_obj_wd_fail(failed),
-                )));
+                return Ok(Err(
+                    FailToVerifyForallFactWithIffWellDefinedResult::ParamType(extract_obj_wd_fail(
+                        failed,
+                    )),
+                ));
             }
         };
 
@@ -76,12 +77,14 @@ impl Runtime {
                     succeeded_dom.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
-                    return Ok(Err(FailToVerifyForallFactWithIffWellDefinedResult::DomFact {
-                        failed_index,
-                        param_type_well_defined,
-                        succeeded_dom,
-                        failed_dom: Box::new(failed_dom),
-                    }));
+                    return Ok(Err(
+                        FailToVerifyForallFactWithIffWellDefinedResult::DomFact {
+                            failed_index,
+                            param_type_well_defined,
+                            succeeded_dom,
+                            failed_dom: Box::new(failed_dom),
+                        },
+                    ));
                 }
             }
         }
@@ -92,13 +95,15 @@ impl Runtime {
             match self.verify_fact_well_definedness(&then_fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => succeeded_then.push(proof),
                 VerifyFactWellDefinedResult::Failed(failed_then) => {
-                    return Ok(Err(FailToVerifyForallFactWithIffWellDefinedResult::ThenFact {
-                        failed_index,
-                        param_type_well_defined,
-                        succeeded_dom,
-                        succeeded_then,
-                        failed_then: Box::new(failed_then),
-                    }));
+                    return Ok(Err(
+                        FailToVerifyForallFactWithIffWellDefinedResult::ThenFact {
+                            failed_index,
+                            param_type_well_defined,
+                            succeeded_dom,
+                            succeeded_then,
+                            failed_then: Box::new(failed_then),
+                        },
+                    ));
                 }
             }
         }
@@ -109,14 +114,16 @@ impl Runtime {
             match self.verify_fact_well_definedness(&iff_fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => succeeded_iff.push(proof),
                 VerifyFactWellDefinedResult::Failed(failed_iff) => {
-                    return Ok(Err(FailToVerifyForallFactWithIffWellDefinedResult::IffFact {
-                        failed_index,
-                        param_type_well_defined,
-                        succeeded_dom,
-                        succeeded_then,
-                        succeeded_iff,
-                        failed_iff: Box::new(failed_iff),
-                    }));
+                    return Ok(Err(
+                        FailToVerifyForallFactWithIffWellDefinedResult::IffFact {
+                            failed_index,
+                            param_type_well_defined,
+                            succeeded_dom,
+                            succeeded_then,
+                            succeeded_iff,
+                            failed_iff: Box::new(failed_iff),
+                        },
+                    ));
                 }
             }
         }
@@ -133,8 +140,8 @@ impl Runtime {
 fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
     match failed {
         VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
-        _ => fail_to_verify_obj_well_defined_others(
-            "param type well-definedness failed".to_string(),
-        ),
+        _ => {
+            fail_to_verify_obj_well_defined_others("param type well-definedness failed".to_string())
+        }
     }
 }

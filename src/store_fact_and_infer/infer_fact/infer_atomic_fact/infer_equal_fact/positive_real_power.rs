@@ -2,9 +2,7 @@ use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessFact};
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, StandardSet};
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::{
-    InferEqualFactPositiveRealPowerResult, StoreFactAndInferResult,
-};
+use crate::store_fact_and_infer::{InferEqualFactPositiveRealPowerResult, StoreFactAndInferResult};
 
 impl Runtime {
     // When: stored `a^x = y` (or swapped) with checked positive real power.
@@ -14,20 +12,23 @@ impl Runtime {
     pub(super) fn infer_equal_fact_positive_real_power(
         &mut self,
         equal_fact: &EqualFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<InferEqualFactPositiveRealPowerResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<InferEqualFactPositiveRealPowerResult>> {
         let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
         if let Some(r) = self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.left,
             &equal_fact.right,
             equal_fact,
-         verify_state)? {
+            verify_state,
+        )? {
             derived.push(r);
         }
         if let Some(r) = self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.right,
             &equal_fact.left,
             equal_fact,
-         verify_state)? {
+            verify_state,
+        )? {
             derived.push(r);
         }
         if derived.is_empty() {
@@ -43,7 +44,8 @@ impl Runtime {
         maybe_power: &Obj,
         target: &Obj,
         equal_fact: &EqualFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Option<StoreFactAndInferResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<StoreFactAndInferResult>> {
         if maybe_power.ir() == target.ir() {
             return Ok(None);
         }
@@ -62,7 +64,10 @@ impl Runtime {
         // A real nonzero square is positive even when its base has unknown sign.
         // Reuse that existing builtin proof before searching for `0 < base`.
         if self
-            .verify_atomic_fact(&power_positive, verify_state.capped_at(VerifyStateLevel::BuiltinRule))?
+            .verify_atomic_fact(
+                &power_positive,
+                verify_state.capped_at(VerifyStateLevel::BuiltinRule),
+            )?
             .is_failed()
         {
             let base_positive = AtomicFact::LessFact(LessFact {
@@ -71,7 +76,10 @@ impl Runtime {
                 right: pow.base.as_ref().clone(),
                 line_file: equal_fact.line_file.clone(),
             });
-            if self.verify_atomic_fact(&base_positive, verify_state)?.is_failed() {
+            if self
+                .verify_atomic_fact(&base_positive, verify_state)?
+                .is_failed()
+            {
                 return Ok(None);
             }
         }
@@ -93,8 +101,8 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::RPos),
             line_file: equal_fact.line_file.clone(),
         });
-        let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(target_in_r_pos), verify_state)?
+        let Some(stored) = self
+            .try_store_inferred_fact_and_infer(&Fact::AtomicFact(target_in_r_pos), verify_state)?
         else {
             return Ok(None);
         };

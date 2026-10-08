@@ -29,7 +29,9 @@ impl Runtime {
             DirectAtomicFactSearchResult::ByClosedCalculation(proof) => {
                 return Ok(Some(match proof {
                     ClosedCalculationProof::Equality(p) => E(EP::ByClosedCalculation(p)),
-                    ClosedCalculationProof::AtomicExceptEquality(p) => A(AP::ByClosedCalculation(p)),
+                    ClosedCalculationProof::AtomicExceptEquality(p) => {
+                        A(AP::ByClosedCalculation(p))
+                    }
                 }));
             }
             DirectAtomicFactSearchResult::ByStructuralMembership(proof) => {

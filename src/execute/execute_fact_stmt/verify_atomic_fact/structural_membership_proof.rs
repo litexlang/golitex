@@ -74,7 +74,6 @@ pub enum IntrinsicCodomain {
     ImaginaryPart,
     ComplexAbs,
 
-
     FiniteSetSize,
     FiniteSetMax,
     FiniteSetMin,
@@ -95,8 +94,10 @@ impl StructuralMembershipProof {
 
 // Both complete atomic premise citations are retained for replay and output.
 pub struct KnownSubsetMembershipProof {
-    pub member_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
-    pub subset_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
+    pub member_proof:
+        super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
+    pub subset_proof:
+        super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
 }
 
 impl KnownSubsetMembershipProof {
@@ -104,6 +105,9 @@ impl KnownSubsetMembershipProof {
         member_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
         subset_proof: super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof,
     ) -> Self {
-        Self { member_proof, subset_proof }
+        Self {
+            member_proof,
+            subset_proof,
+        }
     }
 }

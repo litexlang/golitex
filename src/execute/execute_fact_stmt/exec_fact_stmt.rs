@@ -15,7 +15,10 @@ impl Runtime {
         if verify_result.is_failed() {
             return Ok(ExecFactStmtResult::Failed(verify_result));
         }
-        let store_and_infer_result = self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let store_and_infer_result = self.store_fact_and_infer(
+            fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
         Ok(ExecFactStmtResult::Success(ExecFactStmtSuccessResult {
             verify_result,
             store_and_infer_result,

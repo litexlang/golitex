@@ -8,26 +8,39 @@ use crate::tokenize::Tokenizer;
 
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
-        code: String::new(), session: false, strict: true,
+        code: String::new(),
+        session: false,
+        strict: true,
         language: OutputLanguage::English,
     })
 }
 
 fn object(rt: &mut Runtime, source: &str) -> Obj {
-    let blocks = Tokenizer::new().tokenize(&format!("{source} = {source}"), rt.current_file.clone()).unwrap();
+    let blocks = Tokenizer::new()
+        .tokenize(&format!("{source} = {source}"), rt.current_file.clone())
+        .unwrap();
     let statements = rt.parse(&blocks).unwrap();
-    let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(fact))) = &statements[0] else { panic!("equality"); };
+    let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(fact))) = &statements[0] else {
+        panic!("equality");
+    };
     fact.left.clone()
 }
 
 fn accepted(rt: &mut Runtime, source: &str) {
     let run = rt.run_litex_code(source).unwrap();
-    assert!(run.success && run.session_error.is_none(), "{source}\n{}", emit_run_detailed(&run, rt, "exact-properties", None));
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{source}\n{}",
+        emit_run_detailed(&run, rt, "exact-properties", None)
+    );
     assert!(run.statement_results.iter().all(|stmt| !stmt.is_failed()));
 }
 
 fn facts(rt: &Runtime) -> usize {
-    rt.execution_environments_stack.iter().map(|env| env.facts.facts_by_id.len()).sum()
+    rt.execution_environments_stack
+        .iter()
+        .map(|env| env.facts.facts_by_id.len())
+        .sum()
 }
 
 #[test]
@@ -41,7 +54,13 @@ fn exact_property_lookup_does_not_discover_transitive_bodies_signatures_or_coord
     let carrier_alias = object(&mut rt, "CarrierAlias");
     assert!(!rt.collect_in_function_set_candidates(&step).is_empty());
     assert!(rt.collect_in_function_set_candidates(&second).is_empty());
-    assert!(rt.complete_function_domains(&second, crate::execute::execute_fact_stmt::VerifyState::top_level()).unwrap().is_empty());
+    assert!(rt
+        .complete_function_domains(
+            &second,
+            crate::execute::execute_fact_stmt::VerifyState::top_level()
+        )
+        .unwrap()
+        .is_empty());
     assert_eq!(rt.known_literal_tuple_candidates(&pair).len(), 1);
     assert!(rt.known_literal_tuple_candidates(&pair_alias).is_empty());
     assert!(rt.returned_function_signature(&carrier_alias).is_none());
@@ -55,11 +74,21 @@ fn exact_property_lookup_does_not_discover_transitive_bodies_signatures_or_coord
     accepted(&mut rt, "second=step\nsecond=fn(x R) R {x+1}\nsecond(3)=4");
     let candidates = rt.exact_property_object_values(&second);
     assert!(candidates.iter().all(|(_, path)| path.len() <= 1));
-    let (_, path) = candidates.iter().find(|(value, _)| matches!(value,
-        Obj::FunctionSpace(crate::ast::obj::FunctionSpace::AnonymousFn(_)))).unwrap();
+    let (_, path) = candidates
+        .iter()
+        .find(|(value, _)| {
+            matches!(
+                value,
+                Obj::FunctionSpace(crate::ast::obj::FunctionSpace::AnonymousFn(_))
+            )
+        })
+        .unwrap();
     assert_eq!(path.len(), 1);
     assert!(rt.fact_by_id_in_stack(path[0].2).is_some());
-    accepted(&mut rt, "pair_alias=(1,2)\npair_alias(2)=2\nCarrierAlias=finite_seq(R,2)");
+    accepted(
+        &mut rt,
+        "pair_alias=(1,2)\npair_alias(2)=2\nCarrierAlias=finite_seq(R,2)",
+    );
     assert_eq!(rt.known_literal_tuple_candidates(&pair_alias).len(), 1);
     assert!(rt.returned_function_signature(&carrier_alias).is_some());
 }
@@ -92,11 +121,17 @@ fn exact_property_lookup_stable_tracer_and_template_guards() {
         "/examples/proof_nodes/equal/by_object_definition/by_fn_application/exact_property_function_lookup.lit"));
     accepted(&mut runtime(), source);
     let mut rt = runtime();
-    accepted(&mut rt, "template<a R+>:\n    have fn shift(x R) R=x+a\nlet valid=\\shift<2>\nvalid(3)=5");
+    accepted(
+        &mut rt,
+        "template<a R+>:\n    have fn shift(x R) R=x+a\nlet valid=\\shift<2>\nvalid(3)=5",
+    );
     let before = facts(&rt);
     assert!(!rt.run_litex_code("let invalid=\\shift<0>").unwrap().success);
     assert_eq!(facts(&rt), before);
-    accepted(&mut rt, "have signature_only fn(x R) R\nsignature_only(3) $in R");
+    accepted(
+        &mut rt,
+        "have signature_only fn(x R) R\nsignature_only(3) $in R",
+    );
     assert!(!rt.run_litex_code("signature_only(3)=4").unwrap().success);
     let pair = object(&mut rt, "(1,2)");
     assert!(matches!(pair, Obj::ProductShape(ProductShape::Tuple(_))));

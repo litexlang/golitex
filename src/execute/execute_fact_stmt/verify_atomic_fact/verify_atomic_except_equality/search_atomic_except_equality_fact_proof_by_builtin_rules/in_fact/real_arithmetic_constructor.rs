@@ -97,12 +97,9 @@ impl Runtime {
         }
         // An opaque or already checked composite is also a legal real leaf.
         // For example, i^2 is real by closed calculation although i is not.
-        Ok(self.real_constructor_terminal_proof(
-            expression,
-            StandardSet::R,
-            line_file,
-            premise_state,
-        )?.map(RealArithmeticConstructorTree::Leaf))
+        Ok(self
+            .real_constructor_terminal_proof(expression, StandardSet::R, line_file, premise_state)?
+            .map(RealArithmeticConstructorTree::Leaf))
     }
 
     fn real_arithmetic_constructor_tree_from_children(
@@ -164,7 +161,8 @@ impl Runtime {
                     StandardSet::Z,
                     line_file,
                     premise_state,
-                )? else {
+                )?
+                else {
                     return Ok(None);
                 };
                 Ok(Some(Tree::IntegerPow {
@@ -192,12 +190,15 @@ impl Runtime {
         // A real function call with a Cartesian argument is a typical leaf.
         // Its argument WD has already run at the parent's ceiling; replaying
         // it here would incorrectly demand its carrier rule below that ceiling.
-        Ok(self.search_atomic_except_equality_fact_proof(
-            &AtomicFact::InFact(fact.clone()), premise_state,
-        )?.map(|searched_proof| RealArithmeticConstructorTerminalProof {
-            fact,
-            searched_proof: Box::new(searched_proof),
-        }))
+        Ok(self
+            .search_atomic_except_equality_fact_proof(
+                &AtomicFact::InFact(fact.clone()),
+                premise_state,
+            )?
+            .map(|searched_proof| RealArithmeticConstructorTerminalProof {
+                fact,
+                searched_proof: Box::new(searched_proof),
+            }))
     }
 }
 

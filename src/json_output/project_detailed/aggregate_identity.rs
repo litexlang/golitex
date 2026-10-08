@@ -8,20 +8,52 @@ pub(super) fn project_aggregate_identity(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
-        AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(p) => object_for(runtime, vec![
-            ("type", string("builtin_rule")), ("rule", string("FiniteSetProductMemberRemoval")),
-            ("premises", super::store::project_verify_facts(&p.premises, runtime)),
-            ("pointwise", project_partition_callback(&p.pointwise, runtime)),
-            ("factor_expansions", project_expansions(&p.factor_expansions, runtime)),
-            ("factor_equal", super::verify::project_verify_fact(&p.factor_equal, runtime)),
-        ]),
-        AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(p) => object_for(runtime, vec![
-            ("type", string("builtin_rule")), ("rule", string("FiniteSetProductFreshInsertion")),
-            ("premises", super::store::project_verify_facts(&p.premises, runtime)),
-            ("pointwise", project_partition_callback(&p.pointwise, runtime)),
-            ("factor_expansions", project_expansions(&p.factor_expansions, runtime)),
-            ("factor_equal", super::verify::project_verify_fact(&p.factor_equal, runtime)),
-        ]),
+        AggregateIdentityBuiltinRuleProof::FiniteSetProductMemberRemoval(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("FiniteSetProductMemberRemoval")),
+                (
+                    "premises",
+                    super::store::project_verify_facts(&p.premises, runtime),
+                ),
+                (
+                    "pointwise",
+                    project_partition_callback(&p.pointwise, runtime),
+                ),
+                (
+                    "factor_expansions",
+                    project_expansions(&p.factor_expansions, runtime),
+                ),
+                (
+                    "factor_equal",
+                    super::verify::project_verify_fact(&p.factor_equal, runtime),
+                ),
+            ],
+        ),
+        AggregateIdentityBuiltinRuleProof::FiniteSetProductFreshInsertion(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("FiniteSetProductFreshInsertion")),
+                (
+                    "premises",
+                    super::store::project_verify_facts(&p.premises, runtime),
+                ),
+                (
+                    "pointwise",
+                    project_partition_callback(&p.pointwise, runtime),
+                ),
+                (
+                    "factor_expansions",
+                    project_expansions(&p.factor_expansions, runtime),
+                ),
+                (
+                    "factor_equal",
+                    super::verify::project_verify_fact(&p.factor_equal, runtime),
+                ),
+            ],
+        ),
         AggregateIdentityBuiltinRuleProof::RangeSumConstant(p) => object_for(
             runtime,
             vec![
@@ -177,7 +209,15 @@ pub(super) fn project_aggregate_identity(
             vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetSumDisjointUnion")),
-                ("callbacks", JsonValue::Array(p.callbacks.iter().map(|p| project_partition_callback(p, runtime)).collect())),
+                (
+                    "callbacks",
+                    JsonValue::Array(
+                        p.callbacks
+                            .iter()
+                            .map(|p| project_partition_callback(p, runtime))
+                            .collect(),
+                    ),
+                ),
                 (
                     "premises",
                     super::store::project_verify_facts(&p.premises, runtime),
@@ -189,7 +229,15 @@ pub(super) fn project_aggregate_identity(
             vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetProductDisjointUnion")),
-                ("callbacks", JsonValue::Array(p.callbacks.iter().map(|p| project_partition_callback(p, runtime)).collect())),
+                (
+                    "callbacks",
+                    JsonValue::Array(
+                        p.callbacks
+                            .iter()
+                            .map(|p| project_partition_callback(p, runtime))
+                            .collect(),
+                    ),
+                ),
                 (
                     "premises",
                     super::store::project_verify_facts(&p.premises, runtime),
@@ -403,17 +451,49 @@ pub(super) fn project_expansions(
     expansions: &[crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_have_fn_equal::AnonFnApplicationBodyProof],
     runtime: &Runtime,
 ) -> JsonValue {
-    JsonValue::Array(expansions.iter().map(|e| object_for(runtime, vec![
-        ("function_equal", super::searched::project_known_equality_path(&e.function_equal, runtime)),
-        ("expanded_body", string(e.expanded_body.readable_string())),
-    ])).collect())
+    JsonValue::Array(
+        expansions
+            .iter()
+            .map(|e| {
+                object_for(
+                    runtime,
+                    vec![
+                        (
+                            "function_equal",
+                            super::searched::project_known_equality_path(
+                                &e.function_equal,
+                                runtime,
+                            ),
+                        ),
+                        ("expanded_body", string(e.expanded_body.readable_string())),
+                    ],
+                )
+            })
+            .collect(),
+    )
 }
 
-fn project_partition_callback(p: &FinitePartitionCallbackAgreementProof, runtime: &Runtime) -> JsonValue {
+fn project_partition_callback(
+    p: &FinitePartitionCallbackAgreementProof,
+    runtime: &Runtime,
+) -> JsonValue {
     match p {
-        FinitePartitionCallbackAgreementProof::SameFunction(_) => object_for(runtime, vec![("type", string("same_function"))]),
-        FinitePartitionCallbackAgreementProof::LiteralRestriction(_) => object_for(runtime, vec![("type", string("literal_restriction"))]),
-        FinitePartitionCallbackAgreementProof::EqualFunctions(p) => object_for(runtime, vec![("type", string("equal_functions")), ("equality", super::verify::project_verify_fact(&p.equality, runtime))]),
+        FinitePartitionCallbackAgreementProof::SameFunction(_) => {
+            object_for(runtime, vec![("type", string("same_function"))])
+        }
+        FinitePartitionCallbackAgreementProof::LiteralRestriction(_) => {
+            object_for(runtime, vec![("type", string("literal_restriction"))])
+        }
+        FinitePartitionCallbackAgreementProof::EqualFunctions(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("equal_functions")),
+                (
+                    "equality",
+                    super::verify::project_verify_fact(&p.equality, runtime),
+                ),
+            ],
+        ),
         FinitePartitionCallbackAgreementProof::Pointwise(p) => project_pointwise(p, runtime),
     }
 }

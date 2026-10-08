@@ -134,9 +134,21 @@ fn missing_range_membership_does_not_create_a_preimage() {
 fn registered_and_imported_functions_preserve_distinct_owners() {
     let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("examples/module_manager/declaration_bindings");
-    let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let root = std::env::temp_dir().join(format!("litex-binding-cache-{}-{unique}", std::process::id()));
-    for relative in ["litex.config", "local.lit", "main.lit", "library/litex.config", "library/functions.lit"] {
+    let unique = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let root = std::env::temp_dir().join(format!(
+        "litex-binding-cache-{}-{unique}",
+        std::process::id()
+    ));
+    for relative in [
+        "litex.config",
+        "local.lit",
+        "main.lit",
+        "library/litex.config",
+        "library/functions.lit",
+    ] {
         let target = root.join(relative);
         std::fs::create_dir_all(target.parent().unwrap()).unwrap();
         std::fs::copy(source.join(relative), target).unwrap();
@@ -156,24 +168,30 @@ fn registered_and_imported_functions_preserve_distinct_owners() {
         &std::fs::read_to_string(library.join("litex.config")).unwrap(),
         &library,
         &library,
-    ).unwrap();
-    let fingerprint = crate::knowledge_base::fingerprint_module_recursive(
-        &library, &config, &library,
-    ).unwrap();
+    )
+    .unwrap();
+    let fingerprint =
+        crate::knowledge_base::fingerprint_module_recursive(&library, &config, &library).unwrap();
     crate::knowledge_base::try_mount_module(
         &library,
         &fingerprint,
         &crate::knowledge_base::GlobalIdsSnapshot::new(1, 1, 1, 1),
         &std::collections::HashMap::from([(library.to_string_lossy().to_string(), 0)]),
-    ).unwrap_or_else(|error| panic!("fixture cache mount: {error:?}"));
+    )
+    .unwrap_or_else(|error| panic!("fixture cache mount: {error:?}"));
     let warm = crate::run_module::run_project(LaunchCommand::Repository {
         path: root.clone(),
         session: false,
         strict: false,
         language: OutputLanguage::English,
-    }).expect("run cached fixture");
+    })
+    .expect("run cached fixture");
     assert!(warm.run.success, "{:?}", warm.run.session_error);
-    assert_eq!(warm.files.len(), 2, "cached import must skip the library export");
+    assert_eq!(
+        warm.files.len(),
+        2,
+        "cached import must skip the library export"
+    );
     std::fs::remove_dir_all(root).unwrap();
 }
 
@@ -213,37 +231,62 @@ fn assert_success(source: CodeSource, code: &str) {
 
 fn remaining_function_families() -> [(&'static str, &'static str, &'static str, &'static str); 5] {
     [
-        ("cases", "flag", r#""#, r#"    have fn flag(x R) R by cases:
+        (
+            "cases",
+            "flag",
+            r#""#,
+            r#"    have fn flag(x R) R by cases:
         case x = 0: 0
         case x != 0: 1
     flag(0) = 0
     flag(2) = 1
-"#),
-        ("induc", "countdown", r#""#, r#"    have fn countdown(n N) N by induc n from 0:
+"#,
+        ),
+        (
+            "induc",
+            "countdown",
+            r#""#,
+            r#"    have fn countdown(n N) N by induc n from 0:
         case n = 0: 0
         case n >= 1: countdown(n - 1)
     countdown(0) = 0
-"#),
-        ("exist", "ident", r#"claim:
+"#,
+        ),
+        (
+            "exist",
+            "ident",
+            r#"claim:
     ? forall x R:
         exist! y R st {y = x}
     witness exist! y R st {y = x} from x
-"#, r#"    have fn ident by exist!:
+"#,
+            r#"    have fn ident by exist!:
         ? forall x R:
             exist! y R st {y = x}
     ident(1) = 1
-"#),
-        ("algo-cases", "flag", r#""#, r#"    algo flag(x R) R by cases:
+"#,
+        ),
+        (
+            "algo-cases",
+            "flag",
+            r#""#,
+            r#"    algo flag(x R) R by cases:
         case x = 0: 0
         case x != 0: 1
     flag(0) = 0
     flag(2) = 1
-"#),
-        ("algo-induc", "countdown", r#""#, r#"    algo countdown(n N) N by induc n from 0:
+"#,
+        ),
+        (
+            "algo-induc",
+            "countdown",
+            r#""#,
+            r#"    algo countdown(n N) N by induc n from 0:
         case n = 0: 0
         case n >= 1: countdown(n - 1)
     countdown(0) = 0
-"#),
+"#,
+        ),
     ]
 }
 
@@ -260,7 +303,10 @@ fn remaining_local_function_families_retain_bindings() {
 fn remaining_function_families_ignore_later_same_name_roots() {
     for source in sources() {
         for (_, name, prefix, body) in remaining_function_families() {
-            assert_success(source.clone(), &format!("{prefix}sketch:\n{body}let {name} = 7\n{name} = 7\n"));
+            assert_success(
+                source.clone(),
+                &format!("{prefix}sketch:\n{body}let {name} = 7\n{name} = 7\n"),
+            );
         }
     }
 }
@@ -279,10 +325,20 @@ fn remaining_failed_claims_discard_declarations_before_root_reuse() {
     for source in sources() {
         for (_, name, prefix, body) in remaining_function_families() {
             let mut rt = runtime(source.clone());
-            let result = rt.run_litex_code(&format!("{prefix}claim:\n    ? 0 = 1\n{body}let {name} = 7\n{name} = 7\n0 = 1\n")).expect("no panic or internal error");
+            let result = rt
+                .run_litex_code(&format!(
+                    "{prefix}claim:\n    ? 0 = 1\n{body}let {name} = 7\n{name} = 7\n0 = 1\n"
+                ))
+                .expect("no panic or internal error");
             assert!(result.session_error.is_none());
             let offset = usize::from(!prefix.is_empty());
-            assert_eq!(result.statement_results[offset..].iter().map(|r| r.is_failed()).collect::<Vec<_>>(), vec![true, false, false, true]);
+            assert_eq!(
+                result.statement_results[offset..]
+                    .iter()
+                    .map(|r| r.is_failed())
+                    .collect::<Vec<_>>(),
+                vec![true, false, false, true]
+            );
             assert_eq!(rt.execution_environments_stack.len(), 1);
             assert!(matches!(&result.statement_results[offset], crate::execute::ExecStmtResult::ProofBlock(crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Failed(crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Conclusion { .. })))), "local definitions must pass before the false conclusion fails");
         }
@@ -292,43 +348,68 @@ fn remaining_failed_claims_discard_declarations_before_root_reuse() {
 #[test]
 fn qualified_predicate_witness_and_obtain_keep_their_owner() {
     for (library, code, should_pass) in [
-        (r#"prop get(a R):
+        (
+            r#"prop get(a R):
     exist x R st {x = 0}
 thm ready:
     ? $get(0)
     witness $get(0) from 0
-"#, r#"prop get(a R):
+"#,
+            r#"prop get(a R):
     exist x R st {x = 1}
 release thm Other::definitions::ready
 obtain k from $Other::definitions::get(0)
 k = 1
-"#, false),
-        (r#"prop get(a R):
+"#,
+            false,
+        ),
+        (
+            r#"prop get(a R):
     exist x R st {x = 0}
 thm ready:
     ? $get(0)
     witness $get(0) from 0
-"#, r#"release thm Other::definitions::ready
+"#,
+            r#"release thm Other::definitions::ready
 obtain k from $Other::definitions::get(0)
 k = 0
-"#, true),
-        (r#"prop get(a R):
+"#,
+            true,
+        ),
+        (
+            r#"prop get(a R):
     exist x R st {x = 0}
-"#, r#"prop get(a R):
+"#,
+            r#"prop get(a R):
     exist x R st {x = 1}
 witness $Other::definitions::get(0) from 1
-"#, false),
-        (r#"prop get(a R):
+"#,
+            false,
+        ),
+        (
+            r#"prop get(a R):
     exist x R st {x = 0}
-"#, r#"witness $Other::definitions::get(0) from 0
-"#, true),
+"#,
+            r#"witness $Other::definitions::get(0) from 0
+"#,
+            true,
+        ),
     ] {
         let result = run_owner_fixture(library, code);
-        assert!(result.run.session_error.is_none(), "{:?}", result.run.session_error);
+        assert!(
+            result.run.session_error.is_none(),
+            "{:?}",
+            result.run.session_error
+        );
         assert_eq!(result.run.success, should_pass, "{code}");
         if !should_pass {
             assert!(result.run.statement_results.last().unwrap().is_failed());
-            assert!(result.run.statement_results[..result.run.statement_results.len()-1].iter().all(|r| !r.is_failed()), "reject the false obligation, not the valid premise");
+            assert!(
+                result.run.statement_results[..result.run.statement_results.len() - 1]
+                    .iter()
+                    .all(|r| !r.is_failed()),
+                "reject the false obligation, not the valid premise"
+            );
         }
     }
 }
@@ -336,31 +417,48 @@ witness $Other::definitions::get(0) from 1
 #[test]
 fn qualified_predicate_inference_keeps_definition_and_parameter_types() {
     for (library, code, should_pass) in [
-        (r#"prop zero(x R):
+        (
+            r#"prop zero(x R):
     x = 0
 thm ready:
     ? $zero(0)
-"#, r#"prop zero(x R):
+"#,
+            r#"prop zero(x R):
     x = 1
 release thm Other::definitions::ready
 0 = 1
-"#, false),
-        (r#"prop tagged(x R):
+"#,
+            false,
+        ),
+        (
+            r#"prop tagged(x R):
     x = x
 thm ready:
     ? $tagged(1 / 2)
-"#, r#"prop tagged(x N):
+"#,
+            r#"prop tagged(x N):
     x = x
 release thm Other::definitions::ready
 1 / 2 $in N
-"#, false),
+"#,
+            false,
+        ),
     ] {
         let result = run_owner_fixture(library, code);
-        assert!(result.run.session_error.is_none(), "{:?}", result.run.session_error);
+        assert!(
+            result.run.session_error.is_none(),
+            "{:?}",
+            result.run.session_error
+        );
         assert_eq!(result.run.success, should_pass, "{code}");
         if !should_pass {
             assert!(result.run.statement_results.last().unwrap().is_failed());
-            assert!(result.run.statement_results[..result.run.statement_results.len()-1].iter().all(|r| !r.is_failed()), "reject the false obligation, not the valid premise");
+            assert!(
+                result.run.statement_results[..result.run.statement_results.len() - 1]
+                    .iter()
+                    .all(|r| !r.is_failed()),
+                "reject the false obligation, not the valid premise"
+            );
         }
     }
 }
@@ -368,27 +466,45 @@ release thm Other::definitions::ready
 #[test]
 fn foreign_same_name_induction_retains_its_own_return_domain() {
     for (library, code, should_pass) in [
-        (r#"have fn step(n N) N = 1
-"#, r#"release obj def Other::definitions::step
+        (
+            r#"have fn step(n N) N = 1
+"#,
+            r#"release obj def Other::definitions::step
 have fn step(n N) N by induc n from 0:
     case n = 0: 0
     case n >= 1: Other::definitions::step(n - 1)
 step(1) = Other::definitions::step(1 - 1)
 Other::definitions::step(1 - 1) = 1
 step(1) = 1
-"#, true),
-        (r#"have fn step(n N) R = 1 / 2
-"#, r#"release obj def Other::definitions::step
+"#,
+            true,
+        ),
+        (
+            r#"have fn step(n N) R = 1 / 2
+"#,
+            r#"release obj def Other::definitions::step
 have fn step(n N) N by induc n from 0:
     case n = 0: 0
     case n >= 1: Other::definitions::step(n - 1)
-"#, false),
+"#,
+            false,
+        ),
     ] {
-        for code in [code.to_owned(), code.replace("have fn step(n N)", "algo step(n N)")] {
-        let result = run_owner_fixture(library, &code);
-        assert!(result.run.session_error.is_none(), "{:?}", result.run.session_error);
-        assert_eq!(result.run.success, should_pass, "{code}");
-        assert!(!result.run.statement_results[0].is_failed(), "imported signature must release");
+        for code in [
+            code.to_owned(),
+            code.replace("have fn step(n N)", "algo step(n N)"),
+        ] {
+            let result = run_owner_fixture(library, &code);
+            assert!(
+                result.run.session_error.is_none(),
+                "{:?}",
+                result.run.session_error
+            );
+            assert_eq!(result.run.success, should_pass, "{code}");
+            assert!(
+                !result.run.statement_results[0].is_failed(),
+                "imported signature must release"
+            );
         }
     }
 }
@@ -396,8 +512,10 @@ have fn step(n N) N by induc n from 0:
 #[test]
 fn template_self_rewrite_preserves_foreign_same_name_calls() {
     for (library, code, should_pass) in [
-        (r#"have fn step(n N) N = 1
-"#, r#"release obj def Other::definitions::step
+        (
+            r#"have fn step(n N) N = 1
+"#,
+            r#"release obj def Other::definitions::step
 template<t R>:
     have fn step(n N) N by induc n from 0:
         case n = 0: 0
@@ -405,9 +523,13 @@ template<t R>:
 \step<0>(1) = Other::definitions::step(1 - 1)
 Other::definitions::step(1 - 1) = 1
 \step<0>(1) = 1
-"#, true),
-        (r#"have fn step(n N) N = 1
-"#, r#"release obj def Other::definitions::step
+"#,
+            true,
+        ),
+        (
+            r#"have fn step(n N) N = 1
+"#,
+            r#"release obj def Other::definitions::step
 template<t R>:
     have fn step(n N) N by induc n from 0:
         case n = 0: 0
@@ -416,14 +538,28 @@ template<t R>:
 \step<0>(1 - 1) = \step<0>(0)
 \step<0>(0) = 0
 \step<0>(1) = 0
-"#, false),
+"#,
+            false,
+        ),
     ] {
         let result = run_owner_fixture(library, code);
-        assert!(result.run.session_error.is_none(), "{:?}", result.run.session_error);
+        assert!(
+            result.run.session_error.is_none(),
+            "{:?}",
+            result.run.session_error
+        );
         assert_eq!(result.run.success, should_pass, "{code}");
         if !should_pass {
-            assert!(result.run.statement_results[..2].iter().all(|r| !r.is_failed()), "legal imported signature and template must pass");
-            assert!(result.run.statement_results[2].is_failed(), "reject the wrong equation at first use");
+            assert!(
+                result.run.statement_results[..2]
+                    .iter()
+                    .all(|r| !r.is_failed()),
+                "legal imported signature and template must pass"
+            );
+            assert!(
+                result.run.statement_results[2].is_failed(),
+                "reject the wrong equation at first use"
+            );
         }
     }
 }
@@ -431,15 +567,30 @@ template<t R>:
 fn run_owner_fixture(library: &str, code: &str) -> crate::run::RunFileResult {
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let id = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let root = std::env::temp_dir().join(format!("litex-function-family-owners-{}-{id}", std::process::id()));
+    let root = std::env::temp_dir().join(format!(
+        "litex-function-family-owners-{}-{id}",
+        std::process::id()
+    ));
     std::fs::create_dir_all(root.join("library")).unwrap();
-    std::fs::write(root.join("litex.config"), "[import]\nOther = \"./library\"\n[export]\ntarget = \"./target.lit\"\n").unwrap();
-    std::fs::write(root.join("library/litex.config"), "[export]\ndefinitions = \"./definitions.lit\"\n").unwrap();
+    std::fs::write(
+        root.join("litex.config"),
+        "[import]\nOther = \"./library\"\n[export]\ntarget = \"./target.lit\"\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("library/litex.config"),
+        "[export]\ndefinitions = \"./definitions.lit\"\n",
+    )
+    .unwrap();
     std::fs::write(root.join("library/definitions.lit"), library).unwrap();
     std::fs::write(root.join("target.lit"), code).unwrap();
     let result = crate::run_module::run_file_with_config(LaunchCommand::File {
-        path: root.join("target.lit"), session: false, strict: true, language: OutputLanguage::English,
-    }).expect("run registered/imported owner fixture");
+        path: root.join("target.lit"),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    })
+    .expect("run registered/imported owner fixture");
     std::fs::remove_dir_all(root).unwrap();
     result
 }
@@ -486,12 +637,23 @@ fn qualified_struct_payloads_keep_their_field_carriers() {
     use crate::ast::param::ParamType;
     use crate::ast::stmt::Stmt;
     for (carrier, should_pass) in [("N", false), ("R", true)] {
-        let (mut rt, root) = mounted_owner_runtime("struct Pair:\n    x R\n    y R\n", "struct Pair:\n    x N\n    y N\n");
+        let (mut rt, root) = mounted_owner_runtime(
+            "struct Pair:\n    x R\n    y R\n",
+            "struct Pair:\n    x N\n    y N\n",
+        );
         let code = format!("forall p &Pair:\n    p.x $in {carrier}\n");
-        let tokens = Tokenizer::new().tokenize(&code, rt.current_file.clone()).unwrap();
+        let tokens = Tokenizer::new()
+            .tokenize(&code, rt.current_file.clone())
+            .unwrap();
         let mut statements = rt.parse(&tokens).unwrap();
-        let Stmt::Fact(Fact::ForallFact(forall)) = &mut statements[0] else { panic!("forall query") };
-        let ParamType::Obj(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(view))) = &mut forall.typed_parameters.groups[0].param_type else { panic!("struct carrier") };
+        let Stmt::Fact(Fact::ForallFact(forall)) = &mut statements[0] else {
+            panic!("forall query")
+        };
+        let ParamType::Obj(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(view))) =
+            &mut forall.typed_parameters.groups[0].param_type
+        else {
+            panic!("struct carrier")
+        };
         view.name = imported_owner_name("Pair");
         let result = rt.exec_stmt(&statements[0]).unwrap();
         assert_eq!(!result.is_failed(), should_pass, "{code}");
@@ -500,25 +662,56 @@ fn qualified_struct_payloads_keep_their_field_carriers() {
 }
 
 fn imported_owner_name(name: &str) -> crate::ast::names::AtomicName {
-    crate::ast::names::AtomicName::WithModAndExportFileId { global_mod_id: 0, export_file_id: 0, name: name.into() }
+    crate::ast::names::AtomicName::WithModAndExportFileId {
+        global_mod_id: 0,
+        export_file_id: 0,
+        name: name.into(),
+    }
 }
 
 fn mounted_owner_runtime(library: &str, local: &str) -> (Runtime, std::path::PathBuf) {
     use crate::run_module::{load_config, run_export_file};
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let id = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let root = std::env::temp_dir().join(format!("litex-function-family-payloads-{}-{id}", std::process::id()));
+    let root = std::env::temp_dir().join(format!(
+        "litex-function-family-payloads-{}-{id}",
+        std::process::id()
+    ));
     let lib = root.join("library");
     std::fs::create_dir_all(&lib).unwrap();
-    std::fs::write(root.join("litex.config"), "[import]\nOther = \"./library\"\n[export]\ntarget = \"./target.lit\"\n").unwrap();
-    std::fs::write(lib.join("litex.config"), "[export]\ndefinitions = \"./definitions.lit\"\n").unwrap();
+    std::fs::write(
+        root.join("litex.config"),
+        "[import]\nOther = \"./library\"\n[export]\ntarget = \"./target.lit\"\n",
+    )
+    .unwrap();
+    std::fs::write(
+        lib.join("litex.config"),
+        "[export]\ndefinitions = \"./definitions.lit\"\n",
+    )
+    .unwrap();
     std::fs::write(lib.join("definitions.lit"), library).unwrap();
     let mut rt = runtime(CodeSource::RootExport { export_file_id: 0 });
     rt.abort_file();
-    rt.global_module_manager.set_root_config(load_config(&root, &root).unwrap());
+    rt.global_module_manager
+        .set_root_config(load_config(&root, &root).unwrap());
     let config = load_config(&lib, &root).unwrap();
-    let mod_id = rt.global_module_manager.record_import("Other".into(), lib.clone(), config.clone()).unwrap();
-    let run = run_export_file(&mut rt, "definitions", &lib.join("definitions.lit"), 0, Some(mod_id), CodeSource::ImportedExport { global_mod_id: mod_id, export_file_id: 0 }, false).unwrap();
+    let mod_id = rt
+        .global_module_manager
+        .record_import("Other".into(), lib.clone(), config.clone())
+        .unwrap();
+    let run = run_export_file(
+        &mut rt,
+        "definitions",
+        &lib.join("definitions.lit"),
+        0,
+        Some(mod_id),
+        CodeSource::ImportedExport {
+            global_mod_id: mod_id,
+            export_file_id: 0,
+        },
+        false,
+    )
+    .unwrap();
     assert!(run.run.success, "{:?}", run.run.session_error);
     rt.set_code_source(CodeSource::RootExport { export_file_id: 0 });
     rt.begin_file(RealOrVirtualPath::Eval);
@@ -542,7 +735,10 @@ fn qualified_registration_uses_its_own_predicate_arity() {
     }
     let result = run_owner_fixture("prop eq(a, b set):\n    a != a\n", "prop eq(a, b set):\n    a = a\nregister reflexive:\n    ? forall x set:\n        $Other::definitions::eq(x, x)\n");
     assert!(result.run.session_error.is_none());
-    assert!(!result.run.success, "a true local predicate cannot prove foreign reflexivity");
+    assert!(
+        !result.run.success,
+        "a true local predicate cannot prove foreign reflexivity"
+    );
 }
 
 #[test]

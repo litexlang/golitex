@@ -1,10 +1,10 @@
 use super::helper::corresponding_arg_pairs;
+use super::result::{equal_fact_result_from_success, EqualFactSearchedProof};
+use super::well_defined_result::VerifyEqualFactWellDefinedResult;
 use crate::ast::fact::EqualFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
-use super::result::{equal_fact_result_from_success, EqualFactSearchedProof};
-use super::well_defined_result::VerifyEqualFactWellDefinedResult;
 
 // Pointwise / constructor-wise equality: same outer shape ⇒ prove each
 // corresponding child equal. Port of legacy same_shape_and_corresponding_args_match
@@ -60,14 +60,19 @@ impl Runtime {
                 VerifyEqualFactWellDefinedResult::Success(wd) => wd,
                 VerifyEqualFactWellDefinedResult::Failed(_) => return Ok(None),
             };
-            let searched = if let Some(proof) = self.search_equal_fact_proof(&child, child_verify_state)? {
-                proof
-            } else {
-                let Some(nested) = self.search_equal_fact_proof_by_matching_one_arg_by_one(
-                    &child, child_verify_state,
-                )? else { return Ok(None); };
-                EqualFactSearchedProof::ByMatchingOneArgByOne(nested)
-            };
+            let searched =
+                if let Some(proof) = self.search_equal_fact_proof(&child, child_verify_state)? {
+                    proof
+                } else {
+                    let Some(nested) = self.search_equal_fact_proof_by_matching_one_arg_by_one(
+                        &child,
+                        child_verify_state,
+                    )?
+                    else {
+                        return Ok(None);
+                    };
+                    EqualFactSearchedProof::ByMatchingOneArgByOne(nested)
+                };
             let proof = equal_fact_result_from_success(&child, wd, searched);
             corresponding_arg_equal_proofs.push(proof);
         }

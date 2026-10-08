@@ -27,14 +27,13 @@ impl Runtime {
         verify_state: VerifyState,
         _failure_message: String,
     ) -> RuntimeResult<VerifyFactResult> {
-        let well_defined_proof = match self
-            .verify_atomic_fact_well_definedness(&fact, verify_state.clone())?
-        {
-            VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
-            VerifyAtomicFactWellDefinedResult::Failed(reason) => {
-                return Ok(atomic_except_equality_fact_result_from_wd_fail(reason));
-            }
-        };
+        let well_defined_proof =
+            match self.verify_atomic_fact_well_definedness(&fact, verify_state.clone())? {
+                VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
+                VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                    return Ok(atomic_except_equality_fact_result_from_wd_fail(reason));
+                }
+            };
         match self.search_atomic_except_equality_fact_proof(&fact, verify_state)? {
             Some(searched_proof) => Ok(atomic_except_equality_fact_result_from_success(
                 &fact,

@@ -190,39 +190,71 @@ fn builtin_permission_and_depth_are_inherited() {
 fn finite_product_restrictions_preserve_the_source_domain_and_failure_rollback() {
     for language in OutputLanguage::ALL {
         let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(), session: false, strict: true, language,
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
         });
         let run = rt.run_litex_code(
             "have f fn(x union({1,2},{3})) R\nnot 3 $in {1,2}\n3 $in union({1,2},{3})\nfinite_set_product(union({1,2},{3}),f)=finite_set_product({1,2},fn(x {1,2})R{f(x)})*f(3)"
         ).unwrap();
         assert!(run.success && run.session_error.is_none());
         let detailed = emit_run_detailed(&run, &rt, "eval", None);
-        for key in ["FiniteSetProductFreshInsertion", "literal_restriction", "factor_equal", "well_defined"] {
+        for key in [
+            "FiniteSetProductFreshInsertion",
+            "literal_restriction",
+            "factor_equal",
+            "well_defined",
+        ] {
             assert!(detailed.contains(key), "missing actual {key}: {detailed}");
         }
         // A return upper bound may widen while the complete domain stays fixed.
-        assert!(rt.run_litex_code(
-            "release thm fn_set_member(f,fn(x union({1,2},{3})) C)"
-        ).unwrap().success);
-        let before = rt.execution_environments_stack.iter().map(|env| (
-            env.facts.facts_by_id.len(), env.well_defined_objects.object_to_wd_id.len(),
-        )).collect::<Vec<_>>();
-        let failed = rt.run_litex_code(
-            "release thm fn_set_member(f,fn(x {1,2}) R)"
-        ).unwrap();
+        assert!(
+            rt.run_litex_code("release thm fn_set_member(f,fn(x union({1,2},{3})) C)")
+                .unwrap()
+                .success
+        );
+        let before = rt
+            .execution_environments_stack
+            .iter()
+            .map(|env| {
+                (
+                    env.facts.facts_by_id.len(),
+                    env.well_defined_objects.object_to_wd_id.len(),
+                )
+            })
+            .collect::<Vec<_>>();
+        let failed = rt
+            .run_litex_code("release thm fn_set_member(f,fn(x {1,2}) R)")
+            .unwrap();
         assert!(!failed.success && failed.session_error.is_none());
         let projected = crate::json_output::project_stmt_normal(&failed.statement_results[0], &rt);
         let result = projected.as_object().unwrap();
         let key = |name| crate::json_output::json_keys::localize_key(name, language);
         let why = result.get(&key("why_failed")).unwrap().as_object().unwrap();
         let failure = why.get(&key("failure")).unwrap().as_object().unwrap();
-        assert_eq!(failure.get(&key("phase")).unwrap().as_str().unwrap(), "function_domain");
+        assert_eq!(
+            failure.get(&key("phase")).unwrap().as_str().unwrap(),
+            "function_domain"
+        );
         for key in ["stores", "infers"] {
-            assert!(result.get(&crate::json_output::json_keys::localize_key(key, language)).unwrap().as_array().unwrap().is_empty());
+            assert!(result
+                .get(&crate::json_output::json_keys::localize_key(key, language))
+                .unwrap()
+                .as_array()
+                .unwrap()
+                .is_empty());
         }
-        let after = rt.execution_environments_stack.iter().map(|env| (
-            env.facts.facts_by_id.len(), env.well_defined_objects.object_to_wd_id.len(),
-        )).collect::<Vec<_>>();
+        let after = rt
+            .execution_environments_stack
+            .iter()
+            .map(|env| {
+                (
+                    env.facts.facts_by_id.len(),
+                    env.well_defined_objects.object_to_wd_id.len(),
+                )
+            })
+            .collect::<Vec<_>>();
         assert_eq!(before, after, "rejected short domain must leave no state");
     }
 }

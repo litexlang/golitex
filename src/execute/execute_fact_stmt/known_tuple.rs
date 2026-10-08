@@ -74,7 +74,8 @@ pub enum KnownFunctionTupleApplicability {
 pub struct KnownTemplateSignatureMatchProof {
     pub function_equal: KnownEqualityPathProof,
     pub instance: InstantiatedTemplateObj,
-    pub signature_match: crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof,
+    pub signature_match:
+        crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof,
 }
 
 impl KnownTupleShapeProof {
@@ -114,21 +115,40 @@ impl Runtime {
         // Prefer membership published on this exact subject. Only a checked
         // equality path may transport another value's Cartesian membership.
         for property in self.known_special_properties_of(subject) {
-            let SpecialProperty::Membership(membership) = property else { continue; };
-            let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else { continue; };
-            return Some(KnownTupleShapeProof::CartesianMembership(KnownCartesianTupleProof {
-                subject_equal: KnownEqualityPathProof::new(vec![]),
-                membership, carrier_equal, cart,
-            }));
+            let SpecialProperty::Membership(membership) = property else {
+                continue;
+            };
+            let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else {
+                continue;
+            };
+            return Some(KnownTupleShapeProof::CartesianMembership(
+                KnownCartesianTupleProof {
+                    subject_equal: KnownEqualityPathProof::new(vec![]),
+                    membership,
+                    carrier_equal,
+                    cart,
+                },
+            ));
         }
         for (candidate, path) in self.exact_property_object_values(subject) {
-            if path.is_empty() { continue; }
+            if path.is_empty() {
+                continue;
+            }
             for property in self.known_special_properties_of(&candidate) {
-                let SpecialProperty::Membership(membership) = property else { continue; };
-                let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else { continue; };
-                return Some(KnownTupleShapeProof::CartesianMembership(KnownCartesianTupleProof {
-                    subject_equal: KnownEqualityPathProof::new(path), membership, carrier_equal, cart,
-                }));
+                let SpecialProperty::Membership(membership) = property else {
+                    continue;
+                };
+                let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else {
+                    continue;
+                };
+                return Some(KnownTupleShapeProof::CartesianMembership(
+                    KnownCartesianTupleProof {
+                        subject_equal: KnownEqualityPathProof::new(path),
+                        membership,
+                        carrier_equal,
+                        cart,
+                    },
+                ));
             }
         }
         if let Obj::FnObj(app) = subject {
@@ -138,34 +158,56 @@ impl Runtime {
             if let Some(receiver) = self.finite_function_application_receiver(app) {
                 if let Some(index) = literal_positive_usize(&app.body.last().unwrap()[0]) {
                     if let Some(shape) = self.lookup_known_tuple_shape(&receiver) {
-                        if let Some(factor) = shape.cart().and_then(|cart| cart.args.get(index - 1)) {
+                        if let Some(factor) = shape.cart().and_then(|cart| cart.args.get(index - 1))
+                        {
                             if let Some((cart, carrier_equal)) = self.known_cart_carrier(factor) {
-                                return Some(KnownTupleShapeProof::CartesianCoordinate(KnownCartesianCoordinateTupleProof {
-                                    receiver: Box::new(shape), index, carrier_equal, cart,
-                                }));
+                                return Some(KnownTupleShapeProof::CartesianCoordinate(
+                                    KnownCartesianCoordinateTupleProof {
+                                        receiver: Box::new(shape),
+                                        index,
+                                        carrier_equal,
+                                        cart,
+                                    },
+                                ));
                             }
                         }
                     }
                 }
             }
-            for (signature, _) in self.collect_in_function_set_candidates(&tuple_function_head(app)) {
-                let Some(return_set) = self.applied_fn_set_return_set(app, &signature) else { continue; };
-                let Some((cart, carrier_equal)) = self.known_cart_carrier(&return_set) else { continue; };
+            for (signature, _) in self.collect_in_function_set_candidates(&tuple_function_head(app))
+            {
+                let Some(return_set) = self.applied_fn_set_return_set(app, &signature) else {
+                    continue;
+                };
+                let Some((cart, carrier_equal)) = self.known_cart_carrier(&return_set) else {
+                    continue;
+                };
                 let membership = InFact {
-                    fact_id: self.global_ids.allocate_fact_id(), element: subject.clone(),
-                    set: return_set, line_file: None,
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: subject.clone(),
+                    set: return_set,
+                    line_file: None,
                 };
                 let Some(InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof)) =
                     self.search_in_fact_proof_by_known_special_property(&membership)
-                else { continue; };
-                return Some(KnownTupleShapeProof::FunctionCodomain(KnownFunctionCartesianTupleProof {
-                    function_equal: KnownEqualityPathProof::new(vec![]),
-                    membership, membership_proof: proof, carrier_equal, cart,
-                }));
+                else {
+                    continue;
+                };
+                return Some(KnownTupleShapeProof::FunctionCodomain(
+                    KnownFunctionCartesianTupleProof {
+                        function_equal: KnownEqualityPathProof::new(vec![]),
+                        membership,
+                        membership_proof: proof,
+                        carrier_equal,
+                        cart,
+                    },
+                ));
             }
         }
         self.known_literal_tuple_candidates(subject)
-            .into_iter().next().map(KnownTupleShapeProof::TupleEquality)
+            .into_iter()
+            .next()
+            .map(KnownTupleShapeProof::TupleEquality)
     }
 
     pub(in crate::execute) fn known_literal_tuple_candidates(
@@ -201,14 +243,26 @@ impl Runtime {
             let (anon, template_instance) = match candidate {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => (anon, None),
                 Obj::InstantiatedTemplateObj(instance) => {
-                    let Some(def) = self.def_template_visible(&instance.template_name).cloned() else { continue; };
-                    let TemplateDefEnum::HaveFnEqualStmt(stmt) = &def.template_def_stmt else { continue; };
+                    let Some(def) = self.def_template_visible(&instance.template_name).cloned()
+                    else {
+                        continue;
+                    };
+                    let TemplateDefEnum::HaveFnEqualStmt(stmt) = &def.template_def_stmt else {
+                        continue;
+                    };
                     let ids = def.template_arg_def.ordered_param_ids();
-                    if ids.len() != instance.args.len() { continue; }
+                    if ids.len() != instance.args.len() {
+                        continue;
+                    }
                     let subst = ids.into_iter().zip(instance.args.iter().cloned()).collect();
                     let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) = self.inst_obj(
-                        &Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone())), &subst,
-                    ) else { continue; };
+                        &Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+                            stmt.equal_to_anonymous_fn.clone(),
+                        )),
+                        &subst,
+                    ) else {
+                        continue;
+                    };
                     (anon, Some(instance))
                 }
                 _ => continue,
@@ -245,30 +299,48 @@ impl Runtime {
                 }
                 let mut template_matches = Vec::new();
                 for (peer, peer_path) in self.exact_property_object_values(&head) {
-                    let Obj::InstantiatedTemplateObj(instance) = peer else { continue; };
-                    let Some(signature) = self.instantiated_template_function_signature(&instance) else { continue; };
-                    if self.applied_fn_set_return_set(app, &signature).is_none() { continue; }
+                    let Obj::InstantiatedTemplateObj(instance) = peer else {
+                        continue;
+                    };
+                    let Some(signature) = self.instantiated_template_function_signature(&instance)
+                    else {
+                        continue;
+                    };
+                    if self.applied_fn_set_return_set(app, &signature).is_none() {
+                        continue;
+                    }
                     let candidate_obj = Obj::FunctionSpace(FunctionSpace::FnSet(signature));
-                    let Some(signature_match) = self.lookup_exact_property_obj_equality(&candidate_obj, &signature_obj) else {
+                    let Some(signature_match) =
+                        self.lookup_exact_property_obj_equality(&candidate_obj, &signature_obj)
+                    else {
                         compatible = false;
                         break;
                     };
                     template_matches.push(KnownTemplateSignatureMatchProof {
-                        function_equal: KnownEqualityPathProof::new(peer_path), instance, signature_match,
+                        function_equal: KnownEqualityPathProof::new(peer_path),
+                        instance,
+                        signature_match,
                     });
                 }
-                if !compatible { continue; }
+                if !compatible {
+                    continue;
+                }
                 if let Some(instance) = template_instance {
                     // Application WD already checks this declaration's arguments
                     // and guards. Competing stored signatures must agree too.
                     KnownFunctionTupleApplicability::TemplateDefinition {
-                        instance, signature: anon.body.clone(), alternative_signatures: matches,
+                        instance,
+                        signature: anon.body.clone(),
+                        alternative_signatures: matches,
                         alternative_template_signatures: template_matches,
                     }
                 } else {
-                    if matches.is_empty() && template_matches.is_empty() { continue; }
+                    if matches.is_empty() && template_matches.is_empty() {
+                        continue;
+                    }
                     KnownFunctionTupleApplicability::AllSignaturesMatch {
-                        signatures: matches, template_signatures: template_matches,
+                        signatures: matches,
+                        template_signatures: template_matches,
                     }
                 }
             };
@@ -293,7 +365,9 @@ impl Runtime {
     ) -> Vec<(KnownEqualityPathProof, KnownFunctionTupleValueProof)> {
         let mut candidates = Vec::new();
         for (peer, path) in self.exact_property_object_values(subject) {
-            let Obj::FnObj(app) = peer else { continue; };
+            let Obj::FnObj(app) = peer else {
+                continue;
+            };
             if let Some(function) = self.lookup_known_function_tuple_value(&app) {
                 candidates.push((KnownEqualityPathProof::new(path), function));
             }

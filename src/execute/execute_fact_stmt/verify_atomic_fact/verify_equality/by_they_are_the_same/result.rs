@@ -73,8 +73,12 @@ impl From<SetBuilderAlphaProof> for SameFreeParamShapeProof {
 }
 
 impl CompoundObjAlphaProof {
-    pub fn new() -> Self { Self {} }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 impl From<CompoundObjAlphaProof> for SameFreeParamShapeProof {
-    fn from(proof: CompoundObjAlphaProof) -> Self { Self::Compound(proof) }
+    fn from(proof: CompoundObjAlphaProof) -> Self {
+        Self::Compound(proof)
+    }
 }

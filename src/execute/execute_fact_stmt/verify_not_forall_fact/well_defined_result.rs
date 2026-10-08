@@ -1,7 +1,7 @@
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult, FactWellDefinedProof,
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult,
 };
 
 pub enum FailToVerifyNotForallFactWellDefinedResult {

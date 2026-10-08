@@ -1,5 +1,5 @@
-use super::{ExistOrAndChainAtomicFact, ForallFact};
 use super::super::line_file::SourceLine;
+use super::{ExistOrAndChainAtomicFact, ForallFact};
 use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

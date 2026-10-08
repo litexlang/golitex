@@ -56,7 +56,10 @@ impl Runtime {
         // Re-occupy exist binders so the local proof body can mention them
         // (legacy: parse_stmts_with_existing_free_param_bindings).
         // Example: `witness exist m R st {m = 0} from 0: m = 0`
-        let params = exist_shaped_fact_in_witness.plain().typed_parameters.clone();
+        let params = exist_shaped_fact_in_witness
+            .plain()
+            .typed_parameters
+            .clone();
         let proof = self.with_forall_params_occupied(&params, block, |this| {
             this.parse_witness_optional_proof_body(tb, &proof_blocks, "witness exist")
         })?;
@@ -106,9 +109,7 @@ impl Runtime {
         let proof_blocks = std::mem::take(&mut tb.body);
         let atomic = self.parse_atomic_fact(tb, true)?;
         let AtomicFact::NormalAtomicFact(atomic_fact) = atomic else {
-            return Err(tb.parse_error(
-                "witness `$P`: expected a positive normal atomic prop fact",
-            ));
+            return Err(tb.parse_error("witness `$P`: expected a positive normal atomic prop fact"));
         };
         tb.expect(FROM)?;
         let mut witnesses = vec![parse_obj(self, tb)?];

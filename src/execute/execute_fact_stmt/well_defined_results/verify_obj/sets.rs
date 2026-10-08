@@ -7,14 +7,12 @@ use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
-use crate::ast::fact::{
-    AtomicFact, InFact, NotEqualFact,
-};
+use crate::ast::fact::{AtomicFact, InFact, NotEqualFact};
 use crate::ast::obj::{
-    FamilyIntersect, FamilyUnion, Cart, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
-    FunctionSpace, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct,
-    ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, SetMinus, SetOperator,
-    StandardSet, Tuple, Union,
+    Cart, FamilyIntersect, FamilyUnion, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
+    FunctionSpace, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj,
+    IntervalObjStruct, ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, SetMinus,
+    SetOperator, StandardSet, Tuple, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -92,14 +90,16 @@ impl Runtime {
             });
         }
 
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-            obj: root,
-            proof: ObjWellDefinedProofByDef::SetOperator(
-                SetOperatorObjWellDefinedProofByDef::IndexUnion(
-                    IndexUnionObjWellDefinedProof::from_stages(stages),
+        Ok(VerifyObjWellDefinedResult::Success(
+            ObjWellDefinedProof::ByDef {
+                obj: root,
+                proof: ObjWellDefinedProofByDef::SetOperator(
+                    SetOperatorObjWellDefinedProofByDef::IndexUnion(
+                        IndexUnionObjWellDefinedProof::from_stages(stages),
+                    ),
                 ),
-            ),
-        }))
+            },
+        ))
     }
 
     fn verify_index_union_obj_well_definedness_by_def(
@@ -119,8 +119,12 @@ impl Runtime {
         // Indexed operators require a nonempty index carrier, independently
         // of whether the family is an anonymous or a named function.
         reqs.push(self.require_is_nonempty_set(
-            value.index_set.as_ref(), verify_state.clone(),
-            format!("index_union: index {} must be nonempty", value.index_set.ir()),
+            value.index_set.as_ref(),
+            verify_state.clone(),
+            format!(
+                "index_union: index {} must be nonempty",
+                value.index_set.ir()
+            ),
         )?);
         reqs.push(self.require_is_set(
             value.index_set.as_ref(),
@@ -130,7 +134,10 @@ impl Runtime {
         reqs.push(self.require_is_set(
             value.ambient_set.as_ref(),
             verify_state.clone(),
-            format!("index_union: ambient {} is not a set", value.ambient_set.ir()),
+            format!(
+                "index_union: ambient {} is not a set",
+                value.ambient_set.ir()
+            ),
         )?);
         let family_type = self.fresh_indexed_family_fn_set(
             value.index_set.as_ref().clone(),
@@ -179,14 +186,16 @@ impl Runtime {
             });
         }
 
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-            obj: root,
-            proof: ObjWellDefinedProofByDef::SetOperator(
-                SetOperatorObjWellDefinedProofByDef::IndexIntersect(
-                    IndexIntersectObjWellDefinedProof::from_stages(stages),
+        Ok(VerifyObjWellDefinedResult::Success(
+            ObjWellDefinedProof::ByDef {
+                obj: root,
+                proof: ObjWellDefinedProofByDef::SetOperator(
+                    SetOperatorObjWellDefinedProofByDef::IndexIntersect(
+                        IndexIntersectObjWellDefinedProof::from_stages(stages),
+                    ),
                 ),
-            ),
-        }))
+            },
+        ))
     }
 
     fn verify_index_intersect_obj_well_definedness_by_def(
@@ -206,8 +215,12 @@ impl Runtime {
         // Indexed operators require a nonempty index carrier, independently
         // of whether the family is an anonymous or a named function.
         reqs.push(self.require_is_nonempty_set(
-            value.index_set.as_ref(), verify_state.clone(),
-            format!("index_intersect: index {} must be nonempty", value.index_set.ir()),
+            value.index_set.as_ref(),
+            verify_state.clone(),
+            format!(
+                "index_intersect: index {} must be nonempty",
+                value.index_set.ir()
+            ),
         )?);
         reqs.push(self.require_is_set(
             value.index_set.as_ref(),
@@ -281,14 +294,16 @@ impl Runtime {
             });
         }
 
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-            obj: root,
-            proof: ObjWellDefinedProofByDef::SetOperator(
-                SetOperatorObjWellDefinedProofByDef::IndexCart(
-                    IndexCartObjWellDefinedProof::from_stages(stages),
+        Ok(VerifyObjWellDefinedResult::Success(
+            ObjWellDefinedProof::ByDef {
+                obj: root,
+                proof: ObjWellDefinedProofByDef::SetOperator(
+                    SetOperatorObjWellDefinedProofByDef::IndexCart(
+                        IndexCartObjWellDefinedProof::from_stages(stages),
+                    ),
                 ),
-            ),
-        }))
+            },
+        ))
     }
 
     fn verify_index_cart_obj_well_definedness_by_def(
@@ -308,16 +323,17 @@ impl Runtime {
         // Indexed operators require a nonempty index carrier, independently
         // of whether the family is an anonymous or a named function.
         reqs.push(self.require_is_nonempty_set(
-            value.index_set.as_ref(), verify_state.clone(),
-            format!("index_cart: index {} must be nonempty", value.index_set.ir()),
+            value.index_set.as_ref(),
+            verify_state.clone(),
+            format!(
+                "index_cart: index {} must be nonempty",
+                value.index_set.ir()
+            ),
         )?);
         reqs.push(self.require_is_set(
             value.index_set.as_ref(),
             verify_state.clone(),
-            format!(
-                "index_cart: index {} is not a set",
-                value.index_set.ir()
-            ),
+            format!("index_cart: index {} is not a set", value.index_set.ir()),
         )?);
         reqs.push(self.require_is_nonempty_set(
             value.family_set.as_ref(),
@@ -434,18 +450,27 @@ impl Runtime {
         reqs.push(self.require_is_finite_set(
             value.set.as_ref(),
             verify_state.clone(),
-            format!("finite_set_max requires a finite nonempty set, got {}", value.set.ir()),
+            format!(
+                "finite_set_max requires a finite nonempty set, got {}",
+                value.set.ir()
+            ),
         )?);
         reqs.push(self.require_is_nonempty_set(
             value.set.as_ref(),
             verify_state.clone(),
-            format!("finite_set_max requires a finite nonempty set, got {}", value.set.ir()),
+            format!(
+                "finite_set_max requires a finite nonempty set, got {}",
+                value.set.ir()
+            ),
         )?);
         reqs.push(self.require_obj_subset_of_standard_set(
             value.set.as_ref(),
             StandardSet::R,
             verify_state,
-            format!("finite_set_max requires a real-valued set, got {}", value.set.ir()),
+            format!(
+                "finite_set_max requires a real-valued set, got {}",
+                value.set.ir()
+            ),
         )?);
         Ok(self.with_requirements(proof, reqs))
     }
@@ -462,18 +487,27 @@ impl Runtime {
         reqs.push(self.require_is_finite_set(
             value.set.as_ref(),
             verify_state.clone(),
-            format!("finite_set_min requires a finite nonempty set, got {}", value.set.ir()),
+            format!(
+                "finite_set_min requires a finite nonempty set, got {}",
+                value.set.ir()
+            ),
         )?);
         reqs.push(self.require_is_nonempty_set(
             value.set.as_ref(),
             verify_state.clone(),
-            format!("finite_set_min requires a finite nonempty set, got {}", value.set.ir()),
+            format!(
+                "finite_set_min requires a finite nonempty set, got {}",
+                value.set.ir()
+            ),
         )?);
         reqs.push(self.require_obj_subset_of_standard_set(
             value.set.as_ref(),
             StandardSet::R,
             verify_state,
-            format!("finite_set_min requires a real-valued set, got {}", value.set.ir()),
+            format!(
+                "finite_set_min requires a real-valued set, got {}",
+                value.set.ir()
+            ),
         )?);
         Ok(self.with_requirements(proof, reqs))
     }

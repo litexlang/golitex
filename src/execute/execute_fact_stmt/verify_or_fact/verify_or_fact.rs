@@ -2,10 +2,10 @@ use crate::ast::fact::{
     and_chain_as_fact, atomic_fact_has_positive_polarity, negate_atomic_fact, or_fact_args_ref,
     AndChainAtomicFact, Fact, OrFact,
 };
-use crate::exec_env::or_fact_index_key::or_fact_index_key;
 use crate::exec_env::known_forall_conclusion_memory::{
     or_at_forall_location, ForallConclusionCite,
 };
+use crate::exec_env::or_fact_index_key::or_fact_index_key;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -13,8 +13,8 @@ use crate::execute::execute_fact_stmt::verify_or_fact::result::{
     or_fact_result_from_search_fail, or_fact_result_from_success, or_fact_result_from_wd_fail,
 };
 use crate::execute::execute_fact_stmt::verify_or_fact::{
-    AssumeNegatedOrBranchResult, OrFactSearchProofByKnownOrFact,
-    OrFactSearchProofBySelectedBranch, OrFactSearchedProof,
+    AssumeNegatedOrBranchResult, OrFactSearchProofByKnownOrFact, OrFactSearchProofBySelectedBranch,
+    OrFactSearchedProof,
 };
 use crate::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyOrFactWellDefinedResult, VerifyState,
@@ -176,9 +176,9 @@ impl Runtime {
             }
             let mut matches = Vec::new();
             for (known_arg, goal_arg) in known_args.iter().zip(&goal_args) {
-                let Some(proof) = self.lookup_known_obj_equality_with_graph(
-                    known_arg, goal_arg, &mut adjacency,
-                ) else {
+                let Some(proof) =
+                    self.lookup_known_obj_equality_with_graph(known_arg, goal_arg, &mut adjacency)
+                else {
                     break;
                 };
                 matches.push(proof);

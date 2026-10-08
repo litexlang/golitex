@@ -8,7 +8,8 @@ impl Runtime {
     pub(crate) fn infer_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferEqualityResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferEqualityResult>> {
         let mut rules = Vec::new();
         if let Some(pow) = self.infer_equal_fact_positive_real_power(equal_fact, verify_state)? {
             rules.push(InferEqualityResult::PositiveRealPower(pow));

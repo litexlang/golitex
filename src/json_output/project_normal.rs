@@ -105,19 +105,22 @@ pub fn project_run_normal(
         None => JsonValue::Null,
         Some(err) => string(err.to_string()),
     };
-    object(lang, vec![
-        ("kind", string("run")),
-        ("success", bool_value(run.success)),
-        ("target", string(target)),
-        ("path", path_value),
-        ("detail", string(OutputDetail::Normal.as_str())),
-        (
-            "language",
-            string(runtime.launch_command.output_language().as_str()),
-        ),
-        ("statement_results", JsonValue::Array(statement_results)),
-        ("session_error", session_error),
-    ])
+    object(
+        lang,
+        vec![
+            ("kind", string("run")),
+            ("success", bool_value(run.success)),
+            ("target", string(target)),
+            ("path", path_value),
+            ("detail", string(OutputDetail::Normal.as_str())),
+            (
+                "language",
+                string(runtime.launch_command.output_language().as_str()),
+            ),
+            ("statement_results", JsonValue::Array(statement_results)),
+            ("session_error", session_error),
+        ],
+    )
 }
 
 fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue {
@@ -127,28 +130,32 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
             let statement = verify_goal_display(&success.verify_result);
             let why = build_proof_method(&success.verify_result, runtime);
             let stores = store_fact_texts(&success.store_and_infer_result.store);
-            let infers = infer_fact_texts_from_store_and_infer(
-                runtime,
-                &success.store_and_infer_result,
-            );
-            object(lang, vec![
-                ("success", bool_value(true)),
-                ("statement", string(statement)),
-                ("proof_method", why),
-                ("stores", array_of_strings(stores)),
-                ("infers", array_of_strings(infers)),
-            ])
+            let infers =
+                infer_fact_texts_from_store_and_infer(runtime, &success.store_and_infer_result);
+            object(
+                lang,
+                vec![
+                    ("success", bool_value(true)),
+                    ("statement", string(statement)),
+                    ("proof_method", why),
+                    ("stores", array_of_strings(stores)),
+                    ("infers", array_of_strings(infers)),
+                ],
+            )
         }
         ExecFactStmtResult::Failed(verify) => {
             let statement = verify_goal_display(verify);
             let why = why_failed(verify, runtime);
-            object(lang, vec![
-                ("success", bool_value(false)),
-                ("statement", string(statement)),
-                ("why_failed", why),
-                ("stores", empty_string_array()),
-                ("infers", empty_string_array()),
-            ])
+            object(
+                lang,
+                vec![
+                    ("success", bool_value(false)),
+                    ("statement", string(statement)),
+                    ("why_failed", why),
+                    ("stores", empty_string_array()),
+                    ("infers", empty_string_array()),
+                ],
+            )
         }
     }
 }
@@ -168,16 +175,18 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
             VerifyEqualityResult::Success(s) => {
                 AtomicFact::EqualFact(s.fact.clone()).readable_string()
             }
-            VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof { fact, .. }) => {
-                AtomicFact::EqualFact(fact.clone()).readable_string()
-            }
+            VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof {
+                fact, ..
+            }) => AtomicFact::EqualFact(fact.clone()).readable_string(),
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(_)) => {
                 "<well_defined_not_proven>".into()
             }
         },
         VerifyFactResult::AndFact(r) => match r.as_ref() {
             VerifyAndFactResult::Success(s) => Fact::AndFact(s.fact.clone()).readable_string(),
-            VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToSearchProof { fact, .. })
+            VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToSearchProof {
+                fact, ..
+            })
             | VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToVerifyWellDefined {
                 fact,
                 ..
@@ -185,7 +194,10 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
         },
         VerifyFactResult::ChainFact(r) => match r.as_ref() {
             VerifyChainFactResult::Success(s) => Fact::ChainFact(s.fact.clone()).readable_string(),
-            VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToSearchProof { fact, .. })
+            VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToSearchProof {
+                fact,
+                ..
+            })
             | VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToVerifyWellDefined {
                 fact,
                 ..
@@ -206,7 +218,8 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
                 Fact::ForallFact(s.fact().clone()).readable_string()
             }
             VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {
-                fact, ..
+                fact,
+                ..
             }) => Fact::ForallFact(fact.clone()).readable_string(),
             VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_)) => {
                 "<well_defined_not_proven>".into()
@@ -296,21 +309,27 @@ fn build_proof_method(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue
 fn compound_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
     let lang = output_language(runtime);
     let text = explain_compound_fact_why(kind, lang);
-    object(lang, vec![
-        ("type", string(text.type_tag)),
-        ("rule_name", string(text.rule_name)),
-        ("message", string(text.message)),
-    ])
+    object(
+        lang,
+        vec![
+            ("type", string(text.type_tag)),
+            ("rule_name", string(text.rule_name)),
+            ("message", string(text.message)),
+        ],
+    )
 }
 
 fn searched_proof_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
     let lang = output_language(runtime);
     let text = explain_searched_proof_why(kind, lang);
-    object(lang, vec![
-        ("type", string(text.type_tag)),
-        ("rule_name", string(text.rule_name)),
-        ("message", string(text.message)),
-    ])
+    object(
+        lang,
+        vec![
+            ("type", string(text.type_tag)),
+            ("rule_name", string(text.rule_name)),
+            ("message", string(text.message)),
+        ],
+    )
 }
 
 fn why_failed(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
@@ -318,9 +337,17 @@ fn why_failed(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
     if verify.is_wd_failed() {
         return object(
             lang,
-            vec![("phase", string(phase_value_well_defined(lang))),
-                ("message", string(super::explain::well_defined_not_proven_message(lang))),
-                ("verification", super::project_detailed::project_verify_fact(verify, runtime))],
+            vec![
+                ("phase", string(phase_value_well_defined(lang))),
+                (
+                    "message",
+                    string(super::explain::well_defined_not_proven_message(lang)),
+                ),
+                (
+                    "verification",
+                    super::project_detailed::project_verify_fact(verify, runtime),
+                ),
+            ],
         );
     }
     let goal = verify_goal_display(verify);
@@ -338,8 +365,12 @@ fn why_from_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
-        AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_) => searched_proof_why_json(runtime, "structural_membership"),
-        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_) => searched_proof_why_json(runtime, "closed_calculation"),
+        AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_) => {
+            searched_proof_why_json(runtime, "structural_membership")
+        }
+        AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_) => {
+            searched_proof_why_json(runtime, "closed_calculation")
+        }
         AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
             cite_from_fact_id(runtime, p.cite_fact_id)
         }
@@ -351,7 +382,10 @@ fn why_from_atomic_except_searched(
                 ("rule_name", string(text.rule_name)),
                 ("message", string(text.message)),
             ];
-            if let Some(fact) = p.cite_property_fact_id().and_then(|id| runtime.fact_by_id_in_stack(id)) {
+            if let Some(fact) = p
+                .cite_property_fact_id()
+                .and_then(|id| runtime.fact_by_id_in_stack(id))
+            {
                 fields.push(("cite", string(fact.readable_string())));
             }
             object(lang, fields)
@@ -382,7 +416,9 @@ fn why_from_atomic_except_searched(
 
 fn why_from_equal_searched(searched: &EqualFactSearchedProof, runtime: &Runtime) -> JsonValue {
     match searched {
-        EqualFactSearchedProof::ByClosedCalculation(_) => searched_proof_why_json(runtime, "closed_calculation"),
+        EqualFactSearchedProof::ByClosedCalculation(_) => {
+            searched_proof_why_json(runtime, "closed_calculation")
+        }
         EqualFactSearchedProof::ByTheyAreTheSame(_) => {
             searched_proof_why_json(runtime, "they_are_the_same")
         }

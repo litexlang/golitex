@@ -18,7 +18,6 @@ pub fn localize_key(english_key: &str, lang: OutputLanguage) -> String {
         OutputLanguage::Japanese => japanese_key(english_key).to_string(),
         OutputLanguage::Korean => korean_key(english_key).to_string(),
         OutputLanguage::Vietnamese => vietnamese_key(english_key).to_string(),
-
     }
 }
 
@@ -989,7 +988,9 @@ fn korean_key(english_key: &str) -> &str {
         "left_path" => "왼쪽_경로",
         "bridge" => "연결_증명",
         "right_path" => "오른쪽_경로",
-        "why_parameters_of_known_fact_are_equal_to_givens" => "알려진_명제와_목표의_인수가_같다는_증명",
+        "why_parameters_of_known_fact_are_equal_to_givens" => {
+            "알려진_명제와_목표의_인수가_같다는_증명"
+        }
         "success" => "성공",
         "ok" => "성공",
         "target" => "대상",

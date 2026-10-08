@@ -146,34 +146,55 @@ fn real_power_wd_accepts_symbolic_positive_and_nonnegative_domains() {
 #[test]
 fn real_power_wd_retains_actual_domain_requirements() {
     use crate::ast::fact::AtomicFact;
-    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
-        ArithmeticOperatorObjWellDefinedProofByDef, ObjWellDefinedProof,
-        ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
-    };
     use crate::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicExceptEqualityFactResult;
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
+        ArithmeticOperatorObjWellDefinedProofByDef, ObjWellDefinedProof, ObjWellDefinedProofByDef,
+        VerifyObjWellDefinedResult,
+    };
     use crate::execute::execute_fact_stmt::VerifyFactResult;
     for (prefix, expected) in [
         ("have a R+\nhave t R\n", vec!["a $in R+", "t $in R"]),
-        ("have a R=0\nhave t R+\n", vec!["a $in R", "0 <= a", "t $in R+"]),
+        (
+            "have a R=0\nhave t R+\n",
+            vec!["a $in R", "0 <= a", "t $in R+"],
+        ),
     ] {
         let mut rt = runtime(OutputLanguage::English);
         assert!(rt.run_litex_code(prefix).unwrap().success);
-        let tokens = Tokenizer::new().tokenize("a^t=a^t", rt.current_file.clone()).unwrap();
-        let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) = rt.parse(&tokens).unwrap().remove(0) else {
+        let tokens = Tokenizer::new()
+            .tokenize("a^t=a^t", rt.current_file.clone())
+            .unwrap();
+        let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) =
+            rt.parse(&tokens).unwrap().remove(0)
+        else {
             panic!("power equality")
         };
         let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-            proof: ObjWellDefinedProofByDef::ArithmeticOperator(
-                ArithmeticOperatorObjWellDefinedProofByDef::Pow(proof)), ..
-        }) = rt.verify_obj_well_definedness(&goal.left, VerifyState::top_level()).unwrap() else {
+            proof:
+                ObjWellDefinedProofByDef::ArithmeticOperator(
+                    ArithmeticOperatorObjWellDefinedProofByDef::Pow(proof),
+                ),
+            ..
+        }) = rt
+            .verify_obj_well_definedness(&goal.left, VerifyState::top_level())
+            .unwrap()
+        else {
             panic!("selected power WD proof")
         };
         assert_eq!(proof.child_obj_well_defined.len(), 2);
-        let actual: Vec<_> = proof.requirement_fact_verified.iter().map(|requirement| {
-            let VerifyFactResult::AtomicExceptEquality(result) = requirement else { panic!("atomic requirement") };
-            let VerifyAtomicExceptEqualityFactResult::Success(proved) = result.as_ref() else { panic!("proved requirement") };
-            proved.fact.readable_string()
-        }).collect();
+        let actual: Vec<_> = proof
+            .requirement_fact_verified
+            .iter()
+            .map(|requirement| {
+                let VerifyFactResult::AtomicExceptEquality(result) = requirement else {
+                    panic!("atomic requirement")
+                };
+                let VerifyAtomicExceptEqualityFactResult::Success(proved) = result.as_ref() else {
+                    panic!("proved requirement")
+                };
+                proved.fact.readable_string()
+            })
+            .collect();
         assert_eq!(actual, expected);
     }
 }
@@ -184,12 +205,22 @@ fn real_power_wd_preserves_inherited_permissions() {
     for (prefix, expected) in [("have a R+\nhave t R\n", true), ("have a,t R\n", false)] {
         let mut rt = runtime(OutputLanguage::English);
         assert!(rt.run_litex_code(prefix).unwrap().success);
-        let tokens = Tokenizer::new().tokenize("a^t=a^t", rt.current_file.clone()).unwrap();
-        let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) = rt.parse(&tokens).unwrap().remove(0) else {
+        let tokens = Tokenizer::new()
+            .tokenize("a^t=a^t", rt.current_file.clone())
+            .unwrap();
+        let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) =
+            rt.parse(&tokens).unwrap().remove(0)
+        else {
             panic!("power equality")
         };
-        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty, VerifyStateLevel::BuiltinRule] {
-            let proof = rt.verify_obj_well_definedness(&goal.left, VerifyState::new(level)).unwrap();
+        for level in [
+            VerifyStateLevel::Direct,
+            VerifyStateLevel::KnownSpecialProperty,
+            VerifyStateLevel::BuiltinRule,
+        ] {
+            let proof = rt
+                .verify_obj_well_definedness(&goal.left, VerifyState::new(level))
+                .unwrap();
             assert_eq!(!proof.is_failed(), expected, "{prefix}: {level:?}");
         }
     }
@@ -220,7 +251,9 @@ fn real_power_wd_failed_binding_is_discarded() {
     let mut rt = runtime(OutputLanguage::English);
     let failed = rt.run_litex_code("have a,t R\nlet result=a^t").unwrap();
     assert!(!failed.success && failed.session_error.is_none());
-    let reused = rt.run_litex_code("let result=2^(1/2)\nresult=result").unwrap();
+    let reused = rt
+        .run_litex_code("let result=2^(1/2)\nresult=result")
+        .unwrap();
     assert!(reused.success && reused.session_error.is_none());
     assert!(!rt.run_litex_code("result=0").unwrap().success);
 }
@@ -247,8 +280,15 @@ fn eval_shares_exact_values_and_publishes_the_checked_equality() {
             crate::execute::execute_eval_stmt::ExecCommandStmtResult::Eval(
                 crate::execute::execute_eval_stmt::ExecEvalStmtResult::Success(evaluated),
             ),
-        ) = &result.statement_results[0] else { panic!("eval success"); };
-        assert!(rt.top_exec_env().facts.facts_by_id.contains_key(&evaluated.evaluated_equal_fact.fact_id));
+        ) = &result.statement_results[0]
+        else {
+            panic!("eval success");
+        };
+        assert!(rt
+            .top_exec_env()
+            .facts
+            .facts_by_id
+            .contains_key(&evaluated.evaluated_equal_fact.fact_id));
         let stored: Fact = evaluated.evaluated_equal_fact.clone().into();
         assert!(normal.contains(&stored.readable_string()), "{normal}");
     }
@@ -307,5 +347,8 @@ fn run_examples_closed_rational_power_calculation() {
 
 #[test]
 fn real_power_wd_preserves_maintained_tracer() {
-    check(include_str!("../../../../examples/wd/pow_real_domains.lit"), true);
+    check(
+        include_str!("../../../../examples/wd/pow_real_domains.lit"),
+        true,
+    );
 }

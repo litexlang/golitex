@@ -17,9 +17,7 @@ use std::fs;
 use std::path::Path;
 use std::rc::Rc;
 
-pub fn store_stored_identifier(
-    entry: &StoredIdentifierDefinition,
-) -> Result<String, KbCodecError> {
+pub fn store_stored_identifier(entry: &StoredIdentifierDefinition) -> Result<String, KbCodecError> {
     Ok(encode_stored_identifier(entry)?.stringify_pretty())
 }
 
@@ -49,25 +47,17 @@ pub fn read_stored_identifier(path: &Path) -> Result<StoredIdentifierDefinition,
     load_stored_identifier(&text)
 }
 
-fn encode_stored_identifier(
-    entry: &StoredIdentifierDefinition,
-) -> Result<JsonValue, KbCodecError> {
+fn encode_stored_identifier(entry: &StoredIdentifierDefinition) -> Result<JsonValue, KbCodecError> {
     match entry {
         StoredIdentifierDefinition::LetObj((plain, stmt)) => Ok(JsonValue::object_from(vec![
-            (
-                "kind".into(),
-                JsonValue::String("stored_identifier".into()),
-            ),
+            ("kind".into(), JsonValue::String("stored_identifier".into())),
             ("tag".into(), JsonValue::String("LetObj".into())),
             ("plain_name".into(), JsonValue::String(plain.clone())),
             ("stmt".into(), encode_let_obj(stmt)?),
         ])),
         StoredIdentifierDefinition::HaveObjEqual((plain, stmt)) => {
             Ok(JsonValue::object_from(vec![
-                (
-                    "kind".into(),
-                    JsonValue::String("stored_identifier".into()),
-                ),
+                ("kind".into(), JsonValue::String("stored_identifier".into())),
                 ("tag".into(), JsonValue::String("HaveObjEqual".into())),
                 ("plain_name".into(), JsonValue::String(plain.clone())),
                 ("stmt".into(), encode_have_obj_equal(stmt)?),
@@ -75,10 +65,7 @@ fn encode_stored_identifier(
         }
         StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((plain, stmt)) => {
             Ok(JsonValue::object_from(vec![
-                (
-                    "kind".into(),
-                    JsonValue::String("stored_identifier".into()),
-                ),
+                ("kind".into(), JsonValue::String("stored_identifier".into())),
                 (
                     "tag".into(),
                     JsonValue::String("HaveObjInNonemptySetOrParamType".into()),
@@ -88,10 +75,7 @@ fn encode_stored_identifier(
             ]))
         }
         StoredIdentifierDefinition::HaveFnEqual((plain, stmt)) => Ok(JsonValue::object_from(vec![
-            (
-                "kind".into(),
-                JsonValue::String("stored_identifier".into()),
-            ),
+            ("kind".into(), JsonValue::String("stored_identifier".into())),
             ("tag".into(), JsonValue::String("HaveFnEqual".into())),
             ("plain_name".into(), JsonValue::String(plain.clone())),
             ("stmt".into(), encode_have_fn_equal(stmt)?),
@@ -102,9 +86,7 @@ fn encode_stored_identifier(
     }
 }
 
-fn decode_stored_identifier(
-    value: &JsonValue,
-) -> Result<StoredIdentifierDefinition, KbCodecError> {
+fn decode_stored_identifier(value: &JsonValue) -> Result<StoredIdentifierDefinition, KbCodecError> {
     let map = value.as_object()?;
     let kind = JsonValue::get(map, "kind")?.as_str()?;
     if kind != "stored_identifier" {
@@ -123,12 +105,11 @@ fn decode_stored_identifier(
             plain,
             Rc::new(decode_have_obj_equal(stmt_v)?),
         ))),
-        "HaveObjInNonemptySetOrParamType" => Ok(
-            StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((
-                plain,
-                Rc::new(decode_have_obj_in(stmt_v)?),
-            )),
-        ),
+        "HaveObjInNonemptySetOrParamType" => {
+            Ok(StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType(
+                (plain, Rc::new(decode_have_obj_in(stmt_v)?)),
+            ))
+        }
         "HaveFnEqual" => Ok(StoredIdentifierDefinition::HaveFnEqual((
             plain,
             Rc::new(decode_have_fn_equal(stmt_v)?),
@@ -223,10 +204,7 @@ fn decode_have_fn_equal(value: &JsonValue) -> Result<HaveFnEqualStmt, KbCodecErr
     let map = value.as_object()?;
     Ok(HaveFnEqualStmt {
         name: decode_bound_name(JsonValue::get(map, "name")?)?,
-        equal_to_anonymous_fn: decode_anonymous_fn(JsonValue::get(
-            map,
-            "equal_to_anonymous_fn",
-        )?)?,
+        equal_to_anonymous_fn: decode_anonymous_fn(JsonValue::get(map, "equal_to_anonymous_fn")?)?,
         line_file: decode_line_file(JsonValue::get(map, "line_file")?)?,
     })
 }

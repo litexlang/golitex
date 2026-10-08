@@ -14,9 +14,7 @@ use crate::knowledge_base::{
     exec_env_from_mounted_export, fingerprint_module_recursive, global_ids_from_snapshot,
     mounted_matches_config, try_hit_import_cache, write_import_cache_after_cold,
 };
-use crate::module_manager::{
-    ExportFileAndItsExecEnv, LitexConfig, LitexConfigExport,
-};
+use crate::module_manager::{ExportFileAndItsExecEnv, LitexConfig, LitexConfigExport};
 use crate::run::run_command_outcome::RunSessionError;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::path::Path;

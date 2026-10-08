@@ -40,10 +40,7 @@ impl Runtime {
             return Ok(None);
         };
         // Plain / file-root / cross-mod: store keys stay unqualified local names.
-        if self
-            .def_abstract_prop_visible(&normal.predicate)
-            .is_some()
-        {
+        if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
         }
         let Some(definition) = self.def_prop_visible(&normal.predicate) else {
@@ -79,8 +76,7 @@ impl Runtime {
             let Ok(inst_type) = self.inst_param_type(param_type, &subst) else {
                 return Ok(None);
             };
-            let Some(type_fact) =
-                type_obligation_fact(arg, &inst_type, &mut self.global_ids)
+            let Some(type_fact) = type_obligation_fact(arg, &inst_type, &mut self.global_ids)
             else {
                 return Ok(None);
             };
@@ -124,7 +120,11 @@ fn flatten_typed_parameters(
     out
 }
 
-fn type_obligation_fact(arg: &Obj, param_type: &ParamType, global_ids: &mut GlobalIds) -> Option<Fact> {
+fn type_obligation_fact(
+    arg: &Obj,
+    param_type: &ParamType,
+    global_ids: &mut GlobalIds,
+) -> Option<Fact> {
     let fact_id = global_ids.allocate_fact_id();
     match param_type {
         ParamType::Obj(set) => Some(Fact::AtomicFact(AtomicFact::InFact(InFact {

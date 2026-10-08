@@ -218,16 +218,28 @@ fn inherited_ceiling_and_failure_publication() {
 #[test]
 fn real_power_carrier_leaf_uses_actual_wd_and_ten_language_outputs() {
     let mut rt = runtime(OutputLanguage::English);
-    let run = rt.run_litex_code("forall a R+,t R:\n    a^t $in R\n").unwrap();
+    let run = rt
+        .run_litex_code("forall a R+,t R:\n    a^t $in R\n")
+        .unwrap();
     assert!(run.success && run.session_error.is_none());
     let detailed = crate::json_output::project_run_detailed(&run, &rt, "eval", None);
     let leaf = find_rule(&detailed, "RealPower").expect("real power carrier route");
-    assert!(leaf.as_object().unwrap().get("base_in_real_proof").is_some());
+    assert!(leaf
+        .as_object()
+        .unwrap()
+        .get("base_in_real_proof")
+        .is_some());
     assert!(!contains_string(&detailed, "RealIntegerPower"));
     for language in [
-        OutputLanguage::English, OutputLanguage::Chinese, OutputLanguage::ChineseTraditional,
-        OutputLanguage::French, OutputLanguage::Russian, OutputLanguage::Spanish,
-        OutputLanguage::Arabic, OutputLanguage::Japanese, OutputLanguage::Korean,
+        OutputLanguage::English,
+        OutputLanguage::Chinese,
+        OutputLanguage::ChineseTraditional,
+        OutputLanguage::French,
+        OutputLanguage::Russian,
+        OutputLanguage::Spanish,
+        OutputLanguage::Arabic,
+        OutputLanguage::Japanese,
+        OutputLanguage::Korean,
         OutputLanguage::Vietnamese,
     ] {
         let text = actual_leaf_text(run.statement_results.last().unwrap(), language);

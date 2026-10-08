@@ -76,7 +76,7 @@ pub(super) fn project_atomic_except_success(
                 project_atomic_except_searched(&s.searched_proof, runtime),
             ),
         ],
-        )
+    )
 }
 
 fn project_atomic_except(
@@ -84,7 +84,9 @@ fn project_atomic_except(
     runtime: &Runtime,
 ) -> JsonValue {
     match result {
-        VerifyAtomicExceptEqualityFactResult::Success(s) => project_atomic_except_success(s, runtime),
+        VerifyAtomicExceptEqualityFactResult::Success(s) => {
+            project_atomic_except_success(s, runtime)
+        }
         VerifyAtomicExceptEqualityFactResult::Failed(
             VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(f),
         ) => object_for(
@@ -451,18 +453,48 @@ pub(super) fn project_exist_failed(
 
 fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonValue {
     match result {
-        VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(s)) => object_for(runtime, vec![
-            ("type", string("forall")), ("success", bool_value(true)),
-            ("fact", string(Fact::ForallFact(s.fact.clone()).readable_string())),
-            ("searched_proof", object_for(runtime, vec![
-                ("type", string("empty_parameter_domain")),
-                ("parameter_group_index", JsonValue::Number(s.parameter_group_index as f64)),
-                ("empty_carrier", string(s.empty_carrier.readable_string())),
-                ("empty_carrier_proof", project_verify_fact(&s.empty_carrier_proof, runtime)),
-                ("empty_carrier_store", super::store::project_store_and_infer(&s.empty_carrier_store, runtime)),
-                ("well_defined", super::wd::project_forall_wd(&s.well_defined, runtime)),
-            ])),
-        ]),
+        VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(s)) => {
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("forall")),
+                    ("success", bool_value(true)),
+                    (
+                        "fact",
+                        string(Fact::ForallFact(s.fact.clone()).readable_string()),
+                    ),
+                    (
+                        "searched_proof",
+                        object_for(
+                            runtime,
+                            vec![
+                                ("type", string("empty_parameter_domain")),
+                                (
+                                    "parameter_group_index",
+                                    JsonValue::Number(s.parameter_group_index as f64),
+                                ),
+                                ("empty_carrier", string(s.empty_carrier.readable_string())),
+                                (
+                                    "empty_carrier_proof",
+                                    project_verify_fact(&s.empty_carrier_proof, runtime),
+                                ),
+                                (
+                                    "empty_carrier_store",
+                                    super::store::project_store_and_infer(
+                                        &s.empty_carrier_store,
+                                        runtime,
+                                    ),
+                                ),
+                                (
+                                    "well_defined",
+                                    super::wd::project_forall_wd(&s.well_defined, runtime),
+                                ),
+                            ],
+                        ),
+                    ),
+                ],
+            )
+        }
         VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(s)) => {
             object_for(
                 runtime,
@@ -628,13 +660,37 @@ fn project_introduced_params(
                     runtime,
                 ),
             ),
-            ("auto_opened_struct_layers", JsonValue::Array(introduced.auto_opened_struct_layers.iter()
-                .flatten().map(|opened| object_for(runtime, vec![
-                    ("obj", string(opened.obj.readable_string())),
-                    ("struct_obj", string(opened.struct_obj.readable_string())),
-                    ("store_and_infer", JsonValue::Array(opened.store_and_infer.iter()
-                        .map(|stored| project_store_and_infer(stored, runtime)).collect())),
-                ])).collect())),
+            (
+                "auto_opened_struct_layers",
+                JsonValue::Array(
+                    introduced
+                        .auto_opened_struct_layers
+                        .iter()
+                        .flatten()
+                        .map(|opened| {
+                            object_for(
+                                runtime,
+                                vec![
+                                    ("obj", string(opened.obj.readable_string())),
+                                    ("struct_obj", string(opened.struct_obj.readable_string())),
+                                    (
+                                        "store_and_infer",
+                                        JsonValue::Array(
+                                            opened
+                                                .store_and_infer
+                                                .iter()
+                                                .map(|stored| {
+                                                    project_store_and_infer(stored, runtime)
+                                                })
+                                                .collect(),
+                                        ),
+                                    ),
+                                ],
+                            )
+                        })
+                        .collect(),
+                ),
+            ),
         ],
     )
 }

@@ -197,26 +197,46 @@ fn collect_wd_ids(value: &crate::knowledge_base::JsonValue, ids: &mut Vec<String
 fn template_alias_application_wd_cites_its_checked_instance_and_equality_path() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
     let mut rt = Runtime::new(LaunchCommand::Eval {
-        code: String::new(), session: false, strict: true, language: OutputLanguage::English,
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
     });
     let run = rt.run_litex_code("template<S set>:\n    have fn pair(x S) cart(S,S) = (x,x)\nlet alias = \\pair<R>\nlet other_alias = alias\nother_alias = \\pair<R>\nlet value = other_alias(2)\n").unwrap();
     assert!(run.success && run.session_error.is_none());
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
         ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(result)),
-    )) = run.statement_results.last().unwrap() else { panic!("let result") };
+    )) = run.statement_results.last().unwrap()
+    else {
+        panic!("let result")
+    };
     let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
-        proof: ObjWellDefinedProofByDef::FnObj(proof), ..
-    }) = &result.value_well_defined else { panic!("application WD") };
-    let Some(FnObjDomainFnSetEvidence::TemplateDefinition { function_equal, .. }) = &proof.domain_fn_set else { panic!("template signature") };
+        proof: ObjWellDefinedProofByDef::FnObj(proof),
+        ..
+    }) = &result.value_well_defined
+    else {
+        panic!("application WD")
+    };
+    let Some(FnObjDomainFnSetEvidence::TemplateDefinition { function_equal, .. }) =
+        &proof.domain_fn_set
+    else {
+        panic!("template signature")
+    };
     assert_eq!(function_equal.path.len(), 1);
     for (_, _, id) in &function_equal.path {
         assert!(rt.fact_by_id_in_stack(*id).is_some());
     }
     assert!(!proof.child_obj_well_defined.is_empty());
-    let json = crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
+    let json =
+        crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt)
+            .stringify();
     for field in ["template_definition", "function_equal", "cite_fact_id"] {
         assert!(json.contains(field), "{field}: {json}");
     }
     assert_eq!(rt.execution_environments_stack.len(), 1);
-    assert!(!rt.run_litex_code("other_alias(i) = (i,i)\n").unwrap().success);
+    assert!(
+        !rt.run_litex_code("other_alias(i) = (i,i)\n")
+            .unwrap()
+            .success
+    );
 }

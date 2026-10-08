@@ -1,5 +1,5 @@
-use crate::json_output::explain::BuiltinRuleText;
 use crate::json_output::explain::text::text;
+use crate::json_output::explain::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 
 impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_range_size::RangeSizeProof {

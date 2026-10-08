@@ -1,6 +1,4 @@
-use crate::ast::fact::{
-    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, NormalAtomicFact,
-};
+use crate::ast::fact::{AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, NormalAtomicFact};
 use crate::ast::names::{AtomicName, BoundName};
 use crate::ast::obj::{IdentifierObj, Obj};
 use crate::ast::param::ParamType;
@@ -96,10 +94,7 @@ pub fn symmetric_prop_registration_from_forall(
     Ok((dom_f.predicate.clone(), gather))
 }
 
-fn flatten_set_params(
-    forall_fact: &ForallFact,
-    syntax: &str,
-) -> Result<Vec<BoundName>, String> {
+fn flatten_set_params(forall_fact: &ForallFact, syntax: &str) -> Result<Vec<BoundName>, String> {
     let mut params = Vec::new();
     for group in &forall_fact.typed_parameters.groups {
         match &group.param_type {
@@ -127,7 +122,10 @@ fn normal_atomic_from_then<'a>(
     }
 }
 
-fn normal_atomic_from_dom<'a>(fact: &'a Fact, syntax: &str) -> Result<&'a NormalAtomicFact, String> {
+fn normal_atomic_from_dom<'a>(
+    fact: &'a Fact,
+    syntax: &str,
+) -> Result<&'a NormalAtomicFact, String> {
     match fact {
         Fact::AtomicFact(AtomicFact::NormalAtomicFact(f)) => Ok(f),
         _ => Err(format!(
@@ -157,7 +155,6 @@ fn bound_param_ids_in_order(body: &[Obj], syntax: &str) -> Result<Vec<Identifier
     }
     Ok(ids)
 }
-
 
 // Shape check for `register transitive`:
 // forall x, y, z set: $p(x, y); $p(y, z) => $p(x, z).

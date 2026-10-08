@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::ModCongruenceStrategySingleStep;
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{Mod, Obj, ArithmeticOperator, IntegerOperator};
+use crate::ast::obj::{ArithmeticOperator, IntegerOperator, Mod, Obj};
 use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -12,19 +12,32 @@ impl Runtime {
         fact: &EqualFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<ModCongruenceStrategySingleStep>> {
-        let (Obj::IntegerOperator(IntegerOperator::Mod(left_mod)), Obj::IntegerOperator(IntegerOperator::Mod(right_mod))) = (&fact.left, &fact.right) else {
+        let (
+            Obj::IntegerOperator(IntegerOperator::Mod(left_mod)),
+            Obj::IntegerOperator(IntegerOperator::Mod(right_mod)),
+        ) = (&fact.left, &fact.right)
+        else {
             return Ok(None);
         };
         let pairs = match (left_mod.left.as_ref(), right_mod.left.as_ref()) {
-            (Obj::ArithmeticOperator(ArithmeticOperator::Add(left)), Obj::ArithmeticOperator(ArithmeticOperator::Add(right))) => [
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(left)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(right)),
+            ) => [
                 (left.left.as_ref().clone(), right.left.as_ref().clone()),
                 (left.right.as_ref().clone(), right.right.as_ref().clone()),
             ],
-            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(left)), Obj::ArithmeticOperator(ArithmeticOperator::Sub(right))) => [
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(left)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(right)),
+            ) => [
                 (left.left.as_ref().clone(), right.left.as_ref().clone()),
                 (left.right.as_ref().clone(), right.right.as_ref().clone()),
             ],
-            (Obj::ArithmeticOperator(ArithmeticOperator::Mul(left)), Obj::ArithmeticOperator(ArithmeticOperator::Mul(right))) => [
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(left)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(right)),
+            ) => [
                 (left.left.as_ref().clone(), right.left.as_ref().clone()),
                 (left.right.as_ref().clone(), right.right.as_ref().clone()),
             ],

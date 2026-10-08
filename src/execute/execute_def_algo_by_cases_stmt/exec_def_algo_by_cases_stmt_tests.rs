@@ -1,6 +1,4 @@
-use crate::execute::exec_stmt_result::{
-    ExecDefinitionStmtResult, ExecStmtResult,
-};
+use crate::execute::exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult};
 use crate::execute::execute_def_algo_by_cases_stmt::{
     ExecDefAlgoByCasesStmtFailed, ExecDefAlgoByCasesStmtResult,
 };
@@ -52,17 +50,17 @@ fn def_algo_by_cases_succeeds_and_stores() {
 #[test]
 fn def_algo_by_cases_incomplete_coverage_soft_fails() {
     let mut runtime = runtime_with_file_env();
-    let r = exec_one(
-        &mut runtime,
-        "algo g(x R) R by cases:\n    case x = 0: 0",
-    );
+    let r = exec_one(&mut runtime, "algo g(x R) R by cases:\n    case x = 0: 0");
     match r {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgoByCases(
             ExecDefAlgoByCasesStmtResult::Failed(ExecDefAlgoByCasesStmtFailed::DefineFn(
                 ExecHaveFnEqualCaseByCaseStmtFailed::Coverage(_),
             )),
         )) => {}
-        other => panic!("expected coverage DefineFn fail, got failed={}", other.is_failed()),
+        other => panic!(
+            "expected coverage DefineFn fail, got failed={}",
+            other.is_failed()
+        ),
     }
 }
 

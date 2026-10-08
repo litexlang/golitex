@@ -303,14 +303,23 @@ impl CosArccosLeftInverseBuiltinRuleProof {
 
 impl TanArctanLeftInverseBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Inverse composition of tan and arctan", "On R, composing tan with arctan returns the original argument: tan(arctan(x)) = x")
+        text(
+            "Inverse composition of tan and arctan",
+            "On R, composing tan with arctan returns the original argument: tan(arctan(x)) = x",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("tan与arctan的逆运算复合", "在 R 上，tan与arctan复合后得到原参数，即 tan(arctan(x)) = x")
+        text(
+            "tan与arctan的逆运算复合",
+            "在 R 上，tan与arctan复合后得到原参数，即 tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("tan與arctan的逆運算複合", "在 R 上，tan與arctan複合後得到原引數，即 tan(arctan(x)) = x")
+        text(
+            "tan與arctan的逆運算複合",
+            "在 R 上，tan與arctan複合後得到原引數，即 tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -318,27 +327,45 @@ impl TanArctanLeftInverseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Обратная композиция tan и arctan", "На R композиция tan с arctan возвращает исходный аргумент: tan(arctan(x)) = x")
+        text(
+            "Обратная композиция tan и arctan",
+            "На R композиция tan с arctan возвращает исходный аргумент: tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Composición inversa de tan y arctan", "En R, componer tan con arctan devuelve el argumento original: tan(arctan(x)) = x")
+        text(
+            "Composición inversa de tan y arctan",
+            "En R, componer tan con arctan devuelve el argumento original: tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("التركيب العكسي لـ tan وarctan", "على R، يعيد تركيب tan مع arctan الوسيط الأصلي: tan(arctan(x)) = x")
+        text(
+            "التركيب العكسي لـ tan وarctan",
+            "على R، يعيد تركيب tan مع arctan الوسيط الأصلي: tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("tanとarctanの逆演算の合成", "R 上では、tanとarctanの合成により元の引数が得られます：tan(arctan(x)) = x")
+        text(
+            "tanとarctanの逆演算の合成",
+            "R 上では、tanとarctanの合成により元の引数が得られます：tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("tan와 arctan의 역연산 합성", "R에서 tan와 arctan를 합성하면 원래 인수를 얻습니다: tan(arctan(x)) = x")
+        text(
+            "tan와 arctan의 역연산 합성",
+            "R에서 tan와 arctan를 합성하면 원래 인수를 얻습니다: tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Hợp thành nghịch đảo của tan và arctan", "Trên R, hợp thành tan với arctan trả về đối số ban đầu: tan(arctan(x)) = x")
+        text(
+            "Hợp thành nghịch đảo của tan và arctan",
+            "Trên R, hợp thành tan với arctan trả về đối số ban đầu: tan(arctan(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -359,14 +386,23 @@ impl TanArctanLeftInverseBuiltinRuleProof {
 
 impl CotArccotLeftInverseBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Inverse composition of cot and arccot", "On R, composing cot with arccot returns the original argument: cot(arccot(x)) = x")
+        text(
+            "Inverse composition of cot and arccot",
+            "On R, composing cot with arccot returns the original argument: cot(arccot(x)) = x",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("cot与arccot的逆运算复合", "在 R 上，cot与arccot复合后得到原参数，即 cot(arccot(x)) = x")
+        text(
+            "cot与arccot的逆运算复合",
+            "在 R 上，cot与arccot复合后得到原参数，即 cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("cot與arccot的逆運算複合", "在 R 上，cot與arccot複合後得到原引數，即 cot(arccot(x)) = x")
+        text(
+            "cot與arccot的逆運算複合",
+            "在 R 上，cot與arccot複合後得到原引數，即 cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -374,27 +410,45 @@ impl CotArccotLeftInverseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Обратная композиция cot и arccot", "На R композиция cot с arccot возвращает исходный аргумент: cot(arccot(x)) = x")
+        text(
+            "Обратная композиция cot и arccot",
+            "На R композиция cot с arccot возвращает исходный аргумент: cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Composición inversa de cot y arccot", "En R, componer cot con arccot devuelve el argumento original: cot(arccot(x)) = x")
+        text(
+            "Composición inversa de cot y arccot",
+            "En R, componer cot con arccot devuelve el argumento original: cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("التركيب العكسي لـ cot وarccot", "على R، يعيد تركيب cot مع arccot الوسيط الأصلي: cot(arccot(x)) = x")
+        text(
+            "التركيب العكسي لـ cot وarccot",
+            "على R، يعيد تركيب cot مع arccot الوسيط الأصلي: cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("cotとarccotの逆演算の合成", "R 上では、cotとarccotの合成により元の引数が得られます：cot(arccot(x)) = x")
+        text(
+            "cotとarccotの逆演算の合成",
+            "R 上では、cotとarccotの合成により元の引数が得られます：cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("cot와 arccot의 역연산 합성", "R에서 cot와 arccot를 합성하면 원래 인수를 얻습니다: cot(arccot(x)) = x")
+        text(
+            "cot와 arccot의 역연산 합성",
+            "R에서 cot와 arccot를 합성하면 원래 인수를 얻습니다: cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Hợp thành nghịch đảo của cot và arccot", "Trên R, hợp thành cot với arccot trả về đối số ban đầu: cot(arccot(x)) = x")
+        text(
+            "Hợp thành nghịch đảo của cot và arccot",
+            "Trên R, hợp thành cot với arccot trả về đối số ban đầu: cot(arccot(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -759,42 +813,72 @@ impl ArccotCotRightInverseBuiltinRuleProof {
 
 impl ArcsinExactZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arcsine at zero", "The value of arcsine at zero is zero: arcsin(0) = 0")
+        text(
+            "Value of arcsine at zero",
+            "The value of arcsine at zero is zero: arcsin(0) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反正弦函数在零处的值", "反正弦函数在零处的值为零，即 arcsin(0) = 0")
+        text(
+            "反正弦函数在零处的值",
+            "反正弦函数在零处的值为零，即 arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反正弦函數在零處的值", "反正弦函數在零處的值為零，即 arcsin(0) = 0")
+        text(
+            "反正弦函數在零處的值",
+            "反正弦函數在零處的值為零，即 arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arcsinus en zéro", "La valeur de l’arcsinus en zéro est zéro: arcsin(0) = 0")
+        text(
+            "Valeur de l’arcsinus en zéro",
+            "La valeur de l’arcsinus en zéro est zéro: arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «арксинус» при аргументе нуль", "При аргументе нуль функция «арксинус» принимает значение нуль: arcsin(0) = 0")
+        text(
+            "Значение функции «арксинус» при аргументе нуль",
+            "При аргументе нуль функция «арксинус» принимает значение нуль: arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcoseno en cero", "El valor de arcoseno en cero es cero: arcsin(0) = 0")
+        text(
+            "Valor de arcoseno en cero",
+            "El valor de arcoseno en cero es cero: arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الجيب العكسية عند الصفر", "قيمة دالة الجيب العكسية عند الصفر تساوي الصفر: arcsin(0) = 0")
+        text(
+            "قيمة دالة الجيب العكسية عند الصفر",
+            "قيمة دالة الجيب العكسية عند الصفر تساوي الصفر: arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における逆正弦関数の値", "零における逆正弦関数の値は零です：arcsin(0) = 0")
+        text(
+            "零における逆正弦関数の値",
+            "零における逆正弦関数の値は零です：arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 역사인 함수 값", "영에서의 역사인 함수 값은 영입니다: arcsin(0) = 0")
+        text(
+            "영에서의 역사인 함수 값",
+            "영에서의 역사인 함수 값은 영입니다: arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arcsin tại không", "Giá trị của hàm arcsin tại không bằng không: arcsin(0) = 0")
+        text(
+            "Giá trị của hàm arcsin tại không",
+            "Giá trị của hàm arcsin tại không bằng không: arcsin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -815,42 +899,72 @@ impl ArcsinExactZeroBuiltinRuleProof {
 
 impl ArcsinExactOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arcsine at one", "The value of arcsine at one is π/2: arcsin(1) = π/2")
+        text(
+            "Value of arcsine at one",
+            "The value of arcsine at one is π/2: arcsin(1) = π/2",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反正弦函数在一处的值", "反正弦函数在一处的值为π/2，即 arcsin(1) = π/2")
+        text(
+            "反正弦函数在一处的值",
+            "反正弦函数在一处的值为π/2，即 arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反正弦函數在一處的值", "反正弦函數在一處的值為π/2，即 arcsin(1) = π/2")
+        text(
+            "反正弦函數在一處的值",
+            "反正弦函數在一處的值為π/2，即 arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arcsinus en un", "La valeur de l’arcsinus en un est π/2: arcsin(1) = π/2")
+        text(
+            "Valeur de l’arcsinus en un",
+            "La valeur de l’arcsinus en un est π/2: arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «арксинус» при аргументе единица", "При аргументе единица функция «арксинус» принимает значение π/2: arcsin(1) = π/2")
+        text(
+            "Значение функции «арксинус» при аргументе единица",
+            "При аргументе единица функция «арксинус» принимает значение π/2: arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcoseno en uno", "El valor de arcoseno en uno es π/2: arcsin(1) = π/2")
+        text(
+            "Valor de arcoseno en uno",
+            "El valor de arcoseno en uno es π/2: arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الجيب العكسية عند الواحد", "قيمة دالة الجيب العكسية عند الواحد تساوي π/2: arcsin(1) = π/2")
+        text(
+            "قيمة دالة الجيب العكسية عند الواحد",
+            "قيمة دالة الجيب العكسية عند الواحد تساوي π/2: arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("一における逆正弦関数の値", "一における逆正弦関数の値はπ/2です：arcsin(1) = π/2")
+        text(
+            "一における逆正弦関数の値",
+            "一における逆正弦関数の値はπ/2です：arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일에서의 역사인 함수 값", "일에서의 역사인 함수 값은 π/2입니다: arcsin(1) = π/2")
+        text(
+            "일에서의 역사인 함수 값",
+            "일에서의 역사인 함수 값은 π/2입니다: arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arcsin tại một", "Giá trị của hàm arcsin tại một bằng π/2: arcsin(1) = π/2")
+        text(
+            "Giá trị của hàm arcsin tại một",
+            "Giá trị của hàm arcsin tại một bằng π/2: arcsin(1) = π/2",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -871,18 +985,30 @@ impl ArcsinExactOneBuiltinRuleProof {
 
 impl ArcsinExactNegOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arcsine at minus one", "The value of arcsine at minus one is -π/2: arcsin(-1) = -π/2")
+        text(
+            "Value of arcsine at minus one",
+            "The value of arcsine at minus one is -π/2: arcsin(-1) = -π/2",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反正弦函数在负一处的值", "反正弦函数在负一处的值为-π/2，即 arcsin(-1) = -π/2")
+        text(
+            "反正弦函数在负一处的值",
+            "反正弦函数在负一处的值为-π/2，即 arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反正弦函數在負一處的值", "反正弦函數在負一處的值為-π/2，即 arcsin(-1) = -π/2")
+        text(
+            "反正弦函數在負一處的值",
+            "反正弦函數在負一處的值為-π/2，即 arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arcsinus en moins un", "La valeur de l’arcsinus en moins un est -π/2: arcsin(-1) = -π/2")
+        text(
+            "Valeur de l’arcsinus en moins un",
+            "La valeur de l’arcsinus en moins un est -π/2: arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -890,23 +1016,38 @@ impl ArcsinExactNegOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcoseno en menos uno", "El valor de arcoseno en menos uno es -π/2: arcsin(-1) = -π/2")
+        text(
+            "Valor de arcoseno en menos uno",
+            "El valor de arcoseno en menos uno es -π/2: arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الجيب العكسية عند سالب واحد", "قيمة دالة الجيب العكسية عند سالب واحد تساوي -π/2: arcsin(-1) = -π/2")
+        text(
+            "قيمة دالة الجيب العكسية عند سالب واحد",
+            "قيمة دالة الجيب العكسية عند سالب واحد تساوي -π/2: arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("負の一における逆正弦関数の値", "負の一における逆正弦関数の値は-π/2です：arcsin(-1) = -π/2")
+        text(
+            "負の一における逆正弦関数の値",
+            "負の一における逆正弦関数の値は-π/2です：arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("음의 일에서의 역사인 함수 값", "음의 일에서의 역사인 함수 값은 -π/2입니다: arcsin(-1) = -π/2")
+        text(
+            "음의 일에서의 역사인 함수 값",
+            "음의 일에서의 역사인 함수 값은 -π/2입니다: arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arcsin tại âm một", "Giá trị của hàm arcsin tại âm một bằng -π/2: arcsin(-1) = -π/2")
+        text(
+            "Giá trị của hàm arcsin tại âm một",
+            "Giá trị của hàm arcsin tại âm một bằng -π/2: arcsin(-1) = -π/2",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -927,42 +1068,72 @@ impl ArcsinExactNegOneBuiltinRuleProof {
 
 impl ArccosExactOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arccosine at one", "The value of arccosine at one is zero: arccos(1) = 0")
+        text(
+            "Value of arccosine at one",
+            "The value of arccosine at one is zero: arccos(1) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反余弦函数在一处的值", "反余弦函数在一处的值为零，即 arccos(1) = 0")
+        text(
+            "反余弦函数在一处的值",
+            "反余弦函数在一处的值为零，即 arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反餘弦函數在一處的值", "反餘弦函數在一處的值為零，即 arccos(1) = 0")
+        text(
+            "反餘弦函數在一處的值",
+            "反餘弦函數在一處的值為零，即 arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arccosinus en un", "La valeur de l’arccosinus en un est zéro: arccos(1) = 0")
+        text(
+            "Valeur de l’arccosinus en un",
+            "La valeur de l’arccosinus en un est zéro: arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «арккосинус» при аргументе единица", "При аргументе единица функция «арккосинус» принимает значение нуль: arccos(1) = 0")
+        text(
+            "Значение функции «арккосинус» при аргументе единица",
+            "При аргументе единица функция «арккосинус» принимает значение нуль: arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcocoseno en uno", "El valor de arcocoseno en uno es cero: arccos(1) = 0")
+        text(
+            "Valor de arcocoseno en uno",
+            "El valor de arcocoseno en uno es cero: arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة جيب التمام العكسية عند الواحد", "قيمة دالة جيب التمام العكسية عند الواحد تساوي الصفر: arccos(1) = 0")
+        text(
+            "قيمة دالة جيب التمام العكسية عند الواحد",
+            "قيمة دالة جيب التمام العكسية عند الواحد تساوي الصفر: arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("一における逆余弦関数の値", "一における逆余弦関数の値は零です：arccos(1) = 0")
+        text(
+            "一における逆余弦関数の値",
+            "一における逆余弦関数の値は零です：arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일에서의 역코사인 함수 값", "일에서의 역코사인 함수 값은 영입니다: arccos(1) = 0")
+        text(
+            "일에서의 역코사인 함수 값",
+            "일에서의 역코사인 함수 값은 영입니다: arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arccos tại một", "Giá trị của hàm arccos tại một bằng không: arccos(1) = 0")
+        text(
+            "Giá trị của hàm arccos tại một",
+            "Giá trị của hàm arccos tại một bằng không: arccos(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -983,42 +1154,72 @@ impl ArccosExactOneBuiltinRuleProof {
 
 impl ArccosExactZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arccosine at zero", "The value of arccosine at zero is π/2: arccos(0) = π/2")
+        text(
+            "Value of arccosine at zero",
+            "The value of arccosine at zero is π/2: arccos(0) = π/2",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反余弦函数在零处的值", "反余弦函数在零处的值为π/2，即 arccos(0) = π/2")
+        text(
+            "反余弦函数在零处的值",
+            "反余弦函数在零处的值为π/2，即 arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反餘弦函數在零處的值", "反餘弦函數在零處的值為π/2，即 arccos(0) = π/2")
+        text(
+            "反餘弦函數在零處的值",
+            "反餘弦函數在零處的值為π/2，即 arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arccosinus en zéro", "La valeur de l’arccosinus en zéro est π/2: arccos(0) = π/2")
+        text(
+            "Valeur de l’arccosinus en zéro",
+            "La valeur de l’arccosinus en zéro est π/2: arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «арккосинус» при аргументе нуль", "При аргументе нуль функция «арккосинус» принимает значение π/2: arccos(0) = π/2")
+        text(
+            "Значение функции «арккосинус» при аргументе нуль",
+            "При аргументе нуль функция «арккосинус» принимает значение π/2: arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcocoseno en cero", "El valor de arcocoseno en cero es π/2: arccos(0) = π/2")
+        text(
+            "Valor de arcocoseno en cero",
+            "El valor de arcocoseno en cero es π/2: arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة جيب التمام العكسية عند الصفر", "قيمة دالة جيب التمام العكسية عند الصفر تساوي π/2: arccos(0) = π/2")
+        text(
+            "قيمة دالة جيب التمام العكسية عند الصفر",
+            "قيمة دالة جيب التمام العكسية عند الصفر تساوي π/2: arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における逆余弦関数の値", "零における逆余弦関数の値はπ/2です：arccos(0) = π/2")
+        text(
+            "零における逆余弦関数の値",
+            "零における逆余弦関数の値はπ/2です：arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 역코사인 함수 값", "영에서의 역코사인 함수 값은 π/2입니다: arccos(0) = π/2")
+        text(
+            "영에서의 역코사인 함수 값",
+            "영에서의 역코사인 함수 값은 π/2입니다: arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arccos tại không", "Giá trị của hàm arccos tại không bằng π/2: arccos(0) = π/2")
+        text(
+            "Giá trị của hàm arccos tại không",
+            "Giá trị của hàm arccos tại không bằng π/2: arccos(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1039,42 +1240,72 @@ impl ArccosExactZeroBuiltinRuleProof {
 
 impl ArccosExactNegOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arccosine at minus one", "The value of arccosine at minus one is π: arccos(-1) = π")
+        text(
+            "Value of arccosine at minus one",
+            "The value of arccosine at minus one is π: arccos(-1) = π",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反余弦函数在负一处的值", "反余弦函数在负一处的值为π，即 arccos(-1) = π")
+        text(
+            "反余弦函数在负一处的值",
+            "反余弦函数在负一处的值为π，即 arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反餘弦函數在負一處的值", "反餘弦函數在負一處的值為π，即 arccos(-1) = π")
+        text(
+            "反餘弦函數在負一處的值",
+            "反餘弦函數在負一處的值為π，即 arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arccosinus en moins un", "La valeur de l’arccosinus en moins un est π: arccos(-1) = π")
+        text(
+            "Valeur de l’arccosinus en moins un",
+            "La valeur de l’arccosinus en moins un est π: arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «арккосинус» при аргументе минус единица", "При аргументе минус единица функция «арккосинус» принимает значение π: arccos(-1) = π")
+        text(
+            "Значение функции «арккосинус» при аргументе минус единица",
+            "При аргументе минус единица функция «арккосинус» принимает значение π: arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcocoseno en menos uno", "El valor de arcocoseno en menos uno es π: arccos(-1) = π")
+        text(
+            "Valor de arcocoseno en menos uno",
+            "El valor de arcocoseno en menos uno es π: arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة جيب التمام العكسية عند سالب واحد", "قيمة دالة جيب التمام العكسية عند سالب واحد تساوي π: arccos(-1) = π")
+        text(
+            "قيمة دالة جيب التمام العكسية عند سالب واحد",
+            "قيمة دالة جيب التمام العكسية عند سالب واحد تساوي π: arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("負の一における逆余弦関数の値", "負の一における逆余弦関数の値はπです：arccos(-1) = π")
+        text(
+            "負の一における逆余弦関数の値",
+            "負の一における逆余弦関数の値はπです：arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("음의 일에서의 역코사인 함수 값", "음의 일에서의 역코사인 함수 값은 π입니다: arccos(-1) = π")
+        text(
+            "음의 일에서의 역코사인 함수 값",
+            "음의 일에서의 역코사인 함수 값은 π입니다: arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arccos tại âm một", "Giá trị của hàm arccos tại âm một bằng π: arccos(-1) = π")
+        text(
+            "Giá trị của hàm arccos tại âm một",
+            "Giá trị của hàm arccos tại âm một bằng π: arccos(-1) = π",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1095,42 +1326,72 @@ impl ArccosExactNegOneBuiltinRuleProof {
 
 impl ArctanExactZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arctangent at zero", "The value of arctangent at zero is zero: arctan(0) = 0")
+        text(
+            "Value of arctangent at zero",
+            "The value of arctangent at zero is zero: arctan(0) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反正切函数在零处的值", "反正切函数在零处的值为零，即 arctan(0) = 0")
+        text(
+            "反正切函数在零处的值",
+            "反正切函数在零处的值为零，即 arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反正切函數在零處的值", "反正切函數在零處的值為零，即 arctan(0) = 0")
+        text(
+            "反正切函數在零處的值",
+            "反正切函數在零處的值為零，即 arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arctangente en zéro", "La valeur de l’arctangente en zéro est zéro: arctan(0) = 0")
+        text(
+            "Valeur de l’arctangente en zéro",
+            "La valeur de l’arctangente en zéro est zéro: arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «арктангенс» при аргументе нуль", "При аргументе нуль функция «арктангенс» принимает значение нуль: arctan(0) = 0")
+        text(
+            "Значение функции «арктангенс» при аргументе нуль",
+            "При аргументе нуль функция «арктангенс» принимает значение нуль: arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcotangente en cero", "El valor de arcotangente en cero es cero: arctan(0) = 0")
+        text(
+            "Valor de arcotangente en cero",
+            "El valor de arcotangente en cero es cero: arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الظل العكسية عند الصفر", "قيمة دالة الظل العكسية عند الصفر تساوي الصفر: arctan(0) = 0")
+        text(
+            "قيمة دالة الظل العكسية عند الصفر",
+            "قيمة دالة الظل العكسية عند الصفر تساوي الصفر: arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における逆正接関数の値", "零における逆正接関数の値は零です：arctan(0) = 0")
+        text(
+            "零における逆正接関数の値",
+            "零における逆正接関数の値は零です：arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 역탄젠트 함수 값", "영에서의 역탄젠트 함수 값은 영입니다: arctan(0) = 0")
+        text(
+            "영에서의 역탄젠트 함수 값",
+            "영에서의 역탄젠트 함수 값은 영입니다: arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arctan tại không", "Giá trị của hàm arctan tại không bằng không: arctan(0) = 0")
+        text(
+            "Giá trị của hàm arctan tại không",
+            "Giá trị của hàm arctan tại không bằng không: arctan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1151,42 +1412,72 @@ impl ArctanExactZeroBuiltinRuleProof {
 
 impl ArccotExactZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of arccotangent at zero", "The value of arccotangent at zero is π/2: arccot(0) = π/2")
+        text(
+            "Value of arccotangent at zero",
+            "The value of arccotangent at zero is π/2: arccot(0) = π/2",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("反余切函数在零处的值", "反余切函数在零处的值为π/2，即 arccot(0) = π/2")
+        text(
+            "反余切函数在零处的值",
+            "反余切函数在零处的值为π/2，即 arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("反餘切函數在零處的值", "反餘切函數在零處的值為π/2，即 arccot(0) = π/2")
+        text(
+            "反餘切函數在零處的值",
+            "反餘切函數在零處的值為π/2，即 arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de l’arccotangente en zéro", "La valeur de l’arccotangente en zéro est π/2: arccot(0) = π/2")
+        text(
+            "Valeur de l’arccotangente en zéro",
+            "La valeur de l’arccotangente en zéro est π/2: arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «арккотангенс» при аргументе нуль", "При аргументе нуль функция «арккотангенс» принимает значение π/2: arccot(0) = π/2")
+        text(
+            "Значение функции «арккотангенс» при аргументе нуль",
+            "При аргументе нуль функция «арккотангенс» принимает значение π/2: arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de arcocotangente en cero", "El valor de arcocotangente en cero es π/2: arccot(0) = π/2")
+        text(
+            "Valor de arcocotangente en cero",
+            "El valor de arcocotangente en cero es π/2: arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة ظل التمام العكسية عند الصفر", "قيمة دالة ظل التمام العكسية عند الصفر تساوي π/2: arccot(0) = π/2")
+        text(
+            "قيمة دالة ظل التمام العكسية عند الصفر",
+            "قيمة دالة ظل التمام العكسية عند الصفر تساوي π/2: arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における逆余接関数の値", "零における逆余接関数の値はπ/2です：arccot(0) = π/2")
+        text(
+            "零における逆余接関数の値",
+            "零における逆余接関数の値はπ/2です：arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 역코탄젠트 함수 값", "영에서의 역코탄젠트 함수 값은 π/2입니다: arccot(0) = π/2")
+        text(
+            "영에서의 역코탄젠트 함수 값",
+            "영에서의 역코탄젠트 함수 값은 π/2입니다: arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm arccot tại không", "Giá trị của hàm arccot tại không bằng π/2: arccot(0) = π/2")
+        text(
+            "Giá trị của hàm arccot tại không",
+            "Giá trị của hàm arccot tại không bằng π/2: arccot(0) = π/2",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1207,14 +1498,23 @@ impl ArccotExactZeroBuiltinRuleProof {
 
 impl PowerProductSameBaseBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Product of powers with the same base", "Multiplying powers with the same base adds their exponents: a^m · a^n = a^(m+n)")
+        text(
+            "Product of powers with the same base",
+            "Multiplying powers with the same base adds their exponents: a^m · a^n = a^(m+n)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("同底数幂相乘", "同底数幂相乘时，底数不变，指数相加，即 a^m · a^n = a^(m+n)")
+        text(
+            "同底数幂相乘",
+            "同底数幂相乘时，底数不变，指数相加，即 a^m · a^n = a^(m+n)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("同底數冪相乘", "同底數冪相乘時，底數不變，指數相加，即 a^m · a^n = a^(m+n)")
+        text(
+            "同底數冪相乘",
+            "同底數冪相乘時，底數不變，指數相加，即 a^m · a^n = a^(m+n)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1230,19 +1530,31 @@ impl PowerProductSameBaseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("ضرب قوى ذات أساس واحد", "عند ضرب قوى ذات أساس واحد تُجمع الأسس: a^m · a^n = a^(m+n)")
+        text(
+            "ضرب قوى ذات أساس واحد",
+            "عند ضرب قوى ذات أساس واحد تُجمع الأسس: a^m · a^n = a^(m+n)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("同じ底の累乗の積", "同じ底の累乗を掛けると、指数が加算されます：a^m · a^n = a^(m+n)")
+        text(
+            "同じ底の累乗の積",
+            "同じ底の累乗を掛けると、指数が加算されます：a^m · a^n = a^(m+n)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("밑이 같은 거듭제곱의 곱", "밑이 같은 거듭제곱을 곱하면 지수를 더합니다: a^m · a^n = a^(m+n)")
+        text(
+            "밑이 같은 거듭제곱의 곱",
+            "밑이 같은 거듭제곱을 곱하면 지수를 더합니다: a^m · a^n = a^(m+n)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tích các lũy thừa cùng cơ số", "Khi nhân các lũy thừa cùng cơ số, ta cộng các số mũ: a^m · a^n = a^(m+n)")
+        text(
+            "Tích các lũy thừa cùng cơ số",
+            "Khi nhân các lũy thừa cùng cơ số, ta cộng các số mũ: a^m · a^n = a^(m+n)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1263,22 +1575,37 @@ impl PowerProductSameBaseBuiltinRuleProof {
 
 impl PowerOfPowerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Power of a power", "Raising a power to another power multiplies the exponents: (a^m)^n = a^(m·n)")
+        text(
+            "Power of a power",
+            "Raising a power to another power multiplies the exponents: (a^m)^n = a^(m·n)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("幂的乘方", "幂再乘方时，底数不变，指数相乘，即 (a^m)^n = a^(m·n)")
+        text(
+            "幂的乘方",
+            "幂再乘方时，底数不变，指数相乘，即 (a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("冪的乘方", "冪再乘方時，底數不變，指數相乘，即 (a^m)^n = a^(m·n)")
+        text(
+            "冪的乘方",
+            "冪再乘方時，底數不變，指數相乘，即 (a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Puissance d’une puissance", "Élever une puissance à une puissance multiplie les exposants: (a^m)^n = a^(m·n)")
+        text(
+            "Puissance d’une puissance",
+            "Élever une puissance à une puissance multiplie les exposants: (a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Степень степени", "При возведении степени в степень показатели перемножаются: (a^m)^n = a^(m·n)")
+        text(
+            "Степень степени",
+            "При возведении степени в степень показатели перемножаются: (a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -1286,19 +1613,31 @@ impl PowerOfPowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قوة مرفوعة إلى قوة", "عند رفع قوة إلى قوة أخرى تُضرب الأسس: (a^m)^n = a^(m·n)")
+        text(
+            "قوة مرفوعة إلى قوة",
+            "عند رفع قوة إلى قوة أخرى تُضرب الأسس: (a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("累乗の累乗", "累乗をさらに累乗すると、指数が乗算されます：(a^m)^n = a^(m·n)")
+        text(
+            "累乗の累乗",
+            "累乗をさらに累乗すると、指数が乗算されます：(a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("거듭제곱의 거듭제곱", "거듭제곱을 다시 거듭제곱하면 지수를 곱합니다: (a^m)^n = a^(m·n)")
+        text(
+            "거듭제곱의 거듭제곱",
+            "거듭제곱을 다시 거듭제곱하면 지수를 곱합니다: (a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Lũy thừa của một lũy thừa", "Khi lấy lũy thừa của một lũy thừa, ta nhân các số mũ: (a^m)^n = a^(m·n)")
+        text(
+            "Lũy thừa của một lũy thừa",
+            "Khi lấy lũy thừa của một lũy thừa, ta nhân các số mũ: (a^m)^n = a^(m·n)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1322,11 +1661,17 @@ impl PowerOfProductBuiltinRuleProof {
         text("Power of a product", "A power of a product equals the product of the corresponding powers: (a·b)^n = a^n · b^n")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("积的乘方", "积的乘方等于各因子同次幂的积，即 (a·b)^n = a^n · b^n")
+        text(
+            "积的乘方",
+            "积的乘方等于各因子同次幂的积，即 (a·b)^n = a^n · b^n",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("積的乘方", "積的乘方等於各因子同次冪的積，即 (a·b)^n = a^n · b^n")
+        text(
+            "積的乘方",
+            "積的乘方等於各因子同次冪的積，即 (a·b)^n = a^n · b^n",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1334,7 +1679,10 @@ impl PowerOfProductBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Степень произведения", "Степень произведения равна произведению соответствующих степеней: (a·b)^n = a^n · b^n")
+        text(
+            "Степень произведения",
+            "Степень произведения равна произведению соответствующих степеней: (a·b)^n = a^n · b^n",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -1342,19 +1690,31 @@ impl PowerOfProductBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قوة حاصل الضرب", "قوة حاصل الضرب تساوي حاصل ضرب القوى المقابلة: (a·b)^n = a^n · b^n")
+        text(
+            "قوة حاصل الضرب",
+            "قوة حاصل الضرب تساوي حاصل ضرب القوى المقابلة: (a·b)^n = a^n · b^n",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("積の累乗", "積の累乗は各因子の累乗の積に等しくなります：(a·b)^n = a^n · b^n")
+        text(
+            "積の累乗",
+            "積の累乗は各因子の累乗の積に等しくなります：(a·b)^n = a^n · b^n",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("곱의 거듭제곱", "곱의 거듭제곱은 각 인수의 거듭제곱을 곱한 값입니다: (a·b)^n = a^n · b^n")
+        text(
+            "곱의 거듭제곱",
+            "곱의 거듭제곱은 각 인수의 거듭제곱을 곱한 값입니다: (a·b)^n = a^n · b^n",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Lũy thừa của một tích", "Lũy thừa của một tích bằng tích các lũy thừa tương ứng: (a·b)^n = a^n · b^n")
+        text(
+            "Lũy thừa của một tích",
+            "Lũy thừa của một tích bằng tích các lũy thừa tương ứng: (a·b)^n = a^n · b^n",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1375,7 +1735,10 @@ impl PowerOfProductBuiltinRuleProof {
 
 impl ReciprocalAsNegOnePowerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Reciprocal as a negative first power", "The Reciprocal as a negative first power law gives: 1/a = a^(-1)")
+        text(
+            "Reciprocal as a negative first power",
+            "The Reciprocal as a negative first power law gives: 1/a = a^(-1)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("倒数写成负一次幂", "倒数写成负一次幂可写为：1/a = a^(-1)")
@@ -1386,11 +1749,17 @@ impl ReciprocalAsNegOnePowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Inverse comme puissance d’exposant moins un", "La propriété « Inverse comme puissance d’exposant moins un » donne: 1/a = a^(-1)")
+        text(
+            "Inverse comme puissance d’exposant moins un",
+            "La propriété « Inverse comme puissance d’exposant moins un » donne: 1/a = a^(-1)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Обратное число как степень минус один", "Свойство «Обратное число как степень минус один» выражается равенством: 1/a = a^(-1)")
+        text(
+            "Обратное число как степень минус один",
+            "Свойство «Обратное число как степень минус один» выражается равенством: 1/a = a^(-1)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -1398,19 +1767,31 @@ impl ReciprocalAsNegOnePowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("المقلوب كقوة أسها سالب واحد", "تُكتب خاصية «المقلوب كقوة أسها سالب واحد» كما يلي: 1/a = a^(-1)")
+        text(
+            "المقلوب كقوة أسها سالب واحد",
+            "تُكتب خاصية «المقلوب كقوة أسها سالب واحد» كما يلي: 1/a = a^(-1)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("逆数と負一乗", "逆数と負一乗は次の式で表されます：1/a = a^(-1)")
+        text(
+            "逆数と負一乗",
+            "逆数と負一乗は次の式で表されます：1/a = a^(-1)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("역수와 음의 일제곱", "역수와 음의 일제곱은 다음 식으로 나타납니다: 1/a = a^(-1)")
+        text(
+            "역수와 음의 일제곱",
+            "역수와 음의 일제곱은 다음 식으로 나타납니다: 1/a = a^(-1)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Nghịch đảo dưới dạng lũy thừa âm một", "Tính chất «Nghịch đảo dưới dạng lũy thừa âm một» được biểu diễn bởi: 1/a = a^(-1)")
+        text(
+            "Nghịch đảo dưới dạng lũy thừa âm một",
+            "Tính chất «Nghịch đảo dưới dạng lũy thừa âm một» được biểu diễn bởi: 1/a = a^(-1)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1517,7 +1898,10 @@ impl QuotientAsMulNegOnePowerBuiltinRuleProof {
 
 impl OneToAnyPowerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Power of one", "Every defined power of one equals one: 1^n = 1")
+        text(
+            "Power of one",
+            "Every defined power of one equals one: 1^n = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("一的幂", "一的任何有定义的幂都等于一，即 1^n = 1")
@@ -1528,19 +1912,31 @@ impl OneToAnyPowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Puissance de un", "Toute puissance définie de un vaut un: 1^n = 1")
+        text(
+            "Puissance de un",
+            "Toute puissance définie de un vaut un: 1^n = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Степень единицы", "Любая определённая степень единицы равна единице: 1^n = 1")
+        text(
+            "Степень единицы",
+            "Любая определённая степень единицы равна единице: 1^n = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Potencia de uno", "Toda potencia definida de uno vale uno: 1^n = 1")
+        text(
+            "Potencia de uno",
+            "Toda potencia definida de uno vale uno: 1^n = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قوة العدد واحد", "كل قوة معرّفة للعدد واحد تساوي واحدًا: 1^n = 1")
+        text(
+            "قوة العدد واحد",
+            "كل قوة معرّفة للعدد واحد تساوي واحدًا: 1^n = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -1548,11 +1944,17 @@ impl OneToAnyPowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일의 거듭제곱", "정의된 일의 거듭제곱은 모두 일입니다: 1^n = 1")
+        text(
+            "일의 거듭제곱",
+            "정의된 일의 거듭제곱은 모두 일입니다: 1^n = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Lũy thừa của một", "Mọi lũy thừa xác định của một đều bằng một: 1^n = 1")
+        text(
+            "Lũy thừa của một",
+            "Mọi lũy thừa xác định của một đều bằng một: 1^n = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1579,11 +1981,17 @@ impl ZeroToPosNatPowerBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("零的正自然数次幂", "零的正自然数次幂等于零，即 0^n = 0 (n > 0)")
+        text(
+            "零的正自然数次幂",
+            "零的正自然数次幂等于零，即 0^n = 0 (n > 0)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("零的正自然數次冪", "零的正自然數次冪等於零，即 0^n = 0 (n > 0)")
+        text(
+            "零的正自然數次冪",
+            "零的正自然數次冪等於零，即 0^n = 0 (n > 0)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1622,7 +2030,10 @@ impl ZeroToPosNatPowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영의 양의 자연수 거듭제곱", "영을 양의 자연수 지수로 거듭제곱하면 영입니다: 0^n = 0 (n > 0)")
+        text(
+            "영의 양의 자연수 거듭제곱",
+            "영을 양의 자연수 지수로 거듭제곱하면 영입니다: 0^n = 0 (n > 0)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -1656,11 +2067,17 @@ impl SqrtSquareBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("平方根的平方", "非负实数的平方根再平方，得到原数，即 (sqrt(x))^2 = x (x ≥ 0)")
+        text(
+            "平方根的平方",
+            "非负实数的平方根再平方，得到原数，即 (sqrt(x))^2 = x (x ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("平方根的平方", "非負實數的平方根再平方，得到原數，即 (sqrt(x))^2 = x (x ≥ 0)")
+        text(
+            "平方根的平方",
+            "非負實數的平方根再平方，得到原數，即 (sqrt(x))^2 = x (x ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1685,15 +2102,24 @@ impl SqrtSquareBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("مربع الجذر التربيعي", "مربع الجذر التربيعي لعدد حقيقي غير سالب يساوي العدد نفسه: (sqrt(x))^2 = x (x ≥ 0)")
+        text(
+            "مربع الجذر التربيعي",
+            "مربع الجذر التربيعي لعدد حقيقي غير سالب يساوي العدد نفسه: (sqrt(x))^2 = x (x ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("平方根の二乗", "非負の実数の平方根を二乗すると元の数になります：(sqrt(x))^2 = x (x ≥ 0)")
+        text(
+            "平方根の二乗",
+            "非負の実数の平方根を二乗すると元の数になります：(sqrt(x))^2 = x (x ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("제곱근의 제곱", "음이 아닌 실수의 제곱근을 제곱하면 원래 수가 됩니다: (sqrt(x))^2 = x (x ≥ 0)")
+        text(
+            "제곱근의 제곱",
+            "음이 아닌 실수의 제곱근을 제곱하면 원래 수가 됩니다: (sqrt(x))^2 = x (x ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -1721,7 +2147,10 @@ impl SqrtSquareBuiltinRuleProof {
 
 impl SqrtZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of square root at zero", "The value of square root at zero is zero: sqrt(0) = 0")
+        text(
+            "Value of square root at zero",
+            "The value of square root at zero is zero: sqrt(0) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("平方根在零处的值", "平方根在零处的值为零，即 sqrt(0) = 0")
@@ -1732,31 +2161,52 @@ impl SqrtZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de la racine carrée en zéro", "La valeur de la racine carrée en zéro est zéro: sqrt(0) = 0")
+        text(
+            "Valeur de la racine carrée en zéro",
+            "La valeur de la racine carrée en zéro est zéro: sqrt(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «квадратный корень» при аргументе нуль", "При аргументе нуль функция «квадратный корень» принимает значение нуль: sqrt(0) = 0")
+        text(
+            "Значение функции «квадратный корень» при аргументе нуль",
+            "При аргументе нуль функция «квадратный корень» принимает значение нуль: sqrt(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de raíz cuadrada en cero", "El valor de raíz cuadrada en cero es cero: sqrt(0) = 0")
+        text(
+            "Valor de raíz cuadrada en cero",
+            "El valor de raíz cuadrada en cero es cero: sqrt(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة الجذر التربيعي عند الصفر", "قيمة الجذر التربيعي عند الصفر تساوي الصفر: sqrt(0) = 0")
+        text(
+            "قيمة الجذر التربيعي عند الصفر",
+            "قيمة الجذر التربيعي عند الصفر تساوي الصفر: sqrt(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における平方根の値", "零における平方根の値は零です：sqrt(0) = 0")
+        text(
+            "零における平方根の値",
+            "零における平方根の値は零です：sqrt(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 제곱근 값", "영에서의 제곱근 값은 영입니다: sqrt(0) = 0")
+        text(
+            "영에서의 제곱근 값",
+            "영에서의 제곱근 값은 영입니다: sqrt(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của căn bậc hai tại không", "Giá trị của căn bậc hai tại không bằng không: sqrt(0) = 0")
+        text(
+            "Giá trị của căn bậc hai tại không",
+            "Giá trị của căn bậc hai tại không bằng không: sqrt(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1777,7 +2227,10 @@ impl SqrtZeroBuiltinRuleProof {
 
 impl SqrtOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of square root at one", "The value of square root at one is one: sqrt(1) = 1")
+        text(
+            "Value of square root at one",
+            "The value of square root at one is one: sqrt(1) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("平方根在一处的值", "平方根在一处的值为一，即 sqrt(1) = 1")
@@ -1788,7 +2241,10 @@ impl SqrtOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de la racine carrée en un", "La valeur de la racine carrée en un est un: sqrt(1) = 1")
+        text(
+            "Valeur de la racine carrée en un",
+            "La valeur de la racine carrée en un est un: sqrt(1) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -1796,23 +2252,38 @@ impl SqrtOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de raíz cuadrada en uno", "El valor de raíz cuadrada en uno es uno: sqrt(1) = 1")
+        text(
+            "Valor de raíz cuadrada en uno",
+            "El valor de raíz cuadrada en uno es uno: sqrt(1) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة الجذر التربيعي عند الواحد", "قيمة الجذر التربيعي عند الواحد تساوي الواحد: sqrt(1) = 1")
+        text(
+            "قيمة الجذر التربيعي عند الواحد",
+            "قيمة الجذر التربيعي عند الواحد تساوي الواحد: sqrt(1) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("一における平方根の値", "一における平方根の値は一です：sqrt(1) = 1")
+        text(
+            "一における平方根の値",
+            "一における平方根の値は一です：sqrt(1) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일에서의 제곱근 값", "일에서의 제곱근 값은 일입니다: sqrt(1) = 1")
+        text(
+            "일에서의 제곱근 값",
+            "일에서의 제곱근 값은 일입니다: sqrt(1) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của căn bậc hai tại một", "Giá trị của căn bậc hai tại một bằng một: sqrt(1) = 1")
+        text(
+            "Giá trị của căn bậc hai tại một",
+            "Giá trị của căn bậc hai tại một bằng một: sqrt(1) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1836,11 +2307,17 @@ impl SqrtOfSquareBuiltinRuleProof {
         text("Square root of a square", "The principal square root of a real square is the absolute value of its base: sqrt(a²) = abs(a)")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("平方的平方根", "实数平方的算术平方根等于该实数的绝对值，即 sqrt(a²) = abs(a)")
+        text(
+            "平方的平方根",
+            "实数平方的算术平方根等于该实数的绝对值，即 sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("平方的平方根", "實數平方的算術平方根等於該實數的絕對值，即 sqrt(a²) = abs(a)")
+        text(
+            "平方的平方根",
+            "實數平方的算術平方根等於該實數的絕對值，即 sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1856,15 +2333,24 @@ impl SqrtOfSquareBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجذر التربيعي للمربع", "الجذر التربيعي الرئيسي لمربع عدد حقيقي يساوي قيمته المطلقة: sqrt(a²) = abs(a)")
+        text(
+            "الجذر التربيعي للمربع",
+            "الجذر التربيعي الرئيسي لمربع عدد حقيقي يساوي قيمته المطلقة: sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("平方の平方根", "実数の平方の主平方根は、その実数の絶対値です：sqrt(a²) = abs(a)")
+        text(
+            "平方の平方根",
+            "実数の平方の主平方根は、その実数の絶対値です：sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("제곱의 제곱근", "실수 제곱의 주제곱근은 그 실수의 절댓값입니다: sqrt(a²) = abs(a)")
+        text(
+            "제곱의 제곱근",
+            "실수 제곱의 주제곱근은 그 실수의 절댓값입니다: sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -1892,11 +2378,17 @@ impl SqrtProductBuiltinRuleProof {
         text("Square root distributes over a product of nonnegative reals", "The Square root distributes over a product of nonnegative reals law gives: √(a·b) = √a · √b")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("非负实数乘积的平方根", "非负实数乘积的平方根可写为：√(a·b) = √a · √b")
+        text(
+            "非负实数乘积的平方根",
+            "非负实数乘积的平方根可写为：√(a·b) = √a · √b",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("非負實數乘積的平方根", "非負實數乘積的平方根可寫為：√(a·b) = √a · √b")
+        text(
+            "非負實數乘積的平方根",
+            "非負實數乘積的平方根可寫為：√(a·b) = √a · √b",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1963,11 +2455,17 @@ impl SqrtQuotientBuiltinRuleProof {
         text("Square root of a nonnegative real quotient with positive denominator", "The Square root of a nonnegative real quotient with positive denominator law gives: √(a/b) = √a / √b")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("分母为正的非负实数商的平方根", "分母为正的非负实数商的平方根可写为：√(a/b) = √a / √b")
+        text(
+            "分母为正的非负实数商的平方根",
+            "分母为正的非负实数商的平方根可写为：√(a/b) = √a / √b",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("分母為正的非負實數商的平方根", "分母為正的非負實數商的平方根可寫為：√(a/b) = √a / √b")
+        text(
+            "分母為正的非負實數商的平方根",
+            "分母為正的非負實數商的平方根可寫為：√(a/b) = √a / √b",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2031,42 +2529,72 @@ impl SqrtQuotientBuiltinRuleProof {
 
 impl AbsOfNegationBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Absolute value of a negation", "Negating a number leaves its absolute value unchanged: abs(-a) = abs(a)")
+        text(
+            "Absolute value of a negation",
+            "Negating a number leaves its absolute value unchanged: abs(-a) = abs(a)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("取负不改变绝对值", "一个数与它的相反数具有相同的绝对值，即 abs(-a) = abs(a)")
+        text(
+            "取负不改变绝对值",
+            "一个数与它的相反数具有相同的绝对值，即 abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("取負不改變絕對值", "一個數與它的相反數具有相同的絕對值，即 abs(-a) = abs(a)")
+        text(
+            "取負不改變絕對值",
+            "一個數與它的相反數具有相同的絕對值，即 abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur absolue d’un opposé", "Un nombre et son opposé ont la même valeur absolue: abs(-a) = abs(a)")
+        text(
+            "Valeur absolue d’un opposé",
+            "Un nombre et son opposé ont la même valeur absolue: abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Модуль противоположного числа", "Число и противоположное ему число имеют одинаковый модуль: abs(-a) = abs(a)")
+        text(
+            "Модуль противоположного числа",
+            "Число и противоположное ему число имеют одинаковый модуль: abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor absoluto del opuesto", "Un número y su opuesto tienen el mismo valor absoluto: abs(-a) = abs(a)")
+        text(
+            "Valor absoluto del opuesto",
+            "Un número y su opuesto tienen el mismo valor absoluto: abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("القيمة المطلقة للعدد المعاكس", "للعدد ومعاكسه القيمة المطلقة نفسها: abs(-a) = abs(a)")
+        text(
+            "القيمة المطلقة للعدد المعاكس",
+            "للعدد ومعاكسه القيمة المطلقة نفسها: abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("符号反転と絶対値", "数とその符号を反転した数の絶対値は等しくなります：abs(-a) = abs(a)")
+        text(
+            "符号反転と絶対値",
+            "数とその符号を反転した数の絶対値は等しくなります：abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("부호 반전과 절댓값", "수와 그 부호를 반전한 수의 절댓값은 같습니다: abs(-a) = abs(a)")
+        text(
+            "부호 반전과 절댓값",
+            "수와 그 부호를 반전한 수의 절댓값은 같습니다: abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị tuyệt đối của số đối", "Một số và số đối của nó có cùng giá trị tuyệt đối: abs(-a) = abs(a)")
+        text(
+            "Giá trị tuyệt đối của số đối",
+            "Một số và số đối của nó có cùng giá trị tuyệt đối: abs(-a) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2087,14 +2615,23 @@ impl AbsOfNegationBuiltinRuleProof {
 
 impl AbsProductBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Multiplicativity of absolute value", "The Multiplicativity of absolute value law gives: abs(a·b) = abs(a)·abs(b)")
+        text(
+            "Multiplicativity of absolute value",
+            "The Multiplicativity of absolute value law gives: abs(a·b) = abs(a)·abs(b)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("绝对值的乘法性质", "绝对值的乘法性质可写为：abs(a·b) = abs(a)·abs(b)")
+        text(
+            "绝对值的乘法性质",
+            "绝对值的乘法性质可写为：abs(a·b) = abs(a)·abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("絕對值的乘法性質", "絕對值的乘法性質可寫為：abs(a·b) = abs(a)·abs(b)")
+        text(
+            "絕對值的乘法性質",
+            "絕對值的乘法性質可寫為：abs(a·b) = abs(a)·abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2102,7 +2639,10 @@ impl AbsProductBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Мультипликативность модуля", "Свойство «Мультипликативность модуля» выражается равенством: abs(a·b) = abs(a)·abs(b)")
+        text(
+            "Мультипликативность модуля",
+            "Свойство «Мультипликативность модуля» выражается равенством: abs(a·b) = abs(a)·abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -2110,15 +2650,24 @@ impl AbsProductBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية ضرب القيم المطلقة", "تُكتب خاصية «خاصية ضرب القيم المطلقة» كما يلي: abs(a·b) = abs(a)·abs(b)")
+        text(
+            "خاصية ضرب القيم المطلقة",
+            "تُكتب خاصية «خاصية ضرب القيم المطلقة» كما يلي: abs(a·b) = abs(a)·abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("絶対値の乗法性", "絶対値の乗法性は次の式で表されます：abs(a·b) = abs(a)·abs(b)")
+        text(
+            "絶対値の乗法性",
+            "絶対値の乗法性は次の式で表されます：abs(a·b) = abs(a)·abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("절댓값의 곱셈 성질", "절댓값의 곱셈 성질은 다음 식으로 나타납니다: abs(a·b) = abs(a)·abs(b)")
+        text(
+            "절댓값의 곱셈 성질",
+            "절댓값의 곱셈 성질은 다음 식으로 나타납니다: abs(a·b) = abs(a)·abs(b)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -2143,7 +2692,10 @@ impl AbsProductBuiltinRuleProof {
 
 impl AbsSquareBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Square of the absolute value of a real number", "The Square of the absolute value of a real number law gives: abs(a)² = a²")
+        text(
+            "Square of the absolute value of a real number",
+            "The Square of the absolute value of a real number law gives: abs(a)² = a²",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("实数绝对值的平方", "实数绝对值的平方可写为：abs(a)² = a²")
@@ -2154,27 +2706,45 @@ impl AbsSquareBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Carré de la valeur absolue d’un réel", "La propriété « Carré de la valeur absolue d’un réel » donne: abs(a)² = a²")
+        text(
+            "Carré de la valeur absolue d’un réel",
+            "La propriété « Carré de la valeur absolue d’un réel » donne: abs(a)² = a²",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Квадрат модуля вещественного числа", "Свойство «Квадрат модуля вещественного числа» выражается равенством: abs(a)² = a²")
+        text(
+            "Квадрат модуля вещественного числа",
+            "Свойство «Квадрат модуля вещественного числа» выражается равенством: abs(a)² = a²",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Cuadrado del valor absoluto de un real", "La propiedad «Cuadrado del valor absoluto de un real» se expresa como: abs(a)² = a²")
+        text(
+            "Cuadrado del valor absoluto de un real",
+            "La propiedad «Cuadrado del valor absoluto de un real» se expresa como: abs(a)² = a²",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("مربع القيمة المطلقة لعدد حقيقي", "تُكتب خاصية «مربع القيمة المطلقة لعدد حقيقي» كما يلي: abs(a)² = a²")
+        text(
+            "مربع القيمة المطلقة لعدد حقيقي",
+            "تُكتب خاصية «مربع القيمة المطلقة لعدد حقيقي» كما يلي: abs(a)² = a²",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("実数の絶対値の二乗", "実数の絶対値の二乗は次の式で表されます：abs(a)² = a²")
+        text(
+            "実数の絶対値の二乗",
+            "実数の絶対値の二乗は次の式で表されます：abs(a)² = a²",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("실수 절댓값의 제곱", "실수 절댓값의 제곱은 다음 식으로 나타납니다: abs(a)² = a²")
+        text(
+            "실수 절댓값의 제곱",
+            "실수 절댓값의 제곱은 다음 식으로 나타납니다: abs(a)² = a²",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -2199,7 +2769,10 @@ impl AbsSquareBuiltinRuleProof {
 
 impl LogBaseSelfBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Logarithm of the base", "The Logarithm of the base law gives: log_a(a) = 1")
+        text(
+            "Logarithm of the base",
+            "The Logarithm of the base law gives: log_a(a) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("底数自身的对数", "底数自身的对数可写为：log_a(a) = 1")
@@ -2210,31 +2783,52 @@ impl LogBaseSelfBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Logarithme de la base", "La propriété « Logarithme de la base » donne: log_a(a) = 1")
+        text(
+            "Logarithme de la base",
+            "La propriété « Logarithme de la base » donne: log_a(a) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Логарифм основания", "Свойство «Логарифм основания» выражается равенством: log_a(a) = 1")
+        text(
+            "Логарифм основания",
+            "Свойство «Логарифм основания» выражается равенством: log_a(a) = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Logaritmo de la base", "La propiedad «Logaritmo de la base» se expresa como: log_a(a) = 1")
+        text(
+            "Logaritmo de la base",
+            "La propiedad «Logaritmo de la base» se expresa como: log_a(a) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("لوغاريتم الأساس", "تُكتب خاصية «لوغاريتم الأساس» كما يلي: log_a(a) = 1")
+        text(
+            "لوغاريتم الأساس",
+            "تُكتب خاصية «لوغاريتم الأساس» كما يلي: log_a(a) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("底自身の対数", "底自身の対数は次の式で表されます：log_a(a) = 1")
+        text(
+            "底自身の対数",
+            "底自身の対数は次の式で表されます：log_a(a) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("밑 자체의 로그", "밑 자체의 로그은 다음 식으로 나타납니다: log_a(a) = 1")
+        text(
+            "밑 자체의 로그",
+            "밑 자체의 로그은 다음 식으로 나타납니다: log_a(a) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Logarit của cơ số", "Tính chất «Logarit của cơ số» được biểu diễn bởi: log_a(a) = 1")
+        text(
+            "Logarit của cơ số",
+            "Tính chất «Logarit của cơ số» được biểu diễn bởi: log_a(a) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2255,7 +2849,10 @@ impl LogBaseSelfBuiltinRuleProof {
 
 impl LogOfOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Logarithm of one", "The Logarithm of one law gives: log_a(1) = 0")
+        text(
+            "Logarithm of one",
+            "The Logarithm of one law gives: log_a(1) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("一的对数", "一的对数可写为：log_a(1) = 0")
@@ -2266,19 +2863,31 @@ impl LogOfOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Logarithme de un", "La propriété « Logarithme de un » donne: log_a(1) = 0")
+        text(
+            "Logarithme de un",
+            "La propriété « Logarithme de un » donne: log_a(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Логарифм единицы", "Свойство «Логарифм единицы» выражается равенством: log_a(1) = 0")
+        text(
+            "Логарифм единицы",
+            "Свойство «Логарифм единицы» выражается равенством: log_a(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Logaritmo de uno", "La propiedad «Logaritmo de uno» se expresa como: log_a(1) = 0")
+        text(
+            "Logaritmo de uno",
+            "La propiedad «Logaritmo de uno» se expresa como: log_a(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("لوغاريتم الواحد", "تُكتب خاصية «لوغاريتم الواحد» كما يلي: log_a(1) = 0")
+        text(
+            "لوغاريتم الواحد",
+            "تُكتب خاصية «لوغاريتم الواحد» كما يلي: log_a(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -2286,11 +2895,17 @@ impl LogOfOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일의 로그", "일의 로그은 다음 식으로 나타납니다: log_a(1) = 0")
+        text(
+            "일의 로그",
+            "일의 로그은 다음 식으로 나타납니다: log_a(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Logarit của một", "Tính chất «Logarit của một» được biểu diễn bởi: log_a(1) = 0")
+        text(
+            "Logarit của một",
+            "Tính chất «Logarit của một» được biểu diễn bởi: log_a(1) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2311,14 +2926,23 @@ impl LogOfOneBuiltinRuleProof {
 
 impl LogOfPowerSameBaseBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Cancellation of logarithm and same-base power", "The Cancellation of logarithm and same-base power law gives: log_a(a^n) = n")
+        text(
+            "Cancellation of logarithm and same-base power",
+            "The Cancellation of logarithm and same-base power law gives: log_a(a^n) = n",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("同底对数与幂的消去", "同底对数与幂的消去可写为：log_a(a^n) = n")
+        text(
+            "同底对数与幂的消去",
+            "同底对数与幂的消去可写为：log_a(a^n) = n",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("同底對數與冪的消去", "同底對數與冪的消去可寫為：log_a(a^n) = n")
+        text(
+            "同底對數與冪的消去",
+            "同底對數與冪的消去可寫為：log_a(a^n) = n",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -2334,19 +2958,31 @@ impl LogOfPowerSameBaseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("اختزال اللوغاريتم والقوة ذات الأساس نفسه", "تُكتب خاصية «اختزال اللوغاريتم والقوة ذات الأساس نفسه» كما يلي: log_a(a^n) = n")
+        text(
+            "اختزال اللوغاريتم والقوة ذات الأساس نفسه",
+            "تُكتب خاصية «اختزال اللوغاريتم والقوة ذات الأساس نفسه» كما يلي: log_a(a^n) = n",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("同じ底の対数と累乗の相殺", "同じ底の対数と累乗の相殺は次の式で表されます：log_a(a^n) = n")
+        text(
+            "同じ底の対数と累乗の相殺",
+            "同じ底の対数と累乗の相殺は次の式で表されます：log_a(a^n) = n",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("밑이 같은 로그와 거듭제곱의 소거", "밑이 같은 로그와 거듭제곱의 소거은 다음 식으로 나타납니다: log_a(a^n) = n")
+        text(
+            "밑이 같은 로그와 거듭제곱의 소거",
+            "밑이 같은 로그와 거듭제곱의 소거은 다음 식으로 나타납니다: log_a(a^n) = n",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Khử logarit và lũy thừa cùng cơ số", "Tính chất «Khử logarit và lũy thừa cùng cơ số» được biểu diễn bởi: log_a(a^n) = n")
+        text(
+            "Khử logarit và lũy thừa cùng cơ số",
+            "Tính chất «Khử logarit và lũy thừa cùng cơ số» được biểu diễn bởi: log_a(a^n) = n",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2367,18 +3003,30 @@ impl LogOfPowerSameBaseBuiltinRuleProof {
 
 impl LogArgPowerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Power rule for logarithms", "The exponent can be taken out as a factor of the logarithm: log_a(b^n) = n · log_a(b)")
+        text(
+            "Power rule for logarithms",
+            "The exponent can be taken out as a factor of the logarithm: log_a(b^n) = n · log_a(b)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("对数的幂法则", "真数的指数可作为乘法因子移到对数前，即 log_a(b^n) = n · log_a(b)")
+        text(
+            "对数的幂法则",
+            "真数的指数可作为乘法因子移到对数前，即 log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("對數的冪法則", "真數的指數可作為乘法因子移到對數前，即 log_a(b^n) = n · log_a(b)")
+        text(
+            "對數的冪法則",
+            "真數的指數可作為乘法因子移到對數前，即 log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Règle des puissances pour les logarithmes", "L’exposant peut être sorti comme facteur du logarithme: log_a(b^n) = n · log_a(b)")
+        text(
+            "Règle des puissances pour les logarithmes",
+            "L’exposant peut être sorti comme facteur du logarithme: log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -2386,23 +3034,38 @@ impl LogArgPowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Regla de la potencia para logaritmos", "El exponente puede extraerse como factor del logaritmo: log_a(b^n) = n · log_a(b)")
+        text(
+            "Regla de la potencia para logaritmos",
+            "El exponente puede extraerse como factor del logaritmo: log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قاعدة لوغاريتم القوة", "يمكن إخراج الأس كعامل أمام اللوغاريتم: log_a(b^n) = n · log_a(b)")
+        text(
+            "قاعدة لوغاريتم القوة",
+            "يمكن إخراج الأس كعامل أمام اللوغاريتم: log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("対数の累乗法則", "指数は対数の前の係数として取り出せます：log_a(b^n) = n · log_a(b)")
+        text(
+            "対数の累乗法則",
+            "指数は対数の前の係数として取り出せます：log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("로그의 거듭제곱 법칙", "지수를 로그 앞의 곱셈 인수로 꺼낼 수 있습니다: log_a(b^n) = n · log_a(b)")
+        text(
+            "로그의 거듭제곱 법칙",
+            "지수를 로그 앞의 곱셈 인수로 꺼낼 수 있습니다: log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Quy tắc logarit của lũy thừa", "Số mũ có thể đưa ra ngoài làm hệ số của logarit: log_a(b^n) = n · log_a(b)")
+        text(
+            "Quy tắc logarit của lũy thừa",
+            "Số mũ có thể đưa ra ngoài làm hệ số của logarit: log_a(b^n) = n · log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2595,18 +3258,30 @@ impl LogQuotientBuiltinRuleProof {
 
 impl LogReciprocalBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Logarithm of a reciprocal", "Taking the logarithm of a reciprocal negates the logarithm: log_a(1/b) = -log_a(b)")
+        text(
+            "Logarithm of a reciprocal",
+            "Taking the logarithm of a reciprocal negates the logarithm: log_a(1/b) = -log_a(b)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("倒数的对数", "倒数的对数等于原数对数的相反数，即 log_a(1/b) = -log_a(b)")
+        text(
+            "倒数的对数",
+            "倒数的对数等于原数对数的相反数，即 log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("倒數的對數", "倒數的對數等於原數對數的相反數，即 log_a(1/b) = -log_a(b)")
+        text(
+            "倒數的對數",
+            "倒數的對數等於原數對數的相反數，即 log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Logarithme d’un inverse", "Le logarithme d’un inverse est l’opposé du logarithme: log_a(1/b) = -log_a(b)")
+        text(
+            "Logarithme d’un inverse",
+            "Le logarithme d’un inverse est l’opposé du logarithme: log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -2614,23 +3289,38 @@ impl LogReciprocalBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Logaritmo de un recíproco", "El logaritmo de un recíproco es el opuesto del logaritmo: log_a(1/b) = -log_a(b)")
+        text(
+            "Logaritmo de un recíproco",
+            "El logaritmo de un recíproco es el opuesto del logaritmo: log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("لوغاريتم المقلوب", "لوغاريتم المقلوب يساوي سالب لوغاريتم العدد الأصلي: log_a(1/b) = -log_a(b)")
+        text(
+            "لوغاريتم المقلوب",
+            "لوغاريتم المقلوب يساوي سالب لوغاريتم العدد الأصلي: log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("逆数の対数", "逆数の対数は元の数の対数の符号を反転した値です：log_a(1/b) = -log_a(b)")
+        text(
+            "逆数の対数",
+            "逆数の対数は元の数の対数の符号を反転した値です：log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("역수의 로그", "역수의 로그는 원래 수의 로그의 부호를 반전한 값입니다: log_a(1/b) = -log_a(b)")
+        text(
+            "역수의 로그",
+            "역수의 로그는 원래 수의 로그의 부호를 반전한 값입니다: log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Logarit của số nghịch đảo", "Logarit của số nghịch đảo bằng số đối của logarit ban đầu: log_a(1/b) = -log_a(b)")
+        text(
+            "Logarit của số nghịch đảo",
+            "Logarit của số nghịch đảo bằng số đối của logarit ban đầu: log_a(1/b) = -log_a(b)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2737,7 +3427,10 @@ impl LogChangeOfBaseBuiltinRuleProof {
 
 impl ZeroModBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Remainder of zero", "The Remainder of zero law gives: 0 mod n = 0")
+        text(
+            "Remainder of zero",
+            "The Remainder of zero law gives: 0 mod n = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("零的余数", "零的余数可写为：0 mod n = 0")
@@ -2748,19 +3441,31 @@ impl ZeroModBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Reste de zéro", "La propriété « Reste de zéro » donne: 0 mod n = 0")
+        text(
+            "Reste de zéro",
+            "La propriété « Reste de zéro » donne: 0 mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Остаток от деления нуля", "Свойство «Остаток от деления нуля» выражается равенством: 0 mod n = 0")
+        text(
+            "Остаток от деления нуля",
+            "Свойство «Остаток от деления нуля» выражается равенством: 0 mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Resto de cero", "La propiedad «Resto de cero» se expresa como: 0 mod n = 0")
+        text(
+            "Resto de cero",
+            "La propiedad «Resto de cero» se expresa como: 0 mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("باقي قسمة الصفر", "تُكتب خاصية «باقي قسمة الصفر» كما يلي: 0 mod n = 0")
+        text(
+            "باقي قسمة الصفر",
+            "تُكتب خاصية «باقي قسمة الصفر» كما يلي: 0 mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -2768,11 +3473,17 @@ impl ZeroModBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영의 나머지", "영의 나머지은 다음 식으로 나타납니다: 0 mod n = 0")
+        text(
+            "영의 나머지",
+            "영의 나머지은 다음 식으로 나타납니다: 0 mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Số dư của không", "Tính chất «Số dư của không» được biểu diễn bởi: 0 mod n = 0")
+        text(
+            "Số dư của không",
+            "Tính chất «Số dư của không» được biểu diễn bởi: 0 mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2793,7 +3504,10 @@ impl ZeroModBuiltinRuleProof {
 
 impl ModOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Remainder modulo one", "The Remainder modulo one law gives: a mod 1 = 0")
+        text(
+            "Remainder modulo one",
+            "The Remainder modulo one law gives: a mod 1 = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("除以一的余数", "除以一的余数可写为：a mod 1 = 0")
@@ -2804,31 +3518,52 @@ impl ModOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Reste modulo un", "La propriété « Reste modulo un » donne: a mod 1 = 0")
+        text(
+            "Reste modulo un",
+            "La propriété « Reste modulo un » donne: a mod 1 = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Остаток по модулю один", "Свойство «Остаток по модулю один» выражается равенством: a mod 1 = 0")
+        text(
+            "Остаток по модулю один",
+            "Свойство «Остаток по модулю один» выражается равенством: a mod 1 = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Resto módulo uno", "La propiedad «Resto módulo uno» se expresa como: a mod 1 = 0")
+        text(
+            "Resto módulo uno",
+            "La propiedad «Resto módulo uno» se expresa como: a mod 1 = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الباقي بترديد واحد", "تُكتب خاصية «الباقي بترديد واحد» كما يلي: a mod 1 = 0")
+        text(
+            "الباقي بترديد واحد",
+            "تُكتب خاصية «الباقي بترديد واحد» كما يلي: a mod 1 = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("一を法とする剰余", "一を法とする剰余は次の式で表されます：a mod 1 = 0")
+        text(
+            "一を法とする剰余",
+            "一を法とする剰余は次の式で表されます：a mod 1 = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일로 나눈 나머지", "일로 나눈 나머지은 다음 식으로 나타납니다: a mod 1 = 0")
+        text(
+            "일로 나눈 나머지",
+            "일로 나눈 나머지은 다음 식으로 나타납니다: a mod 1 = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Số dư khi chia cho một", "Tính chất «Số dư khi chia cho một» được biểu diễn bởi: a mod 1 = 0")
+        text(
+            "Số dư khi chia cho một",
+            "Tính chất «Số dư khi chia cho một» được biểu diễn bởi: a mod 1 = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -2869,7 +3604,10 @@ impl OneModAtLeastTwoBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Reste de un pour un module au moins deux", "La propriété « Reste de un pour un module au moins deux » donne: 1 mod n = 1")
+        text(
+            "Reste de un pour un module au moins deux",
+            "La propriété « Reste de un pour un module au moins deux » donne: 1 mod n = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -2877,11 +3615,17 @@ impl OneModAtLeastTwoBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Resto de uno con módulo al menos dos", "La propiedad «Resto de uno con módulo al menos dos» se expresa como: 1 mod n = 1")
+        text(
+            "Resto de uno con módulo al menos dos",
+            "La propiedad «Resto de uno con módulo al menos dos» se expresa como: 1 mod n = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("باقي الواحد بترديد لا يقل عن اثنين", "تُكتب خاصية «باقي الواحد بترديد لا يقل عن اثنين» كما يلي: 1 mod n = 1")
+        text(
+            "باقي الواحد بترديد لا يقل عن اثنين",
+            "تُكتب خاصية «باقي الواحد بترديد لا يقل عن اثنين» كما يلي: 1 mod n = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -2899,7 +3643,10 @@ impl OneModAtLeastTwoBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Số dư của một với môđun ít nhất bằng hai", "Tính chất «Số dư của một với môđun ít nhất bằng hai» được biểu diễn bởi: 1 mod n = 1")
+        text(
+            "Số dư của một với môđun ít nhất bằng hai",
+            "Tính chất «Số dư của một với môđun ít nhất bằng hai» được biểu diễn bởi: 1 mod n = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3092,14 +3839,23 @@ impl ModCompatibleSmallerModulusBuiltinRuleProof {
 
 impl MinIdempotentBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Idempotence of minimum", "Applying minimum to two identical arguments returns that argument: min(a,a) = a")
+        text(
+            "Idempotence of minimum",
+            "Applying minimum to two identical arguments returns that argument: min(a,a) = a",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("最小值的幂等性", "最小值的两个参数相同时，结果就是该参数，即 min(a,a) = a")
+        text(
+            "最小值的幂等性",
+            "最小值的两个参数相同时，结果就是该参数，即 min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("最小值的冪等性", "最小值的兩個引數相同時，結果就是該引數，即 min(a,a) = a")
+        text(
+            "最小值的冪等性",
+            "最小值的兩個引數相同時，結果就是該引數，即 min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3107,27 +3863,45 @@ impl MinIdempotentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Идемпотентность: минимум", "Операция «минимум» с одинаковыми аргументами возвращает этот аргумент: min(a,a) = a")
+        text(
+            "Идемпотентность: минимум",
+            "Операция «минимум» с одинаковыми аргументами возвращает этот аргумент: min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Idempotencia: mínimo", "La operación «mínimo» con dos argumentos iguales devuelve ese argumento: min(a,a) = a")
+        text(
+            "Idempotencia: mínimo",
+            "La operación «mínimo» con dos argumentos iguales devuelve ese argumento: min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية التكرار: القيمة الصغرى", "تطبيق عملية «القيمة الصغرى» على وسيطين متساويين يعيد الوسيط نفسه: min(a,a) = a")
+        text(
+            "خاصية التكرار: القيمة الصغرى",
+            "تطبيق عملية «القيمة الصغرى» على وسيطين متساويين يعيد الوسيط نفسه: min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("最小値の冪等性", "最小値に同じ引数を二つ与えると、その引数が得られます：min(a,a) = a")
+        text(
+            "最小値の冪等性",
+            "最小値に同じ引数を二つ与えると、その引数が得られます：min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("최솟값의 멱등성", "최솟값의 두 인수가 같으면 그 인수가 결과입니다: min(a,a) = a")
+        text(
+            "최솟값의 멱등성",
+            "최솟값의 두 인수가 같으면 그 인수가 결과입니다: min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tính lũy đẳng của giá trị nhỏ nhất", "Phép giá trị nhỏ nhất với hai đối số giống nhau trả về chính đối số đó: min(a,a) = a")
+        text(
+            "Tính lũy đẳng của giá trị nhỏ nhất",
+            "Phép giá trị nhỏ nhất với hai đối số giống nhau trả về chính đối số đó: min(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3148,14 +3922,23 @@ impl MinIdempotentBuiltinRuleProof {
 
 impl MaxIdempotentBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Idempotence of maximum", "Applying maximum to two identical arguments returns that argument: max(a,a) = a")
+        text(
+            "Idempotence of maximum",
+            "Applying maximum to two identical arguments returns that argument: max(a,a) = a",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("最大值的幂等性", "最大值的两个参数相同时，结果就是该参数，即 max(a,a) = a")
+        text(
+            "最大值的幂等性",
+            "最大值的两个参数相同时，结果就是该参数，即 max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("最大值的冪等性", "最大值的兩個引數相同時，結果就是該引數，即 max(a,a) = a")
+        text(
+            "最大值的冪等性",
+            "最大值的兩個引數相同時，結果就是該引數，即 max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3163,27 +3946,45 @@ impl MaxIdempotentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Идемпотентность: максимум", "Операция «максимум» с одинаковыми аргументами возвращает этот аргумент: max(a,a) = a")
+        text(
+            "Идемпотентность: максимум",
+            "Операция «максимум» с одинаковыми аргументами возвращает этот аргумент: max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Idempotencia: máximo", "La operación «máximo» con dos argumentos iguales devuelve ese argumento: max(a,a) = a")
+        text(
+            "Idempotencia: máximo",
+            "La operación «máximo» con dos argumentos iguales devuelve ese argumento: max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية التكرار: القيمة العظمى", "تطبيق عملية «القيمة العظمى» على وسيطين متساويين يعيد الوسيط نفسه: max(a,a) = a")
+        text(
+            "خاصية التكرار: القيمة العظمى",
+            "تطبيق عملية «القيمة العظمى» على وسيطين متساويين يعيد الوسيط نفسه: max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("最大値の冪等性", "最大値に同じ引数を二つ与えると、その引数が得られます：max(a,a) = a")
+        text(
+            "最大値の冪等性",
+            "最大値に同じ引数を二つ与えると、その引数が得られます：max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("최댓값의 멱등성", "최댓값의 두 인수가 같으면 그 인수가 결과입니다: max(a,a) = a")
+        text(
+            "최댓값의 멱등성",
+            "최댓값의 두 인수가 같으면 그 인수가 결과입니다: max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tính lũy đẳng của giá trị lớn nhất", "Phép giá trị lớn nhất với hai đối số giống nhau trả về chính đối số đó: max(a,a) = a")
+        text(
+            "Tính lũy đẳng của giá trị lớn nhất",
+            "Phép giá trị lớn nhất với hai đối số giống nhau trả về chính đối số đó: max(a,a) = a",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3207,11 +4008,17 @@ impl MinCommutativeBuiltinRuleProof {
         text("Commutativity of minimum", "Swapping the two arguments of minimum leaves the result unchanged: min(a,b) = min(b,a)")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("最小值的交换律", "交换最小值的两个参数，结果不变，即 min(a,b) = min(b,a)")
+        text(
+            "最小值的交换律",
+            "交换最小值的两个参数，结果不变，即 min(a,b) = min(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("最小值的交換律", "交換最小值的兩個引數，結果不變，即 min(a,b) = min(b,a)")
+        text(
+            "最小值的交換律",
+            "交換最小值的兩個引數，結果不變，即 min(a,b) = min(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3236,15 +4043,24 @@ impl MinCommutativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية الإبدال: القيمة الصغرى", "تبديل وسيطي عملية «القيمة الصغرى» لا يغيّر النتيجة: min(a,b) = min(b,a)")
+        text(
+            "خاصية الإبدال: القيمة الصغرى",
+            "تبديل وسيطي عملية «القيمة الصغرى» لا يغيّر النتيجة: min(a,b) = min(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("最小値の交換法則", "最小値の二つの引数を交換しても結果は変わりません：min(a,b) = min(b,a)")
+        text(
+            "最小値の交換法則",
+            "最小値の二つの引数を交換しても結果は変わりません：min(a,b) = min(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("최솟값의 교환법칙", "최솟값의 두 인수를 바꾸어도 결과는 같습니다: min(a,b) = min(b,a)")
+        text(
+            "최솟값의 교환법칙",
+            "최솟값의 두 인수를 바꾸어도 결과는 같습니다: min(a,b) = min(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3272,11 +4088,17 @@ impl MaxCommutativeBuiltinRuleProof {
         text("Commutativity of maximum", "Swapping the two arguments of maximum leaves the result unchanged: max(a,b) = max(b,a)")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("最大值的交换律", "交换最大值的两个参数，结果不变，即 max(a,b) = max(b,a)")
+        text(
+            "最大值的交换律",
+            "交换最大值的两个参数，结果不变，即 max(a,b) = max(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("最大值的交換律", "交換最大值的兩個引數，結果不變，即 max(a,b) = max(b,a)")
+        text(
+            "最大值的交換律",
+            "交換最大值的兩個引數，結果不變，即 max(a,b) = max(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3301,15 +4123,24 @@ impl MaxCommutativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية الإبدال: القيمة العظمى", "تبديل وسيطي عملية «القيمة العظمى» لا يغيّر النتيجة: max(a,b) = max(b,a)")
+        text(
+            "خاصية الإبدال: القيمة العظمى",
+            "تبديل وسيطي عملية «القيمة العظمى» لا يغيّر النتيجة: max(a,b) = max(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("最大値の交換法則", "最大値の二つの引数を交換しても結果は変わりません：max(a,b) = max(b,a)")
+        text(
+            "最大値の交換法則",
+            "最大値の二つの引数を交換しても結果は変わりません：max(a,b) = max(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("최댓값의 교환법칙", "최댓값의 두 인수를 바꾸어도 결과는 같습니다: max(a,b) = max(b,a)")
+        text(
+            "최댓값의 교환법칙",
+            "최댓값의 두 인수를 바꾸어도 결과는 같습니다: max(a,b) = max(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3337,11 +4168,17 @@ impl AbsAbsAbsorptionBuiltinRuleProof {
         text("Idempotence of absolute value", "Taking the absolute value twice gives the same result as taking it once: abs(abs(a)) = abs(a)")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("绝对值的幂等性", "重复取绝对值不会改变结果，即 abs(abs(a)) = abs(a)")
+        text(
+            "绝对值的幂等性",
+            "重复取绝对值不会改变结果，即 abs(abs(a)) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("絕對值的冪等性", "重複取絕對值不會改變結果，即 abs(abs(a)) = abs(a)")
+        text(
+            "絕對值的冪等性",
+            "重複取絕對值不會改變結果，即 abs(abs(a)) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3349,7 +4186,10 @@ impl AbsAbsAbsorptionBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Идемпотентность модуля", "Повторное взятие модуля не меняет результат: abs(abs(a)) = abs(a)")
+        text(
+            "Идемпотентность модуля",
+            "Повторное взятие модуля не меняет результат: abs(abs(a)) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -3357,19 +4197,31 @@ impl AbsAbsAbsorptionBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("ثبات القيمة المطلقة عند تكرارها", "أخذ القيمة المطلقة مرتين يعطي نتيجة أخذها مرة واحدة: abs(abs(a)) = abs(a)")
+        text(
+            "ثبات القيمة المطلقة عند تكرارها",
+            "أخذ القيمة المطلقة مرتين يعطي نتيجة أخذها مرة واحدة: abs(abs(a)) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("絶対値の冪等性", "絶対値を二回取っても一回取った場合と同じ値です：abs(abs(a)) = abs(a)")
+        text(
+            "絶対値の冪等性",
+            "絶対値を二回取っても一回取った場合と同じ値です：abs(abs(a)) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("절댓값의 멱등성", "절댓값을 두 번 취해도 한 번 취한 값과 같습니다: abs(abs(a)) = abs(a)")
+        text(
+            "절댓값의 멱등성",
+            "절댓값을 두 번 취해도 한 번 취한 값과 같습니다: abs(abs(a)) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tính lũy đẳng của giá trị tuyệt đối", "Lấy giá trị tuyệt đối hai lần cho cùng kết quả như lấy một lần: abs(abs(a)) = abs(a)")
+        text(
+            "Tính lũy đẳng của giá trị tuyệt đối",
+            "Lấy giá trị tuyệt đối hai lần cho cùng kết quả như lấy một lần: abs(abs(a)) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3390,18 +4242,30 @@ impl AbsAbsAbsorptionBuiltinRuleProof {
 
 impl ExpOfLnBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Exponential after natural logarithm", "The Exponential after natural logarithm law gives: exp(ln(x)) = x (x > 0)")
+        text(
+            "Exponential after natural logarithm",
+            "The Exponential after natural logarithm law gives: exp(ln(x)) = x (x > 0)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("自然对数后的指数运算", "自然对数后的指数运算可写为：exp(ln(x)) = x (x > 0)")
+        text(
+            "自然对数后的指数运算",
+            "自然对数后的指数运算可写为：exp(ln(x)) = x (x > 0)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("自然對數後的指數運算", "自然對數後的指數運算可寫為：exp(ln(x)) = x (x > 0)")
+        text(
+            "自然對數後的指數運算",
+            "自然對數後的指數運算可寫為：exp(ln(x)) = x (x > 0)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Exponentielle après logarithme naturel", "La propriété « Exponentielle après logarithme naturel » donne: exp(ln(x)) = x (x > 0)")
+        text(
+            "Exponentielle après logarithme naturel",
+            "La propriété « Exponentielle après logarithme naturel » donne: exp(ln(x)) = x (x > 0)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -3413,19 +4277,31 @@ impl ExpOfLnBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الدالة الأسية بعد اللوغاريتم الطبيعي", "تُكتب خاصية «الدالة الأسية بعد اللوغاريتم الطبيعي» كما يلي: exp(ln(x)) = x (x > 0)")
+        text(
+            "الدالة الأسية بعد اللوغاريتم الطبيعي",
+            "تُكتب خاصية «الدالة الأسية بعد اللوغاريتم الطبيعي» كما يلي: exp(ln(x)) = x (x > 0)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("自然対数と指数関数の合成", "自然対数と指数関数の合成は次の式で表されます：exp(ln(x)) = x (x > 0)")
+        text(
+            "自然対数と指数関数の合成",
+            "自然対数と指数関数の合成は次の式で表されます：exp(ln(x)) = x (x > 0)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("자연로그 뒤의 지수함수", "자연로그 뒤의 지수함수은 다음 식으로 나타납니다: exp(ln(x)) = x (x > 0)")
+        text(
+            "자연로그 뒤의 지수함수",
+            "자연로그 뒤의 지수함수은 다음 식으로 나타납니다: exp(ln(x)) = x (x > 0)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Hàm mũ sau logarit tự nhiên", "Tính chất «Hàm mũ sau logarit tự nhiên» được biểu diễn bởi: exp(ln(x)) = x (x > 0)")
+        text(
+            "Hàm mũ sau logarit tự nhiên",
+            "Tính chất «Hàm mũ sau logarit tự nhiên» được biểu diễn bởi: exp(ln(x)) = x (x > 0)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3446,22 +4322,37 @@ impl ExpOfLnBuiltinRuleProof {
 
 impl LnOfExpBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Natural logarithm after exponential", "The Natural logarithm after exponential law gives: ln(exp(x)) = x")
+        text(
+            "Natural logarithm after exponential",
+            "The Natural logarithm after exponential law gives: ln(exp(x)) = x",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("指数运算后的自然对数", "指数运算后的自然对数可写为：ln(exp(x)) = x")
+        text(
+            "指数运算后的自然对数",
+            "指数运算后的自然对数可写为：ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("指數運算後的自然對數", "指數運算後的自然對數可寫為：ln(exp(x)) = x")
+        text(
+            "指數運算後的自然對數",
+            "指數運算後的自然對數可寫為：ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Logarithme naturel après exponentielle", "La propriété « Logarithme naturel après exponentielle » donne: ln(exp(x)) = x")
+        text(
+            "Logarithme naturel après exponentielle",
+            "La propriété « Logarithme naturel après exponentielle » donne: ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Натуральный логарифм экспоненты", "Свойство «Натуральный логарифм экспоненты» выражается равенством: ln(exp(x)) = x")
+        text(
+            "Натуральный логарифм экспоненты",
+            "Свойство «Натуральный логарифм экспоненты» выражается равенством: ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -3469,19 +4360,31 @@ impl LnOfExpBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("اللوغاريتم الطبيعي بعد الدالة الأسية", "تُكتب خاصية «اللوغاريتم الطبيعي بعد الدالة الأسية» كما يلي: ln(exp(x)) = x")
+        text(
+            "اللوغاريتم الطبيعي بعد الدالة الأسية",
+            "تُكتب خاصية «اللوغاريتم الطبيعي بعد الدالة الأسية» كما يلي: ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("指数関数と自然対数の合成", "指数関数と自然対数の合成は次の式で表されます：ln(exp(x)) = x")
+        text(
+            "指数関数と自然対数の合成",
+            "指数関数と自然対数の合成は次の式で表されます：ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("지수함수 뒤의 자연로그", "지수함수 뒤의 자연로그은 다음 식으로 나타납니다: ln(exp(x)) = x")
+        text(
+            "지수함수 뒤의 자연로그",
+            "지수함수 뒤의 자연로그은 다음 식으로 나타납니다: ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Logarit tự nhiên sau hàm mũ", "Tính chất «Logarit tự nhiên sau hàm mũ» được biểu diễn bởi: ln(exp(x)) = x")
+        text(
+            "Logarit tự nhiên sau hàm mũ",
+            "Tính chất «Logarit tự nhiên sau hàm mũ» được biểu diễn bởi: ln(exp(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3502,10 +4405,7 @@ impl LnOfExpBuiltinRuleProof {
 
 impl FloorOfIntegerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "⌊n⌋ for integer n",
-            "⌊n⌋ = n when n is an integer",
-        )
+        text("⌊n⌋ for integer n", "⌊n⌋ = n when n is an integer")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("整数 n 的 ⌊n⌋", "当 n 为整数时 ⌊n⌋ = n")
@@ -3516,10 +4416,7 @@ impl FloorOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "⌊n⌋ pour n entier",
-            "⌊n⌋ = n si n est entier",
-        )
+        text("⌊n⌋ pour n entier", "⌊n⌋ = n si n est entier")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -3527,24 +4424,15 @@ impl FloorOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "⌊n⌋ para n entero",
-            "⌊n⌋ = n si n es entero",
-        )
+        text("⌊n⌋ para n entero", "⌊n⌋ = n si n es entero")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "⌊n⌋ للعدد الصحيح n",
-            "⌊n⌋ = n إذا كان n صحيحًا",
-        )
+        text("⌊n⌋ للعدد الصحيح n", "⌊n⌋ = n إذا كان n صحيحًا")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "⌊n⌋（n は整数）",
-            "⌊n⌋ = n（n が整数の場合）",
-        )
+        text("⌊n⌋（n は整数）", "⌊n⌋ = n（n が整数の場合）")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -3552,10 +4440,7 @@ impl FloorOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "⌊n⌋ với n nguyên",
-            "⌊n⌋ = n khi n là số nguyên",
-        )
+        text("⌊n⌋ với n nguyên", "⌊n⌋ = n khi n là số nguyên")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3576,10 +4461,7 @@ impl FloorOfIntegerBuiltinRuleProof {
 
 impl CeilOfIntegerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "⌈n⌉ for integer n",
-            "⌈n⌉ = n when n is an integer",
-        )
+        text("⌈n⌉ for integer n", "⌈n⌉ = n when n is an integer")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("整数 n 的 ⌈n⌉", "当 n 为整数时 ⌈n⌉ = n")
@@ -3590,10 +4472,7 @@ impl CeilOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "⌈n⌉ pour n entier",
-            "⌈n⌉ = n si n est entier",
-        )
+        text("⌈n⌉ pour n entier", "⌈n⌉ = n si n est entier")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -3601,24 +4480,15 @@ impl CeilOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "⌈n⌉ para n entero",
-            "⌈n⌉ = n si n es entero",
-        )
+        text("⌈n⌉ para n entero", "⌈n⌉ = n si n es entero")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "⌈n⌉ للعدد الصحيح n",
-            "⌈n⌉ = n إذا كان n صحيحًا",
-        )
+        text("⌈n⌉ للعدد الصحيح n", "⌈n⌉ = n إذا كان n صحيحًا")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "⌈n⌉（n は整数）",
-            "⌈n⌉ = n（n が整数の場合）",
-        )
+        text("⌈n⌉（n は整数）", "⌈n⌉ = n（n が整数の場合）")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -3626,10 +4496,7 @@ impl CeilOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "⌈n⌉ với n nguyên",
-            "⌈n⌉ = n khi n là số nguyên",
-        )
+        text("⌈n⌉ với n nguyên", "⌈n⌉ = n khi n là số nguyên")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3650,18 +4517,30 @@ impl CeilOfIntegerBuiltinRuleProof {
 
 impl ModSelfZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Remainder when a nonzero integer divides itself", "The Remainder when a nonzero integer divides itself law gives: a mod a = 0")
+        text(
+            "Remainder when a nonzero integer divides itself",
+            "The Remainder when a nonzero integer divides itself law gives: a mod a = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("非零整数除以自身的余数", "非零整数除以自身的余数可写为：a mod a = 0")
+        text(
+            "非零整数除以自身的余数",
+            "非零整数除以自身的余数可写为：a mod a = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("非零整數除以自身的餘數", "非零整數除以自身的餘數可寫為：a mod a = 0")
+        text(
+            "非零整數除以自身的餘數",
+            "非零整數除以自身的餘數可寫為：a mod a = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Reste d’un entier non nul divisé par lui-même", "La propriété « Reste d’un entier non nul divisé par lui-même » donne: a mod a = 0")
+        text(
+            "Reste d’un entier non nul divisé par lui-même",
+            "La propriété « Reste d’un entier non nul divisé par lui-même » donne: a mod a = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -3673,15 +4552,24 @@ impl ModSelfZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("باقي قسمة عدد صحيح غير صفري على نفسه", "تُكتب خاصية «باقي قسمة عدد صحيح غير صفري على نفسه» كما يلي: a mod a = 0")
+        text(
+            "باقي قسمة عدد صحيح غير صفري على نفسه",
+            "تُكتب خاصية «باقي قسمة عدد صحيح غير صفري على نفسه» كما يلي: a mod a = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零でない整数を自身で割った剰余", "零でない整数を自身で割った剰余は次の式で表されます：a mod a = 0")
+        text(
+            "零でない整数を自身で割った剰余",
+            "零でない整数を自身で割った剰余は次の式で表されます：a mod a = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영이 아닌 정수를 자기 자신으로 나눈 나머지", "영이 아닌 정수를 자기 자신으로 나눈 나머지은 다음 식으로 나타납니다: a mod a = 0")
+        text(
+            "영이 아닌 정수를 자기 자신으로 나눈 나머지",
+            "영이 아닌 정수를 자기 자신으로 나눈 나머지은 다음 식으로 나타납니다: a mod a = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3706,14 +4594,23 @@ impl ModSelfZeroBuiltinRuleProof {
 
 impl FloorOfCeilOfIntegerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Floor after ceiling of an integer", "The Floor after ceiling of an integer law gives: ⌊⌈n⌉⌋ = n")
+        text(
+            "Floor after ceiling of an integer",
+            "The Floor after ceiling of an integer law gives: ⌊⌈n⌉⌋ = n",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("整数先向上再向下取整", "整数先向上再向下取整可写为：⌊⌈n⌉⌋ = n")
+        text(
+            "整数先向上再向下取整",
+            "整数先向上再向下取整可写为：⌊⌈n⌉⌋ = n",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("整數先向上再向下取整", "整數先向上再向下取整可寫為：⌊⌈n⌉⌋ = n")
+        text(
+            "整數先向上再向下取整",
+            "整數先向上再向下取整可寫為：⌊⌈n⌉⌋ = n",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3721,7 +4618,10 @@ impl FloorOfCeilOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Округление целого вверх, затем вниз", "Свойство «Округление целого вверх, затем вниз» выражается равенством: ⌊⌈n⌉⌋ = n")
+        text(
+            "Округление целого вверх, затем вниз",
+            "Свойство «Округление целого вверх, затем вниз» выражается равенством: ⌊⌈n⌉⌋ = n",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -3729,15 +4629,24 @@ impl FloorOfCeilOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("تقريب عدد صحيح لأعلى ثم لأسفل", "تُكتب خاصية «تقريب عدد صحيح لأعلى ثم لأسفل» كما يلي: ⌊⌈n⌉⌋ = n")
+        text(
+            "تقريب عدد صحيح لأعلى ثم لأسفل",
+            "تُكتب خاصية «تقريب عدد صحيح لأعلى ثم لأسفل» كما يلي: ⌊⌈n⌉⌋ = n",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("整数の切り上げ後の切り捨て", "整数の切り上げ後の切り捨ては次の式で表されます：⌊⌈n⌉⌋ = n")
+        text(
+            "整数の切り上げ後の切り捨て",
+            "整数の切り上げ後の切り捨ては次の式で表されます：⌊⌈n⌉⌋ = n",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("정수를 올림한 뒤 내림하기", "정수를 올림한 뒤 내림하기은 다음 식으로 나타납니다: ⌊⌈n⌉⌋ = n")
+        text(
+            "정수를 올림한 뒤 내림하기",
+            "정수를 올림한 뒤 내림하기은 다음 식으로 나타납니다: ⌊⌈n⌉⌋ = n",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3762,14 +4671,23 @@ impl FloorOfCeilOfIntegerBuiltinRuleProof {
 
 impl CeilOfFloorOfIntegerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Ceiling after floor of an integer", "The Ceiling after floor of an integer law gives: ⌈⌊n⌋⌉ = n")
+        text(
+            "Ceiling after floor of an integer",
+            "The Ceiling after floor of an integer law gives: ⌈⌊n⌋⌉ = n",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("整数先向下再向上取整", "整数先向下再向上取整可写为：⌈⌊n⌋⌉ = n")
+        text(
+            "整数先向下再向上取整",
+            "整数先向下再向上取整可写为：⌈⌊n⌋⌉ = n",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("整數先向下再向上取整", "整數先向下再向上取整可寫為：⌈⌊n⌋⌉ = n")
+        text(
+            "整數先向下再向上取整",
+            "整數先向下再向上取整可寫為：⌈⌊n⌋⌉ = n",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3777,7 +4695,10 @@ impl CeilOfFloorOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Округление целого вниз, затем вверх", "Свойство «Округление целого вниз, затем вверх» выражается равенством: ⌈⌊n⌋⌉ = n")
+        text(
+            "Округление целого вниз, затем вверх",
+            "Свойство «Округление целого вниз, затем вверх» выражается равенством: ⌈⌊n⌋⌉ = n",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -3785,15 +4706,24 @@ impl CeilOfFloorOfIntegerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("تقريب عدد صحيح لأسفل ثم لأعلى", "تُكتب خاصية «تقريب عدد صحيح لأسفل ثم لأعلى» كما يلي: ⌈⌊n⌋⌉ = n")
+        text(
+            "تقريب عدد صحيح لأسفل ثم لأعلى",
+            "تُكتب خاصية «تقريب عدد صحيح لأسفل ثم لأعلى» كما يلي: ⌈⌊n⌋⌉ = n",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("整数の切り捨て後の切り上げ", "整数の切り捨て後の切り上げは次の式で表されます：⌈⌊n⌋⌉ = n")
+        text(
+            "整数の切り捨て後の切り上げ",
+            "整数の切り捨て後の切り上げは次の式で表されます：⌈⌊n⌋⌉ = n",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("정수를 내림한 뒤 올림하기", "정수를 내림한 뒤 올림하기은 다음 식으로 나타납니다: ⌈⌊n⌋⌉ = n")
+        text(
+            "정수를 내림한 뒤 올림하기",
+            "정수를 내림한 뒤 올림하기은 다음 식으로 나타납니다: ⌈⌊n⌋⌉ = n",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3821,11 +4751,17 @@ impl SqrtOfSquareEqualsAbsBuiltinRuleProof {
         text("Square root of a square", "The principal square root of a real square is the absolute value of its base: sqrt(a²) = abs(a)")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("平方的平方根", "实数平方的算术平方根等于该实数的绝对值，即 sqrt(a²) = abs(a)")
+        text(
+            "平方的平方根",
+            "实数平方的算术平方根等于该实数的绝对值，即 sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("平方的平方根", "實數平方的算術平方根等於該實數的絕對值，即 sqrt(a²) = abs(a)")
+        text(
+            "平方的平方根",
+            "實數平方的算術平方根等於該實數的絕對值，即 sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -3841,15 +4777,24 @@ impl SqrtOfSquareEqualsAbsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجذر التربيعي للمربع", "الجذر التربيعي الرئيسي لمربع عدد حقيقي يساوي قيمته المطلقة: sqrt(a²) = abs(a)")
+        text(
+            "الجذر التربيعي للمربع",
+            "الجذر التربيعي الرئيسي لمربع عدد حقيقي يساوي قيمته المطلقة: sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("平方の平方根", "実数の平方の主平方根は、その実数の絶対値です：sqrt(a²) = abs(a)")
+        text(
+            "平方の平方根",
+            "実数の平方の主平方根は、その実数の絶対値です：sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("제곱의 제곱근", "실수 제곱의 주제곱근은 그 실수의 절댓값입니다: sqrt(a²) = abs(a)")
+        text(
+            "제곱의 제곱근",
+            "실수 제곱의 주제곱근은 그 실수의 절댓값입니다: sqrt(a²) = abs(a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3874,7 +4819,10 @@ impl SqrtOfSquareEqualsAbsBuiltinRuleProof {
 
 impl QuotByOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Integer quotient by one", "The Integer quotient by one law gives: a quot 1 = a")
+        text(
+            "Integer quotient by one",
+            "The Integer quotient by one law gives: a quot 1 = a",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("整数除以一的商", "整数除以一的商可写为：a quot 1 = a")
@@ -3885,7 +4833,10 @@ impl QuotByOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Quotient entier par un", "La propriété « Quotient entier par un » donne: a quot 1 = a")
+        text(
+            "Quotient entier par un",
+            "La propriété « Quotient entier par un » donne: a quot 1 = a",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -3893,23 +4844,38 @@ impl QuotByOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Cociente entero entre uno", "La propiedad «Cociente entero entre uno» se expresa como: a quot 1 = a")
+        text(
+            "Cociente entero entre uno",
+            "La propiedad «Cociente entero entre uno» se expresa como: a quot 1 = a",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خارج القسمة الصحيح على واحد", "تُكتب خاصية «خارج القسمة الصحيح على واحد» كما يلي: a quot 1 = a")
+        text(
+            "خارج القسمة الصحيح على واحد",
+            "تُكتب خاصية «خارج القسمة الصحيح على واحد» كما يلي: a quot 1 = a",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("一による整数除算", "一による整数除算は次の式で表されます：a quot 1 = a")
+        text(
+            "一による整数除算",
+            "一による整数除算は次の式で表されます：a quot 1 = a",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일로 나눈 정수 몫", "일로 나눈 정수 몫은 다음 식으로 나타납니다: a quot 1 = a")
+        text(
+            "일로 나눈 정수 몫",
+            "일로 나눈 정수 몫은 다음 식으로 나타납니다: a quot 1 = a",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Thương nguyên khi chia cho một", "Tính chất «Thương nguyên khi chia cho một» được biểu diễn bởi: a quot 1 = a")
+        text(
+            "Thương nguyên khi chia cho một",
+            "Tính chất «Thương nguyên khi chia cho một» được biểu diễn bởi: a quot 1 = a",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -3930,18 +4896,30 @@ impl QuotByOneBuiltinRuleProof {
 
 impl QuotSelfOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Integer quotient by the same nonzero integer", "The Integer quotient by the same nonzero integer law gives: a quot a = 1")
+        text(
+            "Integer quotient by the same nonzero integer",
+            "The Integer quotient by the same nonzero integer law gives: a quot a = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("非零整数除以自身的商", "非零整数除以自身的商可写为：a quot a = 1")
+        text(
+            "非零整数除以自身的商",
+            "非零整数除以自身的商可写为：a quot a = 1",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("非零整數除以自身的商", "非零整數除以自身的商可寫為：a quot a = 1")
+        text(
+            "非零整數除以自身的商",
+            "非零整數除以自身的商可寫為：a quot a = 1",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Quotient d’un entier non nul par lui-même", "La propriété « Quotient d’un entier non nul par lui-même » donne: a quot a = 1")
+        text(
+            "Quotient d’un entier non nul par lui-même",
+            "La propriété « Quotient d’un entier non nul par lui-même » donne: a quot a = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -3953,15 +4931,24 @@ impl QuotSelfOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خارج قسمة عدد صحيح غير صفري على نفسه", "تُكتب خاصية «خارج قسمة عدد صحيح غير صفري على نفسه» كما يلي: a quot a = 1")
+        text(
+            "خارج قسمة عدد صحيح غير صفري على نفسه",
+            "تُكتب خاصية «خارج قسمة عدد صحيح غير صفري على نفسه» كما يلي: a quot a = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零でない整数の自身による整数除算", "零でない整数の自身による整数除算は次の式で表されます：a quot a = 1")
+        text(
+            "零でない整数の自身による整数除算",
+            "零でない整数の自身による整数除算は次の式で表されます：a quot a = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영이 아닌 정수를 자기 자신으로 나눈 정수 몫", "영이 아닌 정수를 자기 자신으로 나눈 정수 몫은 다음 식으로 나타납니다: a quot a = 1")
+        text(
+            "영이 아닌 정수를 자기 자신으로 나눈 정수 몫",
+            "영이 아닌 정수를 자기 자신으로 나눈 정수 몫은 다음 식으로 나타납니다: a quot a = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -3989,11 +4976,17 @@ impl LcmCommutativeBuiltinRuleProof {
         text("Commutativity of least common multiple", "Swapping the two arguments of least common multiple leaves the result unchanged: lcm(a,b) = lcm(b,a)")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("最小公倍数的交换律", "交换最小公倍数的两个参数，结果不变，即 lcm(a,b) = lcm(b,a)")
+        text(
+            "最小公倍数的交换律",
+            "交换最小公倍数的两个参数，结果不变，即 lcm(a,b) = lcm(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("最小公倍數的交換律", "交換最小公倍數的兩個引數，結果不變，即 lcm(a,b) = lcm(b,a)")
+        text(
+            "最小公倍數的交換律",
+            "交換最小公倍數的兩個引數，結果不變，即 lcm(a,b) = lcm(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4018,15 +5011,24 @@ impl LcmCommutativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية الإبدال: المضاعف المشترك الأصغر", "تبديل وسيطي عملية «المضاعف المشترك الأصغر» لا يغيّر النتيجة: lcm(a,b) = lcm(b,a)")
+        text(
+            "خاصية الإبدال: المضاعف المشترك الأصغر",
+            "تبديل وسيطي عملية «المضاعف المشترك الأصغر» لا يغيّر النتيجة: lcm(a,b) = lcm(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("最小公倍数の交換法則", "最小公倍数の二つの引数を交換しても結果は変わりません：lcm(a,b) = lcm(b,a)")
+        text(
+            "最小公倍数の交換法則",
+            "最小公倍数の二つの引数を交換しても結果は変わりません：lcm(a,b) = lcm(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("최소공배수의 교환법칙", "최소공배수의 두 인수를 바꾸어도 결과는 같습니다: lcm(a,b) = lcm(b,a)")
+        text(
+            "최소공배수의 교환법칙",
+            "최소공배수의 두 인수를 바꾸어도 결과는 같습니다: lcm(a,b) = lcm(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4051,18 +5053,30 @@ impl LcmCommutativeBuiltinRuleProof {
 
 impl LcmIdempotentAbsBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Least common multiple of equal integers", "The Least common multiple of equal integers law gives: lcm(a,a) = |a|")
+        text(
+            "Least common multiple of equal integers",
+            "The Least common multiple of equal integers law gives: lcm(a,a) = |a|",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("相同整数的最小公倍数", "相同整数的最小公倍数可写为：lcm(a,a) = |a|")
+        text(
+            "相同整数的最小公倍数",
+            "相同整数的最小公倍数可写为：lcm(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("相同整數的最小公倍數", "相同整數的最小公倍數可寫為：lcm(a,a) = |a|")
+        text(
+            "相同整數的最小公倍數",
+            "相同整數的最小公倍數可寫為：lcm(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Plus petit commun multiple d’entiers égaux", "La propriété « Plus petit commun multiple d’entiers égaux » donne: lcm(a,a) = |a|")
+        text(
+            "Plus petit commun multiple d’entiers égaux",
+            "La propriété « Plus petit commun multiple d’entiers égaux » donne: lcm(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -4074,15 +5088,24 @@ impl LcmIdempotentAbsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("المضاعف المشترك الأصغر لعددين صحيحين متساويين", "تُكتب خاصية «المضاعف المشترك الأصغر لعددين صحيحين متساويين» كما يلي: lcm(a,a) = |a|")
+        text(
+            "المضاعف المشترك الأصغر لعددين صحيحين متساويين",
+            "تُكتب خاصية «المضاعف المشترك الأصغر لعددين صحيحين متساويين» كما يلي: lcm(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("等しい整数の最小公倍数", "等しい整数の最小公倍数は次の式で表されます：lcm(a,a) = |a|")
+        text(
+            "等しい整数の最小公倍数",
+            "等しい整数の最小公倍数は次の式で表されます：lcm(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("같은 정수의 최소공배수", "같은 정수의 최소공배수은 다음 식으로 나타납니다: lcm(a,a) = |a|")
+        text(
+            "같은 정수의 최소공배수",
+            "같은 정수의 최소공배수은 다음 식으로 나타납니다: lcm(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4110,11 +5133,17 @@ impl GcdCommutativeBuiltinRuleProof {
         text("Commutativity of greatest common divisor", "Swapping the two arguments of greatest common divisor leaves the result unchanged: gcd(a,b) = gcd(b,a)")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("最大公约数的交换律", "交换最大公约数的两个参数，结果不变，即 gcd(a,b) = gcd(b,a)")
+        text(
+            "最大公约数的交换律",
+            "交换最大公约数的两个参数，结果不变，即 gcd(a,b) = gcd(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("最大公約數的交換律", "交換最大公約數的兩個引數，結果不變，即 gcd(a,b) = gcd(b,a)")
+        text(
+            "最大公約數的交換律",
+            "交換最大公約數的兩個引數，結果不變，即 gcd(a,b) = gcd(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4139,15 +5168,24 @@ impl GcdCommutativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية الإبدال: القاسم المشترك الأكبر", "تبديل وسيطي عملية «القاسم المشترك الأكبر» لا يغيّر النتيجة: gcd(a,b) = gcd(b,a)")
+        text(
+            "خاصية الإبدال: القاسم المشترك الأكبر",
+            "تبديل وسيطي عملية «القاسم المشترك الأكبر» لا يغيّر النتيجة: gcd(a,b) = gcd(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("最大公約数の交換法則", "最大公約数の二つの引数を交換しても結果は変わりません：gcd(a,b) = gcd(b,a)")
+        text(
+            "最大公約数の交換法則",
+            "最大公約数の二つの引数を交換しても結果は変わりません：gcd(a,b) = gcd(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("최대공약수의 교환법칙", "최대공약수의 두 인수를 바꾸어도 결과는 같습니다: gcd(a,b) = gcd(b,a)")
+        text(
+            "최대공약수의 교환법칙",
+            "최대공약수의 두 인수를 바꾸어도 결과는 같습니다: gcd(a,b) = gcd(b,a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4172,18 +5210,30 @@ impl GcdCommutativeBuiltinRuleProof {
 
 impl GcdIdempotentAbsBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Greatest common divisor of equal integers", "The Greatest common divisor of equal integers law gives: gcd(a,a) = |a|")
+        text(
+            "Greatest common divisor of equal integers",
+            "The Greatest common divisor of equal integers law gives: gcd(a,a) = |a|",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("相同整数的最大公约数", "相同整数的最大公约数可写为：gcd(a,a) = |a|")
+        text(
+            "相同整数的最大公约数",
+            "相同整数的最大公约数可写为：gcd(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("相同整數的最大公約數", "相同整數的最大公約數可寫為：gcd(a,a) = |a|")
+        text(
+            "相同整數的最大公約數",
+            "相同整數的最大公約數可寫為：gcd(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Plus grand commun diviseur d’entiers égaux", "La propriété « Plus grand commun diviseur d’entiers égaux » donne: gcd(a,a) = |a|")
+        text(
+            "Plus grand commun diviseur d’entiers égaux",
+            "La propriété « Plus grand commun diviseur d’entiers égaux » donne: gcd(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -4195,15 +5245,24 @@ impl GcdIdempotentAbsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("القاسم المشترك الأكبر لعددين صحيحين متساويين", "تُكتب خاصية «القاسم المشترك الأكبر لعددين صحيحين متساويين» كما يلي: gcd(a,a) = |a|")
+        text(
+            "القاسم المشترك الأكبر لعددين صحيحين متساويين",
+            "تُكتب خاصية «القاسم المشترك الأكبر لعددين صحيحين متساويين» كما يلي: gcd(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("等しい整数の最大公約数", "等しい整数の最大公約数は次の式で表されます：gcd(a,a) = |a|")
+        text(
+            "等しい整数の最大公約数",
+            "等しい整数の最大公約数は次の式で表されます：gcd(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("같은 정수의 최대공약수", "같은 정수의 최대공약수은 다음 식으로 나타납니다: gcd(a,a) = |a|")
+        text(
+            "같은 정수의 최대공약수",
+            "같은 정수의 최대공약수은 다음 식으로 나타납니다: gcd(a,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4228,14 +5287,23 @@ impl GcdIdempotentAbsBuiltinRuleProof {
 
 impl GcdRightZeroAbsBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Greatest common divisor with second argument zero", "The Greatest common divisor with second argument zero law gives: gcd(a,0) = |a|")
+        text(
+            "Greatest common divisor with second argument zero",
+            "The Greatest common divisor with second argument zero law gives: gcd(a,0) = |a|",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("第二参数为零的最大公约数", "第二参数为零的最大公约数可写为：gcd(a,0) = |a|")
+        text(
+            "第二参数为零的最大公约数",
+            "第二参数为零的最大公约数可写为：gcd(a,0) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("第二引數為零的最大公約數", "第二引數為零的最大公約數可寫為：gcd(a,0) = |a|")
+        text(
+            "第二引數為零的最大公約數",
+            "第二引數為零的最大公約數可寫為：gcd(a,0) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4251,15 +5319,24 @@ impl GcdRightZeroAbsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("القاسم المشترك الأكبر مع وسيط ثانٍ صفري", "تُكتب خاصية «القاسم المشترك الأكبر مع وسيط ثانٍ صفري» كما يلي: gcd(a,0) = |a|")
+        text(
+            "القاسم المشترك الأكبر مع وسيط ثانٍ صفري",
+            "تُكتب خاصية «القاسم المشترك الأكبر مع وسيط ثانٍ صفري» كما يلي: gcd(a,0) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("第二引数が零の最大公約数", "第二引数が零の最大公約数は次の式で表されます：gcd(a,0) = |a|")
+        text(
+            "第二引数が零の最大公約数",
+            "第二引数が零の最大公約数は次の式で表されます：gcd(a,0) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("두 번째 인수가 영인 최대공약수", "두 번째 인수가 영인 최대공약수은 다음 식으로 나타납니다: gcd(a,0) = |a|")
+        text(
+            "두 번째 인수가 영인 최대공약수",
+            "두 번째 인수가 영인 최대공약수은 다음 식으로 나타납니다: gcd(a,0) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4284,14 +5361,23 @@ impl GcdRightZeroAbsBuiltinRuleProof {
 
 impl GcdLeftZeroAbsBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Greatest common divisor with first argument zero", "The Greatest common divisor with first argument zero law gives: gcd(0,a) = |a|")
+        text(
+            "Greatest common divisor with first argument zero",
+            "The Greatest common divisor with first argument zero law gives: gcd(0,a) = |a|",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("第一参数为零的最大公约数", "第一参数为零的最大公约数可写为：gcd(0,a) = |a|")
+        text(
+            "第一参数为零的最大公约数",
+            "第一参数为零的最大公约数可写为：gcd(0,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("第一引數為零的最大公約數", "第一引數為零的最大公約數可寫為：gcd(0,a) = |a|")
+        text(
+            "第一引數為零的最大公約數",
+            "第一引數為零的最大公約數可寫為：gcd(0,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4307,15 +5393,24 @@ impl GcdLeftZeroAbsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("القاسم المشترك الأكبر مع وسيط أول صفري", "تُكتب خاصية «القاسم المشترك الأكبر مع وسيط أول صفري» كما يلي: gcd(0,a) = |a|")
+        text(
+            "القاسم المشترك الأكبر مع وسيط أول صفري",
+            "تُكتب خاصية «القاسم المشترك الأكبر مع وسيط أول صفري» كما يلي: gcd(0,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("第一引数が零の最大公約数", "第一引数が零の最大公約数は次の式で表されます：gcd(0,a) = |a|")
+        text(
+            "第一引数が零の最大公約数",
+            "第一引数が零の最大公約数は次の式で表されます：gcd(0,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("첫 번째 인수가 영인 최대공약수", "첫 번째 인수가 영인 최대공약수은 다음 식으로 나타납니다: gcd(0,a) = |a|")
+        text(
+            "첫 번째 인수가 영인 최대공약수",
+            "첫 번째 인수가 영인 최대공약수은 다음 식으로 나타납니다: gcd(0,a) = |a|",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4340,7 +5435,10 @@ impl GcdLeftZeroAbsBuiltinRuleProof {
 
 impl FactorialSuccessorBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Factorial recurrence", "The Factorial recurrence law gives: (n+1)! = (n+1)·n!")
+        text(
+            "Factorial recurrence",
+            "The Factorial recurrence law gives: (n+1)! = (n+1)·n!",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("阶乘递推", "阶乘递推可写为：(n+1)! = (n+1)·n!")
@@ -4351,31 +5449,52 @@ impl FactorialSuccessorBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Récurrence de la factorielle", "La propriété « Récurrence de la factorielle » donne: (n+1)! = (n+1)·n!")
+        text(
+            "Récurrence de la factorielle",
+            "La propriété « Récurrence de la factorielle » donne: (n+1)! = (n+1)·n!",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Рекуррентная формула факториала", "Свойство «Рекуррентная формула факториала» выражается равенством: (n+1)! = (n+1)·n!")
+        text(
+            "Рекуррентная формула факториала",
+            "Свойство «Рекуррентная формула факториала» выражается равенством: (n+1)! = (n+1)·n!",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Recurrencia del factorial", "La propiedad «Recurrencia del factorial» se expresa como: (n+1)! = (n+1)·n!")
+        text(
+            "Recurrencia del factorial",
+            "La propiedad «Recurrencia del factorial» se expresa como: (n+1)! = (n+1)·n!",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("العلاقة التكرارية للمضروب", "تُكتب خاصية «العلاقة التكرارية للمضروب» كما يلي: (n+1)! = (n+1)·n!")
+        text(
+            "العلاقة التكرارية للمضروب",
+            "تُكتب خاصية «العلاقة التكرارية للمضروب» كما يلي: (n+1)! = (n+1)·n!",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("階乗の漸化式", "階乗の漸化式は次の式で表されます：(n+1)! = (n+1)·n!")
+        text(
+            "階乗の漸化式",
+            "階乗の漸化式は次の式で表されます：(n+1)! = (n+1)·n!",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("계승의 점화식", "계승의 점화식은 다음 식으로 나타납니다: (n+1)! = (n+1)·n!")
+        text(
+            "계승의 점화식",
+            "계승의 점화식은 다음 식으로 나타납니다: (n+1)! = (n+1)·n!",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Công thức truy hồi của giai thừa", "Tính chất «Công thức truy hồi của giai thừa» được biểu diễn bởi: (n+1)! = (n+1)·n!")
+        text(
+            "Công thức truy hồi của giai thừa",
+            "Tính chất «Công thức truy hồi của giai thừa» được biểu diễn bởi: (n+1)! = (n+1)·n!",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -4396,10 +5515,16 @@ impl FactorialSuccessorBuiltinRuleProof {
 
 impl AbsNonnegEqualsSelfBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Absolute value of a nonnegative real", "The Absolute value of a nonnegative real law gives: abs(a) = a (a ≥ 0)")
+        text(
+            "Absolute value of a nonnegative real",
+            "The Absolute value of a nonnegative real law gives: abs(a) = a (a ≥ 0)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("非负实数的绝对值", "非负实数的绝对值可写为，即 abs(a) = a (a ≥ 0)")
+        text(
+            "非负实数的绝对值",
+            "非负实数的绝对值可写为，即 abs(a) = a (a ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -4410,7 +5535,10 @@ impl AbsNonnegEqualsSelfBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur absolue d’un réel positif ou nul", "La propriété « Valeur absolue d’un réel positif ou nul » donne: abs(a) = a (a ≥ 0)")
+        text(
+            "Valeur absolue d’un réel positif ou nul",
+            "La propriété « Valeur absolue d’un réel positif ou nul » donne: abs(a) = a (a ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -4422,7 +5550,10 @@ impl AbsNonnegEqualsSelfBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("القيمة المطلقة لعدد حقيقي غير سالب", "تُكتب خاصية «القيمة المطلقة لعدد حقيقي غير سالب» كما يلي: abs(a) = a (a ≥ 0)")
+        text(
+            "القيمة المطلقة لعدد حقيقي غير سالب",
+            "تُكتب خاصية «القيمة المطلقة لعدد حقيقي غير سالب» كما يلي: abs(a) = a (a ≥ 0)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -4582,7 +5713,10 @@ impl SignOfPositiveBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إشارة عدد حقيقي موجب", "تُكتب خاصية «إشارة عدد حقيقي موجب» كما يلي: sign(a) = 1 (a > 0)")
+        text(
+            "إشارة عدد حقيقي موجب",
+            "تُكتب خاصية «إشارة عدد حقيقي موجب» كما يلي: sign(a) = 1 (a > 0)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -4593,7 +5727,10 @@ impl SignOfPositiveBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("양의 실수의 부호", "양의 실수의 부호은 다음 식으로 나타납니다：sign(a) = 1 (a > 0)")
+        text(
+            "양의 실수의 부호",
+            "양의 실수의 부호은 다음 식으로 나타납니다：sign(a) = 1 (a > 0)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -4627,11 +5764,17 @@ impl SignOfNegativeBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("负实数的符号", "负实数的符号可写为，即 sign(a) = -1 (a < 0)")
+        text(
+            "负实数的符号",
+            "负实数的符号可写为，即 sign(a) = -1 (a < 0)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("負實數的符號", "負實數的符號可寫為，即 sign(a) = -1 (a < 0)")
+        text(
+            "負實數的符號",
+            "負實數的符號可寫為，即 sign(a) = -1 (a < 0)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -4656,7 +5799,10 @@ impl SignOfNegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إشارة عدد حقيقي سالب", "تُكتب خاصية «إشارة عدد حقيقي سالب» كما يلي: sign(a) = -1 (a < 0)")
+        text(
+            "إشارة عدد حقيقي سالب",
+            "تُكتب خاصية «إشارة عدد حقيقي سالب» كما يلي: sign(a) = -1 (a < 0)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -4667,11 +5813,17 @@ impl SignOfNegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("음의 실수의 부호", "음의 실수의 부호은 다음 식으로 나타납니다：sign(a) = -1 (a < 0)")
+        text(
+            "음의 실수의 부호",
+            "음의 실수의 부호은 다음 식으로 나타납니다：sign(a) = -1 (a < 0)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Dấu của số thực âm", "Tính chất «Dấu của số thực âm» được biểu diễn bởi: sign(a) = -1 (a < 0)")
+        text(
+            "Dấu của số thực âm",
+            "Tính chất «Dấu của số thực âm» được biểu diễn bởi: sign(a) = -1 (a < 0)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -5042,10 +6194,7 @@ impl GcdDividesArgumentBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "gcd 整除",
-            "gcd(a,b) 整除 a（以及 b）",
-        )
+        text("gcd 整除", "gcd(a,b) 整除 a（以及 b）")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -5053,24 +6202,15 @@ impl GcdDividesArgumentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Divisibilité par gcd",
-            "gcd(a,b) divise a et b",
-        )
+        text("Divisibilité par gcd", "gcd(a,b) divise a et b")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Делимость на gcd",
-            "gcd(a,b) делит a и b",
-        )
+        text("Делимость на gcd", "gcd(a,b) делит a и b")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Divisibilidad por gcd",
-            "gcd(a,b) divide a y b",
-        )
+        text("Divisibilidad por gcd", "gcd(a,b) divide a y b")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
@@ -5078,24 +6218,15 @@ impl GcdDividesArgumentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "gcd による整除",
-            "gcd(a,b) は a と b を割り切ります",
-        )
+        text("gcd による整除", "gcd(a,b) は a と b を割り切ります")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "gcd 나눔",
-            "gcd(a,b)는 a와 b를 나눕니다",
-        )
+        text("gcd 나눔", "gcd(a,b)는 a와 b를 나눕니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Chia hết bởi gcd",
-            "gcd(a,b) chia hết a và b",
-        )
+        text("Chia hết bởi gcd", "gcd(a,b) chia hết a và b")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -5122,11 +6253,17 @@ impl ProductModFactorZeroBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("整数倍除以因子的余数", "整数倍除以因子的余数可写为：(k·n) mod n = 0")
+        text(
+            "整数倍除以因子的余数",
+            "整数倍除以因子的余数可写为：(k·n) mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("整數倍除以因子的餘數", "整數倍除以因子的餘數可寫為：(k·n) mod n = 0")
+        text(
+            "整數倍除以因子的餘數",
+            "整數倍除以因子的餘數可寫為：(k·n) mod n = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5374,17 +6511,11 @@ impl EqualFromKnownDifferenceZeroBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "差为零推出相等",
-            "差为零推出相等可写为：a − b = 0 ⇒ a = b",
-        )
+        text("差为零推出相等", "差为零推出相等可写为：a − b = 0 ⇒ a = b")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "差為零推出相等",
-            "差為零推出相等可寫為：a − b = 0 ⇒ a = b",
-        )
+        text("差為零推出相等", "差為零推出相等可寫為：a − b = 0 ⇒ a = b")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5460,17 +6591,11 @@ impl ZeroProductCancelBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "零因子消元",
-            "a·b = 0 且 a≠0 则 b = 0（对称亦然）",
-        )
+        text("零因子消元", "a·b = 0 且 a≠0 则 b = 0（对称亦然）")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "零乘積",
-            "a·b = 0 且 a≠0 推出 b = 0（對稱情況亦然）",
-        )
+        text("零乘積", "a·b = 0 且 a≠0 推出 b = 0（對稱情況亦然）")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5540,7 +6665,10 @@ impl ZeroProductCancelBuiltinRuleProof {
 
 impl SignOfNegationBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Sign of an opposite number", "The Sign of an opposite number law gives: sign(-a) = -sign(a)")
+        text(
+            "Sign of an opposite number",
+            "The Sign of an opposite number law gives: sign(-a) = -sign(a)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("相反数的符号", "相反数的符号可写为：sign(-a) = -sign(a)")
@@ -5551,31 +6679,52 @@ impl SignOfNegationBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Signe d’un opposé", "La propriété « Signe d’un opposé » donne: sign(-a) = -sign(a)")
+        text(
+            "Signe d’un opposé",
+            "La propriété « Signe d’un opposé » donne: sign(-a) = -sign(a)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Знак противоположного числа", "Свойство «Знак противоположного числа» выражается равенством: sign(-a) = -sign(a)")
+        text(
+            "Знак противоположного числа",
+            "Свойство «Знак противоположного числа» выражается равенством: sign(-a) = -sign(a)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Signo de un opuesto", "La propiedad «Signo de un opuesto» se expresa como: sign(-a) = -sign(a)")
+        text(
+            "Signo de un opuesto",
+            "La propiedad «Signo de un opuesto» se expresa como: sign(-a) = -sign(a)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إشارة العدد المعاكس", "تُكتب خاصية «إشارة العدد المعاكس» كما يلي: sign(-a) = -sign(a)")
+        text(
+            "إشارة العدد المعاكس",
+            "تُكتب خاصية «إشارة العدد المعاكس» كما يلي: sign(-a) = -sign(a)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("符号反転した数の符号", "符号反転した数の符号は次の式で表されます：sign(-a) = -sign(a)")
+        text(
+            "符号反転した数の符号",
+            "符号反転した数の符号は次の式で表されます：sign(-a) = -sign(a)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("반대 수의 부호", "반대 수의 부호은 다음 식으로 나타납니다: sign(-a) = -sign(a)")
+        text(
+            "반대 수의 부호",
+            "반대 수의 부호은 다음 식으로 나타납니다: sign(-a) = -sign(a)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Dấu của số đối", "Tính chất «Dấu của số đối» được biểu diễn bởi: sign(-a) = -sign(a)")
+        text(
+            "Dấu của số đối",
+            "Tính chất «Dấu của số đối» được biểu diễn bởi: sign(-a) = -sign(a)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -5599,11 +6748,17 @@ impl SignTimesAbsEqualsArgBuiltinRuleProof {
         text("Recovering a real number from its sign and absolute value", "The Recovering a real number from its sign and absolute value law gives: sign(a)·|a| = a")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("由符号和绝对值还原实数", "由符号和绝对值还原实数可写为：sign(a)·|a| = a")
+        text(
+            "由符号和绝对值还原实数",
+            "由符号和绝对值还原实数可写为：sign(a)·|a| = a",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("由符號和絕對值還原實數", "由符號和絕對值還原實數可寫為：sign(a)·|a| = a")
+        text(
+            "由符號和絕對值還原實數",
+            "由符號和絕對值還原實數可寫為：sign(a)·|a| = a",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -5619,15 +6774,24 @@ impl SignTimesAbsEqualsArgBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("استعادة العدد الحقيقي من إشارته وقيمته المطلقة", "تُكتب خاصية «استعادة العدد الحقيقي من إشارته وقيمته المطلقة» كما يلي: sign(a)·|a| = a")
+        text(
+            "استعادة العدد الحقيقي من إشارته وقيمته المطلقة",
+            "تُكتب خاصية «استعادة العدد الحقيقي من إشارته وقيمته المطلقة» كما يلي: sign(a)·|a| = a",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("符号と絶対値による実数の復元", "符号と絶対値による実数の復元は次の式で表されます：sign(a)·|a| = a")
+        text(
+            "符号と絶対値による実数の復元",
+            "符号と絶対値による実数の復元は次の式で表されます：sign(a)·|a| = a",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("부호와 절댓값으로 실수 복원", "부호와 절댓값으로 실수 복원은 다음 식으로 나타납니다: sign(a)·|a| = a")
+        text(
+            "부호와 절댓값으로 실수 복원",
+            "부호와 절댓값으로 실수 복원은 다음 식으로 나타납니다: sign(a)·|a| = a",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -5738,7 +6902,10 @@ impl AbsEqualsSignTimesArgBuiltinRuleProof {
 
 impl SignOfProductBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Sign of a product", "The Sign of a product law gives: sign(a·b) = sign(a)·sign(b)")
+        text(
+            "Sign of a product",
+            "The Sign of a product law gives: sign(a·b) = sign(a)·sign(b)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("积的符号", "积的符号可写为：sign(a·b) = sign(a)·sign(b)")
@@ -5749,31 +6916,52 @@ impl SignOfProductBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Signe d’un produit", "La propriété « Signe d’un produit » donne: sign(a·b) = sign(a)·sign(b)")
+        text(
+            "Signe d’un produit",
+            "La propriété « Signe d’un produit » donne: sign(a·b) = sign(a)·sign(b)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Знак произведения", "Свойство «Знак произведения» выражается равенством: sign(a·b) = sign(a)·sign(b)")
+        text(
+            "Знак произведения",
+            "Свойство «Знак произведения» выражается равенством: sign(a·b) = sign(a)·sign(b)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Signo de un producto", "La propiedad «Signo de un producto» se expresa como: sign(a·b) = sign(a)·sign(b)")
+        text(
+            "Signo de un producto",
+            "La propiedad «Signo de un producto» se expresa como: sign(a·b) = sign(a)·sign(b)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إشارة حاصل الضرب", "تُكتب خاصية «إشارة حاصل الضرب» كما يلي: sign(a·b) = sign(a)·sign(b)")
+        text(
+            "إشارة حاصل الضرب",
+            "تُكتب خاصية «إشارة حاصل الضرب» كما يلي: sign(a·b) = sign(a)·sign(b)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("積の符号", "積の符号は次の式で表されます：sign(a·b) = sign(a)·sign(b)")
+        text(
+            "積の符号",
+            "積の符号は次の式で表されます：sign(a·b) = sign(a)·sign(b)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("곱의 부호", "곱의 부호은 다음 식으로 나타납니다: sign(a·b) = sign(a)·sign(b)")
+        text(
+            "곱의 부호",
+            "곱의 부호은 다음 식으로 나타납니다: sign(a·b) = sign(a)·sign(b)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Dấu của một tích", "Tính chất «Dấu của một tích» được biểu diễn bởi: sign(a·b) = sign(a)·sign(b)")
+        text(
+            "Dấu của một tích",
+            "Tính chất «Dấu của một tích» được biểu diễn bởi: sign(a·b) = sign(a)·sign(b)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -5966,72 +7154,42 @@ impl QuotEuclideanDecompositionBuiltinRuleProof {
 
 impl ModDividendMinusRemainderZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "mod remainder",
-            "a − (a mod n) is divisible by n",
-        )
+        text("mod remainder", "a − (a mod n) is divisible by n")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "模余数",
-            "a − (a mod n) 可被 n 整除",
-        )
+        text("模余数", "a − (a mod n) 可被 n 整除")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "模運算餘數",
-            "a − (a mod n) 可被 n 整除",
-        )
+        text("模運算餘數", "a − (a mod n) 可被 n 整除")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Reste modulaire",
-            "a − (a mod n) est divisible par n",
-        )
+        text("Reste modulaire", "a − (a mod n) est divisible par n")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Остаток по модулю",
-            "a − (a mod n) делится на n",
-        )
+        text("Остаток по модулю", "a − (a mod n) делится на n")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Resto modular",
-            "a − (a mod n) es divisible por n",
-        )
+        text("Resto modular", "a − (a mod n) es divisible por n")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "باقي القسمة",
-            "a − (a mod n) يقبل القسمة على n",
-        )
+        text("باقي القسمة", "a − (a mod n) يقبل القسمة على n")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "剰余",
-            "a − (a mod n) は n で割り切れます",
-        )
+        text("剰余", "a − (a mod n) は n で割り切れます")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "나머지",
-            "a − (a mod n)은 n으로 나누어집니다",
-        )
+        text("나머지", "a − (a mod n)은 n으로 나누어집니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Số dư",
-            "a − (a mod n) chia hết cho n",
-        )
+        text("Số dư", "a − (a mod n) chia hết cho n")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6058,17 +7216,11 @@ impl SquareSumComponentZeroBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "平方和为零",
-            "在实数上 a² + b² = 0 蕴含 a = 0 且 b = 0",
-        )
+        text("平方和为零", "在实数上 a² + b² = 0 蕴含 a = 0 且 b = 0")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "平方和為零",
-            "對實數，a² + b² = 0 推出 a = 0 且 b = 0",
-        )
+        text("平方和為零", "對實數，a² + b² = 0 推出 a = 0 且 b = 0")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -6144,17 +7296,11 @@ impl MinusOneOddNaturalPowerBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "负一的奇自然数次幂",
-            "对奇自然数 n，(-1)^n = -1",
-        )
+        text("负一的奇自然数次幂", "对奇自然数 n，(-1)^n = -1")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "(-1) 的奇數次方",
-            "(-1)^n = -1（n 為奇自然數）",
-        )
+        text("(-1) 的奇數次方", "(-1)^n = -1（n 為奇自然數）")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -6172,38 +7318,23 @@ impl MinusOneOddNaturalPowerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Potencia impar de (-1)",
-            "(-1)^n = -1 para n natural impar",
-        )
+        text("Potencia impar de (-1)", "(-1)^n = -1 para n natural impar")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "قوة فردية لـ (-1)",
-            "(-1)^n = -1 للعدد الطبيعي الفردي n",
-        )
+        text("قوة فردية لـ (-1)", "(-1)^n = -1 للعدد الطبيعي الفردي n")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "(-1) の奇数乗",
-            "(-1)^n = -1（n は奇数の自然数）",
-        )
+        text("(-1) の奇数乗", "(-1)^n = -1（n は奇数の自然数）")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "(-1)의 홀수 거듭제곱",
-            "(-1)^n = -1(n은 홀수 자연수)",
-        )
+        text("(-1)의 홀수 거듭제곱", "(-1)^n = -1(n은 홀수 자연수)")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Lũy thừa lẻ của (-1)",
-            "(-1)^n = -1 với n tự nhiên lẻ",
-        )
+        text("Lũy thừa lẻ của (-1)", "(-1)^n = -1 với n tự nhiên lẻ")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6227,19 +7358,31 @@ impl LcmGcdProductAbsBuiltinRuleProof {
         text("Product of least common multiple and greatest common divisor", "The Product of least common multiple and greatest common divisor law gives: lcm(a,b)·gcd(a,b) = |a·b|")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("最小公倍数与最大公约数的乘积", "最小公倍数与最大公约数的乘积可写为：lcm(a,b)·gcd(a,b) = |a·b|")
+        text(
+            "最小公倍数与最大公约数的乘积",
+            "最小公倍数与最大公约数的乘积可写为：lcm(a,b)·gcd(a,b) = |a·b|",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("最小公倍數與最大公約數的乘積", "最小公倍數與最大公約數的乘積可寫為：lcm(a,b)·gcd(a,b) = |a·b|")
+        text(
+            "最小公倍數與最大公約數的乘積",
+            "最小公倍數與最大公約數的乘積可寫為：lcm(a,b)·gcd(a,b) = |a·b|",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Produit du PPCM et du PGCD", "La propriété « Produit du PPCM et du PGCD » donne: lcm(a,b)·gcd(a,b) = |a·b|")
+        text(
+            "Produit du PPCM et du PGCD",
+            "La propriété « Produit du PPCM et du PGCD » donne: lcm(a,b)·gcd(a,b) = |a·b|",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Произведение НОК и НОД", "Свойство «Произведение НОК и НОД» выражается равенством: lcm(a,b)·gcd(a,b) = |a·b|")
+        text(
+            "Произведение НОК и НОД",
+            "Свойство «Произведение НОК и НОД» выражается равенством: lcm(a,b)·gcd(a,b) = |a·b|",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -6251,11 +7394,17 @@ impl LcmGcdProductAbsBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("最小公倍数と最大公約数の積", "最小公倍数と最大公約数の積は次の式で表されます：lcm(a,b)·gcd(a,b) = |a·b|")
+        text(
+            "最小公倍数と最大公約数の積",
+            "最小公倍数と最大公約数の積は次の式で表されます：lcm(a,b)·gcd(a,b) = |a·b|",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("최소공배수와 최대공약수의 곱", "최소공배수와 최대공약수의 곱은 다음 식으로 나타납니다: lcm(a,b)·gcd(a,b) = |a·b|")
+        text(
+            "최소공배수와 최대공약수의 곱",
+            "최소공배수와 최대공약수의 곱은 다음 식으로 나타납니다: lcm(a,b)·gcd(a,b) = |a·b|",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -6280,42 +7429,72 @@ impl LcmGcdProductAbsBuiltinRuleProof {
 
 impl UnionEmptyRightBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("union with the empty set", "Union with the empty set leaves the other set unchanged: A ∪ ∅ = A")
+        text(
+            "union with the empty set",
+            "Union with the empty set leaves the other set unchanged: A ∪ ∅ = A",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("与空集作并集", "一个集合与空集的并集等于原集合，即 A ∪ ∅ = A")
+        text(
+            "与空集作并集",
+            "一个集合与空集的并集等于原集合，即 A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("與空集作聯集", "一個集合與空集的聯集等於原集合，即 A ∪ ∅ = A")
+        text(
+            "與空集作聯集",
+            "一個集合與空集的聯集等於原集合，即 A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("union avec l’ensemble vide", "L’union avec l’ensemble vide redonne l’autre ensemble: A ∪ ∅ = A")
+        text(
+            "union avec l’ensemble vide",
+            "L’union avec l’ensemble vide redonne l’autre ensemble: A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Операция «объединение» с пустым множеством", "Объединение с пустым множеством равно исходному множеству: A ∪ ∅ = A")
+        text(
+            "Операция «объединение» с пустым множеством",
+            "Объединение с пустым множеством равно исходному множеству: A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("unión con el conjunto vacío", "La unión con el conjunto vacío devuelve el otro conjunto: A ∪ ∅ = A")
+        text(
+            "unión con el conjunto vacío",
+            "La unión con el conjunto vacío devuelve el otro conjunto: A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("عملية «الاتحاد» مع المجموعة الخالية", "اتحاد مجموعة مع المجموعة الخالية يساوي المجموعة الأصلية: A ∪ ∅ = A")
+        text(
+            "عملية «الاتحاد» مع المجموعة الخالية",
+            "اتحاد مجموعة مع المجموعة الخالية يساوي المجموعة الأصلية: A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合との和集合", "空集合との和集合は元の集合です：A ∪ ∅ = A")
+        text(
+            "空集合との和集合",
+            "空集合との和集合は元の集合です：A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합과의 합집합", "공집합과의 합집합은 원래 집합입니다: A ∪ ∅ = A")
+        text(
+            "공집합과의 합집합",
+            "공집합과의 합집합은 원래 집합입니다: A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phép hợp với tập rỗng", "Hợp với tập rỗng bằng tập ban đầu: A ∪ ∅ = A")
+        text(
+            "Phép hợp với tập rỗng",
+            "Hợp với tập rỗng bằng tập ban đầu: A ∪ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6336,42 +7515,72 @@ impl UnionEmptyRightBuiltinRuleProof {
 
 impl UnionEmptyLeftBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("union with the empty set", "Union with the empty set leaves the other set unchanged: ∅ ∪ A = A")
+        text(
+            "union with the empty set",
+            "Union with the empty set leaves the other set unchanged: ∅ ∪ A = A",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("与空集作并集", "一个集合与空集的并集等于原集合，即 ∅ ∪ A = A")
+        text(
+            "与空集作并集",
+            "一个集合与空集的并集等于原集合，即 ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("與空集作聯集", "一個集合與空集的聯集等於原集合，即 ∅ ∪ A = A")
+        text(
+            "與空集作聯集",
+            "一個集合與空集的聯集等於原集合，即 ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("union avec l’ensemble vide", "L’union avec l’ensemble vide redonne l’autre ensemble: ∅ ∪ A = A")
+        text(
+            "union avec l’ensemble vide",
+            "L’union avec l’ensemble vide redonne l’autre ensemble: ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Операция «объединение» с пустым множеством", "Объединение с пустым множеством равно исходному множеству: ∅ ∪ A = A")
+        text(
+            "Операция «объединение» с пустым множеством",
+            "Объединение с пустым множеством равно исходному множеству: ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("unión con el conjunto vacío", "La unión con el conjunto vacío devuelve el otro conjunto: ∅ ∪ A = A")
+        text(
+            "unión con el conjunto vacío",
+            "La unión con el conjunto vacío devuelve el otro conjunto: ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("عملية «الاتحاد» مع المجموعة الخالية", "اتحاد مجموعة مع المجموعة الخالية يساوي المجموعة الأصلية: ∅ ∪ A = A")
+        text(
+            "عملية «الاتحاد» مع المجموعة الخالية",
+            "اتحاد مجموعة مع المجموعة الخالية يساوي المجموعة الأصلية: ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合との和集合", "空集合との和集合は元の集合です：∅ ∪ A = A")
+        text(
+            "空集合との和集合",
+            "空集合との和集合は元の集合です：∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합과의 합집합", "공집합과의 합집합은 원래 집합입니다: ∅ ∪ A = A")
+        text(
+            "공집합과의 합집합",
+            "공집합과의 합집합은 원래 집합입니다: ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phép hợp với tập rỗng", "Hợp với tập rỗng bằng tập ban đầu: ∅ ∪ A = A")
+        text(
+            "Phép hợp với tập rỗng",
+            "Hợp với tập rỗng bằng tập ban đầu: ∅ ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6392,7 +7601,10 @@ impl UnionEmptyLeftBuiltinRuleProof {
 
 impl IntersectEmptyRightBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("intersection with the empty set", "Intersection with the empty set is empty: A ∩ ∅ = ∅")
+        text(
+            "intersection with the empty set",
+            "Intersection with the empty set is empty: A ∩ ∅ = ∅",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("与空集作交集", "任何集合与空集的交集都是空集，即 A ∩ ∅ = ∅")
@@ -6403,31 +7615,52 @@ impl IntersectEmptyRightBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("intersection avec l’ensemble vide", "L’intersection avec l’ensemble vide est vide: A ∩ ∅ = ∅")
+        text(
+            "intersection avec l’ensemble vide",
+            "L’intersection avec l’ensemble vide est vide: A ∩ ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Операция «пересечение» с пустым множеством", "Пересечение с пустым множеством пусто: A ∩ ∅ = ∅")
+        text(
+            "Операция «пересечение» с пустым множеством",
+            "Пересечение с пустым множеством пусто: A ∩ ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("intersección con el conjunto vacío", "La intersección con el conjunto vacío es vacía: A ∩ ∅ = ∅")
+        text(
+            "intersección con el conjunto vacío",
+            "La intersección con el conjunto vacío es vacía: A ∩ ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("عملية «التقاطع» مع المجموعة الخالية", "تقاطع أي مجموعة مع المجموعة الخالية هو المجموعة الخالية: A ∩ ∅ = ∅")
+        text(
+            "عملية «التقاطع» مع المجموعة الخالية",
+            "تقاطع أي مجموعة مع المجموعة الخالية هو المجموعة الخالية: A ∩ ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合との共通部分", "空集合との共通部分は空集合です：A ∩ ∅ = ∅")
+        text(
+            "空集合との共通部分",
+            "空集合との共通部分は空集合です：A ∩ ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합과의 교집합", "공집합과의 교집합은 공집합입니다: A ∩ ∅ = ∅")
+        text(
+            "공집합과의 교집합",
+            "공집합과의 교집합은 공집합입니다: A ∩ ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phép giao với tập rỗng", "Giao với tập rỗng là tập rỗng: A ∩ ∅ = ∅")
+        text(
+            "Phép giao với tập rỗng",
+            "Giao với tập rỗng là tập rỗng: A ∩ ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6448,7 +7681,10 @@ impl IntersectEmptyRightBuiltinRuleProof {
 
 impl IntersectEmptyLeftBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("intersection with the empty set", "Intersection with the empty set is empty: ∅ ∩ A = ∅")
+        text(
+            "intersection with the empty set",
+            "Intersection with the empty set is empty: ∅ ∩ A = ∅",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("与空集作交集", "任何集合与空集的交集都是空集，即 ∅ ∩ A = ∅")
@@ -6459,31 +7695,52 @@ impl IntersectEmptyLeftBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("intersection avec l’ensemble vide", "L’intersection avec l’ensemble vide est vide: ∅ ∩ A = ∅")
+        text(
+            "intersection avec l’ensemble vide",
+            "L’intersection avec l’ensemble vide est vide: ∅ ∩ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Операция «пересечение» с пустым множеством", "Пересечение с пустым множеством пусто: ∅ ∩ A = ∅")
+        text(
+            "Операция «пересечение» с пустым множеством",
+            "Пересечение с пустым множеством пусто: ∅ ∩ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("intersección con el conjunto vacío", "La intersección con el conjunto vacío es vacía: ∅ ∩ A = ∅")
+        text(
+            "intersección con el conjunto vacío",
+            "La intersección con el conjunto vacío es vacía: ∅ ∩ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("عملية «التقاطع» مع المجموعة الخالية", "تقاطع أي مجموعة مع المجموعة الخالية هو المجموعة الخالية: ∅ ∩ A = ∅")
+        text(
+            "عملية «التقاطع» مع المجموعة الخالية",
+            "تقاطع أي مجموعة مع المجموعة الخالية هو المجموعة الخالية: ∅ ∩ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合との共通部分", "空集合との共通部分は空集合です：∅ ∩ A = ∅")
+        text(
+            "空集合との共通部分",
+            "空集合との共通部分は空集合です：∅ ∩ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합과의 교집합", "공집합과의 교집합은 공집합입니다: ∅ ∩ A = ∅")
+        text(
+            "공집합과의 교집합",
+            "공집합과의 교집합은 공집합입니다: ∅ ∩ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phép giao với tập rỗng", "Giao với tập rỗng là tập rỗng: ∅ ∩ A = ∅")
+        text(
+            "Phép giao với tập rỗng",
+            "Giao với tập rỗng là tập rỗng: ∅ ∩ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6504,42 +7761,72 @@ impl IntersectEmptyLeftBuiltinRuleProof {
 
 impl SetMinusSelfEmptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Difference of a set with itself", "Removing all elements of a set leaves the empty set: A \\ A = ∅")
+        text(
+            "Difference of a set with itself",
+            "Removing all elements of a set leaves the empty set: A \\ A = ∅",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("集合减去自身", "从集合中去掉它的全部元素，得到空集，即 A \\ A = ∅")
+        text(
+            "集合减去自身",
+            "从集合中去掉它的全部元素，得到空集，即 A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("集合減去自身", "從集合中去掉它的全部元素，得到空集，即 A \\ A = ∅")
+        text(
+            "集合減去自身",
+            "從集合中去掉它的全部元素，得到空集，即 A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Différence d’un ensemble avec lui-même", "Retirer tous les éléments d’un ensemble donne l’ensemble vide: A \\ A = ∅")
+        text(
+            "Différence d’un ensemble avec lui-même",
+            "Retirer tous les éléments d’un ensemble donne l’ensemble vide: A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Разность множества с самим собой", "Удаление всех элементов множества даёт пустое множество: A \\ A = ∅")
+        text(
+            "Разность множества с самим собой",
+            "Удаление всех элементов множества даёт пустое множество: A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Diferencia de un conjunto consigo mismo", "Eliminar todos los elementos de un conjunto deja el conjunto vacío: A \\ A = ∅")
+        text(
+            "Diferencia de un conjunto consigo mismo",
+            "Eliminar todos los elementos de un conjunto deja el conjunto vacío: A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("طرح المجموعة من نفسها", "إزالة جميع عناصر مجموعة تترك المجموعة الخالية: A \\ A = ∅")
+        text(
+            "طرح المجموعة من نفسها",
+            "إزالة جميع عناصر مجموعة تترك المجموعة الخالية: A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("集合自身との差集合", "集合からすべての要素を除くと空集合になります：A \\ A = ∅")
+        text(
+            "集合自身との差集合",
+            "集合からすべての要素を除くと空集合になります：A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("집합에서 자기 자신을 뺀 차집합", "집합의 모든 원소를 제거하면 공집합이 됩니다: A \\ A = ∅")
+        text(
+            "집합에서 자기 자신을 뺀 차집합",
+            "집합의 모든 원소를 제거하면 공집합이 됩니다: A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Hiệu của một tập với chính nó", "Loại bỏ mọi phần tử của một tập để lại tập rỗng: A \\ A = ∅")
+        text(
+            "Hiệu của một tập với chính nó",
+            "Loại bỏ mọi phần tử của một tập để lại tập rỗng: A \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6560,7 +7847,10 @@ impl SetMinusSelfEmptyBuiltinRuleProof {
 
 impl SetMinusEmptyRightBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Removing the empty set", "Removing no elements leaves the original set: A \\ ∅ = A")
+        text(
+            "Removing the empty set",
+            "Removing no elements leaves the original set: A \\ ∅ = A",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("减去空集", "去掉空集中的元素不会改变原集合，即 A \\ ∅ = A")
@@ -6571,31 +7861,52 @@ impl SetMinusEmptyRightBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Retrait de l’ensemble vide", "Ne retirer aucun élément laisse l’ensemble initial: A \\ ∅ = A")
+        text(
+            "Retrait de l’ensemble vide",
+            "Ne retirer aucun élément laisse l’ensemble initial: A \\ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Вычитание пустого множества", "Удаление элементов пустого множества не меняет исходное множество: A \\ ∅ = A")
+        text(
+            "Вычитание пустого множества",
+            "Удаление элементов пустого множества не меняет исходное множество: A \\ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Eliminación del conjunto vacío", "No eliminar ningún elemento deja el conjunto original: A \\ ∅ = A")
+        text(
+            "Eliminación del conjunto vacío",
+            "No eliminar ningún elemento deja el conjunto original: A \\ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("طرح المجموعة الخالية", "عدم إزالة أي عنصر يبقي المجموعة الأصلية: A \\ ∅ = A")
+        text(
+            "طرح المجموعة الخالية",
+            "عدم إزالة أي عنصر يبقي المجموعة الأصلية: A \\ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合との差集合", "空集合の要素を除いても元の集合は変わりません：A \\ ∅ = A")
+        text(
+            "空集合との差集合",
+            "空集合の要素を除いても元の集合は変わりません：A \\ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합을 뺀 차집합", "공집합의 원소를 제거해도 원래 집합은 같습니다: A \\ ∅ = A")
+        text(
+            "공집합을 뺀 차집합",
+            "공집합의 원소를 제거해도 원래 집합은 같습니다: A \\ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Trừ tập rỗng", "Không loại bỏ phần tử nào giữ nguyên tập ban đầu: A \\ ∅ = A")
+        text(
+            "Trừ tập rỗng",
+            "Không loại bỏ phần tử nào giữ nguyên tập ban đầu: A \\ ∅ = A",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6616,42 +7927,72 @@ impl SetMinusEmptyRightBuiltinRuleProof {
 
 impl SetMinusEmptyLeftBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Removing a set from the empty set", "Removing elements from an empty set still leaves it empty: ∅ \\ A = ∅")
+        text(
+            "Removing a set from the empty set",
+            "Removing elements from an empty set still leaves it empty: ∅ \\ A = ∅",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("从空集减去集合", "从空集中去掉元素，结果仍是空集，即 ∅ \\ A = ∅")
+        text(
+            "从空集减去集合",
+            "从空集中去掉元素，结果仍是空集，即 ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("從空集減去集合", "從空集中去掉元素，結果仍是空集，即 ∅ \\ A = ∅")
+        text(
+            "從空集減去集合",
+            "從空集中去掉元素，結果仍是空集，即 ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Retrait d’un ensemble de l’ensemble vide", "Retirer des éléments de l’ensemble vide le laisse vide: ∅ \\ A = ∅")
+        text(
+            "Retrait d’un ensemble de l’ensemble vide",
+            "Retirer des éléments de l’ensemble vide le laisse vide: ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Вычитание множества из пустого", "Удаление элементов из пустого множества оставляет его пустым: ∅ \\ A = ∅")
+        text(
+            "Вычитание множества из пустого",
+            "Удаление элементов из пустого множества оставляет его пустым: ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Eliminación de un conjunto del conjunto vacío", "Eliminar elementos del conjunto vacío lo deja vacío: ∅ \\ A = ∅")
+        text(
+            "Eliminación de un conjunto del conjunto vacío",
+            "Eliminar elementos del conjunto vacío lo deja vacío: ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("طرح مجموعة من المجموعة الخالية", "إزالة عناصر من المجموعة الخالية تبقيها خالية: ∅ \\ A = ∅")
+        text(
+            "طرح مجموعة من المجموعة الخالية",
+            "إزالة عناصر من المجموعة الخالية تبقيها خالية: ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合からの差集合", "空集合から要素を除いても空集合のままです：∅ \\ A = ∅")
+        text(
+            "空集合からの差集合",
+            "空集合から要素を除いても空集合のままです：∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합에서 집합을 뺀 차집합", "공집합에서 원소를 제거해도 공집합입니다: ∅ \\ A = ∅")
+        text(
+            "공집합에서 집합을 뺀 차집합",
+            "공집합에서 원소를 제거해도 공집합입니다: ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Trừ một tập khỏi tập rỗng", "Loại bỏ phần tử khỏi tập rỗng vẫn để lại tập rỗng: ∅ \\ A = ∅")
+        text(
+            "Trừ một tập khỏi tập rỗng",
+            "Loại bỏ phần tử khỏi tập rỗng vẫn để lại tập rỗng: ∅ \\ A = ∅",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6672,14 +8013,23 @@ impl SetMinusEmptyLeftBuiltinRuleProof {
 
 impl UnionCommutativeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Commutativity of union", "Swapping the two arguments of union leaves the result unchanged: A ∪ B = B ∪ A")
+        text(
+            "Commutativity of union",
+            "Swapping the two arguments of union leaves the result unchanged: A ∪ B = B ∪ A",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("并集的交换律", "交换并集的两个参数，结果不变，即 A ∪ B = B ∪ A")
+        text(
+            "并集的交换律",
+            "交换并集的两个参数，结果不变，即 A ∪ B = B ∪ A",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("聯集的交換律", "交換聯集的兩個引數，結果不變，即 A ∪ B = B ∪ A")
+        text(
+            "聯集的交換律",
+            "交換聯集的兩個引數，結果不變，即 A ∪ B = B ∪ A",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -6704,19 +8054,31 @@ impl UnionCommutativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية الإبدال: الاتحاد", "تبديل وسيطي عملية «الاتحاد» لا يغيّر النتيجة: A ∪ B = B ∪ A")
+        text(
+            "خاصية الإبدال: الاتحاد",
+            "تبديل وسيطي عملية «الاتحاد» لا يغيّر النتيجة: A ∪ B = B ∪ A",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("和集合の交換法則", "和集合の二つの引数を交換しても結果は変わりません：A ∪ B = B ∪ A")
+        text(
+            "和集合の交換法則",
+            "和集合の二つの引数を交換しても結果は変わりません：A ∪ B = B ∪ A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("합집합의 교환법칙", "합집합의 두 인수를 바꾸어도 결과는 같습니다: A ∪ B = B ∪ A")
+        text(
+            "합집합의 교환법칙",
+            "합집합의 두 인수를 바꾸어도 결과는 같습니다: A ∪ B = B ∪ A",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tính giao hoán của hợp", "Đổi chỗ hai đối số của phép hợp không làm thay đổi kết quả: A ∪ B = B ∪ A")
+        text(
+            "Tính giao hoán của hợp",
+            "Đổi chỗ hai đối số của phép hợp không làm thay đổi kết quả: A ∪ B = B ∪ A",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6743,11 +8105,17 @@ impl IntersectCommutativeBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("交集的交换律", "交换交集的两个参数，结果不变，即 A ∩ B = B ∩ A")
+        text(
+            "交集的交换律",
+            "交换交集的两个参数，结果不变，即 A ∩ B = B ∩ A",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("交集的交換律", "交換交集的兩個引數，結果不變，即 A ∩ B = B ∩ A")
+        text(
+            "交集的交換律",
+            "交換交集的兩個引數，結果不變，即 A ∩ B = B ∩ A",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -6772,15 +8140,24 @@ impl IntersectCommutativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية الإبدال: التقاطع", "تبديل وسيطي عملية «التقاطع» لا يغيّر النتيجة: A ∩ B = B ∩ A")
+        text(
+            "خاصية الإبدال: التقاطع",
+            "تبديل وسيطي عملية «التقاطع» لا يغيّر النتيجة: A ∩ B = B ∩ A",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("共通部分の交換法則", "共通部分の二つの引数を交換しても結果は変わりません：A ∩ B = B ∩ A")
+        text(
+            "共通部分の交換法則",
+            "共通部分の二つの引数を交換しても結果は変わりません：A ∩ B = B ∩ A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("교집합의 교환법칙", "교집합의 두 인수를 바꾸어도 결과는 같습니다: A ∩ B = B ∩ A")
+        text(
+            "교집합의 교환법칙",
+            "교집합의 두 인수를 바꾸어도 결과는 같습니다: A ∩ B = B ∩ A",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -6808,14 +8185,23 @@ impl IntersectCommutativeBuiltinRuleProof {
 
 impl UnionIdempotentBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Idempotence of union", "Applying union to two identical arguments returns that argument: A ∪ A = A")
+        text(
+            "Idempotence of union",
+            "Applying union to two identical arguments returns that argument: A ∪ A = A",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("并集的幂等性", "并集的两个参数相同时，结果就是该参数，即 A ∪ A = A")
+        text(
+            "并集的幂等性",
+            "并集的两个参数相同时，结果就是该参数，即 A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("聯集的冪等性", "聯集的兩個引數相同時，結果就是該引數，即 A ∪ A = A")
+        text(
+            "聯集的冪等性",
+            "聯集的兩個引數相同時，結果就是該引數，即 A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -6823,27 +8209,45 @@ impl UnionIdempotentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Идемпотентность: объединение", "Операция «объединение» с одинаковыми аргументами возвращает этот аргумент: A ∪ A = A")
+        text(
+            "Идемпотентность: объединение",
+            "Операция «объединение» с одинаковыми аргументами возвращает этот аргумент: A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Idempotencia: unión", "La operación «unión» con dos argumentos iguales devuelve ese argumento: A ∪ A = A")
+        text(
+            "Idempotencia: unión",
+            "La operación «unión» con dos argumentos iguales devuelve ese argumento: A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية التكرار: الاتحاد", "تطبيق عملية «الاتحاد» على وسيطين متساويين يعيد الوسيط نفسه: A ∪ A = A")
+        text(
+            "خاصية التكرار: الاتحاد",
+            "تطبيق عملية «الاتحاد» على وسيطين متساويين يعيد الوسيط نفسه: A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("和集合の冪等性", "和集合に同じ引数を二つ与えると、その引数が得られます：A ∪ A = A")
+        text(
+            "和集合の冪等性",
+            "和集合に同じ引数を二つ与えると、その引数が得られます：A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("합집합의 멱등성", "합집합의 두 인수가 같으면 그 인수가 결과입니다: A ∪ A = A")
+        text(
+            "합집합의 멱등성",
+            "합집합의 두 인수가 같으면 그 인수가 결과입니다: A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tính lũy đẳng của hợp", "Phép hợp với hai đối số giống nhau trả về chính đối số đó: A ∪ A = A")
+        text(
+            "Tính lũy đẳng của hợp",
+            "Phép hợp với hai đối số giống nhau trả về chính đối số đó: A ∪ A = A",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6864,14 +8268,23 @@ impl UnionIdempotentBuiltinRuleProof {
 
 impl IntersectIdempotentBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Idempotence of intersection", "Applying intersection to two identical arguments returns that argument: A ∩ A = A")
+        text(
+            "Idempotence of intersection",
+            "Applying intersection to two identical arguments returns that argument: A ∩ A = A",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("交集的幂等性", "交集的两个参数相同时，结果就是该参数，即 A ∩ A = A")
+        text(
+            "交集的幂等性",
+            "交集的两个参数相同时，结果就是该参数，即 A ∩ A = A",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("交集的冪等性", "交集的兩個引數相同時，結果就是該引數，即 A ∩ A = A")
+        text(
+            "交集的冪等性",
+            "交集的兩個引數相同時，結果就是該引數，即 A ∩ A = A",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -6879,7 +8292,10 @@ impl IntersectIdempotentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Идемпотентность: пересечение", "Операция «пересечение» с одинаковыми аргументами возвращает этот аргумент: A ∩ A = A")
+        text(
+            "Идемпотентность: пересечение",
+            "Операция «пересечение» с одинаковыми аргументами возвращает этот аргумент: A ∩ A = A",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -6887,19 +8303,31 @@ impl IntersectIdempotentBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("خاصية التكرار: التقاطع", "تطبيق عملية «التقاطع» على وسيطين متساويين يعيد الوسيط نفسه: A ∩ A = A")
+        text(
+            "خاصية التكرار: التقاطع",
+            "تطبيق عملية «التقاطع» على وسيطين متساويين يعيد الوسيط نفسه: A ∩ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("共通部分の冪等性", "共通部分に同じ引数を二つ与えると、その引数が得られます：A ∩ A = A")
+        text(
+            "共通部分の冪等性",
+            "共通部分に同じ引数を二つ与えると、その引数が得られます：A ∩ A = A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("교집합의 멱등성", "교집합의 두 인수가 같으면 그 인수가 결과입니다: A ∩ A = A")
+        text(
+            "교집합의 멱등성",
+            "교집합의 두 인수가 같으면 그 인수가 결과입니다: A ∩ A = A",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tính lũy đẳng của giao", "Phép giao với hai đối số giống nhau trả về chính đối số đó: A ∩ A = A")
+        text(
+            "Tính lũy đẳng của giao",
+            "Phép giao với hai đối số giống nhau trả về chính đối số đó: A ∩ A = A",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6926,7 +8354,10 @@ impl IntersectFromSubsetBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("子集与包含它的集合相交", "子集与包含它的集合相交可写为：A ⊆ B ⇒ A ∩ B = A")
+        text(
+            "子集与包含它的集合相交",
+            "子集与包含它的集合相交可写为：A ⊆ B ⇒ A ∩ B = A",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -6965,7 +8396,10 @@ impl IntersectFromSubsetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("包含する集合との共通部分", "包含する集合との共通部分は次の式で表されます：A ⊆ B ⇒ A ∩ B = A")
+        text(
+            "包含する集合との共通部分",
+            "包含する集合との共通部分は次の式で表されます：A ⊆ B ⇒ A ∩ B = A",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -7178,7 +8612,10 @@ impl UnionAssociativeBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("并集的结合律", "改变并集三个操作数的分组方式，结果不变，即 (A ∪ B) ∪ C = A ∪ (B ∪ C)")
+        text(
+            "并集的结合律",
+            "改变并集三个操作数的分组方式，结果不变，即 (A ∪ B) ∪ C = A ∪ (B ∪ C)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -7685,30 +9122,51 @@ impl IntersectSetMinusSelfEmptyBuiltinRuleProof {
 
 impl FiniteSetSumEmptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Sum over the empty set", "A sum with no terms equals zero: ∑_{x∈∅} f(x) = 0")
+        text(
+            "Sum over the empty set",
+            "A sum with no terms equals zero: ∑_{x∈∅} f(x) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("空集上的求和", "没有求和项时，和等于零，即 ∑_{x∈∅} f(x) = 0")
+        text(
+            "空集上的求和",
+            "没有求和项时，和等于零，即 ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("空集上的求和", "沒有求和項時，和等於零，即 ∑_{x∈∅} f(x) = 0")
+        text(
+            "空集上的求和",
+            "沒有求和項時，和等於零，即 ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Somme sur l’ensemble vide", "Une somme sans termes vaut zéro: ∑_{x∈∅} f(x) = 0")
+        text(
+            "Somme sur l’ensemble vide",
+            "Une somme sans termes vaut zéro: ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Сумма по пустому множеству", "Сумма без слагаемых равна нулю: ∑_{x∈∅} f(x) = 0")
+        text(
+            "Сумма по пустому множеству",
+            "Сумма без слагаемых равна нулю: ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Suma sobre el conjunto vacío", "Una suma sin términos vale cero: ∑_{x∈∅} f(x) = 0")
+        text(
+            "Suma sobre el conjunto vacío",
+            "Una suma sin términos vale cero: ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("المجموع على المجموعة الخالية", "المجموع دون حدود يساوي صفرًا: ∑_{x∈∅} f(x) = 0")
+        text(
+            "المجموع على المجموعة الخالية",
+            "المجموع دون حدود يساوي صفرًا: ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -7716,11 +9174,17 @@ impl FiniteSetSumEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합에 대한 합", "항이 없는 합은 영입니다: ∑_{x∈∅} f(x) = 0")
+        text(
+            "공집합에 대한 합",
+            "항이 없는 합은 영입니다: ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tổng trên tập rỗng", "Tổng không có số hạng bằng không: ∑_{x∈∅} f(x) = 0")
+        text(
+            "Tổng trên tập rỗng",
+            "Tổng không có số hạng bằng không: ∑_{x∈∅} f(x) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -7747,15 +9211,24 @@ impl FiniteSetProductEmptyBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("空集上的连乘", "没有乘法因子时，积等于一，即 ∏_{x∈∅} f(x) = 1")
+        text(
+            "空集上的连乘",
+            "没有乘法因子时，积等于一，即 ∏_{x∈∅} f(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("空集上的連乘", "沒有乘法因子時，積等於一，即 ∏_{x∈∅} f(x) = 1")
+        text(
+            "空集上的連乘",
+            "沒有乘法因子時，積等於一，即 ∏_{x∈∅} f(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Produit sur l’ensemble vide", "Un produit sans facteurs vaut un: ∏_{x∈∅} f(x) = 1")
+        text(
+            "Produit sur l’ensemble vide",
+            "Un produit sans facteurs vaut un: ∏_{x∈∅} f(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -7784,11 +9257,17 @@ impl FiniteSetProductEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합에 대한 곱", "인수가 없는 곱은 일입니다: ∏_{x∈∅} f(x) = 1")
+        text(
+            "공집합에 대한 곱",
+            "인수가 없는 곱은 일입니다: ∏_{x∈∅} f(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tích trên tập rỗng", "Tích không có thừa số bằng một: ∏_{x∈∅} f(x) = 1")
+        text(
+            "Tích trên tập rỗng",
+            "Tích không có thừa số bằng một: ∏_{x∈∅} f(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -7809,34 +9288,22 @@ impl FiniteSetProductEmptyBuiltinRuleProof {
 
 impl FiniteSetReduceEmptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "reduce over ∅",
-            "reduce over the empty set is the unit",
-        )
+        text("reduce over ∅", "reduce over the empty set is the unit")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("空集上归约", "空集上的归约是单位元")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "空集合折疊",
-            "空集合上的折疊為單位元",
-        )
+        text("空集合折疊", "空集合上的折疊為單位元")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Pli sur ∅",
-            "Le pli sur l'ensemble vide est l'unité",
-        )
+        text("Pli sur ∅", "Le pli sur l'ensemble vide est l'unité")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Свёртка по ∅",
-            "Свёртка по пустому множеству равна единице",
-        )
+        text("Свёртка по ∅", "Свёртка по пустому множеству равна единице")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -7847,31 +9314,19 @@ impl FiniteSetReduceEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "طي على ∅",
-            "الطي على المجموعة الخالية هو الوحدة",
-        )
+        text("طي على ∅", "الطي على المجموعة الخالية هو الوحدة")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "∅ 上の畳み込み",
-            "空集合上の畳み込みは単位元です",
-        )
+        text("∅ 上の畳み込み", "空集合上の畳み込みは単位元です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "∅ 위의 접기",
-            "공집합 위의 접기는 단위원입니다",
-        )
+        text("∅ 위의 접기", "공집합 위의 접기는 단위원입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Gấp trên ∅",
-            "Gấp trên tập rỗng là đơn vị",
-        )
+        text("Gấp trên ∅", "Gấp trên tập rỗng là đơn vị")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -7892,10 +9347,7 @@ impl FiniteSetReduceEmptyBuiltinRuleProof {
 
 impl ReduceEmptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "reduce empty",
-            "reduce on an empty range is the unit",
-        )
+        text("reduce empty", "reduce on an empty range is the unit")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("空归约", "空范围上的归约是单位元")
@@ -7906,10 +9358,7 @@ impl ReduceEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Pli vide",
-            "Le pli sur un intervalle vide est l'unité",
-        )
+        text("Pli vide", "Le pli sur un intervalle vide est l'unité")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -7931,10 +9380,7 @@ impl ReduceEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "空の畳み込み",
-            "空区間上の畳み込みは単位元です",
-        )
+        text("空の畳み込み", "空区間上の畳み込みは単位元です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -7963,10 +9409,7 @@ impl ReduceEmptyBuiltinRuleProof {
 
 impl SumEmptyRangeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "sum empty range",
-            "∑ over an empty range is 0",
-        )
+        text("sum empty range", "∑ over an empty range is 0")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("空范围求和", "空范围求和为 0")
@@ -7991,17 +9434,11 @@ impl SumEmptyRangeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Suma de intervalo vacío",
-            "∑ sobre intervalo vacío es 0",
-        )
+        text("Suma de intervalo vacío", "∑ sobre intervalo vacío es 0")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "مجموع فترة خالية",
-            "∑ على فترة خالية يساوي 0",
-        )
+        text("مجموع فترة خالية", "∑ على فترة خالية يساوي 0")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -8013,10 +9450,7 @@ impl SumEmptyRangeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tổng khoảng rỗng",
-            "∑ trên khoảng rỗng bằng 0",
-        )
+        text("Tổng khoảng rỗng", "∑ trên khoảng rỗng bằng 0")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -8037,10 +9471,7 @@ impl SumEmptyRangeBuiltinRuleProof {
 
 impl ProductEmptyRangeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "product empty range",
-            "∏ over an empty range is 1",
-        )
+        text("product empty range", "∏ over an empty range is 1")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("空范围求积", "空范围求积为 1")
@@ -8072,10 +9503,7 @@ impl ProductEmptyRangeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "حاصل ضرب فترة خالية",
-            "∏ على فترة خالية يساوي 1",
-        )
+        text("حاصل ضرب فترة خالية", "∏ على فترة خالية يساوي 1")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -8083,17 +9511,11 @@ impl ProductEmptyRangeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "빈 구간의 곱",
-            "빈 구간 위의 ∏는 1입니다",
-        )
+        text("빈 구간의 곱", "빈 구간 위의 ∏는 1입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tích khoảng rỗng",
-            "∏ trên khoảng rỗng bằng 1",
-        )
+        text("Tích khoảng rỗng", "∏ trên khoảng rỗng bằng 1")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -8120,7 +9542,10 @@ impl UnionAbsorptionFromSubsetBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("子集与包含它的集合求并", "子集与包含它的集合求并可写为：A ⊆ B ⇒ A ∪ B = B")
+        text(
+            "子集与包含它的集合求并",
+            "子集与包含它的集合求并可写为：A ⊆ B ⇒ A ∪ B = B",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -8296,7 +9721,10 @@ impl EmptySetFromSizeZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("有限集合基數為零則為空集", "有限集合基數為零則為空集可寫為：|S| = 0 ⇒ S = ∅")
+        text(
+            "有限集合基數為零則為空集",
+            "有限集合基數為零則為空集可寫為：|S| = 0 ⇒ S = ∅",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -8363,7 +9791,6 @@ impl EmptySetFromSizeZeroBuiltinRuleProof {
         }
     }
 }
-
 
 impl FiniteSetSizeSetMinusBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
@@ -8545,7 +9972,10 @@ impl ClosedRangeSingletonListSetBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("端点相同的整数闭区间", "端点相同的整数闭区间可写为：{n..n} = {n}")
+        text(
+            "端点相同的整数闭区间",
+            "端点相同的整数闭区间可写为：{n..n} = {n}",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -8622,10 +10052,7 @@ impl ClosedRangeSingletonListSetBuiltinRuleProof {
 
 impl SumSingleTermBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "sum one term",
-            "∑ with a single term equals that term",
-        )
+        text("sum one term", "∑ with a single term equals that term")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("单项目求和", "单项求和等于该项")
@@ -8636,17 +10063,11 @@ impl SumSingleTermBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Somme à terme unique",
-            "∑ à terme unique vaut ce terme",
-        )
+        text("Somme à terme unique", "∑ à terme unique vaut ce terme")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Сумма одного члена",
-            "∑ одного члена равно этому члену",
-        )
+        text("Сумма одного члена", "∑ одного члена равно этому члену")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -8657,10 +10078,7 @@ impl SumSingleTermBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "مجموع حد واحد",
-            "∑ بحد واحد يساوي ذلك الحد",
-        )
+        text("مجموع حد واحد", "∑ بحد واحد يساوي ذلك الحد")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -8668,10 +10086,7 @@ impl SumSingleTermBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "한 항의 합",
-            "한 항의 ∑는 그 항과 같습니다",
-        )
+        text("한 항의 합", "한 항의 ∑는 그 항과 같습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -8696,10 +10111,7 @@ impl SumSingleTermBuiltinRuleProof {
 
 impl ProductSingleTermBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "product one term",
-            "∏ with a single term equals that term",
-        )
+        text("product one term", "∏ with a single term equals that term")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("单项目求积", "单项求积等于该项")
@@ -8710,10 +10122,7 @@ impl ProductSingleTermBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Produit à terme unique",
-            "∏ à terme unique vaut ce terme",
-        )
+        text("Produit à terme unique", "∏ à terme unique vaut ce terme")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -8731,31 +10140,19 @@ impl ProductSingleTermBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "حاصل ضرب حد واحد",
-            "∏ بحد واحد يساوي ذلك الحد",
-        )
+        text("حاصل ضرب حد واحد", "∏ بحد واحد يساوي ذلك الحد")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "一項の積",
-            "一項の ∏ はその項に等しいです",
-        )
+        text("一項の積", "一項の ∏ はその項に等しいです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "한 항의 곱",
-            "한 항의 ∏는 그 항과 같습니다",
-        )
+        text("한 항의 곱", "한 항의 ∏는 그 항과 같습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tích một hạng",
-            "∏ một hạng bằng hạng đó",
-        )
+        text("Tích một hạng", "∏ một hạng bằng hạng đó")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -8782,17 +10179,11 @@ impl ReduceAddZeroEqualsSumBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "归约 +0 即求和",
-            "以加法与 0 归约等于求和",
-        )
+        text("归约 +0 即求和", "以加法与 0 归约等于求和")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "+0 折疊視為和",
-            "加法以 0 為初值的折疊等於和",
-        )
+        text("+0 折疊視為和", "加法以 0 為初值的折疊等於和")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -8817,10 +10208,7 @@ impl ReduceAddZeroEqualsSumBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "طي +0 كمجموع",
-            "الطي بالجمع و0 يساوي مجموعًا",
-        )
+        text("طي +0 كمجموع", "الطي بالجمع و0 يساوي مجموعًا")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -8831,17 +10219,11 @@ impl ReduceAddZeroEqualsSumBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "합으로서의 +0 접기",
-            "덧셈과 0으로 접으면 합과 같습니다",
-        )
+        text("합으로서의 +0 접기", "덧셈과 0으로 접으면 합과 같습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Gấp +0 là tổng",
-            "Gấp với phép cộng và 0 bằng tổng",
-        )
+        text("Gấp +0 là tổng", "Gấp với phép cộng và 0 bằng tổng")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -8868,17 +10250,11 @@ impl FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "有限集归约即求和",
-            "有限集上以 + 与 0 归约等于求和",
-        )
+        text("有限集归约即求和", "有限集上以 + 与 0 归约等于求和")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "有限集合折疊視為和",
-            "以 + 和 0 折疊有限集合等於和",
-        )
+        text("有限集合折疊視為和", "以 + 和 0 折疊有限集合等於和")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -8948,14 +10324,23 @@ impl FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof {
 
 impl PowOfLogInverseBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Cancellation of same-base power and logarithm", "The Cancellation of same-base power and logarithm law gives: a^(log_a(b)) = b")
+        text(
+            "Cancellation of same-base power and logarithm",
+            "The Cancellation of same-base power and logarithm law gives: a^(log_a(b)) = b",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("同底幂与对数的消去", "同底幂与对数的消去可写为：a^(log_a(b)) = b")
+        text(
+            "同底幂与对数的消去",
+            "同底幂与对数的消去可写为：a^(log_a(b)) = b",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("同底冪與對數的消去", "同底冪與對數的消去可寫為：a^(log_a(b)) = b")
+        text(
+            "同底冪與對數的消去",
+            "同底冪與對數的消去可寫為：a^(log_a(b)) = b",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -8971,19 +10356,31 @@ impl PowOfLogInverseBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("اختزال القوة واللوغاريتم ذوي الأساس نفسه", "تُكتب خاصية «اختزال القوة واللوغاريتم ذوي الأساس نفسه» كما يلي: a^(log_a(b)) = b")
+        text(
+            "اختزال القوة واللوغاريتم ذوي الأساس نفسه",
+            "تُكتب خاصية «اختزال القوة واللوغاريتم ذوي الأساس نفسه» كما يلي: a^(log_a(b)) = b",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("同じ底の累乗と対数の相殺", "同じ底の累乗と対数の相殺は次の式で表されます：a^(log_a(b)) = b")
+        text(
+            "同じ底の累乗と対数の相殺",
+            "同じ底の累乗と対数の相殺は次の式で表されます：a^(log_a(b)) = b",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("밑이 같은 거듭제곱과 로그의 소거", "밑이 같은 거듭제곱과 로그의 소거은 다음 식으로 나타납니다: a^(log_a(b)) = b")
+        text(
+            "밑이 같은 거듭제곱과 로그의 소거",
+            "밑이 같은 거듭제곱과 로그의 소거은 다음 식으로 나타납니다: a^(log_a(b)) = b",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Khử lũy thừa và logarit cùng cơ số", "Tính chất «Khử lũy thừa và logarit cùng cơ số» được biểu diễn bởi: a^(log_a(b)) = b")
+        text(
+            "Khử lũy thừa và logarit cùng cơ số",
+            "Tính chất «Khử lũy thừa và logarit cùng cơ số» được biểu diễn bởi: a^(log_a(b)) = b",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9187,19 +10584,31 @@ impl ReOfImaginaryUnitBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Partie réelle de i", "La valeur « Partie réelle » de i est 0: re(i) = 0")
+        text(
+            "Partie réelle de i",
+            "La valeur « Partie réelle » de i est 0: re(i) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Вещественная часть числа i", "Для i величина «Вещественная часть» равна 0: re(i) = 0")
+        text(
+            "Вещественная часть числа i",
+            "Для i величина «Вещественная часть» равна 0: re(i) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Parte real de i", "El valor «Parte real» de i es 0: re(i) = 0")
+        text(
+            "Parte real de i",
+            "El valor «Parte real» de i es 0: re(i) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجزء الحقيقي لـ i", "قيمة «الجزء الحقيقي» لـ i تساوي 0: re(i) = 0")
+        text(
+            "الجزء الحقيقي لـ i",
+            "قيمة «الجزء الحقيقي» لـ i تساوي 0: re(i) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -9211,7 +10620,10 @@ impl ReOfImaginaryUnitBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phần thực của i", "Giá trị «Phần thực» của i bằng 0: re(i) = 0")
+        text(
+            "Phần thực của i",
+            "Giá trị «Phần thực» của i bằng 0: re(i) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9232,7 +10644,10 @@ impl ReOfImaginaryUnitBuiltinRuleProof {
 
 impl ImgOfImaginaryUnitBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Imaginary part of i", "The Imaginary part of i equals 1: img(i) = 1")
+        text(
+            "Imaginary part of i",
+            "The Imaginary part of i equals 1: img(i) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("i 的虚部", "i 的虚部等于 1，即 img(i) = 1")
@@ -9243,19 +10658,31 @@ impl ImgOfImaginaryUnitBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Partie imaginaire de i", "La valeur « Partie imaginaire » de i est 1: img(i) = 1")
+        text(
+            "Partie imaginaire de i",
+            "La valeur « Partie imaginaire » de i est 1: img(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Мнимая часть числа i", "Для i величина «Мнимая часть» равна 1: img(i) = 1")
+        text(
+            "Мнимая часть числа i",
+            "Для i величина «Мнимая часть» равна 1: img(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Parte imaginaria de i", "El valor «Parte imaginaria» de i es 1: img(i) = 1")
+        text(
+            "Parte imaginaria de i",
+            "El valor «Parte imaginaria» de i es 1: img(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجزء التخيلي لـ i", "قيمة «الجزء التخيلي» لـ i تساوي 1: img(i) = 1")
+        text(
+            "الجزء التخيلي لـ i",
+            "قيمة «الجزء التخيلي» لـ i تساوي 1: img(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -9267,7 +10694,10 @@ impl ImgOfImaginaryUnitBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phần ảo của i", "Giá trị «Phần ảo» của i bằng 1: img(i) = 1")
+        text(
+            "Phần ảo của i",
+            "Giá trị «Phần ảo» của i bằng 1: img(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9288,14 +10718,23 @@ impl ImgOfImaginaryUnitBuiltinRuleProof {
 
 impl ReOfRealEmbeddingBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Real part of embed(x)", "The Real part of embed(x) equals x: re(embed(x)) = x")
+        text(
+            "Real part of embed(x)",
+            "The Real part of embed(x) equals x: re(embed(x)) = x",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("embed(x) 的实部", "embed(x) 的实部等于 x，即 re(embed(x)) = x")
+        text(
+            "embed(x) 的实部",
+            "embed(x) 的实部等于 x，即 re(embed(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("embed(x) 的實部", "embed(x) 的實部等於 x，即 re(embed(x)) = x")
+        text(
+            "embed(x) 的實部",
+            "embed(x) 的實部等於 x，即 re(embed(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -9327,11 +10766,17 @@ impl ReOfRealEmbeddingBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("embed(x) の実部", "embed(x) の実部は x です：re(embed(x)) = x")
+        text(
+            "embed(x) の実部",
+            "embed(x) の実部は x です：re(embed(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("embed(x)의 실수부", "embed(x)의 실수부는 x입니다: re(embed(x)) = x")
+        text(
+            "embed(x)의 실수부",
+            "embed(x)의 실수부는 x입니다: re(embed(x)) = x",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -9359,14 +10804,23 @@ impl ReOfRealEmbeddingBuiltinRuleProof {
 
 impl ImgOfRealEmbeddingBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Imaginary part of embed(x)", "The Imaginary part of embed(x) equals 0: img(embed(x)) = 0")
+        text(
+            "Imaginary part of embed(x)",
+            "The Imaginary part of embed(x) equals 0: img(embed(x)) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("embed(x) 的虚部", "embed(x) 的虚部等于 0，即 img(embed(x)) = 0")
+        text(
+            "embed(x) 的虚部",
+            "embed(x) 的虚部等于 0，即 img(embed(x)) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("embed(x) 的虛部", "embed(x) 的虛部等於 0，即 img(embed(x)) = 0")
+        text(
+            "embed(x) 的虛部",
+            "embed(x) 的虛部等於 0，即 img(embed(x)) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -9398,11 +10852,17 @@ impl ImgOfRealEmbeddingBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("embed(x) の虚部", "embed(x) の虚部は 0 です：img(embed(x)) = 0")
+        text(
+            "embed(x) の虚部",
+            "embed(x) の虚部は 0 です：img(embed(x)) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("embed(x)의 허수부", "embed(x)의 허수부는 0입니다: img(embed(x)) = 0")
+        text(
+            "embed(x)의 허수부",
+            "embed(x)의 허수부는 0입니다: img(embed(x)) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -9430,7 +10890,10 @@ impl ImgOfRealEmbeddingBuiltinRuleProof {
 
 impl ReOfRealPlusIBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Real part of x + i", "The Real part of x + i equals x: re(x + i) = x")
+        text(
+            "Real part of x + i",
+            "The Real part of x + i equals x: re(x + i) = x",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("x + i 的实部", "x + i 的实部等于 x，即 re(x + i) = x")
@@ -9441,19 +10904,31 @@ impl ReOfRealPlusIBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Partie réelle de x + i", "La valeur « Partie réelle » de x + i est x: re(x + i) = x")
+        text(
+            "Partie réelle de x + i",
+            "La valeur « Partie réelle » de x + i est x: re(x + i) = x",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Вещественная часть числа x + i", "Для x + i величина «Вещественная часть» равна x: re(x + i) = x")
+        text(
+            "Вещественная часть числа x + i",
+            "Для x + i величина «Вещественная часть» равна x: re(x + i) = x",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Parte real de x + i", "El valor «Parte real» de x + i es x: re(x + i) = x")
+        text(
+            "Parte real de x + i",
+            "El valor «Parte real» de x + i es x: re(x + i) = x",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجزء الحقيقي لـ x + i", "قيمة «الجزء الحقيقي» لـ x + i تساوي x: re(x + i) = x")
+        text(
+            "الجزء الحقيقي لـ x + i",
+            "قيمة «الجزء الحقيقي» لـ x + i تساوي x: re(x + i) = x",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -9465,7 +10940,10 @@ impl ReOfRealPlusIBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phần thực của x + i", "Giá trị «Phần thực» của x + i bằng x: re(x + i) = x")
+        text(
+            "Phần thực của x + i",
+            "Giá trị «Phần thực» của x + i bằng x: re(x + i) = x",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9486,7 +10964,10 @@ impl ReOfRealPlusIBuiltinRuleProof {
 
 impl ImgOfRealPlusIBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Imaginary part of x + i", "The Imaginary part of x + i equals 1: img(x + i) = 1")
+        text(
+            "Imaginary part of x + i",
+            "The Imaginary part of x + i equals 1: img(x + i) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("x + i 的虚部", "x + i 的虚部等于 1，即 img(x + i) = 1")
@@ -9497,19 +10978,31 @@ impl ImgOfRealPlusIBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Partie imaginaire de x + i", "La valeur « Partie imaginaire » de x + i est 1: img(x + i) = 1")
+        text(
+            "Partie imaginaire de x + i",
+            "La valeur « Partie imaginaire » de x + i est 1: img(x + i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Мнимая часть числа x + i", "Для x + i величина «Мнимая часть» равна 1: img(x + i) = 1")
+        text(
+            "Мнимая часть числа x + i",
+            "Для x + i величина «Мнимая часть» равна 1: img(x + i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Parte imaginaria de x + i", "El valor «Parte imaginaria» de x + i es 1: img(x + i) = 1")
+        text(
+            "Parte imaginaria de x + i",
+            "El valor «Parte imaginaria» de x + i es 1: img(x + i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجزء التخيلي لـ x + i", "قيمة «الجزء التخيلي» لـ x + i تساوي 1: img(x + i) = 1")
+        text(
+            "الجزء التخيلي لـ x + i",
+            "قيمة «الجزء التخيلي» لـ x + i تساوي 1: img(x + i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -9521,7 +11014,10 @@ impl ImgOfRealPlusIBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phần ảo của x + i", "Giá trị «Phần ảo» của x + i bằng 1: img(x + i) = 1")
+        text(
+            "Phần ảo của x + i",
+            "Giá trị «Phần ảo» của x + i bằng 1: img(x + i) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9542,7 +11038,10 @@ impl ImgOfRealPlusIBuiltinRuleProof {
 
 impl ComplexAbsOfImaginaryUnitBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Complex modulus of i", "The Complex modulus of i equals 1: C_abs(i) = 1")
+        text(
+            "Complex modulus of i",
+            "The Complex modulus of i equals 1: C_abs(i) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("i 的复数模", "i 的复数模等于 1，即 C_abs(i) = 1")
@@ -9553,31 +11052,52 @@ impl ComplexAbsOfImaginaryUnitBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Module complexe de i", "La valeur « Module complexe » de i est 1: C_abs(i) = 1")
+        text(
+            "Module complexe de i",
+            "La valeur « Module complexe » de i est 1: C_abs(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Модуль комплексного числа числа i", "Для i величина «Модуль комплексного числа» равна 1: C_abs(i) = 1")
+        text(
+            "Модуль комплексного числа числа i",
+            "Для i величина «Модуль комплексного числа» равна 1: C_abs(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Módulo complejo de i", "El valor «Módulo complejo» de i es 1: C_abs(i) = 1")
+        text(
+            "Módulo complejo de i",
+            "El valor «Módulo complejo» de i es 1: C_abs(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("المقياس المركب لـ i", "قيمة «المقياس المركب» لـ i تساوي 1: C_abs(i) = 1")
+        text(
+            "المقياس المركب لـ i",
+            "قيمة «المقياس المركب» لـ i تساوي 1: C_abs(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("i の複素数の絶対値", "i の複素数の絶対値は 1 です：C_abs(i) = 1")
+        text(
+            "i の複素数の絶対値",
+            "i の複素数の絶対値は 1 です：C_abs(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("i의 복소수의 절댓값", "i의 복소수 절댓값은 1입니다: C_abs(i) = 1")
+        text(
+            "i의 복소수의 절댓값",
+            "i의 복소수 절댓값은 1입니다: C_abs(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Môđun phức của i", "Giá trị «Môđun phức» của i bằng 1: C_abs(i) = 1")
+        text(
+            "Môđun phức của i",
+            "Giá trị «Môđun phức» của i bằng 1: C_abs(i) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9684,10 +11204,7 @@ impl ModNestedDivisibleAbsorptionBuiltinRuleProof {
 
 impl SumSplitLastTermBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "sum split last",
-            "Sum splits off its last term",
-        )
+        text("sum split last", "Sum splits off its last term")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("求和拆末项", "求和可拆出最后一项")
@@ -9719,31 +11236,19 @@ impl SumSplitLastTermBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "فصل الحد الأخير للمجموع",
-            "المجموع يفصل حده الأخير",
-        )
+        text("فصل الحد الأخير للمجموع", "المجموع يفصل حده الأخير")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "和の最後の項の分離",
-            "和から最後の項を分離します",
-        )
+        text("和の最後の項の分離", "和から最後の項を分離します")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "합의 마지막 항 분리",
-            "합에서 마지막 항을 분리합니다",
-        )
+        text("합의 마지막 항 분리", "합에서 마지막 항을 분리합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tổng tách hạng cuối",
-            "Tổng tách hạng cuối",
-        )
+        text("Tổng tách hạng cuối", "Tổng tách hạng cuối")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9764,10 +11269,7 @@ impl SumSplitLastTermBuiltinRuleProof {
 
 impl ProductSplitLastTermBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "product split last",
-            "Product splits off its last term",
-        )
+        text("product split last", "Product splits off its last term")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("求积拆末项", "求积可拆出最后一项")
@@ -9799,31 +11301,19 @@ impl ProductSplitLastTermBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "فصل الحد الأخير لحاصل الضرب",
-            "حاصل الضرب يفصل حده الأخير",
-        )
+        text("فصل الحد الأخير لحاصل الضرب", "حاصل الضرب يفصل حده الأخير")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "積の最後の項の分離",
-            "積から最後の項を分離します",
-        )
+        text("積の最後の項の分離", "積から最後の項を分離します")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "곱의 마지막 항 분리",
-            "곱에서 마지막 항을 분리합니다",
-        )
+        text("곱의 마지막 항 분리", "곱에서 마지막 항을 분리합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tích tách hạng cuối",
-            "Tích tách hạng cuối",
-        )
+        text("Tích tách hạng cuối", "Tích tách hạng cuối")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -9850,17 +11340,11 @@ impl FiniteSetSumListExpansionBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "有限集求和展开",
-            "列表集上的求和展开为显式和",
-        )
+        text("有限集求和展开", "列表集上的求和展开为显式和")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "有限集合和展開",
-            "列表集合上的和展開為明確加總",
-        )
+        text("有限集合和展開", "列表集合上的和展開為明確加總")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -9936,17 +11420,11 @@ impl FiniteSetProductListExpansionBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "有限集求积展开",
-            "列表集上的求积展开为显式积",
-        )
+        text("有限集求积展开", "列表集上的求积展开为显式积")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "有限集合乘積展開",
-            "列表集合上的乘積展開為明確乘積",
-        )
+        text("有限集合乘積展開", "列表集合上的乘積展開為明確乘積")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -10016,42 +11494,72 @@ impl FiniteSetProductListExpansionBuiltinRuleProof {
 
 impl EulerEqualsExpOneBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Euler constant as the exponential of one", "The Euler constant as the exponential of one law gives: e = exp(1)")
+        text(
+            "Euler constant as the exponential of one",
+            "The Euler constant as the exponential of one law gives: e = exp(1)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("欧拉数等于一的指数函数值", "欧拉数等于一的指数函数值可写为：e = exp(1)")
+        text(
+            "欧拉数等于一的指数函数值",
+            "欧拉数等于一的指数函数值可写为：e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("歐拉數等於一的指數函數值", "歐拉數等於一的指數函數值可寫為：e = exp(1)")
+        text(
+            "歐拉數等於一的指數函數值",
+            "歐拉數等於一的指數函數值可寫為：e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Constante d’Euler comme exponentielle de un", "La propriété « Constante d’Euler comme exponentielle de un » donne: e = exp(1)")
+        text(
+            "Constante d’Euler comme exponentielle de un",
+            "La propriété « Constante d’Euler comme exponentielle de un » donne: e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Число Эйлера как экспонента единицы", "Свойство «Число Эйлера как экспонента единицы» выражается равенством: e = exp(1)")
+        text(
+            "Число Эйлера как экспонента единицы",
+            "Свойство «Число Эйлера как экспонента единицы» выражается равенством: e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Constante de Euler como exponencial de uno", "La propiedad «Constante de Euler como exponencial de uno» se expresa como: e = exp(1)")
+        text(
+            "Constante de Euler como exponencial de uno",
+            "La propiedad «Constante de Euler como exponencial de uno» se expresa como: e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("ثابت أويلر كقيمة الدالة الأسية عند واحد", "تُكتب خاصية «ثابت أويلر كقيمة الدالة الأسية عند واحد» كما يلي: e = exp(1)")
+        text(
+            "ثابت أويلر كقيمة الدالة الأسية عند واحد",
+            "تُكتب خاصية «ثابت أويلر كقيمة الدالة الأسية عند واحد» كما يلي: e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("一における指数関数とオイラー数", "一における指数関数とオイラー数は次の式で表されます：e = exp(1)")
+        text(
+            "一における指数関数とオイラー数",
+            "一における指数関数とオイラー数は次の式で表されます：e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("일에서의 지수함수 값과 오일러 수", "일에서의 지수함수 값과 오일러 수은 다음 식으로 나타납니다: e = exp(1)")
+        text(
+            "일에서의 지수함수 값과 오일러 수",
+            "일에서의 지수함수 값과 오일러 수은 다음 식으로 나타납니다: e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Hằng số Euler bằng hàm mũ tại một", "Tính chất «Hằng số Euler bằng hàm mũ tại một» được biểu diễn bởi: e = exp(1)")
+        text(
+            "Hằng số Euler bằng hàm mũ tại một",
+            "Tính chất «Hằng số Euler bằng hàm mũ tại một» được biểu diễn bởi: e = exp(1)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10072,7 +11580,10 @@ impl EulerEqualsExpOneBuiltinRuleProof {
 
 impl LnOfEulerBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Natural logarithm of the Euler constant", "The Natural logarithm of the Euler constant law gives: ln(e) = 1")
+        text(
+            "Natural logarithm of the Euler constant",
+            "The Natural logarithm of the Euler constant law gives: ln(e) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("欧拉数的自然对数", "欧拉数的自然对数可写为：ln(e) = 1")
@@ -10083,31 +11594,52 @@ impl LnOfEulerBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Logarithme naturel de la constante d’Euler", "La propriété « Logarithme naturel de la constante d’Euler » donne: ln(e) = 1")
+        text(
+            "Logarithme naturel de la constante d’Euler",
+            "La propriété « Logarithme naturel de la constante d’Euler » donne: ln(e) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Натуральный логарифм числа Эйлера", "Свойство «Натуральный логарифм числа Эйлера» выражается равенством: ln(e) = 1")
+        text(
+            "Натуральный логарифм числа Эйлера",
+            "Свойство «Натуральный логарифм числа Эйлера» выражается равенством: ln(e) = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Logaritmo natural de la constante de Euler", "La propiedad «Logaritmo natural de la constante de Euler» se expresa como: ln(e) = 1")
+        text(
+            "Logaritmo natural de la constante de Euler",
+            "La propiedad «Logaritmo natural de la constante de Euler» se expresa como: ln(e) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("اللوغاريتم الطبيعي لثابت أويلر", "تُكتب خاصية «اللوغاريتم الطبيعي لثابت أويلر» كما يلي: ln(e) = 1")
+        text(
+            "اللوغاريتم الطبيعي لثابت أويلر",
+            "تُكتب خاصية «اللوغاريتم الطبيعي لثابت أويلر» كما يلي: ln(e) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("オイラー数の自然対数", "オイラー数の自然対数は次の式で表されます：ln(e) = 1")
+        text(
+            "オイラー数の自然対数",
+            "オイラー数の自然対数は次の式で表されます：ln(e) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("오일러 수의 자연로그", "오일러 수의 자연로그은 다음 식으로 나타납니다: ln(e) = 1")
+        text(
+            "오일러 수의 자연로그",
+            "오일러 수의 자연로그은 다음 식으로 나타납니다: ln(e) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Logarit tự nhiên của hằng số Euler", "Tính chất «Logarit tự nhiên của hằng số Euler» được biểu diễn bởi: ln(e) = 1")
+        text(
+            "Logarit tự nhiên của hằng số Euler",
+            "Tính chất «Logarit tự nhiên của hằng số Euler» được biểu diễn bởi: ln(e) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10143,10 +11675,7 @@ impl ReOfRealBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Re(x) для вещественного x",
-            "Re(x) = x для вещественного x",
-        )
+        text("Re(x) для вещественного x", "Re(x) = x для вещественного x")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -10154,10 +11683,7 @@ impl ReOfRealBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "Re(x) للعدد الحقيقي x",
-            "Re(x) = x للعدد الحقيقي x",
-        )
+        text("Re(x) للعدد الحقيقي x", "Re(x) = x للعدد الحقيقي x")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -10205,10 +11731,7 @@ impl ImgOfRealBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Im(x) для вещественного x",
-            "Im(x) = 0 для вещественного x",
-        )
+        text("Im(x) для вещественного x", "Im(x) = 0 для вещественного x")
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
@@ -10216,10 +11739,7 @@ impl ImgOfRealBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "Im(x) للعدد الحقيقي x",
-            "Im(x) = 0 للعدد الحقيقي x",
-        )
+        text("Im(x) للعدد الحقيقي x", "Im(x) = 0 للعدد الحقيقي x")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -10252,7 +11772,10 @@ impl ImgOfRealBuiltinRuleProof {
 
 impl ReOfRealPlusImagScaledBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Real part of x + y·i", "The Real part of x + y·i equals x: re(x + y·i) = x")
+        text(
+            "Real part of x + y·i",
+            "The Real part of x + y·i equals x: re(x + y·i) = x",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("x + y·i 的实部", "x + y·i 的实部等于 x，即 re(x + y·i) = x")
@@ -10263,19 +11786,31 @@ impl ReOfRealPlusImagScaledBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Partie réelle de x + y·i", "La valeur « Partie réelle » de x + y·i est x: re(x + y·i) = x")
+        text(
+            "Partie réelle de x + y·i",
+            "La valeur « Partie réelle » de x + y·i est x: re(x + y·i) = x",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Вещественная часть числа x + y·i", "Для x + y·i величина «Вещественная часть» равна x: re(x + y·i) = x")
+        text(
+            "Вещественная часть числа x + y·i",
+            "Для x + y·i величина «Вещественная часть» равна x: re(x + y·i) = x",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Parte real de x + y·i", "El valor «Parte real» de x + y·i es x: re(x + y·i) = x")
+        text(
+            "Parte real de x + y·i",
+            "El valor «Parte real» de x + y·i es x: re(x + y·i) = x",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجزء الحقيقي لـ x + y·i", "قيمة «الجزء الحقيقي» لـ x + y·i تساوي x: re(x + y·i) = x")
+        text(
+            "الجزء الحقيقي لـ x + y·i",
+            "قيمة «الجزء الحقيقي» لـ x + y·i تساوي x: re(x + y·i) = x",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -10283,11 +11818,17 @@ impl ReOfRealPlusImagScaledBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("x + y·i의 실수부", "x + y·i의 실수부는 x입니다: re(x + y·i) = x")
+        text(
+            "x + y·i의 실수부",
+            "x + y·i의 실수부는 x입니다: re(x + y·i) = x",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phần thực của x + y·i", "Giá trị «Phần thực» của x + y·i bằng x: re(x + y·i) = x")
+        text(
+            "Phần thực của x + y·i",
+            "Giá trị «Phần thực» của x + y·i bằng x: re(x + y·i) = x",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10308,42 +11849,72 @@ impl ReOfRealPlusImagScaledBuiltinRuleProof {
 
 impl ImgOfRealPlusImagScaledBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Imaginary part of x + y·i", "The Imaginary part of x + y·i equals y: img(x + y·i) = y")
+        text(
+            "Imaginary part of x + y·i",
+            "The Imaginary part of x + y·i equals y: img(x + y·i) = y",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("x + y·i 的虚部", "x + y·i 的虚部等于 y，即 img(x + y·i) = y")
+        text(
+            "x + y·i 的虚部",
+            "x + y·i 的虚部等于 y，即 img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("x + y·i 的虛部", "x + y·i 的虛部等於 y，即 img(x + y·i) = y")
+        text(
+            "x + y·i 的虛部",
+            "x + y·i 的虛部等於 y，即 img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Partie imaginaire de x + y·i", "La valeur « Partie imaginaire » de x + y·i est y: img(x + y·i) = y")
+        text(
+            "Partie imaginaire de x + y·i",
+            "La valeur « Partie imaginaire » de x + y·i est y: img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Мнимая часть числа x + y·i", "Для x + y·i величина «Мнимая часть» равна y: img(x + y·i) = y")
+        text(
+            "Мнимая часть числа x + y·i",
+            "Для x + y·i величина «Мнимая часть» равна y: img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Parte imaginaria de x + y·i", "El valor «Parte imaginaria» de x + y·i es y: img(x + y·i) = y")
+        text(
+            "Parte imaginaria de x + y·i",
+            "El valor «Parte imaginaria» de x + y·i es y: img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الجزء التخيلي لـ x + y·i", "قيمة «الجزء التخيلي» لـ x + y·i تساوي y: img(x + y·i) = y")
+        text(
+            "الجزء التخيلي لـ x + y·i",
+            "قيمة «الجزء التخيلي» لـ x + y·i تساوي y: img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("x + y·i の虚部", "x + y·i の虚部は y です：img(x + y·i) = y")
+        text(
+            "x + y·i の虚部",
+            "x + y·i の虚部は y です：img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("x + y·i의 허수부", "x + y·i의 허수부는 y입니다: img(x + y·i) = y")
+        text(
+            "x + y·i의 허수부",
+            "x + y·i의 허수부는 y입니다: img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Phần ảo của x + y·i", "Giá trị «Phần ảo» của x + y·i bằng y: img(x + y·i) = y")
+        text(
+            "Phần ảo của x + y·i",
+            "Giá trị «Phần ảo» của x + y·i bằng y: img(x + y·i) = y",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10364,30 +11935,18 @@ impl ImgOfRealPlusImagScaledBuiltinRuleProof {
 
 impl ComplexAbsOfNonnegRealBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "|x| for x≥0 real",
-            "|embed(x)| = x for x ≥ 0",
-        )
+        text("|x| for x≥0 real", "|embed(x)| = x for x ≥ 0")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "非负实数模",
-            "对 x ≥ 0，|embed(x)| = x",
-        )
+        text("非负实数模", "对 x ≥ 0，|embed(x)| = x")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非負實數 x 的 |x|",
-            "|embed(x)| = x（x ≥ 0 時）",
-        )
+        text("非負實數 x 的 |x|", "|embed(x)| = x（x ≥ 0 時）")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "|x| pour x réel non négatif",
-            "|embed(x)| = x pour x ≥ 0",
-        )
+        text("|x| pour x réel non négatif", "|embed(x)| = x pour x ≥ 0")
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -10398,38 +11957,23 @@ impl ComplexAbsOfNonnegRealBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "|x| para x real no negativo",
-            "|embed(x)| = x para x ≥ 0",
-        )
+        text("|x| para x real no negativo", "|embed(x)| = x para x ≥ 0")
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "|x| للعدد الحقيقي غير السالب x",
-            "|embed(x)| = x لـ x ≥ 0",
-        )
+        text("|x| للعدد الحقيقي غير السالب x", "|embed(x)| = x لـ x ≥ 0")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "非負実数 x の |x|",
-            "|embed(x)| = x（x ≥ 0 の場合）",
-        )
+        text("非負実数 x の |x|", "|embed(x)| = x（x ≥ 0 の場合）")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "음이 아닌 실수 x의 |x|",
-            "|embed(x)| = x(x ≥ 0일 때)",
-        )
+        text("음이 아닌 실수 x의 |x|", "|embed(x)| = x(x ≥ 0일 때)")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "|x| với x thực không âm",
-            "|embed(x)| = x với x ≥ 0",
-        )
+        text("|x| với x thực không âm", "|embed(x)| = x với x ≥ 0")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10450,42 +11994,72 @@ impl ComplexAbsOfNonnegRealBuiltinRuleProof {
 
 impl ComplexAbsOfImagScaledBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Complex modulus of y·i", "The Complex modulus of y·i equals abs(y): C_abs(y·i) = abs(y)")
+        text(
+            "Complex modulus of y·i",
+            "The Complex modulus of y·i equals abs(y): C_abs(y·i) = abs(y)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("y·i 的复数模", "y·i 的复数模等于 abs(y)，即 C_abs(y·i) = abs(y)")
+        text(
+            "y·i 的复数模",
+            "y·i 的复数模等于 abs(y)，即 C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("y·i 的複數模", "y·i 的複數模等於 abs(y)，即 C_abs(y·i) = abs(y)")
+        text(
+            "y·i 的複數模",
+            "y·i 的複數模等於 abs(y)，即 C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Module complexe de y·i", "La valeur « Module complexe » de y·i est abs(y): C_abs(y·i) = abs(y)")
+        text(
+            "Module complexe de y·i",
+            "La valeur « Module complexe » de y·i est abs(y): C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Модуль комплексного числа числа y·i", "Для y·i величина «Модуль комплексного числа» равна abs(y): C_abs(y·i) = abs(y)")
+        text(
+            "Модуль комплексного числа числа y·i",
+            "Для y·i величина «Модуль комплексного числа» равна abs(y): C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Módulo complejo de y·i", "El valor «Módulo complejo» de y·i es abs(y): C_abs(y·i) = abs(y)")
+        text(
+            "Módulo complejo de y·i",
+            "El valor «Módulo complejo» de y·i es abs(y): C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("المقياس المركب لـ y·i", "قيمة «المقياس المركب» لـ y·i تساوي abs(y): C_abs(y·i) = abs(y)")
+        text(
+            "المقياس المركب لـ y·i",
+            "قيمة «المقياس المركب» لـ y·i تساوي abs(y): C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("y·i の複素数の絶対値", "y·i の複素数の絶対値は abs(y) です：C_abs(y·i) = abs(y)")
+        text(
+            "y·i の複素数の絶対値",
+            "y·i の複素数の絶対値は abs(y) です：C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("y·i의 복소수의 절댓값", "y·i의 복소수 절댓값은 abs(y)입니다: C_abs(y·i) = abs(y)")
+        text(
+            "y·i의 복소수의 절댓값",
+            "y·i의 복소수 절댓값은 abs(y)입니다: C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Môđun phức của y·i", "Giá trị «Môđun phức» của y·i bằng abs(y): C_abs(y·i) = abs(y)")
+        text(
+            "Môđun phức của y·i",
+            "Giá trị «Môđun phức» của y·i bằng abs(y): C_abs(y·i) = abs(y)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10512,17 +12086,11 @@ impl ClosedRangeLiteralExpansionBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "闭区间展开",
-            "数值闭区间展开为显式列表集",
-        )
+        text("闭区间展开", "数值闭区间展开为显式列表集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "封閉區間展開",
-            "數值封閉區間展開為明確列表集合",
-        )
+        text("封閉區間展開", "數值封閉區間展開為明確列表集合")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -10598,17 +12166,11 @@ impl RangeLiteralExpansionBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "区间展开",
-            "数值区间展开为显式列表集",
-        )
+        text("区间展开", "数值区间展开为显式列表集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "區間展開",
-            "數值區間展開為明確列表集合",
-        )
+        text("區間展開", "數值區間展開為明確列表集合")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -10633,24 +12195,15 @@ impl RangeLiteralExpansionBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "توسيع فترة",
-            "تتوسع الفترة العددية إلى مجموعة قائمة صريحة",
-        )
+        text("توسيع فترة", "تتوسع الفترة العددية إلى مجموعة قائمة صريحة")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "区間の展開",
-            "数値区間を明示的なリスト集合に展開します",
-        )
+        text("区間の展開", "数値区間を明示的なリスト集合に展開します")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "구간 전개",
-            "수치 구간을 명시적 목록 집합으로 전개합니다",
-        )
+        text("구간 전개", "수치 구간을 명시적 목록 집합으로 전개합니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -10678,7 +12231,10 @@ impl RangeLiteralExpansionBuiltinRuleProof {
 
 impl PowerSetOfEmptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Power set of the empty set", "The Power set of the empty set law gives: pow(∅) = {∅}")
+        text(
+            "Power set of the empty set",
+            "The Power set of the empty set law gives: pow(∅) = {∅}",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("空集的幂集", "空集的幂集可写为：pow(∅) = {∅}")
@@ -10689,31 +12245,52 @@ impl PowerSetOfEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Ensemble des parties de l’ensemble vide", "La propriété « Ensemble des parties de l’ensemble vide » donne: pow(∅) = {∅}")
+        text(
+            "Ensemble des parties de l’ensemble vide",
+            "La propriété « Ensemble des parties de l’ensemble vide » donne: pow(∅) = {∅}",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Булеан пустого множества", "Свойство «Булеан пустого множества» выражается равенством: pow(∅) = {∅}")
+        text(
+            "Булеан пустого множества",
+            "Свойство «Булеан пустого множества» выражается равенством: pow(∅) = {∅}",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Conjunto potencia del conjunto vacío", "La propiedad «Conjunto potencia del conjunto vacío» se expresa como: pow(∅) = {∅}")
+        text(
+            "Conjunto potencia del conjunto vacío",
+            "La propiedad «Conjunto potencia del conjunto vacío» se expresa como: pow(∅) = {∅}",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("مجموعة أجزاء المجموعة الخالية", "تُكتب خاصية «مجموعة أجزاء المجموعة الخالية» كما يلي: pow(∅) = {∅}")
+        text(
+            "مجموعة أجزاء المجموعة الخالية",
+            "تُكتب خاصية «مجموعة أجزاء المجموعة الخالية» كما يلي: pow(∅) = {∅}",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合の冪集合", "空集合の冪集合は次の式で表されます：pow(∅) = {∅}")
+        text(
+            "空集合の冪集合",
+            "空集合の冪集合は次の式で表されます：pow(∅) = {∅}",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합의 멱집합", "공집합의 멱집합은 다음 식으로 나타납니다: pow(∅) = {∅}")
+        text(
+            "공집합의 멱집합",
+            "공집합의 멱집합은 다음 식으로 나타납니다: pow(∅) = {∅}",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tập lũy thừa của tập rỗng", "Tính chất «Tập lũy thừa của tập rỗng» được biểu diễn bởi: pow(∅) = {∅}")
+        text(
+            "Tập lũy thừa của tập rỗng",
+            "Tính chất «Tập lũy thừa của tập rỗng» được biểu diễn bởi: pow(∅) = {∅}",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10734,18 +12311,30 @@ impl PowerSetOfEmptyBuiltinRuleProof {
 
 impl PowerSetOfSingletonBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Power set of a singleton", "The Power set of a singleton law gives: pow({a}) = {∅, {a}}")
+        text(
+            "Power set of a singleton",
+            "The Power set of a singleton law gives: pow({a}) = {∅, {a}}",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("单元素集合的幂集", "单元素集合的幂集可写为：pow({a}) = {∅, {a}}")
+        text(
+            "单元素集合的幂集",
+            "单元素集合的幂集可写为：pow({a}) = {∅, {a}}",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("單元素集合的冪集", "單元素集合的冪集可寫為：pow({a}) = {∅, {a}}")
+        text(
+            "單元素集合的冪集",
+            "單元素集合的冪集可寫為：pow({a}) = {∅, {a}}",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Ensemble des parties d’un singleton", "La propriété « Ensemble des parties d’un singleton » donne: pow({a}) = {∅, {a}}")
+        text(
+            "Ensemble des parties d’un singleton",
+            "La propriété « Ensemble des parties d’un singleton » donne: pow({a}) = {∅, {a}}",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -10757,19 +12346,31 @@ impl PowerSetOfSingletonBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("مجموعة أجزاء مجموعة أحادية العنصر", "تُكتب خاصية «مجموعة أجزاء مجموعة أحادية العنصر» كما يلي: pow({a}) = {∅, {a}}")
+        text(
+            "مجموعة أجزاء مجموعة أحادية العنصر",
+            "تُكتب خاصية «مجموعة أجزاء مجموعة أحادية العنصر» كما يلي: pow({a}) = {∅, {a}}",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("単集合の冪集合", "単集合の冪集合は次の式で表されます：pow({a}) = {∅, {a}}")
+        text(
+            "単集合の冪集合",
+            "単集合の冪集合は次の式で表されます：pow({a}) = {∅, {a}}",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("한원소 집합의 멱집합", "한원소 집합의 멱집합은 다음 식으로 나타납니다: pow({a}) = {∅, {a}}")
+        text(
+            "한원소 집합의 멱집합",
+            "한원소 집합의 멱집합은 다음 식으로 나타납니다: pow({a}) = {∅, {a}}",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tập lũy thừa của tập đơn", "Tính chất «Tập lũy thừa của tập đơn» được biểu diễn bởi: pow({a}) = {∅, {a}}")
+        text(
+            "Tập lũy thừa của tập đơn",
+            "Tính chất «Tập lũy thừa của tập đơn» được biểu diễn bởi: pow({a}) = {∅, {a}}",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10790,7 +12391,10 @@ impl PowerSetOfSingletonBuiltinRuleProof {
 
 impl FamilyUnionOfEmptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Union of an empty family", "The Union of an empty family law gives: ⋃∅ = ∅")
+        text(
+            "Union of an empty family",
+            "The Union of an empty family law gives: ⋃∅ = ∅",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("空集合族的并集", "空集合族的并集可写为：⋃∅ = ∅")
@@ -10801,31 +12405,52 @@ impl FamilyUnionOfEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Union d’une famille vide", "La propriété « Union d’une famille vide » donne: ⋃∅ = ∅")
+        text(
+            "Union d’une famille vide",
+            "La propriété « Union d’une famille vide » donne: ⋃∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Объединение пустого семейства", "Свойство «Объединение пустого семейства» выражается равенством: ⋃∅ = ∅")
+        text(
+            "Объединение пустого семейства",
+            "Свойство «Объединение пустого семейства» выражается равенством: ⋃∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Unión de una familia vacía", "La propiedad «Unión de una familia vacía» se expresa como: ⋃∅ = ∅")
+        text(
+            "Unión de una familia vacía",
+            "La propiedad «Unión de una familia vacía» se expresa como: ⋃∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("اتحاد عائلة خالية", "تُكتب خاصية «اتحاد عائلة خالية» كما يلي: ⋃∅ = ∅")
+        text(
+            "اتحاد عائلة خالية",
+            "تُكتب خاصية «اتحاد عائلة خالية» كما يلي: ⋃∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空の集合族の和集合", "空の集合族の和集合は次の式で表されます：⋃∅ = ∅")
+        text(
+            "空の集合族の和集合",
+            "空の集合族の和集合は次の式で表されます：⋃∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("빈 집합족의 합집합", "빈 집합족의 합집합은 다음 식으로 나타납니다: ⋃∅ = ∅")
+        text(
+            "빈 집합족의 합집합",
+            "빈 집합족의 합집합은 다음 식으로 나타납니다: ⋃∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Hợp của họ rỗng", "Tính chất «Hợp của họ rỗng» được biểu diễn bởi: ⋃∅ = ∅")
+        text(
+            "Hợp của họ rỗng",
+            "Tính chất «Hợp của họ rỗng» được biểu diễn bởi: ⋃∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10846,7 +12471,10 @@ impl FamilyUnionOfEmptyBuiltinRuleProof {
 
 impl CartWithEmptyFactorBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Cartesian product with an empty factor", "The Cartesian product with an empty factor law gives: A × ∅ = ∅")
+        text(
+            "Cartesian product with an empty factor",
+            "The Cartesian product with an empty factor law gives: A × ∅ = ∅",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("含空因子的笛卡尔积", "含空因子的笛卡尔积可写为：A × ∅ = ∅")
@@ -10857,7 +12485,10 @@ impl CartWithEmptyFactorBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Produit cartésien avec un facteur vide", "La propriété « Produit cartésien avec un facteur vide » donne: A × ∅ = ∅")
+        text(
+            "Produit cartésien avec un facteur vide",
+            "La propriété « Produit cartésien avec un facteur vide » donne: A × ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -10865,23 +12496,38 @@ impl CartWithEmptyFactorBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Producto cartesiano con un factor vacío", "La propiedad «Producto cartesiano con un factor vacío» se expresa como: A × ∅ = ∅")
+        text(
+            "Producto cartesiano con un factor vacío",
+            "La propiedad «Producto cartesiano con un factor vacío» se expresa como: A × ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الضرب الديكارتي بعامل خالٍ", "تُكتب خاصية «الضرب الديكارتي بعامل خالٍ» كما يلي: A × ∅ = ∅")
+        text(
+            "الضرب الديكارتي بعامل خالٍ",
+            "تُكتب خاصية «الضرب الديكارتي بعامل خالٍ» كما يلي: A × ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("空集合を因子に持つ直積", "空集合を因子に持つ直積は次の式で表されます：A × ∅ = ∅")
+        text(
+            "空集合を因子に持つ直積",
+            "空集合を因子に持つ直積は次の式で表されます：A × ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("공집합 인수를 갖는 데카르트 곱", "공집합 인수를 갖는 데카르트 곱은 다음 식으로 나타납니다: A × ∅ = ∅")
+        text(
+            "공집합 인수를 갖는 데카르트 곱",
+            "공집합 인수를 갖는 데카르트 곱은 다음 식으로 나타납니다: A × ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Tích Descartes có một thừa số rỗng", "Tính chất «Tích Descartes có một thừa số rỗng» được biểu diễn bởi: A × ∅ = ∅")
+        text(
+            "Tích Descartes có một thừa số rỗng",
+            "Tính chất «Tích Descartes có một thừa số rỗng» được biểu diễn bởi: A × ∅ = ∅",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -10994,17 +12640,11 @@ impl SetMinusChainToUnionBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "链式差集",
-            "A \\\\ B \\\\ C 通过被去掉集合的并展开",
-        )
+        text("链式差集", "A \\\\ B \\\\ C 通过被去掉集合的并展开")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "連續差集",
-            "A \\ B \\ C 以被移除集合之聯集展開",
-        )
+        text("連續差集", "A \\ B \\ C 以被移除集合之聯集展開")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11029,10 +12669,7 @@ impl SetMinusChainToUnionBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "فرق متسلسل",
-            "يتوسع A \\ B \\ C باتحاد المجموعات المحذوفة",
-        )
+        text("فرق متسلسل", "يتوسع A \\ B \\ C باتحاد المجموعات المحذوفة")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -11080,17 +12717,11 @@ impl FnRangeOfConstantAnonymousFnBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "常值函数值域",
-            "完整定义域非空的常值函数，其像是单点集",
-        )
+        text("常值函数值域", "完整定义域非空的常值函数，其像是单点集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "常數函數值域",
-            "完整定義域非空的常值函數，其像為單元素集合",
-        )
+        text("常數函數值域", "完整定義域非空的常值函數，其像為單元素集合")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11166,17 +12797,11 @@ impl SeqEqualsFnOnNPosBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "序列即 N+ 上函数",
-            "序列等于其在正整数上的函数",
-        )
+        text("序列即 N+ 上函数", "序列等于其在正整数上的函数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "N+ 上的序列函數",
-            "序列等於其在正整數上的函數",
-        )
+        text("N+ 上的序列函數", "序列等於其在正整數上的函數")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11208,10 +12833,7 @@ impl SeqEqualsFnOnNPosBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "N+ 上の関数としての列",
-            "列は正の整数上の関数に等しいです",
-        )
+        text("N+ 上の関数としての列", "列は正の整数上の関数に等しいです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -11252,17 +12874,11 @@ impl FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "有限序列即函数",
-            "有限序列等于其在 1 至长度上的函数",
-        )
+        text("有限序列即函数", "有限序列等于其在 1 至长度上的函数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "有限序列視為函數",
-            "有限序列等於在索引 1 至其長度上的函數",
-        )
+        text("有限序列視為函數", "有限序列等於在索引 1 至其長度上的函數")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11338,11 +12954,17 @@ impl IndexUnionEmptyIndexBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("空索引集上的指标并集", "空索引集上的指标并集可写为：index_union(∅, X, A) = ∅")
+        text(
+            "空索引集上的指标并集",
+            "空索引集上的指标并集可写为：index_union(∅, X, A) = ∅",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("空索引集上的指標聯集", "空索引集上的指標聯集可寫為：index_union(∅, X, A) = ∅")
+        text(
+            "空索引集上的指標聯集",
+            "空索引集上的指標聯集可寫為：index_union(∅, X, A) = ∅",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11498,17 +13120,11 @@ impl IndexCartEmptyIndexBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "空指标笛卡尔积",
-            "空指标上的指标笛卡尔积是单位",
-        )
+        text("空指标笛卡尔积", "空指标上的指标笛卡尔积是单位")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "空索引笛卡兒積",
-            "空索引上的帶索引笛卡兒積為單位元",
-        )
+        text("空索引笛卡兒積", "空索引上的帶索引笛卡兒積為單位元")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11540,10 +13156,7 @@ impl IndexCartEmptyIndexBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "空の添字集合の直積",
-            "空の添字集合上の直積は単位です",
-        )
+        text("空の添字集合の直積", "空の添字集合上の直積は単位です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -11670,17 +13283,11 @@ impl FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "空有限序列",
-            "长度为 0 的有限序列等于空区间上的函数",
-        )
+        text("空有限序列", "长度为 0 的有限序列等于空区间上的函数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "空有限序列",
-            "長度為零的有限序列等於空區間上的函數",
-        )
+        text("空有限序列", "長度為零的有限序列等於空區間上的函數")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11712,10 +13319,7 @@ impl FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "空の有限列",
-            "長さゼロの有限列は空区間上の関数に等しいです",
-        )
+        text("空の有限列", "長さゼロの有限列は空区間上の関数に等しいです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -11750,23 +13354,14 @@ impl FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof {
 
 impl SetBuilderObviouslyEmptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "empty set-builder",
-            "A contradictory set-builder equals ∅",
-        )
+        text("empty set-builder", "A contradictory set-builder equals ∅")
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "空集合构造器",
-            "矛盾的集合构造器等于 ∅",
-        )
+        text("空集合构造器", "矛盾的集合构造器等于 ∅")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "空集合構造",
-            "條件矛盾的集合構造等於 ∅",
-        )
+        text("空集合構造", "條件矛盾的集合構造等於 ∅")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -11791,31 +13386,19 @@ impl SetBuilderObviouslyEmptyBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "بناء مجموعة خالية",
-            "المجموعة المبنية بشرط متناقض تساوي ∅",
-        )
+        text("بناء مجموعة خالية", "المجموعة المبنية بشرط متناقض تساوي ∅")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "空の内包表記集合",
-            "矛盾する条件の内包表記集合は ∅ です",
-        )
+        text("空の内包表記集合", "矛盾する条件の内包表記集合は ∅ です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "빈 조건제시 집합",
-            "조건이 모순인 조건제시 집합은 ∅입니다",
-        )
+        text("빈 조건제시 집합", "조건이 모순인 조건제시 집합은 ∅입니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tập dựng rỗng",
-            "Tập dựng có điều kiện mâu thuẫn bằng ∅",
-        )
+        text("Tập dựng rỗng", "Tập dựng có điều kiện mâu thuẫn bằng ∅")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -11922,42 +13505,72 @@ impl ComplexAbsSquaredOfRectFormBuiltinRuleProof {
 
 impl ExpOfSumBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Exponential of a sum", "The Exponential of a sum law gives: exp(x+y) = exp(x)·exp(y)")
+        text(
+            "Exponential of a sum",
+            "The Exponential of a sum law gives: exp(x+y) = exp(x)·exp(y)",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("和的指数运算", "和的指数运算可写为：exp(x+y) = exp(x)·exp(y)")
+        text(
+            "和的指数运算",
+            "和的指数运算可写为：exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("和的指數運算", "和的指數運算可寫為：exp(x+y) = exp(x)·exp(y)")
+        text(
+            "和的指數運算",
+            "和的指數運算可寫為：exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Exponentielle d’une somme", "La propriété « Exponentielle d’une somme » donne: exp(x+y) = exp(x)·exp(y)")
+        text(
+            "Exponentielle d’une somme",
+            "La propriété « Exponentielle d’une somme » donne: exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Экспонента суммы", "Свойство «Экспонента суммы» выражается равенством: exp(x+y) = exp(x)·exp(y)")
+        text(
+            "Экспонента суммы",
+            "Свойство «Экспонента суммы» выражается равенством: exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Exponencial de una suma", "La propiedad «Exponencial de una suma» se expresa como: exp(x+y) = exp(x)·exp(y)")
+        text(
+            "Exponencial de una suma",
+            "La propiedad «Exponencial de una suma» se expresa como: exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("الدالة الأسية لمجموع", "تُكتب خاصية «الدالة الأسية لمجموع» كما يلي: exp(x+y) = exp(x)·exp(y)")
+        text(
+            "الدالة الأسية لمجموع",
+            "تُكتب خاصية «الدالة الأسية لمجموع» كما يلي: exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("和の指数関数", "和の指数関数は次の式で表されます：exp(x+y) = exp(x)·exp(y)")
+        text(
+            "和の指数関数",
+            "和の指数関数は次の式で表されます：exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("합의 지수함수", "합의 지수함수은 다음 식으로 나타납니다: exp(x+y) = exp(x)·exp(y)")
+        text(
+            "합의 지수함수",
+            "합의 지수함수은 다음 식으로 나타납니다: exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Hàm mũ của một tổng", "Tính chất «Hàm mũ của một tổng» được biểu diễn bởi: exp(x+y) = exp(x)·exp(y)")
+        text(
+            "Hàm mũ của một tổng",
+            "Tính chất «Hàm mũ của một tổng» được biểu diễn bởi: exp(x+y) = exp(x)·exp(y)",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12070,11 +13683,17 @@ impl ReOfProductBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("复数乘积的实部", "复数乘积的实部可写为：re(z·w) = re(z)·re(w) - img(z)·img(w)")
+        text(
+            "复数乘积的实部",
+            "复数乘积的实部可写为：re(z·w) = re(z)·re(w) - img(z)·img(w)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("複數乘積的實部", "複數乘積的實部可寫為：re(z·w) = re(z)·re(w) - img(z)·img(w)")
+        text(
+            "複數乘積的實部",
+            "複數乘積的實部可寫為：re(z·w) = re(z)·re(w) - img(z)·img(w)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -12150,11 +13769,17 @@ impl ImgOfProductBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("复数乘积的虚部", "复数乘积的虚部可写为：img(z·w) = re(z)·img(w) + img(z)·re(w)")
+        text(
+            "复数乘积的虚部",
+            "复数乘积的虚部可写为：img(z·w) = re(z)·img(w) + img(z)·re(w)",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("複數乘積的虛部", "複數乘積的虛部可寫為：img(z·w) = re(z)·img(w) + img(z)·re(w)")
+        text(
+            "複數乘積的虛部",
+            "複數乘積的虛部可寫為：img(z·w) = re(z)·img(w) + img(z)·re(w)",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -12402,17 +14027,11 @@ impl ReduceSingleTermWithAddZeroBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "单项归约",
-            "单项并以 +0 归约等于该项",
-        )
+        text("单项归约", "单项并以 +0 归约等于该项")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "單項折疊",
-            "單項且以 +0 折疊時等於該項",
-        )
+        text("單項折疊", "單項且以 +0 折疊時等於該項")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -12437,31 +14056,19 @@ impl ReduceSingleTermWithAddZeroBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "طي حد واحد",
-            "طي حد واحد مع +0 يساوي ذلك الحد",
-        )
+        text("طي حد واحد", "طي حد واحد مع +0 يساوي ذلك الحد")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "一項の畳み込み",
-            "一項を +0 で畳み込むとその項に等しいです",
-        )
+        text("一項の畳み込み", "一項を +0 で畳み込むとその項に等しいです")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "한 항 접기",
-            "한 항을 +0으로 접으면 그 항과 같습니다",
-        )
+        text("한 항 접기", "한 항을 +0으로 접으면 그 항과 같습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Gấp một hạng",
-            "Gấp một hạng với +0 bằng hạng đó",
-        )
+        text("Gấp một hạng", "Gấp một hạng với +0 bằng hạng đó")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12488,17 +14095,11 @@ impl FiniteSetSumFubiniSwapBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "有限双重和 Fubini",
-            "有限双重和可交换求和次序",
-        )
+        text("有限双重和 Fubini", "有限双重和可交换求和次序")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "求和的 Fubini 交換",
-            "有限二重和可交換求和順序",
-        )
+        text("求和的 Fubini 交換", "有限二重和可交換求和順序")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -12574,17 +14175,11 @@ impl FiniteSetSumOverCartesianProductBuiltinRuleProof {
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "A×B 上求和",
-            "笛卡尔积上的求和展开为迭代和",
-        )
+        text("A×B 上求和", "笛卡尔积上的求和展开为迭代和")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "A×B 上的和",
-            "笛卡兒積上的和展開為疊代和",
-        )
+        text("A×B 上的和", "笛卡兒積上的和展開為疊代和")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -12616,10 +14211,7 @@ impl FiniteSetSumOverCartesianProductBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "A×B 上の和",
-            "直積上の和を反復和に展開します",
-        )
+        text("A×B 上の和", "直積上の和を反復和に展開します")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -12654,42 +14246,72 @@ impl FiniteSetSumOverCartesianProductBuiltinRuleProof {
 
 impl SinOfZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of sine at zero", "The value of sine at zero is zero: sin(0) = 0")
+        text(
+            "Value of sine at zero",
+            "The value of sine at zero is zero: sin(0) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("正弦函数在零处的值", "正弦函数在零处的值为零，即 sin(0) = 0")
+        text(
+            "正弦函数在零处的值",
+            "正弦函数在零处的值为零，即 sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("正弦函數在零處的值", "正弦函數在零處的值為零，即 sin(0) = 0")
+        text(
+            "正弦函數在零處的值",
+            "正弦函數在零處的值為零，即 sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur du sinus en zéro", "La valeur du sinus en zéro est zéro: sin(0) = 0")
+        text(
+            "Valeur du sinus en zéro",
+            "La valeur du sinus en zéro est zéro: sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «синус» при аргументе нуль", "При аргументе нуль функция «синус» принимает значение нуль: sin(0) = 0")
+        text(
+            "Значение функции «синус» при аргументе нуль",
+            "При аргументе нуль функция «синус» принимает значение нуль: sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de seno en cero", "El valor de seno en cero es cero: sin(0) = 0")
+        text(
+            "Valor de seno en cero",
+            "El valor de seno en cero es cero: sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الجيب عند الصفر", "قيمة دالة الجيب عند الصفر تساوي الصفر: sin(0) = 0")
+        text(
+            "قيمة دالة الجيب عند الصفر",
+            "قيمة دالة الجيب عند الصفر تساوي الصفر: sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における正弦関数の値", "零における正弦関数の値は零です：sin(0) = 0")
+        text(
+            "零における正弦関数の値",
+            "零における正弦関数の値は零です：sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 사인 함수 값", "영에서의 사인 함수 값은 영입니다: sin(0) = 0")
+        text(
+            "영에서의 사인 함수 값",
+            "영에서의 사인 함수 값은 영입니다: sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm sin tại không", "Giá trị của hàm sin tại không bằng không: sin(0) = 0")
+        text(
+            "Giá trị của hàm sin tại không",
+            "Giá trị của hàm sin tại không bằng không: sin(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12710,42 +14332,72 @@ impl SinOfZeroBuiltinRuleProof {
 
 impl CosOfZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of cosine at zero", "The value of cosine at zero is one: cos(0) = 1")
+        text(
+            "Value of cosine at zero",
+            "The value of cosine at zero is one: cos(0) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("余弦函数在零处的值", "余弦函数在零处的值为一，即 cos(0) = 1")
+        text(
+            "余弦函数在零处的值",
+            "余弦函数在零处的值为一，即 cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("餘弦函數在零處的值", "餘弦函數在零處的值為一，即 cos(0) = 1")
+        text(
+            "餘弦函數在零處的值",
+            "餘弦函數在零處的值為一，即 cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur du cosinus en zéro", "La valeur du cosinus en zéro est un: cos(0) = 1")
+        text(
+            "Valeur du cosinus en zéro",
+            "La valeur du cosinus en zéro est un: cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «косинус» при аргументе нуль", "При аргументе нуль функция «косинус» принимает значение единица: cos(0) = 1")
+        text(
+            "Значение функции «косинус» при аргументе нуль",
+            "При аргументе нуль функция «косинус» принимает значение единица: cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de coseno en cero", "El valor de coseno en cero es uno: cos(0) = 1")
+        text(
+            "Valor de coseno en cero",
+            "El valor de coseno en cero es uno: cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة جيب التمام عند الصفر", "قيمة دالة جيب التمام عند الصفر تساوي الواحد: cos(0) = 1")
+        text(
+            "قيمة دالة جيب التمام عند الصفر",
+            "قيمة دالة جيب التمام عند الصفر تساوي الواحد: cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における余弦関数の値", "零における余弦関数の値は一です：cos(0) = 1")
+        text(
+            "零における余弦関数の値",
+            "零における余弦関数の値は一です：cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 코사인 함수 값", "영에서의 코사인 함수 값은 일입니다: cos(0) = 1")
+        text(
+            "영에서의 코사인 함수 값",
+            "영에서의 코사인 함수 값은 일입니다: cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm cos tại không", "Giá trị của hàm cos tại không bằng một: cos(0) = 1")
+        text(
+            "Giá trị của hàm cos tại không",
+            "Giá trị của hàm cos tại không bằng một: cos(0) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12766,42 +14418,72 @@ impl CosOfZeroBuiltinRuleProof {
 
 impl TanOfZeroBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of tangent at zero", "The value of tangent at zero is zero: tan(0) = 0")
+        text(
+            "Value of tangent at zero",
+            "The value of tangent at zero is zero: tan(0) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("正切函数在零处的值", "正切函数在零处的值为零，即 tan(0) = 0")
+        text(
+            "正切函数在零处的值",
+            "正切函数在零处的值为零，即 tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("正切函數在零處的值", "正切函數在零處的值為零，即 tan(0) = 0")
+        text(
+            "正切函數在零處的值",
+            "正切函數在零處的值為零，即 tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de la tangente en zéro", "La valeur de la tangente en zéro est zéro: tan(0) = 0")
+        text(
+            "Valeur de la tangente en zéro",
+            "La valeur de la tangente en zéro est zéro: tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «тангенс» при аргументе нуль", "При аргументе нуль функция «тангенс» принимает значение нуль: tan(0) = 0")
+        text(
+            "Значение функции «тангенс» при аргументе нуль",
+            "При аргументе нуль функция «тангенс» принимает значение нуль: tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de tangente en cero", "El valor de tangente en cero es cero: tan(0) = 0")
+        text(
+            "Valor de tangente en cero",
+            "El valor de tangente en cero es cero: tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الظل عند الصفر", "قيمة دالة الظل عند الصفر تساوي الصفر: tan(0) = 0")
+        text(
+            "قيمة دالة الظل عند الصفر",
+            "قيمة دالة الظل عند الصفر تساوي الصفر: tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零における正接関数の値", "零における正接関数の値は零です：tan(0) = 0")
+        text(
+            "零における正接関数の値",
+            "零における正接関数の値は零です：tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("영에서의 탄젠트 함수 값", "영에서의 탄젠트 함수 값은 영입니다: tan(0) = 0")
+        text(
+            "영에서의 탄젠트 함수 값",
+            "영에서의 탄젠트 함수 값은 영입니다: tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm tan tại không", "Giá trị của hàm tan tại không bằng không: tan(0) = 0")
+        text(
+            "Giá trị của hàm tan tại không",
+            "Giá trị của hàm tan tại không bằng không: tan(0) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12822,42 +14504,72 @@ impl TanOfZeroBuiltinRuleProof {
 
 impl SinOfHalfPiBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of sine at π/2", "The value of sine at π/2 is one: sin(π/2) = 1")
+        text(
+            "Value of sine at π/2",
+            "The value of sine at π/2 is one: sin(π/2) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("正弦函数在π/2处的值", "正弦函数在π/2处的值为一，即 sin(π/2) = 1")
+        text(
+            "正弦函数在π/2处的值",
+            "正弦函数在π/2处的值为一，即 sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("正弦函數在π/2處的值", "正弦函數在π/2處的值為一，即 sin(π/2) = 1")
+        text(
+            "正弦函數在π/2處的值",
+            "正弦函數在π/2處的值為一，即 sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur du sinus en π/2", "La valeur du sinus en π/2 est un: sin(π/2) = 1")
+        text(
+            "Valeur du sinus en π/2",
+            "La valeur du sinus en π/2 est un: sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «синус» при аргументе π/2", "При аргументе π/2 функция «синус» принимает значение единица: sin(π/2) = 1")
+        text(
+            "Значение функции «синус» при аргументе π/2",
+            "При аргументе π/2 функция «синус» принимает значение единица: sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de seno en π/2", "El valor de seno en π/2 es uno: sin(π/2) = 1")
+        text(
+            "Valor de seno en π/2",
+            "El valor de seno en π/2 es uno: sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الجيب عند π/2", "قيمة دالة الجيب عند π/2 تساوي الواحد: sin(π/2) = 1")
+        text(
+            "قيمة دالة الجيب عند π/2",
+            "قيمة دالة الجيب عند π/2 تساوي الواحد: sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("π/2における正弦関数の値", "π/2における正弦関数の値は一です：sin(π/2) = 1")
+        text(
+            "π/2における正弦関数の値",
+            "π/2における正弦関数の値は一です：sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("π/2에서의 사인 함수 값", "π/2에서의 사인 함수 값은 일입니다: sin(π/2) = 1")
+        text(
+            "π/2에서의 사인 함수 값",
+            "π/2에서의 사인 함수 값은 일입니다: sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm sin tại π/2", "Giá trị của hàm sin tại π/2 bằng một: sin(π/2) = 1")
+        text(
+            "Giá trị của hàm sin tại π/2",
+            "Giá trị của hàm sin tại π/2 bằng một: sin(π/2) = 1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12878,42 +14590,72 @@ impl SinOfHalfPiBuiltinRuleProof {
 
 impl CosOfPiBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of cosine at π", "The value of cosine at π is minus one: cos(π) = -1")
+        text(
+            "Value of cosine at π",
+            "The value of cosine at π is minus one: cos(π) = -1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("余弦函数在π处的值", "余弦函数在π处的值为负一，即 cos(π) = -1")
+        text(
+            "余弦函数在π处的值",
+            "余弦函数在π处的值为负一，即 cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("餘弦函數在π處的值", "餘弦函數在π處的值為負一，即 cos(π) = -1")
+        text(
+            "餘弦函數在π處的值",
+            "餘弦函數在π處的值為負一，即 cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur du cosinus en π", "La valeur du cosinus en π est moins un: cos(π) = -1")
+        text(
+            "Valeur du cosinus en π",
+            "La valeur du cosinus en π est moins un: cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «косинус» при аргументе π", "При аргументе π функция «косинус» принимает значение минус единица: cos(π) = -1")
+        text(
+            "Значение функции «косинус» при аргументе π",
+            "При аргументе π функция «косинус» принимает значение минус единица: cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de coseno en π", "El valor de coseno en π es menos uno: cos(π) = -1")
+        text(
+            "Valor de coseno en π",
+            "El valor de coseno en π es menos uno: cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة جيب التمام عند π", "قيمة دالة جيب التمام عند π تساوي سالب واحد: cos(π) = -1")
+        text(
+            "قيمة دالة جيب التمام عند π",
+            "قيمة دالة جيب التمام عند π تساوي سالب واحد: cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("πにおける余弦関数の値", "πにおける余弦関数の値は負の一です：cos(π) = -1")
+        text(
+            "πにおける余弦関数の値",
+            "πにおける余弦関数の値は負の一です：cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("π에서의 코사인 함수 값", "π에서의 코사인 함수 값은 음의 일입니다: cos(π) = -1")
+        text(
+            "π에서의 코사인 함수 값",
+            "π에서의 코사인 함수 값은 음의 일입니다: cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm cos tại π", "Giá trị của hàm cos tại π bằng âm một: cos(π) = -1")
+        text(
+            "Giá trị của hàm cos tại π",
+            "Giá trị của hàm cos tại π bằng âm một: cos(π) = -1",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12934,7 +14676,10 @@ impl CosOfPiBuiltinRuleProof {
 
 impl SinOfPiBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of sine at π", "The value of sine at π is zero: sin(π) = 0")
+        text(
+            "Value of sine at π",
+            "The value of sine at π is zero: sin(π) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         text("正弦函数在π处的值", "正弦函数在π处的值为零，即 sin(π) = 0")
@@ -12945,31 +14690,52 @@ impl SinOfPiBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur du sinus en π", "La valeur du sinus en π est zéro: sin(π) = 0")
+        text(
+            "Valeur du sinus en π",
+            "La valeur du sinus en π est zéro: sin(π) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «синус» при аргументе π", "При аргументе π функция «синус» принимает значение нуль: sin(π) = 0")
+        text(
+            "Значение функции «синус» при аргументе π",
+            "При аргументе π функция «синус» принимает значение нуль: sin(π) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de seno en π", "El valor de seno en π es cero: sin(π) = 0")
+        text(
+            "Valor de seno en π",
+            "El valor de seno en π es cero: sin(π) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة الجيب عند π", "قيمة دالة الجيب عند π تساوي الصفر: sin(π) = 0")
+        text(
+            "قيمة دالة الجيب عند π",
+            "قيمة دالة الجيب عند π تساوي الصفر: sin(π) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("πにおける正弦関数の値", "πにおける正弦関数の値は零です：sin(π) = 0")
+        text(
+            "πにおける正弦関数の値",
+            "πにおける正弦関数の値は零です：sin(π) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("π에서의 사인 함수 값", "π에서의 사인 함수 값은 영입니다: sin(π) = 0")
+        text(
+            "π에서의 사인 함수 값",
+            "π에서의 사인 함수 값은 영입니다: sin(π) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm sin tại π", "Giá trị của hàm sin tại π bằng không: sin(π) = 0")
+        text(
+            "Giá trị của hàm sin tại π",
+            "Giá trị của hàm sin tại π bằng không: sin(π) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -12990,42 +14756,72 @@ impl SinOfPiBuiltinRuleProof {
 
 impl CotOfHalfPiBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Value of cotangent at π/2", "The value of cotangent at π/2 is zero: cot(π/2) = 0")
+        text(
+            "Value of cotangent at π/2",
+            "The value of cotangent at π/2 is zero: cot(π/2) = 0",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("余切函数在π/2处的值", "余切函数在π/2处的值为零，即 cot(π/2) = 0")
+        text(
+            "余切函数在π/2处的值",
+            "余切函数在π/2处的值为零，即 cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("餘切函數在π/2處的值", "餘切函數在π/2處的值為零，即 cot(π/2) = 0")
+        text(
+            "餘切函數在π/2處的值",
+            "餘切函數在π/2處的值為零，即 cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Valeur de la cotangente en π/2", "La valeur de la cotangente en π/2 est zéro: cot(π/2) = 0")
+        text(
+            "Valeur de la cotangente en π/2",
+            "La valeur de la cotangente en π/2 est zéro: cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Значение функции «котангенс» при аргументе π/2", "При аргументе π/2 функция «котангенс» принимает значение нуль: cot(π/2) = 0")
+        text(
+            "Значение функции «котангенс» при аргументе π/2",
+            "При аргументе π/2 функция «котангенс» принимает значение нуль: cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Valor de cotangente en π/2", "El valor de cotangente en π/2 es cero: cot(π/2) = 0")
+        text(
+            "Valor de cotangente en π/2",
+            "El valor de cotangente en π/2 es cero: cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("قيمة دالة ظل التمام عند π/2", "قيمة دالة ظل التمام عند π/2 تساوي الصفر: cot(π/2) = 0")
+        text(
+            "قيمة دالة ظل التمام عند π/2",
+            "قيمة دالة ظل التمام عند π/2 تساوي الصفر: cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("π/2における余接関数の値", "π/2における余接関数の値は零です：cot(π/2) = 0")
+        text(
+            "π/2における余接関数の値",
+            "π/2における余接関数の値は零です：cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("π/2에서의 코탄젠트 함수 값", "π/2에서의 코탄젠트 함수 값은 영입니다: cot(π/2) = 0")
+        text(
+            "π/2에서의 코탄젠트 함수 값",
+            "π/2에서의 코탄젠트 함수 값은 영입니다: cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Giá trị của hàm cot tại π/2", "Giá trị của hàm cot tại π/2 bằng không: cot(π/2) = 0")
+        text(
+            "Giá trị của hàm cot tại π/2",
+            "Giá trị của hàm cot tại π/2 bằng không: cot(π/2) = 0",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -13046,18 +14842,30 @@ impl CotOfHalfPiBuiltinRuleProof {
 
 impl PythagoreanIdentityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Trigonometric Pythagorean identity", "The Trigonometric Pythagorean identity law gives: sin²(x) + cos²(x) = 1")
+        text(
+            "Trigonometric Pythagorean identity",
+            "The Trigonometric Pythagorean identity law gives: sin²(x) + cos²(x) = 1",
+        )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("三角函数平方和恒等式", "三角函数平方和恒等式可写为：sin²(x) + cos²(x) = 1")
+        text(
+            "三角函数平方和恒等式",
+            "三角函数平方和恒等式可写为：sin²(x) + cos²(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("三角函數平方和恆等式", "三角函數平方和恆等式可寫為：sin²(x) + cos²(x) = 1")
+        text(
+            "三角函數平方和恆等式",
+            "三角函數平方和恆等式可寫為：sin²(x) + cos²(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Identité trigonométrique de Pythagore", "La propriété « Identité trigonométrique de Pythagore » donne: sin²(x) + cos²(x) = 1")
+        text(
+            "Identité trigonométrique de Pythagore",
+            "La propriété « Identité trigonométrique de Pythagore » donne: sin²(x) + cos²(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
@@ -13069,15 +14877,24 @@ impl PythagoreanIdentityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("المتطابقة المثلثية لفيثاغورس", "تُكتب خاصية «المتطابقة المثلثية لفيثاغورس» كما يلي: sin²(x) + cos²(x) = 1")
+        text(
+            "المتطابقة المثلثية لفيثاغورس",
+            "تُكتب خاصية «المتطابقة المثلثية لفيثاغورس» كما يلي: sin²(x) + cos²(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("三角関数の二乗和の恒等式", "三角関数の二乗和の恒等式は次の式で表されます：sin²(x) + cos²(x) = 1")
+        text(
+            "三角関数の二乗和の恒等式",
+            "三角関数の二乗和の恒等式は次の式で表されます：sin²(x) + cos²(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("삼각함수 제곱합 항등식", "삼각함수 제곱합 항등식은 다음 식으로 나타납니다: sin²(x) + cos²(x) = 1")
+        text(
+            "삼각함수 제곱합 항등식",
+            "삼각함수 제곱합 항등식은 다음 식으로 나타납니다: sin²(x) + cos²(x) = 1",
+        )
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -13109,17 +14926,11 @@ impl FamilyUnionOfSingletonBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "单元素集合族的并",
-            "只包含集合 A 的集合族，其并集等于 A。",
-        )
+        text("单元素集合族的并", "只包含集合 A 的集合族，其并集等于 A。")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "單元素集合族的聯集",
-            "單元素集合族的聯集等於其成員。",
-        )
+        text("單元素集合族的聯集", "單元素集合族的聯集等於其成員。")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -13151,10 +14962,7 @@ impl FamilyUnionOfSingletonBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "一要素の集合族の和",
-            "一要素の集合族の和はその要素です。",
-        )
+        text("一要素の集合族の和", "一要素の集合族の和はその要素です。")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -13196,17 +15004,11 @@ impl FamilyUnionOfPowerSetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "幂集的并",
-            "集合 A 的幂集中所有集合的并等于 A。",
-        )
+        text("幂集的并", "集合 A 的幂集中所有集合的并等于 A。")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "冪集的聯集",
-            "集合冪集中所有集合的聯集等於該集合。",
-        )
+        text("冪集的聯集", "集合冪集中所有集合的聯集等於該集合。")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -13238,17 +15040,11 @@ impl FamilyUnionOfPowerSetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "べき集合の和",
-            "集合のべき集合の和はその集合です。",
-        )
+        text("べき集合の和", "集合のべき集合の和はその集合です。")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "멱집합의 합집합",
-            "집합의 멱집합의 합집합은 그 집합입니다.",
-        )
+        text("멱집합의 합집합", "집합의 멱집합의 합집합은 그 집합입니다.")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {

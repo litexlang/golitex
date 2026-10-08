@@ -1,6 +1,6 @@
-use super::QuantifierFreeFact;
 use super::super::line_file::SourceLine;
 use super::super::param::TypedParameterList;
+use super::QuantifierFreeFact;
 use crate::runtime::FactId;
 
 // Shared payload for `exist` / `exist!` / `not exist`.

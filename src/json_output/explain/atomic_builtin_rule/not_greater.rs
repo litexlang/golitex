@@ -124,17 +124,11 @@ impl ClosedNumericComparisonBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "封闭数值比较",
-            "两边算出的数满足目标比较关系",
-        )
+        text("封闭数值比较", "两边算出的数满足目标比较关系")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "封閉數值比較",
-            "十進位值 L <= R 時，`not (left > right)`",
-        )
+        text("封閉數值比較", "十進位值 L <= R 時，`not (left > right)`")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -211,14 +205,14 @@ impl FromKnownLessBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知严格小于",
-            "目标由已知的严格小于事实推出",
-        )
+        text("已知严格小于", "目标由已知的严格小于事实推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("由已知小於", "由已知小於給出以下關係: `a < b` ⇒ `not (a > b)`")
+        text(
+            "由已知小於",
+            "由已知小於給出以下關係: `a < b` ⇒ `not (a > b)`",
+        )
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {

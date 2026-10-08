@@ -94,10 +94,7 @@ impl IsSetFactSearchProofByBuiltinRule {
 
 impl IsSetAlwaysTrueBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Always True",
-            "Verified by the always True builtin rule",
-        )
+        text("Always True", "Verified by the always True builtin rule")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
@@ -130,31 +127,19 @@ impl IsSetAlwaysTrueBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "صحيح دائمًا",
-            "تم التحقق بقاعدة الصحة الدائمة المدمجة",
-        )
+        text("صحيح دائمًا", "تم التحقق بقاعدة الصحة الدائمة المدمجة")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "常に真",
-            "常に真となる組み込み規則で検証しました",
-        )
+        text("常に真", "常に真となる組み込み規則で検証しました")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "항상 참",
-            "항상 참인 내장 규칙으로 검증했습니다",
-        )
+        text("항상 참", "항상 참인 내장 규칙으로 검증했습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Luôn đúng",
-            "Đã kiểm chứng bằng quy tắc tích hợp luôn đúng",
-        )
+        text("Luôn đúng", "Đã kiểm chứng bằng quy tắc tích hợp luôn đúng")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

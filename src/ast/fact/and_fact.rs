@@ -1,5 +1,5 @@
-use super::AtomicFact;
 use super::super::line_file::SourceLine;
+use super::AtomicFact;
 use crate::runtime::FactId;
 
 // Flat and of atomics only. No forall / exist / nested and: keeps store and

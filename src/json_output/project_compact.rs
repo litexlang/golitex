@@ -28,7 +28,9 @@ pub fn project_run_compact(
 ) -> JsonValue {
     let lang = output_language(runtime);
     let statement_results = project_run_statements_normal(run, runtime)
-        .iter().map(|stmt| thin_to_compact(lang, stmt)).collect();
+        .iter()
+        .map(|stmt| thin_to_compact(lang, stmt))
+        .collect();
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,

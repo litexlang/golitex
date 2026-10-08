@@ -17,7 +17,6 @@ pub enum AtomicFact {
     IsFiniteSetFact(IsFiniteSetFact),
     InFact(InFact),
 
-
     SubsetFact(SubsetFact),
     SupersetFact(SupersetFact),
     ProperSubsetFact(ProperSubsetFact),
@@ -39,7 +38,6 @@ pub enum AtomicFact {
     NotIsNonemptySetFact(NotIsNonemptySetFact),
     NotIsFiniteSetFact(NotIsFiniteSetFact),
     NotInFact(NotInFact),
-
 
     NotSubsetFact(NotSubsetFact),
     NotSupersetFact(NotSupersetFact),
@@ -239,8 +237,6 @@ pub struct NotSubsetFact {
     pub right: Obj,
     pub line_file: Option<SourceLine>,
 }
-
-
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProperSubsetFact {
@@ -446,18 +442,18 @@ impl AtomicFact {
     pub fn prop_name(&self) -> AtomicName {
         use crate::parse::keywords::{
             BIJECTIVE, COPRIME, DVD, EQUAL, GREATER, GREATER_EQUAL, IN, INJECTIVE,
-            IS_CHOICE_FUNCTION_FOR, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS,
-            LESS_EQUAL, PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
+            IS_CHOICE_FUNCTION_FOR, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL,
+            PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
             AtomicFact::NormalAtomicFact(f) => f.predicate.clone(),
             AtomicFact::NotNormalAtomicFact(f) => f.predicate.clone(),
-            AtomicFact::EqualFact(_) | AtomicFact::NotEqualFact(_) => AtomicName::Plain {
-                name: EQUAL.into(),
-            },
-            AtomicFact::LessFact(_) | AtomicFact::NotLessFact(_) => AtomicName::Plain {
-                name: LESS.into(),
-            },
+            AtomicFact::EqualFact(_) | AtomicFact::NotEqualFact(_) => {
+                AtomicName::Plain { name: EQUAL.into() }
+            }
+            AtomicFact::LessFact(_) | AtomicFact::NotLessFact(_) => {
+                AtomicName::Plain { name: LESS.into() }
+            }
             AtomicFact::GreaterFact(_) | AtomicFact::NotGreaterFact(_) => AtomicName::Plain {
                 name: GREATER.into(),
             },
@@ -482,9 +478,9 @@ impl AtomicFact {
                     name: IS_FINITE_SET.into(),
                 }
             }
-            AtomicFact::InFact(_) | AtomicFact::NotInFact(_) => AtomicName::Plain {
-                name: IN.into(),
-            },
+            AtomicFact::InFact(_) | AtomicFact::NotInFact(_) => {
+                AtomicName::Plain { name: IN.into() }
+            }
             AtomicFact::SubsetFact(_) | AtomicFact::NotSubsetFact(_) => AtomicName::Plain {
                 name: SUBSET.into(),
             },
@@ -501,15 +497,15 @@ impl AtomicFact {
                     name: PROPER_SUPERSET.into(),
                 }
             }
-            AtomicFact::PrimeFact(_) | AtomicFact::NotPrimeFact(_) => AtomicName::Plain {
-                name: PRIME.into(),
-            },
+            AtomicFact::PrimeFact(_) | AtomicFact::NotPrimeFact(_) => {
+                AtomicName::Plain { name: PRIME.into() }
+            }
             AtomicFact::CoprimeFact(_) | AtomicFact::NotCoprimeFact(_) => AtomicName::Plain {
                 name: COPRIME.into(),
             },
-            AtomicFact::DvdFact(_) | AtomicFact::NotDvdFact(_) => AtomicName::Plain {
-                name: DVD.into(),
-            },
+            AtomicFact::DvdFact(_) | AtomicFact::NotDvdFact(_) => {
+                AtomicName::Plain { name: DVD.into() }
+            }
             AtomicFact::InjectiveFact(_) | AtomicFact::NotInjectiveFact(_) => AtomicName::Plain {
                 name: INJECTIVE.into(),
             },

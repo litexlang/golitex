@@ -49,10 +49,7 @@ fn encode_def_thm(stmt: &DefThmStmt) -> Result<JsonValue, KbCodecError> {
         ("kind".into(), JsonValue::String("def_thm".into())),
         ("name".into(), JsonValue::String(stmt.name.clone())),
         ("fact".into(), encode_fact(&stmt.fact)?),
-        (
-            "prove_process".into(),
-            JsonValue::Array(Vec::new()),
-        ),
+        ("prove_process".into(), JsonValue::Array(Vec::new())),
         ("line_file".into(), encode_line_file(&stmt.line_file)?),
     ]))
 }

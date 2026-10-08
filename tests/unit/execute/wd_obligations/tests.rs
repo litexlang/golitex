@@ -55,9 +55,11 @@ fn finite_extrema_require_real_elements_and_discard_failed_bindings() {
 #[test]
 fn finite_extrema_preserve_real_aliases_and_checked_set_domains() {
     let mut rt = runtime();
-    let run = rt.run_litex_code(include_str!(
-        "../../../../examples/wd/finite_extrema_real_carrier.lit"
-    )).unwrap();
+    let run = rt
+        .run_litex_code(include_str!(
+            "../../../../examples/wd/finite_extrema_real_carrier.lit"
+        ))
+        .unwrap();
     assert!(run.success, "{:?}", run.session_error);
     assert!(run.session_error.is_none());
 }
@@ -66,7 +68,11 @@ fn finite_extrema_preserve_real_aliases_and_checked_set_domains() {
 fn finite_extrema_preserve_empty_and_infinite_set_rejections() {
     for operator in ["finite_set_max", "finite_set_min"] {
         for set in ["{}", "R"] {
-            check(&mut runtime(), &format!("let bad = {operator}({set})"), &[false]);
+            check(
+                &mut runtime(),
+                &format!("let bad = {operator}({set})"),
+                &[false],
+            );
         }
     }
 }
@@ -74,9 +80,11 @@ fn finite_extrema_preserve_empty_and_infinite_set_rejections() {
 #[test]
 fn finite_set_fold_preserves_valid_domain_literals_and_named_iterands() {
     let mut rt = runtime();
-    let mut result = rt.run_litex_code(include_str!(
-        "../../../../examples/wd/finite_set_fold_domain.lit"
-    )).unwrap();
+    let mut result = rt
+        .run_litex_code(include_str!(
+            "../../../../examples/wd/finite_set_fold_domain.lit"
+        ))
+        .unwrap();
     result.attach_normal_json(&rt, "eval", None);
     assert!(result.success, "{}", result.normal_json.as_deref().unwrap());
     assert!(result.session_error.is_none());
@@ -84,14 +92,13 @@ fn finite_set_fold_preserves_valid_domain_literals_and_named_iterands() {
 
 #[test]
 fn finite_set_fold_requires_iterand_domain_and_predicate_coverage() {
-    for function in [
-        "fn(x {2}) Z {x}",
-        "fn(x Z: x > 0) Z {x}",
-    ] {
+    for function in ["fn(x {2}) Z {x}", "fn(x Z: x > 0) Z {x}"] {
         let mut rt = runtime();
         check(
             &mut rt,
-            &format!("let bad = finite_set_reduce({{0, 1}}, {function}, fn(a, b Z) Z {{a + b}}, 0)"),
+            &format!(
+                "let bad = finite_set_reduce({{0, 1}}, {function}, fn(a, b Z) Z {{a + b}}, 0)"
+            ),
             &[false],
         );
         let result = rt.run_litex_code("bad = bad").unwrap();

@@ -62,7 +62,10 @@ impl Runtime {
             right: let_stmt.value.clone(),
             line_file: Some(let_stmt.line_file.clone()),
         }));
-        let store_and_infer_result = self.store_fact_and_infer(&equal_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let store_and_infer_result = self.store_fact_and_infer(
+            &equal_fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         Ok(ExecLetObjStmtResult::Success(ExecLetObjStmtSuccessResult {
             statement: let_stmt.clone(),

@@ -124,10 +124,11 @@ impl Runtime {
                             element: base.clone(),
                             set: Obj::StandardSet(StandardSet::R),
                             line_file: None,
-                        }.into();
-                        requirements.push(self.verify_builtin_rule_premise(
-                            &membership, verify_state.clone(),
-                        )?);
+                        }
+                        .into();
+                        requirements.push(
+                            self.verify_builtin_rule_premise(&membership, verify_state.clone())?,
+                        );
                         if requirements.last().unwrap().is_failed() {
                             break;
                         }
@@ -142,10 +143,10 @@ impl Runtime {
                         left: side.clone(),
                         right: zero.clone(),
                         line_file: None,
-                    }.into();
-                    let sum_zero_proof = self.verify_builtin_rule_premise(
-                        &sum_zero, verify_state.clone(),
-                    )?;
+                    }
+                    .into();
+                    let sum_zero_proof =
+                        self.verify_builtin_rule_premise(&sum_zero, verify_state.clone())?;
                     if sum_zero_proof.is_failed() {
                         continue;
                     }
@@ -174,9 +175,7 @@ fn quot_euclidean_decomposition_shape(dividend: &Obj, decomposition: &Obj) -> bo
     let Some((r_left, r_right)) = match_mod(rem_side.as_ref()) else {
         return false;
     };
-    dividend.ir() == q_left.ir()
-        && dividend.ir() == r_left.ir()
-        && q_right.ir() == r_right.ir()
+    dividend.ir() == q_left.ir() && dividend.ir() == r_left.ir() && q_right.ir() == r_right.ir()
 }
 
 fn match_quot_product(obj: &Obj) -> Option<(&Obj, &Obj)> {
@@ -241,12 +240,14 @@ fn lcm_gcd_product_abs_shape(product: &Obj, abs_product: &Obj) -> bool {
         return false;
     };
     let (lcm_args, gcd_args) = match (left.as_ref(), right.as_ref()) {
-        (Obj::IntegerOperator(IntegerOperator::Lcm(Lcm { left: a, right: b })),
-         Obj::IntegerOperator(IntegerOperator::Gcd(Gcd { left: c, right: d })))
-        | (Obj::IntegerOperator(IntegerOperator::Gcd(Gcd { left: c, right: d })),
-           Obj::IntegerOperator(IntegerOperator::Lcm(Lcm { left: a, right: b }))) => {
-            ((a.as_ref(), b.as_ref()), (c.as_ref(), d.as_ref()))
-        }
+        (
+            Obj::IntegerOperator(IntegerOperator::Lcm(Lcm { left: a, right: b })),
+            Obj::IntegerOperator(IntegerOperator::Gcd(Gcd { left: c, right: d })),
+        )
+        | (
+            Obj::IntegerOperator(IntegerOperator::Gcd(Gcd { left: c, right: d })),
+            Obj::IntegerOperator(IntegerOperator::Lcm(Lcm { left: a, right: b })),
+        ) => ((a.as_ref(), b.as_ref()), (c.as_ref(), d.as_ref())),
         _ => return false,
     };
     if !(lcm_args.0.ir() == gcd_args.0.ir() && lcm_args.1.ir() == gcd_args.1.ir()) {
@@ -398,13 +399,20 @@ mod square_sum_real_guard_tests {
 
     fn runtime() -> Runtime {
         Runtime::new(LaunchCommand::Eval {
-            code: String::new(), session: false, strict: true, language: OutputLanguage::English,
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
         })
     }
 
     fn check(rt: &mut Runtime, code: &str, expected: bool) -> JsonValue {
         let run = rt.run_litex_code(code).expect("public Runtime");
-        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
         assert_eq!(run.success, expected, "{code}");
         project_run_detailed(&run, rt, "eval", None)
     }
@@ -419,7 +427,10 @@ mod square_sum_real_guard_tests {
                 if fields.get("rule").and_then(|v| v.as_str().ok()) == Some(name) {
                     return Some(value);
                 }
-                fields.keys_in_order().into_iter().find_map(|key| find_named_rule(fields.get(&key).unwrap(), name))
+                fields
+                    .keys_in_order()
+                    .into_iter()
+                    .find_map(|key| find_named_rule(fields.get(&key).unwrap(), name))
             }
             JsonValue::Array(items) => items.iter().find_map(|item| find_named_rule(item, name)),
             _ => None,
@@ -429,21 +440,39 @@ mod square_sum_real_guard_tests {
     fn contains_exact_string(value: &JsonValue, expected: &str) -> bool {
         match value {
             JsonValue::String(text) => text == expected,
-            JsonValue::Object(fields) => fields.keys_in_order().into_iter()
+            JsonValue::Object(fields) => fields
+                .keys_in_order()
+                .into_iter()
                 .any(|key| contains_exact_string(fields.get(&key).unwrap(), expected)),
-            JsonValue::Array(items) => items.iter().any(|item| contains_exact_string(item, expected)),
+            JsonValue::Array(items) => items
+                .iter()
+                .any(|item| contains_exact_string(item, expected)),
             _ => false,
         }
     }
 
     #[test]
     fn square_sum_real_guard_tracer_preserves_real_forms_and_proof_payload() {
-        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/proof_nodes/equal/by_builtin_rule/square_sum_zero_real_guard.lit"));
+        let source = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/square_sum_zero_real_guard.lit"
+        ));
         let json = check(&mut runtime(), source, true);
-        let rule = find_rule(&json).expect("actual winning rule").as_object().unwrap();
-        let requirements = rule.get("proof_of_requirement_facts").unwrap().as_array().unwrap();
+        let rule = find_rule(&json)
+            .expect("actual winning rule")
+            .as_object()
+            .unwrap();
+        let requirements = rule
+            .get("proof_of_requirement_facts")
+            .unwrap()
+            .as_array()
+            .unwrap();
         assert_eq!(requirements.len(), 3);
-        for (requirement, fact) in requirements.iter().zip(["a $in R", "b $in R", "a ^ 2 + b ^ 2 = 0"]) {
+        for (requirement, fact) in
+            requirements
+                .iter()
+                .zip(["a $in R", "b $in R", "a ^ 2 + b ^ 2 = 0"])
+        {
             let requirement = requirement.as_object().unwrap();
             assert_eq!(requirement.get("success"), Some(&JsonValue::Bool(true)));
             assert_eq!(requirement.get("fact").unwrap().as_str().unwrap(), fact);
@@ -478,18 +507,64 @@ mod square_sum_real_guard_tests {
 
     #[test]
     fn square_sum_real_guard_retains_actual_assumption_citations() {
-        let source = "forall a,b C:\n    a $in R\n    b $in R\n    a^2+b^2=0\n    =>:\n        a=0\n";
+        let source =
+            "forall a,b C:\n    a $in R\n    b $in R\n    a^2+b^2=0\n    =>:\n        a=0\n";
         let json = check(&mut runtime(), source, true);
-        let statement = &json.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
-        let verify = statement.as_object().unwrap().get("verify").unwrap().as_object().unwrap();
+        let statement = &json
+            .as_object()
+            .unwrap()
+            .get("statement_results")
+            .unwrap()
+            .as_array()
+            .unwrap()[0];
+        let verify = statement
+            .as_object()
+            .unwrap()
+            .get("verify")
+            .unwrap()
+            .as_object()
+            .unwrap();
         let assumptions = verify.get("assumed_dom_facts").unwrap().as_array().unwrap();
-        let requirements = find_rule(&json).unwrap().as_object().unwrap().get("proof_of_requirement_facts").unwrap().as_array().unwrap();
+        let requirements = find_rule(&json)
+            .unwrap()
+            .as_object()
+            .unwrap()
+            .get("proof_of_requirement_facts")
+            .unwrap()
+            .as_array()
+            .unwrap();
         assert_eq!(requirements.len(), 3);
         assert_eq!(assumptions.len(), 3);
         for (requirement, assumption) in requirements.iter().zip(assumptions) {
-            let store = &assumption.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap()[0];
-            let source_id = store.as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
-            assert!(contains_exact_string(requirement.as_object().unwrap().get("searched_proof").unwrap(), source_id), "missing {source_id}");
+            let store = &assumption
+                .as_object()
+                .unwrap()
+                .get("store_and_infer")
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .get("stores")
+                .unwrap()
+                .as_array()
+                .unwrap()[0];
+            let source_id = store
+                .as_object()
+                .unwrap()
+                .get("fact_id")
+                .unwrap()
+                .as_str()
+                .unwrap();
+            assert!(
+                contains_exact_string(
+                    requirement
+                        .as_object()
+                        .unwrap()
+                        .get("searched_proof")
+                        .unwrap(),
+                    source_id
+                ),
+                "missing {source_id}"
+            );
         }
     }
 
@@ -497,12 +572,25 @@ mod square_sum_real_guard_tests {
     fn square_sum_real_guard_respects_parent_search_ceiling() {
         let mut rt = runtime();
         let source = "forall a,b R:\n    a^2+b^2=0\n    =>:\n        a=0\n";
-        let tokens = Tokenizer::new().tokenize(source, rt.current_file.clone()).unwrap();
-        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact") };
-        for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty] {
-            assert!(rt.verify_fact(&goal, VerifyState::new(level)).unwrap().is_failed());
+        let tokens = Tokenizer::new()
+            .tokenize(source, rt.current_file.clone())
+            .unwrap();
+        let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("fact")
+        };
+        for level in [
+            VerifyStateLevel::Direct,
+            VerifyStateLevel::KnownSpecialProperty,
+        ] {
+            assert!(rt
+                .verify_fact(&goal, VerifyState::new(level))
+                .unwrap()
+                .is_failed());
         }
-        assert!(!rt.verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule)).unwrap().is_failed());
+        assert!(!rt
+            .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+            .unwrap()
+            .is_failed());
     }
 
     #[test]
@@ -513,7 +601,11 @@ mod square_sum_real_guard_tests {
         check(&mut rt, "i=0\n", false);
         let wrong = "forall a,b C:\n    a^2+b^2=0\n    =>:\n        a=0\n";
         check(&mut rt, wrong, false);
-        check(&mut rt, "forall a,b R:\n    a^2+b^2=0\n    =>:\n        a=0\n        b=0\n", true);
+        check(
+            &mut rt,
+            "forall a,b R:\n    a^2+b^2=0\n    =>:\n        a=0\n        b=0\n",
+            true,
+        );
         check(&mut rt, wrong, false);
         check(&mut rt, "1!=0\ni!=0\n", true);
         check(&mut rt, "1=0\n", false);
@@ -521,20 +613,66 @@ mod square_sum_real_guard_tests {
 
     #[test]
     fn square_sum_real_guard_nonzero_retains_real_and_component_citations() {
-        let source = "forall a,b C:\n    a $in R\n    b $in R\n    b!=0\n    =>:\n        a*a+b*b!=0\n";
+        let source =
+            "forall a,b C:\n    a $in R\n    b $in R\n    b!=0\n    =>:\n        a*a+b*b!=0\n";
         let json = check(&mut runtime(), source, true);
-        let rule = find_named_rule(&json, "SquareSumNonzeroFromComponent").expect("actual rule").as_object().unwrap();
-        let requirements = rule.get("proof_of_requirement_facts").unwrap().as_array().unwrap();
+        let rule = find_named_rule(&json, "SquareSumNonzeroFromComponent")
+            .expect("actual rule")
+            .as_object()
+            .unwrap();
+        let requirements = rule
+            .get("proof_of_requirement_facts")
+            .unwrap()
+            .as_array()
+            .unwrap();
         assert_eq!(requirements.len(), 2);
-        let statement = &json.as_object().unwrap().get("statement_results").unwrap().as_array().unwrap()[0];
-        let assumptions = statement.as_object().unwrap().get("verify").unwrap().as_object().unwrap().get("assumed_dom_facts").unwrap().as_array().unwrap();
+        let statement = &json
+            .as_object()
+            .unwrap()
+            .get("statement_results")
+            .unwrap()
+            .as_array()
+            .unwrap()[0];
+        let assumptions = statement
+            .as_object()
+            .unwrap()
+            .get("verify")
+            .unwrap()
+            .as_object()
+            .unwrap()
+            .get("assumed_dom_facts")
+            .unwrap()
+            .as_array()
+            .unwrap();
         assert_eq!(assumptions.len(), 3);
         let component = rule.get("component_nonzero_proof").unwrap();
         for (proof, assumption) in requirements.iter().chain([component]).zip(assumptions) {
-            assert_eq!(proof.as_object().unwrap().get("success"), Some(&JsonValue::Bool(true)));
-            let store = &assumption.as_object().unwrap().get("store_and_infer").unwrap().as_object().unwrap().get("stores").unwrap().as_array().unwrap()[0];
-            let source_id = store.as_object().unwrap().get("fact_id").unwrap().as_str().unwrap();
-            assert!(contains_exact_string(proof.as_object().unwrap().get("searched_proof").unwrap(), source_id));
+            assert_eq!(
+                proof.as_object().unwrap().get("success"),
+                Some(&JsonValue::Bool(true))
+            );
+            let store = &assumption
+                .as_object()
+                .unwrap()
+                .get("store_and_infer")
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .get("stores")
+                .unwrap()
+                .as_array()
+                .unwrap()[0];
+            let source_id = store
+                .as_object()
+                .unwrap()
+                .get("fact_id")
+                .unwrap()
+                .as_str()
+                .unwrap();
+            assert!(contains_exact_string(
+                proof.as_object().unwrap().get("searched_proof").unwrap(),
+                source_id
+            ));
         }
         for source in [
             "forall a,b R:\n    a!=0\n    =>:\n        a^2+b^2!=0\n",
@@ -560,7 +698,11 @@ mod square_sum_real_guard_tests {
         check(&mut rt, "1^2+i^2!=0\n", false);
         check(&mut rt, "1^2+i^2=0\n", true);
         check(&mut rt, "1=0\n", false);
-        check(&mut rt, "forall a,b R:\n    a!=0\n    =>:\n        a^2+b^2!=0\n", true);
+        check(
+            &mut rt,
+            "forall a,b R:\n    a!=0\n    =>:\n        a^2+b^2!=0\n",
+            true,
+        );
         check(&mut rt, "1^2+i^2!=0\n", false);
     }
 }

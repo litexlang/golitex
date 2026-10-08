@@ -71,15 +71,37 @@ fn batch(output: &Output, exit: i32, success: bool) -> JsonValue {
 fn normal_json_retains_mathematical_content_for_custom_views() {
     let dir = FixtureDir::new();
     let code = "have x R = 2\nx > 0";
-    let json = batch(&dir.run(&["-lang", "en", "-strict", "-e", code], None), 0, true);
+    let json = batch(
+        &dir.run(&["-lang", "en", "-strict", "-e", code], None),
+        0,
+        true,
+    );
     assert_eq!(field(&json, "kind").as_str().unwrap(), "run");
     assert_eq!(field(&json, "session_error"), &JsonValue::Null);
     let statements = field(&json, "statement_results").as_array().unwrap();
     assert_eq!(statements.len(), 2);
-    assert_eq!(field(&statements[0], "statement").as_str().unwrap(), "have x R = 2");
-    assert_eq!(field(&statements[0], "infers").as_array().unwrap()[0].as_str().unwrap(), "x = 2");
-    assert_eq!(field(&statements[1], "stores").as_array().unwrap()[0].as_str().unwrap(), "x > 0");
-    assert_eq!(field(field(&statements[1], "proof_method"), "type").as_str().unwrap(), "builtin_rewrite");
+    assert_eq!(
+        field(&statements[0], "statement").as_str().unwrap(),
+        "have x R = 2"
+    );
+    assert_eq!(
+        field(&statements[0], "infers").as_array().unwrap()[0]
+            .as_str()
+            .unwrap(),
+        "x = 2"
+    );
+    assert_eq!(
+        field(&statements[1], "stores").as_array().unwrap()[0]
+            .as_str()
+            .unwrap(),
+        "x > 0"
+    );
+    assert_eq!(
+        field(field(&statements[1], "proof_method"), "type")
+            .as_str()
+            .unwrap(),
+        "builtin_rewrite"
+    );
 }
 
 #[test]
@@ -90,12 +112,16 @@ fn removed_graph_flags_are_rejected_and_do_not_claim_operand_text() {
             let output = dir.run(&args, None);
             assert_eq!(output.status.code(), Some(2));
             assert!(output.stdout.is_empty());
-            assert!(std::str::from_utf8(&output.stderr).unwrap().starts_with("launch_error:"));
+            assert!(std::str::from_utf8(&output.stderr)
+                .unwrap()
+                .starts_with("launch_error:"));
         }
     }
     let help = dir.run(&["-help"], None);
     assert!(help.status.success());
-    assert!(!std::str::from_utf8(&help.stdout).unwrap().contains("-graph"));
+    assert!(!std::str::from_utf8(&help.stdout)
+        .unwrap()
+        .contains("-graph"));
     // An operand with this spelling still reaches the source parser.
     let ordinary = batch(&dir.run(&["-e", "-graph"], None), 1, false);
     assert_eq!(field(&ordinary, "kind").as_str().unwrap(), "run");

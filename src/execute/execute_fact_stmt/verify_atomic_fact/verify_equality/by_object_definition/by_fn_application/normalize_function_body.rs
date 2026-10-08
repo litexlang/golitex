@@ -1,14 +1,18 @@
 //! Bounded beta substitution inside one function-definition equality route.
 //! This expands stored mathematical bodies, never algorithms or proof search.
 
+use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 use crate::ast::obj::{AnonymousFn, ArithmeticOperator, FnObj, FnObjHead, FunctionSpace, Obj};
 use crate::ast::stmt::TemplateDefEnum;
-use crate::execute::execute_fact_stmt::{ObjWellDefinedProof, VerifyObjWellDefinedResult, VerifyState};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
-use crate::runtime::{Runtime, RuntimeResult};
 use crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof;
-use crate::execute::execute_fact_stmt::known_tuple::{KnownTupleShapeProof, literal_positive_usize, tuple_function_head};
-use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
+use crate::execute::execute_fact_stmt::known_tuple::{
+    literal_positive_usize, tuple_function_head, KnownTupleShapeProof,
+};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::execute::execute_fact_stmt::{
+    ObjWellDefinedProof, VerifyObjWellDefinedResult, VerifyState,
+};
+use crate::runtime::{Runtime, RuntimeResult};
 
 const MAX_BODY_EXPANSIONS: usize = 64;
 
@@ -221,18 +225,31 @@ impl Runtime {
         if args.len() == 1 {
             if let Some(index) = literal_positive_usize(&args[0]) {
                 for source in self.finite_function_signatures(&tuple_function_head(prefix)) {
-                    let KnownTupleShapeProof::TupleEquality(value) = &source.source else { continue; };
-                    let Some(coordinate) = value.value.args.get(index - 1) else { continue; };
-                    let expanded_body = coordinate.as_ref().clone();
-                    if expected_body.is_some_and(|expected| expected != &expanded_body) { continue; }
-                    let application_well_defined = match self.verify_obj_well_definedness(&application, state)? {
-                        VerifyObjWellDefinedResult::Success(proof) => proof,
-                        VerifyObjWellDefinedResult::Failed { .. } => return Ok(None),
+                    let KnownTupleShapeProof::TupleEquality(value) = &source.source else {
+                        continue;
                     };
-                    return Ok(Some(FunctionBodyExpansionProof::FiniteCoordinate(FiniteCoordinateBodyExpansionProof {
-                        application, application_well_defined, source: Box::new(source), index,
-                        continued_body: expanded_body.clone(), expanded_body,
-                    })));
+                    let Some(coordinate) = value.value.args.get(index - 1) else {
+                        continue;
+                    };
+                    let expanded_body = coordinate.as_ref().clone();
+                    if expected_body.is_some_and(|expected| expected != &expanded_body) {
+                        continue;
+                    }
+                    let application_well_defined =
+                        match self.verify_obj_well_definedness(&application, state)? {
+                            VerifyObjWellDefinedResult::Success(proof) => proof,
+                            VerifyObjWellDefinedResult::Failed { .. } => return Ok(None),
+                        };
+                    return Ok(Some(FunctionBodyExpansionProof::FiniteCoordinate(
+                        FiniteCoordinateBodyExpansionProof {
+                            application,
+                            application_well_defined,
+                            source: Box::new(source),
+                            index,
+                            continued_body: expanded_body.clone(),
+                            expanded_body,
+                        },
+                    )));
                 }
             }
         }
@@ -262,14 +279,16 @@ impl Runtime {
                     VerifyObjWellDefinedResult::Success(p) => p,
                     VerifyObjWellDefinedResult::Failed { .. } => continue,
                 };
-            return Ok(Some(FunctionBodyExpansionProof::Anonymous(AnonymousFunctionBodyExpansionProof {
-                application,
-                application_well_defined,
-                function_body,
-                body_application_well_defined,
-                continued_body: expanded_body.clone(),
-                expanded_body,
-            })));
+            return Ok(Some(FunctionBodyExpansionProof::Anonymous(
+                AnonymousFunctionBodyExpansionProof {
+                    application,
+                    application_well_defined,
+                    function_body,
+                    body_application_well_defined,
+                    continued_body: expanded_body.clone(),
+                    expanded_body,
+                },
+            )));
         }
         Ok(None)
     }
@@ -284,27 +303,47 @@ impl Runtime {
             FnObjHead::AnonymousFnLiteral(v) => {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(v.as_ref().clone()))
             }
-            FnObjHead::FieldAccess(v) => Obj::StructAndFieldAccessObj(crate::ast::obj::StructAndFieldAccessObj::FieldAccess(v.clone())),
+            FnObjHead::FieldAccess(v) => Obj::StructAndFieldAccessObj(
+                crate::ast::obj::StructAndFieldAccessObj::FieldAccess(v.clone()),
+            ),
             FnObjHead::InstantiatedTemplateObj(inst) => Obj::InstantiatedTemplateObj(inst.clone()),
         };
         let mut candidates = Vec::new();
         for (candidate, path) in self.exact_property_object_values(&head) {
             match candidate {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => candidates.push((
-                    anon, FunctionBodySourceProof::KnownEquality(KnownEqualityPathProof::new(path)),
+                    anon,
+                    FunctionBodySourceProof::KnownEquality(KnownEqualityPathProof::new(path)),
                 )),
                 Obj::InstantiatedTemplateObj(instance) => {
-                    let Some(def) = self.def_template_visible(&instance.template_name).cloned() else { continue; };
-                    let TemplateDefEnum::HaveFnEqualStmt(have_fn) = &def.template_def_stmt else { continue; };
+                    let Some(def) = self.def_template_visible(&instance.template_name).cloned()
+                    else {
+                        continue;
+                    };
+                    let TemplateDefEnum::HaveFnEqualStmt(have_fn) = &def.template_def_stmt else {
+                        continue;
+                    };
                     let ids = def.template_arg_def.ordered_param_ids();
-                    if ids.len() != instance.args.len() { continue; }
+                    if ids.len() != instance.args.len() {
+                        continue;
+                    }
                     let subst = ids.into_iter().zip(instance.args.iter().cloned()).collect();
-                    let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(have_fn.equal_to_anonymous_fn.clone()));
-                    let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) = self.inst_obj(&literal, &subst) else { continue; };
-                    candidates.push((anon.clone(), FunctionBodySourceProof::Template {
-                        instance: Obj::InstantiatedTemplateObj(instance), instantiated_function: anon,
-                        function_equal: KnownEqualityPathProof::new(path),
-                    }));
+                    let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+                        have_fn.equal_to_anonymous_fn.clone(),
+                    ));
+                    let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) =
+                        self.inst_obj(&literal, &subst)
+                    else {
+                        continue;
+                    };
+                    candidates.push((
+                        anon.clone(),
+                        FunctionBodySourceProof::Template {
+                            instance: Obj::InstantiatedTemplateObj(instance),
+                            instantiated_function: anon,
+                            function_equal: KnownEqualityPathProof::new(path),
+                        },
+                    ));
                 }
                 _ => {}
             }

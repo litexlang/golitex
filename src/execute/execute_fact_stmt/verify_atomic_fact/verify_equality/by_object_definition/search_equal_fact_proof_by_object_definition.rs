@@ -27,9 +27,11 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
         if let Some(proof) = self.try_unfold_both_function_bodies(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByObjectDefinition::ByFnApplication(
-                EqualitySearchProofByFnApplicationObjectDefinition::BothFunctionBodies(proof),
-            )));
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByFnApplication(
+                    EqualitySearchProofByFnApplicationObjectDefinition::BothFunctionBodies(proof),
+                ),
+            ));
         }
         if let Some(proof) = self.search_object_definition_on_def_side(
             &fact.left,
@@ -39,12 +41,9 @@ impl Runtime {
         )? {
             return Ok(Some(proof));
         }
-        if let Some(proof) = self.search_object_definition_on_def_side(
-            &fact.right,
-            &fact.left,
-            fact,
-            verify_state,
-        )? {
+        if let Some(proof) =
+            self.search_object_definition_on_def_side(&fact.right, &fact.left, fact, verify_state)?
+        {
             return Ok(Some(proof));
         }
         Ok(None)
@@ -66,7 +65,8 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
         match def_side {
-            Obj::ProductShape(ProductShape::Cart(cart)) => Ok(self.cartesian_definition(cart, other_side)
+            Obj::ProductShape(ProductShape::Cart(cart)) => Ok(self
+                .cartesian_definition(cart, other_side)
                 .map(EqualitySearchProofByObjectDefinition::CartesianDefinition)),
             Obj::Identifier(_) => self.search_object_definition_for_identifier(
                 def_side,
@@ -118,12 +118,9 @@ impl Runtime {
                 EqualitySearchProofByIdentifierObjectDefinition::HaveObjEqual(proof),
             )));
         }
-        if let Some(proof) = self.try_let_obj_object_definition(
-            def_side,
-            other_side,
-            parent_fact,
-            verify_state,
-        )? {
+        if let Some(proof) =
+            self.try_let_obj_object_definition(def_side, other_side, parent_fact, verify_state)?
+        {
             return Ok(Some(EqualitySearchProofByObjectDefinition::ByIdentifier(
                 EqualitySearchProofByIdentifierObjectDefinition::LetObj(proof),
             )));
@@ -144,9 +141,11 @@ impl Runtime {
             parent_fact,
             verify_state.clone(),
         )? {
-            return Ok(Some(EqualitySearchProofByObjectDefinition::ByFnApplication(
-                EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(proof),
-            )));
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByFnApplication(
+                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(proof),
+                ),
+            ));
         }
         if let Some(proof) = self.try_unfold_have_fn_equal_case_by_case_application(
             def_side,
@@ -154,9 +153,13 @@ impl Runtime {
             parent_fact,
             verify_state.clone(),
         )? {
-            return Ok(Some(EqualitySearchProofByObjectDefinition::ByFnApplication(
-                EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(proof),
-            )));
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByFnApplication(
+                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(
+                        proof,
+                    ),
+                ),
+            ));
         }
         if let Some(proof) = self.try_unfold_have_fn_by_induc_application(
             def_side,
@@ -164,9 +167,11 @@ impl Runtime {
             parent_fact,
             verify_state,
         )? {
-            return Ok(Some(EqualitySearchProofByObjectDefinition::ByFnApplication(
-                EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(proof),
-            )));
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByFnApplication(
+                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(proof),
+                ),
+            ));
         }
         Ok(None)
     }

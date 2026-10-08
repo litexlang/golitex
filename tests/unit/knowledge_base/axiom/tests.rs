@@ -1,6 +1,4 @@
-use crate::ast::fact::{
-    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ForallFact,
-};
+use crate::ast::fact::{AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ForallFact};
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::BoundName;
 use crate::ast::obj::{IdentifierObj, Obj, StandardSet};
@@ -11,15 +9,11 @@ use crate::runtime::runtime_ids::{FactId, IdentifierId};
 use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 
-const FIXTURE: &str =
-    include_str!("../../../../examples/knowledge_base/axiom/eq_refl.axiom.json");
+const FIXTURE: &str = include_str!("../../../../examples/knowledge_base/axiom/eq_refl.axiom.json");
 
 fn sample() -> AxiomStmt {
     let x = BoundName::new(IdentifierId::new(11), "x".to_string());
-    let x_obj = Obj::Identifier(IdentifierObj::plain(
-        IdentifierId::new(11),
-        "x".to_string(),
-    ));
+    let x_obj = Obj::Identifier(IdentifierObj::plain(IdentifierId::new(11), "x".to_string()));
     AxiomStmt {
         name: "eq_refl".to_string(),
         forall_fact: ForallFact {
@@ -46,8 +40,7 @@ fn sample() -> AxiomStmt {
 }
 
 fn fixture_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/knowledge_base/axiom/eq_refl.axiom.json")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/knowledge_base/axiom/eq_refl.axiom.json")
 }
 
 #[test]

@@ -32,7 +32,11 @@ pub struct SqrtSquareNonpositiveProof {
     pub nonpositive_argument: VerifyFactResult,
 }
 impl SqrtSquareNonpositiveProof {
-    pub fn new(nonpositive_argument: VerifyFactResult) -> Self { Self { nonpositive_argument } }
+    pub fn new(nonpositive_argument: VerifyFactResult) -> Self {
+        Self {
+            nonpositive_argument,
+        }
+    }
 }
 impl ElementaryArithmeticProof {
     pub fn rule_id(&self) -> &'static str {
@@ -58,11 +62,19 @@ impl Runtime {
             // Principal sqrt(x^2)=-x when x<=0; no arbitrary abs rewrite.
             if let Obj::ExpLogOperator(ExpLogOperator::Sqrt(root)) = left {
                 if let Some((base, exponent)) = pow_args(&root.arg) {
-                    let negative = Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg { arg: Box::new(base.clone()) }));
-                    if is_number(exponent, "2") && crate::rational_expression::objs_equal_by_rational_expression_evaluation(right, &negative) {
+                    let negative = Obj::ArithmeticOperator(A::Neg(crate::ast::obj::Neg {
+                        arg: Box::new(base.clone()),
+                    }));
+                    if is_number(exponent, "2")
+                        && crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                            right, &negative,
+                        )
+                    {
                         let nonpositive_argument = self.verify_order_nonpositive(base, state)?;
                         if !nonpositive_argument.is_failed() {
-                            return Ok(Some(P::SqrtSquareNonpositive(SqrtSquareNonpositiveProof::new(nonpositive_argument))));
+                            return Ok(Some(P::SqrtSquareNonpositive(
+                                SqrtSquareNonpositiveProof::new(nonpositive_argument),
+                            )));
                         }
                     }
                 }
@@ -175,20 +187,24 @@ impl Runtime {
                     let (Some((x, n)), Some((y, k))) = (pow_args(a), pow_args(b)) else {
                         continue;
                     };
-                    if !same(x, &fact.left)
-                        || !same(y, &fact.right)
-                        || !same(n, k)
-                    {
+                    if !same(x, &fact.left) || !same(y, &fact.right) || !same(n, k) {
                         continue;
                     }
                     let mut requirements = self.elementary_members(
-                        &[(x, StandardSet::RPos), (y, StandardSet::RPos), (n, StandardSet::Z)],
+                        &[
+                            (x, StandardSet::RPos),
+                            (y, StandardSet::RPos),
+                            (n, StandardSet::Z),
+                        ],
                         state,
                     )?;
                     let nonzero: Fact = NotEqualFact {
                         fact_id: self.global_ids.allocate_fact_id(),
-                        left: n.clone(), right: number("0"), line_file: None,
-                    }.into();
+                        left: n.clone(),
+                        right: number("0"),
+                        line_file: None,
+                    }
+                    .into();
                     requirements.push(self.verify_builtin_rule_premise(&nonzero, state)?);
                     if requirements.iter().any(VerifyFactResult::is_failed) {
                         continue;

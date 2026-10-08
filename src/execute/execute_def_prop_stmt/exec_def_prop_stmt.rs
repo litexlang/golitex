@@ -72,13 +72,15 @@ impl Runtime {
 
         self.top_exec_env_mut().store_def_prop(def_prop.clone());
 
-        Ok(ExecDefPropStmtResult::Success(ExecDefPropStmtSuccessResult {
-            statement: def_prop.clone(),
-            param_type_well_defined: introduced.param_type_well_defined,
-            defined_params: introduced.defined_params,
-            iff_fact_well_defined,
-            local_env,
-        }))
+        Ok(ExecDefPropStmtResult::Success(
+            ExecDefPropStmtSuccessResult {
+                statement: def_prop.clone(),
+                param_type_well_defined: introduced.param_type_well_defined,
+                defined_params: introduced.defined_params,
+                iff_fact_well_defined,
+                local_env,
+            },
+        ))
     }
 
     fn ensure_def_prop_name_free(&self, name: &str) -> RuntimeResult<()> {
@@ -122,7 +124,10 @@ impl Runtime {
                     // Assume each body fact before later ones so domain-restricted
                     // applications (e.g. `line_through_points(a, b)` under `a != b`)
                     // can pass WD. Local env is not merged to the parent.
-                    let _ = self.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+                    let _ = self.store_fact_and_infer(
+                        fact,
+                        crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                    )?;
                     iff_fact_well_defined.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {

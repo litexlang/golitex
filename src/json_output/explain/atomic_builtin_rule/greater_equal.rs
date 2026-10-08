@@ -43,16 +43,17 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
         match self {
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
-            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
-            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_zh()
+            }
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_zh()
+            }
             Self::ClosedSubtractionBound(_) => text(
                 "从已有数值界减去常数",
                 "已有上界或下界减去闭式常数后满足目标弱序界",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "复数模长非负",
-                "复数模长取非负主根",
-            ),
+            Self::ComplexModulusNonnegative => text("复数模长非负", "复数模长取非负主根"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_zh(),
             Self::SumOfNonnegatives(p) => p.rule_name_and_message_zh(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh(),
@@ -69,18 +70,23 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
-            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
-            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
-            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
-            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh_hant(),
+            Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_zh_hant()
+            }
+            Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_zh_hant()
+            }
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_zh_hant()
+            }
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_zh_hant()
+            }
             Self::ClosedSubtractionBound(_) => text(
                 "從已有數值界減去常數",
                 "已有上界或下界減去封閉常數後仍足以滿足目標",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "複數模長非負",
-                "複數模長取非負主根",
-            ),
+            Self::ComplexModulusNonnegative => text("複數模長非負", "複數模長取非負主根"),
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::SumOfNonnegatives(p) => p.rule_name_and_message_zh_hant(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_zh_hant(),
@@ -165,16 +171,19 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
         match self {
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
-            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
-            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_ar()
+            }
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_ar()
+            }
             Self::ClosedSubtractionBound(_) => text(
                 "طرح من حد عددي مخزن",
                 "يبقى الحد الأعلى أو الأدنى المخزن كافيًا بعد طرح الثابت المغلق",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "مقياس مركب غير سالب",
-                "المقياس المركب الرئيسي غير سالب",
-            ),
+            Self::ComplexModulusNonnegative => {
+                text("مقياس مركب غير سالب", "المقياس المركب الرئيسي غير سالب")
+            }
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_ar(),
             Self::SumOfNonnegatives(p) => p.rule_name_and_message_ar(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ar(),
@@ -193,16 +202,19 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
         match self {
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
-            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
-            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_ja()
+            }
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_ja()
+            }
             Self::ClosedSubtractionBound(_) => text(
                 "保存済みの数値の境界からの減算",
                 "保存済みの上界または下界は閉じた定数を引いた後も十分です",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "複素数の絶対値の非負性",
-                "複素数の主絶対値は非負です",
-            ),
+            Self::ComplexModulusNonnegative => {
+                text("複素数の絶対値の非負性", "複素数の主絶対値は非負です")
+            }
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_ja(),
             Self::SumOfNonnegatives(p) => p.rule_name_and_message_ja(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_ja(),
@@ -221,8 +233,12 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
         match self {
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
-            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
-            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_ko()
+            }
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_ko()
+            }
             Self::ClosedSubtractionBound(_) => text(
                 "저장된 수치 경계에서 빼기",
                 "저장된 상한 또는 하한은 닫힌 상수를 뺀 후에도 충분합니다",
@@ -249,16 +265,19 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
         match self {
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
-            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
-            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
+            Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_vi()
+            }
+            Self::MulRightLeftNonpositiveReversesWeakGreaterEqual(p) => {
+                p.rule_name_and_message_vi()
+            }
             Self::ClosedSubtractionBound(_) => text(
                 "Trừ từ cận số đã lưu",
                 "Cận trên hoặc dưới đã lưu vẫn đủ sau khi trừ hằng đóng",
             ),
-            Self::ComplexModulusNonnegative => text(
-                "Môđun phức không âm",
-                "Môđun phức chính không âm",
-            ),
+            Self::ComplexModulusNonnegative => {
+                text("Môđun phức không âm", "Môđun phức chính không âm")
+            }
             Self::FromKnownLessEqual(p) => p.rule_name_and_message_vi(),
             Self::SumOfNonnegatives(p) => p.rule_name_and_message_vi(),
             Self::FromKnownOrderComplement(p) => p.rule_name_and_message_vi(),
@@ -320,17 +339,11 @@ impl FromKnownInPositiveNaturalBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知属于正自然数",
-            "目标由已知的正自然数成员关系推出",
-        )
+        text("已知属于正自然数", "目标由已知的正自然数成员关系推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由已知正自然數成員",
-            "目標由已知正自然數成員關係得出",
-        )
+        text("由已知正自然數成員", "目標由已知正自然數成員關係得出")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -407,17 +420,11 @@ impl FromKnownGreaterBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知严格大于",
-            "弱序目标由已知的严格大于推出",
-        )
+        text("已知严格大于", "弱序目标由已知的严格大于推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由已知大於",
-            "弱序由已知嚴格大於命題得出",
-        )
+        text("由已知大於", "弱序由已知嚴格大於命題得出")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -487,17 +494,11 @@ impl FromKnownGreaterBuiltinRuleProof {
 
 impl OrderReflexivityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Order reflexivity",
-            "A quantity is less-or-equal to itself",
-        )
+        text("Order reflexivity", "A quantity is less-or-equal to itself")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "序的自反性",
-            "任何量都不大于也不小于自己（≤ 自身）",
-        )
+        text("序的自反性", "任何量都不大于也不小于自己（≤ 自身）")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -526,10 +527,7 @@ impl OrderReflexivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "انعكاسية الترتيب",
-            "الكمية أصغر من نفسها أو تساويها",
-        )
+        text("انعكاسية الترتيب", "الكمية أصغر من نفسها أو تساويها")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
@@ -537,10 +535,7 @@ impl OrderReflexivityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "순서 반사성",
-            "양은 자기 자신보다 작거나 같습니다",
-        )
+        text("순서 반사성", "양은 자기 자신보다 작거나 같습니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -575,17 +570,11 @@ impl ClosedNumericComparisonBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "封闭数值比较",
-            "两边都是可计算的数，并满足所述比较",
-        )
+        text("封闭数值比较", "两边都是可计算的数，并满足所述比较")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "封閉數值比較",
-            "兩邊為封閉數值且符合所述比較",
-        )
+        text("封閉數值比較", "兩邊為封閉數值且符合所述比較")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -662,17 +651,11 @@ impl PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由 n ≥ 1 得 n-1 ≥ 0",
-            "当值至少为 1 时前驱非负",
-        )
+        text("由 n ≥ 1 得 n-1 ≥ 0", "当值至少为 1 时前驱非负")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "由 n ≥ 1 得 n-1 ≥ 0",
-            "值至少為一時，前驅非負",
-        )
+        text("由 n ≥ 1 得 n-1 ≥ 0", "值至少為一時，前驅非負")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -785,10 +768,7 @@ impl FiniteSetSizeNonnegativeBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "有限集合の要素数の非負性",
-            "有限集合の大きさは非負です",
-        )
+        text("有限集合の要素数の非負性", "有限集合の大きさは非負です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -830,17 +810,11 @@ impl FiniteSetSizeAtLeastOneBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "非空有限集合至少有一个元素",
-            "非空有限集大小至少为 1",
-        )
+        text("非空有限集合至少有一个元素", "非空有限集大小至少为 1")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非空有限集合至少有一個元素",
-            "非空有限集合的大小至少為一",
-        )
+        text("非空有限集合至少有一個元素", "非空有限集合的大小至少為一")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -917,17 +891,11 @@ impl OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "乘以 -1 反转不等式",
-            "两边同乘 -1 后不等式方向相反",
-        )
+        text("乘以 -1 反转不等式", "两边同乘 -1 后不等式方向相反")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "乘以 -1 反轉序",
-            "乘以 -1 反轉不等式方向",
-        )
+        text("乘以 -1 反轉序", "乘以 -1 反轉不等式方向")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -952,24 +920,15 @@ impl OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "عكس الترتيب بالضرب في (-1)",
-            "الضرب في -1 يعكس المتباينة",
-        )
+        text("عكس الترتيب بالضرب في (-1)", "الضرب في -1 يعكس المتباينة")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "×(-1) による順序反転",
-            "-1 を掛けると不等号が反転します",
-        )
+        text("×(-1) による順序反転", "-1 を掛けると不等号が反転します")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "×(-1)에 의한 순서 반전",
-            "-1을 곱하면 부등호가 반전됩니다",
-        )
+        text("×(-1)에 의한 순서 반전", "-1을 곱하면 부등호가 반전됩니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
@@ -1004,10 +963,7 @@ impl FromKnownLessEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知反向序关系",
-            "引用已知的反向比较事实",
-        )
+        text("已知反向序关系", "引用已知的反向比较事实")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -1043,10 +999,7 @@ impl FromKnownLessEqualBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "既知の逆向きの順序",
-            "逆向きの比較は既知です",
-        )
+        text("既知の逆向きの順序", "逆向きの比較は既知です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -1117,31 +1070,19 @@ impl GreaterEqualSumOfNonnegativesBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "مجموع غير السوالب ≥ 0",
-            "مجموع حدود غير سالبة غير سالب",
-        )
+        text("مجموع غير السوالب ≥ 0", "مجموع حدود غير سالبة غير سالب")
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "非負数の和 ≥ 0",
-            "非負の項の和は非負です",
-        )
+        text("非負数の和 ≥ 0", "非負の項の和は非負です")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "비음수의 합 ≥ 0",
-            "음이 아닌 항의 합은 음이 아닙니다",
-        )
+        text("비음수의 합 ≥ 0", "음이 아닌 항의 합은 음이 아닙니다")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tổng số không âm ≥ 0",
-            "Tổng các hạng không âm không âm",
-        )
+        text("Tổng số không âm ≥ 0", "Tổng các hạng không âm không âm")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

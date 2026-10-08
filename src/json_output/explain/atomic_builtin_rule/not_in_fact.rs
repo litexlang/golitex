@@ -197,17 +197,11 @@ impl ClosedNumericNonMembershipBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "闭式求值确认非成员关系",
-            "闭式的求值结果不属于目标集合",
-        )
+        text("闭式求值确认非成员关系", "闭式的求值结果不属于目标集合")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "閉式求值確認非成員關係",
-            "閉式的求值結果不屬於目標集合",
-        )
+        text("閉式求值確認非成員關係", "閉式的求值結果不屬於目標集合")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -284,10 +278,7 @@ impl ListSetExhaustiveDisequalityBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "列表集穷举不等",
-            "与每个列出元素都不等则不属于列表集",
-        )
+        text("列表集穷举不等", "与每个列出元素都不等则不属于列表集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -371,10 +362,7 @@ impl NonMembershipOfIntersectFromLeftBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由左非成员得交非成员",
-            "不属于左因子则不属于交",
-        )
+        text("由左非成员得交非成员", "不属于左因子则不属于交")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -458,10 +446,7 @@ impl NonMembershipOfIntersectFromRightBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由右非成员得交非成员",
-            "不属于右因子则不属于交",
-        )
+        text("由右非成员得交非成员", "不属于右因子则不属于交")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -545,10 +530,7 @@ impl NonMembershipOfUnionBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "两边非成员得并非成员",
-            "两边都不属于则不属于并",
-        )
+        text("两边非成员得并非成员", "两边都不属于则不属于并")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -632,10 +614,7 @@ impl NonMembershipOfSetMinusFromRightBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由右成员得差集非成员",
-            "属于右因子则不属于差集",
-        )
+        text("由右成员得差集非成员", "属于右因子则不属于差集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -719,10 +698,7 @@ impl NonMembershipOfSetMinusFromLeftBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "由左非成员得差集非成员",
-            "不属于左因子则不属于差集",
-        )
+        text("由左非成员得差集非成员", "不属于左因子则不属于差集")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -806,17 +782,11 @@ impl NonMembershipOfIntervalAtOpenEndpointBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "开端点非成员",
-            "开端点处不属于区间",
-        )
+        text("开端点非成员", "开端点处不属于区间")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "開端點非成員",
-            "開端點處不屬於區間",
-        )
+        text("開端點非成員", "開端點處不屬於區間")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -848,10 +818,7 @@ impl NonMembershipOfIntervalAtOpenEndpointBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "開いた端点での非所属",
-            "開いた端点は区間に属しません",
-        )
+        text("開いた端点での非所属", "開いた端点は区間に属しません")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
@@ -893,10 +860,7 @@ impl NonMembershipOfIntervalOutsideBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "区间外非成员",
-            "落在区间外则不属于",
-        )
+        text("区间外非成员", "落在区间外则不属于")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {

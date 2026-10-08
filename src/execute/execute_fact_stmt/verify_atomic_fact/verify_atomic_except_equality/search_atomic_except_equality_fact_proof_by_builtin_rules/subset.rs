@@ -1,9 +1,11 @@
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, SubsetFact};
 use crate::ast::names::AtomicName;
-use crate::ast::obj::{Cart, FunctionSpace, Obj, ProductShape, SetFormer, SetOperator, StandardSet, Union};
+use crate::ast::obj::{
+    Cart, FunctionSpace, Obj, ProductShape, SetFormer, SetOperator, StandardSet, Union,
+};
 use crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::parse::keywords::SUBSET;
@@ -100,7 +102,10 @@ impl FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof {
         construction: FunctionPreimageConstructionProof,
         carrier_match: EqualFactSearchedProof,
     ) -> Self {
-        Self { construction, carrier_match }
+        Self {
+            construction,
+            carrier_match,
+        }
     }
 }
 pub struct SubsetReflexivityBuiltinRuleProof {}
@@ -206,7 +211,10 @@ impl Runtime {
                 )
             }
 
-            (Obj::SetOperator(SetOperator::Union(left_union)), Obj::SetOperator(SetOperator::Union(right_union))) => {
+            (
+                Obj::SetOperator(SetOperator::Union(left_union)),
+                Obj::SetOperator(SetOperator::Union(right_union)),
+            ) => {
                 if let Some(proof) = self.union_subset_from_componentwise_proof(
                     left_union,
                     right_union,
@@ -315,23 +323,19 @@ impl Runtime {
                 self.list_set_subset_from_members_proof(&list_set.list, right, verify_state.clone())
             }
 
-            (
-                Obj::SetFormer(SetFormer::Range(range)),
-                Obj::StandardSet(target),
-            ) => self.integer_range_subset_numeric_carrier_proof(
-                range.start.as_ref(),
-                target,
-                verify_state.clone(),
-            ),
+            (Obj::SetFormer(SetFormer::Range(range)), Obj::StandardSet(target)) => self
+                .integer_range_subset_numeric_carrier_proof(
+                    range.start.as_ref(),
+                    target,
+                    verify_state.clone(),
+                ),
 
-            (
-                Obj::SetFormer(SetFormer::ClosedRange(range)),
-                Obj::StandardSet(target),
-            ) => self.integer_range_subset_numeric_carrier_proof(
-                range.start.as_ref(),
-                target,
-                verify_state.clone(),
-            ),
+            (Obj::SetFormer(SetFormer::ClosedRange(range)), Obj::StandardSet(target)) => self
+                .integer_range_subset_numeric_carrier_proof(
+                    range.start.as_ref(),
+                    target,
+                    verify_state.clone(),
+                ),
 
             _ => Ok(None),
         }?;
@@ -340,8 +344,13 @@ impl Runtime {
         }
 
         // Preserve ordinary union/intersection inclusion priority.
-        if matches!(fact.left, Obj::FunctionSpace(FunctionSpace::Preimage(_) | FunctionSpace::PreimageSet(_))) {
-            if let Some(proof) = self.function_preimage_subset_input_carrier_proof(fact, verify_state)? {
+        if matches!(
+            fact.left,
+            Obj::FunctionSpace(FunctionSpace::Preimage(_) | FunctionSpace::PreimageSet(_))
+        ) {
+            if let Some(proof) =
+                self.function_preimage_subset_input_carrier_proof(fact, verify_state)?
+            {
                 return Ok(Some(proof));
             }
         }
@@ -380,12 +389,14 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
         let left_premise = subset_fact(left_operand, ambient, self);
-        let left_operand_subset_proof = self.verify_builtin_rule_premise(&left_premise, verify_state.clone())?;
+        let left_operand_subset_proof =
+            self.verify_builtin_rule_premise(&left_premise, verify_state.clone())?;
         if left_operand_subset_proof.is_failed() {
             return Ok(None);
         }
         let right_premise = subset_fact(right_operand, ambient, self);
-        let right_operand_subset_proof = self.verify_builtin_rule_premise(&right_premise, verify_state)?;
+        let right_operand_subset_proof =
+            self.verify_builtin_rule_premise(&right_premise, verify_state)?;
         if right_operand_subset_proof.is_failed() {
             return Ok(None);
         }
@@ -426,7 +437,8 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
         let premise = subset_fact(right_operand, ambient, self);
-        let right_operand_subset_proof = self.verify_builtin_rule_premise(&premise, verify_state)?;
+        let right_operand_subset_proof =
+            self.verify_builtin_rule_premise(&premise, verify_state)?;
         if right_operand_subset_proof.is_failed() {
             return Ok(None);
         }
@@ -599,7 +611,11 @@ impl Runtime {
         );
         let mut known_subsets = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
-            let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key)
+            let Some(knowns) = env
+                .facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .get(&key)
             else {
                 continue;
             };
@@ -625,16 +641,19 @@ impl Runtime {
                     continue;
                 }
                 let right_premise = subset_fact(second_left, second_right, self);
-                let middle_to_right_proof = self.verify_builtin_rule_premise(&right_premise, verify_state.clone())?;
+                let middle_to_right_proof =
+                    self.verify_builtin_rule_premise(&right_premise, verify_state.clone())?;
                 if middle_to_right_proof.is_failed() {
                     continue;
                 }
-                return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetTransitivity(
-                    SubsetTransitivityBuiltinRuleProof {
-                        left_to_middle_proof,
-                        middle_to_right_proof,
-                    },
-                )));
+                return Ok(Some(
+                    SubsetFactSearchProofByBuiltinRule::SubsetTransitivity(
+                        SubsetTransitivityBuiltinRuleProof {
+                            left_to_middle_proof,
+                            middle_to_right_proof,
+                        },
+                    ),
+                ));
             }
         }
         Ok(None)
@@ -649,7 +668,8 @@ impl Runtime {
         fact: &SubsetFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        let Ok(construction) = self.verify_function_preimage_construction(&fact.left, state)? else {
+        let Ok(construction) = self.verify_function_preimage_construction(&fact.left, state)?
+        else {
             return Ok(None);
         };
         let comparison = EqualFact {
@@ -661,11 +681,14 @@ impl Runtime {
         let Some(carrier_match) = search_equal_fact_proof_by_they_are_the_same(&comparison) else {
             return Ok(None);
         };
-        Ok(Some(SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(
-            FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof::new(
-                construction, carrier_match.into(),
+        Ok(Some(
+            SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(
+                FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof::new(
+                    construction,
+                    carrier_match.into(),
+                ),
             ),
-        )))
+        ))
     }
 }
 

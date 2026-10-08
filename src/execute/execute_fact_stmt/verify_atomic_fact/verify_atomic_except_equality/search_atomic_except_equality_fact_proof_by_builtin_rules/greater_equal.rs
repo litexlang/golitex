@@ -94,7 +94,6 @@ pub struct FiniteSetSizeAtLeastOneBuiltinRuleProof {
     pub nonempty_proof: VerifyFactResult,
 }
 
-
 pub struct FromKnownLessEqualBuiltinRuleProof {
     pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
@@ -116,15 +115,28 @@ impl Runtime {
     ) -> RuntimeResult<Option<GreaterEqualFactSearchProofByBuiltinRule>> {
         // Principal complex modulus is nonnegative after argument/output WD.
         // Example: have z C; C_abs(z) >= 0.
-        if matches!(&fact.left, Obj::ComplexOperator(crate::ast::obj::ComplexOperator::ComplexAbs(_)))
-            && is_number_value(&fact.right, "0") {
-            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative));
+        if matches!(
+            &fact.left,
+            Obj::ComplexOperator(crate::ast::obj::ComplexOperator::ComplexAbs(_))
+        ) && is_number_value(&fact.right, "0")
+        {
+            return Ok(Some(
+                GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative,
+            ));
         }
         if let Some(premise_proof) = self.known_less_equal_proof(&fact.right, &fact.left) {
-            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(FromKnownLessEqualBuiltinRuleProof { premise_proof })));
+            return Ok(Some(
+                GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(
+                    FromKnownLessEqualBuiltinRuleProof { premise_proof },
+                ),
+            ));
         }
-        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
-            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        if let Some(proof) =
+            self.known_order_complement(fact.clone().into(), verify_state.clone())?
+        {
+            return Ok(Some(
+                GreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof),
+            ));
         }
         // B0 — non-shape
         if fact.left.ir() == fact.right.ir() {
@@ -152,20 +164,28 @@ impl Runtime {
         // The >= orientation must be available at the builtin ceiling too:
         // fn(t Z: t >= 0) N applied to n+1 may need this during predicate WD.
         // Premises keep the dispatcher's restricted state; no converse strategy.
-        if is_number_value(&fact.right, "0") && matches!(fact.left, Obj::ArithmeticOperator(ArithmeticOperator::Add(_))) {
-            if let Some(constructor_tree) = self.nonnegative_sum_tree(&fact.left, &fact.right, verify_state)? {
-                return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(
-                    GreaterEqualSumOfNonnegativesBuiltinRuleProof { constructor_tree },
-                )));
+        if is_number_value(&fact.right, "0")
+            && matches!(
+                fact.left,
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
+            )
+        {
+            if let Some(constructor_tree) =
+                self.nonnegative_sum_tree(&fact.left, &fact.right, verify_state)?
+            {
+                return Ok(Some(
+                    GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(
+                        GreaterEqualSumOfNonnegativesBuiltinRuleProof { constructor_tree },
+                    ),
+                ));
             }
         }
 
         // A — shape: goals ending at 0
         match (&fact.left, &fact.right) {
-            (
-                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
-                zero,
-            ) if is_number_value(right.as_ref(), "1") && is_number_value(zero, "0") => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })), zero)
+                if is_number_value(right.as_ref(), "1") && is_number_value(zero, "0") =>
+            {
                 let one = Obj::Literal(Literal::Number(Number {
                     normalized_value: "1".to_string(),
                 }));
@@ -174,15 +194,15 @@ impl Runtime {
                 {
                     return Ok(Some(
                         GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(
-                            PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
-                                at_least_one_proof,
-                            },
+                            PredecessorNonNegFromAtLeastOneBuiltinRuleProof { at_least_one_proof },
                         ),
                     ));
                 }
             }
             (left, right) if is_one_obj(right) => {
-                if let Some(premise_proof) = self.search_in_positive_natural_premise(left, verify_state)? {
+                if let Some(premise_proof) =
+                    self.search_in_positive_natural_premise(left, verify_state)?
+                {
                     return Ok(Some(
                         GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(
                             FromKnownInPositiveNaturalBuiltinRuleProof { premise_proof },
@@ -201,8 +221,14 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
-        if let Some(proof) = self.search_closed_subtraction_weak_bound(&fact.left, &fact.right, true) {
-            return Ok(Some(GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(GreaterEqualClosedSubtractionBoundBuiltinRuleProof { bound: proof })));
+        if let Some(proof) =
+            self.search_closed_subtraction_weak_bound(&fact.left, &fact.right, true)
+        {
+            return Ok(Some(
+                GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(
+                    GreaterEqualClosedSubtractionBoundBuiltinRuleProof { bound: proof },
+                ),
+            ));
         }
 
         if let Some(proof) = self.search_negative_common_factor_greater_equal(fact, verify_state)? {
@@ -229,22 +255,32 @@ impl Runtime {
     }
 
     fn nonnegative_sum_tree(
-        &mut self, expression: &Obj, zero: &Obj, state: VerifyState,
+        &mut self,
+        expression: &Obj,
+        zero: &Obj,
+        state: VerifyState,
     ) -> RuntimeResult<Option<NonnegativeSumTree>> {
         if let Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) = expression {
-            let Some(left) = self.nonnegative_sum_tree(&add.left, zero, state)? else { return Ok(None); };
-            let Some(right) = self.nonnegative_sum_tree(&add.right, zero, state)? else { return Ok(None); };
-            return Ok(Some(NonnegativeSumTree::Add { left: Box::new(left), right: Box::new(right) }));
+            let Some(left) = self.nonnegative_sum_tree(&add.left, zero, state)? else {
+                return Ok(None);
+            };
+            let Some(right) = self.nonnegative_sum_tree(&add.right, zero, state)? else {
+                return Ok(None);
+            };
+            return Ok(Some(NonnegativeSumTree::Add {
+                left: Box::new(left),
+                right: Box::new(right),
+            }));
         }
         let goal = Fact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact {
-            fact_id: self.global_ids.allocate_fact_id(), left: expression.clone(),
-            right: zero.clone(), line_file: None,
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: expression.clone(),
+            right: zero.clone(),
+            line_file: None,
         }));
         let proof = self.verify_builtin_rule_premise(&goal, state)?;
         Ok((!proof.is_failed()).then_some(NonnegativeSumTree::Leaf(proof)))
     }
-
-
 }
 
 fn is_one_obj(obj: &Obj) -> bool {

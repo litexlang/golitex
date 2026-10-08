@@ -1,13 +1,9 @@
 //! Select source, verify with `exec_stmt`, build IR, render Python/C.
 
 use super::program::ProgramExtractor;
-use crate::launch_command::{
-    CodeExtractionTarget, ExtractInput, LaunchCommand, OutputLanguage,
-};
+use crate::launch_command::{CodeExtractionTarget, ExtractInput, LaunchCommand, OutputLanguage};
 use crate::module_manager::ExportFileAndItsExecEnv;
-use crate::run_module::{
-    load_config, resolve_std_root, run_import_module, RunImportModuleOutcome,
-};
+use crate::run_module::{load_config, resolve_std_root, run_import_module, RunImportModuleOutcome};
 use crate::runtime::{
     CodeSource, RealOrVirtualPath, Runtime, RuntimeError, RuntimeParseError, RuntimeResult,
 };
@@ -159,11 +155,8 @@ fn extract_export_file_into(
     }
 
     let (_file, exec_env) = runtime.finish_file();
-    let recorded = ExportFileAndItsExecEnv::new(
-        export_name.to_string(),
-        export_path.to_path_buf(),
-        exec_env,
-    );
+    let recorded =
+        ExportFileAndItsExecEnv::new(export_name.to_string(), export_path.to_path_buf(), exec_env);
     let _ = export_file_id;
     runtime.global_module_manager.record_root_export(recorded);
     let _ = runtime.global_module_manager.set_current_mod_id(None);

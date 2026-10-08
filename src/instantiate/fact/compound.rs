@@ -16,7 +16,6 @@ impl Runtime {
         &mut self,
         fact: &QuantifierFreeFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<QuantifierFreeFact, InstError> {
         match fact {
             QuantifierFreeFact::AtomicFact(a) => Ok(QuantifierFreeFact::AtomicFact(
@@ -54,14 +53,10 @@ impl Runtime {
         &mut self,
         facts: &[QuantifierFreeFact],
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<Vec<QuantifierFreeFact>, InstError> {
         let mut out = Vec::with_capacity(facts.len());
         for f in facts {
-            out.push(self.inst_quantifier_free_fact_rec(
-                f,
-                param_to_arg_map,
-            )?);
+            out.push(self.inst_quantifier_free_fact_rec(f, param_to_arg_map)?);
         }
         Ok(out)
     }
@@ -70,7 +65,6 @@ impl Runtime {
         &mut self,
         fact: &ChainFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<ChainFact, InstError> {
         let mut objs = Vec::with_capacity(fact.objs.len());
         for o in &fact.objs {
@@ -88,7 +82,6 @@ impl Runtime {
         &mut self,
         fact: &AndChainAtomicFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<AndChainAtomicFact, InstError> {
         match fact {
             AndChainAtomicFact::AtomicFact(a) => Ok(AndChainAtomicFact::AtomicFact(

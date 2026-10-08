@@ -2,14 +2,13 @@
 
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, GreaterEqualFact, GreaterFact,
-    InFact, InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
-    IsSetFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
-    NotCoprimeFact, NotDvdFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
-    NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
-    NotIsNonemptySetFact, NotIsSetFact, NotLessEqualFact, NotLessFact,
-    NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact,
-    NotSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
-    SubsetFact, SupersetFact, SurjectiveFact,
+    InFact, InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+    LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact,
+    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact,
+    NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
+    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact,
+    NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact, PrimeFact,
+    ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::AtomicName;
@@ -18,7 +17,9 @@ use crate::parse::keywords::{
     BIJECTIVE, COPRIME, DVD, EQUAL, GREATER, GREATER_EQUAL, IN, INJECTIVE, IS_CHOICE_FUNCTION_FOR,
     LESS, LESS_EQUAL, NOT_EQUAL, PRIME, SURJECTIVE,
 };
-use crate::runtime::{CodeSource, FactId, RealOrVirtualPath, Runtime, RuntimeParseError, RuntimeResult};
+use crate::runtime::{
+    CodeSource, FactId, RealOrVirtualPath, Runtime, RuntimeParseError, RuntimeResult,
+};
 
 pub const IS_SET: &str = "is_set";
 pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
@@ -404,7 +405,13 @@ fn diagnostic_path(rt: &Runtime, line_file: &SourceLine) -> RealOrVirtualPath {
     }
 }
 
-fn n_args(rt: &Runtime, name: &str, args: &[Obj], expected: usize, line_file: &SourceLine) -> RuntimeResult<()> {
+fn n_args(
+    rt: &Runtime,
+    name: &str,
+    args: &[Obj],
+    expected: usize,
+    line_file: &SourceLine,
+) -> RuntimeResult<()> {
     if args.len() != expected {
         return Err(RuntimeParseError::new(
             format!("`{name}` requires {expected} arguments, got {}", args.len()),

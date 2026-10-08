@@ -1,16 +1,12 @@
 use crate::ast::fact::{ChainFact, Fact};
 use crate::ast::names::AtomicName;
 use crate::exec_env::exec_env::PropRewriteProperty;
-use crate::parse::keywords::{
-    EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
-};
+use crate::parse::keywords::{EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::helper::{
     chain_line_file, chain_order_edges, chain_props_all_equal, chain_uniform_prop, OrderEdge,
 };
-use crate::store_fact_and_infer::{
-    ChainTransitiveCite, InferChainTransitiveClosureResult,
-};
+use crate::store_fact_and_infer::{ChainTransitiveCite, InferChainTransitiveClosureResult};
 
 impl Runtime {
     // Transitive closures from a stored chain (equality / numeric order / known transitive).
@@ -19,7 +15,8 @@ impl Runtime {
         &mut self,
         chain_fact: &ChainFact,
         adjacent_len: usize,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
         if adjacent_len < 2 {
             return Ok(Vec::new());
         }
@@ -39,7 +36,12 @@ impl Runtime {
                 return Ok(Vec::new());
             }
             if has_up || has_down {
-                return self.infer_builtin_numeric_order_closures(chain_fact, &edges, has_up, verify_state);
+                return self.infer_builtin_numeric_order_closures(
+                    chain_fact,
+                    &edges,
+                    has_up,
+                    verify_state,
+                );
             }
         }
 
@@ -55,7 +57,8 @@ impl Runtime {
     fn infer_builtin_equality_closures(
         &mut self,
         chain_fact: &ChainFact,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
         let line_file = chain_line_file(chain_fact);
         let mut closures = Vec::new();
         for start in 0..chain_fact.objs.len() {
@@ -68,9 +71,11 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let derived = Box::new(
-                    self.store_inferred_fact_and_infer(&Fact::AtomicFact(conclusion), verify_state)?,
-                );
+                let derived =
+                    Box::new(self.store_inferred_fact_and_infer(
+                        &Fact::AtomicFact(conclusion),
+                        verify_state,
+                    )?);
                 closures.push(InferChainTransitiveClosureResult {
                     cite: ChainTransitiveCite::BuiltinEquality,
                     start_object_index: start,
@@ -88,7 +93,8 @@ impl Runtime {
         chain_fact: &ChainFact,
         edges: &[OrderEdge],
         has_up: bool,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
         let line_file = chain_line_file(chain_fact);
         let mut closures = Vec::new();
         for start in 0..chain_fact.objs.len() {
@@ -123,9 +129,11 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let derived = Box::new(
-                    self.store_inferred_fact_and_infer(&Fact::AtomicFact(conclusion), verify_state)?,
-                );
+                let derived =
+                    Box::new(self.store_inferred_fact_and_infer(
+                        &Fact::AtomicFact(conclusion),
+                        verify_state,
+                    )?);
                 closures.push(InferChainTransitiveClosureResult {
                     cite: if path_is_equality {
                         ChainTransitiveCite::BuiltinEquality
@@ -146,7 +154,8 @@ impl Runtime {
         &mut self,
         chain_fact: &ChainFact,
         prop_name: AtomicName,
-     verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
         let line_file = chain_line_file(chain_fact);
         let mut closures = Vec::new();
         for start in 0..chain_fact.objs.len() {
@@ -157,9 +166,11 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let derived = Box::new(
-                    self.store_inferred_fact_and_infer(&Fact::AtomicFact(conclusion), verify_state)?,
-                );
+                let derived =
+                    Box::new(self.store_inferred_fact_and_infer(
+                        &Fact::AtomicFact(conclusion),
+                        verify_state,
+                    )?);
                 closures.push(InferChainTransitiveClosureResult {
                     cite: ChainTransitiveCite::KnownTransitive {
                         prop_name: prop_name.clone(),

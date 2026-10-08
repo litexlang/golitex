@@ -197,8 +197,15 @@ pub fn compare_closed_numeric_objs(
         evaluate_obj_to_normalized_decimal_number(left),
         evaluate_obj_to_normalized_decimal_number(right),
     ) {
-        let cmp = compare_number_strings(&left_number.normalized_value, &right_number.normalized_value);
-        return Some((cmp, left_number.normalized_value, right_number.normalized_value));
+        let cmp = compare_number_strings(
+            &left_number.normalized_value,
+            &right_number.normalized_value,
+        );
+        return Some((
+            cmp,
+            left_number.normalized_value,
+            right_number.normalized_value,
+        ));
     }
     // Positive normalized denominators make checked cross-products sound.
     // Example: 1/3 < 1/2; no float or rounded decimal participates.
@@ -207,7 +214,11 @@ pub fn compare_closed_numeric_objs(
             return Some(value);
         }
         let (real, imaginary) = super::exact_complex::exact_complex_coordinates(obj)?;
-        if imaginary.is_zero() { Some(real) } else { None }
+        if imaginary.is_zero() {
+            Some(real)
+        } else {
+            None
+        }
     };
     // Complex syntax may evaluate to a real value (i^2 = -1); a nonzero
     // imaginary part cannot receive an order certificate.

@@ -14,10 +14,11 @@ impl Runtime {
     ) -> RuntimeResult<Result<Vec<ParamTypeWellDefinedProof>, VerifyObjWellDefinedResult>> {
         let mut proofs = Vec::with_capacity(parameters.groups.len());
         for group in &parameters.groups {
-            let one = TypedParameterList { groups: vec![group.clone()] };
-            let checked = self.verify_typed_parameters_well_definedness_or_fail(
-                &one, verify_state.clone(),
-            )?;
+            let one = TypedParameterList {
+                groups: vec![group.clone()],
+            };
+            let checked =
+                self.verify_typed_parameters_well_definedness_or_fail(&one, verify_state.clone())?;
             match checked {
                 Ok(mut group_proofs) => proofs.append(&mut group_proofs),
                 Err(failed) => return Ok(Err(failed)),

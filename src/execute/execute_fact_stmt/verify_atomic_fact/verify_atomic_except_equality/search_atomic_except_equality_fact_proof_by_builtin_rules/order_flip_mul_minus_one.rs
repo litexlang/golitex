@@ -6,9 +6,9 @@
 //! When known `x > 0`, prove `(-1)*x < 0`.
 //! When known `x >= 0` / `x > 0`, prove `(-1)*x <= 0`.
 
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{GreaterEqualFact, LessEqualFact, LessFact};
 use crate::ast::obj::{ArithmeticOperator, Literal, Mul, Number, Obj};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::runtime::Runtime;
 
 // Builtin: `(-1)*x >= 0` from known `x < 0` or `x <= 0`.

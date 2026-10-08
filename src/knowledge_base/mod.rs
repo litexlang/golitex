@@ -27,9 +27,7 @@ pub use def_abstract_prop_codec::{
 pub use def_prop_codec::{
     load_def_prop, read_def_prop, store_def_prop, write_def_prop, KbCodecError,
 };
-pub use def_struct_codec::{
-    load_def_struct, read_def_struct, store_def_struct, write_def_struct,
-};
+pub use def_struct_codec::{load_def_struct, read_def_struct, store_def_struct, write_def_struct};
 pub use def_thm_codec::{load_def_thm, read_def_thm, store_def_thm, write_def_thm};
 pub use definitions_memory_codec::{
     load_definition_memory, read_definition_memory, store_definition_memory,
@@ -41,15 +39,11 @@ pub use import_cache::{
     mounted_matches_config, path_key, snapshot_from_global_ids, try_hit_import_cache,
     write_import_cache_after_cold,
 };
-pub use manifest::{
-    GlobalIdsDeltas, GlobalIdsSnapshot, KbManifest, ManifestExportEntry,
-};
+pub use manifest::{GlobalIdsDeltas, GlobalIdsSnapshot, KbManifest, ManifestExportEntry};
 pub use mount::{
     try_mount_module, write_module_kb, ExportKbWrite, KbMountMiss, MountedExport, MountedModule,
 };
-pub use paths::{
-    export_definitions_path, kb_dir, manifest_path, KB_ABI, KB_DIR_NAME,
-};
+pub use paths::{export_definitions_path, kb_dir, manifest_path, KB_ABI, KB_DIR_NAME};
 pub use remap::{remap_definition_memory, RemapPlan};
 pub use stored_identifier_codec::{
     load_stored_identifier, read_stored_identifier, store_stored_identifier,

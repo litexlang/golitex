@@ -1,17 +1,18 @@
-use super::{
-    AndChainAtomicFact, AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact,
-    ExistShapedFact, Fact, PlainExistFact, GreaterEqualFact, GreaterFact, InFact, InjectiveFact,
-    IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,     LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact,
-    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact,     NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
-    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
-    NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact,
-    OrFact, PrimeFact, ProperSubsetFact, ProperSupersetFact, QuantifierFreeFact, SubsetFact,
-    SupersetFact, SurjectiveFact,
-};
 use super::super::obj::{IdentifierObj, Obj};
 use super::super::param::ParamType;
-use crate::runtime::FactId;
+use super::{
+    AndChainAtomicFact, AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact,
+    ExistShapedFact, Fact, GreaterEqualFact, GreaterFact, InFact, InjectiveFact,
+    IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, LessEqualFact,
+    LessFact, NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotEqualFact,
+    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact, NotIsChoiceFunctionForFact,
+    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotLessEqualFact, NotLessFact,
+    NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact,
+    NotSupersetFact, NotSurjectiveFact, OrFact, PlainExistFact, PrimeFact, ProperSubsetFact,
+    ProperSupersetFact, QuantifierFreeFact, SubsetFact, SupersetFact, SurjectiveFact,
+};
 use crate::runtime::runtime_ids::IdentifierId;
+use crate::runtime::FactId;
 use std::collections::HashSet;
 
 pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
@@ -27,8 +28,6 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
             | AtomicFact::NotInFact(_)
-
-
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
             | AtomicFact::NotProperSubsetFact(_)
@@ -509,4 +508,3 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
         .into(),
     })
 }
-

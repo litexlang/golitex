@@ -26,7 +26,11 @@ pub fn merge_exec_env_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResu
     merge_definitions_from(parent, child)?;
     merge_facts_from(parent, child)?;
     // Keep equality chain projections elaborated by Runtime in the child.
-    parent.facts.known_forall_conclusions.by_equal.merge_from(&child.facts.known_forall_conclusions.by_equal);
+    parent
+        .facts
+        .known_forall_conclusions
+        .by_equal
+        .merge_from(&child.facts.known_forall_conclusions.by_equal);
     merge_well_defined_objects_from(parent, child)?;
     merge_special_object_properties_from(parent, child);
     merge_prop_rewrite_properties_from(parent, child);

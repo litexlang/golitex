@@ -7,17 +7,25 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_t
 // Only an exact numeric pi coefficient is accepted; symbols need other rules.
 pub(super) fn pi_reflection_argument(argument: &Obj, half_turn: bool) -> Option<&Obj> {
     use crate::ast::obj::{ArithmeticOperator as A, Literal, Number};
-    let expected = Obj::Literal(Literal::Number(Number::new(if half_turn { "1" } else { "0.5" }.into())));
+    let expected = Obj::Literal(Literal::Number(Number::new(
+        if half_turn { "1" } else { "0.5" }.into(),
+    )));
     let matches_shift = |shift: &Obj| {
         crate::rational_expression::pi_multiple::pi_coefficient(shift).is_some_and(|actual| {
-            crate::rational_expression::objs_equal_by_rational_expression_evaluation(&actual, &expected)
+            crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                &actual, &expected,
+            )
         })
     };
     match argument {
-        Obj::ArithmeticOperator(A::Sub(difference)) if matches_shift(&difference.left) => Some(&difference.right),
+        Obj::ArithmeticOperator(A::Sub(difference)) if matches_shift(&difference.left) => {
+            Some(&difference.right)
+        }
         Obj::ArithmeticOperator(A::Add(sum)) => {
             for (shift, negative) in [(&*sum.left, &*sum.right), (&*sum.right, &*sum.left)] {
-                if !matches_shift(shift) { continue; }
+                if !matches_shift(shift) {
+                    continue;
+                }
                 if let Obj::ArithmeticOperator(A::Neg(negation)) = negative {
                     return Some(&negation.arg);
                 }
@@ -135,7 +143,6 @@ pub(super) fn finite_pullback_map(function: &Obj, domain: &Obj, source: &Obj) ->
     })
 }
 
-
 use super::log_algebra_base_proof::{
     LogAlgebraBaseProof, LogAlgebraBelowOneProof, LogAlgebraPositiveNonunitProof,
 };
@@ -158,40 +165,68 @@ impl Runtime {
             return Ok(Some(LogAlgebraBaseProof::GreaterThanOne(above_one)));
         }
         let reverse_above: Fact = GreaterFact {
-            fact_id: self.global_ids.allocate_fact_id(), left: base.clone(), right: one.clone(), line_file: None,
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: base.clone(),
+            right: one.clone(),
+            line_file: None,
+        }
+        .into();
         let above_one = self.verify_builtin_rule_premise(&reverse_above, state)?;
         if !above_one.is_failed() {
             return Ok(Some(LogAlgebraBaseProof::GreaterThanOne(above_one)));
         }
         let positive = self.verify_log_algebra_positive(base, state)?;
-        if positive.is_failed() { return Ok(None); }
+        if positive.is_failed() {
+            return Ok(None);
+        }
         let below: Fact = LessFact {
-            fact_id: self.global_ids.allocate_fact_id(), left: base.clone(), right: one.clone(), line_file: None,
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: base.clone(),
+            right: one.clone(),
+            line_file: None,
+        }
+        .into();
         let below_one = self.verify_builtin_rule_premise(&below, state)?;
         let below_one = if below_one.is_failed() {
             let reverse: Fact = GreaterFact {
-                fact_id: self.global_ids.allocate_fact_id(), left: one.clone(), right: base.clone(), line_file: None,
-            }.into();
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: one.clone(),
+                right: base.clone(),
+                line_file: None,
+            }
+            .into();
             self.verify_builtin_rule_premise(&reverse, state)?
-        } else { below_one };
+        } else {
+            below_one
+        };
         if !below_one.is_failed() {
             return Ok(Some(LogAlgebraBaseProof::BelowOne(
                 LogAlgebraBelowOneProof::new(positive, below_one),
             )));
         }
         let nonunit: Fact = NotEqualFact {
-            fact_id: self.global_ids.allocate_fact_id(), left: base.clone(), right: one.clone(), line_file: None,
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: base.clone(),
+            right: one.clone(),
+            line_file: None,
+        }
+        .into();
         let nonunit = self.verify_builtin_rule_premise(&nonunit, state)?;
         let nonunit = if nonunit.is_failed() {
             let reverse: Fact = NotEqualFact {
-                fact_id: self.global_ids.allocate_fact_id(), left: one, right: base.clone(), line_file: None,
-            }.into();
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: one,
+                right: base.clone(),
+                line_file: None,
+            }
+            .into();
             self.verify_builtin_rule_premise(&reverse, state)?
-        } else { nonunit };
-        if nonunit.is_failed() { return Ok(None); }
+        } else {
+            nonunit
+        };
+        if nonunit.is_failed() {
+            return Ok(None);
+        }
         Ok(Some(LogAlgebraBaseProof::PositiveNonunit(
             LogAlgebraPositiveNonunitProof::new(positive, nonunit),
         )))
@@ -205,11 +240,16 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let positive = self.verify_order_positive(obj, state)?;
-        if !positive.is_failed() { return Ok(positive); }
+        if !positive.is_failed() {
+            return Ok(positive);
+        }
         let reverse: Fact = GreaterFact {
-            fact_id: self.global_ids.allocate_fact_id(), left: obj.clone(),
-            right: Obj::Literal(Literal::Number(Number::new("0".into()))), line_file: None,
-        }.into();
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: obj.clone(),
+            right: Obj::Literal(Literal::Number(Number::new("0".into()))),
+            line_file: None,
+        }
+        .into();
         self.verify_builtin_rule_premise(&reverse, state)
     }
 }

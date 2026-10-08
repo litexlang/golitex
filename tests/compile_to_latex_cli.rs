@@ -45,7 +45,11 @@ fn every_locale_runs_through_the_real_binary() {
 fn function_preimages_render_distinct_operator_names_without_double_escaping() {
     for lang in ["en", "zh"] {
         let (ok, json) = convert(&[
-            "-latex", "-lang", lang, "-f", "examples/wd/function_preimages.lit",
+            "-latex",
+            "-lang",
+            lang,
+            "-f",
+            "examples/wd/function_preimages.lit",
         ]);
         assert!(ok, "{json:?}");
         let map = json.as_object().unwrap();

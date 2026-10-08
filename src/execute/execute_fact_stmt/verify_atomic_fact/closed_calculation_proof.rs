@@ -30,7 +30,10 @@ pub enum ClosedAtomicExceptEqualityCalculationProof {
 // Both values use the same exact representation. Decimal strings are normalized;
 // rational/complex arithmetic uses checked exact fractions, never floats.
 pub enum ClosedValuePair {
-    Radical { left_normal: Obj, right_normal: Obj },
+    Radical {
+        left_normal: Obj,
+        right_normal: Obj,
+    },
     Decimal {
         left: String,
         right: String,

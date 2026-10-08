@@ -1,14 +1,14 @@
-use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use super::helper::{
     and_chain_fact, assume_fact, close_by_contradiction, or_fact_from_and_chains,
     proof_verify_state, store_goal_fact, verify_goal_fact,
 };
 use super::result::{
-    ByCasesBranchClosingSuccess, ByCasesBranchFailed, ByCasesBranchSuccess,
-    ExecByCasesStmtFailed, ExecByCasesStmtResult, ExecByCasesStmtSuccess, ExecByStmtResult,
+    ByCasesBranchClosingSuccess, ByCasesBranchFailed, ByCasesBranchSuccess, ExecByCasesStmtFailed,
+    ExecByCasesStmtResult, ExecByCasesStmtSuccess, ExecByStmtResult,
 };
 use crate::ast::fact::Fact;
 use crate::ast::stmt::ByCasesStmt;
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub fn exec_by_cases_stmt(
@@ -16,7 +16,10 @@ pub fn exec_by_cases_stmt(
     stmt: &ByCasesStmt,
 ) -> RuntimeResult<ExecByStmtResult> {
     let n = stmt.cases.len();
-    if n == 0 || stmt.proofs.len() != n || stmt.impossible_facts.len() != n || stmt.then_facts.is_empty()
+    if n == 0
+        || stmt.proofs.len() != n
+        || stmt.impossible_facts.len() != n
+        || stmt.then_facts.is_empty()
     {
         return Ok(ExecByStmtResult::Cases(ExecByCasesStmtResult::Failed(
             ExecByCasesStmtFailed::LengthMismatch(
@@ -119,7 +122,10 @@ fn exec_one_case_branch(
                         result: proof,
                     }));
                 }
-                let stored = rt.store_fact_and_infer(then_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+                let stored = rt.store_fact_and_infer(
+                    then_fact,
+                    crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                )?;
                 conclusion_fact_ids.push(Some(stored.primary_fact_id()));
                 checks.push(proof);
             }

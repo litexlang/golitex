@@ -1,4 +1,4 @@
-use crate::ast::obj::{Obj, ArithmeticOperator};
+use crate::ast::obj::{ArithmeticOperator, Obj};
 use crate::rational_expression::decimal_arithmetic::evaluate_obj_to_normalized_decimal_number;
 use crate::rational_expression::denominator_clearing::collect_rational_expression_monomials_after_denominator_clearing_process;
 use crate::rational_expression::helper::obj_key;
@@ -20,18 +20,32 @@ pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> 
 
 // Only the dedicated ImaginaryUnit AST literal is reduced using i² = -1.
 pub fn objs_equal_by_complex_expression_evaluation(left: &Obj, right: &Obj) -> bool {
-    objs_equal_by_algebraic_normalization(left, right, AlgebraicNormalizationMode::ComplexImaginaryUnit)
+    objs_equal_by_algebraic_normalization(
+        left,
+        right,
+        AlgebraicNormalizationMode::ComplexImaginaryUnit,
+    )
 }
 
 pub fn contains_imaginary_unit(obj: &Obj) -> bool {
     match obj {
         Obj::Literal(crate::ast::obj::Literal::ImaginaryUnit(_)) => true,
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
+            contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => {
+            contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right)
+        }
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => contains_imaginary_unit(&x.arg),
-        Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
-        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right),
-        Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => contains_imaginary_unit(&x.base) || contains_imaginary_unit(&x.exponent),
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => {
+            contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => {
+            contains_imaginary_unit(&x.left) || contains_imaginary_unit(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
+            contains_imaginary_unit(&x.base) || contains_imaginary_unit(&x.exponent)
+        }
         _ => false,
     }
 }

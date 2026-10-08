@@ -15,80 +15,130 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(proof) = self.search_fn_range_of_empty_domain(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(proof),
+            ));
         }
         if let Some(proof) = self.search_empty_function_graph(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(
+                proof,
+            )));
         }
-        if let Some(proof) = self.search_empty_domain_function_space_singleton(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::EmptyDomainFunctionSpaceSingleton(proof)));
+        if let Some(proof) =
+            self.search_empty_domain_function_space_singleton(fact, verify_state)?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::EmptyDomainFunctionSpaceSingleton(proof),
+            ));
         }
         if let Some(proof) = super::by_integer_range_builder::integer_range_builder(fact) {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_scalar_identity(fact, verify_state.clone())? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarIdentity(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarIdentity(
+                proof,
+            )));
         }
-        if let Some(proof)=super::by_reduce_product::reduce_product(fact) {
+        if let Some(proof) = super::by_reduce_product::reduce_product(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceProduct(proof)));
         }
-        if let Some(proof)=self.search_finite_map_size(fact) {
+        if let Some(proof) = self.search_finite_map_size(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteMapSize(proof)));
         }
-        if let Some(proof)=self.search_range_size(fact,verify_state)? { return Ok(Some(proof)); }
-        if let Some(proof)=self.search_euclidean_remainder(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::EuclideanRemainder(proof))); }
+        if let Some(proof) = self.search_range_size(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.search_euclidean_remainder(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::EuclideanRemainder(
+                proof,
+            )));
+        }
         if let Some(proof) = self.search_gcd_common_divisor(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::GcdCommonDivisor(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::GcdCommonDivisor(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_lcm_common_multiple(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::LcmCommonMultiple(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::LcmCommonMultiple(
+                proof,
+            )));
         }
-        if let Some(proof)=self.search_factorial_divisibility(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::FactorialDivisibility(proof))); }
+        if let Some(proof) = self.search_factorial_divisibility(fact, verify_state)? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::FactorialDivisibility(proof),
+            ));
+        }
         if let Some(proof) = self.search_cartesian_size(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::CartesianSize(proof)));
         }
         if let Some(proof) = self.search_elementary_arithmetic(fact, verify_state.clone())? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::ElementaryArithmetic(proof),
+            ));
         }
         if let Some(proof) = self.search_trig_complex_identity(fact, verify_state.clone())? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }
-        if let Some(proof) = self.search_equal_fact_by_aggregate_calculation(fact, verify_state.clone())? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateCalculation(proof)));
+        if let Some(proof) =
+            self.search_equal_fact_by_aggregate_calculation(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::AggregateCalculation(proof),
+            ));
         }
-        if let Some(proof)=self.search_reduce_last_step(fact,verify_state.clone())? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceLastStep(proof)));
+        if let Some(proof) = self.search_reduce_last_step(fact, verify_state.clone())? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceLastStep(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_reduce_partition(fact, verify_state.clone())? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ReducePartition(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReducePartition(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_reduce_first_step(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceFirstStep(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceFirstStep(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_reduce_translation(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceTranslation(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReduceTranslation(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_reduce_pointwise(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ReducePointwise(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReducePointwise(
+                proof,
+            )));
         }
-        if let Some(proof) = self.search_equal_fact_by_aggregate_identities(fact, verify_state.clone())? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateIdentity(proof)));
+        if let Some(proof) =
+            self.search_equal_fact_by_aggregate_identities(fact, verify_state.clone())?
+        {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::AggregateIdentity(
+                proof,
+            )));
         }
         if let Some(proof) = self.search_finite_set_product_reindex(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetProductReindex(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::FiniteSetProductReindex(proof),
+            ));
         }
         if let Some(proof) = self.search_finite_set_reduce_reindex(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetReduceReindex(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::FiniteSetReduceReindex(proof),
+            ));
         }
-        if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equal_from_known_difference_zero(
-                fact,
-                verify_state.clone(),
-            )?
-        {
+        if let Some(proof) = self.search_equal_fact_builtin_rule_equal_from_known_difference_zero(
+            fact,
+            verify_state.clone(),
+        )? {
             return Ok(Some(
                 EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(proof),
             ));
@@ -99,119 +149,77 @@ impl Runtime {
             return Ok(Some(map_power_law_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave2(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave2(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave2_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave3(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave3(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave3_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave4(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave4(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave4_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave5(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave5(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave5_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave6(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave6(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave6_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave7(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave7(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave7_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave8(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave8(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave8_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave9(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave9(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave9_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave10(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave10(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave10_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave11(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave11(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave11_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave12(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave12(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave12_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave13(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave13(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave13_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave14(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave14(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave14_proof(proof)));
         }
         if let Some(proof) = self
-            .search_equal_fact_builtin_rule_equality_identities_wave15(
-                fact,
-                verify_state.clone(),
-            )?
+            .search_equal_fact_builtin_rule_equality_identities_wave15(fact, verify_state.clone())?
         {
             return Ok(Some(map_equality_identities_wave15_proof(proof)));
         }
-        if let Some(proof) = self
-            .search_equal_fact_builtin_rule_closed_trig(fact, verify_state.clone())?
+        if let Some(proof) =
+            self.search_equal_fact_builtin_rule_closed_trig(fact, verify_state.clone())?
         {
             return Ok(Some(map_closed_trig_proof(proof)));
         }
@@ -220,22 +228,36 @@ impl Runtime {
         {
             return Ok(Some(map_inverse_trig_proof(proof)));
         }
-        if let Some(proof) = self.search_equal_fact_builtin_rule_finite_subset_size(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(proof)));
+        if let Some(proof) =
+            self.search_equal_fact_builtin_rule_finite_subset_size(fact, verify_state)?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(proof),
+            ));
         }
         if let Some(proof) = self.search_scalar_division_relation(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof),
+            ));
         }
         if let Some(proof) = self.search_exponential_logarithm_identity(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::ExponentialLogarithmIdentity(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::ExponentialLogarithmIdentity(proof),
+            ));
         }
         if let Some(proof) = self.search_factorial_predecessor(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::FactorialPredecessor(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::FactorialPredecessor(proof),
+            ));
         }
         if let Some(proof) = self.search_integer_interval_equality(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerInterval(proof)));
+            return Ok(Some(EqualitySearchProofByBuiltinRule::IntegerInterval(
+                proof,
+            )));
         }
-        if let Some(proof)=self.scalar_extra_equality(fact,verify_state)? { return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarExtra(proof))); }
+        if let Some(proof) = self.scalar_extra_equality(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarExtra(proof)));
+        }
         if let Some(proof) = super::by_native_fixed_base::native_fixed_base(fact) {
             return Ok(Some(proof));
         }
@@ -248,7 +270,9 @@ fn map_power_law_proof(
 ) -> EqualitySearchProofByBuiltinRule {
     use super::by_power_laws::PowerLawEqualityBuiltinRuleProof as P;
     match proof {
-        P::NegativeIntegerPowerReciprocal(p) => EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal(p),
+        P::NegativeIntegerPowerReciprocal(p) => {
+            EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal(p)
+        }
         P::PowerProductSameBase(p) => EqualitySearchProofByBuiltinRule::PowerProductSameBase(p),
         P::PowerOfPower(p) => EqualitySearchProofByBuiltinRule::PowerOfPower(p),
         P::PowerOfProduct(p) => EqualitySearchProofByBuiltinRule::PowerOfProduct(p),
@@ -336,7 +360,9 @@ fn map_equality_identities_wave5_proof(
         W::LcmCommutative(p) => EqualitySearchProofByBuiltinRule::LcmCommutative(p),
         W::LcmIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(p),
         W::LcmLeftAbsDivisibility(p) => EqualitySearchProofByBuiltinRule::LcmLeftAbsDivisibility(p),
-        W::LcmRightAbsDivisibility(p) => EqualitySearchProofByBuiltinRule::LcmRightAbsDivisibility(p),
+        W::LcmRightAbsDivisibility(p) => {
+            EqualitySearchProofByBuiltinRule::LcmRightAbsDivisibility(p)
+        }
         W::GcdCommutative(p) => EqualitySearchProofByBuiltinRule::GcdCommutative(p),
         W::GcdIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(p),
         W::GcdRightZeroAbs(p) => EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(p),
@@ -398,9 +424,7 @@ fn map_equality_identities_wave8_proof(
         W::ModDividendMinusRemainderZero(p) => {
             EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(p)
         }
-        W::SquareSumComponentZero(p) => {
-            EqualitySearchProofByBuiltinRule::SquareSumComponentZero(p)
-        }
+        W::SquareSumComponentZero(p) => EqualitySearchProofByBuiltinRule::SquareSumComponentZero(p),
         W::MinusOneOddNaturalPower(p) => {
             EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(p)
         }
@@ -458,22 +482,27 @@ fn map_equality_identities_wave10_proof(
     }
 }
 
-
 fn map_equality_identities_wave11_proof(
     proof: super::by_equality_identities_wave11::EqualityIdentitiesWave11BuiltinRuleProof,
 ) -> EqualitySearchProofByBuiltinRule {
     use super::by_equality_identities_wave11::EqualityIdentitiesWave11BuiltinRuleProof as W;
     match proof {
-        W::UnionAbsorptionFromSubset(p) => EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(p),
+        W::UnionAbsorptionFromSubset(p) => {
+            EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(p)
+        }
         W::SetMinusRecoversSubset(p) => EqualitySearchProofByBuiltinRule::SetMinusRecoversSubset(p),
         W::EmptySetFromSizeZero(p) => EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(p),
         W::FiniteSetSizeSetMinus(p) => EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(p),
         W::FiniteSetSizeUnion(p) => EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(p),
-        W::ClosedRangeSingletonListSet(p) => EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(p),
+        W::ClosedRangeSingletonListSet(p) => {
+            EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(p)
+        }
         W::SumSingleTerm(p) => EqualitySearchProofByBuiltinRule::SumSingleTerm(p),
         W::ProductSingleTerm(p) => EqualitySearchProofByBuiltinRule::ProductSingleTerm(p),
         W::ReduceAddZeroEqualsSum(p) => EqualitySearchProofByBuiltinRule::ReduceAddZeroEqualsSum(p),
-        W::FiniteSetReduceAddZeroEqualsSum(p) => EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(p),
+        W::FiniteSetReduceAddZeroEqualsSum(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(p)
+        }
         W::PowOfLogInverse(p) => EqualitySearchProofByBuiltinRule::PowOfLogInverse(p),
     }
 }
@@ -519,18 +548,12 @@ fn map_equality_identities_wave13_proof(
         W::LnOfEuler(p) => EqualitySearchProofByBuiltinRule::LnOfEuler(p),
         W::ReOfReal(p) => EqualitySearchProofByBuiltinRule::ReOfReal(p),
         W::ImgOfReal(p) => EqualitySearchProofByBuiltinRule::ImgOfReal(p),
-        W::ReOfRealPlusImagScaled(p) => {
-            EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(p)
-        }
+        W::ReOfRealPlusImagScaled(p) => EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(p),
         W::ImgOfRealPlusImagScaled(p) => {
             EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(p)
         }
-        W::ComplexAbsOfNonnegReal(p) => {
-            EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(p)
-        }
-        W::ComplexAbsOfImagScaled(p) => {
-            EqualitySearchProofByBuiltinRule::ComplexAbsOfImagScaled(p)
-        }
+        W::ComplexAbsOfNonnegReal(p) => EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(p),
+        W::ComplexAbsOfImagScaled(p) => EqualitySearchProofByBuiltinRule::ComplexAbsOfImagScaled(p),
         W::ClosedRangeLiteralExpansion(p) => {
             EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(p)
         }
@@ -592,9 +615,7 @@ fn map_equality_identities_wave15_proof(
 ) -> EqualitySearchProofByBuiltinRule {
     use super::by_equality_identities_wave15::EqualityIdentitiesWave15BuiltinRuleProof as W;
     match proof {
-        W::FiniteSetSumFubiniSwap(p) => {
-            EqualitySearchProofByBuiltinRule::FiniteSetSumFubiniSwap(p)
-        }
+        W::FiniteSetSumFubiniSwap(p) => EqualitySearchProofByBuiltinRule::FiniteSetSumFubiniSwap(p),
         W::FiniteSetSumOverCartesianProduct(p) => {
             EqualitySearchProofByBuiltinRule::FiniteSetSumOverCartesianProduct(p)
         }

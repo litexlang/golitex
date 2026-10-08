@@ -11,8 +11,7 @@ use crate::execute::execute_have_fn_by_induc_stmt::ExecHaveFnByInducStmtResult;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::result::{
-    ExecDefAlgoByInducStmtFailed, ExecDefAlgoByInducStmtResult,
-    ExecDefAlgoByInducStmtSuccessResult,
+    ExecDefAlgoByInducStmtFailed, ExecDefAlgoByInducStmtResult, ExecDefAlgoByInducStmtSuccessResult,
 };
 
 pub fn exec_def_algo_by_induc_stmt(

@@ -1,6 +1,6 @@
 use crate::ast::fact::{ExistShapedFact, Fact};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::well_defined_result::{
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
 };
@@ -222,44 +222,41 @@ pub fn exist_shaped_fact_result_from_success(
     searched_proof: ExistShapedFactSearchedProof,
 ) -> VerifyFactResult {
     VerifyFactResult::ExistShapedFact(Box::new(match fact {
-        ExistShapedFact::Exist(_) => {
-            VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(
-                VerifyPlainExistFactSuccess {
-                    fact: fact.clone(),
-                    well_defined_proof,
-                    searched_proof,
-                },
-            ))
-        }
-        ExistShapedFact::ExistUnique(_) => {
-            VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(
-                VerifyExistUniqueFactSuccess {
-                    fact: fact.clone(),
-                    well_defined_proof,
-                    searched_proof,
-                },
-            ))
-        }
-        ExistShapedFact::NotExist(_) => {
-            VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Success(
-                VerifyNotExistFactSuccess {
-                    fact: fact.clone(),
-                    well_defined_proof,
-                    searched_proof,
-                },
-            ))
-        }
+        ExistShapedFact::Exist(_) => VerifyExistShapedFactResult::PlainExistFact(
+            VerifyPlainExistFactResult::Success(VerifyPlainExistFactSuccess {
+                fact: fact.clone(),
+                well_defined_proof,
+                searched_proof,
+            }),
+        ),
+        ExistShapedFact::ExistUnique(_) => VerifyExistShapedFactResult::ExistUniqueFact(
+            VerifyExistUniqueFactResult::Success(VerifyExistUniqueFactSuccess {
+                fact: fact.clone(),
+                well_defined_proof,
+                searched_proof,
+            }),
+        ),
+        ExistShapedFact::NotExist(_) => VerifyExistShapedFactResult::NotExistFact(
+            VerifyNotExistFactResult::Success(VerifyNotExistFactSuccess {
+                fact: fact.clone(),
+                well_defined_proof,
+                searched_proof,
+            }),
+        ),
     }))
 }
 
-fn exist_shaped_fact_result_failed(fact: &ExistShapedFact, failed: VerifyExistShapedFactFailed) -> VerifyExistShapedFactResult {
+fn exist_shaped_fact_result_failed(
+    fact: &ExistShapedFact,
+    failed: VerifyExistShapedFactFailed,
+) -> VerifyExistShapedFactResult {
     match fact {
         ExistShapedFact::Exist(_) => {
             VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(failed))
         }
-        ExistShapedFact::ExistUnique(_) => {
-            VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(failed))
-        }
+        ExistShapedFact::ExistUnique(_) => VerifyExistShapedFactResult::ExistUniqueFact(
+            VerifyExistUniqueFactResult::Failed(failed),
+        ),
         ExistShapedFact::NotExist(_) => {
             VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Failed(failed))
         }

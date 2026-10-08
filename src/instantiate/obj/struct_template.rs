@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use crate::runtime::runtime_ids::IdentifierId;
 
-use crate::ast::obj::{InstantiatedTemplateObj, IntervalObj, IntervalObjStruct, Obj, FieldAccess, OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, StructObj, SetFormer};
+use crate::ast::obj::{
+    FieldAccess, InstantiatedTemplateObj, IntervalObj, IntervalObjStruct, Obj,
+    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, SetFormer, StructObj,
+};
 use crate::runtime::Runtime;
 
 use super::super::error::InstError;
@@ -12,7 +15,6 @@ impl Runtime {
         &mut self,
         s: &StructObj,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<StructObj, InstError> {
         let mut params = Vec::with_capacity(s.params.len());
         for o in &s.params {
@@ -28,7 +30,6 @@ impl Runtime {
         &mut self,
         a: &FieldAccess,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<FieldAccess, InstError> {
         Ok(FieldAccess {
             obj: Box::new(self.inst_obj_rec(&a.obj, param_to_arg_map)?),
@@ -40,7 +41,6 @@ impl Runtime {
         &mut self,
         a: &InstantiatedTemplateObj,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<InstantiatedTemplateObj, InstError> {
         let mut args = Vec::with_capacity(a.args.len());
         for o in &a.args {
@@ -56,7 +56,6 @@ impl Runtime {
         &mut self,
         i: &OneSideInfinityIntervalObj,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<Obj, InstError> {
         let mut inst_struct = |s: &OneSideInfinityIntervalObjStruct| {
             Ok(OneSideInfinityIntervalObjStruct {
@@ -65,17 +64,25 @@ impl Runtime {
         };
         Ok(match i {
             OneSideInfinityIntervalObj::LowerOpen(s) => {
-                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LowerOpen(inst_struct(s)?)))
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+                    OneSideInfinityIntervalObj::LowerOpen(inst_struct(s)?),
+                ))
             }
-            OneSideInfinityIntervalObj::LowerClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
-                OneSideInfinityIntervalObj::LowerClosed(inst_struct(s)?),
-            )),
+            OneSideInfinityIntervalObj::LowerClosed(s) => {
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+                    OneSideInfinityIntervalObj::LowerClosed(inst_struct(s)?),
+                ))
+            }
             OneSideInfinityIntervalObj::UpperOpen(s) => {
-                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::UpperOpen(inst_struct(s)?)))
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+                    OneSideInfinityIntervalObj::UpperOpen(inst_struct(s)?),
+                ))
             }
-            OneSideInfinityIntervalObj::UpperClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
-                OneSideInfinityIntervalObj::UpperClosed(inst_struct(s)?),
-            )),
+            OneSideInfinityIntervalObj::UpperClosed(s) => {
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+                    OneSideInfinityIntervalObj::UpperClosed(inst_struct(s)?),
+                ))
+            }
         })
     }
 
@@ -83,7 +90,6 @@ impl Runtime {
         &mut self,
         i: &IntervalObj,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<Obj, InstError> {
         let mut inst_struct = |s: &IntervalObjStruct| {
             Ok(IntervalObjStruct {
@@ -92,18 +98,18 @@ impl Runtime {
             })
         };
         Ok(match i {
-            IntervalObj::LeftOpenRightOpen(s) => {
-                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftOpenRightOpen(inst_struct(s)?)))
-            }
-            IntervalObj::LeftOpenRightClosed(s) => {
-                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftOpenRightClosed(inst_struct(s)?)))
-            }
-            IntervalObj::LeftClosedRightOpen(s) => {
-                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftClosedRightOpen(inst_struct(s)?)))
-            }
-            IntervalObj::LeftClosedRightClosed(s) => {
-                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftClosedRightClosed(inst_struct(s)?)))
-            }
+            IntervalObj::LeftOpenRightOpen(s) => Obj::SetFormer(SetFormer::IntervalObj(
+                IntervalObj::LeftOpenRightOpen(inst_struct(s)?),
+            )),
+            IntervalObj::LeftOpenRightClosed(s) => Obj::SetFormer(SetFormer::IntervalObj(
+                IntervalObj::LeftOpenRightClosed(inst_struct(s)?),
+            )),
+            IntervalObj::LeftClosedRightOpen(s) => Obj::SetFormer(SetFormer::IntervalObj(
+                IntervalObj::LeftClosedRightOpen(inst_struct(s)?),
+            )),
+            IntervalObj::LeftClosedRightClosed(s) => Obj::SetFormer(SetFormer::IntervalObj(
+                IntervalObj::LeftClosedRightClosed(inst_struct(s)?),
+            )),
         })
     }
 }

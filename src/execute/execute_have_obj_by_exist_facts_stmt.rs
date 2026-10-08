@@ -7,8 +7,8 @@
 use crate::ast::fact::{ExistShapedFact, PlainExistFact};
 use crate::ast::stmt::HaveObjByExistFactsStmt;
 use crate::execute::execute_fact_stmt::{
-    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyFactResult, VerifyPlainExistFactResult,
-    VerifyPlainExistFactSuccess, VerifyState,
+    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyFactResult,
+    VerifyPlainExistFactResult, VerifyPlainExistFactSuccess, VerifyState,
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::execute::introduce_typed_parameters::SharedHaveDefinition;
@@ -69,11 +69,15 @@ impl Runtime {
             Some(SharedHaveDefinition::HaveObjByExistFacts(Rc::new(
                 stmt.clone(),
             ))),
-         crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         for body_fact in &stmt.facts {
             let as_fact = quantifier_free_fact_to_fact(body_fact.clone());
-            let stored = self.store_fact_and_infer(&as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let stored = self.store_fact_and_infer(
+                &as_fact,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());

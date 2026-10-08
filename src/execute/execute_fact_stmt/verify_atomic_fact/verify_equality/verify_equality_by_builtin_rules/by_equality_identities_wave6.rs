@@ -94,14 +94,14 @@ impl Runtime {
                 ));
             }
             if let Some(p) = self.try_sign_of_positive(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave6BuiltinRuleProof::SignOfPositive(
-                    p,
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave6BuiltinRuleProof::SignOfPositive(p),
+                ));
             }
             if let Some(p) = self.try_sign_of_negative(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave6BuiltinRuleProof::SignOfNegative(
-                    p,
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave6BuiltinRuleProof::SignOfNegative(p),
+                ));
             }
             if let Some(p) = self.try_max_right_when_less_equal(left, right, child.clone())? {
                 return Ok(Some(

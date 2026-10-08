@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::runtime::runtime_ids::IdentifierId;
 
 use crate::ast::fact::{
-    ExistShapedFact, ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact,
+    ExistOrAndChainAtomicFact, ExistShapedFact, Fact, ForallFact, ForallFactWithIff, NotForallFact,
     PlainExistFact,
 };
 use crate::ast::obj::Obj;
@@ -18,7 +18,6 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<Fact, InstError> {
         match fact {
             Fact::AtomicFact(a) => Ok(Fact::AtomicFact(
@@ -58,9 +57,7 @@ impl Runtime {
                     line_file: o.line_file.clone(),
                 }))
             }
-            Fact::ExistFact(_e)
-            | Fact::ExistUniqueFact(_e)
-            | Fact::NotExistFact(_e) => {
+            Fact::ExistFact(_e) | Fact::ExistUniqueFact(_e) | Fact::NotExistFact(_e) => {
                 let family = match fact {
                     Fact::ExistFact(p) => ExistShapedFact::Exist(p.clone()),
                     Fact::ExistUniqueFact(p) => ExistShapedFact::ExistUnique(p.clone()),
@@ -70,17 +67,15 @@ impl Runtime {
                 let inst = self.inst_exist_fact(&family, param_to_arg_map)?;
                 Ok(crate::ast::fact::exist_shaped_fact_to_fact(&inst))
             }
-            Fact::ForallFact(f) => Ok(Fact::ForallFact(self.inst_forall_fact(
-                f,
-                param_to_arg_map,
-            )?)),
+            Fact::ForallFact(f) => Ok(Fact::ForallFact(
+                self.inst_forall_fact(f, param_to_arg_map)?,
+            )),
             Fact::ForallFactWithIff(f) => Ok(Fact::ForallFactWithIff(
                 self.inst_forall_fact_with_iff(f, param_to_arg_map)?,
             )),
-            Fact::NotForall(f) => Ok(Fact::NotForall(self.inst_not_forall_fact(
-                f,
-                param_to_arg_map,
-            )?)),
+            Fact::NotForall(f) => Ok(Fact::NotForall(
+                self.inst_not_forall_fact(f, param_to_arg_map)?,
+            )),
         }
     }
 
@@ -88,12 +83,9 @@ impl Runtime {
         &mut self,
         plain: &PlainExistFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<PlainExistFact, InstError> {
-        let typed_parameters = self.inst_typed_parameter_list(
-            &plain.typed_parameters,
-            param_to_arg_map,
-        )?;
+        let typed_parameters =
+            self.inst_typed_parameter_list(&plain.typed_parameters, param_to_arg_map)?;
         let facts = self.inst_qf_facts_rec(&plain.facts, param_to_arg_map)?;
         Ok(PlainExistFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -117,21 +109,17 @@ impl Runtime {
         &mut self,
         exist: &ExistShapedFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<ExistShapedFact, InstError> {
         match exist {
-            ExistShapedFact::Exist(p) => Ok(ExistShapedFact::Exist(self.inst_plain_exist_fact(
-                p,
-                param_to_arg_map,
-            )?)),
-            ExistShapedFact::ExistUnique(p) => Ok(ExistShapedFact::ExistUnique(self.inst_plain_exist_fact(
-                p,
-                param_to_arg_map,
-            )?)),
-            ExistShapedFact::NotExist(p) => Ok(ExistShapedFact::NotExist(self.inst_plain_exist_fact(
-                p,
-                param_to_arg_map,
-            )?)),
+            ExistShapedFact::Exist(p) => Ok(ExistShapedFact::Exist(
+                self.inst_plain_exist_fact(p, param_to_arg_map)?,
+            )),
+            ExistShapedFact::ExistUnique(p) => Ok(ExistShapedFact::ExistUnique(
+                self.inst_plain_exist_fact(p, param_to_arg_map)?,
+            )),
+            ExistShapedFact::NotExist(p) => Ok(ExistShapedFact::NotExist(
+                self.inst_plain_exist_fact(p, param_to_arg_map)?,
+            )),
         }
     }
 
@@ -139,22 +127,16 @@ impl Runtime {
         &mut self,
         forall: &ForallFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<ForallFact, InstError> {
-        let typed_parameters = self.inst_typed_parameter_list(
-            &forall.typed_parameters,
-            param_to_arg_map,
-        )?;
+        let typed_parameters =
+            self.inst_typed_parameter_list(&forall.typed_parameters, param_to_arg_map)?;
         let mut dom_facts = Vec::with_capacity(forall.dom_facts.len());
         for dom in &forall.dom_facts {
             dom_facts.push(self.inst_fact_rec(dom, param_to_arg_map)?);
         }
         let mut then_facts = Vec::with_capacity(forall.then_facts.len());
         for then in &forall.then_facts {
-            then_facts.push(self.inst_exist_or_and_chain_atomic(
-                then,
-                param_to_arg_map,
-            )?);
+            then_facts.push(self.inst_exist_or_and_chain_atomic(then, param_to_arg_map)?);
         }
         Ok(ForallFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -185,10 +167,7 @@ impl Runtime {
         let forall_fact = self.inst_forall_fact_contents(&f.forall_fact, &shadowed)?;
         let mut iff_facts = Vec::with_capacity(f.iff_facts.len());
         for iff in &f.iff_facts {
-            iff_facts.push(self.inst_exist_or_and_chain_atomic(
-                iff,
-                &shadowed,
-            )?);
+            iff_facts.push(self.inst_exist_or_and_chain_atomic(iff, &shadowed)?);
         }
         Ok(ForallFactWithIff {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -227,7 +206,6 @@ impl Runtime {
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<ExistOrAndChainAtomicFact, InstError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(a) => Ok(ExistOrAndChainAtomicFact::AtomicFact(
@@ -276,14 +254,16 @@ impl Runtime {
             ExistOrAndChainAtomicFact::ExistFact(e) => Ok(ExistOrAndChainAtomicFact::ExistFact(
                 self.inst_plain_exist_fact(e, param_to_arg_map)?,
             )),
-            ExistOrAndChainAtomicFact::ExistUniqueFact(e) => Ok(
-                ExistOrAndChainAtomicFact::ExistUniqueFact(
+            ExistOrAndChainAtomicFact::ExistUniqueFact(e) => {
+                Ok(ExistOrAndChainAtomicFact::ExistUniqueFact(
                     self.inst_plain_exist_fact(e, param_to_arg_map)?,
-                ),
-            ),
-            ExistOrAndChainAtomicFact::NotExistFact(e) => Ok(ExistOrAndChainAtomicFact::NotExistFact(
-                self.inst_plain_exist_fact(e, param_to_arg_map)?,
-            )),
+                ))
+            }
+            ExistOrAndChainAtomicFact::NotExistFact(e) => {
+                Ok(ExistOrAndChainAtomicFact::NotExistFact(
+                    self.inst_plain_exist_fact(e, param_to_arg_map)?,
+                ))
+            }
         }
     }
 }

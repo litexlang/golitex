@@ -6,14 +6,17 @@
 use super::helper::set_bound_parameter_count;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::fact::{
-    AtomicFact, Fact, ForallFact, ExistOrAndChainAtomicFact, InFact, LessEqualFact, SubsetFact,
+    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, LessEqualFact, SubsetFact,
 };
 use crate::ast::obj::{
     ClosedRange, FiniteSeqSet, FiniteSetReduce, FnSet, FunctionSpace, Obj, Product,
     ProductOfFiniteSet, ProductShape, Range, Reduce, SeqSet, SetFormer, StandardSet, Sum,
     SumOfFiniteSet,
 };
-use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList, SetBoundParameterGroup, SetBoundParameterList};
+use crate::ast::param::{
+    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
+    TypedParameterList,
+};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -152,9 +155,13 @@ impl Runtime {
             &mut reqs,
         )?;
         // Enumeration-independent reduction requires both operation laws.
-        if let Some(signature)=self.resolve_callable_fn_set(value.op.as_ref()) {
-            if let Some(carrier)=homogeneous_binary_carrier(&signature) {
-                reqs.extend(self.unordered_fold_laws(value.op.as_ref(),&carrier,verify_state.clone())?);
+        if let Some(signature) = self.resolve_callable_fn_set(value.op.as_ref()) {
+            if let Some(carrier) = homogeneous_binary_carrier(&signature) {
+                reqs.extend(self.unordered_fold_laws(
+                    value.op.as_ref(),
+                    &carrier,
+                    verify_state.clone(),
+                )?);
             }
         }
         // A finite fold applies f at every set element, so its declared domain
@@ -360,14 +367,28 @@ impl Runtime {
                         verify_state,
                     )?);
                 } else {
-                    let parameter_set = fn_set.set_bound_parameters.groups.iter().find(|g| !g.params.is_empty()).expect("one parameter").param_type.as_ref();
+                    let parameter_set = fn_set
+                        .set_bound_parameters
+                        .groups
+                        .iter()
+                        .find(|g| !g.params.is_empty())
+                        .expect("one parameter")
+                        .param_type
+                        .as_ref();
                     let subset = AtomicFact::SubsetFact(SubsetFact {
                         fact_id: self.global_ids.allocate_fact_id(),
-                        left: set.clone(), right: parameter_set.clone(), line_file: None,
+                        left: set.clone(),
+                        right: parameter_set.clone(),
+                        line_file: None,
                     });
                     reqs.push(self.verify_required_atomic_fact(
-                        subset, verify_state.clone(),
-                        format!("{operation}: set {} is not covered by iterand domain {}", set.ir(), parameter_set.ir()),
+                        subset,
+                        verify_state.clone(),
+                        format!(
+                            "{operation}: set {} is not covered by iterand domain {}",
+                            set.ir(),
+                            parameter_set.ir()
+                        ),
                     )?);
                     reqs.push(self.require_obj_subset_of_standard_set(
                         fn_set.ret_set.as_ref(),
@@ -378,7 +399,12 @@ impl Runtime {
                             fn_set.ret_set.ir()
                         ),
                     )?);
-                    self.append_aggregate_predicate_requirements(&fn_set, AggregateIndexDomain::FiniteSet(set), verify_state, &mut reqs)?;
+                    self.append_aggregate_predicate_requirements(
+                        &fn_set,
+                        AggregateIndexDomain::FiniteSet(set),
+                        verify_state,
+                        &mut reqs,
+                    )?;
                 }
             }
             None => {
@@ -443,45 +469,104 @@ impl Runtime {
             verify_state.clone(),
             reqs,
         )?;
-        self.append_aggregate_predicate_requirements(&fn_set, AggregateIndexDomain::Range(start,end), verify_state, reqs)?;
+        self.append_aggregate_predicate_requirements(
+            &fn_set,
+            AggregateIndexDomain::Range(start, end),
+            verify_state,
+            reqs,
+        )?;
         Ok(())
     }
 
     // A callable's predicate domain must hold at every aggregate argument,
     // before either symbolic identities or numeric consumers may use it.
-    fn append_aggregate_predicate_requirements(&mut self, signature:&FnSet, domain:AggregateIndexDomain,
-        state:VerifyState, requirements:&mut Vec<VerifyFactResult>) -> RuntimeResult<()> {
-        if signature.dom_facts.is_empty() { return Ok(()); }
-        if matches!(domain, AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ListSet(s))) if s.list.is_empty()) { return Ok(()); }
-        if let Some((arguments, endpoint_equalities)) = self.explicit_aggregate_predicate_arguments(domain) {
-            for equality in endpoint_equalities { requirements.push(self.verify_fact(&equality,state)?); }
-            let original = signature.set_bound_parameters.groups.iter().flat_map(|g| &g.params).next().expect("unary");
+    fn append_aggregate_predicate_requirements(
+        &mut self,
+        signature: &FnSet,
+        domain: AggregateIndexDomain,
+        state: VerifyState,
+        requirements: &mut Vec<VerifyFactResult>,
+    ) -> RuntimeResult<()> {
+        if signature.dom_facts.is_empty() {
+            return Ok(());
+        }
+        if matches!(domain, AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ListSet(s))) if s.list.is_empty())
+        {
+            return Ok(());
+        }
+        if let Some((arguments, endpoint_equalities)) =
+            self.explicit_aggregate_predicate_arguments(domain)
+        {
+            for equality in endpoint_equalities {
+                requirements.push(self.verify_fact(&equality, state)?);
+            }
+            let original = signature
+                .set_bound_parameters
+                .groups
+                .iter()
+                .flat_map(|g| &g.params)
+                .next()
+                .expect("unary");
             for argument in arguments {
-                let substitution = std::collections::HashMap::from([(original.id,argument)]);
+                let substitution = std::collections::HashMap::from([(original.id, argument)]);
                 for condition in &signature.dom_facts {
-                    let instantiated = self.inst_fact(&crate::instantiate::quantifier_free_fact_to_fact(condition.clone()),&substitution)
-                        .map_err(|e|crate::runtime::RuntimeError::InternalBug(format!("aggregate argument substitution: {e}")))?;
-                    requirements.push(self.verify_fact(&instantiated,state)?);
+                    let instantiated = self
+                        .inst_fact(
+                            &crate::instantiate::quantifier_free_fact_to_fact(condition.clone()),
+                            &substitution,
+                        )
+                        .map_err(|e| {
+                            crate::runtime::RuntimeError::InternalBug(format!(
+                                "aggregate argument substitution: {e}"
+                            ))
+                        })?;
+                    requirements.push(self.verify_fact(&instantiated, state)?);
                 }
             }
             return Ok(());
         }
         let parameter = self.fresh_internal_param();
         let index = Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(&parameter));
-        let original = signature.set_bound_parameters.groups.iter().flat_map(|g| &g.params).next().expect("unary");
-        let substitution = std::collections::HashMap::from([(original.id,index.clone())]);
-        let (parameter_set,dom_facts) = match domain {
-            AggregateIndexDomain::FiniteSet(set) => (set.clone(),vec![]),
-            AggregateIndexDomain::Range(start,end) => {
-                let lower:Fact = LessEqualFact { fact_id:self.global_ids.allocate_fact_id(),left:start.clone(),right:index.clone(),line_file:None }.into();
-                let upper:Fact = LessEqualFact { fact_id:self.global_ids.allocate_fact_id(),left:index,right:end.clone(),line_file:None }.into();
-                (Obj::StandardSet(StandardSet::Z),vec![lower,upper])
+        let original = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|g| &g.params)
+            .next()
+            .expect("unary");
+        let substitution = std::collections::HashMap::from([(original.id, index.clone())]);
+        let (parameter_set, dom_facts) = match domain {
+            AggregateIndexDomain::FiniteSet(set) => (set.clone(), vec![]),
+            AggregateIndexDomain::Range(start, end) => {
+                let lower: Fact = LessEqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: start.clone(),
+                    right: index.clone(),
+                    line_file: None,
+                }
+                .into();
+                let upper: Fact = LessEqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: index,
+                    right: end.clone(),
+                    line_file: None,
+                }
+                .into();
+                (Obj::StandardSet(StandardSet::Z), vec![lower, upper])
             }
         };
         let mut then_facts = Vec::new();
         for condition in &signature.dom_facts {
-            let instantiated = self.inst_fact(&crate::instantiate::quantifier_free_fact_to_fact(condition.clone()),&substitution)
-                .map_err(|error| crate::runtime::RuntimeError::InternalBug(format!("aggregate predicate binder substitution: {error}")))?;
+            let instantiated = self
+                .inst_fact(
+                    &crate::instantiate::quantifier_free_fact_to_fact(condition.clone()),
+                    &substitution,
+                )
+                .map_err(|error| {
+                    crate::runtime::RuntimeError::InternalBug(format!(
+                        "aggregate predicate binder substitution: {error}"
+                    ))
+                })?;
             then_facts.push(match instantiated {
                 Fact::AtomicFact(p) => ExistOrAndChainAtomicFact::AtomicFact(p),
                 Fact::AndFact(p) => ExistOrAndChainAtomicFact::AndFact(p),
@@ -490,42 +575,94 @@ impl Runtime {
                 _ => unreachable!("quantifier-free callable domain"),
             });
         }
-        let coverage = ForallFact { fact_id:self.global_ids.allocate_fact_id(),
-            typed_parameters:TypedParameterList { groups:vec![TypedParameterGroup { params:vec![parameter],param_type:ParamType::Obj(parameter_set) }] },
-            dom_facts,then_facts,line_file:None };
-        requirements.push(self.verify_forall_fact(&coverage,state)?);
+        let coverage = ForallFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            typed_parameters: TypedParameterList {
+                groups: vec![TypedParameterGroup {
+                    params: vec![parameter],
+                    param_type: ParamType::Obj(parameter_set),
+                }],
+            },
+            dom_facts,
+            then_facts,
+            line_file: None,
+        };
+        requirements.push(self.verify_forall_fact(&coverage, state)?);
         Ok(())
     }
 
     // Literal finite enumeration supplies exactly the predicate obligations for
     // the source interval/list. Endpoint calculation is retained as equality
     // evidence; symbolic domains continue through the universal coverage path.
-    fn explicit_aggregate_predicate_arguments(&mut self, domain:AggregateIndexDomain) -> Option<(Vec<Obj>,Vec<Fact>)> {
+    fn explicit_aggregate_predicate_arguments(
+        &mut self,
+        domain: AggregateIndexDomain,
+    ) -> Option<(Vec<Obj>, Vec<Fact>)> {
         use crate::rational_expression::exact_rational::EvalRational;
-        let (start,end,half_open) = match domain {
-            AggregateIndexDomain::Range(a,b) => (a,b,false),
+        let (start, end, half_open) = match domain {
+            AggregateIndexDomain::Range(a, b) => (a, b, false),
             AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ListSet(s))) => {
-                return (s.list.len()<=crate::execute::execute_eval_stmt::helper::MAX_AGGREGATE_TERMS)
-                    .then(|| (s.list.iter().map(|v|v.as_ref().clone()).collect(),vec![]));
+                return (s.list.len()
+                    <= crate::execute::execute_eval_stmt::helper::MAX_AGGREGATE_TERMS)
+                    .then(|| (s.list.iter().map(|v| v.as_ref().clone()).collect(), vec![]));
             }
-            AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ClosedRange(s))) => (s.start.as_ref(),s.end.as_ref(),false),
-            AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::Range(s))) => (s.start.as_ref(),s.end.as_ref(),true),
+            AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::ClosedRange(s))) => {
+                (s.start.as_ref(), s.end.as_ref(), false)
+            }
+            AggregateIndexDomain::FiniteSet(Obj::SetFormer(SetFormer::Range(s))) => {
+                (s.start.as_ref(), s.end.as_ref(), true)
+            }
             AggregateIndexDomain::FiniteSet(_) => return None,
         };
-        let (start_rewritten,_) = self.rewrite_obj_by_known_closed_numeric_equal(start);
-        let (end_rewritten,_) = self.rewrite_obj_by_known_closed_numeric_equal(end);
+        let (start_rewritten, _) = self.rewrite_obj_by_known_closed_numeric_equal(start);
+        let (end_rewritten, _) = self.rewrite_obj_by_known_closed_numeric_equal(end);
         let first = EvalRational::from_obj(&start_rewritten)?.to_i128_if_integer()?;
         let last = EvalRational::from_obj(&end_rewritten)?.to_i128_if_integer()?;
-        let count = if last<first || (half_open && last==first) { 0 } else {
+        let count = if last < first || (half_open && last == first) {
+            0
+        } else {
             let difference = last.checked_sub(first)?;
-            usize::try_from(if half_open { difference } else { difference.checked_add(1)? }).ok()?
+            usize::try_from(if half_open {
+                difference
+            } else {
+                difference.checked_add(1)?
+            })
+            .ok()?
         };
-        if count>crate::execute::execute_eval_stmt::helper::MAX_AGGREGATE_TERMS { return None; }
-        let number = |value:i128|Obj::Literal(crate::ast::obj::Literal::Number(crate::ast::obj::Number::new(value.to_string())));
-        let endpoints = vec![crate::ast::fact::EqualFact { fact_id:self.global_ids.allocate_fact_id(),left:start.clone(),right:number(first),line_file:None }.into(),
-            crate::ast::fact::EqualFact { fact_id:self.global_ids.allocate_fact_id(),left:end.clone(),right:number(last),line_file:None }.into()];
-        let arguments = (0..count).map(|offset|number(first.checked_add(offset as i128).expect("checked interval count"))).collect();
-        Some((arguments,endpoints))
+        if count > crate::execute::execute_eval_stmt::helper::MAX_AGGREGATE_TERMS {
+            return None;
+        }
+        let number = |value: i128| {
+            Obj::Literal(crate::ast::obj::Literal::Number(
+                crate::ast::obj::Number::new(value.to_string()),
+            ))
+        };
+        let endpoints = vec![
+            crate::ast::fact::EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: start.clone(),
+                right: number(first),
+                line_file: None,
+            }
+            .into(),
+            crate::ast::fact::EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: end.clone(),
+                right: number(last),
+                line_file: None,
+            }
+            .into(),
+        ];
+        let arguments = (0..count)
+            .map(|offset| {
+                number(
+                    first
+                        .checked_add(offset as i128)
+                        .expect("checked interval count"),
+                )
+            })
+            .collect();
+        Some((arguments, endpoints))
     }
 
     // Light coverage: universal numeric carriers auto-pass; N / NPos check start;
@@ -753,8 +890,11 @@ impl Runtime {
     }
 }
 
-#[derive(Clone,Copy)]
-enum AggregateIndexDomain<'a> { Range(&'a Obj,&'a Obj), FiniteSet(&'a Obj) }
+#[derive(Clone, Copy)]
+enum AggregateIndexDomain<'a> {
+    Range(&'a Obj, &'a Obj),
+    FiniteSet(&'a Obj),
+}
 
 fn homogeneous_binary_carrier(fn_set: &FnSet) -> Option<Obj> {
     if set_bound_parameter_count(&fn_set.set_bound_parameters) != 2 || !fn_set.dom_facts.is_empty()

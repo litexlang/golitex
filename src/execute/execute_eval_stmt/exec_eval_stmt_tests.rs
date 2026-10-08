@@ -361,7 +361,8 @@ fn eval_publication_and_failure_are_visible_in_every_output_language() {
         assert!(detail
             .as_object()
             .unwrap()
-            .get(&localize_key("fact_id", language)).is_some());
+            .get(&localize_key("fact_id", language))
+            .is_some());
         assert!(!exec_one(&mut rt, "1+2=3").is_failed());
         let failed = exec_one(&mut rt, "eval 1/0");
         assert!(failed.is_failed());
@@ -498,10 +499,20 @@ fn eval_tuple_calls_compute_and_publish_without_prior_coordinate_equalities() {
     assert!(!exec_one(&mut rt, "outer(1)(2)=2").is_failed());
     assert!(!exec_one(&mut rt, "let literal_outer=((1,2),3)").is_failed());
     assert_eval_number(&mut rt, "eval literal_outer(1)(2)", "2");
-    for code in ["eval p(4)", "eval p(0)", "eval p(1,2)", "eval outer(2)(1)", "eval outer(1)(3)"] {
+    for code in [
+        "eval p(4)",
+        "eval p(0)",
+        "eval p(1,2)",
+        "eval outer(2)(1)",
+        "eval outer(1)(3)",
+    ] {
         let count = rt.top_exec_env().facts.facts_by_id.len();
         assert!(exec_one(&mut rt, code).is_failed(), "{code}");
-        assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), count, "failed eval published: {code}");
+        assert_eq!(
+            rt.top_exec_env().facts.facts_by_id.len(),
+            count,
+            "failed eval published: {code}"
+        );
     }
     assert!(exec_one(&mut rt, "p(2)=3").is_failed());
 }
@@ -510,14 +521,23 @@ fn eval_tuple_calls_compute_and_publish_without_prior_coordinate_equalities() {
 fn eval_tuple_coordinate_evidence_and_unknown_values_stay_checked() {
     for language in OutputLanguage::ALL {
         let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: String::new(), session: false, strict: true, language,
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
         });
         assert!(!exec_one(&mut rt, "let p=(1,2,3)").is_failed());
         let result = exec_one(&mut rt, "eval p(2)");
         assert!(!result.is_failed());
         let detailed = crate::json_output::project_stmt_detailed(&result, &rt).stringify();
-        assert!(detailed.contains("finite_function_coordinate"), "{detailed}");
-        assert!(detailed.contains("p(2)") && detailed.contains("tuple_equality"), "missing coordinate source: {detailed}");
+        assert!(
+            detailed.contains("finite_function_coordinate"),
+            "{detailed}"
+        );
+        assert!(
+            detailed.contains("p(2)") && detailed.contains("tuple_equality"),
+            "missing coordinate source: {detailed}"
+        );
         assert!(!exec_one(&mut rt, "have unknown cart(R,R)").is_failed());
         let count = rt.top_exec_env().facts.facts_by_id.len();
         assert!(exec_one(&mut rt, "eval unknown(1)").is_failed());

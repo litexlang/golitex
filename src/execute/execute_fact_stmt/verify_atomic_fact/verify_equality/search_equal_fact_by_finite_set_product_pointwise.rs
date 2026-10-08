@@ -1,7 +1,12 @@
 use super::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategySingleStep;
 use crate::ast::fact::{EqualFact, Fact};
-use crate::ast::obj::{AnonymousFn, FnObj, FnObjHead, IdentifierObj, Obj, FunctionSpace, IteratedOperator, StructAndFieldAccessObj};
-use crate::ast::param::{ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList};
+use crate::ast::obj::{
+    AnonymousFn, FnObj, FnObjHead, FunctionSpace, IdentifierObj, IteratedOperator, Obj,
+    StructAndFieldAccessObj,
+};
+use crate::ast::param::{
+    ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+};
 use crate::execute::execute_fact_stmt::verify_state::VerifyState;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -15,8 +20,10 @@ impl Runtime {
         fact: &EqualFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<FiniteSetProductPointwiseEqualityStrategySingleStep>> {
-        let (Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(left)), Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(right))) =
-            (&fact.left, &fact.right)
+        let (
+            Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(left)),
+            Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(right)),
+        ) = (&fact.left, &fact.right)
         else {
             return Ok(None);
         };
@@ -102,7 +109,9 @@ fn unary_function_at(rt: &mut Runtime, func: &Obj, x: &Obj) -> Option<Obj> {
             FnObjHead::FieldAccess(v.clone())
         }
         Obj::InstantiatedTemplateObj(v) => FnObjHead::InstantiatedTemplateObj(v.clone()),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => FnObjHead::AnonymousFnLiteral(Box::new(af.clone())),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => {
+            FnObjHead::AnonymousFnLiteral(Box::new(af.clone()))
+        }
         _ => return None,
     };
     Some(Obj::FnObj(FnObj {

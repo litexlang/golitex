@@ -94,8 +94,7 @@ impl ActiveAlgoCalls {
             algo_evaluations: vec![],
             cited_equal_fact_ids: vec![],
             proof_mode: false,
-            function_proof_state: crate::execute::execute_fact_stmt::VerifyState::top_level()
-                ,
+            function_proof_state: crate::execute::execute_fact_stmt::VerifyState::top_level(),
         }
     }
     pub fn contains(&self, key: &str) -> bool {

@@ -17,10 +17,9 @@ impl Runtime {
         ctx: VerifyState,
     ) -> RuntimeResult<Option<ArithmeticCongruenceStrategySingleStep>> {
         if !matches!(
-                (&fact.left, &fact.right),
-                (Obj::ArithmeticOperator(_), Obj::ArithmeticOperator(_))
-            )
-        {
+            (&fact.left, &fact.right),
+            (Obj::ArithmeticOperator(_), Obj::ArithmeticOperator(_))
+        ) {
             return Ok(None);
         }
         let Some(pairs) = corresponding_arg_pairs(&fact.left, &fact.right) else {

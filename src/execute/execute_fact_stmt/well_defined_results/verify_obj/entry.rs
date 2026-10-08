@@ -99,7 +99,9 @@ impl Runtime {
         // Identifier / template-instance / anonymous-literal / field-access headed FnObj.
         if let Obj::FnObj(value) = obj {
             match value.head.as_ref() {
-                FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_) | FnObjHead::Object(_) => {
+                FnObjHead::Identifier(_)
+                | FnObjHead::InstantiatedTemplateObj(_)
+                | FnObjHead::Object(_) => {
                     return self.verify_in_function_set_headed_fn_obj_well_definedness(
                         value,
                         verify_state,
@@ -112,10 +114,8 @@ impl Runtime {
                     );
                 }
                 FnObjHead::FieldAccess(_) => {
-                    return self.verify_field_access_headed_fn_obj_well_definedness(
-                        value,
-                        verify_state,
-                    );
+                    return self
+                        .verify_field_access_headed_fn_obj_well_definedness(value, verify_state);
                 }
             }
         }
@@ -162,15 +162,12 @@ impl Runtime {
 
         let stages = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
         match finish_by_def(obj, stages) {
-            Ok(by_def) => {
-
-                Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef {
-                        obj: obj.clone(),
-                        proof: by_def,
-                    },
-                ))
-            }
+            Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
+                ObjWellDefinedProof::ByDef {
+                    obj: obj.clone(),
+                    proof: by_def,
+                },
+            )),
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
                 obj: obj.clone(),
                 reason: fail,
@@ -349,7 +346,10 @@ impl Runtime {
             Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(value)) => {
                 self.verify_finite_set_min_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::FunctionSpace(FunctionSpace::Preimage(_)) | Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => unreachable!("preimages use dedicated WD pipelines"),
+            Obj::FunctionSpace(FunctionSpace::Preimage(_))
+            | Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => {
+                unreachable!("preimages use dedicated WD pipelines")
+            }
             Obj::FunctionSpace(FunctionSpace::FnRange(_)) => {
                 unreachable!("FnRange WD uses verify_fn_range_obj_well_definedness")
             }

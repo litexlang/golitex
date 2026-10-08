@@ -4,10 +4,10 @@
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, QuantifierFreeFact};
 use crate::ast::obj::{
-    Abs, Add, AnonymousFn, ArithmeticOperator, Cart, ComplexAbs, ComplexOperator, Exp,
+    Abs, Add, AnonymousFn, ArithmeticOperator, Cart, ClosedRange, ComplexAbs, ComplexOperator, Exp,
     ExpLogOperator, FamilyUnion, FiniteSeqSet, FnRange, FnSet, FunctionSpace, ImaginaryPart,
-    Intersect, ListSet, Literal, Ln, Mul, Number, Obj, PowerSet, ProductShape, Range, ClosedRange,
-    RealPart, SeqSet, SetFormer, SetMinus, SetOperator, StandardSet, Union,
+    Intersect, ListSet, Literal, Ln, Mul, Number, Obj, PowerSet, ProductShape, Range, RealPart,
+    SeqSet, SetFormer, SetMinus, SetOperator, StandardSet, Union,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -71,7 +71,6 @@ pub struct FamilyUnionOfSingletonBuiltinRuleProof {}
 // Every element of A occurs in its singleton subset; hence union(P(A))=A.
 pub struct FamilyUnionOfPowerSetBuiltinRuleProof {}
 
-
 // Builtin CartWithEmptyRight: cart(..., {}) = {}.
 // Example: have A set; cart(A, {}) = {}.
 pub struct CartWithEmptyFactorBuiltinRuleProof {}
@@ -88,7 +87,8 @@ pub struct SetMinusChainToUnionBuiltinRuleProof {}
 // Example: fn_range(fn(x R) R {1}) = {1}.
 pub struct FnRangeOfConstantAnonymousFnBuiltinRuleProof {
     pub source: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
-    pub domain_nonempty: crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyProof,
+    pub domain_nonempty:
+        crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyProof,
 }
 
 // Builtin SeqEqualsFnOnNPos: seq(S) = fn(x N+) S.
@@ -208,10 +208,18 @@ impl Runtime {
                 ));
             }
             if family_union_of_singleton_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave13BuiltinRuleProof::FamilyUnionOfSingleton(FamilyUnionOfSingletonBuiltinRuleProof {})));
+                return Ok(Some(
+                    EqualityIdentitiesWave13BuiltinRuleProof::FamilyUnionOfSingleton(
+                        FamilyUnionOfSingletonBuiltinRuleProof {},
+                    ),
+                ));
             }
             if family_union_of_power_set_shape(left, right) {
-                return Ok(Some(EqualityIdentitiesWave13BuiltinRuleProof::FamilyUnionOfPowerSet(FamilyUnionOfPowerSetBuiltinRuleProof {})));
+                return Ok(Some(
+                    EqualityIdentitiesWave13BuiltinRuleProof::FamilyUnionOfPowerSet(
+                        FamilyUnionOfPowerSetBuiltinRuleProof {},
+                    ),
+                ));
             }
             if cart_with_empty_factor_shape(left, right) {
                 return Ok(Some(
@@ -337,9 +345,18 @@ impl Runtime {
             let crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::AnonymousFunction {
                 function: af, ..
             } = &source.source else { continue; };
-            if !anonymous_fn_body_is_closed_literal(af) || list[0].ir() != af.equal_to.ir() { continue; }
-            let Some(domain_nonempty) = self.verify_function_domain_nonempty(&source.signature, verify_state)? else { continue; };
-            return Ok(Some(FnRangeOfConstantAnonymousFnBuiltinRuleProof { source, domain_nonempty }));
+            if !anonymous_fn_body_is_closed_literal(af) || list[0].ir() != af.equal_to.ir() {
+                continue;
+            }
+            let Some(domain_nonempty) =
+                self.verify_function_domain_nonempty(&source.signature, verify_state)?
+            else {
+                continue;
+            };
+            return Ok(Some(FnRangeOfConstantAnonymousFnBuiltinRuleProof {
+                source,
+                domain_nonempty,
+            }));
         }
         Ok(None)
     }
@@ -431,8 +448,10 @@ fn match_real_plus_imag_scaled_owned(obj: &Obj) -> Option<(Obj, Obj)> {
     let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) = obj else {
         return None;
     };
-    for (real_side, imag_side) in [(left.as_ref(), right.as_ref()), (right.as_ref(), left.as_ref())]
-    {
+    for (real_side, imag_side) in [
+        (left.as_ref(), right.as_ref()),
+        (right.as_ref(), left.as_ref()),
+    ] {
         if let Some(scale) = match_imag_scaled_owned(imag_side) {
             return Some((real_side.clone(), scale));
         }
@@ -587,15 +606,25 @@ fn power_set_of_singleton_shape(left: &Obj, right: &Obj) -> bool {
 // foundation every WD object is a set, so these structural set identities
 // have no additional truth premises and do not start recursive proof search.
 fn family_union_of_singleton_shape(left: &Obj, right: &Obj) -> bool {
-    let Obj::SetOperator(SetOperator::FamilyUnion(union)) = left else { return false; };
-    let Obj::SetFormer(SetFormer::ListSet(family)) = union.left.as_ref() else { return false; };
-    let [set] = family.list.as_slice() else { return false; };
+    let Obj::SetOperator(SetOperator::FamilyUnion(union)) = left else {
+        return false;
+    };
+    let Obj::SetFormer(SetFormer::ListSet(family)) = union.left.as_ref() else {
+        return false;
+    };
+    let [set] = family.list.as_slice() else {
+        return false;
+    };
     set.ir() == right.ir()
 }
 
 fn family_union_of_power_set_shape(left: &Obj, right: &Obj) -> bool {
-    let Obj::SetOperator(SetOperator::FamilyUnion(union)) = left else { return false; };
-    let Obj::SetOperator(SetOperator::PowerSet(power)) = union.left.as_ref() else { return false; };
+    let Obj::SetOperator(SetOperator::FamilyUnion(union)) = left else {
+        return false;
+    };
+    let Obj::SetOperator(SetOperator::PowerSet(power)) = union.left.as_ref() else {
+        return false;
+    };
     power.set.ir() == right.ir()
 }
 
@@ -646,8 +675,10 @@ fn union_over_intersect_distributive_shape(left: &Obj, right: &Obj) -> bool {
     let Some(inter) = match_intersect(right) else {
         return false;
     };
-    for (plain, inter_operand) in [(u.left.as_ref(), u.right.as_ref()), (u.right.as_ref(), u.left.as_ref())]
-    {
+    for (plain, inter_operand) in [
+        (u.left.as_ref(), u.right.as_ref()),
+        (u.right.as_ref(), u.left.as_ref()),
+    ] {
         let Some(inner) = match_intersect(inter_operand) else {
             continue;
         };
@@ -673,8 +704,7 @@ fn union_over_intersect_distributive_shape(left: &Obj, right: &Obj) -> bool {
         }
         // cover both B and C
         let factors = [u1.left.ir(), u1.right.ir(), u2.left.ir(), u2.right.ir()];
-        if factors.contains(&b.ir()) && factors.contains(&c.ir()) && factors.contains(&plain.ir())
-        {
+        if factors.contains(&b.ir()) && factors.contains(&c.ir()) && factors.contains(&plain.ir()) {
             return true;
         }
     }
@@ -705,10 +735,7 @@ fn set_minus_chain_to_union_shape(left: &Obj, right: &Obj) -> bool {
 }
 
 fn anonymous_fn_body_is_closed_literal(af: &AnonymousFn) -> bool {
-    matches!(
-        af.equal_to.as_ref(),
-        Obj::Literal(_) | Obj::StandardSet(_)
-    )
+    matches!(af.equal_to.as_ref(), Obj::Literal(_) | Obj::StandardSet(_))
 }
 
 fn single_param_fn_set(fs: &FnSet) -> Option<(&Obj, &Obj)> {
@@ -748,7 +775,7 @@ fn finite_seq_equals_fn_on_one_based_domain_shape(left: &Obj, right: &Obj) -> bo
         (
             Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet { set, n })),
             Obj::FunctionSpace(FunctionSpace::FnSet(fs)),
-        ) => ( (set.as_ref(), n.as_ref()), fs),
+        ) => ((set.as_ref(), n.as_ref()), fs),
         (
             Obj::FunctionSpace(FunctionSpace::FnSet(fs)),
             Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet { set, n })),
@@ -770,7 +797,9 @@ fn finite_seq_equals_fn_on_one_based_domain_shape(left: &Obj, right: &Obj) -> bo
         else {
             return false;
         };
-        let binder = Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(&group.params[0]));
+        let binder = Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(
+            &group.params[0],
+        ));
         return bound.left.ir() == binder.ir() && bound.right.ir() == n.ir();
     }
     if !fs.dom_facts.is_empty() {
@@ -782,8 +811,9 @@ fn finite_seq_equals_fn_on_one_based_domain_shape(left: &Obj, right: &Obj) -> bo
         }
         Obj::SetFormer(SetFormer::Range(Range { start, end })) => {
             match (literal_i128(n), literal_i128(end.as_ref())) {
-                (Some(length), Some(stop)) => literal_i128(start.as_ref()) == Some(1)
-                    && length.checked_add(1) == Some(stop),
+                (Some(length), Some(stop)) => {
+                    literal_i128(start.as_ref()) == Some(1) && length.checked_add(1) == Some(stop)
+                }
                 _ => false,
             }
         }

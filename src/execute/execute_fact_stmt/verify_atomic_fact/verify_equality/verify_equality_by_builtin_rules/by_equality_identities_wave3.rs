@@ -91,19 +91,29 @@ impl Runtime {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Some(p) = self.try_min_idempotent(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::MinIdempotent(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave3BuiltinRuleProof::MinIdempotent(p),
+                ));
             }
             if let Some(p) = self.try_max_idempotent(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::MaxIdempotent(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave3BuiltinRuleProof::MaxIdempotent(p),
+                ));
             }
             if let Some(p) = self.try_min_commutative(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::MinCommutative(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave3BuiltinRuleProof::MinCommutative(p),
+                ));
             }
             if let Some(p) = self.try_max_commutative(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::MaxCommutative(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave3BuiltinRuleProof::MaxCommutative(p),
+                ));
             }
             if let Some(p) = self.try_abs_abs_absorption(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::AbsAbsAbsorption(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave3BuiltinRuleProof::AbsAbsAbsorption(p),
+                ));
             }
             if let Some(p) = self.try_exp_of_ln(left, right, child.clone())? {
                 return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::ExpOfLn(p)));
@@ -112,13 +122,19 @@ impl Runtime {
                 return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::LnOfExp(p)));
             }
             if let Some(p) = self.try_floor_of_integer(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::FloorOfInteger(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave3BuiltinRuleProof::FloorOfInteger(p),
+                ));
             }
             if let Some(p) = self.try_ceil_of_integer(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::CeilOfInteger(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave3BuiltinRuleProof::CeilOfInteger(p),
+                ));
             }
             if let Some(p) = self.try_mod_self_zero(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::ModSelfZero(p)));
+                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::ModSelfZero(
+                    p,
+                )));
             }
         }
         Ok(None)

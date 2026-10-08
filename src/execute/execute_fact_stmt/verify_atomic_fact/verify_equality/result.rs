@@ -195,8 +195,6 @@ pub struct PeerEqualitySuccess {
     pub searched_proof: Box<EqualFactSearchedProof>,
 }
 
-
-
 impl KnownEqualityPathProof {
     pub fn new(path: Vec<(Obj, Obj, FactId)>) -> Self {
         Self { path }
@@ -209,7 +207,11 @@ impl EqualityViaPeersProof {
         bridge: PeerEqualitySuccess,
         right_path: KnownEqualityPathProof,
     ) -> Self {
-        Self { left_path, bridge, right_path }
+        Self {
+            left_path,
+            bridge,
+            right_path,
+        }
     }
 }
 
@@ -219,27 +221,31 @@ impl PeerEqualitySuccess {
         well_defined_proof: EqualFactWellDefinedProof,
         searched_proof: EqualFactSearchedProof,
     ) -> Self {
-        Self { fact, well_defined_proof, searched_proof: Box::new(searched_proof) }
+        Self {
+            fact,
+            well_defined_proof,
+            searched_proof: Box::new(searched_proof),
+        }
     }
 }
 
 impl From<KnownEqualityPathProof> for EqualFactSearchedProofByEquivalenceClass {
-    fn from(proof: KnownEqualityPathProof) -> Self { Self::KnownPath(proof) }
+    fn from(proof: KnownEqualityPathProof) -> Self {
+        Self::KnownPath(proof)
+    }
 }
 
 impl From<EqualityViaPeersProof> for EqualFactSearchedProofByEquivalenceClass {
-    fn from(proof: EqualityViaPeersProof) -> Self { Self::ViaPeers(proof) }
+    fn from(proof: EqualityViaPeersProof) -> Self {
+        Self::ViaPeers(proof)
+    }
 }
 
 impl From<TheyAreTheSameProof> for EqualFactSearchedProof {
-    fn from(proof: TheyAreTheSameProof) -> Self { Self::ByTheyAreTheSame(proof) }
+    fn from(proof: TheyAreTheSameProof) -> Self {
+        Self::ByTheyAreTheSame(proof)
+    }
 }
-
-
-
-
-
-
 
 pub fn equal_fact_result_from_wd_fail(
     reason: FailToVerifyEqualFactWellDefinedResult,
@@ -279,9 +285,15 @@ pub fn strict_equal_arg_proof_from_searched(
     proof: EqualFactSearchedProof,
 ) -> Option<StrictEqualArgProof> {
     match proof {
-        EqualFactSearchedProof::ByClosedCalculation(p) => Some(StrictEqualArgProof::ByClosedCalculation(p)),
-        EqualFactSearchedProof::ByTheyAreTheSame(p) => Some(StrictEqualArgProof::ByTheyAreTheSame(p)),
-        EqualFactSearchedProof::ByKnownSpecialProperty(p) => Some(StrictEqualArgProof::ByKnownSpecialProperty(p)),
+        EqualFactSearchedProof::ByClosedCalculation(p) => {
+            Some(StrictEqualArgProof::ByClosedCalculation(p))
+        }
+        EqualFactSearchedProof::ByTheyAreTheSame(p) => {
+            Some(StrictEqualArgProof::ByTheyAreTheSame(p))
+        }
+        EqualFactSearchedProof::ByKnownSpecialProperty(p) => {
+            Some(StrictEqualArgProof::ByKnownSpecialProperty(p))
+        }
         EqualFactSearchedProof::ByBuiltinRule(p) => Some(StrictEqualArgProof::ByBuiltinRule(p)),
         EqualFactSearchedProof::ByEquivalenceClass(p) => {
             Some(StrictEqualArgProof::ByEquivalenceClass(p))

@@ -1,14 +1,10 @@
 use crate::ast::fact::Fact;
 use crate::ast::stmt::DefStrategyStmt;
 use crate::exec_env::exec_env::ExecEnv;
-use crate::execute::execute_by_stmt::{
-    proof_verify_state, verify_goal_fact,
-};
-use crate::execute::ExecStmtResult;
+use crate::execute::execute_by_stmt::{proof_verify_state, verify_goal_fact};
+use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyFactWellDefinedResult};
 use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
-use crate::execute::execute_fact_stmt::{
-    VerifyFactResult, VerifyFactWellDefinedResult,
-};
+use crate::execute::ExecStmtResult;
 use crate::runtime::{Runtime, RuntimeResult};
 
 // strategy Name: ? forall … — prove the forall in a local body and store the
@@ -91,21 +87,22 @@ pub fn exec_def_strategy_stmt(
 
     runtime.top_exec_env_mut().store_def_strategy(stmt.clone());
 
-    Ok(ExecDefStrategyStmtResult::Success(ExecDefStrategyStmtSuccess {
-        goal_wd,
-        proof_steps,
-        conclusion_proofs,
-        local_env,
-    }))
+    Ok(ExecDefStrategyStmtResult::Success(
+        ExecDefStrategyStmtSuccess {
+            goal_wd,
+            proof_steps,
+            conclusion_proofs,
+            local_env,
+        },
+    ))
 }
 
 fn exec_def_strategy_forall_body(
     runtime: &mut Runtime,
     forall: &crate::ast::fact::ForallFact,
     proof: &[crate::ast::stmt::Stmt],
-) -> RuntimeResult<
-    Result<(Vec<ExecStmtResult>, Vec<VerifyFactResult>), ExecDefStrategyStmtFailed>,
-> {
+) -> RuntimeResult<Result<(Vec<ExecStmtResult>, Vec<VerifyFactResult>), ExecDefStrategyStmtFailed>>
+{
     if runtime
         .introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())?
         .is_err()
@@ -122,7 +119,10 @@ fn exec_def_strategy_forall_body(
                 "strategy: forall domain fact is not well-defined".to_string(),
             )));
         }
-        let _ = runtime.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let _ = runtime.store_fact_and_infer(
+            dom,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
     }
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {

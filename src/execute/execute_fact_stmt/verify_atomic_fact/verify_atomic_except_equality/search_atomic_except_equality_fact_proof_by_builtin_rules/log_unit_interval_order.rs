@@ -21,7 +21,12 @@ impl LogUnitIntervalOrderGuardsProof {
         left_arg_positive_proof: VerifyFactResult,
         right_arg_positive_proof: VerifyFactResult,
     ) -> Self {
-        Self { base_positive_proof, base_lt_one_proof, left_arg_positive_proof, right_arg_positive_proof }
+        Self {
+            base_positive_proof,
+            base_lt_one_proof,
+            left_arg_positive_proof,
+            right_arg_positive_proof,
+        }
     }
 }
 
@@ -32,7 +37,10 @@ pub struct LogStrictDecreasingProof {
 }
 impl LogStrictDecreasingProof {
     pub fn new(guards: LogUnitIntervalOrderGuardsProof, argument_order: VerifyFactResult) -> Self {
-        Self { guards, argument_order }
+        Self {
+            guards,
+            argument_order,
+        }
     }
 }
 
@@ -43,7 +51,10 @@ pub struct LogWeakDecreasingProof {
 }
 impl LogWeakDecreasingProof {
     pub fn new(guards: LogUnitIntervalOrderGuardsProof, argument_order: VerifyFactResult) -> Self {
-        Self { guards, argument_order }
+        Self {
+            guards,
+            argument_order,
+        }
     }
 }
 
@@ -58,13 +69,22 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
         let Some(guards) = self.log_unit_interval_order_guards(
-            base, left_arg, right_arg, line_file.clone(), state,
-        )? else { return Ok(None); };
+            base,
+            left_arg,
+            right_arg,
+            line_file.clone(),
+            state,
+        )?
+        else {
+            return Ok(None);
+        };
         // The target left log has the larger argument; preserve the actual
         // right_arg < left_arg or left_arg > right_arg source and its citation.
-        let Some(argument_order) = self.strict_order_premise(
-            right_arg, left_arg, line_file, state,
-        )? else { return Ok(None); };
+        let Some(argument_order) =
+            self.strict_order_premise(right_arg, left_arg, line_file, state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(LessFactSearchProofByBuiltinRule::LogStrictDecreasing(
             LogStrictDecreasingProof::new(guards, argument_order),
         )))
@@ -79,14 +99,26 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         let Some(guards) = self.log_unit_interval_order_guards(
-            base, left_arg, right_arg, line_file.clone(), state,
-        )? else { return Ok(None); };
-        let Some(argument_order) = self.weak_order_premise(
-            right_arg, left_arg, line_file, state,
-        )? else { return Ok(None); };
-        Ok(Some(LessEqualFactSearchProofByBuiltinRule::LogWeakDecreasing(
-            LogWeakDecreasingProof::new(guards, argument_order),
-        )))
+            base,
+            left_arg,
+            right_arg,
+            line_file.clone(),
+            state,
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(argument_order) =
+            self.weak_order_premise(right_arg, left_arg, line_file, state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(
+            LessEqualFactSearchProofByBuiltinRule::LogWeakDecreasing(LogWeakDecreasingProof::new(
+                guards,
+                argument_order,
+            )),
+        ))
     }
 
     fn log_unit_interval_order_guards(
@@ -97,14 +129,37 @@ impl Runtime {
         line_file: Option<SourceLine>,
         state: VerifyState,
     ) -> RuntimeResult<Option<LogUnitIntervalOrderGuardsProof>> {
-        let zero = Obj::Literal(Literal::Number(Number { normalized_value: "0".to_string() }));
-        let one = Obj::Literal(Literal::Number(Number { normalized_value: "1".to_string() }));
-        let Some(base_positive_proof) = self.strict_order_premise(&zero, base, line_file.clone(), state)? else { return Ok(None); };
-        let Some(base_lt_one_proof) = self.strict_order_premise(base, &one, line_file.clone(), state)? else { return Ok(None); };
-        let Some(left_arg_positive_proof) = self.strict_order_premise(&zero, left_arg, line_file.clone(), state)? else { return Ok(None); };
-        let Some(right_arg_positive_proof) = self.strict_order_premise(&zero, right_arg, line_file, state)? else { return Ok(None); };
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".to_string(),
+        }));
+        let one = Obj::Literal(Literal::Number(Number {
+            normalized_value: "1".to_string(),
+        }));
+        let Some(base_positive_proof) =
+            self.strict_order_premise(&zero, base, line_file.clone(), state)?
+        else {
+            return Ok(None);
+        };
+        let Some(base_lt_one_proof) =
+            self.strict_order_premise(base, &one, line_file.clone(), state)?
+        else {
+            return Ok(None);
+        };
+        let Some(left_arg_positive_proof) =
+            self.strict_order_premise(&zero, left_arg, line_file.clone(), state)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_arg_positive_proof) =
+            self.strict_order_premise(&zero, right_arg, line_file, state)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(LogUnitIntervalOrderGuardsProof::new(
-            base_positive_proof, base_lt_one_proof, left_arg_positive_proof, right_arg_positive_proof,
+            base_positive_proof,
+            base_lt_one_proof,
+            left_arg_positive_proof,
+            right_arg_positive_proof,
         )))
     }
 }

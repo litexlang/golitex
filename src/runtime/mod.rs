@@ -6,15 +6,15 @@
 //! Symbol identity premise: `../identifier_identity.md`
 //! (plain occurrences carry IdentifierId; qualified atoms do not).
 
+pub mod code_source;
 pub mod error;
-pub mod internal_names;
-mod parse_scope_transaction;
-#[cfg(test)]
-mod internal_names_tests;
 #[cfg(test)]
 mod internal_error_tests;
+pub mod internal_names;
+#[cfg(test)]
+mod internal_names_tests;
+mod parse_scope_transaction;
 pub mod real_or_virtual_path;
-pub mod code_source;
 pub mod runtime;
 pub mod runtime_ids;
 

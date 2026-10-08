@@ -69,7 +69,9 @@ impl Runtime {
             }
             let mut matches = Vec::new();
             for (left, right) in args.iter().zip(&goal_args) {
-                let Some(proof) = self.lookup_known_obj_equality_with_graph(left, right, &mut adjacency) else {
+                let Some(proof) =
+                    self.lookup_known_obj_equality_with_graph(left, right, &mut adjacency)
+                else {
                     break;
                 };
                 matches.push(proof);

@@ -1,8 +1,8 @@
+use crate::ast::fact::Fact;
+use crate::ast::names::AtomicName;
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FailToVerifyObjWellDefinedResult, ObjWellDefinedProof,
 };
-use crate::ast::names::AtomicName;
-use crate::ast::fact::Fact;
 use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 pub enum FailToVerifyAtomicFactWellDefinedResult {
@@ -21,9 +21,17 @@ pub enum FailToVerifyAtomicFactWellDefinedResult {
 }
 
 pub enum PredicateSignatureWellDefinedFailure {
-    Undefined { predicate: AtomicName },
-    Retired { predicate: AtomicName },
-    Arity { predicate: AtomicName, expected: usize, actual: usize },
+    Undefined {
+        predicate: AtomicName,
+    },
+    Retired {
+        predicate: AtomicName,
+    },
+    Arity {
+        predicate: AtomicName,
+        expected: usize,
+        actual: usize,
+    },
 }
 
 // Builtin arity is fixed by the AST leaf. User signatures are resolved using

@@ -6,12 +6,20 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::tokenize::Tokenizer;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English })
+    Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    })
 }
 
 #[test]
 fn discrete_constructor_tracer_checks_recursive_domains_and_codomain() {
-    let code = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/proof_nodes/atomic/by_builtin_rule/discrete_arithmetic_constructor_closure.lit"));
+    let code = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/examples/proof_nodes/atomic/by_builtin_rule/discrete_arithmetic_constructor_closure.lit"
+    ));
     let run = runtime().run_litex_code(code).unwrap();
     assert!(run.session_error.is_none(), "{:?}", run.session_error);
     assert!(run.success, "maintained recursion tracer");
@@ -20,19 +28,43 @@ fn discrete_constructor_tracer_checks_recursive_domains_and_codomain() {
 #[test]
 fn discrete_constructor_truth_retains_stage_citation_and_no_temporary_store() {
     let mut rt = runtime();
-    assert!(rt.run_litex_code("have f fn(t N) N\nhave n N\n").unwrap().success);
-    let tokens = Tokenizer::new().tokenize("f(n) + f(n) * 2 $in N", rt.current_file.clone()).unwrap();
-    let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else { panic!("fact"); };
-    for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty] {
-        assert!(rt.verify_fact(&goal, VerifyState::new(level)).unwrap().is_failed());
+    assert!(
+        rt.run_litex_code("have f fn(t N) N\nhave n N\n")
+            .unwrap()
+            .success
+    );
+    let tokens = Tokenizer::new()
+        .tokenize("f(n) + f(n) * 2 $in N", rt.current_file.clone())
+        .unwrap();
+    let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else {
+        panic!("fact");
+    };
+    for level in [
+        VerifyStateLevel::Direct,
+        VerifyStateLevel::KnownSpecialProperty,
+    ] {
+        assert!(rt
+            .verify_fact(&goal, VerifyState::new(level))
+            .unwrap()
+            .is_failed());
     }
-    assert!(!rt.verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule)).unwrap().is_failed());
-    let Fact::AtomicFact(atomic) = &goal else { panic!("atomic"); };
+    assert!(!rt
+        .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+        .unwrap()
+        .is_failed());
+    let Fact::AtomicFact(atomic) = &goal else {
+        panic!("atomic");
+    };
     assert!(rt.lookup_known_atomic_fact(atomic).is_none());
     let result = rt.exec_stmt(&Stmt::Fact(goal)).unwrap();
     assert!(!result.is_failed());
     let json = crate::json_output::project_stmt_detailed(&result, &rt).stringify();
-    for text in ["DiscreteArithmeticConstructorClosure", "constructor_tree", "FnApplicationInCodomain", "cite_property_fact_id"] {
+    for text in [
+        "DiscreteArithmeticConstructorClosure",
+        "constructor_tree",
+        "FnApplicationInCodomain",
+        "cite_property_fact_id",
+    ] {
         assert!(json.contains(text), "{text}: {json}");
     }
 }
@@ -50,7 +82,11 @@ fn discrete_constructor_rejects_natural_subtraction_wrong_carriers_and_domains()
         "have fn bad(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: bad(n) + 1\n",
     ] {
         let run = runtime().run_litex_code(code).unwrap();
-        assert!(run.session_error.is_none(), "{code}: {:?}", run.session_error);
+        assert!(
+            run.session_error.is_none(),
+            "{code}: {:?}",
+            run.session_error
+        );
         assert!(!run.success, "{code}");
     }
 }

@@ -74,7 +74,8 @@ fn contains_aggregate(obj: &Obj) -> bool {
             | IteratedOperator::SumOfFiniteSet(_)
             | IteratedOperator::ProductOfFiniteSet(_),
         ) => true,
-        Obj::IteratedOperator(IteratedOperator::Reduce(_) | IteratedOperator::FiniteSetReduce(_)
+        Obj::IteratedOperator(
+            IteratedOperator::Reduce(_) | IteratedOperator::FiniteSetReduce(_),
         ) => true,
         Obj::ArithmeticOperator(op) => match op {
             ArithmeticOperator::Add(v) => {

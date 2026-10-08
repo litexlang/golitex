@@ -61,7 +61,11 @@ fn signed_carrier_nonzero_inference_is_known() {
         assert!(!exec(&mut rt, &format!("have x {carrier}")).is_failed());
         let result = exec(&mut rt, "x != 0");
         assert!(!result.is_failed());
-        assert!(has_field(&project_stmt_normal(&result, &rt), "type", "cite_known"));
+        assert!(has_field(
+            &project_stmt_normal(&result, &rt),
+            "type",
+            "cite_known"
+        ));
     }
     let mut rt = runtime(OutputLanguage::English);
     assert!(exec(&mut rt, "have x R+ = 0").is_failed());
@@ -77,11 +81,18 @@ fn positive_divisor_builder_inference_preserves_wd() {
     assert!(!exec(&mut rt, "have a, b Z").is_failed());
     // The direct carrier check must return a checked outcome, never InternalBug.
     // Its automatic subset proof is a separate capability from this inference.
-    exec(&mut rt, "have c power_set(N) = {d N+: $dvd(a, d), $dvd(b, d)}");
+    exec(
+        &mut rt,
+        "have c power_set(N) = {d N+: $dvd(a, d), $dvd(b, d)}",
+    );
     let mut rt = runtime(OutputLanguage::English);
     assert!(!exec(&mut rt, "have a, b Z").is_failed());
     let result = exec(&mut rt, "have c set = {d N+: $dvd(a, d), $dvd(b, d)}");
-    assert!(!result.is_failed(), "{}", project_stmt_detailed(&result, &rt).stringify_pretty());
+    assert!(
+        !result.is_failed(),
+        "{}",
+        project_stmt_detailed(&result, &rt).stringify_pretty()
+    );
     assert!(!exec(&mut rt, "forall d c:\n    d $in N").is_failed());
     assert!(!exec(&mut rt, "by def c $subset N").is_failed());
     assert!(!exec(&mut rt, "c $in power_set(N)").is_failed());
@@ -219,15 +230,25 @@ fn native_scalar_codomain_normal_and_detailed_keep_native_carrier() {
     assert!(normal.contains("已检查运算的返回类型"));
 }
 
-
 #[test]
 fn finite_set_extrema_membership_preserves_wd_and_target() {
-    for (operator, rule) in [("finite_set_max", "FiniteSetMaxMember"), ("finite_set_min", "FiniteSetMinMember")] {
+    for (operator, rule) in [
+        ("finite_set_max", "FiniteSetMaxMember"),
+        ("finite_set_min", "FiniteSetMinMember"),
+    ] {
         let source = format!("claim:\n    ? forall S finite_set:\n        S $subset R\n        $is_nonempty_set(S)\n        =>:\n            {operator}(S) $in S\n");
         let mut rt = runtime(OutputLanguage::English);
         let result = exec(&mut rt, &source);
-        assert!(!result.is_failed(), "{}", project_stmt_detailed(&result, &rt).stringify());
-        assert!(has_field(&project_stmt_detailed(&result, &rt), "rule", rule));
+        assert!(
+            !result.is_failed(),
+            "{}",
+            project_stmt_detailed(&result, &rt).stringify()
+        );
+        assert!(has_field(
+            &project_stmt_detailed(&result, &rt),
+            "rule",
+            rule
+        ));
         for bad in [
             format!("{operator}({{}}) $in {{}}\n"),
             format!("{operator}(R) $in R\n"),
@@ -242,17 +263,24 @@ fn finite_set_extrema_membership_preserves_wd_and_target() {
     }
 }
 
-
 #[test]
 fn positive_common_divisor_gcd_bound_requires_both_residues() {
     let code = "claim:\n    ? forall a, b Z, d N+:\n        a != 0 or b != 0\n        a % d = 0\n        b % d = 0\n        =>:\n            d <= gcd(a,b)\n";
     let mut rt = runtime(OutputLanguage::English);
     let result = exec(&mut rt, code);
-    assert!(!result.is_failed(), "{}",project_stmt_detailed(&result,&rt).stringify());
-    let detail = project_stmt_detailed(&result,&rt);
+    assert!(
+        !result.is_failed(),
+        "{}",
+        project_stmt_detailed(&result, &rt).stringify()
+    );
+    let detail = project_stmt_detailed(&result, &rt);
     assert!(has_field(&detail, "rule", "PositiveCommonDivisorLeGcd"));
     let text = detail.stringify();
-    for field in ["divisor_in_n_pos_proof", "left_remainder_zero_proof", "right_remainder_zero_proof"] {
+    for field in [
+        "divisor_in_n_pos_proof",
+        "left_remainder_zero_proof",
+        "right_remainder_zero_proof",
+    ] {
         assert!(text.contains(field));
     }
     for bad in [
@@ -266,11 +294,10 @@ fn positive_common_divisor_gcd_bound_requires_both_residues() {
         let mut negative = runtime(OutputLanguage::English);
         assert!(exec(&mut negative,&bad).is_failed(), "accepted: {bad}");
     }
-    for (a,b) in [("0","-18"),("-12","0"),("-12","-18"),("-12","18")] {
+    for (a, b) in [("0", "-18"), ("-12", "0"), ("-12", "-18"), ("-12", "18")] {
         assert_accepts(&format!("have a Z={a}\nhave b Z={b}\nhave d N+=6\na != 0 or b != 0\na%d=0\nb%d=0\nd<=gcd(a,b)\n"));
     }
 }
-
 
 #[test]
 fn strict_lower_bound_positive_infer_composes_with_log_wd() {
@@ -303,62 +330,122 @@ fn strict_lower_bound_positive_infer_preserves_domains_and_scope() {
 #[test]
 fn strict_lower_bound_positive_infer_keeps_source_and_bound_proof() {
     use crate::execute::ExecFactStmtResult;
-    use crate::store_fact_and_infer::{InferFactResult, InferAtomicFactResult, InferAtomicExceptEqualityResult};
+    use crate::store_fact_and_infer::{
+        InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
+    };
     let mut rt = runtime(OutputLanguage::English);
     assert!(!exec(&mut rt, "have x R = 3").is_failed());
     let result = exec(&mut rt, "2 < x");
-    let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else { panic!("fact success") };
-    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &success.store_and_infer_result.infer else { panic!("infer") };
-    let proof = rules.iter().find_map(|r| match r {
-        InferAtomicExceptEqualityResult::StrictLowerBoundPositive(p) => Some(p),
-        _ => None,
-    }).expect("positive bound certificate");
-    assert_eq!(proof.source_fact_id, success.store_and_infer_result.primary_fact_id());
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
+        panic!("fact success")
+    };
+    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+        &success.store_and_infer_result.infer
+    else {
+        panic!("infer")
+    };
+    let proof = rules
+        .iter()
+        .find_map(|r| match r {
+            InferAtomicExceptEqualityResult::StrictLowerBoundPositive(p) => Some(p),
+            _ => None,
+        })
+        .expect("positive bound certificate");
+    assert_eq!(
+        proof.source_fact_id,
+        success.store_and_infer_result.primary_fact_id()
+    );
     assert!(!proof.bound_nonnegative_proof.is_failed());
     let derived = proof.derived.primary_fact_id();
     let fact = rt.fact_by_id_in_stack(derived).expect("derived positive");
     assert!(fact.readable_string().contains("0 < x"));
-    assert!(project_stmt_normal(&result, &rt).stringify_pretty().contains("0 < x"));
+    assert!(project_stmt_normal(&result, &rt)
+        .stringify_pretty()
+        .contains("0 < x"));
 }
 
 #[test]
 fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
-    use crate::execute::ExecFactStmtResult;
-    use crate::execute::execute_fact_stmt::VerifyFactResult;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
         AtomicExceptEqualityFactSearchedProof, VerifyAtomicExceptEqualityFactResult,
     };
-    use crate::store_fact_and_infer::{InferFactResult, InferAtomicFactResult, InferAtomicExceptEqualityResult};
+    use crate::execute::execute_fact_stmt::VerifyFactResult;
+    use crate::execute::ExecFactStmtResult;
+    use crate::store_fact_and_infer::{
+        InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
+    };
     for bound in ["0 <= n", "n >= 0", "1 / 2 <= n", "n >= 2"] {
         let mut rt = runtime(OutputLanguage::English);
         assert!(!exec(&mut rt, "have n Z = 3").is_failed());
         let result = exec(&mut rt, bound);
-        let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else { panic!("bound success") };
-        let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &success.store_and_infer_result.infer else { panic!("infer") };
-        let proof = rules.iter().find_map(|r| match r {
-            InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(p) => Some(p),
-            _ => None,
-        }).expect("integer and nonnegative-bound certificates");
-        assert_eq!(proof.source_fact_id, success.store_and_infer_result.primary_fact_id());
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
+            panic!("bound success")
+        };
+        let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+            &success.store_and_infer_result.infer
+        else {
+            panic!("infer")
+        };
+        let proof = rules
+            .iter()
+            .find_map(|r| match r {
+                InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(p) => Some(p),
+                _ => None,
+            })
+            .expect("integer and nonnegative-bound certificates");
+        assert_eq!(
+            proof.source_fact_id,
+            success.store_and_infer_result.primary_fact_id()
+        );
         assert!(!proof.integer_proof.is_failed());
         assert!(!proof.bound_nonnegative_proof.is_failed());
-        let VerifyFactResult::AtomicExceptEquality(integer) = &proof.integer_proof else { panic!("integer proof") };
-        let VerifyAtomicExceptEqualityFactResult::Success(integer) = integer.as_ref() else { panic!("proved integer") };
-        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cite) = &integer.searched_proof else { panic!("stored integer citation") };
-        assert_eq!(rt.fact_by_id_in_stack(cite.cite_fact_id).unwrap().readable_string(), "n $in Z");
+        let VerifyFactResult::AtomicExceptEquality(integer) = &proof.integer_proof else {
+            panic!("integer proof")
+        };
+        let VerifyAtomicExceptEqualityFactResult::Success(integer) = integer.as_ref() else {
+            panic!("proved integer")
+        };
+        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cite) =
+            &integer.searched_proof
+        else {
+            panic!("stored integer citation")
+        };
+        assert_eq!(
+            rt.fact_by_id_in_stack(cite.cite_fact_id)
+                .unwrap()
+                .readable_string(),
+            "n $in Z"
+        );
         let derived = proof.derived.primary_fact_id();
-        assert_eq!(rt.fact_by_id_in_stack(derived).unwrap().readable_string(), "n $in N");
-        for output in [project_stmt_normal(&result, &rt), project_stmt_detailed(&result, &rt)] {
+        assert_eq!(
+            rt.fact_by_id_in_stack(derived).unwrap().readable_string(),
+            "n $in N"
+        );
+        for output in [
+            project_stmt_normal(&result, &rt),
+            project_stmt_detailed(&result, &rt),
+        ] {
             let text = output.stringify_pretty();
             assert!(text.contains("n $in N"), "{text}");
         }
-        assert!(project_stmt_detailed(&result, &rt).stringify_pretty().contains(&derived.to_string()));
+        assert!(project_stmt_detailed(&result, &rt)
+            .stringify_pretty()
+            .contains(&derived.to_string()));
         let use_result = exec(&mut rt, "n $in N");
         assert!(!use_result.is_failed());
-        let ExecStmtResult::Fact(ExecFactStmtResult::Success(use_success)) = &use_result else { panic!("membership success") };
-        let VerifyFactResult::AtomicExceptEquality(member) = &use_success.verify_result else { panic!("membership proof") };
-        let VerifyAtomicExceptEqualityFactResult::Success(member) = member.as_ref() else { panic!("proved membership") };
-        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cite) = &member.searched_proof else { panic!("derived membership citation") };
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(use_success)) = &use_result else {
+            panic!("membership success")
+        };
+        let VerifyFactResult::AtomicExceptEquality(member) = &use_success.verify_result else {
+            panic!("membership proof")
+        };
+        let VerifyAtomicExceptEqualityFactResult::Success(member) = member.as_ref() else {
+            panic!("proved membership")
+        };
+        let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cite) = &member.searched_proof
+        else {
+            panic!("derived membership citation")
+        };
         assert_eq!(cite.cite_fact_id, derived);
         assert_eq!(rt.execution_environments_stack.len(), 1);
     }
@@ -368,7 +455,11 @@ fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
 fn weak_integer_lower_bound_in_n_unblocks_nested_induction_wd() {
     let proof = "have fn identity(n N) N = n\nby induc k from 0:\n    ? identity(k) >= 0\n    ? from k = 0:\n        identity(0) = 0\n    ? induc:\n        k $in N\n        k + 1 $in N\n        identity(k + 1) = k + 1\n        identity(k + 1) >= 0";
     assert_accepts(proof);
-    assert_accepts(&proof.replace("by induc", "by strong_induc").replace("? induc:", "? strong_induc:"));
+    assert_accepts(
+        &proof
+            .replace("by induc", "by strong_induc")
+            .replace("? induc:", "? strong_induc:"),
+    );
     assert_accepts("have fn identity(n N) N = n\nforall b R, n Z:\n    b >= 0\n    n >= b\n    =>:\n        identity(n) = n");
     assert_accepts("have fn identity(n N) N = n\nforall b R, n Z:\n    0 <= b\n    b <= n\n    =>:\n        identity(n) = n");
 }

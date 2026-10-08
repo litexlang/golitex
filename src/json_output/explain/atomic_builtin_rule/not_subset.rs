@@ -101,10 +101,7 @@ impl FromKnownNotSupersetBuiltinRuleProof {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "已知非超集",
-            "目标由已知的非超集事实推出",
-        )
+        text("已知非超集", "目标由已知的非超集事实推出")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {

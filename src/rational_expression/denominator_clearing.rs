@@ -1,4 +1,4 @@
-use crate::ast::obj::{Number, Obj, ArithmeticOperator};
+use crate::ast::obj::{ArithmeticOperator, Number, Obj};
 use crate::rational_expression::helper::{add_objs, mul_objs, obj_from_number};
 use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::rational_expression::monomial_collection::collect_monomials_in_obj;
@@ -79,7 +79,9 @@ fn multiply_fraction_denominators_and_get_side_monomials(
 fn split_monomial_into_fraction_factors_and_denominators(
     monomial: &MonomialWithNonZeroScalarAndOrderedOperands,
 ) -> (Vec<Obj>, Vec<Obj>) {
-    let mut factors = vec![obj_from_number(Number::new(monomial.non_zero_scalar.clone()))];
+    let mut factors = vec![obj_from_number(Number::new(
+        monomial.non_zero_scalar.clone(),
+    ))];
     let mut denominators: Vec<Obj> = if let Some(operands) = monomial.ordered_operands.as_ref() {
         Vec::with_capacity(operands.len())
     } else {

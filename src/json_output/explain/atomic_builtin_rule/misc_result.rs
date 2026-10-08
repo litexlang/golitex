@@ -268,17 +268,11 @@ impl PrimeByComputation {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "计算素性",
-            "由封闭非负整数计算判定素数",
-        )
+        text("计算素性", "由封闭非负整数计算判定素数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "計算質數性",
-            "對已求值的非負整數判定 `$prime(n)`",
-        )
+        text("計算質數性", "對已求值的非負整數判定 `$prime(n)`")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
@@ -1089,7 +1083,6 @@ impl NotIsSetFactSearchProofByBuiltinRule {
     }
 }
 
-
 impl NotProperSubsetFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         let _ = (self, OutputLanguage::English);
@@ -1326,17 +1319,11 @@ impl NotPrimeByComputation {
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "计算非素性",
-            "由封闭非负整数计算判定非素数",
-        )
+        text("计算非素性", "由封闭非负整数计算判定非素数")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "計算非質數性",
-            "對已求值的非負非質數判定 `not $prime(n)`",
-        )
+        text("計算非質數性", "對已求值的非負非質數判定 `not $prime(n)`")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {

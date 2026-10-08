@@ -1,15 +1,18 @@
+use super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 use super::equivalence_class_graph::{
     equivalence_class_keys_in_adjacency, equivalence_class_members_with_paths_in_adjacency,
     equivalence_class_path_in_adjacency, EquivalenceClassAdjacency,
 };
-use super::result::{EqualityViaPeersProof, KnownEqualityAlphaEndpointsProof, KnownEqualityPathProof, PeerEqualitySuccess};
-use super::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
+use super::result::{
+    EqualityViaPeersProof, KnownEqualityAlphaEndpointsProof, KnownEqualityPathProof,
+    PeerEqualitySuccess,
+};
 use super::well_defined_result::VerifyEqualFactWellDefinedResult;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::Obj;
 use crate::exec_env::known_fact_memory::ObjIR;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProofByEquivalenceClass;
-use crate::execute::execute_fact_stmt::{VerifyState};
+use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 use std::collections::{HashMap, HashSet};
 
@@ -58,12 +61,16 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    return Ok(Some(EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(KnownEqualityAlphaEndpointsProof {
-                        cited: cited.clone(),
-                        reversed,
-                        left_identity,
-                        right_identity,
-                    })));
+                    return Ok(Some(
+                        EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(
+                            KnownEqualityAlphaEndpointsProof {
+                                cited: cited.clone(),
+                                reversed,
+                                left_identity,
+                                right_identity,
+                            },
+                        ),
+                    ));
                 }
             }
         }
@@ -75,9 +82,8 @@ impl Runtime {
         let left_only = (1..left.len()).map(|i| (i, 0));
         let right_only = (1..right.len()).map(|j| (0, j));
         let both = (1..left.len()).flat_map(|i| (1..right.len()).map(move |j| (i, j)));
-        let child_state = verify_state.capped_at(
-            crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
-        );
+        let child_state = verify_state
+            .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
         for (i, j) in left_only.chain(right_only).chain(both) {
             let mut bridge_fact = fact.clone();
             bridge_fact.fact_id = self.global_ids.allocate_fact_id();
@@ -120,9 +126,9 @@ impl Runtime {
                 VerifyEqualFactWellDefinedResult::Success(proof) => proof,
                 VerifyEqualFactWellDefinedResult::Failed(_) => return Ok(None),
             };
-        Ok(self.search_equal_fact_proof(&fact, state)?.map(|proof| {
-            PeerEqualitySuccess::new(fact, well_defined_proof, proof)
-        }))
+        Ok(self
+            .search_equal_fact_proof(&fact, state)?
+            .map(|proof| PeerEqualitySuccess::new(fact, well_defined_proof, proof)))
     }
 
     // Oriented path across visible env-stack generating edges (BFS).

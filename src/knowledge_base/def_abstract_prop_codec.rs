@@ -1,8 +1,6 @@
 //! Store / load one `DefAbstractPropStmt` as JSON.
 
-use super::def_prop_codec::{
-    decode_line_file, encode_line_file, KbCodecError,
-};
+use super::def_prop_codec::{decode_line_file, encode_line_file, KbCodecError};
 use super::json_mini::JsonValue;
 use crate::ast::stmt::DefAbstractPropStmt;
 use std::fs;
@@ -46,10 +44,7 @@ fn encode_def_abstract_prop(stmt: &DefAbstractPropStmt) -> Result<JsonValue, KbC
         .map(|p| JsonValue::String(p.clone()))
         .collect();
     Ok(JsonValue::object_from(vec![
-        (
-            "kind".into(),
-            JsonValue::String("def_abstract_prop".into()),
-        ),
+        ("kind".into(), JsonValue::String("def_abstract_prop".into())),
         ("name".into(), JsonValue::String(stmt.name.clone())),
         ("params".into(), JsonValue::Array(params)),
         ("line_file".into(), encode_line_file(&stmt.line_file)?),

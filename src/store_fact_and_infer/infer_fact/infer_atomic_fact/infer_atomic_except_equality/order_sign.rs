@@ -2,7 +2,9 @@ use crate::ast::fact::{AtomicFact, Fact, GreaterEqualFact, InFact, LessEqualFact
 use crate::ast::obj::{Literal, Number, Obj, StandardSet};
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::{InferStrictLowerBoundPositiveResult, InferWeakIntegerLowerBoundInNResult};
+use crate::store_fact_and_infer::{
+    InferStrictLowerBoundPositiveResult, InferWeakIntegerLowerBoundInNResult,
+};
 
 impl Runtime {
     // Stored b < x (or x > b), with an available 0 <= b certificate, gives 0 < x.
@@ -18,7 +20,9 @@ impl Runtime {
             AtomicFact::GreaterFact(f) => (&f.right, &f.left, f.fact_id, f.line_file.clone()),
             _ => return Ok(None),
         };
-        let zero = Obj::Literal(Literal::Number(Number { normalized_value: "0".into() }));
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".into(),
+        }));
         // Already a positivity fact: do not infer the same fact recursively.
         if bound.ir() == zero.ir() {
             return Ok(None);
@@ -28,7 +32,8 @@ impl Runtime {
             left: zero.clone(),
             right: bound.clone(),
             line_file: line_file.clone(),
-        }.into();
+        }
+        .into();
         let bound_nonnegative_proof = self.verify_fact(
             &nonnegative,
             verify_state.capped_at(VerifyStateLevel::KnownSpecialProperty),
@@ -41,7 +46,8 @@ impl Runtime {
             left: zero,
             right: value.clone(),
             line_file,
-        }.into();
+        }
+        .into();
         let derived = Box::new(self.store_inferred_fact_and_infer(&positive, verify_state)?);
         Ok(Some(InferStrictLowerBoundPositiveResult {
             source_fact_id,
@@ -74,7 +80,12 @@ impl Runtime {
         let natural_key = (natural.prop_name(), true);
         let natural_ir = natural.ir();
         let already_stored = self.execution_environments_stack.iter().rev().any(|env| {
-            match env.facts.known_atomic_except_equality_facts.by_prop.get(&natural_key) {
+            match env
+                .facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .get(&natural_key)
+            {
                 Some(knowns) => knowns.iter().any(|known| known.ir() == natural_ir),
                 None => false,
             }
@@ -87,19 +98,23 @@ impl Runtime {
             element: value.clone(),
             set: Obj::StandardSet(StandardSet::Z),
             line_file: line_file.clone(),
-        }.into();
+        }
+        .into();
         let premise_state = verify_state.capped_at(VerifyStateLevel::KnownSpecialProperty);
         let integer_proof = self.verify_fact(&integer, premise_state)?;
         if integer_proof.is_failed() {
             return Ok(None);
         }
-        let zero = Obj::Literal(Literal::Number(Number { normalized_value: "0".into() }));
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".into(),
+        }));
         let nonnegative: Fact = LessEqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: zero.clone(),
             right: bound.clone(),
             line_file: line_file.clone(),
-        }.into();
+        }
+        .into();
         let mut bound_nonnegative_proof = self.verify_fact(&nonnegative, premise_state)?;
         if bound_nonnegative_proof.is_failed() {
             let nonnegative_dual: Fact = GreaterEqualFact {
@@ -107,7 +122,8 @@ impl Runtime {
                 left: bound.clone(),
                 right: zero,
                 line_file,
-            }.into();
+            }
+            .into();
             bound_nonnegative_proof = self.verify_fact(&nonnegative_dual, premise_state)?;
             if bound_nonnegative_proof.is_failed() {
                 return Ok(None);

@@ -1,10 +1,10 @@
 use crate::ast::fact::EqualFact;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     equal_fact_result_from_search_fail, equal_fact_result_from_success,
     equal_fact_result_from_wd_fail, EqualFactSearchedProofByKnownForallViaSymmetry,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::VerifyEqualFactWellDefinedResult;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -58,11 +58,15 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
         use super::super::AtomicFactSearchedProof;
-        Ok(match self.search_atomic_fact(&fact.clone().into(), state)? {
-            Some(AtomicFactSearchedProof::Equality(p)) => Some(p),
-            None => None,
-            Some(AtomicFactSearchedProof::AtomicExceptEquality(_)) => unreachable!("equality dispatch"),
-        })
+        Ok(
+            match self.search_atomic_fact(&fact.clone().into(), state)? {
+                Some(AtomicFactSearchedProof::Equality(p)) => Some(p),
+                None => None,
+                Some(AtomicFactSearchedProof::AtomicExceptEquality(_)) => {
+                    unreachable!("equality dispatch")
+                }
+            },
+        )
     }
 
     pub fn search_equal_fact_proof_by_builtin_strategy(
@@ -71,20 +75,26 @@ impl Runtime {
         ctx: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
         if let Some(proof) = self.search_equal_fact_by_cos_zero_integer_offset(fact, ctx)? {
-            return Ok(Some(EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof),
+            ));
         }
         if let Some(proof) = self.search_equal_fact_by_tuple_components(fact, ctx)? {
-            return Ok(Some(EqualitySearchProofByBuiltinStrategy::TupleComponentEquality(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::TupleComponentEquality(proof),
+            ));
         }
         if let Some(proof) = self.search_equal_fact_by_arithmetic_congruence(fact, ctx)? {
-            return Ok(Some(EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof),
+            ));
         }
         if let Some(proof) = self.search_equal_fact_by_complex_with_nonzero_premises(fact, ctx)? {
-            return Ok(Some(EqualitySearchProofByBuiltinStrategy::ComplexWithNonzeroPremises(proof)));
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::ComplexWithNonzeroPremises(proof),
+            ));
         }
-        if let Some(proof) =
-            self.search_equal_fact_by_rational_with_nonzero_premises(fact, ctx)?
-        {
+        if let Some(proof) = self.search_equal_fact_by_rational_with_nonzero_premises(fact, ctx)? {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
             ));
@@ -94,9 +104,7 @@ impl Runtime {
                 EqualitySearchProofByBuiltinStrategy::ExtremumEquality(proof),
             ));
         }
-        if let Some(proof) =
-            self.search_equal_fact_by_finite_set_product_pointwise(fact, ctx)?
-        {
+        if let Some(proof) = self.search_equal_fact_by_finite_set_product_pointwise(fact, ctx)? {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(proof),
             ));

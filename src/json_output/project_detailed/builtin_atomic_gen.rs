@@ -2830,21 +2830,46 @@ pub(super) fn project_atomic_builtin_rule(
         }
 }
 
-fn project_closed_subtraction_bound(family: &str, p: &br::closed_subtraction_bound::ClosedSubtractionBoundCertificate, runtime: &Runtime) -> JsonValue {
-    object_for(runtime, vec![
-        ("type", string("builtin_rule")), ("family", string(family)),
-        ("rule", string("ClosedSubtractionBound")),
-        ("bound", object_for(runtime, vec![
-            ("cite_fact_id", string(p.cite_fact_id.to_string())),
-            ("cite", string(p.source_fact.readable_string())),
-            ("direction", string(match p.direction { br::closed_subtraction_bound::BoundDirection::Lower => "lower", br::closed_subtraction_bound::BoundDirection::Upper => "upper" })),
-            ("normalized_subtrahend", string(p.normalized_subtrahend.readable_string())),
-            ("translated_bound", string(p.translated_bound.readable_string())),
-            ("target_bound", string(p.target_bound.readable_string())),
-        ])),
-    ])
+fn project_closed_subtraction_bound(
+    family: &str,
+    p: &br::closed_subtraction_bound::ClosedSubtractionBoundCertificate,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(
+        runtime,
+        vec![
+            ("type", string("builtin_rule")),
+            ("family", string(family)),
+            ("rule", string("ClosedSubtractionBound")),
+            (
+                "bound",
+                object_for(
+                    runtime,
+                    vec![
+                        ("cite_fact_id", string(p.cite_fact_id.to_string())),
+                        ("cite", string(p.source_fact.readable_string())),
+                        (
+                            "direction",
+                            string(match p.direction {
+                                br::closed_subtraction_bound::BoundDirection::Lower => "lower",
+                                br::closed_subtraction_bound::BoundDirection::Upper => "upper",
+                            }),
+                        ),
+                        (
+                            "normalized_subtrahend",
+                            string(p.normalized_subtrahend.readable_string()),
+                        ),
+                        (
+                            "translated_bound",
+                            string(p.translated_bound.readable_string()),
+                        ),
+                        ("target_bound", string(p.target_bound.readable_string())),
+                    ],
+                ),
+            ),
+        ],
+    )
 }
-
 
 fn project_real_arithmetic_constructor_tree(
     tree: &br::in_fact::RealArithmeticConstructorTree,
@@ -2852,78 +2877,176 @@ fn project_real_arithmetic_constructor_tree(
 ) -> JsonValue {
     use br::in_fact::RealArithmeticConstructorTree::*;
     let terminal = |proof: &br::in_fact::RealArithmeticConstructorTerminalProof| {
-        object_for(runtime, vec![
-            ("fact", string(format!("{} $in {}", proof.fact.element.readable_string(), proof.fact.set.readable_string()))),
-            ("searched_proof", super::searched::project_atomic_except_searched(&proof.searched_proof, runtime)),
-        ])
+        object_for(
+            runtime,
+            vec![
+                (
+                    "fact",
+                    string(format!(
+                        "{} $in {}",
+                        proof.fact.element.readable_string(),
+                        proof.fact.set.readable_string()
+                    )),
+                ),
+                (
+                    "searched_proof",
+                    super::searched::project_atomic_except_searched(&proof.searched_proof, runtime),
+                ),
+            ],
+        )
     };
-    let binary = |kind, left, right| object_for(runtime, vec![
-        ("constructor", string(kind)),
-        ("left", project_real_arithmetic_constructor_tree(left, runtime)),
-        ("right", project_real_arithmetic_constructor_tree(right, runtime)),
-    ]);
+    let binary = |kind, left, right| {
+        object_for(
+            runtime,
+            vec![
+                ("constructor", string(kind)),
+                (
+                    "left",
+                    project_real_arithmetic_constructor_tree(left, runtime),
+                ),
+                (
+                    "right",
+                    project_real_arithmetic_constructor_tree(right, runtime),
+                ),
+            ],
+        )
+    };
     match tree {
-        Leaf(proof) => object_for(runtime, vec![
-            ("constructor", string("leaf")),
-            ("proof", terminal(proof)),
-        ]),
+        Leaf(proof) => object_for(
+            runtime,
+            vec![("constructor", string("leaf")), ("proof", terminal(proof))],
+        ),
         Add { left, right } => binary("add", left, right),
         Sub { left, right } => binary("sub", left, right),
-        Neg { argument } => object_for(runtime, vec![
-            ("constructor", string("neg")),
-            ("argument", project_real_arithmetic_constructor_tree(argument, runtime)),
-        ]),
+        Neg { argument } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("neg")),
+                (
+                    "argument",
+                    project_real_arithmetic_constructor_tree(argument, runtime),
+                ),
+            ],
+        ),
         Mul { left, right } => binary("mul", left, right),
         Div { left, right } => binary("div", left, right),
-        IntegerPow { base, exponent_in_integer_proof } => object_for(runtime, vec![
-            ("constructor", string("integer_pow")),
-            ("base", project_real_arithmetic_constructor_tree(base, runtime)),
-            ("exponent_in_integer_proof", terminal(exponent_in_integer_proof)),
-        ]),
+        IntegerPow {
+            base,
+            exponent_in_integer_proof,
+        } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("integer_pow")),
+                (
+                    "base",
+                    project_real_arithmetic_constructor_tree(base, runtime),
+                ),
+                (
+                    "exponent_in_integer_proof",
+                    terminal(exponent_in_integer_proof),
+                ),
+            ],
+        ),
     }
 }
 
 fn project_discrete_arithmetic_constructor_tree(
-    tree: &br::in_fact::DiscreteArithmeticConstructorTree, runtime: &Runtime,
+    tree: &br::in_fact::DiscreteArithmeticConstructorTree,
+    runtime: &Runtime,
 ) -> JsonValue {
     use br::in_fact::DiscreteArithmeticConstructorTree::*;
-    let binary = |kind, left, right| object_for(runtime, vec![
-        ("constructor", string(kind)),
-        ("left", project_discrete_arithmetic_constructor_tree(left, runtime)),
-        ("right", project_discrete_arithmetic_constructor_tree(right, runtime)),
-    ]);
+    let binary = |kind, left, right| {
+        object_for(
+            runtime,
+            vec![
+                ("constructor", string(kind)),
+                (
+                    "left",
+                    project_discrete_arithmetic_constructor_tree(left, runtime),
+                ),
+                (
+                    "right",
+                    project_discrete_arithmetic_constructor_tree(right, runtime),
+                ),
+            ],
+        )
+    };
     match tree {
-        Leaf { fact, searched_proof } => object_for(runtime, vec![
-            ("constructor", string("leaf")), ("fact", string(format!("{} $in {}", fact.element.readable_string(), fact.set.readable_string()))),
-            ("searched_proof", super::searched::project_atomic_except_searched(searched_proof, runtime)),
-        ]),
+        Leaf {
+            fact,
+            searched_proof,
+        } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("leaf")),
+                (
+                    "fact",
+                    string(format!(
+                        "{} $in {}",
+                        fact.element.readable_string(),
+                        fact.set.readable_string()
+                    )),
+                ),
+                (
+                    "searched_proof",
+                    super::searched::project_atomic_except_searched(searched_proof, runtime),
+                ),
+            ],
+        ),
         Add { left, right } => binary("add", left, right),
         Sub { left, right } => binary("sub", left, right),
         Mul { left, right } => binary("mul", left, right),
-        Neg { argument } => object_for(runtime, vec![
-            ("constructor", string("neg")), ("argument", project_discrete_arithmetic_constructor_tree(argument, runtime)),
-        ]),
+        Neg { argument } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("neg")),
+                (
+                    "argument",
+                    project_discrete_arithmetic_constructor_tree(argument, runtime),
+                ),
+            ],
+        ),
     }
 }
 
-fn project_nonnegative_sum_tree(tree: &br::greater_equal::NonnegativeSumTree, runtime: &Runtime) -> JsonValue {
+fn project_nonnegative_sum_tree(
+    tree: &br::greater_equal::NonnegativeSumTree,
+    runtime: &Runtime,
+) -> JsonValue {
     use br::greater_equal::NonnegativeSumTree::*;
     match tree {
-        Leaf(proof) => object_for(runtime, vec![("constructor", string("leaf")), ("proof", project_verify_fact(proof, runtime))]),
-        Add { left, right } => object_for(runtime, vec![
-            ("constructor", string("add")), ("left", project_nonnegative_sum_tree(left, runtime)),
-            ("right", project_nonnegative_sum_tree(right, runtime)),
-        ]),
+        Leaf(proof) => object_for(
+            runtime,
+            vec![
+                ("constructor", string("leaf")),
+                ("proof", project_verify_fact(proof, runtime)),
+            ],
+        ),
+        Add { left, right } => object_for(
+            runtime,
+            vec![
+                ("constructor", string("add")),
+                ("left", project_nonnegative_sum_tree(left, runtime)),
+                ("right", project_nonnegative_sum_tree(right, runtime)),
+            ],
+        ),
     }
 }
 
 fn project_sign_extremum_order_argument(
-    proof: &br::sign_extremum_order::WeakOrderArgumentProof, runtime: &Runtime,
+    proof: &br::sign_extremum_order::WeakOrderArgumentProof,
+    runtime: &Runtime,
 ) -> JsonValue {
     match proof {
-        br::sign_extremum_order::WeakOrderArgumentProof::SameArgument(argument) => object_for(runtime, vec![
-            ("type", string("same_argument")), ("argument", string(argument.readable_string())),
-        ]),
-        br::sign_extremum_order::WeakOrderArgumentProof::ByOrder(proof) => project_verify_fact(proof, runtime),
+        br::sign_extremum_order::WeakOrderArgumentProof::SameArgument(argument) => object_for(
+            runtime,
+            vec![
+                ("type", string("same_argument")),
+                ("argument", string(argument.readable_string())),
+            ],
+        ),
+        br::sign_extremum_order::WeakOrderArgumentProof::ByOrder(proof) => {
+            project_verify_fact(proof, runtime)
+        }
     }
 }

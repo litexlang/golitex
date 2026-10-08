@@ -35,7 +35,6 @@ pub struct EmptySetFromSizeZeroBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-
 // Builtin FiniteSetSizeSetMinus:
 //   finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B)).
 // Example: have A finite_set; have B finite_set;
@@ -88,7 +87,6 @@ pub enum EqualityIdentitiesWave11BuiltinRuleProof {
     SetMinusRecoversSubset(SetMinusRecoversSubsetBuiltinRuleProof),
     EmptySetFromSizeZero(EmptySetFromSizeZeroBuiltinRuleProof),
 
-
     FiniteSetSizeSetMinus(FiniteSetSizeSetMinusBuiltinRuleProof),
     FiniteSetSizeUnion(FiniteSetSizeUnionBuiltinRuleProof),
     ClosedRangeSingletonListSet(ClosedRangeSingletonListSetBuiltinRuleProof),
@@ -107,8 +105,6 @@ impl Runtime {
     ) -> RuntimeResult<Option<EqualityIdentitiesWave11BuiltinRuleProof>> {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
-
-
             if finite_set_size_set_minus_shape(left, right) {
                 return Ok(Some(
                     EqualityIdentitiesWave11BuiltinRuleProof::FiniteSetSizeSetMinus(
@@ -145,12 +141,14 @@ impl Runtime {
                 ));
             }
             if let Some(p) = self.try_pow_of_log_inverse(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave11BuiltinRuleProof::PowOfLogInverse(
-                    p,
-                )));
+                return Ok(Some(
+                    EqualityIdentitiesWave11BuiltinRuleProof::PowOfLogInverse(p),
+                ));
             }
             if let Some(p) = self.try_sum_single_term(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave11BuiltinRuleProof::SumSingleTerm(p)));
+                return Ok(Some(
+                    EqualityIdentitiesWave11BuiltinRuleProof::SumSingleTerm(p),
+                ));
             }
             if let Some(p) = self.try_product_single_term(left, right, child.clone())? {
                 return Ok(Some(
@@ -493,7 +491,6 @@ fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
     }
 }
 
-
 fn finite_set_size_set_minus_shape(size_side: &Obj, sub_side: &Obj) -> bool {
     let Some(set_minus_set) = match_finite_set_size(size_side) else {
         return false;
@@ -583,8 +580,10 @@ fn is_binary_add_anonymous_fn(obj: &Obj) -> bool {
     else {
         return false;
     };
-    let (Some(lid), Some(rid)) = (identifier_plain_id(left.as_ref()), identifier_plain_id(right.as_ref()))
-    else {
+    let (Some(lid), Some(rid)) = (
+        identifier_plain_id(left.as_ref()),
+        identifier_plain_id(right.as_ref()),
+    ) else {
         return false;
     };
     (lid == params[0].id && rid == params[1].id) || (lid == params[1].id && rid == params[0].id)

@@ -6,18 +6,13 @@ use crate::ast::fact::AndChainAtomicFact;
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::BoundName;
 use crate::ast::obj::Obj;
-use crate::ast::stmt::{
-    DefAlgoByCasesStmt, DefAlgoByInducStmt, DefinitionStmt, FnSetClause, Stmt,
-};
+use crate::ast::stmt::{DefAlgoByCasesStmt, DefAlgoByInducStmt, DefinitionStmt, FnSetClause, Stmt};
 use crate::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
 impl Runtime {
     // `algo f(x R) R by cases:` … | `algo f(n N) N by induc n from 0:` …
-    pub(in crate::parse) fn parse_algo_stmt(
-        &mut self,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
+    pub(in crate::parse) fn parse_algo_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.advance()?; // `algo`
 
@@ -56,9 +51,7 @@ impl Runtime {
             if tb.peek() == Some(INDUC) {
                 return self.parse_algo_by_induc_tail(block, &mut tb, bound, fn_set_clause);
             }
-            Err(tb.parse_error(
-                "algo: expected `by cases` or `by induc` after signature",
-            ))
+            Err(tb.parse_error("algo: expected `by cases` or `by induc` after signature"))
         })();
         self.pop_parse_scope();
         result

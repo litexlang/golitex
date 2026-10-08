@@ -1,22 +1,26 @@
 use super::order_complement::FromKnownOrderComplementBuiltinRuleProof;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{AtomicFact, Fact, GreaterFact, InFact};
-use crate::ast::obj::{
-    Add, ArithmeticOperator, Literal, Mul, Number, Obj, StandardSet,
-};
+use crate::ast::obj::{Add, ArithmeticOperator, Literal, Mul, Number, Obj, StandardSet};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::rational_expression::{
-    compare_closed_numeric_objs, NumberCompareResult,
-};
+use crate::rational_expression::{compare_closed_numeric_objs, NumberCompareResult};
 use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `a > b`.
 pub enum GreaterFactSearchProofByBuiltinRule {
-    MulLeftNegativeReversesStrictGreater(super::order_negative_common_factor::MulLeftNegativeReversesStrictGreaterProof),
-    MulRightNegativeReversesStrictGreater(super::order_negative_common_factor::MulRightNegativeReversesStrictGreaterProof),
-    MulLeftRightNegativeReversesStrictGreater(super::order_negative_common_factor::MulLeftRightNegativeReversesStrictGreaterProof),
-    MulRightLeftNegativeReversesStrictGreater(super::order_negative_common_factor::MulRightLeftNegativeReversesStrictGreaterProof),
+    MulLeftNegativeReversesStrictGreater(
+        super::order_negative_common_factor::MulLeftNegativeReversesStrictGreaterProof,
+    ),
+    MulRightNegativeReversesStrictGreater(
+        super::order_negative_common_factor::MulRightNegativeReversesStrictGreaterProof,
+    ),
+    MulLeftRightNegativeReversesStrictGreater(
+        super::order_negative_common_factor::MulLeftRightNegativeReversesStrictGreaterProof,
+    ),
+    MulRightLeftNegativeReversesStrictGreater(
+        super::order_negative_common_factor::MulRightLeftNegativeReversesStrictGreaterProof,
+    ),
     TanGreaterZeroOnFirstQuadrant(super::trig_first_quadrant::TanGreaterZeroOnFirstQuadrantProof),
     CotGreaterZeroOnFirstQuadrant(super::trig_first_quadrant::CotGreaterZeroOnFirstQuadrantProof),
     FromKnownOrderComplement(FromKnownOrderComplementBuiltinRuleProof),
@@ -98,8 +102,12 @@ impl Runtime {
         fact: &GreaterFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.known_order_complement(fact.clone().into(), verify_state.clone())? {
-            return Ok(Some(GreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof)));
+        if let Some(proof) =
+            self.known_order_complement(fact.clone().into(), verify_state.clone())?
+        {
+            return Ok(Some(
+                GreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof),
+            ));
         }
         if let Some(premise_proof) = self.known_less_proof(&fact.right, &fact.left) {
             return Ok(Some(GreaterFactSearchProofByBuiltinRule::FromKnownLess(
@@ -109,12 +117,17 @@ impl Runtime {
         if matches!(&fact.left, Obj::Literal(Literal::EulerNumber(_)))
             && matches!(&fact.right, Obj::Literal(Literal::Number(n)) if n.normalized_value == "1")
         {
-            return Ok(Some(GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterOne(
-                NativeEulerGreaterOneBuiltinRuleProof {},
-            )));
+            return Ok(Some(
+                GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterOne(
+                    NativeEulerGreaterOneBuiltinRuleProof {},
+                ),
+            ));
         }
         if is_zero_obj(&fact.right) {
-            if matches!(&fact.left, Obj::Literal(crate::ast::obj::Literal::EulerNumber(_))) {
+            if matches!(
+                &fact.left,
+                Obj::Literal(crate::ast::obj::Literal::EulerNumber(_))
+            ) {
                 return Ok(Some(
                     GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterZero(
                         NativeEulerGreaterZeroBuiltinRuleProof {},
@@ -128,10 +141,9 @@ impl Runtime {
                     ),
                 ));
             }
-            if let Some(proof) = self.greater_from_positive_real_membership_proof(
-                &fact.left,
-                verify_state.clone(),
-            )? {
+            if let Some(proof) =
+                self.greater_from_positive_real_membership_proof(&fact.left, verify_state.clone())?
+            {
                 return Ok(Some(proof));
             }
         }

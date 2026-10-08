@@ -3,20 +3,22 @@
 //! Full forall text stays in `KnownFactMemory.facts_by_id`. Index entries are
 //! `ForallConclusionCite` (fact id + `ForallConclusionLocation` path).
 
+use crate::ast::fact::atomic_fact_has_positive_polarity;
 use crate::ast::fact::{
     AndFactComponentForallConclusionLocation, AtomicFact, DirectForallConclusionLocation,
-    ExistShapedFact, ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
+    ExistOrAndChainAtomicFact, ExistShapedFact, ForallConclusionLocation, ForallFact, OrFact,
 };
 use crate::ast::names::AtomicName;
-use crate::ast::fact::atomic_fact_has_positive_polarity;
-use crate::exec_env::exist_shaped_fact_index_key::{exist_shaped_fact_index_key, ExistShapedFactIndexKey};
-use crate::exec_env::or_fact_index_key::{or_fact_index_key, OrFactIndexKey};
+use crate::exec_env::exist_shaped_fact_index_key::{
+    exist_shaped_fact_index_key, ExistShapedFactIndexKey,
+};
 use crate::exec_env::forall_conclusion_index_key::{
     and_forall_conclusion_index_key, chain_forall_conclusion_index_key,
     AndForallConclusionIndexKey, ChainForallConclusionIndexKey,
 };
-use crate::runtime::FactId;
 use crate::exec_env::forall_equality_index::ForallEqualityIndex;
+use crate::exec_env::or_fact_index_key::{or_fact_index_key, OrFactIndexKey};
+use crate::runtime::FactId;
 use std::collections::HashMap;
 
 /// Cite a stored forall conclusion: which fact + where inside its then-tree.
@@ -58,7 +60,8 @@ impl KnownForallConclusionMemory {
             match then {
                 ExistOrAndChainAtomicFact::AtomicFact(atomic) => {
                     self.push_atomic_leaf(
-                        forall, atomic,
+                        forall,
+                        atomic,
                         ForallConclusionCite {
                             fact_id,
                             location: ForallConclusionLocation::DirectThenFact(
@@ -79,7 +82,8 @@ impl KnownForallConclusionMemory {
                         });
                     for (component_index, atomic) in and_fact.facts.iter().enumerate() {
                         self.push_atomic_leaf(
-                            forall, atomic,
+                            forall,
+                            atomic,
                             ForallConclusionCite {
                                 fact_id,
                                 location: ForallConclusionLocation::AndFactComponent(
@@ -94,12 +98,15 @@ impl KnownForallConclusionMemory {
                 }
                 ExistOrAndChainAtomicFact::OrFact(or_fact) => {
                     let key = or_fact_index_key(or_fact);
-                    self.by_or.entry(key).or_default().push(ForallConclusionCite {
-                        fact_id,
-                        location: ForallConclusionLocation::DirectThenFact(
-                            DirectForallConclusionLocation { then_fact_index },
-                        ),
-                    });
+                    self.by_or
+                        .entry(key)
+                        .or_default()
+                        .push(ForallConclusionCite {
+                            fact_id,
+                            location: ForallConclusionLocation::DirectThenFact(
+                                DirectForallConclusionLocation { then_fact_index },
+                            ),
+                        });
                 }
                 ExistOrAndChainAtomicFact::ExistFact(plain) => {
                     let key = exist_shaped_fact_index_key(&ExistShapedFact::Exist(plain.clone()));
@@ -114,7 +121,8 @@ impl KnownForallConclusionMemory {
                         });
                 }
                 ExistOrAndChainAtomicFact::ExistUniqueFact(plain) => {
-                    let key = exist_shaped_fact_index_key(&ExistShapedFact::ExistUnique(plain.clone()));
+                    let key =
+                        exist_shaped_fact_index_key(&ExistShapedFact::ExistUnique(plain.clone()));
                     self.by_exist
                         .entry(key)
                         .or_default()
@@ -126,7 +134,8 @@ impl KnownForallConclusionMemory {
                         });
                 }
                 ExistOrAndChainAtomicFact::NotExistFact(plain) => {
-                    let key = exist_shaped_fact_index_key(&ExistShapedFact::NotExist(plain.clone()));
+                    let key =
+                        exist_shaped_fact_index_key(&ExistShapedFact::NotExist(plain.clone()));
                     self.by_exist
                         .entry(key)
                         .or_default()
@@ -164,7 +173,8 @@ impl KnownForallConclusionMemory {
         let fact_id = forall.fact_id;
         for (component_index, atomic) in adjacent.iter().enumerate() {
             self.push_atomic_leaf(
-                forall, atomic,
+                forall,
+                atomic,
                 ForallConclusionCite {
                     fact_id,
                     location: ForallConclusionLocation::ChainFactComponent(
@@ -222,11 +232,22 @@ impl KnownForallConclusionMemory {
         }
     }
 
-    fn push_atomic_leaf(&mut self, forall: &ForallFact, atomic: &AtomicFact, cite: ForallConclusionCite) {
+    fn push_atomic_leaf(
+        &mut self,
+        forall: &ForallFact,
+        atomic: &AtomicFact,
+        cite: ForallConclusionCite,
+    ) {
         match atomic {
-            AtomicFact::EqualFact(equal) => self.by_equal.record(equal, &forall.typed_parameters.ordered_param_ids(), cite),
+            AtomicFact::EqualFact(equal) => {
+                self.by_equal
+                    .record(equal, &forall.typed_parameters.ordered_param_ids(), cite)
+            }
             _ => {
-                let key = (atomic.prop_name(), atomic_fact_has_positive_polarity(atomic));
+                let key = (
+                    atomic.prop_name(),
+                    atomic_fact_has_positive_polarity(atomic),
+                );
                 self.by_atomic_prop.entry(key).or_default().push(cite);
             }
         }
@@ -316,7 +337,9 @@ pub fn and_at_forall_location(
     forall: &ForallFact,
     location: &ForallConclusionLocation,
 ) -> Option<crate::ast::fact::AndFact> {
-    let ForallConclusionLocation::DirectThenFact(loc) = location else { return None; };
+    let ForallConclusionLocation::DirectThenFact(loc) = location else {
+        return None;
+    };
     match forall.then_facts.get(loc.then_fact_index)? {
         ExistOrAndChainAtomicFact::AndFact(and_fact) => Some(and_fact.clone()),
         _ => None,
@@ -327,7 +350,9 @@ pub fn chain_at_forall_location(
     forall: &ForallFact,
     location: &ForallConclusionLocation,
 ) -> Option<crate::ast::fact::ChainFact> {
-    let ForallConclusionLocation::DirectThenFact(loc) = location else { return None; };
+    let ForallConclusionLocation::DirectThenFact(loc) = location else {
+        return None;
+    };
     match forall.then_facts.get(loc.then_fact_index)? {
         ExistOrAndChainAtomicFact::ChainFact(chain) => Some(chain.clone()),
         _ => None,

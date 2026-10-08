@@ -1,4 +1,4 @@
-use crate::ast::obj::{Add, Div, Mul, Number, Obj, Sub, ArithmeticOperator, Literal};
+use crate::ast::obj::{Add, ArithmeticOperator, Div, Literal, Mul, Number, Obj, Sub};
 
 /// True when the number spelling has no decimal point (e.g. `3`, not `3.0`).
 pub fn is_number_string_literally_integer_without_dot(str: String) -> bool {
@@ -16,7 +16,9 @@ pub fn number_from_normalized(normalized_value: String) -> Number {
 impl Number {
     pub fn new(normalized_value: String) -> Self {
         Self {
-            normalized_value: super::decimal_arithmetic::normalize_decimal_number_string(&normalized_value),
+            normalized_value: super::decimal_arithmetic::normalize_decimal_number_string(
+                &normalized_value,
+            ),
         }
     }
 }

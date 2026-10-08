@@ -26,7 +26,8 @@ impl Runtime {
         }
 
         // Arg equality: known / peel only (no nested builtin / deep search).
-        let equality_state = verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
+        let equality_state =
+            verify_state.capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::Direct);
 
         let lookup_key = (fact.prop_name(), atomic_fact_has_positive_polarity(fact));
         let goal_args = atomic_fact_args_ref(fact);

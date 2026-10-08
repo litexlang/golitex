@@ -3,7 +3,10 @@ use super::result::{
     ExecByStmtResult, ExecByThmStmtFailed, ExecByThmStmtResult, ExecByThmStmtSuccess,
     ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess,
 };
-use crate::ast::fact::{atomic_fact_args_ref, atomic_fact_has_positive_polarity, AtomicFact, EqualFact, Fact, ForallFact};
+use crate::ast::fact::{
+    atomic_fact_args_ref, atomic_fact_has_positive_polarity, AtomicFact, EqualFact, Fact,
+    ForallFact,
+};
 use crate::ast::obj::Obj;
 use crate::ast::stmt::{ByThmStmt, ReleaseThmStmt, TheoremCall, TheoremCallArguments};
 use crate::runtime::runtime_ids::IdentifierId;
@@ -25,22 +28,39 @@ pub fn exec_release_thm_stmt(
             Ok(proofs) => proofs,
             Err(failed) => return Ok(Err(failed)),
         };
-        let function_domain = match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
-            Ok(proof) => proof, Err(failed) => return Ok(Err(failed)),
-        };
+        let function_domain =
+            match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
             if proof.is_failed() {
-                return Ok(Err(ExecReleaseThmStmtFailed::Dom { theorem: thm_name.clone(), fact: dom.clone(), index, result: proof }));
+                return Ok(Err(ExecReleaseThmStmtFailed::Dom {
+                    theorem: thm_name.clone(),
+                    fact: dom.clone(),
+                    index,
+                    result: proof,
+                }));
             }
-            let _ = rt.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let _ = rt.store_fact_and_infer(
+                dom,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             dom_proofs.push(proof);
         }
-        let conclusions_wd = match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
-            Ok(proofs) => proofs, Err(failed) => return Ok(Err(failed)),
-        };
-        Ok(Ok((type_proofs, function_domain, dom_proofs, conclusions_wd)))
+        let conclusions_wd =
+            match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
+                Ok(proofs) => proofs,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok((
+            type_proofs,
+            function_domain,
+            dom_proofs,
+            conclusions_wd,
+        )))
     })?;
 
     let (type_proofs, function_domain, dom_proofs, conclusions_wd) = match dom_outcome {
@@ -54,22 +74,28 @@ pub fn exec_release_thm_stmt(
             Ok(s) => stored.push(s),
             Err(message) => {
                 return Ok(ExecReleaseThmStmtResult::Failed(
-                    ExecReleaseThmStmtFailed::Store { theorem: thm_name.clone(), index, message },
+                    ExecReleaseThmStmtFailed::Store {
+                        theorem: thm_name.clone(),
+                        index,
+                        message,
+                    },
                 ));
             }
         }
     }
 
-    Ok(ExecReleaseThmStmtResult::Success(ExecReleaseThmStmtSuccess {
-        call: stmt.call.clone(),
-        builtin: prepared.builtin,
-        type_proofs,
-        function_domain,
-        dom_proofs,
-        conclusions_wd,
-        local_env,
-        stored,
-    }))
+    Ok(ExecReleaseThmStmtResult::Success(
+        ExecReleaseThmStmtSuccess {
+            call: stmt.call.clone(),
+            builtin: prepared.builtin,
+            type_proofs,
+            function_domain,
+            dom_proofs,
+            conclusions_wd,
+            local_env,
+            stored,
+        },
+    ))
 }
 
 pub fn exec_by_thm_stmt(
@@ -92,60 +118,88 @@ pub fn exec_by_thm_stmt(
             Ok(proofs) => proofs,
             Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
         };
-        let function_domain = match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
-            Ok(proof) => proof,
-            Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
-        };
+        let function_domain =
+            match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+            };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
             if proof.is_failed() {
                 return Ok(Err(ExecByThmStmtFailed::Release(
-                    ExecReleaseThmStmtFailed::Dom { theorem: thm_name.clone(), fact: dom.clone(), index, result: proof },
+                    ExecReleaseThmStmtFailed::Dom {
+                        theorem: thm_name.clone(),
+                        fact: dom.clone(),
+                        index,
+                        result: proof,
+                    },
                 )));
             }
-            let _ = rt.store_fact_and_infer(dom, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let _ = rt.store_fact_and_infer(
+                dom,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             dom_proofs.push(proof);
         }
-        let conclusions_wd = match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
-            Ok(proofs) => proofs,
-            Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
-        };
+        let conclusions_wd =
+            match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
+                Ok(proofs) => proofs,
+                Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+            };
         let mut direct_conclusions = Vec::new();
         for conclusion in &prepared.conclusions {
-            let stored = rt.store_fact_and_infer(conclusion, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+            let stored = rt.store_fact_and_infer(
+                conclusion,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
             // Only the returned atoms and explicit package components are selectable.
             // Inferred facts and ambient facts must not supply a selected target.
             for (_, atomic) in stored.atomic_components() {
                 direct_conclusions.push(atomic);
             }
         }
-        let Some(selected_proof) = verify_selected_theorem_conclusion(
-            rt, &stmt.selected_fact, &direct_conclusions,
-        )? else {
+        let Some(selected_proof) =
+            verify_selected_theorem_conclusion(rt, &stmt.selected_fact, &direct_conclusions)?
+        else {
             return Ok(Err(ExecByThmStmtFailed::NotReturned {
-                theorem: thm_name.clone(), fact: selected.clone(),
+                theorem: thm_name.clone(),
+                fact: selected.clone(),
                 conclusions: prepared.conclusions.clone(),
             }));
         };
         if selected_proof.is_failed() {
-            return Ok(Err(ExecByThmStmtFailed::Selected { theorem: thm_name.clone(), fact: selected.clone(), result: selected_proof }));
+            return Ok(Err(ExecByThmStmtFailed::Selected {
+                theorem: thm_name.clone(),
+                fact: selected.clone(),
+                result: selected_proof,
+            }));
         }
-        Ok(Ok((type_proofs, function_domain, dom_proofs, conclusions_wd, selected_proof)))
+        Ok(Ok((
+            type_proofs,
+            function_domain,
+            dom_proofs,
+            conclusions_wd,
+            selected_proof,
+        )))
     })?;
 
-    let (type_proofs, function_domain, dom_proofs, conclusions_wd, selected_proof) = match local_outcome {
-        Ok(v) => v,
-        Err(failed) => {
-            return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
-        }
-    };
+    let (type_proofs, function_domain, dom_proofs, conclusions_wd, selected_proof) =
+        match local_outcome {
+            Ok(v) => v,
+            Err(failed) => {
+                return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
+            }
+        };
 
     let stored = match store_goal_fact(runtime, &selected)? {
         Ok(s) => s,
         Err(msg) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
-                ExecByThmStmtFailed::Store { theorem: thm_name.clone(), message: msg },
+                ExecByThmStmtFailed::Store {
+                    theorem: thm_name.clone(),
+                    message: msg,
+                },
             )));
         }
     };
@@ -166,32 +220,71 @@ pub fn exec_by_thm_stmt(
 }
 
 fn verify_prepared_function_domain(
-    runtime: &mut Runtime, theorem: &str,
+    runtime: &mut Runtime,
+    theorem: &str,
     builtin: &Option<super::result::BuiltinThmApplication>,
-) -> RuntimeResult<Result<Option<super::result::BuiltinFunctionDomainProof>, ExecReleaseThmStmtFailed>> {
-    let Some(application) = builtin else { return Ok(Ok(None)); };
+) -> RuntimeResult<
+    Result<Option<super::result::BuiltinFunctionDomainProof>, ExecReleaseThmStmtFailed>,
+> {
+    let Some(application) = builtin else {
+        return Ok(Ok(None));
+    };
     use crate::builtin_theorem::BuiltinTheoremId;
     if application.theorem == BuiltinTheoremId::TupleEqualFromCoordinates {
-        let target = match runtime.tuple_equality_domain(&application.arguments[0], &application.arguments[1])? {
+        let target = match runtime
+            .tuple_equality_domain(&application.arguments[0], &application.arguments[1])?
+        {
             Ok(target) => target,
-            Err(message) => return Ok(Err(ExecReleaseThmStmtFailed::BuiltinShape { theorem: application.theorem, message })),
+            Err(message) => {
+                return Ok(Err(ExecReleaseThmStmtFailed::BuiltinShape {
+                    theorem: application.theorem,
+                    message,
+                }))
+            }
         };
-        let left = match runtime.verify_complete_function_domain(&application.arguments[0], &target, super::helper::proof_verify_state())? {
+        let left = match runtime.verify_complete_function_domain(
+            &application.arguments[0],
+            &target,
+            super::helper::proof_verify_state(),
+        )? {
             Ok(proof) => proof,
-            Err(result) => return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain { theorem: theorem.to_string(), result })),
+            Err(result) => {
+                return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain {
+                    theorem: theorem.to_string(),
+                    result,
+                }))
+            }
         };
-        let right = match runtime.verify_complete_function_domain(&application.arguments[1], &target, super::helper::proof_verify_state())? {
+        let right = match runtime.verify_complete_function_domain(
+            &application.arguments[1],
+            &target,
+            super::helper::proof_verify_state(),
+        )? {
             Ok(proof) => proof,
-            Err(result) => return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain { theorem: theorem.to_string(), result })),
+            Err(result) => {
+                return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain {
+                    theorem: theorem.to_string(),
+                    result,
+                }))
+            }
         };
-        return Ok(Ok(Some(super::result::BuiltinFunctionDomainProof::TupleEquality { left, right })));
+        return Ok(Ok(Some(
+            super::result::BuiltinFunctionDomainProof::TupleEquality { left, right },
+        )));
     }
-    if !matches!(application.theorem, BuiltinTheoremId::FunctionSetMember | BuiltinTheoremId::CartesianMemberFromCoordinates) {
+    if !matches!(
+        application.theorem,
+        BuiltinTheoremId::FunctionSetMember | BuiltinTheoremId::CartesianMemberFromCoordinates
+    ) {
         return Ok(Ok(None));
     }
     let target = if application.theorem == BuiltinTheoremId::CartesianMemberFromCoordinates {
-        runtime.cart_definition_for_set(&application.arguments[1]).map(|cart| runtime.cart_function_signature(&cart))
-    } else { runtime.function_space_signature(&application.arguments[1]) };
+        runtime
+            .cart_definition_for_set(&application.arguments[1])
+            .map(|cart| runtime.cart_function_signature(&cart))
+    } else {
+        runtime.function_space_signature(&application.arguments[1])
+    };
     let Some(target) = target else {
         return Ok(Err(ExecReleaseThmStmtFailed::BuiltinShape {
             theorem: application.theorem,
@@ -200,14 +293,21 @@ fn verify_prepared_function_domain(
     };
     // Check before pointwise premises or the conclusion are stored. In
     // particular, an empty forall cannot supply an exact empty-domain proof.
-    Ok(match runtime.verify_complete_function_domain(
-        &application.arguments[0], &target, super::helper::proof_verify_state(),
-    )? {
-        Ok(proof) => Ok(Some(super::result::BuiltinFunctionDomainProof::Membership(proof))),
-        Err(result) => Err(ExecReleaseThmStmtFailed::FunctionDomain {
-            theorem: theorem.to_string(), result,
-        }),
-    })
+    Ok(
+        match runtime.verify_complete_function_domain(
+            &application.arguments[0],
+            &target,
+            super::helper::proof_verify_state(),
+        )? {
+            Ok(proof) => Ok(Some(super::result::BuiltinFunctionDomainProof::Membership(
+                proof,
+            ))),
+            Err(result) => Err(ExecReleaseThmStmtFailed::FunctionDomain {
+                theorem: theorem.to_string(),
+                result,
+            }),
+        },
+    )
 }
 
 pub(crate) struct PreparedRelease {
@@ -318,29 +418,51 @@ fn verify_prepared_type_facts(
     runtime: &mut Runtime,
     thm_name: &str,
     type_facts: &[Fact],
-) -> RuntimeResult<Result<Vec<crate::execute::execute_fact_stmt::VerifyFactResult>, ExecReleaseThmStmtFailed>> {
+) -> RuntimeResult<
+    Result<Vec<crate::execute::execute_fact_stmt::VerifyFactResult>, ExecReleaseThmStmtFailed>,
+> {
     let mut proofs = Vec::with_capacity(type_facts.len());
     for (index, fact) in type_facts.iter().enumerate() {
         let proof = verify_goal_fact(runtime, fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecReleaseThmStmtFailed::Type { theorem: thm_name.to_string(), fact: fact.clone(), index, result: proof }));
+            return Ok(Err(ExecReleaseThmStmtFailed::Type {
+                theorem: thm_name.to_string(),
+                fact: fact.clone(),
+                index,
+                result: proof,
+            }));
         }
-        let _ = runtime.store_fact_and_infer(fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let _ = runtime.store_fact_and_infer(
+            fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
         proofs.push(proof);
     }
     Ok(Ok(proofs))
 }
 
 fn verify_prepared_conclusions_wd(
-    runtime: &mut Runtime, thm_name: &str, conclusions: &[Fact],
-) -> RuntimeResult<Result<Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>, ExecReleaseThmStmtFailed>> {
+    runtime: &mut Runtime,
+    thm_name: &str,
+    conclusions: &[Fact],
+) -> RuntimeResult<
+    Result<Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>, ExecReleaseThmStmtFailed>,
+> {
     use crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult;
     let mut proofs = Vec::with_capacity(conclusions.len());
     for (index, fact) in conclusions.iter().enumerate() {
-        let result = runtime.verify_fact_well_definedness(fact, super::helper::proof_verify_state())?;
+        let result =
+            runtime.verify_fact_well_definedness(fact, super::helper::proof_verify_state())?;
         match result {
             VerifyFactWellDefinedResult::Success(proof) => proofs.push(proof),
-            failed => return Ok(Err(ExecReleaseThmStmtFailed::ConclusionWd { theorem: thm_name.to_string(), fact: fact.clone(), index, result: failed })),
+            failed => {
+                return Ok(Err(ExecReleaseThmStmtFailed::ConclusionWd {
+                    theorem: thm_name.to_string(),
+                    fact: fact.clone(),
+                    index,
+                    result: failed,
+                }))
+            }
         }
     }
     Ok(Ok(proofs))
@@ -372,7 +494,8 @@ fn verify_selected_theorem_conclusion(
     let selected_args = atomic_fact_args_ref(selected);
     for conclusion in conclusions {
         if selected.prop_name() != conclusion.prop_name()
-            || atomic_fact_has_positive_polarity(selected) != atomic_fact_has_positive_polarity(conclusion)
+            || atomic_fact_has_positive_polarity(selected)
+                != atomic_fact_has_positive_polarity(conclusion)
         {
             continue;
         }
@@ -383,8 +506,10 @@ fn verify_selected_theorem_conclusion(
         let mut identities = Vec::new();
         for (known, goal) in conclusion_args.iter().zip(&selected_args) {
             let comparison = EqualFact {
-                fact_id: selected.fact_id(), left: (*known).clone(),
-                right: (*goal).clone(), line_file: None,
+                fact_id: selected.fact_id(),
+                left: (*known).clone(),
+                right: (*goal).clone(),
+                line_file: None,
             };
             let Some(identity) = search_equal_fact_proof_by_they_are_the_same(&comparison) else {
                 break;
@@ -395,8 +520,11 @@ fn verify_selected_theorem_conclusion(
             continue;
         }
 
-        if let (AtomicFact::EqualFact(goal), AtomicFact::EqualFact(cited)) = (selected, conclusion) {
-            let well_defined = match runtime.verify_equal_fact_well_definedness(goal, super::helper::proof_verify_state())? {
+        if let (AtomicFact::EqualFact(goal), AtomicFact::EqualFact(cited)) = (selected, conclusion)
+        {
+            let well_defined = match runtime
+                .verify_equal_fact_well_definedness(goal, super::helper::proof_verify_state())?
+            {
                 VerifyEqualFactWellDefinedResult::Success(proof) => proof,
                 VerifyEqualFactWellDefinedResult::Failed(reason) => {
                     return Ok(Some(equal_fact_result_from_wd_fail(reason)));
@@ -404,30 +532,41 @@ fn verify_selected_theorem_conclusion(
             };
             let mut identities = identities.into_iter();
             let proof = KnownEqualityAlphaEndpointsProof {
-                cited: cited.clone(), reversed: false,
+                cited: cited.clone(),
+                reversed: false,
                 left_identity: identities.next().expect("equality left identity"),
                 right_identity: identities.next().expect("equality right identity"),
             };
             return Ok(Some(equal_fact_result_from_success(
-                goal, well_defined,
+                goal,
+                well_defined,
                 EqualFactSearchedProof::ByEquivalenceClass(
                     EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof),
                 ),
             )));
         }
 
-        let well_defined = match runtime.verify_atomic_fact_well_definedness(selected, super::helper::proof_verify_state())? {
+        let well_defined = match runtime
+            .verify_atomic_fact_well_definedness(selected, super::helper::proof_verify_state())?
+        {
             VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
             VerifyAtomicFactWellDefinedResult::Failed(reason) => {
-                return Ok(Some(atomic_except_equality_fact_result_from_wd_fail(reason)));
+                return Ok(Some(atomic_except_equality_fact_result_from_wd_fail(
+                    reason,
+                )));
             }
         };
         let proof = AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
             cite_fact_id: conclusion.fact_id(),
-            why_parameters_of_known_fact_are_equal_to_givens: identities.into_iter().map(Into::into).collect(),
+            why_parameters_of_known_fact_are_equal_to_givens: identities
+                .into_iter()
+                .map(Into::into)
+                .collect(),
         };
         return Ok(Some(atomic_except_equality_fact_result_from_success(
-            selected, well_defined, AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof),
+            selected,
+            well_defined,
+            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof),
         )));
     }
     Ok(None)

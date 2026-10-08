@@ -72,7 +72,6 @@ pub(super) fn is_zero_obj(obj: &Obj) -> bool {
     )
 }
 
-
 impl Runtime {
     // Prove strategy premises inside VerifyState: known + nested strategy only.
     pub(crate) fn verify_strategy_requirements(
@@ -149,7 +148,6 @@ impl Runtime {
         }
         .into()
     }
-
 
     pub(super) fn strategy_not_equal_fact(
         &mut self,
@@ -238,19 +236,22 @@ impl Runtime {
     }
 }
 
-
 // Zero is also 0/c once the caller proves the strict sign of c. This lets
 // quotient monotonicity handle 0 <= a/c and a/c <= 0 without a manual 0/c bridge.
 // The caller must retain the denominator-sign and numerator-order proofs.
 pub(super) fn common_division_parts(left: &Obj, right: &Obj) -> Option<(Obj, Obj, Obj)> {
     use crate::ast::obj::ArithmeticOperator;
     match (left, right) {
-        (Obj::ArithmeticOperator(ArithmeticOperator::Div(a)), Obj::ArithmeticOperator(ArithmeticOperator::Div(b)))
-            if a.right == b.right => Some((*a.left.clone(), *b.left.clone(), *a.right.clone())),
-        (_, Obj::ArithmeticOperator(ArithmeticOperator::Div(b))) if is_zero_obj(left) =>
-            Some((zero_obj(), *b.left.clone(), *b.right.clone())),
-        (Obj::ArithmeticOperator(ArithmeticOperator::Div(a)), _) if is_zero_obj(right) =>
-            Some((*a.left.clone(), zero_obj(), *a.right.clone())),
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(b)),
+        ) if a.right == b.right => Some((*a.left.clone(), *b.left.clone(), *a.right.clone())),
+        (_, Obj::ArithmeticOperator(ArithmeticOperator::Div(b))) if is_zero_obj(left) => {
+            Some((zero_obj(), *b.left.clone(), *b.right.clone()))
+        }
+        (Obj::ArithmeticOperator(ArithmeticOperator::Div(a)), _) if is_zero_obj(right) => {
+            Some((*a.left.clone(), zero_obj(), *a.right.clone()))
+        }
         _ => None,
     }
 }

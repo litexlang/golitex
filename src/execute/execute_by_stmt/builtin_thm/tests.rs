@@ -1,22 +1,32 @@
 use crate::builtin_theorem::BuiltinTheoremId;
-use crate::execute::{ExecReleaseAndExpandStmtResult, ExecStmtResult};
 use crate::execute::execute_by_stmt::ExecReleaseThmStmtResult;
-use crate::json_output::{project_stmt_normal, project_stmt_detailed};
+use crate::execute::{ExecReleaseAndExpandStmtResult, ExecStmtResult};
+use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
 fn runtime() -> Runtime {
-    Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::English })
+    Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    })
 }
 fn execute(rt: &mut Runtime, code: &str) -> ExecStmtResult {
-    let blocks = Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+    let blocks = Tokenizer::new()
+        .tokenize(code, rt.current_file.clone())
+        .unwrap();
     let mut stmts = rt.parse(&blocks).unwrap();
     assert_eq!(stmts.len(), 1, "{code}");
     rt.exec_stmt(&stmts.remove(0)).unwrap()
 }
 fn count_facts(rt: &Runtime) -> usize {
-    rt.execution_environments_stack.iter().map(|env| env.facts.facts_by_id.len()).sum()
+    rt.execution_environments_stack
+        .iter()
+        .map(|env| env.facts.facts_by_id.len())
+        .sum()
 }
 
 #[test]
@@ -46,21 +56,40 @@ fn exact_function_finite_values_support_named_calls_carriers_aliases_and_complet
         ("let p=(1,2)", "p(1,2)=1"),
         ("let p=(1,2)", "p(1)(1)=1"),
         ("let p=(1,2)", "p(1)=2"),
-        ("let p=(1,2)", "release thm fn_set_member(p,finite_seq(R,3))"),
+        (
+            "let p=(1,2)",
+            "release thm fn_set_member(p,finite_seq(R,3))",
+        ),
         ("let p=tuple(7)", "p(2)=7"),
         ("let p=()", "p(1)=0"),
         ("have p cart(R,Z)", "p(1) $in Z"),
         ("have fn mk(x R: x>0) cart(R,Z)=(x,2)", "mk(0)(2) $in Z"),
         ("have fn mk(x R) cart(R,Z)=(x,2)", "mk(7)(3) $in Z"),
-        ("have fn z(k N+) Z=0", "release thm cart_member_from_coordinates(z,cart(R,Z))"),
-        ("let p=(1,2,3)", "release thm cart_member_from_coordinates(p,cart(R,Z))"),
-        ("let p=(1,2)", "release thm cart_member_from_coordinates(p,cart(R,{}))"),
+        (
+            "have fn z(k N+) Z=0",
+            "release thm cart_member_from_coordinates(z,cart(R,Z))",
+        ),
+        (
+            "let p=(1,2,3)",
+            "release thm cart_member_from_coordinates(p,cart(R,Z))",
+        ),
+        (
+            "let p=(1,2)",
+            "release thm cart_member_from_coordinates(p,cart(R,{}))",
+        ),
     ] {
-        let mut rt=runtime();
-        assert!(rt.run_litex_code(setup).unwrap().success,"{setup}");
-        let before=count_facts(&rt);
-        assert!(execute(&mut rt,negative).is_failed(),"{setup}\n{negative}");
-        assert_eq!(count_facts(&rt),before,"finite-function negative published facts");
+        let mut rt = runtime();
+        assert!(rt.run_litex_code(setup).unwrap().success, "{setup}");
+        let before = count_facts(&rt);
+        assert!(
+            execute(&mut rt, negative).is_failed(),
+            "{setup}\n{negative}"
+        );
+        assert_eq!(
+            count_facts(&rt),
+            before,
+            "finite-function negative published facts"
+        );
     }
 }
 
@@ -79,28 +108,60 @@ fn exact_function_domain_acceptance_files_keep_successful_prefixes_and_failure_p
         let run = rt.run_litex_code(&source).unwrap();
         assert!(!run.success, "negative fixture accepted: {file}");
         if phase == "retired_syntax" {
-            let expected_count = case.get("expected_prefix_count")
-                .map(|value| value.as_u64().unwrap() as usize).unwrap_or(2);
-            let expected_diagnostic = case.get("expected_diagnostic")
-                .map(|value| value.as_str().unwrap()).unwrap_or("cart_dim is removed");
+            let expected_count = case
+                .get("expected_prefix_count")
+                .map(|value| value.as_u64().unwrap() as usize)
+                .unwrap_or(2);
+            let expected_diagnostic = case
+                .get("expected_diagnostic")
+                .map(|value| value.as_str().unwrap())
+                .unwrap_or("cart_dim is removed");
             assert_eq!(run.statement_results.len(), expected_count, "{file}");
-            assert!(run.statement_results.iter().all(|stmt| !stmt.is_failed()), "{file}");
-            assert!(format!("{:?}", run.session_error).contains(expected_diagnostic), "{file}");
+            assert!(
+                run.statement_results.iter().all(|stmt| !stmt.is_failed()),
+                "{file}"
+            );
+            assert!(
+                format!("{:?}", run.session_error).contains(expected_diagnostic),
+                "{file}"
+            );
             continue;
         }
-        assert!(run.session_error.is_none(), "unexpected parse/exec failure: {file}");
-        let (last, prefix) = run.statement_results.split_last().expect("negative statement");
-        assert!(prefix.iter().all(|stmt| !stmt.is_failed()), "failed setup: {file}");
+        assert!(
+            run.session_error.is_none(),
+            "unexpected parse/exec failure: {file}"
+        );
+        let (last, prefix) = run
+            .statement_results
+            .split_last()
+            .expect("negative statement");
+        assert!(
+            prefix.iter().all(|stmt| !stmt.is_failed()),
+            "failed setup: {file}"
+        );
         assert!(last.is_failed(), "negative target accepted: {file}");
         let json = project_stmt_normal(last, &rt);
-        let failure = json.as_object().unwrap().get("why_failed").unwrap().as_object().unwrap();
+        let failure = json
+            .as_object()
+            .unwrap()
+            .get("why_failed")
+            .unwrap()
+            .as_object()
+            .unwrap();
         let mut actual_phase = failure.get("phase").unwrap().as_str().unwrap();
         // Release has an outer statement stage and a nested theorem stage.
         // Check that exact owner, rather than finding an arbitrary phase in
         // a premise's recursive proof tree.
         if actual_phase == "release_thm" {
-            actual_phase = failure.get("failure").unwrap().as_object().unwrap()
-                .get("phase").unwrap().as_str().unwrap();
+            actual_phase = failure
+                .get("failure")
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .get("phase")
+                .unwrap()
+                .as_str()
+                .unwrap();
         }
         assert_eq!(actual_phase, phase, "wrong failure boundary: {file}");
         if let Some(stage) = case.get("expected_constructor_stage") {
@@ -108,10 +169,17 @@ fn exact_function_domain_acceptance_files_keep_successful_prefixes_and_failure_p
             // recursive child premise that happens to have the same label.
             let mut constructor_failure = failure;
             for _ in 0..4 {
-                constructor_failure = constructor_failure.get("failure").unwrap().as_object().unwrap();
+                constructor_failure = constructor_failure
+                    .get("failure")
+                    .unwrap()
+                    .as_object()
+                    .unwrap();
             }
-            assert_eq!(constructor_failure.get("phase").unwrap().as_str().unwrap(),
-                stage.as_str().unwrap(), "wrong constructor obligation: {file}");
+            assert_eq!(
+                constructor_failure.get("phase").unwrap().as_str().unwrap(),
+                stage.as_str().unwrap(),
+                "wrong constructor obligation: {file}"
+            );
         }
     }
     for file in [
@@ -186,8 +254,15 @@ fn exact_function_membership_rejects_short_long_empty_and_dropped_guards_without
             assert!(!execute(&mut rt, definition).is_failed(), "{definition}");
             let before = count_facts(&rt);
             let result = execute(&mut rt, &statement);
-            assert!(result.is_failed(), "false exact membership: {definition}\n{statement}");
-            assert_eq!(count_facts(&rt), before, "rejected exact membership published facts");
+            assert!(
+                result.is_failed(),
+                "false exact membership: {definition}\n{statement}"
+            );
+            assert_eq!(
+                count_facts(&rt),
+                before,
+                "rejected exact membership published facts"
+            );
             if statement.contains("thm") {
                 let detailed = format!("{:?}", project_stmt_detailed(&result, &rt));
                 assert!(detailed.contains("function_domain"), "{detailed}");
@@ -235,7 +310,11 @@ fn exact_function_empty_cart_equalities_do_not_publish_dimensions_or_false_equal
     }
     for env in &rt.execution_environments_stack {
         for fact in env.facts.facts_by_id.values() {
-            assert!(!fact.readable_string().contains("cart_dim"), "unexpected dimension fact: {}", fact.readable_string());
+            assert!(
+                !fact.readable_string().contains("cart_dim"),
+                "unexpected dimension fact: {}",
+                fact.readable_string()
+            );
         }
     }
     let before = count_facts(&rt);
@@ -245,13 +324,19 @@ fn exact_function_empty_cart_equalities_do_not_publish_dimensions_or_false_equal
 
 #[test]
 fn exact_function_retired_cart_dimension_has_no_parse_wd_or_numeric_route() {
-    for code in ["cart_dim({})=2", "cart_dim(cart({},R))=2", "cart_dim(cart({},R,Z))=3"] {
+    for code in [
+        "cart_dim({})=2",
+        "cart_dim(cart({},R))=2",
+        "cart_dim(cart({},R,Z))=3",
+    ] {
         let mut rt = runtime();
         let result = rt.run_litex_code(code).unwrap();
-        assert!(result.session_error.is_some(), "retired syntax accepted: {code}");
+        assert!(
+            result.session_error.is_some(),
+            "retired syntax accepted: {code}"
+        );
         assert!(result.statement_results.is_empty());
     }
-
 }
 
 #[test]
@@ -286,18 +371,33 @@ fn exact_function_extension_uses_full_domains_and_ignores_return_upper_bounds() 
 #[test]
 fn exact_function_empty_domain_universals_do_not_publish_their_conclusions() {
     for carrier in ["{}", "closed_range(1,0)"] {
-        let mut rt=runtime();
-        let universal=format!("forall x {carrier}:\n    2=3");
-        let result=execute(&mut rt,&universal);
-        assert!(!result.is_failed(),"empty-domain universal must be vacuous: {carrier}\n{:?}",project_stmt_detailed(&result,&rt));
-        assert!(format!("{:?}",project_stmt_detailed(&result,&rt)).contains("empty_parameter_domain"));
-        let before=count_facts(&rt);
-        assert!(execute(&mut rt,"2=3").is_failed(),"vacuous conclusions must not escape");
-        assert_eq!(count_facts(&rt),before);
-        assert!(execute(&mut rt,&format!("forall x {carrier}:\n    1/0=0")).is_failed(),"vacuity must not bypass WD");
+        let mut rt = runtime();
+        let universal = format!("forall x {carrier}:\n    2=3");
+        let result = execute(&mut rt, &universal);
+        assert!(
+            !result.is_failed(),
+            "empty-domain universal must be vacuous: {carrier}\n{:?}",
+            project_stmt_detailed(&result, &rt)
+        );
+        assert!(
+            format!("{:?}", project_stmt_detailed(&result, &rt)).contains("empty_parameter_domain")
+        );
+        let before = count_facts(&rt);
+        assert!(
+            execute(&mut rt, "2=3").is_failed(),
+            "vacuous conclusions must not escape"
+        );
+        assert_eq!(count_facts(&rt), before);
+        assert!(
+            execute(&mut rt, &format!("forall x {carrier}:\n    1/0=0")).is_failed(),
+            "vacuity must not bypass WD"
+        );
     }
-    let mut rt=runtime();
-    assert!(execute(&mut rt,"forall x {0}:\n    2=3").is_failed(),"nonempty-domain universal cannot be vacuous");
+    let mut rt = runtime();
+    assert!(
+        execute(&mut rt, "forall x {0}:\n    2=3").is_failed(),
+        "nonempty-domain universal cannot be vacuous"
+    );
 }
 
 #[path = "../../../../tests/unit/execute/builtin_theorem_catalogue/tests.rs"]
@@ -368,51 +468,117 @@ fn literal_tuple_extensionality_checks_all_coordinates_and_complete_domains() {
     ] {
         let mut rt = runtime();
         let result = rt.run_litex_code(code).unwrap();
-        assert!(result.success && result.session_error.is_none(), "{code}\n{}", crate::json_output::emit_run_detailed(&result, &rt, "test", None));
-        use crate::execute::execute_by_stmt::{BuiltinFunctionDomainProof,ExecByStmtResult,ExecByThmStmtResult};
-        let last=result.statement_results.last().unwrap();
-        let domains=match last {
-            ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(ExecReleaseThmStmtResult::Success(proof))) => &proof.function_domain,
-            ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => &proof.function_domain,
+        assert!(
+            result.success && result.session_error.is_none(),
+            "{code}\n{}",
+            crate::json_output::emit_run_detailed(&result, &rt, "test", None)
+        );
+        use crate::execute::execute_by_stmt::{
+            BuiltinFunctionDomainProof, ExecByStmtResult, ExecByThmStmtResult,
+        };
+        let last = result.statement_results.last().unwrap();
+        let domains = match last {
+            ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+                ExecReleaseThmStmtResult::Success(proof),
+            )) => &proof.function_domain,
+            ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => {
+                &proof.function_domain
+            }
             _ => panic!("native tuple theorem result"),
         };
-        assert!(matches!(domains,Some(BuiltinFunctionDomainProof::TupleEquality{..})),"both complete-domain proofs must survive execution");
-        let detailed=project_stmt_detailed(last,&rt).stringify();
-        assert!(detailed.contains("tuple_exact_domains"),"{detailed}");
+        assert!(
+            matches!(
+                domains,
+                Some(BuiltinFunctionDomainProof::TupleEquality { .. })
+            ),
+            "both complete-domain proofs must survive execution"
+        );
+        let detailed = project_stmt_detailed(last, &rt).stringify();
+        assert!(detailed.contains("tuple_exact_domains"), "{detailed}");
     }
     for (setup, negative) in [
-        ("have a cart({1},{2})", "release thm tuple_equal_from_coordinates(a,(1,3))"),
-        ("have a cart({1},{2},{3})", "release thm tuple_equal_from_coordinates(a,(1,2))"),
-        ("have a cart({1},{2},{3})", "release thm tuple_equal_from_coordinates(a,(1,2,4))"),
-        ("have a cart({1},{2})", "release thm tuple_equal_from_coordinates((1,3),a)"),
-        ("have a cart({1},{2},{3})", "by thm tuple_equal_from_coordinates(a,(1,2)) => a=(1,2)"),
-        ("let a=()", "release thm tuple_equal_from_coordinates(a,tuple(0))"),
-        ("have fn z(k N+)R=0\nhave fn z2(k closed_range(1,2))R=z(k)", "release thm tuple_equal_from_coordinates(z,z2)"),
-        ("have f,g cart({0},R)\nf(1)=g(1)", "release thm tuple_equal_from_coordinates(f,g)"),
+        (
+            "have a cart({1},{2})",
+            "release thm tuple_equal_from_coordinates(a,(1,3))",
+        ),
+        (
+            "have a cart({1},{2},{3})",
+            "release thm tuple_equal_from_coordinates(a,(1,2))",
+        ),
+        (
+            "have a cart({1},{2},{3})",
+            "release thm tuple_equal_from_coordinates(a,(1,2,4))",
+        ),
+        (
+            "have a cart({1},{2})",
+            "release thm tuple_equal_from_coordinates((1,3),a)",
+        ),
+        (
+            "have a cart({1},{2},{3})",
+            "by thm tuple_equal_from_coordinates(a,(1,2)) => a=(1,2)",
+        ),
+        (
+            "let a=()",
+            "release thm tuple_equal_from_coordinates(a,tuple(0))",
+        ),
+        (
+            "have fn z(k N+)R=0\nhave fn z2(k closed_range(1,2))R=z(k)",
+            "release thm tuple_equal_from_coordinates(z,z2)",
+        ),
+        (
+            "have f,g cart({0},R)\nf(1)=g(1)",
+            "release thm tuple_equal_from_coordinates(f,g)",
+        ),
     ] {
         let mut rt = runtime();
         let prefix = rt.run_litex_code(setup).unwrap();
         assert!(prefix.success && prefix.session_error.is_none(), "{setup}");
-        let before=count_facts(&rt);
-        assert!(execute(&mut rt,negative).is_failed(), "false tuple equality: {setup}\n{negative}");
-        assert_eq!(count_facts(&rt),before,"failed extensionality published facts: {negative}");
+        let before = count_facts(&rt);
+        assert!(
+            execute(&mut rt, negative).is_failed(),
+            "false tuple equality: {setup}\n{negative}"
+        );
+        assert_eq!(
+            count_facts(&rt),
+            before,
+            "failed extensionality published facts: {negative}"
+        );
     }
 }
 
 #[test]
 fn native_tuple_exact_domain_output_keeps_release_and_selected_proofs_in_ten_languages() {
     let source=include_str!("../../../../examples/stmt_nodes/release_and_expand/tuple_exact_function_extensionality.lit");
-    for language in [OutputLanguage::English,OutputLanguage::Chinese,OutputLanguage::ChineseTraditional,OutputLanguage::French,OutputLanguage::Russian,OutputLanguage::Spanish,OutputLanguage::Arabic,OutputLanguage::Japanese,OutputLanguage::Korean,OutputLanguage::Vietnamese] {
-        let mut rt=Runtime::new(LaunchCommand::Eval {code:String::new(),session:false,strict:true,language});
-        let run=rt.run_litex_code(source).unwrap();
-        assert!(run.success && run.session_error.is_none(),"{language:?}");
-        for index in [0,2,5,7,8] {
-            let stmt=&run.statement_results[index];
-            let normal=project_stmt_normal(stmt,&rt).stringify();
-            let detailed=project_stmt_detailed(stmt,&rt).stringify();
+    for language in [
+        OutputLanguage::English,
+        OutputLanguage::Chinese,
+        OutputLanguage::ChineseTraditional,
+        OutputLanguage::French,
+        OutputLanguage::Russian,
+        OutputLanguage::Spanish,
+        OutputLanguage::Arabic,
+        OutputLanguage::Japanese,
+        OutputLanguage::Korean,
+        OutputLanguage::Vietnamese,
+    ] {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language,
+        });
+        let run = rt.run_litex_code(source).unwrap();
+        assert!(run.success && run.session_error.is_none(), "{language:?}");
+        for index in [0, 2, 5, 7, 8] {
+            let stmt = &run.statement_results[index];
+            let normal = project_stmt_normal(stmt, &rt).stringify();
+            let detailed = project_stmt_detailed(stmt, &rt).stringify();
             crate::knowledge_base::JsonValue::parse(&normal).unwrap();
             crate::knowledge_base::JsonValue::parse(&detailed).unwrap();
-            assert!(detailed.contains("tuple_exact_domains"),"{language:?} stmt{index}: {detailed}");
+            assert!(
+                detailed.contains("tuple_exact_domains"),
+                "{language:?} stmt{index}: {detailed}"
+            );
         }
     }
 }
@@ -420,10 +586,26 @@ fn native_tuple_exact_domain_output_keeps_release_and_selected_proofs_in_ten_lan
 #[test]
 fn builtin_theorem_failures_expose_premise_arity_shape_and_lookup() {
     for (code, phase, goal) in [
-        ("release thm subset_of_finite_set_is_finite({2}, {1})", "premise", "{2} $subset {1}"),
-        ("release thm rational_between_reals(1, 0)", "premise", "1 < 0"),
-        ("release thm fn_set_member(1, R)", "call_shape", "function or sequence set"),
-        ("release thm rational_between_reals(1)", "arity", "rational_between_reals"),
+        (
+            "release thm subset_of_finite_set_is_finite({2}, {1})",
+            "premise",
+            "{2} $subset {1}",
+        ),
+        (
+            "release thm rational_between_reals(1, 0)",
+            "premise",
+            "1 < 0",
+        ),
+        (
+            "release thm fn_set_member(1, R)",
+            "call_shape",
+            "function or sequence set",
+        ),
+        (
+            "release thm rational_between_reals(1)",
+            "arity",
+            "rational_between_reals",
+        ),
         ("release thm missing_theorem", "lookup", "missing_theorem"),
     ] {
         let mut rt = runtime();
@@ -431,9 +613,15 @@ fn builtin_theorem_failures_expose_premise_arity_shape_and_lookup() {
         let result = execute(&mut rt, code);
         assert!(result.is_failed(), "{code}");
         assert_eq!(count_facts(&rt), before, "failed theorem must roll back");
-        for json in [project_stmt_normal(&result, &rt), project_stmt_detailed(&result, &rt)] {
+        for json in [
+            project_stmt_normal(&result, &rt),
+            project_stmt_detailed(&result, &rt),
+        ] {
             let text = json.stringify();
-            assert!(text.contains(phase) && text.contains(goal), "{code}: {text}");
+            assert!(
+                text.contains(phase) && text.contains(goal),
+                "{code}: {text}"
+            );
         }
     }
 }
@@ -481,12 +669,29 @@ fn builtin_theorems_do_not_certify_missing_premises_or_bad_shapes() {
 
 #[test]
 fn chinese_theorem_diagnostics_keep_the_exact_failed_premise() {
-    let mut rt = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: true, language: OutputLanguage::Chinese });
-    let result = execute(&mut rt, "release thm subset_of_finite_set_is_finite({2}, {1})");
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::Chinese,
+    });
+    let result = execute(
+        &mut rt,
+        "release thm subset_of_finite_set_is_finite({2}, {1})",
+    );
     assert!(result.is_failed());
-    for json in [project_stmt_normal(&result, &rt), project_stmt_detailed(&result, &rt)] {
+    for json in [
+        project_stmt_normal(&result, &rt),
+        project_stmt_detailed(&result, &rt),
+    ] {
         let text = json.stringify();
-        for expected in ["定理名", "目标命题", "下标", "subset_of_finite_set_is_finite", "{2} $subset {1}"] {
+        for expected in [
+            "定理名",
+            "目标命题",
+            "下标",
+            "subset_of_finite_set_is_finite",
+            "{2} $subset {1}",
+        ] {
             assert!(text.contains(expected), "missing {expected}: {text}");
         }
     }
@@ -496,25 +701,46 @@ fn chinese_theorem_diagnostics_keep_the_exact_failed_premise() {
 fn builtin_release_keeps_contract_premise_and_wd_evidence() {
     let mut rt = runtime();
     let result = execute(&mut rt, "release thm rational_between_reals(0, 1)");
-    let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(ExecReleaseThmStmtResult::Success(ref success))) = result else { panic!("expected theorem success") };
-    assert_eq!(success.builtin.as_ref().unwrap().theorem, BuiltinTheoremId::RationalBetweenReals);
+    let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+        ExecReleaseThmStmtResult::Success(ref success),
+    )) = result
+    else {
+        panic!("expected theorem success")
+    };
+    assert_eq!(
+        success.builtin.as_ref().unwrap().theorem,
+        BuiltinTheoremId::RationalBetweenReals
+    );
     assert_eq!(success.dom_proofs.len(), 3);
     assert_eq!(success.conclusions_wd.len(), 1);
     assert_eq!(success.stored.len(), 1);
     let json = project_stmt_detailed(&result, &rt).stringify();
-    assert!(json.contains("builtin_theorem") && json.contains("requirements") && json.contains("conclusions_wd"));
+    assert!(
+        json.contains("builtin_theorem")
+            && json.contains("requirements")
+            && json.contains("conclusions_wd")
+    );
 }
 
 #[test]
 fn builtin_by_thm_stores_only_selected_conclusion_and_rolls_back_failure() {
     let mut rt = runtime();
-    let result = execute(&mut rt, "by thm subset_of_finite_set_is_finite({1}, {1, 2}) => $is_finite_set({1})");
-    assert!(!result.is_failed(), "{}", project_stmt_detailed(&result, &rt).stringify());
+    let result = execute(
+        &mut rt,
+        "by thm subset_of_finite_set_is_finite({1}, {1, 2}) => $is_finite_set({1})",
+    );
+    assert!(
+        !result.is_failed(),
+        "{}",
+        project_stmt_detailed(&result, &rt).stringify()
+    );
     let before = count_facts(&rt);
     let failed = execute(&mut rt, "by thm rational_between_reals(2, 3) => 0 = 1");
     assert!(failed.is_failed());
     assert_eq!(count_facts(&rt), before);
-    assert!(project_stmt_normal(&failed, &rt).stringify().contains("selected_fact"));
+    assert!(project_stmt_normal(&failed, &rt)
+        .stringify()
+        .contains("selected_fact"));
     assert!(execute(&mut rt, "exist q Q st {2 < q and q < 3}").is_failed());
 }
 
@@ -527,7 +753,9 @@ fn builtin_names_and_opaque_certificates_cannot_be_redefined() {
         "abstract_prop is_real_greatest_lower_bound(S, L)",
     ] {
         let mut rt = runtime();
-        let blocks = Tokenizer::new().tokenize(code, rt.current_file.clone()).unwrap();
+        let blocks = Tokenizer::new()
+            .tokenize(code, rt.current_file.clone())
+            .unwrap();
         assert!(rt.parse(&blocks).is_err(), "reserved name accepted: {code}");
     }
 }
@@ -538,11 +766,25 @@ fn empty_named_and_anonymous_index_families_are_rejected_by_wd() {
         let mut rt = runtime();
         assert!(!execute(&mut rt, "have fn family(k {}) power_set(N) = {}").is_failed());
         for family in ["family", "fn(k {}) power_set(N) {{}}"] {
-            let code = format!("{op}({{}}, {}, {family}) = {op}({{}}, {}, {family})", if op == "index_cart" { "power_set(N)" } else { "N" }, if op == "index_cart" { "power_set(N)" } else { "N" });
+            let code = format!(
+                "{op}({{}}, {}, {family}) = {op}({{}}, {}, {family})",
+                if op == "index_cart" {
+                    "power_set(N)"
+                } else {
+                    "N"
+                },
+                if op == "index_cart" {
+                    "power_set(N)"
+                } else {
+                    "N"
+                }
+            );
             let before = count_facts(&rt);
             let result = execute(&mut rt, &code);
             assert!(result.is_failed(), "empty index accepted: {code}");
-            assert!(project_stmt_normal(&result, &rt).stringify().contains("well_defined"));
+            assert!(project_stmt_normal(&result, &rt)
+                .stringify()
+                .contains("well_defined"));
             assert_eq!(count_facts(&rt), before);
         }
     }
@@ -555,26 +797,53 @@ fn complex_calculation_retains_typed_route_and_rejects_invalid_identities() {
         let result = execute(&mut rt, code);
         assert!(!result.is_failed(), "{code}");
         let json = project_stmt_detailed(&result, &rt).stringify();
-        assert!(json.contains("by_closed_calculation") && json.contains("left_imaginary") && json.contains("right_imaginary"), "{json}");
+        assert!(
+            json.contains("by_closed_calculation")
+                && json.contains("left_imaginary")
+                && json.contains("right_imaginary"),
+            "{json}"
+        );
     }
-    for code in ["i*i=1", "i^3=i", "(1+i)*(1-i)=0", "i/0=i/0", "1/0=1/0", "0/0=1"] {
+    for code in [
+        "i*i=1",
+        "i^3=i",
+        "(1+i)*(1-i)=0",
+        "i/0=i/0",
+        "1/0=1/0",
+        "0/0=1",
+    ] {
         let mut rt = runtime();
-        assert!(execute(&mut rt, code).is_failed(), "invalid calculation accepted: {code}");
+        assert!(
+            execute(&mut rt, code).is_failed(),
+            "invalid calculation accepted: {code}"
+        );
     }
 }
 
 #[test]
 fn theorem_diagnostics_keep_nested_proof_failure_and_conclusion_wd() {
     let mut rt = runtime();
-    let result = execute(&mut rt, "thm wrong:\n    ? 0 = 1\n    release thm subset_of_finite_set_is_finite({2}, {1})");
+    let result = execute(
+        &mut rt,
+        "thm wrong:\n    ? 0 = 1\n    release thm subset_of_finite_set_is_finite({2}, {1})",
+    );
     assert!(result.is_failed());
-    for json in [project_stmt_normal(&result, &rt), project_stmt_detailed(&result, &rt)] {
+    for json in [
+        project_stmt_normal(&result, &rt),
+        project_stmt_detailed(&result, &rt),
+    ] {
         let text = json.stringify();
-        assert!(text.contains("proof_body") && text.contains("{2} $subset {1}"), "{text}");
+        assert!(
+            text.contains("proof_body") && text.contains("{2} $subset {1}"),
+            "{text}"
+        );
     }
     let mut rt = runtime();
     let result = execute(&mut rt, "release thm index_cart_nonempty_by_choice_from_family(index_cart({}, {{1}}, fn(k {}) {{1}} {{1}}))");
     assert!(result.is_failed());
     let text = project_stmt_normal(&result, &rt).stringify();
-    assert!(text.contains("well_defined") && (text.contains("nonempty") || text.contains("empty")), "{text}");
+    assert!(
+        text.contains("well_defined") && (text.contains("nonempty") || text.contains("empty")),
+        "{text}"
+    );
 }

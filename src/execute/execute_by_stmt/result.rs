@@ -2,14 +2,15 @@ use crate::ast::fact::{AndChainAtomicFact, AtomicFact, Fact};
 use crate::ast::names::AtomicName;
 use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
+use crate::execute::execute_fact_stmt::AssumeDomFactResult;
 use crate::execute::execute_fact_stmt::{
-    ProveAndStoreThenFactResult, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
+    ProveAndStoreThenFactResult, VerifyFactResult, VerifyFactWellDefinedResult,
+    VerifyObjWellDefinedResult,
 };
-use crate::runtime::FactId;
-use crate::execute::ExecStmtResult;
 use crate::execute::execute_proof_block_stmt::ProofBlockBodyFailed;
 use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
-use crate::execute::execute_fact_stmt::AssumeDomFactResult;
+use crate::execute::ExecStmtResult;
+use crate::runtime::FactId;
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 // `local_env` on by-stmt Success (and nested branch/case Success):
@@ -95,7 +96,8 @@ pub enum ExecByFnExtensionStmtResult {
 // Stage order: goal_wd → domain sources/match → pointwise → local_env → store.
 pub struct ExecByFnExtensionStmtSuccess {
     pub goal_wd: VerifyFactWellDefinedResult,
-    pub right_domain: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+    pub right_domain:
+        crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
     pub domain_match: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
     pub carrier: FnSet,
     pub proof_steps: Vec<ExecStmtResult>,
@@ -114,7 +116,8 @@ pub enum ExecByFnExtensionStmtFailed {
 }
 
 pub struct FnExtensionDomainCandidateFailure {
-    pub right_source: crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+    pub right_source:
+        crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
     pub result: crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchFailure,
 }
 
@@ -320,8 +323,15 @@ pub struct ExecReleaseThmStmtSuccess {
 }
 
 pub enum ExecReleaseThmStmtFailed {
-    BuiltinArity { theorem: crate::builtin_theorem::BuiltinTheoremId, expected: usize, actual: usize },
-    BuiltinShape { theorem: crate::builtin_theorem::BuiltinTheoremId, message: String },
+    BuiltinArity {
+        theorem: crate::builtin_theorem::BuiltinTheoremId,
+        expected: usize,
+        actual: usize,
+    },
+    BuiltinShape {
+        theorem: crate::builtin_theorem::BuiltinTheoremId,
+        message: String,
+    },
     ThmNotFound(String),
     Shape(String),
     Type {
@@ -385,9 +395,20 @@ pub struct ExecByThmStmtSuccess {
 
 pub enum ExecByThmStmtFailed {
     Release(ExecReleaseThmStmtFailed),
-    NotReturned { theorem: String, fact: Fact, conclusions: Vec<Fact> },
-    Selected { theorem: String, fact: Fact, result: VerifyFactResult },
-    Store { theorem: String, message: String },
+    NotReturned {
+        theorem: String,
+        fact: Fact,
+        conclusions: Vec<Fact>,
+    },
+    Selected {
+        theorem: String,
+        fact: Fact,
+        result: VerifyFactResult,
+    },
+    Store {
+        theorem: String,
+        message: String,
+    },
 }
 
 impl ExecByThmStmtResult {
@@ -494,7 +515,6 @@ impl ExecByStrongInducStmtResult {
         matches!(self, Self::Failed(_))
     }
 }
-
 
 // ---------------------------------------------------------------------------
 // enumerate finite_set / for / enumerate range / closed_range as cases

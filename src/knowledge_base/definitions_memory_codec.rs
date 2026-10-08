@@ -56,7 +56,11 @@ fn encode_definition_memory(defs: &DefinitionMemory) -> Result<JsonValue, KbCode
         predicates.push(JsonValue::parse(&store_def_prop(stmt)?)?);
     }
     let mut abstracts = Vec::new();
-    let mut abs_keys: Vec<_> = defs.abstract_predicate_definitions.keys().cloned().collect();
+    let mut abs_keys: Vec<_> = defs
+        .abstract_predicate_definitions
+        .keys()
+        .cloned()
+        .collect();
     abs_keys.sort();
     for name in abs_keys {
         let stmt = defs
@@ -90,10 +94,7 @@ fn encode_definition_memory(defs: &DefinitionMemory) -> Result<JsonValue, KbCode
         axioms.push(JsonValue::parse(&store_axiom(stmt)?)?);
     }
     Ok(JsonValue::object_from(vec![
-        (
-            "kind".into(),
-            JsonValue::String("definition_memory".into()),
-        ),
+        ("kind".into(), JsonValue::String("definition_memory".into())),
         ("identifiers".into(), JsonValue::Array(identifiers)),
         ("predicate_definitions".into(), JsonValue::Array(predicates)),
         (
@@ -124,9 +125,7 @@ fn decode_definition_memory(value: &JsonValue) -> Result<DefinitionMemory, KbCod
                 n,
                 _,
             ))
-            | crate::exec_env::StoredIdentifierDefinition::HaveFnEqual((n, _)) => {
-                n.clone()
-            }
+            | crate::exec_env::StoredIdentifierDefinition::HaveFnEqual((n, _)) => n.clone(),
             other => {
                 return Err(KbCodecError::Unsupported(format!(
                     "unexpected identifier after load: {other:?}"
@@ -160,7 +159,11 @@ fn decode_definition_memory(value: &JsonValue) -> Result<DefinitionMemory, KbCod
 }
 
 fn reject_unsupported_maps(defs: &DefinitionMemory) -> Result<(), KbCodecError> {
-    if defs.structure_definitions.values().any(|definition| !definition.equivalent_facts.is_empty()) {
+    if defs
+        .structure_definitions
+        .values()
+        .any(|definition| !definition.equivalent_facts.is_empty())
+    {
         return Err(KbCodecError::Unsupported(
             "struct definition laws require source execution; definitions-only KB does not replay published foralls".into(),
         ));

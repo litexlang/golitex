@@ -1,6 +1,6 @@
 //! Match `x - 1` surfaces used by natural-predecessor builtins.
 
-use crate::ast::obj::{Number, Obj, Sub, ArithmeticOperator, Literal};
+use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, Sub};
 
 // `obj` is exactly `base - 1` (normalized decimal one).
 pub(crate) fn match_sub_one<'a>(obj: &'a Obj) -> Option<&'a Obj> {

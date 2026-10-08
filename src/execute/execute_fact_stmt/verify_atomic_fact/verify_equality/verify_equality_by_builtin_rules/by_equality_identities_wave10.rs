@@ -80,12 +80,14 @@ impl Runtime {
                 ));
             }
             if let Some(p) = self.try_reduce_empty(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave10BuiltinRuleProof::ReduceEmpty(p)));
-            }
-            if let Some(p) = self.try_sum_empty_range(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave10BuiltinRuleProof::SumEmptyRange(
+                return Ok(Some(EqualityIdentitiesWave10BuiltinRuleProof::ReduceEmpty(
                     p,
                 )));
+            }
+            if let Some(p) = self.try_sum_empty_range(left, right, child.clone())? {
+                return Ok(Some(
+                    EqualityIdentitiesWave10BuiltinRuleProof::SumEmptyRange(p),
+                ));
             }
             if let Some(p) = self.try_product_empty_range(left, right, child.clone())? {
                 return Ok(Some(

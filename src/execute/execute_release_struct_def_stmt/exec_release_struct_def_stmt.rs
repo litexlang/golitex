@@ -72,7 +72,9 @@ impl Runtime {
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: stmt.obj.clone(),
-            set: Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj.clone())),
+            set: Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                struct_obj.clone(),
+            )),
             line_file: Some(stmt.line_file.clone()),
         }));
         let verify_state = VerifyState::top_level();
@@ -83,7 +85,11 @@ impl Runtime {
             ));
         }
 
-        match self.release_one_struct_layer(&stmt.obj, &struct_obj, crate::execute::execute_fact_stmt::VerifyState::top_level())? {
+        match self.release_one_struct_layer(
+            &stmt.obj,
+            &struct_obj,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )? {
             ReleaseOneStructLayerResult::Success(release) => Ok(
                 ExecReleaseStructDefStmtResult::Success(ExecReleaseStructDefStmtSuccess {
                     statement: stmt.clone(),

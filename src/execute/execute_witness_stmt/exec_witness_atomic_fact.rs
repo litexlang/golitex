@@ -76,7 +76,10 @@ impl Runtime {
         stmt: &WitnessAtomicFact,
     ) -> RuntimeResult<ExecWitnessAtomicFactStmtResult> {
         let prop_name = stmt.atomic_fact.predicate.local_name();
-        if self.def_abstract_prop_visible(&stmt.atomic_fact.predicate).is_some() {
+        if self
+            .def_abstract_prop_visible(&stmt.atomic_fact.predicate)
+            .is_some()
+        {
             return Ok(ExecWitnessAtomicFactStmtResult::Failed(
                 ExecWitnessAtomicFactStmtFailed::AbstractProp,
             ));
@@ -109,10 +112,9 @@ impl Runtime {
             ));
         }
 
-        let type_facts = match self.type_facts_for_typed_arguments(
-            &definition.typed_parameters,
-            &stmt.atomic_fact.body,
-        ) {
+        let type_facts = match self
+            .type_facts_for_typed_arguments(&definition.typed_parameters, &stmt.atomic_fact.body)
+        {
             Ok(facts) => facts,
             Err(message) => {
                 return Ok(ExecWitnessAtomicFactStmtResult::Failed(
@@ -125,7 +127,10 @@ impl Runtime {
             let check = self.verify_fact(fact, VerifyState::top_level())?;
             if check.is_failed() {
                 return Ok(ExecWitnessAtomicFactStmtResult::Failed(
-                    ExecWitnessAtomicFactStmtFailed::PropArgumentType { index, result: check },
+                    ExecWitnessAtomicFactStmtFailed::PropArgumentType {
+                        index,
+                        result: check,
+                    },
                 ));
             }
             prop_argument_type_checks.push(check);
@@ -154,23 +159,27 @@ impl Runtime {
             }
         };
 
-        let (ambient, proof_steps, obligations, local_env) =
-            match self.run_witness_exist_with_proof(
+        let (ambient, proof_steps, obligations, local_env) = match self
+            .run_witness_exist_with_proof(
                 &projected_exist,
                 &stmt.witnesses,
                 &stmt.proof,
-             crate::execute::execute_fact_stmt::VerifyState::top_level())? {
-                Ok(v) => v,
-                Err(failed) => {
-                    return Ok(ExecWitnessAtomicFactStmtResult::Failed(
-                        ExecWitnessAtomicFactStmtFailed::ExistCheck(failed),
-                    ));
-                }
-            };
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )? {
+            Ok(v) => v,
+            Err(failed) => {
+                return Ok(ExecWitnessAtomicFactStmtResult::Failed(
+                    ExecWitnessAtomicFactStmtFailed::ExistCheck(failed),
+                ));
+            }
+        };
 
         let atomic_as_fact =
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(stmt.atomic_fact.clone()));
-        let store_and_infer_result = self.store_fact_and_infer(&atomic_as_fact, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let store_and_infer_result = self.store_fact_and_infer(
+            &atomic_as_fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
 
         Ok(ExecWitnessAtomicFactStmtResult::Success(
             ExecWitnessAtomicFactStmtSuccessResult {

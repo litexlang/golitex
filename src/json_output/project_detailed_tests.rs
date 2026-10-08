@@ -95,19 +95,28 @@ fn detailed_fact_success_chinese_keys() {
 fn detailed_known_or_preserves_each_argument_equality_path() {
     let mut rt = runtime_en();
     // Unit premises keep both branches unknown while testing stored-Or reuse.
-    assert!(rt.run_litex_code(
-        "have a, b, c R\ntrust a > 0 or a < 0\ntrust a = b\ntrust b = c"
-    ).unwrap().success);
+    assert!(
+        rt.run_litex_code("have a, b, c R\ntrust a > 0 or a < 0\ntrust a = b\ntrust b = c")
+            .unwrap()
+            .success
+    );
     let result = exec_one(&mut rt, "c > 0 or c < 0");
     assert!(!result.is_failed());
     let json = project_stmt_detailed(&result, &rt);
     let searched = obj_field(obj_field(&json, "verify"), "searched_proof");
-    assert_eq!(obj_field(searched, "type").as_str().ok(), Some("by_known_or"));
+    assert_eq!(
+        obj_field(searched, "type").as_str().ok(),
+        Some("by_known_or")
+    );
     let equalities = obj_field(searched, "why_parameters_of_known_fact_are_equal_to_givens")
-        .as_array().unwrap();
+        .as_array()
+        .unwrap();
     assert_eq!(equalities.len(), 4);
     for index in [0, 2] {
-        assert_eq!(obj_field(&equalities[index], "kind").as_str().ok(), Some("known_path"));
+        assert_eq!(
+            obj_field(&equalities[index], "kind").as_str().ok(),
+            Some("known_path")
+        );
         let path = obj_field(&equalities[index], "path").as_array().unwrap();
         assert_eq!(path.len(), 2);
         for (edge, expected) in path.iter().zip(["a = b", "b = c"]) {
@@ -116,7 +125,10 @@ fn detailed_known_or_preserves_each_argument_equality_path() {
         }
     }
     for index in [1, 3] {
-        assert_eq!(obj_field(&equalities[index], "kind").as_str().ok(), Some("same_ir"));
+        assert_eq!(
+            obj_field(&equalities[index], "kind").as_str().ok(),
+            Some("same_ir")
+        );
     }
 }
 
@@ -159,9 +171,24 @@ fn detailed_by_def_preserves_definition_route() {
     assert_eq!(obj_field(&detailed, "success"), &JsonValue::Bool(true));
     let proof = obj_field(&detailed, "proof");
     let searched = obj_field(proof, "searched_proof");
-    assert_eq!(obj_field(searched, "type").as_str().ok(), Some("by_definition"));
-    assert_eq!(obj_field(searched, "requirement_facts").as_array().unwrap().len(), 2);
-    assert_eq!(obj_field(searched, "proof_of_requirement_facts").as_array().unwrap().len(), 2);
+    assert_eq!(
+        obj_field(searched, "type").as_str().ok(),
+        Some("by_definition")
+    );
+    assert_eq!(
+        obj_field(searched, "requirement_facts")
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(
+        obj_field(searched, "proof_of_requirement_facts")
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
     assert!(json_has_no_local_env(&detailed));
 
     let result = exec_one(&mut rt, "by def 1 $in {x R: x > 0}");
@@ -176,32 +203,89 @@ fn detailed_atomic_builtin_rewrite_preserves_citation_and_residual() {
     let code = "forall n N:\n    n=16\n    =>:\n        $prime(n+1)\n";
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
         let mut rt = Runtime::new(LaunchCommand::Eval {
-            code: code.to_string(), session: false, strict: true, language,
+            code: code.to_string(),
+            session: false,
+            strict: true,
+            language,
         });
         let run = rt.run_litex_code(code).expect("run");
         assert!(run.success);
         let detailed = project_run_detailed(&run, &rt, "eval", None);
         let english = language == OutputLanguage::English;
-        let statements = obj_field(&detailed, if english { "statement_results" } else { "语句结果" })
-            .as_array().unwrap();
+        let statements = obj_field(
+            &detailed,
+            if english {
+                "statement_results"
+            } else {
+                "语句结果"
+            },
+        )
+        .as_array()
+        .unwrap();
         let verify = obj_field(&statements[0], if english { "verify" } else { "验证" });
         let then = obj_field(verify, "proved_then_facts").as_array().unwrap();
         let verified = obj_field(&then[0], "verify_result");
-        let rewrite = obj_field(verified, if english { "searched_proof" } else { "搜索证明" });
-        assert_eq!(obj_field(rewrite, if english { "type" } else { "类型" }).as_str().ok(), Some("by_builtin_rewrite"));
-        assert_eq!(obj_field(rewrite, if english { "rule" } else { "规则" }).as_str().ok(), Some("ClosedNumericEqualSubstitution"));
-        assert!(obj_field(rewrite, "rewritten_fact").as_str().unwrap().contains("16 + 1"));
-        let cites = obj_field(rewrite, "cited_equal_fact_ids").as_array().unwrap();
+        let rewrite = obj_field(
+            verified,
+            if english {
+                "searched_proof"
+            } else {
+                "搜索证明"
+            },
+        );
+        assert_eq!(
+            obj_field(rewrite, if english { "type" } else { "类型" })
+                .as_str()
+                .ok(),
+            Some("by_builtin_rewrite")
+        );
+        assert_eq!(
+            obj_field(rewrite, if english { "rule" } else { "规则" })
+                .as_str()
+                .ok(),
+            Some("ClosedNumericEqualSubstitution")
+        );
+        assert!(obj_field(rewrite, "rewritten_fact")
+            .as_str()
+            .unwrap()
+            .contains("16 + 1"));
+        let cites = obj_field(rewrite, "cited_equal_fact_ids")
+            .as_array()
+            .unwrap();
         assert_eq!(cites.len(), 1);
         let dom = obj_field(verify, "assumed_dom_facts").as_array().unwrap();
-        let dom_store = obj_field(&dom[0], if english { "store_and_infer" } else { "存储与推理" });
-        let stored = obj_field(dom_store, if english { "stores" } else { "存储" }).as_array().unwrap();
+        let dom_store = obj_field(
+            &dom[0],
+            if english {
+                "store_and_infer"
+            } else {
+                "存储与推理"
+            },
+        );
+        let stored = obj_field(dom_store, if english { "stores" } else { "存储" })
+            .as_array()
+            .unwrap();
         let id_key = if english { "fact_id" } else { "命题编号" };
         assert_eq!(obj_field(&cites[0], id_key), obj_field(&stored[0], id_key));
         let residual = obj_field(rewrite, "proof_of_rewritten_fact");
-        assert_eq!(obj_field(residual, if english { "success" } else { "成功" }), &JsonValue::Bool(true));
-        let child = obj_field(residual, if english { "searched_proof" } else { "搜索证明" });
-        assert_eq!(obj_field(child, if english { "rule" } else { "规则" }).as_str().ok(), Some("PrimeByComputation"));
+        assert_eq!(
+            obj_field(residual, if english { "success" } else { "成功" }),
+            &JsonValue::Bool(true)
+        );
+        let child = obj_field(
+            residual,
+            if english {
+                "searched_proof"
+            } else {
+                "搜索证明"
+            },
+        );
+        assert_eq!(
+            obj_field(child, if english { "rule" } else { "规则" })
+                .as_str()
+                .ok(),
+            Some("PrimeByComputation")
+        );
         assert_eq!(obj_field(child, "resolved_value").as_str().ok(), Some("17"));
         assert!(json_has_no_local_env(&detailed));
     }

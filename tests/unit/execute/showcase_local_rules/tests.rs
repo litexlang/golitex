@@ -48,7 +48,10 @@ fn cosine_integer_offset_positive_and_evidence() {
     assert!(detailed.contains("proof_of_requirement_facts"));
     // Cancellation requires a nonzero denominator. Its implementation route
     // may change; acceptance and the missing-premise control own this contract.
-    let guarded = check("have a R:\n    a != 0\na*pi/a=pi\ncos(a*pi/a+pi/2)=cos(pi+pi/2)=0", true);
+    let guarded = check(
+        "have a R:\n    a != 0\na*pi/a=pi\ncos(a*pi/a+pi/2)=cos(pi+pi/2)=0",
+        true,
+    );
     assert!(guarded.contains("a != 0"));
     check("have a R\na*pi/a=pi", false);
     check("0 = cos(3*pi/2)", true);
@@ -133,16 +136,28 @@ fn run_examples_power_product_same_base_unit_exponent_directions_and_domains() {
                 &format!("forall x {base_carrier}, n {exponent_carrier}:\n    {goal}\n"),
                 true,
             );
-            assert!(detailed.contains("PowerProductSameBase"), "{goal}\n{detailed}");
+            assert!(
+                detailed.contains("PowerProductSameBase"),
+                "{goal}\n{detailed}"
+            );
         }
     }
     // The bare base may itself be a power or another compound expression.
-    check("forall x C, n N:\n    (x^2)^(n + 1) = (x^2)^n * x^2\n", true);
-    check("forall x, y C, n N:\n    (x + y)^(n + 1) = (x + y)^n * (x + y)\n", true);
+    check(
+        "forall x C, n N:\n    (x^2)^(n + 1) = (x^2)^n * x^2\n",
+        true,
+    );
+    check(
+        "forall x, y C, n N:\n    (x + y)^(n + 1) = (x + y)^n * (x + y)\n",
+        true,
+    );
     check("forall x C:\n    x^(1 + 1) = x * x\n", true);
     check("forall n N:\n    0^(n + 1) = 0^n * 0\n", true);
     check("0^(0 + 1) = 0^0 * 0\n", true);
-    check("forall x R, n N:\n    x^(n + 1) = x^n * x^1 = x^n * x\n", true);
+    check(
+        "forall x R, n N:\n    x^(n + 1) = x^n * x^1 = x^n * x\n",
+        true,
+    );
     for source in [
         include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/power_product_same_base_unit_exponent.lit"),
         include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/natural_power_laws.lit"),
@@ -162,10 +177,13 @@ fn power_product_same_base_unit_exponent_retains_actual_requirements() {
 
     for (base_carrier, exponent_carrier, requirement_count) in [("C", "N", 3), ("C*", "Z", 4)] {
         let mut rt = runtime();
-        let code = format!("have x {base_carrier}\nhave n {exponent_carrier}\nx^(n + 1) = x^n * x\n");
+        let code =
+            format!("have x {base_carrier}\nhave n {exponent_carrier}\nx^(n + 1) = x^n * x\n");
         let run = rt.run_litex_code(&code).unwrap();
         assert!(run.success, "{code}");
-        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = run.statement_results.last().unwrap() else {
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+            run.statement_results.last().unwrap()
+        else {
             panic!("successful equality statement");
         };
         let VerifyFactResult::Equality(result) = &statement.verify_result else {
@@ -174,11 +192,17 @@ fn power_product_same_base_unit_exponent_retains_actual_requirements() {
         let VerifyEqualityResult::Success(proof) = &**result else {
             panic!("successful equality proof");
         };
-        let EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::PowerProductSameBase(rule)) = &proof.searched_proof else {
+        let EqualFactSearchedProof::ByBuiltinRule(
+            EqualitySearchProofByBuiltinRule::PowerProductSameBase(rule),
+        ) = &proof.searched_proof
+        else {
             panic!("actual common-base power rule");
         };
         assert_eq!(rule.proof_of_requirement_facts.len(), requirement_count);
-        assert!(rule.proof_of_requirement_facts.iter().all(|proof| !proof.is_failed()));
+        assert!(rule
+            .proof_of_requirement_facts
+            .iter()
+            .all(|proof| !proof.is_failed()));
     }
 }
 
@@ -202,10 +226,18 @@ fn power_product_same_base_unit_exponent_rejects_false_and_undefined_goals() {
 #[test]
 fn integer_power_laws_require_nonzero_bases_and_integer_exponents() {
     let detailed = check(
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
-            "/examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit")), true,
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/integer_power_laws.lit"
+        )),
+        true,
     );
-    for rule in ["PowerProductSameBase", "PowerOfPower", "PowerOfProduct", "proof_of_requirement_facts"] {
+    for rule in [
+        "PowerProductSameBase",
+        "PowerOfPower",
+        "PowerOfProduct",
+        "proof_of_requirement_facts",
+    ] {
         assert!(detailed.contains(rule), "{rule}");
     }
     for code in [
@@ -214,14 +246,21 @@ fn integer_power_laws_require_nonzero_bases_and_integer_exponents() {
         "forall x R*, m,n R:\n    (x^m)^n=x^(m*n)",
         "forall x C*, m,n Z:\n    (x^m)^n=x^(m+n)",
         "0^(-1)=1",
-    ] { check(code, false); }
+    ] {
+        check(code, false);
+    }
     check("forall x R, m,n N:\n    (x^m)^n=x^(m*n)", true);
 }
 
 #[test]
 fn symbolic_positive_power_cancellation_keeps_exponent_guards() {
-    let detailed = check(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
-        "/examples/proof_nodes/equal/by_builtin_rule/positive_power_cancellation_symbolic.lit")), true);
+    let detailed = check(
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/proof_nodes/equal/by_builtin_rule/positive_power_cancellation_symbolic.lit"
+        )),
+        true,
+    );
     assert!(detailed.contains("PositivePowerCancellation"));
     assert!(detailed.contains("requirements"));
     for code in [
@@ -229,8 +268,13 @@ fn symbolic_positive_power_cancellation_keeps_exponent_guards() {
         "forall x,y R+, n R*:\n    x^n=y^n\n    =>:\n        x=y",
         "forall x,y R*:\n    x^2=y^2\n    =>:\n        x=y",
         "forall x,y R+:\n    x^0=y^0\n    =>:\n        x=y",
-    ] { check(code, false); }
-    check("forall x,y R+:\n    x^(-2)=y^(-2)\n    =>:\n        x=y", true);
+    ] {
+        check(code, false);
+    }
+    check(
+        "forall x,y R+:\n    x^(-2)=y^(-2)\n    =>:\n        x=y",
+        true,
+    );
 }
 
 #[test]
@@ -277,10 +321,7 @@ fn local_strategies_respect_existing_depth_boundary() {
         .unwrap()
         .is_none());
     let eq = equal(&mut rt, "(1+3,2+4)=(4,6)");
-    assert!(rt
-        .search_equal_fact_proof(&eq, depth)
-        .unwrap()
-        .is_some());
+    assert!(rt.search_equal_fact_proof(&eq, depth).unwrap().is_some());
     let eq = equal(&mut rt, "(1,2)(1)+(3,4)(1)=1+3");
     assert!(rt
         .search_equal_fact_proof(&eq, depth.capped_at(VerifyStateLevel::Direct))
@@ -289,9 +330,17 @@ fn local_strategies_respect_existing_depth_boundary() {
     // Constructor matching at SP can now calculate its Direct leaves. Direct
     // itself still cannot decompose the tuple.
     let eq = equal(&mut rt, "(1+3,2+4)=(4,6)");
-    assert!(rt.search_equal_fact_proof(&eq, VerifyState::new(VerifyStateLevel::Direct)).unwrap().is_none());
+    assert!(rt
+        .search_equal_fact_proof(&eq, VerifyState::new(VerifyStateLevel::Direct))
+        .unwrap()
+        .is_none());
     assert!(!rt
-        .verify_equal_fact(&eq, VerifyState::top_level().capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty))
+        .verify_equal_fact(
+            &eq,
+            VerifyState::top_level().capped_at(
+                crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty
+            )
+        )
         .unwrap()
         .is_failed());
 }

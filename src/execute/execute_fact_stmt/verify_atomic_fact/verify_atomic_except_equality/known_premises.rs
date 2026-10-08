@@ -136,8 +136,11 @@ impl Runtime {
             line_file: None,
         });
         let searched = self.search_atomic_except_equality_fact_proof(&fact, state)?;
-        Ok(searched.map(|searched_proof| AtomicExceptEqualityFactKnownProof {
-            fact, searched_proof: Box::new(searched_proof),
-        }))
+        Ok(
+            searched.map(|searched_proof| AtomicExceptEqualityFactKnownProof {
+                fact,
+                searched_proof: Box::new(searched_proof),
+            }),
+        )
     }
 }

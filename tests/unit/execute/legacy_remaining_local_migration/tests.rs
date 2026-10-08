@@ -147,15 +147,15 @@ const EVIDENCE_CASES: &[(&str,&str,&[&str])] = &[
 
 #[test]
 fn run_examples_legacy_remaining_local_migration() {
-    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     for path in EXAMPLES {
-        let source=std::fs::read_to_string(root.join(path)).unwrap();
-        check(&mut runtime(OutputLanguage::English),&source,true);
+        let source = std::fs::read_to_string(root.join(path)).unwrap();
+        check(&mut runtime(OutputLanguage::English), &source, true);
     }
-    assert_eq!(EXAMPLES.len(),50);
-    println!("checked {} maintained examples",EXAMPLES.len());
+    assert_eq!(EXAMPLES.len(), 50);
+    println!("checked {} maintained examples", EXAMPLES.len());
 }
-const EXAMPLES:&[&str]=&[
+const EXAMPLES: &[&str] = &[
     "examples/proof_nodes/equal/by_builtin_rule/factorial_predecessor.lit",
     "examples/proof_nodes/equal/by_builtin_rule/exp_injective.lit",
     "examples/proof_nodes/equal/by_builtin_rule/ln_injective.lit",

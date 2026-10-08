@@ -6,10 +6,11 @@ use crate::rational_expression::gcd_decimal_str_and_normalize;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
-    CoprimeByComputation, CoprimeFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
-    NotCoprimeByComputation, NotCoprimeFactSearchProofByBuiltinRule,
-    NotNormalAtomicFactSearchProofByBuiltinRule, NotPrimeByComputation,
-    NotPrimeFactSearchProofByBuiltinRule, PrimeByComputation, PrimeFactSearchProofByBuiltinRule,
+    CoprimeByComputation, CoprimeFactSearchProofByBuiltinRule,
+    NormalAtomicFactSearchProofByBuiltinRule, NotCoprimeByComputation,
+    NotCoprimeFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
+    NotPrimeByComputation, NotPrimeFactSearchProofByBuiltinRule, PrimeByComputation,
+    PrimeFactSearchProofByBuiltinRule,
 };
 
 impl Runtime {

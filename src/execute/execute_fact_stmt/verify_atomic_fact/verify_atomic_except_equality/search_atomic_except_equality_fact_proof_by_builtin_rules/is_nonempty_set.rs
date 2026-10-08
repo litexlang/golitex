@@ -1,5 +1,5 @@
 use crate::ast::fact::IsNonemptySetFact;
-use crate::ast::obj::{Obj, StandardSet, SetFormer, SetOperator};
+use crate::ast::obj::{Obj, SetFormer, SetOperator, StandardSet};
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 

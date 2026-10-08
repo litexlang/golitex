@@ -24,9 +24,16 @@ pub enum ExecReleaseObjDefStmtFailed {
 
 // Mirrored from StoredIdentifierDefinition (minus ParamType).
 pub enum ReleaseObjDefByKind {
-    LetObj { equal: Fact },
-    HaveObjInNonemptySetOrParamType { type_fact: Fact },
-    HaveObjEqual { type_fact: Fact, equal: Fact },
+    LetObj {
+        equal: Fact,
+    },
+    HaveObjInNonemptySetOrParamType {
+        type_fact: Fact,
+    },
+    HaveObjEqual {
+        type_fact: Fact,
+        equal: Fact,
+    },
     HaveObjByExistFacts {
         type_fact: Fact,
         body_facts: Vec<Fact>,
@@ -84,7 +91,9 @@ impl Runtime {
         &mut self,
         stmt: &ReleaseObjDefStmt,
     ) -> RuntimeResult<ExecReleaseObjDefStmtResult> {
-        let Some(looked_up) = self.stored_identifier_definition_visible(&stmt.name).cloned()
+        let Some(looked_up) = self
+            .stored_identifier_definition_visible(&stmt.name)
+            .cloned()
         else {
             return Ok(ExecReleaseObjDefStmtResult::Failed(
                 ExecReleaseObjDefStmtFailed::DefinitionNotFound {
@@ -98,13 +107,15 @@ impl Runtime {
             Ok(built) => built,
             Err(failed) => {
                 return Ok(ExecReleaseObjDefStmtResult::Failed(map_build_fail(
-                    &stmt.name,
-                    failed,
+                    &stmt.name, failed,
                 )));
             }
         };
 
-        let store_and_infer = self.store_built_release_facts(&built, crate::execute::execute_fact_stmt::VerifyState::top_level())?;
+        let store_and_infer = self.store_built_release_facts(
+            &built,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
         let released = finalize_kind(is_induc, built.kind);
 
         Ok(ExecReleaseObjDefStmtResult::Success(
@@ -124,19 +135,17 @@ fn map_build_fail(
 ) -> ExecReleaseObjDefStmtFailed {
     match failed {
         BuildReleaseFactsFailed::ParamTypeNotReleasable => {
-            ExecReleaseObjDefStmtFailed::ParamTypeNotReleasable {
-                name: name.clone(),
-            }
+            ExecReleaseObjDefStmtFailed::ParamTypeNotReleasable { name: name.clone() }
         }
         BuildReleaseFactsFailed::NameNotInDefinition => {
-            ExecReleaseObjDefStmtFailed::NameNotInDefinition {
+            ExecReleaseObjDefStmtFailed::NameNotInDefinition { name: name.clone() }
+        }
+        BuildReleaseFactsFailed::FlattenInduc(reason) => {
+            ExecReleaseObjDefStmtFailed::FlattenInduc {
                 name: name.clone(),
+                reason,
             }
         }
-        BuildReleaseFactsFailed::FlattenInduc(reason) => ExecReleaseObjDefStmtFailed::FlattenInduc {
-            name: name.clone(),
-            reason,
-        },
         BuildReleaseFactsFailed::Instantiate(reason) => ExecReleaseObjDefStmtFailed::Instantiate {
             name: name.clone(),
             reason,

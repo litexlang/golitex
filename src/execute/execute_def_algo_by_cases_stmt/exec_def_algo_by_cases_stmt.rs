@@ -7,14 +7,11 @@
 
 use crate::ast::stmt::{DefAlgoByCasesStmt, HaveFnEqualCaseByCaseStmt};
 use crate::exec_env::StoredDefAlgo;
-use crate::execute::execute_have_fn_equal_case_by_case_stmt::{
-    ExecHaveFnEqualCaseByCaseStmtResult,
-};
+use crate::execute::execute_have_fn_equal_case_by_case_stmt::ExecHaveFnEqualCaseByCaseStmtResult;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::result::{
-    ExecDefAlgoByCasesStmtFailed, ExecDefAlgoByCasesStmtResult,
-    ExecDefAlgoByCasesStmtSuccessResult,
+    ExecDefAlgoByCasesStmtFailed, ExecDefAlgoByCasesStmtResult, ExecDefAlgoByCasesStmtSuccessResult,
 };
 
 pub fn exec_def_algo_by_cases_stmt(
@@ -36,11 +33,9 @@ pub fn exec_def_algo_by_cases_stmt(
     };
 
     match runtime.exec_have_fn_equal_case_by_case_stmt(&have_stmt)? {
-        ExecHaveFnEqualCaseByCaseStmtResult::Failed(failed) => {
-            Ok(ExecDefAlgoByCasesStmtResult::Failed(
-                ExecDefAlgoByCasesStmtFailed::DefineFn(failed),
-            ))
-        }
+        ExecHaveFnEqualCaseByCaseStmtResult::Failed(failed) => Ok(
+            ExecDefAlgoByCasesStmtResult::Failed(ExecDefAlgoByCasesStmtFailed::DefineFn(failed)),
+        ),
         ExecHaveFnEqualCaseByCaseStmtResult::Success(define_fn) => {
             runtime
                 .top_exec_env_mut()

@@ -390,27 +390,27 @@ impl ProgramExtractor {
                 Box::new(self.extract_expression(&value.right, params, line_file)?),
             ),
             Obj::ArithmeticOperator(ArithmeticOperator::Floor(value)) => {
-                ExtractedExpressionKind::Floor(Box::new(self.extract_expression(
-                    &value.arg,
-                    params,
-                    line_file,
-                )?))
+                ExtractedExpressionKind::Floor(Box::new(
+                    self.extract_expression(&value.arg, params, line_file)?,
+                ))
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Ceil(value)) => {
-                ExtractedExpressionKind::Ceil(Box::new(self.extract_expression(
-                    &value.arg,
-                    params,
-                    line_file,
-                )?))
+                ExtractedExpressionKind::Ceil(Box::new(
+                    self.extract_expression(&value.arg, params, line_file)?,
+                ))
             }
-            Obj::ArithmeticOperator(ArithmeticOperator::Min(value)) => ExtractedExpressionKind::Min(
-                Box::new(self.extract_expression(&value.left, params, line_file)?),
-                Box::new(self.extract_expression(&value.right, params, line_file)?),
-            ),
-            Obj::ArithmeticOperator(ArithmeticOperator::Max(value)) => ExtractedExpressionKind::Max(
-                Box::new(self.extract_expression(&value.left, params, line_file)?),
-                Box::new(self.extract_expression(&value.right, params, line_file)?),
-            ),
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(value)) => {
+                ExtractedExpressionKind::Min(
+                    Box::new(self.extract_expression(&value.left, params, line_file)?),
+                    Box::new(self.extract_expression(&value.right, params, line_file)?),
+                )
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(value)) => {
+                ExtractedExpressionKind::Max(
+                    Box::new(self.extract_expression(&value.left, params, line_file)?),
+                    Box::new(self.extract_expression(&value.right, params, line_file)?),
+                )
+            }
             Obj::ExpLogOperator(ExpLogOperator::Exp(value)) => ExtractedExpressionKind::Exp(
                 Box::new(self.extract_expression(&value.arg, params, line_file)?),
             ),
@@ -418,20 +418,18 @@ impl ProgramExtractor {
                 Box::new(self.extract_expression(&value.arg, params, line_file)?),
             ),
             Obj::ArithmeticOperator(ArithmeticOperator::Sign(value)) => {
-                ExtractedExpressionKind::Sign(Box::new(self.extract_expression(
-                    &value.arg,
-                    params,
-                    line_file,
-                )?))
+                ExtractedExpressionKind::Sign(Box::new(
+                    self.extract_expression(&value.arg, params, line_file)?,
+                ))
             }
             Obj::IntegerOperator(IntegerOperator::Factorial(value)) => {
-                ExtractedExpressionKind::Factorial(Box::new(self.extract_expression(
-                    &value.arg,
-                    params,
-                    line_file,
-                )?))
+                ExtractedExpressionKind::Factorial(Box::new(
+                    self.extract_expression(&value.arg, params, line_file)?,
+                ))
             }
-            Obj::Identifier(identifier) => self.extract_identifier(identifier, params, line_file)?,
+            Obj::Identifier(identifier) => {
+                self.extract_identifier(identifier, params, line_file)?
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Add(value)) => self
                 .extract_binary_expression(
                     &value.left,
@@ -607,11 +605,7 @@ pub(super) fn code_extraction_error(
     line_file: &SourceLine,
     msg: impl Into<String>,
 ) -> RuntimeError {
-    RuntimeError::Unsupported(format!(
-        "line {}: {}",
-        line_file.line,
-        msg.into()
-    ))
+    RuntimeError::Unsupported(format!("line {}: {}", line_file.line, msg.into()))
 }
 
 fn reject_unsupported_have_fn_equal(stmt: &HaveFnEqualStmt) -> RuntimeResult<()> {
@@ -678,11 +672,7 @@ fn reject_unsupported_fact(fact: &Fact) -> RuntimeResult<()> {
 }
 
 fn code_extraction_error_fact(fact: &Fact, msg: impl Into<String>) -> RuntimeError {
-    RuntimeError::Unsupported(format!(
-        "fact `{}`: {}",
-        fact.readable_string(),
-        msg.into()
-    ))
+    RuntimeError::Unsupported(format!("fact `{}`: {}", fact.readable_string(), msg.into()))
 }
 
 fn validate_real_function_signature(

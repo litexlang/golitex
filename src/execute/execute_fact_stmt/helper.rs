@@ -2,7 +2,9 @@ use crate::ast::fact::{EqualFact, Fact};
 use crate::ast::obj::Obj;
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{EqualFactSearchedProof, KnownEqualityPathProof};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
+    EqualFactSearchedProof, KnownEqualityPathProof,
+};
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 
@@ -21,7 +23,9 @@ impl Runtime {
         let key = object.ir();
         let mut values = vec![(object.clone(), Vec::new())];
         for property in self.known_special_properties_of(object) {
-            let SpecialProperty::Equality(fact) = property else { continue; };
+            let SpecialProperty::Equality(fact) = property else {
+                continue;
+            };
             let value = if fact.left.ir() == key {
                 fact.right
             } else if fact.right.ir() == key {
@@ -44,7 +48,8 @@ impl Runtime {
         right: &Obj,
     ) -> Option<Vec<(Obj, Obj, FactId)>> {
         let right_key = right.ir();
-        self.exact_property_object_values(left).into_iter()
+        self.exact_property_object_values(left)
+            .into_iter()
             .find_map(|(value, path)| (value.ir() == right_key).then_some(path))
     }
 
@@ -57,13 +62,17 @@ impl Runtime {
     ) -> Option<EqualFactSearchedProof> {
         let comparison = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: left.clone(), right: right.clone(), line_file: None,
+            left: left.clone(),
+            right: right.clone(),
+            line_file: None,
         };
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
             return Some(proof.into());
         }
         let path = self.exact_property_equality_path(left, right)?;
-        Some(EqualFactSearchedProof::ByEquivalenceClass(KnownEqualityPathProof::new(path).into()))
+        Some(EqualFactSearchedProof::ByEquivalenceClass(
+            KnownEqualityPathProof::new(path).into(),
+        ))
     }
 
     // The stage dispatcher has already restricted this premise's permissions.

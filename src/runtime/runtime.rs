@@ -35,7 +35,7 @@ pub struct Runtime {
 /// One parse layer's plain names → [`IdentifierId`].
 /// Inner scopes must not reuse a visible outer plain name.
 pub struct ParseScope {
-    pub plain: HashMap<String, IdentifierId>
+    pub plain: HashMap<String, IdentifierId>,
 }
 
 /// Global monotonic id counters owned by `Runtime`.
@@ -44,7 +44,7 @@ pub struct GlobalIds {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
     next_prop_rewrite_property_id: PropRewritePropertyId,
-    next_identifier_id: IdentifierId
+    next_identifier_id: IdentifierId,
 }
 
 impl Runtime {
@@ -56,12 +56,14 @@ impl Runtime {
             LaunchCommand::File { .. }
             | LaunchCommand::Repository { .. }
             | LaunchCommand::ExtractExecutableCode {
-                input: crate::launch_command::ExtractInput::File(_)
+                input:
+                    crate::launch_command::ExtractInput::File(_)
                     | crate::launch_command::ExtractInput::Repository(_),
                 ..
             }
             | LaunchCommand::CompileToLatex {
-                input: crate::launch_command::LatexInput::File(_)
+                input:
+                    crate::launch_command::LatexInput::File(_)
                     | crate::launch_command::LatexInput::Repository(_),
                 ..
             } => CodeSource::StandaloneFile,
@@ -70,7 +72,8 @@ impl Runtime {
                 ..
             }
             | LaunchCommand::CompileToLatex {
-                input: crate::launch_command::LatexInput::Code(_), ..
+                input: crate::launch_command::LatexInput::Code(_),
+                ..
             } => CodeSource::Eval,
             LaunchCommand::Help { .. } | LaunchCommand::Version { .. } => {
                 panic!("Runtime::new does not accept Help/Version LaunchCommand")
@@ -84,7 +87,8 @@ impl Runtime {
                 ..
             }
             | LaunchCommand::CompileToLatex {
-                input: crate::launch_command::LatexInput::Code(_), ..
+                input: crate::launch_command::LatexInput::Code(_),
+                ..
             } => RealOrVirtualPath::Eval,
             LaunchCommand::File { path, .. }
             | LaunchCommand::Repository { path, .. }
@@ -95,7 +99,8 @@ impl Runtime {
                 ..
             }
             | LaunchCommand::CompileToLatex {
-                input: crate::launch_command::LatexInput::File(path)
+                input:
+                    crate::launch_command::LatexInput::File(path)
                     | crate::launch_command::LatexInput::Repository(path),
                 ..
             } => RealOrVirtualPath::Real(path.clone()),
@@ -216,16 +221,16 @@ impl Runtime {
             }
             CodeSource::RootExport { export_file_id } => AtomicName::WithExportFileId {
                 export_file_id: *export_file_id,
-                name
+                name,
             },
             CodeSource::ImportedExport {
                 global_mod_id,
-                export_file_id
+                export_file_id,
             } => AtomicName::WithModAndExportFileId {
                 global_mod_id: *global_mod_id,
                 export_file_id: *export_file_id,
-                name
-            }
+                name,
+            },
         }
     }
 
@@ -239,22 +244,19 @@ impl Runtime {
             }
             AtomicName::WithExportFileId {
                 export_file_id,
-                name
+                name,
             } => IdentifierObj::with_export_file_id(export_file_id, name),
             AtomicName::WithModAndExportFileId {
                 global_mod_id,
                 export_file_id,
-                name
-            } => IdentifierObj::with_mod_and_export_file_id(global_mod_id, export_file_id, name)
+                name,
+            } => IdentifierObj::with_mod_and_export_file_id(global_mod_id, export_file_id, name),
         }
     }
 
     /// Free reference: outermost + promoting `code_source` → qualified;
     /// otherwise Plain+id (inner binders, or Eval/Repl/StandaloneFile outermost).
-    pub fn identifier_obj_for_plain_free_ref(
-        &self,
-        name: String,
-    ) -> RuntimeResult<IdentifierObj> {
+    pub fn identifier_obj_for_plain_free_ref(&self, name: String) -> RuntimeResult<IdentifierObj> {
         let (id, scope_index) = self.resolve_plain_atom_with_scope_index(&name)?;
         if scope_index == 0 && self.code_source.promotes_outermost_symbols() {
             Ok(self.identifier_obj_for_file_root_symbol(name))
@@ -386,7 +388,7 @@ impl Runtime {
 impl ParseScope {
     pub fn new() -> Self {
         Self {
-            plain: HashMap::new()
+            plain: HashMap::new(),
         }
     }
 }
@@ -397,7 +399,7 @@ impl GlobalIds {
             next_fact_id: FactId::new(1),
             next_well_definedness_id: WellDefinednessId::new(1),
             next_prop_rewrite_property_id: PropRewritePropertyId::new(1),
-            next_identifier_id: IdentifierId::new(1)
+            next_identifier_id: IdentifierId::new(1),
         }
     }
 
@@ -447,7 +449,7 @@ impl GlobalIds {
             next_prop_rewrite_property_id: PropRewritePropertyId::new(
                 next_prop_rewrite_property_id,
             ),
-            next_identifier_id: IdentifierId::new(next_identifier_id)
+            next_identifier_id: IdentifierId::new(next_identifier_id),
         }
     }
 }
