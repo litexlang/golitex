@@ -270,7 +270,9 @@ fn guarded_rational_replays_exact_strategy_and_child_guards() {
         )
     ));
     let output = compile_run(&result, &runtime, "guarded_rational").expect("guarded rational");
+    assert!(output.contains("litex_normalize_rational (disch :="));
     assert!(output.contains("exact _litex_nz_0 | exact _litex_nz_1"));
+    assert!(!output.contains("field_simp"));
     assert!(!output.contains("only [_litex_nz_"));
     assert!(output.contains("nativeNonzeroOfDenote"));
 }
@@ -525,6 +527,7 @@ fn scalar_division_relations_replay_their_actual_child_equations() {
         assert!(output.contains("NativeBridge.nativeEqOfDenoteNumber"));
         assert!(output.contains("div_eq_iff"));
         assert!(!output.contains("field_simp"));
+        assert!(!output.contains("litex_normalize_rational"));
     }
 }
 

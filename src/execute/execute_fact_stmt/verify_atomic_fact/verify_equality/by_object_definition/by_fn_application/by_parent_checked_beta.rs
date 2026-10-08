@@ -61,13 +61,25 @@ pub enum ParentCheckedBetaFunctionBody {
     TemplateAnonymousFunction {
         template_instance: Obj,
         function: AnonymousFn,
-        checked_domain: FnSet,
+        domain: TemplateApplicationDomainProof,
     },
     AnonymousLiteral,
     KnownAnonymousFunction {
         function: AnonymousFn,
         function_equal: KnownEqualityPathProof,
         checked_domain: FnSet,
+    },
+}
+
+// Cached WD cites an earlier result without retaining its selected signature.
+// Recheck only the declared template's arguments/guards in that case; retain
+// every checked child and requirement without changing the WD memo contract.
+pub enum TemplateApplicationDomainProof {
+    Parent { checked_domain: FnSet },
+    Rechecked {
+        checked_domain: FnSet,
+        argument_well_defined: Vec<Box<ObjWellDefinedProof>>,
+        requirement_fact_verified: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
     },
 }
 
@@ -217,7 +229,7 @@ impl Runtime {
                     // call domain/guards; match that complete domain before
                     // substituting, rather than rechecking an invented lambda.
                     // Example: \inverse_part<S,T,f>(B) = {x S: f(x) $in B}.
-                    let Some(checked_domain) = checked_application_domain(app_wd) else { return Ok(None); };
+                    if app.body.len() != 1 { return Ok(None); }
                     let Some(definition) = self.def_template_visible(&instance.template_name) else { return Ok(None); };
                     let TemplateDefEnum::HaveFnEqualStmt(definition_body) = &definition.template_def_stmt else { return Ok(None); };
                     let ids = definition.template_arg_def.ordered_param_ids();
@@ -225,10 +237,21 @@ impl Runtime {
                     let substitution = ids.into_iter().zip(instance.args.iter().cloned()).collect();
                     let body = Obj::FunctionSpace(FunctionSpace::AnonymousFn(definition_body.equal_to_anonymous_fn.clone()));
                     let Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal))) = self.inst_obj(&body, &substitution) else { return Ok(None); };
-                    if !function_domains_alpha_equal(&literal.body, checked_domain) { return Ok(None); }
+                    let domain = if let Some(checked_domain) = checked_application_domain(app_wd) {
+                        if !function_domains_alpha_equal(&literal.body, checked_domain) { return Ok(None); }
+                        TemplateApplicationDomainProof::Parent { checked_domain: checked_domain.clone() }
+                    } else {
+                        let Some(child) = state.for_premises(VerifyStateLevel::DefinitionAndForall) else { return Ok(None); };
+                        let Ok(verification) = self.try_verify_fn_obj_against_fn_set(app, &literal.body, child)? else { return Ok(None); };
+                        if !verification.is_fully_known() { return Ok(None); }
+                        let (argument_well_defined, requirement_fact_verified) = verification.into_success_child_proofs();
+                        TemplateApplicationDomainProof::Rechecked {
+                            checked_domain: literal.body.clone(), argument_well_defined, requirement_fact_verified,
+                        }
+                    };
                     let source = ParentCheckedBetaFunctionBody::TemplateAnonymousFunction {
                         template_instance: Obj::InstantiatedTemplateObj(instance.clone()),
-                        function: literal.clone(), checked_domain: checked_domain.clone(),
+                        function: literal.clone(), domain,
                     };
                     (literal, source)
                 }

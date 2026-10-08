@@ -15,12 +15,14 @@ universe u v w
 
 namespace Litex
 
-open Lean Elab Tactic in
-/-- Complete only the already selected rational-normalization adapter. The
-fixed denominator step may close the goal itself; otherwise its remaining
-polynomial equality is checked by `ring`. No target shape or theorem search
-selects between alternative proof routes. -/
-elab (name := finishNormalization) "litex_finish_normalization" : tactic => do
+open Lean Elab Tactic Lean.Parser.Tactic in
+/-- Check only the already selected rational-normalization adapter. An explicit
+discharger supplies the source's certified denominator evidence. The fixed
+denominator step may close the goal itself; otherwise its remaining polynomial
+equality is checked by `ring`. No target shape or theorem search selects between
+alternative proof routes. -/
+elab (name := normalizeRational) "litex_normalize_rational" d:discharger : tactic => do
+  evalTactic (← `(tactic| field_simp $d))
   if !(← getGoals).isEmpty then
     evalTactic (← `(tactic| ring))
 

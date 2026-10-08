@@ -439,6 +439,8 @@ fn function_body_template_set_return_keeps_binder_and_domain_evidence() {
     assert!(evidence.contains("template_instance"));
     assert!(evidence.contains("checked_domain"));
     assert!(evidence.contains("residual_proof"));
+    assert!(evidence.contains("rechecked"));
+    assert!(evidence.contains("requirement_fact_verified"));
 }
 
 #[test]

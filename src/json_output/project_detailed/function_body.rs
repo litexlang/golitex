@@ -69,11 +69,11 @@ pub(super) fn project_parent_checked_function_body(
             ("application_well_defined", super::wd::project_obj_wd_proof(application_well_defined, runtime)),
             ("application_function_body", project_parent_checked_function_body(application_function_body, runtime)),
         ]),
-        ParentCheckedBetaFunctionBody::TemplateAnonymousFunction { template_instance, function, checked_domain } => object_for(runtime, vec![
+        ParentCheckedBetaFunctionBody::TemplateAnonymousFunction { template_instance, function, domain } => object_for(runtime, vec![
             ("type", string("template_anonymous_function")),
             ("template_instance", string(template_instance.readable_string())),
             ("function", string(Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.clone())).readable_string())),
-            ("checked_domain", string(Obj::FunctionSpace(FunctionSpace::FnSet(checked_domain.clone())).readable_string())),
+            ("domain", project_template_application_domain(domain, runtime)),
         ]),
         ParentCheckedBetaFunctionBody::AnonymousLiteral => object_for(runtime, vec![("type", string("anonymous_literal"))]),
         ParentCheckedBetaFunctionBody::KnownAnonymousFunction { function, function_equal, checked_domain } => object_for(runtime, vec![
@@ -83,6 +83,26 @@ pub(super) fn project_parent_checked_function_body(
             ("checked_domain", string(Obj::FunctionSpace(FunctionSpace::FnSet(checked_domain.clone())).readable_string())),
         ]),
     }
+}
+
+fn project_template_application_domain(
+    domain: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::TemplateApplicationDomainProof,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::TemplateApplicationDomainProof;
+    let (checked, kind) = match domain {
+        TemplateApplicationDomainProof::Parent { checked_domain } => (checked_domain, "parent"),
+        TemplateApplicationDomainProof::Rechecked { checked_domain, .. } => (checked_domain, "rechecked"),
+    };
+    let mut fields = vec![
+        ("type", string(kind)),
+        ("checked_domain", string(Obj::FunctionSpace(FunctionSpace::FnSet(checked.clone())).readable_string())),
+    ];
+    if let TemplateApplicationDomainProof::Rechecked { argument_well_defined, requirement_fact_verified, .. } = domain {
+        fields.push(("argument_well_defined", JsonValue::Array(argument_well_defined.iter().map(|proof| super::wd::project_obj_wd_proof(proof, runtime)).collect())));
+        fields.push(("requirement_fact_verified", JsonValue::Array(requirement_fact_verified.iter().map(|proof| super::verify::project_verify_fact(proof, runtime)).collect())));
+    }
+    object_for(runtime, fields)
 }
 
 pub(super) fn project_function_body_normalization(

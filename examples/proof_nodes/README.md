@@ -197,6 +197,14 @@ aliases still check the selected body separately. Both equality orientations
 and missing guard/carrier, wrong arity/value, and permission boundaries have
 executable function-body regressions.
 
+[Set-valued template application](equal/by_object_definition/by_template/set_valued_application.lit)
+uses checked template arguments and the parent application's complete domain to
+unfold a declared function body. Detailed evidence retains the template
+instance, instantiated body, matched domain and residual truth proof. A cached
+WD ID triggers a bounded check of the declared arguments and guards with its
+own evidence. Changed
+free functions, wrong values and missing guards remain rejected.
+
 [Nested-function existential instantiation](exist/by_known_forall/nested_function_alpha.lit)
 starts from a witnessed theorem, infers a free callback beneath a literal's
 local binder, and preserves whole nested alpha equality when reusing or
