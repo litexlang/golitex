@@ -118,7 +118,7 @@ accepted independently in [Round14](../../plan/迁移的plan/experience/problem_
   gates, command exits and stable source/binary identity.
 - [old_fn_set_2026-10-04.json](old_fn_set_2026-10-04.json): complete old Obj
   file and its three negatives.
-- [proof_journals/cleanup_2026-10-04.json](proof_journals/cleanup_2026-10-04.json):
+- proof_journals/cleanup_2026-10-04.json (historical task record; retired):
   twenty exact session frames and clean-file outcomes, including both raw
   field premise orderings and diagnostic recovery.
 
@@ -162,7 +162,7 @@ search. This follow-up changes only proof fixtures and records, with no kernel,
 AST, state, search-policy or trust changes. Strict current release observations
 are in [explicit_proofs_2026-10-04.json](explicit_proofs_2026-10-04.json); exact
 source-order attempts and the nine-case baseline are in
-[proof_journals/explicit_bridges_2026-10-04.json](proof_journals/explicit_bridges_2026-10-04.json).
+proof_journals/explicit_bridges_2026-10-04.json (historical task record; retired).
 
 ## The user's template alias chain passes
 
@@ -311,7 +311,7 @@ changing VerifyState or the search-stage schedule.
 
 Focused release gates are listed in [numeric_evaluation_tests.json](numeric_evaluation_tests.json).
 Source-order before/after discarded strict REPL probes are in
-[proof_journals/numeric_evaluation_2026-10-04.json](proof_journals/numeric_evaluation_2026-10-04.json).
+proof_journals/numeric_evaluation_2026-10-04.json (historical task record; retired).
 No trust, protected AST/state change, full examples/docs/textbook gate, Lean
 compilation or display-eval claim is included in this scoped acceptance.
 

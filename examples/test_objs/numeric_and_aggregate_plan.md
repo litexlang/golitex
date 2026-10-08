@@ -1,4 +1,4 @@
-> 2026-10-04用户更新：成功的 `eval` 现在核验并发布 `source = result`。下文关于 display-only／不存事实的旧决定属于历史，现行合同见[Manual](../../docs/Manual.md)与[验收经验](experience/problem_notes/eval_store_result_2026-10-04.md)。
+> 2026-10-04用户更新：成功的 `eval` 现在核验并发布 `source = result`。下文关于 display-only／不存事实的旧决定属于历史，现行合同见[Manual](../../docs/Manual.md)与验收经验 (historical task record; retired)。
 
 # 数值、虚数单位与 sum/product 能力恢复计划
 
@@ -7,7 +7,7 @@
 - 用户要求：修复十进制规范化；把 `i != 0` 做成 builtin rule；强化 `sum` 与 `product`；先对照 legacy 制定计划。
 - 日期：2026-10-02。实现工作区：golitex；验收与问题记录：`examples/test_objs`。
 - 本文件保留实施前的源码对照和验收计划。用户后续批准四阶段实现及选项 A；现已实现，当前结果见 [验收记录](acceptance.md)。下文标为“当前”的缺陷描述指制定计划时的基线，不代表修复后的状态。
-- 当前执行证据来自 [诊断记录](diagnosis_2026-10-02.md) 及 [带源码/二进制哈希的 journal](proof_journals/diagnosis_2026-10-02.json)。本轮没有重新构建或执行 legacy。
+- 当前执行证据来自 [诊断记录](diagnosis_2026-10-02.md) 及 带源码/二进制哈希的 journal (historical task record; retired)。本轮没有重新构建或执行 legacy。
 - legacy 对照基线：commit `8ebce3f7a4a4c61250063c9eb9e69c9fb3cfa735`。下列六个归档文件逐字节与该 commit 的对应 `src/` 文件一致，已用 `git show` 独立检查：`object/numeric_constants.rs`、`verification/builtin_rules/complex_builtin.rs`、`execution/command_execution/evaluation.rs`、`verification/builtin_rules/equality_numeric/{iterated_ranges,finite_set_sum,finite_set_product}.rs`。
 
 ## 已确认的实现差异

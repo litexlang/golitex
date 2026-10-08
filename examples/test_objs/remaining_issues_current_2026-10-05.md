@@ -2,7 +2,7 @@
 
 Task context：用户要求汇报前实跑、已解项从具体纠错记录删除；本轮进一步要求自行修局部问题，并区分 `.lit`、局部 Rust、BT 和合同工作。
 
-**旧“25张开放卡”是84d13156历史截面，不能继续当当前失败数。** 活动状态在[总清单](../../plan/src收尾总清单.md)，完整原式、owner、执行顺序和验收在[下一阶段路线](../../plan/剩余问题修复路线_2026-10-05.md)。本轮[经验](experience/problem_notes/remaining_repair_routing_2026-10-05.md)和[journal](proof_journals/remaining_repair_routing_2026-10-05.json)记录真实范围；未宣称全113卡再次验收。
+**旧“25张开放卡”是84d13156历史截面，不能继续当当前失败数。** 活动状态在[总清单](../../plan/src收尾总清单.md)，完整原式、owner、执行顺序和验收在[下一阶段路线](../../plan/剩余问题修复路线_2026-10-05.md)。本轮经验 (historical task record; retired)和journal (historical task record; retired)记录真实范围；未宣称全113卡再次验收。
 
 ## 当前实际修复项
 
@@ -30,7 +30,7 @@ Task context：用户要求汇报前实跑、已解项从具体纠错记录删�
 
 release SHA256：`dddc1902feee4bbdfd163994ed84aef4867ea447041184f680d1d24b87f55b8d`。初始27个输入/入口期间src/Cargo指纹无漂移；随后作者修改仅两份`.lit`。抽象代数**39/39**、模块和限定名调用者通过，错误环同态输入拒绝。欧氏几何一般坐标lemma通过，完整文件仍开放。
 
-DEC04已按用户确认修正旧负例：原表达式作为正例保留，真实字段载体/错值反例补齐；最新完整Rust库955/955、integration1/1、相邻7/7通过。[当前验收](../test_statements/experience/problem_notes/unused-struct-parameter-test-cleanup-2026-10-05.md)。下方933/934保留为此前冻结截面，不代表当前失败。
+DEC04已按用户确认修正旧负例：原表达式作为正例保留，真实字段载体/错值反例补齐；最新完整Rust库955/955、integration1/1、相邻7/7通过。当前验收 (historical task record; retired)。下方933/934保留为此前冻结截面，不代表当前失败。
 
 同时核验JSON、session_error和exit，超时单列。root `-r` Normal汇总没有逐文件statement列表，不拿其0项当实际选择数。本轮未重跑完整Rust或发布门；相邻933/934及唯一DEC04断言仍是另一冻结验收。
 
@@ -40,6 +40,6 @@ DEC04已按用户确认修正旧负例：原表达式作为正例保留，真实
 
 LEG37's two original guarded quotient formulas now pass, with symmetric equality,
 missing-guard/wrong-argument controls and ten-language actual-leaf consumers.
-The [scoped definition-rule acceptance](../proof_nodes/experience/problem_notes/obj-definition-builtin-rules-2026-10-05.md)
+The scoped definition-rule acceptance (historical task record; retired)
 records 27 focused Rust tests and 12 strict whole-file gates. Earlier frozen
 binary observations above retain their historical meaning.

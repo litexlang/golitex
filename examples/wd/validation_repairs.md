@@ -2,7 +2,7 @@
 
 The user authorized local WD repairs while preserving the total execution
 Pipeline. The source-owned evidence is
-[validation_repairs.json](proof_journals/validation_repairs.json).
+validation_repairs.json (historical task record; retired).
 
 ## Checked domains must guard later WD
 

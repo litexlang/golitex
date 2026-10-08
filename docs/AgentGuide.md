@@ -157,9 +157,9 @@ the artificial axiom above is deliberately rejected in strict mode. Reserve
 | Module interfaces and chapter dependencies | The owning module's `README.md`, `math_collections.md`, and `litex.config` |
 | Repository authorization and local-only boundaries | [AGENTS.md](../AGENTS.md) and the applicable repository policy skill |
 
-Verified example and controls: [2026-10-07 receipt](../tests/tooling/acceptance/agent-session-guide-2026-10-07.json).
+Verified example and controls: 2026-10-07 receipt (historical task record; retired).
 The explicit fresh-process replay was also rechecked with the current worktree
-release build: [recheck receipt](../tests/tooling/acceptance/agent-session-guide-recheck-2026-10-07.json).
+release build: recheck receipt (historical task record; retired).
 The checks cover same-process retention, a fresh-process rejection, failed
 compound-statement rollback, per-statement commit in a mixed frame, hard-error
 termination, and the axiom's strict-mode rejection. They change no kernel

@@ -16,5 +16,5 @@ bypass is closed in [strict_cache_policy](../strict_cache_policy/README.md).
 The geometry authoring issue is also closed by explicit `release obj def` in
 its original module; it required no module-owner lookup change.
 
-[Current evidence](../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
-[Historical error-forwarding evidence](../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md).
+Current evidence (historical task record; retired).
+Historical error-forwarding evidence (historical task record; retired).

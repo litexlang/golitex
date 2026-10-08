@@ -5,24 +5,24 @@ Task: add detailed regression files for every current Litex Obj variant.
 The current manifest inventories 95 terminal Obj declarations, 95 dedicated positive files and four explicitly retired interface families. It lists 665 positive cases, 309 rejection fixtures and 0 recorded gaps. These are written-case counts, not a full-corpus pass.
 
 The earlier 2026-10-03 [audit](audit_2026-10-03.md) observed 67 direct
-rejections. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
+rejections. The subsequent F authoring repairs (historical task record; retired)
 promote 23 checked proof migrations and four unchanged recovered addition folds;
 the recovered subtraction rejection stays in the negative corpus. Original gap
 sources and receipts are archived in the authoring journal before retirement.
-That F follow-up changed proofs and fixtures. The subsequent [exact numeric, periodic trig and modulus repair](experience/problem_notes/exact_numeric_periodic_modulus_2026-10-03.md) adds local Rust leaves, closes 14 gaps and adds 21 positive and five negative cases. Current versus retained-release receipts are distinguished in the journal.
+That F follow-up changed proofs and fixtures. The subsequent exact numeric, periodic trig and modulus repair (historical task record; retired) adds local Rust leaves, closes 14 gaps and adds 21 positive and five negative cases. Current versus retained-release receipts are distinguished in the journal.
 
-The [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md) closes the other eight requested extrema, inverse and log goals. The focused current-source report covers all 13 involved object families; unrelated gaps remain in the manifest.
+The remaining elementary follow-up (historical task record; retired) closes the other eight requested extrema, inverse and log goals. The focused current-source report covers all 13 involved object families; unrelated gaps remain in the manifest.
 
 
-The [closed elementary calculation follow-up](experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md) adds 33 scoped positive cases and six rejection cases for fraction rounding, integer-valued operands, radicals, numeric complex parts and rational logarithms. These are additions to the existing inventory; earlier full-suite failure receipts remain historical.
+The closed elementary calculation follow-up (historical task record; retired) adds 33 scoped positive cases and six rejection cases for fraction rounding, integer-valued operands, radicals, numeric complex parts and rational logarithms. These are additions to the existing inventory; earlier full-suite failure receipts remain historical.
 
-The [set-proof follow-up](experience/problem_notes/remaining_set_proof_repairs_2026-10-03.md) closes 17 of the remaining 22 gaps with checked Litex steps. That round left five gaps; the focused gate does not replace full-corpus historical failures.
+The set-proof follow-up (historical task record; retired) closes 17 of the remaining 22 gaps with checked Litex steps. That round left five gaps; the focused gate does not replace full-corpus historical failures.
 
-The [five-set follow-up](experience/problem_notes/five_set_gap_followup_2026-10-03.md) closes those last five gaps with explicit member contracts and extension proofs. Zero recorded gaps is an inventory status, not a whole-corpus acceptance.
+The five-set follow-up (historical task record; retired) closes those last five gaps with explicit member contracts and extension proofs. Zero recorded gaps is an inventory status, not a whole-corpus acceptance.
 
 These counts describe coverage of written cases, not proof that the implementation is bug-free. The runner audits the enum tree and all `.lit` fixtures on every run.
 
-The [rational-power addition](experience/problem_notes/exact_rational_powers_2026-10-03.md)
+The rational-power addition (historical task record; retired)
 adds P141–P156 and N141–N149 to Pow. Its exact calculation/eval and domain
 boundaries have a stable focused certificate; three legacy mixed-module
 expectation failures are retained separately.

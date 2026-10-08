@@ -1,5 +1,5 @@
 # Field access WD via definition-time DefinedAsStruct
-# Run: litex -f examples/tmp.lit
+# Run: litex -f examples/claim_obtain_scope.lit
 
 struct Point:
     x R

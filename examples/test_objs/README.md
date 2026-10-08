@@ -16,16 +16,16 @@ domains and remaining interface candidates. The [38 explicit author routes](../p
 pass a strict standalone gate; this focused result does not certify every
 owning Obj file, including the concurrently changed `cart_dim` boundary.
 
-The subsequent [common relation completion](../proof_nodes/experience/problem_notes/common-obj-relations-2026-10-05.md)
+The subsequent common relation completion (historical task record; retired)
 supplies the selected gcd/lcm, factorial/product, sine-interval and general
 positive logarithm-base interfaces, with dedicated examples and focused boundary
 checks. The remaining LEG35/36 trigonometric cases keep their existing owners.
 
 > **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
 
-原审计的32个问题主题按原编号列在[逐项清理计划](../../plan/src收尾总清单.md#obj-original-32)：第1项的显式Litex证明与第3项的 eval 结果存储已完成，第2项已撤回。关闭项从[活动纠错记录](remaining_issues_2026-10-04.md)删除；[eval 解法及验收](experience/problem_notes/eval_store_result_2026-10-04.md)保留经验与回执，其余按原编号对应总清单。
+原审计的32个问题主题按原编号列在[逐项清理计划](../../plan/src收尾总清单.md#obj-original-32)：第1项的显式Litex证明与第3项的 eval 结果存储已完成，第2项已撤回。关闭项从[活动纠错记录](remaining_issues_2026-10-04.md)删除；eval 解法及验收 (historical task record; retired)保留经验与回执，其余按原编号对应总清单。
 
-[符号聚合三项的最新复核](experience/problem_notes/symbolic_aggregate_status_2026-10-04.md)：原十个短式现有 7 个直接通过，3 个已有显式作者证明；五个相关完整文件通过。第4–6项已从活动纠错段落移除，短搜索边界和原始回执保留。
+符号聚合三项的最新复核 (historical task record; retired)：原十个短式现有 7 个直接通过，3 个已有显式作者证明；五个相关完整文件通过。第4–6项已从活动纠错段落移除，短搜索边界和原始回执保留。
 
 This directory inventories the terminal variants reachable from `Obj` in
 `src/ast/obj.rs`. Active families have dedicated, nonempty positive `.lit`
@@ -46,34 +46,34 @@ fixtures. No test uses `trust` to manufacture success.
 The approved numeric and aggregate repairs add exact decimal normalization,
 imaginary nonzero and guarded division, bounded nested sum/product calculation
 and symbolic identities. The [2026-10-03 audit](audit_2026-10-03.md) is a retained
-historical snapshot. The subsequent [F authoring repairs](experience/problem_notes/f_authoring_repairs_2026-10-03.md)
+historical snapshot. The subsequent F authoring repairs (historical task record; retired)
 promote 23 explicit checked proofs and four recovered folds, leaving 44 gaps and 551 positive cases at that point. The [exact numeric,
 periodic trig and modulus repair](experience/problem_notes/exact_numeric_periodic_modulus_2026-10-03.md)
 closes 14 more gaps and adds 21 positive and five negative cases. That round left **586 positive cases, 289 negatives and 30 remaining gaps**. Source and binary identities,
 gates and any concurrent-build limitations are recorded separately in
 [acceptance](acceptance.md) and the authoring journal. No test adds trust.
 
-The [remaining elementary follow-up](experience/problem_notes/remaining_elementary_gaps_2026-10-03.md)
+The remaining elementary follow-up (historical task record; retired)
 closes the eight finite-rational-extremum, quarter-angle-inverse and log goals
 left after the fourteen numeric/periodic/modulus closures. At that checkpoint the manifest
 contained **594 positive cases, 289 negatives and 22 remaining gaps**. Inverse
 and log cases retain their checked intermediate proofs and principal ranges.
 
 
-The [closed elementary calculation follow-up](experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md) adds 33 positive and six negative cases. That round left **627 positive cases, 295 negatives and 22 remaining gaps**. Four dedicated tracers and paired negatives cover calculation and exact display evaluation; a focused result is not a new complete-suite certificate.
+The closed elementary calculation follow-up (historical task record; retired) adds 33 positive and six negative cases. That round left **627 positive cases, 295 negatives and 22 remaining gaps**. Four dedicated tracers and paired negatives cover calculation and exact display evaluation; a focused result is not a new complete-suite certificate.
 
 The latest full scan also finds [39 owning-file regressions](current_source_regressions_2026-10-03.md)
 after concurrent kernel changes: 37 rejections and two protocol failures.
 They are separate from the direct-gap inventory. Focused feature success does
 not make this complete corpus green; consult the dated source/binary receipts.
 
-The [explicit set-proof follow-up](experience/problem_notes/remaining_set_proof_repairs_2026-10-03.md) closes 17 more gaps with contra, extension, carrier proofs and definition release. That round left **644 positive cases, 295 negatives and 5 remaining gaps**; its strict focused gate covers 11 owning files and 28 rejection fixtures.
+The explicit set-proof follow-up (historical task record; retired) closes 17 more gaps with contra, extension, carrier proofs and definition release. That round left **644 positive cases, 295 negatives and 5 remaining gaps**; its strict focused gate covers 11 owning files and 28 rejection fixtures.
 
-The [five-set follow-up](experience/problem_notes/five_set_gap_followup_2026-10-03.md) closes the last five recorded gaps. That dated inventory had **665 positive cases, 309 negatives and 0 recorded gaps**; the current source inventory is listed in coverage.md. Concurrent unrelated additions contribute to these totals; this round closes five cases and adds five negatives. Its focused gates do not certify the full corpus.
+The five-set follow-up (historical task record; retired) closes the last five recorded gaps. That dated inventory had **665 positive cases, 309 negatives and 0 recorded gaps**; the current source inventory is listed in coverage.md. Concurrent unrelated additions contribute to these totals; this round closes five cases and adds five negatives. Its focused gates do not certify the full corpus.
 
 ## Run
 
-The [exact rational-power addition](experience/problem_notes/exact_rational_powers_2026-10-03.md)
+The exact rational-power addition (historical task record; retired)
 adds 16 positive and nine negative Pow cases. Its 23 selected Rust tests and
 38 strict CLI checks pass, including exact eval values and retained integer
 domains. Three previously recorded mixed-module test expectations still fail;
@@ -173,6 +173,6 @@ corpus cannot prove the absence of all object bugs.
 P200 in `floor`, `ceil`, `tan`, `cot`, `gcd`, `finite_set_max` and
 `finite_set_min` covers their defining bounds, guarded quotients, Euclidean
 recursion and member bounds. Each case keeps its discarded sketch scope.
-The [definition-rule acceptance record](../proof_nodes/experience/problem_notes/obj-definition-builtin-rules-2026-10-05.md)
+The definition-rule acceptance record (historical task record; retired)
 contains the former failures and nearest rejected domains; the corresponding
 `coverage.json` entries include P200.

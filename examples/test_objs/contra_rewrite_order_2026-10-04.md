@@ -82,7 +82,7 @@ by contra:
 
 ## 用户决定：保留替换，显式写证明
 
-用户在诊断后明确选择不改Rust，只把例子补为`i*i=0*0=0`。该证明已经在当前release 30/30独立新进程通过，并纳入Stmt例子和Obj P103。见[作者修复记录](experience/problem_notes/imaginary_contra_explicit_chain_2026-10-04.md)。历史顺序诊断仍成立；原简写的自动证明边界保留，不再作为本例待实现的Rust修复任务。
+用户在诊断后明确选择不改Rust，只把例子补为`i*i=0*0=0`。该证明已经在当前release 30/30独立新进程通过，并纳入Stmt例子和Obj P103。见作者修复记录 (historical task record; retired)。历史顺序诊断仍成立；原简写的自动证明边界保留，不再作为本例待实现的Rust修复任务。
 
 ## 历史修复讨论（未实施，用户已选择作者路线）
 
@@ -94,6 +94,6 @@ by contra:
 
 原固定源码：`36876aef82db464bf805f02abd38636c516ca6a892d31e328034698f3d558c9d`；base binary：`288b50777e68d743572dab25af99dab06444124e2680e8ece6370626c63334ef`。诊断只改副本中的单一重写叶子，差异完整保存。diagnostic source：`a2c78f0887668b3b70f44df42176cd3bce63da829df6ecccfaf76ee53cca6737`；binary：`f75f707eb86f218263126fb0af6ba20c9174bd410d0477bbe27e6565ab1841c7`。正式对应文件在任务开始/结束哈希相同。
 
-[机器记录](proof_journals/contra_rewrite_order_2026-10-04.json) · [完整receipt](proof_journals/contra_rewrite_order_2026-10-04_receipts.zip)（SHA-256 `e01f884c34101884e2114eace95cd7ad981c044ccc03fc890d12eb8030765d13`）。保存固定原/诊断程序、诊断源码、源文件差异、构建输出、全部stdout/stderr、输入、参数与解析脚本。原源码归档引用上轮receipt的`current-source.zip`；其receipt SHA-256：`dc0ae3371b3972e4b3c8f2380fd8e7bfdd57140b33537c311a6856c4d8acf94a`。
+机器记录 (historical task record; retired) · [完整receipt](proof_journals/contra_rewrite_order_2026-10-04_receipts.zip)（SHA-256 `e01f884c34101884e2114eace95cd7ad981c044ccc03fc890d12eb8030765d13`）。保存固定原/诊断程序、诊断源码、源文件差异、构建输出、全部stdout/stderr、输入、参数与解析脚本。原源码归档引用上轮receipt的`current-source.zip`；其receipt SHA-256：`dc0ae3371b3972e4b3c8f2380fd8e7bfdd57140b33537c311a6856c4d8acf94a`。
 
 复现：从receipt取出`litex-diagnostic`，用原完整输入执行`-strict -lang en -e <代码>`；不设置诊断变量保留原遍历，`LITEX_DIAG_REWRITE_ORDER=oldest`强制坏顺序，`newest`强制好顺序。诊断变量只对该复制程序有效。正式CLI的success和exit均核验，日志不作为成功判据。

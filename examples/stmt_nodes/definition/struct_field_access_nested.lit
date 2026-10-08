@@ -1,5 +1,5 @@
 # FieldAccess: `x.y` and `x.y.z` as one node with fields: Vec
-# Run: litex -f examples/tmp.lit
+# Run: litex -f examples/claim_obtain_scope.lit
 
 struct Coordinates:
     x R

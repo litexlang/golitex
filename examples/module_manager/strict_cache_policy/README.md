@@ -31,6 +31,6 @@ These Rust fixtures create and clean their own temporary modules.
 cargo test --release --offline run_module::strict_cache_tests
 ```
 
-[Current acceptance and raw evidence](../../../tests/tooling/acceptance/conversation-clarifications-2026-10-04.md).
-[Historical defect and exact proposed patch](../../../tests/tooling/acceptance/conversation-closeout-retest-2026-10-04.md#cache).
+Current acceptance and raw evidence (historical task record; retired).
+Historical defect and exact proposed patch (historical task record; retired).
 Canonical route: [LEG29](../../../plan/src收尾总清单.md#leg29).

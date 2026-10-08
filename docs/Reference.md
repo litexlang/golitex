@@ -14,6 +14,6 @@ one canonical set of entries.
 
 Stable entry identifiers are unchanged. This file is a relocation notice;
 new content belongs in Manual.md. Historical evidence remains in the
-[sample audit](audits/reference-samples-2026-10-06.json) and
-[inventory audit](audits/reference-inventory-2026-10-06.json).
-The [merge audit](audits/manual-merge-2026-10-06.json) records the consolidation.
+sample audit (historical task record; retired) and
+inventory audit (historical task record; retired).
+The merge audit (historical task record; retired) records the consolidation.

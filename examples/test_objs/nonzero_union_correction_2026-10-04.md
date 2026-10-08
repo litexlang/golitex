@@ -163,6 +163,6 @@ sketch:
 
 新聚焦源码：`36876aef82db464bf805f02abd38636c516ca6a892d31e328034698f3d558c9d`；release binary：`288b50777e68d743572dab25af99dab06444124e2680e8ece6370626c63334ef`。新构建前后与源码归档身份稳定；之后共享工作区继续变化，后续变化不在本门禁内。651项纠正仍使用原固定版本，没有混入新版本。详细诊断由相同新源码归档独立构建，经`Runtime::run_litex_code -> exec_stmt`执行，证明投影不修改内核。
 
-[机器记录](proof_journals/nonzero_union_correction_2026-10-04.json) · [新receipt](proof_journals/nonzero_union_correction_2026-10-04_receipts.zip)（SHA-256 `dc0ae3371b3972e4b3c8f2380fd8e7bfdd57140b33537c311a6856c4d8acf94a`）。原receipt保持不变（SHA-256 `c8ba2fdb40b4dc22eeb30dd16c05026e88e33f85d96498d0185b1868ad14880e`）。新receipt保存651项实际代码/完整输出、聚焦输入/输出、新源码/程序、详细诊断与复现脚本。原固定源码/程序引用原receipt的`verified/source-frozen.zip`和`verified/litex-frozen`。
+机器记录 (historical task record; retired) · [新receipt](proof_journals/nonzero_union_correction_2026-10-04_receipts.zip)（SHA-256 `dc0ae3371b3972e4b3c8f2380fd8e7bfdd57140b33537c311a6856c4d8acf94a`）。原receipt保持不变（SHA-256 `c8ba2fdb40b4dc22eeb30dd16c05026e88e33f85d96498d0185b1868ad14880e`）。新receipt保存651项实际代码/完整输出、聚焦输入/输出、新源码/程序、详细诊断与复现脚本。原固定源码/程序引用原receipt的`verified/source-frozen.zip`和`verified/litex-frozen`。
 
 复现使用新receipt内`correct_archived_gate.py`与`focused_probes.py`。当前CLI命令`litex -strict -lang en -e <完整代码>`，整文件`litex -strict -lang en -f <union.lit>`；成功同时要求JSON `success=true`且exit0，错误输入同时要求`success=false`且exit1。

@@ -4,7 +4,7 @@ Task: preserve exact full-corpus failures discovered during the numeric powers, 
 
 This stable current-source gate used source `9a8e89bf05c2130634abfe5e8e82b7758e47c158160813561a7d40d316c21c34` and binary `a3bcaa8de4825bfb6780178e9cb2a8e2e0a711ddc575617d3c4e75266d3df7ea`. It found 37 rejected owning positive files and two process/protocol failures; all 289 negative fixtures still rejected. Earlier retained releases passed these owning files. The exact mathematical cause of each new failure is not yet established.
 
-Full original files, exact diagnostics and commands are retained in [the source/output journal](proof_journals/current_source_regressions_2026-10-03.json). This page does not treat the failures as successful regressions. The existing direct-gap list remains separate.
+Full original files, exact diagnostics and commands are retained in the source/output journal (historical task record; retired). This page does not treat the failures as successful regressions. The existing direct-gap list remains separate.
 
 ## fn_obj
 

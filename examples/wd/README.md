@@ -186,7 +186,7 @@ after failure in eval, REPL and root-export contexts.
 [Positive ln image carrier](ln_positive_image_carrier.lit) publishes the checked
 1<x implies ln(x) inR+ author and verifies ln(ln(x)) inR. A nested comparison
 consumer of that same helper remains rejected in predicate-domain WD; the
-[record](../proof_nodes/experience/problem_notes/exp-ln-order-repair-2026-10-05.md)
+record (historical task record; retired)
 retains complete old-accepted authors, actual failure and acceptance boundary.
 Carrier success alone does not close the comparison issue or justify increasing
 shared search permissions.
@@ -198,7 +198,7 @@ and nonzero-integer complex powers, closed rational roots, and `0^0=1` retain
 their original behavior. Executable missing-guard, negative/complex noninteger,
 zero-negative, false-value, permission and rollback controls are in
 `tests/unit/execute/exact_rational_powers/tests.rs`.
-The [acceptance record](experience/problem_notes/pow-real-domains-2026-10-06.md)
+The acceptance record (historical task record; retired)
 links the before receipts, persistent session, output checks and cold gates.
 
 [Point and set preimages](function_preimages.lit) check both target roles against

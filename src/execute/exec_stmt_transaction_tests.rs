@@ -523,7 +523,7 @@ fn intersect_membership_infers_both() {
 
 #[test]
 fn set_minus_membership_infers_split() {
-    // Full path is covered by `examples/tmp.lit` via the CLI (64MB stack).
+    // Full path is covered by `examples/claim_obtain_scope.lit` via the CLI (64MB stack).
     // In the lib-test harness even a dedicated large-stack thread overflows while
     // re-verifying the inferred facts; check only that trust+infer succeeds.
     std::thread::Builder::new()

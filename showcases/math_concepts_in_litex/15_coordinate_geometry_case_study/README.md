@@ -30,7 +30,7 @@ unfinished proofs are outside the current showcase scope.
 Verification status (2026-10-05): the complete, byte-identical showcase copy
 passed strict file verification (227/227). Both its candidate module and the
 actual module at this public directory passed on the same release binary.
-See the [acceptance note](../experience/problem_notes/plane-geometry-replacement-acceptance-2026-10-05.md).
+See the historical acceptance note (retired).
 
 Current migration (2026-10-06): `main.lit` now uses `p(1)` / `p(2)` and
 is copied from the maintained current `showcases/2D_Geometry/geo.lit`.

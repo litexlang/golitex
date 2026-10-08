@@ -2074,7 +2074,7 @@ All input domains are checked before computing. Square roots keep the
 nonnegative principal value, and numeric logarithms use exact prime-exponent
 ratios. Unsupported radical inversion, factorization exhaustion and arithmetic
 overflow decline calculation. No decimal approximation proves an equality.
-The four [closed calculation tracers](../examples/test_objs/experience/problem_notes/closed_exact_elementary_calculation_2026-10-03.md)
+The four closed calculation tracers (historical task record; retired)
 and their paired executable negatives record these boundaries.
 
 ### Why can a strict positive lower bound make a logarithm goal well-defined?

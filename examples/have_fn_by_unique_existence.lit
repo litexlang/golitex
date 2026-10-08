@@ -1,0 +1,43 @@
+# Tracer: have fn by exist! — exec, release, template def + instance.
+# Run: target/release/litex -f examples/have_fn_by_unique_existence.lit
+#
+# Intentionally omitted: surface `f $in fn(x A) B` (FnSet spelling may not
+# alpha-match). Property forall is the smoke check for membership-driven use.
+
+prop F(x, y R):
+    y = x
+have A set = R
+have B set = R
+
+claim:
+    ? forall x A:
+        exist! y B st {$F(x, y)}
+    witness exist! y B st {$F(x, y)} from x:
+        by def $F(x, x)
+
+have fn f by exist!:
+    ? forall x A:
+        exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))
+
+forall x A, y B:
+    $F(x, y)
+    =>:
+        y = f(x)
+
+release obj def f
+
+forall x A:
+    $F(x, f(x))
+
+template<_S set>:
+    have fn choose_t by exist!:
+        ? forall x A:
+            exist! y B st {$F(x, y)}
+
+\choose_t<{0}> = \choose_t<{0}>
+
+forall x A:
+    $F(x, \choose_t<{0}>(x))

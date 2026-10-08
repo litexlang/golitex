@@ -82,9 +82,9 @@ Examples:
 litex -strict -e "1 = 1"
 litex -strict -e '-2 < 0'
 litex -session -f chapter.lit
-litex -lang zh -f examples/tmp.lit
+litex -lang zh -f examples/claim_obtain_scope.lit
 litex -lang fr -e '1 + 1 = 2'
-litex -f examples/tmp.lit
+litex -f examples/claim_obtain_scope.lit
 ```
 
 The parser is a small whitelist. Unsupported options and trailing tokens are
@@ -477,10 +477,10 @@ and replay of forward-inference branches remain outside this slice.
 
 ```bash
 litex -e "1 = 1"
-litex -f examples/tmp.lit
+litex -f examples/claim_obtain_scope.lit
 litex -r examples/module_manager/repo
-litex -strict -f examples/tmp.lit
-litex -session -f examples/tmp.lit
+litex -strict -f examples/claim_obtain_scope.lit
+litex -session -f examples/claim_obtain_scope.lit
 ```
 
 ## LaTeX conversion (preview)

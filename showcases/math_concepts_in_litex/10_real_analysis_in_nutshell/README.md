@@ -38,5 +38,5 @@ The 2026-10-08 builtin update verifies those two distance facts directly and
 binds the common positive tail index as `have n0 N+ = n1 + n2`. The uniqueness
 proof retains its hypotheses and conclusion while removing 24 administrative
 source lines. Its complete registered `main.lit` passed a clean strict `-f`
-gate. [Implementation and verification receipt](../../../tests/tooling/acceptance/bt-rule-corpus-implementation-2026-10-08.json)
+gate. Implementation and verification receipt (historical task record; retired)
 records the focused tests and boundary controls.
