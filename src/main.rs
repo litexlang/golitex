@@ -47,16 +47,20 @@ fn run_launch() {
             })
         })
         .collect::<Vec<_>>();
-    match litex::run::run_graph::parse_graph_command(&args) {
+    match litex::run::run_compile_to_lean::parse_lean_command(&args) {
         Ok(Some(command)) => {
-            let result = match litex::run::run_graph::run_graph_command(command) {
-                Ok(result) => result,
-                Err(error) => report_error(None, &error),
-            };
-            if let Err(error) = litex::run::output::write_stdout(format_args!("{}\n", result.json)) {
-                report_error(None, &error);
+            match litex::run::run_compile_to_lean::run_compile_to_lean(command) {
+                Ok(source) => {
+                    if let Err(error) = litex::run::output::write_stdout(format_args!("{source}")) {
+                        let _ = writeln!(std::io::stderr().lock(), "phase=compile: {error}");
+                        process::exit(1);
+                    }
+                }
+                Err(error) => {
+                    let _ = writeln!(std::io::stderr().lock(), "{error}");
+                    process::exit(1);
+                }
             }
-            if !result.success { process::exit(1); }
             return;
         }
         Ok(None) => {}

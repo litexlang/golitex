@@ -27,19 +27,6 @@ pub fn run_export_file(
     code_source: CodeSource,
     keep_env_open: bool,
 ) -> RuntimeResult<RunFileResult> {
-    run_export_file_with_graph(runtime, export_name, export_path, export_file_id, current_mod_id, code_source, keep_env_open, None)
-}
-
-pub(crate) fn run_export_file_with_graph(
-    runtime: &mut Runtime,
-    export_name: &str,
-    export_path: &Path,
-    export_file_id: usize,
-    current_mod_id: Option<usize>,
-    code_source: CodeSource,
-    keep_env_open: bool,
-    graph: Option<&mut crate::graph::MathGraph>,
-) -> RuntimeResult<RunFileResult> {
     if !export_path.is_file() {
         return Err(RuntimeError::Io {
             path: export_path.to_path_buf(),
@@ -70,7 +57,6 @@ pub(crate) fn run_export_file_with_graph(
     };
     // Capture fact-ID-backed stores and citations while the file env is live.
     code_result.attach_normal_json(runtime, "file", Some(export_path));
-    if let Some(graph) = graph { graph.collect_run(&code_result, runtime, &export_path.display().to_string()); }
 
     if !code_result.success {
         runtime.abort_file();

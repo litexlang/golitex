@@ -1,0 +1,3 @@
+# The number one is a set in the Litex mathematical world.
+
+$is_set(1)

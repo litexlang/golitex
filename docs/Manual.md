@@ -1420,6 +1420,13 @@ then its separate `ByKnownSpecialProperty` step, then builtin rules. This
 order also applies inside strategy search. Re-reading a released equality
 cites its existing path before attempting rules with new premises; it still
 requires WD. See the [release-and-read tracer](../examples/proof_nodes/equal/by_equivalence_class/stored_equality_before_builtin.lit).
+The later equality-class stage also reuses one stored equality when both
+endpoints differ only by structurally alpha-equivalent bound names, including
+anonymous functions inside sums. It cites the original equality plus both
+endpoint identities; free functions, bodies, carriers and bounds must still
+match. This is stored-fact reuse, with no new mathematical premise or graph
+mutation. See the [aggregate replay tracer](../examples/proof_nodes/equal/by_equivalence_class/stored_aggregate_alpha.lit).
+
 Known Cartesian membership supplies the complete finite domain and ordered
 coordinate carriers; a stored tuple equality supplies coordinate beta evidence.
 For example, `have p cart(R,R) = (a,b)` permits `p(1) = a` after application WD.
@@ -6174,6 +6181,8 @@ forall x preimage_set(square, {4}):
     square(x) $in {4}
 ```
 
+For a checked complete unary domain `fn(x S) T`, both inverse-image forms are subsets of `S` and belong to `power_set(S)`. Multiple input parameters use the corresponding Cartesian input carrier. The bounded inclusion rule retains the checked construction and exact carrier-matching evidence; it does not infer inclusion in a different carrier. See [input-carrier and family typing](../examples/wd/preimage_input_carrier.lit).
+
 **Nearest boundaries:** a noncallable function or an ill-defined target rejects even with an empty target set. A function alias needs its own published callable interface: `have alias fn(x R) R = square` provides one; `let alias = square` alone does not authorize reading a neighbor's function signature. Wrong input arity and guard violations remain rejected.
 
 **Source and evidence:** [bounded construction](../src/execute/execute_fact_stmt/function_preimage.rs), [maintained strict example](../examples/wd/function_preimages.lit), and `cargo test --release function_preimages`. `have by fn_preimage` continues to extract witnesses from known function-range membership.
@@ -8198,6 +8207,51 @@ recipe does not promise a general certificate search algorithm.
 **Ordinary mathematics:** to prove `abs(x)<=M`, supply the bounds on `x`
 and its negative. The native matching form uses `0-x`. Triangle and
 reverse-triangle bounds are useful starting facts for sums and differences.
+
+**Checked preview: real distance and binary extrema.** Symmetry and the
+distance triangle check directly, without publishing a negation or an
+intermediate sum:
+
+```litex
+forall x,y,z R:
+    abs(x-y) = abs(y-x)
+    abs(x-z) <= abs(x-y)+abs(y-z)
+    abs(x-y) <= abs(x)+abs(y)
+```
+
+Two checked coordinate error bounds give the same bound on their minima or
+maxima. Strict bounds and reverse-written comparisons also work; the rule
+retains each actual source comparison as proof evidence.
+
+```litex
+forall a,b,x,y R, epsilon R+:
+    abs(a-x) <= epsilon
+    abs(b-y) <= epsilon
+    =>:
+        abs(max(a,b)-max(x,y)) <= epsilon
+        abs(min(a,b)-min(x,y)) <= epsilon
+```
+
+A common positive radius can be bound directly:
+
+```litex
+have a,b,c R+
+have first_radius R+ = min(a,b)
+have common_radius R+ = min(first_radius,c)
+```
+
+These are fixed builtin leaves. The extrema rules also recognize already-WD
+finite extrema of `union({a},{b})` or a displayed two-member set. Finiteness,
+nonemptiness, real membership and displayed-set distinctness still belong to
+object WD. Both error bounds or both positive memberships are required. A
+nested minimum can use a checked typed intermediate as above; the rules do
+not increase the inherited premise ceiling.
+
+Runnable tracers: [maximum bound](../examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit),
+[minimum bound](../examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit),
+[positive minimum](../examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit),
+[distance symmetry](../examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit),
+and [distance triangle](../examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit).
 
 **Checked direct forms:**
 
@@ -11964,12 +12018,14 @@ they introduce a predicate signature, not a proved instance or a definition
 body. Named set-theoretic releases remain part of the fixed mathematical
 foundation and are allowed under strict mode.
 
-Lean rechecking is a separate experimental direction. The current `src/lib.rs`
-and `Cargo.toml` do not build a Litex-to-Lean compiler, and the current CLI has
-no Lean output flag. The [Lean object interface](../lean/) is an initial
-bootstrap, without a compiler or theorem replay. Earlier compiler/ABI material
-is archived locally under `scripts/legacy_to_lean/`, which is excluded from Git;
-it does not certify a run of this kernel.
+Lean rechecking is a separate preview direction. `litex -lean -f <file>`
+replays supported typed verification results from a standalone source file.
+The [semantic interface](../lean/Litex.lean) and
+[generated problem pairs](../lean/examples/) cover the initial numeric slice;
+generation and real Lean kernel checking remain separate gates. Unsupported
+proof routes fail compilation rather than becoming assumptions. Development
+material and the earlier ABI are local-only under ignored `scripts/`.
+See the [CLI boundary](cli.md#lean-compiler-boundary) for current restrictions.
 
 ### Documentation and test contract
 

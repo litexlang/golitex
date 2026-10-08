@@ -45,7 +45,7 @@ _— George Boole，《思维的规律》（1854），第 II 章（节选）_
 
 **普通事实自动触发局部验证，是 Litex 的默认证明接口。** 作者选择定义、构造和中间结论；语言查找受支持的依据，返回结构化反馈，并把通过的事实存入上下文。这些结果可供 AI 读取，用于修复尝试、复用知识和积累可检查的推理数据。[第 1.1 节](#fact-oriented-interface)给出具体例子。
 
-Litex 到 Lean 的编译器预计在 2026 年底完成，目前尚未接入构建。它的目标是让支持范围内的证明接受 Lean 独立复核，并连接现有形式化生态。
+当前构建已提供初始的 `litex -lean -f <source.lit>` 独立文件编译入口，将受支持的验证结果编译为 Lean 证明，接受独立复核。整个 Litex 系统的覆盖及其与现有形式化生态的连接，仍在继续推进。
 
 <a id="overview-spine"></a>
 
@@ -193,7 +193,9 @@ release thm newton::fixed_point(sqrt(2))
 </tbody>
 </table>
 
-**把数学变成一张关系图。** Litex 可以把定义、定理和已验证事实组织成关系图：节点表示数学内容，连线展示它们之间的依赖，帮助读者追溯一项结论使用了什么。可以到 [litexlang.com](https://litexlang.com) 试用 Litex 生成的可交互关系图，探索数学源码中的知识与联系。
+想了解抽取过程与支持范围，可以查看 [Python/C 抽取实现](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code)。
+
+**把数学变成一张关系图。** Litex 可以把定义、定理和已验证事实组织成关系图：节点表示数学内容，连线展示它们之间的依赖，帮助读者追溯一项结论使用了什么。可以到 [litexlang.com](https://litexlang.com) 试用 Litex 生成的可交互关系图，探索数学源码中的知识与联系。图的生成与查看方式见 [关系图实现](https://github.com/litexlang/golitex/tree/main/src/graph)。
 
 **把数学写成便于阅读的文稿。** 数学源码也可以转换为 LaTeX，用于讲义和文稿。左侧是一条数学事实，右侧是实际生成的排版源码；转换负责呈现，数学验证另行进行：
 
@@ -210,6 +212,8 @@ release thm newton::fixed_point(sqrt(2))
 </tr>
 </tbody>
 </table>
+
+源码到排版的转换过程见 [LaTeX 转换实现](https://github.com/litexlang/golitex/tree/main/src/compile_to_latex)。
 
 完整的定义、证明与项目配置，见[第 3 节](#mathematical-workflow)。
 
@@ -229,26 +233,31 @@ flowchart LR
     Knowledge --> AI
 ```
 
-**5. 写出的证明，最终还能交给 Lean 再检查一次。**
+**5. 受支持的证明，还能交给 Lean 再检查一次。**
 
-我希望这些更贴近日常数学的表达，能够编译为 Lean 证明对象，接受独立复核并连接现有生态。当前构建尚未接入这个编译入口，它仍是 Litex 要继续实现的目标。
+我希望这些更贴近日常数学的表达，能够编译为 Lean 证明对象，接受独立复核并连接现有生态。初始的独立文件编译器，已经为有限范围内的验证结果提供了这条路线。
 
-例如，一条 Litex 计算事实：
+例如，`lean/examples/one_equals_itself/statement.lit` 写下数字一等于自身：
 
 ```litex
-1 + 1 = 2
+1 = 1
 ```
 
-沿用仓库早期编译实验的表示方式，对应的 Lean 证明可以写为：
+运行 `litex -lean -f lean/examples/one_equals_itself/statement.lit`，会将配对的 Lean 源码输出到标准输出；保存该输出得到同名的 `.lean` 文件。下面保留实际生成的证明形式，仅省略自动生成的命名空间：
 
 ```lean
 import Litex
 
-theorem one_add_one : Litex.Same ((1 : ℂ) + (1 : ℂ)) (2 : ℂ) := by
-  exact Litex.Same.ofEq (by norm_num)
+universe u
+variable {M : Litex.Semantics.{u}}
+
+theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
+  (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))
 ```
 
-`Litex.Same` 是编译层中的相等关系。上面的最小 Lean 片段已由 Lean 检查；它展示目标证明的形式，当前 Litex 构建仍未提供生成它的编译入口。
+`Litex.number` 返回 `Obj ℂ`，其中保留原生数字及其良定义证明。`Litex.Same` 在显式的 `Semantics` 参数 `M` 下比较对象表示的数学意义；编译器通过 `Litex.sameRefl` 回放已经检查的反身性路线。这个生成例子已通过 Lean 检查，但不表示完整 Litex 模型或所有证明路线都已实现。
+
+维护中的源码位置是 [Lean 语义接口](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean)与[成对的编译例子](https://github.com/litexlang/golitex/tree/main/lean/examples)。早期复杂函数产物在[第 5 节](#compatibility)明确标为历史实验。
 
 无论你是数学家、程序员，还是 Lean 用户，都可以从 Litex 中发现新的知识与视角；感兴趣的话，可以继续阅读文末的[编程、数学与Litex形式化](#overview-readers)。
 
@@ -864,7 +873,7 @@ Litex 则把数学组织成对象与逐步增长的事实上下文。`e $in S` �
 
 这不等于取消静态约束或推断。Litex 在接受表达式前仍会检查定义域、返回集合、结构字段和其他良定义性义务，并通过专用规则在证明中推出成员与载体事实。区别在于，这种推断向上下文增加 `e $in S` 一类事实，而不是推断一个决定对象身份的特权类型 `e : T`。
 
-Lean 以依赖类型论为核心；Litex 选择以集合与成员事实组织用户层数学。Lean 的 `Set α` 同样能表达集合论，Mathlib 也提供丰富的数学接口；差异在于两者默认让作者怎样引入对象、陈述事实和交代验证依据。Litex 当前的覆盖仍在扩展，不能由共同的数学目标推出两者现有的表达范围相同。Litex 的验证器与内置规则构成自己的可信实现面，因此把证据交给 Lean 独立复核是一条重要的目标路线；早期编译实验尚未接入当前构建。
+Lean 以依赖类型论为核心；Litex 选择以集合与成员事实组织用户层数学。Lean 的 `Set α` 同样能表达集合论，Mathlib 也提供丰富的数学接口；差异在于两者默认让作者怎样引入对象、陈述事实和交代验证依据。Litex 当前的覆盖仍在扩展，不能由共同的数学目标推出两者现有的表达范围相同。Litex 的验证器与内置规则构成自己的可信实现面，因此把证据交给 Lean 独立复核很重要。初始的独立文件编译器已经回放有限范围内的当前验证结果，整个系统尚未覆盖。
 
 </details>
 
@@ -1387,18 +1396,18 @@ _“形式证明的每一步逻辑推导，都已被检查直至数学的基础�
 
 _— Thomas Hales，《Formal Proof》（2008）_
 
-Litex 当前使用自己的验证器检查源码并提供反馈；把证明交给 Lean 独立复核，是下一阶段的目标。这需要满足三个条件：翻译保持原命题的含义，生成的证明没有空洞，而且确实通过 Lean 内核检查。满足这些条件后，才能减少对 Litex 验证器本身的依赖，并进一步连接 Mathlib。早期编译实验的产物仍被保留，但当前构建尚未接入编译器。
+Litex 使用自己的验证器检查源码并提供反馈；当前构建也已提供初始的独立文件 `-lean -f` 编译器。独立复核需要满足三个条件：翻译保持原命题的含义，生成的证明没有空洞，而且确实通过 Lean 内核检查。满足这些条件后，才能在已编译的路线内减少对 Litex 验证器本身的依赖，并进一步连接 Mathlib。当前编译器只支持有限范围的结果，尚未覆盖整个 Litex 系统。
 
-> **当前构建：** `litex` 可执行程序没有集成的编译入口。早期实验保留的脚本指向本构建不提供的二进制目标。下面仅记录那次实验；它尚未由当前构建重新生成，也未在当前 Lean 环境中重新核验。
+> **当前构建：** `litex -lean -f <source.lit>` 编译受支持的独立文件，并拒绝尚未覆盖的路线。当前接口位于 [lean/Litex.lean](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean)，生成的成对例子位于 [lean/examples](https://github.com/litexlang/golitex/tree/main/lean/examples)。下面的复杂函数例子记录早期实验；它尚未由当前编译器重新生成，也未在当前 Lean 环境中重新核验。
 
 <details>
-<summary><strong>示例：Litex代码如何编译成Lean</strong></summary>
+<summary><strong>历史示例：早期 Litex 到 Lean 的编译实验</strong></summary>
 
 目标中的 Litex–Lean–Mathlib 路径依次经过：
 
 `Litex 源码 → Litex 验证 → ToLean 编译 → Lean 内核复核 → 手写 adapter → Mathlib 定理`
 
-> 当前验证结果保留事实与规则的来源；编译器未来须把每条**受支持**的接受路径变成 Lean 可检查的证据，并明确拒绝尚未覆盖的路径。规则数量本身不能代替这项逐路径的语义工作。
+> 当前验证结果保留事实与规则的来源；初始编译器已经回放其中有限范围的结果。继续扩展，需要把新增的每条**受支持**的接受路径变成 Lean 可检查的证据，并明确拒绝尚未覆盖的路径。规则数量本身不能代替这项逐路径的语义工作。下面的历史产物使用早期接口，不是当前的 `Obj` 契约。
 
 举例：我们想要证明前`n`个正奇数之和是`n^2`。我们先写下Litex的源码：
 
@@ -1592,7 +1601,7 @@ Litex 希望让同一份经过验证的源码和结果，用于人的阅读、AI
 | --- | --- |
 | 可读推理的前端 | 人可以直接审核的数学对象、条件、中间事实和结论 |
 | 可信推理数据的生产层 | 经过机器检查的事实与验证来源、明确的停止边界，以及被显式标出的可信边界 |
-| 现有生态的接入层 | 从一开始的设计上即面向 Lean 编译与复核（第 5 节，Experimental）；早期 Lean 产物仅记录实验覆盖，当前 `src/` 未接入编译器；以及明确分离、由 AI 或人类编写的新增 Lean/Mathlib adapter |
+| 现有生态的接入层 | 初始的独立文件 Lean 编译与复核，支持有限范围的验证结果（第 5 节，Experimental）；整个系统的覆盖尚未完成，新增 Lean/Mathlib adapter 仍明确分离，由 AI 或人类编写 |
 | 证明 → 可执行代码（Experimental） | 把已检查的计算片段转化成可运行的 Python / C（第 3.4 节） |
 
 当前验证器与工具已具备相当规模，但可用性、领域覆盖与实际采用仍须由带日期的例子和使用结果证明。对这些方向感兴趣，可以联系 litexlang@outlook.com。
@@ -1678,7 +1687,7 @@ Litex: 对象与事实 → 内核检查并检索依据 → 已验证事实扩展
 
 Lean 把对象、命题和证明纳入依赖类型论的 term/type 体系；Litex 在源码中区分数学对象、事实以及定义和证明步骤。下面的 subtype 对照展示：当函数调用的条件已经成立时，两种语言怎样写出这个调用。这里比较的是表达方式和阅读成本。
 
-Lean 仍是 Litex 的重要参照与未来复核目标。Lean 的证明经精化成为由内核检查的证明项；面向可执行程序的编译器 IR 是另一条路径。Litex 的早期编译实验留下了 Lean 产物，但当前 `src/` 尚未接入编译器。性能或学习成本上的优势也不能只凭界面推断，须在可比任务上测量。
+Lean 仍是 Litex 的重要参照与复核目标。Lean 的证明经精化成为由内核检查的证明项；面向可执行程序的编译器 IR 是另一条路径。当前独立文件编译器已将受支持的结果回放到 Lean；更广的覆盖与历史复杂函数例子的迁移仍是另外的工作。性能或学习成本上的优势也不能只凭界面推断，须在可比任务上测量。
 
 <details>
 <summary><strong>Lean–Litex 对照示例</strong></summary>
@@ -1807,7 +1816,7 @@ Litex 仍检查 `x > 0`，但让它作为普通事实留在上下文中，源码
 
 从前提出发积累中间事实，与从目标出发分解证明义务，都是数学工作中有用的方向。Litex 的默认源码偏向前者；Lean tactic 的常见交互偏向后者。AI 究竟在哪一种表示下更容易提出正确步骤、利用失败反馈和复用中间结论，是可以比较的研究问题，不能仅从训练方式推断。
 
-理想的协作流程可以同时利用两种方向：先用目标选择有价值的路线，再逐句积累可检查的事实。Litex 与 Lean 若能完成可信交接，就可能把两种工作方式连接起来；当前编译入口尚待实现。
+理想的协作流程可以同时利用两种方向：先用目标选择有价值的路线，再逐句积累可检查的事实。Litex 初始的独立文件编译器已提供有限范围的 Lean 交接；要在整个系统上连接这两种工作方式，仍须扩展结果覆盖并验证语义。
 
 </details>
 

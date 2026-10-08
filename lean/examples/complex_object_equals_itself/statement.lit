@@ -1,0 +1,4 @@
+# Every complex object equals itself, with its original generic representation.
+
+forall a C:
+    a = a

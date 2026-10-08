@@ -27,6 +27,7 @@ use super::subset::standard_set_is_subset_eq;
 
 mod real_arithmetic_constructor;
 pub mod scalar_refined_product;
+pub mod positive_minimum;
 mod discrete_arithmetic_constructor;
 pub use discrete_arithmetic_constructor::{
     DiscreteArithmeticConstructorClosureBuiltinRuleProof, DiscreteArithmeticConstructorTree,
@@ -38,6 +39,7 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    MinPreservesPositiveCarrier(positive_minimum::MinPreservesPositiveCarrierProof),
     NonzeroRationalQuotient(scalar_refined_product::NonzeroRationalQuotientProof),
     NonzeroRationalProduct(scalar_refined_product::NonzeroRationalProductProof),
     PositiveRealQuotient(scalar_refined_product::PositiveRealQuotientProof),
@@ -409,6 +411,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
         if let Some(proof) = self.scalar_refined_product(fact, verify_state)? { return Ok(Some(proof)); }
+        if let Some(proof) = self.search_positive_minimum(fact, verify_state)? { return Ok(Some(proof)); }
 
         if let Some(proof) = self.finite_set_max_membership_proof(fact) {
             return Ok(Some(proof));

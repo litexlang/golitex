@@ -17,6 +17,24 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsDifferenceTriangle(_)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("AbsDifferenceTriangle")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MaxLipschitzFromCoordinateBounds(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("MaxLipschitzFromCoordinateBounds")),
+            ("left_error_bound", project_verify_fact(&p.left_error_bound, runtime)),
+            ("right_error_bound", project_verify_fact(&p.right_error_bound, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::MinLipschitzFromCoordinateBounds(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("MinLipschitzFromCoordinateBounds")),
+            ("left_error_bound", project_verify_fact(&p.left_error_bound, runtime)),
+            ("right_error_bound", project_verify_fact(&p.right_error_bound, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::MinPreservesPositiveCarrier(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("MinPreservesPositiveCarrier")),
+            ("left_positive", project_verify_fact(&p.left_positive, runtime)),
+            ("right_positive", project_verify_fact(&p.right_positive, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ProductNonnegativeNegativeWeak(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("ProductNonnegativeNegativeWeak")),
 ("nonnegative_factor",project_verify_fact(&p.nonnegative_factor,runtime)),
 ("negative_factor",project_verify_fact(&p.negative_factor,runtime)),

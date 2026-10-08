@@ -10,6 +10,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::rational_expression::{exact_rational::EvalRational, NumberCompareResult};
 
 pub enum ScalarIdentityBuiltinRuleProof {
+    AbsDifferenceSymmetry(AbsDifferenceSymmetryProof),
     SignZeroReflection(SignZeroReflectionProof),
     FiniteSetMaxSelection(FiniteSetMaxSelectionBuiltinRuleProof),
     FiniteSetMinSelection(FiniteSetMinSelectionBuiltinRuleProof),
@@ -21,6 +22,10 @@ pub enum ScalarIdentityBuiltinRuleProof {
     MinMaxAbsorption(MinMaxAbsorptionBuiltinRuleProof),
     MaxMinAbsorption(MaxMinAbsorptionBuiltinRuleProof),
     LcmZero(LcmZeroBuiltinRuleProof),
+}
+pub struct AbsDifferenceSymmetryProof {}
+impl AbsDifferenceSymmetryProof {
+    pub fn new() -> Self { Self {} }
 }
 // sign(x)=0 implies x=0 for real x; retain the actual stored equality.
 pub struct SignZeroReflectionProof {
@@ -71,6 +76,7 @@ impl ExactExtremumComparison {
 impl ScalarIdentityBuiltinRuleProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::AbsDifferenceSymmetry(_) => "AbsDifferenceSymmetry",
             Self::SignZeroReflection(_) => "SignZeroReflection",
             Self::FiniteSetMaxSelection(_) => "FiniteSetMaxSelection",
             Self::FiniteSetMinSelection(_) => "FiniteSetMinSelection",
@@ -93,6 +99,15 @@ impl Runtime {
     ) -> RuntimeResult<Option<ScalarIdentityBuiltinRuleProof>> {
         use ScalarIdentityBuiltinRuleProof as P;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            // Real absolute difference is symmetric: abs(a-b)=abs(b-a).
+            // Parent equality WD owns both real domains; this leaf adds no search.
+            if let (Obj::ArithmeticOperator(A::Abs(left)), Obj::ArithmeticOperator(A::Abs(right))) = (left, right) {
+                if let (Obj::ArithmeticOperator(A::Sub(a)), Obj::ArithmeticOperator(A::Sub(b))) = (&*left.arg, &*right.arg) {
+                    if a.left.ir() == b.right.ir() && a.right.ir() == b.left.ir() {
+                        return Ok(Some(P::AbsDifferenceSymmetry(AbsDifferenceSymmetryProof::new())));
+                    }
+                }
+            }
             // A displayed nonempty rational set has an extremal original member.
             // Example: finite_set_max({1/3,1/2}) = 1/2. Whole-object WD
             // retains finiteness, real membership and pairwise distinctness.

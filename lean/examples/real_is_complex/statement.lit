@@ -1,0 +1,4 @@
+# Every real object is also a complex object.
+
+forall a R:
+    a $in C

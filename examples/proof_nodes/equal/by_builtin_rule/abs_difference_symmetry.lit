@@ -1,0 +1,12 @@
+# Tracer: AbsDifferenceSymmetry.
+# Before (needed a negation bridge):
+# have x,y R
+# x-y = -(y-x)
+# abs(x-y) = abs(-(y-x)) = abs(y-x)
+# Former behavior: the bare symmetric equality was a search_proof miss.
+# Now: the direct equality checks for arbitrary real operands.
+# Boundary: abs requires real arguments; sum and difference are not interchangeable.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit
+
+forall x,y R:
+    abs(x-y) = abs(y-x)

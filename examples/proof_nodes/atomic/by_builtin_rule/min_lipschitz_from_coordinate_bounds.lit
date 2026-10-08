@@ -1,0 +1,30 @@
+# Tracer: MinLipschitzFromCoordinateBounds.
+# Before (direct target rejected):
+# forall a,b,x,y R, epsilon R+:
+#     abs(a-x) <= epsilon
+#     abs(b-y) <= epsilon
+#     =>:
+#         abs(min(a,b)-min(x,y)) <= epsilon
+# Former behavior: search_proof miss; Analysis used a 152-line case proof.
+# Now: the two checked error bounds close the minimum estimate.
+# Boundary: both bounds and the real/finite-extremum domains are required.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit
+
+forall a,b,x,y R, epsilon R+:
+    abs(a-x) <= epsilon
+    abs(b-y) <= epsilon
+    =>:
+        abs(min(a,b)-min(x,y)) <= epsilon
+
+thm two_point_min_stability:
+    ? forall epsilon R+, u,v,x,y R:
+        abs(u-x) < epsilon
+        abs(v-y) < epsilon
+        $is_finite_set(union({u},{v}))
+        $is_nonempty_set(union({u},{v}))
+        union({u},{v}) $subset R
+        $is_finite_set(union({x},{y}))
+        $is_nonempty_set(union({x},{y}))
+        union({x},{y}) $subset R
+        =>:
+            abs(finite_set_min(union({u},{v}))-finite_set_min(union({x},{y}))) <= epsilon

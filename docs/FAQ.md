@@ -57,7 +57,10 @@ generating FactIds and win before a rule can introduce new proof obligations,
 including inside strategy search. The later class-search fallback can compare members of
 the two endpoint classes using identity, permitted builtin rules, or constructor
 matching, and records the left path, new proof, and right path. This also lets
-known membership cross alpha-equivalent named function sets. The peer proof
+known membership cross alpha-equivalent named function sets. A stored equality with structurally alpha-identical endpoints can also be
+cited before trying a new peer bridge. Renaming bound summand variables keeps
+the fact reusable; changing a free function, body, bound or carrier does not.
+No equality keys are rewritten by this read-only check. The peer proof
 cannot recursively expand more classes or enable a disabled builtin entry. Larger
 classes still mean more candidate comparisons. The
 [equality README](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)

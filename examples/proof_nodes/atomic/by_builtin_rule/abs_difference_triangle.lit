@@ -1,0 +1,16 @@
+# Tracer: AbsDifferenceTriangle.
+# Before (needed an explicit distance decomposition):
+# have x,y,z R
+# x-z = (x-y)+(y-z)
+# abs(x-z) = abs((x-y)+(y-z)) <= abs(x-y)+abs(y-z)
+# Former behavior: the direct distance triangle was a search_proof miss.
+# Now: direct distance and subtraction triangles check, including reversed sides.
+# Boundary: the same intermediate point must join the two distances; WD is required.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit
+
+forall x,y,z R:
+    abs(x-z) <= abs(x-y)+abs(y-z)
+    abs(x-z) <= abs(z-y)+abs(y-x)
+
+forall x,y R:
+    abs(x-y) <= abs(x)+abs(y)

@@ -1,0 +1,16 @@
+# Tracer: MinPreservesPositiveCarrier.
+# Before (typed value rejected without a sign case proof):
+# have a,b R+
+# have delta R+ = min(a,b)
+# Former behavior: positive membership was a search_proof miss.
+# Now: the minimum consumes both checked positive-real memberships.
+# Boundary: an arbitrary real, zero or negative operand cannot supply this refinement.
+# A nested minimum may use a checked typed intermediate; no search ceiling is widened.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit
+
+have a,b,c R+
+have first_radius R+ = min(a,b)
+have common_radius R+ = min(first_radius,c)
+
+forall lower_radius,upper_radius R+:
+    min(lower_radius,upper_radius) $in R+

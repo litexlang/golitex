@@ -9,6 +9,7 @@
 have fn square(x R) R = x^2
 preimage(square, 4) $subset R
 preimage_set(square, {4}) $subset R
+preimage_set(square, {4}) $subset union(preimage_set(square, {4}), {})
 preimage_set(square, {4}) $in power_set(R)
 
 have fn reciprocal(x R: x != 0) R = 1 / x

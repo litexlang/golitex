@@ -165,9 +165,6 @@ impl Runtime {
 
         // A — shape dispatch
         let shape = match (&fact.left, &fact.right) {
-            (Obj::FunctionSpace(FunctionSpace::Preimage(_) | FunctionSpace::PreimageSet(_)), _) => {
-                self.function_preimage_subset_input_carrier_proof(fact, verify_state)
-            }
             (Obj::StandardSet(left), Obj::StandardSet(right)) => {
                 if standard_set_is_subset_eq(left, right) {
                     return Ok(Some(SubsetFactSearchProofByBuiltinRule::StandardSetSubset(
@@ -340,6 +337,13 @@ impl Runtime {
         }?;
         if shape.is_some() {
             return Ok(shape);
+        }
+
+        // Preserve ordinary union/intersection inclusion priority.
+        if matches!(fact.left, Obj::FunctionSpace(FunctionSpace::Preimage(_) | FunctionSpace::PreimageSet(_))) {
+            if let Some(proof) = self.function_preimage_subset_input_carrier_proof(fact, verify_state)? {
+                return Ok(Some(proof));
+            }
         }
 
         // Bounded leaf: one known middle set for transitivity.

@@ -285,7 +285,7 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
                 },
                 P::FloorIntegerTranslation(p) => entries.push(("integer_proof",project_verify_fact(&p.integer_proof,runtime))),
                 P::CeilIntegerTranslation(p) => entries.push(("integer_proof",project_verify_fact(&p.integer_proof,runtime))),
-                P::FloorNegation(_) | P::CeilNegation(_) | P::MinMaxAbsorption(_) | P::MaxMinAbsorption(_) | P::LcmZero(_) => {},
+                P::AbsDifferenceSymmetry(_) | P::FloorNegation(_) | P::CeilNegation(_) | P::MinMaxAbsorption(_) | P::MaxMinAbsorption(_) | P::LcmZero(_) => {},
             }
             object_for(runtime,entries)
         },

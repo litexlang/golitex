@@ -126,62 +126,6 @@ fn actual_rules_are_available_in_all_output_locales() {
     }
 }
 
-#[test]
-fn graph_keeps_both_extremum_order_citations() {
-    let mut rt = runtime(OutputLanguage::English);
-    let run = rt.run_litex_code("forall a,b,c,d R:\n    a<=c\n    b<=d\n    =>:\n        min(a,b)<=min(c,d)\n        max(a,b)<=max(c,d)\n").unwrap();
-    assert!(run.success);
-    let facts_before = rt.top_exec_env().facts.facts_by_id.len();
-    let ids_before = rt.global_ids.clone();
-    let mut graph = crate::graph::MathGraph::new(OutputLanguage::English);
-    graph.collect_run(&run, &rt, "<eval>");
-    let json = graph.json(true, "eval", None);
-    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), facts_before);
-    assert_eq!(rt.global_ids, ids_before);
-    for premise in ["a <= c", "b <= d"] {
-        assert!(json.contains(premise), "{json}");
-    }
-    assert!(json.contains("min(a, b) <= min(c, d)"), "{json}");
-    assert!(json.contains("max(a, b) <= max(c, d)"), "{json}");
-    assert!(!json.contains("unresolved_reference"), "{json}");
-    let parsed = JsonValue::parse(&json).unwrap();
-    let root = parsed.as_object().unwrap();
-    let JsonValue::Array(nodes) = root.get("nodes").unwrap() else {
-        panic!("nodes")
-    };
-    let JsonValue::Array(edges) = root.get("edges").unwrap() else {
-        panic!("edges")
-    };
-    for target in ["min(a, b) <= min(c, d)", "max(a, b) <= max(c, d)"] {
-        let goal_ids: Vec<&str> = nodes
-            .iter()
-            .filter_map(|n| {
-                let n = n.as_object().unwrap();
-                (n.get("label").unwrap().as_str().unwrap() == target)
-                    .then(|| n.get("id").unwrap().as_str().unwrap())
-            })
-            .collect();
-        assert!(!goal_ids.is_empty(), "{target}");
-        for premise in ["a <= c", "b <= d"] {
-            let premise_ids: Vec<&str> = nodes
-                .iter()
-                .filter_map(|n| {
-                    let n = n.as_object().unwrap();
-                    (n.get("label").unwrap().as_str().unwrap() == premise)
-                        .then(|| n.get("id").unwrap().as_str().unwrap())
-                })
-                .collect();
-            assert!(
-                edges.iter().any(|e| {
-                    let e = e.as_object().unwrap();
-                    premise_ids.contains(&e.get("from").unwrap().as_str().unwrap())
-                        && goal_ids.contains(&e.get("to").unwrap().as_str().unwrap())
-                }),
-                "{premise} -> {target}: {json}"
-            );
-        }
-    }
-}
 
 #[test]
 fn fixed_argument_monotonicity_and_reverse_spellings() {

@@ -12,6 +12,9 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    AbsDifferenceTriangle(super::real_metric_bounds::AbsDifferenceTriangleProof),
+    MaxLipschitzFromCoordinateBounds(super::real_metric_bounds::MaxLipschitzFromCoordinateBoundsProof),
+    MinLipschitzFromCoordinateBounds(super::real_metric_bounds::MinLipschitzFromCoordinateBoundsProof),
     ProductNonnegativeNegativeWeak(super::scalar_extra_sign::ProductNonnegativeNegativeWeakProof),
     SqrtMonotoneFromDefinedRoots(super::sqrt_defined_order::SqrtMonotoneFromDefinedRootsProof),
     AbsFromIntervalBounds(super::scalar_order_relations::AbsFromIntervalBoundsProof),
@@ -540,6 +543,9 @@ impl Runtime {
         }
 
         if let Some(proof) = self.search_sign_extremum_weak_order(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.search_real_metric_bound(fact, verify_state)? {
             return Ok(Some(proof));
         }
 

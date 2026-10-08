@@ -1,0 +1,607 @@
+{
+  "date": "2026-10-08",
+  "scope": "Implement the three approved groups and verify source-preserving reductions",
+  "baseline_sha256": {
+    "src/graph/walk_generated.rs": "b963bd1de4540293b8938d681f71d611f7802c539f273e7b0a7fbb9130336b7a",
+    "src/json_output/project_detailed/builtin_atomic_gen.rs": "513fff6361cc8a1a0d813ead42695dfdedc9643409d9594b8b4aae946e2338f8",
+    "src/json_output/project_detailed/equality_builtin_gen.rs": "02fb93cbe551ba8c2a322371d947e01c03cfa7ca6aa92dd58bbec3728e83d1d5",
+    "src/json_output/explain/atomic_builtin_rule/less_equal.rs": "544f157f44364735a55aa59dc5eecdb43f67acd023a489ec3f92c79f68eac186",
+    "src/json_output/explain/atomic_builtin_rule/in_fact.rs": "f16a25be9bbef8e973c43f0bc32ea1a1059ce7ce8fff2dc1c3d38022dd5135d5",
+    "src/json_output/explain/equality_builtin_rule/scalar_identities.rs": "fdf4aed5d11a984c7aa01fa01cc464f60bf97b4756102c0e15f037240ed00de0",
+    "docs/Manual.md": "54490286688edddece60a10ee20795a77d0eff9d3dffd1cf13475b97b651dc09",
+    "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit": "eeeb0327c807dbebb9e503265671e99e8a00f2f419cd515abb6650f3ad52796d",
+    "scripts/Analysis/textbook/chapter06-sequential-limits.lit": "d267f9261040ee70ab215837373e7a723717b2d326a96f0d2cca89052031cc23"
+  },
+  "checks": [
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit"
+      ],
+      "source_sha256": "503cf9a230611d179fd35245eb0dce3edd68d9f2f8cd75e545f9ac108079493e",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (max(a, b) - max(x, y)) <= epsilon",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (max(a, b) - max(x, y)) <= epsilon"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "thm two_point_max_stability:\n    ? forall epsilon R+, u, v, x, y R:\n        abs (u - x) < epsilon\n        abs (v - y) < epsilon\n        $is_finite_set(union({u}, {v}))\n        $is_nonempty_set(union({u}, {v}))\n        union({u}, {v}) $subset R\n        $is_finite_set(union({x}, {y}))\n        $is_nonempty_set(union({x}, {y}))\n        union({x}, {y}) $subset R\n        =>:\n            abs (finite_set_max(union({u}, {v})) - finite_set_max(union({x}, {y}))) <= epsilon",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall epsilon R+, u, v, x, y R:\n    abs (u - x) < epsilon\n    abs (v - y) < epsilon\n    $is_finite_set(union({u}, {v}))\n    $is_nonempty_set(union({u}, {v}))\n    union({u}, {v}) $subset R\n    $is_finite_set(union({x}, {y}))\n    $is_nonempty_set(union({x}, {y}))\n    union({x}, {y}) $subset R\n    =>:\n        abs (finite_set_max(union({u}, {v})) - finite_set_max(union({x}, {y}))) <= epsilon"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit"
+      ],
+      "source_sha256": "cd07c96b896a65a6190519251f72bd61fbb72c2bdd2f7f62bf18416b54c87218",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (min(a, b) - min(x, y)) <= epsilon",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (min(a, b) - min(x, y)) <= epsilon"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "thm two_point_min_stability:\n    ? forall epsilon R+, u, v, x, y R:\n        abs (u - x) < epsilon\n        abs (v - y) < epsilon\n        $is_finite_set(union({u}, {v}))\n        $is_nonempty_set(union({u}, {v}))\n        union({u}, {v}) $subset R\n        $is_finite_set(union({x}, {y}))\n        $is_nonempty_set(union({x}, {y}))\n        union({x}, {y}) $subset R\n        =>:\n            abs (finite_set_min(union({u}, {v})) - finite_set_min(union({x}, {y}))) <= epsilon",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall epsilon R+, u, v, x, y R:\n    abs (u - x) < epsilon\n    abs (v - y) < epsilon\n    $is_finite_set(union({u}, {v}))\n    $is_nonempty_set(union({u}, {v}))\n    union({u}, {v}) $subset R\n    $is_finite_set(union({x}, {y}))\n    $is_nonempty_set(union({x}, {y}))\n    union({x}, {y}) $subset R\n    =>:\n        abs (finite_set_min(union({u}, {v})) - finite_set_min(union({x}, {y}))) <= epsilon"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit"
+      ],
+      "source_sha256": "e0cf128839a51432d8523b9eefc93dbb2f17981546edcd56f018050e856e2b73",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x, y R:\n    abs (x - y) = abs (y - x)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y R:\n    abs (x - y) = abs (y - x)"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit"
+      ],
+      "source_sha256": "28c8fc2496940b8ab4535c7bcd7339dc45289c469ccd5c5b3006e2e226e0ad63",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x, y, z R:\n    abs (x - z) <= abs (x - y) + abs (y - z)\n    abs (x - z) <= abs (z - y) + abs (y - x)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y, z R:\n    abs (x - z) <= abs (x - y) + abs (y - z)\n    abs (x - z) <= abs (z - y) + abs (y - x)"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall x, y R:\n    abs (x - y) <= abs (x) + abs (y)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y R:\n    abs (x - y) <= abs (x) + abs (y)"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit"
+      ],
+      "source_sha256": "73bcb9f5fac268c61aa2d27d51a541c1e7e0a7337dc785a2ef2ed7abdb597c25",
+      "exit_code": 1,
+      "output": {
+        "kind": "run",
+        "success": false,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have a, b, c R+",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "a $in R+"
+            ],
+            "infers": [
+              "0 < a",
+              "0 <= a",
+              "a != 0",
+              "b $in R+",
+              "0 < b",
+              "0 <= b",
+              "b != 0",
+              "c $in R+",
+              "0 < c",
+              "0 <= c",
+              "c != 0"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "have first_radius R+ = min(a, b)",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have with equality",
+              "message": "Introduce an object equal to a given well-defined value"
+            },
+            "stores": [
+              "first_radius $in R+"
+            ],
+            "infers": [
+              "0 < first_radius",
+              "0 <= first_radius",
+              "first_radius != 0",
+              "first_radius = min(a, b)"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "have common_radius R+ = min(first_radius, c)",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have with equality",
+              "message": "Introduce an object equal to a given well-defined value"
+            },
+            "stores": [
+              "common_radius $in R+"
+            ],
+            "infers": [
+              "0 < common_radius",
+              "0 <= common_radius",
+              "common_radius != 0",
+              "common_radius = min(first_radius, c)"
+            ]
+          }
+        ],
+        "session_error": "parse_error: name `a` is already bound in an enclosing parse scope at line 15 in /Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit"
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit"
+      ],
+      "source_sha256": "503cf9a230611d179fd35245eb0dce3edd68d9f2f8cd75e545f9ac108079493e",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (max(a, b) - max(x, y)) <= epsilon",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (max(a, b) - max(x, y)) <= epsilon"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "thm two_point_max_stability:\n    ? forall epsilon R+, u, v, x, y R:\n        abs (u - x) < epsilon\n        abs (v - y) < epsilon\n        $is_finite_set(union({u}, {v}))\n        $is_nonempty_set(union({u}, {v}))\n        union({u}, {v}) $subset R\n        $is_finite_set(union({x}, {y}))\n        $is_nonempty_set(union({x}, {y}))\n        union({x}, {y}) $subset R\n        =>:\n            abs (finite_set_max(union({u}, {v})) - finite_set_max(union({x}, {y}))) <= epsilon",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall epsilon R+, u, v, x, y R:\n    abs (u - x) < epsilon\n    abs (v - y) < epsilon\n    $is_finite_set(union({u}, {v}))\n    $is_nonempty_set(union({u}, {v}))\n    union({u}, {v}) $subset R\n    $is_finite_set(union({x}, {y}))\n    $is_nonempty_set(union({x}, {y}))\n    union({x}, {y}) $subset R\n    =>:\n        abs (finite_set_max(union({u}, {v})) - finite_set_max(union({x}, {y}))) <= epsilon"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit"
+      ],
+      "source_sha256": "cd07c96b896a65a6190519251f72bd61fbb72c2bdd2f7f62bf18416b54c87218",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_lipschitz_from_coordinate_bounds.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (min(a, b) - min(x, y)) <= epsilon",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall a, b, x, y R, epsilon R+:\n    abs (a - x) <= epsilon\n    abs (b - y) <= epsilon\n    =>:\n        abs (min(a, b) - min(x, y)) <= epsilon"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "thm two_point_min_stability:\n    ? forall epsilon R+, u, v, x, y R:\n        abs (u - x) < epsilon\n        abs (v - y) < epsilon\n        $is_finite_set(union({u}, {v}))\n        $is_nonempty_set(union({u}, {v}))\n        union({u}, {v}) $subset R\n        $is_finite_set(union({x}, {y}))\n        $is_nonempty_set(union({x}, {y}))\n        union({x}, {y}) $subset R\n        =>:\n            abs (finite_set_min(union({u}, {v})) - finite_set_min(union({x}, {y}))) <= epsilon",
+            "proof_method": {
+              "type": "definition",
+              "rule_name": "Define theorem",
+              "message": "Record a theorem"
+            },
+            "stores": [
+              "forall epsilon R+, u, v, x, y R:\n    abs (u - x) < epsilon\n    abs (v - y) < epsilon\n    $is_finite_set(union({u}, {v}))\n    $is_nonempty_set(union({u}, {v}))\n    union({u}, {v}) $subset R\n    $is_finite_set(union({x}, {y}))\n    $is_nonempty_set(union({x}, {y}))\n    union({x}, {y}) $subset R\n    =>:\n        abs (finite_set_min(union({u}, {v})) - finite_set_min(union({x}, {y}))) <= epsilon"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit"
+      ],
+      "source_sha256": "e0cf128839a51432d8523b9eefc93dbb2f17981546edcd56f018050e856e2b73",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x, y R:\n    abs (x - y) = abs (y - x)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y R:\n    abs (x - y) = abs (y - x)"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit"
+      ],
+      "source_sha256": "28c8fc2496940b8ab4535c7bcd7339dc45289c469ccd5c5b3006e2e226e0ad63",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_difference_triangle.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "forall x, y, z R:\n    abs (x - z) <= abs (x - y) + abs (y - z)\n    abs (x - z) <= abs (z - y) + abs (y - x)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y, z R:\n    abs (x - z) <= abs (x - y) + abs (y - z)\n    abs (x - z) <= abs (z - y) + abs (y - x)"
+            ],
+            "infers": []
+          },
+          {
+            "success": true,
+            "statement": "forall x, y R:\n    abs (x - y) <= abs (x) + abs (y)",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall x, y R:\n    abs (x - y) <= abs (x) + abs (y)"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    },
+    {
+      "kind": "new_example",
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit",
+      "command": [
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit"
+      ],
+      "source_sha256": "0f7cb098fe75d9ee6db219ef069a0e5c986aebdca20ea7465d006fa8127215b5",
+      "exit_code": 0,
+      "output": {
+        "kind": "run",
+        "success": true,
+        "target": "file",
+        "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/min_preserves_positive_carrier.lit",
+        "detail": "normal",
+        "language": "en",
+        "statement_results": [
+          {
+            "success": true,
+            "statement": "have a, b, c R+",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have from nonempty set",
+              "message": "Introduce an object from a nonempty carrier / parameter type"
+            },
+            "stores": [
+              "a $in R+"
+            ],
+            "infers": [
+              "0 < a",
+              "0 <= a",
+              "a != 0",
+              "b $in R+",
+              "0 < b",
+              "0 <= b",
+              "b != 0",
+              "c $in R+",
+              "0 < c",
+              "0 <= c",
+              "c != 0"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "have first_radius R+ = min(a, b)",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have with equality",
+              "message": "Introduce an object equal to a given well-defined value"
+            },
+            "stores": [
+              "first_radius $in R+"
+            ],
+            "infers": [
+              "0 < first_radius",
+              "0 <= first_radius",
+              "first_radius != 0",
+              "first_radius = min(a, b)"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "have common_radius R+ = min(first_radius, c)",
+            "proof_method": {
+              "type": "define_obj",
+              "rule_name": "Have with equality",
+              "message": "Introduce an object equal to a given well-defined value"
+            },
+            "stores": [
+              "common_radius $in R+"
+            ],
+            "infers": [
+              "0 < common_radius",
+              "0 <= common_radius",
+              "common_radius != 0",
+              "common_radius = min(first_radius, c)"
+            ]
+          },
+          {
+            "success": true,
+            "statement": "forall lower_radius, upper_radius R+:\n    min(lower_radius, upper_radius) $in R+",
+            "proof_method": {
+              "type": "compound_fact",
+              "rule_name": "Universal",
+              "message": "Verified as a forall fact (details omitted in Normal)"
+            },
+            "stores": [
+              "forall lower_radius, upper_radius R+:\n    min(lower_radius, upper_radius) $in R+"
+            ],
+            "infers": []
+          }
+        ],
+        "session_error": null
+      },
+      "stderr": ""
+    }
+  ],
+  "binary_sha256": "55e09f53f528650a063237d0b7c7a6471c93569e69322d22d3f6ed49493f8283",
+  "draft_binary": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-10-08/bt-rule-corpus-implementation/target/release/litex",
+  "current_source_sha256": "071bd422301c0e41099f6e8098632cd111d50bcd3324906c99f4ffae0df5400d",
+  "focused_rust_tests": {
+    "command": "CARGO_TARGET_DIR=tmp/2026-10-08/bt-rule-corpus-implementation/target cargo test --release --lib real_metric_bounds_tests -- --nocapture",
+    "result": "7 passed; 0 failed; 1228 filtered out",
+    "stdout_log": "   Compiling litex-lang v1.0.0-beta (/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex)\nwarning: unused import: `crate::ast::names::AtomicName`\n --> src/execute/execute_by_stmt/result.rs:2:5\n  |\n2 | use crate::ast::names::AtomicName;\n  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused imports: `PreparedRelease` and `prepare_release_conclusions`\n  --> src/execute/execute_by_stmt/mod.rs:46:35\n   |\n46 | pub(crate) use exec_by_thm_stmt::{prepare_release_conclusions, PreparedRelease};\n   |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^\n\nwarning: unused imports: `AtomicFact` and `Fact`\n --> src/execute/execute_fact_stmt/../../../tests/unit/execute/finite_function_coordinates/tests.rs:1:24\n  |\n1 | use crate::ast::fact::{AtomicFact, Fact};\n  |                        ^^^^^^^^^^  ^^^^\n\nwarning: unused imports: `Obj` and `ProductShape`\n --> src/execute/execute_fact_stmt/../../../tests/unit/execute/finite_function_coordinates/tests.rs:2:23\n  |\n2 | use crate::ast::obj::{Obj, ProductShape};\n  |                       ^^^  ^^^^^^^^^^^^\n\nwarning: unused imports: `Literal` and `Number`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_proof_by_known_special_property.rs:4:23\n  |\n4 | use crate::ast::obj::{Literal, Number, Obj, ProductShape};\n  |                       ^^^^^^^  ^^^^^^\n\nwarning: unused import: `StructAndFieldAccessObj`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/by_object_definition/by_template/by_have_obj_equal.rs:14:53\n   |\n14 | use crate::ast::obj::{InstantiatedTemplateObj, Obj, StructAndFieldAccessObj};\n   |                                                     ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `StructAndFieldAccessObj`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/by_object_definition/search_equal_fact_proof_by_object_definition.rs:9:53\n  |\n9 | use crate::ast::obj::{FnObjHead, Obj, ProductShape, StructAndFieldAccessObj};\n  |                                                     ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `GreaterEqualFact`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_elementary_arithmetic.rs:2:53\n  |\n2 | use crate::ast::fact::{AtomicFact, EqualFact, Fact, GreaterEqualFact, InFact, NotEqualFact};\n  |                                                     ^^^^^^^^^^^^^^^^\n\nwarning: unused import: `Sub`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_power_laws.rs:7:85\n  |\n7 |     Add, ArithmeticOperator, Div, Literal, Mul, Neg, Number, Obj, Pow, StandardSet, Sub,\n  |                                                                                     ^^^\n\nwarning: unused imports: `GreaterFact`, `LessFact`, and `NotEqualFact`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave2.rs:7:49\n  |\n7 |     AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, NotEqualFact, GreaterFact,\n  |                                                 ^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^\n\nwarning: unused imports: `Cart`, `ProductShape`, and `Tuple`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave11.rs:9:43\n   |\n 9 |     Add, AnonymousFn, ArithmeticOperator, Cart, ClosedRange, ExpLogOperator, FiniteSetReduce,\n   |                                           ^^^^\n10 |     FiniteSetSize, FiniteSetStat, FnObj, FnObjHead, FunctionSpace, Intersect, IteratedOperator,\n11 |     ListSet, Literal, Log, Number, Obj, Pow, Product, ProductShape, Reduce,\n   |                                                       ^^^^^^^^^^^^\n12 |     SetFormer, SetMinus, SetOperator, Sub, Sum, SumOfFiniteSet, Tuple, Union,\n   |                                                                 ^^^^^\n\nwarning: unused import: `crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave11.rs:18:5\n   |\n18 | use crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize;\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `Ln`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave13.rs:9:34\n  |\n9 |     Intersect, ListSet, Literal, Ln, Mul, Number, Obj, PowerSet, ProductShape, Range, ClosedRange,\n  |                                  ^^\n\nwarning: unused import: `FnSet`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave14.rs:13:53\n   |\n13 |     ExpLogOperator, FiniteSeqSet, FnObj, FnObjHead, FnSet, FunctionSpace, ImaginaryPart,\n   |                                                     ^^^^^\n\nwarning: unused import: `FnObj`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave15.rs:8:24\n  |\n8 |     AnonymousFn, Cart, FnObj, FnObjHead, FunctionSpace, IdentifierObj, IteratedOperator, Obj,\n  |                        ^^^^^\n\nwarning: unused import: `crate::json_output::json_keys::localize_key`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/../../../../../../tests/unit/execute/native_fixed_base/tests.rs:12:5\n   |\n12 | use crate::json_output::json_keys::localize_key;\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `crate::execute::execute_fact_stmt::VerifyStateLevel`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/../../../../../tests/unit/execute/equality_search/stored_known_first.rs:2:5\n  |\n2 | use crate::execute::execute_fact_stmt::VerifyStateLevel;\n  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `crate::execute::execute_fact_stmt::VerifyStateLevel`\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/../../../../../tests/unit/execute/equality_search/tests.rs:329:9\n    |\n329 |     use crate::execute::execute_fact_stmt::VerifyStateLevel;\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `LessEqualFact`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_known_special_property.rs:2:55\n  |\n2 | use crate::ast::fact::{AtomicFact, EqualFact, InFact, LessEqualFact};\n  |                                                       ^^^^^^^^^^^^^\n\nwarning: unused import: `ProductShape`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_known_special_property.rs:11:23\n   |\n11 | use crate::ast::obj::{ProductShape, Literal, Number};\n   |                       ^^^^^^^^^^^^\n\nwarning: unused import: `FnSet`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/in_fact.rs:11:87\n   |\n11 |     Add, ArithmeticOperator, Cart, ComplexOperator, ExpLogOperator, FnObj, FnObjHead, FnSet,\n   |                                                                                       ^^^^^\n\nwarning: unused import: `AtomicFact`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/not_subset.rs:2:24\n  |\n2 | use crate::ast::fact::{AtomicFact, NotSubsetFact};\n  |                        ^^^^^^^^^^\n\nwarning: unused import: `AtomicFact`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/not_superset.rs:2:24\n  |\n2 | use crate::ast::fact::{AtomicFact, NotSupersetFact};\n  |                        ^^^^^^^^^^\n\nwarning: unused import: `FactId`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_abs_algebra.rs:30:22\n   |\n30 | use crate::runtime::{FactId, Runtime, RuntimeResult};\n   |                      ^^^^^^\n\nwarning: unused import: `FiniteSetSize`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_stage_a_remainder.rs:10:63\n   |\n10 |     Add, ArithmeticOperator, Div, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat,\n   |                                                               ^^^^^^^^^^^^^\n\nwarning: unused imports: `CoprimeFact`, `NotCoprimeFact`, `NotPrimeFact`, and `PrimeFact`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/search_atomic_except_equality_fact_proof_by_builtin_rule.rs:2:32\n  |\n2 |     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, InjectiveFact, IsChoiceFunctionForFact,\n  |                                ^^^^^^^^^^^\n3 |     NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotInjectiveFact,     NotIsChoiceFunctionForFact, NotIsSetFact, NotPrimeFact, NotPr...\n  |                       ^^^^^^^^^^^^^^                                                                              ^^^^^^^^^^^^\n4 |     NotProperSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,\n  |                                               ^^^^^^^^^\n\nwarning: unused imports: `CoprimeFactSearchProofByBuiltinRule`, `NotCoprimeFactSearchProofByBuiltinRule`, `NotPrimeFactSearchProofByBuiltinRule`, and `PrimeFactSearchProofByBuiltinRule`\n  --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/search_atomic_except_equality_fact_proof_by_builtin_rule.rs:12:5\n   |\n12 |     CoprimeFactSearchProofByBuiltinRule, DvdFactSearchProofByBuiltinRule,\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n13 |     InjectiveFactSearchProofByBuiltinRule, IsChoiceFunctionForFactSearchProofByBuiltinRule,\n14 |     NotBijectiveFactSearchProofByBuiltinRule, NotCoprimeFactSearchProofByBuiltinRule,\n   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n...\n17 |     NotIsSetFactSearchProofByBuiltinRule,     NotPrimeFactSearchProofByBuiltinRule, NotProperSubsetFactSearchProofByBuiltinRule,\n   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n18 |     NotProperSupersetFactSearchProofByBuiltinRule, NotSurjectiveFactSearchProofByBuiltinRule,\n19 |     PrimeFactSearchProofByBuiltinRule, ProperSubsetFactSearchProofByBuiltinRule,\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `VerifyStateLevel` and `VerifyState`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/../../../../../../tests/unit/execute/negative_common_factor_order/tests.rs:4:58\n  |\n4 | use crate::execute::execute_fact_stmt::{VerifyFactResult,VerifyState,VerifyStateLevel};\n  |                                                          ^^^^^^^^^^^ ^^^^^^^^^^^^^^^^\n\nwarning: unused import: `ProductShape`\n --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_strategy/set_membership.rs:4:56\n  |\n4 |     FnObj, FnObjHead, FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator,\n  |                                                        ^^^^^^^^^^^^\n\nwarning: unused import: `ProductShape`\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs:13:25\n   |\n13 |     ProductOfFiniteSet, ProductShape, Range, Reduce, SeqSet, SetFormer, StandardSet, Sum,\n   |                         ^^^^^^^^^^^^\n\nwarning: unused import: `ProductShape`\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs:16:57\n   |\n16 |     ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, SetMinus, SetOperator,\n   |                                                         ^^^^^^^^^^^^\n\nwarning: unused import: `StructAndFieldAccessObj`\n  --> src/execute/execute_have_fn_by_forall_exist_unique_stmt.rs:32:83\n   |\n32 | use crate::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj, FunctionSpace, StructAndFieldAccessObj};\n   |                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `ParamType` and `TypedParameterList`\n  --> src/execute/execute_have_fn_by_induc_stmt.rs:21:25\n   |\n21 | use crate::ast::param::{ParamType, SetBoundParameterGroup, TypedParameterList};\n   |                         ^^^^^^^^^                          ^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `IdentifierObj`\n  --> src/execute/execute_have_by_fn_preimage_stmt.rs:17:45\n   |\n17 |     FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, StructAndFieldAccessObj,\n   |                                             ^^^^^^^^^^^^^\n\nwarning: unused import: `ArithmeticOperator`\n --> src/execute/exec_stmt_transaction_tests.rs:3:36\n  |\n3 | use crate::ast::obj::{Number, Obj, ArithmeticOperator, Literal};\n  |                                    ^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `ExecDefineObjStmtResult`\n    --> src/execute/exec_stmt_transaction_tests.rs:1716:52\n     |\n1716 |     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};\n     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `ExecDefineObjStmtResult`\n    --> src/execute/exec_stmt_transaction_tests.rs:1767:52\n     |\n1767 |     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};\n     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `ExecDefineObjStmtResult`\n    --> src/execute/exec_stmt_transaction_tests.rs:1817:52\n     |\n1817 |     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};\n     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `ExecDefineObjStmtResult`\n    --> src/execute/exec_stmt_transaction_tests.rs:1951:52\n     |\n1951 |     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};\n     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `ExecDefineObjStmtResult`\n    --> src/execute/exec_stmt_transaction_tests.rs:2041:35\n     |\n2041 |         ExecDefinitionStmtResult, ExecDefineObjStmtResult, ExecStmtResult as ESR\n     |                                   ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `ExecDefineObjStmtResult`\n    --> src/execute/exec_stmt_transaction_tests.rs:2442:52\n     |\n2442 |     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};\n     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `Runtime`\n  --> src/extract_executable_code/program.rs:17:22\n   |\n17 | use crate::runtime::{Runtime, RuntimeError, RuntimeResult};\n   |                      ^^^^^^^\n\nwarning: unused import: `project_verify_facts`\n --> src/json_output/project_detailed/or_builtin_gen.rs:2:45\n  |\n2 | use super::store::{project_store_and_infer, project_verify_facts};\n  |                                             ^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `ExecByInducStmtResult` and `ExecByStrongInducStmtResult`\n  --> src/json_output/project_detailed/stmt.rs:16:26\n   |\n16 |     ExecByForStmtResult, ExecByInducStmtResult, ExecByStmtResult, ExecByStrongInducStmtResult,\n   |                          ^^^^^^^^^^^^^^^^^^^^^                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `crate::execute::execute_fact_stmt::ExecFactStmtResult`\n  --> src/json_output/project_detailed/stmt.rs:19:5\n   |\n19 | use crate::execute::execute_fact_stmt::ExecFactStmtResult;\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `ExecHaveFnByInducStmtResult`, `ExecHaveObjEqualStmtResult`, and `ExecHaveObjInNonemptySetStmtResult`\n  --> src/json_output/project_detailed/stmt.rs:30:46\n   |\n30 |     ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnByInducStmtResult,\n   |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n31 |     ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult,\n32 |     ExecHaveObjByExistFactsStmtResult, ExecHaveObjEqualStmtResult,\n   |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n33 |     ExecHaveObjInNonemptySetStmtResult, ExecLetObjStmtResult,\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused imports: `LogArgPowerBuiltinRuleProof`, `LogProductBuiltinRuleProof`, `LogQuotientBuiltinRuleProof`, and `LogReciprocalBuiltinRuleProof`\n  --> src/json_output/acceptance_tests.rs:17:5\n   |\n17 |     LogArgPowerBuiltinRuleProof, LogBaseSelfBuiltinRuleProof,\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n18 |     LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, LogProductBuiltinRuleProof,\n   |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^\n19 |     LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof, ModOneBuiltinRuleProof,\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `FnRangeOfConstantAnonymousFnBuiltinRuleProof`\n  --> src/json_output/acceptance_tests.rs:99:56\n   |\n99 |     FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof, FnRangeOfConstantAnonymousFnBuiltinRuleProof,\n   |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: unused import: `std::fs`\n --> src/knowledge_base/../../tests/unit/knowledge_base/def_abstract_prop/tests.rs:7:5\n  |\n7 | use std::fs;\n  |     ^^^^^^^\n\nwarning: unused import: `VerifyState`\n --> src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_equal_fact/positive_real_power.rs:3:41\n  |\n3 | use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};\n  |                                         ^^^^^^^^^^^\n\nwarning: value assigned to `state` is never read\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/../../../../../tests/unit/execute/equality_search/tests.rs:369:21\n    |\n369 |     let mut state = VerifyState::top_level();\n    |                     ^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used\n370 |     state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);\n    |     ------------------------------------------------------------------------------------------ `state` is overwritten here before the previous value is read\n    |\n    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused variable: `arg`\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_abs_algebra.rs:154:68\n    |\n154 |             (Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })), _) => {\n    |                                                                    ^^^ help: try ignoring the field: `arg: _`\n    |\n    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nwarning: value assigned to `state` is never read\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/../../../../../tests/unit/execute/known_search/tests.rs:258:21\n    |\n258 |     let mut state = builtin_disabled();\n    |                     ^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used\n259 |     state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);\n    |     ------------------------------------------------------------------------------------------ `state` is overwritten here before the previous value is read\n\nwarning: value assigned to `state` is never read\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/../../../../../tests/unit/execute/known_search/tests.rs:551:21\n    |\n551 |     let mut state = builtin_disabled();\n    |                     ^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used\n552 |     state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);\n    |     ------------------------------------------------------------------------------------------ `state` is overwritten here before the previous value is read\n\nwarning: unused variable: `verify_state`\n   --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs:116:9\n    |\n116 |         verify_state: VerifyState,\n    |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_verify_state`\n\nwarning: unused variable: `verify_state`\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs:57:9\n   |\n57 |         verify_state: VerifyState,\n   |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_verify_state`\n\nwarning: variable does not need to be mutable\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/wrap_obj_well_defined_by_def.rs:57:5\n   |\n57 |     mut stages: ObjWellDefinedByDefCommonStages,\n   |     ----^^^^^^\n   |     |\n   |     help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\nwarning: unused variable: `prop_name`\n  --> src/execute/execute_obtain_obj_from_atomic_fact_stmt.rs:64:13\n   |\n64 |         let prop_name = stmt.fact.predicate.local_name();\n   |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_prop_name`\n\nwarning: unused variable: `prop_name`\n  --> src/execute/execute_witness_stmt/exec_witness_atomic_fact.rs:78:13\n   |\n78 |         let prop_name = stmt.atomic_fact.predicate.local_name();\n   |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_prop_name`\n\nwarning: unused variable: `verify_state`\n   --> src/execute/execute_witness_stmt/exec_witness_exist_fact.rs:154:6\n    |\n154 |      verify_state: crate::execute::execute_fact_stmt::VerifyState) -> RuntimeResult<\n    |      ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_verify_state`\n\nwarning: value assigned to `state` is never read\n   --> src/execute/../../tests/unit/execute/legacy_next_capabilities/tests.rs:179:25\n    |\n179 |         let mut state = VerifyState::top_level();\n    |                         ^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used\n180 |         state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty);\n    |         --------------------------------------------------------------------------------------------------- `state` is overwritten here before the previous value is read\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/builtin_atomic_gen.rs:599:17\n    |\n599 |             let mut entries = vec![\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/builtin_atomic_gen.rs:608:17\n    |\n608 |             let mut entries = vec![\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/builtin_atomic_gen.rs:617:17\n    |\n617 |             let mut entries = vec![\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/builtin_atomic_gen.rs:626:17\n    |\n626 |             let mut entries = vec![\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1003:17\n     |\n1003 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1012:17\n     |\n1012 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1049:17\n     |\n1049 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1058:17\n     |\n1058 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1067:17\n     |\n1067 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1076:17\n     |\n1076 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1085:17\n     |\n1085 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1094:17\n     |\n1094 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1103:17\n     |\n1103 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1205:17\n     |\n1205 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1214:17\n     |\n1214 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1223:17\n     |\n1223 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1232:17\n     |\n1232 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1241:17\n     |\n1241 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1693:17\n     |\n1693 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1711:17\n     |\n1711 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1720:17\n     |\n1720 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1729:17\n     |\n1729 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1747:17\n     |\n1747 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1756:17\n     |\n1756 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1765:17\n     |\n1765 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1774:17\n     |\n1774 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1792:17\n     |\n1792 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1801:17\n     |\n1801 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1810:17\n     |\n1810 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1819:17\n     |\n1819 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1828:17\n     |\n1828 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1837:17\n     |\n1837 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:1846:17\n     |\n1846 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2168:17\n     |\n2168 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2177:17\n     |\n2177 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2186:17\n     |\n2186 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2195:17\n     |\n2195 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2204:17\n     |\n2204 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2213:17\n     |\n2213 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2222:17\n     |\n2222 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2240:17\n     |\n2240 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2351:17\n     |\n2351 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2421:17\n     |\n2421 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2449:17\n     |\n2449 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2468:17\n     |\n2468 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2655:17\n     |\n2655 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/builtin_atomic_gen.rs:2664:17\n     |\n2664 |             let mut entries = vec![\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:318:17\n    |\n318 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SinArcsinLeftInverse\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:323:17\n    |\n323 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"CosArccosLeftInverse\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:328:17\n    |\n328 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"TanArctanLeftInverse\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:333:17\n    |\n333 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"CotArccotLeftInverse\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:358:17\n    |\n358 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArcsinExactZero\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:363:17\n    |\n363 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArcsinExactOne\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:368:17\n    |\n368 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArcsinExactNegOne\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:373:17\n    |\n373 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArccosExactOne\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:378:17\n    |\n378 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArccosExactZero\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:383:17\n    |\n383 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArccosExactNegOne\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:388:17\n    |\n388 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArctanExactZero\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:393:17\n    |\n393 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ArccotExactZero\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:429:17\n    |\n429 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"OneToAnyPower\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:444:17\n    |\n444 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SqrtZero\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:449:17\n    |\n449 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SqrtOne\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:469:17\n    |\n469 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"AbsOfNegation\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:474:17\n    |\n474 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"AbsProduct\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:479:17\n    |\n479 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"AbsSquare\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:540:17\n    |\n540 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ModOne\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:560:17\n    |\n560 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"MinIdempotent\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:565:17\n    |\n565 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"MaxIdempotent\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:570:17\n    |\n570 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"MinCommutative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:575:17\n    |\n575 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"MaxCommutative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:580:17\n    |\n580 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"AbsAbsAbsorption\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:590:17\n    |\n590 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"LnOfExp\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:620:17\n    |\n620 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SqrtOfSquareEqualsAbs\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:625:17\n    |\n625 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"QuotByOne\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:635:17\n    |\n635 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"LcmCommutative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:640:17\n    |\n640 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"LcmIdempotentAbs\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:645:17\n    |\n645 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"GcdCommutative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:650:17\n    |\n650 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"GcdIdempotentAbs\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:710:17\n    |\n710 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"GcdDividesArgument\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:715:17\n    |\n715 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ProductModFactorZero\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:742:17\n    |\n742 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SignOfNegation\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:747:17\n    |\n747 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SignTimesAbsEqualsArg\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:752:17\n    |\n752 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"AbsEqualsSignTimesArg\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:757:17\n    |\n757 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SignOfProduct\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:767:17\n    |\n767 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"QuotEuclideanDecomposition\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:772:17\n    |\n772 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ModDividendMinusRemainderZero\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:782:17\n    |\n782 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"MinusOneOddNaturalPower\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:787:17\n    |\n787 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"LcmGcdProductAbs\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:792:17\n    |\n792 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"UnionEmptyRight\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:797:17\n    |\n797 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"UnionEmptyLeft\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:802:17\n    |\n802 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IntersectEmptyRight\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:807:17\n    |\n807 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IntersectEmptyLeft\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:812:17\n    |\n812 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetMinusSelfEmpty\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:817:17\n    |\n817 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetMinusEmptyRight\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:822:17\n    |\n822 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetMinusEmptyLeft\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:827:17\n    |\n827 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"UnionCommutative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:832:17\n    |\n832 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IntersectCommutative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:837:17\n    |\n837 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"UnionIdempotent\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:842:17\n    |\n842 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IntersectIdempotent\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:862:17\n    |\n862 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"UnionAssociative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:867:17\n    |\n867 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IntersectAssociative\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:872:17\n    |\n872 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IntersectUnionDistributive\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:877:17\n    |\n877 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetMinusUnionDeMorgan\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:882:17\n    |\n882 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetMinusIntersectDeMorgan\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:887:17\n    |\n887 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IntersectSetMinusSelfEmpty\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:892:17\n    |\n892 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetSumEmpty\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:897:17\n    |\n897 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetProductEmpty\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:902:17\n    |\n902 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetReduceEmpty\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:943:17\n    |\n943 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetSizeSetMinus\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:948:17\n    |\n948 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetSizeUnion\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:953:17\n    |\n953 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ClosedRangeSingletonListSet\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:968:17\n    |\n968 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ReduceAddZeroEqualsSum\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:973:17\n    |\n973 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetReduceAddZeroEqualsSum\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:983:17\n    |\n983 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"UnionSetMinusDecomposition\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:988:17\n    |\n988 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetMinusIntersectSelf\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:993:17\n    |\n993 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ReOfImaginaryUnit\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n   --> src/json_output/project_detailed/equality_builtin_gen.rs:998:17\n    |\n998 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ImgOfImaginaryUnit\"))];\n    |                 ----^^^^^^^\n    |                 |\n    |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1003:17\n     |\n1003 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ReOfRealEmbedding\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1008:17\n     |\n1008 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ImgOfRealEmbedding\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1013:17\n     |\n1013 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ReOfRealPlusI\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1018:17\n     |\n1018 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ImgOfRealPlusI\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1023:17\n     |\n1023 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ComplexAbsOfImaginaryUnit\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1055:17\n     |\n1055 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"EulerEqualsExpOne\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1060:17\n     |\n1060 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"LnOfEuler\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1075:17\n     |\n1075 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ReOfRealPlusImagScaled\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1080:17\n     |\n1080 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ImgOfRealPlusImagScaled\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1085:17\n     |\n1085 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ComplexAbsOfNonnegReal\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1090:17\n     |\n1090 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ComplexAbsOfImagScaled\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1095:17\n     |\n1095 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ClosedRangeLiteralExpansion\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1100:17\n     |\n1100 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"RangeLiteralExpansion\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1105:17\n     |\n1105 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"PowerSetOfEmpty\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1110:17\n     |\n1110 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"PowerSetOfSingleton\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1115:17\n     |\n1115 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FamilyUnionOfEmpty\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1132:17\n     |\n1132 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"CartWithEmptyFactor\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1137:17\n     |\n1137 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"UnionOverIntersectDistributive\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1142:17\n     |\n1142 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetMinusChainToUnion\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1169:17\n     |\n1169 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SeqEqualsFnOnNPos\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1174:17\n     |\n1174 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSeqEqualsFnOnOneBasedDomain\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1179:17\n     |\n1179 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IndexUnionEmptyIndex\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1184:17\n     |\n1184 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IndexIntersectEmptyIndex\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1189:17\n     |\n1189 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IndexCartEmptyIndex\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1194:17\n     |\n1194 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"IndexUnionSingleton\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1199:17\n     |\n1199 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSeqZeroEqualsFnOnEmpty\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1204:17\n     |\n1204 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SetBuilderObviouslyEmpty\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1209:17\n     |\n1209 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ComplexAbsSquaredOfRectForm\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1214:17\n     |\n1214 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ExpOfSum\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1226:17\n     |\n1226 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ReOfProduct\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1231:17\n     |\n1231 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"ImgOfProduct\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1236:17\n     |\n1236 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SinOfSum\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1241:17\n     |\n1241 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"CosOfSum\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1251:17\n     |\n1251 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetSumFubiniSwap\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1256:17\n     |\n1256 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"FiniteSetSumOverCartesianProduct\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1261:17\n     |\n1261 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SinOfZero\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1266:17\n     |\n1266 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"CosOfZero\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1271:17\n     |\n1271 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"TanOfZero\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1276:17\n     |\n1276 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SinOfHalfPi\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1281:17\n     |\n1281 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"CosOfPi\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1286:17\n     |\n1286 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"SinOfPi\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1291:17\n     |\n1291 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"CotOfHalfPi\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: variable does not need to be mutable\n    --> src/json_output/project_detailed/equality_builtin_gen.rs:1296:17\n     |\n1296 |             let mut entries = vec![(\"type\", string(\"builtin_rule\")), (\"rule\", string(\"PythagoreanIdentity\"))];\n     |                 ----^^^^^^^\n     |                 |\n     |                 help: remove this `mut`\n\nwarning: function `identifier_obj` is never used\n   --> src/execute/execute_by_stmt/enumerate_helpers.rs:158:15\n    |\n158 | pub(super) fn identifier_obj(id: IdentifierId, name: String) -> Obj {\n    |               ^^^^^^^^^^^^^^\n    |\n    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `number_literal_key` is never used\n  --> src/execute/execute_eval_stmt/helper.rs:12:8\n   |\n12 | pub fn number_literal_key(obj: &Obj) -> Option<String> {\n   |        ^^^^^^^^^^^^^^^^^^\n\nwarning: function `is_zero_obj` is never used\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_power_laws.rs:546:4\n    |\n546 | fn is_zero_obj(obj: &Obj) -> bool {\n    |    ^^^^^^^^^^^\n\nwarning: function `is_number_obj` is never used\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave13.rs:374:4\n    |\n374 | fn is_number_obj(obj: &Obj) -> bool {\n    |    ^^^^^^^^^^^^^\n\nwarning: function `zero_obj` is never used\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave14.rs:674:4\n    |\n674 | fn zero_obj() -> Obj {\n    |    ^^^^^^^^\n\nwarning: function `one_obj` is never used\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave14.rs:680:4\n    |\n680 | fn one_obj() -> Obj {\n    |    ^^^^^^^\n\nwarning: function `abs_self_upper_matches` is never used\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_abs_algebra.rs:583:4\n    |\n583 | fn abs_self_upper_matches(fact: &LessEqualFact) -> bool {\n    |    ^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `abs_self_lower_matches` is never used\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/order_abs_algebra.rs:591:4\n    |\n591 | fn abs_self_lower_matches(fact: &LessEqualFact) -> bool {\n    |    ^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `as_div` is never used\n   --> src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_strategy/structural_order_weak.rs:635:4\n    |\n635 | fn as_div(obj: &Obj) -> Option<(Obj, Obj)> {\n    |    ^^^^^^\n\nwarning: methods `verify_atom_obj_well_definedness_by_def` and `obj_has_in_function_set` are never used\n   --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs:40:19\n    |\n 20 | impl Runtime {\n    | ------------ methods in this implementation\n...\n 40 |     pub(super) fn verify_atom_obj_well_definedness_by_def(\n    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n...\n673 |     pub(super) fn obj_has_in_function_set(&self, obj: &Obj) -> bool {\n    |                   ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: methods `maybe_register_instantiated_template_definitional_facts` and `store_instantiated_template_fn_set_membership` are never used\n   --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/structs.rs:489:8\n    |\n 34 | impl Runtime {\n    | ------------ methods in this implementation\n...\n489 |     fn maybe_register_instantiated_template_definitional_facts(\n    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n...\n605 |     fn store_instantiated_template_fn_set_membership(\n    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `expect_success_obj_proof` is never used\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/wrap_obj_well_defined_by_def.rs:23:4\n   |\n23 | fn expect_success_obj_proof(result: VerifyObjWellDefinedResult) -> Box<ObjWellDefinedProof> {\n   |    ^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `take_child_proofs` is never used\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/wrap_obj_well_defined_by_def.rs:32:4\n   |\n32 | fn take_child_proofs(\n   |    ^^^^^^^^^^^^^^^^^\n\nwarning: function `take_requirements` is never used\n  --> src/execute/execute_fact_stmt/well_defined_results/verify_obj/wrap_obj_well_defined_by_def.rs:44:4\n   |\n44 | fn take_requirements(\n   |    ^^^^^^^^^^^^^^^^^\n\nwarning: field `defined_as_struct` is never read\n  --> src/execute/execute_release_obj_def_stmt/build_release_facts.rs:36:9\n   |\n33 | pub(super) struct BuiltReleaseFacts {\n   |                   ----------------- field in this struct\n...\n36 |     pub defined_as_struct: Option<(Obj, StructObj)>,\n   |         ^^^^^^^^^^^^^^^^^\n\nwarning: function `closed_numeric_equal_rewrite_proves_subterm_goal` is never used\n    --> src/execute/exec_stmt_transaction_tests.rs:1440:4\n     |\n1440 | fn closed_numeric_equal_rewrite_proves_subterm_goal() {\n     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `free_plain_ids_in_subst` is never used\n  --> src/instantiate/capture.rs:52:8\n   |\n52 | pub fn free_plain_ids_in_subst(subst: &HashMap<IdentifierId, Obj>) -> HashSet<IdentifierId> {\n   |        ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `binder_bound_names_from_set_bound_parameters` is never used\n   --> src/instantiate/capture.rs:346:8\n    |\n346 | pub fn binder_bound_names_from_set_bound_parameters(\n    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `collect_free_plain_ids_in_atomic_fact` is never used\n   --> src/instantiate/fact/compound.rs:227:8\n    |\n227 | pub fn collect_free_plain_ids_in_atomic_fact(\n    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `identifier_is_plain` is never used\n   --> src/instantiate/fact/compound.rs:235:8\n    |\n235 | pub fn identifier_is_plain(name: &AtomicName) -> Option<&String> {\n    |        ^^^^^^^^^^^^^^^^^^^\n\nwarning: method `inst_set_bound_parameter_list` is never used\n  --> src/instantiate/param.rs:41:19\n   |\n12 | impl Runtime {\n   | ------------ method in this implementation\n...\n41 |     pub(crate) fn inst_set_bound_parameter_list(\n   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `typed_param_bound_names` is never used\n  --> src/instantiate/param.rs:57:8\n   |\n57 | pub fn typed_param_bound_names(list: &TypedParameterList) -> Vec<BoundName> {\n   |        ^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: method `inst_typed_parameter_list_under_binders` is never used\n  --> src/instantiate/param.rs:72:19\n   |\n71 | impl Runtime {\n   | ------------ method in this implementation\n72 |     pub(crate) fn inst_typed_parameter_list_under_binders(\n   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `definition_memory_from_parts` is never used\n   --> src/knowledge_base/definitions_memory_codec.rs:187:8\n    |\n187 | pub fn definition_memory_from_parts(\n    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `compare_normalized_number_str_to_zero` is never used\n  --> src/rational_expression/decimal_comparison.rs:11:8\n   |\n11 | pub fn compare_normalized_number_str_to_zero(number_value: &str) -> NumberCompareResult {\n   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `normalized_decimal_string_is_integer` is never used\n  --> src/rational_expression/decimal_comparison.rs:64:4\n   |\n64 | fn normalized_decimal_string_is_integer(number_value: &str) -> bool {\n   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `normalized_decimal_string_is_even_integer` is never used\n  --> src/rational_expression/decimal_comparison.rs:69:8\n   |\n69 | pub fn normalized_decimal_string_is_even_integer(number_value: &str) -> bool {\n   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: function `number_from_normalized` is never used\n  --> src/rational_expression/helper.rs:12:8\n   |\n12 | pub fn number_from_normalized(normalized_value: String) -> Number {\n   |        ^^^^^^^^^^^^^^^^^^^^^^\n\nwarning: `litex-lang` (lib test) generated 249 warnings (run `cargo fix --lib -p litex-lang --tests` to apply 217 suggestions)\n    Finished `release` profile [optimized] target(s) in 1m 06s\n     Running unittests src/lib.rs (tmp/2026-10-08/bt-rule-corpus-implementation/target/release/deps/litex-c0b120a3b3b8d087)\n\nrunning 7 tests\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::real_metric_bounds::real_metric_bounds_tests::graph_keeps_both_metric_bound_citations_without_mutation ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::real_metric_bounds::real_metric_bounds_tests::triangle_orientations_and_typed_minimum_composition ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::real_metric_bounds::real_metric_bounds_tests::exact_rules_keep_both_checked_premises ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::real_metric_bounds::real_metric_bounds_tests::strict_reverse_and_finite_pair_forms_keep_the_same_rule ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::real_metric_bounds::real_metric_bounds_tests::leaf_permissions_and_failed_publication_remain_bounded ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::real_metric_bounds::real_metric_bounds_tests::all_output_languages_and_unsupported_lean_routes_remain_explicit ... ok\ntest execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::real_metric_bounds::real_metric_bounds_tests::missing_bounds_false_formulas_and_undefined_domains_reject ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 1228 filtered out; finished in 0.14s\n\n"
+  },
+  "proof_journal": "scripts/Analysis/proof_journals/bt_rule_corpus_implementation_2026_10_08.json",
+  "materialized_sources": [
+    "scripts/Analysis/textbook/chapter06-sequential-limits.lit",
+    "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit"
+  ]
+}

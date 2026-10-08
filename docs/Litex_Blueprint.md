@@ -45,7 +45,7 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
 **Ordinary facts trigger local verification by default in Litex.** Authors choose definitions, constructions, and intermediate conclusions; the language finds supported grounds, returns structured feedback, and stores accepted facts in the context. AI can use these results to repair attempts, reuse knowledge, and collect checkable reasoning data. [Section 1.1](#fact-oriented-interface) gives concrete examples.
 
-The Litex-to-Lean compiler is expected to be completed by the end of 2026 and is not yet integrated into the build. Its goal is independent Lean rechecking of supported proofs and connection to the existing formalization ecosystem.
+The current build provides an initial `litex -lean -f <source.lit>` entrypoint for standalone files. It compiles supported verification results into Lean proofs for independent rechecking; coverage of the full Litex system and its connection to the existing formalization ecosystem remain work in progress.
 
 <a id="overview-spine"></a>
 
@@ -193,7 +193,9 @@ release thm newton::fixed_point(sqrt(2))
 </tbody>
 </table>
 
-**Turn mathematics into a graph of relationships.** Litex can organize definitions, theorems, and verified facts into a graph: nodes represent mathematical content, and edges show dependencies, helping readers trace what a conclusion relies on. Visit [litexlang.com](https://litexlang.com) to try Litex-generated interactive graphs and explore the knowledge and connections in mathematical source.
+For extraction details and supported forms, see the [Python/C extraction implementation](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code).
+
+**Turn mathematics into a graph of relationships.** Litex can organize definitions, theorems, and verified facts into a graph: nodes represent mathematical content, and edges show dependencies, helping readers trace what a conclusion relies on. Visit [litexlang.com](https://litexlang.com) to try Litex-generated interactive graphs and explore the knowledge and connections in mathematical source. See the [graph implementation](https://github.com/litexlang/golitex/tree/main/src/graph) for how these relationships are exported and viewed.
 
 **Write mathematics for others to read.** Mathematical source can also be converted to LaTeX for lecture notes or a manuscript. A mathematical fact appears on the left and its actual typesetting source on the right. Conversion handles presentation; mathematical verification is a separate step:
 
@@ -210,6 +212,8 @@ release thm newton::fixed_point(sqrt(2))
 </tr>
 </tbody>
 </table>
+
+See the [LaTeX conversion implementation](https://github.com/litexlang/golitex/tree/main/src/compile_to_latex) for how mathematical source is rendered.
 
 See [Section 3](#mathematical-workflow) for the complete definitions, proofs, and project setup.
 
@@ -229,26 +233,31 @@ flowchart LR
     Knowledge --> AI
 ```
 
-**5. A written proof should ultimately be checked again by Lean.**
+**5. A supported proof can also be checked by Lean.**
 
-I want expressions closer to everyday mathematics to compile into Lean proof objects, receive an independent check, and connect to the existing ecosystem. The current build has not yet integrated this compiler entrypoint; it remains a goal for Litex to implement.
+I want expressions closer to everyday mathematics to compile into Lean proof objects, receive an independent check, and connect to the existing ecosystem. The initial standalone compiler now provides this route for a limited set of verification results.
 
-For example, consider a Litex arithmetic fact:
+For example, the source in `lean/examples/one_equals_itself/statement.lit` states that one equals itself:
 
 ```litex
-1 + 1 = 2
+1 = 1
 ```
 
-Using the representation from the repository's earlier compilation experiment, the corresponding Lean proof can be written as:
+Running `litex -lean -f lean/examples/one_equals_itself/statement.lit` emits the paired Lean source to stdout; saving that output yields the `.lean` file. Its proof has this form, with only the generated namespace omitted:
 
 ```lean
 import Litex
 
-theorem one_add_one : Litex.Same ((1 : ℂ) + (1 : ℂ)) (2 : ℂ) := by
-  exact Litex.Same.ofEq (by norm_num)
+universe u
+variable {M : Litex.Semantics.{u}}
+
+theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
+  (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))
 ```
 
-`Litex.Same` is the equality relation in that compilation layer. The minimal Lean fragment above has been checked by Lean. It illustrates the target proof form; the current Litex build still has no compiler entrypoint that generates it.
+`Litex.number` returns an `Obj ℂ` containing the native number and its well-definedness proof. `Litex.Same` compares represented meanings under the explicit `Semantics` parameter `M`; the compiler replays the checked reflexivity route through `Litex.sameRefl`. This generated example passes Lean checking, but it does not establish a complete Litex model or compilation of every proof route.
+
+The maintained source locations are the [Lean semantic interface](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean) and [paired compiler examples](https://github.com/litexlang/golitex/tree/main/lean/examples). Earlier complex-function output is identified as historical in [Section 5](#compatibility).
 
 Whether you are a mathematician, a programmer, or a Lean user, Litex can offer new knowledge and perspectives; if you are interested, continue with [Programming, Mathematics, and Formalization with Litex](#overview-readers) at the end of this document.
 
@@ -344,6 +353,13 @@ have n N
 ```
 
 Litex follows the supported addition structure using closure of the natural numbers. This does not mean that every operation preserves the natural-number carrier; domains and operation conditions still have to hold.
+
+Stored equality reuse also compares structural bound-variable identity.
+For example, a checked aggregate equality with summand binders named
+`source_index` and `target_index` can be cited again with renamed binders.
+The equality-class stage keeps the generating FactId and an identity proof
+for each endpoint; it changes no stored key and proves no new mathematical
+law. Free functions, carriers, bounds and summand bodies remain exact.
 
 **Supply an intermediate equality, then reuse the result.** The author can expose the route from a definition to a value:
 
@@ -880,7 +896,7 @@ Definition-selected default struct field views remain a distinct annotation.
 
 This does not cancel static constraints or inference. Before accepting an expression, Litex still checks domains, return sets, structure fields, and other well-definedness obligations, and derives membership and carrier facts in proofs through dedicated rules. The difference is that such inference adds facts such as `e $in S` to the context, rather than inferring a privileged type `e : T` that decides the object's identity.
 
-Lean's core is based on dependent type theory; Litex chooses to organize user-facing mathematics through sets and membership facts. Lean's `Set α` can also express set-theoretic mathematics, and Mathlib offers rich mathematical interfaces. The difference is in how each language asks authors to introduce objects, state facts, and supply verification grounds by default. Litex's current coverage is still expanding; a shared mathematical goal does not mean the two systems already have identical scope. Litex's verifier and builtin rules form their own trusted implementation surface, which makes independent Lean rechecking an important goal. The earlier compiler experiment is not wired into the current build.
+Lean's core is based on dependent type theory; Litex chooses to organize user-facing mathematics through sets and membership facts. Lean's `Set α` can also express set-theoretic mathematics, and Mathlib offers rich mathematical interfaces. The difference is in how each language asks authors to introduce objects, state facts, and supply verification grounds by default. Litex's current coverage is still expanding; a shared mathematical goal does not mean the two systems already have identical scope. Litex's verifier and builtin rules form their own trusted implementation surface, which makes independent Lean rechecking important. The initial standalone compiler replays a limited set of current verification results; the full system is not yet covered.
 
 </details>
 
@@ -1422,18 +1438,18 @@ _“A formal proof is a proof in which every logical inference has been checked 
 
 _— Thomas Hales, “Formal Proof” (2008)_
 
-Litex currently checks source with its own verifier and provides feedback; handing proofs to Lean for independent rechecking is a next-stage goal. This requires three conditions: translation preserves the original proposition, generated proofs contain no holes, and Lean's kernel actually accepts them. Meeting these conditions would reduce reliance on Litex's own verifier and allow further connections to Mathlib. Earlier compiler artifacts remain available, but the current build has no compiler integration.
+Litex checks source with its own verifier and provides feedback; the current build also has an initial standalone `-lean -f` compiler. Independent rechecking requires three conditions: translation preserves the original proposition, generated proofs contain no holes, and Lean's kernel actually accepts them. Meeting these conditions reduces reliance on Litex's own verifier for the compiled routes and allows further connections to Mathlib. The current compiler supports a limited set of results, not the full Litex system.
 
-> **Current build:** The `litex` binary has no integrated compiler command. A wrapper retained from the earlier experiment targets a binary absent from this build. The example below records that experiment; it has not been regenerated by the current build or rechecked with the current Lean toolchain.
+> **Current build:** `litex -lean -f <source.lit>` compiles supported standalone source and rejects unsupported routes. The current interface lives in [lean/Litex.lean](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean), with generated pairs under [lean/examples](https://github.com/litexlang/golitex/tree/main/lean/examples). The complex-function example below records an earlier experiment; it has not been regenerated by the current compiler or rechecked with the current Lean toolchain.
 
 <details>
-<summary><strong>Example: how Litex code compiles to Lean</strong></summary>
+<summary><strong>Historical example: an earlier Litex-to-Lean compilation experiment</strong></summary>
 
 The intended Litex–Lean–Mathlib path is:
 
 `Litex source → Litex verification → ToLean compilation → Lean kernel recheck → handwritten adapter → Mathlib theorem`
 
-> Current verification results retain the sources of facts and rules. A future compiler must turn each **supported** acceptance path into evidence Lean can check, and reject paths it does not yet cover. A rule count alone cannot replace this semantic work on each path.
+> Current verification results retain the sources of facts and rules. The initial compiler replays a limited set of these results; extending it requires turning each additional **supported** acceptance path into evidence Lean can check, and rejecting paths it does not yet cover. A rule count alone cannot replace this semantic work on each path. The historical output below uses an earlier interface, not the current `Obj` contract.
 
 Example: we want to prove that the sum of the first `n` positive odd numbers is `n^2`. We first write Litex source:
 
@@ -1624,7 +1640,7 @@ Litex hopes to use the same verified source and results for human reading, AI-as
 | --- | --- |
 | Readable reasoning front end | Mathematical objects, conditions, intermediate facts, and conclusions that people can inspect directly |
 | Checkable reasoning data layer | Machine-checked facts and verification grounds, clear stopping points, and explicitly marked trust boundaries |
-| Connection to existing ecosystems | Designed toward Lean compilation and rechecking (Section 5, experimental); early Lean artifacts document only experimental coverage, and the current `src/` has no compiler; new Lean/Mathlib adapters remain separate, handwritten work |
+| Connection to existing ecosystems | Initial standalone Lean compilation and rechecking for supported verification results (Section 5, experimental); full-system coverage remains incomplete, and new Lean/Mathlib adapters remain separate, handwritten work |
 | Proof to executable code (experimental) | Convert checked computational fragments into runnable Python or C (Section 3.4) |
 
 The current verifier and tools are substantial, but usability, domain coverage, and adoption still require dated examples and real use results. For discussion, contact litexlang@outlook.com.
@@ -1717,7 +1733,7 @@ Litex: objects and facts → kernel checks and searches for grounds → verified
 
 Lean places objects, propositions, and proofs within a dependent term/type system; Litex distinguishes mathematical objects, facts, and definition and proof steps in its source. The subtype comparison below shows how each language writes a function call when its condition is already known. The comparison concerns expression and reading cost.
 
-Lean remains an important reference point and a future rechecking target. Lean proofs elaborate into proof terms checked by its kernel; compiler IR for executable programs is a separate path. Litex retained Lean artifacts from an earlier compilation experiment, but the current `src/` has no compiler integration. Performance and learning-cost advantages also need measurement on comparable tasks, not inference from interface alone.
+Lean remains an important reference point and a rechecking target. Lean proofs elaborate into proof terms checked by its kernel; compiler IR for executable programs is a separate path. The current standalone Litex compiler replays supported results into Lean, while broader coverage and the historical complex-function examples remain separate work. Performance and learning-cost advantages also need measurement on comparable tasks, not inference from interface alone.
 
 <details>
 <summary><strong>Lean–Litex comparison examples</strong></summary>
@@ -1846,7 +1862,7 @@ Ideally, Litex users attend to objects, conditions, facts, and conclusions, whil
 
 Accumulating intermediate facts from premises and decomposing proof obligations from a goal are both useful directions in mathematical work. Litex source defaults toward the former; common Lean tactic interaction defaults toward the latter. Which representation makes it easier for AI to propose correct steps, use failure feedback, and reuse intermediate conclusions is a comparative research question, not something to infer from training methods alone.
 
-An ideal workflow could use goals to choose a worthwhile route, then accumulate checkable facts statement by statement. If Litex and Lean can achieve a trustworthy handoff, they may connect these two ways of working; the compiler entrypoint still needs to be implemented.
+An ideal workflow could use goals to choose a worthwhile route, then accumulate checkable facts statement by statement. Litex's initial standalone compiler provides a limited handoff to Lean; connecting these two ways of working across the full system still requires broader result coverage and semantic validation.
 
 </details>
 

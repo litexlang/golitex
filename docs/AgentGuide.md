@@ -130,6 +130,11 @@ the same name requires a fresh context. A normal proof miss is not a restart
 condition. Parsing/tokenization errors and hard session errors can terminate
 the REPL; a stopped process cannot retain usable context for the next attempt.
 
+When deliberately adopting a verified rebuilt Litex executable, save the
+accepted source first, then restart and replay it. Replacing the binary on
+disk does not update the process that is already running. A build or an
+ordinary proof miss alone is not a reason to discard the live Session.
+
 Record the error, reopen the intended module context, replay the journal's
 accepted statements in order, confirm their success, then retry the pending
 statement. Record unexpected session termination in the source-owned blocker

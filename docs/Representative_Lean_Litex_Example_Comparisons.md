@@ -34,9 +34,10 @@ either project may continue to evolve.
 For the larger design argument, see the [Litex
 Blueprint](https://litexlang.com/doc/Litex_Blueprint). For language details,
 see the [Manual](Manual.md) and [CLI reference](cli.md). The current
-`src/` build has no Lean compiler entrypoint. The [Lean object interface](../lean/)
-is an initial bootstrap, without a compiler or theorem replay. Earlier material
-is archived locally under `scripts/legacy_to_lean/`, which is excluded from Git.
+preview `-lean -f` output mode replays a restricted set of typed results.
+The [semantic interface](../lean/Litex.lean) and
+[generated problem pairs](../lean/examples/) show that initial numeric slice.
+Earlier material is archived locally under `scripts/legacy_to_lean/`, excluded from Git.
 The semantic discussion below describes that earlier experiment and design
 target; this page does not certify current compiler coverage.
 
@@ -512,19 +513,20 @@ forall A set  means  $is_set(A)
 ```
 
 Here `set` is a parameter kind, not a universal set object. The second form
-does not mean `A $in Litex.Set`; `Litex.Set` is the Lean compiler's
-exact-carrier representation type. The target To-Lean interface therefore
-keeps the set object representation-polymorphic and retains its source proof:
+does not introduce a source set of all objects. The current semantic interface
+keeps a generic carrier and wraps its value with WD evidence in `Litex.Obj`.
+An illustrative general-set binder interface is:
 
 ```lean
-∀ {αA : Type 1} (A : αA) (hA : Litex.IsSet A), ...
+∀ {αA : Type v} [Litex.Representation M αA]
+  (A : Litex.Obj (M := M) αA) (hA : Litex.IsSet A), ...
 ```
 
-In that proposed interface, whenever a theorem uses `A` as a domain, Lean would obtain the
-exact set through `Litex.IsSet.rep A hA` and states membership against that
-representative. This target differs from the earlier v2 emitter described
-in the retained Lean notes, which narrowed `A` to `Litex.Set`. Neither that
-emitter nor this proposed migration is an active compiler in the current build.
+`Litex.In x A` is an ordinary proposition about the two certified objects;
+it does not change the host type of `x`. General set binders and set constructors
+remain outside the initial compiler slice. The actual generated examples
+currently cover numeric facts, R/C binders and certified arithmetic objects;
+the earlier exact-carrier emitter is historical.
 
 Nested sets, power-set membership, and subset transport can all be written as
 ordinary mathematical facts in Litex:
@@ -794,5 +796,5 @@ example collection:
   and the complete `Group` comparison;
 - [Manual](https://litexlang.com/doc/Manual): syntax and proof forms;
 - [CLI reference](cli.md): current entrypoints, output, sessions, and modules;
-- [Lean object interface README](../lean/README.md):
+- [Lean semantic interface](../lean/Litex.lean):
   initial object-interface work; see the [current build boundary](cli.md#lean-compiler-boundary).
