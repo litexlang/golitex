@@ -79,6 +79,14 @@ application result can supply its tuple value or a coordinate without first
 asserting the complete tuple equality; see the
 [template alias tracer](../examples/stmt_nodes/definition/template_alias_struct_tuple.lit).
 
+A declared template function returning a set can unfold without treating its
+body as a new function declaration. Its parent application already checks the
+template arguments, input carriers and guards; the definition rule matches that
+complete domain and verifies the substituted residual with the existing
+restricted permissions. This is checked definition use, not an assumed set
+identity or a general recursive evaluator. See the
+[set-valued template tracer](../examples/proof_nodes/equal/by_object_definition/by_template/set_valued_application.lit).
+
 An explicit chain such as `y = x + 1 = 3` checks its adjacent steps and also
 stores the endpoint `y = 3`. Subsequent facts can reuse that stored equality.
 For `have x R = 2` and `have y R = x + 1`, use this chain to expose the

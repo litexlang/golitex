@@ -6111,7 +6111,7 @@ fn(x R) R = fn(t R) R
 
 **Well-definedness and domain.** The function-space checks apply; under its local binders/guards the body is WD and belongs to T. The empty-complete-domain exception only concerns pointwise return membership, not body WD.
 
-**Common native properties and proof routes.** A matching function-space membership and checked beta/evaluation equalities. Named or direct applications use the same domain conditions.
+**Common native properties and proof routes.** A matching function-space membership and checked beta/evaluation equalities. Named or direct applications use the same domain conditions. A template `have fn ... = body` application can also unfold using the parent equality's checked template arguments and complete application domain. The selected declared body must have the same input carriers and guards; its substituted residual keeps the existing definition-premise truth permissions. This supports set-valued bodies without rechecking a synthetic anonymous application. When cached WD supplies only an ID, the rule rechecks the declared template's argument memberships and guards with the existing definition-premise ceiling. Detailed evidence distinguishes the parent domain from this rechecked domain and retains `template_instance`, the instantiated `function`, `checked_domain`, each argument/guard proof, and the residual proof. See the [set-valued template tracer](../examples/proof_nodes/equal/by_object_definition/by_template/set_valued_application.lit).
 
 **Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 

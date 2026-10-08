@@ -451,10 +451,15 @@ write diagnostics to stderr and emit no partial Lean artifact.
 litex -strict -lean -f lean/examples/real_is_complex/statement.lit
 ```
 
-The initial slice covers reflexivity, sethood, exact integer R/C membership,
-ordinary forall introduction, R-to-C membership and certified add/div objects.
-Support depends on the actual proof route. Rational normalization and other
-unsupported routes fail even if another Core theorem could prove the conclusion.
+The current numeric slice covers reflexivity, sethood, literal N/Z/R/C membership,
+ordinary forall introduction, numeric hierarchy bridges, and certified
+add/sub/mul/neg/div objects with closed integer powers. Selected Rational
+normalization uses explicit denotation transport and a fixed Lean normalizer;
+its guarded route consumes the recorded nonzero proofs. Arithmetic constructor
+congruence, exact closed calculation children and scalar division relations
+also replay their own selected evidence. Support still depends on the actual
+proof route and object domain; unsupported routes fail even if another Core
+theorem could prove the conclusion.
 Sessions, repository mode, other output modes and module configurations/imports
 are not supported by this first slice.
 
@@ -463,6 +468,10 @@ The final artifacts are [lean/Litex.lean](../lean/Litex.lean) and
 pair. Development tools and plans are local-only in `scripts/litex_to_lean/`;
 older material remains in `scripts/legacy_to_lean/`. Emission is distinct from
 Lean kernel checking, and the numeric model does not yet interpret all Litex.
+The empty `Rational {}` result tag records a successful normalization family,
+not a monomial derivation: the generated normalization proof must pass Lean.
+General equality-class paths, named declarations, function/set constructors
+and replay of forward-inference branches remain outside this slice.
 
 ## Practical Recipes
 

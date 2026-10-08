@@ -1,0 +1,99 @@
+{
+  "status": "partial_pending_website_write_access",
+  "source_audits": [
+    {
+      "path": "docs/audits/learner-cheatsheet-redesign-2026-10-07.json",
+      "bytes": 20026,
+      "git_blob": "79318a357a1b4beab943924566a3cc6c74f777bc",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/reference-inventory-2026-10-06.json",
+      "bytes": 954143,
+      "git_blob": "4b6d6074afb81b2e1275e93d333318ee296a0c43",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/manual-merge-2026-10-06.json",
+      "bytes": 548394,
+      "git_blob": "19eed77fe6e1c46467fff84a41941645f92c2d06",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/manual-pipeline-2026-10-06.json",
+      "bytes": 707620,
+      "git_blob": "0b8cf36c83f3ef69162cab7361933b76a8256457",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/manual-order-recipes-2026-10-06.json",
+      "bytes": 95179,
+      "git_blob": "e1763f77f4aff06175701a989ad1f58563384198",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/manual-square-product-2026-10-06.json",
+      "bytes": 114971,
+      "git_blob": "6d9c66591ba812deec183183aaebcd18cf2e67c9",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/manual-power-catalog-2026-10-06.json",
+      "bytes": 96121,
+      "git_blob": "17e818e7dcbb6ecdaf45bddbbb72e76b6b988f4d",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/manual-proof-basics-2026-10-06.json",
+      "bytes": 53679,
+      "git_blob": "653c167293d24880a08ab05dc916bbc3efd17a38",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    },
+    {
+      "path": "docs/audits/reference-samples-2026-10-06.json",
+      "bytes": 92052,
+      "git_blob": "227f5b7dc8a6cbfec92eaae0d8c6640a6b2ee43a",
+      "restored_from": "b94a2f2f01aab5f6a1348686096e12b07497cb1c"
+    }
+  ],
+  "source_documents": {
+    "docs/AgentGuide.md": "7d2b483113a1db46e17a4010058cf231fa10ae7d05f672d953b95e802f609c90",
+    "docs/FAQ.md": "2224100999cafcff11e2b54cb3e5fa9402e3a0cc32626f12e1ca82d10769077e",
+    "docs/Learn_Litex.md": "17346eb8c3f50692a6a13bd67fdd476eab7331a8597d7518fb940135aafcee3c",
+    "docs/Litex_Blueprint.md": "1f339d0317191e9c92050e6bec82d4af8dd4be788022d89151c7b20d86474fa7",
+    "docs/Litex_Learner_Cheatsheet.md": "79a092c9f909c523286e4d7642403a535870fa5b1815e5e69079e75820d9242f",
+    "docs/Litex_To_Lean_Compiler_Guide.md": "5d94b5d9c385c130fc57c578fad7b9e8fa9e8f3c05b3256d7aa8f2818db6d062",
+    "docs/Litex中文蓝图.md": "b99003302801b5d5866463991be14a4b7ffe7ff7f709250b0e2024422269c6f5",
+    "docs/Manual.md": "5d8904f7571425df0dcced0d172f7eae4870f267bd4e26b02d885dd511ac1f58",
+    "docs/Reference.md": "3e91543786f8007875045b3931d910ace03cb355ccb1283e7857a62a9afe5cb3",
+    "docs/Representative_Lean_Litex_Example_Comparisons.md": "0e33c9383114852e8a8ba361c246e94d134953e266c657df5e8a14f97d1231fd",
+    "docs/cli.md": "f12ff6e19f1be2d2d1f19602d44d931cb391d67a4afd9d34e6f0cf2417910917",
+    "docs/setup.md": "24f6aa03c429ad272a70fa29e213afd19a994454d3f59ef6d0e7d78815bc579d",
+    "docs/学习Litex.md": "721561040182ec830ecf3164701922ee1c89af156ffc228a7d0bbf885e5a8cf0"
+  },
+  "source_link_check": {
+    "documents": 13,
+    "local_links": 1655,
+    "external_urls_skipped": 83,
+    "errors": 0
+  },
+  "candidate_checks": {
+    "native_tests_passed": 38,
+    "api_and_layout_assertions_passed": 14,
+    "typescript_diagnostics": 0,
+    "shell_syntax_checks": "passed",
+    "patch_apply_check": "passed"
+  },
+  "website_patch": "tmp/2026-10-08/docs-website-links/website.patch",
+  "website_patch_applied": false,
+  "website_checkout": "/Users/shenjiachen/主要文件夹/GeekGems/litex/litex-webpage",
+  "blocked_by": "The website checkout is outside the current writable roots. Workspace write access requested.",
+  "preserved_concurrent_website_changes": true,
+  "not_run": [
+    "live-browser clicks and refresh",
+    "full website production build",
+    "Rust/Lean/textbook tests",
+    "deployment"
+  ],
+  "next_step": "Add litex-webpage to the writable workspace, recheck the patch against the live checkout, apply it, synchronize the source publication mirror, and verify the real website routes."
+}

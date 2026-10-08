@@ -697,7 +697,7 @@ impl LeanCompiler {
                 .map(|n| format!("exact {n}"))
                 .collect::<Vec<_>>()
                 .join(" | ");
-            format!("(by\n  {}\n  field_simp (disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero) <;> ring\n)", native_guards.join("\n  "))
+            format!("(by\n  {}\n  litex_normalize_rational (disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)\n)", native_guards.join("\n  "))
         } else {
             "(by ring)".to_string()
         };

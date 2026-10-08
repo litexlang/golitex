@@ -368,3 +368,21 @@ and the four `closed_*_calculation.lit` tracers.
 Power-set membership now has a local known-subset route: both fixed subset arguments are the already checked membership element and PowerSet base. `PowerSetMembershipSubsetProof::KnownSubset` retains the queried subset and the existing read-only cite/argument-identity proofs. `VerifiedSubset` keeps the former independent successful verifier route and unchanged premise ceiling. This does not change raw known lookup, atomic WD, caching, publication or search permissions. The maintained tracer is `examples/proof_nodes/atomic/by_builtin_rule/in_power_set_from_restricted_image.lit`.
 
 Focused alpha-reuse acceptance: [2026-10-08 receipt](../../../../../tests/tooling/acceptance/stored-equality-alpha-2026-10-08.json) records the equality-family tests, strict aggregate premise tracer, assumption-replay boundary and executable documentation gate.
+
+### Parent-checked template beta
+
+For a `HaveFnEqualStmt` template-headed application, the existing parent-checked
+beta route now consumes the parent's exact application WD and its selected
+complete input domain. It instantiates the checked template body, compares
+input carriers/guards modulo alpha, substitutes the actual arguments and
+checks residual truth at the existing definition-premise ceiling. The
+`TemplateAnonymousFunction` evidence retains the resolved instance,
+instantiated function and selected domain; detailed JSON projects these fields.
+It adds no search-order, fuel, state or syntax change. The maintained tracer is
+`examples/proof_nodes/equal/by_object_definition/by_template/set_valued_application.lit`.
+
+If parent WD is cached and no selected signature is retained, the template
+branch checks its own declared arguments/guards with the existing bounded
+`try_verify_fn_obj_against_fn_set` API. Success-only argument WD and requirement
+proofs are retained in `TemplateApplicationDomainProof::Rechecked`; no new
+cache field, provenance lookup, or fresh verifier permission is introduced.

@@ -11,12 +11,13 @@ template<S, T set, f fn(x S) T>:
 claim:
     ? forall S, T set, f fn(x S) T, B power_set(T):
         \inverse_part<S, T, f>(B) = {x S: f(x) $in B}
+    \inverse_part<S, T, f>(B) $in power_set(S)
 
-template<I, S, T set, f fn(x S) T, family fn(j I) power_set(S)>:
-    have fn family_images(j I) power_set(T) = fn_range(fn(x family(j)) T {f(x)})
+template<I, S, T set, f fn(x S) T, family fn(j I) power_set(T)>:
+    have fn family_preimages(j I) power_set(S) = {x S: f(x) $in family(j)}
 claim:
-    ? forall I, S, T set, f fn(x S) T, family fn(j I) power_set(S), j I:
-        \family_images<I, S, T, f, family>(j) = fn_range(fn(x family(j)) T {f(x)})
+    ? forall I, S, T set, f fn(x S) T, family fn(j I) power_set(T), j I:
+        \family_preimages<I, S, T, f, family>(j) = {x S: f(x) $in family(j)}
 
 template<c R>:
     have fn reciprocal_shift(x R: x != c) R = 1 / (x - c)
