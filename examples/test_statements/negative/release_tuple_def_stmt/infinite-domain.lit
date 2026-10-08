@@ -1,0 +1,4 @@
+have fn z(i1 N+) R=0
+release tuple def z
+z $in finite_seq(R,2)
+z $in fn(k closed_range(1,2)) R

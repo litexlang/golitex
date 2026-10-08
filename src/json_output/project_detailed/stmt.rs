@@ -1451,6 +1451,9 @@ fn project_release_and_expand(
     result: &ExecReleaseAndExpandStmtResult,
     runtime: &Runtime,
 ) -> JsonValue {
+    if let ExecReleaseAndExpandStmtResult::TupleDef(result) = result {
+        return project_release_tuple_def(result, runtime);
+    }
     if let ExecReleaseAndExpandStmtResult::CartDef(result) = result {
         return project_release_cart_def(result, runtime);
     }
@@ -1462,6 +1465,7 @@ fn project_release_and_expand(
         ExecReleaseAndExpandStmtResult::StructDef(_) => "release_struct_def",
         ExecReleaseAndExpandStmtResult::ObjDef(_) => "release_obj_def",
         ExecReleaseAndExpandStmtResult::CartDef(_) => "release_cart_def",
+        ExecReleaseAndExpandStmtResult::TupleDef(_) => "release_tuple_def",
         ExecReleaseAndExpandStmtResult::ExpandRange(_) => "expand_range",
         ExecReleaseAndExpandStmtResult::ZornLemma(_) => "release_zorn_lemma",
         ExecReleaseAndExpandStmtResult::AxiomOfChoice(_) => "release_axiom_of_choice",
@@ -1755,6 +1759,38 @@ pub(in crate::json_output) fn project_release_cart_def(
                 ])),
             };
             object_for(runtime, vec![("success", bool_value(false)), ("kind", string("release_cart_def")), ("phase", string(phase)), ("failure", details)])
+        }
+    }
+}
+
+
+pub(in crate::json_output) fn project_release_tuple_def(
+    result: &crate::execute::execute_release_tuple_def_stmt::ExecReleaseTupleDefStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_release_tuple_def_stmt::{ExecReleaseTupleDefStmtResult as R, ExecReleaseTupleDefStmtFailed as F};
+    match result {
+        R::Success(s) => object_for(runtime, vec![
+            ("success", bool_value(true)), ("kind", string("release_tuple_def")),
+            ("statement", string(s.statement.readable_string())),
+            ("shape", super::function_domain::project_finite_function_source(&s.shape, runtime)),
+            ("complete_domain", super::function_domain::project_function_domain(&s.domain, runtime)),
+            ("membership_rule", super::theorem::project_builtin_application_value(&s.membership_rule, runtime)),
+            ("return_proofs", project_verify_facts(&s.return_proofs, runtime)),
+            ("membership_well_defined", project_fact_wd_proof(&s.membership_wd, runtime)),
+            ("coordinate_proofs", project_verify_facts(&s.coordinate_proofs, runtime)),
+            ("stored", JsonValue::Array(s.stored.iter().map(|store| project_store_and_infer(store, runtime)).collect())),
+        ]),
+        R::Failed(failure) => {
+            let (phase, details) = match failure {
+                F::Shape => ("shape", object_for(runtime, vec![("reason", string("no_checked_tuple_shape"))])),
+                F::Domain(f) => ("complete_domain", super::function_domain::project_function_domain_failure(f, runtime)),
+                F::Requirements(message) => ("return_requirements", object_for(runtime, vec![("message", string(message))])),
+                F::Return { fact, result } => ("return_bound", object_for(runtime, vec![("fact", string(fact.readable_string())), ("verification", project_verify_fact(result, runtime))])),
+                F::MembershipWd(result) => ("membership_well_defined", project_verify_fact_wd_result(result, runtime)),
+                F::Coordinate { fact, result } => ("coordinate", object_for(runtime, vec![("fact", string(fact.readable_string())), ("verification", project_verify_fact(result, runtime))])),
+            };
+            object_for(runtime, vec![("success", bool_value(false)), ("kind", string("release_tuple_def")), ("phase", string(phase)), ("failure", details)])
         }
     }
 }

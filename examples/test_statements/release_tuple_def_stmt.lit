@@ -1,0 +1,8 @@
+# Stmt: ReleaseTupleDefStmt
+# AST: Stmt::ReleaseAndExpand::ReleaseTupleDefStmt
+# case: checked-tuple-contract
+let t=(1,2)
+release tuple def t
+t $in finite_seq(union({1},{2}),2)
+t(1)=1
+t(2)=2

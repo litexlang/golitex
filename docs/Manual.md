@@ -1661,6 +1661,7 @@ statement's body. The examples in the dictionaries show the active-binder form.
 | [S49](#s49-register-symmetric-predicate-laws) | `register symmetric: ? forall ...` | Register symmetric predicate laws | checked |
 | [S50](#s50-register-transitive-predicate-laws) | `register transitive: ? forall ...` | Register transitive predicate laws | checked |
 | [S51](#s51-exact-evaluation) | `eval expression` | Exact evaluation | checked |
+| [S52](#s52-release-a-tuple-definition) | `release tuple def object` | Publish an exact finite-sequence contract and coordinates | checked |
 
 ### S01. Expression-defined functions
 
@@ -2355,6 +2356,12 @@ mode. Struct parameterization belongs to the struct declaration itself.
 `\identity<R>(2)` then applies that value. The two stages have different
 argument contracts. See R03 for the checked family and both calls. The source
 enumeration is [TemplateDefEnum](../src/ast/stmt.rs).
+
+
+A checked specialized function has its full declared function type even when
+the bound parameter is renamed. Its domain conditions, return carrier and
+free owners must still match, and instantiation must satisfy every template
+argument and guard. See the [checked function-type example](../examples/wd/template_function_declared_type.lit).
 
 **Further detail:** [Carrier families and function arguments](#carrier-families-and-function-arguments).
 
@@ -3790,6 +3797,32 @@ eval 2 + 3
 **Source and evidence:** [implementation](../src/execute/execute_eval_stmt/exec_eval_stmt.rs); `S51` in the [inventory and verification record](audits/reference-inventory-2026-10-06.json).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
+
+### S52. Release a tuple definition
+
+**Public form:** `release tuple def object`.
+
+**Mathematical function.** Publish the exact `finite_seq` membership and coordinate facts of a checked tuple value or Cartesian member. Literal tuples and their direct stored aliases use a union of singleton coordinate sets; repeated coordinates keep their original length. When no literal value is known, a Cartesian member uses the union of its factor sets and retains each factor's coordinate bound.
+
+**Before execution.** A checked tuple value or Cartesian membership supplies the shape. The complete domain must equal `closed_range(1,n)`. Every return premise, generated membership and coordinate must check before publication.
+
+**Execution and result.** Store the membership and each coordinate through the ordinary fact store, with source locations and FactIds. `()` releases `finite_seq({},0)` without coordinates; `tuple(a)` releases `finite_seq({a},1)` and remains printed as `tuple(a)` so it cannot be mistaken for scalar grouping. Failed statements and local sketches publish no partial package.
+
+**Nearest boundary.** Scalars, ill-defined values and infinite-domain functions reject. The command does not discover arbitrary function bodies, does not traverse transitive alias chains, and does not publish size, image or dimension facts. A function with complete domain `N+` cannot become a length-two function by this command or by `fn_set_member`.
+
+**Checked example.**
+
+```litex
+let t=(1,2)
+release tuple def t
+t $in finite_seq(union({1},{2}),2)
+t(1)=1
+t(2)=2
+```
+
+**Source and evidence:** [executor](../src/execute/execute_release_tuple_def_stmt.rs), [runnable tracer](../examples/stmt_nodes/release_and_expand/release_tuple_def.lit), and [acceptance](../examples/stmt_nodes/experience/problem_notes/release_tuple_def_2026-10-08.md).
+
+**Related entries:** [O78 Finite tuples](#o78-finite-tuples). `release cart def cart(A,B)` publishes the complete set definition described there; this command publishes facts about an individual value.
 
 <a id="objects"></a>
 
@@ -6003,6 +6036,8 @@ finite_set_size(cart()) = 1
 **Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Ordinary calls also accept literal tuple heads: `(1,2)(1)=1` and `((1,2),3)(1)(2)=2`. Every call checks its receiver's complete domain; `(1,2)(3)` and `((1,2),3)(2)(1)` fail WD. Old `[index]`, dimension and constructor-projection syntax is removed. A singleton uses `tuple(value)`, since `(value)` is grouping.
+
+See [S52](#s52-release-a-tuple-definition) for `release tuple def object`, which publishes the exact finite-sequence membership and known coordinates of a value.
 
 `release cart def cart(A,B)` verifies and stores the complete equality
 `cart(A,B)={p finite_seq(union(A,B),2):p(1) $in A,p(2) $in B}`.

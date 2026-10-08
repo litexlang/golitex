@@ -26,6 +26,7 @@ use std::collections::HashMap;
 use super::subset::standard_set_is_subset_eq;
 
 mod real_arithmetic_constructor;
+pub mod scalar_refined_product;
 mod discrete_arithmetic_constructor;
 pub use discrete_arithmetic_constructor::{
     DiscreteArithmeticConstructorClosureBuiltinRuleProof, DiscreteArithmeticConstructorTree,
@@ -37,6 +38,10 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    NonzeroRationalQuotient(scalar_refined_product::NonzeroRationalQuotientProof),
+    NonzeroRationalProduct(scalar_refined_product::NonzeroRationalProductProof),
+    PositiveRealQuotient(scalar_refined_product::PositiveRealQuotientProof),
+    PositiveRealProduct(scalar_refined_product::PositiveRealProductProof),
     DiscreteArithmeticConstructorClosure(DiscreteArithmeticConstructorClosureBuiltinRuleProof),
     FiniteSetMaxMember(FiniteSetMaxMemberBuiltinRuleProof),
     FiniteSetMinMember(FiniteSetMinMemberBuiltinRuleProof),
@@ -403,6 +408,8 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.scalar_refined_product(fact, verify_state)? { return Ok(Some(proof)); }
+
         if let Some(proof) = self.finite_set_max_membership_proof(fact) {
             return Ok(Some(proof));
         }
@@ -2001,3 +2008,7 @@ mod family_union_alpha_tests;
 #[cfg(test)]
 #[path = "../../../../../../tests/unit/execute/power_set_parent_wd/tests.rs"]
 mod power_set_parent_wd_tests;
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/anonymous_fn_in_finite_seq/tests.rs"]
+mod anonymous_fn_in_finite_seq_tests;

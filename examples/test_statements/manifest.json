@@ -2909,8 +2909,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [true, false],
-            "failed_phase": ["by_thm"]
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_thm"
+            ]
           }
         },
         {
@@ -2919,8 +2924,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [true, false],
-            "failed_phase": ["by_thm"]
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "by_thm"
+            ]
           }
         },
         {
@@ -3732,6 +3742,73 @@
             "success": false,
             "statement_success": [],
             "session_error_contains": "release cart def expects one cart(...)"
+          }
+        }
+      ]
+    },
+    {
+      "leaf": "ReleaseTupleDefStmt",
+      "ast_path": [
+        "ReleaseAndExpand",
+        "ReleaseTupleDefStmt"
+      ],
+      "payload": "ReleaseTupleDefStmt",
+      "file": "release_tuple_def_stmt.lit",
+      "file_strict": true,
+      "cases": [
+        {
+          "name": "checked-tuple-contract",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        }
+      ],
+      "negative": [
+        {
+          "name": "infinite-domain",
+          "file": "negative/release_tuple_def_stmt/infinite-domain.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false,
+              false,
+              false
+            ]
+          }
+        },
+        {
+          "name": "scalar",
+          "file": "negative/release_tuple_def_stmt/scalar.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ]
+          }
+        },
+        {
+          "name": "invalid-wd",
+          "file": "negative/release_tuple_def_stmt/invalid-wd.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ]
+          }
+        },
+        {
+          "name": "trailing-body",
+          "file": "negative/release_tuple_def_stmt/trailing-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [],
+            "session_error_contains": "release tuple def expects one object and no body"
           }
         }
       ]

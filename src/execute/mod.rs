@@ -30,6 +30,7 @@ mod execute_let_stmt;
 mod execute_release_struct_def_stmt;
 pub mod execute_release_obj_def_stmt;
 pub mod execute_release_cart_def_stmt;
+pub mod execute_release_tuple_def_stmt;
 pub mod execute_unsafe_stmt;
 pub mod execute_witness_stmt;
 mod introduce_typed_parameters;

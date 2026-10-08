@@ -13,6 +13,19 @@ pub(super) fn project_known_special_property(
     runtime: &Runtime,
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::AnonymousFnInFiniteSeq(p)) => return object_for(runtime, vec![
+            ("type", string("by_known_special_property")),
+            ("rule", string("AnonymousFnInFiniteSeq")),
+            ("declared_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.declared_signature.clone())).readable_string())),
+            ("signature_match", project_equal_searched(&p.signature_match, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(p)) => return object_for(runtime, vec![
+            ("type", string("by_known_special_property")),
+            ("rule", string("TemplateFunctionInDeclaredFnSet")),
+            ("instance", string(crate::ast::obj::Obj::InstantiatedTemplateObj(p.instance.clone()).readable_string())),
+            ("declared_signature", string(crate::ast::obj::Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(p.declared_signature.clone())).readable_string())),
+            ("signature_match", project_equal_searched(&p.signature_match, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(p)) => return object_for(runtime, vec![
             ("type", string("by_known_special_property")),
             ("rule", string("FnApplicationInStandardSuperset")),

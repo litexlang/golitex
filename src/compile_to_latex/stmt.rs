@@ -200,6 +200,7 @@ fn statement(
                 "",
                 "",
             ),
+            ReleaseAndExpandStmt::ReleaseTupleDefStmt(x) => say(Phrase::ReleaseObj, &inline(&o(&x.obj)?), "", ""),
             ReleaseAndExpandStmt::ReleaseCartDefStmt(x) => say(Phrase::ReleaseObj, &inline(&o(&crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::Cart(x.cart.clone())))?), "", ""),
             ReleaseAndExpandStmt::ExpandRangeStmt(x) => {
                 let (start, end, relation) = match &x.range {

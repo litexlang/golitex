@@ -430,7 +430,23 @@ impl Runtime {
         }
         let neg_x = negate_obj(arg.as_ref());
         let neg_upper = less_equal_fact(&neg_x, bound, self);
-        let neg_upper_proof = self.verify_builtin_rule_premise(&neg_upper, verify_state)?;
+        let mut neg_upper_proof = self.verify_builtin_rule_premise(&neg_upper, verify_state)?;
+        // The same -x premise may be written natively or as (-1)*x.
+        // Keep its actual verify result instead of creating a rewritten cite.
+        if neg_upper_proof.is_failed() {
+            let native = Obj::ArithmeticOperator(ArithmeticOperator::Neg(crate::ast::obj::Neg { arg: arg.clone() }));
+            let requirement = less_equal_fact(&native, bound, self);
+            neg_upper_proof = self.verify_builtin_rule_premise(&requirement, verify_state)?;
+        }
+        if neg_upper_proof.is_failed() {
+            let product = Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                left: Box::new(Obj::ArithmeticOperator(ArithmeticOperator::Neg(crate::ast::obj::Neg {
+                    arg: Box::new(Obj::Literal(crate::ast::obj::Literal::Number(crate::ast::obj::Number::new("1".into())))),
+                }))), right: arg.clone(),
+            }));
+            let requirement = less_equal_fact(&product, bound, self);
+            neg_upper_proof = self.verify_builtin_rule_premise(&requirement, verify_state)?;
+        }
         if neg_upper_proof.is_failed() {
             return Ok(None);
         }
@@ -525,8 +541,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult>
     {
-        let goal = less_equal_fact(&zero_obj(), obj, self);
-        self.verify_builtin_rule_premise(&goal, verify_state)
+        self.verify_order_nonnegative(obj, verify_state)
     }
 
 

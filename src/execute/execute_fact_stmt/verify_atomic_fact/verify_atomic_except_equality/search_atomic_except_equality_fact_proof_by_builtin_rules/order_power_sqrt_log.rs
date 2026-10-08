@@ -559,8 +559,19 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_equal_fact(&zero_obj(), obj, self);
-        // Premise of a builtin rule: cite-only / known, no nested premise-producing rules.
-        self.verify_builtin_rule_premise(&goal, verify_state.clone())
+        // Accept actual weak/strict sources at the same ceiling. A strict
+        // positive fact is a sufficient guard; preserve that fact unchanged.
+        let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
+        if !proof.is_failed() { return Ok(proof); }
+        for requirement in [
+            crate::ast::fact::GreaterEqualFact { fact_id: self.global_ids.allocate_fact_id(), left: obj.clone(), right: zero_obj(), line_file: None }.into(),
+            make_less_fact(&zero_obj(), obj, self),
+            crate::ast::fact::GreaterFact { fact_id: self.global_ids.allocate_fact_id(), left: obj.clone(), right: zero_obj(), line_file: None }.into(),
+        ] {
+            let result = self.verify_builtin_rule_premise(&requirement, verify_state)?;
+            if !result.is_failed() { return Ok(result); }
+        }
+        Ok(proof)
     }
 
     pub(crate) fn verify_order_nonpositive(
@@ -569,7 +580,17 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_equal_fact(obj, &zero_obj(), self);
-        self.verify_builtin_rule_premise(&goal, verify_state.clone())
+        let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
+        if !proof.is_failed() { return Ok(proof); }
+        for requirement in [
+            crate::ast::fact::GreaterEqualFact { fact_id: self.global_ids.allocate_fact_id(), left: zero_obj(), right: obj.clone(), line_file: None }.into(),
+            make_less_fact(obj, &zero_obj(), self),
+            crate::ast::fact::GreaterFact { fact_id: self.global_ids.allocate_fact_id(), left: zero_obj(), right: obj.clone(), line_file: None }.into(),
+        ] {
+            let result = self.verify_builtin_rule_premise(&requirement, verify_state)?;
+            if !result.is_failed() { return Ok(result); }
+        }
+        Ok(proof)
     }
 
     pub(crate) fn verify_order_positive(
@@ -578,7 +599,12 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(&zero_obj(), obj, self);
-        self.verify_builtin_rule_premise(&goal, verify_state.clone())
+        let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
+        if !proof.is_failed() { return Ok(proof); }
+        let reverse: Fact = crate::ast::fact::GreaterFact {
+            fact_id: self.global_ids.allocate_fact_id(), left: obj.clone(), right: zero_obj(), line_file: None,
+        }.into();
+        self.verify_builtin_rule_premise(&reverse, verify_state)
     }
 
     pub(crate) fn verify_order_negative(
@@ -587,7 +613,12 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(obj, &zero_obj(), self);
-        self.verify_builtin_rule_premise(&goal, verify_state.clone())
+        let proof = self.verify_builtin_rule_premise(&goal, verify_state)?;
+        if !proof.is_failed() { return Ok(proof); }
+        let reverse: Fact = crate::ast::fact::GreaterFact {
+            fact_id: self.global_ids.allocate_fact_id(), left: zero_obj(), right: obj.clone(), line_file: None,
+        }.into();
+        self.verify_builtin_rule_premise(&reverse, verify_state)
     }
 
     pub(crate) fn verify_order_gt_one(

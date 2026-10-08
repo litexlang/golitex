@@ -223,6 +223,15 @@ impl Runtime {
         if let Some(proof) = self.search_equal_fact_builtin_rule_finite_subset_size(fact, verify_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(proof)));
         }
+        if let Some(proof) = self.search_scalar_division_relation(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(proof)));
+        }
+        if let Some(proof) = self.search_exponential_logarithm_identity(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ExponentialLogarithmIdentity(proof)));
+        }
+        if let Some(proof) = self.search_factorial_predecessor(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::FactorialPredecessor(proof)));
+        }
         if let Some(proof) = super::by_native_fixed_base::native_fixed_base(fact) {
             return Ok(Some(proof));
         }

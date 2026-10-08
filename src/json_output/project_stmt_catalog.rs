@@ -564,6 +564,15 @@ fn project_release(r: &ExecReleaseAndExpandStmtResult, runtime: &Runtime) -> Jso
                 failed(runtime, "release obj …", "release_obj")
             }
         },
+        ExecReleaseAndExpandStmtResult::TupleDef(x) => match x {
+            crate::execute::execute_release_tuple_def_stmt::ExecReleaseTupleDefStmtResult::Success(s) => {
+                let (stores, infers) = flatten_store_nodes(runtime, &s.stored);
+                success_parts(runtime, s.statement.readable_string(), "release_tuple_def", stores, infers)
+            }
+            crate::execute::execute_release_tuple_def_stmt::ExecReleaseTupleDefStmtResult::Failed(_) => failed_with_details(
+                runtime, "release tuple def …", "release_tuple_def", super::project_detailed::project_release_tuple_def(x, runtime),
+            ),
+        },
         ExecReleaseAndExpandStmtResult::CartDef(x) => match x {
             crate::execute::execute_release_cart_def_stmt::ExecReleaseCartDefStmtResult::Success(s) => {
                 let (stores, infers) = flatten_store_nodes(runtime, std::slice::from_ref(&s.store_and_infer));

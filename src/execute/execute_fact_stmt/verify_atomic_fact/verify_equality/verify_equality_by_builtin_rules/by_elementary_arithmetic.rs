@@ -134,15 +134,9 @@ impl Runtime {
                 if let Some(premise) = self.lookup_known_obj_equality(&s.arg, &squared) {
                     let mut requirements =
                         self.elementary_members(&[(right, StandardSet::R)], state.clone())?;
-                    let nonnegative =
-                        Fact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact {
-                            fact_id: self.global_ids.allocate_fact_id(),
-                            left: right.clone(),
-                            right: number("0"),
-                            line_file: None,
-                        }));
-                    requirements
-                        .push(self.verify_builtin_rule_premise(&nonnegative, state.clone())?);
+                    // Preserve either actual nonnegative spelling instead of
+                    // requiring another builtin direction conversion below the ceiling.
+                    requirements.push(self.verify_order_nonnegative(right, state)?);
                     if requirements.iter().all(|r| !r.is_failed()) {
                         return Ok(Some(P::SqrtKnownSquare {
                             premise: Box::new(premise),

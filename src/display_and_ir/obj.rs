@@ -719,6 +719,8 @@ impl Cart {
 impl Tuple {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        // `(a)` parses as grouping; preserve the singleton constructor.
+        if self.args.len() == 1 { out.push_str(TUPLE); }
         {
             out.push_str(LEFT_PAREN);
             out.push_str(

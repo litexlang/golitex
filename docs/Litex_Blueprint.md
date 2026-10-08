@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 6, 2026.
+Last updated: October 8, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -38,13 +38,17 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
 *Begun in 2024, Litex asks whether a formal language can become an everyday mathematical language for anyone willing to learn it: close to familiar mathematical expression, yet rigorously checked. It hopes to become a Python for formal languages, helping more people gradually become formalization experts.*
 
+**Fostering understanding is at the heart of Litex.** Mathematics helps us understand the world; mathematical understanding itself deserves particular care in the AI era. This aim has two connected aspects.
+
+**First, retain familiar mathematical concepts and ways of writing.** Litex seeks to preserve the objects and habits of everyday mathematical writing: sets, elements, functions, relations, and direct statements of conditions, facts, and conclusions. The aim is to let readers draw on their existing mathematical intuition and lower the barriers and costs of learning and understanding formal expression.
+
+**Second, make the structure of mathematics easier to see.** By comparing source and verification records, readers can ask how definitions, conditions, and conclusions depend on each other, how a piece of knowledge is established, and how it supports further reasoning. Litex hopes this will help people [deepen their understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/), discover connections, and find inspiration through formalization.
+
 Writing a checkable proof often requires both understanding the mathematics and knowing which theorem to cite or which proof tool to use. Litex makes the selection and combination of many routine verification methods part of the language: authors write definitions, constructions, and intermediate conclusions, while the language finds local grounds in current knowledge, builtin rules, and definitions, and checks their conditions.
 
 Authors can state the fact that should hold next, then inspect the grounds the language found or the point where checking stopped. Verified facts remain available to later reasoning. Litex organizes this work around sets, elements, functions, and relations, with clear feedback that people and AI can use together. Authors choose the mathematical route; within its supported scope, the language selects methods, checks premises, and combines verification steps. [Section 1.1](#fact-oriented-interface) illustrates this division of work and the implementation it requires.
 
 The next step on this path is Lean. The Litex-to-Lean compiler is not yet integrated into the current build and is expected to be completed by the end of 2026. Its goal is to let Lean independently recheck supported Litex proofs, connecting familiar mathematical expression to the existing formalization ecosystem.
-
-These choices ultimately serve human understanding. Mathematics helps us understand the world we live in; Litex hopes to keep [fostering understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/) in the AI era, when this ability may be easiest to lose and most important to retain.
 
 <a id="overview-spine"></a>
 
@@ -714,7 +718,7 @@ A failed statement adds neither `stores` nor `infers` to the accepted context. A
 
 </details>
 
-The record lets people inspect local grounds, gives AI feedback for revision, and can supply material for a dependency graph of definitions and facts. Section 4 discusses collaboration; Section 5 discusses the goal of handing supported internal evidence to Lean for independent rechecking. Both depend on clear boundaries between accepted statements and stopped attempts.
+The record lets people inspect local grounds, gives AI feedback for revision, and can supply material for a dependency graph of definitions and facts. By comparing source, established definitions and facts, and the verification method for the step, readers can ask why it holds and how the reasoning connects from one step to the next. Section 4 discusses collaboration; Section 5 discusses the goal of handing supported internal evidence to Lean for independent rechecking. Both depend on clear boundaries between accepted statements and stopped attempts.
 
 ![Litex fact-relation graph example](https://litexlang.com/_next/image?url=%2Fassets%2Fknowledge_graph.png&w=640&q=75)
 
@@ -761,7 +765,7 @@ _“Language design is a curious mixture of grand ideas and fiddly details.”_
 
 _— Bjarne Stroustrup_
 
-Litex takes set theory as its mathematical foundation and organizes mathematics through sets, elements, functions, and relations. Authors can write membership, subset relations, function applications, and equalities directly, without first unfolding the concrete set-theoretic construction of common objects. How builtin rules and number-system interfaces correspond to foundational theory still needs to be documented and audited.
+Litex takes set theory as its mathematical foundation and organizes mathematics through sets, elements, functions, and relations. Authors can write membership, subset relations, function applications, and equalities directly, without first unfolding the concrete set-theoretic construction of common objects. The aim is to let readers work with familiar mathematical concepts and reduce the extra effort of understanding formal representations. How builtin rules and number-system interfaces correspond to foundational theory still needs to be documented and audited.
 
 For example, if `s` is contained in `t`, then after intersecting each with the same set `u`, the former is still contained in the latter:
 
@@ -1481,7 +1485,7 @@ _— G. H. Hardy, A Mathematician’s Apology (1940)_
 
 Mathematics needs trustworthy conclusions and a language in which people can understand how those conclusions were established. Litex therefore poses a testable question: can organizing source around sets and facts, automatically checking supported local steps, and recording each step's grounds lower the cost for people and AI to construct, review, and repair checkable mathematics? This route deserves exploration alongside existing approaches such as Lean, Mizar, and Naproche, with real mathematical tasks to test its effects.
 
-I hope more people can participate in rigorous verification while retaining mathematical understanding. The current code, examples, and boundaries are a starting point. Broader domain coverage, independent Lean rechecking, and a real reduction in human effort still need to be demonstrated separately.
+I hope Litex helps more people continue to understand and create mathematics while taking part in rigorous verification. The current code, examples, and boundaries are a starting point. Broader domain coverage, independent Lean rechecking, and a real reduction in human effort still need to be demonstrated separately.
 
 <details>
 <summary><strong>A note from the author</strong></summary>

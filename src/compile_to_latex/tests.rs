@@ -113,7 +113,7 @@ fn every_current_statement_fixture_renders_in_every_language() {
         }
     }
     assert_eq!(
-        count, 51,
+        count, 52,
         "update the statement inventory when the parser surface changes"
     );
 }

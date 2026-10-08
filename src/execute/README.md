@@ -55,7 +55,10 @@ or coordinate images. See the
 [complete definition](../../examples/proof_nodes/equal/by_object_definition/cart_function_set_definition.lit)
 and [extensionality](../../examples/stmt_nodes/release_and_expand/tuple_exact_function_extensionality.lit)
 tracers. General literal application heads and the dedicated cart release
-statement remain separate pending interfaces.
+statement are supported. `release tuple def object` checks a known tuple value
+or Cartesian member, its complete domain, all return bounds and coordinates
+before publishing exact `finite_seq` membership and coordinate facts through
+the ordinary store. See [the tuple release tracer](../../examples/stmt_nodes/release_and_expand/release_tuple_def.lit).
 
 ## Checked eval result publication
 

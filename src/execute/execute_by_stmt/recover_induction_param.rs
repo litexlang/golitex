@@ -251,6 +251,7 @@ fn induction_bound_from_stmt(name: &str, stmt: &Stmt) -> Option<crate::ast::name
                 }
             }
             ReleaseAndExpandStmt::ReleaseStructDefStmt(s) => objs.push(&s.obj),
+            ReleaseAndExpandStmt::ReleaseTupleDefStmt(s) => objs.push(&s.obj),
             ReleaseAndExpandStmt::ReleaseCartDefStmt(s) => {
                 return induction_bound_from_obj(name, &crate::ast::obj::Obj::ProductShape(crate::ast::obj::ProductShape::Cart(s.cart.clone())));
             }

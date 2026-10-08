@@ -1,0 +1,13 @@
+# Infer: optional NormalAtomic definition expansion retains the caller WD ceiling.
+# Formerly rejected, with an inferred-exist WD internal error:
+# prop has_entry(x R):
+#     exist terms finite_seq(R, 1) st {terms(1) = x}
+# have fn entry_set(t R) power_set(R) = {x R: $has_entry(x)}
+# Run: target/release/litex -f examples/infer/atomic/normal_atomic_expand_bounded_wd.lit
+# Boundary: unsupported child WD is skipped, never stored without its check.
+# Out-of-domain terms(0) and false equalities remain executable Rust negatives.
+
+prop has_entry(x R):
+    exist terms finite_seq(R, 1) st {terms(1) = x}
+
+have fn entry_set(t R) power_set(R) = {x R: $has_entry(x)}

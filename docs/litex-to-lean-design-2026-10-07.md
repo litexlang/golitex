@@ -2,7 +2,76 @@
 
 This proposal preserves Litex's pure-set mathematics while making ordinary numeric, set and function results usable in Lean and Mathlib. The recommended architecture keeps native Lean representations and proves their correspondence with a concrete set-theoretic model. The architecture and numeric encoding policy remain open user decisions. No compiler or semantic change is implemented by this document.
 
-## A representative source and its intended export
+## First MVP scope
+
+The user's October 8 steering makes object introduction, sethood, membership and the R/C hierarchy the first compilation slice. A further correction fixes representation independence: a source object admitted by `a $in C` must remain a representative in arbitrary Lean host type `α`; the membership fact does not restrict its host type to `ℂ`. Reflexivity applies independently of C membership. The reciprocal example below is a later WD/application slice. The first MVP should support representation-independent identifiers, the standard domains `R` and `C`, ordinary typed `have`, atomic sethood/membership/equality, and the shallow single-conclusion universal needed to export the hierarchy law.
+
+The following exact source passed the installed release binary with exit 0, `kind: run`, `success: true` and `session_error: null`:
+
+```litex
+have a C
+$is_set(a)
+a $in C
+a = a
+$is_set(R)
+$is_set(C)
+```
+
+This second source also passed the same contract:
+
+```litex
+have b R
+b $in R
+b $in C
+forall x R:
+    x $in C
+```
+
+The actual `b $in C` route is structural membership through the standard superset relation and its stored R-membership source. It is not an eager inference result. Compiler support must consume that exact typed certificate and FactId. Known-membership replay, object reflexivity and the `IsSet` AlwaysTrue rule are the other initial atomic routes.
+
+The negative source below returned exit 1 and `success: false` at its second statement, while `have z C` succeeded. This is failure to establish real membership, not proof of nonmembership:
+
+<!-- litex:skip-test -->
+
+```litex
+have z C
+z $in R
+```
+
+The public semantic interface is heterogeneous. Lean's host type supplies storage for a representative; Litex membership supplies mathematical classification. In particular, these are the revised target contracts, not implemented Core declarations:
+
+```lean
+-- Proposed public contracts, independent of a's host carrier.
+Litex.In a Litex.C ↔ ∃ z : ℂ, Litex.Same a z
+Litex.In a Litex.R ↔ ∃ r : ℝ, Litex.Same a r
+```
+
+Together with a proved `Same r (r : ℂ)` bridge, the R witness establishes C membership without changing the original `a : α`. The selected numeric representative must be unique in its faithful native carrier. `a`, `R` and `C` need actual pure-set interpretations, so the model justifies the source sethood rule; the target must retain the named proof for the source IsSetFact. A number's host Lean type alone is not a set-theoretic interpretation.
+
+`have a C` checks C's nonemptiness, introduces a fresh source object, and stores its membership. Its exported context has `{α : Type u} (a : α) (haC : Litex.In a Litex.C)`. It must not silently restrict `α := ℂ`, fix `a := 0`, erase the context or add a project axiom. Core reflexivity does not need haC; the source context still registers that evidence under its FactId. The revised schematic theorem shapes are:
+
+```lean
+-- Intended context and theorem shape; Core names remain proposed.
+theorem self {α : Type u} (a : α) :
+    Litex.Same a a := Litex.Same.refl a
+
+theorem real_to_complex {α : Type u} (x : α) (hxR : Litex.In x Litex.R) :
+    Litex.In x Litex.C := Litex.in_C_of_in_R hxR
+```
+
+`Same` may relate endpoints of different host types. Native Lean equality implies Same. The converse needs a proved faithful observation, such as native complex endpoints; even identical endpoint host types do not justify general native equality. Proposed acceptance shapes include `Same (3 : ℕ) (3 : ℂ)` and two reviewed wrapper representatives `Sum.inl (3 : ℂ)` and `Sum.inr (3 : ℂ)` that are semantically Same while natively unequal. Reject `Same (3 : ℂ) (4 : ℂ)`. These wrapper examples are proposed controls, not executed proofs.
+
+Fixed-domain membership must respect element equality. General source membership must also respect equality of the set argument. The compiler must not recover these laws by rendering source equalities as Lean casts. A native adapter opens `haC` to a complex representative and a Same certificate; it does not retype the original value. No numeric typeclass on arbitrary `α` should be an additional source-level prerequisite for using that membership fact.
+
+The model-backed denotation proposal remains a possible backend, but it must establish this public contract. A total per-type `Representation` map implicitly required by `Same` is representation metadata that must be supplied coherently, not a new source premise. An alternative closed semantic relation can define membership by the representative witnesses above. Arbitrarily existentially choosing unrelated representation maps inside `Same` or `In` would collapse distinctions and is forbidden. Merely changing a theorem binder to `α` does not discharge coherence, uniqueness or sethood obligations. No backend is selected by this correction alone.
+
+The exact declaration's original AST, source order, identifiers and FactIds still need capture. The minimal producer path is `HaveObjInNonemptySet` and its nonempty/membership outputs, followed by the four supported atomic proof routes and shallow forall introduction. Unsupported Result variants must produce an explicit diagnostic.
+
+Acceptance must run the Litex source, compile the actual successful results, check the generated file in Lean, and use a proved adapter on that generated theorem. A native specialization supplies a known faithful host representation, then recovers its native equality. For an arbitrary `x : α`, real membership instead gives a real representative and a Same certificate; native casts to ℂ become available only for that selected representative. Test at least two host carriers and the same-carrier wrapper control to ensure the implementation preserves representation independence. Keep reverse-hierarchy, fresh-object-equals-zero and dead-FactId controls. Functions, arithmetic normalization, induction, general set construction and named foundational releases belong to later slices.
+
+This is the proposed first implementation scope, not a completed compiler. The existing mathematical feasibility probe establishes model lemmas, and the October 8 CLI checks establish current source behavior; neither alone establishes the full end-to-end acceptance.
+
+## A subsequent function source and its intended export
 
 The current source in [b03.lit](../examples/test_function_sets/basic/b03.lit) is:
 

@@ -9,6 +9,59 @@ use crate::runtime::Runtime;
 
 pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinRule, runtime: &Runtime) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::FactorialPredecessor(p) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("FactorialPredecessor")),
+            ("positive_natural", project_verify_fact(&p.positive_natural, runtime)),
+        ]),
+        EqualitySearchProofByBuiltinRule::ExponentialLogarithmIdentity(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_exponential_logarithm_identities::ExponentialLogarithmIdentityProof as P;
+            let mut entries = vec![("type", string("builtin_rule")), ("rule", string(p.rule_id()))];
+            match p {
+                P::ExpDifference(_) => {
+                },
+                P::LnProduct(_) => {
+                },
+                P::LnQuotient(_) => {
+                },
+                P::ExpInjective(p) => {
+                    entries.push(("left_real", project_verify_fact(&p.left_real, runtime)));
+                    entries.push(("right_real", project_verify_fact(&p.right_real, runtime)));
+                    entries.push(("image_equality", super::searched::project_equal_searched(&p.image_equality, runtime)));
+                },
+                P::LnInjective(p) => {
+                    entries.push(("left_positive", project_verify_fact(&p.left_positive, runtime)));
+                    entries.push(("right_positive", project_verify_fact(&p.right_positive, runtime)));
+                    entries.push(("image_equality", super::searched::project_equal_searched(&p.image_equality, runtime)));
+                },
+                P::LogFromKnownPower(p) => {
+                    entries.push(("base_proof", project_log_algebra_base(&p.base_proof, runtime)));
+                    entries.push(("exponent_integer", project_verify_fact(&p.exponent_integer, runtime)));
+                    entries.push(("power_equality", super::searched::project_equal_searched(&p.power_equality, runtime)));
+                },
+                P::PowerFromKnownLog(p) => {
+                    entries.push(("base_proof", project_log_algebra_base(&p.base_proof, runtime)));
+                    entries.push(("argument_positive", project_verify_fact(&p.argument_positive, runtime)));
+                    entries.push(("exponent_integer", project_verify_fact(&p.exponent_integer, runtime)));
+                    entries.push(("logarithm_equality", super::searched::project_equal_searched(&p.logarithm_equality, runtime)));
+                },
+            }
+            object_for(runtime, entries)
+        },
+
+        EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(p) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_division_relations::ScalarDivisionRelationProof as P;
+            let mut entries = vec![("type", string("builtin_rule")), ("rule", string(p.rule_id()))];
+            match p {
+                P::ProductFromDivision(p) => {
+                    entries.push(("division_equation", project_verify_fact(&p.division_equation, runtime)));
+                },
+                P::DivisionFromProduct(p) => {
+                    entries.push(("product_equation", project_verify_fact(&p.product_equation, runtime)));
+                },
+            }
+            object_for(runtime, entries)
+        },
+
         EqualitySearchProofByBuiltinRule::GcdCommonDivisor(p) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("GcdCommonDivisor")),
             ("divisor_positive", project_verify_fact(&p.divisor_positive, runtime)),

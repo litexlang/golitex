@@ -224,6 +224,9 @@ impl Runtime {
                     ExecReleaseAndExpandStmtResult::ObjDef(self.exec_release_obj_def_stmt(stmt)?),
                 ))
             }
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseTupleDefStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::TupleDef(self.exec_release_tuple_def_stmt(stmt)?)))
+            }
             Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseCartDefStmt(stmt)) => {
                 Ok(ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::CartDef(self.exec_release_cart_def_stmt(stmt)?)))
             }

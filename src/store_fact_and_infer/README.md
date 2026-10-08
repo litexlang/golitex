@@ -80,6 +80,11 @@ Tracer: `examples/infer/equal/nonzero_real_square.lit`.
   (Obj domains in the prop signature are instantiated by call-site args;
   binder names need not match — see
   `examples/infer/atomic/normal_atomic_param_types_renamed_carrier.lit`)
+  Optional iff children use the existing soft inferred-store path: unavailable
+  WD at the inherited caller ceiling skips that child instead of aborting the
+  checked seed. No child is stored without its WD evidence and no search ceiling
+  is raised. Explicit definition proofs retain their normal obligations.
+  Tracer: `examples/infer/atomic/normal_atomic_expand_bounded_wd.lit`.
 - InFact: list/union/intersect/set_minus, cart, ranges/intervals,
   set-builder, power_set, equal-FnSet / fn_range / finite_seq / seq,
   family_union / index_union / index_intersect / **index_cart**,

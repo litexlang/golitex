@@ -669,24 +669,14 @@ impl Runtime {
     // Algebraic log identities hold on both positive base ranges, excluding 1.
     // Example: log(1/2,(1/2)^(-3))=-3; monotonicity keeps its own sign premise.
     fn verify_log_algebra_base(&mut self, base: &Obj, state: VerifyState) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
-        let positive_requirement: Fact = GreaterFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: base.clone(),
-            right: Obj::Literal(Literal::Number(Number::new("0".into()))),
-            line_file: None,
-        }.into();
-        let positive = self.verify_builtin_rule_premise(&positive_requirement, state.clone())?;
-        let positive = if positive.is_failed() {
-            self.verify_positive(base, state.clone())?
-        } else { positive };
-        if positive.is_failed() { return Ok(None); }
-        let requirement: Fact = NotEqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: base.clone(), right: Obj::Literal(Literal::Number(Number::new("1".into()))), line_file: None,
-        }.into();
-        let nonunit = self.verify_builtin_rule_premise(&requirement, state)?;
-        if nonunit.is_failed() { return Ok(None); }
-        Ok(Some(vec![positive, nonunit]))
+        // Reuse the same positive, nonunit alternatives as the other log laws.
+        // Example: a R+, a<1 => log(a,a)=1, with actual a<1 evidence.
+        let Some(base_proof) = self.verify_log_algebra_base_guard(base, state)? else { return Ok(None); };
+        Ok(Some(match base_proof {
+            LogAlgebraBaseProof::GreaterThanOne(proof) => vec![proof],
+            LogAlgebraBaseProof::BelowOne(proof) => vec![proof.positive_proof, proof.less_than_one_proof],
+            LogAlgebraBaseProof::PositiveNonunit(proof) => vec![proof.positive_proof, proof.nonunit_proof],
+        }))
     }
 
     fn try_log_arg_power(

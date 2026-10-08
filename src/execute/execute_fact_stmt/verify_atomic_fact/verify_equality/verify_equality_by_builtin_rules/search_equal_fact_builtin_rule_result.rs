@@ -129,6 +129,9 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    FactorialPredecessor(super::by_factorial_predecessor::FactorialPredecessorProof),
+    ExponentialLogarithmIdentity(super::by_exponential_logarithm_identities::ExponentialLogarithmIdentityProof),
+    ScalarDivisionRelation(super::by_scalar_division_relations::ScalarDivisionRelationProof),
     TanQuotientDefinition(super::by_elementary_definitions::TanQuotientDefinitionProof),
     CotQuotientDefinition(super::by_elementary_definitions::CotQuotientDefinitionProof),
     GcdEuclideanStep(super::by_elementary_definitions::GcdEuclideanStepProof),
