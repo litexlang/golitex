@@ -18,11 +18,8 @@ from pathlib import Path
 from typing import Sequence
 
 
-SMOKE_SOURCE = (
-    "import std basics\n"
-    "quot(-7, 3) = -3\n"
-    "$dvd(12, 3)\n"
-)
+SMOKE_SOURCE = "quot(-7, 3) = -3\n$dvd(12, 3)\n"
+SMOKE_CONFIG = '[import std]\nbasics\n\n[export]\nsmoke = "./smoke.lit"\n'
 PACKAGE_VERSION = re.compile(r'^version\s*=\s*"([^"]+)"\s*$')
 HOST_TARGET = re.compile(r"^host:\s*(\S+)\s*$", re.MULTILINE)
 
@@ -181,6 +178,7 @@ def build_local_archive(
         "cargo",
         "build",
         "--release",
+        "--locked",
         "--target",
         platform.target,
         "--target-dir",
@@ -265,9 +263,11 @@ def check_archive(
 
     smoke_file = extracted / "smoke.lit"
     smoke_file.write_text(SMOKE_SOURCE, encoding="utf-8")
+    (extracted / "litex.config").write_text(SMOKE_CONFIG, encoding="utf-8")
     smoke_result = subprocess.run(
         [str(binary), "-lang", "en", "-f", smoke_file.name],
         cwd=extracted,
+        env={**os.environ, "LITEX_STD_PATH": str(extracted / "std")},
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -275,7 +275,7 @@ def check_archive(
     )
     validate_run_output(smoke_result.stdout, smoke_result.returncode)
     print(
-        "PREFLIGHT smoke: import std basics + "
+        "PREFLIGHT smoke: litex.config [import std] basics + "
         "native quot(-7, 3) and $dvd(12, 3) -> ok",
         flush=True,
     )
@@ -329,13 +329,9 @@ def validate_run_output(output: str, returncode: int) -> None:
 
 
 def validate_version_output(output: str, returncode: int, version: str) -> None:
-    try:
-        envelope = json.loads(output)
-    except json.JSONDecodeError as error:
-        raise PreflightError(f"version command did not return JSON:\n{output}") from error
     if returncode != 0:
         raise PreflightError(f"version command exited with {returncode}:\n{output}")
-    if envelope != {"kind": "version", "ok": True, "version": version}:
+    if output.rstrip("\r\n") != f"Litex {version}":
         raise PreflightError(
             f"archive binary version check failed for {version!r}:\n{output}"
         )

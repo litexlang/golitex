@@ -13,6 +13,7 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defin
 };
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     VerifyEqualityResult, VerifyEqualitySuccess, EqualFactSearchedProof,
+    EqualFactSearchedProofByEquivalenceClass, KnownEqualityPathProof, StrictEqualArgProof,
 };
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::result::TheyAreTheSameProof;
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
