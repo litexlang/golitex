@@ -50,6 +50,10 @@ Litex checks the concrete claim through the definition and keeps
 fact-oriented interface, not a claim that the verifier can invent an entire
 proof from its final statement.
 
+**How Litex works.** See the [Litex Verification Pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)
+for a visual overview of checking a fact, finding local grounds, and making
+accepted knowledge available to later steps.
+
 **Multilingual feedback.** The CLI can present JSON verification feedback in
 several languages. The same source can be checked with `-lang zh` for Chinese
 explanations or `-lang fr` for French ones. Thanks in part to AI-assisted

@@ -57,7 +57,7 @@ fn guarded_quantifier_wd_retains_stages_and_local_guard_evidence() {
     ] {
         let results = check(&mut rt, source, &[true]);
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(ExecDefPropStmtResult::Success(s))) = &results[0] else { panic!("definition success") };
-        match (&s.iff_fact_well_defined[0], iff) {
+        match (&s.assumed_iff_facts[0].well_defined, iff) {
             (FactWellDefinedProof::NotForall(p), false) => {
                 assert_eq!((p.param_type_well_defined.len(), p.dom.len(), p.then.len()), (1, 1, 1));
                 assert!(!p.local_env.well_defined_objects.object_to_wd_id.is_empty());

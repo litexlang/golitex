@@ -10,13 +10,14 @@
 use crate::ast::stmt::DefPropStmt;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::{
-    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, ParamTypeWellDefinedProof,
-    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
+    FailToVerifyFactWellDefinedResult, ParamTypeWellDefinedProof, VerifyFactWellDefinedResult,
+    VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::execute::IntroduceTypedParametersFailed;
 use crate::execute::IntroduceTypedParametersResult;
 use crate::parse::keywords::{ABSTRACT_PROP, PROP};
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecDefPropStmtFailed {
@@ -27,14 +28,14 @@ pub enum ExecDefPropStmtFailed {
 
 /// `prop name(...): body` pipeline success payload.
 ///
-/// `iff_fact_well_defined` is parallel to `statement.iff_facts`.
+/// `assumed_iff_facts` retains each body's WD followed by its actual local store.
 /// `local_env` is the closed binder scope (params + any local WD records);
 /// it is not merged into the parent. The parent only gains the prop definition.
 pub struct ExecDefPropStmtSuccessResult {
     pub statement: DefPropStmt,
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
     pub defined_params: StoreHaveObjAndInferResult,
-    pub iff_fact_well_defined: Vec<FactWellDefinedProof>,
+    pub assumed_iff_facts: Vec<AssumeDomFactResult>,
     pub local_env: Box<ExecEnv>,
 }
 
@@ -65,7 +66,7 @@ impl Runtime {
         let (local_outcome, local_env) =
             self.run_in_local_env_and_take_env(|rt| rt.exec_def_prop_stmt_in_local(def_prop))?;
 
-        let (introduced, iff_fact_well_defined) = match local_outcome {
+        let (introduced, assumed_iff_facts) = match local_outcome {
             Ok(parts) => parts,
             Err(failed) => return Ok(ExecDefPropStmtResult::Failed(failed)),
         };
@@ -77,7 +78,7 @@ impl Runtime {
                 statement: def_prop.clone(),
                 param_type_well_defined: introduced.param_type_well_defined,
                 defined_params: introduced.defined_params,
-                iff_fact_well_defined,
+                assumed_iff_facts,
                 local_env,
             },
         ))
@@ -101,7 +102,7 @@ impl Runtime {
         &mut self,
         def_prop: &DefPropStmt,
     ) -> RuntimeResult<
-        Result<(IntroduceTypedParametersResult, Vec<FactWellDefinedProof>), ExecDefPropStmtFailed>,
+        Result<(IntroduceTypedParametersResult, Vec<AssumeDomFactResult>), ExecDefPropStmtFailed>,
     > {
         let verify_state = VerifyState::top_level();
 
@@ -117,18 +118,21 @@ impl Runtime {
             }
         };
 
-        let mut iff_fact_well_defined = Vec::with_capacity(def_prop.iff_facts.len());
+        let mut assumed_iff_facts = Vec::with_capacity(def_prop.iff_facts.len());
         for fact in &def_prop.iff_facts {
             match self.verify_fact_well_definedness(fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Assume each body fact before later ones so domain-restricted
                     // applications (e.g. `line_through_points(a, b)` under `a != b`)
                     // can pass WD. Local env is not merged to the parent.
-                    let _ = self.store_fact_and_infer(
+                    let store_and_infer = self.store_fact_and_infer(
                         fact,
                         crate::execute::execute_fact_stmt::VerifyState::top_level(),
                     )?;
-                    iff_fact_well_defined.push(proof);
+                    assumed_iff_facts.push(AssumeDomFactResult {
+                        well_defined: proof,
+                        store_and_infer,
+                    });
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {
                     return Ok(Err(ExecDefPropStmtFailed::IffFactWellDefined(reason)));
@@ -136,6 +140,6 @@ impl Runtime {
             }
         }
 
-        Ok(Ok((introduced, iff_fact_well_defined)))
+        Ok(Ok((introduced, assumed_iff_facts)))
     }
 }

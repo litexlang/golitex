@@ -59,6 +59,8 @@ As AI grows more capable, Human–AI mathematical workflows could enable explora
 
 ### 0.1 Five Characteristics: How Litex Works
 
+For a visual overview of how a fact is checked and accepted knowledge extends the context, see the [Litex Verification Pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png).
+
 **These five characteristics explore one question: can organizing knowledge around facts and feedback lower the cost for people and AI to construct, understand, review, and reuse checkable mathematics?**
 
 **1. I can write proofs in terms of mathematical facts.**

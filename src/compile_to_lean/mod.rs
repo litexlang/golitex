@@ -1,4 +1,5 @@
 mod compile_by_stmt_result;
+mod compile_def_prop_stmt_result;
 mod compile_def_thm_stmt_result;
 mod compile_define_obj_stmt_result;
 mod compile_definition_stmt_result;
@@ -20,5 +21,7 @@ pub use compile_run::compile_run;
 pub use lean_compile_error::LeanCompileError;
 pub use litex_to_lean_compiler::LitexToLeanCompiler;
 
+#[cfg(test)]
+mod concrete_prop_tests;
 #[cfg(test)]
 mod tests;

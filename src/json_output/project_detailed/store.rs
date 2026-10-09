@@ -4,7 +4,9 @@ use crate::execute::StoreHaveObjAndInferResult;
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualityResult, InferFactResult};
+use crate::store_fact_and_infer::{
+    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferEqualityResult, InferFactResult,
+};
 
 pub(super) fn project_verify_facts(facts: &[VerifyFactResult], runtime: &Runtime) -> JsonValue {
     JsonValue::Array(
@@ -44,11 +46,81 @@ pub(super) fn project_store_and_infer(
         ("stores", JsonValue::Array(stores)),
         ("infers", JsonValue::Array(infers)),
     ];
+    let prop_rules = project_prop_definition_infer(&node.infer, runtime);
+    if !prop_rules.is_empty() {
+        entries.push(("prop_definition_rules", JsonValue::Array(prop_rules)));
+    }
     let cancellation_rules = project_cancellation_infer(&node.infer, runtime);
     if !cancellation_rules.is_empty() {
         entries.push(("cancellation_rules", JsonValue::Array(cancellation_rules)));
     }
     object_for(runtime, entries)
+}
+
+fn project_prop_definition_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+    let atomic = match infer {
+        InferFactResult::AtomicFact(atomic) => vec![atomic],
+        InferFactResult::AndFact(and) => and.components.iter().collect(),
+        InferFactResult::ChainFact(chain) => chain.adjacent_infers.iter().collect(),
+        InferFactResult::OrFact(_)
+        | InferFactResult::ExistShapedFact(_)
+        | InferFactResult::NotForallFact(_)
+        | InferFactResult::ForallFact(_)
+        | InferFactResult::ForallFactWithIff(_) => return Vec::new(),
+    };
+    let mut rules = Vec::new();
+    for atomic in atomic {
+        let InferAtomicFactResult::ExceptEquality(infer) = atomic else {
+            continue;
+        };
+        for rule in infer {
+            let (name, derived) = match rule {
+                InferAtomicExceptEqualityResult::NormalAtomicParamTypes(result) => {
+                    ("NormalAtomicParamTypes", &result.derived)
+                }
+                InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(result) => {
+                    ("NormalAtomicExpandDefinition", &result.derived)
+                }
+                _ => continue,
+            };
+            rules.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string(name)),
+                    (
+                        "derived",
+                        JsonValue::Array(
+                            derived
+                                .iter()
+                                .map(|result| {
+                                    object_for(
+                                        runtime,
+                                        vec![
+                                            (
+                                                "well_defined",
+                                                super::wd::project_fact_wd_proof(
+                                                    &result.well_defined,
+                                                    runtime,
+                                                ),
+                                            ),
+                                            (
+                                                "store_and_infer",
+                                                project_store_and_infer(
+                                                    &result.store_and_infer,
+                                                    runtime,
+                                                ),
+                                            ),
+                                        ],
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
+                ],
+            ));
+        }
+    }
+    rules
 }
 
 fn project_cancellation_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {

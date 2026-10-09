@@ -2596,6 +2596,11 @@ fn simplification_theorem_citation_keeps_its_declaration_time_context() {
         .params[0]
         .id
         .value();
+    let first_member = ordinary_have(&result.statement_results[0])
+        .store_and_infer_result
+        .store_and_infer_results[0]
+        .primary_fact_id()
+        .value();
     assert_ne!(first, later);
     let output = compile_run(&result, &compiler, "simplification_declaration_context")
         .expect("the earlier theorem keeps only its original context parameters");
@@ -2611,7 +2616,7 @@ fn simplification_theorem_citation_keeps_its_declaration_time_context() {
         .1;
     assert!(later_proof.contains(&format!("_Host_i{later} :")));
     assert!(later_proof.contains(&format!(
-        "(@named_thm_2 M _Host_i{first} _rep_i{first} _value_i{first} _h_param_i{first})"
+        "(@named_thm_2 M _Host_i{first} _rep_i{first} _value_i{first} _fact_f{first_member})"
     )));
 }
 

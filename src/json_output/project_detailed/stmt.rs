@@ -79,6 +79,16 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                         "store_and_infer",
                         project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
                     ),
+                    (
+                        "store_and_infer_results",
+                        JsonValue::Array(vec![
+                            project_store_and_infer(&s.store_and_infer_result.membership, runtime),
+                            project_store_and_infer(
+                                &s.store_and_infer_result.defining_equal,
+                                runtime,
+                            ),
+                        ]),
+                    ),
                 ],
             ),
             ExecHaveFnEqualStmtResult::Failed(failed) => {
@@ -666,9 +676,18 @@ fn project_def_prop(result: &ExecDefPropStmtResult, runtime: &Runtime) -> JsonVa
                 (
                     "iff_fact_well_defined",
                     JsonValue::Array(
-                        s.iff_fact_well_defined
+                        s.assumed_iff_facts
                             .iter()
-                            .map(|p| project_fact_wd_proof(p, runtime))
+                            .map(|p| project_fact_wd_proof(&p.well_defined, runtime))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "store_and_infer_results",
+                    JsonValue::Array(
+                        s.assumed_iff_facts
+                            .iter()
+                            .map(|p| project_store_and_infer(&p.store_and_infer, runtime))
                             .collect(),
                     ),
                 ),

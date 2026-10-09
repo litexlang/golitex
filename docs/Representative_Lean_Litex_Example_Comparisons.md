@@ -43,6 +43,9 @@ target; this page does not certify current compiler coverage.
 
 The complete `Group` comparison is kept in the Blueprint rather than repeated
 here. This page concentrates on examples that add distinct evidence.
+After the examples, [Section 8](#8-a-design-perspective-what-the-author-states-what-the-checker-reconstructs)
+connects them into a proposal about formal-language design: which decisions
+belong in the mathematical source, and which work the checker should reconstruct.
 
 ## A Semantic Difference Behind the Syntax: `Eq` and `Same`
 
@@ -772,6 +775,116 @@ and asks users to name compound subclaims when they cross the directly parsed
 fact shapes. The benefit sought is a smaller, more canonical mathematical
 surface; the cost should be stated plainly rather than treated as an
 implementation detail.
+
+---
+
+## 8. A Design Perspective: What the Author States, What the Checker Reconstructs
+
+The scientific question behind these examples is how checkable mathematical
+knowledge should be represented, constructed, reviewed, and reused. Litex
+proposes a different starting point for formal-language design: organize the
+source around mathematical objects and the facts that hold about them, then
+ask the verifier to reconstruct routine local grounds. Its significance can
+therefore lie in the interaction of its design choices, even when each choice
+has precedents in Lean, Mizar, Isabelle, Rocq, or other systems.
+
+### The central inversion: state the next fact, reconstruct its grounds
+
+Return to Section 1's `x = 2` example. The Litex author writes the consequences
+`x + 1 = 3` and `x^2 = 4`; the verifier finds substitution and arithmetic
+grounds. The explicit Lean proof instead writes `rw [h]`, `norm_num`, and
+`exact ⟨h_add, h_square⟩` to construct a proof of those same consequences.
+This suggests the design principle **write what to verify; let the verifier
+determine how to justify the routine step**.
+
+That principle describes a division of labor at the source interface. Lean
+source also states what is to be proved. Its tactic execution and elaboration
+construct core terms, and its kernel checks those terms against the rules of
+its type theory; the kernel does not discover the author's intended theorem
+from a tactic script. The [Lean Language Reference](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)
+separates these stages explicitly. Likewise, Litex's verifier searches for
+grounds within its supported local rules; it does not discover an arbitrary
+mathematical argument. Authors still choose useful intermediate facts,
+witnesses, estimates, cases, and induction arguments.
+
+### Six related changes of starting point
+
+These are separate design axes, rather than six names for shorter proofs.
+The comparison column describes an available or common organization, not a
+requirement imposed on every user of another system.
+
+| Design question | A different starting point | Litex's choice and concrete evidence | Consequence and boundary |
+|---|---|---|---|
+| What determines an object's mathematical classification? | Start with a host type and express movement between representations through coercions or explicit bridges. | Start with the mathematical object; accumulate membership facts such as `x $in N`, `x $in Z`, and `x $in R`. The opening `Eq`/`Same` discussion explains the representation distinction. | Knowledge about an object can grow without changing its source identity. Generated Lean remains typed, and cross-representation identity needs certified semantic bridges. |
+| Where do conditions for using an expression live? | Package a value and its condition into a subtype, or pass the condition as a proof argument. | Keep the mathematical definition domain visible: `have fn positive_successor(x R: x > 0) R = x + 1`, then `positive_successor(1) = 2`. Section 1 compares the subtype spelling. | A call asks the checker to establish its domain conditions from context. Conditions remain obligations; an undefined expression cannot become valid merely because its proposed equation looks plausible. |
+| What are the basic categories of the language? | Use one dependent term/type framework for values, propositions, and proofs, as Lean does. | Separate objects, facts, and statements that define or prove them. Section 7's rejected `have h = (x = 2)` shows that a fact is not an ordinary object. | A mathematical surface with specialized fact shapes is possible, at the cost of general proof programming and arbitrary proposition nesting. This is a restriction of the source language, not merely notation. |
+| How does a routine fact become reusable? | Select a named lemma or proof method and direct its application. | State the required fact and match it against available knowledge by its mathematical content. Section 5 states `intersect(s, u) $subset intersect(t, u)` directly under `s $subset t`. | Names need not mediate every routine step. The current checker indexes facts by shape and relation; named theorem calls remain useful, and matching is limited by scope and supported routes. |
+| What is the unit of interactive progress? | Develop a proof by transforming a current goal into remaining subgoals. | Extend an accepted mathematical context one statement at a time. In the [Agent Guide](AgentGuide.md), `$ready(8)` fails while the earlier assumed `$ready(7)` remains usable in the same Session. | An ordinary failed statement can be repaired without replaying accepted work. This is a statement-level boundary: a multi-statement input is not one transaction, and hard errors may require restart. |
+| What should checking leave behind? | Treat the checked theorem as the main deliverable, with proof terms and tooling metadata supporting it. | Retain typed execution results describing well-definedness, verification grounds, cited facts, and stored consequences. Detailed output and the current Lean compiler consume this evidence. | Checking can also produce a record for explanation, repair, and supported proof replay. Current results are not a complete portable certificate; compiler coverage and independent checking remain separate acceptance conditions. |
+
+The implementation anchors for the last four rows are the
+[fact categories](../src/ast/fact/fact.rs),
+[fact indexing and inference](../src/store_fact_and_infer/README.md),
+[statement commit boundary](../src/execute/exec_stmt.rs),
+[output projection](../src/json_output/README.md), and
+[result-driven Lean compilation](../src/compile_to_lean/README.md).
+The current [Lean semantic interface](../lean/Litex.lean) defines `Same` and
+`In` through represented meanings under an explicit semantics parameter; it
+does not establish a completed model of all Litex objects and rules.
+
+### Why the combination matters
+
+The choices reinforce one another. Membership facts let domain knowledge about
+an object accumulate in the same context as ordinary mathematical conclusions.
+The object/fact split gives the checker specialized shapes to index and match.
+Local verification makes a bare mathematical statement a useful input; the
+statement commit boundary makes its acceptance a useful unit of progress.
+Retained evidence can then explain that acceptance and supply supported
+compilation routes without asking a second prover to rediscover the argument.
+
+This changes the language-design question from choosing convenient proof
+commands to deciding which mathematical decisions must remain visible in
+source, which mechanical steps can be reconstructed, and what evidence must
+survive reconstruction. For the `x = 2` example, the two consequences remain
+visible to the reader while the substitution work belongs to the checker.
+For the convergence example, the author must still supply the substantive
+choice `epsilon / (|c| + 1)` and the estimate. The intended boundary is thus
+between meaningful mathematical choices and routine local verification, and
+its usefulness has to be tested on real proofs.
+
+The individual ideas have substantial precedents. [Mizar's manual](https://mizar.uwb.edu.pl/project/mizman.pdf)
+describes statements with empty justification, reference-based `by`
+justification, and structured subproofs. [Isabelle/Isar](https://isabelle.in.tum.de/Isar/)
+offers readable structured proofs combined with proof methods.
+[Rocq's `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html)
+uses bounded proof search and hint databases. Lean also supports forward
+`have` proofs, automation, incremental elaboration, and rich inspection
+metadata. These systems cannot fairly be grouped into one opposing design.
+The examples justify studying Litex's coherent combination; establishing how
+rare or historically novel that combination is would require a broader
+comparison, including controlled mathematical languages such as Naproche.
+
+### A research hypothesis that can be tested
+
+The hypothesis is that this division of labor can lower the cost of producing,
+understanding, repairing, and reusing checkable mathematical knowledge for
+humans and AI. It is stronger and more useful than counting omitted tactics,
+but it is not an established performance or usability result.
+
+A comparison should use equivalent mathematical statements, explicit library
+and assumption boundaries, and idiomatic implementations in each language.
+It should measure authoring and review time, repair attempts, the ability to
+detect a mismatch with the intended statement, verification cost, and whether
+intermediate results remain reusable. Rejected invalid steps, remaining proof
+debt, and unsupported compiler routes belong in the results as well.
+
+Because mathematics supplies methods and models throughout the natural
+sciences, a successful design could matter beyond one proof assistant:
+more people might be able to construct and inspect verifiable reasoning,
+including AI-generated candidate arguments. That is a potential consequence
+of the hypothesis, contingent on measured improvements and trustworthy
+verification. The language design itself remains the scientific object to
+investigate.
 
 ---
 

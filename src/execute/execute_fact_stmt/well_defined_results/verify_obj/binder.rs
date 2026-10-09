@@ -16,6 +16,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::instantiate::quantifier_free_fact_to_fact;
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -29,10 +30,16 @@ impl Runtime {
             rt.verify_fn_set_obj_well_definedness_in_local(value, verify_state.clone())
         })?;
         match inner {
-            Ok((param_type_well_defined, dom_fact_well_defined, ret_set_well_defined)) => {
+            Ok((
+                param_type_well_defined,
+                defined_params,
+                assumed_dom_facts,
+                ret_set_well_defined,
+            )) => {
                 let proof = FnSetObjWellDefinedProof {
                     param_type_well_defined,
-                    dom_fact_well_defined,
+                    defined_params,
+                    assumed_dom_facts,
                     ret_set_well_defined,
                     local_env,
                 };
@@ -68,14 +75,16 @@ impl Runtime {
         match inner {
             Ok((
                 param_type_well_defined,
-                dom_fact_well_defined,
+                defined_params,
+                assumed_dom_facts,
                 ret_set_well_defined,
                 body_well_defined,
                 body_in_ret_set,
             )) => {
                 let proof = AnonymousFnObjWellDefinedProof {
                     param_type_well_defined,
-                    dom_fact_well_defined,
+                    defined_params,
+                    assumed_dom_facts,
                     ret_set_well_defined,
                     body_well_defined,
                     body_in_ret_set,
@@ -160,7 +169,8 @@ impl Runtime {
         Result<
             (
                 Vec<Box<ObjWellDefinedProof>>,
-                Vec<FactWellDefinedProof>,
+                StoreHaveObjAndInferResult,
+                Vec<AssumeDomFactResult>,
                 Box<ObjWellDefinedProof>,
             ),
             FailToVerifyFnSetObjWellDefined,
@@ -201,9 +211,10 @@ impl Runtime {
         };
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.set_bound_parameters);
-        self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let defined_params =
+            self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
 
-        let dom_fact_well_defined = match self
+        let assumed_dom_facts = match self
             .verify_quantifier_free_facts_well_defined(&value.dom_facts, verify_state.clone())?
         {
             Ok(proofs) => proofs,
@@ -220,7 +231,8 @@ impl Runtime {
         match self.verify_obj_well_definedness(value.ret_set.as_ref(), verify_state)? {
             VerifyObjWellDefinedResult::Success(ret_set_well_defined) => Ok(Ok((
                 param_type_well_defined,
-                dom_fact_well_defined,
+                defined_params,
+                assumed_dom_facts,
                 Box::new(ret_set_well_defined),
             ))),
             VerifyObjWellDefinedResult::Failed {
@@ -228,7 +240,10 @@ impl Runtime {
                 reason: failed,
             } => Ok(Err(FailToVerifyFnSetObjWellDefined::RetSet {
                 param_type_well_defined,
-                dom_fact_well_defined,
+                dom_fact_well_defined: assumed_dom_facts
+                    .into_iter()
+                    .map(|assumed| assumed.well_defined)
+                    .collect(),
                 failed_obj,
                 failed: Box::new(failed),
             })),
@@ -243,7 +258,8 @@ impl Runtime {
         Result<
             (
                 Vec<Box<ObjWellDefinedProof>>,
-                Vec<FactWellDefinedProof>,
+                StoreHaveObjAndInferResult,
+                Vec<AssumeDomFactResult>,
                 Box<ObjWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
                 AnonymousFnBodyInReturnSetProof,
@@ -291,9 +307,10 @@ impl Runtime {
         let empty_complete_domain = self.verify_function_domain_empty(&value.body, verify_state)?;
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.body.set_bound_parameters);
-        self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let defined_params =
+            self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
 
-        let dom_fact_well_defined = match self.verify_quantifier_free_facts_well_defined(
+        let assumed_dom_facts = match self.verify_quantifier_free_facts_well_defined(
             &value.body.dom_facts,
             verify_state.clone(),
         )? {
@@ -318,7 +335,10 @@ impl Runtime {
             } => {
                 return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::RetSet {
                     param_type_well_defined,
-                    dom_fact_well_defined,
+                    dom_fact_well_defined: assumed_dom_facts
+                        .into_iter()
+                        .map(|assumed| assumed.well_defined)
+                        .collect(),
                     failed_obj,
                     failed: Box::new(failed),
                 }));
@@ -335,7 +355,10 @@ impl Runtime {
             } => {
                 return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::Body {
                     param_type_well_defined,
-                    dom_fact_well_defined,
+                    dom_fact_well_defined: assumed_dom_facts
+                        .into_iter()
+                        .map(|assumed| assumed.well_defined)
+                        .collect(),
                     ret_set_well_defined,
                     failed_obj,
                     failed: Box::new(failed),
@@ -363,7 +386,10 @@ impl Runtime {
             if body_in_ret_set.is_failed() {
                 return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::BodyInRetSet {
                     param_type_well_defined,
-                    dom_fact_well_defined,
+                    dom_fact_well_defined: assumed_dom_facts
+                        .into_iter()
+                        .map(|assumed| assumed.well_defined)
+                        .collect(),
                     ret_set_well_defined,
                     body_well_defined,
                     failed: body_in_ret_set,
@@ -374,7 +400,8 @@ impl Runtime {
 
         Ok(Ok((
             param_type_well_defined,
-            dom_fact_well_defined,
+            defined_params,
+            assumed_dom_facts,
             ret_set_well_defined,
             body_well_defined,
             body_in_ret_set,
@@ -416,7 +443,10 @@ impl Runtime {
 
         let fact_well_defined =
             match self.verify_quantifier_free_facts_well_defined(&value.facts, verify_state)? {
-                Ok(proofs) => proofs,
+                Ok(proofs) => proofs
+                    .into_iter()
+                    .map(|assumed| assumed.well_defined)
+                    .collect(),
                 Err((failed_index, succeeded, failed_fact)) => {
                     return Ok(Err(FailToVerifySetBuilderObjWellDefined::Fact {
                         failed_index,
@@ -471,7 +501,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<
         Result<
-            Vec<FactWellDefinedProof>,
+            Vec<AssumeDomFactResult>,
             (
                 usize,
                 Vec<FactWellDefinedProof>,
@@ -479,18 +509,28 @@ impl Runtime {
             ),
         >,
     > {
-        let mut succeeded = Vec::with_capacity(facts.len());
+        let mut succeeded: Vec<AssumeDomFactResult> = Vec::with_capacity(facts.len());
         for (failed_index, fact) in facts.iter().enumerate() {
             let as_fact = quantifier_free_fact_to_fact(fact.clone());
             match self.verify_fact_well_definedness(&as_fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Assume earlier facts in binder scopes (FnSet/AnonymousFn dom,
                     // SetBuilder facts) before later WD checks.
-                    let _ = self.store_fact_and_infer(&as_fact, verify_state)?;
-                    succeeded.push(proof);
+                    let store_and_infer = self.store_fact_and_infer(&as_fact, verify_state)?;
+                    succeeded.push(AssumeDomFactResult {
+                        well_defined: proof,
+                        store_and_infer,
+                    });
                 }
                 VerifyFactWellDefinedResult::Failed(failed) => {
-                    return Ok(Err((failed_index, succeeded, failed)));
+                    return Ok(Err((
+                        failed_index,
+                        succeeded
+                            .into_iter()
+                            .map(|assumed| assumed.well_defined)
+                            .collect(),
+                        failed,
+                    )));
                 }
             }
         }

@@ -62,6 +62,8 @@ litex -lang en -strict -f first.lit
 
 成功的批量检查在 JSON 结果里有 `"success": true` 且 `"session_error": null`。网站可能把结果呈现得更简单。交互式命令行 REPL 对成功输入块打印 `success`。第 6 部分会更仔细地读失败结果。
 
+想直观看到 Litex 如何检查一条事实，可以看 [Litex 验证流程图](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)。
+
 **试一试：** 把第二行改成 `2 * (3 + 5) = 16`。运行前先预测结果。再故意把右边改成 `15`。
 
 第一次改动应通过；第二次应失败。对这个具体计算，普通算术也能看出改后的等式为假。一般而言，Litex 检查失败需要更多解释，不只是“等式为假”。
@@ -613,6 +615,8 @@ smallest repair. Finish with a clean whole-file check and its result.
 ```
 
 循环就是你已练习过的：提出陈述或证明步骤，检查，读反馈，修复，保留已接受工作。普通交互失败不必抹掉先前成功。保存源码，让新进程能复现完整结果。
+
+[Litex Agent 协作流程图](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png) 展示了人、AI 与验证器之间的这一协作循环。
 
 检查器不决定 agent 是否形式化了你真正想要的问题。在把成功运行当作原问题的答案之前，复查定义、定义域、假设与结论。更长的 agent 会话与重放纪律，见 [Agent Guide](AgentGuide.md)。
 

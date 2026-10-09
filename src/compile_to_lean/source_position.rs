@@ -1,5 +1,8 @@
 use super::helper::verified_subject;
 use super::LeanCompileError;
+use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByDefStmtSuccess};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::UserDefinedPropDefinitionProof;
+use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
@@ -32,6 +35,10 @@ pub(super) enum SourceOwner<'a> {
     FactWD(&'a FactWellDefinedProof),
     HaveGroup(&'a ParamTypeWellDefinedProof, &'a ParamTypeFactCheckResult),
     ParamTypeWD(&'a ParamTypeWellDefinedProof),
+    PropDefinition(&'a ExecDefPropStmtSuccessResult),
+    ByDef(&'a ExecByDefStmtSuccess),
+    PropRequirements(&'a UserDefinedPropDefinitionProof),
+    PropInference(&'a StoreFactAndInferResult),
 }
 
 impl<'a> SourcePosition<'a> {
@@ -79,13 +86,13 @@ impl<'a> SourcePosition<'a> {
     pub fn context_arguments(&self) -> String {
         self.context_parameters()
             .iter()
-            .flat_map(|(p, _, _)| {
+            .flat_map(|(p, _, fact_id)| {
                 let id = p.id.value();
                 [
                     format!("_Host_i{id}"),
                     format!("_rep_i{id}"),
                     format!("_value_i{id}"),
-                    format!("_h_param_i{id}"),
+                    format!("_fact_f{}", fact_id.value()),
                 ]
             })
             .collect::<Vec<_>>()
@@ -102,6 +109,7 @@ impl<'a> SourcePosition<'a> {
                 | SourceOwner::KnownForall(_)
                 | SourceOwner::Call(_)
                 | SourceOwner::HaveEqualType(_) => return true,
+                SourceOwner::PropDefinition(_) | SourceOwner::ByDef(_) => return true,
                 _ => {}
             }
             position = current.parent;
@@ -145,6 +153,45 @@ impl<'a> SourcePosition<'a> {
         ))
     }
 
+    pub fn visible_prop(
+        &self,
+        predicate: &AtomicName,
+    ) -> Result<(&'a ExecDefPropStmtSuccessResult, Self, usize), LeanCompileError> {
+        let AtomicName::Plain { name } = predicate else {
+            return Err(LeanCompileError::unsupported("Prop/QualifiedDeclaration"));
+        };
+        let mut position = Some(self);
+        while let Some(current) = position {
+            if let SourceOwner::Run(run) = current.owner {
+                for (index, statement) in run
+                    .statement_results
+                    .iter()
+                    .take(current.before)
+                    .enumerate()
+                    .rev()
+                {
+                    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+                        ExecDefPropStmtResult::Success(proof),
+                    )) = statement
+                    {
+                        if &proof.statement.name == name {
+                            return Ok((
+                                proof,
+                                Self::new(None, SourceOwner::Run(run), index),
+                                index,
+                            ));
+                        }
+                    }
+                }
+            }
+            position = current.parent;
+        }
+        Err(LeanCompileError::new(
+            "Prop/Producer",
+            "The predicate has no preceding concrete definition in the original results.",
+        ))
+    }
+
     pub fn source_fact(
         &self,
         id: FactId,
@@ -159,6 +206,8 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::HaveEqualType(p) => Some(p.type_local_env.as_ref()),
+                SourceOwner::PropDefinition(p) => Some(p.local_env.as_ref()),
+                SourceOwner::ByDef(p) => Some(p.local_env.as_ref()),
                 _ => None,
             };
             if let Some(fact) = env.and_then(|env| env.facts.facts_by_id.get(&id)) {
@@ -188,6 +237,8 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::HaveEqualType(p) => Some(p.type_local_env.as_ref()),
+                SourceOwner::PropDefinition(p) => Some(p.local_env.as_ref()),
+                SourceOwner::ByDef(p) => Some(p.local_env.as_ref()),
                 _ => None,
             };
             if let Some(object) =
@@ -253,7 +304,12 @@ impl<'a> SourcePosition<'a> {
                     }
                 }
                 check_store_subject(store, fact)?;
-                return Ok((name, carrier, fact_id, format!("_h_param_i{}", id.value())));
+                return Ok((
+                    name,
+                    carrier,
+                    fact_id,
+                    format!("_fact_f{}", fact_id.value()),
+                ));
             }
             position = current.parent;
         }
@@ -441,16 +497,16 @@ fn context_arguments_before(run: &RunLitexCodeResult, before: usize) -> Vec<Stri
     let mut arguments = Vec::new();
     for statement in run.statement_results.iter().take(before) {
         if let Some(proof) = ordinary_have(statement) {
-            for group in &proof.statement.param_def.groups {
-                for parameter in &group.params {
-                    let id = parameter.id.value();
-                    arguments.extend([
-                        format!("_Host_i{id}"),
-                        format!("_rep_i{id}"),
-                        format!("_value_i{id}"),
-                        format!("_h_param_i{id}"),
-                    ]);
-                }
+            let mut parameters = Vec::new();
+            append_have_parameters(proof, usize::MAX, &mut parameters);
+            for (parameter, _, fact_id) in parameters {
+                let id = parameter.id.value();
+                arguments.extend([
+                    format!("_Host_i{id}"),
+                    format!("_rep_i{id}"),
+                    format!("_value_i{id}"),
+                    format!("_fact_f{}", fact_id.value()),
+                ]);
             }
         }
     }
@@ -522,6 +578,12 @@ fn parameter_in_owner<'a>(
                 .introduced_params
                 .defined_params
                 .store_and_infer_results,
+            position.before,
+            id,
+        ),
+        SourceOwner::PropDefinition(p) => parameter_from_groups(
+            &p.statement.typed_parameters.groups,
+            &p.defined_params.store_and_infer_results,
             position.before,
             id,
         ),
@@ -598,12 +660,28 @@ fn infer_has_fact(
     id: FactId,
     actual: &Fact,
 ) -> Result<bool, LeanCompileError> {
-    if !store_has_natural_zero(store) {
-        return Ok(false);
-    }
     if let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &store.infer
     {
         for rule in rules {
+            let derived = match rule {
+                InferAtomicExceptEqualityResult::NormalAtomicParamTypes(p) => Some(&p.derived),
+                InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(p) => {
+                    Some(&p.derived)
+                }
+                _ => None,
+            };
+            if let Some(derived) = derived {
+                for derived in derived {
+                    let store = &derived.store_and_infer;
+                    if store.primary_fact_id() == id {
+                        check_store_subject(store, actual)?;
+                        return Ok(true);
+                    }
+                    if infer_has_fact(store, id, actual)? {
+                        return Ok(true);
+                    }
+                }
+            }
             if let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(p) = rule {
                 for derived in &p.derived {
                     if derived.primary_fact_id() == id {
@@ -615,6 +693,27 @@ fn infer_has_fact(
         }
     }
     Ok(false)
+}
+
+fn prop_inference_stages(
+    store: &StoreFactAndInferResult,
+) -> Vec<&crate::store_fact_and_infer::StoreInferredFactAndInferResult> {
+    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &store.infer
+    else {
+        return Vec::new();
+    };
+    rules
+        .iter()
+        .flat_map(|rule| match rule {
+            InferAtomicExceptEqualityResult::NormalAtomicParamTypes(p) => {
+                p.derived.iter().collect::<Vec<_>>()
+            }
+            InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(p) => {
+                p.derived.iter().collect::<Vec<_>>()
+            }
+            _ => Vec::new(),
+        })
+        .collect()
 }
 
 fn have_reference(
@@ -638,7 +737,7 @@ fn have_reference(
             };
             if store.primary_fact_id() == id {
                 check_store_subject(store, actual)?;
-                return Ok(Some(format!("_h_param_i{}", parameter.id.value())));
+                return Ok(Some(format!("_fact_f{}", id.value())));
             }
             if infer_has_fact(store, id, actual)? {
                 return Ok(Some(format!("_fact_f{}", id.value())));
@@ -668,7 +767,7 @@ fn header_reference(
             };
             if store.primary_fact_id() == id {
                 check_store_subject(store, actual)?;
-                return Ok(Some(format!("_h_param_i{}", parameter.id.value())));
+                return Ok(Some(format!("_fact_f{}", id.value())));
             }
             if infer_has_fact(store, id, actual)? {
                 return Ok(Some(format!("_fact_f{}", id.value())));
@@ -679,7 +778,10 @@ fn header_reference(
     for dom in doms.iter().take(before.saturating_sub(index)) {
         if dom.store_and_infer.primary_fact_id() == id {
             check_store_subject(&dom.store_and_infer, actual)?;
-            return Ok(Some(format!("_h_dom_f{}", id.value())));
+            return Ok(Some(format!("_fact_f{}", id.value())));
+        }
+        if infer_has_fact(&dom.store_and_infer, id, actual)? {
+            return Ok(Some(format!("_fact_f{}", id.value())));
         }
     }
     Ok(None)
@@ -715,6 +817,33 @@ fn statement_reference(
                 Some((_, index)) => format!("fact_{}", index + 1),
                 None => internal(),
             })))
+        }
+        ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(p)))
+            if before > 0 =>
+        {
+            if p.stored.primary_fact_id() == id {
+                check_store_subject(&p.stored, actual)?;
+                check_subject(
+                    &verified_subject(&p.proof)
+                        .ok_or_else(|| LeanCompileError::unsupported("ByDef/Subject"))?,
+                    actual,
+                )?;
+                return Ok(Some(global_reference(match top {
+                    Some((_, index)) => format!("fact_{}", index + 1),
+                    None => internal(),
+                })));
+            }
+            if infer_has_fact(&p.stored, id, actual)? {
+                return Ok(Some(global_reference(internal())));
+            }
+            Ok(None)
+        }
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) if before > 0 => {
+            if infer_has_fact(&p.store_and_infer_result, id, actual)? {
+                Ok(Some(global_reference(internal())))
+            } else {
+                Ok(None)
+            }
         }
         ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(p)))
             if before > 0 && p.stored.primary_fact_id() == id =>
@@ -773,7 +902,12 @@ fn statement_reference(
             if let Some(p) = ordinary_have(statement) {
                 let reference = have_reference(p, before, id, actual)?;
                 if let Some(reference) = reference {
-                    if reference.starts_with("_h_param_") {
+                    if p.store_and_infer_result
+                        .store_and_infer_results
+                        .iter()
+                        .take(before)
+                        .any(|store| store.primary_fact_id() == id)
+                    {
                         return Ok(Some(reference));
                     }
                     if let Some((run, statement_index)) = top {
@@ -792,13 +926,13 @@ fn statement_reference(
                         }
                         let mut parameters = Vec::new();
                         append_have_parameters(p, prefix, &mut parameters);
-                        for (parameter, _, _) in parameters {
+                        for (parameter, _, fact_id) in parameters {
                             let number = parameter.id.value();
                             arguments.extend([
                                 format!("_Host_i{number}"),
                                 format!("_rep_i{number}"),
                                 format!("_value_i{number}"),
-                                format!("_h_param_i{number}"),
+                                format!("_fact_f{}", fact_id.value()),
                             ]);
                         }
                         return Ok(Some(application(&reference, &arguments)));
@@ -942,6 +1076,49 @@ fn fact_reference_in_owner(
             }
             Ok(None)
         }
+        SourceOwner::PropDefinition(p) => {
+            let stores = &p.defined_params.store_and_infer_results;
+            for store in stores.iter().take(position.before) {
+                if store.primary_fact_id() == id {
+                    check_store_subject(store, actual)?;
+                    return Ok(Some(format!("_fact_f{}", id.value())));
+                }
+                if infer_has_fact(store, id, actual)? {
+                    return Ok(Some(format!("_fact_f{}", id.value())));
+                }
+            }
+            for assumption in p
+                .assumed_iff_facts
+                .iter()
+                .take(position.before.saturating_sub(stores.len()))
+            {
+                let store = &assumption.store_and_infer;
+                if store.primary_fact_id() == id {
+                    check_store_subject(store, actual)?;
+                    return Ok(Some(format!("_fact_f{}", id.value())));
+                }
+                if infer_has_fact(store, id, actual)? {
+                    return Ok(Some(format!("_fact_f{}", id.value())));
+                }
+            }
+            Ok(None)
+        }
+        SourceOwner::PropInference(store) => {
+            for derived in prop_inference_stages(store)
+                .into_iter()
+                .take(position.before)
+            {
+                let store = &derived.store_and_infer;
+                if store.primary_fact_id() == id {
+                    check_store_subject(store, actual)?;
+                    return Ok(Some(format!("_fact_f{}", id.value())));
+                }
+                if infer_has_fact(store, id, actual)? {
+                    return Ok(Some(format!("_fact_f{}", id.value())));
+                }
+            }
+            Ok(None)
+        }
         // Formation children can supply construction evidence, never a truth producer.
         SourceOwner::Verify(_)
         | SourceOwner::WD(_)
@@ -949,7 +1126,9 @@ fn fact_reference_in_owner(
         | SourceOwner::FactWD(_)
         | SourceOwner::HaveEqualType(_)
         | SourceOwner::HaveGroup(_, _)
-        | SourceOwner::ParamTypeWD(_) => Ok(None),
+        | SourceOwner::ParamTypeWD(_)
+        | SourceOwner::ByDef(_)
+        | SourceOwner::PropRequirements(_) => Ok(None),
     }
 }
 
@@ -1356,6 +1535,133 @@ fn visit_owner<T>(
                 }
             }
         }
+        SourceOwner::PropDefinition(proof) => {
+            let count = parameter_count(&proof.statement.typed_parameters.groups);
+            for (index, assumed) in proof
+                .assumed_iff_facts
+                .iter()
+                .take(position.before.saturating_sub(count))
+                .enumerate()
+                .rev()
+            {
+                let prior = SourcePosition {
+                    before: count + index,
+                    ..*position
+                };
+                let inference = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::PropInference(&assumed.store_and_infer),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_owner(&inference, wd, verify)? {
+                    return Ok(Some(value));
+                }
+                let formation = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::FactWD(&assumed.well_defined),
+                    usize::MAX,
+                );
+                if let Some(value) =
+                    visit_fact_formation(&assumed.well_defined, usize::MAX, &formation, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+            let mut offset = 0;
+            for (group, carrier) in proof
+                .statement
+                .typed_parameters
+                .groups
+                .iter()
+                .zip(&proof.param_type_well_defined)
+            {
+                if offset < position.before {
+                    if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(
+                        carrier,
+                    )) = carrier
+                    {
+                        let prior = SourcePosition {
+                            before: offset,
+                            ..*position
+                        };
+                        if let Some(value) = visit_complete_wd(carrier, &prior, wd, verify)? {
+                            return Ok(Some(value));
+                        }
+                    }
+                }
+                offset += group.params.len();
+            }
+        }
+        SourceOwner::ByDef(proof) => {
+            if position.before > 1 {
+                let prior = SourcePosition {
+                    before: 1,
+                    ..*position
+                };
+                if let Some(value) = visit_complete_verify(&proof.proof, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+            if position.before > 0 {
+                if let VerifyFactWellDefinedResult::Success(goal) = &proof.goal_wd {
+                    let prior = SourcePosition {
+                        before: 0,
+                        ..*position
+                    };
+                    let formation =
+                        SourcePosition::new(Some(&prior), SourceOwner::FactWD(goal), usize::MAX);
+                    return visit_fact_formation(goal, usize::MAX, &formation, wd, verify);
+                }
+            }
+        }
+        SourceOwner::PropRequirements(proof) => {
+            for (index, child) in proof
+                .proof_of_requirement_facts
+                .iter()
+                .take(position.before)
+                .enumerate()
+                .rev()
+            {
+                let prior = SourcePosition {
+                    before: index,
+                    ..*position
+                };
+                if let Some(value) = visit_complete_verify(child, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+        }
+        SourceOwner::PropInference(store) => {
+            for (index, derived) in prop_inference_stages(store)
+                .into_iter()
+                .take(position.before)
+                .enumerate()
+                .rev()
+            {
+                let prior = SourcePosition {
+                    before: index,
+                    ..*position
+                };
+                let nested = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::PropInference(&derived.store_and_infer),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_owner(&nested, wd, verify)? {
+                    return Ok(Some(value));
+                }
+                let formation = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::FactWD(&derived.well_defined),
+                    usize::MAX,
+                );
+                if let Some(value) =
+                    visit_fact_formation(&derived.well_defined, usize::MAX, &formation, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+        }
     }
     Ok(None)
 }
@@ -1385,6 +1691,14 @@ fn visit_header<T>(
             before: count + index,
             ..*position
         };
+        let inference = SourcePosition::new(
+            Some(&prior),
+            SourceOwner::PropInference(&dom.store_and_infer),
+            usize::MAX,
+        );
+        if let Some(value) = visit_owner(&inference, wd, verify)? {
+            return Ok(Some(value));
+        }
         let formation = SourcePosition::new(
             Some(&prior),
             SourceOwner::FactWD(&dom.well_defined),
@@ -1438,7 +1752,61 @@ fn visit_statement<T>(
     let position = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
     match statement {
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) if before > 0 => {
+            let seed = SourcePosition {
+                before: 1,
+                ..position
+            };
+            let inference = SourcePosition::new(
+                Some(&seed),
+                SourceOwner::PropInference(&proof.store_and_infer_result),
+                usize::MAX,
+            );
+            if let Some(value) = visit_owner(&inference, wd, verify)? {
+                return Ok(Some(value));
+            }
             visit_complete_verify(&proof.verify_result, &position, wd, verify)
+        }
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+            ExecDefPropStmtResult::Success(proof),
+        )) if before > 0 => {
+            let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
+                if closed_leaf(proof.obj()) {
+                    wd(proof, position)
+                } else {
+                    Ok(None)
+                }
+            };
+            let scope = SourcePosition::new(
+                Some(&position),
+                SourceOwner::PropDefinition(proof),
+                usize::MAX,
+            );
+            visit_owner(&scope, &mut closed, &mut |_, _| Ok(None))
+        }
+        ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(proof)))
+            if before > 0 =>
+        {
+            let seed = SourcePosition {
+                before: 1,
+                ..position
+            };
+            let inference = SourcePosition::new(
+                Some(&seed),
+                SourceOwner::PropInference(&proof.stored),
+                usize::MAX,
+            );
+            if let Some(value) = visit_owner(&inference, wd, verify)? {
+                return Ok(Some(value));
+            }
+            let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
+                if closed_leaf(proof.obj()) {
+                    wd(proof, position)
+                } else {
+                    Ok(None)
+                }
+            };
+            let scope = SourcePosition::new(Some(&position), SourceOwner::ByDef(proof), usize::MAX);
+            visit_owner(&scope, &mut closed, &mut |_, _| Ok(None))
         }
         // A completed theorem or call exports only its selected whole statement,
         // never its closed binder/call-local construction records.

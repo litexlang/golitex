@@ -9,6 +9,7 @@ use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result::FactWellDefinedProof;
+use crate::prelude::*;
 use crate::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
@@ -902,14 +903,16 @@ pub struct SetBuilderObjWellDefinedProof {
 
 pub struct FnSetObjWellDefinedProof {
     pub param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
-    pub dom_fact_well_defined: Vec<FactWellDefinedProof>,
+    pub defined_params: StoreHaveObjAndInferResult,
+    pub assumed_dom_facts: Vec<AssumeDomFactResult>,
     pub ret_set_well_defined: Box<ObjWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
 }
 
 pub struct AnonymousFnObjWellDefinedProof {
     pub param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
-    pub dom_fact_well_defined: Vec<FactWellDefinedProof>,
+    pub defined_params: StoreHaveObjAndInferResult,
+    pub assumed_dom_facts: Vec<AssumeDomFactResult>,
     pub ret_set_well_defined: Box<ObjWellDefinedProof>,
     pub body_well_defined: Box<ObjWellDefinedProof>,
     pub body_in_ret_set: AnonymousFnBodyInReturnSetProof,
