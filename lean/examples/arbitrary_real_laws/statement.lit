@@ -1,0 +1,9 @@
+# An arbitrary real object equals itself, is unchanged by adding zero, and satisfies order reflexivity.
+
+have arbitrary_real R
+
+arbitrary_real = arbitrary_real
+
+arbitrary_real + 0 = arbitrary_real
+
+arbitrary_real >= arbitrary_real

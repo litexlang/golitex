@@ -1,0 +1,6 @@
+# Dividing rational numbers by a nonzero rational number gives a rational number.
+
+forall a,b Q:
+    b != 0
+    =>:
+        a / b $in Q

@@ -1,0 +1,7 @@
+# Every real square is nonnegative in either written order orientation.
+
+forall x R:
+    0 <= x^2
+
+forall x R:
+    x^2 >= 0

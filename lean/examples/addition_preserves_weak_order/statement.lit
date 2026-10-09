@@ -1,0 +1,6 @@
+# Adding the same real number preserves a weak inequality.
+
+forall a,b,t R:
+    a <= b
+    =>:
+        a + t <= b + t

@@ -1,0 +1,7 @@
+# Two weak real inequalities with a common middle point compose.
+
+forall a,b,c R:
+    a <= b
+    b <= c
+    =>:
+        a <= c

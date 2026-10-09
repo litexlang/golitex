@@ -1,0 +1,5 @@
+# Name a rational half and prove that two copies add to one.
+
+have half Q = 1 / 2
+
+half + half = 1

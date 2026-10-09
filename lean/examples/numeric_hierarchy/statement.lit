@@ -1,0 +1,13 @@
+# Every natural number is an integer, every integer is rational, every rational is real, and every real is complex.
+
+forall n N:
+    n $in Z
+
+forall z Z:
+    z $in Q
+
+forall q Q:
+    q $in R
+
+forall r R:
+    r $in C

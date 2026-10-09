@@ -1,0 +1,6 @@
+# A real weak inequality can be written with the opposite order symbol.
+
+forall a,b R:
+    a <= b
+    =>:
+        b >= a

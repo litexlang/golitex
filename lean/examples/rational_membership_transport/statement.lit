@@ -1,0 +1,7 @@
+# Equal complex objects share rational membership without changing their representation.
+
+forall u,v C:
+    u = v
+    u $in Q
+    =>:
+        v $in Q

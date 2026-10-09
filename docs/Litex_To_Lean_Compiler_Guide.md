@@ -104,6 +104,45 @@ The proof consumes the given equality and real-membership fact. It transports
 membership through denotation equality while retaining both objects' generic
 host representations.
 
+## Rational aliases, arbitrary numeric contexts and real order
+
+The [rational half example](../lean/examples/typed_rational_half/statement.lit)
+keeps the literal and owned-division object distinction:
+
+```litex
+have half Q = 1 / 2
+half + half = 1
+```
+
+Its [actual generated file](../lean/examples/typed_rational_half/statement.lean)
+replays Q membership and the stored defining equality, substitutes the recorded
+closed expression through the two add operands, then consumes the actual closed
+residual proof. Q denotes the faithful rational image; membership never changes
+the alias's host type. A fixed certificate normalizer checks the recorded scalar
+values rather than finding another proof of the final goal.
+
+The [arbitrary real example](../lean/examples/arbitrary_real_laws/statement.lit)
+starts with a context declaration:
+
+```litex
+have arbitrary_real R
+arbitrary_real + 0 = arbitrary_real
+arbitrary_real >= arbitrary_real
+```
+
+The compiler checks the recorded nonempty proof and emits a generic certified
+object and In-R hypothesis. Later theorem headers retain those parameters; it
+does not define the object to be zero. This stage's arbitrary-have profile is
+top-level numeric context; local witness/proof declarations need later support.
+
+[Real squares](../lean/examples/real_squares_nonnegative/statement.lit) and
+[weak-order transitivity](../lean/examples/weak_order_transitivity/statement.lit)
+use ordinary `Litex.Le`/`Litex.Lt` facts, with greater comparisons represented by
+reversing their arguments. Their meanings contain real denotation witnesses;
+there is no order on arbitrary complex objects. The compiler replays the actual
+R-domain conditions before the selected order theorem and retains its source
+premises, exact citations and even-exponent restriction.
+
 ## Membership preserves the object's representation
 
 The [generic complex-object example](../lean/examples/complex_object_equals_itself/statement.lit)

@@ -1,0 +1,6 @@
+# A strictly positive real object is nonzero.
+
+forall positive_real R:
+    positive_real > 0
+    =>:
+        positive_real != 0
