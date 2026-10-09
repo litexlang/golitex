@@ -1,0 +1,25 @@
+# Template set-builder carrier projection.
+# Before: coordinate WD failed with "no matching function signature":
+# template<S set>:
+#     have pairs set = {p cart(N, S): p(1) >= 0}
+# forall S set, p \pairs<S>:
+#     p(2) $in S
+# Now: the checked template RHS supplies the existing builder projection.
+# Boundary: wrong coordinates/carriers and invalid template arguments reject.
+# Evidence: cargo test --lib --release template_builder_
+# Run: target/release/litex -strict -lang en -f examples/infer/atomic/template_set_builder_carrier.lit
+
+template<S set>:
+    have pairs set = {p cart(N, S): p(1) >= 0}
+forall S set, p \pairs<S>:
+    p(1) >= 0
+    p(2) $in S
+
+template<S set>:
+    have streams set = {p cart(N, fn(index N+) S): p(1) >= 0}
+claim:
+    ? forall S set, p \streams<S>, index N+:
+        p(2)(index) $in S
+    have stream fn(k N+) S = p(2)
+    stream(index) $in S
+    p(2)(index) = stream(index)

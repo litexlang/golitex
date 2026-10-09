@@ -62,6 +62,12 @@ target/release/litex -strict -f examples/infer/atomic/set_builder_projection_rep
 
 Require exit 0, root `success: true`, and `session_error: null`.
 
+`atomic/template_set_builder_carrier.lit` checks membership projection through
+a checked `have ... = ...` template whose RHS is a set-builder. The original
+carrier and defining conditions supply Cartesian coordinates and nested
+function types. Template arguments and guards remain checked before unfolding;
+wrong coordinates and carriers remain rejected by focused projection tests.
+
 `atomic/choice_function_pointwise.lit` stores a positive choice-function
 certificate, releases its existing pointwise definition, then checks a fiber
 membership through the ordinary known-forall path.

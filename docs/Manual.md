@@ -595,6 +595,27 @@ parentheses can request nesting. `×` never means numeric multiplication:
 sets. Write `2 * 3` for arithmetic multiplication. The word forms remain
 constructor calls such as `union(A, B)`; this preview does not add `A union B`.
 
+### Absolute-value bars (preview)
+
+`|expr|` is another input spelling of the existing real `abs(expr)` object.
+The enclosed expression is grouped as a whole; ordinary operators and
+postfixes apply outside it. `abs(...)` remains supported, and stored facts and
+diagnostics keep the canonical `abs(...)` spelling.
+
+```litex
+|-3| = abs(-3) = 3
+|1 - 4|^2 = 9
+forall x, y R:
+    |x + y| <= |x| + |y|
+```
+
+Bars can nest: `||x||` means `abs(abs(x))`. Both delimiters are required,
+and empty bars are rejected. Multiplication stays explicit (`2 * |x|`). The
+domain remains real: `|i|` and `|{1, 2}|` are rejected, with complex modulus
+still written `C_abs(i)` and finite cardinality `finite_set_size({1, 2})`.
+These bars do not introduce a norm. See the maintained
+[absolute-value bars tracer](../examples/test_objs/absolute_value_bars.lit).
+
 ---
 
 ## Factual Statements
@@ -3901,7 +3922,7 @@ t(2)=2
 | [O25](#o25-additive-inverse) | `-a` | Additive inverse | checked |
 | [O26](#o26-multiplication) | `a * b` | Multiplication | checked |
 | [O27](#o27-powers) | `a^b` | Powers | checked |
-| [O28](#o28-real-absolute-value) | `abs(x)` | Real absolute value | checked |
+| [O28](#o28-real-absolute-value) | `abs(x)`, `\|x\|` | Real absolute value | checked |
 | [O29](#o29-minimum-of-two-reals) | `min(a, b)` | Minimum of two reals | checked |
 | [O30](#o30-maximum-of-two-reals) | `max(a, b)` | Maximum of two reals | checked |
 | [O31](#o31-floor) | `floor(x)` | Floor | checked |
@@ -4775,7 +4796,7 @@ For checked signs, parity and order recipes, see
 
 ### O28. Real absolute value
 
-**Public form:** `abs(x)`.
+**Public form:** `abs(x)` or `|x|`; see the [bars input preview](#absolute-value-bars-preview).
 
 **Mathematical function.** The nonnegative magnitude of a real scalar.
 
@@ -9705,6 +9726,14 @@ and every defining fact of the set-builder after definitional unfold.
 > when `Name` is known equal to that set-builder) also stores `x $in S` and the
 > instantiated defining facts. That is the store-time reverse of set-builder
 > membership.
+
+This projection also accepts a checked `have ... = ...` template instance whose
+RHS is a set-builder. Its template arguments and guards are checked before the
+existing definition substitution; the projected carrier then supplies the
+usual coordinate and function types. The
+[template carrier example](../examples/infer/atomic/template_set_builder_carrier.lit)
+checks this with Cartesian carriers. This does not select a branch from a
+disjunctive defining condition or admit an invalid template argument.
 
 **Entry:** [O93](#o93-template-instances).
 

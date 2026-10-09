@@ -3,8 +3,11 @@ use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
-impl<'a> LitexToLeanCompiler<'a> {
-    pub(in crate::compile_to_lean) fn source_universes(&self) -> Result<String, LeanCompileError> {
+impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn source_universes(
+        &self,
+        result: &RunLitexCodeResult,
+    ) -> Result<String, LeanCompileError> {
         fn parameters<'s>(fact: &'s Fact, out: &mut Vec<IdentifierId>) {
             if let Fact::ForallFact(fact) = fact {
                 for group in &fact.typed_parameters.groups {
@@ -57,7 +60,7 @@ impl<'a> LitexToLeanCompiler<'a> {
             }
         }
         let mut ids = Vec::new();
-        for result in &self.result.statement_results {
+        for result in &result.statement_results {
             statement(result, &mut ids);
         }
         Ok(if ids.is_empty() {
@@ -406,7 +409,7 @@ impl<'a> LitexToLeanCompiler<'a> {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         position
-            .visible_parameter(id, self.runtime)
+            .visible_parameter(id, &self.runtime)
             .map(|(parameter, _, _, _)| format!("_value_i{}", parameter.id.value()))
             .map_err(|_| {
                 LeanCompileError::new(

@@ -3,14 +3,14 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_real_membership_certificate(
         &self,
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if let Ok((_, set, _, hypothesis)) = position.visible_parameter(*id, self.runtime) {
+            if let Ok((_, set, _, hypothesis)) = position.visible_parameter(*id, &self.runtime) {
                 if set == &Obj::StandardSet(StandardSet::R) {
                     return Ok(hypothesis);
                 }
@@ -100,7 +100,7 @@ impl<'a> LitexToLeanCompiler<'a> {
             ));
         }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if let Ok((_, set, _, hypothesis)) = position.visible_parameter(*id, self.runtime) {
+            if let Ok((_, set, _, hypothesis)) = position.visible_parameter(*id, &self.runtime) {
                 if set == &Obj::StandardSet(StandardSet::C) {
                     return self.numeric_member(object, &hypothesis, position);
                 }
@@ -265,7 +265,8 @@ impl<'a> LitexToLeanCompiler<'a> {
                 // An identifier WD carries no numeric assertion. Its actual
                 // preceding membership proof supplies the observation separately.
                 if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = obj {
-                    if let Ok((_, set, _, member)) = position.visible_parameter(*id, self.runtime) {
+                    if let Ok((_, set, _, member)) = position.visible_parameter(*id, &self.runtime)
+                    {
                         if set == &Obj::StandardSet(StandardSet::C) {
                             return self.numeric_member(obj, &member, position);
                         }

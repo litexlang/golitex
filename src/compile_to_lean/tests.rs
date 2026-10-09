@@ -1,8 +1,8 @@
-use super::{compile_run, LitexToLeanCompiler};
+use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
-fn execute(source: &str) -> (RunLitexCodeResult, Runtime) {
+fn execute(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let command =
         parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
             .expect("strict command");
@@ -12,19 +12,34 @@ fn execute(source: &str) -> (RunLitexCodeResult, Runtime) {
         result.success,
         "test input must already be successfully verified"
     );
-    (result, runtime)
+    (result, LitexToLeanCompiler::new(runtime))
+}
+
+fn compile_run(
+    result: &RunLitexCodeResult,
+    compiler: &LitexToLeanCompiler,
+    namespace: &str,
+) -> Result<String, LeanCompileError> {
+    compiler.compile_run(result, namespace)
 }
 
 #[test]
 fn combined_unit_preserves_only_legal_scope_dependencies() {
     let source = "1 = 1\n$is_set(1)\n1 $in R\nforall a C:\n    a = a\nforall a R:\n    a $in C\nforall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b\n";
-    let (result, runtime) = execute(source);
+    let (result, compiler) = execute(source);
     assert_eq!(result.statement_results.len(), 6);
-    let compiler = LitexToLeanCompiler::new(&result, &runtime);
-    let output = compiler.compile("combined_scope").expect("complete replay");
+    let output = compiler
+        .compile_run(&result, "combined_scope")
+        .expect("complete replay");
+    let (independent_result, independent_compiler) = execute(source);
     assert_eq!(
         output,
-        compile_run(&result, &runtime, "combined_scope").expect("compatible entrypoint")
+        compile_run_owned_runtime(
+            &independent_result,
+            independent_compiler.runtime,
+            "combined_scope"
+        )
+        .expect("the consuming convenience entrypoint uses its own actual source run")
     );
 }
 
@@ -38,16 +53,60 @@ fn compiler_struct_rejects_a_failed_source_run_after_a_successful_prefix() {
     let result = runtime.run_litex_code(source).expect("source outcome");
     assert!(!result.success);
     assert!(!result.statement_results[0].is_failed());
-    let error = LitexToLeanCompiler::new(&result, &runtime)
-        .compile("failed_run")
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&result, "failed_run")
         .expect_err("a successful prefix cannot become a partial artifact");
     assert_eq!(error.route, "source_failed");
     assert_eq!(error.statement_index, None);
 }
 
 #[test]
+fn compiler_result_input_can_change_between_calls() {
+    let source = "have arbitrary_real R\narbitrary_real = arbitrary_real\n";
+    let command =
+        parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
+            .expect("strict command");
+    let mut runtime = Runtime::new(command);
+    let generic = runtime
+        .run_litex_code(source)
+        .expect("the actual generic run");
+    assert!(generic.success);
+    let failed = runtime
+        .run_litex_code("1 = 2\n")
+        .expect("an ordinary proof failure produces a failed result");
+    assert!(!failed.success);
+    assert!(failed.session_error.is_none());
+    let numeric = runtime
+        .run_litex_code("7 = 7\n")
+        .expect("the same runtime accepts a later actual closed numeric run");
+    assert!(numeric.success);
+    let compiler = LitexToLeanCompiler::new(runtime);
+    let error = compiler
+        .compile_run(&failed, "owned_runtime_reuse")
+        .expect_err("a failed result never becomes a partial artifact");
+    assert_eq!(error.route, "source_failed");
+    let first = compiler
+        .compile_run(&generic, "owned_runtime_reuse")
+        .expect("failure does not consume the compiler or poison a successful result");
+    let second = compiler
+        .compile_run(&numeric, "owned_runtime_reuse")
+        .expect("the method compiles its new result argument");
+    assert_ne!(first, second);
+    assert!(first.contains("Litex.Representation"));
+    assert!(!second.contains("Litex.Representation"));
+    assert!(second.contains("theorem fact_1"));
+    assert!(second.contains("(7 : ℂ)"));
+    assert_eq!(
+        first,
+        compiler
+            .compile_run(&generic, "owned_runtime_reuse")
+            .expect("the original result remains independently replayable")
+    );
+}
+
+#[test]
 fn selected_rational_route_uses_normalization_adapter() {
-    let (result, runtime) = execute("1 = 1\nforall a C:\n    a + 0 = a\n");
+    let (result, compiler) = execute("1 = 1\nforall a C:\n    a + 0 = a\n");
     let success = forall_proof(&result.statement_results[1]);
     assert!(matches!(
         &equality_proof(&success.proved_then_facts[0].verify_result).searched_proof,
@@ -55,7 +114,7 @@ fn selected_rational_route_uses_normalization_adapter() {
             EqualitySearchProofByCalculation::Rational {}
         ))
     ));
-    let output = compile_run(&result, &runtime, "add_zero").expect("selected Rational adapter");
+    let output = compile_run(&result, &compiler, "add_zero").expect("selected Rational adapter");
     assert!(output.contains("NativeBridge.sameOfDenoteNumber"));
     assert!(output.contains("(by ring)"));
     assert!(!output.contains("Litex.addZero"));
@@ -63,8 +122,8 @@ fn selected_rational_route_uses_normalization_adapter() {
 
 #[test]
 fn unsupported_constructor_after_supported_prefix_rejects_complete_artifact() {
-    let (result, runtime) = execute("1 = 1\nforall a R:\n    sin(a) + 0 = sin(a)\n");
-    let error = compile_run(&result, &runtime, "unsupported_trig")
+    let (result, compiler) = execute("1 = 1\nforall a R:\n    sin(a) + 0 = sin(a)\n");
+    let error = compile_run(&result, &compiler, "unsupported_trig")
         .expect_err("trig denotation is outside the integer arithmetic adapter");
     assert_eq!(error.statement_index, Some(2));
     assert_eq!(error.route, "WD/TrigOperator");
@@ -72,7 +131,7 @@ fn unsupported_constructor_after_supported_prefix_rejects_complete_artifact() {
 
 #[test]
 fn known_wd_requires_the_exact_recorded_subject() {
-    let (mut result, runtime) = execute("1 = 1\n2 = 2\n$is_set(1)\n");
+    let (mut result, compiler) = execute("1 = 1\n2 = 2\n$is_set(1)\n");
     let two = match &result.statement_results[1] {
         ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) => {
             match &success.verify_result {
@@ -85,7 +144,8 @@ fn known_wd_requires_the_exact_recorded_subject() {
         }
         _ => panic!("successful fact"),
     };
-    let other_id = runtime
+    let other_id = compiler
+        .runtime
         .top_exec_env()
         .well_defined_objects
         .lookup(&two)
@@ -105,14 +165,14 @@ fn known_wd_requires_the_exact_recorded_subject() {
         ObjWellDefinedProof::ByKnown { wd_id, .. } => *wd_id = other_id,
         ObjWellDefinedProof::ByDef { .. } => panic!("sethood should reuse one's WD"),
     }
-    let error = compile_run(&result, &runtime, "wrong_wd_subject")
+    let error = compile_run(&result, &compiler, "wrong_wd_subject")
         .expect_err("another object's cache is not this certificate");
     assert_eq!(error.route, "WD/ByKnown");
 }
 
 #[test]
 fn a_missing_wd_id_is_not_recovered_from_a_true_goal() {
-    let (mut result, runtime) = execute("1 = 1\n$is_set(1)\n");
+    let (mut result, compiler) = execute("1 = 1\n$is_set(1)\n");
     let success = match &mut result.statement_results[1] {
         ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) => success,
         _ => panic!("successful fact"),
@@ -128,15 +188,15 @@ fn a_missing_wd_id_is_not_recovered_from_a_true_goal() {
         ObjWellDefinedProof::ByKnown { wd_id, .. } => *wd_id = WellDefinednessId::new(u64::MAX),
         ObjWellDefinedProof::ByDef { .. } => panic!("sethood should reuse one's WD"),
     }
-    let error = compile_run(&result, &runtime, "missing_wd_id")
+    let error = compile_run(&result, &compiler, "missing_wd_id")
         .expect_err("the cited WD identity must resolve");
     assert_eq!(error.route, "WdId/Resolution");
 }
 
 #[test]
 fn closed_forall_assumptions_do_not_escape_into_the_next_forall() {
-    let (mut result, runtime) = execute("forall a R:\n    a = a\nforall b R:\n    b $in C\n");
-    assert!(compile_run(&result, &runtime, "valid_scopes").is_ok());
+    let (mut result, compiler) = execute("forall a R:\n    a = a\nforall b R:\n    b $in C\n");
+    assert!(compile_run(&result, &compiler, "valid_scopes").is_ok());
     let old_id = forall_proof_mut(&mut result.statement_results[0])
         .introduced_params
         .defined_params
@@ -162,16 +222,16 @@ fn closed_forall_assumptions_do_not_escape_into_the_next_forall() {
         StructuralMembershipReason::Known(proof) => proof.cite_fact_id = old_id,
         _ => panic!("R-membership citation"),
     }
-    let error = compile_run(&result, &runtime, "escaped_scope")
+    let error = compile_run(&result, &compiler, "escaped_scope")
         .expect_err("the earlier binder assumption is closed");
     assert_eq!(error.route, "FactId/Resolution");
 }
 
 #[test]
 fn division_reflexivity_replays_nonzero_evidence_before_reflexivity() {
-    let (mut result, runtime) =
+    let (mut result, compiler) =
         execute("forall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b\n");
-    assert!(compile_run(&result, &runtime, "valid_division").is_ok());
+    assert!(compile_run(&result, &compiler, "valid_division").is_ok());
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = match &mut forall.proved_then_facts[0].verify_result {
         VerifyFactResult::Equality(proof) => match proof.as_mut() {
@@ -192,37 +252,37 @@ fn division_reflexivity_replays_nonzero_evidence_before_reflexivity() {
         }
         _ => panic!("division WD by construction"),
     }
-    let error = compile_run(&result, &runtime, "missing_division_requirement")
+    let error = compile_run(&result, &compiler, "missing_division_requirement")
         .expect_err("reflexivity cannot skip construction legality");
     assert_eq!(error.route, "WD/Arithmetic");
 }
 
 #[test]
 fn presentation_strings_do_not_determine_the_generated_proof() {
-    let (mut result, runtime) = execute("1 = 1\n$is_set(1)\n");
-    let original = compile_run(&result, &runtime, "presentation_independence")
+    let (mut result, compiler) = execute("1 = 1\n$is_set(1)\n");
+    let original = compile_run(&result, &compiler, "presentation_independence")
         .expect("supported typed results");
     result.statement_texts = vec!["trust 1 = 2".to_string(), "unrelated display".to_string()];
     result.normal_json = Some("not a proof or even valid JSON".to_string());
-    let altered = compile_run(&result, &runtime, "presentation_independence")
+    let altered = compile_run(&result, &compiler, "presentation_independence")
         .expect("presentation has no proof role");
     assert_eq!(original, altered);
 }
 
 #[test]
 fn live_wd_cache_does_not_replace_a_missing_replayed_producer() {
-    let (mut result, runtime) = execute("1 = 1\n$is_set(1)\n");
-    assert!(compile_run(&result, &runtime, "complete_producers").is_ok());
+    let (mut result, compiler) = execute("1 = 1\n$is_set(1)\n");
+    assert!(compile_run(&result, &compiler, "complete_producers").is_ok());
     result.statement_results.remove(0);
-    let error = compile_run(&result, &runtime, "missing_constructor")
+    let error = compile_run(&result, &compiler, "missing_constructor")
         .expect_err("the live cache contains a subject, not an emitted proof");
     assert_eq!(error.route, "WD/Producer");
 }
 
 #[test]
 fn known_membership_replays_all_argument_identity_evidence() {
-    let (mut result, runtime) = execute("forall a R:\n    a $in C\n");
-    assert!(compile_run(&result, &runtime, "complete_argument_evidence").is_ok());
+    let (mut result, compiler) = execute("forall a R:\n    a $in C\n");
+    assert!(compile_run(&result, &compiler, "complete_argument_evidence").is_ok());
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let atomic = match &mut forall.proved_then_facts[0].verify_result {
         VerifyFactResult::AtomicExceptEquality(proof) => match proof.as_mut() {
@@ -246,7 +306,7 @@ fn known_membership_replays_all_argument_identity_evidence() {
         }
         _ => panic!("membership citation"),
     }
-    let error = compile_run(&result, &runtime, "missing_argument_evidence")
+    let error = compile_run(&result, &compiler, "missing_argument_evidence")
         .expect_err("a citation must not discard its transport evidence");
     assert_eq!(error.route, "KnownAtomic");
 }
@@ -273,8 +333,8 @@ fn arithmetic_family_preserves_owned_constructors_and_generic_carriers() {
         ),
     ];
     for (source, constructor) in cases {
-        let (result, runtime) = execute(source);
-        let output = compile_run(&result, &runtime, "arithmetic_family").expect(source);
+        let (result, compiler) = execute(source);
+        let output = compile_run(&result, &compiler, "arithmetic_family").expect(source);
         assert!(output.contains(constructor), "{source}");
         assert!(output.contains("Litex.Obj (M := M) _Host_"));
         assert!(output.contains("NativeBridge.sameOfDenoteNumber"));
@@ -284,7 +344,7 @@ fn arithmetic_family_preserves_owned_constructors_and_generic_carriers() {
 #[test]
 fn guarded_rational_replays_exact_strategy_and_child_guards() {
     let source = "forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n";
-    let (result, runtime) = execute(source);
+    let (result, compiler) = execute(source);
     let success = forall_proof(&result.statement_results[0]);
     assert!(matches!(
         &equality_proof(&success.proved_then_facts[0].verify_result).searched_proof,
@@ -292,7 +352,7 @@ fn guarded_rational_replays_exact_strategy_and_child_guards() {
             EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(_)
         )
     ));
-    let output = compile_run(&result, &runtime, "guarded_rational").expect("guarded rational");
+    let output = compile_run(&result, &compiler, "guarded_rational").expect("guarded rational");
     assert!(output.contains("litex_normalize_rational (disch :="));
     assert!(output.contains("exact _litex_nz_0 | exact _litex_nz_1"));
     assert!(!output.contains("field_simp"));
@@ -304,8 +364,8 @@ fn guarded_rational_replays_exact_strategy_and_child_guards() {
 fn guarded_requirements_cannot_be_deleted_or_reordered() {
     let source = "forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n";
     for delete in [true, false] {
-        let (mut result, runtime) = execute(source);
-        assert!(compile_run(&result, &runtime, "complete_guards").is_ok());
+        let (mut result, compiler) = execute(source);
+        assert!(compile_run(&result, &compiler, "complete_guards").is_ok());
         let forall = forall_proof_mut(&mut result.statement_results[0]);
         let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
         match &mut equality.searched_proof {
@@ -322,7 +382,7 @@ fn guarded_requirements_cannot_be_deleted_or_reordered() {
             }
             _ => panic!("selected guarded normalization"),
         }
-        let error = compile_run(&result, &runtime, "tampered_guards")
+        let error = compile_run(&result, &compiler, "tampered_guards")
             .expect_err("guard order and arity are source evidence");
         assert_eq!(
             error.route,
@@ -337,14 +397,14 @@ fn guarded_requirements_cannot_be_deleted_or_reordered() {
 
 #[test]
 fn guarded_route_cannot_be_retagged_as_zero_premise_rational() {
-    let (mut result, runtime) = execute("forall a C:\n    a != 0\n    =>:\n        a / a = 1\n");
+    let (mut result, compiler) = execute("forall a C:\n    a != 0\n    =>:\n        a / a = 1\n");
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
     equality.searched_proof =
         EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
             EqualitySearchProofByCalculation::Rational {},
         ));
-    let error = compile_run(&result, &runtime, "forged_zero_premise")
+    let error = compile_run(&result, &compiler, "forged_zero_premise")
         .expect_err("cancellation has recorded obligations");
     assert_eq!(error.route, "Rational/Requirements");
 }
@@ -352,9 +412,9 @@ fn guarded_route_cannot_be_retagged_as_zero_premise_rational() {
 #[test]
 fn nonzero_product_guard_replays_actual_factor_children() {
     let source = "forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n";
-    let (mut result, runtime) = execute(source);
+    let (mut result, compiler) = execute(source);
     let output =
-        compile_run(&result, &runtime, "product_guard").expect("guarded denominator product");
+        compile_run(&result, &compiler, "product_guard").expect("guarded denominator product");
     assert!(output.contains("mul_ne_zero"));
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
@@ -377,7 +437,7 @@ fn nonzero_product_guard_replays_actual_factor_children() {
         }
         _ => panic!("actual product nonzero route"),
     }
-    let error = compile_run(&result, &runtime, "missing_factor_guard")
+    let error = compile_run(&result, &compiler, "missing_factor_guard")
         .expect_err("a product guard has two proven factors");
     assert_eq!(error.route, "NonzeroProduct/Requirements");
 }
@@ -386,8 +446,8 @@ fn nonzero_product_guard_replays_actual_factor_children() {
 fn closed_integer_power_keeps_exponent_object_and_source_domain() {
     for exponent in ["-2", "-(1 + 1)", "-4 / 2"] {
         let source = format!("forall a C:\n    a != 0\n    =>:\n        a^({exponent}) + a^({exponent}) = 2 * a^({exponent})\n");
-        let (result, runtime) = execute(&source);
-        let output = compile_run(&result, &runtime, "integer_power").expect(&source);
+        let (result, compiler) = execute(&source);
+        let output = compile_run(&result, &compiler, "integer_power").expect(&source);
         assert!(output.contains("Litex.powInt"));
         assert!(output.contains("Litex.neg"));
         assert!(output.contains("(-2 : ℤ)"));
@@ -400,13 +460,13 @@ fn existing_large_integer_literal_profile_does_not_inherit_i128_limits() {
     let numeral = "123456789012345678901234567890123456789012345678901234567890";
     let source =
         format!("{numeral} = {numeral}\n$is_set({numeral})\n{numeral} $in R\n{numeral} $in C\n");
-    let (result, runtime) = execute(&source);
-    assert!(compile_run(&result, &runtime, "large_literal").is_ok());
+    let (result, compiler) = execute(&source);
+    assert!(compile_run(&result, &compiler, "large_literal").is_ok());
 }
 
 #[test]
 fn rational_guard_replays_its_actual_fact_id() {
-    let (mut result, runtime) =
+    let (mut result, compiler) =
         execute("forall a C, b C, c C:\n    b != 0\n    c != 0\n    =>:\n        (a / b) / c = a / (b * c)\n");
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
@@ -422,14 +482,14 @@ fn rational_guard_replays_its_actual_fact_id() {
         }
         _ => panic!("actual guard citation"),
     }
-    let error = compile_run(&result, &runtime, "missing_guard_citation")
+    let error = compile_run(&result, &compiler, "missing_guard_citation")
         .expect_err("matching guard subjects cannot repair a missing source citation");
     assert_eq!(error.route, "FactId/Resolution");
 }
 
 #[test]
 fn integer_value_does_not_override_a_changed_power_domain() {
-    let (mut result, runtime) = execute("forall a C:\n    (a + 1) * (a - 1) = a^2 - 1\n");
+    let (mut result, compiler) = execute("forall a C:\n    (a + 1) * (a - 1) = a^2 - 1\n");
     let (external, _) = execute("2 $in C\n");
     let truthful_c = match external
         .statement_results
@@ -463,20 +523,20 @@ fn integer_value_does_not_override_a_changed_power_domain() {
         _ => panic!("power WD"),
     };
     power.requirement_fact_verified[1] = truthful_c;
-    let error = compile_run(&result, &runtime, "changed_power_domain")
+    let error = compile_run(&result, &compiler, "changed_power_domain")
         .expect_err("an integer payload cannot invent the recorded natural-domain proof");
     assert_eq!(error.route, "WD/Pow/Domain");
 }
 
 #[test]
 fn numeric_child_congruence_replays_children_and_closed_value_pair() {
-    let (result, runtime) = execute("forall a C:\n    a + 0.125 = a + 1 / 8\n");
+    let (result, compiler) = execute("forall a C:\n    a + 0.125 = a + 1 / 8\n");
     let success = forall_proof(&result.statement_results[0]);
     assert!(matches!(
         &equality_proof(&success.proved_then_facts[0].verify_result).searched_proof,
         EqualFactSearchedProof::ByMatchingOneArgByOne(_)
     ));
-    let output = compile_run(&result, &runtime, "numeric_child_congruence")
+    let output = compile_run(&result, &compiler, "numeric_child_congruence")
         .expect("owned arithmetic congruence");
     assert!(output.contains("congrArg₂ M.addValue"));
     assert!(output.contains("(by norm_num)"));
@@ -485,7 +545,7 @@ fn numeric_child_congruence_replays_children_and_closed_value_pair() {
 
 #[test]
 fn arithmetic_congruence_requires_its_exact_children() {
-    let (mut result, runtime) = execute("forall a C:\n    a + 0.125 = a + 1 / 8\n");
+    let (mut result, compiler) = execute("forall a C:\n    a + 0.125 = a + 1 / 8\n");
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
     match &mut equality.searched_proof {
@@ -494,14 +554,14 @@ fn arithmetic_congruence_requires_its_exact_children() {
         }
         _ => panic!("actual congruence route"),
     }
-    let error = compile_run(&result, &runtime, "missing_congruence_child")
+    let error = compile_run(&result, &compiler, "missing_congruence_child")
         .expect_err("the selected parent constructor cannot replace a missing child proof");
     assert_eq!(error.route, "ArithmeticCongruence/Children");
 }
 
 #[test]
 fn closed_numeric_congruence_leaf_rejects_a_changed_scalar_certificate() {
-    let (mut result, runtime) = execute("forall a C:\n    a + 0.125 = a + 1 / 8\n");
+    let (mut result, compiler) = execute("forall a C:\n    a + 0.125 = a + 1 / 8\n");
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
     let child = match &mut equality.searched_proof {
@@ -517,7 +577,7 @@ fn closed_numeric_congruence_leaf_rejects_a_changed_scalar_certificate() {
         },
         _ => panic!("actual closed calculation leaf"),
     }
-    let error = compile_run(&result, &runtime, "changed_closed_leaf")
+    let error = compile_run(&result, &compiler, "changed_closed_leaf")
         .expect_err("a scalar payload must match the actual endpoint");
     assert_eq!(error.route, "ClosedEquality/Values");
 }
@@ -535,7 +595,7 @@ fn scalar_division_relations_replay_their_actual_child_equations() {
         ),
     ];
     for (source, product) in cases {
-        let (result, runtime) = execute(source);
+        let (result, compiler) = execute(source);
         let success = forall_proof(&result.statement_results[0]);
         match &equality_proof(&success.proved_then_facts[0].verify_result).searched_proof {
             EqualFactSearchedProof::ByBuiltinRule(
@@ -546,7 +606,7 @@ fn scalar_division_relations_replay_their_actual_child_equations() {
             ),
             _ => panic!("actual scalar division relation"),
         }
-        let output = compile_run(&result, &runtime, "scalar_division_relation").expect(source);
+        let output = compile_run(&result, &compiler, "scalar_division_relation").expect(source);
         assert!(output.contains("NativeBridge.nativeEqOfDenoteNumber"));
         assert!(output.contains("div_eq_iff"));
         assert!(!output.contains("field_simp"));
@@ -556,7 +616,7 @@ fn scalar_division_relations_replay_their_actual_child_equations() {
 
 #[test]
 fn scalar_division_relation_checks_its_child_subject() {
-    let (mut result, runtime) =
+    let (mut result, compiler) =
         execute("forall a C, b C:\n    b != 0\n    =>:\n        a / b * b = a\n");
     let forall = forall_proof_mut(&mut result.statement_results[0]);
     let equality = equality_proof_mut(&mut forall.proved_then_facts[0].verify_result);
@@ -571,14 +631,14 @@ fn scalar_division_relation_checks_its_child_subject() {
     // A syntactically successful child from another endpoint cannot certify
     // the parent relation. Changing only the endpoint first fails exact WD.
     child.fact.right = Obj::Literal(Literal::Number(Number::new("1".to_string())));
-    let error = compile_run(&result, &runtime, "changed_division_child")
+    let error = compile_run(&result, &compiler, "changed_division_child")
         .expect_err("the source child must have its own certified endpoints");
     assert_eq!(error.route, "WD/Subject");
 }
 
 #[test]
 fn forged_false_rational_claim_requires_kernel_validation() {
-    let (mut result, runtime) = execute("forall a C:\n    a + 1 = a + 1\n");
+    let (mut result, compiler) = execute("forall a C:\n    a + 1 = a + 1\n");
     let success = match &mut result.statement_results[0] {
         ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) => p,
         _ => panic!("authentic successful statement"),
@@ -646,7 +706,7 @@ fn forged_false_rational_claim_requires_kernel_validation() {
         }
         _ => panic!("forall primary store"),
     }
-    let output = compile_run(&result, &runtime, "forged_false_rational")
+    let output = compile_run(&result, &compiler, "forged_false_rational")
         .expect("Rational's empty tag is not a Rust mathematical certificate");
     assert!(output.contains("NativeBridge.sameOfDenoteNumber"));
     assert!(output.contains("(by ring)"));
@@ -675,8 +735,8 @@ fn phase1_numeric_and_typed_aliases_replay_actual_definition_evidence() {
         ("have typed_offset R = 2\nlet typed_alias = typed_offset\ntyped_alias = 2\ntyped_alias $in R\n", 2),
     ];
     for (source, equality_index) in sources {
-        let (result, runtime) = execute(source);
-        let output = compile_run(&result, &runtime, "phase1_aliases").expect(source);
+        let (result, compiler) = execute(source);
+        let output = compile_run(&result, &compiler, "phase1_aliases").expect(source);
         assert!(output.contains("noncomputable def _object_i"));
         assert!(output.contains("Litex.sameRefl"));
         assert!(matches!(
@@ -691,11 +751,11 @@ fn phase1_numeric_and_typed_aliases_replay_actual_definition_evidence() {
 
 #[test]
 fn phase1_named_theorem_uses_the_actual_alias_argument_and_returned_citation() {
-    let (result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    let (result, compiler) = execute(PHASE1_NAMED_ALIAS);
     if let Ok(path) = std::env::var("LITEX_LEAN_PHASE1_TRACE") {
         std::fs::write(
             path,
-            crate::json_output::emit_run_detailed(&result, &runtime, "phase1", None),
+            crate::json_output::emit_run_detailed(&result, &compiler.runtime, "phase1", None),
         )
         .expect("write selected-result audit");
     }
@@ -710,7 +770,7 @@ fn phase1_named_theorem_uses_the_actual_alias_argument_and_returned_citation() {
         }
         _ => panic!("source theorem selection must directly cite its returned equality"),
     }
-    let output = compile_run(&result, &runtime, "phase1_named_alias").expect("named alias tracer");
+    let output = compile_run(&result, &compiler, "phase1_named_alias").expect("named alias tracer");
     assert!(output.contains("theorem named_thm_1"));
     assert!(output.contains("named_thm_1 (M := M)"));
     let alias = &let_definition(&result.statement_results[5]).statement.name;
@@ -719,7 +779,7 @@ fn phase1_named_theorem_uses_the_actual_alias_argument_and_returned_citation() {
 
 #[test]
 fn phase1_equality_paths_preserve_orientation_and_transport() {
-    let (result, runtime) = execute(PHASE1_TRANSITIVITY);
+    let (result, compiler) = execute(PHASE1_TRANSITIVITY);
     let proof = forall_proof(&result.statement_results[0]);
     for conclusion in &proof.proved_then_facts[..2] {
         assert!(matches!(
@@ -729,7 +789,7 @@ fn phase1_equality_paths_preserve_orientation_and_transport() {
             )
         ));
     }
-    let output = compile_run(&result, &runtime, "phase1_paths").expect("oriented equality paths");
+    let output = compile_run(&result, &compiler, "phase1_paths").expect("oriented equality paths");
     assert!(output.contains(".trans"));
     assert!(output.contains(".symm"));
     assert!(output.contains("congrArg₂ M.addValue"));
@@ -748,8 +808,8 @@ fn phase1_membership_and_nonzero_transport_consume_cited_argument_equalities() {
         ),
     ];
     for (source, bridge) in cases {
-        let (result, runtime) = execute(source);
-        let output = compile_run(&result, &runtime, "phase1_predicate_transport").expect(source);
+        let (result, compiler) = execute(source);
+        let output = compile_run(&result, &compiler, "phase1_predicate_transport").expect(source);
         assert!(output.contains(bridge));
     }
 }
@@ -757,9 +817,9 @@ fn phase1_membership_and_nonzero_transport_consume_cited_argument_equalities() {
 #[test]
 fn phase1_theorem_body_replays_local_alias_and_typed_definition() {
     let source = "thm alias_in_body:\n    ? forall x R:\n        x + 0 = x\n    let temporary = x + 0\n    have body_zero R = 0\n    temporary = x\n";
-    let (result, runtime) = execute(source);
-    let output =
-        compile_run(&result, &runtime, "phase1_local_definitions").expect("local body definitions");
+    let (result, compiler) = execute(source);
+    let output = compile_run(&result, &compiler, "phase1_local_definitions")
+        .expect("local body definitions");
     assert!(output.contains("let _object_i"));
     assert!(output.contains("have _fact_f"));
     assert!(!output.contains("noncomputable def _object_i"));
@@ -767,9 +827,9 @@ fn phase1_theorem_body_replays_local_alias_and_typed_definition() {
 
 #[test]
 fn phase1_missing_alias_producer_is_not_recovered_from_runtime_definitions() {
-    let (mut result, runtime) = execute("let alias = 2\nalias = alias\n");
+    let (mut result, compiler) = execute("let alias = 2\nalias = alias\n");
     result.statement_results.remove(0);
-    let error = compile_run(&result, &runtime, "phase1_missing_alias")
+    let error = compile_run(&result, &compiler, "phase1_missing_alias")
         .expect_err("source alias needs a compiled producer");
     assert_eq!(error.route, "Identifier/Producer");
 }
@@ -777,7 +837,7 @@ fn phase1_missing_alias_producer_is_not_recovered_from_runtime_definitions() {
 #[test]
 fn phase1_local_theorem_alias_cannot_escape_into_a_later_statement() {
     let source = "thm alias_in_body:\n    ? forall x R:\n        x + 0 = x\n    let temporary = x + 0\n    have body_zero R = 0\n    temporary = x\n1 = 1\n";
-    let (mut result, runtime) = execute(source);
+    let (mut result, compiler) = execute(source);
     let temporary = match &named_theorem_mut(&mut result.statement_results[0]).body {
         ExecDefThmBodyProof::Forall(body) => Obj::Identifier(IdentifierObj::from_bound_name(
             &let_definition(&body.proof_steps[0]).statement.name,
@@ -801,91 +861,91 @@ fn phase1_local_theorem_alias_cannot_escape_into_a_later_statement() {
         StoreFactResult::AtomicFact(stored) => stored.fact = AtomicFact::EqualFact(changed),
         _ => panic!("atomic later store"),
     }
-    let error = compile_run(&result, &runtime, "phase1_escaped_body_alias")
+    let error = compile_run(&result, &compiler, "phase1_escaped_body_alias")
         .expect_err("the theorem's local alias producer was closed before this statement");
     assert_eq!(error.route, "Identifier/Producer");
 }
 
 #[test]
 fn phase1_alias_statement_identity_and_value_must_match_its_stored_equality() {
-    let (mut result, runtime) = execute("let alias = 2\n");
+    let (mut result, compiler) = execute("let alias = 2\n");
     let_definition_mut(&mut result.statement_results[0])
         .statement
         .name
         .id = IdentifierId::new(u64::MAX);
-    let error = compile_run(&result, &runtime, "phase1_wrong_alias_id")
+    let error = compile_run(&result, &compiler, "phase1_wrong_alias_id")
         .expect_err("stored alias identity must be exact");
     assert_eq!(error.route, "Declaration/StoreSubject");
 
-    let (mut result, runtime) = execute("let alias = 2\n");
+    let (mut result, compiler) = execute("let alias = 2\n");
     let_definition_mut(&mut result.statement_results[0])
         .statement
         .value = number_object("3");
-    let error = compile_run(&result, &runtime, "phase1_wrong_alias_value")
+    let error = compile_run(&result, &compiler, "phase1_wrong_alias_value")
         .expect_err("literal WD cannot certify another value");
     assert_eq!(error.route, "WD/Subject");
 }
 
 #[test]
 fn phase1_alias_requires_its_own_store_and_source_orientation() {
-    let (mut result, runtime) = execute("let alias = 2\n2 = alias\n");
+    let (mut result, compiler) = execute("let alias = 2\n2 = alias\n");
     let reversed = fact_statement(&result.statement_results[1])
         .store_and_infer_result
         .primary_fact_id();
     let_definition_mut(&mut result.statement_results[0]).stored_fact_ids[0] = reversed;
-    let error = compile_run(&result, &runtime, "phase1_reversed_alias_store")
+    let error = compile_run(&result, &compiler, "phase1_reversed_alias_store")
         .expect_err("alias storage requires name equals value");
     assert_eq!(error.route, "Declaration/StoreSubject");
 
-    let (mut result, runtime) = execute("let alias = 2\n");
+    let (mut result, compiler) = execute("let alias = 2\n");
     let_definition_mut(&mut result.statement_results[0])
         .stored_fact_ids
         .clear();
-    let error = compile_run(&result, &runtime, "phase1_missing_alias_store")
+    let error = compile_run(&result, &compiler, "phase1_missing_alias_store")
         .expect_err("alias storage stage cannot disappear");
     assert_eq!(error.route, "Let/Inference");
 }
 
 #[test]
 fn phase1_typed_alias_requires_all_membership_stages() {
-    let (mut result, runtime) = execute("have offset R = 2\n");
+    let (mut result, compiler) = execute("have offset R = 2\n");
     have_equal_mut(&mut result.statement_results[0])
         .membership_checks
         .clear();
-    let error = compile_run(&result, &runtime, "phase1_missing_have_member")
+    let error = compile_run(&result, &compiler, "phase1_missing_have_member")
         .expect_err("typed definition cannot skip its carrier proof");
     assert_eq!(error.route, "HaveEqual/Stages");
 }
 
 #[test]
 fn phase1_missing_and_wrong_equality_edges_are_not_repaired_by_search() {
-    let (mut result, runtime) = execute(PHASE1_TRANSITIVITY);
+    let (mut result, compiler) = execute(PHASE1_TRANSITIVITY);
     equality_path_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     )
     .path
     .pop();
-    let error = compile_run(&result, &runtime, "phase1_missing_path_edge")
+    let error = compile_run(&result, &compiler, "phase1_missing_path_edge")
         .expect_err("ordered path must reach its source endpoint");
     assert_eq!(error.route, "Equality/PathEndpoint");
 
-    let (mut result, runtime) = execute(PHASE1_TRANSITIVITY);
+    let (mut result, compiler) = execute(PHASE1_TRANSITIVITY);
     let path = equality_path_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
     assert_eq!(path.path.len(), 2);
     path.path[1].2 = path.path[0].2;
-    let error = compile_run(&result, &runtime, "phase1_wrong_path_citation")
+    let error = compile_run(&result, &compiler, "phase1_wrong_path_citation")
         .expect_err("first equality does not prove the second edge");
     assert_eq!(error.route, "Equality/PathSubject");
 
-    let (mut result, runtime) = execute(PHASE1_TRANSITIVITY);
+    let (mut result, compiler) = execute(PHASE1_TRANSITIVITY);
     equality_path_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     )
     .path
     .swap(0, 1);
-    let error = compile_run(&result, &runtime, "phase1_reordered_path")
+    let error = compile_run(&result, &compiler, "phase1_reordered_path")
         .expect_err("valid edges cannot be consumed out of order");
     assert_eq!(error.route, "Equality/PathOrder");
 }
@@ -893,47 +953,47 @@ fn phase1_missing_and_wrong_equality_edges_are_not_repaired_by_search() {
 #[test]
 fn phase1_invocation_requires_the_earlier_named_declaration() {
     let source = format!("{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
-    let (mut result, runtime) = execute(&source);
+    let (mut result, compiler) = execute(&source);
     result.statement_results.remove(0);
-    let error = compile_run(&result, &runtime, "phase1_missing_theorem")
+    let error = compile_run(&result, &compiler, "phase1_missing_theorem")
         .expect_err("runtime declaration is not compiled evidence");
     assert_eq!(error.route, "ByThm/Producer");
 
-    let (mut result, runtime) = execute(&source);
+    let (mut result, compiler) = execute(&source);
     match &mut by_theorem_mut(&mut result.statement_results[1]).callee {
         ResolvedTheoremCallee::UserTheorem(declaration) => declaration.name.push_str("_other"),
         _ => panic!("actual user theorem callee"),
     }
-    let error = compile_run(&result, &runtime, "phase1_corrupt_callee")
+    let error = compile_run(&result, &compiler, "phase1_corrupt_callee")
         .expect_err("captured callee must equal compiled declaration");
     assert_eq!(error.route, "ByThm/Callee");
 }
 
 #[test]
 fn phase1_theorem_goal_wd_requires_its_own_parameter_producers() {
-    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
         .introduced_params
         .defined_params
         .stored_fact_ids
         .clear();
-    let error = compile_run(&result, &runtime, "phase1_missing_goal_parameter")
+    let error = compile_run(&result, &compiler, "phase1_missing_goal_parameter")
         .expect_err("goal WD binder introductions are a required stage");
     assert_eq!(error.route, "Parameters/StoreCapture");
 
-    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
         .introduced_params
         .defined_params
         .stored_fact_ids[0] = FactId::new(u64::MAX);
-    let error = compile_run(&result, &runtime, "phase1_wrong_goal_parameter")
+    let error = compile_run(&result, &compiler, "phase1_wrong_goal_parameter")
         .expect_err("goal WD cannot use a nonexistent introducing membership");
     assert_eq!(error.route, "Parameters/StoreCapture");
 }
 
 #[test]
 fn phase1_named_declaration_binder_identity_cannot_change_behind_goal_wd() {
-    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     match &mut named_theorem_mut(&mut result.statement_results[0])
         .statement
         .fact
@@ -943,43 +1003,43 @@ fn phase1_named_declaration_binder_identity_cannot_change_behind_goal_wd() {
         }
         _ => panic!("forall theorem interface"),
     }
-    let error = compile_run(&result, &runtime, "phase1_corrupt_declaration_binder")
+    let error = compile_run(&result, &compiler, "phase1_corrupt_declaration_binder")
         .expect_err("declaration and goal-WD binder identities must agree");
     assert_eq!(error.route, "Parameters/Subject");
 }
 
 #[test]
 fn phase1_guarded_theorem_goal_wd_replays_the_exact_domain_store() {
-    let (result, runtime) = execute(PHASE1_GUARDED_THEOREM);
-    assert!(compile_run(&result, &runtime, "phase1_guarded_goal").is_ok());
+    let (result, compiler) = execute(PHASE1_GUARDED_THEOREM);
+    assert!(compile_run(&result, &compiler, "phase1_guarded_goal").is_ok());
 
-    let (mut result, runtime) = execute(PHASE1_GUARDED_THEOREM);
+    let (mut result, compiler) = execute(PHASE1_GUARDED_THEOREM);
     let wd = theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]));
     match &mut wd.assumed_dom_facts[0].store_and_infer.store {
         StoreFactResult::AtomicFact(stored) => stored.fact_id = FactId::new(u64::MAX),
         _ => panic!("atomic nonzero domain store"),
     }
-    let error = compile_run(&result, &runtime, "phase1_corrupt_goal_domain_store")
+    let error = compile_run(&result, &compiler, "phase1_corrupt_goal_domain_store")
         .expect_err("domain assumption must own its exact primary store");
     assert_eq!(error.route, "Store/Subject");
 }
 
 #[test]
 fn phase1_theorem_goal_wd_checks_every_exact_then_subject() {
-    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
         .then
         .clear();
-    let error = compile_run(&result, &runtime, "phase1_missing_goal_then_wd")
+    let error = compile_run(&result, &compiler, "phase1_missing_goal_then_wd")
         .expect_err("goal formation cannot skip a conclusion");
     assert_eq!(error.route, "WD/ForallThenArity");
 
-    let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
+    let (mut result, compiler) = execute(PHASE1_ADD_ZERO);
     match &mut theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0])).then[0] {
         FactWellDefinedProof::Equality(wd) => replace_wd_subject(&mut wd.left, number_object("9")),
         _ => panic!("equality goal WD"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_goal_then_wd")
+    let error = compile_run(&result, &compiler, "phase1_changed_goal_then_wd")
         .expect_err("another object's WD is not this conclusion's WD");
     assert_eq!(error.route, "WD/Subject");
 }
@@ -987,7 +1047,7 @@ fn phase1_theorem_goal_wd_checks_every_exact_then_subject() {
 #[test]
 fn phase1_theorem_body_source_steps_cannot_be_replaced_by_other_definitions() {
     let source = "thm alias_in_body:\n    ? forall x R:\n        x + 0 = x\n    let temporary = x + 0\n    have body_zero R = 0\n    temporary = x\n";
-    let (mut result, runtime) = execute(source);
+    let (mut result, compiler) = execute(source);
     let theorem = named_theorem_mut(&mut result.statement_results[0]);
     match &mut theorem.body {
         ExecDefThmBodyProof::Forall(body) => {
@@ -998,7 +1058,7 @@ fn phase1_theorem_body_source_steps_cannot_be_replaced_by_other_definitions() {
         }
         _ => panic!("forall body"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_body_capture")
+    let error = compile_run(&result, &compiler, "phase1_changed_body_capture")
         .expect_err("captured result must belong to its source statement");
     assert_eq!(error.route, "Theorem/ProofStepCapture");
 }
@@ -1006,11 +1066,11 @@ fn phase1_theorem_body_source_steps_cannot_be_replaced_by_other_definitions() {
 #[test]
 fn phase1_invocation_cannot_delete_a_returned_producer() {
     let source = format!("{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
-    let (mut result, runtime) = execute(&source);
+    let (mut result, compiler) = execute(&source);
     by_theorem_mut(&mut result.statement_results[1])
         .returned_conclusions
         .clear();
-    let error = compile_run(&result, &runtime, "phase1_deleted_return")
+    let error = compile_run(&result, &compiler, "phase1_deleted_return")
         .expect_err("selected proof needs the invocation's actual returned producer");
     assert_eq!(error.route, "ByThm/Stages");
 }
@@ -1018,7 +1078,7 @@ fn phase1_invocation_cannot_delete_a_returned_producer() {
 #[test]
 fn phase1_explicit_selection_cannot_be_replaced_by_an_unrelated_ambient_truth() {
     let source = format!("1 = 1\n1 = 1\n{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
-    let (mut result, runtime) = execute(&source);
+    let (mut result, compiler) = execute(&source);
     let ambient = match result.statement_results.remove(1) {
         ExecStmtResult::Fact(ExecFactStmtResult::Success(ambient)) => ambient,
         _ => panic!("actual independently verified ambient truth"),
@@ -1026,7 +1086,7 @@ fn phase1_explicit_selection_cannot_be_replaced_by_an_unrelated_ambient_truth() 
     let call = by_theorem_mut(&mut result.statement_results[2]);
     call.selected_proof = ambient.verify_result;
     call.stored = ambient.store_and_infer_result;
-    let error = compile_run(&result, &runtime, "phase1_ambient_selection")
+    let error = compile_run(&result, &compiler, "phase1_ambient_selection")
         .expect_err("a true ambient proof does not select a returned theorem atom");
     assert_eq!(error.route, "ByThm/SelectionProvenance");
 }
@@ -1034,7 +1094,7 @@ fn phase1_explicit_selection_cannot_be_replaced_by_an_unrelated_ambient_truth() 
 #[test]
 fn phase1_explicit_selection_rejects_ambient_citations_even_with_the_right_alpha_shape() {
     let source = format!("1 = 1\n1 = 1\n{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
-    let (mut result, runtime) = execute(&source);
+    let (mut result, compiler) = execute(&source);
     let registered = equality_proof(&fact_statement(&result.statement_results[0]).verify_result)
         .fact
         .clone();
@@ -1063,7 +1123,7 @@ fn phase1_explicit_selection_rejects_ambient_citations_even_with_the_right_alpha
         _ => panic!("actual exact selected alpha shape"),
     }
     call.stored = ambient.store_and_infer_result;
-    let error = compile_run(&result, &runtime, "phase1_ambient_alpha_selection")
+    let error = compile_run(&result, &compiler, "phase1_ambient_alpha_selection")
         .expect_err("a correctly shaped citation must still originate in this return list");
     assert_eq!(error.route, "ByThm/SelectionProvenance");
 }
@@ -1071,7 +1131,7 @@ fn phase1_explicit_selection_rejects_ambient_citations_even_with_the_right_alpha
 #[test]
 fn phase1_explicit_selection_cannot_reverse_a_directly_returned_equality() {
     let source = format!("{PHASE1_ADD_ZERO}by thm add_zero(2) => 2 + 0 = 2\n");
-    let (mut result, runtime) = execute(&source);
+    let (mut result, compiler) = execute(&source);
     let call = by_theorem_mut(&mut result.statement_results[1]);
     let selected = equality_proof_mut(&mut call.selected_proof);
     std::mem::swap(&mut selected.fact.left, &mut selected.fact.right);
@@ -1090,7 +1150,7 @@ fn phase1_explicit_selection_cannot_reverse_a_directly_returned_equality() {
         StoreFactResult::AtomicFact(stored) => stored.fact = AtomicFact::EqualFact(reversed),
         _ => panic!("atomic selected store"),
     }
-    let error = compile_run(&result, &runtime, "phase1_reversed_selection")
+    let error = compile_run(&result, &compiler, "phase1_reversed_selection")
         .expect_err("equality symmetry is not direct theorem selection");
     assert_eq!(error.route, "ByThm/SelectionProvenance");
 }
@@ -1099,7 +1159,7 @@ const PHASE1_KNOWN_FORALL: &str = "forall a,b,c R:\n    a = b\n    =>:\n        
 
 #[test]
 fn phase1_known_forall_reuses_the_exact_producer_with_all_binders_including_unused() {
-    let (result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (result, compiler) = execute(PHASE1_KNOWN_FORALL);
     let source = forall_proof(&result.statement_results[0]);
     let target = known_forall(&result.statement_results[1]);
     assert_eq!(target.cite_fact_id, source.fact.fact_id);
@@ -1113,7 +1173,7 @@ fn phase1_known_forall_reuses_the_exact_producer_with_all_binders_including_unus
         assert_eq!(renaming.source, source.id);
         assert_eq!(renaming.target, target.id);
     }
-    let output = compile_run(&result, &runtime, "phase1_whole_forall")
+    let output = compile_run(&result, &compiler, "phase1_whole_forall")
         .expect("whole-proposition alpha reuse");
     assert!(output.contains("fact_1 (M := M)"));
     assert!(output.contains("theorem fact_2"));
@@ -1122,15 +1182,15 @@ fn phase1_known_forall_reuses_the_exact_producer_with_all_binders_including_unus
 
 #[test]
 fn phase1_known_forall_cannot_omit_or_add_even_an_unused_binder_renaming() {
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     known_forall_mut(&mut result.statement_results[1])
         .parameter_renamings
         .pop();
-    let error = compile_run(&result, &runtime, "phase1_missing_unused_renaming")
+    let error = compile_run(&result, &compiler, "phase1_missing_unused_renaming")
         .expect_err("unused binder still owns one positional renaming");
     assert_eq!(error.route, "KnownForall/Arity");
 
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     let proof = known_forall_mut(&mut result.statement_results[1]);
     let first = &proof.parameter_renamings[0];
     let extra = crate::execute::execute_fact_stmt::verify_forall_fact::ForallParameterRenaming {
@@ -1138,7 +1198,7 @@ fn phase1_known_forall_cannot_omit_or_add_even_an_unused_binder_renaming() {
         target: first.target,
     };
     proof.parameter_renamings.push(extra);
-    let error = compile_run(&result, &runtime, "phase1_extra_renaming")
+    let error = compile_run(&result, &compiler, "phase1_extra_renaming")
         .expect_err("an additional mapping cannot alter source binder arity");
     assert_eq!(error.route, "KnownForall/Arity");
 }
@@ -1152,7 +1212,7 @@ fn phase1_known_forall_requires_an_ordered_bijection_without_duplicate_ids() {
         "duplicate_source",
         "duplicate_target",
     ] {
-        let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+        let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
         let renamings = &mut known_forall_mut(&mut result.statement_results[1]).parameter_renamings;
         match change {
             "wrong_source" => renamings[0].source = IdentifierId::new(u64::MAX),
@@ -1162,64 +1222,64 @@ fn phase1_known_forall_requires_an_ordered_bijection_without_duplicate_ids() {
             "duplicate_target" => renamings[1].target = renamings[0].target,
             _ => unreachable!(),
         }
-        let error = compile_run(&result, &runtime, "phase1_changed_renaming").expect_err(change);
+        let error = compile_run(&result, &compiler, "phase1_changed_renaming").expect_err(change);
         assert_eq!(error.route, "KnownForall/Renaming", "{change}");
     }
 }
 
 #[test]
 fn phase1_known_forall_needs_an_earlier_compiled_producer() {
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     result.statement_results.remove(0);
-    let error = compile_run(&result, &runtime, "phase1_missing_whole_forall_producer")
+    let error = compile_run(&result, &compiler, "phase1_missing_whole_forall_producer")
         .expect_err("runtime source fact does not replace its removed proof producer");
     assert_eq!(error.route, "FactId/Producer");
 }
 
 #[test]
 fn phase1_known_forall_rejects_missing_wrong_family_and_closed_scope_citations() {
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     known_forall_mut(&mut result.statement_results[1]).cite_fact_id = FactId::new(u64::MAX);
-    let error = compile_run(&result, &runtime, "phase1_missing_whole_forall_cite")
+    let error = compile_run(&result, &compiler, "phase1_missing_whole_forall_cite")
         .expect_err("missing source citation cannot be searched again");
     assert_eq!(error.route, "FactId/Resolution");
 
     let source = format!("1 = 1\n{PHASE1_KNOWN_FORALL}");
-    let (mut result, runtime) = execute(&source);
+    let (mut result, compiler) = execute(&source);
     let atomic_id = fact_statement(&result.statement_results[0])
         .store_and_infer_result
         .primary_fact_id();
     known_forall_mut(&mut result.statement_results[2]).cite_fact_id = atomic_id;
-    let error = compile_run(&result, &runtime, "phase1_wrong_whole_forall_family")
+    let error = compile_run(&result, &compiler, "phase1_wrong_whole_forall_family")
         .expect_err("an atomic theorem is not the cited whole forall");
     assert_eq!(error.route, "KnownForall/Citation");
 
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     let closed_id = forall_proof(&result.statement_results[0]).assumed_dom_facts[0]
         .store_and_infer
         .primary_fact_id();
     known_forall_mut(&mut result.statement_results[1]).cite_fact_id = closed_id;
-    let error = compile_run(&result, &runtime, "phase1_closed_whole_forall_cite")
+    let error = compile_run(&result, &compiler, "phase1_closed_whole_forall_cite")
         .expect_err("a previous forall's local premise has left the active scope");
     assert_eq!(error.route, "FactId/Resolution");
 }
 
 #[test]
 fn phase1_known_forall_cannot_change_parameter_carriers() {
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     known_forall_mut(&mut result.statement_results[1])
         .fact
         .typed_parameters
         .groups[0]
         .param_type = ParamType::Obj(Obj::StandardSet(StandardSet::C));
-    let error = compile_run(&result, &runtime, "phase1_changed_whole_forall_carrier")
+    let error = compile_run(&result, &compiler, "phase1_changed_whole_forall_carrier")
         .expect_err("alpha renaming cannot change R into C");
     assert_eq!(error.route, "KnownForall/Carrier");
 }
 
 #[test]
 fn phase1_known_forall_cannot_change_domain_or_conclusion_subjects() {
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     match &mut known_forall_mut(&mut result.statement_results[1])
         .fact
         .dom_facts[0]
@@ -1227,11 +1287,11 @@ fn phase1_known_forall_cannot_change_domain_or_conclusion_subjects() {
         Fact::AtomicFact(AtomicFact::EqualFact(fact)) => fact.right = number_object("0"),
         _ => panic!("guard equality"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_whole_forall_domain")
+    let error = compile_run(&result, &compiler, "phase1_changed_whole_forall_domain")
         .expect_err("recorded binder bijection does not justify another premise");
     assert_eq!(error.route, "KnownForall/Domain");
 
-    let (mut result, runtime) = execute(PHASE1_KNOWN_FORALL);
+    let (mut result, compiler) = execute(PHASE1_KNOWN_FORALL);
     match &mut known_forall_mut(&mut result.statement_results[1])
         .fact
         .then_facts[0]
@@ -1241,35 +1301,35 @@ fn phase1_known_forall_cannot_change_domain_or_conclusion_subjects() {
         }
         _ => panic!("conclusion equality"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_whole_forall_conclusion")
+    let error = compile_run(&result, &compiler, "phase1_changed_whole_forall_conclusion")
         .expect_err("recorded binder bijection does not justify another conclusion");
     assert_eq!(error.route, "KnownForall/Conclusion");
 }
 
 #[test]
 fn phase1_second_theorem_call_needs_its_own_argument_type_proof_identity() {
-    let (mut result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    let (mut result, compiler) = execute(PHASE1_NAMED_ALIAS);
     by_theorem_mut(&mut result.statement_results[6])
         .type_proofs
         .clear();
-    let error = compile_run(&result, &runtime, "phase1_deleted_second_type_proof")
+    let error = compile_run(&result, &compiler, "phase1_deleted_second_type_proof")
         .expect_err("the alias call cannot skip its argument membership stage");
     assert_eq!(error.route, "ByThm/Arguments");
 
-    let (mut result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    let (mut result, compiler) = execute(PHASE1_NAMED_ALIAS);
     let proof = &mut by_theorem_mut(&mut result.statement_results[6]).type_proofs[0];
     match &mut atomic_proof_mut(proof).fact {
         AtomicFact::InFact(fact) => fact.fact_id = FactId::new(u64::MAX),
         _ => panic!("actual alias argument membership proof"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_second_type_proof_id")
+    let error = compile_run(&result, &compiler, "phase1_changed_second_type_proof_id")
         .expect_err("returned WD cites this exact checked type producer's original identity");
     assert_eq!(error.route, "FactId/Producer");
 }
 
 #[test]
 fn phase1_second_call_return_wd_cannot_cite_a_closed_first_call_type_proof() {
-    let (mut result, runtime) = execute(PHASE1_NAMED_ALIAS);
+    let (mut result, compiler) = execute(PHASE1_NAMED_ALIAS);
     let closed =
         atomic_proof_mut(&mut by_theorem_mut(&mut result.statement_results[3]).type_proofs[0])
             .fact
@@ -1295,7 +1355,7 @@ fn phase1_second_call_return_wd_cannot_cite_a_closed_first_call_type_proof() {
         }
         _ => panic!("actual standard numeric-superset operand requirement"),
     }
-    let error = compile_run(&result, &runtime, "phase1_closed_call_type_producer")
+    let error = compile_run(&result, &compiler, "phase1_closed_call_type_producer")
         .expect_err("the first invocation's fresh membership producer is closed");
     assert_eq!(error.route, "FactId/Resolution");
 }
@@ -1345,7 +1405,7 @@ const PHASE1_CARRIER_REWRITE: &str =
 
 #[test]
 fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
-    let (mut result, runtime) = execute(PHASE1_COMPUTED_REWRITE);
+    let (mut result, compiler) = execute(PHASE1_COMPUTED_REWRITE);
     let expected = let_definition(&result.statement_results[0])
         .stored_fact_ids
         .clone();
@@ -1367,7 +1427,7 @@ fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
         }
         _ => panic!("actual computed alias ClosedNumeric winning route"),
     }
-    let output = compile_run(&result, &runtime, "phase1_computed_alias")
+    let output = compile_run(&result, &compiler, "phase1_computed_alias")
         .expect("computed alias membership and arithmetic WD");
     assert!(output.contains("Litex.inOfSame"));
     assert!(output.contains("Litex.sameRefl (Litex.add"));
@@ -1376,7 +1436,7 @@ fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
 
 #[test]
 fn phase1_carrier_alias_membership_consumes_its_actual_ordered_known_equality_path() {
-    let (mut result, runtime) = execute(PHASE1_CARRIER_REWRITE);
+    let (mut result, compiler) = execute(PHASE1_CARRIER_REWRITE);
     let expected = vec![
         let_definition(&result.statement_results[1]).stored_fact_ids[0],
         let_definition(&result.statement_results[0]).stored_fact_ids[0],
@@ -1387,7 +1447,7 @@ fn phase1_carrier_alias_membership_consumes_its_actual_ordered_known_equality_pa
         }
         _ => panic!("actual carrier KnownEqual winning route"),
     }
-    let output = compile_run(&result, &runtime, "phase1_carrier_alias")
+    let output = compile_run(&result, &compiler, "phase1_carrier_alias")
         .expect("carrier alias equality path");
     assert!(output.contains("Litex.inOfSame"));
     assert!(output.contains(".trans"));
@@ -1396,14 +1456,14 @@ fn phase1_carrier_alias_membership_consumes_its_actual_ordered_known_equality_pa
 #[test]
 fn phase1_atomic_rewrite_needs_nonempty_nonduplicated_citations() {
     for duplicate in [false, true] {
-        let (mut result, runtime) = execute(PHASE1_COMPUTED_REWRITE);
+        let (mut result, compiler) = execute(PHASE1_COMPUTED_REWRITE);
         let ids = atomic_rewrite_cites_mut(atomic_rewrite_mut(&mut result.statement_results[1]));
         if duplicate {
             ids.push(ids[0]);
         } else {
             ids.clear();
         }
-        let error = compile_run(&result, &runtime, "phase1_changed_rewrite_cites")
+        let error = compile_run(&result, &compiler, "phase1_changed_rewrite_cites")
             .expect_err("recorded rewrite citations cannot disappear or duplicate");
         assert_eq!(error.route, "AtomicRewrite/Citations");
     }
@@ -1413,7 +1473,7 @@ fn phase1_atomic_rewrite_needs_nonempty_nonduplicated_citations() {
 fn phase1_closed_atomic_rewrite_rejects_wrong_and_unused_source_equalities() {
     let source = "let computed = 2 + 3\nlet other_offset = 3\ncomputed $in C\n";
     for unused in [false, true] {
-        let (mut result, runtime) = execute(source);
+        let (mut result, compiler) = execute(source);
         let other = let_definition(&result.statement_results[1]).stored_fact_ids[0];
         let ids = atomic_rewrite_cites_mut(atomic_rewrite_mut(&mut result.statement_results[2]));
         if unused {
@@ -1421,7 +1481,7 @@ fn phase1_closed_atomic_rewrite_rejects_wrong_and_unused_source_equalities() {
         } else {
             ids[0] = other;
         }
-        let error = compile_run(&result, &runtime, "phase1_unrelated_rewrite_equality")
+        let error = compile_run(&result, &compiler, "phase1_unrelated_rewrite_equality")
             .expect_err("rewrite must consume exactly its recorded source equalities");
         assert_eq!(
             error.route,
@@ -1437,7 +1497,7 @@ fn phase1_closed_atomic_rewrite_rejects_wrong_and_unused_source_equalities() {
 #[test]
 fn phase1_known_atomic_rewrite_rejects_discontinuous_incomplete_and_reordered_paths() {
     for change in ["reorder", "missing_first", "missing_last"] {
-        let (mut result, runtime) = execute(PHASE1_CARRIER_REWRITE);
+        let (mut result, compiler) = execute(PHASE1_CARRIER_REWRITE);
         let ids = atomic_rewrite_cites_mut(atomic_rewrite_mut(&mut result.statement_results[2]));
         assert_eq!(ids.len(), 2);
         match change {
@@ -1451,7 +1511,7 @@ fn phase1_known_atomic_rewrite_rejects_discontinuous_incomplete_and_reordered_pa
             _ => unreachable!(),
         }
         let error =
-            compile_run(&result, &runtime, "phase1_changed_known_rewrite_path").expect_err(change);
+            compile_run(&result, &compiler, "phase1_changed_known_rewrite_path").expect_err(change);
         assert_eq!(
             error.route,
             if change == "missing_last" {
@@ -1465,7 +1525,7 @@ fn phase1_known_atomic_rewrite_rejects_discontinuous_incomplete_and_reordered_pa
 
 #[test]
 fn phase1_atomic_rewrite_requires_the_exact_residual_family_and_child_subject() {
-    let (mut result, runtime) = execute("5 != 0\nlet computed = 2 + 3\ncomputed $in C\n");
+    let (mut result, compiler) = execute("5 != 0\nlet computed = 2 + 3\ncomputed $in C\n");
     let other_family = atomic_fact_from_statement(&result.statement_results[0]);
     match atomic_rewrite_mut(&mut result.statement_results[2]) {
         AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
@@ -1473,11 +1533,11 @@ fn phase1_atomic_rewrite_requires_the_exact_residual_family_and_child_subject() 
         ) => proof.rewritten_fact = Fact::AtomicFact(other_family),
         _ => panic!("closed alias rewrite"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_rewrite_family")
+    let error = compile_run(&result, &compiler, "phase1_changed_rewrite_family")
         .expect_err("membership rewrite cannot become inequality");
     assert_eq!(error.route, "AtomicRewrite/Family");
 
-    let (mut result, runtime) = execute(PHASE1_COMPUTED_REWRITE);
+    let (mut result, compiler) = execute(PHASE1_COMPUTED_REWRITE);
     match atomic_rewrite_mut(&mut result.statement_results[1]) {
         AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
             proof,
@@ -1487,14 +1547,14 @@ fn phase1_atomic_rewrite_requires_the_exact_residual_family_and_child_subject() 
         },
         _ => panic!("closed alias rewrite"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_rewrite_residual")
+    let error = compile_run(&result, &compiler, "phase1_changed_rewrite_residual")
         .expect_err("genuine residual proof for five does not certify six");
     assert_eq!(error.route, "AtomicRewrite/ChildSubject");
 }
 
 #[test]
 fn phase1_computed_rhs_rewrite_requires_the_actual_closed_endpoint() {
-    let (mut result, runtime) = execute("let computed = 2 + 3\n6 $in C\ncomputed $in C\n");
+    let (mut result, compiler) = execute("let computed = 2 + 3\n6 $in C\ncomputed $in C\n");
     let six = match result.statement_results.remove(1) {
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
         _ => panic!("genuine primitive six-membership proof"),
@@ -1515,7 +1575,7 @@ fn phase1_computed_rhs_rewrite_requires_the_actual_closed_endpoint() {
         }
         _ => panic!("computed alias closed rewrite"),
     }
-    let error = compile_run(&result, &runtime, "phase1_changed_closed_endpoint").expect_err(
+    let error = compile_run(&result, &compiler, "phase1_changed_closed_endpoint").expect_err(
         "a genuine proof that six is complex cannot replace the selected closed endpoint two plus three",
     );
     assert_eq!(error.route, "AtomicRewrite/ClosedTopLevelCitation");
@@ -1523,12 +1583,12 @@ fn phase1_computed_rhs_rewrite_requires_the_actual_closed_endpoint() {
 
 #[test]
 fn phase2_computed_value_equality_replays_the_selected_subterm_rewrite() {
-    let (result, runtime) = execute("let computed = 2 + 3\ncomputed + 1 = 6\n");
+    let (result, compiler) = execute("let computed = 2 + 3\ncomputed + 1 = 6\n");
     assert!(matches!(
         &equality_proof(&fact_statement(&result.statement_results[1]).verify_result).searched_proof,
         EqualFactSearchedProof::ByBuiltinRewrite(_)
     ));
-    let output = compile_run(&result, &runtime, "phase2_computed_alias_sum").expect(
+    let output = compile_run(&result, &compiler, "phase2_computed_alias_sum").expect(
         "the selected closed-subterm rewrite has exact live citation and residual evidence",
     );
     assert!(output.contains("congrArg₂ M.addValue"));
@@ -1772,8 +1832,8 @@ fn phase2_all_verified_problem_profiles_emit_replayed_artifacts() {
         ("closed_real_order", PHASE2_CLOSED_ORDER),
     ];
     for (name, source) in cases {
-        let (result, runtime) = execute(source);
-        let output = compile_run(&result, &runtime, &format!("phase2_{name}"))
+        let (result, compiler) = execute(source);
+        let output = compile_run(&result, &compiler, &format!("phase2_{name}"))
             .unwrap_or_else(|error| panic!("{name}: {error:?}"));
         assert!(!output.contains("sorry"));
         assert!(!output.contains("admit"));
@@ -1792,7 +1852,7 @@ fn phase2_all_verified_problem_profiles_emit_replayed_artifacts() {
 
 #[test]
 fn phase2_typed_half_uses_the_actual_closed_substitution_and_closed_child() {
-    let (mut result, runtime) = execute(PHASE2_HALF);
+    let (mut result, compiler) = execute(PHASE2_HALF);
     let equality_id = have_equal_mut(&mut result.statement_results[0])
         .store_and_infer_result
         .stored_fact_ids[1];
@@ -1805,14 +1865,14 @@ fn phase2_typed_half_uses_the_actual_closed_substitution_and_closed_child() {
         &child.searched_proof,
         EqualFactSearchedProof::ByClosedCalculation(_)
     ));
-    assert!(compile_run(&result, &runtime, "phase2_half_exact_route").is_ok());
+    assert!(compile_run(&result, &compiler, "phase2_half_exact_route").is_ok());
 }
 
 #[test]
 fn phase2_half_substitution_rejects_deleted_duplicate_wrong_and_unused_citations() {
     let source = "let other_value = 2\nhave half Q = 1 / 2\nhalf + half = 1\n";
     for change in ["deleted", "duplicate", "wrong", "unused"] {
-        let (mut result, runtime) = execute(source);
+        let (mut result, compiler) = execute(source);
         let other = let_definition(&result.statement_results[0]).stored_fact_ids[0];
         let ids =
             &mut phase2_half_rewrite_mut(&mut result.statement_results[2]).cited_equal_fact_ids;
@@ -1823,7 +1883,7 @@ fn phase2_half_substitution_rejects_deleted_duplicate_wrong_and_unused_citations
             "unused" => ids.push(other),
             _ => unreachable!(),
         }
-        phase2_rejected(&result, &runtime, change, &["EqualityRewrite/", "FactId/"]);
+        phase2_rejected(&result, &compiler, change, &["EqualityRewrite/", "FactId/"]);
     }
 }
 
@@ -1831,14 +1891,14 @@ fn phase2_half_substitution_rejects_deleted_duplicate_wrong_and_unused_citations
 fn phase2_two_closed_aliases_preserve_source_substitution_order() {
     let source =
         "have first_half Q = 1 / 2\nhave second_half Q = 1 / 2\nfirst_half + second_half = 1\n";
-    let (mut result, runtime) = execute(source);
-    assert!(compile_run(&result, &runtime, "phase2_two_half_aliases").is_ok());
+    let (mut result, compiler) = execute(source);
+    assert!(compile_run(&result, &compiler, "phase2_two_half_aliases").is_ok());
     let ids = &mut phase2_half_rewrite_mut(&mut result.statement_results[2]).cited_equal_fact_ids;
     assert_eq!(ids.len(), 2);
     ids.swap(0, 1);
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_reordered_half_substitution",
         &["EqualityRewrite/CitationOrder"],
     );
@@ -1846,16 +1906,16 @@ fn phase2_two_closed_aliases_preserve_source_substitution_order() {
 
 #[test]
 fn phase2_half_substitution_requires_exact_residual_and_scalar_evidence() {
-    let (mut result, runtime) = execute(PHASE2_HALF);
+    let (mut result, compiler) = execute(PHASE2_HALF);
     phase2_half_rewrite_mut(&mut result.statement_results[1]).rewritten_left = number_object("2");
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_half_residual",
         &["EqualityRewrite/Residual"],
     );
 
-    let (mut result, runtime) = execute(PHASE2_HALF);
+    let (mut result, compiler) = execute(PHASE2_HALF);
     let child = equality_proof_mut(
         &mut phase2_half_rewrite_mut(&mut result.statement_results[1]).residual_equal,
     );
@@ -1868,7 +1928,7 @@ fn phase2_half_substitution_requires_exact_residual_and_scalar_evidence() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_half_scalar",
         &["ClosedEquality/"],
     );
@@ -1877,7 +1937,7 @@ fn phase2_half_substitution_requires_exact_residual_and_scalar_evidence() {
 #[test]
 fn phase2_half_substitution_cannot_replace_its_child_by_an_unrelated_true_equality() {
     let source = "2 = 2\n2 = 2\nhave half Q = 1 / 2\nhalf + half = 1\n";
-    let (mut result, runtime) = execute(source);
+    let (mut result, compiler) = execute(source);
     let unrelated = match result.statement_results.remove(1) {
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof.verify_result,
         _ => panic!("actual unrelated equality"),
@@ -1885,7 +1945,7 @@ fn phase2_half_substitution_cannot_replace_its_child_by_an_unrelated_true_equali
     phase2_half_rewrite_mut(&mut result.statement_results[2]).residual_equal = unrelated;
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_unrelated_half_child",
         &["EqualityRewrite/Residual"],
     );
@@ -1894,14 +1954,14 @@ fn phase2_half_substitution_cannot_replace_its_child_by_an_unrelated_true_equali
 #[test]
 fn phase2_half_substitution_rejects_a_closed_scope_equality_origin() {
     let source = "forall local_value Q:\n    local_value = 1 / 2\n    =>:\n        local_value = local_value\nhave half Q = 1 / 2\nhalf + half = 1\n";
-    let (mut result, runtime) = execute(source);
+    let (mut result, compiler) = execute(source);
     let closed_id = forall_proof(&result.statement_results[0]).assumed_dom_facts[0]
         .store_and_infer
         .primary_fact_id();
     phase2_half_rewrite_mut(&mut result.statement_results[2]).cited_equal_fact_ids[0] = closed_id;
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_closed_half_origin",
         &["FactId/Resolution"],
     );
@@ -1909,7 +1969,7 @@ fn phase2_half_substitution_rejects_a_closed_scope_equality_origin() {
 
 #[test]
 fn phase2_typed_half_preserves_the_original_division_wd_guard() {
-    let (mut result, runtime) = execute(PHASE2_HALF);
+    let (mut result, compiler) = execute(PHASE2_HALF);
     let value_wd = &mut have_equal_mut(&mut result.statement_results[0]).equal_to_well_defined[0];
     match value_wd {
         VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
@@ -1925,7 +1985,7 @@ fn phase2_typed_half_preserves_the_original_division_wd_guard() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_missing_half_division_guard",
         &["WD/Arithmetic"],
     );
@@ -1933,7 +1993,7 @@ fn phase2_typed_half_preserves_the_original_division_wd_guard() {
 
 #[test]
 fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
-    let (mut result, runtime) = execute(PHASE2_HIERARCHY);
+    let (mut result, compiler) = execute(PHASE2_HIERARCHY);
     for statement in &result.statement_results {
         let proof = phase2_atomic(&forall_proof(statement).proved_then_facts[0].verify_result);
         assert!(matches!(
@@ -1952,12 +2012,12 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
     .set = StandardSet::C;
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_hierarchy_set",
         &["StructuralMembership/", "StructuralMembership"],
     );
 
-    let (mut result, runtime) = execute(PHASE2_DIVISION);
+    let (mut result, compiler) = execute(PHASE2_DIVISION);
     let structural = phase2_structural_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
@@ -1967,7 +2027,7 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_rational_operand_domain",
         &["StructuralMembership/", "StructuralMembership"],
     );
@@ -1975,7 +2035,7 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
 
 #[test]
 fn phase2_rational_division_closure_cannot_discard_denominator_legality() {
-    let (mut result, runtime) = execute(PHASE2_DIVISION);
+    let (mut result, compiler) = execute(PHASE2_DIVISION);
     let goal = atomic_proof_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
@@ -1993,7 +2053,7 @@ fn phase2_rational_division_closure_cannot_discard_denominator_legality() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_missing_rational_guard",
         &["WD/Arithmetic"],
     );
@@ -2001,7 +2061,7 @@ fn phase2_rational_division_closure_cannot_discard_denominator_legality() {
 
 #[test]
 fn phase2_arbitrary_have_retains_generic_input_and_its_nonempty_evidence() {
-    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let (mut result, compiler) = execute(PHASE2_HAVE);
     let have = phase2_have_mut(&mut result.statement_results[0]);
     assert!(matches!(
         &have.groups[0].nonempty_check,
@@ -2015,7 +2075,7 @@ fn phase2_arbitrary_have_retains_generic_input_and_its_nonempty_evidence() {
         &have.groups[0].defined_params.store_and_infer_results[0],
         &have.store_and_infer_result.store_and_infer_results[0]
     ));
-    let output = compile_run(&result, &runtime, "phase2_generic_real_context")
+    let output = compile_run(&result, &compiler, "phase2_generic_real_context")
         .expect("arbitrary real context");
     assert!(output.contains("Litex.Representation"));
     assert!(output.contains("Litex.Obj"));
@@ -2027,17 +2087,17 @@ fn phase2_arbitrary_have_retains_generic_input_and_its_nonempty_evidence() {
 
 #[test]
 fn phase2_arbitrary_have_rejects_missing_and_wrong_nonempty_checks() {
-    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let (mut result, compiler) = execute(PHASE2_HAVE);
     phase2_have_mut(&mut result.statement_results[0]).groups[0].nonempty_check =
         ParamTypeFactCheckResult::Set;
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_missing_nonempty",
         &["Have/NonemptyCheck"],
     );
 
-    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let (mut result, compiler) = execute(PHASE2_HAVE);
     let have = phase2_have_mut(&mut result.statement_results[0]);
     match &mut have.groups[0].nonempty_check {
         ParamTypeFactCheckResult::Obj(result) => match &mut atomic_proof_mut(result).searched_proof
@@ -2053,7 +2113,7 @@ fn phase2_arbitrary_have_rejects_missing_and_wrong_nonempty_checks() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_wrong_nonempty_carrier",
         &["Nonempty/", "Have/Nonempty", "Atomic/"],
     );
@@ -2068,7 +2128,7 @@ fn phase2_arbitrary_have_rejects_missing_store_trees_and_divergent_views() {
         "both_trees",
         "both_ids",
     ] {
-        let (mut result, runtime) = execute(PHASE2_HAVE);
+        let (mut result, compiler) = execute(PHASE2_HAVE);
         let have = phase2_have_mut(&mut result.statement_results[0]);
         match change {
             "aggregate_ids" => have.store_and_infer_result.stored_fact_ids.clear(),
@@ -2087,13 +2147,13 @@ fn phase2_arbitrary_have_rejects_missing_store_trees_and_divergent_views() {
             }
             _ => unreachable!(),
         }
-        phase2_rejected(&result, &runtime, change, &["Have/", "Parameters/"]);
+        phase2_rejected(&result, &compiler, change, &["Have/", "Parameters/"]);
     }
 }
 
 #[test]
 fn phase2_arbitrary_have_header_identity_must_match_its_actual_store() {
-    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let (mut result, compiler) = execute(PHASE2_HAVE);
     phase2_have_mut(&mut result.statement_results[0])
         .statement
         .param_def
@@ -2102,7 +2162,7 @@ fn phase2_arbitrary_have_header_identity_must_match_its_actual_store() {
         .id = IdentifierId::new(u64::MAX);
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_have_header",
         &["Parameters/Subject"],
     );
@@ -2110,7 +2170,7 @@ fn phase2_arbitrary_have_header_identity_must_match_its_actual_store() {
 
 #[test]
 fn phase2_natural_parameter_cannot_lose_a_captured_inference_identity() {
-    let (mut result, runtime) = execute(PHASE2_HIERARCHY);
+    let (mut result, compiler) = execute(PHASE2_HIERARCHY);
     let parameters = &mut forall_proof_mut(&mut result.statement_results[0])
         .introduced_params
         .defined_params;
@@ -2121,7 +2181,7 @@ fn phase2_natural_parameter_cannot_lose_a_captured_inference_identity() {
     parameters.stored_fact_ids.pop();
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_deleted_natural_inference_id",
         &["Parameters/StoreCapture", "Forall/"],
     );
@@ -2129,7 +2189,7 @@ fn phase2_natural_parameter_cannot_lose_a_captured_inference_identity() {
 
 #[test]
 fn phase2_closed_order_consumes_actual_comparison_certificates() {
-    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let (mut result, compiler) = execute(PHASE2_CLOSED_ORDER);
     let proof =
         atomic_proof_mut(&mut fact_statement_mut(&mut result.statement_results[0]).verify_result);
     match &mut proof.searched_proof {
@@ -2142,12 +2202,12 @@ fn phase2_closed_order_consumes_actual_comparison_certificates() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_comparison_direction",
         &["Closed", "Order/", "Atomic/"],
     );
 
-    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let (mut result, compiler) = execute(PHASE2_CLOSED_ORDER);
     let proof =
         atomic_proof_mut(&mut fact_statement_mut(&mut result.statement_results[1]).verify_result);
     match &mut proof.searched_proof {
@@ -2161,7 +2221,7 @@ fn phase2_closed_order_consumes_actual_comparison_certificates() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_closed_order_value",
         &["Closed", "Order/", "Atomic/"],
     );
@@ -2169,9 +2229,9 @@ fn phase2_closed_order_consumes_actual_comparison_certificates() {
 
 #[test]
 fn phase2_closed_order_ignores_presentation_strings() {
-    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let (mut result, compiler) = execute(PHASE2_CLOSED_ORDER);
     let expected =
-        compile_run(&result, &runtime, "phase2_presentation").expect("actual typed values");
+        compile_run(&result, &compiler, "phase2_presentation").expect("actual typed values");
     for statement in &mut result.statement_results {
         let proof = atomic_proof_mut(&mut fact_statement_mut(statement).verify_result);
         match &mut proof.searched_proof {
@@ -2186,7 +2246,7 @@ fn phase2_closed_order_ignores_presentation_strings() {
         }
     }
     assert_eq!(
-        compile_run(&result, &runtime, "phase2_presentation")
+        compile_run(&result, &compiler, "phase2_presentation")
             .expect("presentation is not evidence"),
         expected
     );
@@ -2194,7 +2254,7 @@ fn phase2_closed_order_ignores_presentation_strings() {
 
 #[test]
 fn phase2_closed_order_rejects_a_changed_fact_family_even_with_true_value_payload() {
-    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let (mut result, compiler) = execute(PHASE2_CLOSED_ORDER);
     let source =
         match &phase2_atomic(&fact_statement(&result.statement_results[0]).verify_result).fact {
             AtomicFact::LessFact(fact) => fact.clone(),
@@ -2214,7 +2274,7 @@ fn phase2_closed_order_rejects_a_changed_fact_family_even_with_true_value_payloa
     };
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_order_family",
         &["Closed", "Order/", "Atomic/", "WD/"],
     );
@@ -2222,7 +2282,7 @@ fn phase2_closed_order_rejects_a_changed_fact_family_even_with_true_value_payloa
 
 #[test]
 fn phase2_order_transitivity_replays_oriented_actual_premise_ids() {
-    let (mut result, runtime) = execute(PHASE2_TRANS);
+    let (mut result, compiler) = execute(PHASE2_TRANS);
     let proof = atomic_proof_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
@@ -2239,7 +2299,7 @@ fn phase2_order_transitivity_replays_oriented_actual_premise_ids() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_reversed_transitivity_citations",
         &["Order/", "Atomic/", "FactId/"],
     );
@@ -2247,7 +2307,7 @@ fn phase2_order_transitivity_replays_oriented_actual_premise_ids() {
 
 #[test]
 fn phase2_order_addition_requires_its_original_order_premise() {
-    let (mut result, runtime) = execute(PHASE2_MONOTONE);
+    let (mut result, compiler) = execute(PHASE2_MONOTONE);
     let proof = atomic_proof_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
@@ -2267,7 +2327,7 @@ fn phase2_order_addition_requires_its_original_order_premise() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_missing_addition_premise",
         &["FactId/Resolution"],
     );
@@ -2275,7 +2335,7 @@ fn phase2_order_addition_requires_its_original_order_premise() {
 
 #[test]
 fn phase2_square_rule_cannot_lose_its_real_base_citation() {
-    let (mut result, runtime) = execute(PHASE2_SQUARES);
+    let (mut result, compiler) = execute(PHASE2_SQUARES);
     let proof = atomic_proof_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
@@ -2295,7 +2355,7 @@ fn phase2_square_rule_cannot_lose_its_real_base_citation() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_missing_square_real_proof",
         &["FactId/Resolution"],
     );
@@ -2303,7 +2363,7 @@ fn phase2_square_rule_cannot_lose_its_real_base_citation() {
 
 #[test]
 fn phase2_order_reflexivity_uses_the_recorded_same_object() {
-    let (mut result, runtime) = execute(PHASE2_HAVE);
+    let (mut result, compiler) = execute(PHASE2_HAVE);
     let proof =
         atomic_proof_mut(&mut fact_statement_mut(&mut result.statement_results[3]).verify_result);
     match &mut proof.searched_proof {
@@ -2316,7 +2376,7 @@ fn phase2_order_reflexivity_uses_the_recorded_same_object() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_changed_reflexive_subject",
         &["Order/", "Atomic/"],
     );
@@ -2324,7 +2384,7 @@ fn phase2_order_reflexivity_uses_the_recorded_same_object() {
 
 #[test]
 fn phase2_q_membership_transport_cannot_drop_its_known_fact_citation() {
-    let (mut result, runtime) = execute(PHASE2_Q_TRANSPORT);
+    let (mut result, compiler) = execute(PHASE2_Q_TRANSPORT);
     let proof = atomic_proof_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
@@ -2336,14 +2396,19 @@ fn phase2_q_membership_transport_cannot_drop_its_known_fact_citation() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_missing_q_transport_fact",
         &["FactId/Resolution"],
     );
 }
 
-fn phase2_rejected(result: &RunLitexCodeResult, runtime: &Runtime, name: &str, families: &[&str]) {
-    let error = compile_run(result, runtime, "phase2_changed_evidence").expect_err(name);
+fn phase2_rejected(
+    result: &RunLitexCodeResult,
+    compiler: &LitexToLeanCompiler,
+    name: &str,
+    families: &[&str],
+) {
+    let error = compile_run(result, compiler, "phase2_changed_evidence").expect_err(name);
     assert!(
         families
             .iter()
@@ -2403,7 +2468,7 @@ fn fact_statement_mut(statement: &mut ExecStmtResult) -> &mut ExecFactStmtSucces
 #[test]
 fn phase2_order_wd_keeps_both_real_requirements_in_source_order() {
     for change in ["missing", "reordered"] {
-        let (mut result, runtime) = execute(PHASE2_SQUARES);
+        let (mut result, compiler) = execute(PHASE2_SQUARES);
         let square = atomic_proof_mut(
             &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0]
                 .verify_result,
@@ -2418,7 +2483,7 @@ fn phase2_order_wd_keeps_both_real_requirements_in_source_order() {
         } else {
             requirements.swap(0, 1);
         }
-        phase2_rejected(&result, &runtime, change, &["WD/OrderRealDomain"]);
+        phase2_rejected(&result, &compiler, change, &["WD/OrderRealDomain"]);
     }
 }
 
@@ -2429,7 +2494,7 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
     // actual citation proof that can be moved into the forged order's WD stage.
     // The original source remains true; only the test's result values change.
     let source = "forall real_power_base R:\n    real_power_base^3 = real_power_base^3\n    real_power_base^3 $in R\n    real_power_base^3 $in R\n    real_power_base^3 $in R\n    0 <= real_power_base^2\n";
-    let (mut result, runtime) = execute(source);
+    let (mut result, compiler) = execute(source);
     let success = fact_statement_mut(&mut result.statement_results[0]);
     let forall = match &mut success.verify_result {
         VerifyFactResult::ForallFact(result) => match result.as_mut() {
@@ -2507,7 +2572,7 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
     }
     phase2_rejected(
         &result,
-        &runtime,
+        &compiler,
         "phase2_odd_exponent_with_even_tag",
         &["Order/EvenPowerExponent"],
     );
@@ -2516,7 +2581,7 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
 #[test]
 fn simplification_theorem_citation_keeps_its_declaration_time_context() {
     let source = "have a R\nthm context_reflexivity:\n    ? a = a\nhave b R\nby thm context_reflexivity => a = a\n";
-    let (result, runtime) = execute(source);
+    let (result, compiler) = execute(source);
     let first = ordinary_have(&result.statement_results[0])
         .statement
         .param_def
@@ -2532,7 +2597,7 @@ fn simplification_theorem_citation_keeps_its_declaration_time_context() {
         .id
         .value();
     assert_ne!(first, later);
-    let output = compile_run(&result, &runtime, "simplification_declaration_context")
+    let output = compile_run(&result, &compiler, "simplification_declaration_context")
         .expect("the earlier theorem keeps only its original context parameters");
     let header = output
         .lines()
@@ -2556,7 +2621,7 @@ fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
         InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
     };
 
-    let (result, runtime) = execute("have n N\nn >= 0\n");
+    let (result, compiler) = execute("have n N\nn >= 0\n");
     let store = &ordinary_have(&result.statement_results[0]).groups[0]
         .defined_params
         .store_and_infer_results[0];
@@ -2583,7 +2648,7 @@ fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
         ) => assert_eq!(proof.premise_proof.cite_fact_id(), Some(inferred_id)),
         _ => panic!("the source actually cites the inferred opposite-order fact"),
     }
-    let output = compile_run(&result, &runtime, "simplification_natural_inference")
+    let output = compile_run(&result, &compiler, "simplification_natural_inference")
         .expect("the inferred producer is emitted before its use");
     let name = format!("_fact_f{}", inferred_id.value());
     let producer = output
@@ -2600,7 +2665,7 @@ fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
 
 #[test]
 fn simplification_alias_equality_uses_its_stored_id_in_the_selected_rewrite() {
-    let (result, runtime) = execute("let half = 1 / 2\nhalf + half = 1\n");
+    let (result, compiler) = execute("let half = 1 / 2\nhalf + half = 1\n");
     let alias = let_definition(&result.statement_results[0]);
     let equality_id = alias.stored_fact_ids[0];
     let rewrite = match &equality_proof(&fact_statement(&result.statement_results[1]).verify_result)
@@ -2616,7 +2681,7 @@ fn simplification_alias_equality_uses_its_stored_id_in_the_selected_rewrite() {
         &equality_proof(&rewrite.residual_equal).searched_proof,
         EqualFactSearchedProof::ByClosedCalculation(_)
     ));
-    let output = compile_run(&result, &runtime, "simplification_alias_equality")
+    let output = compile_run(&result, &compiler, "simplification_alias_equality")
         .expect("the selected substitution uses the emitted alias equality");
     let name = format!("_fact_f{}", equality_id.value());
     let producer = output
@@ -2640,7 +2705,7 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
         "have c R\nthm two_returns:\n    ? forall x R:\n        x + 0 = x\n        x $in C\n";
     for (selected, selected_index) in [("c + 0 = c", 0), ("c $in C", 1)] {
         let source = format!("{head}by thm two_returns(c) => {selected}\n");
-        let (result, runtime) = execute(&source);
+        let (result, compiler) = execute(&source);
         let invocation = by_theorem(&result.statement_results[2]);
         assert_eq!(invocation.returned_conclusions.len(), 2);
         let ids: Vec<_> = invocation
@@ -2672,7 +2737,7 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
             _ => panic!("one of the theorem's two actual returned atoms"),
         };
         assert_eq!(selected_id, ids[selected_index]);
-        let output = compile_run(&result, &runtime, "simplification_returned_components")
+        let output = compile_run(&result, &compiler, "simplification_returned_components")
             .expect("either returned atom can be selected from one invocation");
         let consumer = output.find("theorem fact_3 ").expect("the selected fact");
         let body = &output[consumer..];
@@ -2701,9 +2766,9 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
 
 #[test]
 fn simplification_future_natural_producer_is_not_recovered_from_runtime() {
-    let (mut result, runtime) = execute("have n N\nn >= 0\n");
+    let (mut result, compiler) = execute("have n N\nn >= 0\n");
     result.statement_results.swap(0, 1);
-    let error = compile_run(&result, &runtime, "simplification_future_inference")
+    let error = compile_run(&result, &compiler, "simplification_future_inference")
         .expect_err("a live runtime does not make a later Lean producer available early");
     assert_eq!(error.statement_index, Some(1));
     assert!(matches!(
@@ -2715,7 +2780,7 @@ fn simplification_future_natural_producer_is_not_recovered_from_runtime() {
 #[test]
 fn simplification_known_forall_reuses_a_global_alias_with_the_current_goal_wd() {
     let source = "let global_offset = 2\nlet other_offset = 3\nforall left_real R:\n    left_real + global_offset = left_real + global_offset\nforall right_real R:\n    right_real + global_offset = right_real + global_offset\n";
-    let (result, runtime) = execute(source);
+    let (result, compiler) = execute(source);
     let earlier = forall_proof(&result.statement_results[2]);
     let reused = known_forall(&result.statement_results[3]);
     let producer_id = fact_statement(&result.statement_results[2])
@@ -2735,7 +2800,7 @@ fn simplification_known_forall_reuses_a_global_alias_with_the_current_goal_wd() 
     assert!(reused.fact.dom_facts.is_empty());
     let output = compile_run(
         &result,
-        &runtime,
+        &compiler,
         "simplification_known_forall_global_alias",
     )
     .expect("the current goal's WD supplies its renamed binder and original alias");
@@ -2750,7 +2815,7 @@ fn simplification_known_forall_reuses_a_global_alias_with_the_current_goal_wd() 
 #[test]
 fn simplification_named_theorem_body_retains_its_local_explicit_call() {
     let source = "thm add_zero:\n    ? forall x R:\n        x + 0 = x\nthm add_zero_again:\n    ? forall y R:\n        y + 0 = y\n    y + 0 = y + 0\n    by thm add_zero(y) => y + 0 = y\n";
-    let (result, runtime) = execute(source);
+    let (result, compiler) = execute(source);
     let earlier = named_theorem(&result.statement_results[0]);
     let later = named_theorem(&result.statement_results[1]);
     let goal = match &later.statement.fact {
@@ -2798,7 +2863,7 @@ fn simplification_named_theorem_body_retains_its_local_explicit_call() {
         }
         _ => panic!("the explicit nested invocation selects its actual returned equality"),
     }
-    let output = compile_run(&result, &runtime, "simplification_nested_named_call")
+    let output = compile_run(&result, &compiler, "simplification_nested_named_call")
         .expect("the invocation's local proof evidence closes inside the theorem body");
     let later = output
         .split_once("theorem named_thm_2")
@@ -2816,8 +2881,8 @@ fn simplification_named_theorem_body_retains_its_local_explicit_call() {
 #[test]
 fn simplification_named_call_cannot_export_a_compound_constructor_from_its_local_scope() {
     let source = "thm add_zero:\n    ? forall x R:\n        x + 0 = x\nthm add_zero_again:\n    ? forall y R:\n        y + 0 = y\n    by thm add_zero(y) => y + 0 = y\n";
-    let (result, runtime) = execute(source);
-    let error = compile_run(&result, &runtime, "simplification_closed_call_constructor")
+    let (result, compiler) = execute(source);
+    let error = compile_run(&result, &compiler, "simplification_closed_call_constructor")
         .expect_err("the invocation-local construction is not a preceding parent producer");
     assert_eq!(error.statement_index, Some(2));
     assert_eq!(error.route, "WD/Producer");

@@ -52,12 +52,14 @@ The Rust entrypoint makes the execution and compilation stages explicit:
 
 ```rust
 let result = runtime.run_litex_code(&source)?;
-let compiler = LitexToLeanCompiler::new(&result, &runtime);
-let lean = compiler.compile(&artifact_namespace)?;
+let compiler = LitexToLeanCompiler::new(runtime);
+let lean = compiler.compile_run(&result, &artifact_namespace)?;
 ```
 
-The compiler borrows the completed result and Runtime, then dispatches the
-existing `ExecStmtResult` and its typed child enums. Its files mirror the
+The compiler takes ownership of Runtime and receives the completed result as a
+method parameter, then dispatches the existing `ExecStmtResult` and its typed
+child enums. Runtime is moved without cloning; the compiler has only that one
+field and no lifetime parameter. Its files mirror the
 executor's statement and verification branches. Each branch reads its original
 subject and selected evidence, compiles its children, and produces temporary
 Lean expressions. It does not maintain a second object, fact, theorem or
@@ -75,11 +77,13 @@ If its exported proposition uses that proof name, the generated type includes
 the necessary actual proof expressions as local `let` values. This closes the
 Lean expression without turning proved facts into new theorem assumptions.
 
-Runtime executes the source once and remains an immutable exact-ID resolver.
+Runtime executes the source once, then moves into the compiler as a read-only
+exact-ID resolver.
 The current result is not self-contained after Runtime disposal: some source
-stages retain IDs rather than complete producer payloads. `compile` returns
-source only when the whole artifact succeeds. The existing free `compile_run`
-API delegates to the same implementation.
+stages retain IDs rather than complete producer payloads. `compile_run` returns
+source only when the whole artifact succeeds. The method can receive another
+result without retaining earlier output. The free `compile_run` delegates to
+the same implementation and now also takes Runtime by value.
 
 For `1 = 1`, the recorded route is reflexivity. For a fact such as
 `a + 0 = a`, a selected rational-normalization route must go through its

@@ -8,6 +8,113 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
+#[test]
+fn free_parameter_objects_substitute_free_ids_without_capturing_same_spelling_binders() {
+    for (source, expected_source) in [
+        ("fn(x R: x > a) R", "fn(u R: u > x) R"),
+        ("fn(x R) R {x + a}", "fn(u R) R {u + x}"),
+        ("{x R: x > a}", "{u R: u > x}"),
+    ] {
+        let mut rt = test_runtime();
+        assert!(rt.run_litex_code("have a R").unwrap().success);
+        let original = free_parameter_audit_object(&mut rt, source);
+        let before = original.clone();
+        let bound_id = free_parameter_audit_binder_id(&original);
+        let a_id = rt.resolve_plain_atom("a").unwrap();
+        // The stored binder named x has ended before a new external x exists.
+        assert!(rt.run_litex_code("have x R = 7").unwrap().success);
+        let x_id = rt.resolve_plain_atom("x").unwrap();
+        assert_ne!(x_id, bound_id);
+        let x = Obj::Identifier(IdentifierObj::plain(x_id, "x".into()));
+        let zero = Obj::Literal(Literal::Number(Number::new("0".into())));
+        let subst = HashMap::from([(a_id, x), (x_id, zero.clone()), (bound_id, zero)]);
+        let actual = rt.inst_obj(&original, &subst).unwrap();
+        assert_eq!(free_parameter_audit_binder_id(&actual), bound_id);
+        let mut free = std::collections::HashSet::new();
+        super::collect_free_plain_ids(&actual, &std::collections::HashSet::new(), &mut free);
+        assert_eq!(free, std::collections::HashSet::from([x_id]), "{source}");
+        let expected = free_parameter_audit_object(&mut rt, expected_source);
+        assert!(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(&actual, &expected), "bound occurrences must remain bound: {source}");
+        // a -> x and x -> 0 is simultaneous: the inserted x stays free.
+        assert_eq!(original, before, "instantiation must not mutate its source");
+    }
+}
+
+#[test]
+fn free_parameter_objects_substitute_external_carriers_simultaneously() {
+    for source in ["fn(t A) A", "fn(t A) A {t}", "{t A: t = t}"] {
+        let mut rt = test_runtime();
+        assert!(rt.run_litex_code("have A, B set").unwrap().success);
+        let original = free_parameter_audit_object(&mut rt, source);
+        let bound_id = free_parameter_audit_binder_id(&original);
+        let a_id = rt.resolve_plain_atom("A").unwrap();
+        let b_id = rt.resolve_plain_atom("B").unwrap();
+        let b = Obj::Identifier(IdentifierObj::plain(b_id, "B".into()));
+        let zero = Obj::Literal(Literal::Number(Number::new("0".into())));
+        let actual = rt
+            .inst_obj(&original, &HashMap::from([(a_id, b), (b_id, zero)]))
+            .unwrap();
+        assert_eq!(free_parameter_audit_binder_id(&actual), bound_id);
+        let mut free = std::collections::HashSet::new();
+        super::collect_free_plain_ids(&actual, &std::collections::HashSet::new(), &mut free);
+        assert_eq!(free, std::collections::HashSet::from([b_id]), "{source}");
+        let expected = free_parameter_audit_object(&mut rt, &source.replace(" A", " B"));
+        assert!(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(&actual, &expected));
+    }
+}
+
+#[test]
+fn free_parameter_objects_nested_substitution_keeps_outer_and_inner_binders_bound() {
+    let mut rt = test_runtime();
+    assert!(rt.run_litex_code("have a R").unwrap().success);
+    let original =
+        free_parameter_audit_object(&mut rt, "fn(x R) (fn(y R) R) {fn(y R) R {x + a + y}}");
+    let outer_id = free_parameter_audit_binder_id(&original);
+    assert!(rt.run_litex_code("have x R = 7").unwrap().success);
+    let a_id = rt.resolve_plain_atom("a").unwrap();
+    let x_id = rt.resolve_plain_atom("x").unwrap();
+    let actual = rt
+        .inst_obj(
+            &original,
+            &HashMap::from([(
+                a_id,
+                Obj::Identifier(IdentifierObj::plain(x_id, "x".into())),
+            )]),
+        )
+        .unwrap();
+    assert_eq!(free_parameter_audit_binder_id(&actual), outer_id);
+    let mut free = std::collections::HashSet::new();
+    super::collect_free_plain_ids(&actual, &std::collections::HashSet::new(), &mut free);
+    assert_eq!(free, std::collections::HashSet::from([x_id]));
+    let expected =
+        free_parameter_audit_object(&mut rt, "fn(u R) (fn(v R) R) {fn(v R) R {u + x + v}}");
+    let captured =
+        free_parameter_audit_object(&mut rt, "fn(u R) (fn(v R) R) {fn(v R) R {u + u + v}}");
+    let alpha = crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal;
+    assert!(alpha(&actual, &expected));
+    assert!(!alpha(&actual, &captured));
+}
+
+#[test]
+fn free_parameter_objects_same_display_does_not_identify_disjoint_free_variables() {
+    for source in ["fn(x R: x > a) R", "fn(x R) R {x+a}", "{x R: x>a}"] {
+        let mut rt = test_runtime();
+        rt.push_parse_scope();
+        let first_a = rt.define_plain_atom("a".into()).unwrap();
+        let first = free_parameter_audit_object(&mut rt, source);
+        rt.pop_parse_scope();
+        rt.push_parse_scope();
+        let second_a = rt.define_plain_atom("a".into()).unwrap();
+        let second = free_parameter_audit_object(&mut rt, source);
+        rt.pop_parse_scope();
+        assert_ne!(first_a.id, second_a.id);
+        assert_eq!(first.readable_string(), second.readable_string());
+        assert_ne!(first.ir(), second.ir());
+        assert!(!crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(&first, &second), "{source}");
+        assert!(!rt.plain_atom_is_visible("a"));
+    }
+}
+
 fn test_runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
         code: String::new(),
@@ -276,4 +383,58 @@ fn imported_mod_context_qualifies_with_mod_id() {
     assert_eq!(*global_mod_id, mod_id);
     assert_eq!(*export_file_id, 0);
     assert_eq!(name, "x");
+}
+
+fn free_parameter_audit_object(rt: &mut Runtime, source: &str) -> Obj {
+    let code = format!("{source} = {source}");
+    let blocks = Tokenizer::new()
+        .tokenize(&code, rt.current_file.clone())
+        .unwrap();
+    let statements = rt.parse(&blocks).unwrap();
+    let crate::ast::stmt::Stmt::Fact(crate::ast::fact::Fact::AtomicFact(AtomicFact::EqualFact(eq))) =
+        &statements[0]
+    else {
+        panic!("object equality: {source}");
+    };
+    eq.left.clone()
+}
+
+fn free_parameter_audit_binder_id(object: &Obj) -> IdentifierId {
+    match object {
+        Obj::FunctionSpace(crate::ast::obj::FunctionSpace::FnSet(f)) => {
+            f.set_bound_parameters.groups[0].params[0].id
+        }
+        Obj::FunctionSpace(crate::ast::obj::FunctionSpace::AnonymousFn(f)) => {
+            f.body.set_bound_parameters.groups[0].params[0].id
+        }
+        Obj::SetFormer(crate::ast::obj::SetFormer::SetBuilder(s)) => s.param_binding.id,
+        _ => panic!("binder object"),
+    }
+}
+
+#[test]
+fn struct_nested_field_instantiation_matches_source_paths_and_keeps_receivers_distinct() {
+    let prefix = r#"struct ScalarOperations:
+    unit R
+    combine fn(x, y R) R
+    <=>:
+        unit = 1
+struct ScalarAction:
+    scalars &ScalarOperations
+    act fn(a, x R) R
+    <=>:
+        forall a, b, x R:
+            act(scalars.combine(a, b), x) = act(a, act(b, x))
+"#;
+    for (body, expected) in [
+        ("claim:\n    ? forall action &ScalarAction, a, b, x R:\n        action.act(action.scalars.combine(a, b), x) = action.act(a, action.act(b, x))\n    release struct def action\n", true),
+        ("claim:\n    ? forall action &ScalarAction:\n        action.scalars.unit = 1\n    release struct def action.scalars\n", true),
+        ("claim:\n    ? forall first, second &ScalarAction, a, b, x R:\n        first.act(second.scalars.combine(a, b), x) = first.act(a, first.act(b, x))\n    release struct def first\n    release struct def second\n", false),
+        ("claim:\n    ? forall action &ScalarAction:\n        action.scalars.unit = 0\n    release struct def action.scalars\n", false),
+    ] {
+        let mut rt = test_runtime();
+        let result = rt.run_litex_code(&format!("{prefix}\n{body}")).unwrap();
+        assert!(result.session_error.is_none(), "{body}");
+        assert_eq!(result.success, expected, "{body}");
+    }
 }

@@ -9,13 +9,21 @@ owns invocation and output behavior.
 
 ```rust
 let result = runtime.run_litex_code(&source)?;
-let lean = LitexToLeanCompiler::new(&result, &runtime).compile(&namespace)?;
+let compiler = LitexToLeanCompiler::new(runtime);
+let lean = compiler.compile_run(&result, &namespace)?;
 ```
 
-The coordinator borrows only the completed `RunLitexCodeResult` and its original
-immutable `Runtime`. `compile_run` is a compatible convenience entrypoint. The
-CLI executes source once and compiles the result while Runtime remains alive.
-The complete artifact is returned only after every statement is compiled.
+The compiler owns only the original `Runtime`, moved into it after source
+execution without cloning. It has no lifetime parameter or result field.
+`compile_run(&self, result, namespace)` receives the completed run as a method
+input and reads Runtime only for exact citation resolution. Branch methods
+likewise receive their original typed results as parameters. Reusing the same
+compiler does not retain an earlier result or partial output.
+
+The free `compile_run(result, runtime, namespace)` convenience function also
+takes ownership of Runtime; its previous borrowed-Runtime signature has changed.
+The CLI executes source once, transfers Runtime into the compiler, and returns
+the complete artifact only after every statement is compiled.
 
 ## Result dispatch and file ownership
 
@@ -55,6 +63,8 @@ positions and the current stage/child boundary. It identifies which source
 prefix is being compiled. For example, left-operand WD can be available before
 right-operand cached WD, while the statement's truth proof is still unavailable.
 It is neither another ExecEnv nor an object/fact/proof cache.
+Its internal borrow lifetime remains explicit where Rust requires it; this
+does not impose a lifetime parameter on the owning compiler API.
 
 Exact source IDs determine internal names. Stored alias equalities, supported
 inference and theorem-return projections have declarations at their actual

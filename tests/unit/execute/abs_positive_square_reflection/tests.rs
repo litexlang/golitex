@@ -187,7 +187,7 @@ fn localized_output_and_unsupported_lean_routes_remain_explicit() {
         let mut rt = runtime(OutputLanguage::English);
         let run = check(&mut rt, source, true);
         assert!(
-            crate::compile_to_lean::compile_run(&run, &rt, "abs_square_rule").is_err(),
+            crate::compile_to_lean::compile_run(&run, rt, "abs_square_rule").is_err(),
             "No Lean adapter was added"
         );
     }

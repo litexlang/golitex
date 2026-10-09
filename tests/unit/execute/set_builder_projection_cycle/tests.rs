@@ -13,6 +13,72 @@ fn runtime(strict: bool) -> Runtime {
         language: OutputLanguage::English,
     })
 }
+
+fn exec_template_builder_statement(rt: &mut Runtime, code: &str) -> bool {
+    let tokens = Tokenizer::new()
+        .tokenize(code, rt.current_file.clone())
+        .unwrap();
+    let mut statements = rt.parse(&tokens).unwrap();
+    assert_eq!(statements.len(), 1);
+    let result = rt.exec_stmt(&statements.remove(0)).unwrap();
+    if result.is_failed() {
+        eprintln!(
+            "{}",
+            crate::json_output::project_stmt_detailed(&result, rt).stringify()
+        );
+    }
+    !result.is_failed()
+}
+
+#[test]
+fn template_builder_projects_carrier_coordinates_and_conditions() {
+    let mut rt = runtime(true);
+    for code in [
+        "template<S set>:\n    have pairs set = {p cart(N, S): p(1) >= 0}\n",
+        "forall S set, p \\pairs<S>:\n    p(1) >= 0\n    p(2) $in S\n",
+        "template<S set>:\n    have streams set = {p cart(N, fn(index N+) S): p(1) >= 0}\n",
+        "claim:\n    ? forall S set, p \\streams<S>, index N+:\n        p(2)(index) $in S\n    have stream fn(k N+) S = p(2)\n    stream(index) $in S\n    p(2)(index) = stream(index)\n",
+    ] {
+        assert!(exec_template_builder_statement(&mut rt, code), "{code}");
+    }
+}
+
+#[test]
+fn template_builder_rejects_wrong_coordinate_carrier_and_template_parameter() {
+    let mut rt = runtime(true);
+    assert!(exec_template_builder_statement(
+        &mut rt,
+        "template<S set, n N+>:\n    have pairs set = {p cart(N, S): p(1) >= n}\n"
+    ));
+    for code in [
+        "forall p \\pairs<R, 1>:\n    p(2) $in N\n",
+        "forall p \\pairs<R, 1>:\n    p(3) $in R\n",
+        "forall p \\pairs<R, 1>:\n    p(1) < 1\n",
+        "have invalid \\pairs<R, 0>\n",
+    ] {
+        let before = sizes(&rt);
+        assert!(!exec_template_builder_statement(&mut rt, code), "{code}");
+        assert_eq!(sizes(&rt), before, "failed statement leaked: {code}");
+    }
+}
+
+#[test]
+fn template_builder_preserves_explicit_template_guard() {
+    let mut rt = runtime(true);
+    assert!(exec_template_builder_statement(&mut rt,
+        "template<S set: $is_nonempty_set(S)>:\n    have guarded_pairs set = {p cart(N, S): p(1) >= 0}\n"));
+    assert!(exec_template_builder_statement(
+        &mut rt,
+        "forall p \\guarded_pairs<R>:\n    p(1) >= 0\n    p(2) $in R\n"
+    ));
+    let before = sizes(&rt);
+    assert!(!exec_template_builder_statement(
+        &mut rt,
+        "have invalid \\guarded_pairs<{}>\n"
+    ));
+    assert_eq!(sizes(&rt), before);
+}
+
 fn sizes(rt: &Runtime) -> Vec<(usize, usize)> {
     rt.execution_environments_stack
         .iter()

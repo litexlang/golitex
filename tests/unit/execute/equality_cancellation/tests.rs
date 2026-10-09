@@ -349,7 +349,7 @@ fn equality_cancellation_lean_citations_fail_closed_without_infer_replay() {
         let mut rt = runtime();
         let run = rt.run_litex_code(&source).expect("source run");
         assert!(run.success);
-        let error = crate::compile_to_lean::compile_run(&run, &rt, "cancellation_boundary")
+        let error = crate::compile_to_lean::compile_run(&run, rt, "cancellation_boundary")
             .expect_err("uncompiled inferred equality must not become a Lean assumption");
         assert_eq!(error.route, "FactId/Producer", "{error}");
     }

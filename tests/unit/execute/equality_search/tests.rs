@@ -597,3 +597,68 @@ fn run_examples_local_alpha_without_graph_scan() {
     )).unwrap();
     assert!(result.success && result.session_error.is_none());
 }
+
+#[test]
+fn free_parameter_objects_failed_aliases_do_not_publish_indexes_or_capture_later_names() {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have a, b R");
+    let before = store_sizes(&rt);
+    let index_before = rt
+        .top_exec_env()
+        .facts
+        .known_equal_to_obj_with_free_params
+        .by_other_side
+        .clone();
+    let failed = exec(&mut rt,
+        "claim:\n    ? 0 = 1\n    let f = fn(x R) R {x+a}\n    let S = {x R: x>a}\n    let F = fn(x R: x>a) R");
+    assert!(failed.is_failed());
+    assert!(
+        matches!(
+            &failed,
+            ExecStmtResult::ProofBlock(
+                crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(
+                    crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Failed(
+                        crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Conclusion { .. }
+                    )
+                )
+            )
+        ),
+        "all three aliases must execute before the false conclusion fails"
+    );
+    assert_eq!(store_sizes(&rt), before);
+    assert_eq!(
+        rt.top_exec_env()
+            .facts
+            .known_equal_to_obj_with_free_params
+            .by_other_side,
+        index_before
+    );
+    for name in ["f", "S", "F"] {
+        assert!(!rt.plain_atom_is_visible(name));
+        assert!(!rt.top_exec_env().definitions.identifiers.contains_key(name));
+    }
+    exec_ok(&mut rt, "let f = fn(x R) R {x+b}");
+    exec_ok(&mut rt, "let S = {x R: x>b}");
+    exec_ok(&mut rt, "let F = fn(x R: x>b) R");
+    for code in ["f(0)=b", "S={y R: y>b}", "F=fn(y R: y>b) R"] {
+        exec_ok(&mut rt, code);
+    }
+    for code in ["f(0)=a", "S={y R: y>a}", "F=fn(y R: y>a) R", "0=1"] {
+        let before = store_sizes(&rt);
+        let index_before = rt
+            .top_exec_env()
+            .facts
+            .known_equal_to_obj_with_free_params
+            .by_other_side
+            .clone();
+        assert!(exec(&mut rt, code).is_failed(), "{code}");
+        assert_eq!(store_sizes(&rt), before);
+        assert_eq!(
+            rt.top_exec_env()
+                .facts
+                .known_equal_to_obj_with_free_params
+                .by_other_side,
+            index_before
+        );
+    }
+}

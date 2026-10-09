@@ -15,7 +15,7 @@ impl Runtime {
     ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
         if self
-            .resolve_set_builder_for_membership_projection(&in_fact.set)
+            .resolve_set_builder_for_membership_projection(&in_fact.set, verify_state)?
             .is_some()
         {
             let mut derived = Vec::new();
@@ -25,7 +25,8 @@ impl Runtime {
                 if !expanded.insert(member.ir()) {
                     continue;
                 }
-                let Some(builder) = self.resolve_set_builder_for_membership_projection(&member.set)
+                let Some(builder) =
+                    self.resolve_set_builder_for_membership_projection(&member.set, verify_state)?
                 else {
                     continue;
                 };
@@ -120,18 +121,35 @@ impl Runtime {
     }
 
     fn resolve_set_builder_for_membership_projection(
-        &self,
+        &mut self,
         set: &Obj,
-    ) -> Option<crate::ast::obj::SetBuilder> {
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<crate::ast::obj::SetBuilder>> {
         if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = set {
-            return Some(builder.clone());
+            return Ok(Some(builder.clone()));
         }
         for (value, _) in self.exact_property_object_values(set) {
-            if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = value {
-                return Some(builder);
+            if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &value {
+                return Ok(Some(builder.clone()));
+            }
+            // A checked template instance is a definitional set alias. Preserve
+            // its argument/guard WD ceiling before substituting the existing
+            // HaveObjEqual RHS; no generic theorem search is needed here.
+            if let Obj::InstantiatedTemplateObj(instance) = &value {
+                if self
+                    .verify_obj_well_definedness(&value, verify_state)?
+                    .is_failed()
+                {
+                    continue;
+                }
+                if let Some(Obj::SetFormer(SetFormer::SetBuilder(builder))) =
+                    self.expanded_have_obj_equal_rhs_of_instantiated_template(instance)?
+                {
+                    return Ok(Some(builder));
+                }
             }
         }
-        None
+        Ok(None)
     }
 
     fn resolve_power_set_base_for_membership_projection(&self, set: &Obj) -> Option<Obj> {

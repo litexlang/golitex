@@ -213,7 +213,7 @@ fn all_output_languages_and_unsupported_lean_routes_remain_explicit() {
         let mut rt = runtime(crate::launch_command::OutputLanguage::English);
         let run = check(&mut rt, source, true);
         assert!(
-            crate::compile_to_lean::compile_run(&run, &rt, "metric_bound").is_err(),
+            crate::compile_to_lean::compile_run(&run, rt, "metric_bound").is_err(),
             "No Lean theorem adapter was added"
         );
     }

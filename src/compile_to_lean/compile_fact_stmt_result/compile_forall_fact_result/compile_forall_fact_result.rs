@@ -4,7 +4,7 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 use std::collections::HashMap;
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_verify_forall_result(
         &self,
         result: &VerifyForallFactResult,

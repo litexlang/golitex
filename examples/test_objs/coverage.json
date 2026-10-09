@@ -3219,6 +3219,7 @@
   ],
   "workflow_gaps": [],
   "auxiliary_files": [
+    "absolute_value_bars.lit",
     "fixtures/values/base.lit",
     "fixtures/values/other.lit",
     "identifier_with_export_file_id/base.lit",

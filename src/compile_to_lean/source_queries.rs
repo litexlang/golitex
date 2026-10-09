@@ -2,16 +2,13 @@ use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn cited_fact_reference<'p>(
-        &self,
+        &'p self,
         id: FactId,
         position: &SourcePosition<'p>,
-    ) -> Result<(&'p Fact, String), LeanCompileError>
-    where
-        'a: 'p,
-    {
-        position.visible_fact(id, self.runtime)
+    ) -> Result<(&'p Fact, String), LeanCompileError> {
+        position.visible_fact(id, &self.runtime)
     }
 
     pub(in crate::compile_to_lean) fn resolve_fact(
@@ -19,7 +16,7 @@ impl<'a> LitexToLeanCompiler<'a> {
         id: FactId,
         position: &SourcePosition<'_>,
     ) -> Result<Fact, LeanCompileError> {
-        position.source_fact(id, self.runtime).cloned()
+        position.source_fact(id, &self.runtime).cloned()
     }
 
     pub(in crate::compile_to_lean) fn resolve_wd(
@@ -27,6 +24,6 @@ impl<'a> LitexToLeanCompiler<'a> {
         id: WellDefinednessId,
         position: &SourcePosition<'_>,
     ) -> Result<Obj, LeanCompileError> {
-        position.source_wd(id, self.runtime).cloned()
+        position.source_wd(id, &self.runtime).cloned()
     }
 }

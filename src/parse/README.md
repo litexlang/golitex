@@ -470,7 +470,7 @@ Precedence low → high:
 | ranges | `a...b`, `closed_range(a, b)`, `range(a, b)` |
 | cart | `A × B`, `cart()`, `cart(A)`, `cart(A, B, ...)` |
 | unicode / keyword sets | `A ∪ B`, `A ∩ B`; `union` `intersect` `set_minus` `family_union` `family_intersect` `power_set` `index_union` `index_intersect` `index_cart` |
-| arith | `+ - * / % ^`, unary `-` (= AST `Neg`), `abs` `floor` `ceil` `sign` `min` `max` |
+| arith | `+ - * / % ^`, unary `-` (= AST `Neg`), `abs(x)` / `\|x\|` (= AST `Abs`), `floor` `ceil` `sign` `min` `max` |
 | int | `gcd` `lcm` `quot` |
 | trig / explog | `sin cos tan cot arcsin arccos arctan arccot` ; `sqrt exp ln` ; `log(base, x)` |
 | finite | `finite_set_size` `finite_set_max` `finite_set_min` `finite_set_product` |
@@ -484,6 +484,13 @@ Precedence low → high:
 | fn_range | `fn_range(f)` |
 | preimages | `preimage(f, y)`, `preimage_set(f, Y)` (exactly two operands) |
 | factorial | `factorial(n)` and postfix `n!` |
+
+Absolute-value bars delimit one complete object expression and lower directly to
+the existing real `Abs` node. They nest (`||x||` is `abs(abs(x))`) and accept
+ordinary postfixes (`|x|^2` is `abs(x)^2`). Empty or unpaired bars and implicit
+multiplication such as `2|x|` are rejected. Canonical display remains `abs(...)`;
+the notation adds no complex modulus, norm or set-cardinality overload.
+The maintained tracer is [absolute_value_bars.lit](../../examples/test_objs/absolute_value_bars.lit).
 
 ### Keyword primaries that are **not** parse-wired yet
 
