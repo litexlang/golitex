@@ -247,6 +247,84 @@ fn direct_carrier_json_retains_tree_and_bilingual_reason() {
     }
 }
 
+#[test]
+fn order_domain_reuses_checked_argument_wd_without_publishing_it() {
+    use crate::prelude::*;
+    let mut rt = runtime();
+    assert!(
+        rt.run_litex_code("have A finite_set\nhave B set")
+            .unwrap()
+            .success
+    );
+    let Fact::AtomicFact(goal) = fact(
+        &mut rt,
+        "finite_set_size(set_minus(A, B)) < finite_set_size(A)",
+    ) else {
+        panic!("atomic comparison")
+    };
+    let before = memory_sizes(&rt);
+    let VerifyAtomicFactWellDefinedResult::Success(proof) = rt
+        .verify_atomic_fact_well_definedness(
+            &goal,
+            VerifyState::new(VerifyStateLevel::DefinitionAndForall),
+        )
+        .unwrap()
+    else {
+        panic!("finite difference comparison WD")
+    };
+    let PredicateDomainProof::ByCheckedArguments(requirements) = proof.predicate_domain else {
+        panic!("checked argument domain fallback")
+    };
+    assert_eq!(requirements.len(), 2);
+    for (index, requirement) in requirements.iter().enumerate() {
+        assert_eq!(requirement.argument_index, index);
+        assert_eq!(requirement.membership.set, StandardSet::R);
+    }
+    assert_eq!(memory_sizes(&rt), before, "domain fallback published state");
+}
+
+#[test]
+fn order_domain_reuse_does_not_bypass_failed_argument_guards() {
+    use crate::prelude::*;
+    for (setup, goal) in [
+        (
+            "have A set\nhave B set",
+            "finite_set_size(set_minus(A, B)) < 1",
+        ),
+        ("", "1 / 0 < 1"),
+        ("", "sqrt(-1) < 1"),
+    ] {
+        let mut rt = runtime();
+        assert!(rt.run_litex_code(setup).unwrap().success);
+        let Fact::AtomicFact(goal) = fact(&mut rt, goal) else {
+            panic!("atomic comparison")
+        };
+        let before = memory_sizes(&rt);
+        assert!(rt
+            .verify_atomic_fact_well_definedness(
+                &goal,
+                VerifyState::new(VerifyStateLevel::DefinitionAndForall)
+            )
+            .unwrap()
+            .is_failed());
+        assert_eq!(memory_sizes(&rt), before);
+    }
+}
+
+#[test]
+fn order_domain_reuse_projects_its_checked_argument_provenance() {
+    let mut rt = runtime();
+    let result = rt
+        .run_litex_code(include_str!(
+            "../../../../examples/wd/checked_argument_numeric_domain.lit"
+        ))
+        .unwrap();
+    assert!(result.success);
+    let json = crate::json_output::emit_run_detailed(&result, &rt, "eval", None);
+    assert!(json.contains("by_checked_argument_membership"), "{json}");
+    assert!(json.contains("argument_index"), "{json}");
+}
+
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
         code: String::new(),

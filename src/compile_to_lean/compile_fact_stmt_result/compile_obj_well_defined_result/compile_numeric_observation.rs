@@ -58,6 +58,30 @@ impl LitexToLeanCompiler {
                             .len()
                         && source_order_parts(&proof.fact).is_ok()
                     {
+                        if let PredicateDomainProof::ByCheckedArguments(requirements) =
+                            &proof.well_defined_proof.predicate_domain
+                        {
+                            let args = atomic_fact_args_ref(&proof.fact);
+                            for requirement in requirements {
+                                if requirement.membership.element != *object {
+                                    continue;
+                                }
+                                if requirement.membership.set != StandardSet::R
+                                    || args
+                                        .get(requirement.argument_index)
+                                        .is_none_or(|arg| *arg != object)
+                                    || !matches!(&requirement.requirement, Fact::AtomicFact(AtomicFact::InFact(member)) if member.element == *object && member.set == Obj::StandardSet(StandardSet::R))
+                                {
+                                    return Err(LeanCompileError::new("WD/OrderRealDomain", "Real-domain evidence is not attached to its checked argument."));
+                                }
+                                let producer = SourcePosition::new(
+                                    Some(cursor),
+                                    SourceOwner::AtomicWD(&proof.well_defined_proof),
+                                    args.len() + requirement.argument_index,
+                                );
+                                return self.compile_structural(&requirement.membership, &producer);
+                            }
+                        }
                         if let PredicateDomainProof::ByKnownFact(known) =
                             &proof.well_defined_proof.predicate_domain
                         {

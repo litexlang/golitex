@@ -136,12 +136,21 @@ Unsupported constructors still reject the whole artifact. The generated pair
 is `lean/examples/named_function_affine_arithmetic/statement.{lit,lean}`;
 producer and tampering contracts live under `tests/unit/compile_to_lean/known_fn_value_substitution/`.
 
-The accepted mathematical profile remains phases 1 and 2: numeric N/Z/Q/R/C,
-selected real comparisons, top-level numeric contexts, let/typed-have aliases,
-named theorems and explicit returned-atom selection. Owned functions/prop,
-sets, local arbitrary-have, general consumed inference and module compilation
-retain explicit unsupported branches. Exact certificates, orientations,
-argument match evidence and residual children must be preserved.
+The compiler also supports the phase-3 slice: top-level concrete predicates
+with flat atomic defining clauses, and formula functions with one or two fixed
+N/Z/Q/R/C inputs and output. Functions retain owned graph representations;
+calls consume the recorded function membership, input memberships and atomic
+guards. The additional `FunctionSemantics M` interface has a proved ZF model
+in the same `lean/Litex.lean`. Its body callbacks interpret source objects,
+without replacing their representations with native real arrows.
+
+Sets, recursive/composed formula bodies, concrete-predicate function guards,
+local declarations, general consumed inference and module compilation retain
+explicit unsupported branches. Exact certificates, orientations, argument
+match evidence and residual children must be preserved. Generated files keep
+all source proof names; only unused-variable and unused-section-variable
+style linters are disabled. Real Lean checking and other warnings remain
+separate required gates.
 
 A compound constructor recorded only inside a closed theorem-call scope is
 not a parent-scope WD producer. A nested call whose enclosing conclusion lacks
