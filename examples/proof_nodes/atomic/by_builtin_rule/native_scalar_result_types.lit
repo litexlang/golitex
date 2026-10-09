@@ -17,12 +17,12 @@ sign(0 - a) = 0 - sign(a)
 
 # No explicit result-type facts are needed for nested WD.
 have x R
-sign(x) * abs(x) = x
+sign(x) * |x| = x
 ln(exp(x)) = x
 
 have u Z*
 have v Z*
-lcm(u, v) * gcd(u, v) = abs(u * v)
+lcm(u, v) * gcd(u, v) = |u * v|
 u % gcd(u, v) = 0
 
 have n N

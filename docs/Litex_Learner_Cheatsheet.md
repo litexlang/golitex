@@ -103,8 +103,8 @@ For real-distance calculations, state symmetry and the triangle directly:
 
 ```litex
 forall x,y,z R:
-    abs(x-y) = abs(y-x)
-    abs(x-z) <= abs(x-y)+abs(y-z)
+    |x-y| = |y-x|
+    |x-z| <= |x-y|+|y-z|
 ```
 
 Two coordinate error bounds also bound the difference of two minima or maxima.
@@ -366,9 +366,10 @@ selection. `×` denotes Cartesian product; numerical multiplication is `*`.
 `⊂` is proper subset, while `⊆` is non-strict subset. Check the
 [alias reference](Manual.md#unicode-mathematical-input-aliases-preview).
 
-Real absolute value accepts either `abs(x)` or `|x|`. Bars group a complete
-expression, with `|x|^2` meaning `abs(x)^2`. Nested `||x||` means
-`abs(abs(x))`; complex modulus, norms and cardinality have no bar overload.
+For ordinary mathematical examples, prefer `|x|`; `abs(x)` remains supported.
+Bars group a complete expression, with `|x|^2` meaning `abs(x)^2`.
+Nested `||x||` means `abs(abs(x))`; complex modulus, norms and cardinality
+have no bar overload.
 Multiplication stays explicit (`2 * |x|`), and diagnostics keep `abs(...)`.
 
 ```litex

@@ -597,6 +597,9 @@ constructor calls such as `union(A, B)`; this preview does not add `A union B`.
 
 ### Absolute-value bars (preview)
 
+Prefer `|expr|` in ordinary mathematical examples and showcases. Use
+`abs(expr)` when explaining the function spelling or canonical output.
+
 `|expr|` is another input spelling of the existing real `abs(expr)` object.
 The enclosed expression is grouped as a whole; ordinary operators and
 postfixes apply outside it. `abs(...)` remains supported, and stored facts and
@@ -1354,7 +1357,7 @@ Detailed output retains the constructor tree under `by_structural_membership`.
 This is type propagation; symbolic equalities and order proofs keep their own rules.
 
 Two fixed scalar rules (preview) consume already available guards. For a real
-`x`, `x != 0` permits `abs(x) > 0`; zero and non-real arguments retain their
+`x`, `x != 0` permits `|x| > 0`; zero and non-real arguments retain their
 normal rejection boundaries. For real nonnegative `x,y`, `x^2 <= y^2` permits
 `x <= y`, and the reverse-written comparison works in the opposite direction.
 Both nonnegative guards remain required by this rule; a weak squared comparison
@@ -1372,7 +1375,7 @@ fails explicitly rather than emitting an assumed proof.
 forall x R:
     x != 0
     =>:
-        abs(x) > 0
+        |x| > 0
 ```
 
 ```litex
@@ -4802,7 +4805,7 @@ For checked signs, parity and order recipes, see
 
 **Well-definedness and domain.** x $in R. Every child expression must first be WD.
 
-**Common native properties and proof routes.** abs(-x) = abs(x); abs(x) >= 0; square/magnitude and signed-value rules.
+**Common native properties and proof routes.** |-x| = |x|; |x| >= 0; square/magnitude and signed-value rules.
 
 **Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
@@ -4811,10 +4814,10 @@ For checked signs, parity and order recipes, see
 **Checked example.**
 
 ```litex
-abs(-3) = 3
-abs(0) = 0
+|-3| = 3
+|0| = 0
 forall x R:
-    abs(x) >= 0
+    |x| >= 0
 ```
 
 **Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O28` in the inventory and verification record (historical task record; retired).
@@ -5375,7 +5378,7 @@ log(2, 1) = 0
 
 **Well-definedness and domain.** x $in R; 0 <= x. Child WD also applies.
 
-**Common native properties and proof routes.** Nonnegative real codomain; sqrt(x)^2 = x and sqrt(x^2) = abs(x) for real x.
+**Common native properties and proof routes.** Nonnegative real codomain; sqrt(x)^2 = x and sqrt(x^2) = |x| for real x.
 
 **Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
@@ -5385,7 +5388,7 @@ log(2, 1) = 0
 
 ```litex
 sqrt(4) = 2
-sqrt((-3)^2) = abs(-3) = 3
+sqrt((-3)^2) = |-3| = 3
 ```
 
 **Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O50` in the inventory and verification record (historical task record; retired).
@@ -6581,6 +6584,13 @@ struct PosPoint:
 **Public form:** `value.field`.
 
 **Mathematical function.** Select a named coordinate of a known struct view.
+
+Field substitution and struct-layer release preserve the same ordered path
+as source syntax: substituting `scalars = space.scalars` in `scalars.mul`
+produces `space.scalars.mul`. This also applies to callable fields and to
+arguments such as `space.scalars.zero`; it does not license missing fields or
+interchange receivers. See the
+[nested-field instantiation tracer](../examples/stmt_nodes/definition/struct_nested_field_instantiation.lit).
 
 **Well-definedness and domain.** The receiver’s definition-owned struct view, membership and field must verify. Callable or nested fields retain their declared signature/view.
 
@@ -7996,15 +8006,15 @@ have fn absolute(x R) R by cases:
     case x < 0: -x
 claim:
     ? forall x R:
-        absolute(x) = abs(x)
+        absolute(x) = |x|
     by cases:
-        ? absolute(x) = abs(x)
+        ? absolute(x) = |x|
         case x >= 0:
             0 <= x
-            absolute(x) = x = abs(x)
+            absolute(x) = x = |x|
         case x < 0:
             x <= 0
-            absolute(x) = -x = abs(x)
+            absolute(x) = -x = |x|
 ```
 
 The guarded equations of the definition are already usable. In this comparison with native abs, the proof additionally states the weak sign facts consumed by the abs rule before the equality chains. These facts follow from the cases; they are not new mathematical hypotheses. Independent deletion controls identify the necessary bridges.
@@ -8262,7 +8272,7 @@ recipe does not promise a general certificate search algorithm.
 
 ### R10. Expose absolute-value bounds
 
-**Ordinary mathematics:** to prove `abs(x)<=M`, supply the bounds on `x`
+**Ordinary mathematics:** to prove `|x|<=M`, supply the bounds on `x`
 and its negative. The native matching form uses `0-x`. Triangle and
 reverse-triangle bounds are useful starting facts for sums and differences.
 
@@ -8272,9 +8282,9 @@ intermediate sum:
 
 ```litex
 forall x,y,z R:
-    abs(x-y) = abs(y-x)
-    abs(x-z) <= abs(x-y)+abs(y-z)
-    abs(x-y) <= abs(x)+abs(y)
+    |x-y| = |y-x|
+    |x-z| <= |x-y|+|y-z|
+    |x-y| <= |x|+|y|
 ```
 
 Two checked coordinate error bounds give the same bound on their minima or
@@ -8283,11 +8293,11 @@ retains each actual source comparison as proof evidence.
 
 ```litex
 forall a,b,x,y R, epsilon R+:
-    abs(a-x) <= epsilon
-    abs(b-y) <= epsilon
+    |a-x| <= epsilon
+    |b-y| <= epsilon
     =>:
-        abs(max(a,b)-max(x,y)) <= epsilon
-        abs(min(a,b)-min(x,y)) <= epsilon
+        |max(a,b)-max(x,y)| <= epsilon
+        |min(a,b)-min(x,y)| <= epsilon
 ```
 
 A common positive radius can be bound directly:
@@ -8318,10 +8328,10 @@ forall x, M R:
     x <= M
     0-x <= M
     =>:
-        abs(x) <= M
+        |x| <= M
 forall x, y R:
-    abs(x+y) <= abs(x)+abs(y)
-    abs(x)-abs(y) <= abs(x-y)
+    |x+y| <= |x|+|y|
+    |x|-|y| <= |x-y|
 ```
 
 **Checked interval proof:** starting from `-M<=x<=M`, translate the lower
@@ -8333,9 +8343,9 @@ claim:
         -M <= x
         x <= M
         =>:
-            abs(x) <= M
+            |x| <= M
     0-x = -M+(M-x) <= x+(M-x) = M
-    abs(x) <= M
+    |x| <= M
 ```
 
 If the available premise is already `-x<=M`, the corresponding bridge is
@@ -8498,13 +8508,13 @@ zero. Use that fact to recover the equality cases of nonnegative bounds.
 
 | Mathematical task | Recommended statement or route |
 |---|---|
-| Remove the sign before squaring | `abs(x)^2 = x^2` |
-| Take the root of a square on all reals | `sqrt(x^2) = abs(x)` |
+| Remove the sign before squaring | `\|x\|^2 = x^2` |
+| Take the root of a square on all reals | `sqrt(x^2) = \|x\|` |
 | Take the root of a square with `x>=0` | `sqrt(x^2) = x` |
 | Square a square root with `x>=0` | `sqrt(x)^2 = x` |
-| Separate a product's magnitude | `abs(x*y) = abs(x)*abs(y)` |
-| Remove absolute value from a square | `abs(x^2) = x^2` |
-| Compare magnitudes | `a^2<=b^2` gives `abs(a)<=abs(b)` |
+| Separate a product's magnitude | `\|x*y\| = \|x\|*\|y\|` |
+| Remove absolute value from a square | `\|x^2\| = x^2` |
+| Compare magnitudes | `a^2<=b^2` gives `\|a\|<=\|b\|` |
 | Recover signed order from squares | With `a,b>=0`, `a^2<=b^2` gives `a<=b` |
 | Recover zero from a square | `x^2=0` gives `x=0` |
 | Recover zero from a square sum | `a^2+b^2=0` gives `a=b=0` |
@@ -8513,11 +8523,11 @@ zero. Use that fact to recover the equality cases of nonnegative bounds.
 
 ```litex
 forall x R:
-    abs(x)^2 = x^2
-    sqrt(x^2) = abs(x)
-    abs(x^2) = x^2
+    |x|^2 = x^2
+    sqrt(x^2) = |x|
+    |x^2| = x^2
 forall x, y R:
-    abs(x*y) = abs(x)*abs(y)
+    |x*y| = |x|*|y|
 forall x R:
     0 <= x
     =>:
@@ -8533,13 +8543,13 @@ absolute values, with equality transport at the endpoints.
 forall a, b R:
     a^2 <= b^2
     =>:
-        abs(a) <= abs(b)
+        |a| <= |b|
 claim:
     ? forall a, b R:
-        abs(a) <= abs(b)
+        |a| <= |b|
         =>:
             a^2 <= b^2
-    a^2 = abs(a)^2 <= abs(b)^2 = b^2
+    a^2 = |a|^2 <= |b|^2 = b^2
 ```
 
 **Checked signed reflection:** expose the square-root domain facts before
@@ -9059,8 +9069,8 @@ make each one a separate builtin theorem or automatic tactic.
 | `2*a*b <= t*a^2+b^2/t` | Real `a,b`; `t>0` | [R13 weighted bound](#r13-reusable-quadratic-certificates) |
 | `a^2+b^2+c^2 >= a*b+b*c+c*a` | Any real `a,b,c` | [R09 three-square certificate](#r09-build-a-sum-of-squares-proof) |
 | `(a*c+b*d)^2 <= (a^2+b^2)*(c^2+d^2)` | Any real `a,b,c,d` | [R13 two-dimensional Cauchy–Schwarz](#r13-reusable-quadratic-certificates) |
-| `abs(x+y) <= abs(x)+abs(y)` | Any real `x,y` | [R10 triangle bounds](#r10-expose-absolute-value-bounds) |
-| `abs(x)-abs(y) <= abs(x-y)` | Any real `x,y` | [R10 reverse-triangle bound](#r10-expose-absolute-value-bounds) |
+| `\|x+y\| <= \|x\|+\|y\|` | Any real `x,y` | [R10 triangle bounds](#r10-expose-absolute-value-bounds) |
+| `\|x\|-\|y\| <= \|x-y\|` | Any real `x,y` | [R10 reverse-triangle bound](#r10-expose-absolute-value-bounds) |
 | `a*x^2+b*x+c >= c-(b^2/a)/4` | `a>0`, real `b,c,x` | [R14 completed quadratic](#complete-a-general-positive-quadratic) |
 | `a^m <= a^n` | `a>=1`, integer `m<=n` | [R15 exponent growth](#order-arbitrary-integer-exponents) |
 | `a <= a^n` | `a>=1`, positive natural `n` | [R15 lower range](#order-arbitrary-integer-exponents) |
@@ -10064,9 +10074,9 @@ complex evaluation or an order on `C`.
 
 `re(z)`, `img(z)`, and `C_abs(z)` are dedicated unary builtin expression
 forms with domain `C` and result set `R`, at the same object-model level as
-`abs(z)`. Their bare names are not first-class function values; higher-order
+`|z|`. Their bare names are not first-class function values; higher-order
 code can use `fn(z C) R {re(z)}` and the analogous lambdas. For a real input,
-`C_abs(r) = abs(r)`, while `C_abs(i) = 1`. Equality and inequality (`=`, `!=`)
+`C_abs(r) = |r|`, while `C_abs(i) = 1`. Equality and inequality (`=`, `!=`)
 are available for complex objects. Ordered comparisons, signs, real intervals,
 `abs`, `sqrt`, and `log` remain real-domain operations.
 
@@ -10107,7 +10117,7 @@ factual statements. Their operation domains reject these arguments:
 <!-- litex:skip-test -->
 ```litex
 i < 1
-abs(i)
+|i|
 sqrt(i)
 log(2, i)
 i^(1 / 2)
@@ -10266,7 +10276,7 @@ together.
 
 | Group | Recognized laws and required premises |
 |---|---|
-| Absolute-value algebra | `abs(x*y) = abs(x)*abs(y)`; `0 <= abs(x)`; `x <= abs(x)`; `(-x) <= abs(x)`; `(-abs(x)) <= x`; `abs(x+y) <= abs(x)+abs(y)`; `abs(x-y) <= abs(x)+abs(y)`; `abs(x)-abs(y) <= abs(x-y)` and `<= abs(x+y)`; `x != 0` gives `0 < abs(x)`; nonnegative/nonpositive `x` selects `abs(x)=x` or `abs(x)=(-x)`. |
+| Absolute-value algebra | `\|x*y\| = \|x\|*\|y\|`; `0 <= \|x\|`; `x <= \|x\|`; `(-x) <= \|x\|`; `(-\|x\|) <= x`; `\|x+y\| <= \|x\|+\|y\|`; `\|x-y\| <= \|x\|+\|y\|`; `\|x\|-\|y\| <= \|x-y\|` and `<= \|x+y\|`; `x != 0` gives `0 < \|x\|`; nonnegative/nonpositive `x` selects `\|x\|=x` or `\|x\|=(-x)`. |
 | Nonzero closure | Known nonzero real factors give `a*b != 0`; a nonzero numerator and denominator give `a/b != 0`. Division still requires the denominator fact for well-definedness. |
 | Order weakening | `a < b` gives `a <= b`, and `a > b` gives `a >= b`. The converse is not available without disequality or another strict premise. |
 | Addition | Weak+weak gives weak order; strict+strict gives strict order; weak+strict and strict+weak give strict order. Adding a common left term preserves either order. Nonnegative summands give a nonnegative sum; the sum is positive when both are positive or one is positive and the other nonnegative. `0 <= b` gives `a <= a+b`. |
@@ -10279,9 +10289,9 @@ These are executable instances of four different groups:
 
 ```litex
 forall x, y R:
-    abs(x * y) = abs(x) * abs(y)
-    abs(x + y) <= abs(x) + abs(y)
-    abs(x) - abs(y) <= abs(x - y)
+    |x * y| = |x| * |y|
+    |x + y| <= |x| + |y|
+    |x| - |y| <= |x - y|
 
 forall a, b R:
     a != 0
@@ -10560,7 +10570,7 @@ aggregate, and remainder rows.
 | Same or known-equal objects | Reflexivity, symmetry, transitivity, equality-chain lookup, replacement of known-equal immediate subobjects, and calculation or rational-expression normalization. Equality is also obtained from both weak-order directions over an ordered numeric carrier. |
 | Additive and multiplicative cancellation | `x = y` gives `x-y=0`; `a*b=0` together with either nonzero factor gives the other factor equal to zero; a known `a+b=c` gives `a=c-b`, in either summand order. |
 | Division | From `a/b=c` and `b!=0`, Litex proves `a=c*b`. From `a=b*c` and `b!=0`, it proves `a/b=c`. The displayed multiplier and divisor positions must match; the rule does not silently commute a product first. |
-| Absolute value and square root | A known sign selects `abs(x)=x` or `abs(x)=(-x)`; `abs(x)=0` gives `x=0`; even powers may replace a real base by its absolute value. Square-root rules include the principal-root square, special values, product/quotient laws under their domains, and `sqrt(a^2)=a` when `a>=0`. |
+| Absolute value and square root | A known sign selects `\|x\|=x` or `\|x\|=(-x)`; `\|x\|=0` gives `x=0`; even powers may replace a real base by its absolute value. Square-root rules include the principal-root square, special values, product/quotient laws under their domains, and `sqrt(a^2)=a` when `a>=0`. |
 | Powers and logarithms | Zero/one, exponent addition, iterated power, product power, negative exponent, roots, and inverse logarithm/power shapes are supported only in the carrier branches listed below. |
 | Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs. A positive common divisor `d` divides `gcd(a,b)`; `lcm(a,b)` for positive integer inputs divides every integer common multiple. `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
 | Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of differences, unions and power sets, concrete product cardinality by expansion, and empty-set equality from emptiness or zero finite cardinality. The general symbolic Cartesian-product cardinality formula remains a migration gap. |
@@ -10615,7 +10625,7 @@ because equality verification failed.
 | Order and membership separation | Any known strict real order proves disequality. A value above a known positive lower bound is nonzero. Membership of one object and known nonmembership of the other in the same set prove the objects distinct. A nonempty set is not `{}`. |
 | Addition and subtraction | `a!=b` gives `a-b!=0`, and `a-b!=0` gives `a!=b`. Likewise `a!=(-b)` gives `a+b!=0`, while a nonzero sum gives the corresponding operand-versus-negation fact. The immediate operand positions must match. |
 | Products and quotients | Two known nonzero factors in `R` or `C` give a nonzero product; a known nonzero product in either native field gives both factors nonzero. The matching zero-product split is likewise available over `R` and `C`, but not for arbitrary user-defined multiplication. A well-defined quotient is nonzero from a nonzero numerator; its denominator obligation was already checked. |
-| Powers, roots, and absolute value | A supported well-defined power is nonzero from a nonzero base, and positive-base power branches are intrinsically nonzero. `abs(x)!=0` follows from `x!=0`; `sqrt(x)!=0` requires `x>0`, not merely `x>=0`. |
+| Powers, roots, and absolute value | A supported well-defined power is nonzero from a nonzero base, and positive-base power branches are intrinsically nonzero. `\|x\|!=0` follows from `x!=0`; `sqrt(x)!=0` requires `x>0`, not merely `x>=0`. |
 | Sums of real squares | Either nonzero component, or the known two-branch component-nonzero disjunction, gives `a^2+b^2!=0` (also for the matching `a*a+b*b` shape). Conversely, the supported disjunction rule exposes that at least one component is nonzero. |
 | Native positive values | Well-defined `exp(x)` and `factorial(n)` are nonzero. Dedicated complex-modulus, sign, and trigonometric nonzero rules use the domains and canonical sign intervals described in their object sections. |
 
@@ -10661,7 +10671,7 @@ alone never supplies an order. The order layer recognizes these contracts:
 | Products | Same weak signs give a nonnegative product; same strict signs give a positive product; opposite signs give a negative/nonpositive product. Multiplying an inequality preserves its direction for a positive factor and reverses it for a negative factor; weak zero factors only support weak conclusions. |
 | Quotients | A positive denominator preserves order and supports cross-multiplication. A negative denominator reverses order. Sign conclusions require the numerator sign and a strictly positive denominator. Rules such as `a<=b/c` consume a positive `c` and the matching multiplied inequality. |
 | Powers | Mathematical directions: positive exponents preserve base order on positive bases; positive natural exponents are monotone on nonnegative bases; odd natural exponents are monotone on all reals; even exponents compare magnitudes; negative exponents reverse positive-base order. The checked domains and compositions are narrower than this mathematical list: see [R15](#r15-power-signs-and-two-kinds-of-monotonicity) for natural-base order, parity certificates, integer-exponent growth/decay and the real-exponent search boundary. |
-| Roots, logarithms, and absolute value | `sqrt(x)` is nonnegative, and positive for positive `x`. A logarithm with base `>1` preserves strict order; a base strictly between `0` and `1` reverses it. Absolute value supplies direct, triangle, and reverse-triangle bounds, including `abs(sum(...,f)) <= sum(...,fn(index Z) R {abs(f(index))})` and the analogous finite-set sum under the matching index/carrier facts. |
+| Roots, logarithms, and absolute value | `sqrt(x)` is nonnegative, and positive for positive `x`. A logarithm with base `>1` preserves strict order; a base strictly between `0` and `1` reverses it. Absolute value supplies direct, triangle, and reverse-triangle bounds, including `\|sum(...,f)\| <= sum(...,fn(index Z) R {\|f(index)\|})` and the analogous finite-set sum under the matching index/carrier facts. |
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
 | Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
 
@@ -10693,24 +10703,24 @@ the saved weak-difference orientation and subtraction-from-zero forms.
 claim:
     ? forall x R:
         0 <= x^2
-        (-x) <= abs(x)
-        x <= abs(x)
+        (-x) <= |x|
+        x <= |x|
     by cases:
-        ? -x <= abs(x) and x <= abs(x)
+        ? -x <= |x| and x <= |x|
         case x > 0:
             x $in R+
-            abs(x) = x
-            -x <= 0 <= x = abs(x)
-            x = abs(x)
+            |x| = x
+            -x <= 0 <= x = |x|
+            x = |x|
         case x = 0:
-            abs(x) = 0
-            -x = 0 = abs(x)
-            x = 0 = abs(x)
+            |x| = 0
+            -x = 0 = |x|
+            x = 0 = |x|
         case x < 0:
             x $in R-
-            abs(x) = -x
-            x < 0 < -x = abs(x)
-            -x = abs(x)
+            |x| = -x
+            x < 0 < -x = |x|
+            -x = |x|
 
 claim:
     ? forall a, b, c, d R:
@@ -10776,23 +10786,23 @@ forall a, b R+:
 > Quotient positivity, sqrt denominators, log nonzero conditions, and integer
 > mod-result carriers are checked in their proof_nodes.
 > Equality identities wave 3 (preview): `min`/`max` idempotent and commutative;
-> `abs(abs(a)) = abs(a)`; `exp(ln(x)) = x` (`x` in `R+`); `ln(exp(x)) = x`
+> `||a|| = |a|`; `exp(ln(x)) = x` (`x` in `R+`); `ln(exp(x)) = x`
 > (`x` in `R`; native `exp` returns `R+`, satisfying ln WD);
 > `floor(n) = n` / `ceil(n) = n` (`n` in `Z`); `a % a = 0` (`a != 0`).
 > Equality identities wave 4 (preview): `floor(ceil(n)) = n`,
-> `ceil(floor(n)) = n` (`n` in `Z`); `sqrt(a^2) = abs(a)`.
+> `ceil(floor(n)) = n` (`n` in `Z`); `sqrt(a^2) = |a|`.
 > Equality identities wave 5 (preview): `quot(a, 1) = a`;
 > `quot(a, a) = 1` (`a` in `N+`);
 > `lcm` commutative / idempotent-abs; `gcd` commutative / idempotent-abs /
-> zero-abs (gcd proof_nodes bind nonzero integer arguments as `Z*`);
+> zero-|gcd proof_nodes bind nonzero integer arguments as `Z*`|;
 > `(n+1)! = (n+1) * n!` (`n` in `N`; native factorial returns `N+`).
-> Equality identities wave 6 (preview): `abs(a) = a` when `0 <= a`;
-> `abs(a) = 0 - a` when `a <= 0`; `sign(a) = 1` when `0 < a`;
+> Equality identities wave 6 (preview): `|a| = a` when `0 <= a`;
+> `|a| = 0 - a` when `a <= 0`; `sign(a) = 1` when `0 < a`;
 > `sign(a) = 0 - 1` when `a < 0`; ordered `min`/`max` when `a <= b` or `b <= a`.
 > Equality identities wave 7 (preview): `a % gcd(a, b) = 0` /
 > `(a * b) % a = 0` (nonzero divisor; native gcd returns `N+`); `a = b` from `a <= b` and `b <= a`; `a - b = 0` from `a = b`;
 > `b = 0` from `a * b = 0` and `a != 0`; `sign(0 - a) = 0 - sign(a)`;
-> `sign(a) * abs(a) = a`; `abs(a) = sign(a) * a`;
+> `sign(a) * |a| = a`; `|a| = sign(a) * a`;
 > `sign(a * b) = sign(a) * sign(b)` (native sign returns `Z`,
 > usable in real and complex arithmetic WD);
 > `a = c - b` from known `a + b = c`.
@@ -10848,7 +10858,7 @@ forall a, b R+:
 > `a = d * quot(a, d) + (a % d)`; `(a - (a % b)) % b = 0` (narrow `trust`
 > nonzero divisor for current mod/quot WD); `a = 0` from known
 > `a^2 + b^2 = 0`; `(-1)^(2 * m + 1) = -1` (`m` in `N`);
-> `lcm(a, b) * gcd(a, b) = abs(a * b)` (narrow trust for current lcm/gcd WD).
+> `lcm(a, b) * gcd(a, b) = |a * b|` (narrow trust for current lcm/gcd WD).
 > NotEqual leftovers (preview, A9 partial): `$is_nonempty_set(A)` ⇒ `A != {}`;
 > `n $in N` and `1 <= n` ⇒ `n != 0`; `a != 0` ⇒ `a^n != 0` (integer exponent);
 > `a != 0` and `b != 0` ⇒ `a / b != 0`; `a * b != 0` ⇒ `a != 0`;
@@ -11120,11 +11130,11 @@ preserves the former process-dependent failure.
 | Family | Recognized laws and required domains |
 |---|---|
 | `exp` and `ln` | `exp(0)=1`, `ln(1)=0`, `exp(x)=e^x`, their inverse laws, and the usual addition/product identities. `exp` maps `R` to `R+` and preserves and reflects order and equality. `ln` has the corresponding behavior on `R+` and agrees with `log(e,x)`. |
-| `sign` | Returns `(-1)`, `0`, or `1`; is odd, multiplicative, and weakly monotone; characterizes zero and nonzero inputs; and satisfies `sign(x)*abs(x)=x`. |
+| `sign` | Returns `(-1)`, `0`, or `1`; is odd, multiplicative, and weakly monotone; characterizes zero and nonzero inputs; and satisfies `sign(x)*\|x\|=x`. |
 | `factorial` | Maps `N` to `N+`, evaluates finite natural inputs, exposes the successor recurrence, preserves weak order, is strictly increasing past the `0! = 1!` boundary, and gives divisibility from an earlier to a later factorial. |
 | `floor` and `ceil` | Return integers, expose their characteristic bounds, preserve weak order, commute with integer translation, and are dual under negation. |
 | `min` and `max` | Select an argument from a known comparison, bound both arguments, preserve componentwise weak order, and satisfy the usual commutative, associative, idempotent, and absorption laws. |
-| `gcd` and `lcm` | Are symmetric on their domains; `gcd` divides both integer inputs; `lcm` is nonnegative, has the expected common-multiple bounds, and satisfies `lcm(a,b)*gcd(a,b)=abs(a*b)` when the pair is not both zero. |
+| `gcd` and `lcm` | Are symmetric on their domains; `gcd` divides both integer inputs; `lcm` is nonnegative, has the expected common-multiple bounds, and satisfies `lcm(a,b)*gcd(a,b)=\|a*b\|` when the pair is not both zero. |
 
 Symbolic transcendental expressions are not decimal approximations. Every law
 still requires its ordinary well-definedness conditions.
@@ -11504,7 +11514,7 @@ The `or` verifier recognizes these exhaustive forms:
 |---|---|
 | `P or not P` | Two exactly complementary atomic facts. |
 | Real order alternatives | Real operands; complementary strict/weak pairs, trichotomy permutations, or equality plus strict order when the matching weak comparison is already known. |
-| `abs(x)=x or abs(x)=(-x)` | Canonical two-branch absolute-value split. |
+| `\|x\|=x or \|x\|=(-x)` | Canonical two-branch absolute-value split. |
 | Complete residues | Every canonical equality `n % k = r` for `r=0,...,k-1`, with a positive literal/canonical modulus shape. |
 | Integer successor tail | Known `x,base $in Z` and `x>=base`; the branches list consecutive equalities from `base` followed by the matching strict tail. |
 | `a=0 or b=0` | `a,b $in R` and known `a*b=0` (either product order). |
@@ -11519,7 +11529,7 @@ The `or` verifier recognizes these exhaustive forms:
 > `a > b or a = b or a < b`.
 > Also ported (each its own builtin / result struct):
 > `P or not P` (complementary atomics),
-> `abs(x) = x or abs(x) = (-x)` (either branch order),
+> `|x| = x or |x| = (-x)` (either branch order),
 > `a = 0 or b = 0` when `a, b $in R` and known `a * b = 0` (either product /
 > branch order),
 > `n = 0 or n >= 1` for `n $in N`,
@@ -11558,7 +11568,7 @@ forall a, b R:
         a = b or a < b
 
 forall x R:
-    abs(x) = x or abs(x) = (-x)
+    |x| = x or |x| = (-x)
 ```
 
 Branch order is flexible only where the matcher explicitly treats it as a

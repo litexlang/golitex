@@ -158,8 +158,8 @@ kernel ultimately checks the resulting proof term.
 
 ### Keep the mathematical estimate visible
 
-Suppose `0 < epsilon <= 1`, `abs(x) < epsilon`, and `abs(y) < epsilon`. The
-reason that `abs(x * y) < epsilon` is the short estimate
+Suppose `0 < epsilon <= 1`, `|x| < epsilon`, and `|y| < epsilon`. The
+reason that `|x * y| < epsilon` is the short estimate
 
 \[
 |xy| = |x||y| < \varepsilon^2 \leq \varepsilon.
@@ -198,13 +198,13 @@ claim:
                 a * b < c * d
         0 < epsilon
         epsilon <= 1
-        abs(x) < epsilon
-        abs(y) < epsilon
+        |x| < epsilon
+        |y| < epsilon
         =>:
-            abs(x * y) < epsilon
-    0 <= abs(x) < epsilon
-    0 <= abs(y) < epsilon
-    abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon * 1 = epsilon
+            |x * y| < epsilon
+    0 <= |x| < epsilon
+    0 <= |y| < epsilon
+    |x * y| = |x| * |y| < epsilon * epsilon <= epsilon * 1 = epsilon
 ```
 
 AI can generate either proof cheaply. The interface question is what remains
@@ -296,7 +296,7 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
     _ = ε := mul_div_cancel₀ _ (ne_of_lt acpos).symm
 ```
 
-The Litex proof chooses `epsilon / (abs(c) + 1)`. Since the denominator is
+The Litex proof chooses `epsilon / (|c| + 1)`. Since the denominator is
 always positive, one estimate covers both `c = 0` and `c != 0`.
 
 ```litex
@@ -304,7 +304,7 @@ prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
         n >= N0
         =>:
-            abs(s(n) - a) < epsilon
+            |s(n) - a| < epsilon
 
 prop converges_to(s fn(n N) R, a R):
     forall epsilon R+:
@@ -320,27 +320,27 @@ thm converges_to_mul_const:
     claim:
         ? forall epsilon R+:
             exist N0 N st {$is_eventually_close(scaled, c * a, epsilon, N0)}
-        abs(c) >= 0
-        abs(c) + 1 > 0
-        have scale R+ = abs(c) + 1
+        |c| >= 0
+        |c| + 1 > 0
+        have scale R+ = |c| + 1
         epsilon / scale > 0
         epsilon / scale $in R+
-        abs(c) <= scale
+        |c| <= scale
         obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / scale, K)}
         witness exist K N st {$is_eventually_close(scaled, c * a, epsilon, K)} from N0:
             claim:
                 ? forall n N:
                     n >= N0
                     =>:
-                        abs(scaled(n) - c * a) < epsilon
+                        |scaled(n) - c * a| < epsilon
                 scaled(n) = c * s(n)
-                abs(s(n) - a) < epsilon / scale
-                abs(s(n) - a) >= 0
+                |s(n) - a| < epsilon / scale
+                |s(n) - a| >= 0
                 scaled(n) - c * a = c * s(n) - c * a = c * (s(n) - a)
-                abs(scaled(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a)
-                scale * abs(s(n) - a) < scale * (epsilon / scale) = epsilon
-                abs(scaled(n) - c * a) = abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a) < epsilon
+                |scaled(n) - c * a| = |c * (s(n) - a)| = |c| * |s(n) - a|
+                |c| * |s(n) - a| <= scale * |s(n) - a|
+                scale * |s(n) - a| < scale * (epsilon / scale) = epsilon
+                |scaled(n) - c * a| = |c| * |s(n) - a| <= scale * |s(n) - a| < epsilon
             by def $is_eventually_close(scaled, c * a, epsilon, N0)
     by def $converges_to(scaled, c * a)
 ```
@@ -353,7 +353,7 @@ inequality chain, while the checker supplies routine arithmetic and definition
 folding.
 
 This does not claim that Lean requires this proof shape or cannot use the
-uniform `abs(c) + 1` argument. It compares two natural ways of organizing the
+uniform `|c| + 1` argument. It compares two natural ways of organizing the
 same elementary analysis proof.
 
 ---

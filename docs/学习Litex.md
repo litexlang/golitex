@@ -103,11 +103,11 @@ x $in R
 数学定义是 $d(x)=|x|$：
 
 ```litex
-have fn distance_from_zero(x R) R = abs(x)
+have fn distance_from_zero(x R) R = |x|
 distance_from_zero(-3) = distance_from_zero(3) = 3
 ```
 
-第一行读作：“定义名为 `distance_from_zero` 的函数，实数输入 `x`，实数输出，值为 `abs(x)`。”`abs` 是绝对值。之后可以把名字作用到输入上，如 `distance_from_zero(-3)`。
+第一行读作：“定义名为 `distance_from_zero` 的函数，实数输入 `x`，实数输出，值为 `|x|`。”`abs` 是绝对值。之后可以把名字作用到输入上，如 `distance_from_zero(-3)`。
 
 第二行是等式链，要求两边相邻等式都成立：`-3` 处的距离等于 `3` 处的距离，且该距离等于 `3`。函数定义描述数学值；它们本身不承诺导出器能把每个定义变成 Python 程序。
 
@@ -280,7 +280,7 @@ claim:
 **问题：** 证明每个到零的距离都非负。
 
 ```litex
-have fn distance_from_zero(x R) R = abs(x)
+have fn distance_from_zero(x R) R = |x|
 
 prop is_nonnegative(t R):
     t >= 0
@@ -288,7 +288,7 @@ prop is_nonnegative(t R):
 claim:
     ? forall x R:
         $is_nonnegative(distance_from_zero(x))
-    distance_from_zero(x) = abs(x) >= 0
+    distance_from_zero(x) = |x| >= 0
     by def $is_nonnegative(distance_from_zero(x))
 ```
 
@@ -474,7 +474,7 @@ reciprocal(2) * 2 = 1
 reciprocal(2) * 4 = (reciprocal(2) * 2) * 2 = 2
 
 # Distance from zero and a property of its output.
-have fn distance_from_zero(x R) R = abs(x)
+have fn distance_from_zero(x R) R = |x|
 
 prop is_nonnegative(t R):
     t >= 0
@@ -482,7 +482,7 @@ prop is_nonnegative(t R):
 claim:
     ? forall x R:
         $is_nonnegative(distance_from_zero(x))
-    distance_from_zero(x) = abs(x) >= 0
+    distance_from_zero(x) = |x| >= 0
     by def $is_nonnegative(distance_from_zero(x))
 
 distance_from_zero(-3) = 3

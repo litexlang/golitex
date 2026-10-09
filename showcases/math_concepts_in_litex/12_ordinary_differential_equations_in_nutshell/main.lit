@@ -8,9 +8,9 @@
 prop derivative_delta_controlled(f fn(x R) R, x0, slope R, epsilon, delta R+):
     forall x R:
         x != x0
-        abs(x - x0) < delta
+        |x - x0| < delta
         =>:
-            abs((f(x) - f(x0)) / (x - x0) - slope) < epsilon
+            |(f(x) - f(x0)) / (x - x0) - slope| < epsilon
 
 prop has_derivative_at(f fn(x R) R, x0, slope R):
     forall epsilon R+:
@@ -43,16 +43,16 @@ thm ode_solution_has_derivative:
             claim:
                 ? forall x R:
                     x != x0
-                    abs(x - x0) < epsilon
+                    |x - x0| < epsilon
                     =>:
-                        abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) < epsilon
+                        |(ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0| < epsilon
                 x - x0 != 0
                 ode_solution(x) = x^2 + 1
                 ode_solution(x0) = x0^2 + 1
                 ode_solution(x) - ode_solution(x0) = (x^2 + 1) - (x0^2 + 1) = x^2 - x0^2 = (x - x0) * (x + x0)
                 (ode_solution(x) - ode_solution(x0)) / (x - x0) = ((x - x0) * (x + x0)) / (x - x0) = x + x0
                 (ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
-                abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
+                |(ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0| = |x - x0| < epsilon
             by def $derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)
     by def $has_derivative_at(ode_solution, x0, 2 * x0)
 
@@ -86,17 +86,17 @@ thm derivative_value_unique:
         slope1 != slope2
         slope1 - slope2 != 0
         claim:
-            ? abs(slope1 - slope2) > 0
+            ? |slope1 - slope2| > 0
             by contra:
-                ? abs(slope1 - slope2) > 0
-                abs(slope1 - slope2) <= 0
-                0 <= abs(slope1 - slope2)
-                abs(slope1 - slope2) = 0
-                abs(slope1 - slope2) != 0
-                impossible abs(slope1 - slope2) = 0
-        abs(slope1 - slope2) / 3 $in R
-        0 < abs(slope1 - slope2) / 3
-        have epsilon R+ = abs(slope1 - slope2) / 3
+                ? |slope1 - slope2| > 0
+                |slope1 - slope2| <= 0
+                0 <= |slope1 - slope2|
+                |slope1 - slope2| = 0
+                |slope1 - slope2| != 0
+                impossible |slope1 - slope2| = 0
+        |slope1 - slope2| / 3 $in R
+        0 < |slope1 - slope2| / 3
+        have epsilon R+ = |slope1 - slope2| / 3
         obtain delta1 from exist delta1 R+ st {$derivative_delta_controlled(f, x0, slope1, epsilon, delta1)}
         obtain delta2 from exist delta2 R+ st {$derivative_delta_controlled(f, x0, slope2, epsilon, delta2)}
         union({delta1}, {delta2}) $subset R+
@@ -110,32 +110,32 @@ thm derivative_value_unique:
         sample - x0 = radius / 2
         sample - x0 > 0
         0 <= sample - x0
-        abs(sample - x0) = sample - x0 = radius / 2
+        |sample - x0| = sample - x0 = radius / 2
         radius / 2 < radius
         delta1 $in union({delta1}, {delta2})
         delta2 $in union({delta1}, {delta2})
         radius = finite_set_min(union({delta1}, {delta2})) <= delta1
         radius = finite_set_min(union({delta1}, {delta2})) <= delta2
-        abs(sample - x0) = radius / 2 < radius <= delta1
-        abs(sample - x0) = radius / 2 < radius <= delta2
+        |sample - x0| = radius / 2 < radius <= delta1
+        |sample - x0| = radius / 2 < radius <= delta2
         have difference_quotient R = (f(sample) - f(x0)) / (sample - x0)
-        abs((f(sample) - f(x0)) / (sample - x0) - slope1) < epsilon
-        abs(difference_quotient - slope1) = abs((f(sample) - f(x0)) / (sample - x0) - slope1) < epsilon
-        abs((f(sample) - f(x0)) / (sample - x0) - slope2) < epsilon
-        abs(difference_quotient - slope2) = abs((f(sample) - f(x0)) / (sample - x0) - slope2) < epsilon
+        |(f(sample) - f(x0)) / (sample - x0) - slope1| < epsilon
+        |difference_quotient - slope1| = |(f(sample) - f(x0)) / (sample - x0) - slope1| < epsilon
+        |(f(sample) - f(x0)) / (sample - x0) - slope2| < epsilon
+        |difference_quotient - slope2| = |(f(sample) - f(x0)) / (sample - x0) - slope2| < epsilon
         slope1 - difference_quotient = -(difference_quotient - slope1)
-        abs(slope1 - difference_quotient) = abs(-(difference_quotient - slope1)) = abs(difference_quotient - slope1)
+        |slope1 - difference_quotient| = |-(difference_quotient - slope1)| = |difference_quotient - slope1|
         slope1 - slope2 = (slope1 - difference_quotient) + (difference_quotient - slope2)
-        abs(slope1 - slope2) = abs((slope1 - difference_quotient) + (difference_quotient - slope2)) <= abs(slope1 - difference_quotient) + abs(difference_quotient - slope2)
-        abs(slope1 - difference_quotient) + abs(difference_quotient - slope2) < epsilon + epsilon = 2 * epsilon
+        |slope1 - slope2| = |(slope1 - difference_quotient) + (difference_quotient - slope2)| <= |slope1 - difference_quotient| + |difference_quotient - slope2|
+        |slope1 - difference_quotient| + |difference_quotient - slope2| < epsilon + epsilon = 2 * epsilon
         2 / 3 < 1
-        (2 / 3) * abs(slope1 - slope2) < 1 * abs(slope1 - slope2)
-        2 * epsilon = 2 * (abs(slope1 - slope2) / 3)
-        2 * (abs(slope1 - slope2) / 3) = 2 * abs(slope1 - slope2) / 3 = (2 / 3) * abs(slope1 - slope2)
-        1 * abs(slope1 - slope2) = abs(slope1 - slope2)
-        2 * epsilon < abs(slope1 - slope2)
-        abs(slope1 - slope2) <= abs(slope1 - difference_quotient) + abs(difference_quotient - slope2) < 2 * epsilon < abs(slope1 - slope2)
-        impossible abs(slope1 - slope2) < abs(slope1 - slope2)
+        (2 / 3) * |slope1 - slope2| < 1 * |slope1 - slope2|
+        2 * epsilon = 2 * (|slope1 - slope2| / 3)
+        2 * (|slope1 - slope2| / 3) = 2 * |slope1 - slope2| / 3 = (2 / 3) * |slope1 - slope2|
+        1 * |slope1 - slope2| = |slope1 - slope2|
+        2 * epsilon < |slope1 - slope2|
+        |slope1 - slope2| <= |slope1 - difference_quotient| + |difference_quotient - slope2| < 2 * epsilon < |slope1 - slope2|
+        impossible |slope1 - slope2| < |slope1 - slope2|
 
 # Existence from differentiability and the uniqueness theorem define a callable
 # derivative value on differentiable function-point pairs.

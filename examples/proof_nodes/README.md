@@ -14,6 +14,11 @@ Prefer `have … = …` and `forall` binders. Do **not** use `trust` to fake
 definitions or ambient assumptions in these tracers (see
 `examples/stmt_nodes/unsafe/` for trust-stmt coverage).
 
+Prefer `|x|` for real absolute values in mathematical examples, including
+distances such as `|x - y|`. The function spelling `abs(x)` remains supported.
+The [triangle inequality](atomic/by_builtin_rule/less_equal_abs_triangle_inequality.lit)
+shows the ordinary bar notation using the same builtin rule.
+
 ## Acceptance
 
 ```bash
@@ -329,13 +334,13 @@ now use checked facts. Native scalar codomains now discharge the eight equality 
 See [the result-type tracer](atomic/by_builtin_rule/native_scalar_result_types.lit)
 and [B01–B04 acceptance](../../plan/迁移的plan/experience/problem_notes/native-scalar-result-types.md).
 Equality BuiltinRule identities (Stage B wave 3):
-`min`/`max` idempotent + commutative; `abs(abs(a))=abs(a)`;
+`min`/`max` idempotent + commutative; `||a||=|a|`;
 `exp(ln(x))=x` (`R+`); `ln(exp(x))=x` (`x` in `R`, with native `exp` codomain `R+`);
 `floor(n)=n` / `ceil(n)=n` (`Z`); `a % a = 0` (`a != 0`) — see `min_*.lit`,
 `max_*.lit`, `abs_abs_absorption.lit`, `exp_of_ln.lit`, `ln_of_exp.lit`,
 `floor_of_integer.lit`, `ceil_of_integer.lit`, `mod_self_zero.lit`.
 Equality BuiltinRule identities (Stage B wave 4):
-`floor(ceil(n))=n`, `ceil(floor(n))=n` (`Z`); `sqrt(a^2)=abs(a)` — see
+`floor(ceil(n))=n`, `ceil(floor(n))=n` (`Z`); `sqrt(a^2)=|a|` — see
 `floor_of_ceil_of_integer.lit`, `ceil_of_floor_of_integer.lit`,
 `sqrt_of_square_equals_abs.lit`.
 Equality BuiltinRule identities (Stage B wave 5):
@@ -344,14 +349,14 @@ Equality BuiltinRule identities (Stage B wave 5):
 nonzero inputs); `(n+1)!=(n+1)*n!` (native factorial codomain `N+`) — see `quot_*.lit`, `lcm_*.lit`, `gcd_*.lit`,
 `factorial_successor.lit`.
 Equality BuiltinRule identities (Stage B wave 6):
-`abs(a)=a` (`0 <= a`); `abs(a)=0-a` (`a <= 0`); `sign(a)=1` (`0 < a`);
+`|a|=a` (`0 <= a`); `|a|=0-a` (`a <= 0`); `sign(a)=1` (`0 < a`);
 `sign(a)=0-1` (`a < 0`); ordered `min`/`max` — see `abs_nonneg_equals_self.lit`,
 `abs_nonpos_equals_negation.lit`, `sign_of_*.lit`, `max_*_when_less_equal.lit`,
 `min_*_when_less_equal.lit`.
 Equality BuiltinRule identities (Stage B wave 7):
 `a % gcd(a,b)=0` / `(a*b)%a=0` (nonzero divisor; native gcd codomain `N+`);
 `a=b` from two-sided `<=`; `a-b=0` from `a=b`; zero-product cancel;
-`sign(0-a)=0-sign(a)`; `sign(a)*abs(a)=a`; `abs(a)=sign(a)*a`;
+`sign(0-a)=0-sign(a)`; `sign(a)*|a|=a`; `|a|=sign(a)*a`;
 `sign(a*b)=sign(a)*sign(b)` (native sign codomain `Z` supplies arithmetic WD);
 `a=c-b` from known `a+b=c`, including `a=-b` when `c=0` — see `gcd_divides_argument.lit`,
 `product_mod_factor_zero.lit`, `equality_from_two_sided_weak_order.lit`,
@@ -424,7 +429,7 @@ Greater add/mul congruence (A10): `greater_add_*_congruence_strict.lit`,
 Equality BuiltinRule identities (Stage B wave 8):
 Euclidean `a=d*quot(a,d)+(a%d)`; `(a-(a%b))%b=0` (narrow nonzero-divisor trust);
 `a=0` from known `a^2+b^2=0`; `(-1)^(2*m+1)=-1`;
-`lcm(a,b)*gcd(a,b)=abs(a*b)` (narrow lcm/gcd WD trust) — see
+`lcm(a,b)*gcd(a,b)=|a*b|` (narrow lcm/gcd WD trust) — see
 `quot_euclidean_decomposition.lit`, `mod_dividend_minus_remainder_zero.lit`,
 `square_sum_component_zero.lit`, `minus_one_odd_natural_power.lit`,
 `lcm_gcd_product_abs.lit`.

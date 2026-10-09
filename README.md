@@ -148,6 +148,11 @@ background for the next attempt. Failed statements do not enter the accepted
 context. An external writing tool can save attempts and feedback for later
 review—the language does not automatically archive the full collaboration.
 
+[![Litex Agent Pipeline: AI proposes Litex steps, the verifier returns JSON feedback, and accepted facts accumulate into checked source.](assets/litex-agent-pipeline.png)](assets/litex-agent-pipeline.png)
+
+*AI proposes, Litex checks, and accepted knowledge accumulates. The output
+previews illustrate possible uses of the checked source.*
+
 First attempt (rejected):
 
 <!-- litex:skip-test -->
@@ -228,7 +233,7 @@ _“The best way to predict the future is to invent it.”_
 
 _— Alan Kay, “The Early History of Smalltalk” (1993)_
 
-Jiachen Shen (沈嘉辰) is a mathematics PhD student at Fudan University. Lean
+Jiachen Shen (沈嘉辰), creator of Litex, is a mathematics PhD student at Fudan University. Lean
 showed him that mathematics and programming can meet in a real language;
 Litex explores whether formal source can follow more closely the way people
 construct mathematical arguments.

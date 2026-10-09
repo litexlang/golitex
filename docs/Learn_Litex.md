@@ -142,12 +142,12 @@ is not. The identity `x + 0 = x` works for that arbitrary real number.
 The mathematical definition is $d(x)=|x|$:
 
 ```litex
-have fn distance_from_zero(x R) R = abs(x)
+have fn distance_from_zero(x R) R = |x|
 distance_from_zero(-3) = distance_from_zero(3) = 3
 ```
 
 Read the first line as: “define a function named `distance_from_zero`, with
-real input `x`, real output, and value `abs(x)`.” `abs` is absolute value.
+real input `x`, real output, and value `|x|`.” `abs` is absolute value.
 The name can now be applied to an input, as in `distance_from_zero(-3)`.
 
 The second line is an equality chain. It asks for both adjacent equalities:
@@ -375,7 +375,7 @@ list of tactic names.
 **Question:** Show that every distance from zero is nonnegative.
 
 ```litex
-have fn distance_from_zero(x R) R = abs(x)
+have fn distance_from_zero(x R) R = |x|
 
 prop is_nonnegative(t R):
     t >= 0
@@ -383,7 +383,7 @@ prop is_nonnegative(t R):
 claim:
     ? forall x R:
         $is_nonnegative(distance_from_zero(x))
-    distance_from_zero(x) = abs(x) >= 0
+    distance_from_zero(x) = |x| >= 0
     by def $is_nonnegative(distance_from_zero(x))
 ```
 
@@ -633,7 +633,7 @@ reciprocal(2) * 2 = 1
 reciprocal(2) * 4 = (reciprocal(2) * 2) * 2 = 2
 
 # Distance from zero and a property of its output.
-have fn distance_from_zero(x R) R = abs(x)
+have fn distance_from_zero(x R) R = |x|
 
 prop is_nonnegative(t R):
     t >= 0
@@ -641,7 +641,7 @@ prop is_nonnegative(t R):
 claim:
     ? forall x R:
         $is_nonnegative(distance_from_zero(x))
-    distance_from_zero(x) = abs(x) >= 0
+    distance_from_zero(x) = |x| >= 0
     by def $is_nonnegative(distance_from_zero(x))
 
 distance_from_zero(-3) = 3

@@ -1307,7 +1307,7 @@ prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
         n >= N0
         =>:
-            abs(s(n) - a) < epsilon
+            |s(n) - a| < epsilon
 
 # “收敛到 a”：任意正误差都存在这样一个 N0。
 prop converges_to(s fn(n N) R, a R):
@@ -1354,17 +1354,17 @@ thm converges_to_mul_const:
     claim:
         ? forall epsilon R+:
             exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
-        abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R+
-        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        |c| + 1 > 0
+        epsilon / (|c| + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (|c| + 1), K)}
         witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
             forall n N:
                 n >= N0
                 =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
-                    abs(c * s(n) - c * a) = abs(c) * abs(s(n) - a)
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < epsilon
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+                    |s(n) - a| < epsilon / (|c| + 1)
+                    |c * s(n) - c * a| = |c| * |s(n) - a|
+                    |c| * |s(n) - a| <= (|c| + 1) * |s(n) - a| < epsilon
+                    |fn(k N) R {c * s(k)}(n) - c * a| < epsilon
             by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
     by def $converges_to(fn(n N) R {c * s(n)}, c * a)
 ```

@@ -6,4 +6,4 @@
 # Now: the same statement is active; no trust or architecture changes.
 # False/domain variants are executable Rust regressions in legacy_small_capabilities.
 forall x R:
-    abs(x)^4 = x^4
+    |x|^4 = x^4

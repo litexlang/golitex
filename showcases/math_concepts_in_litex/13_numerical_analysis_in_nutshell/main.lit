@@ -5,7 +5,7 @@
 # closed-form error bound.
 #
 # Write x_n for sqrt_two_newton_iterate(n) and
-# g_n for the residual gap abs(x_n^2 - 2).
+# g_n for the residual gap |x_n^2 - 2|.
 #
 # Main line:
 #
@@ -66,7 +66,7 @@ have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
     case n = 0: 1
     case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))
 
-have fn sqrt_two_newton_gap(n N) R = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+have fn sqrt_two_newton_gap(n N) R = |square_root_two_residual(sqrt_two_newton_iterate(n))|
 
 # This comparison sequence is chosen to obey B_(n+1) = B_n^2 / 4.
 thm sqrt_two_newton_gap_bound_positive:
@@ -132,17 +132,17 @@ thm newton_sqrt_two_residual_nonnegative:
 # an exact identity for the absolute residual gap.
 thm newton_sqrt_two_one_step_gap_identity:
     ? forall x R+:
-        4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = abs(square_root_two_residual(x))^2
+        4 * x^2 * |square_root_two_residual(newton_sqrt_two(x))| = |square_root_two_residual(x)|^2
     release thm newton_sqrt_two_residual_identity(x)
     4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
     release thm newton_sqrt_two_residual_nonnegative(x)
     square_root_two_residual(newton_sqrt_two(x)) >= 0
     square_root_two_residual(newton_sqrt_two(x)) $in R
     0 <= square_root_two_residual(newton_sqrt_two(x))
-    abs(square_root_two_residual(newton_sqrt_two(x))) = square_root_two_residual(newton_sqrt_two(x))
+    |square_root_two_residual(newton_sqrt_two(x))| = square_root_two_residual(newton_sqrt_two(x))
     square_root_two_residual(x) $in R
-    abs(square_root_two_residual(x))^2 = square_root_two_residual(x)^2
-    4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2 = abs(square_root_two_residual(x))^2
+    |square_root_two_residual(x)|^2 = square_root_two_residual(x)^2
+    4 * x^2 * |square_root_two_residual(newton_sqrt_two(x))| = 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2 = |square_root_two_residual(x)|^2
 
 # Step 2: show that every positive input is sent above one; therefore all
 # iterates starting from x_0 = 1 stay at least one.
@@ -180,12 +180,12 @@ thm sqrt_two_newton_gap_step_identity:
     ? forall n N:
         4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = sqrt_two_newton_gap(n)^2
     sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
-    sqrt_two_newton_gap(n + 1) = abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1))) = abs(square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n))))
-    sqrt_two_newton_gap(n) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
-    4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = 4 * sqrt_two_newton_iterate(n)^2 * abs(square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n))))
-    sqrt_two_newton_gap(n)^2 = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))^2
+    sqrt_two_newton_gap(n + 1) = |square_root_two_residual(sqrt_two_newton_iterate(n + 1))| = |square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n)))|
+    sqrt_two_newton_gap(n) = |square_root_two_residual(sqrt_two_newton_iterate(n))|
+    4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = 4 * sqrt_two_newton_iterate(n)^2 * |square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n)))|
+    sqrt_two_newton_gap(n)^2 = |square_root_two_residual(sqrt_two_newton_iterate(n))|^2
     release thm newton_sqrt_two_one_step_gap_identity(sqrt_two_newton_iterate(n))
-    4 * sqrt_two_newton_iterate(n)^2 * abs(square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n)))) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))^2
+    4 * sqrt_two_newton_iterate(n)^2 * |square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n)))| = |square_root_two_residual(sqrt_two_newton_iterate(n))|^2
 
 # Step 4: since x_n >= 1, the denominator 4 * x_n^2 is at least four.
 # Hence every residual gap contracts quadratically.
@@ -204,8 +204,8 @@ thm sqrt_two_newton_gap_contracts_quadratically:
     0 <= sqrt_two_newton_iterate(n)^2 - 1
     1 <= sqrt_two_newton_iterate(n)^2
     sqrt_two_newton_iterate(n)^2 >= 1
-    sqrt_two_newton_gap(n + 1) = abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1)))
-    abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1))) >= 0
+    sqrt_two_newton_gap(n + 1) = |square_root_two_residual(sqrt_two_newton_iterate(n + 1))|
+    |square_root_two_residual(sqrt_two_newton_iterate(n + 1))| >= 0
     sqrt_two_newton_gap(n + 1) >= 0
     sqrt_two_newton_gap(n + 1) $in R
     sqrt_two_newton_iterate(n)^2 $in R
@@ -246,13 +246,13 @@ thm sqrt_two_newton_gap_is_bounded:
             square_root_two_residual(sqrt_two_newton_iterate(0)) = square_root_two_residual(1)
             square_root_two_residual(1) = -1
             square_root_two_residual(sqrt_two_newton_iterate(0)) = -1
-            abs(square_root_two_residual(sqrt_two_newton_iterate(0))) = abs(-1)
-            abs(-1) = 1
-            sqrt_two_newton_gap(0) = abs(square_root_two_residual(sqrt_two_newton_iterate(0))) = abs(-1) = 1
+            |square_root_two_residual(sqrt_two_newton_iterate(0))| = |-1|
+            |-1| = 1
+            sqrt_two_newton_gap(0) = |square_root_two_residual(sqrt_two_newton_iterate(0))| = |-1| = 1
             sqrt_two_newton_gap_bound(0) = 4 * (1 / 4)^(2^0) = 4 * (1 / 4) = 1
         ? induc:
-            sqrt_two_newton_gap(k) = abs(square_root_two_residual(sqrt_two_newton_iterate(k)))
-            abs(square_root_two_residual(sqrt_two_newton_iterate(k))) >= 0
+            sqrt_two_newton_gap(k) = |square_root_two_residual(sqrt_two_newton_iterate(k))|
+            |square_root_two_residual(sqrt_two_newton_iterate(k))| >= 0
             sqrt_two_newton_gap(k) >= 0
             sqrt_two_newton_gap_bound(k) > 0
             0 <= sqrt_two_newton_gap_bound(k)

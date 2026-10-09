@@ -7,8 +7,8 @@
 
 # Now (verified in strict mode): same mathematical target and premises.
 forall a,b Z*,m N+:
-    m%abs(a)=0
-    m%abs(b)=0
+    m%|a|=0
+    m%|b|=0
     =>:
         lcm(a,b)<=m
 

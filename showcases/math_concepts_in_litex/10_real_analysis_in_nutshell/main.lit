@@ -11,7 +11,7 @@ prop is_tail_close_to(a fn(index N+) R, L R, epsilon R+, n0 N+):
     forall n N+:
         n >= n0
         =>:
-            abs(a(n) - L) < epsilon
+            |a(n) - L| < epsilon
 
 prop has_eventual_closeness_to(a fn(index N+) R, L R, epsilon R+):
     exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
@@ -38,12 +38,12 @@ thm constant_sequence_has_limit:
             ? forall n N+:
                 n >= 1
                 =>:
-                    abs(\constant_sequence<c>(n) - c) < epsilon
+                    |\constant_sequence<c>(n) - c| < epsilon
             \constant_sequence<c>(n) = c
             \constant_sequence<c>(n) - c = 0
-            abs(\constant_sequence<c>(n) - c) = 0
+            |\constant_sequence<c>(n) - c| = 0
             0 < epsilon
-            abs(\constant_sequence<c>(n) - c) < epsilon
+            |\constant_sequence<c>(n) - c| < epsilon
         by def $is_tail_close_to(\constant_sequence<c>, c, epsilon, 1)
         witness $has_eventual_closeness_to(\constant_sequence<c>, c, epsilon) from 1
     by def $has_limit(\constant_sequence<c>, c)
@@ -63,33 +63,33 @@ thm sequence_limit_unique:
             =>:
                 L1 = L2
         L1 - L2 != 0
-        0 <= abs(L1 - L2)
-        abs(L1 - L2) != 0
-        0 = abs(L1 - L2) or 0 < abs(L1 - L2)
+        0 <= |L1 - L2|
+        |L1 - L2| != 0
+        0 = |L1 - L2| or 0 < |L1 - L2|
         by cases:
-            ? 0 < abs(L1 - L2)
-            case 0 = abs(L1 - L2):
-                impossible abs(L1 - L2) != 0
-            case 0 < abs(L1 - L2):
-                0 < abs(L1 - L2)
-        0 < abs(L1 - L2) / 3
-        abs(L1 - L2) / 3 $in R+
-        obtain n1 from $has_eventual_closeness_to(a, L1, abs(L1 - L2) / 3)
-        obtain n2 from $has_eventual_closeness_to(a, L2, abs(L1 - L2) / 3)
+            ? 0 < |L1 - L2|
+            case 0 = |L1 - L2|:
+                impossible |L1 - L2| != 0
+            case 0 < |L1 - L2|:
+                0 < |L1 - L2|
+        0 < |L1 - L2| / 3
+        |L1 - L2| / 3 $in R+
+        obtain n1 from $has_eventual_closeness_to(a, L1, |L1 - L2| / 3)
+        obtain n2 from $has_eventual_closeness_to(a, L2, |L1 - L2| / 3)
         have n0 N+ = n1 + n2
         n0 >= n1
         n0 >= n2
-        abs(a(n0) - L1) < abs(L1 - L2) / 3
-        abs(a(n0) - L2) < abs(L1 - L2) / 3
-        abs(L1 - a(n0)) = abs(a(n0) - L1)
-        abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2)
-        abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2) / 3 + abs(L1 - L2) / 3
+        |a(n0) - L1| < |L1 - L2| / 3
+        |a(n0) - L2| < |L1 - L2| / 3
+        |L1 - a(n0)| = |a(n0) - L1|
+        |L1 - L2| <= |L1 - a(n0)| + |a(n0) - L2|
+        |L1 - a(n0)| + |a(n0) - L2| < |L1 - L2| / 3 + |L1 - L2| / 3
         2 / 3 < 1
-        abs(L1 - L2) / 3 + abs(L1 - L2) / 3 = (2 / 3) * abs(L1 - L2) < 1 * abs(L1 - L2) = abs(L1 - L2)
-        abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2)
+        |L1 - L2| / 3 + |L1 - L2| / 3 = (2 / 3) * |L1 - L2| < 1 * |L1 - L2| = |L1 - L2|
+        |L1 - L2| <= |L1 - a(n0)| + |a(n0) - L2| < |L1 - L2|
         by contra:
             ? L1 = L2
-            impossible abs(L1 - L2) = abs(L1 - L2)
+            impossible |L1 - L2| = |L1 - L2|
     by contra:
         ? L1 = L2
         impossible L1 != L2

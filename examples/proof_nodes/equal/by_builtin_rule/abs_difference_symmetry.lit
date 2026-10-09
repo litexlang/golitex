@@ -9,4 +9,4 @@
 # Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/abs_difference_symmetry.lit
 
 forall x,y R:
-    abs(x-y) = abs(y-x)
+    |x-y| = |y-x|

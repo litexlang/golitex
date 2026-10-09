@@ -2,4 +2,4 @@
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/abs_equals_sign_times_arg.lit
 
 have a R
-abs(a) = sign(a) * a
+|a| = sign(a) * a

@@ -9,6 +9,12 @@ checks that each currently wired statement kind can execute end-to-end.
 
 ## Acceptance
 
+The [nested-field instantiation tracer](definition/struct_nested_field_instantiation.lit)
+checks direct struct laws with nested callable and value fields, including
+parameterized scalar structures. Substitution and one-layer release keep the
+parser's ordered field path; wrong receivers, values and missing fields remain
+negative controls in the focused instantiation regression.
+
 ```bash
 target/release/litex -f <this-file>
 ```

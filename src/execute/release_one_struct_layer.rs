@@ -253,6 +253,14 @@ fn failed_release(
 }
 
 fn field_access_obj(obj: &Obj, field: &str) -> Obj {
+    if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(parent)) = obj {
+        let mut fields = parent.fields.clone();
+        fields.push(field.to_string());
+        return Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(FieldAccess {
+            obj: parent.obj.clone(),
+            fields,
+        }));
+    }
     Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(FieldAccess {
         obj: Box::new(obj.clone()),
         fields: vec![field.to_string()],

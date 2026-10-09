@@ -12,17 +12,17 @@
 # Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/max_lipschitz_from_coordinate_bounds.lit
 
 forall a,b,x,y R, epsilon R+:
-    abs(a-x) <= epsilon
-    abs(b-y) <= epsilon
+    |a-x| <= epsilon
+    |b-y| <= epsilon
     =>:
-        abs(max(a,b)-max(x,y)) <= epsilon
+        |max(a,b)-max(x,y)| <= epsilon
 
 # Analysis Chapter 6's exact mathematical interface, retaining its strict
 # error bounds and the existing finite-extremum domains.
 thm two_point_max_stability:
     ? forall epsilon R+, u,v,x,y R:
-        abs(u-x) < epsilon
-        abs(v-y) < epsilon
+        |u-x| < epsilon
+        |v-y| < epsilon
         $is_finite_set(union({u},{v}))
         $is_nonempty_set(union({u},{v}))
         union({u},{v}) $subset R
@@ -30,14 +30,14 @@ thm two_point_max_stability:
         $is_nonempty_set(union({x},{y}))
         union({x},{y}) $subset R
         =>:
-            abs(finite_set_max(union({u},{v}))-finite_set_max(union({x},{y}))) <= epsilon
+            |finite_set_max(union({u},{v}))-finite_set_max(union({x},{y}))| <= epsilon
 
 # A displayed pair keeps the original pairwise-distinctness WD guard.
 forall a,b,x,y R, epsilon R+:
     a!=b
     x!=y
-    abs(a-x)<=epsilon
-    abs(b-y)<=epsilon
+    |a-x|<=epsilon
+    |b-y|<=epsilon
     $is_finite_set({a,b})
     $is_nonempty_set({a,b})
     {a,b} $subset R
@@ -45,4 +45,4 @@ forall a,b,x,y R, epsilon R+:
     $is_nonempty_set({x,y})
     {x,y} $subset R
     =>:
-        abs(finite_set_max({a,b})-finite_set_max({x,y}))<=epsilon
+        |finite_set_max({a,b})-finite_set_max({x,y})|<=epsilon

@@ -38,7 +38,7 @@ newton_sqrt_two_step(1) = (1 + 2 / 1) / 2 = 3 / 2
 9 / 4 - 2 = 1 / 4
 square_root_two_residual(3 / 2) = 1 / 4
 square_root_two_residual(newton_sqrt_two_step(1)) = square_root_two_residual(3 / 2) = 1 / 4
-abs(square_root_two_residual(newton_sqrt_two_step(1))) = abs(1 / 4) = 1 / 4
+|square_root_two_residual(newton_sqrt_two_step(1))| = |1 / 4| = 1 / 4
 
 newton_sqrt_two_step(3 / 2) = ((3 / 2) + 2 / (3 / 2)) / 2
 2 / (3 / 2) = 4 / 3

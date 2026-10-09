@@ -4,4 +4,4 @@
 have x R
 have y R
 x + y $in R
-abs(x) $in R
+|x| $in R

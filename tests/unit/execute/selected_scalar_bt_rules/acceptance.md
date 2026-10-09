@@ -85,3 +85,10 @@ Unrelated source files changed during this verification window. Executable
 identity and source limits are recorded; acceptance of these exact cases is
 not a claim that an entire immutable checkout or every concurrent change was
 audited. The completed execution ledger can now be removed.
+
+## Selected-scope recheck
+
+A further current-source release build and the six selected Rust tests passed.
+All six maintained examples passed independent `-lang en -strict -f` gates;
+missing-guard and false-conclusion controls remained rejected in the Rust suite.
+The paired JSON records this under `latest_selected_scope_recheck`.

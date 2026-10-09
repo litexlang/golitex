@@ -3,17 +3,17 @@
 # forall x R:
 #     x != 0
 #     =>:
-#         abs(x) > 0
+#         |x| > 0
 
 forall x R:
     x != 0
     =>:
-        abs(x) > 0
+        |x| > 0
 
 # A difference supplies its nonzero bridge explicitly.
 forall x,y R:
     x-y != 0
     =>:
-        0 < abs(x-y)
+        0 < |x-y|
 
 # Boundary: x=0 and non-real arguments are rejected by executable Rust controls.

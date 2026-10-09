@@ -3,10 +3,10 @@ claim:
         sign(x)=0
         =>:
             x=0
-    sign(x)*abs(x)=x
-    sign(x)*abs(x)=0*abs(x)
-    0*abs(x)=0
-    x=sign(x)*abs(x)=0*abs(x)=0
+    sign(x)*|x|=x
+    sign(x)*|x|=0*|x|
+    0*|x|=0
+    x=sign(x)*|x|=0*|x|=0
 forall x R:
     sign(x)=0
     =>:
@@ -16,8 +16,8 @@ claim:
         x!=0
         =>:
             sign(x)!=0
-    sign(x)*abs(x)=x
-    sign(x)*abs(x)!=0
+    sign(x)*|x|=x
+    sign(x)*|x|!=0
     sign(x)!=0
 forall x R:
     x!=0

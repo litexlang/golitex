@@ -357,5 +357,238 @@
       }
     ],
     "source_correspondence": "Current-worktree builds and gates succeeded, but unrelated concurrent source changes prevent claiming one immutable whole-checkout snapshot."
+  },
+  "latest_selected_scope_recheck": {
+    "binary_sha256": "b9daf3c90fa2c922ca954c378e7a43ecdedfe9624c98bc97e3a75dd416350f85",
+    "cases": [
+      {
+        "name": "subtraction_order_pairs",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-f",
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a - d <= b - c",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a - d <= b - c"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "abs_square_radius",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-f",
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall x, r R:\n    r >= 0\n    x ^ 2 <= r ^ 2\n    =>:\n        abs (x) <= r",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x, r R:\n    r >= 0\n    x ^ 2 <= r ^ 2\n    =>:\n        abs (x) <= r"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "quotient_scalar_upper_bound",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-f",
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b, M R:\n    b > 0\n    a <= M * b\n    =>:\n        a / b <= M",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b, M R:\n    b > 0\n    a <= M * b\n    =>:\n        a / b <= M"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "quotient_scalar_strict_upper_bound",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-f",
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b, M R:\n    b > 0\n    a < M * b\n    =>:\n        a / b < M",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b, M R:\n    b > 0\n    a < M * b\n    =>:\n        a / b < M"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "exact_integer_quotient",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-f",
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b Z:\n    b != 0\n    a % b = 0\n    =>:\n        a / b $in Z",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b Z:\n    b != 0\n    a % b = 0\n    =>:\n        a / b $in Z"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      },
+      {
+        "name": "abs_nonzero_denominator_consumer",
+        "command": [
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/target/release/litex",
+          "-lang",
+          "en",
+          "-strict",
+          "-f",
+          "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall u, v R:\n    v != 0\n    =>:\n        abs (v) != 0\n        u / abs (v) $in R",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall u, v R:\n    v != 0\n    =>:\n        abs (v) != 0\n        u / abs (v) $in R"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        },
+        "stderr": ""
+      }
+    ],
+    "rust_tests": {
+      "command": "cargo test --release selected_scalar_bt_rules_tests -- --nocapture",
+      "exit_code": 0,
+      "passed": 6,
+      "failed": 0
+    }
   }
 }

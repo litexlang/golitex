@@ -12,7 +12,7 @@ forall a Z, m N+, n N:
 
 # B06-abs-even-power-corrected
 forall x R:
-    abs(x)^4 = x^4
+    |x|^4 = x^4
 
 # B23-power-zero-invert
 forall x R, n N+:

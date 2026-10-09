@@ -15,4 +15,4 @@ have a N = 3!
 have b R = sqrt(4)
 have c R = log(2, 8)
 eval a + b * c
-eval abs(a - b^c) + gcd(a, 4)
+eval |a - b^c| + gcd(a, 4)
