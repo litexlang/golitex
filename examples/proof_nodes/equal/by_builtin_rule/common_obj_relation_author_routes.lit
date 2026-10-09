@@ -99,13 +99,13 @@ sketch:
 sketch:
     claim:
         ? forall x R:
-            C_abs(x)=abs(x)
+            C_abs(x)=|x|
         x=x+i*0
         C_abs(x)^2=C_abs(x+i*0)^2=x^2+0^2=x^2
         0<=C_abs(x)
         sqrt(C_abs(x)^2)=C_abs(x)
-        sqrt(x^2)=abs(x)
-        C_abs(x)=sqrt(C_abs(x)^2)=sqrt(x^2)=abs(x)
+        sqrt(x^2)=|x|
+        C_abs(x)=sqrt(C_abs(x)^2)=sqrt(x^2)=|x|
 
 
 # D01-division-window
@@ -455,16 +455,16 @@ sketch:
 sketch:
     claim:
         ? forall x R:
-            abs(x)=max(x,-x)
+            |x|=max(x,-x)
         by cases:
-            ? abs(x)=max(x,-x)
+            ? |x|=max(x,-x)
             case 0<=x:
-                abs(x)=x
+                |x|=x
                 -x=0-x<=x-x=0<=x
                 max(x,-x)=x
             case x<0:
                 x<=0
-                abs(x)=-x
+                |x|=-x
                 x<=0=x-x<=0-x=-x
                 max(x,-x)=-x
 
@@ -473,22 +473,22 @@ sketch:
 sketch:
     claim:
         ? forall x R:
-            min(x,-x)=-abs(x)
+            min(x,-x)=-|x|
         by cases:
-            ? min(x,-x)=-abs(x)
+            ? min(x,-x)=-|x|
             case 0<=x:
-                abs(x)=x
+                |x|=x
                 -x=0-x<=x-x=0<=x
                 min(x,-x)=-x
-                -abs(x)=-x
-                min(x,-x)=-x=-abs(x)
+                -|x|=-x
+                min(x,-x)=-x=-|x|
             case x<0:
                 x<=0
-                abs(x)=-x
+                |x|=-x
                 x<=0=x-x<=0-x=-x
                 min(x,-x)=x
-                -abs(x)=-(-x)=x
-                min(x,-x)=x=-abs(x)
+                -|x|=-(-x)=x
+                min(x,-x)=x=-|x|
 
 
 # R08-branch-chains
@@ -513,22 +513,22 @@ sketch:
 sketch:
     claim:
         ? forall x,y R:
-            max(x,y)-min(x,y)=abs(x-y)
+            max(x,y)-min(x,y)=|x-y|
         by cases:
-            ? max(x,y)-min(x,y)=abs(x-y)
+            ? max(x,y)-min(x,y)=|x-y|
             case x<=y:
                 min(x,y)=x
                 max(x,y)=y
                 x-y<=0
-                abs(x-y)=-(x-y)
-                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=abs(x-y)
+                |x-y|=-(x-y)
+                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=|x-y|
             case y<x:
                 y<=x
                 min(x,y)=y
                 max(x,y)=x
                 0<=x-y
-                abs(x-y)=x-y
-                max(x,y)-min(x,y)=x-min(x,y)=x-y=abs(x-y)
+                |x-y|=x-y
+                max(x,y)-min(x,y)=x-min(x,y)=x-y=|x-y|
 
 
 # R10-materialized-instances
@@ -549,28 +549,28 @@ sketch:
                 min(x,y)+max(x,y)=y+max(x,y)=y+x=x+y
     claim:
         ? forall x,y R:
-            max(x,y)-min(x,y)=abs(x-y)
+            max(x,y)-min(x,y)=|x-y|
         by cases:
-            ? max(x,y)-min(x,y)=abs(x-y)
+            ? max(x,y)-min(x,y)=|x-y|
             case x<=y:
                 min(x,y)=x
                 max(x,y)=y
                 x-y<=0
-                abs(x-y)=-(x-y)
-                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=abs(x-y)
+                |x-y|=-(x-y)
+                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=|x-y|
             case y<x:
                 y<=x
                 min(x,y)=y
                 max(x,y)=x
                 0<=x-y
-                abs(x-y)=x-y
-                max(x,y)-min(x,y)=x-min(x,y)=x-y=abs(x-y)
+                |x-y|=x-y
+                max(x,y)-min(x,y)=x-min(x,y)=x-y=|x-y|
     claim:
         ? forall x,y R:
-            min(x,y)=(x+y-abs(x-y))/2
+            min(x,y)=(x+y-|x-y|)/2
         min(x,y)+max(x,y)=x+y
-        max(x,y)-min(x,y)=abs(x-y)
-        (x+y-abs(x-y))/2=(min(x,y)+max(x,y)-abs(x-y))/2=(min(x,y)+max(x,y)-(max(x,y)-min(x,y)))/2=min(x,y)
+        max(x,y)-min(x,y)=|x-y|
+        (x+y-|x-y|)/2=(min(x,y)+max(x,y)-|x-y|)/2=(min(x,y)+max(x,y)-(max(x,y)-min(x,y)))/2=min(x,y)
 
 
 # R11-materialized-instances
@@ -591,28 +591,28 @@ sketch:
                 min(x,y)+max(x,y)=y+max(x,y)=y+x=x+y
     claim:
         ? forall x,y R:
-            max(x,y)-min(x,y)=abs(x-y)
+            max(x,y)-min(x,y)=|x-y|
         by cases:
-            ? max(x,y)-min(x,y)=abs(x-y)
+            ? max(x,y)-min(x,y)=|x-y|
             case x<=y:
                 min(x,y)=x
                 max(x,y)=y
                 x-y<=0
-                abs(x-y)=-(x-y)
-                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=abs(x-y)
+                |x-y|=-(x-y)
+                max(x,y)-min(x,y)=y-min(x,y)=y-x=-(x-y)=|x-y|
             case y<x:
                 y<=x
                 min(x,y)=y
                 max(x,y)=x
                 0<=x-y
-                abs(x-y)=x-y
-                max(x,y)-min(x,y)=x-min(x,y)=x-y=abs(x-y)
+                |x-y|=x-y
+                max(x,y)-min(x,y)=x-min(x,y)=x-y=|x-y|
     claim:
         ? forall x,y R:
-            max(x,y)=(x+y+abs(x-y))/2
+            max(x,y)=(x+y+|x-y|)/2
         min(x,y)+max(x,y)=x+y
-        max(x,y)-min(x,y)=abs(x-y)
-        (x+y+abs(x-y))/2=(min(x,y)+max(x,y)+abs(x-y))/2=(min(x,y)+max(x,y)+(max(x,y)-min(x,y)))/2=max(x,y)
+        max(x,y)-min(x,y)=|x-y|
+        (x+y+|x-y|)/2=(min(x,y)+max(x,y)+|x-y|)/2=(min(x,y)+max(x,y)+(max(x,y)-min(x,y)))/2=max(x,y)
 
 
 # R12-equality-chain

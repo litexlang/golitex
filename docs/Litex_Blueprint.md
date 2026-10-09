@@ -1331,7 +1331,7 @@ prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
         n >= N0
         =>:
-            abs(s(n) - a) < epsilon
+            |s(n) - a| < epsilon
 
 # "Converges to a": for every positive error there exists such an N0.
 prop converges_to(s fn(n N) R, a R):
@@ -1371,7 +1371,7 @@ prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
         n >= N0
         =>:
-            abs(s(n) - a) < epsilon
+            |s(n) - a| < epsilon
 
 prop converges_to(s fn(n N) R, a R):
     forall epsilon R+:
@@ -1387,27 +1387,27 @@ thm converges_to_mul_const:
     claim:
         ? forall epsilon R+:
             exist N0 N st {$is_eventually_close(scaled, c * a, epsilon, N0)}
-        abs(c) >= 0
-        abs(c) + 1 > 0
-        have scale R+ = abs(c) + 1
+        |c| >= 0
+        |c| + 1 > 0
+        have scale R+ = |c| + 1
         epsilon / scale > 0
         epsilon / scale $in R+
-        abs(c) <= scale
+        |c| <= scale
         obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / scale, K)}
         witness exist K N st {$is_eventually_close(scaled, c * a, epsilon, K)} from N0:
             claim:
                 ? forall n N:
                     n >= N0
                     =>:
-                        abs(scaled(n) - c * a) < epsilon
+                        |scaled(n) - c * a| < epsilon
                 scaled(n) = c * s(n)
-                abs(s(n) - a) < epsilon / scale
-                abs(s(n) - a) >= 0
+                |s(n) - a| < epsilon / scale
+                |s(n) - a| >= 0
                 scaled(n) - c * a = c * s(n) - c * a = c * (s(n) - a)
-                abs(scaled(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a)
-                scale * abs(s(n) - a) < scale * (epsilon / scale) = epsilon
-                abs(scaled(n) - c * a) = abs(c) * abs(s(n) - a) <= scale * abs(s(n) - a) < epsilon
+                |scaled(n) - c * a| = |c * (s(n) - a)| = |c| * |s(n) - a|
+                |c| * |s(n) - a| <= scale * |s(n) - a|
+                scale * |s(n) - a| < scale * (epsilon / scale) = epsilon
+                |scaled(n) - c * a| = |c| * |s(n) - a| <= scale * |s(n) - a| < epsilon
             by def $is_eventually_close(scaled, c * a, epsilon, N0)
     by def $converges_to(scaled, c * a)
 ```

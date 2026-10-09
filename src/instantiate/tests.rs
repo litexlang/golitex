@@ -438,3 +438,24 @@ struct ScalarAction:
         assert_eq!(result.success, expected, "{body}");
     }
 }
+
+#[test]
+fn releasing_parameterized_nested_scalar_laws_keeps_callable_and_argument_paths_flat() {
+    let code = r#"struct ScalarIdentity<S nonempty_set>:
+    zero S
+    add fn(x, y S) S
+    <=>:
+        forall x S:
+            add(zero, x) = x
+struct IdentityCarrier<S nonempty_set>:
+    scalars &ScalarIdentity<S>
+    element S
+claim:
+    ? forall S nonempty_set, carrier &IdentityCarrier<S>:
+        carrier.scalars.add(carrier.scalars.zero, carrier.scalars.zero) = carrier.scalars.zero
+    release struct def carrier.scalars
+"#;
+    let mut rt = test_runtime();
+    let result = rt.run_litex_code(code).unwrap();
+    assert!(result.success && result.session_error.is_none());
+}

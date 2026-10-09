@@ -3,4 +3,4 @@
 # Run: litex -f examples/proof_nodes/or/by_builtin_rule/abs_sign_split.lit
 
 have x R
-abs(x) = x or abs(x) = (-x)
+|x| = x or |x| = (-x)

@@ -3,4 +3,4 @@
 
 have x R
 have y R
-abs(x) - abs(y) <= abs(x - y)
+|x| - |y| <= |x - y|

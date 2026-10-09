@@ -7,7 +7,7 @@ forall x,r R:
     r>=0
     x^2<=r^2
     =>:
-        abs(x)<=r
+        |x|<=r
 
 # Boundary: missing guards and false conclusions remain rejected by selected_scalar_bt_rules_tests.
 # Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit

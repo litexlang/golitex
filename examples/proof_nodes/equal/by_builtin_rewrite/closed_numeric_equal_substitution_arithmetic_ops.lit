@@ -2,7 +2,7 @@
 # Store / rewrite when the closed representative uses abs / min / max / floor / sign.
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rewrite/closed_numeric_equal_substitution_arithmetic_ops.lit
 
-have a R = abs(-3)
+have a R = |-3|
 a = 3
 
 have b R = min(1, 2)

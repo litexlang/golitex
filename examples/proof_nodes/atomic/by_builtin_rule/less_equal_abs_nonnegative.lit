@@ -2,4 +2,4 @@
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_abs_nonnegative.lit
 
 have a R
-0 <= abs(a)
+0 <= |a|

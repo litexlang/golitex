@@ -2,28 +2,28 @@
 # Run: target/release/litex -f examples/test_objs/abs.lit
 # Cases use discarded sketch scopes; no cross-case facts.
 
-# P01: abs(0) = 0
+# P01: |0| = 0
 sketch:
-    abs(0) = 0
+    |0| = 0
 
-# P02: abs(-3) = 3
+# P02: |-3| = 3
 sketch:
-    abs(-3) = 3
+    |-3| = 3
 
-# P03: abs(2.5) = 2.5
+# P03: |2.5| = 2.5
 sketch:
-    abs(2.5) = 2.5
+    |2.5| = 2.5
 
-# P04: abs(abs(-4)) = 4
+# P04: ||-4|| = 4
 sketch:
-    abs(abs(-4)) = 4
+    ||-4|| = 4
 
-# P05: abs(-x) = abs(x)
+# P05: |-x| = |x|
 sketch:
     forall x R:
-        abs(-x) = abs(x)
+        |-x| = |x|
 
-# P06: abs(x) >= 0
+# P06: |x| >= 0
 sketch:
     forall x R:
-        abs(x) >= 0
+        |x| >= 0

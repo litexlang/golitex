@@ -3,4 +3,4 @@
 
 have a Z*
 have b Z*
-lcm(a, b) * gcd(a, b) = abs(a * b)
+lcm(a, b) * gcd(a, b) = |a * b|

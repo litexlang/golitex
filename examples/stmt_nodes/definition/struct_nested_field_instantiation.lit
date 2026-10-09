@@ -29,3 +29,21 @@ claim:
     ? forall action &ScalarAction:
         action.scalars.unit = 1
     release struct def action.scalars
+
+# Releasing a nested parameterized scalar structure also flattens substitutions
+# of plain field identifiers, both callable heads and their zero arguments.
+struct ScalarIdentity<S nonempty_set>:
+    zero S
+    add fn(x, y S) S
+    <=>:
+        forall x S:
+            add(zero, x) = x
+
+struct IdentityCarrier<S nonempty_set>:
+    scalars &ScalarIdentity<S>
+    element S
+
+claim:
+    ? forall S nonempty_set, carrier &IdentityCarrier<S>:
+        carrier.scalars.add(carrier.scalars.zero, carrier.scalars.zero) = carrier.scalars.zero
+    release struct def carrier.scalars

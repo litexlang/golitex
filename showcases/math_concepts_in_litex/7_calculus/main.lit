@@ -8,9 +8,9 @@
 prop derivative_delta_controlled(f fn(u R) R, x0, L R, epsilon, delta R+):
     forall x R:
         x != x0
-        abs(x - x0) < delta
+        |x - x0| < delta
         =>:
-            abs((f(x) - f(x0)) / (x - x0) - L) < epsilon
+            |(f(x) - f(x0)) / (x - x0) - L| < epsilon
 
 prop has_derivative_at_R(f fn(u R) R, x0, L R):
     forall epsilon R+:
@@ -31,7 +31,7 @@ thm square_difference_quotient:
     (square_function(x) - square_function(x0)) / (x - x0) = ((x - x0) * (x + x0)) / (x - x0) = x + x0
 
 # Choose delta = epsilon; the exact quotient reduces the derivative error to
-# abs(x - x0).
+# |x - x0|.
 thm square_function_has_derivative_at:
     ? forall x0 R:
         $has_derivative_at_R(square_function, x0, 2 * x0)
@@ -42,13 +42,13 @@ thm square_function_has_derivative_at:
             claim:
                 ? forall x R:
                     x != x0
-                    abs(x - x0) < epsilon
+                    |x - x0| < epsilon
                     =>:
-                        abs((square_function(x) - square_function(x0)) / (x - x0) - 2 * x0) < epsilon
+                        |(square_function(x) - square_function(x0)) / (x - x0) - 2 * x0| < epsilon
                 release thm square_difference_quotient(x0, x)
                 (square_function(x) - square_function(x0)) / (x - x0) = x + x0
                 (square_function(x) - square_function(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
-                abs((square_function(x) - square_function(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
+                |(square_function(x) - square_function(x0)) / (x - x0) - 2 * x0| = |x - x0| < epsilon
             by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, epsilon)
     by def $has_derivative_at_R(square_function, x0, 2 * x0)
 
@@ -85,13 +85,13 @@ thm affine_function_has_derivative_at:
             claim:
                 ? forall x R:
                     x != x0
-                    abs(x - x0) < 1
+                    |x - x0| < 1
                     =>:
-                        abs((\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a) < epsilon
+                        |(\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a| < epsilon
                 release thm affine_difference_quotient(a, b, x0, x)
                 (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = a
                 (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a = 0
-                abs((\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a) = abs(0) = 0 < epsilon
+                |(\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a| = |0| = 0 < epsilon
             by def $derivative_delta_controlled(\affine_function<a, b>, x0, a, epsilon, 1)
     by def $has_derivative_at_R(\affine_function<a, b>, x0, a)
 

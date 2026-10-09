@@ -4,4 +4,4 @@
 forall a Z:
     a != 0
     =>:
-        gcd(a, a) = abs(a)
+        gcd(a, a) = |a|

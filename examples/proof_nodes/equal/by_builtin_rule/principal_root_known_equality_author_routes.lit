@@ -36,9 +36,9 @@ claim:
         x<=0
         =>:
             sqrt(x^2)=-x
-    sqrt(x^2)=abs(x)
-    abs(x)=-x
-    sqrt(x^2)=abs(x)=-x
+    sqrt(x^2)=|x|
+    |x|=-x
+    sqrt(x^2)=|x|=-x
 forall x R:
     x<=0
     =>:

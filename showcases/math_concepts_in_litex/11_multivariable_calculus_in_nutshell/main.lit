@@ -41,9 +41,9 @@ thm quadratic_surface_y_difference_quotient:
 prop x_partial_delta_controlled(f fn(p cart(R, R)) R, point cart(R, R), slope R, epsilon, delta R+):
     forall x R:
         x != point(1)
-        abs(x - point(1)) < delta
+        |x - point(1)| < delta
         =>:
-            abs((f((x, point(2))) - f(point)) / (x - point(1)) - slope) < epsilon
+            |(f((x, point(2))) - f(point)) / (x - point(1)) - slope| < epsilon
 
 prop has_x_partial_derivative_at(f fn(p cart(R, R)) R, point cart(R, R), slope R):
     forall epsilon R+:
@@ -52,15 +52,15 @@ prop has_x_partial_derivative_at(f fn(p cart(R, R)) R, point cart(R, R), slope R
 prop y_partial_delta_controlled(f fn(p cart(R, R)) R, point cart(R, R), slope R, epsilon, delta R+):
     forall y R:
         y != point(2)
-        abs(y - point(2)) < delta
+        |y - point(2)| < delta
         =>:
-            abs((f((point(1), y)) - f(point)) / (y - point(2)) - slope) < epsilon
+            |(f((point(1), y)) - f(point)) / (y - point(2)) - slope| < epsilon
 
 prop has_y_partial_derivative_at(f fn(p cart(R, R)) R, point cart(R, R), slope R):
     forall epsilon R+:
         exist delta R+ st {$y_partial_delta_controlled(f, point, slope, epsilon, delta)}
 
-# The exact quotient leaves error abs(x-point(1)), so delta = epsilon works.
+# The exact quotient leaves error |x-point(1)|, so delta = epsilon works.
 thm quadratic_surface_has_x_partial_derivative:
     ? forall point cart(R, R):
         $has_x_partial_derivative_at(quadratic_surface, point, 2 * point(1))
@@ -71,13 +71,13 @@ thm quadratic_surface_has_x_partial_derivative:
             claim:
                 ? forall x R:
                     x != point(1)
-                    abs(x - point(1)) < epsilon
+                    |x - point(1)| < epsilon
                     =>:
-                        abs((quadratic_surface((x, point(2))) - quadratic_surface(point)) / (x - point(1)) - 2 * point(1)) < epsilon
+                        |(quadratic_surface((x, point(2))) - quadratic_surface(point)) / (x - point(1)) - 2 * point(1)| < epsilon
                 release thm quadratic_surface_x_difference_quotient(point, x)
                 (quadratic_surface((x, point(2))) - quadratic_surface(point)) / (x - point(1)) = x + point(1)
                 (quadratic_surface((x, point(2))) - quadratic_surface(point)) / (x - point(1)) - 2 * point(1) = (x + point(1)) - 2 * point(1) = x - point(1)
-                abs((quadratic_surface((x, point(2))) - quadratic_surface(point)) / (x - point(1)) - 2 * point(1)) = abs(x - point(1)) < epsilon
+                |(quadratic_surface((x, point(2))) - quadratic_surface(point)) / (x - point(1)) - 2 * point(1)| = |x - point(1)| < epsilon
             by def $x_partial_delta_controlled(quadratic_surface, point, 2 * point(1), epsilon, delta)
     by def $has_x_partial_derivative_at(quadratic_surface, point, 2 * point(1))
 
@@ -92,13 +92,13 @@ thm quadratic_surface_has_y_partial_derivative:
             claim:
                 ? forall y R:
                     y != point(2)
-                    abs(y - point(2)) < epsilon
+                    |y - point(2)| < epsilon
                     =>:
-                        abs((quadratic_surface((point(1), y)) - quadratic_surface(point)) / (y - point(2)) - 2 * point(2)) < epsilon
+                        |(quadratic_surface((point(1), y)) - quadratic_surface(point)) / (y - point(2)) - 2 * point(2)| < epsilon
                 release thm quadratic_surface_y_difference_quotient(point, y)
                 (quadratic_surface((point(1), y)) - quadratic_surface(point)) / (y - point(2)) = y + point(2)
                 (quadratic_surface((point(1), y)) - quadratic_surface(point)) / (y - point(2)) - 2 * point(2) = (y + point(2)) - 2 * point(2) = y - point(2)
-                abs((quadratic_surface((point(1), y)) - quadratic_surface(point)) / (y - point(2)) - 2 * point(2)) = abs(y - point(2)) < epsilon
+                |(quadratic_surface((point(1), y)) - quadratic_surface(point)) / (y - point(2)) - 2 * point(2)| = |y - point(2)| < epsilon
             by def $y_partial_delta_controlled(quadratic_surface, point, 2 * point(2), epsilon, delta)
     by def $has_y_partial_derivative_at(quadratic_surface, point, 2 * point(2))
 

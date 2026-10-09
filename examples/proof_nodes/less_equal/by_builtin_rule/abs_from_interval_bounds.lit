@@ -2,4 +2,4 @@ forall x,b R:
     -b<=x
     x<=b
     =>:
-        abs(x)<=b
+        |x|<=b

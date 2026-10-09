@@ -22,7 +22,7 @@ for the first-version stop line.
 - **Form:** `prop has_sequence_limit(a, L)` built from an explicit tail-control
   relation.
 - **Sketch:** `forall epsilon R+: exist n0 N+ st {forall n N+: n>=n0 =>
-  abs(a(n)-L)<epsilon}`.
+  |a(n)-L|<epsilon}`.
 - **Rejected form:** an unconditional `limit(a)` function; existence and
   uniqueness have not yet supplied a canonical value.
 - **Dependencies:** positive reals, absolute value, sequence carrier, and
@@ -55,7 +55,7 @@ for the first-version stop line.
   relation.
 - **Sketch:** for every positive epsilon, some positive delta controls the
   error of `(f(x)-f(x0))/(x-x0)` whenever `x` is in `E`, `x != x0`, and
-  `abs(x-x0)<delta`.
+  `|x-x0|<delta`.
 - **Rejected form:** a primitive derivative function with no existence or
   uniqueness boundary.
 - **Dependencies:** punctured function limit and a limit-point condition on

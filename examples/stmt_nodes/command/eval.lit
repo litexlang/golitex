@@ -9,7 +9,7 @@
 
 eval (1 + 2)^2
 eval 1 / 2
-eval abs(-3)
+eval |-3|
 eval 3!
 eval sqrt(4)
 eval sqrt(0.36)

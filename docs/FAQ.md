@@ -301,7 +301,7 @@ making them remember or guess the parser rule.
 Litex is easiest to understand through four related layers:
 
 - an `object` is a mathematical expression, such as `x`, `x + 1`, `R`,
-  `{1, 2}`, `abs(x)`, or `fn(n N+) R`;
+  `{1, 2}`, `|x|`, or `fn(n N+) R`;
 - a `fact` is a proposition about objects, such as `x > y`, `x $in R`,
   `1 + 2 = 3`, or `x = y or x < y or x > y`;
 - a `statement` is a line or block that acts on the mathematical context, such
@@ -317,8 +317,8 @@ A **builtin object** is an object form or name that Litex understands directly.
 Not every builtin word is an object: `not`, `and`, `or`, `forall`, and `exist`
 are builtin logical or factual forms because they express the shape of facts
 and proofs. Builtin object heads are expressions such as standard sets,
-arithmetic operations, tuple and set forms, or `abs(x)`. Some of these are
-mainly for user convenience. The absolute value object `abs(x)` is a good
+arithmetic operations, tuple and set forms, or `|x|`. Some of these are
+mainly for user convenience. The absolute value object `|x|` is a good
 example: users could define a similar function themselves from basic order and
 arithmetic, but the standard spelling is built in because ordinary mathematics
 uses it constantly.
@@ -331,7 +331,7 @@ have fn self_abs(x R) R by cases:
 ```
 
 The point is not that `abs` is impossible to express without a builtin name.
-The point is that writing `abs(x)` lets the verifier connect the expression to
+The point is that writing `|x|` lets the verifier connect the expression to
 the usual absolute-value rules without every file rebuilding that interface.
 
 A **source-level background fact** is an ordinary Litex fact, usually kept in
@@ -1215,7 +1215,7 @@ readable after AI has made proof generation abundant? The epsilon-product
 example in [Representative Lean–Litex Example
 Comparisons](Representative_Lean_Litex_Example_Comparisons.md#ai-lowers-generation-cost-not-automatically-understanding-cost)
 is the concrete test: the durable proof should preserve the short estimate
-`abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon` while keeping
+`|x * y| = |x| * |y| < epsilon * epsilon <= epsilon` while keeping
 its side conditions auditable.
 
 ## What is fundamentally different about Litex?
