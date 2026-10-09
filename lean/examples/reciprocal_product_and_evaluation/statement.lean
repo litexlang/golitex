@@ -6,6 +6,7 @@ namespace LitexCompiled.file_lean_x2f_examples_x2f_reciprocal_x5f_product_x5f_an
 
 universe u v1 v6
 variable {M : Litex.Semantics.{u}}
+set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
 def prop_1 {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) : Prop :=

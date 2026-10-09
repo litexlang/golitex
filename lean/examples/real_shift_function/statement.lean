@@ -6,6 +6,7 @@ namespace LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_shift_x5f_function_x
 
 universe u v3 v4 v5
 variable {M : Litex.Semantics.{u}}
+set_option linter.unusedSectionVars false
 variable [_functionSemantics : Litex.FunctionSemantics M]
 
 noncomputable def _object_i1 := (Litex.formulaFn (M := M) Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => True) (fun (_raw_i2 : M.Value) => (M.addValue _raw_i2 (M.number (1 : ℂ)))) (by

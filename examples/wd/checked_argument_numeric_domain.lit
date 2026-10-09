@@ -1,0 +1,10 @@
+# Tracer: numeric predicate domains reuse checked argument WD.
+# Before: the comparison goal rechecked the finite-difference cardinality
+# under a lower ceiling and failed its real-membership domain before the body.
+# The active proof supplies the cardinality's natural type; no trust is used.
+# Boundary: missing finiteness and undefined division still fail argument WD.
+# Run: target/release/litex -strict -lang en -f examples/wd/checked_argument_numeric_domain.lit
+thm finite_difference_cardinality_is_nonnegative:
+    ? forall A finite_set, B set:
+        finite_set_size(set_minus(A, B)) >= 0
+    finite_set_size(set_minus(A, B)) $in N

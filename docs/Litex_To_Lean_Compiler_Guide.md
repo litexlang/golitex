@@ -22,7 +22,7 @@ Its [generated Lean file](../lean/examples/one_equals_itself/statement.lean)
 contains this declaration, shown verbatim without the surrounding namespace:
 
 ```lean
-theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
+theorem h_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
   (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))
 ```
 
@@ -68,8 +68,10 @@ parameter model.
 A borrowed source-position cursor identifies the original result ancestors and
 completed stage prefix. This preserves earlier citations and local boundaries
 without copying ExecEnv or maintaining a separate proof registry. Source IDs
-spell internal declarations; public `fact_<index>` and `named_thm_<index>` names
-remain stable. Parameter signatures come from the declaration's original
+spell every source proof declaration and reference as `h_<original FactId>`,
+including parameters, guards, inferred facts and named theorems. Statement
+positions determine execution order; they do not allocate proof names.
+Parameter signatures come from the declaration's original
 position, so a later `have` cannot extend an earlier theorem's inputs.
 
 An object's constructor can depend on a local membership or nonzero proof.

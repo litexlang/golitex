@@ -1358,6 +1358,14 @@ negative powers, finite cardinalities and projections retain all WD conditions;
 Detailed output retains the constructor tree under `by_structural_membership`.
 This is type propagation; symbolic equalities and order proofs keep their own rules.
 
+When an atomic predicate's domain recheck fails, a standard numeric membership
+may reuse the exact argument's object WD already checked in that same atomic
+proof. The structural membership certificate names that argument index; it
+does not publish a new WD cache entry or reopen a wider search ceiling. All
+argument guards still run first. Detailed output calls this domain route
+`by_checked_argument_membership`; it supplies formation evidence, not the
+truth of the comparison. See the [finite-difference cardinality tracer](../examples/wd/checked_argument_numeric_domain.lit).
+
 Two fixed scalar rules (preview) consume already available guards. For a real
 `x`, `x != 0` permits `|x| > 0`; zero and non-real arguments retain their
 normal rejection boundaries. For real nonnegative `x,y`, `x^2 <= y^2` permits

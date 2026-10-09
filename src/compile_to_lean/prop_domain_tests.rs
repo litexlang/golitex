@@ -86,3 +86,91 @@ fn concrete_prop_rejects_counterfeit_builtin_predicate_signature() {
         .unwrap_err();
     assert_eq!(error.route, "Prop/SignatureFamily");
 }
+
+#[test]
+fn checked_argument_domains_compile_and_reject_changed_indices_or_subjects() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::closed_calculation_proof::{
+        ClosedMembershipCalculationProof, ClosedScalarValue,
+    };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::{
+        StructuralMembershipProof, StructuralMembershipReason,
+    };
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof;
+    for change in [
+        "valid",
+        "index",
+        "subject",
+        "carrier",
+        "missing",
+        "reordered",
+    ] {
+        let mut runtime = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        let mut result = runtime.run_litex_code("1 < 2").unwrap();
+        assert!(result.success);
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+            &mut result.statement_results[0]
+        else {
+            panic!("comparison")
+        };
+        let VerifyFactResult::AtomicExceptEquality(proof) = &mut statement.verify_result else {
+            panic!("atomic")
+        };
+        let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
+            panic!("success")
+        };
+        let domain = std::mem::replace(
+            &mut proof.well_defined_proof.predicate_domain,
+            PredicateDomainProof::ByRequirements(Vec::new()),
+        );
+        let PredicateDomainProof::ByRequirements(requirements) = domain else {
+            panic!("ordinary comparison domain")
+        };
+        let mut checked = Vec::new();
+        for (index, requirement) in requirements.into_iter().enumerate() {
+            let Fact::AtomicFact(AtomicFact::InFact(member)) = &requirement.requirement else {
+                panic!("member")
+            };
+            let membership = StructuralMembershipProof::new(
+                member.element.clone(),
+                StandardSet::R,
+                StructuralMembershipReason::Closed(ClosedMembershipCalculationProof::StandardSet {
+                    value: ClosedScalarValue::Decimal((index + 1).to_string()),
+                    set: StandardSet::R,
+                }),
+            );
+            checked.push(PredicateDomainArgumentMembershipProof::new(
+                requirement.requirement,
+                index,
+                membership,
+            ));
+        }
+        match change {
+            "index" => checked[0].argument_index = 1,
+            "subject" => checked[0].membership.element = checked[1].membership.element.clone(),
+            "carrier" => checked[0].membership.set = StandardSet::C,
+            "missing" => {
+                checked.pop();
+            }
+            "reordered" => checked.swap(0, 1),
+            _ => {}
+        }
+        proof.well_defined_proof.predicate_domain =
+            PredicateDomainProof::ByCheckedArguments(checked);
+        let compilation =
+            LitexToLeanCompiler::new(runtime).compile_run(&result, "checked_argument_domain");
+        if change == "valid" {
+            compilation.unwrap();
+        } else {
+            assert_eq!(
+                compilation.unwrap_err().route,
+                "WD/OrderRealDomain",
+                "{change}"
+            );
+        }
+    }
+}
