@@ -27,7 +27,7 @@ i != i
 3 + 4*i != 4*i + 3
 ```
 
-规则：`src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/not_equal.rs`。计算分支：`src/execute/execute_fact_stmt/verify_atomic_fact/calculate_closed_atomic_fact.rs`。
+规则：`src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/not_equal.rs`。计算分支：`src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/calculate_closed_atomic_except_equality_fact.rs`。
 
 后续已用逐条日志与固定顺序干预确认R01原因，见[重写顺序诊断](contra_rewrite_order_2026-10-04.md)。下文“静态诊断/尚未逐次读取”的表述记录本页最初检查点；新证据已补齐，正式实现仍未修复。
 

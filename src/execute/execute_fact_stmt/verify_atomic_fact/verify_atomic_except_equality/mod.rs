@@ -1,4 +1,5 @@
 pub mod builtin_prop_definition;
+pub mod calculate_closed_atomic_except_equality_fact;
 pub mod helper;
 mod known_premises;
 pub mod lookup_known_atomic_fact;
@@ -14,6 +15,7 @@ pub mod search_atomic_except_equality_fact_proof_by_known_forall_fact;
 pub mod search_atomic_except_equality_fact_proof_by_known_rewrite;
 pub mod search_atomic_except_equality_fact_proof_by_known_special_property;
 pub mod search_atomic_except_equality_fact_proof_by_known_strategy;
+pub mod search_atomic_except_equality_fact_proof_directly;
 pub mod verify_atomic_except_equality;
 
 pub use search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;

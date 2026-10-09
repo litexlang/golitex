@@ -4,11 +4,6 @@ use crate::rational_expression::NumberCompareResult;
 
 // Success evidence only. Unsupported expressions and false goals yield None at
 // the calculator boundary, never a successful proof with a failure flag.
-pub enum ClosedCalculationProof {
-    Equality(ClosedEqualityCalculationProof),
-    AtomicExceptEquality(ClosedAtomicExceptEqualityCalculationProof),
-}
-
 pub struct ClosedEqualityCalculationProof {
     pub values: ClosedValuePair,
 }

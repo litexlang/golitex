@@ -197,7 +197,7 @@ fn real_arithmetic_constructor_closure_retains_permissions_tree_and_citations() 
             panic!("atomic carrier goal")
         };
         assert!(
-            rt.search_atomic_fact(atomic, VerifyState::new(level))
+            rt.search_atomic_except_equality_fact_proof(atomic, VerifyState::new(level))
                 .unwrap()
                 .is_none(),
             "truth search must retain its {level:?} ceiling"

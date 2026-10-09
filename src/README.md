@@ -68,13 +68,14 @@ live below their dispatchers.
 | Fact-statement execution | `Fact`, `ExecFactStmtResult` | [execute_fact_stmt/exec_fact_stmt.rs](execute/execute_fact_stmt/exec_fact_stmt.rs): `execute_fact_statement`. Verifies a fact before storing it and running inference. |
 | Well-definedness | `Obj`, `VerifyObjWellDefinedResult` | [well_defined_results/verify_obj/entry.rs](execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs): `verify_obj_well_definedness`. Checks whether an expression is meaningful under its domain conditions. Fact families also check predicate and binder requirements. |
 | Fact verification | `Fact`, `VerifyFactResult` | [execute_fact_stmt/verify.rs](execute/execute_fact_stmt/verify.rs): `verify_fact`. Dispatches by logical shape. [verify_equal_fact.rs](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equal_fact.rs): `verify_equal_fact` shows the well-definedness-then-proof pipeline for equality. |
-| Atomic proof search | `AtomicFact`, `VerifyState`, searched-proof payloads | [verify_atomic_fact/search_atomic_fact.rs](execute/execute_fact_stmt/verify_atomic_fact/search_atomic_fact.rs): `search_atomic_fact`. Orders the available proof routes. [verify_state.rs](execute/execute_fact_stmt/verify_state.rs): `VerifyState::for_premises` limits which routes their premises may use. |
+| Atomic proof search | `EqualFact` or other `AtomicFact`, `VerifyState`, family searched-proof payloads | [search_equal_fact_proof.rs](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_proof.rs) and [search_atomic_except_equality_fact_proof.rs](execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof.rs) own the two search pipelines. [verify_state.rs](execute/execute_fact_stmt/verify_state.rs): `VerifyState::for_premises` limits which routes their premises may use. |
 | Fact storage and inference | `KnownFactMemory`, `StoreFactAndInferResult` | [store_fact_and_infer.rs](store_fact_and_infer/store_fact_and_infer.rs): `store_fact_and_infer`; [store_fact.rs](store_fact_and_infer/store_fact.rs): `store_fact`; [infer_fact.rs](store_fact_and_infer/infer_fact/infer_fact.rs): `infer_fact`. Stores the seed, then dispatches its local forward consequences. |
 | Structured proofs | `ClaimStmt`, `ForallFact`, local `ExecEnv` and proof results | [exec_claim_stmt.rs](execute/execute_proof_block_stmt/exec_claim_stmt.rs): `exec_claim_stmt`; [verify_forall_fact.rs](execute/execute_fact_stmt/verify_forall_fact/verify_forall_fact.rs): `verify_forall_fact`. Shows local parameters, premises and conclusion checking. A successful claim publishes its goal while retaining local evidence in its result. |
 
 For the shortest algorithm route, follow `run_litex_code` → `exec_stmt` →
 `execute_fact_statement` → `verify_fact`. Then inspect the chosen fact family,
-`search_atomic_fact` for an atomic goal, and `store_fact_and_infer` after
+`search_equal_fact_proof` or `search_atomic_except_equality_fact_proof` for an
+atomic goal, and `store_fact_and_infer` after
 success. Parsing happens before execution of each complete top-level block.
 
 ## Follow one fact through the representations
@@ -89,7 +90,7 @@ Trace the homepage's `a + 1 = 3` after `have a R = 2`:
 3. **Execution boundary:** `exec_stmt` opens a temporary child environment;
    `execute_fact_statement` asks `verify_fact` to verify the proposition.
 4. **Mathematical grounds:** the equality family checks well-definedness
-   before proof search. `search_atomic_fact` selects a supported route under
+   before proof search. `search_equal_fact_proof` selects a supported route under
    `VerifyState`; its searched-proof payload records that selected route.
 5. **Knowledge produced:** on verification success, `store_fact_and_infer`
    records the equality and any supported forward consequences. The result

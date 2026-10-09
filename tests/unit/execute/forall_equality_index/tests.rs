@@ -593,7 +593,10 @@ fn direct_numeric_keys_do_not_drop_large_or_radical_equalities() {
         else {
             panic!("numeric equality");
         };
-        assert!(crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact(&equal.clone().into()).is_some(), "Direct calculation {left}={right}");
+        assert!(
+            crate::prelude::calculate_closed_equal_fact(equal).is_some(),
+            "Direct calculation {left}={right}"
+        );
         let mut index = ForallEqualityIndex::new();
         let source = EqualFact {
             fact_id: FactId::new(1),

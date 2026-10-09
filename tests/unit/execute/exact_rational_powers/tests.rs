@@ -1,9 +1,9 @@
 use crate::ast::fact::Fact;
 use crate::ast::stmt::Stmt;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
 use crate::json_output::{emit_run_detailed, emit_run_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::prelude::{calculate_closed_equal_fact, AtomicFact};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -304,10 +304,10 @@ fn direct_calculation_preserves_domain_evidence_and_declines_symbols() {
     let Stmt::Fact(goal) = &statements[0] else {
         panic!("fact")
     };
-    let Fact::AtomicFact(atomic) = goal else {
+    let Fact::AtomicFact(AtomicFact::EqualFact(atomic)) = goal else {
         panic!("atomic")
     };
-    assert!(calculate_closed_atomic_fact(atomic).is_some());
+    assert!(calculate_closed_equal_fact(atomic).is_some());
     let proof = rt
         .verify_fact(goal, VerifyState::new(VerifyStateLevel::Direct))
         .unwrap();
@@ -318,10 +318,10 @@ fn direct_calculation_preserves_domain_evidence_and_declines_symbols() {
         .tokenize("x^(1/3)=2", rt.current_file.clone())
         .unwrap();
     let statements = rt.parse(&tokens).unwrap();
-    let Stmt::Fact(Fact::AtomicFact(goal)) = &statements[0] else {
+    let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) = &statements[0] else {
         panic!("atomic")
     };
-    assert!(calculate_closed_atomic_fact(goal).is_none());
+    assert!(calculate_closed_equal_fact(goal).is_none());
 
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
         let mut rt = runtime(language);

@@ -29,8 +29,7 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::{HashMap, HashSet};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::EquivalenceClassAdjacency;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::closed_calculation_proof::ClosedCalculationProof;
+use crate::prelude::calculate_closed_equal_fact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
 
 // Scoped to a read-only matching phase; never survives requirement searches.
@@ -286,14 +285,10 @@ impl Runtime {
         }
         let searched = self
             .lookup_known_obj_equality_with_graph(left, right, &mut equality.adjacency)
-            .or_else(
-                || match calculate_closed_atomic_fact(&equal_fact.clone().into()) {
-                    Some(ClosedCalculationProof::Equality(proof)) => {
-                        Some(EqualFactSearchedProof::ByClosedCalculation(proof))
-                    }
-                    _ => None,
-                },
-            );
+            .or_else(|| {
+                calculate_closed_equal_fact(&equal_fact)
+                    .map(EqualFactSearchedProof::ByClosedCalculation)
+            });
         let Some(equal_proof) = searched.and_then(strict_equal_arg_proof_from_searched) else {
             equality.misses.insert(key);
             return Ok(None);
