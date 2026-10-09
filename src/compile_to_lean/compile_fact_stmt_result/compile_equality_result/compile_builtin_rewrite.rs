@@ -3,23 +3,38 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 use crate::rational_expression::ClosedNumericExpr;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite;
 
 impl LitexToLeanCompiler {
-    pub(in crate::compile_to_lean) fn compile_closed_equality_substitution(
+    pub(in crate::compile_to_lean) fn compile_equality_builtin_rewrite(
         &self,
         goal: &EqualFact,
-        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof,
+        proof: &EqualitySearchProofByBuiltinRewrite,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if proof.cited_equal_fact_ids.is_empty() {
+        let (rewritten_left, rewritten_right, cited_equal_fact_ids, residual_equal) = match proof {
+            EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(p) => (
+                &p.rewritten_left,
+                &p.rewritten_right,
+                &p.cited_equal_fact_ids,
+                &p.residual_equal,
+            ),
+            EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(p) => (
+                &p.rewritten_left,
+                &p.rewritten_right,
+                &p.cited_equal_fact_ids,
+                &p.residual_equal,
+            ),
+        };
+        if cited_equal_fact_ids.is_empty() {
             return Err(LeanCompileError::new(
                 "EqualityRewrite/Citations",
                 "The selected substitution must cite a source equality.",
             ));
         }
         let mut equalities = Vec::new();
-        for (index, id) in proof.cited_equal_fact_ids.iter().enumerate() {
-            if proof.cited_equal_fact_ids[..index].contains(id) {
+        for (index, id) in cited_equal_fact_ids.iter().enumerate() {
+            if cited_equal_fact_ids[..index].contains(id) {
                 return Err(LeanCompileError::new(
                     "EqualityRewrite/Citations",
                     "Substitution citations are unique in source order.",
@@ -43,11 +58,11 @@ impl LitexToLeanCompiler {
             }
             equalities.push((*id, equality.clone()));
         }
-        let residual = self.compile_verify(&proof.residual_equal, position)?;
-        match &source_subject(&proof.residual_equal)? {
+        let residual = self.compile_verify(residual_equal, position)?;
+        match &source_subject(residual_equal)? {
             Fact::AtomicFact(AtomicFact::EqualFact(eq))
-                if eq.left.ir() == proof.rewritten_left.ir()
-                    && eq.right.ir() == proof.rewritten_right.ir() => {}
+                if eq.left.ir() == rewritten_left.ir() && eq.right.ir() == rewritten_right.ir() => {
+            }
             _ => {
                 return Err(LeanCompileError::new(
                     "EqualityRewrite/Residual",
@@ -60,26 +75,28 @@ impl LitexToLeanCompiler {
         // endpoints; it supplies WD only, never a newly stored source fact.
         let after_residual = SourcePosition {
             parent: Some(position),
-            owner: SourceOwner::Verify(&proof.residual_equal),
+            owner: SourceOwner::Verify(residual_equal),
             before: usize::MAX,
         };
         let position = &after_residual;
         let mut used = Vec::new();
-        let left = self.compile_cited_closed_substitution(
+        let left = self.compile_cited_equality_substitution(
             &goal.left,
-            &proof.rewritten_left,
+            rewritten_left,
             &equalities,
             &mut used,
+            proof,
             position,
         )?;
-        let right = self.compile_cited_closed_substitution(
+        let right = self.compile_cited_equality_substitution(
             &goal.right,
-            &proof.rewritten_right,
+            rewritten_right,
             &equalities,
             &mut used,
+            proof,
             position,
         )?;
-        if used != proof.cited_equal_fact_ids {
+        if &used != cited_equal_fact_ids {
             return Err(LeanCompileError::new(
                 "EqualityRewrite/CitationOrder",
                 "Every source equality must be used in the recorded substitution order.",
@@ -91,12 +108,13 @@ impl LitexToLeanCompiler {
         ))
     }
 
-    pub(in crate::compile_to_lean) fn compile_cited_closed_substitution(
+    pub(in crate::compile_to_lean) fn compile_cited_equality_substitution(
         &self,
         original: &Obj,
         residual: &Obj,
         equalities: &[(FactId, EqualFact)],
         used: &mut Vec<FactId>,
+        proof: &EqualitySearchProofByBuiltinRewrite,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         self.compile_object_reference(original, position)?;
@@ -110,12 +128,17 @@ impl LitexToLeanCompiler {
         let direct: Vec<_> = equalities
             .iter()
             .filter(|(_, eq)| {
-                (eq.left.ir() == original.ir()
-                    && eq.right.ir() == residual.ir()
-                    && ClosedNumericExpr::try_from_obj(&eq.right).is_some())
-                    || (eq.right.ir() == original.ir()
-                        && eq.left.ir() == residual.ir()
-                        && ClosedNumericExpr::try_from_obj(&eq.left).is_some())
+                let exact = (eq.left.ir() == original.ir() && eq.right.ir() == residual.ir())
+                    || (eq.right.ir() == original.ir() && eq.left.ir() == residual.ir());
+                let eligible = match proof {
+                    EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(_) => {
+                        ClosedNumericExpr::try_from_obj(residual).is_some()
+                    }
+                    EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(_) => {
+                        matches!(original, Obj::FnObj(_))
+                    }
+                };
+                exact && eligible
             })
             .collect();
         if direct.len() > 1 {
@@ -130,11 +153,12 @@ impl LitexToLeanCompiler {
             }
             return self.compile_registered_equality(*id, original, residual, position);
         }
-        let (operation, pairs) = arithmetic_constructor_pairs(original, residual).ok_or_else(|| LeanCompileError::new("EqualityRewrite/Subterm", "The changed subtree has no exact recorded closed endpoint or matching owned arithmetic constructor."))?;
+        let (operation, pairs) = arithmetic_constructor_pairs(original, residual).ok_or_else(|| LeanCompileError::new("EqualityRewrite/Subterm", "The changed subtree has no eligible exact recorded endpoint or matching owned arithmetic constructor."))?;
         let mut children = Vec::new();
         for (a, b) in pairs {
-            children
-                .push(self.compile_cited_closed_substitution(a, b, equalities, used, position)?);
+            children.push(
+                self.compile_cited_equality_substitution(a, b, equalities, used, proof, position)?,
+            );
         }
         Ok(if children.len() == 1 {
             format!("(congrArg M.{operation} {})", children[0])

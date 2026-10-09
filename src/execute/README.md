@@ -373,6 +373,24 @@ for named and anonymous families alike. Definition-unfold residuals keep
 `can_use_rewrite: false`; explicit chains retain their checked endpoints.
 
 
+## Direct function-value equality rewrite
+
+`verify_equality/search_equal_fact_by_known_fn_value_substitution.rs` owns the
+new branch after closed numeric equality substitution. Its success payload is
+`KnownFnValueSubstitutionBuiltinRewriteProof`, in its own data-structure file:
+rewritten left, rewritten right, ordered unique equality citations, then the
+successful residual verification. Original equality WD stays on the parent;
+residual WD stays on that child. No new environment state or index is owned here.
+
+The original scalar-tree walk selects only a unique nontrivial direct equality
+for an exact `FnObj` through the existing exact-property reader. It skips
+inserted values and rebuilt parents, and treats ordinary call arguments and
+non-scalar constructors as leaves. The residual inherits a ceiling capped at
+Strategy with rewrite off; neither the general definition normalizer nor
+known-forall search is reopened. Detailed output and Lean replay consume the
+same source citations and child, never rediscover a proof. The persistent
+tracer is `examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit`.
+
 ## Enumeration and eval boundaries
 
 The strict gate inspects both ordinary trust statements and the trust-have

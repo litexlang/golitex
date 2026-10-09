@@ -27,7 +27,7 @@ impl Runtime {
         }
         let args = atomic_except_equality_fact_arg_objs(fact);
         let mut succeeded_args = Vec::new();
-        for arg in args {
+        for arg in &args {
             match self.verify_obj_well_definedness(arg, verify_state.clone())? {
                 VerifyObjWellDefinedResult::Failed { reason, .. } => {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
@@ -117,7 +117,7 @@ impl Runtime {
         for requirements in self.atomic_predicate_domain_requirement_routes(fact) {
             let mut predicate_domain = Vec::new();
             let mut failed = None;
-            for requirement in requirements {
+            for requirement in requirements.iter().cloned() {
                 // Domain obligations inherit the caller's ceiling; peer/strategy
                 // expansion cannot be reopened while checking a predicate domain.
                 let domain_state = verify_state
@@ -135,6 +135,44 @@ impl Runtime {
                 );
             }
             if let Some((requirement, result)) = failed {
+                // Each argument already passed object WD above. If a reduced
+                // domain recheck cannot replay that WD, reuse it for truth-only
+                // structural membership (e.g. finite_set_size(A \ B) in R).
+                let mut memberships = Vec::new();
+                for domain in &requirements {
+                    let crate::ast::fact::Fact::AtomicFact(AtomicFact::InFact(member)) = domain
+                    else {
+                        break;
+                    };
+                    let Obj::StandardSet(target) = &member.set else {
+                        break;
+                    };
+                    let Some(argument_index) = args.iter().position(|arg| *arg == &member.element)
+                    else {
+                        break;
+                    };
+                    let Some(membership) =
+                        self.search_structural_membership(&member.element, target)
+                    else {
+                        break;
+                    };
+                    memberships.push(
+                        super::well_defined_result::PredicateDomainArgumentMembershipProof::new(
+                            domain.clone(),
+                            argument_index,
+                            membership,
+                        ),
+                    );
+                }
+                if !requirements.is_empty() && memberships.len() == requirements.len() {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                        AtomicFactWellDefinedProof {
+                            well_defined_of_each_parameter: succeeded_args,
+                            predicate_signature,
+                            predicate_domain: PredicateDomainProof::ByCheckedArguments(memberships),
+                        },
+                    ));
+                }
                 if first_failure.is_none() {
                     first_failure = Some((predicate_domain, requirement, result));
                 }

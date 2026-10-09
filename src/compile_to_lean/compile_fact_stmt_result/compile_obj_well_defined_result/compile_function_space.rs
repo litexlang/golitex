@@ -175,16 +175,21 @@ impl LitexToLeanCompiler {
             .iter()
             .map(|store| format!("h_{}", store.primary_fact_id().value()))
             .collect::<Vec<_>>();
-        let mut lines = vec![format!("intro {} {}", raw.join(" "), inputs.join(" "))];
+        let introductions = format!("intro {} {}", raw.join(" "), inputs.join(" "));
         let guards = assumed
             .iter()
             .map(|paired| format!("h_{}", paired.store_and_infer.primary_fact_id().value()))
             .collect::<Vec<_>>();
-        lines.push(match guards.len() {
-            0 => "intro _".into(),
-            1 => format!("intro {}", guards[0]),
-            _ => format!("rintro ⟨{}⟩", guards.join(", ")),
-        });
+        let mut lines = match guards.len() {
+            0 => vec![format!("{introductions} _")],
+            1 => vec![format!("{introductions} {}", guards[0])],
+            _ => vec![format!(
+                "rintro {} {} ⟨{}⟩",
+                raw.join(" "),
+                inputs.join(" "),
+                guards.join(", ")
+            )],
+        };
         for (index, ((parameter, carrier), store)) in parameters
             .iter()
             .zip(&defined.store_and_infer_results)

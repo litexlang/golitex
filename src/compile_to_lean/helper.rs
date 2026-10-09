@@ -553,6 +553,20 @@ pub(super) fn instantiated_object_matches(
         }
     }
     match (expected, actual) {
+        (Obj::FnObj(expected), Obj::FnObj(actual)) => {
+            expected.head == actual.head
+                && expected.body.len() == actual.body.len()
+                && expected
+                    .body
+                    .iter()
+                    .zip(&actual.body)
+                    .all(|(expected, actual)| {
+                        expected.len() == actual.len()
+                            && expected.iter().zip(actual).all(|(expected, actual)| {
+                                instantiated_object_matches(expected, actual, substitution)
+                            })
+                    })
+        }
         (
             Obj::ArithmeticOperator(ArithmeticOperator::Add(a)),
             Obj::ArithmeticOperator(ArithmeticOperator::Add(b)),

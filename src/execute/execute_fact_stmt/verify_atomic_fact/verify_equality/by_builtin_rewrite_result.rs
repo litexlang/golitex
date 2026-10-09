@@ -11,13 +11,16 @@ use crate::runtime::runtime_ids::FactId;
 //   goal, then proves the residual with rewrite off — an explicit certificate
 //   instead of legacy opaque resolve_obj.
 //
-// Allowed here: only ClosedNumericEqualSubstitution (see `ClosedNumericExpr`
-// for what "closed numeric" means). No general known-equality subterm rewrite.
+// ClosedNumericEqualSubstitution stays first. KnownFnValueSubstitution consumes
+// unique direct function-value equations in one original scalar-tree pass.
 // Constructor-wise / pointwise equality belongs elsewhere, not in rewrite.
 //
 // Dispatcher: `search_equal_fact_proof_by_builtin_rewrite`.
 pub enum EqualitySearchProofByBuiltinRewrite {
     ClosedNumericEqualSubstitution(ClosedNumericEqualSubstitutionBuiltinRewriteProof),
+    KnownFnValueSubstitution(
+        super::known_fn_value_substitution_builtin_rewrite_proof::KnownFnValueSubstitutionBuiltinRewriteProof,
+    ),
 }
 
 // Closed-numeric index substitution: a non-closed object indexed under

@@ -1,0 +1,26 @@
+# Tracer: reuse direct function-value equations inside scalar calculations.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit
+#
+# Before: after shift(x)=x+3, the short affine equality missed search_proof.
+# 2 * shift(x) = 2 * (x + 3) = 2 * x + 6
+# Now: the stored function-value equation supplies one cited substitution.
+have fn shift(x R) R = x + 3
+
+thm affine_value_product:
+    ? forall x R:
+        2 * shift(x) = 2 * x + 6
+    shift(x) = x + 3
+
+# Before: coordinate calculations needed their explicit expanded middle term.
+# 2 * F(t)(1) - F(t)(2) = 2 * (t(1) + t(2)) - (t(1) + 2 * t(2)) = t(1)
+have fn F(t cart(Z, Z)) cart(Z, Z) = (t(1) + t(2), t(1) + 2 * t(2))
+
+thm first_coordinate_inverse:
+    ? forall t cart(Z, Z):
+        2 * F(t)(1) - F(t)(2) = t(1)
+    F(t)(1) = t(1) + t(2)
+    F(t)(2) = t(1) + 2 * t(2)
+
+# Boundary: no definition discovery, equality-graph walk, or repeated expansion.
+# Ambiguous direct values stay an explicit author choice; WD is still required.
+# Executable controls: tests/unit/execute/known_fn_value_substitution/tests.rs.

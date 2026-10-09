@@ -64,7 +64,7 @@ impl LitexToLeanCompiler {
             .iter()
             .any(statement_uses_functions)
         {
-            "\nvariable [_functionSemantics : Litex.FunctionSemantics M]"
+            "\nset_option linter.unusedSectionVars false\nvariable [_functionSemantics : Litex.FunctionSemantics M]"
         } else {
             ""
         };

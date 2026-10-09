@@ -2,6 +2,7 @@ mod compile_atomic_except_equality_result;
 mod compile_builtin_rewrite;
 mod compile_builtin_strategy;
 mod compile_closed_calculation;
+mod compile_complex_arithmetic_closure;
 mod compile_known_atomic;
 mod compile_order;
 mod compile_prop_definition;

@@ -1,8 +1,7 @@
-use crate::compile_to_lean::{LitexToLeanCompiler, LeanCompileError};
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite;
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_verify_equality_result(
@@ -110,9 +109,9 @@ impl LitexToLeanCompiler {
                     "Equality/KnownForallFactViaSymmetry",
                 ))
             }
-            EqualFactSearchedProof::ByBuiltinRewrite(
-                EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(proof),
-            ) => self.compile_closed_equality_substitution(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRewrite(proof) => {
+                self.compile_equality_builtin_rewrite(fact, proof, position)?
+            }
         };
         Ok(proof)
     }
