@@ -94,7 +94,10 @@ fn compiler_result_input_can_change_between_calls() {
     assert_ne!(first, second);
     assert!(first.contains("Litex.Representation"));
     assert!(!second.contains("Litex.Representation"));
-    assert!(second.contains("theorem fact_1"));
+    let numeric_id = fact_statement(&numeric.statement_results[0])
+        .store_and_infer_result
+        .primary_fact_id();
+    assert!(second.contains(&format!("theorem h_{}", numeric_id.value())));
     assert!(second.contains("(7 : ℂ)"));
     assert_eq!(
         first,
@@ -102,6 +105,77 @@ fn compiler_result_input_can_change_between_calls() {
             .compile_run(&generic, "owned_runtime_reuse")
             .expect("the original result remains independently replayable")
     );
+}
+
+#[test]
+fn proof_names_replay_original_fact_ids_for_parameters_declarations_citations_and_calls() {
+    let source = "have fn proof_named_shift(x R) R = x + 1\nthm proof_named_real_to_complex:\n    ? forall x R:\n        x $in C\nhave a R\na $in C\nby thm proof_named_real_to_complex(a) => a $in C\n$is_set(proof_named_shift(a))\n";
+    let (result, compiler) = execute(source);
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+        crate::execute::ExecHaveFnEqualStmtResult::Success(function),
+    )) = &result.statement_results[0]
+    else {
+        panic!("the actual named function declaration");
+    };
+    let named = named_theorem(&result.statement_results[1]);
+    let have = ordinary_have(&result.statement_results[2]);
+    let parameter_id = have.groups[0].defined_params.store_and_infer_results[0].primary_fact_id();
+    let declared = fact_statement(&result.statement_results[3]);
+    let invocation = by_theorem(&result.statement_results[4]);
+    let call = fact_statement(&result.statement_results[5]);
+    let VerifyFactResult::AtomicExceptEquality(call_verify) = &call.verify_result else {
+        panic!("the call sethood verification");
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(call_verify) = call_verify.as_ref() else {
+        panic!("the successful call sethood verification");
+    };
+    let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::FnObj(call_wd),
+        ..
+    } = &call_verify
+        .well_defined_proof
+        .well_defined_of_each_parameter[0]
+    else {
+        panic!("the actual function call constructor WD");
+    };
+    let Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::InFunctionSet { fact_id: callable_id, .. }) = &call_wd.domain_fn_set else {
+        panic!("the call's original selected signature citation");
+    };
+    assert_eq!(
+        *callable_id,
+        function.store_and_infer_result.membership_fact_id
+    );
+    let output =
+        compile_run(&result, &compiler, "original_fact_names").expect("actual result replay");
+    let parameter_name = format!("h_{}", parameter_id.value());
+    assert!(output.contains(&format!("({parameter_name} : Litex.In")));
+    for id in [
+        named.statement.fact.fact_id(),
+        declared.store_and_infer_result.primary_fact_id(),
+        invocation.stored.primary_fact_id(),
+        call.store_and_infer_result.primary_fact_id(),
+    ] {
+        assert!(output.contains(&format!("theorem h_{}", id.value())));
+    }
+    assert!(output.contains(&format!(
+        "h_{} (M := M)",
+        named.statement.fact.fact_id().value()
+    )));
+    let call_declaration = format!(
+        "theorem h_{}",
+        call.store_and_infer_result.primary_fact_id().value()
+    );
+    let call_output = output
+        .split_once(&call_declaration)
+        .expect("the actual call conclusion")
+        .1;
+    assert!(call_output.contains(&format!("h_{} (M := M)", callable_id.value())));
+    assert!(call_output.contains(&parameter_name));
+    assert!(!output.contains("theorem fact_"));
+    assert!(!output.contains("named_thm_"));
+    assert!(!output.contains("_fact_f"));
+    assert!(!output.contains("_input_i"));
+    assert!(!output.contains("_guard"));
 }
 
 #[test]
@@ -771,8 +845,13 @@ fn phase1_named_theorem_uses_the_actual_alias_argument_and_returned_citation() {
         _ => panic!("source theorem selection must directly cite its returned equality"),
     }
     let output = compile_run(&result, &compiler, "phase1_named_alias").expect("named alias tracer");
-    assert!(output.contains("theorem named_thm_1"));
-    assert!(output.contains("named_thm_1 (M := M)"));
+    let theorem_id = named_theorem(&result.statement_results[0])
+        .statement
+        .fact
+        .fact_id()
+        .value();
+    assert!(output.contains(&format!("theorem h_{theorem_id}")));
+    assert!(output.contains(&format!("h_{theorem_id} (M := M)")));
     let alias = &let_definition(&result.statement_results[5]).statement.name;
     assert!(output.contains(&format!("(_object_i{} (M := M))", alias.id.value())));
 }
@@ -821,7 +900,7 @@ fn phase1_theorem_body_replays_local_alias_and_typed_definition() {
     let output = compile_run(&result, &compiler, "phase1_local_definitions")
         .expect("local body definitions");
     assert!(output.contains("let _object_i"));
-    assert!(output.contains("have _fact_f"));
+    assert!(output.contains("have h_"));
     assert!(!output.contains("noncomputable def _object_i"));
 }
 
@@ -1175,8 +1254,8 @@ fn phase1_known_forall_reuses_the_exact_producer_with_all_binders_including_unus
     }
     let output = compile_run(&result, &compiler, "phase1_whole_forall")
         .expect("whole-proposition alpha reuse");
-    assert!(output.contains("fact_1 (M := M)"));
-    assert!(output.contains("theorem fact_2"));
+    assert!(output.contains(&format!("h_{} (M := M)", source.fact.fact_id.value())));
+    assert!(output.contains(&format!("theorem h_{}", target.fact.fact_id.value())));
     assert!(!output.contains("(by ring)"));
 }
 
@@ -1526,7 +1605,7 @@ fn phase1_known_atomic_rewrite_rejects_discontinuous_incomplete_and_reordered_pa
 #[test]
 fn phase1_atomic_rewrite_requires_the_exact_residual_family_and_child_subject() {
     let (mut result, compiler) = execute("5 != 0\nlet computed = 2 + 3\ncomputed $in C\n");
-    let other_family = atomic_fact_from_statement(&result.statement_results[0]);
+    let other_family = atomich_rom_statement(&result.statement_results[0]);
     match atomic_rewrite_mut(&mut result.statement_results[2]) {
         AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
             proof,
@@ -1601,7 +1680,7 @@ fn phase2_computed_value_equality_replays_the_selected_subterm_rewrite() {
     }
 }
 
-fn atomic_fact_from_statement(result: &ExecStmtResult) -> AtomicFact {
+fn atomich_rom_statement(result: &ExecStmtResult) -> AtomicFact {
     match &fact_statement(result).verify_result {
         VerifyFactResult::AtomicExceptEquality(proof) => match proof.as_ref() {
             VerifyAtomicExceptEqualityFactResult::Success(proof) => proof.fact.clone(),
@@ -2253,7 +2332,7 @@ fn phase2_closed_order_ignores_presentation_strings() {
 }
 
 #[test]
-fn phase2_closed_order_rejects_a_changed_fact_family_even_with_true_value_payload() {
+fn phase2_closed_order_rejects_a_changedh_amily_even_with_true_value_payload() {
     let (mut result, compiler) = execute(PHASE2_CLOSED_ORDER);
     let source =
         match &phase2_atomic(&fact_statement(&result.statement_results[0]).verify_result).fact {
@@ -2604,19 +2683,28 @@ fn simplification_theorem_citation_keeps_its_declaration_time_context() {
     assert_ne!(first, later);
     let output = compile_run(&result, &compiler, "simplification_declaration_context")
         .expect("the earlier theorem keeps only its original context parameters");
+    let theorem_id = named_theorem(&result.statement_results[1])
+        .statement
+        .fact
+        .fact_id()
+        .value();
+    let selected_id = by_theorem(&result.statement_results[3])
+        .stored
+        .primary_fact_id()
+        .value();
     let header = output
         .lines()
-        .find(|line| line.starts_with("theorem named_thm_2 "))
+        .find(|line| line.starts_with(&format!("theorem h_{theorem_id} ")))
         .expect("the named declaration is exported");
     assert!(header.contains(&format!("_Host_i{first} :")));
     assert!(!header.contains(&format!("_Host_i{later} :")));
     let later_proof = output
-        .split_once("theorem fact_4 ")
+        .split_once(&format!("theorem h_{selected_id} "))
         .expect("the later selected fact is exported")
         .1;
     assert!(later_proof.contains(&format!("_Host_i{later} :")));
     assert!(later_proof.contains(&format!(
-        "(@named_thm_2 M _Host_i{first} _rep_i{first} _value_i{first} _fact_f{first_member})"
+        "(h_{theorem_id} (M := M) (_Host_i{first} := _Host_i{first}) (_rep_i{first} := _rep_i{first}) _value_i{first} h_{first_member})"
     )));
 }
 
@@ -2655,12 +2743,18 @@ fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
     }
     let output = compile_run(&result, &compiler, "simplification_natural_inference")
         .expect("the inferred producer is emitted before its use");
-    let name = format!("_fact_f{}", inferred_id.value());
+    let name = format!("h_{}", inferred_id.value());
     let producer = output
         .find(&format!("theorem {name} "))
         .expect("the real stored inference has a named Lean producer");
     let consumer = output
-        .find("theorem fact_2 ")
+        .find(&format!(
+            "theorem h_{} ",
+            fact_statement(&result.statement_results[1])
+                .store_and_infer_result
+                .primary_fact_id()
+                .value()
+        ))
         .expect("the order conclusion");
     assert!(producer < consumer);
     assert!(output[producer..consumer].contains("Litex.naturalNonnegative"));
@@ -2688,12 +2782,18 @@ fn simplification_alias_equality_uses_its_stored_id_in_the_selected_rewrite() {
     ));
     let output = compile_run(&result, &compiler, "simplification_alias_equality")
         .expect("the selected substitution uses the emitted alias equality");
-    let name = format!("_fact_f{}", equality_id.value());
+    let name = format!("h_{}", equality_id.value());
     let producer = output
         .find(&format!("theorem {name} "))
         .expect("the source alias store has a named equality proof");
     let consumer = output
-        .find("theorem fact_2 ")
+        .find(&format!(
+            "theorem h_{} ",
+            fact_statement(&result.statement_results[1])
+                .store_and_infer_result
+                .primary_fact_id()
+                .value()
+        ))
         .expect("the arithmetic conclusion");
     assert!(producer < consumer);
     let proof = output[consumer..]
@@ -2744,10 +2844,15 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
         assert_eq!(selected_id, ids[selected_index]);
         let output = compile_run(&result, &compiler, "simplification_returned_components")
             .expect("either returned atom can be selected from one invocation");
-        let consumer = output.find("theorem fact_3 ").expect("the selected fact");
+        let consumer = output
+            .find(&format!(
+                "theorem h_{} ",
+                invocation.stored.primary_fact_id().value()
+            ))
+            .expect("the selected fact");
         let body = &output[consumer..];
-        let first_name = format!("_fact_f{}", ids[0].value());
-        let second_name = format!("_fact_f{}", ids[1].value());
+        let first_name = format!("h_{}", ids[0].value());
+        let second_name = format!("h_{}", ids[1].value());
         let first = body
             .find(&format!("have {first_name} "))
             .expect("the first actual returned store has a local producer");
@@ -2757,7 +2862,7 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
         assert!(first < second);
         assert!(body[first..second].contains("And.left"));
         assert!(body[second..].contains("And.right"));
-        let selected_name = format!("_fact_f{}", selected_id.value());
+        let selected_name = format!("h_{}", selected_id.value());
         let selected_proof = body
             .lines()
             .rev()
@@ -2810,10 +2915,10 @@ fn simplification_known_forall_reuses_a_global_alias_with_the_current_goal_wd() 
     )
     .expect("the current goal's WD supplies its renamed binder and original alias");
     let later = output
-        .split_once("theorem fact_4")
+        .split_once(&format!("theorem h_{}", reused.fact.fact_id.value()))
         .expect("the reused whole-forall result is exported")
         .1;
-    assert!(later.contains("fact_3 (M := M)"));
+    assert!(later.contains(&format!("h_{} (M := M)", producer_id.value())));
     assert!(!later.contains("(by ring)"));
 }
 
@@ -2871,7 +2976,10 @@ fn simplification_named_theorem_body_retains_its_local_explicit_call() {
     let output = compile_run(&result, &compiler, "simplification_nested_named_call")
         .expect("the invocation's local proof evidence closes inside the theorem body");
     let later = output
-        .split_once("theorem named_thm_2")
+        .split_once(&format!(
+            "theorem h_{}",
+            later.statement.fact.fact_id().value()
+        ))
         .expect("the named theorem is exported")
         .1;
     let (signature, proof) = later
@@ -2879,8 +2987,11 @@ fn simplification_named_theorem_body_retains_its_local_explicit_call() {
         .expect("the exported theorem retains a separate statement and proof");
     assert_eq!(signature.matches('∀').count(), 1);
     assert!(!signature.contains('→'));
-    assert!(proof.contains("named_thm_1 (M := M)"));
-    assert!(proof.contains(&format!("_fact_f{}", returned_id.value())));
+    assert!(proof.contains(&format!(
+        "h_{} (M := M)",
+        earlier.statement.fact.fact_id().value()
+    )));
+    assert!(proof.contains(&format!("h_{}", returned_id.value())));
 }
 
 #[test]

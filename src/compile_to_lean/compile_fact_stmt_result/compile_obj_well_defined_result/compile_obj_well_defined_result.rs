@@ -47,6 +47,12 @@ impl LitexToLeanCompiler {
                     (Obj::StandardSet(set), ObjWellDefinedProofByDef::StandardSet(_)) => {
                         standard_term(set)?
                     }
+                    (Obj::FunctionSpace(space), ObjWellDefinedProofByDef::FunctionSpace(proof)) => {
+                        self.compile_function_space_wd(space, proof, position)?
+                    }
+                    (Obj::FnObj(application), ObjWellDefinedProofByDef::FnObj(proof)) => {
+                        self.compile_fn_obj_wd(application, proof, position)?
+                    }
                     (
                         Obj::ArithmeticOperator(operator),
                         ObjWellDefinedProofByDef::ArithmeticOperator(wd),
@@ -162,7 +168,14 @@ impl LitexToLeanCompiler {
             )?;
         }
         match &wd.predicate_signature {
-            PredicateSignatureWellDefinedProof::Builtin => {}
+            PredicateSignatureWellDefinedProof::Builtin => {
+                if matches!(fact, AtomicFact::NormalAtomicFact(_)) {
+                    return Err(LeanCompileError::new(
+                        "Prop/SignatureFamily",
+                        "A concrete source predicate cannot use a builtin predicate signature.",
+                    ));
+                }
+            }
             signature @ PredicateSignatureWellDefinedProof::Prop { .. } => {
                 self.validate_prop_predicate_signature(signature, fact, position)?;
             }
@@ -172,6 +185,12 @@ impl LitexToLeanCompiler {
         }
         match &wd.predicate_domain {
             PredicateDomainProof::ByRequirements(requirements) => {
+                if matches!(fact, AtomicFact::NormalAtomicFact(_)) && !requirements.is_empty() {
+                    return Err(LeanCompileError::new(
+                        "WD/PropDomain",
+                        "Concrete predicate formation has no extra domain stages; its typed memberships belong to definition proof or assumption meaning.",
+                    ));
+                }
                 if matches!(
                     fact,
                     AtomicFact::LessFact(_)

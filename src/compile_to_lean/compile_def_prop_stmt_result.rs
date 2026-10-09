@@ -133,7 +133,7 @@ impl LitexToLeanCompiler {
                 binders.push(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"));
                 let member = (
                     self.fact_proposition(&fact, &formed)?,
-                    format!("_fact_f{}", fact.fact_id().value()),
+                    format!("h_{}", fact.fact_id().value()),
                 );
                 memberships.push((member.1.clone(), member.0.clone()));
                 parameter_definitions.extend(self.compile_parameter_inferences(
@@ -169,7 +169,7 @@ impl LitexToLeanCompiler {
             };
             let clause = (
                 self.fact_proposition(fact, &formed)?,
-                format!("_fact_f{}", fact.fact_id().value()),
+                format!("h_{}", fact.fact_id().value()),
             );
             let completed = SourcePosition {
                 before: count + index + 1,

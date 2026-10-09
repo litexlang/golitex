@@ -1,6 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -81,13 +82,16 @@ impl LitexToLeanCompiler {
                                 format!("(Litex.standardNonempty (M := M) Litex.StandardSetValue.{})", standard_value_constructor(&p.target_set)?)
                             },
                             rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, position)?,
+                            AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
+                                AtomicFact::InFact(fact) => self.compile_fn_return_builtin(fact, rule, position)?,
+                                _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
+                            },
                             other => return Err(unsupported_atomic_builtin(other)),
                         },
-                        AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(_) => {
-                            return Err(LeanCompileError::unsupported(
-                                "Atomic/KnownSpecialProperty",
-                            ))
-                        }
+                        AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(rule)) => match &success.fact {
+                            AtomicFact::InFact(fact) => self.compile_fn_return_rule(fact, rule, position)?,
+                            _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
+                        },
                         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)) =>
                             self.compile_nonzero_product(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {

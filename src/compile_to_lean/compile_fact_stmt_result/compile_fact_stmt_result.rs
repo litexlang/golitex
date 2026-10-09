@@ -43,11 +43,7 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         self.validate_store(store, source)?;
         let declaration = self.emit_fact(source, compiled.clone(), index, local, position);
-        let name = if local {
-            format!("_fact_f{}", source.fact_id().value())
-        } else {
-            format!("fact_{index}")
-        };
+        let name = format!("h_{}", source.fact_id().value());
         let reference = if local {
             name
         } else {

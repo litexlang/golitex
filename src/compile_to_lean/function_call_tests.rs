@@ -148,7 +148,7 @@ fn function_calls_preserve_distinct_real_parameter_groups_and_original_membershi
     let (term, output, member) =
         compile_leaf(&result, &compiler, 1).expect("certified simultaneous call");
     assert_eq!(output, StandardSet::R);
-    assert!(term.contains(&format!("_fact_f{}", fact_id.value())));
+    assert!(term.contains(&format!("h_{}", fact_id.value())));
     assert!(member.contains("Litex.call2InOutput"));
     compiler
         .compile_run(&result, "two_source_parameter_groups")
@@ -216,7 +216,7 @@ fn function_call_replays_the_actual_literal_equality_citation() {
     );
     let (term, _, _) =
         compile_leaf(&result, &compiler, 1).expect("original equality to the formula graph");
-    assert!(term.contains(&format!("_fact_f{}", id.value())));
+    assert!(term.contains(&format!("h_{}", id.value())));
     assert!(term.contains("Litex.formulaFnInFnSet"));
     compiler
         .compile_run(&result, "literal_alias_call")

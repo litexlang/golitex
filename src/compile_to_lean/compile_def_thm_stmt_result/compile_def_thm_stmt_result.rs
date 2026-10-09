@@ -8,7 +8,7 @@ impl LitexToLeanCompiler {
         &self,
         proof: &ExecDefThmStmtSuccess,
         position: &SourcePosition<'_>,
-        index: usize,
+        _index: usize,
     ) -> Result<String, LeanCompileError> {
         let goal_wd = match &proof.goal_wd {
             VerifyFactWellDefinedResult::Success(wd) => wd,
@@ -28,7 +28,7 @@ impl LitexToLeanCompiler {
         let compiled = self.compile_named_theorem_body(proof, &source_position);
         let compiled = compiled?;
         self.validate_store(&proof.stored, &proof.statement.fact)?;
-        let name = format!("named_thm_{index}");
+        let name = format!("h_{}", proof.statement.fact.fact_id().value());
         let declaration = format!(
             "theorem {name}{} : {} :=\n  {}",
             self.context_header(position),

@@ -44,7 +44,7 @@ fn concrete_prop_retains_domains_and_actual_explicit_definition_route() {
         .compile_run(&result, "concrete_nonzero")
         .unwrap();
     assert!(output.contains("def prop_1"));
-    assert!(output.contains("∃ (_fact_f"));
+    assert!(output.contains("∃ (h_"));
     assert!(output.contains("Litex.In _value_i"));
     assert!(output.contains("Exists.intro"));
     assert!(output.contains("rcases"));
@@ -90,7 +90,7 @@ fn concrete_prop_inference_retains_actual_constructor_formation_before_store() {
     let output = LitexToLeanCompiler::new(runtime)
         .compile_run(&result, "concrete_square")
         .unwrap();
-    assert!(output.contains(&format!("theorem _fact_f{}", actual_id.value())));
+    assert!(output.contains(&format!("theorem h_{}", actual_id.value())));
     assert!(output.contains("Litex.mul"));
     assert!(output.contains("rcases"));
 }
@@ -111,7 +111,7 @@ fn concrete_prop_earlier_clause_certifies_later_guarded_constructor() {
     let output = LitexToLeanCompiler::new(runtime)
         .compile_run(&result, "concrete_guarded")
         .unwrap();
-    assert!(output.contains(&format!("∃ (_fact_f{}", nonzero_id.value())));
+    assert!(output.contains(&format!("∃ (h_{}", nonzero_id.value())));
     assert!(output.contains("Litex.div"));
 }
 

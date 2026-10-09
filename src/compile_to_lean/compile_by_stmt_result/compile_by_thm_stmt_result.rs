@@ -78,7 +78,7 @@ impl LitexToLeanCompiler {
         proof: &ExecByThmStmtSuccess,
         registered: &DefThmStmt,
         declaration_position: &SourcePosition<'_>,
-        declaration_index: usize,
+        _declaration_index: usize,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
         let mut substitution = HashMap::new();
@@ -139,7 +139,7 @@ impl LitexToLeanCompiler {
                             &member,
                             &type_position,
                         ));
-                        application_arguments.push(format!("_fact_f{}", subject.fact_id().value()));
+                        application_arguments.push(format!("h_{}", subject.fact_id().value()));
 
                         offset += 1;
                     }
@@ -185,18 +185,18 @@ impl LitexToLeanCompiler {
             }
             let subject = source_subject(result)?;
             definitions.push(self.emit_internal_fact(&subject, &compiled, &domain_position));
-            application_arguments.push(format!("_fact_f{}", subject.fact_id().value()));
+            application_arguments.push(format!("h_{}", subject.fact_id().value()));
         }
         let application = if application_arguments.is_empty() {
             self.context_application(
-                &format!("named_thm_{declaration_index}"),
+                &format!("h_{}", registered.fact.fact_id().value()),
                 declaration_position,
             )
         } else {
             format!(
                 "({} {})",
                 self.context_application(
-                    &format!("named_thm_{declaration_index}"),
+                    &format!("h_{}", registered.fact.fact_id().value()),
                     declaration_position
                 ),
                 application_arguments.join(" ")

@@ -112,7 +112,7 @@ impl LitexToLeanCompiler {
                     ))
                 }
             }
-            let check_name = format!("_nonempty_f{}", nonempty_subject.fact_id().value());
+            let check_name = format!("h_{}", nonempty_subject.fact_id().value());
             declarations.push(format!(
                 "theorem {check_name}{} : {} := {}",
                 self.context_header(position),
@@ -152,7 +152,7 @@ impl LitexToLeanCompiler {
                 let fact = self.resolve_fact(store.primary_fact_id(), &parameter_position)?;
                 let member = (
                     self.fact_proposition(&fact, &carrier_position)?,
-                    format!("_fact_f{}", store.primary_fact_id().value()),
+                    format!("h_{}", store.primary_fact_id().value()),
                 );
                 declarations.extend(self.compile_parameter_inferences(
                     store,
