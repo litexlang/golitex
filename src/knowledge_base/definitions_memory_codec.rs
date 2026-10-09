@@ -8,7 +8,6 @@ use super::def_thm_codec::{load_def_thm, store_def_thm};
 use super::json_mini::JsonValue;
 use super::stored_identifier_codec::{load_stored_identifier, store_stored_identifier};
 use crate::exec_env::exec_env::DefinitionMemory;
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
@@ -184,23 +183,4 @@ fn reject_unsupported_maps(defs: &DefinitionMemory) -> Result<(), KbCodecError> 
         ));
     }
     Ok(())
-}
-
-/// Helper for tests / callers assembling a memory from known maps.
-pub fn definition_memory_from_parts(
-    identifiers: HashMap<String, crate::exec_env::StoredIdentifierDefinition>,
-    predicates: HashMap<String, crate::ast::stmt::DefPropStmt>,
-    abstracts: HashMap<String, crate::ast::stmt::DefAbstractPropStmt>,
-    structures: HashMap<String, crate::ast::stmt::DefStructStmt>,
-    theorems: HashMap<String, crate::ast::stmt::DefThmStmt>,
-    axioms: HashMap<String, crate::ast::stmt::AxiomStmt>,
-) -> DefinitionMemory {
-    let mut defs = DefinitionMemory::new();
-    defs.identifiers = identifiers;
-    defs.predicate_definitions = predicates;
-    defs.abstract_predicate_definitions = abstracts;
-    defs.structure_definitions = structures;
-    defs.theorem_definitions = theorems;
-    defs.axiom_definitions = axioms;
-    defs
 }

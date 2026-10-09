@@ -48,7 +48,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
     let export_index = find_export_index(&config.exports, &path);
 
     let mut runtime = Runtime::new(command);
-    runtime.abort_file();
+    runtime.abort_source();
     runtime
         .global_module_manager
         .set_root_config(config.clone());
@@ -86,10 +86,10 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
         match run_export_file(
             &mut runtime,
             &export.name,
-            &export.path,
-            export_file_id,
-            None,
-            crate::runtime::CodeSource::RootExport { export_file_id },
+            crate::runtime::CodeSource::RootExport {
+                path: export.path.clone(),
+                export_file_id,
+            },
             keep_env_open,
         ) {
             Ok(mut file_result) => {
@@ -135,14 +135,10 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
 
     // Target is not in [export]: run it as an extra file after full mount.
     let export_name = export_name_for_path(&path);
-    let export_file_id = config.exports.len();
     match run_export_file(
         &mut runtime,
         &export_name,
-        &path,
-        export_file_id,
-        None,
-        crate::runtime::CodeSource::StandaloneFile,
+        crate::runtime::CodeSource::Real(path.clone()),
         session,
     ) {
         Ok(mut file_result) => {
@@ -182,14 +178,14 @@ fn run_file_isolated(
     let mut code_result = match runtime.run_litex_code(&source) {
         Ok(result) => result,
         Err(error) => {
-            runtime.abort_file();
+            runtime.abort_source();
             return Err(error);
         }
     };
     code_result.attach_normal_json(&runtime, "file", Some(path.as_path()));
 
     if !code_result.success {
-        runtime.abort_file();
+        runtime.abort_source();
         return Ok(RunFileResult::new(path, code_result));
     }
 
@@ -206,7 +202,7 @@ fn run_file_isolated(
         return Ok(RunFileResult::new(path, code_result));
     }
 
-    let (file, exec_env) = runtime.finish_file();
+    let (file, exec_env) = runtime.finish_source();
     runtime.publish_completed_export_file(file, exec_env);
     Ok(RunFileResult::new(path, code_result))
 }

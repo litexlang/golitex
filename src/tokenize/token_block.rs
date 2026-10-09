@@ -1,4 +1,4 @@
-use crate::runtime::{CodeSource, RealOrVirtualPath, RuntimeParseError, RuntimeResult};
+use crate::runtime::{CodeSource, RuntimeParseError, RuntimeResult};
 
 /// One indented source unit handed from tokenizer to parser.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -6,7 +6,7 @@ pub struct TokenBlock {
     pub header: Vec<String>,
     pub body: Vec<TokenBlock>,
     pub line: usize,
-    pub source_path: RealOrVirtualPath,
+    pub source_path: CodeSource,
     pub parse_index: usize,
 }
 
@@ -15,7 +15,7 @@ impl TokenBlock {
         header: Vec<String>,
         body: Vec<TokenBlock>,
         line: usize,
-        source_path: RealOrVirtualPath,
+        source_path: CodeSource,
     ) -> Self {
         Self {
             header,
@@ -93,8 +93,8 @@ impl TokenBlock {
         Ok(())
     }
 
-    pub fn line_file(&self, code_source: CodeSource) -> crate::ast::SourceLine {
-        crate::ast::SourceLine::new(self.line, code_source)
+    pub fn line_file(&self) -> crate::ast::SourceLine {
+        crate::ast::SourceLine::new(self.line, self.source_path.clone())
     }
 
     pub fn parse_error(&self, message: impl Into<String>) -> crate::runtime::RuntimeError {

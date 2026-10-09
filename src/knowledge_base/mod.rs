@@ -4,6 +4,8 @@
 //! See `README.md` in this package.
 
 mod axiom_codec;
+#[cfg(test)]
+mod code_source_tests;
 mod def_abstract_prop_codec;
 mod def_prop_codec;
 mod def_struct_codec;

@@ -9,7 +9,10 @@ fn runtime() -> Runtime {
         language: OutputLanguage::English,
     });
     // Canonical showcases export main.lit: exercise qualified definition owners.
-    rt.set_code_source(CodeSource::RootExport { export_file_id: 0 });
+    rt.current_file = CodeSource::RootExport {
+        path: "test.lit".into(),
+        export_file_id: 0,
+    };
     rt
 }
 

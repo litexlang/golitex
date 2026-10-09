@@ -18,7 +18,7 @@ use crate::ast::fact::{
     GreaterEqualFact, InFact, LessFact, OrFact, QuantifierFreeFact,
 };
 use crate::ast::obj::{FnSet, FunctionSpace, IdentifierObj, Obj, StandardSet};
-use crate::ast::param::{ParamType, SetBoundParameterGroup, TypedParameterList};
+use crate::ast::param::SetBoundParameterGroup;
 use crate::ast::stmt::{
     FnSetClause, HaveFnByInducCase, HaveFnByInducCaseBody, HaveFnByInducStmt,
     HaveFnEqualCaseByCaseStmt,

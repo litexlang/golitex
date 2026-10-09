@@ -323,15 +323,18 @@ prop is_pos(x R):
   "line_file": {
     "line": 1,
     "origin": {
-      "export_file_id": 0,
-      "tag": "RootExport"
+      "tag": "RootExport",
+      "path": "test.lit",
+      "export_file_id": 0
     }
   }
 }
 ```
 
-`line_file` is a `SourceLine`: line number plus `CodeSource` origin (no absolute
-path). `StandaloneFile` / display paths live on `Runtime.current_file`.
+`line_file` is a `SourceLine`: line number plus a `CodeSource` containing the
+source path and publication IDs. `Runtime.current_file` owns the source for
+new input; AST locations and file-environment snapshots retain their sources.
+ABI 9 requires real paths and rebuilds older caches from source.
 
 ### Supported AST subset (grow over time)
 

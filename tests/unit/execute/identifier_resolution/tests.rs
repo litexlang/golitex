@@ -2,7 +2,7 @@ use crate::ast::fact::{AtomicFact, Fact};
 use crate::ast::stmt::Stmt;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::run_module::{load_config, run_export_file};
-use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime};
+use crate::runtime::{CodeSource, Runtime};
 use crate::tokenize::Tokenizer;
 
 #[test]
@@ -130,7 +130,7 @@ fn mounted_runtime() -> Runtime {
         strict: true,
         language: OutputLanguage::English,
     });
-    rt.abort_file();
+    rt.abort_source();
     rt.global_module_manager
         .set_root_config(load_config(&root, &root).unwrap());
     let config = load_config(&library, &root).unwrap();
@@ -142,10 +142,8 @@ fn mounted_runtime() -> Runtime {
         let run = run_export_file(
             &mut rt,
             &export.name,
-            &export.path,
-            file_id,
-            Some(mod_id),
             CodeSource::ImportedExport {
+                path: export.path.clone(),
                 global_mod_id: mod_id,
                 export_file_id: file_id,
             },
@@ -162,16 +160,18 @@ fn mounted_runtime() -> Runtime {
     let run = run_export_file(
         &mut rt,
         "base",
-        &root.join("base.lit"),
-        0,
-        None,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::RootExport {
+            path: root.join("base.lit"),
+            export_file_id: 0,
+        },
         false,
     )
     .unwrap();
     assert!(run.run.success);
-    rt.set_code_source(CodeSource::RootExport { export_file_id: 1 });
-    rt.begin_file(RealOrVirtualPath::Eval);
+    rt.begin_source(CodeSource::RootExport {
+        path: "test.lit".into(),
+        export_file_id: 1,
+    });
     rt
 }
 

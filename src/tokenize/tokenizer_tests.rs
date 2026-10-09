@@ -1,10 +1,10 @@
-use crate::runtime::RealOrVirtualPath;
+use crate::runtime::CodeSource;
 use crate::tokenize::Tokenizer;
 
 #[test]
 fn tokenizes_one_plus_one_equals_two() {
     let blocks = Tokenizer::new()
-        .tokenize("1 + 1 = 2", RealOrVirtualPath::Eval)
+        .tokenize("1 + 1 = 2", CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -22,7 +22,7 @@ fn tokenizes_one_plus_one_equals_two() {
 fn tokenizes_indented_block_body() {
     let source = "forall x R:\n    x = x\n";
     let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
+        .tokenize(source, CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -45,9 +45,7 @@ fn tokenizes_indented_block_body() {
 #[test]
 fn hash_comments_ignore_unbalanced_quotes_and_preserve_line_numbers() {
     let source = "# Finally \"there is no x satisfying\n# P(x)\" and \"every x fails.\"\n1 = 1 # \"unfinished comment\n";
-    let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
-        .unwrap();
+    let blocks = Tokenizer::new().tokenize(source, CodeSource::Eval).unwrap();
     assert_eq!(blocks.len(), 1);
     assert_eq!(blocks[0].header, vec!["1", "=", "1"]);
     assert_eq!(blocks[0].line, 3);
@@ -56,9 +54,7 @@ fn hash_comments_ignore_unbalanced_quotes_and_preserve_line_numbers() {
 #[test]
 fn hash_comment_after_a_header_does_not_hide_its_colon() {
     let source = "forall x R: # \"unfinished comment\n    x = x # \"another comment\n";
-    let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
-        .unwrap();
+    let blocks = Tokenizer::new().tokenize(source, CodeSource::Eval).unwrap();
     assert_eq!(blocks.len(), 1);
     assert_eq!(blocks[0].body.len(), 1);
     assert_eq!(blocks[0].body[0].header, vec!["x", "=", "x"]);
@@ -67,12 +63,10 @@ fn hash_comment_after_a_header_does_not_hide_its_colon() {
 #[test]
 fn hash_in_an_inline_aside_does_not_begin_a_comment() {
     let source = "1 \"note # inside aside\" = 1 # \"ignored\n";
-    let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
-        .unwrap();
+    let blocks = Tokenizer::new().tokenize(source, CodeSource::Eval).unwrap();
     assert_eq!(blocks[0].header, vec!["1", "=", "1"]);
     let error = Tokenizer::new()
-        .tokenize("1 = 1 \"unclosed # inside aside\n", RealOrVirtualPath::Eval)
+        .tokenize("1 = 1 \"unclosed # inside aside\n", CodeSource::Eval)
         .unwrap_err();
     assert!(format!("{error:?}").contains("unclosed inline aside"));
 }
@@ -81,7 +75,7 @@ fn hash_in_an_inline_aside_does_not_begin_a_comment() {
 fn strips_inline_aside_quotes() {
     let source = "forall a R:\n    \"我们有\" a ^ 2 >= 0\n";
     let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
+        .tokenize(source, CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -97,7 +91,7 @@ fn strips_inline_aside_quotes() {
 fn aside_after_colon_still_opens_block() {
     let source = "forall a R: \"note\"\n    a = a\n";
     let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
+        .tokenize(source, CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -113,7 +107,7 @@ fn aside_after_colon_still_opens_block() {
 #[test]
 fn unclosed_inline_aside_is_error() {
     let err = Tokenizer::new()
-        .tokenize("1 = 1 \"oops", RealOrVirtualPath::Eval)
+        .tokenize("1 = 1 \"oops", CodeSource::Eval)
         .expect_err("unclosed aside");
     let msg = format!("{err:?}");
     assert!(msg.contains("unclosed inline aside"), "{msg}");
@@ -123,7 +117,7 @@ fn unclosed_inline_aside_is_error() {
 fn strips_exact_triple_quote_block_comment() {
     let source = "\"\"\"\na = b\n\"\"\"\n1 = 1\n";
     let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
+        .tokenize(source, CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -138,7 +132,7 @@ fn strips_exact_triple_quote_block_comment() {
 #[test]
 fn single_quote_line_is_not_block_delimiter() {
     let err = Tokenizer::new()
-        .tokenize("\"\n1 = 1\n\"\n", RealOrVirtualPath::Eval)
+        .tokenize("\"\n1 = 1\n\"\n", CodeSource::Eval)
         .expect_err("lone quote is inline aside");
     let msg = format!("{err:?}");
     assert!(msg.contains("unclosed inline aside"), "{msg}");
@@ -147,7 +141,7 @@ fn single_quote_line_is_not_block_delimiter() {
 #[test]
 fn unclosed_block_comment_is_error() {
     let err = Tokenizer::new()
-        .tokenize("\"\"\"\na = b\n1 = 1\n", RealOrVirtualPath::Eval)
+        .tokenize("\"\"\"\na = b\n1 = 1\n", CodeSource::Eval)
         .expect_err("unclosed block comment");
     let msg = format!("{err:?}");
     assert!(msg.contains("unclosed block comment"), "{msg}");
@@ -157,7 +151,7 @@ fn unclosed_block_comment_is_error() {
 fn joins_trailing_double_backslash_line_continuation() {
     let source = "a = b \\\\\n   = c \\\\\n   = 1\n";
     let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
+        .tokenize(source, CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -172,7 +166,7 @@ fn joins_trailing_double_backslash_line_continuation() {
 #[test]
 fn mid_line_double_backslash_is_not_continuation() {
     let blocks = Tokenizer::new()
-        .tokenize("a \\\\ b = b \\\\ a", RealOrVirtualPath::Eval)
+        .tokenize("a \\\\ b = b \\\\ a", CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -187,7 +181,7 @@ fn mid_line_double_backslash_is_not_continuation() {
 #[test]
 fn unclosed_line_continuation_is_error() {
     let err = Tokenizer::new()
-        .tokenize("a = b \\\\\n", RealOrVirtualPath::Eval)
+        .tokenize("a = b \\\\\n", CodeSource::Eval)
         .expect_err("unclosed continuation");
     let msg = format!("{err:?}");
     assert!(msg.contains("unclosed line continuation"), "{msg}");
@@ -197,7 +191,7 @@ fn unclosed_line_continuation_is_error() {
 fn line_continuation_allows_trailing_hash_comment() {
     let source = "a = b \\\\  # asdfadfs\n   = c\n";
     let blocks = Tokenizer::new()
-        .tokenize(source, RealOrVirtualPath::Eval)
+        .tokenize(source, CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(blocks.len(), 1);
     assert_eq!(
@@ -213,19 +207,19 @@ fn line_continuation_allows_trailing_hash_comment() {
 fn tokenizes_factorial_bang_and_exist_bang() {
     let tokenizer = Tokenizer::new();
     let a = tokenizer
-        .tokenize("2!", RealOrVirtualPath::Eval)
+        .tokenize("2!", CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(a[0].header, vec!["2", "!"]);
     let b = tokenizer
-        .tokenize("2 != 3", RealOrVirtualPath::Eval)
+        .tokenize("2 != 3", CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(b[0].header, vec!["2", "!=", "3"]);
     let c = tokenizer
-        .tokenize("exist! x N", RealOrVirtualPath::Eval)
+        .tokenize("exist! x N", CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(c[0].header, vec!["exist", "!", "x", "N"]);
     let d = tokenizer
-        .tokenize("n!", RealOrVirtualPath::Eval)
+        .tokenize("n!", CodeSource::Eval)
         .expect("tokenize");
     assert_eq!(d[0].header, vec!["n", "!"]);
 }

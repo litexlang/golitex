@@ -1618,6 +1618,32 @@ inference first reuses that existing checked rule. Zero and `i^2` cannot use it.
 The user states the meaningful structural fact once, and the checker records
 the small consequences that a human reader would normally keep in mind.
 
+Scalar cancellation is another example:
+
+```litex
+forall a, b, k R:
+    k != 0
+    a * k = b * k
+    =>:
+        a = b
+```
+
+Storing the product equality publishes the remaining equality using the
+available nonzero certificate; sums cancel their direct common addend without
+a nonzero condition. `a-k=b-k` and `k-a=k-b` also publish `a=b`. For division,
+`a/k=b/k` requires `k!=0`; `k/a=k/b` requires `k!=0` and the quotient WD
+conditions `a!=0`, `b!=0`. A zero common numerator conveys no denominator
+equality. Unlike addition/multiplication, subtraction/division do not cancel
+crossed positions such as `a-k=k-b` or `a/k=k/b`.
+The candidate comes from the two operand trees, so this
+rule does not search every fact involving `a` or `b`. Domain and nonzero checks
+use at most KnownSpecialProperty under the caller's permissions. It does not
+expand, reassociate or match aliases. If `k!=0` arrives later, restate the
+product equality to trigger inference. Missing nonzero and zero factors never
+cancel. See the [cancellation tracer](../examples/infer/equal/nonzero_factor_cancellation.lit).
+Lean compilation of a citation to this new inference remains unsupported and
+fails closed rather than introducing an assumption.
+
 For example, `closed_range(0, n) $subset N` follows directly when `n $in N`,
 and `{k closed_range(0, n): P(k)}` is finite because it only filters a finite
 base. If that filtered set is also proved nonempty, its finite minimum can be

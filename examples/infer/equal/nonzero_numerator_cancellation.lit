@@ -1,0 +1,21 @@
+# Tracer: NonzeroNumeratorCancellation; reciprocal injectivity.
+# Before (failed at search_proof):
+# forall a, b, k C*:
+#     k/a=k/b
+#     =>:
+#         a=b
+# Now: retain nonzero certificates for k, a and b before publishing a=b.
+# Boundary: 0/a=0/b conveys no equality of a,b; missing/zero denominator rejects WD.
+# Tests: tests/unit/execute/equality_cancellation/tests.rs
+# Owner: src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_equal_fact/infer_equal_fact_division_cancellation.rs
+# Run: target/release/litex -lang en -strict -f examples/infer/equal/nonzero_numerator_cancellation.lit
+
+forall a, b, k C*:
+    k/a=k/b
+    =>:
+        a=b
+
+forall a, b R*:
+    2/a=2/b
+    =>:
+        a=b

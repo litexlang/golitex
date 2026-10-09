@@ -196,6 +196,25 @@ State a direct target first when ordinary verification can establish it. For a
 proof needing an explicit mathematical move, choose the corresponding action.
 The entries below are abbreviated forms, not complete runnable programs.
 
+For scalar cancellation, state the remaining equality directly:
+
+```litex
+forall a, b, k R:
+    k != 0
+    a * k = b * k
+    =>:
+        a = b
+```
+
+`a+k=b+k` also publishes `a=b`, without a nonzero condition. The common
+operand must appear directly on both sides. Subtraction supports `a-k=b-k`
+and `k-a=k-b`. Division supports `a/k=b/k` with `k!=0`, and `k/a=k/b` with
+`k!=0`, `a!=0`, `b!=0`. Subtraction/division require matching operand positions;
+`0/a=0/b` cannot cancel its numerator. Put the nonzero certificate
+before the product equality; if it arrives later, restate that equality.
+Expansion, reassociation and alias matching are outside this infer rule.
+See the [cancellation contract](Manual.md#equality-and-structural-inference).
+
 | Needed move | Action | Contract/example |
 | --- | --- | --- |
 | Use a positive concrete definition | `by def $P(args)` | [S47](Manual.md#s47-explicit-definition-folding) |

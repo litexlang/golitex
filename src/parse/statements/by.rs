@@ -90,7 +90,7 @@ impl Runtime {
             left,
             right,
             proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -134,7 +134,7 @@ impl Runtime {
             left,
             right,
             proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -175,7 +175,7 @@ impl Runtime {
             ByEnumerateFiniteSetStmt {
                 forall_fact,
                 proof,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -199,7 +199,7 @@ impl Runtime {
         Ok(Stmt::By(ByStmt::ByForStmt(ByForStmt {
             forall_fact,
             proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -287,7 +287,7 @@ impl Runtime {
             then_facts,
             proofs,
             impossible_facts,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -333,7 +333,7 @@ impl Runtime {
             to_prove,
             proof,
             impossible_fact,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -375,7 +375,7 @@ impl Runtime {
         }
         Ok(Stmt::By(ByStmt::ByDefStmt(ByDefStmt {
             fact,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -398,7 +398,7 @@ impl Runtime {
             return Ok(Stmt::By(ByStmt::ByThmStmt(ByThmStmt {
                 call,
                 selected_fact,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             })));
         }
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
@@ -407,7 +407,7 @@ impl Runtime {
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseThmStmt(ReleaseThmStmt {
                 call,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -568,7 +568,7 @@ impl Runtime {
         self.pop_parse_scope();
         let (to_prove, proof, base_proof, step_proof) = parsed?;
 
-        let line_file = SourceLine::new(block.line, self.code_source.clone());
+        let line_file = SourceLine::new(block.line, block.source_path.clone());
         if strong {
             Ok(Stmt::By(ByStmt::ByStrongInducStmt(ByStrongInducStmt {
                 to_prove,

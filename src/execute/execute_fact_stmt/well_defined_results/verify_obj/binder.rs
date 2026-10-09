@@ -140,7 +140,7 @@ impl Runtime {
     fn finish_binder_obj_success<P>(
         &mut self,
         obj: Obj,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
         wrap: impl FnOnce(P) -> ObjWellDefinedProofByDef,
         proof: P,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {

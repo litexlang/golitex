@@ -1,8 +1,6 @@
 use crate::ast::fact::{AndChainAtomicFact, EqualFact, Fact, ForallFact, InFact, OrFact};
 use crate::ast::line_file::SourceLine;
-use crate::ast::obj::{
-    ClosedRange, IdentifierObj, ListSet, Literal, Number, Obj, Range, SetFormer,
-};
+use crate::ast::obj::{ClosedRange, ListSet, Literal, Number, Obj, Range, SetFormer};
 use crate::ast::param::ParamType;
 use crate::ast::stmt::ClosedRangeOrRange;
 use crate::rational_expression::exact_rational::evaluate_obj_to_exact_rational_for_eval;
@@ -153,8 +151,4 @@ pub(super) fn membership_in_fact(
         }
         .into(),
     )
-}
-
-pub(super) fn identifier_obj(id: IdentifierId, name: String) -> Obj {
-    Obj::Identifier(IdentifierObj::plain(id, name))
 }

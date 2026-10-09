@@ -1,6 +1,6 @@
 use crate::ast::obj::IdentifierObj;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
-use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime};
+use crate::runtime::{CodeSource, Runtime};
 
 fn runtime(source: CodeSource) -> Runtime {
     let mut rt = Runtime::new(LaunchCommand::Eval {
@@ -9,17 +9,20 @@ fn runtime(source: CodeSource) -> Runtime {
         strict: true,
         language: OutputLanguage::English,
     });
-    rt.finish_file();
-    rt.set_code_source(source);
-    rt.begin_file(RealOrVirtualPath::Eval);
+    rt.finish_source();
+    rt.begin_source(source);
     rt
 }
 
 fn sources() -> [CodeSource; 3] {
     [
-        CodeSource::StandaloneFile,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::Real("test.lit".into()),
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 0,
+        },
         CodeSource::ImportedExport {
+            path: "test.lit".into(),
             global_mod_id: 0,
             export_file_id: 0,
         },
@@ -90,7 +93,7 @@ fn failed_same_named_witness_preserves_outer_definition_and_discards_local_facts
 
 #[test]
 fn surface_name_does_not_validate_an_unrelated_binding_id() {
-    let mut rt = runtime(CodeSource::StandaloneFile);
+    let mut rt = runtime(CodeSource::Real("test.lit".into()));
     assert!(
         rt.run_litex_code("have g R = 2\nhave j R = 3")
             .unwrap()

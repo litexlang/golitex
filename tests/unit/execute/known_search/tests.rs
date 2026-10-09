@@ -283,8 +283,7 @@ fn fixed_builtin_premises_retain_definition_evidence_without_storing_the_premise
     exec_ok(&mut rt, "have a R");
     let before = memory_sizes(&rt);
     let target = atomic(&mut rt, "positive(a) >= 1");
-    let mut state = builtin_disabled();
-    state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
+    let state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
     let result = rt.verify_fact(&Fact::AtomicFact(target), state).unwrap();
     assert!(!result.is_failed());
     let VerifyFactResult::AtomicExceptEquality(result) = result else {
@@ -620,8 +619,7 @@ fn equality_antisymmetry_retains_both_read_only_order_citations() {
     }
     let target = Fact::AtomicFact(atomic(&mut rt, "a = b"));
     let before = memory_sizes(&rt);
-    let mut state = builtin_disabled();
-    state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
+    let state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
     let VerifyFactResult::Equality(result) = rt.verify_fact(&target, state).unwrap() else {
         panic!("equality")
     };
@@ -706,4 +704,80 @@ fn memory_sizes(rt: &Runtime) -> Vec<(usize, usize, usize)> {
             )
         })
         .collect()
+}
+
+fn fnset_carrier_matching_runtime() -> Runtime {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "abstract_prop fnset_selected(X, function)");
+    exec_ok(
+        &mut rt,
+        r#"claim:
+    ? forall X set:
+        {function fn(x X) X: $fnset_selected(X, function)} $in power_set(fn(x X) X)
+    claim:
+        ? forall member {function fn(x X) X: $fnset_selected(X, function)}:
+            member $in fn(x X) X
+    by def:
+        ? {function fn(x X) X: $fnset_selected(X, function)} $subset fn(x X) X
+"#,
+    );
+    rt
+}
+
+#[test]
+fn forall_fnset_free_parameter_matches_alpha_renamed_builder_carrier() {
+    let mut rt = fnset_carrier_matching_runtime();
+    exec_ok(
+        &mut rt,
+        r#"template<Y set>:
+    have selected_functions power_set(fn(t Y) Y) = {operation fn(z Y) Y: $fnset_selected(Y, operation)}
+"#,
+    );
+}
+
+#[test]
+fn forall_fnset_free_parameter_rejects_changed_signature() {
+    for code in [
+        r#"template<Y set>:
+    have wrong_return power_set(fn(t Y) N) = {operation fn(z Y) Y: $fnset_selected(Y, operation)}
+"#,
+        r#"template<Y set>:
+    have wrong_arity power_set(fn(t, u Y) Y) = {operation fn(z Y) Y: $fnset_selected(Y, operation)}
+"#,
+    ] {
+        let mut rt = fnset_carrier_matching_runtime();
+        let stmt = parse(&mut rt, code);
+        assert!(rt.exec_stmt(&stmt).unwrap().is_failed(), "{code}");
+    }
+}
+
+#[test]
+fn forall_fnset_free_parameter_rejects_local_binder_capture() {
+    use crate::ast::fact::atomic_fact_args_ref;
+    use crate::ast::obj::{IdentifierObj, Obj};
+    let mut rt = fnset_carrier_matching_runtime();
+    exec_ok(&mut rt, "have A set");
+    let id_fact = atomic(&mut rt, "A = A");
+    let args = atomic_fact_args_ref(&id_fact);
+    let Obj::Identifier(IdentifierObj::Plain { id, .. }) = args[0] else {
+        panic!("plain set parameter")
+    };
+    let pattern = atomic(
+        &mut rt,
+        "{function fn(x A) A: $fnset_selected(A, function)} $in power_set(fn(x A) A)",
+    );
+    let goal = atomic(
+        &mut rt,
+        "{operation fn(z A) A: $fnset_selected(operation, operation)} $in power_set(fn(t A) A)",
+    );
+    let before = memory_sizes(&rt);
+    assert!(rt
+        .match_forall_conclusion_args_to_subst(
+            &atomic_fact_args_ref(&pattern),
+            &atomic_fact_args_ref(&goal),
+            &[*id],
+        )
+        .unwrap()
+        .is_none());
+    assert_eq!(memory_sizes(&rt), before);
 }

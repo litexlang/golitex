@@ -1,4 +1,4 @@
-use crate::ast::obj::{FnObj, FnObjHead, IdentifierObj, Literal, Number, Obj};
+use crate::ast::obj::{FnObj, FnObjHead, IdentifierObj, Literal, Obj};
 use crate::ast::param::SetBoundParameterList;
 use crate::runtime::runtime_ids::IdentifierId;
 use std::collections::HashSet;
@@ -7,15 +7,6 @@ pub const MAX_EVAL_DEPTH: usize = 64;
 
 pub fn is_number_literal(obj: &Obj) -> bool {
     matches!(obj, Obj::Literal(Literal::Number(_)))
-}
-
-pub fn number_literal_key(obj: &Obj) -> Option<String> {
-    match obj {
-        Obj::Literal(Literal::Number(Number { normalized_value })) => {
-            Some(normalized_value.clone())
-        }
-        _ => None,
-    }
 }
 
 pub fn fn_obj_plain_name(fn_obj: &FnObj) -> Option<String> {

@@ -348,7 +348,6 @@ fn normal_identity_output_is_not_a_builtin_in_either_language() {
 
 #[test]
 fn builtin_ceiling_keeps_local_alpha_calculation_and_exact_stored_paths() {
-    use crate::execute::execute_fact_stmt::VerifyStateLevel;
     for (code, expected) in [
         ("fn(x R) R = fn(y R) R", "identity"),
         ("1 + 1 = 2", "calculation"),
@@ -388,8 +387,7 @@ fn explicit_definition_chain_stores_endpoint_before_later_verification() {
     exec_ok(&mut runtime, "have x R = 2");
     exec_ok(&mut runtime, "have y R = x + 1");
     // Even with builtin entry enabled, definition residuals must keep rewrite disabled.
-    let mut state = VerifyState::top_level();
-    state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
+    let state = VerifyState::new(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
     assert!(verify(&mut runtime, "y = 3", state).is_failed());
 
     exec_ok(&mut runtime, "y = x + 1 = 3");

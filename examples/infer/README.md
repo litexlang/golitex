@@ -42,6 +42,15 @@ Callable-field range and indexed-family consequences are covered by
 `equal/nonzero_real_square.lit` checks positive membership transported from
 a nonzero real square while retaining the negative/zero/complex boundaries.
 
+Direct scalar cancellation has one tracer per rule:
+`equal/additive_cancellation.lit`, `equal/subtractive_cancellation.lit`,
+`equal/nonzero_factor_cancellation.lit`, `equal/common_denominator_cancellation.lit`
+and `equal/nonzero_numerator_cancellation.lit`. Addition/multiplication allow
+all shared-operand positions; subtraction/division require the same position.
+Division retains denominator nonzero proofs; canceling a common numerator also
+requires it to be nonzero. Executable crossed-position, zero, missing-WD,
+scope, replay and premise-ceiling controls live in `equality_cancellation` tests.
+
 `atomic/set_builder_projection_replay.lit` proves a self-carrier builder equality
 by extension, rechecks the stored equality, and checks a different builder's
 carrier and defining condition. Exact already-visible builder consequences are

@@ -17,6 +17,34 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SubtractionOrderPairs(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("SubtractionOrderPairs")),
+            ("minuend_order", project_verify_fact(&p.minuend_order, runtime)),
+            ("subtrahend_order", project_verify_fact(&p.subtrahend_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsSquareRadius(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("AbsSquareRadius")),
+            ("radius_nonnegative", project_verify_fact(&p.radius_nonnegative, runtime)),
+            ("squared_order", project_verify_fact(&p.squared_order, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::QuotientScalarUpperBound(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("QuotientScalarUpperBound")),
+            ("denominator_positive", project_verify_fact(&p.denominator_positive, runtime)),
+            ("product_bound", project_verify_fact(&p.product_bound, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::QuotientScalarStrictUpperBound(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("QuotientScalarStrictUpperBound")),
+            ("denominator_positive", project_verify_fact(&p.denominator_positive, runtime)),
+            ("product_bound", project_verify_fact(&p.product_bound, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::ExactIntegerQuotient(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ExactIntegerQuotient")),
+            ("numerator_integer", project_verify_fact(&p.numerator_integer, runtime)),
+            ("denominator_integer", project_verify_fact(&p.denominator_integer, runtime)),
+            ("denominator_nonzero", project_verify_fact(&p.denominator_nonzero, runtime)),
+            ("zero_remainder", project_verify_fact(&p.zero_remainder, runtime)),
+        ]),
+
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::AbsPositiveFromNonzero(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("AbsPositiveFromNonzero")),
             ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime)),
@@ -606,7 +634,7 @@ pub(super) fn project_atomic_builtin_rule(
             ])
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ArctanPrincipalLowerBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessFact")),
                 ("rule", string("ArctanPrincipalLowerBound")),
@@ -615,7 +643,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ArctanPrincipalUpperBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessFact")),
                 ("rule", string("ArctanPrincipalUpperBound")),
@@ -624,7 +652,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ArccotPrincipalLowerBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessFact")),
                 ("rule", string("ArccotPrincipalLowerBound")),
@@ -633,7 +661,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ArccotPrincipalUpperBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessFact")),
                 ("rule", string("ArccotPrincipalUpperBound")),
@@ -1010,7 +1038,7 @@ pub(super) fn project_atomic_builtin_rule(
             ("type", string("builtin_rule")), ("family", string("GreaterFact")), ("rule", string("NativeEulerGreaterOne")),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterZero(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("GreaterFact")),
                 ("rule", string("NativeEulerGreaterZero")),
@@ -1019,7 +1047,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::NativePiGreaterZero(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("GreaterFact")),
                 ("rule", string("NativePiGreaterZero")),
@@ -1056,7 +1084,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalLowerBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("ArcsinPrincipalLowerBound")),
@@ -1065,7 +1093,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalUpperBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("ArcsinPrincipalUpperBound")),
@@ -1074,7 +1102,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalLowerBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("ArccosPrincipalLowerBound")),
@@ -1083,7 +1111,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalUpperBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("ArccosPrincipalUpperBound")),
@@ -1092,7 +1120,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::UnitCircleLowerBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("UnitCircleLowerBound")),
@@ -1101,7 +1129,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::UnitCircleUpperBound(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("UnitCircleUpperBound")),
@@ -1110,7 +1138,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsNonnegative")),
@@ -1212,7 +1240,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsSelfUpper(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsSelfUpper")),
@@ -1221,7 +1249,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsSelfLower(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsSelfLower")),
@@ -1230,7 +1258,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsTriangleInequality(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsTriangleInequality")),
@@ -1239,7 +1267,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleAdd(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsReverseTriangleAdd")),
@@ -1248,7 +1276,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleSub(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("LessEqualFact")),
                 ("rule", string("AbsReverseTriangleSub")),
@@ -1700,7 +1728,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsSetFact(br::is_set::IsSetFactSearchProofByBuiltinRule::AlwaysTrue(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsSetFact")),
                 ("rule", string("AlwaysTrue")),
@@ -1718,7 +1746,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(br::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule::LiteralListSetNonempty(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsNonemptySetFact")),
                 ("rule", string("LiteralListSetNonempty")),
@@ -1727,7 +1755,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(br::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule::PowerSetNonempty(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsNonemptySetFact")),
                 ("rule", string("PowerSetNonempty")),
@@ -1736,7 +1764,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(br::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule::OneSideInfinityIntervalNonempty(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsNonemptySetFact")),
                 ("rule", string("OneSideInfinityIntervalNonempty")),
@@ -1754,7 +1782,7 @@ pub(super) fn project_atomic_builtin_rule(
             ("domain_finite_proof",project_verify_fact(&p.domain_finite_proof,runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::ListSet(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsFiniteSetFact")),
                 ("rule", string("ListSet")),
@@ -1763,7 +1791,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsFiniteSetFact")),
                 ("rule", string("ClosedRange")),
@@ -1772,7 +1800,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::Range(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsFiniteSetFact")),
                 ("rule", string("Range")),
@@ -1781,7 +1809,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(br::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::FiniteSeqZeroLength(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("IsFiniteSetFact")),
                 ("rule", string("FiniteSeqZeroLength")),
@@ -1799,7 +1827,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::ClosedNumericMembership(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("ClosedNumericMembership")),
@@ -1808,7 +1836,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("ComplexArithmeticClosure")),
@@ -1817,7 +1845,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealTrigClosure(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("RealTrigClosure")),
@@ -1826,7 +1854,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealTrigInComplex(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("RealTrigInComplex")),
@@ -1835,7 +1863,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::ComplexCoordinateInReal(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("ComplexCoordinateInReal")),
@@ -1844,7 +1872,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::ComplexCoordinateInComplex(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("ComplexCoordinateInComplex")),
@@ -1853,7 +1881,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealArithmeticClosure(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("InFact")),
                 ("rule", string("RealArithmeticClosure")),
@@ -2175,7 +2203,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::IntersectSubsetLeft(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("IntersectSubsetLeft")),
@@ -2184,7 +2212,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::IntersectSubsetRight(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("IntersectSubsetRight")),
@@ -2193,7 +2221,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::SubsetUnionLeft(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("SubsetUnionLeft")),
@@ -2202,7 +2230,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::SubsetUnionRight(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("SubsetUnionRight")),
@@ -2211,7 +2239,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::SetMinusSubsetLeft(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("SetMinusSubsetLeft")),
@@ -2220,7 +2248,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::RealIntervalSubsetReal(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("RealIntervalSubsetReal")),
@@ -2229,7 +2257,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("SetBuilderSubsetOfParamSet")),
@@ -2247,7 +2275,7 @@ pub(super) fn project_atomic_builtin_rule(
             ])
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SubsetFact")),
                 ("rule", string("SubsetReflexivity")),
@@ -2358,7 +2386,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SupersetFact(br::superset::SupersetFactSearchProofByBuiltinRule::SupersetReflexivity(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("SupersetFact")),
                 ("rule", string("SupersetReflexivity")),
@@ -2428,7 +2456,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ListSetDifferentLength(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("NotEqualFact")),
                 ("rule", string("ListSetDifferentLength")),
@@ -2456,7 +2484,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("NotEqualFact")),
                 ("rule", string("CosNonzeroAtZero")),
@@ -2475,7 +2503,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHalfPi(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("NotEqualFact")),
                 ("rule", string("SinNonzeroAtHalfPi")),
@@ -2662,7 +2690,7 @@ pub(super) fn project_atomic_builtin_rule(
             ("type", string("builtin_rule")), ("family", string("NotIsSetFact")),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsNonemptySetFact(br::not_is_nonempty_set::NotIsNonemptySetFactSearchProofByBuiltinRule::EmptyListSet(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("NotIsNonemptySetFact")),
                 ("rule", string("EmptyListSet")),
@@ -2671,7 +2699,7 @@ pub(super) fn project_atomic_builtin_rule(
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsFiniteSetFact(br::not_is_finite_set::NotIsFiniteSetFactSearchProofByBuiltinRule::StandardInfiniteSet(p)) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("family", string("NotIsFiniteSetFact")),
                 ("rule", string("StandardInfiniteSet")),

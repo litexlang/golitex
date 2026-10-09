@@ -1,0 +1,2 @@
+mod compile_by_stmt_result;
+mod compile_by_thm_stmt_result;

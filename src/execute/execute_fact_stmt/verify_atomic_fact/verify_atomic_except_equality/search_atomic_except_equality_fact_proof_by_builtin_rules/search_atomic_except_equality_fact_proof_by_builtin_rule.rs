@@ -1,22 +1,19 @@
 use crate::ast::fact::{
-    AtomicFact, BijectiveFact, CoprimeFact, DvdFact, InjectiveFact, IsChoiceFunctionForFact,
-    NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotInjectiveFact, NotIsChoiceFunctionForFact,
-    NotIsSetFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSurjectiveFact,
-    PrimeFact, ProperSubsetFact, ProperSupersetFact, SurjectiveFact,
+    AtomicFact, BijectiveFact, DvdFact, InjectiveFact, IsChoiceFunctionForFact, NotBijectiveFact,
+    NotDvdFact, NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsSetFact, NotProperSubsetFact,
+    NotProperSupersetFact, NotSurjectiveFact, ProperSubsetFact, ProperSupersetFact, SurjectiveFact,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
     AtomicExceptEqualityFactSearchProofByBuiltinRule, BijectiveFactSearchProofByBuiltinRule,
-    CoprimeFactSearchProofByBuiltinRule, DvdFactSearchProofByBuiltinRule,
-    InjectiveFactSearchProofByBuiltinRule, IsChoiceFunctionForFactSearchProofByBuiltinRule,
-    NotBijectiveFactSearchProofByBuiltinRule, NotCoprimeFactSearchProofByBuiltinRule,
+    DvdFactSearchProofByBuiltinRule, InjectiveFactSearchProofByBuiltinRule,
+    IsChoiceFunctionForFactSearchProofByBuiltinRule, NotBijectiveFactSearchProofByBuiltinRule,
     NotDvdFactSearchProofByBuiltinRule, NotInjectiveFactSearchProofByBuiltinRule,
     NotIsChoiceFunctionForFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
-    NotPrimeFactSearchProofByBuiltinRule, NotProperSubsetFactSearchProofByBuiltinRule,
-    NotProperSupersetFactSearchProofByBuiltinRule, NotSurjectiveFactSearchProofByBuiltinRule,
-    PrimeFactSearchProofByBuiltinRule, ProperSubsetFactSearchProofByBuiltinRule,
+    NotProperSubsetFactSearchProofByBuiltinRule, NotProperSupersetFactSearchProofByBuiltinRule,
+    NotSurjectiveFactSearchProofByBuiltinRule, ProperSubsetFactSearchProofByBuiltinRule,
     ProperSupersetFactSearchProofByBuiltinRule, SurjectiveFactSearchProofByBuiltinRule,
 };
 

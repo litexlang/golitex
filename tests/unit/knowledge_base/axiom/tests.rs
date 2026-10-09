@@ -35,7 +35,13 @@ fn sample() -> AxiomStmt {
             )],
             line_file: None,
         },
-        line_file: SourceLine::new(1, CodeSource::RootExport { export_file_id: 0 }),
+        line_file: SourceLine::new(
+            1,
+            CodeSource::RootExport {
+                path: "test.lit".into(),
+                export_file_id: 0,
+            },
+        ),
     }
 }
 

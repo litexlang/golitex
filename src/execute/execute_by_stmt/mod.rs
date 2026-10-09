@@ -32,7 +32,6 @@ pub use exec_by_for_stmt::exec_by_for_stmt;
 pub use exec_by_induc_stmt::{exec_by_induc_stmt, exec_by_strong_induc_stmt};
 pub use exec_by_regularity_axiom_stmt::exec_release_regularity_axiom_stmt;
 pub use exec_by_thm_stmt::{exec_by_thm_stmt, exec_release_thm_stmt};
-pub(crate) use exec_by_thm_stmt::{prepare_release_conclusions, PreparedRelease};
 pub use exec_by_zorn_lemma_stmt::exec_release_zorn_lemma_stmt;
 pub use exec_expand_range_stmt::exec_expand_range_stmt;
 pub use result::{
@@ -50,7 +49,6 @@ pub use result::{
 pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 // Existing failure IR consumed by the crate's Normal/Detailed JSON projection.
 pub(crate) use helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
-pub(crate) use result::ByCasesBranchClosingSuccess;
 pub(crate) use result::ExecByFnExtensionStmtFailed;
 pub(crate) use result::{ByCasesBranchFailed, ExecByCasesStmtFailed, ExecByExtensionStmtFailed};
 

@@ -17,6 +17,7 @@ use crate::ast::stmt::{
 };
 use crate::exec_env::exec_env::DefinitionMemory;
 use crate::exec_env::StoredIdentifierDefinition;
+use crate::prelude::*;
 use crate::runtime::runtime_ids::{FactId, IdentifierId};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -109,12 +110,14 @@ fn remap_stored_identifier(
 }
 
 fn remap_let_obj(stmt: &mut LetObjStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     remap_bound_name(&mut stmt.name, plan);
     remap_obj(&mut stmt.value, plan)?;
     Ok(())
 }
 
 fn remap_have_obj_equal(stmt: &mut HaveObjEqualStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     remap_typed_parameter_list(&mut stmt.param_def, plan)?;
     for obj in &mut stmt.objs_equal_to {
         remap_obj(obj, plan)?;
@@ -126,17 +129,20 @@ fn remap_have_obj_in(
     stmt: &mut HaveObjInNonemptySetOrParamTypeStmt,
     plan: &RemapPlan,
 ) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     remap_typed_parameter_list(&mut stmt.param_def, plan)?;
     Ok(())
 }
 
 fn remap_have_fn_equal(stmt: &mut HaveFnEqualStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     remap_bound_name(&mut stmt.name, plan);
     remap_anonymous_fn(&mut stmt.equal_to_anonymous_fn, plan)?;
     Ok(())
 }
 
 fn remap_def_prop(stmt: &mut DefPropStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     remap_typed_parameter_list(&mut stmt.typed_parameters, plan)?;
     for fact in &mut stmt.iff_facts {
         remap_fact(fact, plan)?;
@@ -145,13 +151,14 @@ fn remap_def_prop(stmt: &mut DefPropStmt, plan: &RemapPlan) -> Result<(), KbCode
 }
 
 fn remap_def_abstract_prop(
-    _stmt: &mut DefAbstractPropStmt,
-    _plan: &RemapPlan,
+    stmt: &mut DefAbstractPropStmt,
+    plan: &RemapPlan,
 ) -> Result<(), KbCodecError> {
-    Ok(())
+    remap_source(&mut stmt.line_file.origin, plan)
 }
 
 fn remap_def_struct(stmt: &mut DefStructStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     if let Some((params, dom)) = &mut stmt.param_def_with_dom {
         remap_typed_parameter_list(params, plan)?;
         for fact in dom {
@@ -174,6 +181,7 @@ fn remap_struct_field(field: &mut StructFieldDef, plan: &RemapPlan) -> Result<()
 }
 
 fn remap_def_thm(stmt: &mut DefThmStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     if !stmt.prove_process.is_empty() {
         return Err(KbCodecError::Unsupported(
             "remap def_thm with non-empty prove_process".into(),
@@ -184,6 +192,7 @@ fn remap_def_thm(stmt: &mut DefThmStmt, plan: &RemapPlan) -> Result<(), KbCodecE
 }
 
 fn remap_axiom(stmt: &mut AxiomStmt, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    remap_source(&mut stmt.line_file.origin, plan)?;
     remap_forall_fact(&mut stmt.forall_fact, plan)?;
     Ok(())
 }
@@ -336,6 +345,9 @@ fn remap_quantifier_free_fact(
 }
 
 fn remap_forall_fact(forall: &mut ForallFact, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    if let Some(line) = &mut forall.line_file {
+        remap_source(&mut line.origin, plan)?;
+    }
     forall.fact_id = remap_fact_id(forall.fact_id, plan);
     remap_typed_parameter_list(&mut forall.typed_parameters, plan)?;
     for fact in &mut forall.dom_facts {
@@ -357,61 +369,97 @@ fn remap_forall_fact(forall: &mut ForallFact, plan: &RemapPlan) -> Result<(), Kb
 fn remap_atomic_fact(atomic: &mut AtomicFact, plan: &RemapPlan) -> Result<(), KbCodecError> {
     match atomic {
         AtomicFact::GreaterFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::LessFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::GreaterEqualFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::LessEqualFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::EqualFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::NotGreaterFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::NotLessFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::NotGreaterEqualFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::NotLessEqualFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::NotEqualFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.left, plan)?;
             remap_obj(&mut f.right, plan)?;
         }
         AtomicFact::InFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.element, plan)?;
             remap_obj(&mut f.set, plan)?;
         }
         AtomicFact::NotInFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
             f.fact_id = remap_fact_id(f.fact_id, plan);
             remap_obj(&mut f.element, plan)?;
             remap_obj(&mut f.set, plan)?;
@@ -421,6 +469,13 @@ fn remap_atomic_fact(atomic: &mut AtomicFact, plan: &RemapPlan) -> Result<(), Kb
                 "remap AtomicFact `{other:?}`"
             )));
         }
+    }
+    Ok(())
+}
+
+fn remap_source(source: &mut CodeSource, plan: &RemapPlan) -> Result<(), KbCodecError> {
+    if let CodeSource::ImportedExport { global_mod_id, .. } = source {
+        *global_mod_id = remap_mod_id(*global_mod_id, plan)?;
     }
     Ok(())
 }

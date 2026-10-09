@@ -122,3 +122,20 @@ pub(super) fn binary_extremum_operands(obj: &Obj) -> Option<(BinaryExtremumKind,
         _ => None,
     }
 }
+
+impl Runtime {
+    // A checked strict comparison also suffices for a weak scalar-rule guard.
+    // Retain the actual source comparison without reopening a weakening rule.
+    pub(super) fn weak_or_strict_order_premise(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: Option<SourceLine>,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<VerifyFactResult>> {
+        if let Some(proof) = self.weak_order_premise(left, right, line_file.clone(), state)? {
+            return Ok(Some(proof));
+        }
+        self.strict_order_premise(left, right, line_file, state)
+    }
+}

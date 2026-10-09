@@ -18,7 +18,7 @@ use crate::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity, quantifier_free_fact_args_ref,
     AtomicFact, EqualFact, Fact, ForallFact,
 };
-use crate::ast::obj::{AnonymousFn, FunctionSpace, IdentifierObj, Obj, SetBuilder, SetFormer};
+use crate::ast::obj::{FnSet, FunctionSpace, IdentifierObj, Obj, SetBuilder, SetFormer};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     strict_equal_arg_proof_from_searched, ForallConclusionArgMatchProof,
@@ -401,9 +401,10 @@ impl Runtime {
         ) = (pattern, goal)
         {
             let mut trial = subst.clone();
-            if !self.match_anonymous_fn_free_parameters(
-                left,
-                right,
+            if !self.match_function_signature_free_parameters(
+                &left.body,
+                &right.body,
+                Some((left.equal_to.as_ref(), right.equal_to.as_ref())),
                 param_set,
                 &mut trial,
                 equality_state,
@@ -416,6 +417,42 @@ impl Runtime {
             };
             // Child pairing proposes free arguments only. The full signature,
             // guard syntax and body must still pass the existing strict equality.
+            let Some(equal) =
+                self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state, equality)?
+            else {
+                return Ok(None);
+            };
+            *subst = trial;
+            return Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+                pattern: pattern.clone(),
+                pattern_after_subst,
+                goal_arg: goal.clone(),
+                equal,
+            }));
+        }
+
+        if let (
+            Obj::FunctionSpace(FunctionSpace::FnSet(left)),
+            Obj::FunctionSpace(FunctionSpace::FnSet(right)),
+        ) = (pattern, goal)
+        {
+            let mut trial = subst.clone();
+            if !self.match_function_signature_free_parameters(
+                left,
+                right,
+                None,
+                param_set,
+                &mut trial,
+                equality_state,
+                equality,
+            )? {
+                return Ok(None);
+            }
+            let Ok(pattern_after_subst) = self.inst_obj(pattern, &trial) else {
+                return Ok(None);
+            };
+            // Signature traversal proposes free arguments only. Complete strict
+            // equality still checks binders, guards and the dependent codomain.
             let Some(equal) =
                 self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state, equality)?
             else {
@@ -570,19 +607,20 @@ impl Runtime {
         Ok(true)
     }
 
-    fn match_anonymous_fn_free_parameters(
+    fn match_function_signature_free_parameters(
         &mut self,
-        pattern: &AnonymousFn,
-        goal: &AnonymousFn,
+        pattern: &FnSet,
+        goal: &FnSet,
+        expressions: Option<(&Obj, &Obj)>,
         param_set: &HashSet<IdentifierId>,
         subst: &mut HashMap<IdentifierId, Obj>,
         equality_state: VerifyState,
         equality: &mut ForallMatchEqualityContext,
     ) -> RuntimeResult<bool> {
-        let left_groups = &pattern.body.set_bound_parameters.groups;
-        let right_groups = &goal.body.set_bound_parameters.groups;
+        let left_groups = &pattern.set_bound_parameters.groups;
+        let right_groups = &goal.set_bound_parameters.groups;
         if left_groups.len() != right_groups.len()
-            || pattern.body.dom_facts.len() != goal.body.dom_facts.len()
+            || pattern.dom_facts.len() != goal.dom_facts.len()
         {
             return Ok(false);
         }
@@ -616,7 +654,7 @@ impl Runtime {
                 local_ids.insert(right.id);
             }
         }
-        for (left, right) in pattern.body.dom_facts.iter().zip(&goal.body.dom_facts) {
+        for (left, right) in pattern.dom_facts.iter().zip(&goal.dom_facts) {
             let Ok(left) = self.inst_quantifier_free_fact(left, &rename) else {
                 return Ok(false);
             };
@@ -634,10 +672,11 @@ impl Runtime {
                 }
             }
         }
-        for (left, right) in [
-            (pattern.body.ret_set.as_ref(), goal.body.ret_set.as_ref()),
-            (pattern.equal_to.as_ref(), goal.equal_to.as_ref()),
-        ] {
+        let mut tails = vec![(pattern.ret_set.as_ref(), goal.ret_set.as_ref())];
+        if let Some(expressions) = expressions {
+            tails.push(expressions);
+        }
+        for (left, right) in tails {
             let Ok(left) = self.inst_obj(left, &rename) else {
                 return Ok(false);
             };

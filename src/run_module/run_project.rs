@@ -35,7 +35,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
 
     let mut runtime = Runtime::new(command);
     // Runtime::new opens a placeholder file env for the repo path; drop it.
-    runtime.abort_file();
+    runtime.abort_source();
     runtime
         .global_module_manager
         .set_root_config(root_config.clone());
@@ -74,10 +74,10 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         match run_export_file(
             &mut runtime,
             &export.name,
-            &export.path,
-            export_file_id,
-            None,
-            crate::runtime::CodeSource::RootExport { export_file_id },
+            crate::runtime::CodeSource::RootExport {
+                path: export.path.clone(),
+                export_file_id,
+            },
             keep_env_open,
         ) {
             Ok(file_result) => {

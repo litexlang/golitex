@@ -6,8 +6,8 @@ use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, QuantifierFreeFact};
 use crate::ast::obj::{
     Abs, Add, AnonymousFn, ArithmeticOperator, Cart, ClosedRange, ComplexAbs, ComplexOperator, Exp,
     ExpLogOperator, FamilyUnion, FiniteSeqSet, FnRange, FnSet, FunctionSpace, ImaginaryPart,
-    Intersect, ListSet, Literal, Ln, Mul, Number, Obj, PowerSet, ProductShape, Range, RealPart,
-    SeqSet, SetFormer, SetMinus, SetOperator, StandardSet, Union,
+    Intersect, ListSet, Literal, Mul, Number, Obj, PowerSet, ProductShape, Range, RealPart, SeqSet,
+    SetFormer, SetMinus, SetOperator, StandardSet, Union,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -386,10 +386,6 @@ fn is_euler(obj: &Obj) -> bool {
 
 fn is_imaginary_unit(obj: &Obj) -> bool {
     matches!(obj, Obj::Literal(Literal::ImaginaryUnit(_)))
-}
-
-fn is_number_obj(obj: &Obj) -> bool {
-    matches!(obj, Obj::Literal(Literal::Number(_)))
 }
 
 fn literal_i128(obj: &Obj) -> Option<i128> {

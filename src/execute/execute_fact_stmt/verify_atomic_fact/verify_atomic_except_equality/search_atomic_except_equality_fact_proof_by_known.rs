@@ -1,11 +1,15 @@
+#[cfg(test)]
 use crate::ast::fact::AtomicFact;
+#[cfg(test)]
 use crate::execute::execute_fact_stmt::verify_atomic_fact::AtomicExceptEqualityFactSearchedProof;
+#[cfg(test)]
 use crate::execute::execute_fact_stmt::VerifyState;
+#[cfg(test)]
 use crate::runtime::{Runtime, RuntimeResult};
 
+#[cfg(test)]
 impl Runtime {
-    // Both callers have already established object WD. This phase does not
-    // enable builtin entry or consume strategy depth, and preserves the selected proof route.
+    // Test helper for known-only search after object WD, preserving the proof route.
     pub(in crate::execute) fn search_atomic_except_equality_fact_proof_by_known(
         &mut self,
         fact: &AtomicFact,

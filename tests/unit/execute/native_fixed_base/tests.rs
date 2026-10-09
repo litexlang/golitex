@@ -9,7 +9,6 @@ use crate::execute::execute_fact_stmt::verify_forall_fact::{
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState, VerifyStateLevel};
 use crate::execute::{ExecFactStmtResult, ExecStmtResult};
 use crate::json_output::explain::BuiltinRuleText;
-use crate::json_output::json_keys::localize_key;
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;

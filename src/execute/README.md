@@ -1,5 +1,18 @@
 # Statement execution
 
+## Direct scalar cancellation inference
+
+Accepted `a+k=b+k` publishes `a=b`; accepted `a*k=b*k` publishes it when
+`k!=0` is already available. Differences `a-k=b-k` and `k-a=k-b` also cancel.
+Quotients `a/k=b/k` need `k!=0`; `k/a=k/b` needs all three operands nonzero.
+The equality-infer owner matches exact common operands: all four binary
+positions for +/*, same positions only for -//. It checks C-membership and nonzero under
+the inherited KnownSpecialProperty ceiling, then uses ordinary inferred WD
+and storage. It retains the source FactId and every premise proof. Each child
+removes an arithmetic constructor; known remaining equalities are skipped.
+No global goal search, alias/AC matching, state index, or later-premise replay
+is added. See [infer ownership](../store_fact_and_infer/README.md).
+
 ## Exact-object structural metadata
 
 Function WD, body reduction, codomain reading, complete-domain selection,

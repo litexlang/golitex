@@ -108,7 +108,7 @@ impl Runtime {
                 HaveFnEqualStmt {
                     name: bound,
                     equal_to_anonymous_fn,
-                    line_file: SourceLine::new(block.line, self.code_source.clone()),
+                    line_file: SourceLine::new(block.line, block.source_path.clone()),
                 },
             )))
         })();
@@ -161,7 +161,7 @@ impl Runtime {
                 fn_set_clause,
                 cases,
                 equal_tos,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -197,7 +197,7 @@ impl Runtime {
                 measure,
                 lower_bound,
                 cases,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -311,7 +311,7 @@ impl Runtime {
             DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
                 name,
                 forall,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }

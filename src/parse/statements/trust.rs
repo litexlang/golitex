@@ -20,7 +20,7 @@ impl Runtime {
             let facts = self.parse_facts_in_body(&tb.body)?;
             return Ok(Stmt::Trust(TrustBoundaryStmt::TrustStmt(TrustStmt {
                 facts,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             })));
         }
 
@@ -30,7 +30,7 @@ impl Runtime {
         }
         Ok(Stmt::Trust(TrustBoundaryStmt::TrustStmt(TrustStmt {
             facts: vec![fact],
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -80,7 +80,7 @@ impl Runtime {
             TrustHaveStmt {
                 param_def,
                 facts,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }

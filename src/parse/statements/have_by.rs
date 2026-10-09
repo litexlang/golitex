@@ -92,7 +92,7 @@ impl Runtime {
                 name: bound,
                 prop_name,
                 source_set,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         )))
     }
@@ -152,7 +152,7 @@ impl Runtime {
             DefineObjStmt::HaveByPreimageStmt(HaveByPreimageStmt {
                 preimage_names,
                 range_membership,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         )))
     }

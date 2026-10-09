@@ -1,5 +1,5 @@
 use crate::launch_command::{LaunchCommand, OutputLanguage};
-use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime};
+use crate::runtime::{CodeSource, Runtime};
 
 const OPS: &str =
     "struct Ops:\n    op fn(x R)R\n    tag N\nhave fn shift(x R)R=x+1\nhave ops &Ops=(shift,0)\n";
@@ -12,9 +12,8 @@ fn runtime(source: CodeSource) -> Runtime {
         strict: true,
         language: OutputLanguage::English,
     });
-    rt.finish_file();
-    rt.set_code_source(source);
-    rt.begin_file(RealOrVirtualPath::Eval);
+    rt.finish_source();
+    rt.begin_source(source);
     rt
 }
 
@@ -23,7 +22,10 @@ fn check(code: &str, expected: bool) -> String {
     for source in [
         CodeSource::Eval,
         CodeSource::Repl,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 0,
+        },
     ] {
         let mut rt = runtime(source);
         let result = rt

@@ -3,7 +3,7 @@ use super::helper::escape_text;
 use crate::launch_command::{LatexInput, LaunchCommand, OutputLanguage};
 use crate::module_manager::{GlobalModuleManager, LitexConfig};
 use crate::run_module::{load_config, resolve_std_root};
-use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{CodeSource, Runtime, RuntimeError, RuntimeResult};
 use crate::tokenize::Tokenizer;
 use std::collections::HashSet;
 use std::fs;
@@ -143,11 +143,11 @@ fn render_exports(
 ) -> RuntimeResult<String> {
     let mut fragments = Vec::new();
     for (index, export) in config.exports.iter().enumerate() {
-        runtime.abort_file();
-        runtime.set_code_source(CodeSource::RootExport {
+        runtime.abort_source();
+        runtime.begin_source(CodeSource::RootExport {
+            path: export.path.clone(),
             export_file_id: index,
         });
-        runtime.begin_file(RealOrVirtualPath::Real(export.path.clone()));
         let fragment = to_latex(&read_source(&export.path)?, runtime)?;
         fragments.push(format!(
             "\\section*{{{}}}\n{}",

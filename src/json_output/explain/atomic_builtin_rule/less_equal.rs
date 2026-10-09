@@ -72,6 +72,10 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
+
             Self::NonnegativeSquareOrderReflection(_) => text("NonnegativeSquareOrderReflection", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
 Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
             Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
@@ -183,6 +187,14 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => {
+                text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
+            }
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => {
+                text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M")
+            }
+
             Self::NonnegativeSquareOrderReflection(_) => text(
                 "非负实数平方比较反推原数比较",
                 "0<=x, 0<=y, x^2<=y^2 => x<=y",
@@ -323,6 +335,14 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => {
+                text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
+            }
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => {
+                text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M")
+            }
+
             Self::NonnegativeSquareOrderReflection(_) => text(
                 "非負實數平方比較反推原數比較",
                 "0<=x, 0<=y, x^2<=y^2 => x<=y",
@@ -467,6 +487,10 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
+
             Self::NonnegativeSquareOrderReflection(_) => text("Réflexion de l’ordre des carrés non négatifs", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
 Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
             Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
@@ -578,6 +602,10 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
+
             Self::NonnegativeSquareOrderReflection(_) => text("Порядок неотрицательных чисел по квадратам", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
 Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
             Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
@@ -689,6 +717,10 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
+
             Self::NonnegativeSquareOrderReflection(_) => text("Reflexión del orden de cuadrados no negativos", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
 Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
             Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
@@ -800,6 +832,14 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => {
+                text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
+            }
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => {
+                text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M")
+            }
+
             Self::NonnegativeSquareOrderReflection(_) => text(
                 "استنتاج ترتيب عددين غير سالبين من مربعيهما",
                 "0<=x, 0<=y, x^2<=y^2 => x<=y",
@@ -955,6 +995,14 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => {
+                text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
+            }
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => {
+                text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M")
+            }
+
             Self::NonnegativeSquareOrderReflection(_) => text(
                 "非負実数の平方による順序の反映",
                 "0<=x, 0<=y, x^2<=y^2 => x<=y",
@@ -1099,6 +1147,14 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => {
+                text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
+            }
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => {
+                text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M")
+            }
+
             Self::NonnegativeSquareOrderReflection(_) => text(
                 "음이 아닌 실수의 제곱 순서 반영",
                 "0<=x, 0<=y, x^2<=y^2 => x<=y",
@@ -1248,6 +1304,14 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::SubtractionOrderPairs(_) => {
+                text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
+            }
+            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
+            Self::QuotientScalarUpperBound(_) => {
+                text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M")
+            }
+
             Self::NonnegativeSquareOrderReflection(_) => text(
                 "Suy ra thứ tự số thực không âm từ bình phương",
                 "0<=x, 0<=y, x^2<=y^2 => x<=y",
@@ -1418,6 +1482,10 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::SubtractionOrderPairs(_) => None,
+            Self::AbsSquareRadius(_) => None,
+            Self::QuotientScalarUpperBound(_) => None,
+
             Self::ProductNonnegativeNegativeWeak(_) => None,
             Self::LiteralWeakBound(_)
             | Self::IntegerSuccessorGap(_)

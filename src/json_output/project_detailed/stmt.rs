@@ -16,10 +16,8 @@ use crate::execute::execute_by_stmt::{ByContradictionClosingFailed, ExecByContra
 use crate::execute::execute_by_stmt::{
     ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult,
     ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult, ExecByFnExtensionStmtResult,
-    ExecByForStmtResult, ExecByInducStmtResult, ExecByStmtResult, ExecByStrongInducStmtResult,
-    ExecByThmStmtResult,
+    ExecByForStmtResult, ExecByStmtResult, ExecByThmStmtResult,
 };
-use crate::execute::execute_fact_stmt::ExecFactStmtResult;
 use crate::execute::execute_proof_block_stmt::{
     ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
 };
@@ -30,13 +28,11 @@ use crate::execute::{
     ExecDefStructStmtResult, ExecDefTemplateStmtResult, ExecDefThmBodyProof, ExecDefThmStmtResult,
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecEvalStmtResult,
     ExecHaveByFnPreimageStmtResult, ExecHaveByReplacementAxiomStmtResult,
-    ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnByInducStmtResult,
-    ExecHaveFnEqualCaseByCaseStmtResult, ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult,
-    ExecHaveObjByExistFactsStmtResult, ExecHaveObjEqualStmtResult,
-    ExecHaveObjInNonemptySetStmtResult, ExecLetObjStmtResult,
-    ExecObtainObjFromAtomicFactStmtResult, ExecObtainObjFromExistFactStmtResult,
-    ExecReleaseAndExpandStmtResult, ExecStmtResult, ExecTrustBoundaryStmtResult,
-    ParamTypeFactCheckResult,
+    ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnEqualCaseByCaseStmtResult,
+    ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult, ExecHaveObjByExistFactsStmtResult,
+    ExecLetObjStmtResult, ExecObtainObjFromAtomicFactStmtResult,
+    ExecObtainObjFromExistFactStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult,
+    ExecTrustBoundaryStmtResult, ParamTypeFactCheckResult,
 };
 use crate::json_output::helper::{bool_value, object_for, string};
 use crate::knowledge_base::JsonValue;

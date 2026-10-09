@@ -1,0 +1,26 @@
+# Tracer: AdditiveCancellation from direct scalar sum structure.
+# Before (failed at search_proof):
+# forall a, b, k R:
+#     a + k = b + k
+#     =>:
+#         a = b
+# Now: stores a = b while assuming the sum equality, then cites that equality.
+# Boundary: exact shared addend only; no expansion, reassociation or aliases.
+# Executable negative/scope controls: tests/unit/execute/equality_cancellation/tests.rs
+# Evidence: target/release/litex -lang en -strict -f examples/infer/equal/additive_cancellation.lit
+# Owner: src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_equal_fact/infer_equal_fact_additive_cancellation.rs
+
+forall a, b, k R:
+    a + k = b + k
+    =>:
+        a = b
+
+forall a, b, k C:
+    k + a = b + k
+    =>:
+        a = b
+
+forall a, b, x, y Q:
+    (a + x) + y = (b + x) + y
+    =>:
+        a = b

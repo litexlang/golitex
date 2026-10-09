@@ -19,19 +19,32 @@ In an interactive session, the three submissions print `error`, `success`,
 The runner now uses one transaction per complete top-level `TokenBlock`:
 
 ```rust
-let scopes_before = self.begin_parse_scope_transaction();
-let result = self.parse_token_block(block)
-    .and_then(|stmt| self.exec_stmt(&stmt));
+let ((statement, outcome), temporary_scopes) =
+    self.run_in_temporary_parse_scopes_and_take_scopes(|runtime| {
+        let stmt = runtime.parse_token_block(block)?;
+        let statement = stmt.readable_string();
+        let outcome = runtime.exec_stmt(&stmt)?;
+        Ok((statement, outcome))
+    })?;
+
+if outcome.is_failed() {
+    return Ok((statement, outcome));
+}
+self.parse_scope_stack = temporary_scopes;
+Ok((statement, outcome))
 ```
 
-Successful execution retains the installed parse scopes. Soft failure or a
-parse/execution error restores `scopes_before`. The shared helper copies the
-existing layers at their existing depth rather than pushing another lexical
-scope: scope 0 must remain the file root for export qualification. It does not
-restore global IDs, since failed ASTs/results may already contain them.
+The shared helper always restores the original scopes after the closure
+returns. An error discards the temporary scopes; an `Ok` returns them for the
+caller to commit. The runner drops them on soft failure and assigns them back
+only after successful execution. The helper copies the existing layers at
+their existing depth rather than pushing another lexical scope: scope 0 must
+remain the file root for export qualification. It does not restore global IDs,
+since failed ASTs/results may already contain them.
 
-`Runtime::parse` remains a parse-only batch API, with whole-batch rollback on a
-parse error. The source runner owns the longer parse-and-execution transaction.
+`Runtime::parse` uses the same helper and remains a parse-only batch API, with
+whole-batch rollback on a parse error and explicit commit on success. The
+source runner owns the longer parse-and-execution transaction.
 A later parse/execution error preserves successful earlier blocks and their
 reported results. Tokenization still happens for the entire source first;
 tokenizer errors prevent all execution. Complete claim/thm/sketch proof bodies
@@ -40,8 +53,9 @@ are parsed before any nested execution.
 ## Acceptance
 
 ```bash
-cargo test --release binding_lifecycle_tests -- --nocapture
-target/release/litex -strict -f examples/stmt_nodes/definition/parse_scope_transaction.lit
+cargo test --release --lib binding_lifecycle_tests -- --nocapture
+cargo test --release --lib function_signature_scope_tests -- --nocapture
+target/release/litex -lang en -strict -f examples/stmt_nodes/definition/parse_scope_transaction.lit
 ```
 
 The 12 strict regressions cover same-session correction, same-input correction,
@@ -52,6 +66,13 @@ atomicity, monotonic IDs, root/import qualification, and tokenizer boundaries.
 The same-source and REPL correction were also checked with the release CLI.
 Eight related statement fixtures and both `identifier_resolution` and
 `obtain_bindings` registered modules pass with exit 0 and JSON `success: true`.
+
+The 2026-10-09 helper extraction preserves these behaviors: the 12 binding
+lifecycle regressions and 6 function-signature scope regressions pass in the
+release test executable. The strict release CLI tracer exits 0 with
+`kind: run`, `success: true`, and `session_error: null`. The refactor moves
+restoration into the shared helper while leaving explicit commit decisions
+at the two entrypoints; it adds no public syntax or verification capability.
 
 ## Broader gate evidence
 

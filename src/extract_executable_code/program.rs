@@ -14,7 +14,7 @@ use crate::ast::stmt::{
     DefAlgoByCasesStmt, DefineObjStmt, DefinitionStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
     HaveObjEqualStmt, Stmt,
 };
-use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{RuntimeError, RuntimeResult};
 use std::collections::HashSet;
 
 pub(super) struct ExtractedProgram {

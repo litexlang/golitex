@@ -1,5 +1,5 @@
 //! Generated or-fact builtin-rule detailed projection.
-use super::store::{project_store_and_infer, project_verify_facts};
+use super::store::project_store_and_infer;
 use super::verify::project_verify_fact;
 use super::wd::project_fact_wd_proof;
 use crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule;

@@ -218,6 +218,10 @@ points for writing more Litex. The full argument and further source examples
 are in the [Blueprint](docs/Litex_Blueprint.md) and
 [中文蓝图](docs/Litex中文蓝图.md).
 
+To understand the implementation, follow the [source reading guide](src/README.md):
+start with the central data structures, then trace the component algorithms
+that check statements and grow the mathematical context.
+
 ## About
 
 _“The best way to predict the future is to invent it.”_

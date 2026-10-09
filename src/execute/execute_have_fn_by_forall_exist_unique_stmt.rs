@@ -29,9 +29,7 @@ use crate::ast::fact::{
     QuantifierFreeFact,
 };
 use crate::ast::names::BoundName;
-use crate::ast::obj::{
-    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, StructAndFieldAccessObj,
-};
+use crate::ast::obj::{FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj};
 use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
     TypedParameterList,

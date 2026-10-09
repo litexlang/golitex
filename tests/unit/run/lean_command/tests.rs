@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::run::{run_command, RunCommandOutcome};
-use crate::runtime::{CodeSource, RealOrVirtualPath};
+use crate::runtime::CodeSource;
 
 fn parse(args: &[&str]) -> RuntimeResult<LaunchCommand> {
     parse_launch_command(&args.iter().map(|arg| arg.to_string()).collect::<Vec<_>>())
@@ -25,10 +25,9 @@ fn lean_command_preserves_launch_options_and_file_provenance() {
         assert_eq!(command.output_language(), OutputLanguage::Chinese);
         let runtime = Runtime::new(command.clone());
         assert_eq!(runtime.launch_command, command);
-        assert_eq!(runtime.code_source, CodeSource::StandaloneFile);
         assert_eq!(
             runtime.current_file,
-            RealOrVirtualPath::Real("identity.lit".into())
+            CodeSource::Real("identity.lit".into())
         );
     }
 }

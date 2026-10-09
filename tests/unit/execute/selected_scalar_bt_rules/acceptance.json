@@ -1,0 +1,361 @@
+{
+  "binary": "tmp/2026-10-09/selected-scalar-bt-rules/overlay/target/release/litex",
+  "binary_sha256": "67360fd3b37c55f6a0ec49e965c8cd099dfd1615b6d5693a16e9a1cf736f7b97",
+  "cases": [
+    {
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit",
+      "command": [
+        "tmp/2026-10-09/selected-scalar-bt-rules/overlay/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit"
+      ],
+      "exit": 0,
+      "success": true,
+      "sha256": "c933d17eb67c4a7314b21fe71ea18736d78c48af76c8b217449dc6408943e789"
+    },
+    {
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit",
+      "command": [
+        "tmp/2026-10-09/selected-scalar-bt-rules/overlay/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit"
+      ],
+      "exit": 0,
+      "success": true,
+      "sha256": "80bb43ebeaf574ce5a5711d483711cf77ddb62bb8da8b18216bcca1028899690"
+    },
+    {
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit",
+      "command": [
+        "tmp/2026-10-09/selected-scalar-bt-rules/overlay/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit"
+      ],
+      "exit": 0,
+      "success": true,
+      "sha256": "7f9c86d4d281e47c1841e44ce2f3b5eb78b9645746505689f540ddb7795133d0"
+    },
+    {
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit",
+      "command": [
+        "tmp/2026-10-09/selected-scalar-bt-rules/overlay/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit"
+      ],
+      "exit": 0,
+      "success": true,
+      "sha256": "7fcbf5bc53e23701e767ad536b0adadfe8164a551768d0c8a87b88bef1915d37"
+    },
+    {
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit",
+      "command": [
+        "tmp/2026-10-09/selected-scalar-bt-rules/overlay/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit"
+      ],
+      "exit": 0,
+      "success": true,
+      "sha256": "8948a0ac939d4aa23115c855753e0ecc176c1da1fceba6e1db22ac567fa7b5bc"
+    },
+    {
+      "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit",
+      "command": [
+        "tmp/2026-10-09/selected-scalar-bt-rules/overlay/target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit"
+      ],
+      "exit": 0,
+      "success": true,
+      "sha256": "62ad32a528af5151a24115ec55e1f1b1287ca03c10b3eeb7fd242ff317e582fa"
+    }
+  ],
+  "source_correspondence": "HEAD + exact overlay-files.json; unrelated concurrent compiler/infer changes excluded",
+  "base_commit": "3c5befb5605193a53827b472b15462714ee8690b",
+  "date": "2026-10-09",
+  "source_hashes": {
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/in_fact.rs": "a11bae775ce6e19eadd6870f2590211ae687efbe82ef44b47d4e89da27daca4c",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/less.rs": "55707fcf4564ee256d0dcf34ee46a80c6734a04407009ed142de4f592a6bc382",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/less_equal.rs": "223590be6d6097348397cc1f73ce07f6e95275275fc52a4c4a3d2fece1b92fd3",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/mod.rs": "a1504383a346d127772baacc73090720bb22fe68e73544c4832c0751126aeb03",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/selected_scalar_bt_rules.rs": "867e135955876d1f812666e10460861db25cc181e53dacf4fec4fc2fb6d07462",
+    "src/json_output/explain/atomic_builtin_rule/in_fact.rs": "7d20007ef468e785ad912c79fb908800b3f11668674ab64023aab47840faf76d",
+    "src/json_output/explain/atomic_builtin_rule/less.rs": "818b76fc3e00506b5fc104365dd4cc67d0761c8159ce5483e1e7725fe7afb327",
+    "src/json_output/explain/atomic_builtin_rule/less_equal.rs": "f7ef8d852968ed66ca87174ed27dbcde5ae7d3a063fcf194e9cf2ae58ab68d33",
+    "src/json_output/project_detailed/builtin_atomic_gen.rs": "028268390fb7eb22a66e8c42b4fbad8660863ad5d834fec7dc462ccfc4c34132",
+    "tests/unit/execute/selected_scalar_bt_rules/tests.rs": "252cb701dfb599f40fd6148bde9e7c7a92853b1b6c9a38053c7762ef15dc2668",
+    "examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit": "c933d17eb67c4a7314b21fe71ea18736d78c48af76c8b217449dc6408943e789",
+    "examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit": "80bb43ebeaf574ce5a5711d483711cf77ddb62bb8da8b18216bcca1028899690",
+    "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit": "7f9c86d4d281e47c1841e44ce2f3b5eb78b9645746505689f540ddb7795133d0",
+    "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit": "7fcbf5bc53e23701e767ad536b0adadfe8164a551768d0c8a87b88bef1915d37",
+    "examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit": "8948a0ac939d4aa23115c855753e0ecc176c1da1fceba6e1db22ac567fa7b5bc",
+    "examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit": "62ad32a528af5151a24115ec55e1f1b1287ca03c10b3eeb7fd242ff317e582fa",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/helper.rs": "57179c172be8b6db10c0161ced58a72d69c47f1c328bce67948c54f3c8db3752"
+  },
+  "rust_suites": {
+    "selected_scalar_bt_rules_tests": 6,
+    "abs_positive_square_reflection_tests": 6,
+    "signed_difference_order_tests": 5,
+    "negative_common_factor_order_tests": 5,
+    "builtin_entry_policy_tests": 14
+  },
+  "worktree_build": {
+    "exit": 101,
+    "cause": "Unrelated concurrent src/compile_to_lean/litex_to_lean_compiler.rs changes: missing/undeclared lifetime, missing scopes field, required lifetimes in child proof parameters",
+    "log": "tmp/2026-10-09/selected-scalar-bt-rules/build-final-worktree.log",
+    "integration_status": "superseded_by_accepted_worktree_integration"
+  },
+  "worktree_integration": {
+    "status": "accepted",
+    "binary": "target/release/litex",
+    "binary_sha256": "fdd886de6c331668e4a6ea998be37644bba3f08dd310418009bb1859136e3eb1",
+    "source_build": {
+      "command": "cargo build --release",
+      "exit_code": 0,
+      "log": "tmp/2026-10-09/equality-inequality-search/build-round-23-source-recheck.log"
+    },
+    "rust_suites": {
+      "selected_scalar_bt_rules_tests": 6,
+      "abs_positive_square_reflection_tests": 6,
+      "signed_difference_order_tests": 5,
+      "negative_common_factor_order_tests": 5,
+      "builtin_entry_policy_tests": 14
+    },
+    "files": [
+      {
+        "path": "examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit",
+        "command": [
+          "target/release/litex",
+          "-strict",
+          "-lang",
+          "en",
+          "-f",
+          "examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a - d <= b - c",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a - d <= b - c"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        }
+      },
+      {
+        "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit",
+        "command": [
+          "target/release/litex",
+          "-strict",
+          "-lang",
+          "en",
+          "-f",
+          "examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_square_radius.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall x, r R:\n    r >= 0\n    x ^ 2 <= r ^ 2\n    =>:\n        abs (x) <= r",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall x, r R:\n    r >= 0\n    x ^ 2 <= r ^ 2\n    =>:\n        abs (x) <= r"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        }
+      },
+      {
+        "path": "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit",
+        "command": [
+          "target/release/litex",
+          "-strict",
+          "-lang",
+          "en",
+          "-f",
+          "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_upper_bound.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b, M R:\n    b > 0\n    a <= M * b\n    =>:\n        a / b <= M",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b, M R:\n    b > 0\n    a <= M * b\n    =>:\n        a / b <= M"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        }
+      },
+      {
+        "path": "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit",
+        "command": [
+          "target/release/litex",
+          "-strict",
+          "-lang",
+          "en",
+          "-f",
+          "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "examples/proof_nodes/atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b, M R:\n    b > 0\n    a < M * b\n    =>:\n        a / b < M",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b, M R:\n    b > 0\n    a < M * b\n    =>:\n        a / b < M"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        }
+      },
+      {
+        "path": "examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit",
+        "command": [
+          "target/release/litex",
+          "-strict",
+          "-lang",
+          "en",
+          "-f",
+          "examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "examples/proof_nodes/atomic/by_builtin_rule/exact_integer_quotient.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall a, b Z:\n    b != 0\n    a % b = 0\n    =>:\n        a / b $in Z",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall a, b Z:\n    b != 0\n    a % b = 0\n    =>:\n        a / b $in Z"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        }
+      },
+      {
+        "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit",
+        "command": [
+          "target/release/litex",
+          "-strict",
+          "-lang",
+          "en",
+          "-f",
+          "examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit"
+        ],
+        "exit_code": 0,
+        "output": {
+          "kind": "run",
+          "success": true,
+          "target": "file",
+          "path": "examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit",
+          "detail": "normal",
+          "language": "en",
+          "statement_results": [
+            {
+              "success": true,
+              "statement": "forall u, v R:\n    v != 0\n    =>:\n        abs (v) != 0\n        u / abs (v) $in R",
+              "proof_method": {
+                "type": "compound_fact",
+                "rule_name": "Universal",
+                "message": "Verified as a forall fact (details omitted in Normal)"
+              },
+              "stores": [
+                "forall u, v R:\n    v != 0\n    =>:\n        abs (v) != 0\n        u / abs (v) $in R"
+              ],
+              "infers": []
+            }
+          ],
+          "session_error": null
+        }
+      }
+    ],
+    "source_correspondence": "Current-worktree builds and gates succeeded, but unrelated concurrent source changes prevent claiming one immutable whole-checkout snapshot."
+  }
+}

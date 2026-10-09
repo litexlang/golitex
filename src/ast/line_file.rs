@@ -1,7 +1,6 @@
 use crate::runtime::CodeSource;
 
-// Source location on AST: line + live CodeSource (no absolute path).
-// StandaloneFile / display paths live on Runtime.current_file.
+// Source location on AST: line plus source path and publication identity.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceLine {
     pub line: usize,

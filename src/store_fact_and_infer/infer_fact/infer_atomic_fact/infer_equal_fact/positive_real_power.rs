@@ -1,6 +1,6 @@
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessFact};
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, StandardSet};
-use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
+use crate::execute::execute_fact_stmt::VerifyStateLevel;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{InferEqualFactPositiveRealPowerResult, StoreFactAndInferResult};
 

@@ -27,7 +27,7 @@ indexing.
      is `RootExport` / `ImportedExport` →
      `IdentifierObj::WithExportFileId` / `WithModAndExportFileId`
      (no id);
-   - bound in outermost scope under `Eval` / `Repl` / `StandaloneFile`, or
+   - bound in outermost scope under `Eval` / `Repl` / `Real`, or
      bound in an **inner** scope → `IdentifierObj::Plain { id, name }`.
    Undefined plain name → parse error.
 3. **Qualified names** have no `IdentifierId`; identity is the qualified
@@ -120,16 +120,17 @@ same-name definition into an imported predicate, template, or struct.
   Its source forall is parsed before allocating the chosen function's
   binding, as with obtain's source. A source parameter or existential witness
   can therefore share the new function's spelling while retaining its own ID.
-- **`-r` / project mount run loop** still deferred for some polish; set
-  `Runtime.code_source` (`RootExport` / `ImportedExport` / …) before parsing
-  each export or standalone file. `Eval` / `Repl` never pretend to be `f0`.
+- **`-r` / project mount run loop** opens each export with
+  `begin_source(CodeSource::RootExport { path, export_file_id })` or the
+  corresponding imported/real source before parsing. `Eval` / `Repl` never
+  pretend to be `f0`.
 
 ## Do-not-break checklist
 
 - [ ] Plain IR embeds `#id#name`; display never shows the id wrapper.
 - [ ] Qualified atoms never allocate `IdentifierId`.
 - [ ] File-root free refs promote only under `RootExport` / `ImportedExport`;
-  `Eval` / `Repl` / `StandaloneFile` stay Plain.
+  `Eval` / `Repl` / `Real` stay Plain.
 - [ ] Nested same-name binders remain parse-forbidden.
 - [ ] `inst_*` uses `HashMap<IdentifierId, Obj>` only.
 - [ ] No `surface`/`alpha` dual fields on binder objs.

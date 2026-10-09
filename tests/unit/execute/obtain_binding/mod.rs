@@ -1,13 +1,17 @@
 use crate::ast::stmt::{DefineObjStmt, DefinitionStmt, Stmt};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
-use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime};
+use crate::runtime::{CodeSource, Runtime};
 use crate::tokenize::Tokenizer;
 
 fn sources() -> [CodeSource; 3] {
     [
-        CodeSource::StandaloneFile,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::Real("test.lit".into()),
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 0,
+        },
         CodeSource::ImportedExport {
+            path: "test.lit".into(),
             global_mod_id: 0,
             export_file_id: 0,
         },
@@ -21,9 +25,8 @@ fn runtime(source: CodeSource) -> Runtime {
         strict: true,
         language: OutputLanguage::English,
     });
-    rt.finish_file();
-    rt.set_code_source(source);
-    rt.begin_file(RealOrVirtualPath::Eval);
+    rt.finish_source();
+    rt.begin_source(source);
     rt
 }
 

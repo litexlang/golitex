@@ -7,11 +7,6 @@ pub enum NumberCompareResult {
     Greater,
 }
 
-// Compare a normalized decimal string to "0".
-pub fn compare_normalized_number_str_to_zero(number_value: &str) -> NumberCompareResult {
-    compare_number_strings(number_value.trim(), "0")
-}
-
 fn parse_number_parts_for_comparison(number_value: &str) -> (bool, Vec<u8>, Vec<u8>) {
     let trimmed_number_value = number_value.trim();
     let (is_negative, magnitude_string) = if trimmed_number_value.starts_with('-') {
@@ -59,21 +54,6 @@ fn digits_are_all_zero(digits: &[u8]) -> bool {
         }
     }
     true
-}
-
-fn normalized_decimal_string_is_integer(number_value: &str) -> bool {
-    let (_, _integer_digits, fractional_digits) = parse_number_parts_for_comparison(number_value);
-    digits_are_all_zero(&fractional_digits)
-}
-
-pub fn normalized_decimal_string_is_even_integer(number_value: &str) -> bool {
-    if !normalized_decimal_string_is_integer(number_value) {
-        return false;
-    }
-    let (_is_negative, integer_digits, _fractional_digits) =
-        parse_number_parts_for_comparison(number_value);
-    let last_digit = integer_digits.last().copied().unwrap_or(0);
-    last_digit % 2 == 0
 }
 
 fn first_non_zero_integer_digit_index(integer_digits: &[u8]) -> usize {

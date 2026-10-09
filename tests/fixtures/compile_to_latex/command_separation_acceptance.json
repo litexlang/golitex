@@ -10,7 +10,7 @@
     ],
     "latex_pipeline": "tokenize -> Runtime::parse -> AST rendering; no verification or execution"
   },
-  "runtime_scope": "Only command names and existing CodeSource / RealOrVirtualPath input mapping; Runtime state fields and lifecycle unchanged.",
+  "runtime_scope": "Input mapping uses the unified CodeSource for virtual input, real paths and export identity; command separation does not alter source lifecycle.",
   "tests": [
     {
       "command": "cargo test --release --lib launch_command_tests -- --nocapture",

@@ -44,7 +44,7 @@ impl Runtime {
             ReleaseAndExpandStmt::ExpandRangeStmt(ExpandRangeStmt {
                 element,
                 range,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -63,7 +63,7 @@ impl Runtime {
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseThmStmt(ReleaseThmStmt {
                 call,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -91,7 +91,7 @@ impl Runtime {
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseStructDefStmt(ReleaseStructDefStmt {
                 obj,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -120,7 +120,7 @@ impl Runtime {
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseObjDefStmt(ReleaseObjDefStmt {
                 name,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -140,7 +140,7 @@ impl Runtime {
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseTupleDefStmt(crate::ast::stmt::ReleaseTupleDefStmt {
                 obj,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -163,7 +163,7 @@ impl Runtime {
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseCartDefStmt(crate::ast::stmt::ReleaseCartDefStmt {
                 cart,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -193,7 +193,7 @@ impl Runtime {
         Ok(Stmt::ReleaseAndExpand(
             ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(ReleaseRegularityAxiomStmt {
                 set: args[0].clone(),
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -232,7 +232,7 @@ impl Runtime {
             ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(ReleaseAxiomOfChoiceStmt {
                 family,
                 proof,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }
@@ -282,7 +282,7 @@ impl Runtime {
                 upper_bound_prop_name,
                 maximal_prop_name,
                 proof,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         ))
     }

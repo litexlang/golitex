@@ -75,7 +75,7 @@ impl Runtime {
             .into_iter()
             .map(|name| self.define_plain_atom_as_parse(&tb, name))
             .collect::<RuntimeResult<Vec<_>>>()?;
-        let line_file = SourceLine::new(block.line, self.code_source.clone());
+        let line_file = SourceLine::new(block.line, block.source_path.clone());
         let definition = match source {
             ObtainSource::Exist(fact) => {
                 DefineObjStmt::ObtainObjFromExistFact(ObtainObjFromExistFact {

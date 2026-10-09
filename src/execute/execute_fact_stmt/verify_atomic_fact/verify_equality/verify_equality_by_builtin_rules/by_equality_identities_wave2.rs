@@ -3,9 +3,7 @@
 //! One matcher ↔ one dedicated proof struct.
 
 use super::log_algebra_base_proof::LogAlgebraBaseProof;
-use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, GreaterFact, LessEqualFact, LessFact, NotEqualFact,
-};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, LessEqualFact};
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Div, ExpLogOperator, IntegerOperator, Literal, Log, Mod, Mul,
     Number, Obj, Pow, Sqrt, Sub,

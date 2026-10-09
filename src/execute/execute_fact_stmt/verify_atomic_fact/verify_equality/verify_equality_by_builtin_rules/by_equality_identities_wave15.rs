@@ -5,7 +5,7 @@
 use crate::ast::fact::EqualFact;
 use crate::ast::names::BoundName;
 use crate::ast::obj::{
-    AnonymousFn, Cart, FnObj, FnObjHead, FunctionSpace, IdentifierObj, IteratedOperator, Obj,
+    AnonymousFn, Cart, FnObjHead, FunctionSpace, IdentifierObj, IteratedOperator, Obj,
     ProductShape, SumOfFiniteSet, Tuple,
 };
 use crate::ast::param::SetBoundParameterList;

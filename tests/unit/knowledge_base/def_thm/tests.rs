@@ -24,7 +24,13 @@ fn sample() -> DefThmStmt {
             line_file: None,
         })),
         prove_process: Vec::new(),
-        line_file: SourceLine::new(1, CodeSource::RootExport { export_file_id: 0 }),
+        line_file: SourceLine::new(
+            1,
+            CodeSource::RootExport {
+                path: "test.lit".into(),
+                export_file_id: 0,
+            },
+        ),
     }
 }
 

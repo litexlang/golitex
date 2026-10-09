@@ -1,5 +1,5 @@
 use crate::launch_command::{LaunchCommand, OutputLanguage};
-use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime};
+use crate::runtime::{CodeSource, Runtime};
 use crate::tokenize::Tokenizer;
 
 #[test]
@@ -197,9 +197,13 @@ fn registered_and_imported_functions_preserve_distinct_owners() {
 
 fn sources() -> [CodeSource; 3] {
     [
-        CodeSource::StandaloneFile,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::Real("test.lit".into()),
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 0,
+        },
         CodeSource::ImportedExport {
+            path: "test.lit".into(),
             global_mod_id: 0,
             export_file_id: 0,
         },
@@ -213,9 +217,8 @@ fn runtime(source: CodeSource) -> Runtime {
         strict: true,
         language: OutputLanguage::English,
     });
-    rt.finish_file();
-    rt.set_code_source(source);
-    rt.begin_file(RealOrVirtualPath::Eval);
+    rt.finish_source();
+    rt.begin_source(source);
     rt
 }
 
@@ -690,8 +693,11 @@ fn mounted_owner_runtime(library: &str, local: &str) -> (Runtime, std::path::Pat
     )
     .unwrap();
     std::fs::write(lib.join("definitions.lit"), library).unwrap();
-    let mut rt = runtime(CodeSource::RootExport { export_file_id: 0 });
-    rt.abort_file();
+    let mut rt = runtime(CodeSource::RootExport {
+        path: "test.lit".into(),
+        export_file_id: 0,
+    });
+    rt.abort_source();
     rt.global_module_manager
         .set_root_config(load_config(&root, &root).unwrap());
     let config = load_config(&lib, &root).unwrap();
@@ -702,10 +708,8 @@ fn mounted_owner_runtime(library: &str, local: &str) -> (Runtime, std::path::Pat
     let run = run_export_file(
         &mut rt,
         "definitions",
-        &lib.join("definitions.lit"),
-        0,
-        Some(mod_id),
         CodeSource::ImportedExport {
+            path: lib.join("definitions.lit"),
             global_mod_id: mod_id,
             export_file_id: 0,
         },
@@ -713,8 +717,10 @@ fn mounted_owner_runtime(library: &str, local: &str) -> (Runtime, std::path::Pat
     )
     .unwrap();
     assert!(run.run.success, "{:?}", run.run.session_error);
-    rt.set_code_source(CodeSource::RootExport { export_file_id: 0 });
-    rt.begin_file(RealOrVirtualPath::Eval);
+    rt.begin_source(CodeSource::RootExport {
+        path: "test.lit".into(),
+        export_file_id: 0,
+    });
     let result = rt.run_litex_code(local).unwrap();
     assert!(result.success, "{:?}", result.session_error);
     (rt, root)

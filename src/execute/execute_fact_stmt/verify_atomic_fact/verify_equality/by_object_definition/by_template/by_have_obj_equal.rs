@@ -11,7 +11,7 @@
 //! reduces to proving `R = R` after substituting `S := R`.
 
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{InstantiatedTemplateObj, Obj, StructAndFieldAccessObj};
+use crate::ast::obj::{InstantiatedTemplateObj, Obj};
 use crate::ast::stmt::TemplateDefEnum;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;

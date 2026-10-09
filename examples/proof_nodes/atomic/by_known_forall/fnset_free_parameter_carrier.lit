@@ -1,0 +1,24 @@
+# Tracer: forall free parameters inside function-space binders.
+# Before (same code): the checked outer claim could not be reused by the
+# template; selected_functions failed membership in power_set(fn(x X) X).
+# Now: signature matching proposes the free X binding; complete strict alpha
+# equality still checks the carrier, guards, return set and bound occurrences.
+# Boundary: mismatched arity/return carriers and escaped local binders remain
+# rejected by the focused forall_fnset_free_parameter Rust tests.
+# Gate: target/release/litex -strict -f examples/proof_nodes/atomic/by_known_forall/fnset_free_parameter_carrier.lit
+#
+# Former failing declaration:
+# template<X set>:
+#     have selected_functions power_set(fn(x X) X) = {f fn(x X) X: $selected(X, f)}
+
+abstract_prop selected(X, f)
+claim:
+    ? forall X set:
+        {f fn(x X) X: $selected(X, f)} $in power_set(fn(x X) X)
+    claim:
+        ? forall member {f fn(x X) X: $selected(X, f)}:
+            member $in fn(x X) X
+    by def:
+        ? {f fn(x X) X: $selected(X, f)} $subset fn(x X) X
+template<X set>:
+    have selected_functions power_set(fn(x X) X) = {f fn(x X) X: $selected(X, f)}

@@ -6,7 +6,7 @@
 //! - Instantiated template (obj or fn head) → template body unfolds
 
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{FnObjHead, Obj, ProductShape, StructAndFieldAccessObj};
+use crate::ast::obj::{FnObjHead, Obj, ProductShape};
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 

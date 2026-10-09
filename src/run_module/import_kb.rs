@@ -67,7 +67,7 @@ pub fn try_finish_import_from_kb(
             .get(export.export_file_id)
             .map(|row| row.path.clone())
             .unwrap_or_else(|| module_dir.join(&export.relative_path));
-        let env = exec_env_from_mounted_export(export, mod_id);
+        let env = exec_env_from_mounted_export(export, mod_id, path.clone());
         recorded.push(ExportFileAndItsExecEnv::new(
             export.name.clone(),
             path,

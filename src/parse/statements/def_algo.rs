@@ -102,7 +102,7 @@ impl Runtime {
                 fn_set_clause,
                 cases,
                 equal_tos,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -140,7 +140,7 @@ impl Runtime {
                 measure,
                 lower_bound,
                 cases,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }

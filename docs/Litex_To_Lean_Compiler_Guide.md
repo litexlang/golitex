@@ -56,13 +56,30 @@ let compiler = LitexToLeanCompiler::new(&result, &runtime);
 let lean = compiler.compile(&artifact_namespace)?;
 ```
 
-The compiler owns one artifact's replay state and dispatches `ExecStmtResult`
-by its actual Fact/Definition/By variants, then dispatches their typed child
-results. Runtime executes the source once and remains an immutable exact-ID
-citation resolver during compilation. The current result is not self-contained
-after Runtime disposal. `compile` consumes the compiler and returns source only
-when the complete replay succeeds. The existing free `compile_run` API remains
-a convenience entrypoint to this implementation.
+The compiler borrows the completed result and Runtime, then dispatches the
+existing `ExecStmtResult` and its typed child enums. Its files mirror the
+executor's statement and verification branches. Each branch reads its original
+subject and selected evidence, compiles its children, and produces temporary
+Lean expressions. It does not maintain a second object, fact, theorem or
+parameter model.
+
+A borrowed source-position cursor identifies the original result ancestors and
+completed stage prefix. This preserves earlier citations and local boundaries
+without copying ExecEnv or maintaining a separate proof registry. Source IDs
+spell internal declarations; public `fact_<index>` and `named_thm_<index>` names
+remain stable. Parameter signatures come from the declaration's original
+position, so a later `have` cannot extend an earlier theorem's inputs.
+
+An object's constructor can depend on a local membership or nonzero proof.
+If its exported proposition uses that proof name, the generated type includes
+the necessary actual proof expressions as local `let` values. This closes the
+Lean expression without turning proved facts into new theorem assumptions.
+
+Runtime executes the source once and remains an immutable exact-ID resolver.
+The current result is not self-contained after Runtime disposal: some source
+stages retain IDs rather than complete producer payloads. `compile` returns
+source only when the whole artifact succeeds. The existing free `compile_run`
+API delegates to the same implementation.
 
 For `1 = 1`, the recorded route is reflexivity. For a fact such as
 `a + 0 = a`, a selected rational-normalization route must go through its
@@ -236,6 +253,15 @@ A cached construction must resolve to the already replayed evidence for that
 object. If an ID is missing, or a required inferred fact has no supported
 producer, compilation rejects the route. Searching for another true fact in
 the live environment would hide the missing source dependency.
+
+Direct scalar cancellation now publishes `a=b` from a stored `a+k=b+k`,
+`a-k=b-k`, `k-a=k-b`, or from `a*k=b*k` / `a/k=b/k` with an available
+`k!=0` certificate. `k/a=k/b` also needs both denominators nonzero.
+Its inference evidence
+is retained by Litex, but this compiler does not yet replay it. Citing that
+derived equality rejects compilation at `FactId/Producer`; it is never emitted
+as a new assumption. The producer/consumer boundary is checked by the
+`equality_cancellation_lean_citations_fail_closed_without_infer_replay` test.
 
 ## What successful output establishes
 

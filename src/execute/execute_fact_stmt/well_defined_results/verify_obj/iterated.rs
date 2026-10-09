@@ -10,8 +10,7 @@ use crate::ast::fact::{
 };
 use crate::ast::obj::{
     ClosedRange, FiniteSeqSet, FiniteSetReduce, FnSet, FunctionSpace, Obj, Product,
-    ProductOfFiniteSet, ProductShape, Range, Reduce, SeqSet, SetFormer, StandardSet, Sum,
-    SumOfFiniteSet,
+    ProductOfFiniteSet, Range, Reduce, SeqSet, SetFormer, StandardSet, Sum, SumOfFiniteSet,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,

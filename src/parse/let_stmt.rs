@@ -61,7 +61,7 @@ impl Runtime {
             DefineObjStmt::LetObjStmt(LetObjStmt {
                 name,
                 value,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             }),
         )))
     }

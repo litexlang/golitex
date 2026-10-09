@@ -1,0 +1,13 @@
+# Tracer: SubtractionOrderPairs
+# Before: explicit proof bridge
+# a-d<=b-d<=b-c
+# Old direct target missed search_proof; the explicit bridge was required in the dated probe.
+# Now: direct guarded target
+forall a,b,c,d R:
+    a<=b
+    c<=d
+    =>:
+        a-d<=b-c
+
+# Boundary: missing guards and false conclusions remain rejected by selected_scalar_bt_rules_tests.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/subtraction_order_pairs.lit

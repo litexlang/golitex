@@ -117,10 +117,8 @@ pub fn run_import_module(
         let file_result = match run_export_file(
             runtime,
             &export.name,
-            &export.path,
-            export_file_id,
-            Some(mod_id),
             crate::runtime::CodeSource::ImportedExport {
+                path: export.path.clone(),
                 global_mod_id: mod_id,
                 export_file_id,
             },

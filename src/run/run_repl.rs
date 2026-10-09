@@ -2,7 +2,7 @@ use super::output::write_stdout;
 use super::run_command::VERSION;
 use crate::launch_command::LaunchCommand;
 use crate::run_module::{mount_cwd_config, MountCwdConfigOutcome};
-use crate::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{CodeSource, Runtime, RuntimeError, RuntimeResult};
 use crate::LITEX;
 use std::io;
 
@@ -10,7 +10,7 @@ use std::io;
 pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
     let mut runtime = Runtime::new(command);
     // Drop placeholder Repl env so mount can open export files.
-    runtime.abort_file();
+    runtime.abort_source();
 
     match mount_cwd_config(&mut runtime)? {
         MountCwdConfigOutcome::Done => {}
@@ -19,14 +19,13 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
         }
     }
 
-    runtime.set_code_source(crate::runtime::CodeSource::Repl);
-    runtime.begin_file(RealOrVirtualPath::Repl);
+    runtime.begin_source(CodeSource::Repl);
     run_repl_loop(&mut runtime)
 }
 
 /// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
 pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
-    runtime.set_code_source(crate::runtime::CodeSource::Repl);
+    runtime.current_file = CodeSource::Repl;
     write_stdout(format_args!("{} REPL {}\n", LITEX, VERSION))?;
     write_stdout(format_args!(
         "type `exit` or Ctrl-D to quit; end a block with a blank line\n"
@@ -39,13 +38,13 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
         let code_result = match runtime.run_litex_code(&code) {
             Ok(result) => result,
             Err(error) => {
-                runtime.abort_file();
+                runtime.abort_source();
                 return Err(error);
             }
         };
 
         if let Some(session_error) = code_result.session_error {
-            runtime.abort_file();
+            runtime.abort_source();
             return Err(mount_session_error_to_runtime_error(session_error));
         }
 
@@ -59,7 +58,7 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
         }
     }
 
-    runtime.abort_file();
+    runtime.abort_source();
     Ok(())
 }
 

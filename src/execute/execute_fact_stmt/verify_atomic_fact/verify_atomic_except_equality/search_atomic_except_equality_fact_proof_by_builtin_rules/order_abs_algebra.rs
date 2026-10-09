@@ -27,7 +27,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     UnitCircleLowerBoundBuiltinRuleProof, UnitCircleUpperBoundBuiltinRuleProof,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{FactId, Runtime, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Shape dispatch for `a <= b` algebra / abs / trig builtins.
@@ -151,7 +151,7 @@ impl Runtime {
             }
 
             // Left Abs: sandwich upper bound.
-            (Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })), _) => {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: _ })), _) => {
                 self.abs_le_from_symmetric_bounds_proof(fact, verify_state)
             }
 
@@ -581,31 +581,6 @@ fn match_negation(obj: &Obj) -> Option<&Obj> {
         }
         _ => None,
     }
-}
-
-fn abs_self_upper_matches(fact: &LessEqualFact) -> bool {
-    matches!(
-        &fact.right,
-        Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg }))
-            if arg.as_ref().ir() == fact.left.ir()
-    )
-}
-
-fn abs_self_lower_matches(fact: &LessEqualFact) -> bool {
-    let Some(abs_x) = (match &fact.left {
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right }))
-            if is_zero_obj(left.as_ref()) =>
-        {
-            match right.as_ref() {
-                Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })) => Some(arg.as_ref()),
-                _ => None,
-            }
-        }
-        _ => None,
-    }) else {
-        return false;
-    };
-    abs_x.ir() == fact.right.ir()
 }
 
 fn abs_triangle_inequality_matches(fact: &LessEqualFact) -> bool {

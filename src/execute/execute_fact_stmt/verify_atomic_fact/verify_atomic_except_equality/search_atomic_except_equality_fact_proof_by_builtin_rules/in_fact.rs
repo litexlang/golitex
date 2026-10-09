@@ -8,7 +8,7 @@ use crate::ast::fact::{
 };
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
-    Add, ArithmeticOperator, Cart, ComplexOperator, ExpLogOperator, FnObj, FnObjHead, FnSet,
+    Add, ArithmeticOperator, Cart, ComplexOperator, ExpLogOperator, FnObj, FnObjHead,
     FunctionSpace, IntegerOperator, IntervalObj, IteratedOperator, Literal, Mul, Number, Obj,
     OneSideInfinityIntervalObj, ProductShape, SetFormer, SetOperator, StandardSet,
     StructAndFieldAccessObj, StructObj, TrigOperator, };
@@ -39,6 +39,8 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    ExactIntegerQuotient(super::selected_scalar_bt_rules::ExactIntegerQuotientProof),
+
     MinPreservesPositiveCarrier(positive_minimum::MinPreservesPositiveCarrierProof),
     NonzeroRationalQuotient(scalar_refined_product::NonzeroRationalQuotientProof),
     NonzeroRationalProduct(scalar_refined_product::NonzeroRationalProductProof),
@@ -495,6 +497,10 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(proof) = closed_exact_scalar_membership_proof(fact) {
+            return Ok(Some(proof));
+        }
+
+        if let Some(proof) = self.search_exact_integer_quotient(fact, verify_state)? {
             return Ok(Some(proof));
         }
 

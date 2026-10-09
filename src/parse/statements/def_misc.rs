@@ -119,7 +119,7 @@ impl Runtime {
                 param_def_with_dom,
                 fields,
                 equivalent_facts,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -169,7 +169,7 @@ impl Runtime {
                 template_arg_def,
                 template_arg_dom,
                 template_def_stmt,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -243,7 +243,7 @@ impl Runtime {
                 name,
                 forall_fact,
                 prove_process,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }

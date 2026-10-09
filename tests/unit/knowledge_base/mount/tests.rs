@@ -45,7 +45,13 @@ fn sample_prop(id: u64, fact_id: u64) -> DefPropStmt {
             })),
             line_file: None,
         }))],
-        line_file: SourceLine::new(1, CodeSource::RootExport { export_file_id: 0 }),
+        line_file: SourceLine::new(
+            1,
+            CodeSource::RootExport {
+                path: "test.lit".into(),
+                export_file_id: 0,
+            },
+        ),
     }
 }
 
@@ -54,6 +60,61 @@ fn sample_defs(id: u64, fact_id: u64) -> DefinitionMemory {
     let prop = sample_prop(id, fact_id);
     defs.predicate_definitions.insert(prop.name.clone(), prop);
     defs
+}
+
+#[test]
+fn mount_remaps_imported_source_identity_and_preserves_its_path() {
+    let root = temp_module_root();
+    let path = root.join("main.lit");
+    let mut definitions = sample_defs(7, 42);
+    let prop = definitions.predicate_definitions.get_mut("is_pos").unwrap();
+    let origin = CodeSource::ImportedExport {
+        path: path.clone(),
+        global_mod_id: 10,
+        export_file_id: 0,
+    };
+    prop.line_file.origin = origin.clone();
+    let Fact::AtomicFact(AtomicFact::EqualFact(fact)) = &mut prop.iff_facts[0] else {
+        panic!("equal fact");
+    };
+    fact.line_file = Some(SourceLine::new(2, origin));
+    let module_key = root.to_string_lossy().into_owned();
+    write_module_kb(
+        &root,
+        "source-identity",
+        10,
+        &BTreeMap::from([(10, module_key.clone())]),
+        &[ExportKbWrite {
+            export_file_id: 0,
+            name: "main".into(),
+            relative_path: "main.lit".into(),
+            definitions,
+            global_ids_at_enter: GlobalIdsSnapshot::new(10, 1, 1, 7),
+            global_ids_at_leave: GlobalIdsSnapshot::new(43, 1, 1, 8),
+        }],
+    )
+    .unwrap();
+    let mounted = try_mount_module(
+        &root,
+        "source-identity",
+        &GlobalIdsSnapshot::new(100, 1, 1, 20),
+        &HashMap::from([(module_key, 21)]),
+    )
+    .unwrap();
+    let expected = CodeSource::ImportedExport {
+        path: path.clone(),
+        global_mod_id: 21,
+        export_file_id: 0,
+    };
+    let prop = &mounted.exports[0].definitions.predicate_definitions["is_pos"];
+    assert_eq!(prop.line_file.origin, expected);
+    let Fact::AtomicFact(AtomicFact::EqualFact(fact)) = &prop.iff_facts[0] else {
+        panic!("equal fact");
+    };
+    assert_eq!(fact.line_file.as_ref().unwrap().origin, expected);
+    let env = crate::knowledge_base::exec_env_from_mounted_export(&mounted.exports[0], 21, path);
+    assert_eq!(env.session_view.as_ref().unwrap().code_source, expected);
+    fs::remove_dir_all(root).unwrap();
 }
 
 #[test]

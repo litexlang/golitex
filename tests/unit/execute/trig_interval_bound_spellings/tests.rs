@@ -123,7 +123,7 @@ fn fixed_bound_lookup_preserves_direct_ceiling_and_does_not_publish() {
     let run = rt.run_litex_code(prefix).unwrap();
     assert!(run.success && run.session_error.is_none());
     let blocks = crate::tokenize::Tokenizer::new()
-        .tokenize("(-pi)/2<=y", crate::runtime::RealOrVirtualPath::Eval)
+        .tokenize("(-pi)/2<=y", crate::runtime::CodeSource::Eval)
         .unwrap();
     let mut parsed = rt.parse(&blocks).unwrap();
     let canonical: Fact = match parsed.remove(0) {

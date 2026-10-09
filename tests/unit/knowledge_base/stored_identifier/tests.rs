@@ -27,7 +27,13 @@ fn sample_let_a() -> StoredIdentifierDefinition {
             value: Obj::Literal(Literal::Number(Number {
                 normalized_value: "1".to_string(),
             })),
-            line_file: SourceLine::new(1, CodeSource::RootExport { export_file_id: 0 }),
+            line_file: SourceLine::new(
+                1,
+                CodeSource::RootExport {
+                    path: "test.lit".into(),
+                    export_file_id: 0,
+                },
+            ),
         }),
     ))
 }
@@ -54,7 +60,13 @@ fn sample_have_fn_id() -> StoredIdentifierDefinition {
                     "x".to_string(),
                 ))),
             },
-            line_file: SourceLine::new(1, CodeSource::RootExport { export_file_id: 0 }),
+            line_file: SourceLine::new(
+                1,
+                CodeSource::RootExport {
+                    path: "test.lit".into(),
+                    export_file_id: 0,
+                },
+            ),
         }),
     ))
 }

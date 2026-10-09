@@ -4,7 +4,7 @@
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, NotEqualFact};
 use crate::ast::obj::{
-    Add, ArithmeticOperator, Div, Literal, Mul, Neg, Number, Obj, Pow, StandardSet, Sub,
+    Add, ArithmeticOperator, Div, Literal, Mul, Neg, Number, Obj, Pow, StandardSet,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -649,12 +649,5 @@ fn is_neg_one_obj(obj: &Obj) -> bool {
     matches!(
         obj,
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg })) if is_one_obj(arg.as_ref())
-    )
-}
-
-fn is_zero_obj(obj: &Obj) -> bool {
-    matches!(
-        obj,
-        Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "0"
     )
 }

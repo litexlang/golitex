@@ -1,6 +1,6 @@
 //! Transactional exec_stmt + WD-memory regression tests.
 
-use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj};
+use crate::ast::obj::{Literal, Number, Obj};
 use crate::execute::ExecStmtResult;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
@@ -1426,6 +1426,7 @@ fn store_equality_indexes_equal_to_obj_with_free_params() {
     );
 }
 
+#[test]
 fn closed_numeric_equal_rewrite_proves_subterm_goal() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R = 10").is_failed());
@@ -1690,8 +1691,8 @@ fn have_fn_by_cases_slice2() {
     use crate::execute::execute_have_fn_equal_case_by_case_stmt::{
         ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
     };
+    use crate::execute::ExecDefinitionStmtResult;
     use crate::execute::ExecStmtResult;
-    use crate::execute::{ExecDefineObjStmtResult, ExecDefinitionStmtResult};
 
     let mut runtime = runtime_with_file_env();
     let code = "have fn nonzero_flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1";
@@ -1741,8 +1742,8 @@ fn have_fn_by_cases_slice2() {
 #[test]
 fn have_fn_by_exist_stores_membership_and_properties() {
     use crate::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
+    use crate::execute::ExecDefinitionStmtResult;
     use crate::execute::ExecStmtResult;
-    use crate::execute::{ExecDefineObjStmtResult, ExecDefinitionStmtResult};
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
@@ -1789,8 +1790,8 @@ fn have_fn_by_exist_fails_when_forall_unproven() {
     use crate::execute::execute_have_fn_by_forall_exist_unique_stmt::{
         ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
     };
+    use crate::execute::ExecDefinitionStmtResult;
     use crate::execute::ExecStmtResult;
-    use crate::execute::{ExecDefineObjStmtResult, ExecDefinitionStmtResult};
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
@@ -1923,8 +1924,8 @@ fn have_fn_by_induc_countdown_slice() {
     use crate::execute::execute_have_fn_by_induc_stmt::{
         ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult,
     };
+    use crate::execute::ExecDefinitionStmtResult;
     use crate::execute::ExecStmtResult;
-    use crate::execute::{ExecDefineObjStmtResult, ExecDefinitionStmtResult};
 
     let mut runtime = runtime_with_file_env();
     let code = "have fn countdown(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: countdown(n - 1)";
@@ -2016,9 +2017,7 @@ fn auto_open_point_forall_field_reflexive() {
 
 #[test]
 fn group_struct_def_with_forall_law_succeeds() {
-    use crate::execute::exec_stmt_result::{
-        ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecStmtResult as ESR,
-    };
+    use crate::execute::exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult as ESR};
     use crate::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 
     let code = r#"
@@ -2448,8 +2447,8 @@ fn template_have_fn_by_exist_wires_body() {
     use crate::execute::execute_def_template_stmt::{
         ExecDefTemplateStmtResult, ExecTemplateDefBodyResult,
     };
+    use crate::execute::ExecDefinitionStmtResult;
     use crate::execute::ExecStmtResult;
-    use crate::execute::{ExecDefineObjStmtResult, ExecDefinitionStmtResult};
 
     // Def-time body check + instance release of membership/property/uniqueness.
     let mut runtime = runtime_with_file_env();

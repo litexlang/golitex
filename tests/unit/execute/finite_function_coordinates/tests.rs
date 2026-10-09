@@ -1,5 +1,3 @@
-use crate::ast::fact::{AtomicFact, Fact};
-use crate::ast::obj::{Obj, ProductShape};
 use crate::execute::ExecStmtResult;
 use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};

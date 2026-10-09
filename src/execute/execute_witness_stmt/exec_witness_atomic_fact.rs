@@ -75,7 +75,7 @@ impl Runtime {
         &mut self,
         stmt: &WitnessAtomicFact,
     ) -> RuntimeResult<ExecWitnessAtomicFactStmtResult> {
-        let prop_name = stmt.atomic_fact.predicate.local_name();
+        let _prop_name = stmt.atomic_fact.predicate.local_name();
         if self
             .def_abstract_prop_visible(&stmt.atomic_fact.predicate)
             .is_some()

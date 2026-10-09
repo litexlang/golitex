@@ -9,7 +9,7 @@ use crate::ast::fact::{AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, Qua
 use crate::ast::names::BoundName;
 use crate::ast::obj::{
     Add, AnonymousFn, ArithmeticOperator, ComplexAbs, ComplexOperator, Cos, Div, Exp,
-    ExpLogOperator, FiniteSeqSet, FnObj, FnObjHead, FnSet, FunctionSpace, ImaginaryPart, IndexCart,
+    ExpLogOperator, FiniteSeqSet, FnObj, FnObjHead, FunctionSpace, ImaginaryPart, IndexCart,
     IndexIntersect, IndexUnion, IteratedOperator, ListSet, Literal, Log, Mul, Number, Obj, Pow,
     RealPart, Reduce, SetFormer, SetOperator, Sin, StandardSet, Sub, TrigOperator,
 };
@@ -676,18 +676,6 @@ fn is_number_two(obj: &Obj) -> bool {
         obj,
         Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "2"
     )
-}
-
-fn zero_obj() -> Obj {
-    Obj::Literal(Literal::Number(Number {
-        normalized_value: "0".to_string(),
-    }))
-}
-
-fn one_obj() -> Obj {
-    Obj::Literal(Literal::Number(Number {
-        normalized_value: "1".to_string(),
-    }))
 }
 
 fn bound_name_obj(name: &BoundName) -> Obj {

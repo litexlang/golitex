@@ -42,7 +42,7 @@ impl Runtime {
         Ok(Stmt::Register(RegisterStmt::RegisterReflexivePropStmt(
             RegisterReflexivePropStmt {
                 forall_fact,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -61,7 +61,7 @@ impl Runtime {
         Ok(Stmt::Register(RegisterStmt::RegisterSymmetricPropStmt(
             RegisterSymmetricPropStmt {
                 forall_fact,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -80,7 +80,7 @@ impl Runtime {
         Ok(Stmt::Register(RegisterStmt::RegisterTransitivePropStmt(
             RegisterTransitivePropStmt {
                 forall_fact,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
