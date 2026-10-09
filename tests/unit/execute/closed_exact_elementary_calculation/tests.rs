@@ -1,8 +1,8 @@
 use crate::ast::fact::Fact;
 use crate::ast::stmt::Stmt;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
 use crate::json_output::{emit_run_detailed, emit_run_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::prelude::{calculate_closed_equal_fact, AtomicFact};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -254,8 +254,10 @@ fn pure_leaf_declines_symbolic_undefined_and_exhausted_calculations() {
         "re((1+2*i)*(3-i))=5",
         "log(8,4)=2/3",
     ] {
-        let goal = atomic(&mut rt, source);
-        assert!(calculate_closed_atomic_fact(&goal).is_some(), "{source}");
+        let AtomicFact::EqualFact(goal) = atomic(&mut rt, source) else {
+            panic!("equality");
+        };
+        assert!(calculate_closed_equal_fact(&goal).is_some(), "{source}");
     }
     rt.run_litex_code("have x R").unwrap();
     for source in [
@@ -271,8 +273,10 @@ fn pure_leaf_declines_symbolic_undefined_and_exhausted_calculations() {
         "sqrt(1000000007)=sqrt(1000000007)",
         "1/(1+sqrt(2))=0",
     ] {
-        let goal = atomic(&mut rt, source);
-        assert!(calculate_closed_atomic_fact(&goal).is_none(), "{source}");
+        let AtomicFact::EqualFact(goal) = atomic(&mut rt, source) else {
+            panic!("equality");
+        };
+        assert!(calculate_closed_equal_fact(&goal).is_none(), "{source}");
     }
 }
 

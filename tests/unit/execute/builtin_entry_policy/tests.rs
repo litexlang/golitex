@@ -3,6 +3,7 @@ use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState, VerifyStateLevel};
 use crate::execute::ExecStmtResult;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::prelude::*;
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -31,11 +32,6 @@ fn direct_closed_calculation_tracer_restores_finite_enumeration() {
 #[test]
 fn direct_result_distinguishes_calculation_citation_and_miss() {
     use crate::ast::fact::AtomicFact;
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::closed_calculation_proof::{
-        ClosedCalculationProof as C, ClosedValuePair,
-    };
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::direct_atomic_fact_search_result::DirectAtomicFactSearchResult as D;
     let mut rt = runtime();
     let Fact::AtomicFact(goal) = fact(&mut rt, "1/3 + 1/3 = 2/3") else {
         panic!("atomic")
@@ -47,7 +43,8 @@ fn direct_result_distinguishes_calculation_citation_and_miss() {
         .lookup_known_obj_equality(&equal.left, &equal.right)
         .is_none());
     let before = memory_sizes(&rt);
-    let D::ByClosedCalculation(C::Equality(proof)) = rt.search_atomic_fact_proof_directly(&goal)
+    let Some(EqualFactSearchedProof::ByClosedCalculation(proof)) =
+        rt.search_equal_fact_proof_directly(equal)
     else {
         panic!("calculation")
     };
@@ -55,36 +52,36 @@ fn direct_result_distinguishes_calculation_citation_and_miss() {
     assert_eq!(memory_sizes(&rt), before);
     exec_ok(&mut rt, "1/3 + 1/3 = 2/3");
     assert!(matches!(
-        rt.search_atomic_fact_proof_directly(&goal),
-        D::ByKnownFact(_)
+        rt.search_equal_fact_proof_directly(equal),
+        Some(EqualFactSearchedProof::ByEquivalenceClass(_))
     ));
-    let Fact::AtomicFact(wrong) = fact(&mut rt, "1/3 = 1/2") else {
+    let Fact::AtomicFact(AtomicFact::EqualFact(wrong)) = fact(&mut rt, "1/3 = 1/2") else {
         panic!("atomic")
     };
-    assert!(matches!(
-        rt.search_atomic_fact_proof_directly(&wrong),
-        D::NotFound
-    ));
-    assert!(calculate_closed_atomic_fact(&wrong).is_none());
+    assert!(rt.search_equal_fact_proof_directly(&wrong).is_none());
+    assert!(calculate_closed_equal_fact(&wrong).is_none());
 
     let Fact::AtomicFact(member) = fact(&mut rt, "7/11 $in Q") else {
         panic!("atomic")
     };
     assert!(rt.lookup_known_atomic_fact(&member).is_none());
     assert!(matches!(
-        rt.search_atomic_fact_proof_directly(&member),
-        D::ByClosedCalculation(C::AtomicExceptEquality(_))
+        rt.search_atomic_except_equality_fact_proof_directly(&member)
+            .unwrap(),
+        Some(AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
+            _
+        ))
     ));
     exec_ok(&mut rt, "7/11 $in Q");
     assert!(matches!(
-        rt.search_atomic_fact_proof_directly(&member),
-        D::ByKnownFact(_)
+        rt.search_atomic_except_equality_fact_proof_directly(&member)
+            .unwrap(),
+        Some(AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(_))
     ));
 }
 
 #[test]
 fn direct_calculation_covers_polarities_and_fails_closed() {
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
     let mut rt = runtime();
     exec_ok(&mut rt, "have p cart(R,R)");
     for code in [
@@ -111,7 +108,11 @@ fn direct_calculation_covers_polarities_and_fails_closed() {
         let Fact::AtomicFact(goal) = fact(&mut rt, code) else {
             panic!("atomic")
         };
-        assert!(calculate_closed_atomic_fact(&goal).is_some(), "{code}");
+        let calculated = match &goal {
+            AtomicFact::EqualFact(equal) => calculate_closed_equal_fact(equal).is_some(),
+            other => calculate_closed_atomic_except_equality_fact(other).is_some(),
+        };
+        assert!(calculated, "{code}");
     }
     for code in [
         "1+1=3",
@@ -131,7 +132,11 @@ fn direct_calculation_covers_polarities_and_fails_closed() {
         let Fact::AtomicFact(goal) = fact(&mut rt, code) else {
             panic!("atomic")
         };
-        assert!(calculate_closed_atomic_fact(&goal).is_none(), "{code}");
+        let calculated = match &goal {
+            AtomicFact::EqualFact(equal) => calculate_closed_equal_fact(equal).is_some(),
+            other => calculate_closed_atomic_except_equality_fact(other).is_some(),
+        };
+        assert!(!calculated, "{code}");
     }
     for code in ["1/0=1/0", "p(3)=p(3)", "1+1=3", "i<1"] {
         assert!(
@@ -146,8 +151,54 @@ fn direct_calculation_covers_polarities_and_fails_closed() {
 }
 
 #[test]
+fn split_search_rejects_equality_at_the_non_equality_entry() {
+    let mut rt = runtime();
+    let Fact::AtomicFact(goal) = fact(&mut rt, "1+1=2") else {
+        panic!("atomic equality")
+    };
+    let AtomicFact::EqualFact(equal) = &goal else {
+        panic!("equality")
+    };
+    let before = memory_sizes(&rt);
+    assert!(matches!(
+        rt.search_equal_fact_proof(equal, VerifyState::new(VerifyStateLevel::Direct))
+            .unwrap(),
+        Some(EqualFactSearchedProof::ByClosedCalculation(_))
+    ));
+    for state in [
+        VerifyState::new(VerifyStateLevel::Direct),
+        VerifyState::top_level(),
+    ] {
+        assert!(matches!(
+            rt.search_atomic_except_equality_fact_proof(&goal, state),
+            Err(crate::runtime::RuntimeError::InternalBug(message))
+                if message == "EqualFact truth search must use search_equal_fact_proof"
+        ));
+    }
+    assert!(matches!(
+        rt.search_atomic_except_equality_fact_proof_directly(&goal),
+        Err(crate::runtime::RuntimeError::InternalBug(_))
+    ));
+    assert!(calculate_closed_atomic_except_equality_fact(&goal).is_none());
+
+    let Fact::AtomicFact(not_equal) = fact(&mut rt, "1 != 2") else {
+        panic!("disequality")
+    };
+    assert!(matches!(
+        rt.search_atomic_except_equality_fact_proof(
+            &not_equal,
+            VerifyState::new(VerifyStateLevel::Direct)
+        )
+        .unwrap(),
+        Some(AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
+            ClosedAtomicExceptEqualityCalculationProof::NotEqual(_)
+        ))
+    ));
+    assert_eq!(memory_sizes(&rt), before);
+}
+
+#[test]
 fn direct_never_uses_symbolic_normalization_definitions_or_known_value_substitution() {
-    use crate::execute::execute_fact_stmt::verify_atomic_fact::direct_atomic_fact_search_result::DirectAtomicFactSearchResult as D;
     let mut rt = runtime();
     exec_ok(&mut rt, "have a R = 2");
     exec_ok(&mut rt, "have fn f(x R) R = x+1");
@@ -158,11 +209,11 @@ fn direct_never_uses_symbolic_normalization_definitions_or_known_value_substitut
         "(a,a)=(2,2)",
         "finite_set_size({a})=1",
     ] {
-        let Fact::AtomicFact(goal) = fact(&mut rt, code) else {
-            panic!("atomic")
+        let Fact::AtomicFact(AtomicFact::EqualFact(goal)) = fact(&mut rt, code) else {
+            panic!("equality")
         };
         assert!(
-            matches!(rt.search_atomic_fact_proof_directly(&goal), D::NotFound),
+            rt.search_equal_fact_proof_directly(&goal).is_none(),
             "{code}"
         );
     }
@@ -234,18 +285,18 @@ fn constructor_descent_keeps_a_fixed_leaf_ceiling() {
         exec_ok(&mut rt, code);
     }
     let goal = fact(&mut rt, "f(g(a)) = f(g(b))");
-    let Fact::AtomicFact(goal) = goal else {
-        panic!("atomic")
+    let Fact::AtomicFact(AtomicFact::EqualFact(goal)) = goal else {
+        panic!("equality")
     };
     assert!(rt
-        .search_atomic_fact(
+        .search_equal_fact_proof(
             &goal,
             VerifyState::new(VerifyStateLevel::KnownSpecialProperty)
         )
         .unwrap()
         .is_some());
     assert!(rt
-        .search_atomic_fact(&goal, VerifyState::new(VerifyStateLevel::Direct))
+        .search_equal_fact_proof(&goal, VerifyState::new(VerifyStateLevel::Direct))
         .unwrap()
         .is_none());
 }
@@ -285,15 +336,32 @@ fn direct_cannot_reenter_property_and_raw_known_cannot_calculate() {
         };
         let before = memory_sizes(&rt);
         assert!(
-            rt.search_atomic_fact(&atomic, VerifyState::new(Direct))
-                .unwrap()
-                .is_none(),
+            !(match &atomic {
+                crate::ast::fact::AtomicFact::EqualFact(equal) => rt
+                    .search_equal_fact_proof(equal, VerifyState::new(Direct))
+                    .unwrap()
+                    .is_some(),
+                other => rt
+                    .search_atomic_except_equality_fact_proof(other, VerifyState::new(Direct))
+                    .unwrap()
+                    .is_some(),
+            }),
             "{text}"
         );
         assert!(
-            rt.search_atomic_fact(&atomic, VerifyState::new(KnownSpecialProperty))
-                .unwrap()
-                .is_some(),
+            match &atomic {
+                crate::ast::fact::AtomicFact::EqualFact(equal) => rt
+                    .search_equal_fact_proof(equal, VerifyState::new(KnownSpecialProperty))
+                    .unwrap()
+                    .is_some(),
+                other => rt
+                    .search_atomic_except_equality_fact_proof(
+                        other,
+                        VerifyState::new(KnownSpecialProperty)
+                    )
+                    .unwrap()
+                    .is_some(),
+            },
             "{text}"
         );
         assert_eq!(before, memory_sizes(&rt));

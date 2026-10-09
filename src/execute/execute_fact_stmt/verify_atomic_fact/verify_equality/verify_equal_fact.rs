@@ -51,24 +51,6 @@ impl Runtime {
         }
     }
 
-    // Family-specific proof wrapper; permissions are scheduled centrally.
-    pub fn search_equal_fact_proof(
-        &mut self,
-        fact: &EqualFact,
-        state: VerifyState,
-    ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
-        use super::super::AtomicFactSearchedProof;
-        Ok(
-            match self.search_atomic_fact(&fact.clone().into(), state)? {
-                Some(AtomicFactSearchedProof::Equality(p)) => Some(p),
-                None => None,
-                Some(AtomicFactSearchedProof::AtomicExceptEquality(_)) => {
-                    unreachable!("equality dispatch")
-                }
-            },
-        )
-    }
-
     pub fn search_equal_fact_proof_by_builtin_strategy(
         &mut self,
         fact: &EqualFact,

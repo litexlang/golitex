@@ -1,9 +1,9 @@
 use crate::ast::fact::Fact;
 use crate::ast::stmt::Stmt;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::direct_atomic_fact_search_result::DirectAtomicFactSearchResult as D;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason as P;
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::prelude::AtomicExceptEqualityFactSearchedProof as PSearch;
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -118,7 +118,14 @@ fn direct_does_not_call_sp_or_unfold_user_functions() {
             panic!()
         };
         assert!(
-            matches!(rt.search_atomic_fact_proof_directly(&goal), D::NotFound),
+            match &goal {
+                crate::ast::fact::AtomicFact::EqualFact(equal) =>
+                    rt.search_equal_fact_proof_directly(equal).is_none(),
+                other => rt
+                    .search_atomic_except_equality_fact_proof_directly(other)
+                    .unwrap()
+                    .is_none(),
+            },
             "{code}"
         );
     }
@@ -137,7 +144,10 @@ fn carrier_proof_retains_leaf_citations_and_known_priority() {
     let Fact::AtomicFact(goal) = fact(&mut rt, "a-b $in R") else {
         panic!()
     };
-    let D::ByStructuralMembership(proof) = rt.search_atomic_fact_proof_directly(&goal) else {
+    let Some(PSearch::ByStructuralMembership(proof)) = rt
+        .search_atomic_except_equality_fact_proof_directly(&goal)
+        .unwrap()
+    else {
         panic!("structural")
     };
     let P::Sub { left, right } = proof.reason else {
@@ -154,8 +164,9 @@ fn carrier_proof_retains_leaf_citations_and_known_priority() {
     }
     assert!(rt.run_litex_code("a-b $in R").unwrap().success);
     assert!(matches!(
-        rt.search_atomic_fact_proof_directly(&goal),
-        D::ByKnownFact(_)
+        rt.search_atomic_except_equality_fact_proof_directly(&goal)
+            .unwrap(),
+        Some(PSearch::ByKnownAtomicFact(_))
     ));
 
     // Batched alternatives keep the nearest carrier ahead of earlier facts,
@@ -166,7 +177,10 @@ fn carrier_proof_retains_leaf_citations_and_known_priority() {
         let Fact::AtomicFact(goal) = fact(&mut rt, "u $in R") else {
             panic!()
         };
-        let D::ByStructuralMembership(proof) = rt.search_atomic_fact_proof_directly(&goal) else {
+        let Some(PSearch::ByStructuralMembership(proof)) = rt
+            .search_atomic_except_equality_fact_proof_directly(&goal)
+            .unwrap()
+        else {
             panic!("structural superset: {setup}")
         };
         let P::StandardSuperset(source) = proof.reason else {

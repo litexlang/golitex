@@ -1,7 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
-use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::obj_well_defined_proof_by_def::{
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     AnonymousFnBodyInReturnSetProof, AnonymousFnObjWellDefinedProof, FnSetObjWellDefinedProof,
     FunctionSpaceObjWellDefinedProofByDef,
 };
@@ -88,19 +88,19 @@ impl LitexToLeanCompiler {
         let membership = match &wd.body_in_ret_set {
             AnonymousFnBodyInReturnSetProof::CheckedMembership(proof) => proof,
             AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(_) => {
-                return Err(LeanCompileError::unsupported("Function/EmptyCompleteDomain"))
+                return Err(LeanCompileError::unsupported(
+                    "Function/EmptyCompleteDomain",
+                ))
             }
         };
         match source_subject(membership)? {
             Fact::AtomicFact(AtomicFact::InFact(member))
                 if member.element.ir() == function.equal_to.ir()
                     && member.set.ir() == signature.ret_set.ir() => {}
-            _ => {
-                return Err(LeanCompileError::new(
-                    "Function/ReturnSubject",
-                    "The recorded return proof does not establish this body in its declared carrier.",
-                ))
-            }
+            _ => return Err(LeanCompileError::new(
+                "Function/ReturnSubject",
+                "The recorded return proof does not establish this body in its declared carrier.",
+            )),
         }
         let membership_position = SourcePosition {
             before: body_position.before + 1,
@@ -110,8 +110,8 @@ impl LitexToLeanCompiler {
         let h_return = format!(
             "(by\n  {}\n  change {}\n  exact {})",
             head.replace('\n', "\n  "),
-            member.0,
-            member.1
+            member.0.replace('\n', "\n  "),
+            member.1.replace('\n', "\n  ")
         );
         let domains = self.compile_function_domains(signature)?;
         let guard = self.compile_function_guard_template(signature, position)?;
@@ -139,7 +139,12 @@ impl LitexToLeanCompiler {
         let groups = &signature.set_bound_parameters.groups;
         let parameters = groups
             .iter()
-            .flat_map(|group| group.params.iter().map(|parameter| (parameter, &group.param_type)))
+            .flat_map(|group| {
+                group
+                    .params
+                    .iter()
+                    .map(|parameter| (parameter, &group.param_type))
+            })
             .collect::<Vec<_>>();
         self.validate_parameter_store_capture(defined)?;
         if carriers.len() != groups.len()
@@ -153,7 +158,13 @@ impl LitexToLeanCompiler {
         }
         for (index, (group, carrier)) in groups.iter().zip(carriers).enumerate() {
             ensure_object(&group.param_type, carrier)?;
-            self.compile_wd(carrier, &SourcePosition { before: index, ..*position })?;
+            self.compile_wd(
+                carrier,
+                &SourcePosition {
+                    before: index,
+                    ..*position
+                },
+            )?;
         }
         let raw = parameters
             .iter()
@@ -163,7 +174,11 @@ impl LitexToLeanCompiler {
             .iter()
             .map(|(parameter, _)| format!("_input_i{}", parameter.id.value()))
             .collect::<Vec<_>>();
-        let mut lines = vec![format!("intro {} {} _guard", raw.join(" "), inputs.join(" "))];
+        let mut lines = vec![format!(
+            "intro {} {} _guard",
+            raw.join(" "),
+            inputs.join(" ")
+        )];
         for (index, ((parameter, carrier), store)) in parameters
             .iter()
             .zip(&defined.store_and_infer_results)
@@ -190,7 +205,10 @@ impl LitexToLeanCompiler {
             lines.push(format!(
                 "let _value_i{id} := Litex.semanticObject (M := M) _raw_i{id} (M.member_isSet _input_i{id})"
             ));
-            let member = (self.fact_proposition(&fact, &introduced)?, format!("_input_i{id}"));
+            let member = (
+                self.fact_proposition(&fact, &introduced)?,
+                format!("_input_i{id}"),
+            );
             lines.push(self.emit_internal_fact(&fact, &member, &introduced));
             let member = (member.0, format!("_fact_f{}", fact.fact_id().value()));
             lines.extend(self.compile_parameter_inferences(store, &fact, &member, &introduced)?);
@@ -219,7 +237,10 @@ impl LitexToLeanCompiler {
                     conjunction_projection("_guard", index, assumed.len())
                 ),
             );
-            let completed = SourcePosition { before: prior.before + 1, ..*position };
+            let completed = SourcePosition {
+                before: prior.before + 1,
+                ..*position
+            };
             lines.push(self.emit_internal_fact(&fact, &compiled, &completed));
             let compiled = (compiled.0, format!("_fact_f{}", fact.fact_id().value()));
             lines.extend(self.compile_parameter_inferences(
@@ -234,7 +255,12 @@ impl LitexToLeanCompiler {
 
     fn function_header_stages(&self, signature: &FnSet) -> usize {
         signature.set_bound_parameters.groups.len()
-            + signature.set_bound_parameters.groups.iter().map(|group| group.params.len()).sum::<usize>()
+            + signature
+                .set_bound_parameters
+                .groups
+                .iter()
+                .map(|group| group.params.len())
+                .sum::<usize>()
             + signature.dom_facts.len()
     }
 
@@ -244,15 +270,31 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let domains = self.compile_function_domains(signature)?;
-        let parameters = signature.set_bound_parameters.groups.iter()
-            .flat_map(|group| &group.params).collect::<Vec<_>>();
-        let variables = parameters.iter().map(|parameter| format!("_raw_i{}", parameter.id.value()))
+        let parameters = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|group| &group.params)
             .collect::<Vec<_>>();
-        let binders = variables.iter().map(|name| format!("({name} : M.Value)"))
-            .collect::<Vec<_>>().join(" ");
-        let members = variables.iter().zip(&domains).map(|(name, domain)| format!("M.mem {name} (M.standard {domain})"))
-            .collect::<Vec<_>>().join(" → ");
+        let variables = parameters
+            .iter()
+            .map(|parameter| format!("_raw_i{}", parameter.id.value()))
+            .collect::<Vec<_>>();
+        let binders = variables
+            .iter()
+            .map(|name| format!("({name} : M.Value)"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let members = variables
+            .iter()
+            .zip(&domains)
+            .map(|(name, domain)| format!("M.mem {name} (M.standard {domain})"))
+            .collect::<Vec<_>>()
+            .join(" → ");
         let guard = self.compile_function_guard_template(signature, position)?;
-        Ok(format!("∀ {binders}, {members} → ({guard} {}) → True", variables.join(" ")))
+        Ok(format!(
+            "∀ {binders}, {members} → ({guard} {}) → True",
+            variables.join(" ")
+        ))
     }
 }

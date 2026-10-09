@@ -206,8 +206,8 @@ bound during that structural recursion. Exist apply also instantiates the
 conclusion and alpha-compares to the goal before instantiation requirements.
 
 `VerifyState` now has exactly `level` and `can_rewrite`. Equality and other
-atomic facts use one `search_atomic_fact` schedule; family wrappers retain
-their own evidence types. `verify_*` checks WD first, whereas `search_*` assumes
+atomic facts own separate search pipelines with typed evidence, sharing the
+stage-to-premise policy below. `verify_*` checks WD first, whereas `search_*` assumes
 the target's WD is already established.
 
 | Target stage | Premise ceiling |
@@ -231,9 +231,17 @@ transaction, excluding named identifiers and quantified binder internals.
 A stored atomic fact can supply its predicate-domain evidence by an explicit
 citation, after argument WD and visible predicate signature checks.
 
-Direct is implemented by `search_atomic_fact_proof_directly`,
-returning `DirectAtomicFactSearchResult::{ByKnownFact, ByClosedCalculation, ByStructuralMembership, NotFound}`.
-The closed calculator is a pure free function with no Runtime or state parameter.
+`verify_atomic_fact` dispatches once to equality or non-equality verification.
+Each branch owns its complete truth-search pipeline:
+`search_equal_fact_proof` and `search_atomic_except_equality_fact_proof`.
+Both use the shared `VerifyState` premise policy without redispatching the goal.
+Their Direct entries are `search_equal_fact_proof_directly` and
+`search_atomic_except_equality_fact_proof_directly`, returning the corresponding
+family's searched proof or `None`. Stored evidence precedes closed calculation;
+non-equality additionally tries structural membership after calculation.
+Passing an `EqualFact` to non-equality search is an internal error; `NotEqualFact`
+remains a non-equality goal, and equality premises may still be searched explicitly.
+The typed closed calculators are pure free functions with no Runtime or state parameter.
 It supports classified closed decimals, exact rational/complex values, real order
 and standard-set membership/non-membership; symbolic normalization, constructor
 shape calculations and user definitions retain their existing higher routes.

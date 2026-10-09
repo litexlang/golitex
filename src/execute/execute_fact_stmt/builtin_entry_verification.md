@@ -1,4 +1,73 @@
-## Structural membership increment (2026-10-03)
+# Equality/non-equality search split (2026-10-09)
+
+`verify_atomic_fact` remains the single family dispatcher. Its equality and
+non-equality branches now own their complete search pipelines, including Direct.
+The mixed `search_atomic_fact`, `AtomicFactSearchedProof`, and
+`DirectAtomicFactSearchResult` interfaces have been removed.
+
+Before, a family-specific entry erased the classification and unpacked it again:
+
+```rust
+match self.search_atomic_fact(fact, state)? {
+    Some(AtomicFactSearchedProof::AtomicExceptEquality(proof)) => Some(proof),
+    None => None,
+    Some(AtomicFactSearchedProof::Equality(_)) => unreachable!("non-equality dispatch"),
+}
+```
+
+Now each search starts with its own typed Direct entry and proceeds through
+its own existing stages:
+
+```rust
+// In search_equal_fact_proof, with fact: &EqualFact:
+if let Some(proof) = self.search_equal_fact_proof_directly(fact) {
+    return Ok(Some(proof));
+}
+// In search_atomic_except_equality_fact_proof, with fact: &AtomicFact:
+if let Some(proof) = self.search_atomic_except_equality_fact_proof_directly(fact)? {
+    return Ok(Some(proof));
+}
+```
+
+Both retain the same `VerifyState::for_premises` and `after_rewrite` policy,
+stage order and success evidence. Direct returns the existing family searched
+proof, with `None` for a miss. The two pure typed calculators share only numeric
+value evaluation; they do not rebox equality inputs into `AtomicFact`.
+Non-equality search rejects an `EqualFact` as `RuntimeError::InternalBug` before
+lookup. `NotEqualFact` stays in that branch, and explicitly generated equality
+premises continue to use equality search. WD, Runtime/Env state, mathematical
+rules, trust, public syntax and JSON proof labels are unchanged.
+
+Tracer: `examples/proof_nodes/equal/direct_closed_calculation.lit`.
+Boundary regression: `split_search_rejects_equality_at_the_non_equality_entry`;
+existing tests retain false/undefined rejection, stored-first priority, Direct
+permissions, structural membership and no speculative fact publication.
+
+Validation:
+
+- `cargo test --release builtin_entry_policy_tests -- --nocapture`: 15 passed.
+- `cargo test --release --all-targets --no-fail-fast`: 1390 library tests and
+  27 integration tests passed. The pre-split baseline passed 1389 and 27;
+  every existing successful test name was retained, with one new boundary test.
+  The full run also covers equality, known facts, pure calculation, structural
+  membership, forall argument matching, JSON evidence and compiler consumers.
+- `cargo build --release`: passed.
+- `target/release/litex -lang en -strict -f examples/proof_nodes/equal/direct_closed_calculation.lit`:
+  exit 0, Normal `kind: run`, `success: true`, `session_error: null`.
+- The same CLI gate passed for `examples/proof_nodes/equal/shared_search_levels.lit`
+  and `examples/proof_nodes/atomic/direct_structural_membership.lit`.
+- `target/release/litex -lang en -strict -e '1/0=1/0'` and `-e '1+1=3'`:
+  exit 1, Normal `kind: run`, `success: false`, `session_error: null`.
+- Static comparison retained the exact numeric evaluation/comparison algorithms,
+  stage sequence and existing proof payload types; `git diff --check` passed.
+
+Before establishing the baseline, two missing prelude re-exports used by
+existing compiler edits were added. Compiler source files were not modified by
+this task. Textbook, packaging and standalone real-Lean gates were not selected:
+their contracts were not changed. Raw logs and CLI envelopes remain under
+`tmp/2026-10-09/split-atomic-search/`.
+
+## Historical structural membership increment (2026-10-03)
 
 Direct now has a separate `ByStructuralMembership` success route, after known
 proofs and pure closed calculation. Constructor descent uses no verifier/search

@@ -71,8 +71,8 @@ outer WD, symmetry and statement transactions remain in force.
 ```text
 verify_equal_fact(goal, state)
   -> WD left, then right with the same ceiling
-  -> search_equal_fact_proof -> shared search_atomic_fact
-       0 identity/pairwise structural alpha, exact stored paths/facts
+  -> search_equal_fact_proof (equality's own pipeline)
+       0 identity/pairwise structural alpha, exact stored paths, closed calculation
        1 special properties and finite constructor descent (leaves 0)
        2 builtin rules (premises 1)
        3 strategies and searched peer bridges (premises 2)
@@ -336,7 +336,9 @@ no active Lean compiler under `src/`; these additions make no Lean replay claim.
 
 ### Direct calculation at level 0
 
-`search_atomic_fact` first consumes `DirectAtomicFactSearchResult`. Raw equality
+`search_equal_fact_proof` first calls `search_equal_fact_proof_directly`, which
+returns an `EqualFactSearchedProof` or `None` without converting the target to
+`AtomicFact`. Raw equality
 lookup still returns identity/alpha or stored paths. A new closed numeric hit
 becomes `EqualFactSearchedProof::ByClosedCalculation`, also supported by
 `StrictEqualArgProof`, with exact normal forms/coordinates retained in Detailed

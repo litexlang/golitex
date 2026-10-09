@@ -30,6 +30,7 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::closed_cal
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::*;
 pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     LiteralObjWellDefinedProofByDef, ArithmeticOperatorObjWellDefinedProofByDef,
+    FunctionSpaceObjWellDefinedProofByDef, AnonymousFnBodyInReturnSetProof,
 };
 pub(crate) use crate::launch_command::LaunchCommand;
 #[cfg(test)]
@@ -63,3 +64,10 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_ato
     less::LessFactSearchProofByBuiltinRule,
     less_equal::LessEqualFactSearchProofByBuiltinRule,
 };
+
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::calculate_closed_equal_fact::calculate_closed_equal_fact;
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::calculate_closed_atomic_except_equality_fact::calculate_closed_atomic_except_equality_fact;
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::helper::{calculate_value_pair, calculate_closed_decimal};
+pub(crate) use crate::rational_expression::{compare_number_strings, is_closed_numeric_expr, NumberCompareResult};
+pub(crate) use crate::rational_expression::closed_scalar_membership::{exact_complex_inhabits_standard_set, normalized_decimal_inhabits_standard_set};
+pub(crate) use crate::rational_expression::exact_complex::exact_complex_coordinates;

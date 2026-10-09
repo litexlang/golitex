@@ -668,13 +668,14 @@ Existing stored citations and pairwise structural alpha keep their labels.
 Ordinary Direct lookup no longer searches graph-wide alpha endpoints/paths.
 Explicit selected-theorem endpoint comparisons can still emit `alpha_endpoints`;
 the existing `alpha_paths` representation remains readable.
-The Direct entry result also distinguishes `NotFound`, which is not a proof.
+The typed Direct search entries return `None` for a miss, which is not a proof.
 
 
 ## Direct structural membership
 
-`DirectAtomicFactSearchResult::ByStructuralMembership` becomes the corresponding
-non-equality searched-proof variant. It has a separate tree from closed values.
+The non-equality Direct entry returns
+`AtomicExceptEqualityFactSearchedProof::ByStructuralMembership` directly.
+It has a separate tree from closed values.
 Normal output uses `by_structural_membership` / `结构归属`; Detailed retains
 `element`, `set`, and `kind`. Arithmetic nodes retain their child proofs; a
 `known` leaf retains its original citation, `closed` retains exact calculation,

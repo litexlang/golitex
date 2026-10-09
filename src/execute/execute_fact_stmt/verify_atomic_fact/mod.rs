@@ -1,5 +1,6 @@
 //! Verification stages for atomic facts.
 
+pub(crate) mod helper;
 mod known_subset_membership;
 
 pub mod match_forall_conclusion_args;
@@ -29,13 +30,7 @@ pub use well_defined_result::{
     VerifyAtomicFactWellDefinedResult,
 };
 
-pub mod search_atomic_fact;
-pub use search_atomic_fact::AtomicFactSearchedProof;
-
-pub mod calculate_closed_atomic_fact;
 pub mod closed_calculation_proof;
-pub mod direct_atomic_fact_search_result;
-pub mod search_atomic_fact_proof_directly;
 
 pub mod search_structural_membership;
 pub mod structural_membership_proof;

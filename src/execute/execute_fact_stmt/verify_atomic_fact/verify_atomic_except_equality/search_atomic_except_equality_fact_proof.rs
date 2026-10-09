@@ -1,19 +1,66 @@
-use crate::ast::fact::AtomicFact;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::AtomicExceptEqualityFactSearchedProof;
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::prelude::*;
 
 impl Runtime {
+    // Truth only: the caller must have established WD for the target.
     pub fn search_atomic_except_equality_fact_proof(
         &mut self,
         fact: &AtomicFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
-        use super::super::AtomicFactSearchedProof;
-        Ok(match self.search_atomic_fact(fact, state)? {
-            Some(AtomicFactSearchedProof::AtomicExceptEquality(p)) => Some(p),
-            None => None,
-            Some(AtomicFactSearchedProof::Equality(_)) => unreachable!("non-equality dispatch"),
-        })
+        use AtomicExceptEqualityFactSearchedProof as P;
+        use VerifyStateLevel::*;
+
+        if let Some(proof) = self.search_atomic_except_equality_fact_proof_directly(fact)? {
+            return Ok(Some(proof));
+        }
+        if let Some(child) = state.for_premises(KnownSpecialProperty) {
+            if let Some(proof) =
+                self.search_atomic_except_equality_fact_proof_by_known_atomic_fact(fact, child)?
+            {
+                return Ok(Some(P::ByKnownAtomicFact(proof)));
+            }
+            if let Some(proof) =
+                self.search_atomic_except_equality_fact_proof_by_known_special_property(fact)
+            {
+                return Ok(Some(P::ByKnownSpecialProperty(proof)));
+            }
+        }
+        if let Some(child) = state.for_premises(BuiltinRule) {
+            if let Some(proof) =
+                self.search_atomic_except_equality_fact_proof_by_builtin_rule(fact, child)?
+            {
+                return Ok(Some(P::ByBuiltinRule(proof)));
+            }
+        }
+        if let Some(child) = state.for_premises(Strategy) {
+            if let Some(proof) = self.verify_by_strategy_atomic_except_equality(fact, child)? {
+                return Ok(Some(proof));
+            }
+        }
+        if let Some(child) = state.for_premises(DefinitionAndForall) {
+            if let Some(proof) =
+                self.search_atomic_except_equality_fact_proof_by_definition(fact, child)?
+            {
+                return Ok(Some(P::ByDefinition(proof)));
+            }
+            if let Some(proof) =
+                self.search_atomic_except_equality_fact_proof_by_known_forall_fact(fact, child)?
+            {
+                return Ok(Some(P::ByKnownForallFact(proof)));
+            }
+        }
+        if let Some(child) = state.after_rewrite() {
+            if let Some(proof) =
+                self.search_atomic_except_equality_fact_proof_by_builtin_rewrite(fact, child)?
+            {
+                return Ok(Some(P::ByBuiltinRewrite(proof)));
+            }
+            if let Some(proof) =
+                self.search_atomic_except_equality_fact_proof_by_known_rewrite(fact, child)?
+            {
+                return Ok(Some(P::ByKnownRewrite(proof)));
+            }
+        }
+        Ok(None)
     }
 }

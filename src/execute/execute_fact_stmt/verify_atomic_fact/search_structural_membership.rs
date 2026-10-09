@@ -1,5 +1,5 @@
-use super::calculate_closed_atomic_fact::calculate_closed_atomic_fact;
-use super::closed_calculation_proof::{ClosedAtomicExceptEqualityCalculationProof, ClosedCalculationProof};
+use crate::prelude::calculate_closed_atomic_except_equality_fact;
+use super::closed_calculation_proof::ClosedAtomicExceptEqualityCalculationProof;
 use super::structural_membership_proof::{IntrinsicCodomain, StructuralMembershipProof, StructuralMembershipReason};
 use super::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
 use super::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::standard_set_is_subset_eq;
@@ -32,9 +32,8 @@ impl Runtime {
                 P::Known(known),
             ));
         }
-        if let Some(ClosedCalculationProof::AtomicExceptEquality(
-            ClosedAtomicExceptEqualityCalculationProof::In(proof),
-        )) = calculate_closed_atomic_fact(&goal)
+        if let Some(ClosedAtomicExceptEqualityCalculationProof::In(proof)) =
+            calculate_closed_atomic_except_equality_fact(&goal)
         {
             return Some(StructuralMembershipProof::new(
                 element.clone(),
