@@ -897,7 +897,7 @@ fn phase1_theorem_goal_wd_requires_its_own_parameter_producers() {
         .clear();
     let error = compile_run(&result, &runtime, "phase1_missing_goal_parameter")
         .expect_err("goal WD binder introductions are a required stage");
-    assert_eq!(error.route, "Forall/ParameterInference");
+    assert_eq!(error.route, "Parameters/StoreCapture");
 
     let (mut result, runtime) = execute(PHASE1_ADD_ZERO);
     theorem_goal_wd_mut(named_theorem_mut(&mut result.statement_results[0]))
@@ -906,7 +906,7 @@ fn phase1_theorem_goal_wd_requires_its_own_parameter_producers() {
         .stored_fact_ids[0] = FactId::new(u64::MAX);
     let error = compile_run(&result, &runtime, "phase1_wrong_goal_parameter")
         .expect_err("goal WD cannot use a nonexistent introducing membership");
-    assert_eq!(error.route, "FactId/Resolution");
+    assert_eq!(error.route, "Parameters/StoreCapture");
 }
 
 #[test]
@@ -923,7 +923,7 @@ fn phase1_named_declaration_binder_identity_cannot_change_behind_goal_wd() {
     }
     let error = compile_run(&result, &runtime, "phase1_corrupt_declaration_binder")
         .expect_err("declaration and goal-WD binder identities must agree");
-    assert_eq!(error.route, "Forall/ParameterFact");
+    assert_eq!(error.route, "Parameters/Subject");
 }
 
 #[test]
@@ -1500,16 +1500,23 @@ fn phase1_computed_rhs_rewrite_requires_the_actual_closed_endpoint() {
 }
 
 #[test]
-fn phase1_computed_value_equality_preserves_the_unsupported_selected_rewrite_boundary() {
+fn phase2_computed_value_equality_replays_the_selected_subterm_rewrite() {
     let (result, runtime) = execute("let computed = 2 + 3\ncomputed + 1 = 6\n");
     assert!(matches!(
         &equality_proof(&fact_statement(&result.statement_results[1]).verify_result).searched_proof,
         EqualFactSearchedProof::ByBuiltinRewrite(_)
     ));
-    let error = compile_run(&result, &runtime, "phase1_composite_equality_boundary").expect_err(
-        "atomic whole-argument support does not reroute a selected composite equality rewrite",
+    let output = compile_run(&result, &runtime, "phase2_computed_alias_sum").expect(
+        "the selected closed-subterm rewrite has exact live citation and residual evidence",
     );
-    assert_eq!(error.route, "Equality/BuiltinRewrite");
+    assert!(output.contains("congrArg₂ M.addValue"));
+    if let Some(directory) = std::env::var_os("LITEX_LEAN_PHASE2_OUTPUT_DIR") {
+        std::fs::write(
+            std::path::PathBuf::from(directory).join("computed_alias_sum.lean"),
+            output,
+        )
+        .expect("write requested actual alias-sum compiler artifact");
+    }
 }
 
 fn atomic_fact_from_statement(result: &ExecStmtResult) -> AtomicFact {
@@ -2124,7 +2131,10 @@ fn phase2_closed_order_consumes_actual_comparison_certificates() {
     match &mut proof.searched_proof {
         AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
             ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(proof),
-        ) => proof.left_normal = "0".into(),
+        ) => match &mut proof.values {
+            ClosedValuePair::Decimal { left, .. } => *left = "0".into(),
+            _ => panic!("actual primitive decimal value pair"),
+        },
         _ => panic!("actual closed weak-order certificate"),
     }
     phase2_rejected(
@@ -2132,6 +2142,31 @@ fn phase2_closed_order_consumes_actual_comparison_certificates() {
         &runtime,
         "phase2_changed_closed_order_value",
         &["Closed", "Order/", "Atomic/"],
+    );
+}
+
+#[test]
+fn phase2_closed_order_ignores_presentation_strings() {
+    let (mut result, runtime) = execute(PHASE2_CLOSED_ORDER);
+    let expected =
+        compile_run(&result, &runtime, "phase2_presentation").expect("actual typed values");
+    for statement in &mut result.statement_results {
+        let proof = atomic_proof_mut(&mut fact_statement_mut(statement).verify_result);
+        match &mut proof.searched_proof {
+            AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
+                ClosedAtomicExceptEqualityCalculationProof::Less(p)
+                | ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(p),
+            ) => {
+                p.left_normal = "changed presentation".into();
+                p.right_normal = "unrelated display".into();
+            }
+            _ => panic!("actual closed comparison variants"),
+        }
+    }
+    assert_eq!(
+        compile_run(&result, &runtime, "phase2_presentation")
+            .expect("presentation is not evidence"),
+        expected
     );
 }
 
@@ -2341,4 +2376,117 @@ fn fact_statement_mut(statement: &mut ExecStmtResult) -> &mut ExecFactStmtSucces
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => proof,
         _ => panic!("successful fact statement"),
     }
+}
+
+#[test]
+fn phase2_order_wd_keeps_both_real_requirements_in_source_order() {
+    for change in ["missing", "reordered"] {
+        let (mut result, runtime) = execute(PHASE2_SQUARES);
+        let square = atomic_proof_mut(
+            &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0]
+                .verify_result,
+        );
+        let requirements = match &mut square.well_defined_proof.predicate_domain {
+            PredicateDomainProof::ByRequirements(requirements) => requirements,
+            _ => panic!("actual square order has explicit real-domain requirements"),
+        };
+        assert_eq!(requirements.len(), 2);
+        if change == "missing" {
+            requirements.pop();
+        } else {
+            requirements.swap(0, 1);
+        }
+        phase2_rejected(&result, &runtime, change, &["WD/OrderRealDomain"]);
+    }
+}
+
+#[test]
+fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
+    // The first equality constructs a genuine cubic object and its cached WD.
+    // The first membership proves it real. The repeated membership supplies an
+    // actual citation proof that can be moved into the forged order's WD stage.
+    // The original source remains true; only the test's result values change.
+    let source = "forall real_power_base R:\n    real_power_base^3 = real_power_base^3\n    real_power_base^3 $in R\n    real_power_base^3 $in R\n    real_power_base^3 $in R\n    0 <= real_power_base^2\n";
+    let (mut result, runtime) = execute(source);
+    let success = fact_statement_mut(&mut result.statement_results[0]);
+    let forall = match &mut success.verify_result {
+        VerifyFactResult::ForallFact(result) => match result.as_mut() {
+            VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(forall)) => {
+                forall
+            }
+            _ => panic!("actual locally introduced real-power source"),
+        },
+        _ => panic!("forall statement"),
+    };
+    let cubic_equality = equality_proof(&forall.proved_then_facts[0].verify_result);
+    let cube = cubic_equality.fact.left.clone();
+    // Consume a separate genuine cubic WD from a removable duplicate, so this
+    // control does not assume whether the source chose ByDef or ByKnown.
+    let mut cube_formation = forall.proved_then_facts.remove(3);
+    forall.fact.then_facts.remove(3);
+    let cube_wd = atomic_proof_mut(&mut cube_formation.verify_result)
+        .well_defined_proof
+        .well_defined_of_each_parameter
+        .remove(0);
+    match &cube_wd {
+        ObjWellDefinedProof::ByKnown { obj, .. } | ObjWellDefinedProof::ByDef { obj, .. } => {
+            assert_eq!(obj.ir(), cube.ir())
+        }
+    };
+
+    // Reuse the actual repeated-membership result. Do not manufacture an In R
+    // proof, a WD certificate, or a fresh source identity for the changed goal.
+    let cube_member = forall.proved_then_facts.remove(2);
+    forall.fact.then_facts.remove(2);
+    let cube_member_fact = phase2_atomic(&cube_member.verify_result).fact.clone();
+    match &cube_member_fact {
+        AtomicFact::InFact(fact) => {
+            assert_eq!(fact.element.ir(), cube.ir());
+            assert_eq!(fact.set, Obj::StandardSet(StandardSet::R));
+        }
+        _ => panic!("actual cubic real-membership result"),
+    }
+
+    let square = atomic_proof_mut(&mut forall.proved_then_facts[2].verify_result);
+    assert!(matches!(
+        &square.searched_proof,
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(_),
+            ),
+        )
+    ));
+    match &mut square.fact {
+        AtomicFact::LessEqualFact(fact) => fact.right = cube.clone(),
+        _ => panic!("actual weak square nonnegativity goal"),
+    }
+    square.well_defined_proof.well_defined_of_each_parameter[1] = cube_wd;
+    match &mut square.well_defined_proof.predicate_domain {
+        PredicateDomainProof::ByRequirements(requirements) => {
+            assert_eq!(requirements.len(), 2);
+            requirements[1].requirement = Fact::AtomicFact(cube_member_fact);
+            requirements[1].result = Box::new(cube_member.verify_result);
+        }
+        _ => panic!("actual two-stage real-domain WD"),
+    }
+
+    // Keep every enclosing primary store and source conclusion aligned so the
+    // counterfeit reaches the parity guard, rather than an incidental mismatch.
+    let changed_goal = square.fact.clone();
+    forall.fact.then_facts[2] = ExistOrAndChainAtomicFact::AtomicFact(changed_goal.clone());
+    match &mut forall.proved_then_facts[2].store_and_infer.store {
+        StoreFactResult::AtomicFact(stored) => stored.fact = changed_goal,
+        _ => panic!("atomic order primary store"),
+    }
+    let changed_forall = forall.fact.clone();
+    match &mut success.store_and_infer_result.store {
+        StoreFactResult::ForallFact(stored) => stored.fact = changed_forall,
+        _ => panic!("whole forall primary store"),
+    }
+    phase2_rejected(
+        &result,
+        &runtime,
+        "phase2_odd_exponent_with_even_tag",
+        &["Order/EvenPowerExponent"],
+    );
 }

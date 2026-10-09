@@ -473,9 +473,13 @@ not a monomial derivation: the generated normalization proof must pass Lean.
 The declaration slice adds let and typed RHS-have aliases, named theorems and
 explicit theorem selections. Equality-class paths, supported argument transport
 and whole-forall reuse retain exact recorded citations. Bounded atomic rewrites
-support whole-argument aliases and certified closed representatives. Arbitrary
-have, Q/order, function/set constructors, compound subterm rewrites and general
-forward-inference replay remain outside the current compiler profile.
+support whole-argument aliases and certified closed representatives. Selected
+closed-numeric equality subtree substitution retains its exact citations and
+residual proof. The numeric profile includes Q hierarchy/closure, real comparison
+and bounded weak-order rules, and ordinary top-level numeric have as generic
+parameter contexts with actual nonempty checks. Local arbitrary-have proof steps,
+function/set constructors, general inequality solving, refined carriers and
+uncompiled forward-inference families remain outside the current profile.
 
 ## Practical Recipes
 

@@ -3678,8 +3678,8 @@ impl LeanCompiler {
         };
         let relation = if strict { "<" } else { "≤" };
         Ok(format!(
-            "((Litex.NativeBridge.{observation} {} {} {low_r} {high_r}).mpr (by\n  have _litex_left_value : Litex.NativeBridge.asReal {lhs} {ha} = {r} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {lhs} {ha}).symm.trans (({}).trans (congrArg M.number (by norm_num : {} = ({r} : ℂ)))))\n  have _litex_right_value : Litex.NativeBridge.asReal {rhs} {hb} = {s} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {rhs} {hb}).symm.trans (({}).trans (congrArg M.number (by norm_num : {} = ({s} : ℂ)))))\n  exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => _litex_r {relation} _litex_s) {low_value} {high_value}) (by norm_num)))",
-            self.object_term(low)?, self.object_term(high)?, x.denotation, x.value, y.denotation, y.value,
+            "((Litex.NativeBridge.{observation} {} {} {low_r} {high_r}).mpr (by\n  have _litex_left_value : Litex.NativeBridge.asReal {lhs} {ha} = {r} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {lhs} {ha}).symm.trans (({}).trans (congrArg M.number (by norm_num))))\n  have _litex_right_value : Litex.NativeBridge.asReal {rhs} {hb} = {s} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {rhs} {hb}).symm.trans (({}).trans (congrArg M.number (by norm_num))))\n  exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => _litex_r {relation} _litex_s) {low_value} {high_value}) (by norm_num)))",
+            self.object_term(low)?, self.object_term(high)?, x.denotation, y.denotation,
         ))
     }
 

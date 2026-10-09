@@ -40,14 +40,23 @@ inputs.
 `compile_run` rejects a failed or incomplete source run, then visits
 `statement_results` in order. It returns the assembled artifact only after
 every statement succeeds. It accepts supported fact statements, `let`, typed
-RHS `have`, named `thm`, and explicit `by thm` selections. Other statement and
+RHS `have`, ordinary numeric `have` contexts, named `thm`, and explicit `by thm` selections. Other statement and
 object families retain explicit unsupported branches.
 
 Aliases keep their source IdentifierIds and actual stored defining equalities.
 Their Lean definitions retain the certified RHS object rather than choosing a
 new carrier. A typed definition first replays the RHS membership proof. The
-current plain numeric profile rejects dependent carriers, struct opening and
-uncaptured inference producers.
+current plain numeric profile rejects dependent carriers and struct opening.
+Actual ordered parameter-store trees are captured and their flattened ID views
+validated. The natural-membership nonnegative inference has an explicit replay;
+other uncompiled inferred producers still fail on citation.
+
+Ordinary numeric `have` replays its type WD and actual nonempty certificate,
+then introduces a generic certified object plus its membership hypothesis.
+Exported definitions/theorems retain this source parameter context. The compiler
+does not select zero or change the object's host type. This stage supports
+standalone top-level numeric contexts; local arbitrary-have proof steps remain
+unsupported.
 
 Named theorem results retain the original declaration, separate goal-formation
 WD scope, actual body parameter/domain introduction, ordered proof steps and
@@ -102,8 +111,10 @@ orientations and endpoint identities; peer bridges replay their own WD and
 selected proof. Supported known atomic facts transport In, IsSet and inequality
 through their recorded argument equalities. Atomic builtin rewrite accepts
 bounded whole-argument numeric/known-equality substitution with its exact
-residual child and citations; compound subterm rewrites, function unfolding and
-order duality remain unsupported. Numeric substitution preserves the recorded
+residual child and citations. Equality also supports the selected closed-numeric
+subtree rewrite through exact arithmetic constructor congruence and its actual
+residual proof. General known-equality subtree rewrites and function unfolding
+remain unsupported. Recorded numeric order duality is replayed separately. Numeric substitution preserves the recorded
 closed-expression endpoint and its source equality citation; a different closed
 residual is rejected rather than normalized into a replacement proof.
 
@@ -112,6 +123,18 @@ The empty Rational tag contains no monomial trace: Lean checks the emitted
 normalization proof itself. Do not describe this as replaying an unavailable
 low-level normalization trace, or replace the selected route with a theorem
 chosen by goal shape.
+
+The numeric hierarchy includes faithful Q membership and Q arithmetic closure.
+Real comparisons are ordinary `Litex.Le`/`Litex.Lt` facts based on real denotation
+witnesses. Predicate formation requires the two actual ordered R-membership
+stages. Scoped real certificates come only from replayed requirements,
+introductions or known-order evidence; they are never discovered by Env search.
+Selected closed comparisons consume typed `ClosedValuePair` and the comparison
+tag; normal strings remain presentation only. Supported weak-order adapters
+retain exact reflexivity objects, add premises, transitivity citations, even
+literal exponent guards and strict-order nonzero premises. Unsupported inequality
+rules, old string-only builtin comparison payloads and generic/negative even
+power rule applications remain explicit failures.
 
 Arithmetic WD adapters preserve constructor shape and replay child WD and
 domain evidence. Membership can attach numeric denotation evidence to an
