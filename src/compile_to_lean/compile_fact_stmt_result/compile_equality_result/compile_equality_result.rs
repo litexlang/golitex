@@ -81,8 +81,8 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByEquivalenceClass(proof) => {
                 self.compile_equivalence_class(fact, proof, position)?
             }
-            EqualFactSearchedProof::ByObjectDefinition(_) => {
-                return Err(LeanCompileError::unsupported("Equality/ObjectDefinition"))
+            EqualFactSearchedProof::ByObjectDefinition(proof) => {
+                self.compile_function_definition(fact, proof, position)?
             }
             EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),

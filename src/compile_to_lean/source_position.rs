@@ -96,7 +96,7 @@ impl<'a> SourcePosition<'a> {
                     format!("_Host_i{id}"),
                     format!("_rep_i{id}"),
                     format!("_value_i{id}"),
-                    format!("_fact_f{}", fact_id.value()),
+                    format!("h_{}", fact_id.value()),
                 ]
             })
             .collect::<Vec<_>>()
@@ -359,12 +359,7 @@ impl<'a> SourcePosition<'a> {
                     }
                 }
                 check_store_subject(store, fact)?;
-                return Ok((
-                    name,
-                    carrier,
-                    fact_id,
-                    format!("_fact_f{}", fact_id.value()),
-                ));
+                return Ok((name, carrier, fact_id, format!("h_{}", fact_id.value())));
             }
             position = current.parent;
         }
@@ -560,7 +555,7 @@ fn context_arguments_before(run: &RunLitexCodeResult, before: usize) -> Vec<Stri
                     format!("_Host_i{id}"),
                     format!("_rep_i{id}"),
                     format!("_value_i{id}"),
-                    format!("_fact_f{}", fact_id.value()),
+                    format!("h_{}", fact_id.value()),
                 ]);
             }
         }
@@ -572,7 +567,17 @@ fn application(name: &str, arguments: &[String]) -> String {
     if arguments.is_empty() {
         format!("({name} (M := M))")
     } else {
-        format!("(@{name} M {})", arguments.join(" "))
+        let arguments = arguments
+            .chunks_exact(4)
+            .map(|group| {
+                format!(
+                    "({} := {}) ({} := {}) {} {}",
+                    group[0], group[0], group[1], group[1], group[2], group[3]
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        format!("({name} (M := M) {arguments})")
     }
 }
 
@@ -836,7 +841,7 @@ fn have_reference(
 ) -> Result<Option<String>, LeanCompileError> {
     let mut index = 0;
     for group in &proof.statement.param_def.groups {
-        for parameter in &group.params {
+        for _parameter in &group.params {
             if index >= before {
                 return Ok(None);
             }
@@ -849,10 +854,10 @@ fn have_reference(
             };
             if store.primary_fact_id() == id {
                 check_store_subject(store, actual)?;
-                return Ok(Some(format!("_fact_f{}", id.value())));
+                return Ok(Some(format!("h_{}", id.value())));
             }
             if infer_has_fact(store, id, actual)? {
-                return Ok(Some(format!("_fact_f{}", id.value())));
+                return Ok(Some(format!("h_{}", id.value())));
             }
             index += 1;
         }
@@ -870,7 +875,7 @@ fn header_reference(
 ) -> Result<Option<String>, LeanCompileError> {
     let mut index = 0;
     for group in groups {
-        for parameter in &group.params {
+        for _parameter in &group.params {
             if index >= before {
                 return Ok(None);
             }
@@ -879,10 +884,10 @@ fn header_reference(
             };
             if store.primary_fact_id() == id {
                 check_store_subject(store, actual)?;
-                return Ok(Some(format!("_fact_f{}", id.value())));
+                return Ok(Some(format!("h_{}", id.value())));
             }
             if infer_has_fact(store, id, actual)? {
-                return Ok(Some(format!("_fact_f{}", id.value())));
+                return Ok(Some(format!("h_{}", id.value())));
             }
             index += 1;
         }
@@ -890,10 +895,10 @@ fn header_reference(
     for dom in doms.iter().take(before.saturating_sub(index)) {
         if dom.store_and_infer.primary_fact_id() == id {
             check_store_subject(&dom.store_and_infer, actual)?;
-            return Ok(Some(format!("_fact_f{}", id.value())));
+            return Ok(Some(format!("h_{}", id.value())));
         }
         if infer_has_fact(&dom.store_and_infer, id, actual)? {
-            return Ok(Some(format!("_fact_f{}", id.value())));
+            return Ok(Some(format!("h_{}", id.value())));
         }
     }
     Ok(None)
@@ -910,7 +915,7 @@ fn statement_reference(
     top: Option<(&RunLitexCodeResult, usize)>,
     before: usize,
 ) -> Result<Option<String>, LeanCompileError> {
-    let internal = || format!("_fact_f{}", id.value());
+    let internal = || format!("h_{}", id.value());
     let global_reference = |name: String| match top {
         Some((run, index)) => application(&name, &context_arguments_before(run, index)),
         None => name,
@@ -943,10 +948,7 @@ fn statement_reference(
                     .ok_or_else(|| LeanCompileError::unsupported("Fact/Subject"))?,
                 actual,
             )?;
-            Ok(Some(global_reference(match top {
-                Some((_, index)) => format!("fact_{}", index + 1),
-                None => internal(),
-            })))
+            Ok(Some(global_reference(internal())))
         }
         ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(p)))
             if before > 0 =>
@@ -958,10 +960,7 @@ fn statement_reference(
                         .ok_or_else(|| LeanCompileError::unsupported("ByDef/Subject"))?,
                     actual,
                 )?;
-                return Ok(Some(global_reference(match top {
-                    Some((_, index)) => format!("fact_{}", index + 1),
-                    None => internal(),
-                })));
+                return Ok(Some(global_reference(internal())));
             }
             if infer_has_fact(&p.stored, id, actual)? {
                 return Ok(Some(global_reference(internal())));
@@ -984,20 +983,14 @@ fn statement_reference(
                     .ok_or_else(|| LeanCompileError::unsupported("ByThm/Subject"))?,
                 actual,
             )?;
-            Ok(Some(global_reference(match top {
-                Some((_, index)) => format!("fact_{}", index + 1),
-                None => internal(),
-            })))
+            Ok(Some(global_reference(internal())))
         }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(p),
         )) if before > 0 && p.stored.primary_fact_id() == id => {
             check_store_subject(&p.stored, actual)?;
             check_subject(&p.statement.fact, actual)?;
-            Ok(Some(global_reference(match top {
-                Some((_, index)) => format!("named_thm_{}", index + 1),
-                None => internal(),
-            })))
+            Ok(Some(global_reference(internal())))
         }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(p)),
@@ -1062,7 +1055,7 @@ fn statement_reference(
                                 format!("_Host_i{number}"),
                                 format!("_rep_i{number}"),
                                 format!("_value_i{number}"),
-                                format!("_fact_f{}", fact_id.value()),
+                                format!("h_{}", fact_id.value()),
                             ]);
                         }
                         return Ok(Some(application(&reference, &arguments)));
@@ -1123,7 +1116,7 @@ fn fact_reference_in_owner(
             {
                 if then.store_and_infer.primary_fact_id() == id {
                     check_store_subject(&then.store_and_infer, actual)?;
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
             }
             Ok(None)
@@ -1189,7 +1182,7 @@ fn fact_reference_in_owner(
                 if let Some(subject) = verified_subject(proof) {
                     if subject.fact_id() == id {
                         check_subject(&subject, actual)?;
-                        return Ok(Some(format!("_fact_f{}", id.value())));
+                        return Ok(Some(format!("h_{}", id.value())));
                     }
                 }
             }
@@ -1201,7 +1194,7 @@ fn fact_reference_in_owner(
             {
                 if store.primary_fact_id() == id {
                     check_store_subject(store, actual)?;
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
             }
             Ok(None)
@@ -1211,10 +1204,10 @@ fn fact_reference_in_owner(
             for store in stores.iter().take(position.before) {
                 if store.primary_fact_id() == id {
                     check_store_subject(store, actual)?;
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
                 if infer_has_fact(store, id, actual)? {
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
             }
             for assumption in p
@@ -1225,10 +1218,10 @@ fn fact_reference_in_owner(
                 let store = &assumption.store_and_infer;
                 if store.primary_fact_id() == id {
                     check_store_subject(store, actual)?;
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
                 if infer_has_fact(store, id, actual)? {
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
             }
             Ok(None)
@@ -1241,10 +1234,10 @@ fn fact_reference_in_owner(
                 let store = &derived.store_and_infer;
                 if store.primary_fact_id() == id {
                     check_store_subject(store, actual)?;
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
                 if infer_has_fact(store, id, actual)? {
-                    return Ok(Some(format!("_fact_f{}", id.value())));
+                    return Ok(Some(format!("h_{}", id.value())));
                 }
             }
             Ok(None)
@@ -1258,10 +1251,10 @@ fn fact_reference_in_owner(
                 {
                     if store.primary_fact_id() == id {
                         check_store_subject(store, actual)?;
-                        return Ok(Some(format!("_fact_f{}", id.value())));
+                        return Ok(Some(format!("h_{}", id.value())));
                     }
                     if infer_has_fact(store, id, actual)? {
-                        return Ok(Some(format!("_fact_f{}", id.value())));
+                        return Ok(Some(format!("h_{}", id.value())));
                     }
                 }
                 let head = carriers.len() + parameters.store_and_infer_results.len();
@@ -1269,10 +1262,10 @@ fn fact_reference_in_owner(
                     let store = &domain.store_and_infer;
                     if store.primary_fact_id() == id {
                         check_store_subject(store, actual)?;
-                        return Ok(Some(format!("_fact_f{}", id.value())));
+                        return Ok(Some(format!("h_{}", id.value())));
                     }
                     if infer_has_fact(store, id, actual)? {
-                        return Ok(Some(format!("_fact_f{}", id.value())));
+                        return Ok(Some(format!("h_{}", id.value())));
                     }
                 }
             }
@@ -1517,7 +1510,7 @@ fn visit_function_formation<T>(
             usize::MAX,
         );
         if let Some(value) =
-            visit_fact_formation(&domain.well_defined, usize::MAX, &formation, wd, verify)?
+            visith_ormation(&domain.well_defined, usize::MAX, &formation, wd, verify)?
         {
             return Ok(Some(value));
         }
@@ -1602,7 +1595,7 @@ fn visit_owner<T>(
             return visit_atomic_formation(proof, position.before, position, wd, verify)
         }
         SourceOwner::FactWD(proof) => {
-            return visit_fact_formation(proof, position.before, position, wd, verify)
+            return visith_ormation(proof, position.before, position, wd, verify)
         }
         SourceOwner::Forall(proof) => {
             let head = parameter_count(&proof.fact.typed_parameters.groups)
@@ -1648,8 +1641,7 @@ fn visit_owner<T>(
                 };
                 let formation =
                     SourcePosition::new(Some(&prior), SourceOwner::FactWD(then), usize::MAX);
-                if let Some(value) = visit_fact_formation(then, usize::MAX, &formation, wd, verify)?
-                {
+                if let Some(value) = visith_ormation(then, usize::MAX, &formation, wd, verify)? {
                     return Ok(Some(value));
                 }
             }
@@ -1679,8 +1671,7 @@ fn visit_owner<T>(
                 };
                 let formation =
                     SourcePosition::new(Some(&prior), SourceOwner::FactWD(then), usize::MAX);
-                if let Some(value) = visit_fact_formation(then, usize::MAX, &formation, wd, verify)?
-                {
+                if let Some(value) = visith_ormation(then, usize::MAX, &formation, wd, verify)? {
                     return Ok(Some(value));
                 }
             }
@@ -1738,7 +1729,7 @@ fn visit_owner<T>(
                 let formation =
                     SourcePosition::new(Some(&prior), SourceOwner::FactWD(conclusion), usize::MAX);
                 if let Some(value) =
-                    visit_fact_formation(conclusion, usize::MAX, &formation, wd, verify)?
+                    visith_ormation(conclusion, usize::MAX, &formation, wd, verify)?
                 {
                     return Ok(Some(value));
                 }
@@ -1830,7 +1821,7 @@ fn visit_owner<T>(
                     usize::MAX,
                 );
                 if let Some(value) =
-                    visit_fact_formation(&assumed.well_defined, usize::MAX, &formation, wd, verify)?
+                    visith_ormation(&assumed.well_defined, usize::MAX, &formation, wd, verify)?
                 {
                     return Ok(Some(value));
                 }
@@ -1878,7 +1869,7 @@ fn visit_owner<T>(
                     };
                     let formation =
                         SourcePosition::new(Some(&prior), SourceOwner::FactWD(goal), usize::MAX);
-                    return visit_fact_formation(goal, usize::MAX, &formation, wd, verify);
+                    return visith_ormation(goal, usize::MAX, &formation, wd, verify);
                 }
             }
         }
@@ -1924,7 +1915,7 @@ fn visit_owner<T>(
                     usize::MAX,
                 );
                 if let Some(value) =
-                    visit_fact_formation(&derived.well_defined, usize::MAX, &formation, wd, verify)?
+                    visith_ormation(&derived.well_defined, usize::MAX, &formation, wd, verify)?
                 {
                     return Ok(Some(value));
                 }
@@ -2020,8 +2011,7 @@ fn visit_header<T>(
             SourceOwner::FactWD(&dom.well_defined),
             usize::MAX,
         );
-        if let Some(value) =
-            visit_fact_formation(&dom.well_defined, usize::MAX, &formation, wd, verify)?
+        if let Some(value) = visith_ormation(&dom.well_defined, usize::MAX, &formation, wd, verify)?
         {
             return Ok(Some(value));
         }
@@ -2432,7 +2422,7 @@ fn visit_atomic_formation<T>(
     Ok(None)
 }
 
-fn visit_fact_formation<T>(
+fn visith_ormation<T>(
     proof: &FactWellDefinedProof,
     before: usize,
     position: &SourcePosition<'_>,
@@ -2469,6 +2459,16 @@ fn visit_fact_formation<T>(
 fn arithmetic_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::FnObj(proof),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
     let ObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ArithmeticOperator(proof),
         ..

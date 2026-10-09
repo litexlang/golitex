@@ -170,15 +170,21 @@ impl LitexToLeanCompiler {
             .iter()
             .map(|(parameter, _)| format!("_raw_i{}", parameter.id.value()))
             .collect::<Vec<_>>();
-        let inputs = parameters
+        let inputs = defined
+            .store_and_infer_results
             .iter()
-            .map(|(parameter, _)| format!("_input_i{}", parameter.id.value()))
+            .map(|store| format!("h_{}", store.primary_fact_id().value()))
             .collect::<Vec<_>>();
-        let mut lines = vec![format!(
-            "intro {} {} _guard",
-            raw.join(" "),
-            inputs.join(" ")
-        )];
+        let mut lines = vec![format!("intro {} {}", raw.join(" "), inputs.join(" "))];
+        let guards = assumed
+            .iter()
+            .map(|paired| format!("h_{}", paired.store_and_infer.primary_fact_id().value()))
+            .collect::<Vec<_>>();
+        lines.push(match guards.len() {
+            0 => "intro _".into(),
+            1 => format!("intro {}", guards[0]),
+            _ => format!("rintro ⟨{}⟩", guards.join(", ")),
+        });
         for (index, ((parameter, carrier), store)) in parameters
             .iter()
             .zip(&defined.store_and_infer_results)
@@ -202,15 +208,12 @@ impl LitexToLeanCompiler {
             }
             self.validate_store(store, &fact)?;
             let id = parameter.id.value();
+            let hypothesis = format!("h_{}", fact.fact_id().value());
             lines.push(format!(
-                "let _value_i{id} := Litex.semanticObject (M := M) _raw_i{id} (M.member_isSet _input_i{id})"
+                "let _value_i{id} := Litex.semanticObject (M := M) _raw_i{id} (M.member_isSet {hypothesis})"
             ));
-            let member = (
-                self.fact_proposition(&fact, &introduced)?,
-                format!("_input_i{id}"),
-            );
-            lines.push(self.emit_internal_fact(&fact, &member, &introduced));
-            let member = (member.0, format!("_fact_f{}", fact.fact_id().value()));
+            let member = (self.fact_proposition(&fact, &introduced)?, hypothesis);
+            lines.push(format!("have {} : {} := {}", member.1, member.0, member.1));
             lines.extend(self.compile_parameter_inferences(store, &fact, &member, &introduced)?);
         }
         for (index, (source, paired)) in signature.dom_facts.iter().zip(assumed).enumerate() {
@@ -232,17 +235,14 @@ impl LitexToLeanCompiler {
             let raw = self.compile_function_raw_fact(source, signature, position)?;
             let compiled = (
                 self.fact_proposition(&fact, &formed)?,
-                format!(
-                    "(by\n  change {raw}\n  exact {})",
-                    conjunction_projection("_guard", index, assumed.len())
-                ),
+                format!("(by\n  change {raw}\n  exact {})", guards[index]),
             );
             let completed = SourcePosition {
                 before: prior.before + 1,
                 ..*position
             };
             lines.push(self.emit_internal_fact(&fact, &compiled, &completed));
-            let compiled = (compiled.0, format!("_fact_f{}", fact.fact_id().value()));
+            let compiled = (compiled.0, format!("h_{}", fact.fact_id().value()));
             lines.extend(self.compile_parameter_inferences(
                 &paired.store_and_infer,
                 &fact,

@@ -26,6 +26,25 @@ impl LitexToLeanCompiler {
         )? {
             return Ok(proof);
         }
+        if let Some(proof) = position
+            .with_visible_alias(object, &mut |_, value, wd, producer| {
+                let wd = success_object_wd(wd, value)?;
+                self.numeric_function_real_wd(wd, producer)
+            })?
+            .flatten()
+        {
+            return Ok(proof);
+        }
+        if matches!(object, Obj::FnObj(_)) {
+            if let Some(proof) = position
+                .with_visible_wd(object, &mut |wd, producer| {
+                    self.numeric_function_real_wd(wd, producer)
+                })?
+                .flatten()
+            {
+                return Ok(proof);
+            }
+        }
         let mut current = Some(position);
         while let Some(cursor) = current {
             if let SourceOwner::Verify(VerifyFactResult::AtomicExceptEquality(result)) =
@@ -259,6 +278,32 @@ impl LitexToLeanCompiler {
                 Ok(pair)
             }
             ObjWellDefinedProof::ByDef {
+                obj: Obj::FnObj(_),
+                proof: ObjWellDefinedProofByDef::FnObj(_),
+            } => {
+                let (call, output, member) = self.numeric_function_output_wd(wd, position)?;
+                let complex = match output {
+                    StandardSet::N => format!("(Litex.naturalToComplex {call} {member})"),
+                    StandardSet::Z => format!("(Litex.integerToComplex {call} {member})"),
+                    StandardSet::Q => format!("(Litex.rationalToComplex {call} {member})"),
+                    StandardSet::R => format!("(Litex.realToComplex {call} {member})"),
+                    StandardSet::C => member,
+                    _ => {
+                        return Err(LeanCompileError::unsupported(
+                            "Arithmetic/FunctionOutputCarrier",
+                        ))
+                    }
+                };
+                // The term is this actual constructor, so observing its return
+                // law never asks the current WD cursor to rediscover itself.
+                Ok((
+                    format!("(Litex.NativeBridge.asComplex {call} {complex})"),
+                    format!("(Litex.NativeBridge.asComplex_spec {call} {complex})"),
+                    complex,
+                    None,
+                ))
+            }
+            ObjWellDefinedProof::ByDef {
                 obj,
                 proof: ObjWellDefinedProofByDef::Identifier(_),
             } => {
@@ -303,6 +348,79 @@ impl LitexToLeanCompiler {
                 ))
             }
             ObjWellDefinedProof::ByDef { proof, .. } => Err(unsupported_wd_definition(proof)),
+        }
+    }
+
+    fn numeric_function_output_wd(
+        &self,
+        wd: &ObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, StandardSet, String), LeanCompileError> {
+        let ObjWellDefinedProof::ByDef {
+            obj: Obj::FnObj(application),
+            proof: ObjWellDefinedProofByDef::FnObj(proof),
+        } = wd
+        else {
+            return Err(LeanCompileError::new(
+                "Arithmetic/FunctionOutputWD",
+                "Function output observation needs its original application constructor.",
+            ));
+        };
+        let constructor = SourcePosition {
+            parent: Some(position),
+            owner: SourceOwner::WD(wd),
+            before: 0,
+        };
+        let (call, output) = self.compile_fn_call_with_return(application, proof, &constructor)?;
+        let law = if application.body[0].len() == 1 {
+            "callInOutput"
+        } else {
+            "call2InOutput"
+        };
+        let member = format!("(Litex.{law} {call})");
+        Ok((call, output, member))
+    }
+
+    fn numeric_function_real_wd(
+        &self,
+        wd: &ObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        match wd {
+            ObjWellDefinedProof::ByKnown {
+                obj: object @ Obj::FnObj(_),
+                wd_id,
+            } => {
+                if self.resolve_wd(*wd_id, position)?.ir() != object.ir() {
+                    return Err(LeanCompileError::new(
+                        "WD/ByKnown",
+                        "Cached function WD resolves to another source object.",
+                    ));
+                }
+                // Only a preceding original ByDef constructor can supply the
+                // cached call's output tag and its checked domain certificates.
+                Ok(position
+                    .with_visible_wd(object, &mut |wd, producer| {
+                        self.numeric_function_real_wd(wd, producer)
+                    })?
+                    .flatten())
+            }
+            ObjWellDefinedProof::ByDef {
+                obj: Obj::FnObj(_),
+                proof: ObjWellDefinedProofByDef::FnObj(_),
+            } => {
+                let (call, output, member) = self.numeric_function_output_wd(wd, position)?;
+                Ok(match output {
+                    StandardSet::N => Some(format!("(Litex.naturalToReal {call} {member})")),
+                    StandardSet::Z => Some(format!("(Litex.integerToReal {call} {member})")),
+                    StandardSet::Q => Some(format!("(Litex.rationalToReal {call} {member})")),
+                    StandardSet::R => Some(member),
+                    // A checked C return certifies a complex value only. Any
+                    // later R assertion still needs its own source certificate.
+                    _ => None,
+                })
+            }
+            _ => Ok(None),
         }
     }
 }

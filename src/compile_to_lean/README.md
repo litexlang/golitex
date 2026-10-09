@@ -66,11 +66,13 @@ It is neither another ExecEnv nor an object/fact/proof cache.
 Its internal borrow lifetime remains explicit where Rust requires it; this
 does not impose a lifetime parameter on the owning compiler API.
 
-Exact source IDs determine internal names. Stored alias equalities, supported
-inference and theorem-return projections have declarations at their actual
-producer stage. Temporary Verify children are not automatically stored facts;
-some obligations reuse the owning target FactId. Public `fact_<index>` and
-`named_thm_<index>` names retain their compatibility role.
+Each source proof is named `h_<original FactId>`, including exported facts,
+named theorems, local hypotheses, stored alias equalities, supported inference
+and theorem-return projections. Declarations and citations use the same actual
+ID; statement positions determine traversal order, not proof names. Producers
+are emitted at their actual stage. Temporary Verify children are not
+automatically stored facts; some obligations reuse the owning target FactId.
+Their selected proofs may be passed directly to certified constructors.
 
 A declaration's parameters come from its original source position. Introducing
 another object later cannot extend an earlier theorem's signature. Generic

@@ -4,6 +4,8 @@ mod compile_def_thm_stmt_result;
 mod compile_define_obj_stmt_result;
 mod compile_definition_stmt_result;
 mod compile_fact_stmt_result;
+mod compile_function_template;
+mod compile_have_fn_equal_stmt_result;
 mod compile_have_obj_equal_stmt_result;
 mod compile_have_obj_in_nonempty_set_stmt_result;
 mod compile_let_stmt_result;
@@ -23,5 +25,11 @@ pub use litex_to_lean_compiler::LitexToLeanCompiler;
 
 #[cfg(test)]
 mod concrete_prop_tests;
+#[cfg(test)]
+mod function_call_tests;
+#[cfg(test)]
+mod numeric_function_call_tests;
+#[cfg(test)]
+mod prop_domain_tests;
 #[cfg(test)]
 mod tests;

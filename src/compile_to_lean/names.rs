@@ -92,15 +92,11 @@ impl LitexToLeanCompiler {
         &self,
         source: &Fact,
         fact: (String, String),
-        index: usize,
+        _index: usize,
         local: bool,
         position: &SourcePosition<'_>,
     ) -> String {
-        let name = if local {
-            format!("_fact_f{}", source.fact_id().value())
-        } else {
-            format!("fact_{index}")
-        };
+        let name = format!("h_{}", source.fact_id().value());
         let kind = if local { "have" } else { "theorem" };
         let declaration = format!(
             "{kind} {name}{} : {} :=\n  {}",
@@ -123,7 +119,7 @@ impl LitexToLeanCompiler {
             let id = parameter.id.value();
             let fact_id = fact_id.value();
             let set = standard_term(match set { Obj::StandardSet(set) => set, _ => unreachable!("validated numeric carrier") }).expect("validated numeric carrier");
-            format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (_fact_f{fact_id} : Litex.In _value_i{id} {set})")
+            format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : Litex.In _value_i{id} {set})")
         }).collect::<Vec<_>>();
         if binders.is_empty() {
             String::new()
@@ -141,7 +137,18 @@ impl LitexToLeanCompiler {
         if arguments.is_empty() {
             format!("({name} (M := M))")
         } else {
-            format!("(@{name} M {arguments})")
+            let arguments = arguments.split_whitespace().collect::<Vec<_>>();
+            let arguments = arguments
+                .chunks_exact(4)
+                .map(|group| {
+                    format!(
+                        "({} := {}) ({} := {}) {} {}",
+                        group[0], group[0], group[1], group[1], group[2], group[3]
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(" ");
+            format!("({name} (M := M) {arguments})")
         }
     }
 
@@ -185,7 +192,7 @@ impl LitexToLeanCompiler {
             .collect::<Vec<_>>();
         let tokens = |text: &str| {
             text.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-                .filter(|token| token.starts_with("_fact_f") || token.starts_with("_object_i"))
+                .filter(|token| token.starts_with("h_") || token.starts_with("_object_i"))
                 .map(str::to_string)
                 .collect::<Vec<_>>()
         };
@@ -231,7 +238,7 @@ impl LitexToLeanCompiler {
         compiled: &(String, String),
         position: &SourcePosition<'_>,
     ) -> String {
-        let name = format!("_fact_f{}", fact.fact_id().value());
+        let name = format!("h_{}", fact.fact_id().value());
         let local = position.is_local();
         format!(
             "{} {name}{} : {} :=\n  {}",
@@ -259,7 +266,7 @@ impl LitexToLeanCompiler {
 
         let instance = format!("_rep_i{}", id.value());
         let value = format!("_value_i{}", id.value());
-        let hypothesis = format!("_fact_f{}", store.primary_fact_id().value());
+        let hypothesis = format!("h_{}", store.primary_fact_id().value());
         let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
         let fact = self.resolve_fact(store.primary_fact_id(), position)?;
         match &fact {
@@ -399,6 +406,12 @@ impl LitexToLeanCompiler {
             return Ok(term);
         }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
+            if let Ok((proof, producer, _)) = position.visible_function(id) {
+                return Ok(self.context_application(
+                    &format!("_object_i{}", proof.statement.name.id.value()),
+                    &producer,
+                ));
+            }
             return self.compile_parameter_reference(*id, position);
         }
         if let Some(term) =

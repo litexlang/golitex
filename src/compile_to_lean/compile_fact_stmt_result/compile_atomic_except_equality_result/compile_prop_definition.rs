@@ -124,25 +124,16 @@ impl LitexToLeanCompiler {
             position.visible_prop(&normal.predicate)?;
         self.prop_argument_substitution(declaration, normal)?;
         let mut arguments = Vec::new();
-        let context = declaration_position.context_arguments();
-        if !context.is_empty() {
-            arguments.push(context);
-        }
         for object in &normal.body {
-            arguments.push(format!(
-                "_ _ {}",
-                self.compile_object_reference(object, position)?
-            ));
+            arguments.push(self.compile_object_reference(object, position)?);
         }
-        Ok(format!(
-            "(@prop_{} M{})",
-            index + 1,
-            if arguments.is_empty() {
-                String::new()
-            } else {
-                format!(" {}", arguments.join(" "))
-            }
-        ))
+        let predicate =
+            self.context_application(&format!("prop_{}", index + 1), &declaration_position);
+        Ok(if arguments.is_empty() {
+            predicate
+        } else {
+            format!("({predicate} {})", arguments.join(" "))
+        })
     }
 
     pub(in crate::compile_to_lean) fn validate_prop_predicate_signature(
@@ -331,7 +322,7 @@ impl LitexToLeanCompiler {
                 };
                 let names = witness_ids
                     .iter()
-                    .map(|id| format!("_fact_f{}", id.value()))
+                    .map(|id| format!("h_{}", id.value()))
                     .collect::<Vec<_>>();
                 let proof = if names.len() == 1 {
                     compiled.1.clone()
