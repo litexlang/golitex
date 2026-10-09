@@ -43,4 +43,8 @@ mod reserved_object_binding_tests;
 #[path = "../../tests/unit/parse/retired_product_syntax.rs"]
 mod retired_product_syntax_tests;
 
+#[cfg(test)]
+#[path = "../../tests/unit/parse/absolute_value_bars.rs"]
+mod absolute_value_bar_tests;
+
 pub use statements::prop_registration_shape;

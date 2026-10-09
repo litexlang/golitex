@@ -5,7 +5,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 use crate::rational_expression::ClosedNumericExpr;
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_atomic_builtin_rewrite(
         &self,
         goal: &AtomicFact,

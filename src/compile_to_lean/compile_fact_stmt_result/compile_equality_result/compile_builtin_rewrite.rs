@@ -4,7 +4,7 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 use crate::rational_expression::ClosedNumericExpr;
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_closed_equality_substitution(
         &self,
         goal: &EqualFact,

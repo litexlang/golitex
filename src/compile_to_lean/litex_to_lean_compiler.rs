@@ -6,19 +6,21 @@ use crate::prelude::*;
 /// Compile one complete execution result by dispatching its original result enums.
 /// Runtime supplies read-only exact citation subjects; source positions enforce
 /// producer order and lexical visibility without a compiler-owned proof world.
-pub struct LitexToLeanCompiler<'a> {
-    pub(super) result: &'a RunLitexCodeResult,
-    pub(super) runtime: &'a Runtime,
+pub struct LitexToLeanCompiler {
+    pub(super) runtime: Runtime,
 }
 
-impl<'a> LitexToLeanCompiler<'a> {
-    pub fn new(result: &'a RunLitexCodeResult, runtime: &'a Runtime) -> Self {
-        Self { result, runtime }
+impl LitexToLeanCompiler {
+    pub fn new(runtime: Runtime) -> Self {
+        Self { runtime }
     }
 
     /// Produce one complete artifact; an error returns no partial Lean output.
-    pub fn compile(self, artifact_namespace: &str) -> Result<String, LeanCompileError> {
-        let result = self.result;
+    pub fn compile_run(
+        &self,
+        result: &RunLitexCodeResult,
+        artifact_namespace: &str,
+    ) -> Result<String, LeanCompileError> {
         let position = SourcePosition {
             parent: None,
             owner: SourceOwner::Run(result),
@@ -54,7 +56,7 @@ impl<'a> LitexToLeanCompiler<'a> {
                 })?;
             declarations.push(compiled);
         }
-        let universes = self.source_universes()?;
+        let universes = self.source_universes(result)?;
         Ok(format!("import Litex\n\nnamespace LitexCompiled.{artifact_namespace}\n\nuniverse {universes}\nvariable {{M : Litex.Semantics.{{u}}}}\n\n{}\nend LitexCompiled.{artifact_namespace}\n", declarations.join("\n\n")))
     }
 }

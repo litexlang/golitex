@@ -60,6 +60,17 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     if token == LEFT_PAREN {
         return parse_paren_or_tuple(rt, tb);
     }
+    if token == "|" {
+        tb.advance()?;
+        let arg = parse_obj(rt, tb)?;
+        if tb.peek() != Some("|") {
+            return Err(tb.parse_error("absolute value expects a closing `|`"));
+        }
+        tb.advance()?;
+        return Ok(Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
+            arg: Box::new(arg),
+        })));
+    }
     if token == LEFT_CURLY {
         return parse_list_set(rt, tb);
     }

@@ -366,6 +366,17 @@ selection. `×` denotes Cartesian product; numerical multiplication is `*`.
 `⊂` is proper subset, while `⊆` is non-strict subset. Check the
 [alias reference](Manual.md#unicode-mathematical-input-aliases-preview).
 
+Real absolute value accepts either `abs(x)` or `|x|`. Bars group a complete
+expression, with `|x|^2` meaning `abs(x)^2`. Nested `||x||` means
+`abs(abs(x))`; complex modulus, norms and cardinality have no bar overload.
+Multiplication stays explicit (`2 * |x|`), and diagnostics keep `abs(...)`.
+
+```litex
+|-3| = abs(-3) = 3
+forall x, y R:
+    |x + y| <= |x| + |y|
+```
+
 Write `-(x^2)` for the negative of a square, `(-x)^2` for the square of a
 negative value, and `x^(-1)` for a negative exponent. Prefer a direct
 `by def $P(args)` and a bodyless witness when their obligations already verify.

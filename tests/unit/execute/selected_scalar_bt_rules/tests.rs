@@ -212,7 +212,7 @@ fn all_locales_and_explicit_unsupported_lean_routes() {
         let mut rt = runtime(OutputLanguage::English);
         let run = check(&mut rt, source, true);
         assert!(
-            crate::compile_to_lean::compile_run(&run, &rt, "selected_scalar").is_err(),
+            crate::compile_to_lean::compile_run(&run, rt, "selected_scalar").is_err(),
             "No new Lean adapter"
         );
     }

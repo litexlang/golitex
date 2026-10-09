@@ -55,6 +55,32 @@ def cases():
     for name in ("R", "pi", "sin"):
         yield case(f"repeated-name-builtin-{name}", "duplicate-names",
                    f"let {name} = 0", reject=True, error_contains="reserved builtin name")
+    for name, source, expected in [
+        ("anonymous-free", "have a, b R\nfn(x R) R {x+a} = fn(y R) R {y+a}\nfn(x R) R {x+a} = fn(y R) R {y+b}", [True, True, False]),
+        ("fnset-guard-free", "have a, b R\nfn(x R: x>a) R = fn(y R: y>a) R\nfn(x R: x>a) R = fn(y R: y>b) R", [True, True, False]),
+        ("builder-free", "have a, b R\n{x R: x>a} = {y R: y>a}\n{x R: x>a} = {y R: y>b}", [True, True, False]),
+        ("bound-free-confusion", "have a R\nfn(x R) R {x+a} = fn(y R) R {a+a}\nfn(x R) R {a} = fn(y R) R {y}\n0 = 1", [True, False, False, False]),
+        ("parameter-order", "have a R\nfn(x,y R) R {x-y+a} = fn(u,v R) R {u-v+a}\nfn(x,y R) R {x-y+a} = fn(u,v R) R {v-u+a}", [True, True, False]),
+        ("nested-anonymous", "have a,b R\nfn(x R) (fn(y R) R) {fn(y R) R {x+a+y}} = fn(u R) (fn(v R) R) {fn(v R) R {u+a+v}}\nfn(x R) (fn(y R) R) {fn(y R) R {x+a+y}} = fn(u R) (fn(v R) R) {fn(v R) R {u+b+v}}", [True, True, False]),
+        ("nested-bound-role", "fn(x R) (fn(y R) R) {fn(y R) R {x-y}} = fn(u R) (fn(v R) R) {fn(v R) R {u-v}}\nfn(x R) (fn(y R) R) {fn(y R) R {x-y}} = fn(u R) (fn(v R) R) {fn(v R) R {v-u}}", [True, False]),
+        ("disjoint-same-spelling", "fn(x R) fn(x R) R = fn(y R) fn(z R) R\nfn(x R) fn(x R) R = fn(y R) fn(z R) N\nfn(x fn(x R) R) R = fn(y fn(z R) R) R\nfn(x fn(x R) R) R = fn(y fn(z R) N) R", [True, False, True, False]),
+        ("stored-anonymous", "have a,b R\nlet f = fn(x R) R {x+a}\nf(0)=a\nf(0)=b\nf = fn(y R) R {y+a}\nf = fn(y R) R {y+b}", [True, True, True, False, True, False]),
+        ("stored-builder", "have a,b R\nlet S={x R: x>a}\nS={y R: y>a}\nS={y R: y>b}", [True, True, True, False]),
+        ("stored-fnset", "have a,b R\nlet F=fn(x R: x>a) R\nF=fn(y R: y>a) R\nF=fn(y R: y>b) R", [True, True, True, False]),
+        ("theorem-substitution", "thm shifted:\n    ? forall a R:\n        fn(x R) R {x+a}(0)=a\nhave x R=7\nby thm shifted(x) => fn(y R) R {y+x}(0)=x\nby thm shifted(x) => fn(y R) R {y+x}(0)=0\nfn(y R) R {y+x}(0)=0", [True, True, True, False, False]),
+        ("external-carrier", "have A,B set\nfn(x A) A = fn(y A) A\nfn(x A) A = fn(y B) B\n{x A: x=x} = {y B: y=y}", [True, True, False, False]),
+        ("tuple-wrapper", "have a,b R\n(fn(x R) R {a}, {t R: t>a}) = (fn(y R) R {a}, {u R: u>a})\n(fn(x R) R {a}, {t R: t>a}) = (fn(y R) R {b}, {u R: u>a})", [True, True, False]),
+        ("sum-wrapper", "have a,b R\nsum(1,2,fn(x Z) R {x+a}) = sum(1,2,fn(y Z) R {y+a})\nsum(1,2,fn(x Z) R {x+a}) = sum(1,2,fn(y Z) R {y+b})", [True, True, False]),
+        ("union-wrapper", "have a,b R\nunion({x R: x>a},{t R: t<0}) = union({y R: y>a},{u R: u<0})\nunion({x R: x>a},{t R: t<0}) = union({y R: y>b},{u R: u<0})", [True, True, False]),
+        ("anonymous-wd", "fn(x R) R {1/0} = fn(y R) R {1/0}\n1=1\n0=1", [False, True, False]),
+        ("fnset-wd", "fn(x R: x/0=x/0) R = fn(y R: y/0=y/0) R\n1=1\n0=1", [False, True, False]),
+        ("builder-wd", "{x R: x/0=x/0} = {y R: y/0=y/0}\n1=1\n0=1", [False, True, False]),
+        ("rollback-aliases", "have a,b R\nclaim:\n    ? 0=1\n    let f=fn(x R) R {x+a}\n    let S={x R: x>a}\n    let F=fn(x R: x>a) R\nlet f=fn(x R) R {x+b}\nf(0)=b\nf(0)=a\n0=1", [True, False, True, True, False, False]),
+    ]:
+        yield case(f"free-param-{name}", "free-parameter-objects", source, expected)
+    yield case("free-param-overlapping-anonymous-binders", "free-parameter-objects",
+               "let f = fn(x R) (fn(y R) R) {fn(x R) R {x}}",
+               reject=True, error_contains="already bound")
     for p, q in product((False, True), repeat=2):
         left, right = ("0 = 0" if p else "0 = 1"), ("1 = 1" if q else "1 = 0")
         yield case(f"boolean-{int(p)}-{int(q)}", "logic",

@@ -4,7 +4,7 @@ use crate::compile_to_lean::source_position::SourcePosition;
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite;
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_verify_equality_result(
         &self,
         result: &VerifyEqualityResult,

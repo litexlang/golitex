@@ -4,7 +4,8 @@ use crate::runtime::runtime_ids::IdentifierId;
 
 use crate::ast::obj::{
     FieldAccess, InstantiatedTemplateObj, IntervalObj, IntervalObjStruct, Obj,
-    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, SetFormer, StructObj,
+    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, SetFormer,
+    StructAndFieldAccessObj, StructObj,
 };
 use crate::runtime::Runtime;
 
@@ -31,10 +32,23 @@ impl Runtime {
         a: &FieldAccess,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<FieldAccess, InstError> {
-        Ok(FieldAccess {
+        let mut result = FieldAccess {
             obj: Box::new(self.inst_obj_rec(&a.obj, param_to_arg_map)?),
             fields: a.fields.clone(),
-        })
+        };
+        // Substituting scalars -> space.scalars in scalars.mul must retain
+        // the parser's flat space.scalars.mul path, including callable heads.
+        while let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(parent)) =
+            result.obj.as_ref()
+        {
+            let mut fields = parent.fields.clone();
+            fields.extend(result.fields.iter().cloned());
+            result = FieldAccess {
+                obj: parent.obj.clone(),
+                fields,
+            };
+        }
+        Ok(result)
     }
 
     pub(crate) fn inst_instantiated_template(

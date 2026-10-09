@@ -6,7 +6,7 @@ use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
 };
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn validate_parameter_store_capture(
         &self,
         result: &StoreHaveObjAndInferResult,

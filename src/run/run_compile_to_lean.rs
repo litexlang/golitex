@@ -49,9 +49,9 @@ fn compile_source(command: LaunchCommand) -> Result<String, String> {
             ),
         });
     }
-    let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(&result, &runtime);
+    let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);
     compiler
-        .compile(&namespace)
+        .compile_run(&result, &namespace)
         .map_err(|error| format!("phase=compile: {error}"))
 }
 

@@ -11,7 +11,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule;
 use crate::rational_expression::NumberCompareResult;
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_order_proposition(
         &self,
         fact: &AtomicFact,
@@ -469,13 +469,10 @@ impl<'a> LitexToLeanCompiler<'a> {
     }
 
     pub(in crate::compile_to_lean) fn compile_registered_order<'p>(
-        &self,
+        &'p self,
         id: FactId,
         position: &SourcePosition<'p>,
-    ) -> Result<(&'p AtomicFact, String), LeanCompileError>
-    where
-        'a: 'p,
-    {
+    ) -> Result<(&'p AtomicFact, String), LeanCompileError> {
         let (fact, reference) = self.cited_fact_reference(id, position)?;
         let atomic = match fact {
             Fact::AtomicFact(fact) if fact.fact_id() == id => fact,
