@@ -152,7 +152,7 @@ impl LitexToLeanCompiler {
                 let fact = self.resolve_fact(store.primary_fact_id(), &parameter_position)?;
                 let member = (
                     self.fact_proposition(&fact, &carrier_position)?,
-                    format!("_h_param_i{}", parameter.id.value()),
+                    format!("_fact_f{}", store.primary_fact_id().value()),
                 );
                 declarations.extend(self.compile_parameter_inferences(
                     store,

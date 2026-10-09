@@ -6,6 +6,7 @@ use crate::execute::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecLetObjStmtResult, ExecStmtResult,
 };
 use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::prelude::*;
 use crate::runtime::Runtime;
 
 #[test]
@@ -127,7 +128,7 @@ fn field_application_wd_citations_stay_in_the_retained_definition_scope() {
     else {
         panic!("prop result")
     };
-    let FactWellDefinedProof::Equality(wd) = &s.iff_fact_well_defined[0] else {
+    let FactWellDefinedProof::Equality(wd) = &s.assumed_iff_facts[0].well_defined else {
         panic!("equality WD")
     };
     let ObjWellDefinedProof::ByDef {
@@ -171,6 +172,314 @@ fn field_application_wd_citations_stay_in_the_retained_definition_scope() {
             "projected field-call WD id {id} must stay in its retained scope"
         );
     }
+}
+
+#[test]
+fn function_binder_capture_preserves_ordered_parameter_and_guard_producers() {
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let run = rt
+        .run_litex_code("have fn ratio(a, b R: b != 0) R = a / b\n")
+        .unwrap();
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{:?}",
+        run.session_error
+    );
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+        crate::execute::ExecHaveFnEqualStmtResult::Success(result),
+    )) = &run.statement_results[0]
+    else {
+        panic!("function definition result")
+    };
+    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
+                anonymous,
+            )),
+        ..
+    }) = &result.anonymous_fn_well_defined
+    else {
+        panic!("anonymous function WD")
+    };
+    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(
+                signature,
+            )),
+        ..
+    }) = &result.fn_set_well_defined
+    else {
+        panic!("function set WD")
+    };
+    let header = &result.statement.equal_to_anonymous_fn.body;
+    let parameters: Vec<_> = header
+        .set_bound_parameters
+        .groups
+        .iter()
+        .flat_map(|group| {
+            group
+                .params
+                .iter()
+                .map(|parameter| (parameter, &group.param_type))
+        })
+        .collect();
+    let expected_guard =
+        crate::instantiate::quantifier_free_fact_to_fact(header.dom_facts[0].clone());
+    for (defined, assumed, env) in [
+        (
+            &anonymous.defined_params,
+            &anonymous.assumed_dom_facts,
+            &anonymous.local_env,
+        ),
+        (
+            &signature.defined_params,
+            &signature.assumed_dom_facts,
+            &signature.local_env,
+        ),
+    ] {
+        assert_eq!(defined.store_and_infer_results.len(), parameters.len());
+        for ((parameter, carrier), stored) in
+            parameters.iter().zip(&defined.store_and_infer_results)
+        {
+            let id = stored.primary_fact_id();
+            let Fact::AtomicFact(AtomicFact::InFact(member)) =
+                env.facts.facts_by_id.get(&id).unwrap()
+            else {
+                panic!("captured parameter membership")
+            };
+            assert_eq!(
+                member.element.ir(),
+                Obj::Identifier(IdentifierObj::from_bound_name(parameter)).ir()
+            );
+            assert_eq!(member.set.ir(), carrier.ir());
+            assert_eq!(
+                stored.store.atomic_components()[0].1,
+                AtomicFact::InFact(member.clone())
+            );
+            assert!(
+                rt.fact_by_id_in_stack(id).is_none(),
+                "local parameter fact must remain local"
+            );
+        }
+        assert_eq!(assumed.len(), 1);
+        let guard_id = assumed[0].store_and_infer.primary_fact_id();
+        assert_eq!(env.facts.facts_by_id.get(&guard_id), Some(&expected_guard));
+        assert!(
+            rt.fact_by_id_in_stack(guard_id).is_none(),
+            "local guard must remain local"
+        );
+    }
+    let stores = &result.store_and_infer_result;
+    assert_eq!(
+        stores.membership.primary_fact_id(),
+        stores.membership_fact_id
+    );
+    assert_eq!(
+        stores.defining_equal.primary_fact_id(),
+        stores.defining_equal_fact_id
+    );
+    let mut expected_ids = stores.membership.stored_fact_ids();
+    expected_ids.extend(stores.defining_equal.stored_fact_ids());
+    assert_eq!(stores.stored_fact_ids, expected_ids);
+    let projected = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt);
+    let stages = projected
+        .as_object()
+        .unwrap()
+        .get("store_and_infer_results")
+        .unwrap()
+        .as_array()
+        .unwrap();
+    assert_eq!(stages.len(), 2);
+    for (stage, id) in stages
+        .iter()
+        .zip([stores.membership_fact_id, stores.defining_equal_fact_id])
+    {
+        let stored = &stage
+            .as_object()
+            .unwrap()
+            .get("stores")
+            .unwrap()
+            .as_array()
+            .unwrap()[0];
+        assert_eq!(
+            stored
+                .as_object()
+                .unwrap()
+                .get("fact_id")
+                .unwrap()
+                .as_str()
+                .unwrap(),
+            id.to_string()
+        );
+    }
+    assert_eq!(rt.execution_environments_stack.len(), 1);
+}
+
+#[test]
+fn anonymous_function_division_wd_cites_its_captured_nonzero_guard() {
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let run = rt
+        .run_litex_code("have fn reciprocal(x R: x != 0) R = 1 / x\n")
+        .unwrap();
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{:?}",
+        run.session_error
+    );
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+        crate::execute::ExecHaveFnEqualStmtResult::Success(result),
+    )) = &run.statement_results[0]
+    else {
+        panic!("function definition result")
+    };
+    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
+                anonymous,
+            )),
+        ..
+    }) = &result.anonymous_fn_well_defined
+    else {
+        panic!("anonymous function WD")
+    };
+    let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::ArithmeticOperator(
+                ArithmeticOperatorObjWellDefinedProofByDef::Div(division),
+            ),
+        ..
+    } = anonymous.body_well_defined.as_ref()
+    else {
+        panic!("body division WD")
+    };
+    let VerifyFactResult::AtomicExceptEquality(proof) = &division.requirement_fact_verified[0]
+    else {
+        panic!("nonzero requirement")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_ref() else {
+        panic!("successful nonzero check")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cited) = &proof.searched_proof
+    else {
+        panic!("nonzero guard citation")
+    };
+    assert_eq!(
+        cited.cite_fact_id,
+        anonymous.assumed_dom_facts[0]
+            .store_and_infer
+            .primary_fact_id()
+    );
+    let rejected = rt
+        .run_litex_code("let failed_value = reciprocal(0)\n")
+        .unwrap();
+    assert!(!rejected.success && rejected.session_error.is_none());
+    assert!(
+        rt.run_litex_code("let failed_value = reciprocal(2)\n")
+            .unwrap()
+            .success
+    );
+}
+
+#[test]
+fn concrete_prop_capture_retains_body_guard_used_by_later_wd() {
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let rejected = rt
+        .run_litex_code("prop guarded_value(x R):\n    1 / x $in R\n")
+        .unwrap();
+    assert!(!rejected.success && rejected.session_error.is_none());
+    let run = rt
+        .run_litex_code("prop guarded_value(x R):\n    x != 0\n    1 / x $in R\n")
+        .unwrap();
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{:?}",
+        run.session_error
+    );
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+        crate::execute::execute_def_prop_stmt::ExecDefPropStmtResult::Success(result),
+    )) = &run.statement_results[0]
+    else {
+        panic!("concrete proposition result")
+    };
+    assert_eq!(result.assumed_iff_facts.len(), 2);
+    for (expected, captured) in result
+        .statement
+        .iff_facts
+        .iter()
+        .zip(&result.assumed_iff_facts)
+    {
+        let id = captured.store_and_infer.primary_fact_id();
+        assert_eq!(result.local_env.facts.facts_by_id.get(&id), Some(expected));
+        assert!(
+            rt.fact_by_id_in_stack(id).is_none(),
+            "definition body fact must remain local"
+        );
+    }
+    let guard_id = result.assumed_iff_facts[0]
+        .store_and_infer
+        .primary_fact_id();
+    let FactWellDefinedProof::AtomicExceptEquality(wd) = &result.assumed_iff_facts[1].well_defined
+    else {
+        panic!("membership WD")
+    };
+    let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::ArithmeticOperator(
+                ArithmeticOperatorObjWellDefinedProofByDef::Div(division),
+            ),
+        ..
+    } = &wd.well_defined_of_each_parameter[0]
+    else {
+        panic!("guarded division WD")
+    };
+    let VerifyFactResult::AtomicExceptEquality(proof) = &division.requirement_fact_verified[0]
+    else {
+        panic!("nonzero requirement")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_ref() else {
+        panic!("successful nonzero check")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(cited) = &proof.searched_proof
+    else {
+        panic!("earlier definition-body citation")
+    };
+    assert_eq!(cited.cite_fact_id, guard_id);
+    let projected = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt);
+    let fields = projected.as_object().unwrap();
+    assert_eq!(
+        fields
+            .get("iff_fact_well_defined")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(
+        fields
+            .get("store_and_infer_results")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(rt.execution_environments_stack.len(), 1);
 }
 
 fn collect_wd_ids(value: &crate::knowledge_base::JsonValue, ids: &mut Vec<String>) {

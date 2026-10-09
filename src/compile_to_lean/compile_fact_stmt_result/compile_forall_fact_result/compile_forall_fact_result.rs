@@ -359,7 +359,7 @@ impl LitexToLeanCompiler {
                     self.resolve_fact(stores[offset].primary_fact_id(), &parameter_position)?;
                 let member = (
                     self.fact_proposition(&fact, &carrier_position)?,
-                    format!("_h_param_i{}", parameter.id.value()),
+                    format!("_fact_f{}", stores[offset].primary_fact_id().value()),
                 );
                 definitions.extend(self.compile_parameter_inferences(
                     &stores[offset],
@@ -394,9 +394,19 @@ impl LitexToLeanCompiler {
                 before: usize::MAX,
             };
             let proposition = self.atomic_proposition(atomic, &formation)?;
-            let hypothesis = format!("_h_dom_f{}", fact.fact_id().value());
+            let hypothesis = format!("_fact_f{}", fact.fact_id().value());
             binders.push(format!("({hypothesis} : {proposition})"));
             introductions.push(hypothesis.clone());
+            let complete = SourcePosition {
+                before: expected_count + index + 1,
+                ..*position
+            };
+            definitions.extend(self.compile_prop_inferences(
+                &assumed.store_and_infer,
+                fact,
+                &(proposition, hypothesis),
+                &complete,
+            )?);
         }
         Ok((binders, introductions, definitions))
     }

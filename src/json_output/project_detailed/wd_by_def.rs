@@ -1,6 +1,6 @@
 //! Generated Obj WD by-def projection. Prefer regenerating via scripts if shapes change.
 use super::searched::project_known_equality_path;
-use super::store::project_verify_facts;
+use super::store::{project_have_store_and_infer, project_verify_facts};
 use super::wd::{project_fact_wd_proof, project_obj_wd_proof};
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
@@ -364,11 +364,24 @@ pub(super) fn project_obj_wd_by_def(
                     ),
                 ),
                 (
+                    "defined_params",
+                    project_have_store_and_infer(&p.defined_params, runtime),
+                ),
+                (
                     "dom_fact_well_defined",
                     JsonValue::Array(
-                        p.dom_fact_well_defined
+                        p.assumed_dom_facts
                             .iter()
-                            .map(|f| project_fact_wd_proof(f, runtime))
+                            .map(|f| project_fact_wd_proof(&f.well_defined, runtime))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "assumed_dom_facts",
+                    JsonValue::Array(
+                        p.assumed_dom_facts
+                            .iter()
+                            .map(|f| super::verify::project_assume_dom(f, runtime))
                             .collect(),
                     ),
                 ),
@@ -473,11 +486,24 @@ pub(super) fn project_obj_wd_by_def(
                     ),
                 ),
                 (
+                    "defined_params",
+                    project_have_store_and_infer(&p.defined_params, runtime),
+                ),
+                (
                     "dom_fact_well_defined",
                     JsonValue::Array(
-                        p.dom_fact_well_defined
+                        p.assumed_dom_facts
                             .iter()
-                            .map(|f| project_fact_wd_proof(f, runtime))
+                            .map(|f| project_fact_wd_proof(&f.well_defined, runtime))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "assumed_dom_facts",
+                    JsonValue::Array(
+                        p.assumed_dom_facts
+                            .iter()
+                            .map(|f| super::verify::project_assume_dom(f, runtime))
                             .collect(),
                     ),
                 ),

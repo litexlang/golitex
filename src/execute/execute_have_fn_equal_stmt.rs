@@ -8,6 +8,7 @@ use crate::ast::obj::{FnSet, FunctionSpace, Obj};
 use crate::ast::stmt::HaveFnEqualStmt;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
+use crate::prelude::*;
 use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
@@ -18,7 +19,9 @@ pub enum ExecHaveFnEqualStmtFailed {
 
 pub struct StoreHaveFnEqualAndInferResult {
     pub membership_fact_id: FactId,
+    pub membership: StoreFactAndInferResult,
     pub defining_equal_fact_id: FactId,
+    pub defining_equal: StoreFactAndInferResult,
     pub stored_fact_ids: Vec<FactId>,
 }
 
@@ -116,9 +119,8 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self
-            .store_fact_and_infer(&membership, verify_state)?
-            .stored_fact_ids();
+        let membership = self.store_fact_and_infer(&membership, verify_state)?;
+        let mut stored_fact_ids = membership.stored_fact_ids();
 
         let defining_equal_fact_id = self.global_ids.allocate_fact_id();
         let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
@@ -129,14 +131,14 @@ impl Runtime {
             )),
             line_file: Some(stmt.line_file.clone()),
         }));
-        stored_fact_ids.extend(
-            self.store_fact_and_infer(&defining_equal, verify_state)?
-                .stored_fact_ids(),
-        );
+        let defining_equal = self.store_fact_and_infer(&defining_equal, verify_state)?;
+        stored_fact_ids.extend(defining_equal.stored_fact_ids());
 
         Ok(StoreHaveFnEqualAndInferResult {
             membership_fact_id,
+            membership,
             defining_equal_fact_id,
+            defining_equal,
             stored_fact_ids,
         })
     }

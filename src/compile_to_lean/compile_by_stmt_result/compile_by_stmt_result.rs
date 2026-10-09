@@ -14,9 +14,11 @@ impl LitexToLeanCompiler {
             ExecByStmtResult::Thm(result) => {
                 self.compile_by_thm_result(result, position, index, local)
             }
+            ExecByStmtResult::Def(result) => {
+                self.compile_by_def_result(result, position, index, local)
+            }
             ExecByStmtResult::Cases(_)
             | ExecByStmtResult::Contra(_)
-            | ExecByStmtResult::Def(_)
             | ExecByStmtResult::Extension(_)
             | ExecByStmtResult::FnExtension(_)
             | ExecByStmtResult::EnumerateFiniteSet(_)

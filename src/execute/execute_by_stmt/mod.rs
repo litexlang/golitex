@@ -37,7 +37,7 @@ pub use exec_expand_range_stmt::exec_expand_range_stmt;
 pub use result::{
     BuiltinFunctionDomainProof, BuiltinThmApplication, ByInducBodySuccess, ByInducCaseFailed,
     ByInducCaseSuccess, EnumerateAssignmentOutcome, EnumerateAssignmentSuccess,
-    ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult,
+    ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult, ExecByDefStmtSuccess,
     ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult, ExecByFnExtensionStmtResult,
     ExecByForStmtResult, ExecByInducStmtFailed, ExecByInducStmtResult, ExecByStmtResult,
     ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult, ExecByThmStmtFailed,

@@ -96,9 +96,8 @@ impl LitexToLeanCompiler {
                         AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(_) => {
                             return Err(LeanCompileError::unsupported("Atomic/KnownStrategy"))
                         }
-                        AtomicExceptEqualityFactSearchedProof::ByDefinition(_) => {
-                            return Err(LeanCompileError::unsupported("Atomic/Definition"))
-                        }
+                        AtomicExceptEqualityFactSearchedProof::ByDefinition(proof) =>
+                            self.compile_prop_definition(&success.fact, proof, position)?,
                         AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(_) => {
                             return Err(LeanCompileError::unsupported("Atomic/KnownForallFact"))
                         }

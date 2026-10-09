@@ -1,6 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::ExecDefPropStmtResult;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -41,6 +42,17 @@ impl LitexToLeanCompiler {
                     };
                     for step in steps {
                         statement(step, out);
+                    }
+                }
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+                    ExecDefPropStmtResult::Success(proof),
+                )) => {
+                    for group in &proof.statement.typed_parameters.groups {
+                        for parameter in &group.params {
+                            if !out.contains(&parameter.id) {
+                                out.push(parameter.id);
+                            }
+                        }
                     }
                 }
                 ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -107,10 +119,11 @@ impl LitexToLeanCompiler {
         &self,
         position: &SourcePosition<'_>,
     ) -> String {
-        let binders = position.context_parameters().into_iter().map(|(parameter, set, _)| {
+        let binders = position.context_parameters().into_iter().map(|(parameter, set, fact_id)| {
             let id = parameter.id.value();
+            let fact_id = fact_id.value();
             let set = standard_term(match set { Obj::StandardSet(set) => set, _ => unreachable!("validated numeric carrier") }).expect("validated numeric carrier");
-            format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (_h_param_i{id} : Litex.In _value_i{id} {set})")
+            format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (_fact_f{fact_id} : Litex.In _value_i{id} {set})")
         }).collect::<Vec<_>>();
         if binders.is_empty() {
             String::new()
@@ -246,7 +259,7 @@ impl LitexToLeanCompiler {
 
         let instance = format!("_rep_i{}", id.value());
         let value = format!("_value_i{}", id.value());
-        let hypothesis = format!("_h_param_i{}", id.value());
+        let hypothesis = format!("_fact_f{}", store.primary_fact_id().value());
         let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
         let fact = self.resolve_fact(store.primary_fact_id(), position)?;
         match &fact {
@@ -332,8 +345,10 @@ impl LitexToLeanCompiler {
                 "Litex.IsNonempty {}",
                 self.compile_object_reference(&f.set, position)?
             )),
-            AtomicFact::NormalAtomicFact(_)
-            | AtomicFact::IsFiniteSetFact(_)
+            AtomicFact::NormalAtomicFact(normal) => {
+                self.compile_normal_atomic_proposition(normal, position)
+            }
+            AtomicFact::IsFiniteSetFact(_)
             | AtomicFact::SubsetFact(_)
             | AtomicFact::SupersetFact(_)
             | AtomicFact::ProperSubsetFact(_)

@@ -63,7 +63,15 @@ impl Runtime {
             else {
                 continue;
             };
-            derived.push(self.store_inferred_fact_and_infer(&obligation, verify_state)?);
+            let Some(stored) =
+                self.try_store_inferred_fact_and_infer_with_wd(&obligation, verify_state)?
+            else {
+                return Err(crate::runtime::RuntimeError::InternalBug(format!(
+                    "inferred fact {} failed well-definedness check",
+                    obligation.ir()
+                )));
+            };
+            derived.push(stored);
         }
         if derived.is_empty() {
             return Ok(None);
@@ -106,7 +114,7 @@ impl Runtime {
             // an existential over finite_seq(R, 1)); do not commit that child or
             // abort the seed. Explicit definition proofs retain their WD checks.
             if let Some(stored) =
-                self.try_store_inferred_fact_and_infer(&instantiated, verify_state)?
+                self.try_store_inferred_fact_and_infer_with_wd(&instantiated, verify_state)?
             {
                 derived.push(stored);
             }

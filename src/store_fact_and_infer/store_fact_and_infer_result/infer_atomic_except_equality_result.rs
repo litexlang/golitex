@@ -1,7 +1,7 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::runtime::FactId;
 
-use super::StoreFactAndInferResult;
+use super::{StoreFactAndInferResult, StoreInferredFactAndInferResult};
 
 // One non-equal atomic infer rule hit (parallel to AtomicExceptEquality search
 // proof arms). Verify keeps a single winning proof; infer pushes every hit into
@@ -69,7 +69,7 @@ pub enum InferAtomicExceptEqualityResult {
 }
 
 pub struct InferNormalAtomicParamTypesProjectedResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactAndInferResult>,
 }
 
 pub enum InferBuiltinDefinitionResult {
@@ -136,7 +136,7 @@ impl InferBuiltinDefinitionResult {
 }
 
 pub struct InferExpandDefinitionResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactAndInferResult>,
 }
 
 pub struct InferSetBuilderMembershipProjectionResult {
@@ -263,14 +263,14 @@ impl InferAtomicExceptEqualityResult {
             Self::NormalAtomicParamTypes(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
-                    ids.extend(d.stored_fact_ids());
+                    ids.extend(d.store_and_infer.stored_fact_ids());
                 }
                 ids
             }
             Self::NormalAtomicExpandDefinition(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
-                    ids.extend(d.stored_fact_ids());
+                    ids.extend(d.store_and_infer.stored_fact_ids());
                 }
                 ids
             }

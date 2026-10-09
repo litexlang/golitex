@@ -28,11 +28,13 @@ impl LitexToLeanCompiler {
                     )),
                 }
             }
+            ExecDefinitionStmtResult::DefProp(result) => {
+                self.compile_def_prop_statement(result, position, index, local)
+            }
             ExecDefinitionStmtResult::HaveFnEqual(_)
             | ExecDefinitionStmtResult::HaveFnEqualCaseByCase(_)
             | ExecDefinitionStmtResult::HaveFnByForallExistUnique(_)
             | ExecDefinitionStmtResult::HaveFnByInduc(_)
-            | ExecDefinitionStmtResult::DefProp(_)
             | ExecDefinitionStmtResult::DefAbstractProp(_)
             | ExecDefinitionStmtResult::DefStruct(_)
             | ExecDefinitionStmtResult::DefTemplate(_)

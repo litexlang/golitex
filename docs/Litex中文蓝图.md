@@ -58,6 +58,8 @@ Litex 还包含[到 Lean 的编译器设计](#compatibility)，探索把受支�
 
 ### 0.1 五个特点：Litex是怎么工作的
 
+想直观看到一条事实如何被检查、通过后如何扩展上下文，可以先看 [Litex 验证流程图（Litex Verification Pipeline）](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)。
+
 **这五个特点围绕一个问题：以事实和反馈组织知识，能否降低人和 AI 构造、理解、审阅与复用可检查数学的成本？**
 
 **1. 我可以用数学事实来写证明。**

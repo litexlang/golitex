@@ -252,10 +252,28 @@ impl Runtime {
         fact: &Fact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<crate::store_fact_and_infer::StoreFactAndInferResult>> {
-        let wd = self.verify_fact_well_definedness(fact, verify_state)?;
-        if wd.is_failed() {
-            return Ok(None);
-        }
-        Ok(Some(self.store_fact_and_infer(fact, verify_state)?))
+        Ok(self
+            .try_store_inferred_fact_and_infer_with_wd(fact, verify_state)?
+            .map(|result| result.store_and_infer))
+    }
+
+    // Retain the original formation check for result consumers. The old helper
+    // discards this evidence after the same single WD/store pipeline completes.
+    pub(crate) fn try_store_inferred_fact_and_infer_with_wd(
+        &mut self,
+        fact: &Fact,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Option<crate::store_fact_and_infer::StoreInferredFactAndInferResult>> {
+        let well_defined = match self.verify_fact_well_definedness(fact, verify_state)? {
+            VerifyFactWellDefinedResult::Success(proof) => proof,
+            VerifyFactWellDefinedResult::Failed(_) => return Ok(None),
+        };
+        let store_and_infer = self.store_fact_and_infer(fact, verify_state)?;
+        Ok(Some(
+            crate::store_fact_and_infer::StoreInferredFactAndInferResult {
+                well_defined,
+                store_and_infer,
+            },
+        ))
     }
 }

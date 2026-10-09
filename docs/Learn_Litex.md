@@ -90,6 +90,9 @@ its JSON result. The website may present that result more simply. The
 interactive command-line REPL prints `success` for a successful input block.
 We will read a failed result more carefully in Part 6.
 
+For a visual overview of how Litex checks a fact, see the
+[Litex Verification Pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png).
+
 **Try:** Change the second line to `2 * (3 + 5) = 16`. Predict the result before
 running it. Then deliberately change the right-hand side to `15`.
 
@@ -830,6 +833,9 @@ The loop is the one you have practiced: propose a statement or proof step,
 check it, read the feedback, repair it, and retain accepted work. Normal
 interactive failures need not erase earlier successes. Save the source so a
 fresh process can reproduce the complete result.
+
+The [Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
+shows this collaboration loop between people, AI, and the verifier.
 
 The checker does not decide whether the agent formalized the problem you
 actually meant. Review the definition, domain, hypotheses, and conclusion

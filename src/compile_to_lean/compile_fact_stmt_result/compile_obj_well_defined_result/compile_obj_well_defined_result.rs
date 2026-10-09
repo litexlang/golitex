@@ -163,8 +163,10 @@ impl LitexToLeanCompiler {
         }
         match &wd.predicate_signature {
             PredicateSignatureWellDefinedProof::Builtin => {}
-            PredicateSignatureWellDefinedProof::Prop { .. }
-            | PredicateSignatureWellDefinedProof::AbstractProp { .. } => {
+            signature @ PredicateSignatureWellDefinedProof::Prop { .. } => {
+                self.validate_prop_predicate_signature(signature, fact, position)?;
+            }
+            PredicateSignatureWellDefinedProof::AbstractProp { .. } => {
                 return Err(LeanCompileError::unsupported("WD/UserPredicate"))
             }
         }

@@ -4,4 +4,5 @@ mod compile_builtin_strategy;
 mod compile_closed_calculation;
 mod compile_known_atomic;
 mod compile_order;
+mod compile_prop_definition;
 mod compile_structural_membership;
