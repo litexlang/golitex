@@ -1,0 +1,26 @@
+# Tracer: SubtractiveCancellation; same-position scalar subtraction.
+# Before (failed at search_proof):
+# forall a, b, k C:
+#     a-k=b-k
+#     =>:
+#         a=b
+# Now: both common subtrahend and common minuend publish a=b.
+# Boundary: a-k=k-b does not justify a=b; no crossed-position cancellation.
+# Tests: tests/unit/execute/equality_cancellation/tests.rs
+# Owner: src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_equal_fact/infer_equal_fact_subtractive_cancellation.rs
+# Run: target/release/litex -lang en -strict -f examples/infer/equal/subtractive_cancellation.lit
+
+forall a, b, k C:
+    a-k=b-k
+    =>:
+        a=b
+
+forall a, b, k R:
+    k-a=k-b
+    =>:
+        a=b
+
+forall a, b, x, y Q:
+    (x-a)-y=(x-b)-y
+    =>:
+        a=b

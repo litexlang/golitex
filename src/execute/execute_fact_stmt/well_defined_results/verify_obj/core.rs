@@ -35,13 +35,6 @@ impl Runtime {
         self.finish_leaf_obj_success(Obj::Identifier(value.clone()), verify_state)
     }
 
-    pub(super) fn verify_atom_obj_well_definedness_by_def(
-        &mut self,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        Ok(ObjWellDefinedByDefCommonStages::leaf())
-    }
-
     pub(super) fn verify_standard_set_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
@@ -52,7 +45,7 @@ impl Runtime {
     fn finish_leaf_obj_success(
         &mut self,
         obj: Obj,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let by_def = match &obj {
             Obj::Identifier(_) => {
@@ -717,10 +710,6 @@ impl Runtime {
                 ),
             },
         ))
-    }
-
-    pub(super) fn obj_has_in_function_set(&self, obj: &Obj) -> bool {
-        !self.collect_in_function_set_candidates(obj).is_empty()
     }
 }
 

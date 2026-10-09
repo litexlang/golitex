@@ -1,7 +1,7 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{AtomicExceptEqualityFactSearchedProof, VerifyAtomicExceptEqualityFactResult};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{AtomicExceptEqualityFactSearchProofByBuiltinRule,less::LessFactSearchProofByBuiltinRule,greater::GreaterFactSearchProofByBuiltinRule,less_equal::LessEqualFactSearchProofByBuiltinRule,greater_equal::GreaterEqualFactSearchProofByBuiltinRule};
 use crate::execute::execute_fact_stmt::verify_forall_fact::{VerifyForallFactProof, VerifyForallFactResult};
-use crate::execute::execute_fact_stmt::{VerifyFactResult,VerifyState,VerifyStateLevel};
+use crate::execute::execute_fact_stmt::VerifyFactResult;
 use crate::execute::{ExecStmtResult,ExecFactStmtResult};
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand,OutputLanguage};

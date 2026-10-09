@@ -2,7 +2,7 @@ use super::run_command_outcome::{RunEvalResult, RunLitexCodeResult, RunSessionEr
 use super::run_repl::run_repl_loop;
 use crate::launch_command::LaunchCommand;
 use crate::run_module::{mount_cwd_config, MountCwdConfigOutcome};
-use crate::runtime::{RealOrVirtualPath, Runtime, RuntimeResult};
+use crate::runtime::{CodeSource, Runtime, RuntimeResult};
 
 /// `-e <code>`: mount cwd `litex.config` when present (else empty), then eval.
 /// With `session`, a successful eval keeps the env open and enters REPL.
@@ -15,7 +15,7 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
 
     let mut runtime = Runtime::new(command);
     // Drop placeholder Eval env so mount can open export files.
-    runtime.abort_file();
+    runtime.abort_source();
 
     match mount_cwd_config(&mut runtime)? {
         MountCwdConfigOutcome::Done => {}
@@ -28,20 +28,19 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
         }
     }
 
-    runtime.set_code_source(crate::runtime::CodeSource::Eval);
-    runtime.begin_file(RealOrVirtualPath::Eval);
+    runtime.begin_source(CodeSource::Eval);
 
     let mut code_result = match runtime.run_litex_code(&code) {
         Ok(result) => result,
         Err(error) => {
-            runtime.abort_file();
+            runtime.abort_source();
             return Err(error);
         }
     };
     code_result.attach_normal_json(&runtime, "eval", None);
 
     if !code_result.success {
-        runtime.abort_file();
+        runtime.abort_source();
         return Ok(RunEvalResult::new(code_result));
     }
 
@@ -58,7 +57,7 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
         return Ok(RunEvalResult::new(code_result));
     }
 
-    let (file, exec_env) = runtime.finish_file();
+    let (file, exec_env) = runtime.finish_source();
     runtime.publish_completed_export_file(file, exec_env);
     Ok(RunEvalResult::new(code_result))
 }

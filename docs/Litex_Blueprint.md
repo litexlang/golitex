@@ -1662,11 +1662,11 @@ _“A mathematician, like a painter or a poet, is a maker of patterns.”_
 
 _— G. H. Hardy, A Mathematician’s Apology (1940)_
 
-<!-- This passage is a bit more idealistic. In the AI era, everyone focuses too much on pragmatism and easily overlooks the long-term influence of a native, innovative, distinctive new solution. Whether in mathematics or in any science, people encourage different angles and different solutions to the same problem. Such different viewpoints are often the true sources of breakthroughs in the history of science, and may ultimately bring greater gains in effectiveness. -->
+Mathematics is the mother of the natural sciences. One bottleneck in its widespread application has been the shortage of people who understand mathematics and can apply it to real problems. AI offers a chance to overcome this bottleneck, while formal languages allow more reasoning produced by people and AI together to be checked, understood, and reused.
 
-Mathematics needs trustworthy conclusions and a language in which people can understand how those conclusions were established. Litex therefore poses a testable question: can organizing source around sets and facts, automatically checking supported local steps, and recording each step's grounds lower the cost for people and AI to construct, review, and repair checkable mathematics? This route deserves exploration alongside existing approaches such as Lean, Mizar, and Naproche, with real mathematical tasks to test its effects.
+Litex seeks to explore how mathematics and formalization can transform science and engineering in the AI era on a larger scale and in more imaginative ways. Lowering the barrier to formalization is the starting point for this exploration.
 
-I hope Litex helps more people continue to understand and create mathematics while taking part in rigorous verification. The current code, examples, and boundaries are a starting point. Broader domain coverage, independent Lean rechecking, and a real reduction in human effort still need to be demonstrated separately.
+**I hope formal languages can reach wherever mathematics reaches and brings benefits—and that Litex can, too.**
 
 <details>
 <summary><strong>A note from the author</strong></summary>

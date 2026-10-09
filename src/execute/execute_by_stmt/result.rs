@@ -1,5 +1,4 @@
 use crate::ast::fact::{AndChainAtomicFact, AtomicFact, Fact};
-use crate::ast::names::AtomicName;
 use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::AssumeDomFactResult;

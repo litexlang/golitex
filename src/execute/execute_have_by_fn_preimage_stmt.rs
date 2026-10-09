@@ -13,9 +13,7 @@
 use std::collections::HashMap;
 
 use crate::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::ast::obj::{
-    FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, StructAndFieldAccessObj,
-};
+use crate::ast::obj::{FnObj, FnObjHead, FnSet, FunctionSpace, Obj, StructAndFieldAccessObj};
 use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };

@@ -48,7 +48,7 @@ impl Runtime {
             name,
             typed_parameters,
             iff_facts,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 
@@ -83,7 +83,7 @@ impl Runtime {
             DefAbstractPropStmt {
                 name,
                 params,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }

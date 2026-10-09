@@ -1,6 +1,5 @@
 use super::code_source::CodeSource;
 use super::error::{RuntimeError, RuntimeResult};
-use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, IdentifierId, PropRewritePropertyId, WellDefinednessId};
 use crate::ast::names::{AtomicName, BoundName, PlainName};
 use crate::ast::obj::IdentifierObj;
@@ -24,12 +23,10 @@ pub struct Runtime {
     pub global_module_manager: GlobalModuleManager,
     pub execution_environments_stack: Vec<Box<ExecEnv>>,
     pub parse_scope_stack: Vec<Box<ParseScope>>,
-    pub current_file: RealOrVirtualPath,
+    pub current_file: CodeSource,
     pub global_ids: GlobalIds,
     /// How this Runtime session was launched (`-strict` / `-session` live here).
     pub launch_command: LaunchCommand,
-    /// Where the currently running code came from (drives outermost symbol qualify).
-    pub code_source: CodeSource,
 }
 
 /// One parse layer's plain names → [`IdentifierId`].
@@ -48,40 +45,10 @@ pub struct GlobalIds {
 }
 
 impl Runtime {
-    /// Create a session from its launch contract and open the matching file env.
+    /// Create a session from its launch contract and open the matching source env.
     pub fn new(command: LaunchCommand) -> Self {
-        let code_source = match &command {
-            LaunchCommand::Eval { .. } => CodeSource::Eval,
-            LaunchCommand::Repl { .. } => CodeSource::Repl,
-            LaunchCommand::File { .. }
-            | LaunchCommand::CompileToLean { .. }
-            | LaunchCommand::Repository { .. }
-            | LaunchCommand::ExtractExecutableCode {
-                input:
-                    crate::launch_command::ExtractInput::File(_)
-                    | crate::launch_command::ExtractInput::Repository(_),
-                ..
-            }
-            | LaunchCommand::CompileToLatex {
-                input:
-                    crate::launch_command::LatexInput::File(_)
-                    | crate::launch_command::LatexInput::Repository(_),
-                ..
-            } => CodeSource::StandaloneFile,
-            LaunchCommand::ExtractExecutableCode {
-                input: crate::launch_command::ExtractInput::Code(_),
-                ..
-            }
-            | LaunchCommand::CompileToLatex {
-                input: crate::launch_command::LatexInput::Code(_),
-                ..
-            } => CodeSource::Eval,
-            LaunchCommand::Help { .. } | LaunchCommand::Version { .. } => {
-                panic!("Runtime::new does not accept Help/Version LaunchCommand")
-            }
-        };
         let file = match &command {
-            LaunchCommand::Repl { .. } => RealOrVirtualPath::Repl,
+            LaunchCommand::Repl { .. } => CodeSource::Repl,
             LaunchCommand::Eval { .. }
             | LaunchCommand::ExtractExecutableCode {
                 input: crate::launch_command::ExtractInput::Code(_),
@@ -90,7 +57,7 @@ impl Runtime {
             | LaunchCommand::CompileToLatex {
                 input: crate::launch_command::LatexInput::Code(_),
                 ..
-            } => RealOrVirtualPath::Eval,
+            } => CodeSource::Eval,
             LaunchCommand::File { path, .. }
             | LaunchCommand::CompileToLean { path, .. }
             | LaunchCommand::Repository { path, .. }
@@ -105,7 +72,7 @@ impl Runtime {
                     crate::launch_command::LatexInput::File(path)
                     | crate::launch_command::LatexInput::Repository(path),
                 ..
-            } => RealOrVirtualPath::Real(path.clone()),
+            } => CodeSource::Real(path.clone()),
             LaunchCommand::Help { .. } | LaunchCommand::Version { .. } => {
                 panic!("Runtime::new does not accept Help/Version LaunchCommand")
             }
@@ -117,26 +84,21 @@ impl Runtime {
             current_file: file.clone(),
             global_ids: GlobalIds::new(),
             launch_command: command,
-            code_source,
         };
-        runtime.begin_file(file);
+        runtime.begin_source(file);
         runtime
     }
 
-    pub fn begin_file(&mut self, file: RealOrVirtualPath) {
+    pub fn begin_source(&mut self, file: CodeSource) {
         self.current_file = file;
         let session_view =
-            ExecEnvSessionView::new(self.global_ids.clone(), self.code_source.clone());
+            ExecEnvSessionView::new(self.global_ids.clone(), self.current_file.clone());
         self.execution_environments_stack
             .push(Box::new(ExecEnv::new(Some(session_view))));
         self.push_parse_scope();
     }
 
-    pub fn set_code_source(&mut self, code_source: CodeSource) {
-        self.code_source = code_source;
-    }
-
-    pub fn finish_file(&mut self) -> (RealOrVirtualPath, Box<ExecEnv>) {
+    pub fn finish_source(&mut self) -> (CodeSource, Box<ExecEnv>) {
         let file = self.current_file.clone();
         let mut exec_env = self
             .execution_environments_stack
@@ -149,16 +111,12 @@ impl Runtime {
         (file, exec_env)
     }
 
-    pub fn abort_file(&mut self) {
+    pub fn abort_source(&mut self) {
         self.execution_environments_stack.clear();
         self.parse_scope_stack.clear();
     }
 
-    pub fn publish_completed_export_file(
-        &mut self,
-        file: RealOrVirtualPath,
-        exec_env: Box<ExecEnv>,
-    ) {
+    pub fn publish_completed_export_file(&mut self, file: CodeSource, exec_env: Box<ExecEnv>) {
         let name = file.name();
         let path = file.display_path();
         self.global_module_manager
@@ -189,7 +147,7 @@ impl Runtime {
     }
 
     /// Resolve a plain name and report which parse-scope index holds it.
-    /// Index `0` is the file-root scope pushed by `begin_file`.
+    /// Index `0` is the source-root scope pushed by `begin_source`.
     pub fn resolve_plain_atom_with_scope_index(
         &self,
         name: &str,
@@ -211,23 +169,22 @@ impl Runtime {
             .is_some_and(|scope| scope.plain.contains_key(name))
     }
 
-    /// Outermost-scope symbol name form from live `code_source`.
+    /// Outermost-scope symbol name form from live `current_file`.
     ///
-    /// - `Eval` / `Repl` / `StandaloneFile` → `Plain` (no publication stamp)
+    /// - `Eval` / `Repl` / `Real` → `Plain` (no publication stamp)
     /// - `RootExport` → `WithExportFileId`
     /// - `ImportedExport` → `WithModAndExportFileId`
     pub fn atomic_name_for_file_root_symbol(&self, name: PlainName) -> AtomicName {
-        match &self.code_source {
-            CodeSource::Eval | CodeSource::Repl | CodeSource::StandaloneFile => {
-                AtomicName::Plain { name }
-            }
-            CodeSource::RootExport { export_file_id } => AtomicName::WithExportFileId {
+        match &self.current_file {
+            CodeSource::Eval | CodeSource::Repl | CodeSource::Real(_) => AtomicName::Plain { name },
+            CodeSource::RootExport { export_file_id, .. } => AtomicName::WithExportFileId {
                 export_file_id: *export_file_id,
                 name,
             },
             CodeSource::ImportedExport {
                 global_mod_id,
                 export_file_id,
+                ..
             } => AtomicName::WithModAndExportFileId {
                 global_mod_id: *global_mod_id,
                 export_file_id: *export_file_id,
@@ -256,11 +213,11 @@ impl Runtime {
         }
     }
 
-    /// Free reference: outermost + promoting `code_source` → qualified;
-    /// otherwise Plain+id (inner binders, or Eval/Repl/StandaloneFile outermost).
+    /// Free reference: outermost + promoting source → qualified;
+    /// otherwise Plain+id (inner binders, or Eval/Repl/Real outermost).
     pub fn identifier_obj_for_plain_free_ref(&self, name: String) -> RuntimeResult<IdentifierObj> {
         let (id, scope_index) = self.resolve_plain_atom_with_scope_index(&name)?;
-        if scope_index == 0 && self.code_source.promotes_outermost_symbols() {
+        if scope_index == 0 && self.current_file.promotes_outermost_symbols() {
             Ok(self.identifier_obj_for_file_root_symbol(name))
         } else {
             Ok(IdentifierObj::plain(id, name))
@@ -275,7 +232,7 @@ impl Runtime {
             .first()
             .and_then(|scope| scope.plain.get(&bound.name))
             == Some(&bound.id)
-            && self.code_source.promotes_outermost_symbols()
+            && self.current_file.promotes_outermost_symbols()
         {
             self.identifier_obj_for_file_root_symbol(bound.name.clone())
         } else {
@@ -286,7 +243,7 @@ impl Runtime {
     /// Prop/atomic name free ref: promote only when outermost and promoting.
     pub fn atomic_name_for_plain_prop_ref(&self, name: String) -> AtomicName {
         if self.is_bound_in_file_root_parse_scope(&name)
-            && self.code_source.promotes_outermost_symbols()
+            && self.current_file.promotes_outermost_symbols()
         {
             self.atomic_name_for_file_root_symbol(name)
         } else {

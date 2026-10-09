@@ -243,7 +243,7 @@ fn raw_bound_lookup_preserves_direct_ceiling_and_publishes_no_nonzero_fact() {
     let run = rt.run_litex_code(prefix).unwrap();
     assert!(run.success && run.session_error.is_none());
     let blocks = crate::tokenize::Tokenizer::new()
-        .tokenize("cos(x)!=0", crate::runtime::RealOrVirtualPath::Eval)
+        .tokenize("cos(x)!=0", crate::runtime::CodeSource::Eval)
         .unwrap();
     let mut parsed = rt.parse(&blocks).unwrap();
     let Stmt::Fact(fact) = parsed.remove(0) else {

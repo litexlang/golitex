@@ -1,0 +1,13 @@
+# Tracer: Existing AbsNonzeroFromArg
+# Before: explicit proof bridge
+# abs(v)!=0
+# Already accepted before this task; no new rule or WD change.
+# Now: direct guarded target
+forall u,v R:
+    v!=0
+    =>:
+        abs(v)!=0
+        u/abs(v) $in R
+
+# Boundary: missing guards and false conclusions remain rejected by selected_scalar_bt_rules_tests.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit

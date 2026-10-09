@@ -11,8 +11,8 @@ use crate::ast::fact::{AtomicFact, InFact, NotEqualFact};
 use crate::ast::obj::{
     Cart, FamilyIntersect, FamilyUnion, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
     FunctionSpace, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj,
-    IntervalObjStruct, ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, SetMinus,
-    SetOperator, StandardSet, Tuple, Union,
+    IntervalObjStruct, ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, SetMinus, SetOperator,
+    StandardSet, Tuple, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::execute::execute_fact_stmt::VerifyState;

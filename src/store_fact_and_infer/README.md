@@ -31,7 +31,7 @@ store_fact_and_infer/
     infer_not_forall_fact.rs
     infer_forall_fact*.rs    # NoInfer (intentional)
     infer_atomic_fact/
-      infer_equal_fact/      # positive-real power and checked transports
+      infer_equal_fact/      # scalar cancellation and positive-real power transport
       infer_atomic_except_equality/
         expand_definition.rs     # NormalAtomic param types + iff
         membership_*.rs          # InFact by set former / ops
@@ -51,6 +51,24 @@ store_fact_and_infer/
 
 **EqualFact**
 
+- Scalar sums with a directly identical common addend publish equality of the
+  remaining operands. Scalar products do the same when the common factor has
+  an available nonzero certificate. Addition/multiplication match all four
+  binary positions; subtraction/division match same positions only. Differences
+  cancel a common minuend or subtrahend without nonzero conditions. Quotients
+  cancel a nonzero common denominator, or a nonzero common numerator with both
+  remaining denominators nonzero. Matching uses exact ObjIR; no alias traversal,
+  expansion or reassociation is performed. Three C-membership proofs and all
+  required nonzero proofs
+  inherit the caller's permissions capped at KnownSpecialProperty. Missing
+  premises skip the rule without rejecting the accepted source equality.
+  Each result retains the source FactId, common operand, premise proofs and
+  ordinary WD-checked derived store/infer tree. The equality graph skips
+  already-known endpoints. Each recursive cancellation removes the outer
+  arithmetic constructor. Later nonzero facts do not retrigger older seeds.
+  Tracers: `examples/infer/equal/{additive,subtractive,nonzero_factor,common_denominator,nonzero_numerator}_cancellation.lit`; focused tests:
+  `equality_cancellation`. Lean replay of a citation to these uncompiled
+  consequences remains fail-closed at `FactId/Producer`.
 - Cartesian and tuple equalities remain ordinary checked equalities; they do
   not publish shape predicates or construction dimensions.
 - Literal `u − v = 0` → `u = v` is **verify-time**

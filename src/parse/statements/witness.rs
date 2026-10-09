@@ -69,7 +69,7 @@ impl Runtime {
                 equal_tos,
                 exist_shaped_fact_in_witness,
                 proof,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -96,7 +96,7 @@ impl Runtime {
                 obj,
                 set,
                 proof,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }
@@ -125,7 +125,7 @@ impl Runtime {
                 atomic_fact,
                 witnesses,
                 proof,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, block.source_path.clone()),
             },
         )))
     }

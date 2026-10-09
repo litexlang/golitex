@@ -1,5 +1,4 @@
 use super::*;
-use crate::execute::execute_fact_stmt::VerifyStateLevel;
 
 #[test]
 fn stored_equality_precedes_calculation_and_special_property_in_both_entries() {

@@ -1,5 +1,5 @@
 //! Narrow arithmetic identities; all semantic premises use the builtin entry.
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, GreaterEqualFact, InFact, NotEqualFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, NotEqualFact};
 use crate::ast::obj::{ArithmeticOperator as A, ExpLogOperator, IntegerOperator, Literal, Number, Obj, Pow, StandardSet};
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;

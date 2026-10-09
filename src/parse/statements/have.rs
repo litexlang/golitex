@@ -78,7 +78,7 @@ impl Runtime {
                 Ok(Stmt::Definition(DefinitionStmt::DefineObj(
                     DefineObjStmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt {
                         param_def,
-                        line_file: SourceLine::new(block.line, self.code_source.clone()),
+                        line_file: SourceLine::new(block.line, block.source_path.clone()),
                     }),
                 )))
             }
@@ -90,7 +90,7 @@ impl Runtime {
                     DefineObjStmt::HaveObjEqualStmt(HaveObjEqualStmt {
                         param_def,
                         objs_equal_to,
-                        line_file: SourceLine::new(block.line, self.code_source.clone()),
+                        line_file: SourceLine::new(block.line, block.source_path.clone()),
                     }),
                 )))
             }
@@ -102,7 +102,7 @@ impl Runtime {
                     DefineObjStmt::HaveObjByExistFactsStmt(HaveObjByExistFactsStmt {
                         param_def,
                         facts,
-                        line_file: SourceLine::new(block.line, self.code_source.clone()),
+                        line_file: SourceLine::new(block.line, block.source_path.clone()),
                     }),
                 )))
             }

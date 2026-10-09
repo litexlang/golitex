@@ -5,7 +5,6 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::ast::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, Fact, OrFact, QuantifierFreeFact,
 };
-use crate::ast::names::AtomicName;
 use crate::ast::obj::Obj;
 use crate::runtime::Runtime;
 
@@ -214,21 +213,5 @@ fn atomic_fact_obj_args(atomic: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotBijectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::IsChoiceFunctionForFact(f) => vec![&f.index, &f.set, &f.family, &f.choice],
         AtomicFact::NotIsChoiceFunctionForFact(f) => vec![&f.index, &f.set, &f.family, &f.choice],
-    }
-}
-
-pub fn collect_free_plain_ids_in_atomic_fact(
-    atomic: &AtomicFact,
-    bound: &HashSet<IdentifierId>,
-    out: &mut HashSet<IdentifierId>,
-) {
-    collect_free_plain_ids_in_atomic(atomic, bound, out);
-}
-
-pub fn identifier_is_plain(name: &AtomicName) -> Option<&String> {
-    if let AtomicName::Plain { name } = name {
-        Some(name)
-    } else {
-        None
     }
 }

@@ -4,7 +4,7 @@ use crate::ast::obj::Obj;
 use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::replace_obj_matching_ir;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
-use crate::runtime::{RealOrVirtualPath, Runtime};
+use crate::runtime::{CodeSource, Runtime};
 use crate::tokenize::Tokenizer;
 
 fn runtime(language: OutputLanguage) -> Runtime {
@@ -17,9 +17,7 @@ fn runtime(language: OutputLanguage) -> Runtime {
 }
 
 fn left(rt: &mut Runtime, code: &str) -> Obj {
-    let blocks = Tokenizer::new()
-        .tokenize(code, RealOrVirtualPath::Eval)
-        .unwrap();
+    let blocks = Tokenizer::new().tokenize(code, CodeSource::Eval).unwrap();
     let mut parsed = rt.parse(&blocks).unwrap();
     let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(f))) = parsed.remove(0) else {
         panic!("equality");

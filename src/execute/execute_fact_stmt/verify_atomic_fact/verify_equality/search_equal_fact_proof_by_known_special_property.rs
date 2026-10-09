@@ -1,7 +1,7 @@
 //! Equality from cited tuple structure. Both goal objects have already passed WD.
 use super::result::{EqualFactSearchedProof, KnownEqualityPathProof};
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{Literal, Number, Obj, ProductShape};
+use crate::ast::obj::{Obj, ProductShape};
 use crate::execute::execute_fact_stmt::known_tuple::{
     literal_positive_usize, KnownFunctionTupleValueProof, KnownTupleShapeProof,
     KnownTupleValueProof,

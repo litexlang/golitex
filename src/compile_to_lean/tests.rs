@@ -2512,3 +2512,333 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
         &["Order/EvenPowerExponent"],
     );
 }
+
+#[test]
+fn simplification_theorem_citation_keeps_its_declaration_time_context() {
+    let source = "have a R\nthm context_reflexivity:\n    ? a = a\nhave b R\nby thm context_reflexivity => a = a\n";
+    let (result, runtime) = execute(source);
+    let first = ordinary_have(&result.statement_results[0])
+        .statement
+        .param_def
+        .groups[0]
+        .params[0]
+        .id
+        .value();
+    let later = ordinary_have(&result.statement_results[2])
+        .statement
+        .param_def
+        .groups[0]
+        .params[0]
+        .id
+        .value();
+    assert_ne!(first, later);
+    let output = compile_run(&result, &runtime, "simplification_declaration_context")
+        .expect("the earlier theorem keeps only its original context parameters");
+    let header = output
+        .lines()
+        .find(|line| line.starts_with("theorem named_thm_2 "))
+        .expect("the named declaration is exported");
+    assert!(header.contains(&format!("_Host_i{first} :")));
+    assert!(!header.contains(&format!("_Host_i{later} :")));
+    let later_proof = output
+        .split_once("theorem fact_4 ")
+        .expect("the later selected fact is exported")
+        .1;
+    assert!(later_proof.contains(&format!("_Host_i{later} :")));
+    assert!(later_proof.contains(&format!(
+        "(@named_thm_2 M _Host_i{first} _rep_i{first} _value_i{first} _h_param_i{first})"
+    )));
+}
+
+#[test]
+fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
+    use crate::store_fact_and_infer::{
+        InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
+    };
+
+    let (result, runtime) = execute("have n N\nn >= 0\n");
+    let store = &ordinary_have(&result.statement_results[0]).groups[0]
+        .defined_params
+        .store_and_infer_results[0];
+    let inferred = match &store.infer {
+        InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) => rules
+            .iter()
+            .find_map(|rule| match rule {
+                InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) => {
+                    assert_eq!(proof.derived.len(), 1);
+                    Some(&proof.derived[0])
+                }
+                _ => None,
+            })
+            .expect("natural membership records its actual nonnegative inference"),
+        _ => panic!("actual natural membership inference"),
+    };
+    let inferred_id = inferred.primary_fact_id();
+    match &phase2_atomic(&fact_statement(&result.statement_results[1]).verify_result).searched_proof
+    {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+                GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(proof),
+            ),
+        ) => assert_eq!(proof.premise_proof.cite_fact_id(), Some(inferred_id)),
+        _ => panic!("the source actually cites the inferred opposite-order fact"),
+    }
+    let output = compile_run(&result, &runtime, "simplification_natural_inference")
+        .expect("the inferred producer is emitted before its use");
+    let name = format!("_fact_f{}", inferred_id.value());
+    let producer = output
+        .find(&format!("theorem {name} "))
+        .expect("the real stored inference has a named Lean producer");
+    let consumer = output
+        .find("theorem fact_2 ")
+        .expect("the order conclusion");
+    assert!(producer < consumer);
+    assert!(output[producer..consumer].contains("Litex.naturalNonnegative"));
+    assert!(output[consumer..].contains(&name));
+    assert!(!output[consumer..].contains("Litex.naturalNonnegative"));
+}
+
+#[test]
+fn simplification_alias_equality_uses_its_stored_id_in_the_selected_rewrite() {
+    let (result, runtime) = execute("let half = 1 / 2\nhalf + half = 1\n");
+    let alias = let_definition(&result.statement_results[0]);
+    let equality_id = alias.stored_fact_ids[0];
+    let rewrite = match &equality_proof(&fact_statement(&result.statement_results[1]).verify_result)
+        .searched_proof
+    {
+        EqualFactSearchedProof::ByBuiltinRewrite(
+            EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(proof),
+        ) => proof,
+        _ => panic!("the source selected the actual closed alias-substitution route"),
+    };
+    assert_eq!(rewrite.cited_equal_fact_ids, vec![equality_id]);
+    assert!(matches!(
+        &equality_proof(&rewrite.residual_equal).searched_proof,
+        EqualFactSearchedProof::ByClosedCalculation(_)
+    ));
+    let output = compile_run(&result, &runtime, "simplification_alias_equality")
+        .expect("the selected substitution uses the emitted alias equality");
+    let name = format!("_fact_f{}", equality_id.value());
+    let producer = output
+        .find(&format!("theorem {name} "))
+        .expect("the source alias store has a named equality proof");
+    let consumer = output
+        .find("theorem fact_2 ")
+        .expect("the arithmetic conclusion");
+    assert!(producer < consumer);
+    let proof = output[consumer..]
+        .split_once(" :=\n")
+        .expect("the exported conclusion has a proof")
+        .1;
+    assert!(proof.contains(&name));
+    assert!(proof.contains("congrArg₂ M.addValue"));
+}
+
+#[test]
+fn simplification_each_returned_component_has_an_invocation_local_producer() {
+    let head =
+        "have c R\nthm two_returns:\n    ? forall x R:\n        x + 0 = x\n        x $in C\n";
+    for (selected, selected_index) in [("c + 0 = c", 0), ("c $in C", 1)] {
+        let source = format!("{head}by thm two_returns(c) => {selected}\n");
+        let (result, runtime) = execute(&source);
+        let invocation = by_theorem(&result.statement_results[2]);
+        assert_eq!(invocation.returned_conclusions.len(), 2);
+        let ids: Vec<_> = invocation
+            .returned_conclusions
+            .iter()
+            .map(StoreFactAndInferResult::primary_fact_id)
+            .collect();
+        assert_ne!(ids[0], ids[1]);
+        let selected_id = match &invocation.selected_proof {
+            VerifyFactResult::Equality(_) => {
+                match &equality_proof(&invocation.selected_proof).searched_proof {
+                    EqualFactSearchedProof::ByEquivalenceClass(
+                        EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(proof),
+                    ) => {
+                        assert!(!proof.reversed);
+                        proof.cited.fact_id
+                    }
+                    _ => panic!("the selected equality directly cites its returned atom"),
+                }
+            }
+            VerifyFactResult::AtomicExceptEquality(_) => {
+                match &phase2_atomic(&invocation.selected_proof).searched_proof {
+                    AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => {
+                        proof.cite_fact_id
+                    }
+                    _ => panic!("the selected membership directly cites its returned atom"),
+                }
+            }
+            _ => panic!("one of the theorem's two actual returned atoms"),
+        };
+        assert_eq!(selected_id, ids[selected_index]);
+        let output = compile_run(&result, &runtime, "simplification_returned_components")
+            .expect("either returned atom can be selected from one invocation");
+        let consumer = output.find("theorem fact_3 ").expect("the selected fact");
+        let body = &output[consumer..];
+        let first_name = format!("_fact_f{}", ids[0].value());
+        let second_name = format!("_fact_f{}", ids[1].value());
+        let first = body
+            .find(&format!("have {first_name} "))
+            .expect("the first actual returned store has a local producer");
+        let second = body
+            .find(&format!("have {second_name} "))
+            .expect("the second actual returned store has a local producer");
+        assert!(first < second);
+        assert!(body[first..second].contains("And.left"));
+        assert!(body[second..].contains("And.right"));
+        let selected_name = format!("_fact_f{}", selected_id.value());
+        let selected_proof = body
+            .lines()
+            .rev()
+            .find(|line| line.trim_start().starts_with("exact "))
+            .expect("the invocation finishes by selecting its returned proof");
+        assert!(selected_proof.contains(&selected_name));
+        assert!(!output[..consumer].contains(&first_name));
+        assert!(!output[..consumer].contains(&second_name));
+    }
+}
+
+#[test]
+fn simplification_future_natural_producer_is_not_recovered_from_runtime() {
+    let (mut result, runtime) = execute("have n N\nn >= 0\n");
+    result.statement_results.swap(0, 1);
+    let error = compile_run(&result, &runtime, "simplification_future_inference")
+        .expect_err("a live runtime does not make a later Lean producer available early");
+    assert_eq!(error.statement_index, Some(1));
+    assert!(matches!(
+        error.route.as_str(),
+        "WD/Producer" | "Identifier/Producer" | "FactId/Producer"
+    ));
+}
+
+#[test]
+fn simplification_known_forall_reuses_a_global_alias_with_the_current_goal_wd() {
+    let source = "let global_offset = 2\nlet other_offset = 3\nforall left_real R:\n    left_real + global_offset = left_real + global_offset\nforall right_real R:\n    right_real + global_offset = right_real + global_offset\n";
+    let (result, runtime) = execute(source);
+    let earlier = forall_proof(&result.statement_results[2]);
+    let reused = known_forall(&result.statement_results[3]);
+    let producer_id = fact_statement(&result.statement_results[2])
+        .store_and_infer_result
+        .primary_fact_id();
+    assert_eq!(producer_id, earlier.fact.fact_id);
+    assert_eq!(reused.cite_fact_id, producer_id);
+    assert_eq!(reused.parameter_renamings.len(), 1);
+    assert_eq!(
+        reused.parameter_renamings[0].source,
+        earlier.fact.typed_parameters.groups[0].params[0].id
+    );
+    assert_eq!(
+        reused.parameter_renamings[0].target,
+        reused.fact.typed_parameters.groups[0].params[0].id
+    );
+    assert!(reused.fact.dom_facts.is_empty());
+    let output = compile_run(
+        &result,
+        &runtime,
+        "simplification_known_forall_global_alias",
+    )
+    .expect("the current goal's WD supplies its renamed binder and original alias");
+    let later = output
+        .split_once("theorem fact_4")
+        .expect("the reused whole-forall result is exported")
+        .1;
+    assert!(later.contains("fact_3 (M := M)"));
+    assert!(!later.contains("(by ring)"));
+}
+
+#[test]
+fn simplification_named_theorem_body_retains_its_local_explicit_call() {
+    let source = "thm add_zero:\n    ? forall x R:\n        x + 0 = x\nthm add_zero_again:\n    ? forall y R:\n        y + 0 = y\n    y + 0 = y + 0\n    by thm add_zero(y) => y + 0 = y\n";
+    let (result, runtime) = execute(source);
+    let earlier = named_theorem(&result.statement_results[0]);
+    let later = named_theorem(&result.statement_results[1]);
+    let goal = match &later.statement.fact {
+        Fact::ForallFact(goal) => goal,
+        _ => panic!("the source theorem has its original forall interface"),
+    };
+    assert_eq!(goal.typed_parameters.groups.len(), 1);
+    assert_eq!(goal.typed_parameters.groups[0].params.len(), 1);
+    assert!(goal.dom_facts.is_empty());
+    assert_eq!(goal.then_facts.len(), 1);
+    let body = match &later.body {
+        ExecDefThmBodyProof::Forall(body) => body,
+        _ => panic!("the source theorem has its recorded local proof body"),
+    };
+    assert!(body.assumed_dom_facts.is_empty());
+    assert_eq!(body.proof_steps.len(), 2);
+    let parent = equality_proof(&fact_statement(&body.proof_steps[0]).verify_result);
+    assert_eq!(parent.fact.left.ir(), parent.fact.right.ir());
+    assert!(matches!(
+        &parent.fact.left,
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
+    ));
+    match &parent.well_defined_proof.left {
+        ObjWellDefinedProof::ByDef { obj, .. } => assert_eq!(obj.ir(), parent.fact.left.ir()),
+        _ => panic!("the parent proof actually constructs its own compound object"),
+    }
+    let invocation = by_theorem(&body.proof_steps[1]);
+    match &invocation.callee {
+        ResolvedTheoremCallee::UserTheorem(declaration) => {
+            assert_eq!(declaration, &earlier.statement)
+        }
+        _ => panic!("the source explicitly invokes the preceding named theorem"),
+    }
+    assert_eq!(invocation.type_proofs.len(), 1);
+    assert!(invocation.dom_proofs.is_empty());
+    assert_eq!(invocation.conclusions_wd.len(), 1);
+    assert_eq!(invocation.returned_conclusions.len(), 1);
+    let returned_id = invocation.returned_conclusions[0].primary_fact_id();
+    match &equality_proof(&invocation.selected_proof).searched_proof {
+        EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::AlphaEndpoints(selected),
+        ) => {
+            assert!(!selected.reversed);
+            assert_eq!(selected.cited.fact_id, returned_id);
+        }
+        _ => panic!("the explicit nested invocation selects its actual returned equality"),
+    }
+    let output = compile_run(&result, &runtime, "simplification_nested_named_call")
+        .expect("the invocation's local proof evidence closes inside the theorem body");
+    let later = output
+        .split_once("theorem named_thm_2")
+        .expect("the named theorem is exported")
+        .1;
+    let (signature, proof) = later
+        .split_once(" :=\n")
+        .expect("the exported theorem retains a separate statement and proof");
+    assert_eq!(signature.matches('∀').count(), 1);
+    assert!(!signature.contains('→'));
+    assert!(proof.contains("named_thm_1 (M := M)"));
+    assert!(proof.contains(&format!("_fact_f{}", returned_id.value())));
+}
+
+#[test]
+fn simplification_named_call_cannot_export_a_compound_constructor_from_its_local_scope() {
+    let source = "thm add_zero:\n    ? forall x R:\n        x + 0 = x\nthm add_zero_again:\n    ? forall y R:\n        y + 0 = y\n    by thm add_zero(y) => y + 0 = y\n";
+    let (result, runtime) = execute(source);
+    let error = compile_run(&result, &runtime, "simplification_closed_call_constructor")
+        .expect_err("the invocation-local construction is not a preceding parent producer");
+    assert_eq!(error.statement_index, Some(2));
+    assert_eq!(error.route, "WD/Producer");
+}
+
+fn named_theorem(statement: &ExecStmtResult) -> &ExecDefThmStmtSuccess {
+    match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(proof),
+        )) => proof,
+        _ => panic!("successful named theorem"),
+    }
+}
+
+fn ordinary_have(statement: &ExecStmtResult) -> &ExecHaveObjInNonemptySetStmtSuccessResult {
+    match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(proof),
+            ),
+        )) => proof,
+        _ => panic!("actual arbitrary-have result"),
+    }
+}

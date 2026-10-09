@@ -212,15 +212,19 @@ fn rollback_preserves_old_bindings_and_never_reuses_identifier_ids() {
 #[test]
 fn isolation_preserves_file_root_qualification_and_inner_bindings() {
     for source in [
-        CodeSource::StandaloneFile,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::Real("test.lit".into()),
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 0,
+        },
         CodeSource::ImportedExport {
+            path: "test.lit".into(),
             global_mod_id: 0,
             export_file_id: 0,
         },
     ] {
         let mut rt = runtime();
-        rt.set_code_source(source.clone());
+        rt.current_file = source.clone();
         let result = rt
             .run_litex_code("have k N = -1\nhave k N = 1\nk = 1")
             .unwrap();
@@ -230,7 +234,7 @@ fn isolation_preserves_file_root_qualification_and_inner_bindings() {
         assert_eq!(rt.parse_scope_stack.len(), 1);
         let root_ref = rt.identifier_obj_for_plain_free_ref("k".into()).unwrap();
         match source {
-            CodeSource::StandaloneFile => assert!(matches!(root_ref, IdentifierObj::Plain { .. })),
+            CodeSource::Real(_) => assert!(matches!(root_ref, IdentifierObj::Plain { .. })),
             CodeSource::RootExport { .. } => {
                 assert!(matches!(root_ref, IdentifierObj::WithExportFileId { .. }))
             }
@@ -253,6 +257,159 @@ fn isolation_preserves_file_root_qualification_and_inner_bindings() {
         assert!(!rt.parse_scope_stack[0].plain.contains_key("inner"));
         rt.pop_parse_scope();
     }
+}
+
+#[test]
+fn repeated_names_never_replace_an_existing_object_or_function() {
+    for (prefix, duplicate, old_fact, wrong_fact) in [
+        ("let item = 1", "let item = 2", "item = 1", "item = 2"),
+        ("let item = 1", "have item R = 2", "item = 1", "item = 2"),
+        (
+            "let item = 1",
+            "have fn item(t R) R = 2",
+            "item = 1",
+            "item = 2",
+        ),
+        ("have item R = 1", "let item = 2", "item = 1", "item = 2"),
+        (
+            "have fn item(t R) R = 1",
+            "have fn item(u R) R = 2",
+            "item(0) = 1",
+            "item(0) = 2",
+        ),
+        (
+            "have fn item(t R) R = 1",
+            "let item = 2",
+            "item(0) = 1",
+            "item(0) = 2",
+        ),
+    ] {
+        let mut rt = runtime();
+        success(&mut rt, prefix);
+        let original_id = rt.resolve_plain_atom("item").unwrap();
+        let facts_before = rt.top_exec_env().facts.facts_by_id.len();
+        let result = rt.run_litex_code(duplicate).unwrap();
+        parse_error(&result);
+        assert!(result.statement_results.is_empty());
+        assert!(result
+            .session_error
+            .unwrap()
+            .to_string()
+            .contains("already bound"));
+        assert_eq!(rt.resolve_plain_atom("item").unwrap(), original_id);
+        assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), facts_before);
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+        assert_eq!(rt.parse_scope_stack.len(), 1);
+        // Inspect the retained Runtime through its API; CLI parse errors end
+        // the interactive process and are not promised to be recoverable there.
+        success(&mut rt, old_fact);
+        assert!(!rt.run_litex_code(wrong_fact).unwrap().success);
+        assert!(!rt.run_litex_code("0 = 1").unwrap().success);
+    }
+}
+
+#[test]
+fn repeated_names_keep_predicate_theorem_and_struct_definitions() {
+    for (prefix, duplicate, old_fact, wrong_fact) in [
+        (
+            "prop item(t R):\n    t = 0",
+            "prop item(t R):\n    t = 1",
+            "by def $item(0)",
+            "by def $item(1)",
+        ),
+        (
+            "prop item(t R):\n    t = 0",
+            "let item = 1",
+            "by def $item(0)",
+            "by def $item(1)",
+        ),
+        (
+            "thm item:\n    ? forall t N:\n        t >= 0",
+            "thm item:\n    ? 0 = 1",
+            "release thm item(0)",
+            "release thm item(-1)",
+        ),
+        (
+            "struct item:\n    value R\n    other R",
+            "struct item:\n    value N\n    other R",
+            "forall p &item:\n    p.value $in R",
+            "forall p &item:\n    p.value $in N",
+        ),
+        (
+            "let item = 1",
+            "prop item(t R):\n    t = 0",
+            "item = 1",
+            "item = 2",
+        ),
+        (
+            "let item = 1",
+            "thm item:\n    ? 1 = 1",
+            "item = 1",
+            "item = 2",
+        ),
+    ] {
+        let mut rt = runtime();
+        success(&mut rt, prefix);
+        let original_id = rt.resolve_plain_atom("item").unwrap();
+        let result = rt.run_litex_code(duplicate).unwrap();
+        parse_error(&result);
+        assert!(result
+            .session_error
+            .unwrap()
+            .to_string()
+            .contains("already bound"));
+        assert_eq!(rt.resolve_plain_atom("item").unwrap(), original_id);
+        success(&mut rt, old_fact);
+        assert!(!rt.run_litex_code(wrong_fact).unwrap().success);
+        assert!(!rt.run_litex_code("0 = 1").unwrap().success);
+    }
+}
+
+#[test]
+fn repeated_names_reject_visible_shadowing_and_duplicate_binders() {
+    for duplicate in [
+        "forall x R:\n    x = x",
+        "sketch:\n    let x = 2",
+        "have fn f(x R) R = x",
+        "let f = fn(x R) R {x}",
+        "let S = {x R: x = x}",
+    ] {
+        let mut rt = runtime();
+        success(&mut rt, "let x = 1");
+        let original_id = rt.resolve_plain_atom("x").unwrap();
+        let result = rt.run_litex_code(duplicate).unwrap();
+        parse_error(&result);
+        assert!(result
+            .session_error
+            .unwrap()
+            .to_string()
+            .contains("already bound"));
+        assert_eq!(rt.resolve_plain_atom("x").unwrap(), original_id);
+        success(&mut rt, "x = 1");
+        assert!(!rt.run_litex_code("x = 2").unwrap().success);
+    }
+    let mut rt = runtime();
+    let result = rt.run_litex_code("forall t, t R:\n    t = t").unwrap();
+    parse_error(&result);
+    assert!(rt.resolve_plain_atom("t").is_err());
+    success(&mut rt, "let t = 2\nt = 2");
+}
+
+#[test]
+fn repeated_names_after_closed_scopes_have_fresh_ids_and_no_old_equations() {
+    let mut rt = runtime();
+    success(&mut rt, "sketch:\n    let item = 1\n    item = 1");
+    assert!(rt.resolve_plain_atom("item").is_err());
+    let after_first_scope = rt.global_ids.to_u64s().3;
+    success(&mut rt, "sketch:\n    let item = 2\n    item = 2");
+    assert!(rt.resolve_plain_atom("item").is_err());
+    assert!(rt.global_ids.to_u64s().3 > after_first_scope);
+    success(&mut rt, "let item = 3\nitem = 3");
+    assert!(rt.resolve_plain_atom("item").unwrap().value() >= after_first_scope);
+    assert!(!rt.run_litex_code("item = 1").unwrap().success);
+    assert!(!rt.run_litex_code("item = 2").unwrap().success);
+    success(&mut rt, "forall x R:\n    x = x\nforall x R:\n    x = x");
+    assert!(!rt.run_litex_code("0 = 1").unwrap().success);
 }
 
 #[test]

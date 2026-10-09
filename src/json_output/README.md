@@ -49,6 +49,17 @@ Parameter introductions use the same store projection. Closed comparisons add
 typed-calculation `values` while retaining `left_normal`, `right_normal` and
 `comparison`. Normal and Compact presentation remains unchanged.
 
+Stores that perform direct scalar cancellation additionally expose
+`cancellation_rules` in Detailed output. Each entry names `AdditiveCancellation`,
+`SubtractiveCancellation`, `NonzeroFactorCancellation`,
+`CommonDenominatorCancellation` or `NonzeroNumeratorCancellation` and keeps the
+source fact, common operand, three C-membership proofs, required nonzero proofs,
+and derived store tree. Common-numerator cancellation retains separate
+nonzero proofs for both denominators as well as the numerator.
+And/Chain atomic components retain the same entries; nested cancellation
+evidence stays under `derived`. The existing Normal `infers` list contains
+the published equality. Unrelated store nodes keep their previous shape.
+
 ```rust
 pub enum OutputDetail {
     Compact,   // thin: success + statement (+ fail_reason)

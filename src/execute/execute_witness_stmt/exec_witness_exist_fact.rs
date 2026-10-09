@@ -157,7 +157,7 @@ impl Runtime {
         exist_fact: &ExistShapedFact,
         equal_tos: &[Obj],
         proof: &[Stmt],
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<
         Result<
             (

@@ -18,8 +18,8 @@ pub enum MountCwdConfigOutcome {
 
 /// Load `cwd/litex.config` (missing → empty) and mount imports + all exports.
 ///
-/// Caller must ensure there is **no** live file env (e.g. after `abort_file`).
-/// On success the runtime has no open file env; caller opens Eval/Repl after.
+/// Caller must ensure there is **no** live source env (e.g. after `abort_source`).
+/// On success the runtime has no open source env; caller opens Eval/Repl after.
 pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOutcome> {
     let cwd = std::env::current_dir().map_err(|error| RuntimeError::Io {
         path: PathBuf::from("."),
@@ -61,10 +61,10 @@ pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOu
         match run_export_file(
             runtime,
             &export.name,
-            &export.path,
-            export_file_id,
-            None,
-            crate::runtime::CodeSource::RootExport { export_file_id },
+            crate::runtime::CodeSource::RootExport {
+                path: export.path.clone(),
+                export_file_id,
+            },
             false,
         ) {
             Ok(file_result) => {

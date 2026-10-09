@@ -20,6 +20,8 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    QuotientScalarStrictUpperBound(super::selected_scalar_bt_rules::QuotientScalarBoundProof),
+
     AbsPositiveFromNonzero(super::abs_positive_from_nonzero::AbsPositiveFromNonzeroProof),
     LnNegativeBelowOne(super::scalar_extra_sign::LnNegativeBelowOneProof),
     LnPositiveAboveOne(super::scalar_extra_sign::LnPositiveAboveOneProof),
@@ -409,6 +411,12 @@ impl Runtime {
             return Ok(Some(
                 LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(proof),
             ));
+        }
+
+        if let Some(proof) =
+            self.search_quotient_scalar_bound(&fact.left, &fact.right, true, verify_state)?
+        {
+            return Ok(Some(proof.into()));
         }
 
         // Zero-premise closed numeric (no nested search).

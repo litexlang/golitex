@@ -4,9 +4,7 @@ use super::program::ProgramExtractor;
 use crate::launch_command::{CodeExtractionTarget, ExtractInput, LaunchCommand, OutputLanguage};
 use crate::module_manager::ExportFileAndItsExecEnv;
 use crate::run_module::{load_config, resolve_std_root, run_import_module, RunImportModuleOutcome};
-use crate::runtime::{
-    CodeSource, RealOrVirtualPath, Runtime, RuntimeError, RuntimeParseError, RuntimeResult,
-};
+use crate::runtime::{CodeSource, Runtime, RuntimeError, RuntimeParseError, RuntimeResult};
 use crate::tokenize::Tokenizer;
 use std::collections::HashSet;
 use std::env;
@@ -51,9 +49,8 @@ pub fn extract_code_from_file(
     };
     let mut runtime = Runtime::new(command);
     // Drop placeholder; reopen on the real file path with selected source as Eval-like buffer.
-    runtime.abort_file();
-    runtime.set_code_source(CodeSource::StandaloneFile);
-    runtime.begin_file(RealOrVirtualPath::Real(resolved_path.clone()));
+    runtime.abort_source();
+    runtime.begin_source(CodeSource::Real(resolved_path.clone()));
     extract_code(selected_source.as_str(), &mut runtime, target)
 }
 
@@ -83,7 +80,7 @@ pub fn extract_code_from_repository(
         language: OutputLanguage::English,
     };
     let mut runtime = Runtime::new(command);
-    runtime.abort_file();
+    runtime.abort_source();
     runtime
         .global_module_manager
         .set_root_config(root_config.clone());
@@ -144,17 +141,19 @@ fn extract_export_file_into(
         .global_module_manager
         .set_current_mod_id(None)
         .map_err(RuntimeError::InternalBug)?;
-    runtime.set_code_source(CodeSource::RootExport { export_file_id });
-    runtime.begin_file(RealOrVirtualPath::Real(export_path.to_path_buf()));
+    runtime.begin_source(CodeSource::RootExport {
+        path: export_path.to_path_buf(),
+        export_file_id,
+    });
 
     let outcome = verify_and_extract_into(runtime, &source, extractor);
     if outcome.is_err() {
-        runtime.abort_file();
+        runtime.abort_source();
         let _ = runtime.global_module_manager.set_current_mod_id(None);
         return outcome;
     }
 
-    let (_file, exec_env) = runtime.finish_file();
+    let (_file, exec_env) = runtime.finish_source();
     let recorded =
         ExportFileAndItsExecEnv::new(export_name.to_string(), export_path.to_path_buf(), exec_env);
     let _ = export_file_id;
@@ -296,6 +295,6 @@ fn marker_error(path: &Path, line: usize, message: String) -> RuntimeError {
     RuntimeError::ParseError(RuntimeParseError::new(
         message,
         line,
-        RealOrVirtualPath::Real(path.to_path_buf()),
+        CodeSource::Real(path.to_path_buf()),
     ))
 }

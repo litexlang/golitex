@@ -1,0 +1,254 @@
+use crate::compile_to_lean::helper::*;
+use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::prelude::*;
+
+impl<'a> LitexToLeanCompiler<'a> {
+    pub(in crate::compile_to_lean) fn compile_structural(
+        &self,
+        proof: &StructuralMembershipProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let compiled = match &proof.reason {
+            StructuralMembershipReason::Known(known) => {
+                let mut fact = match self.resolve_fact(known.cite_fact_id, position)? {
+                    Fact::AtomicFact(AtomicFact::InFact(fact)) => fact,
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "StructuralMembership/Known",
+                            "The structural citation is not a membership fact.",
+                        ))
+                    }
+                };
+                // Known membership may target an equal alias. Replay the exact
+                // argument certificates against the structural node's subject.
+                fact.element = proof.element.clone();
+                fact.set = Obj::StandardSet(proof.set.clone());
+                self.compile_known_atomic(known, &AtomicFact::InFact(fact), position)
+            }
+            StructuralMembershipReason::Closed(closed) => self.compile_closed_membership(
+                &proof.element,
+                &Obj::StandardSet(proof.set.clone()),
+                closed,
+                position,
+            ),
+            StructuralMembershipReason::StandardSuperset(child) => {
+                if child.element.ir() != proof.element.ir() {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/SupersetSubject",
+                        "Standard inclusion evidence changes its element.",
+                    ));
+                }
+                let bridge = match (&child.set, &proof.set) {
+                    (StandardSet::R, StandardSet::C) => "realToComplex",
+                    (StandardSet::Z, StandardSet::C) => "integerToComplex",
+                    (StandardSet::N, StandardSet::C) => "naturalToComplex",
+                    (StandardSet::N, StandardSet::Z) => "naturalToInteger",
+                    (StandardSet::N, StandardSet::R) => "naturalToReal",
+                    (StandardSet::Z, StandardSet::R) => "integerToReal",
+                    (StandardSet::N, StandardSet::Q) => "naturalToRational",
+                    (StandardSet::Z, StandardSet::Q) => "integerToRational",
+                    (StandardSet::Q, StandardSet::R) => "rationalToReal",
+                    (StandardSet::Q, StandardSet::C) => "rationalToComplex",
+                    _ => {
+                        return Err(LeanCompileError::unsupported(
+                            "StructuralMembership/StandardSuperset",
+                        ))
+                    }
+                };
+                let child = self.compile_structural(child, position)?;
+                Ok(format!(
+                    "(Litex.{bridge} {} {child})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::KnownSubset(_) => Err(LeanCompileError::unsupported(
+                "StructuralMembership/KnownSubset",
+            )),
+            StructuralMembershipReason::Add { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Add, position)
+            }
+            StructuralMembershipReason::Sub { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Sub, position)
+            }
+            StructuralMembershipReason::Mul { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Mul, position)
+            }
+            StructuralMembershipReason::Div { left, right } => {
+                self.compile_structural_binary(proof, left, right, BinaryArithmetic::Div, position)
+            }
+            StructuralMembershipReason::Neg { argument } => {
+                let operand = match &proof.element {
+                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => x.arg.as_ref(),
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "StructuralMembership/NegSubject",
+                            "Negation membership evidence has another constructor.",
+                        ))
+                    }
+                };
+                if operand.ir() != argument.element.ir() || proof.set != argument.set {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/NegChild",
+                        "Negation membership changes its operand or carrier.",
+                    ));
+                }
+                let child = self.compile_structural(argument, position)?;
+                match proof.set {
+                    StandardSet::C => Ok(format!(
+                        "(Litex.negInC {} {child})",
+                        self.compile_object_reference(operand, position)?
+                    )),
+                    StandardSet::R => Ok(format!(
+                        "(Litex.negInR {} {child})",
+                        self.compile_object_reference(operand, position)?
+                    )),
+                    StandardSet::Q => Ok(format!(
+                        "(Litex.negInQ {} {child})",
+                        self.compile_object_reference(operand, position)?
+                    )),
+                    StandardSet::Z => Ok(format!(
+                        "(Litex.negInZ {} {child})",
+                        self.compile_object_reference(operand, position)?
+                    )),
+                    _ => Err(LeanCompileError::unsupported(
+                        "StructuralMembership/NegCarrier",
+                    )),
+                }
+            }
+            StructuralMembershipReason::Abs { .. } => {
+                Err(LeanCompileError::unsupported("StructuralMembership/Abs"))
+            }
+            StructuralMembershipReason::Pow { base, exponent } => {
+                let power = match &proof.element {
+                    Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => x,
+                    _ => {
+                        return Err(LeanCompileError::new(
+                            "StructuralMembership/PowSubject",
+                            "Power membership evidence has another constructor.",
+                        ))
+                    }
+                };
+                let expected_exponent = if matches!(proof.set, StandardSet::N | StandardSet::Z) {
+                    StandardSet::N
+                } else {
+                    StandardSet::Z
+                };
+                if power.base.ir() != base.element.ir()
+                    || power.exponent.ir() != exponent.element.ir()
+                    || base.set != proof.set
+                    || exponent.set != expected_exponent
+                {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/PowChild",
+                        "Power membership changes its operand or integer carrier.",
+                    ));
+                }
+                let ha_c = self.compile_structural(base, position)?;
+                let he_z = self.compile_structural(exponent, position)?;
+                match proof.set {
+                    StandardSet::C => Ok(format!(
+                        "(Litex.powStructuralInC {} {ha_c} {he_z})",
+                        self.compile_object_reference(&proof.element, position)?
+                    )),
+                    StandardSet::R | StandardSet::Q => {
+                        let suffix = if proof.set == StandardSet::Q {
+                            "Q"
+                        } else {
+                            "R"
+                        };
+                        // Replay the actual integer-child certificate even though the
+                        // owned power WD already proves exponent identification.
+                        Ok(format!("(by\n  have _recorded_exp : Litex.In {} (Litex.Z (M := M)) := {he_z}\n  exact Litex.powStructuralIn{suffix} {} {ha_c}\n)", self.compile_object_reference(&power.exponent, position)?, self.compile_object_reference(&proof.element, position)?))
+                    }
+                    _ => Err(LeanCompileError::unsupported(
+                        "StructuralMembership/PowCarrier",
+                    )),
+                }
+            }
+            StructuralMembershipReason::Intrinsic(_) => Err(LeanCompileError::unsupported(
+                "StructuralMembership/Intrinsic",
+            )),
+        }?;
+        if proof.set == StandardSet::R {}
+        Ok(compiled)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_structural_binary(
+        &self,
+        root: &StructuralMembershipProof,
+        left: &StructuralMembershipProof,
+        right: &StructuralMembershipProof,
+        operation: BinaryArithmetic,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (a, b, name) = match (&root.element, operation) {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Add(x)), BinaryArithmetic::Add) => {
+                (x.left.as_ref(), x.right.as_ref(), "add")
+            }
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)), BinaryArithmetic::Sub) => {
+                (x.left.as_ref(), x.right.as_ref(), "sub")
+            }
+            (Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)), BinaryArithmetic::Mul) => {
+                (x.left.as_ref(), x.right.as_ref(), "mul")
+            }
+            (Obj::ArithmeticOperator(ArithmeticOperator::Div(x)), BinaryArithmetic::Div) => {
+                (x.left.as_ref(), x.right.as_ref(), "div")
+            }
+            _ => {
+                return Err(LeanCompileError::new(
+                    "StructuralMembership/ArithmeticSubject",
+                    "Arithmetic membership evidence has another constructor.",
+                ))
+            }
+        };
+        if left.element.ir() != a.ir()
+            || right.element.ir() != b.ir()
+            || left.set != root.set
+            || right.set != root.set
+        {
+            return Err(LeanCompileError::new(
+                "StructuralMembership/ArithmeticChild",
+                "Arithmetic membership changes its exact children or carrier.",
+            ));
+        }
+        let ha = self.compile_structural(left, position)?;
+        let hb = self.compile_structural(right, position)?;
+        match root.set {
+            StandardSet::C => {
+                let guard = if matches!(operation, BinaryArithmetic::Div) {
+                    format!(
+                        " ({}).wd.2.2",
+                        self.compile_object_reference(&root.element, position)?
+                    )
+                } else {
+                    String::new()
+                };
+                Ok(format!(
+                    "(Litex.{name}InC {} {} {ha} {hb}{guard})",
+                    self.compile_object_reference(a, position)?,
+                    self.compile_object_reference(b, position)?
+                ))
+            }
+            StandardSet::R | StandardSet::Q => {
+                let suffix = if root.set == StandardSet::Q { "Q" } else { "R" };
+                let guard = if matches!(operation, BinaryArithmetic::Div) {
+                    format!(
+                        " ({}).wd.2.2",
+                        self.compile_object_reference(&root.element, position)?
+                    )
+                } else {
+                    String::new()
+                };
+                Ok(format!(
+                    "(Litex.{name}In{suffix} {} {} {ha} {hb}{guard})",
+                    self.compile_object_reference(a, position)?,
+                    self.compile_object_reference(b, position)?
+                ))
+            }
+            _ => Err(LeanCompileError::unsupported(
+                "StructuralMembership/ArithmeticCarrier",
+            )),
+        }
+    }
+}

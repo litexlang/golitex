@@ -248,41 +248,44 @@ pub(crate) fn decode_line_file(value: &JsonValue) -> Result<SourceLine, KbCodecE
 }
 
 pub(crate) fn encode_code_source(origin: &CodeSource) -> Result<JsonValue, KbCodecError> {
+    let (tag, path) = match origin {
+        CodeSource::Eval => ("Eval", None),
+        CodeSource::Repl => ("Repl", None),
+        CodeSource::Real(path) => ("Real", Some(path)),
+        CodeSource::RootExport { path, .. } => ("RootExport", Some(path)),
+        CodeSource::ImportedExport { path, .. } => ("ImportedExport", Some(path)),
+    };
+    let mut fields = vec![("tag".into(), JsonValue::String(tag.into()))];
+    if let Some(path) = path {
+        let path = path
+            .to_str()
+            .ok_or_else(|| KbCodecError::Unsupported("CodeSource path is not UTF-8".into()))?;
+        fields.push(("path".into(), JsonValue::String(path.into())));
+    }
     match origin {
-        CodeSource::Eval => Ok(JsonValue::object_from(vec![(
-            "tag".into(),
-            JsonValue::String("Eval".into()),
-        )])),
-        CodeSource::Repl => Ok(JsonValue::object_from(vec![(
-            "tag".into(),
-            JsonValue::String("Repl".into()),
-        )])),
-        CodeSource::StandaloneFile => Ok(JsonValue::object_from(vec![(
-            "tag".into(),
-            JsonValue::String("StandaloneFile".into()),
-        )])),
-        CodeSource::RootExport { export_file_id } => Ok(JsonValue::object_from(vec![
-            ("tag".into(), JsonValue::String("RootExport".into())),
-            (
+        CodeSource::RootExport { export_file_id, .. } => {
+            fields.push((
                 "export_file_id".into(),
                 JsonValue::Number(*export_file_id as f64),
-            ),
-        ])),
+            ));
+        }
         CodeSource::ImportedExport {
             global_mod_id,
             export_file_id,
-        } => Ok(JsonValue::object_from(vec![
-            ("tag".into(), JsonValue::String("ImportedExport".into())),
-            (
+            ..
+        } => {
+            fields.push((
                 "global_mod_id".into(),
                 JsonValue::Number(*global_mod_id as f64),
-            ),
-            (
+            ));
+            fields.push((
                 "export_file_id".into(),
                 JsonValue::Number(*export_file_id as f64),
-            ),
-        ])),
+            ));
+        }
+        CodeSource::Eval | CodeSource::Repl | CodeSource::Real(_) => {}
     }
+    Ok(JsonValue::object_from(fields))
 }
 
 pub(crate) fn decode_code_source(value: &JsonValue) -> Result<CodeSource, KbCodecError> {
@@ -290,11 +293,15 @@ pub(crate) fn decode_code_source(value: &JsonValue) -> Result<CodeSource, KbCode
     match JsonValue::get(map, "tag")?.as_str()? {
         "Eval" => Ok(CodeSource::Eval),
         "Repl" => Ok(CodeSource::Repl),
-        "StandaloneFile" => Ok(CodeSource::StandaloneFile),
+        "Real" => Ok(CodeSource::Real(
+            JsonValue::get(map, "path")?.as_str()?.into(),
+        )),
         "RootExport" => Ok(CodeSource::RootExport {
+            path: JsonValue::get(map, "path")?.as_str()?.into(),
             export_file_id: JsonValue::get(map, "export_file_id")?.as_u64()? as usize,
         }),
         "ImportedExport" => Ok(CodeSource::ImportedExport {
+            path: JsonValue::get(map, "path")?.as_str()?.into(),
             global_mod_id: JsonValue::get(map, "global_mod_id")?.as_u64()? as usize,
             export_file_id: JsonValue::get(map, "export_file_id")?.as_u64()? as usize,
         }),

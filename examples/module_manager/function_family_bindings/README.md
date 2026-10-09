@@ -2,7 +2,7 @@
 
 Task: repair Mechanics B11–B13 and related qualified-predicate projection after the 2026-10-02 user approval.
 
-Run the local declaration tracer as StandaloneFile, RootExport (`local.lit`) and ImportedExport (Rust fixture / library probes), and run `main.lit` for actual cross-module ownership:
+Run the local declaration tracer as `CodeSource::Real`, `CodeSource::RootExport` (`local.lit`) and `CodeSource::ImportedExport` (Rust fixture / library probes), and run `main.lit` for actual cross-module ownership:
 
 ```sh
 target/release/litex -strict -f examples/stmt_nodes/definition/local_function_family_bindings.lit

@@ -1,4 +1,4 @@
-use crate::ast::fact::{AtomicFact, NotSubsetFact};
+use crate::ast::fact::NotSubsetFact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};

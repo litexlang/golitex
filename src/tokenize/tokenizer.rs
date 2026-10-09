@@ -6,7 +6,7 @@ use super::symbols::{
     UNICODE_Z_NOT_ZERO, UNICODE_Z_POSITIVE, Z_NEGATIVE, Z_NOT_ZERO, Z_POSITIVE,
 };
 use super::token_block::TokenBlock;
-use crate::runtime::{RealOrVirtualPath, RuntimeParseError, RuntimeResult};
+use crate::runtime::{CodeSource, RuntimeParseError, RuntimeResult};
 
 pub struct Tokenizer;
 
@@ -15,11 +15,7 @@ impl Tokenizer {
         Self
     }
 
-    pub fn tokenize(
-        &self,
-        code: &str,
-        source_path: RealOrVirtualPath,
-    ) -> RuntimeResult<Vec<TokenBlock>> {
+    pub fn tokenize(&self, code: &str, source_path: CodeSource) -> RuntimeResult<Vec<TokenBlock>> {
         let stripped = self.strip_triple_quote_comment_blocks(code, &source_path)?;
         let joined = self.join_line_continuations(&stripped, &source_path)?;
         let lines: Vec<&str> = joined.lines().collect();
@@ -32,7 +28,7 @@ impl Tokenizer {
         &self,
         line: &str,
         line_no: usize,
-        source_path: &RealOrVirtualPath,
+        source_path: &CodeSource,
     ) -> RuntimeResult<String> {
         let mut out = String::with_capacity(line.len());
         let mut i = 0;
@@ -165,7 +161,7 @@ impl Tokenizer {
     fn strip_triple_quote_comment_blocks(
         &self,
         source_code: &str,
-        source_path: &RealOrVirtualPath,
+        source_path: &CodeSource,
     ) -> RuntimeResult<String> {
         let mut in_comment = false;
         let mut open_line = 0;
@@ -212,7 +208,7 @@ impl Tokenizer {
     fn join_line_continuations(
         &self,
         source_code: &str,
-        source_path: &RealOrVirtualPath,
+        source_path: &CodeSource,
     ) -> RuntimeResult<String> {
         let mut lines: Vec<String> = source_code.lines().map(|line| line.to_string()).collect();
         let mut i = 0;
@@ -249,7 +245,7 @@ impl Tokenizer {
         lines: &[&str],
         i: &mut usize,
         base_indent: usize,
-        source_path: &RealOrVirtualPath,
+        source_path: &CodeSource,
     ) -> RuntimeResult<Vec<TokenBlock>> {
         let mut items = Vec::new();
         let mut body_indent = None;

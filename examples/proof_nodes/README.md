@@ -24,6 +24,15 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+## Function-space carriers
+
+[Free function-space parameters](atomic/by_known_forall/fnset_free_parameter_carrier.lit)
+shows a checked forall statement reused by a template whose set-builder
+carrier is a function space. Inner bound names may differ, while argument
+types, guards, result carriers and free owners remain checked. Focused
+`forall_fnset_free_parameter` tests reject mismatched signatures and binder
+capture.
+
 ## Real distance and binary extrema
 
 [Distance symmetry](equal/by_builtin_rule/abs_difference_symmetry.lit) and
@@ -1015,6 +1024,20 @@ The 2026-10-07 additions cover [integer reciprocal powers](equal/by_builtin_rule
 Each property has its own strict runnable file and dedicated rule evidence. Monotonicity retains the actual argument orders; an unchanged argument carries structural identity evidence. Quotient WD retains the nonzero denominators. A guarded universal may need the existing source-order introduction when upfront WD cannot reuse the whole stored proposition. The `legacy_six_simple_bt_tests` regressions cover exact original sources, false and invalid-domain boundaries, inherited permissions, repeat/alpha reuse, failed publication, detailed premises, graph edges and all output locales. `run_examples_legacy_six_simple_bt_tracers` collects the 16 dedicated examples; it does not claim whole-corpus coverage.
 
 ## Absolute-value positivity and nonnegative square order
+
+The selected scalar bt tracers check [two-pair subtraction](atomic/by_builtin_rule/subtraction_order_pairs.lit),
+[absolute square-radius bounds](atomic/by_builtin_rule/abs_square_radius.lit),
+[weak](atomic/by_builtin_rule/quotient_scalar_upper_bound.lit) and
+[strict](atomic/by_builtin_rule/quotient_scalar_strict_upper_bound.lit) positive-denominator
+quotient upper bounds, and [exact integer quotients](atomic/by_builtin_rule/exact_integer_quotient.lit).
+The [absolute denominator consumer](atomic/by_builtin_rule/abs_nonzero_denominator_consumer.lit)
+checks existing nonzero support without adding a duplicate rule. Each new leaf
+retains its actual guard evidence at the inherited premise ceiling. The
+`selected_scalar_bt_rules_tests` suite includes the dedicated example collector,
+false/missing-guard controls, restricted permissions, rollback, all output
+languages and explicitly unsupported Lean compilation. Exact integer quotient
+typing permits either divisor sign with the stated `b!=0` and zero remainder;
+it does not infer natural-number membership or general rational quotient integrality.
 
 [Absolute-value positivity](atomic/by_builtin_rule/abs_positive_from_nonzero.lit)
 consumes the real argument's nonzero evidence.

@@ -61,7 +61,7 @@ impl Runtime {
         &mut self,
         stmt: &ObtainObjFromAtomicFact,
     ) -> RuntimeResult<ExecObtainObjFromAtomicFactStmtResult> {
-        let prop_name = stmt.fact.predicate.local_name();
+        let _prop_name = stmt.fact.predicate.local_name();
         if self
             .def_abstract_prop_visible(&stmt.fact.predicate)
             .is_some()

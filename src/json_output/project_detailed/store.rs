@@ -1,11 +1,10 @@
 //! Store / infer helpers for Detailed projection (`local_env` omitted).
 
-use crate::execute::execute_fact_stmt::VerifyFactResult;
 use crate::execute::StoreHaveObjAndInferResult;
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
-use crate::runtime::{FactId, Runtime};
-use crate::store_fact_and_infer::StoreFactAndInferResult;
+use crate::prelude::*;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualityResult, InferFactResult};
 
 pub(super) fn project_verify_facts(facts: &[VerifyFactResult], runtime: &Runtime) -> JsonValue {
     JsonValue::Array(
@@ -41,13 +40,187 @@ pub(super) fn project_store_and_infer(
         .filter(|id| !store_ids.contains(id))
         .map(|id| fact_id_entry(runtime, id))
         .collect();
-    object_for(
-        runtime,
-        vec![
-            ("stores", JsonValue::Array(stores)),
-            ("infers", JsonValue::Array(infers)),
-        ],
-    )
+    let mut entries = vec![
+        ("stores", JsonValue::Array(stores)),
+        ("infers", JsonValue::Array(infers)),
+    ];
+    let cancellation_rules = project_cancellation_infer(&node.infer, runtime);
+    if !cancellation_rules.is_empty() {
+        entries.push(("cancellation_rules", JsonValue::Array(cancellation_rules)));
+    }
+    object_for(runtime, entries)
+}
+
+fn project_cancellation_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+    let mut rules = Vec::new();
+    match infer {
+        InferFactResult::AtomicFact(atomic) => {
+            rules.extend(project_cancellation_atomic(atomic, runtime))
+        }
+        InferFactResult::AndFact(and) => {
+            for atomic in &and.components {
+                rules.extend(project_cancellation_atomic(atomic, runtime));
+            }
+        }
+        InferFactResult::ChainFact(chain) => {
+            for atomic in &chain.adjacent_infers {
+                rules.extend(project_cancellation_atomic(atomic, runtime));
+            }
+            for closure in &chain.transitive_closures {
+                rules.extend(project_cancellation_infer(&closure.derived.infer, runtime));
+            }
+        }
+        InferFactResult::OrFact(_)
+        | InferFactResult::ExistShapedFact(_)
+        | InferFactResult::NotForallFact(_)
+        | InferFactResult::ForallFact(_)
+        | InferFactResult::ForallFactWithIff(_) => {}
+    }
+    rules
+}
+
+fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+    let InferAtomicFactResult::EqualFact(infer) = infer else {
+        return Vec::new();
+    };
+    let mut rules = Vec::new();
+    for rule in infer {
+        match rule {
+            InferEqualityResult::AdditiveCancellation(r) => rules.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string("AdditiveCancellation")),
+                    ("source", fact_id_entry(runtime, r.source_fact_id)),
+                    ("common_operand", string(r.common_operand.readable_string())),
+                    (
+                        "left_in_c_proof",
+                        super::verify::project_verify_fact(&r.left_in_c_proof, runtime),
+                    ),
+                    (
+                        "right_in_c_proof",
+                        super::verify::project_verify_fact(&r.right_in_c_proof, runtime),
+                    ),
+                    (
+                        "common_in_c_proof",
+                        super::verify::project_verify_fact(&r.common_in_c_proof, runtime),
+                    ),
+                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                ],
+            )),
+            InferEqualityResult::NonzeroFactorCancellation(r) => rules.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string("NonzeroFactorCancellation")),
+                    ("source", fact_id_entry(runtime, r.source_fact_id)),
+                    ("common_operand", string(r.common_operand.readable_string())),
+                    (
+                        "left_in_c_proof",
+                        super::verify::project_verify_fact(&r.left_in_c_proof, runtime),
+                    ),
+                    (
+                        "right_in_c_proof",
+                        super::verify::project_verify_fact(&r.right_in_c_proof, runtime),
+                    ),
+                    (
+                        "common_in_c_proof",
+                        super::verify::project_verify_fact(&r.common_in_c_proof, runtime),
+                    ),
+                    (
+                        "factor_nonzero_proof",
+                        super::verify::project_verify_fact(&r.factor_nonzero_proof, runtime),
+                    ),
+                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                ],
+            )),
+            InferEqualityResult::SubtractiveCancellation(r) => rules.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string("SubtractiveCancellation")),
+                    ("source", fact_id_entry(runtime, r.source_fact_id)),
+                    ("common_operand", string(r.common_operand.readable_string())),
+                    (
+                        "left_in_c_proof",
+                        super::verify::project_verify_fact(&r.left_in_c_proof, runtime),
+                    ),
+                    (
+                        "right_in_c_proof",
+                        super::verify::project_verify_fact(&r.right_in_c_proof, runtime),
+                    ),
+                    (
+                        "common_in_c_proof",
+                        super::verify::project_verify_fact(&r.common_in_c_proof, runtime),
+                    ),
+                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                ],
+            )),
+            InferEqualityResult::CommonDenominatorCancellation(r) => rules.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string("CommonDenominatorCancellation")),
+                    ("source", fact_id_entry(runtime, r.source_fact_id)),
+                    ("common_operand", string(r.common_operand.readable_string())),
+                    (
+                        "left_in_c_proof",
+                        super::verify::project_verify_fact(&r.left_in_c_proof, runtime),
+                    ),
+                    (
+                        "right_in_c_proof",
+                        super::verify::project_verify_fact(&r.right_in_c_proof, runtime),
+                    ),
+                    (
+                        "common_in_c_proof",
+                        super::verify::project_verify_fact(&r.common_in_c_proof, runtime),
+                    ),
+                    (
+                        "denominator_nonzero_proof",
+                        super::verify::project_verify_fact(&r.denominator_nonzero_proof, runtime),
+                    ),
+                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                ],
+            )),
+            InferEqualityResult::NonzeroNumeratorCancellation(r) => rules.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string("NonzeroNumeratorCancellation")),
+                    ("source", fact_id_entry(runtime, r.source_fact_id)),
+                    ("common_operand", string(r.common_operand.readable_string())),
+                    (
+                        "left_in_c_proof",
+                        super::verify::project_verify_fact(&r.left_in_c_proof, runtime),
+                    ),
+                    (
+                        "right_in_c_proof",
+                        super::verify::project_verify_fact(&r.right_in_c_proof, runtime),
+                    ),
+                    (
+                        "common_in_c_proof",
+                        super::verify::project_verify_fact(&r.common_in_c_proof, runtime),
+                    ),
+                    (
+                        "numerator_nonzero_proof",
+                        super::verify::project_verify_fact(&r.numerator_nonzero_proof, runtime),
+                    ),
+                    (
+                        "left_denominator_nonzero_proof",
+                        super::verify::project_verify_fact(
+                            &r.left_denominator_nonzero_proof,
+                            runtime,
+                        ),
+                    ),
+                    (
+                        "right_denominator_nonzero_proof",
+                        super::verify::project_verify_fact(
+                            &r.right_denominator_nonzero_proof,
+                            runtime,
+                        ),
+                    ),
+                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                ],
+            )),
+            InferEqualityResult::PositiveRealPower(_) => {}
+        }
+    }
+    rules
 }
 
 pub(super) fn project_have_store_ids(fact_ids: &[FactId], runtime: &Runtime) -> JsonValue {

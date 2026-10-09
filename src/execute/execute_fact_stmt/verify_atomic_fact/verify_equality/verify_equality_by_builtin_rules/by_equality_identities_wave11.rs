@@ -6,16 +6,15 @@ use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, LessFact, SubsetFact,
 };
 use crate::ast::obj::{
-    Add, AnonymousFn, ArithmeticOperator, Cart, ClosedRange, ExpLogOperator, FiniteSetReduce,
+    Add, AnonymousFn, ArithmeticOperator, ClosedRange, ExpLogOperator, FiniteSetReduce,
     FiniteSetSize, FiniteSetStat, FnObj, FnObjHead, FunctionSpace, Intersect, IteratedOperator,
-    ListSet, Literal, Log, Number, Obj, Pow, Product, ProductShape, Reduce,
-    SetFormer, SetMinus, SetOperator, Sub, Sum, SumOfFiniteSet, Tuple, Union,
+    ListSet, Literal, Log, Number, Obj, Pow, Product, Reduce,
+    SetFormer, SetMinus, SetOperator, Sub, Sum, SumOfFiniteSet, Union,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::anonymous_fns_alpha_equal;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize;
 
 // Builtin UnionAbsorptionFromSubset: A ⊆ B ⇒ union(A, B) = B (either operand order).
 // Example: have A set; have B set; trust A $subset B; union(A, B) = B.

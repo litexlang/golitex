@@ -1,7 +1,7 @@
 use super::result::*;
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, NotEqualFact};
 use crate::ast::obj::{
-    FnObj, FnObjHead, FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator,
+    FnObj, FnObjHead, FunctionSpace, IntervalObj, Obj, SetFormer, SetOperator,
     StandardSet, StructAndFieldAccessObj,
 };
 use crate::ast::param::SetBoundParameterList;

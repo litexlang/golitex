@@ -246,10 +246,11 @@ fn imported_mod_context_qualifies_with_mod_id() {
         .global_module_manager
         .set_current_mod_id(Some(mod_id))
         .expect("set_current_mod_id");
-    runtime.set_code_source(crate::runtime::CodeSource::ImportedExport {
+    runtime.current_file = crate::runtime::CodeSource::ImportedExport {
+        path: "test.lit".into(),
         global_mod_id: mod_id,
         export_file_id: 0,
-    });
+    };
 
     let tokens = Tokenizer::new()
         .tokenize("have x R", runtime.current_file.clone())

@@ -793,7 +793,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SinArcsinLeftInverse")),
             ];
@@ -801,7 +801,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::CosArccosLeftInverse(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CosArccosLeftInverse")),
             ];
@@ -809,7 +809,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::TanArctanLeftInverse(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("TanArctanLeftInverse")),
             ];
@@ -817,7 +817,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::CotArccotLeftInverse(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CotArccotLeftInverse")),
             ];
@@ -869,7 +869,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArcsinExactZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArcsinExactZero")),
             ];
@@ -877,7 +877,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArcsinExactOne(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArcsinExactOne")),
             ];
@@ -885,7 +885,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArcsinExactNegOne(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArcsinExactNegOne")),
             ];
@@ -893,7 +893,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArccosExactOne(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArccosExactOne")),
             ];
@@ -901,7 +901,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArccosExactZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArccosExactZero")),
             ];
@@ -909,7 +909,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArccosExactNegOne(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArccosExactNegOne")),
             ];
@@ -917,7 +917,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArctanExactZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArctanExactZero")),
             ];
@@ -925,7 +925,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ArccotExactZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ArccotExactZero")),
             ];
@@ -1007,7 +1007,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::OneToAnyPower(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("OneToAnyPower")),
             ];
@@ -1037,7 +1037,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SqrtZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SqrtZero")),
             ];
@@ -1045,7 +1045,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SqrtOne(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SqrtOne")),
             ];
@@ -1086,7 +1086,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::AbsOfNegation(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("AbsOfNegation")),
             ];
@@ -1094,7 +1094,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::AbsProduct(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("AbsProduct")),
             ];
@@ -1102,7 +1102,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::AbsSquare(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("AbsSquare")),
             ];
@@ -1241,7 +1241,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ModOne(p) => {
-            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ModOne"))];
+            let entries = vec![("type", string("builtin_rule")), ("rule", string("ModOne"))];
             let _ = p;
             object_for(runtime, entries)
         }
@@ -1279,7 +1279,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::MinIdempotent(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("MinIdempotent")),
             ];
@@ -1287,7 +1287,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::MaxIdempotent(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("MaxIdempotent")),
             ];
@@ -1295,7 +1295,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::MinCommutative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("MinCommutative")),
             ];
@@ -1303,7 +1303,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::MaxCommutative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("MaxCommutative")),
             ];
@@ -1311,7 +1311,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::AbsAbsAbsorption(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("AbsAbsAbsorption")),
             ];
@@ -1330,7 +1330,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::LnOfExp(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("LnOfExp")),
             ];
@@ -1393,7 +1393,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SqrtOfSquareEqualsAbs(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SqrtOfSquareEqualsAbs")),
             ];
@@ -1401,7 +1401,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::QuotByOne(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("QuotByOne")),
             ];
@@ -1420,7 +1420,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::LcmCommutative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("LcmCommutative")),
             ];
@@ -1428,7 +1428,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("LcmIdempotentAbs")),
             ];
@@ -1436,7 +1436,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::GcdCommutative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("GcdCommutative")),
             ];
@@ -1444,7 +1444,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("GcdIdempotentAbs")),
             ];
@@ -1573,7 +1573,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::GcdDividesArgument(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("GcdDividesArgument")),
             ];
@@ -1581,7 +1581,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ProductModFactorZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ProductModFactorZero")),
             ];
@@ -1637,7 +1637,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SignOfNegation(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SignOfNegation")),
             ];
@@ -1645,7 +1645,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SignTimesAbsEqualsArg(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SignTimesAbsEqualsArg")),
             ];
@@ -1653,7 +1653,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::AbsEqualsSignTimesArg(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("AbsEqualsSignTimesArg")),
             ];
@@ -1661,7 +1661,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SignOfProduct(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SignOfProduct")),
             ];
@@ -1680,7 +1680,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("QuotEuclideanDecomposition")),
             ];
@@ -1688,7 +1688,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ModDividendMinusRemainderZero")),
             ];
@@ -1707,7 +1707,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("MinusOneOddNaturalPower")),
             ];
@@ -1715,7 +1715,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("LcmGcdProductAbs")),
             ];
@@ -1723,7 +1723,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::UnionEmptyRight(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("UnionEmptyRight")),
             ];
@@ -1731,7 +1731,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::UnionEmptyLeft(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("UnionEmptyLeft")),
             ];
@@ -1739,7 +1739,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IntersectEmptyRight(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IntersectEmptyRight")),
             ];
@@ -1747,7 +1747,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IntersectEmptyLeft(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IntersectEmptyLeft")),
             ];
@@ -1755,7 +1755,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetMinusSelfEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetMinusSelfEmpty")),
             ];
@@ -1763,7 +1763,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetMinusEmptyRight(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetMinusEmptyRight")),
             ];
@@ -1771,7 +1771,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetMinusEmptyLeft(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetMinusEmptyLeft")),
             ];
@@ -1779,7 +1779,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::UnionCommutative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("UnionCommutative")),
             ];
@@ -1787,7 +1787,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IntersectCommutative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IntersectCommutative")),
             ];
@@ -1795,7 +1795,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::UnionIdempotent(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("UnionIdempotent")),
             ];
@@ -1803,7 +1803,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IntersectIdempotent(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IntersectIdempotent")),
             ];
@@ -1844,7 +1844,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::UnionAssociative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("UnionAssociative")),
             ];
@@ -1852,7 +1852,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IntersectAssociative(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IntersectAssociative")),
             ];
@@ -1860,7 +1860,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IntersectUnionDistributive(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IntersectUnionDistributive")),
             ];
@@ -1868,7 +1868,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetMinusUnionDeMorgan(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetMinusUnionDeMorgan")),
             ];
@@ -1876,7 +1876,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetMinusIntersectDeMorgan(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetMinusIntersectDeMorgan")),
             ];
@@ -1884,7 +1884,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IntersectSetMinusSelfEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IntersectSetMinusSelfEmpty")),
             ];
@@ -1892,7 +1892,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSetSumEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetSumEmpty")),
             ];
@@ -1900,7 +1900,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSetProductEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetProductEmpty")),
             ];
@@ -1908,7 +1908,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSetReduceEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetReduceEmpty")),
             ];
@@ -1997,7 +1997,7 @@ pub(super) fn project_equality_builtin_rule(
             ],
         ),
         EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetSizeSetMinus")),
             ];
@@ -2005,7 +2005,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetSizeUnion")),
             ];
@@ -2013,7 +2013,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ClosedRangeSingletonListSet")),
             ];
@@ -2043,7 +2043,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ReduceAddZeroEqualsSum(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ReduceAddZeroEqualsSum")),
             ];
@@ -2051,7 +2051,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetReduceAddZeroEqualsSum")),
             ];
@@ -2070,7 +2070,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::UnionSetMinusDecomposition(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("UnionSetMinusDecomposition")),
             ];
@@ -2078,7 +2078,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetMinusIntersectSelf(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetMinusIntersectSelf")),
             ];
@@ -2086,7 +2086,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ReOfImaginaryUnit(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ReOfImaginaryUnit")),
             ];
@@ -2094,7 +2094,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ImgOfImaginaryUnit(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ImgOfImaginaryUnit")),
             ];
@@ -2102,7 +2102,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ReOfRealEmbedding(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ReOfRealEmbedding")),
             ];
@@ -2110,7 +2110,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ImgOfRealEmbedding(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ImgOfRealEmbedding")),
             ];
@@ -2118,7 +2118,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ReOfRealPlusI(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ReOfRealPlusI")),
             ];
@@ -2126,7 +2126,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ImgOfRealPlusI(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ImgOfRealPlusI")),
             ];
@@ -2134,7 +2134,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ComplexAbsOfImaginaryUnit(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ComplexAbsOfImaginaryUnit")),
             ];
@@ -2211,7 +2211,7 @@ pub(super) fn project_equality_builtin_rule(
             ],
         ),
         EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("EulerEqualsExpOne")),
             ];
@@ -2219,7 +2219,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::LnOfEuler(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("LnOfEuler")),
             ];
@@ -2249,7 +2249,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ReOfRealPlusImagScaled")),
             ];
@@ -2257,7 +2257,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ImgOfRealPlusImagScaled")),
             ];
@@ -2265,7 +2265,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ComplexAbsOfNonnegReal")),
             ];
@@ -2273,7 +2273,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ComplexAbsOfImagScaled(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ComplexAbsOfImagScaled")),
             ];
@@ -2281,7 +2281,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ClosedRangeLiteralExpansion")),
             ];
@@ -2289,7 +2289,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::RangeLiteralExpansion(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("RangeLiteralExpansion")),
             ];
@@ -2297,7 +2297,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("PowerSetOfEmpty")),
             ];
@@ -2305,7 +2305,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::PowerSetOfSingleton(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("PowerSetOfSingleton")),
             ];
@@ -2313,7 +2313,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FamilyUnionOfEmpty")),
             ];
@@ -2337,7 +2337,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CartWithEmptyFactor")),
             ];
@@ -2345,7 +2345,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("UnionOverIntersectDistributive")),
             ];
@@ -2353,7 +2353,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetMinusChainToUnion")),
             ];
@@ -2427,7 +2427,7 @@ pub(super) fn project_equality_builtin_rule(
             ],
         ),
         EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SeqEqualsFnOnNPos")),
             ];
@@ -2435,7 +2435,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSeqEqualsFnOnOneBasedDomain")),
             ];
@@ -2443,7 +2443,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IndexUnionEmptyIndex(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IndexUnionEmptyIndex")),
             ];
@@ -2451,7 +2451,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IndexIntersectEmptyIndex(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IndexIntersectEmptyIndex")),
             ];
@@ -2459,7 +2459,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IndexCartEmptyIndex(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IndexCartEmptyIndex")),
             ];
@@ -2467,7 +2467,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::IndexUnionSingleton(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("IndexUnionSingleton")),
             ];
@@ -2475,7 +2475,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSeqZeroEqualsFnOnEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSeqZeroEqualsFnOnEmpty")),
             ];
@@ -2483,7 +2483,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SetBuilderObviouslyEmpty(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SetBuilderObviouslyEmpty")),
             ];
@@ -2491,7 +2491,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ComplexAbsSquaredOfRectForm")),
             ];
@@ -2499,7 +2499,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ExpOfSum(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ExpOfSum")),
             ];
@@ -2530,7 +2530,7 @@ pub(super) fn project_equality_builtin_rule(
             ],
         ),
         EqualitySearchProofByBuiltinRule::ReOfProduct(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ReOfProduct")),
             ];
@@ -2538,7 +2538,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::ImgOfProduct(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ImgOfProduct")),
             ];
@@ -2546,7 +2546,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SinOfSum(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SinOfSum")),
             ];
@@ -2554,7 +2554,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::CosOfSum(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CosOfSum")),
             ];
@@ -2573,7 +2573,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSetSumFubiniSwap(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetSumFubiniSwap")),
             ];
@@ -2581,7 +2581,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::FiniteSetSumOverCartesianProduct(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("FiniteSetSumOverCartesianProduct")),
             ];
@@ -2589,7 +2589,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SinOfZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SinOfZero")),
             ];
@@ -2597,7 +2597,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::CosOfZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CosOfZero")),
             ];
@@ -2605,7 +2605,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::TanOfZero(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("TanOfZero")),
             ];
@@ -2613,7 +2613,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SinOfHalfPi(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SinOfHalfPi")),
             ];
@@ -2621,7 +2621,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::CosOfPi(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CosOfPi")),
             ];
@@ -2629,7 +2629,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::SinOfPi(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("SinOfPi")),
             ];
@@ -2637,7 +2637,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::CotOfHalfPi(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CotOfHalfPi")),
             ];
@@ -2645,7 +2645,7 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::PythagoreanIdentity(p) => {
-            let mut entries = vec![
+            let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("PythagoreanIdentity")),
             ];

@@ -154,7 +154,7 @@ impl Runtime {
                 match identifier {
                     IdentifierObj::Plain { id, .. } if *id != stored_id => return None,
                     IdentifierObj::WithExportFileId { export_file_id, .. }
-                        if self.code_source.is_live_root_export(*export_file_id) =>
+                        if self.current_file.is_live_root_export(*export_file_id) =>
                     {
                         if self.parse_scope_stack.first()?.plain.get(plain) != Some(&stored_id) {
                             return None;
@@ -165,7 +165,7 @@ impl Runtime {
                         export_file_id,
                         ..
                     } if self
-                        .code_source
+                        .current_file
                         .is_live_imported_export(*global_mod_id, *export_file_id) =>
                     {
                         if self.parse_scope_stack.first()?.plain.get(plain) != Some(&stored_id) {
@@ -228,7 +228,7 @@ impl Runtime {
                 .finished_export_exec_env(None, *export_file_id)
                 .and_then(|env| lookup(env, plain))
                 .or_else(|| {
-                    if self.code_source.is_live_root_export(*export_file_id) {
+                    if self.current_file.is_live_root_export(*export_file_id) {
                         for env in self.execution_environments_stack.iter().rev() {
                             if let Some(def) = lookup(env, plain) {
                                 return Some(def);
@@ -246,7 +246,7 @@ impl Runtime {
                 .and_then(|env| lookup(env, plain))
                 .or_else(|| {
                     if self
-                        .code_source
+                        .current_file
                         .is_live_imported_export(*global_mod_id, *export_file_id)
                     {
                         for env in self.execution_environments_stack.iter().rev() {

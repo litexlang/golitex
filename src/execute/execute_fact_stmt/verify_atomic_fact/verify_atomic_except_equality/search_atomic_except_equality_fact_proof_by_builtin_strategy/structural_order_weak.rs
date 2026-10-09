@@ -830,14 +830,6 @@ fn as_mul(obj: &Obj) -> Option<(Obj, Obj)> {
         _ => None,
     }
 }
-fn as_div(obj: &Obj) -> Option<(Obj, Obj)> {
-    match obj {
-        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => {
-            Some((x.left.as_ref().clone(), x.right.as_ref().clone()))
-        }
-        _ => None,
-    }
-}
 fn as_pow(obj: &Obj) -> Option<(Obj, Obj)> {
     match obj {
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {

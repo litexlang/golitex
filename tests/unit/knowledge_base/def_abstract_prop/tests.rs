@@ -4,7 +4,6 @@ use crate::knowledge_base::{
     load_def_abstract_prop, store_def_abstract_prop, write_def_abstract_prop,
 };
 use crate::runtime::CodeSource;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 const FIXTURE: &str = include_str!(
@@ -15,7 +14,13 @@ fn sample() -> DefAbstractPropStmt {
     DefAbstractPropStmt {
         name: "marked".to_string(),
         params: vec!["x".to_string()],
-        line_file: SourceLine::new(1, CodeSource::RootExport { export_file_id: 0 }),
+        line_file: SourceLine::new(
+            1,
+            CodeSource::RootExport {
+                path: "test.lit".into(),
+                export_file_id: 0,
+            },
+        ),
     }
 }
 

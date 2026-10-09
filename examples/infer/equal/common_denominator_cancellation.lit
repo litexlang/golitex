@@ -1,0 +1,27 @@
+# Tracer: CommonDenominatorCancellation; checked scalar quotients.
+# Before (failed at search_proof):
+# forall a, b C, k C*:
+#     a/k=b/k
+#     =>:
+#         a=b
+# Now: the common denominator's nonzero certificate is retained with a=b.
+# Boundary: zero/undefined denominator and crossed positions do not cancel.
+# Tests: tests/unit/execute/equality_cancellation/tests.rs
+# Owner: src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_equal_fact/infer_equal_fact_division_cancellation.rs
+# Run: target/release/litex -lang en -strict -f examples/infer/equal/common_denominator_cancellation.lit
+
+forall a, b C, k C*:
+    a/k=b/k
+    =>:
+        a=b
+
+forall a, b, x, y R:
+    x+y!=0
+    a/(x+y)=b/(x+y)
+    =>:
+        a=b
+
+forall b C, k C*:
+    0/k=b/k
+    =>:
+        b=0

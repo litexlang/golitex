@@ -185,14 +185,18 @@ fn runtime(strict: bool) -> Runtime {
 fn check(code: &str, expected: &[bool]) {
     for source in [
         CodeSource::Eval,
-        CodeSource::RootExport { export_file_id: 2 },
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 2,
+        },
         CodeSource::ImportedExport {
+            path: "test.lit".into(),
             global_mod_id: 3,
             export_file_id: 2,
         },
     ] {
         let mut rt = runtime(false);
-        rt.set_code_source(source);
+        rt.current_file = source;
         let result = rt.run_litex_code(code).unwrap();
         assert!(
             result.session_error.is_none(),

@@ -8,7 +8,7 @@ fn runtime(source: CodeSource) -> Runtime {
         strict: true,
         language: OutputLanguage::English,
     });
-    rt.set_code_source(source);
+    rt.current_file = source;
     rt
 }
 
@@ -16,7 +16,10 @@ fn rejected_binding(code: &str) {
     for source in [
         CodeSource::Eval,
         CodeSource::Repl,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 0,
+        },
     ] {
         let mut rt = runtime(source);
         let run = rt.run_litex_code(code).unwrap();
@@ -81,7 +84,10 @@ fn builtin_uses_similar_names_and_failed_binding_reuse_remain_valid() {
     for source in [
         CodeSource::Eval,
         CodeSource::Repl,
-        CodeSource::RootExport { export_file_id: 0 },
+        CodeSource::RootExport {
+            path: "test.lit".into(),
+            export_file_id: 0,
+        },
     ] {
         let mut rt = runtime(source);
         let run = rt.run_litex_code(code).unwrap();

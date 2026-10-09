@@ -7,7 +7,7 @@
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessEqualFact, LessFact};
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
-    Add, ArithmeticOperator, Div, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat,
+    Add, ArithmeticOperator, Div, FiniteSetMax, FiniteSetMin, FiniteSetStat,
     IntegerOperator, Literal, Mod, Mul, Number, Obj, SetOperator, Sub, Union,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::{

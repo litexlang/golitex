@@ -31,6 +31,10 @@ use crate::json_output::explain::text::text;
 impl LessFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => {
                 text("AbsPositiveFromNonzero", "x in R, x!=0 => 0<abs(x)")
             }
@@ -126,6 +130,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => {
                 text("非零实数的绝对值为正", "x in R, x!=0 => 0<abs(x)")
             }
@@ -220,6 +228,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => {
                 text("非零實數的絕對值為正", "x in R, x!=0 => 0<abs(x)")
             }
@@ -312,6 +324,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => text(
                 "Valeur absolue strictement positive",
                 "x in R, x!=0 => 0<abs(x)",
@@ -408,6 +424,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => text(
                 "Положительный модуль ненулевого числа",
                 "x in R, x!=0 => 0<abs(x)",
@@ -504,6 +524,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => text(
                 "Valor absoluto positivo de un real no nulo",
                 "x in R, x!=0 => 0<abs(x)",
@@ -600,6 +624,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => text(
                 "القيمة المطلقة للعدد الحقيقي غير الصفري موجبة",
                 "x in R, x!=0 => 0<abs(x)",
@@ -696,6 +724,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => {
                 text("非零実数の絶対値は正", "x in R, x!=0 => 0<abs(x)")
             }
@@ -791,6 +823,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => {
                 text("영이 아닌 실수의 절댓값은 양수", "x in R, x!=0 => 0<abs(x)")
             }
@@ -886,6 +922,10 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => {
+                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
+            }
+
             Self::AbsPositiveFromNonzero(_) => text(
                 "Giá trị tuyệt đối của số thực khác không là dương",
                 "x in R, x!=0 => 0<abs(x)",
@@ -997,6 +1037,8 @@ impl LessFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::QuotientScalarStrictUpperBound(_) => None,
+
             Self::ProductPositiveNegativeStrict(_)
             | Self::LnPositiveAboveOne(_)
             | Self::LnNegativeBelowOne(_) => None,

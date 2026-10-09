@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::ast::names::BoundName;
 use crate::ast::obj::{
     AnonymousFn, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FnSet,
     FunctionSpace, IdentifierObj, IntegerOperator, IteratedOperator, Literal, Obj, ProductShape,
@@ -47,14 +46,6 @@ fn collect_ternary(
     collect_free_plain_ids(a, bound, out);
     collect_free_plain_ids(b, bound, out);
     collect_free_plain_ids(c, bound, out);
-}
-
-pub fn free_plain_ids_in_subst(subst: &HashMap<IdentifierId, Obj>) -> HashSet<IdentifierId> {
-    let mut ids = HashSet::new();
-    for obj in subst.values() {
-        collect_free_plain_ids(obj, &HashSet::new(), &mut ids);
-    }
-    ids
 }
 
 pub fn collect_free_plain_ids(
@@ -345,18 +336,6 @@ pub fn binder_ids_from_set_bound_parameters(list: &SetBoundParameterList) -> Vec
         }
     }
     ids
-}
-
-pub fn binder_bound_names_from_set_bound_parameters(
-    list: &SetBoundParameterList,
-) -> Vec<BoundName> {
-    let mut names = Vec::new();
-    for group in &list.groups {
-        for param in &group.params {
-            names.push(param.clone());
-        }
-    }
-    names
 }
 
 impl Runtime {

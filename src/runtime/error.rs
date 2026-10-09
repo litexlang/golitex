@@ -1,4 +1,4 @@
-use super::real_or_virtual_path::RealOrVirtualPath;
+use super::code_source::CodeSource;
 use std::fmt;
 use std::path::PathBuf;
 
@@ -33,11 +33,11 @@ impl fmt::Display for RuntimeError {
 pub struct RuntimeParseError {
     pub message: String,
     pub line: usize,
-    pub path: RealOrVirtualPath,
+    pub path: CodeSource,
 }
 
 impl RuntimeParseError {
-    pub fn new(message: impl Into<String>, line: usize, path: RealOrVirtualPath) -> Self {
+    pub fn new(message: impl Into<String>, line: usize, path: CodeSource) -> Self {
         Self {
             message: message.into(),
             line,

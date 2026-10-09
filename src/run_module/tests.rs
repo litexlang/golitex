@@ -376,7 +376,7 @@ fn mount_cwd_config_empty_when_missing() {
         strict: false,
         language: OutputLanguage::English,
     });
-    runtime.abort_file();
+    runtime.abort_source();
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
     assert!(matches!(outcome, MountCwdConfigOutcome::Done));
 
@@ -402,7 +402,7 @@ fn mount_cwd_config_runs_exports() {
         strict: false,
         language: OutputLanguage::English,
     });
-    runtime.abort_file();
+    runtime.abort_source();
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
     assert!(matches!(outcome, MountCwdConfigOutcome::Done));
     assert_eq!(runtime.global_module_manager.root_exports().len(), 1);
@@ -429,7 +429,7 @@ fn mount_cwd_config_soft_fail_is_fail_to_import() {
         strict: false,
         language: OutputLanguage::English,
     });
-    runtime.abort_file();
+    runtime.abort_source();
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
     assert!(matches!(
         outcome,

@@ -6802,6 +6802,12 @@ its negation.
 > belongs to the equality-specific `ByTheyAreTheSame` stage, after WD and before
 > builtin rules. Bound names may differ; free identifiers, types and bodies
 > must correspond. This stage also runs with builtin entry disabled.
+> Known forall facts can also infer their free parameters inside FnSet
+> signatures, including function-space carriers of set builders. Signature
+> traversal proposes bindings; complete strict equality must still check
+> bound occurrences, argument types, guards and the return carrier. Local
+> signature binders cannot escape into those free bindings. See the
+> [function-space carrier tracer](../examples/proof_nodes/atomic/by_known_forall/fnset_free_parameter_carrier.lit).
 > Known `$in` reuses the same argument-equality pipeline. Its unified
 > `ByEquivalenceClass` stage can cite stored paths and compare peers once using
 > identity, permitted builtin rules, or restricted constructor matching. Peer
@@ -11568,6 +11574,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | Stored fact | Typical inferred information |
 |---|---|
 | Equality | Numeric values, simple linear solved values, tuple/cart/set-builder/sequence/function structure, and positive-real membership transported from a known power side. Literal `u-v=0` ⇒ `u=v` is verify-time `EqualFromKnownDifferenceZero`. |
+| Scalar arithmetic equality with a direct common operand | Cancel a common addend/minuend/subtrahend; cancel a certified nonzero common factor, denominator or numerator. Division retains its denominator nonzero conditions. No expansion, reassociation or alias matching. |
 | `by fn_extension` success | Ordinary object equality `f = g`, so known-equality congruence can use it. |
 | Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; `$dvd(x,y)` exposes `x % y = 0` and an integer multiple witness; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
 | Membership | Constructor-specific carrier, shape, bound, component, disjunction, or existential information listed below. |
@@ -11605,6 +11612,8 @@ have s set = cart(R, R)
 
 Typical consequences include:
 
+- scalar `a+k=b+k` publishes `a=b`; `a*k=b*k` does so only when `k!=0`
+  is already available at the restricted inference stage;
 - `u - v = 0` gives `u = v` when meaningful *(verify-time
   `EqualFromKnownDifferenceZero`, not eager infer)*;
 - `by fn_extension` stores the ordinary equality `f = g`;
@@ -11640,6 +11649,49 @@ The base may be negative. The declaration reuses the existing nonzero-real
 even-power rule before trying the positive-base route. Zero and complex bases
 do not satisfy that rule. Source WD and explicit proof checking retain their
 ordinary permissions. See the [square tracer](../examples/infer/equal/nonzero_real_square.lit).
+
+Direct scalar cancellation works across the standard numeric carriers,
+including complex numbers:
+
+| Stored equality | Required nonzero certificates | Published equality |
+| --- | --- | --- |
+| `a+k=b+k` | None | `a=b` |
+| `a-k=b-k` | None | `a=b` |
+| `k-a=k-b` | None | `a=b` |
+| `a*k=b*k` | `k!=0` | `a=b` |
+| `a/k=b/k` | `k!=0` | `a=b` |
+| `k/a=k/b` | `k!=0`, `a!=0`, `b!=0` | `a=b` |
+
+Addition and multiplication allow all four positions of the common operand.
+Subtraction and division require the common operand in the same position;
+`a-k=k-b` and `a/k=k/b` do not imply `a=b`.
+
+```litex
+forall a, b, k R:
+    k != 0
+    a * k = b * k
+    =>:
+        a = b
+```
+
+The product equality triggers inference; its source and the operand C-membership
+and nonzero proofs are retained. Premise checks inherit the caller's ceiling
+and use at most KnownSpecialProperty, without strategy or forall search.
+`k*a=b*k` is also supported. Matching requires a directly identical common
+operand; the rule does not expand or reassociate expressions, or chase aliases.
+Derived equality uses ordinary WD/store/infer and can trigger another strictly
+smaller cancellation. An already-known remaining equality is skipped.
+Zero or an unavailable required nonzero proof does not cancel; in particular,
+`0/a=0/b` supplies no equality of `a` and `b`. A quotient with an unproved or
+zero denominator fails WD before its source equality can be stored. A nonzero fact arriving
+after the product equality does not retrigger it; the equality can be restated
+once the certificate is present. These inference consequences are not yet
+replayed by the Lean compiler; a citation to one fails at `FactId/Producer`.
+See the [additive tracer](../examples/infer/equal/additive_cancellation.lit),
+[subtractive tracer](../examples/infer/equal/subtractive_cancellation.lit),
+[nonzero-factor tracer](../examples/infer/equal/nonzero_factor_cancellation.lit),
+[common-denominator tracer](../examples/infer/equal/common_denominator_cancellation.lit)
+and [nonzero-numerator tracer](../examples/infer/equal/nonzero_numerator_cancellation.lit).
 
 Inference is directional bookkeeping, not a license to solve any equation:
 

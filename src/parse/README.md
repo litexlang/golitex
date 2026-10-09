@@ -555,7 +555,7 @@ Iron rules (also in `mod.rs`):
 1. Plain atoms get `IdentifierId` (see `../identifier_identity.md`): no shadowing; no same-name nested binders.
 2. ParseScope maps plain name → id only.
 3. Do not store facts or read `ExecEnv` here.
-4. Errors: `RuntimeParseError` + path from `TokenBlock`; AST stamps `SourceLine` via live `CodeSource`.
+4. Errors, token blocks and AST `SourceLine` use one `CodeSource` for the source path and export identity. `Runtime.current_file` supplies the source for new input.
 
 Object-primary builtin spellings cannot be declared as user names, including
 parameters, fields and witnesses. The shared binder wrapper rejects them before

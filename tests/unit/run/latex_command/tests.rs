@@ -4,7 +4,7 @@ use crate::launch_command::{
     OutputLanguage,
 };
 use crate::run::{run_command, RunCommandOutcome};
-use crate::runtime::{CodeSource, RealOrVirtualPath, Runtime};
+use crate::runtime::{CodeSource, Runtime};
 
 #[test]
 fn latex_dispatch_is_parse_only_and_has_its_own_result() {
@@ -50,21 +50,15 @@ fn latex_dispatch_is_parse_only_and_has_its_own_result() {
 
 #[test]
 fn latex_runtime_provenance_tracks_each_input_kind() {
-    for (input, source, file) in [
-        (
-            LatexInput::Code("1 = 1".into()),
-            CodeSource::Eval,
-            RealOrVirtualPath::Eval,
-        ),
+    for (input, source) in [
+        (LatexInput::Code("1 = 1".into()), CodeSource::Eval),
         (
             LatexInput::File("identity.lit".into()),
-            CodeSource::StandaloneFile,
-            RealOrVirtualPath::Real("identity.lit".into()),
+            CodeSource::Real("identity.lit".into()),
         ),
         (
             LatexInput::Repository("project".into()),
-            CodeSource::StandaloneFile,
-            RealOrVirtualPath::Real("project".into()),
+            CodeSource::Real("project".into()),
         ),
     ] {
         let command = LaunchCommand::CompileToLatex {
@@ -74,8 +68,7 @@ fn latex_runtime_provenance_tracks_each_input_kind() {
         };
         let runtime = Runtime::new(command.clone());
         assert_eq!(runtime.launch_command, command);
-        assert_eq!(runtime.code_source, source);
-        assert_eq!(runtime.current_file, file);
+        assert_eq!(runtime.current_file, source);
         assert_eq!(runtime.execution_environments_stack.len(), 1);
         assert_eq!(runtime.parse_scope_stack.len(), 1);
     }

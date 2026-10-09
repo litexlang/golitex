@@ -1,177 +1,147 @@
 # Litex-to-Lean Compiler Implementation
 
-This module replays successful typed Litex execution results into Lean source.
-Its implementation and internal design rationale are documented here. The
-[compiler guide](../../docs/Litex_To_Lean_Compiler_Guide.md) owns the broader
-design principles and source/generated example walkthroughs;
-[CLI documentation](../../docs/cli.md#lean-compiler-boundary) owns invocation
-and output behavior.
+This module compiles the completed typed execution result into Lean source.
+The [compiler guide](../../docs/Litex_To_Lean_Compiler_Guide.md) explains source
+semantics and examples; [CLI documentation](../../docs/cli.md#lean-compiler-boundary)
+owns invocation and output behavior.
 
-## Entry point and owners
+## Public entrypoint
 
 ```rust
 let result = runtime.run_litex_code(&source)?;
-let compiler = LitexToLeanCompiler::new(&result, &runtime);
-let lean = compiler.compile(&artifact_namespace)?;
+let lean = LitexToLeanCompiler::new(&result, &runtime).compile(&namespace)?;
 ```
 
-| File | Responsibility |
-| --- | --- |
-| [litex_to_lean_compiler.rs](litex_to_lean_compiler.rs) | Own one artifact's replay state, validate the run, dispatch typed results, and return complete Lean source. |
-| [compile_run.rs](compile_run.rs) | Preserve the existing free-function API by delegating to LitexToLeanCompiler. |
-| [lean_compile_error.rs](lean_compile_error.rs) | Report the source statement index, evidence route, and rejection reason. |
-| [tests.rs](tests.rs) | Exercise supported replay and reject missing, changed, or out-of-scope evidence. |
-| [mod.rs](mod.rs) | Declare the module and export its public API. |
-| [../run/run_compile_to_lean.rs](../run/run_compile_to_lean.rs) | Execute `LaunchCommand::CompileToLean`, verify standalone source once, and return `CompileToLeanResult` while Runtime remains live. |
-| [../../lean/Litex.lean](../../lean/Litex.lean) | Define object semantics, certified constructors, and proved native bridges used by emitted terms. |
+The coordinator borrows only the completed `RunLitexCodeResult` and its original
+immutable `Runtime`. `compile_run` is a compatible convenience entrypoint. The
+CLI executes source once and compiles the result while Runtime remains alive.
+The complete artifact is returned only after every statement is compiled.
 
-`parse_launch_command` parses `-lean -f` into `LaunchCommand::CompileToLean`;
-`run_command` dispatches it and returns `RunCommandOutcome::CompileToLean`.
-The shared CLI output writer emits Lean source on stdout or a phase diagnostic
-on stderr. `main` uses the same entrypoint for every command.
+## Result dispatch and file ownership
 
-`LitexToLeanCompiler` borrows the completed typed result and the same live
-`Runtime` that produced it. It owns the replay scopes, identifier/fact/WD
-registries, universes and exported parameter context. `compile` consumes the
-instance: completed or partially failed replay state cannot be reused for a
-different artifact. The free `compile_run` function remains compatible and
-delegates to this same implementation.
+The layout mirrors `src/execute`: one dispatcher per existing result enum and
+separate files/folders for its mathematical branches. Methods belong to the
+same `LitexToLeanCompiler`; there are no mutable child compilers or parallel
+compiler result types.
 
-`Runtime` is borrowed only for exact citation resolution; it performs no second
-proof search for the compiler. Result references are not yet an owned closure
-that can survive Runtime disposal. Display strings and presentation JSON are
-not replay inputs.
+```text
+RunLitexCodeResult.statement_results
+  -> ExecStmtResult
+     -> ExecDefinitionStmtResult -> ExecDefineObjStmtResult / DefThm
+     -> ExecByStmtResult -> ByThm
+     -> ExecFactStmtResult -> VerifyFactResult
+        -> equality / atomic-except-equality / forall
+        -> selected searched_proof and its original children
+        -> object WD and its original constructor/domain evidence
+```
 
-## Replay pipeline
+The entrypoint owns run validation, namespace/header output and ordered traversal.
+Statement dispatch belongs to `compile_stmt_result`; leaf owners mirror let,
+have, theorem, by-theorem and fact-result branches. `source_position` reads the
+original result prefix/ancestors; `source_queries` resolves exact subjects.
+`compile_store_result` validates actual stores. Naming helpers spell existing source IDs;
+`lean_compile_error` reports source statement position and rejected route.
 
-`LitexToLeanCompiler::compile` rejects a failed or incomplete source run, then visits
-`statement_results` in order. It returns the assembled artifact only after
-every statement succeeds. It accepts supported fact statements, `let`, typed
-RHS `have`, ordinary numeric `have` contexts, named `thm`, and explicit `by thm` selections. Other statement and
-object families retain explicit unsupported branches.
+## Borrow the source tree; generate temporary output
 
-`compile_statement_in_scope` dispatches on `ExecStmtResult`. Fact results go to
-`compile_fact_statement`; definition results go to `compile_definition_statement`
-and its `ExecDefineObjStmtResult` dispatcher; by-results go to
-`compile_by_statement`. These are methods of the same state owner, not separate
-mutable compilers. Each handler then replays its existing typed child evidence.
+No persistent ObjectTerm, NumericTerm, FactTerm, NamedTheorem, OutputReference,
+EmittedFact, ContextParameter or output-scope registry is needed. Original
+parameters, facts, stores and selected proofs remain in the source results.
+Children return temporary Lean expressions; a proof renderer can return a
+proposition and proof string without copying the source fact.
 
-Aliases keep their source IdentifierIds and actual stored defining equalities.
-Their Lean definitions retain the certified RHS object rather than choosing a
-new carrier. A typed definition first replays the RHS membership proof. The
-current plain numeric profile rejects dependent carriers and struct opening.
-Actual ordered parameter-store trees are captured and their flattened ID views
-validated. The natural-membership nonnegative inference has an explicit replay;
-other uncompiled inferred producers still fail on citation.
+A source-position cursor contains only borrowed original result owners, parent
+positions and the current stage/child boundary. It identifies which source
+prefix is being compiled. For example, left-operand WD can be available before
+right-operand cached WD, while the statement's truth proof is still unavailable.
+It is neither another ExecEnv nor an object/fact/proof cache.
 
-Ordinary numeric `have` replays its type WD and actual nonempty certificate,
-then introduces a generic certified object plus its membership hypothesis.
-Exported definitions/theorems retain this source parameter context. The compiler
-does not select zero or change the object's host type. This stage supports
-standalone top-level numeric contexts; local arbitrary-have proof steps remain
-unsupported.
+Exact source IDs determine internal names. Stored alias equalities, supported
+inference and theorem-return projections have declarations at their actual
+producer stage. Temporary Verify children are not automatically stored facts;
+some obligations reuse the owning target FactId. Public `fact_<index>` and
+`named_thm_<index>` names retain their compatibility role.
 
-Named theorem results retain the original declaration, separate goal-formation
-WD scope, actual body parameter/domain introduction, ordered proof steps and
-conclusion proofs. Compilation checks this capture against the source statement
-and closes the local scope before publishing its theorem. Calls require the
-earlier compiled callee, validated parameter/domain proofs and the actual
-returned stores. Only direct, unreversed returned-atom selection is accepted;
-an independently true ambient goal cannot replace that citation.
+A declaration's parameters come from its original source position. Introducing
+another object later cannot extend an earlier theorem's signature. Generic
+hosts retain their own universe, Representation, certified Obj and ordinary
+membership hypothesis. Universes and parameter strings are rendered from
+source records, not retained in parallel compiler lists.
 
-For each fact, `compile_verify` dispatches on the successful `VerifyFactResult`
-and its selected `searched_proof`. It replays object WD before the truth proof,
-checks that the evidence subjects match the source objects/facts, validates
-storage, and registers the emitted fact for later citations. Additional
-inferred facts are not promoted to assumptions: citing an inference without
-a supported replayed producer is rejected.
+Some constructor types refer to an earlier local membership or domain proof.
+When that proof name occurs in an exported proposition, close the proposition
+over the necessary actual producer definitions as ordered Lean `let` values.
+These are proof expressions, not additional assumptions. Unused definitions
+are omitted, and the ordinary theorem statement remains definitionally equal
+to the source proposition.
 
-`compile_forall` pushes a `CompilerScope` carrying the result's captured local
-environment, introduces binders and assumptions, replays the body, and pops
-the scope on either success or error. Generic binders retain their host type,
-`Litex.Representation`, certified `Litex.Obj`, and membership hypotheses.
-Whole-forall reuse instead applies its recorded earlier producer after checking
-the exact ordered binder bijection, carriers, premises, conclusions and fixed
-free references. Its captured WD scope is replayed without searching its
-conclusions again.
+## Exact citation and scope checks
 
-## Internal representations
+Lookup reads earlier siblings and active source ancestors. At root, earlier
+exported statements are visible; their closed theorem/forall/call bodies are
+not. In a local result, only introductions, assumptions and completed stages
+are visible. Future siblings and later stages are unavailable.
 
-| Type | Role |
-| --- | --- |
-| `ObjectTerm` | Source object and its emitted certified Lean term, with optional numeric bridge evidence. |
-| `NumericTerm` | Native numeric value, denotation/member evidence and optional exact closed scalar derived from certified numeric constructors or definitions. |
-| `FactTerm` | Exact source fact, emitted proposition, and emitted proof. |
-| `CompilerScope` | Active identifier, object, fact-ID, WD-ID and named-theorem registries plus an optional captured environment. |
+Captured `local_env` and Runtime resolve exact FactId/WdId subjects only. A
+resolved subject is insufficient: a supported source producer must also occur
+in the visible original prefix. This preserves rejection of removed producers,
+future references, wrong subjects and closed-scope citations even if Runtime
+still holds a matching record. Unsupported inferred facts never become new
+hypotheses.
 
-Identifier IDs preserve binder identity, FactIds preserve citations, and
-WellDefinednessIds preserve cached construction dependencies. Object IR keys
-locate certified terms; they do not authorize discovering a new proof from a
-matching proposition. `resolve_fact` and `resolve_wd` resolve recorded subjects
-from captured scope/Runtime context, while producer registries require the
-corresponding evidence to have been replayed.
+Current results are not a standalone citation closure. Let retains stored IDs
+rather than the full store/infer result, and anonymous ByDef WD does not retain
+its later cache-registration ID. Root references also use live Runtime. Any
+Runtime-free compilation requires an explicit producer-capture design; it must
+not be simulated with a new compiler-owned store.
 
-## Adapter design and rejection boundaries
+## Mathematical adapters and support boundary
 
-Route-specific adapters consume the evidence variant selected by Litex.
-Reflexivity emits `Litex.sameRefl`; closed numeric calculations validate their
-exact endpoint certificates; rational normalization validates the supported
-expression domain and ordered nonzero requirements before emitting a native
-normalization proof through `Litex.NativeBridge`.
+Every object owns WD. Constructor compilation replays certified children and
+exact membership/nonzero/domain proofs before truth evidence. Arithmetic keeps
+Litex construction shape. Membership adds knowledge without choosing a new
+host type for a generic object.
 
-Equality-class replay checks ordered path edges, their exact active producers,
-orientations and endpoint identities; peer bridges replay their own WD and
-selected proof. Supported known atomic facts transport In, IsSet and inequality
-through their recorded argument equalities. Atomic builtin rewrite accepts
-bounded whole-argument numeric/known-equality substitution with its exact
-residual child and citations. Equality also supports the selected closed-numeric
-subtree rewrite through exact arithmetic constructor congruence and its actual
-residual proof. General known-equality subtree rewrites and function unfolding
-remain unsupported. Recorded numeric order duality is replayed separately. Numeric substitution preserves the recorded
-closed-expression endpoint and its source equality citation; a different closed
-residual is rejected rather than normalized into a replacement proof.
+Numeric denotation, C/R-membership and closed-value evidence are rendered by
+leaf helpers from actual source constructions and selected proofs. Removing a
+numeric cache does not remove these semantic bridges or authorize recovering
+a proof by target-shape matching.
 
-The rational adapter uses fixed `ring` or guarded `field_simp`/`ring` output.
-The empty Rational tag contains no monomial trace: Lean checks the emitted
-normalization proof itself. Do not describe this as replaying an unavailable
-low-level normalization trace, or replace the selected route with a theorem
-chosen by goal shape.
+Selected adapters include reflexivity, exact closed calculations, recorded
+rational normalization, scalar division relations, arithmetic congruence,
+equality paths, membership transport, supported numeric hierarchy and real
+order routes. Fixed `ring`/guarded normalization checks the source-selected
+certificate family; no independent target theorem search is performed. The
+source Rational tag does not contain a monomial trace, so Lean checks the
+normalization proof rather than replaying an unavailable low-level trace.
 
-The numeric hierarchy includes faithful Q membership and Q arithmetic closure.
-Real comparisons are ordinary `Litex.Le`/`Litex.Lt` facts based on real denotation
-witnesses. Predicate formation requires the two actual ordered R-membership
-stages. Scoped real certificates come only from replayed requirements,
-introductions or known-order evidence; they are never discovered by Env search.
-Selected closed comparisons consume typed `ClosedValuePair` and the comparison
-tag; normal strings remain presentation only. Supported weak-order adapters
-retain exact reflexivity objects, add premises, transitivity citations, even
-literal exponent guards and strict-order nonzero premises. Unsupported inequality
-rules, old string-only builtin comparison payloads and generic/negative even
-power rule applications remain explicit failures.
+The accepted mathematical profile remains phases 1 and 2: numeric N/Z/Q/R/C,
+selected real comparisons, top-level numeric contexts, let/typed-have aliases,
+named theorems and explicit returned-atom selection. Owned functions/prop,
+sets, local arbitrary-have, general consumed inference and module compilation
+retain explicit unsupported branches. Exact certificates, orientations,
+argument match evidence and residual children must be preserved.
 
-Arithmetic WD adapters preserve constructor shape and replay child WD and
-domain evidence. Membership can attach numeric denotation evidence to an
-existing object; it does not replace the object's generic host representation.
-Unsupported constructors, statement families, routes, or unresolved producers
-return `LeanCompileError` for the entire artifact.
+A compound constructor recorded only inside a closed theorem-call scope is
+not a parent-scope WD producer. A nested call whose enclosing conclusion lacks
+that producer still rejects with `WD/Producer`. The positive nested-call
+regression constructs the object in an earlier parent proof step; the bare
+call remains a source-capture gap, not a newly supported route.
 
-## Extending and checking the module
+Any failed source, unsupported branch or unavailable evidence rejects the
+entire artifact. No partial Lean file, new axiom, proof hole or fabricated
+premise is emitted.
 
-Start with the actual producer result and its source-facing contract. Add an
-adapter for that selected route, check exact subjects and ordered dependencies,
-and use a proved semantic bridge. Preserve a real source/generated pair and
-an executable rejected boundary. Result-contract gaps must be repaired at
-their owning producer rather than reconstructed from presentation text.
-
-Focused Rust tests can be run with:
+## Verification
 
 ```sh
 cargo test --release --lib compile_to_lean::tests
+python3 scripts/litex_to_lean/check.py
 ```
 
-These tests cover replay contracts; successful string generation alone does
-not establish Lean kernel acceptance. The guide describes the separate source,
-compiler, regeneration, and Lean checks. Canonical pairs live under
-`lean/examples/`; fixtures, gate tools, receipts, and pinned Lean/Mathlib build
-state belong to the local-only `scripts/litex_to_lean/` workspace. Keep generated
-proofs compiler-owned and regenerate them through the actual CLI.
+Rust tests check actual result contracts and corrupt/deleted producer controls.
+The local gate separately runs strict source verification, actual CLI generation,
+byte-for-byte pair drift, pinned Lean warnings-as-errors, negative controls and
+native consumers. Canonical pairs belong in `lean/examples`; all check tooling,
+receipts, Lake/dependencies, native adapters and drafts stay in ignored
+`scripts/litex_to_lean`. Generated Lean files are changed only through the CLI.

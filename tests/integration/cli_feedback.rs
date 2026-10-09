@@ -324,6 +324,26 @@ fn file_session_errors_retain_the_original_declaration() {
 }
 
 #[test]
+fn file_session_preserves_context_across_a_soft_failure() {
+    let dir = FixtureDir::new();
+    fs::write(dir.0.join("main.lit"), "have k N\nk >= 0\n").unwrap();
+    let output = dir.run(
+        &["-strict", "-f", "main.lit", "-session"],
+        Some("k >= 0\n1 = 2\nk >= 0\nexit\n"),
+    );
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert!(output.stderr.is_empty(), "{output:?}");
+    let stdout = std::str::from_utf8(&output.stdout).unwrap();
+    assert_eq!(stdout.matches("litex> success").count(), 2, "{stdout}");
+    assert!(stdout.contains("\"success\": false"), "{stdout}");
+    let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
+    let json = JsonValue::parse(&stdout[start..]).unwrap();
+    assert_eq!(field(&json, "path").as_str().unwrap(), "main.lit");
+    assert_eq!(field(&json, "success"), &JsonValue::Bool(true));
+    assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+}
+
+#[test]
 fn eval_session_hard_errors_retain_the_initial_proof_and_report_once() {
     let dir = FixtureDir::new();
     let code = "thm identity:\n    ? forall x R:\n        x = x\nhave k N\nk >= 0";

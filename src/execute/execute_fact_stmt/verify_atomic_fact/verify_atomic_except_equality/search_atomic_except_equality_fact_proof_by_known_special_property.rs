@@ -1,12 +1,12 @@
 use super::known_fn_standard_return::FnApplicationInStandardSupersetProof;
 use super::result::AtomicExceptEqualityFactKnownProof;
 use super::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::proper_subsets_in_membership_proof_order;
-use crate::ast::fact::{AtomicFact, EqualFact, InFact, LessEqualFact};
+use crate::ast::fact::{AtomicFact, EqualFact, InFact};
 use crate::ast::obj::{
     FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, IteratedOperator, Obj, StandardSet,
     StructAndFieldAccessObj,
 };
-use crate::ast::obj::{Literal, Number, ProductShape};
+use crate::ast::obj::{Literal, Number};
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::known_tuple::{
     literal_positive_usize, KnownTupleShapeProof,

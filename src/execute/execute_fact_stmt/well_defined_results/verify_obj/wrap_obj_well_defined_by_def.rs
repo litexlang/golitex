@@ -1,4 +1,3 @@
-use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
@@ -7,7 +6,6 @@ use crate::ast::obj::{
     IntegerOperator, IteratedOperator, Literal, Obj, ProductShape, SetFormer, SetOperator,
     StructAndFieldAccessObj, TrigOperator,
 };
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
 // Pack CommonStages into the Obj-mirrored ByDef proof, or the mirrored fail.
 pub(super) fn finish_by_def(
@@ -20,41 +18,9 @@ pub(super) fn finish_by_def(
     Ok(pack_success_by_def(obj, stages))
 }
 
-fn expect_success_obj_proof(result: VerifyObjWellDefinedResult) -> Box<ObjWellDefinedProof> {
-    match result {
-        VerifyObjWellDefinedResult::Success(proof) => Box::new(proof),
-        VerifyObjWellDefinedResult::Failed { .. } => {
-            unreachable!("finish_by_def only packs fully-known stages")
-        }
-    }
-}
-
-fn take_child_proofs(
-    stages: &mut ObjWellDefinedByDefCommonStages,
-    n: usize,
-) -> Vec<Box<ObjWellDefinedProof>> {
-    let mut out = Vec::with_capacity(n);
-    for _ in 0..n {
-        let result = stages.child_obj_well_defined.remove(0);
-        out.push(expect_success_obj_proof(result));
-    }
-    out
-}
-
-fn take_requirements(
-    stages: &mut ObjWellDefinedByDefCommonStages,
-    n: usize,
-) -> Vec<VerifyFactResult> {
-    let mut out = Vec::with_capacity(n);
-    for _ in 0..n {
-        out.push(stages.requirement_fact_verified.remove(0));
-    }
-    out
-}
-
 fn pack_success_by_def(
     obj: &Obj,
-    mut stages: ObjWellDefinedByDefCommonStages,
+    stages: ObjWellDefinedByDefCommonStages,
 ) -> ObjWellDefinedProofByDef {
     match obj {
         Obj::Identifier(_)

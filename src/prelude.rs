@@ -3,12 +3,10 @@ pub(crate) use crate::ast::obj::*;
 pub(crate) use crate::ast::param::*;
 pub(crate) use crate::ast::names::{AtomicName, BoundName};
 pub(crate) use crate::ast::stmt::{DefThmStmt, TheoremCallArguments, Stmt, DefinitionStmt, DefineObjStmt, ByStmt};
-pub(crate) use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult, ExecReleaseAndExpandStmtResult};
+pub(crate) use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
 pub(crate) use crate::execute::{ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult, ExecLetObjStmtResult, ExecLetObjStmtSuccessResult, IntroduceTypedParametersResult};
 pub(crate) use crate::execute::execute_def_thm_stmt::{ExecDefThmStmtResult, ExecDefThmStmtSuccess, ExecDefThmBodyProof};
-pub(crate) use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult, ExecByThmStmtSuccess, ExecReleaseThmStmtResult, ResolvedTheoremCallee};
-pub(crate) use crate::exec_env::exec_env::ExecEnv;
-pub(crate) use crate::exec_env::known_fact_memory::ObjIR;
+pub(crate) use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult, ExecByThmStmtSuccess, ResolvedTheoremCallee};
 pub(crate) use crate::execute::{ExecStmtResult, ParamTypeWellDefinedProof};
 pub(crate) use crate::execute::execute_fact_stmt::*;
 pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact::{
@@ -19,12 +17,12 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defin
     AtomicFactWellDefinedProof, PredicateSignatureWellDefinedProof, PredicateDomainProof,
 };
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
-    VerifyEqualityResult, VerifyEqualitySuccess, EqualFactSearchedProof,
+    VerifyEqualityResult, EqualFactSearchedProof,
     EqualFactSearchedProofByEquivalenceClass, KnownEqualityPathProof,
 };
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::result::TheyAreTheSameProof;
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
-    VerifyAtomicExceptEqualityFactResult, VerifyAtomicExceptEqualityFactSuccess, AtomicExceptEqualityFactSearchedProof,
+    VerifyAtomicExceptEqualityFactResult, AtomicExceptEqualityFactSearchedProof,
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact,
 };
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_set::IsSetFactSearchProofByBuiltinRule;
@@ -33,9 +31,15 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::structural
 pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     LiteralObjWellDefinedProofByDef, ArithmeticOperatorObjWellDefinedProofByDef,
 };
-pub(crate) use crate::launch_command::{parse_launch_command, LaunchCommand, OutputLanguage};
+pub(crate) use crate::launch_command::LaunchCommand;
+#[cfg(test)]
+pub(crate) use crate::launch_command::{parse_launch_command, OutputLanguage};
+#[cfg(test)]
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::VerifyEqualitySuccess;
+#[cfg(test)]
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::VerifyAtomicExceptEqualityFactSuccess;
 pub(crate) use crate::run::RunLitexCodeResult;
-pub(crate) use crate::runtime::{Runtime, RuntimeError, RuntimeResult, FactId, IdentifierId, WellDefinednessId};
+pub(crate) use crate::runtime::{CodeSource, Runtime, RuntimeError, RuntimeResult, FactId, IdentifierId, WellDefinednessId};
 pub(crate) use crate::store_fact_and_infer::{StoreFactAndInferResult, StoreFactResult};
 
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{

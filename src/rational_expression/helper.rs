@@ -9,10 +9,6 @@ pub fn obj_key(obj: &Obj) -> String {
     obj.ir().display_string()
 }
 
-pub fn number_from_normalized(normalized_value: String) -> Number {
-    Number::new(normalized_value)
-}
-
 impl Number {
     pub fn new(normalized_value: String) -> Self {
         Self {

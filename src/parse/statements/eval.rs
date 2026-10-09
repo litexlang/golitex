@@ -19,7 +19,7 @@ impl Runtime {
         }
         Ok(Stmt::Command(CommandStmt::EvalStmt(EvalStmt {
             obj_to_eval,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, block.source_path.clone()),
         })))
     }
 }
