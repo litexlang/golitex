@@ -29,6 +29,17 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+## Stored function-value substitution
+
+[KnownFnValueSubstitution](equal/by_builtin_rewrite/known_fn_value_substitution.lit)
+reuses explicitly stored affine and coordinate equations inside scalar
+calculations. It substitutes unique direct values on both sides in one original
+tree pass, retains the selected `FactId`s, and checks a Strategy-capped residual
+with rewrite off. Inserted functions, ambiguous values, definition discovery,
+ordinary call arguments and equality-class walks are outside this route.
+Focused producer and compiler tests preserve false/WD/scope/permission and
+certificate-tampering boundaries.
+
 ## Function-space carriers
 
 [Free function-space parameters](atomic/by_known_forall/fnset_free_parameter_carrier.lit)

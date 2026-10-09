@@ -54,6 +54,29 @@ pub struct AtomicFactWellDefinedProof {
 pub enum PredicateDomainProof {
     ByKnownFact(super::AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     ByRequirements(Vec<PredicateDomainWellDefinedProof>),
+    ByCheckedArguments(Vec<PredicateDomainArgumentMembershipProof>),
+}
+
+// These memberships consume the enclosing atomic proof's checked argument WD.
+// The index identifies that exact argument; no cache or duplicated WD is needed.
+pub struct PredicateDomainArgumentMembershipProof {
+    pub requirement: Fact,
+    pub argument_index: usize,
+    pub membership: super::structural_membership_proof::StructuralMembershipProof,
+}
+
+impl PredicateDomainArgumentMembershipProof {
+    pub fn new(
+        requirement: Fact,
+        argument_index: usize,
+        membership: super::structural_membership_proof::StructuralMembershipProof,
+    ) -> Self {
+        Self {
+            requirement,
+            argument_index,
+            membership,
+        }
+    }
 }
 
 pub struct PredicateDomainWellDefinedProof {

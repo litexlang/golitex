@@ -1,0 +1,13 @@
+# Stored affine function values prove a doubled formula and a two-sided identity.
+have fn shift(x R) R = x + 3
+thm affine_value_product:
+    ? forall x R:
+        2 * shift(x) = 2 * x + 6
+    shift(x) = x + 3
+
+have fn right(x R) R = x - 1
+thm affine_two_sides:
+    ? forall x R:
+        shift(x) + shift(x) = 2 * right(x) + 8
+    shift(x) = x + 3
+    right(x) = x - 1

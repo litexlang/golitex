@@ -343,6 +343,14 @@ The current implementation grades lookup paths through `VerifyState`: direct evi
 <details>
 <summary><strong>Which steps does Litex check automatically, and which should the author write?</strong></summary>
 
+The equality rewrite `KnownFnValueSubstitution` reuses explicitly stored
+function-value equations under scalar constructors. With `shift(x)=x+3`,
+`2*shift(x)=2*x+6` can omit the expanded middle term. It visits the original
+tree once, cites each selected equation, and checks a residual with generic
+definition/forall expansion and further rewrite disabled. It does not traverse
+inserted values, discover definitions, or choose between several direct values.
+See the [runnable tracer](../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit).
+
 Authors choose definitions, constructions and key intermediate results; Litex checks supported local steps against current knowledge. The boundary depends on the work a step requires: following a fixed structure to check available grounds, or choosing a proof route that has not yet been supplied. It cannot be drawn simply by counting automatic steps.
 
 **Check types through a uniform structure.** This expression contains several layers of addition, but the author need not supply a separate type fact for each layer:
@@ -418,7 +426,7 @@ This inventory counts Rust enum variants at source commit `2ecde77d0`. The rows 
 | `Fact` / `AtomicFact` | 10 / 46 | Fact forms / atomic-relation forms |
 | Builtin rules | **551** | Nonempty terminal proof-result branches: 267 for equality, 259 for other atomic facts, 16 for disjunctions, and 9 for existentials |
 | Builtin strategies | **128** | Strategy-result branches: 8 for equality and 120 for other atomic facts |
-| Builtin rewrites / builtin predicate-definition paths | 5 / 11 | Separately counted result branches, excluded from the rule count above |
+| Builtin rewrites / builtin predicate-definition paths | 6 / 11 | Separately counted result branches, excluded from the rule count above |
 | Reserved named builtin theorems | 29 | Distinct names callable through the general `release thm` interface and related entrypoints |
 
 “Expanded” has a fixed boundary: for `Obj`, it opens the immediate mathematical-expression families while keeping names, function applications, and template instances as three generic forms; for `Stmt`, it opens the first-level statement families and `DefineObjStmt`, but does not expand the contained `Fact`. Thus 91 and 50 are AST-form counts, not 91 builtin mathematical objects or 50 theorems.

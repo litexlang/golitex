@@ -1,0 +1,15 @@
+# A real shift evaluates at two and distributes over a translated sum.
+
+have fn shift(x R) R = x + 1
+
+shift(2) = 3
+
+forall x R:
+    shift(x) = x + 1
+
+thm shift_add:
+    ? forall x, y R:
+        shift(x + y) = shift(x) + y
+    shift(x + y) = x + y + 1
+    shift(x) = x + 1
+    x + y + 1 = x + 1 + y

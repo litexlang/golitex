@@ -127,6 +127,15 @@ certificate family; no independent target theorem search is performed. The
 source Rational tag does not contain a monomial trace, so Lean checks the
 normalization proof rather than replaying an unavailable low-level trace.
 
+`KnownFnValueSubstitution` equality evidence replays directly cited function
+values through the supported arithmetic constructors. The consumer validates
+the visible source equality, exact ordered replacement endpoints, actual
+successful residual and unique citation traversal order. It never follows a
+function alias or instantiates another body to complete the certificate.
+Unsupported constructors still reject the whole artifact. The generated pair
+is `lean/examples/named_function_affine_arithmetic/statement.{lit,lean}`;
+producer and tampering contracts live under `tests/unit/compile_to_lean/known_fn_value_substitution/`.
+
 The accepted mathematical profile remains phases 1 and 2: numeric N/Z/Q/R/C,
 selected real comparisons, top-level numeric contexts, let/typed-have aliases,
 named theorems and explicit returned-atom selection. Owned functions/prop,

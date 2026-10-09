@@ -1,0 +1,11 @@
+# Nonnegative real numbers satisfy their defining weak inequality.
+
+prop is_nonnegative(x R):
+    x >= 0
+
+by def $is_nonnegative(2)
+
+forall x R:
+    $is_nonnegative(x)
+    =>:
+        x >= 0

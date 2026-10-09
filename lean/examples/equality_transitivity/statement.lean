@@ -1,35 +1,37 @@
 import Litex
 
+set_option linter.unusedVariables false
+
 namespace LitexCompiled.file_lean_x2f_examples_x2f_equality_x5f_transitivity_x2f_statement_x2e_lit
 
 universe u v1 v2 v3 v4 v5 v6 v7
 variable {M : Litex.Semantics.{u}}
 
-theorem fact_1 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (_h_param_i1 : Litex.In _value_i1 (Litex.R (M := M))) {_Host_i2 : Type v2} [_rep_i2 : Litex.Representation M _Host_i2] (_value_i2 : Litex.Obj (M := M) _Host_i2) (_h_param_i2 : Litex.In _value_i2 (Litex.R (M := M))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (_h_param_i3 : Litex.In _value_i3 (Litex.R (M := M))) (_h_dom_f1 : Litex.Same _value_i1 _value_i2) (_h_dom_f2 : Litex.Same _value_i2 _value_i3), (let _fact_f3 : Litex.Same _value_i1 _value_i3 :=
-  (((((Litex.sameRefl _value_i1)).trans _h_dom_f1)).trans _h_dom_f2);
-(Litex.Same _value_i1 _value_i3 ∧ (Litex.Same _value_i3 _value_i1 ∧ Litex.Same (Litex.add _value_i1 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i1 _h_param_i1) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i3 (Litex.inOfSame _value_i1 _value_i3 (Litex.R (M := M)) (Litex.R (M := M)) (((Litex.sameRefl _value_i1)).trans _fact_f3) (Litex.sameRefl (Litex.R (M := M))) _h_param_i1)) (Litex.numberInC (M := M) (1 : ℂ)))))) :=
+theorem h_6 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i1] (_value_i1 : Litex.Obj (M := M) _Host_i1) (h_19 : Litex.In _value_i1 (Litex.R (M := M))) {_Host_i2 : Type v2} [_rep_i2 : Litex.Representation M _Host_i2] (_value_i2 : Litex.Obj (M := M) _Host_i2) (h_20 : Litex.In _value_i2 (Litex.R (M := M))) {_Host_i3 : Type v3} [_rep_i3 : Litex.Representation M _Host_i3] (_value_i3 : Litex.Obj (M := M) _Host_i3) (h_21 : Litex.In _value_i3 (Litex.R (M := M))) (h_1 : Litex.Same _value_i1 _value_i2) (h_2 : Litex.Same _value_i2 _value_i3), (let h_3 : Litex.Same _value_i1 _value_i3 :=
+  (((((Litex.sameRefl _value_i1)).trans h_1)).trans h_2);
+(Litex.Same _value_i1 _value_i3 ∧ (Litex.Same _value_i3 _value_i1 ∧ Litex.Same (Litex.add _value_i1 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i1 h_19) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i3 (Litex.inOfSame _value_i1 _value_i3 (Litex.R (M := M)) (Litex.R (M := M)) (((Litex.sameRefl _value_i1)).trans h_3) (Litex.sameRefl (Litex.R (M := M))) h_19)) (Litex.numberInC (M := M) (1 : ℂ)))))) :=
   (by
-    intro _Host_i1 _rep_i1 _value_i1 _h_param_i1 _Host_i2 _rep_i2 _value_i2 _h_param_i2 _Host_i3 _rep_i3 _value_i3 _h_param_i3 _h_dom_f1 _h_dom_f2
-    have _fact_f3 : Litex.Same _value_i1 _value_i3 :=
-      (((((Litex.sameRefl _value_i1)).trans _h_dom_f1)).trans _h_dom_f2)
-    have _fact_f4 : Litex.Same _value_i3 _value_i1 :=
-      (((Litex.sameRefl _value_i3)).trans (_fact_f3).symm)
-    have _fact_f5 : Litex.Same (Litex.add _value_i1 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i1 _h_param_i1) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i3 (Litex.inOfSame _value_i1 _value_i3 (Litex.R (M := M)) (Litex.R (M := M)) (((Litex.sameRefl _value_i1)).trans _fact_f3) (Litex.sameRefl (Litex.R (M := M))) _h_param_i1)) (Litex.numberInC (M := M) (1 : ℂ))) :=
-      (congrArg₂ M.addValue (((Litex.sameRefl _value_i1)).trans _fact_f3) (Litex.sameRefl (Litex.number (M := M) (1 : ℂ))))
-    exact (And.intro _fact_f3 (And.intro _fact_f4 _fact_f5))
+    intro _Host_i1 _rep_i1 _value_i1 h_19 _Host_i2 _rep_i2 _value_i2 h_20 _Host_i3 _rep_i3 _value_i3 h_21 h_1 h_2
+    have h_3 : Litex.Same _value_i1 _value_i3 :=
+      (((((Litex.sameRefl _value_i1)).trans h_1)).trans h_2)
+    have h_4 : Litex.Same _value_i3 _value_i1 :=
+      (((Litex.sameRefl _value_i3)).trans (h_3).symm)
+    have h_5 : Litex.Same (Litex.add _value_i1 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i1 h_19) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (Litex.realToComplex _value_i3 (Litex.inOfSame _value_i1 _value_i3 (Litex.R (M := M)) (Litex.R (M := M)) (((Litex.sameRefl _value_i1)).trans h_3) (Litex.sameRefl (Litex.R (M := M))) h_19)) (Litex.numberInC (M := M) (1 : ℂ))) :=
+      (congrArg₂ M.addValue (((Litex.sameRefl _value_i1)).trans h_3) (Litex.sameRefl (Litex.number (M := M) (1 : ℂ))))
+    exact (And.intro h_3 (And.intro h_4 h_5))
   )
 
-theorem fact_2 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (_h_param_i4 : Litex.In _value_i4 (Litex.R (M := M))) {_Host_i5 : Type v5} [_rep_i5 : Litex.Representation M _Host_i5] (_value_i5 : Litex.Obj (M := M) _Host_i5) (_h_param_i5 : Litex.In _value_i5 (Litex.R (M := M))) (_h_dom_f87 : Litex.Same _value_i4 _value_i5), Litex.Same _value_i5 _value_i4 :=
+theorem h_89 : ∀ {_Host_i4 : Type v4} [_rep_i4 : Litex.Representation M _Host_i4] (_value_i4 : Litex.Obj (M := M) _Host_i4) (h_102 : Litex.In _value_i4 (Litex.R (M := M))) {_Host_i5 : Type v5} [_rep_i5 : Litex.Representation M _Host_i5] (_value_i5 : Litex.Obj (M := M) _Host_i5) (h_103 : Litex.In _value_i5 (Litex.R (M := M))) (h_87 : Litex.Same _value_i4 _value_i5), Litex.Same _value_i5 _value_i4 :=
   (by
-    intro _Host_i4 _rep_i4 _value_i4 _h_param_i4 _Host_i5 _rep_i5 _value_i5 _h_param_i5 _h_dom_f87
-    have _fact_f88 : Litex.Same _value_i5 _value_i4 :=
-      (((Litex.sameRefl _value_i5)).trans (_h_dom_f87).symm)
-    exact _fact_f88
+    intro _Host_i4 _rep_i4 _value_i4 h_102 _Host_i5 _rep_i5 _value_i5 h_103 h_87
+    have h_88 : Litex.Same _value_i5 _value_i4 :=
+      (((Litex.sameRefl _value_i5)).trans (h_87).symm)
+    exact h_88
   )
 
-theorem fact_3 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host_i6] (_value_i6 : Litex.Obj (M := M) _Host_i6) (_h_param_i6 : Litex.In _value_i6 (Litex.R (M := M))) {_Host_i7 : Type v7} [_rep_i7 : Litex.Representation M _Host_i7] (_value_i7 : Litex.Obj (M := M) _Host_i7) (_h_param_i7 : Litex.In _value_i7 (Litex.R (M := M))) (_h_dom_f105 : Litex.Same _value_i6 _value_i7), Litex.Same _value_i7 _value_i6 :=
+theorem h_107 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host_i6] (_value_i6 : Litex.Obj (M := M) _Host_i6) (h_110 : Litex.In _value_i6 (Litex.R (M := M))) {_Host_i7 : Type v7} [_rep_i7 : Litex.Representation M _Host_i7] (_value_i7 : Litex.Obj (M := M) _Host_i7) (h_111 : Litex.In _value_i7 (Litex.R (M := M))) (h_105 : Litex.Same _value_i6 _value_i7), Litex.Same _value_i7 _value_i6 :=
   (by
-    intro _Host_i6 _rep_i6 _value_i6 _h_param_i6 _Host_i7 _rep_i7 _value_i7 _h_param_i7 _h_dom_f105
-    exact ((fact_2 (M := M)) _value_i6 _h_param_i6 _value_i7 _h_param_i7 _h_dom_f105)
+    intro _Host_i6 _rep_i6 _value_i6 h_110 _Host_i7 _rep_i7 _value_i7 h_111 h_105
+    exact ((h_89 (M := M)) _value_i6 h_110 _value_i7 h_111 h_105)
   )
 end LitexCompiled.file_lean_x2f_examples_x2f_equality_x5f_transitivity_x2f_statement_x2e_lit

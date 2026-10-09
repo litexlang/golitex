@@ -1,0 +1,10 @@
+# A real reciprocal evaluates at two and obeys its formula under a nonzero guard.
+
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+reciprocal(2) = 1 / 2
+
+forall x R:
+    x != 0
+    =>:
+        reciprocal(x) = 1 / x

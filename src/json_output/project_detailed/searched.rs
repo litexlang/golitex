@@ -552,38 +552,43 @@ fn project_equality_builtin_rewrite(
     proof: &EqualitySearchProofByBuiltinRewrite,
     runtime: &Runtime,
 ) -> JsonValue {
-    match proof {
-        EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(p) => {
-            let cites: Vec<JsonValue> = p
-                .cited_equal_fact_ids
-                .iter()
-                .map(|id| {
-                    let mut entries = vec![("fact_id", string(id.to_string()))];
-                    if let Some(fact) = runtime.fact_by_id_in_stack(*id) {
-                        entries.push(("fact", string(fact.readable_string())));
-                    }
-                    object_for(runtime, entries)
-                })
-                .collect();
-            object_for(
-                runtime,
-                vec![
-                    ("type", string("by_builtin_rewrite")),
-                    ("rule", string("ClosedNumericEqualSubstitution")),
-                    ("rewritten_left", string(p.rewritten_left.readable_string())),
-                    (
-                        "rewritten_right",
-                        string(p.rewritten_right.readable_string()),
-                    ),
-                    ("cited_equal_fact_ids", JsonValue::Array(cites)),
-                    (
-                        "residual_equal",
-                        project_verify_fact(&p.residual_equal, runtime),
-                    ),
-                ],
-            )
-        }
-    }
+    let (rule, left, right, ids, residual) = match proof {
+        EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(p) => (
+            "ClosedNumericEqualSubstitution",
+            &p.rewritten_left,
+            &p.rewritten_right,
+            &p.cited_equal_fact_ids,
+            &p.residual_equal,
+        ),
+        EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(p) => (
+            "KnownFnValueSubstitution",
+            &p.rewritten_left,
+            &p.rewritten_right,
+            &p.cited_equal_fact_ids,
+            &p.residual_equal,
+        ),
+    };
+    let cites = ids
+        .iter()
+        .map(|id| {
+            let mut entries = vec![("fact_id", string(id.to_string()))];
+            if let Some(fact) = runtime.fact_by_id_in_stack(*id) {
+                entries.push(("fact", string(fact.readable_string())));
+            }
+            object_for(runtime, entries)
+        })
+        .collect();
+    object_for(
+        runtime,
+        vec![
+            ("type", string("by_builtin_rewrite")),
+            ("rule", string(rule)),
+            ("rewritten_left", string(left.readable_string())),
+            ("rewritten_right", string(right.readable_string())),
+            ("cited_equal_fact_ids", JsonValue::Array(cites)),
+            ("residual_equal", project_verify_fact(residual, runtime)),
+        ],
+    )
 }
 
 pub(super) fn project_known_atomic(

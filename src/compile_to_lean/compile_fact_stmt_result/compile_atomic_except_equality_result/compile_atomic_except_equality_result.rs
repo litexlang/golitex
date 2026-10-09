@@ -83,7 +83,10 @@ impl LitexToLeanCompiler {
                             },
                             rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, position)?,
                             AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
-                                AtomicFact::InFact(fact) => self.compile_fn_return_builtin(fact, rule, position)?,
+                                AtomicFact::InFact(fact) => match rule {
+                                    crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(_) => self.compile_complex_arithmetic_closure(fact, position)?,
+                                    _ => self.compile_fn_return_builtin(fact, rule, position)?,
+                                },
                                 _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
                             },
                             other => return Err(unsupported_atomic_builtin(other)),

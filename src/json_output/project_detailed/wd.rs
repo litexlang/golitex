@@ -92,6 +92,28 @@ pub(super) fn project_atomic_wd_proof(
                 ("cite", super::searched::project_known_atomic(cite, runtime)),
             ],
         ),
+        PredicateDomainProof::ByCheckedArguments(requirements) => JsonValue::Array(
+            requirements
+                .iter()
+                .map(|p| {
+                    object_for(
+                        runtime,
+                        vec![
+                            ("requirement", string(p.requirement.readable_string())),
+                            ("type", string("by_checked_argument_membership")),
+                            ("argument_index", JsonValue::Number(p.argument_index as f64)),
+                            (
+                                "membership",
+                                super::structural_membership::project_structural_membership(
+                                    &p.membership,
+                                    runtime,
+                                ),
+                            ),
+                        ],
+                    )
+                })
+                .collect(),
+        ),
         PredicateDomainProof::ByRequirements(requirements) => JsonValue::Array(
             requirements
                 .iter()

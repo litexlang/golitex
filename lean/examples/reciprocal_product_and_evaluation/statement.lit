@@ -1,0 +1,22 @@
+# A nonzero real reciprocal, its product theorem, and an explicitly cited evaluation.
+prop is_nonzero(x R):
+    x != 0
+
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+thm reciprocal_product:
+    ? forall x R:
+        $is_nonzero(x)
+        =>:
+            reciprocal(x) * x = 1
+    reciprocal(x) = 1 / x
+    reciprocal(x) * x = (1 / x) * x
+    (1 / x) * x = 1
+
+have denominator R = 2
+by def $is_nonzero(denominator)
+let answer = reciprocal(denominator)
+reciprocal(denominator) = 1 / denominator
+1 / denominator = 1 / 2
+by thm reciprocal_product(denominator) => reciprocal(denominator) * denominator = 1
+answer = 1 / 2

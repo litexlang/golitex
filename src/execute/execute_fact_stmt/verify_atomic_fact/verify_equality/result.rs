@@ -125,7 +125,7 @@ impl VerifyEqualityResult {
 
 // Mirrors search_equal_fact_proof stage order.
 // MatchingOneArgByOne = constructor peel (not rewrite).
-// Rewrite stages replace legacy opaque resolve_obj (ClosedNumeric only).
+// Rewrite stages retain explicit numeric or direct function-value citations.
 pub enum EqualFactSearchedProof {
     ByClosedCalculation(super::super::closed_calculation_proof::ClosedEqualityCalculationProof),
     ByTheyAreTheSame(TheyAreTheSameProof),

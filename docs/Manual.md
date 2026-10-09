@@ -1324,8 +1324,10 @@ first reads stored facts/identity/alpha paths, then tries closed exact calculati
 and deterministic structural membership.
 Special properties (level 1) may use level-0 premises; builtin rules (level 2)
 may use level 1; strategies (level 3) and definition/forall (level 4) may use
-level 2. Rewrite is available at level 4 once per branch and keeps level 4
-with rewriting disabled. WD checks inherit the current ceiling.
+level 2. Rewrite is available at level 4 once per branch. Numeric and atomic
+rewrites keep level 4 with rewriting disabled; direct function-value equality
+substitution caps its residual at level 3, so it does not reopen generic
+definition/forall search. WD checks inherit the current ceiling.
 
 Closed calculation has no access to the environment or recursive proof search.
 It covers closed numeric equality, real comparisons and standard-set membership
@@ -7659,14 +7661,14 @@ It contains these two mathematical steps:
 ```litex
 # Fragment of the full checked R01 proof; x and reciprocal are defined there.
 reciprocal(x) = 1 / x
-reciprocal(x) * x = (1 / x) * x = 1
+reciprocal(x) * x = 1
 ```
 
-The first line establishes the specific function value equality. The second
-uses it under multiplication and closes the scalar identity. In the current
-checked context, a direct universal goal fails; deleting the first line while
-retaining the chain also fails. Retaining only the first line fails to close
-the law. The full two-step proof passes.
+The first line establishes the specific function value equality. The scalar
+identity then verifies directly, and the full R01 claim needs only that value
+equation in its body. The longer chain remains a readable optional explanation.
+Deleting the value equation still leaves a search miss in this context; a
+function definition alone does not publish every symbolic application value.
 
 This boundary concerns the exact reciprocal-law example. It does not mean
 that every function application needs a manually repeated defining equation.
@@ -7926,7 +7928,6 @@ claim:
         =>:
             reciprocal(x) * x = 1
     reciprocal(x) = 1 / x
-    reciprocal(x) * x = (1 / x) * x = 1
 ```
 
 This example demonstrates the full route through the dictionaries:
@@ -7937,7 +7938,7 @@ This example demonstrates the full route through the dictionaries:
 3. [F01](#f01-membership-and-nonmembership) explains carrier information and
    legal function applications.
 4. [P05](#p05-a-function-equation-may-need-to-be-exposed-before-substitution)
-   explains the two explicit steps needed by this proof.
+   explains why the function-value equation is exposed before checking the law.
 
 The proof machinery remains local to the `claim`; the successful statement
 exports its universal conclusion. No helper theorem merely restating the
@@ -11124,6 +11125,38 @@ both `a=0` and `cos(a)=1`, the whole cosine value wins. Equality, order and
 `eval` retain each selected equality citation; residual verification keeps its
 existing permissions. The [numeric substitution tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
 preserves the former process-dependent failure.
+
+Known function-value substitution is an equality rewrite (preview), tried
+after closed numeric substitution. It reads the unique nontrivial directly
+indexed equality of each original function call under the existing scalar
+constructors. The equation can be written in either direction. For example:
+
+```litex
+have fn shift(x R) R = x + 3
+thm affine_value_product:
+    ? forall x R:
+        2 * shift(x) = 2 * x + 6
+    shift(x) = x + 3
+```
+
+The stored `shift(x)=x+3` equation supplies the replacement; the residual is
+`2*(x+3)=2*x+6`. All eligible original occurrences on both equality sides
+are replaced in one pass. Inserted expressions and rebuilt parents are not
+visited, and ordinary function arguments, tuples and binders are not traversed.
+This route does not discover function definitions, instantiate universal
+theorems or walk equality classes. Multiple distinct direct values make that
+call ineligible; an explicit intermediate equation remains available.
+
+Original and residual objects must pass WD. Residual truth is checked with
+rewrite consumed and a Strategy ceiling, excluding generic definition/forall
+expansion. Detailed output names `KnownFnValueSubstitution` and retains ordered
+unique source `FactId`s, rewritten endpoints and the residual proof; Normal
+output keeps the existing `builtin_rewrite` label. The
+[affine and coordinate tracer](../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit)
+has executable false, two-hop, ambiguity, scope and permission controls.
+Lean replay validates these exact citations and endpoints for its supported
+arithmetic constructors; other object/constructor routes remain explicitly
+unsupported by the compiler.
 
 ### Native numeric function rules
 

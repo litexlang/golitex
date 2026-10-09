@@ -184,6 +184,48 @@ impl LitexToLeanCompiler {
             }
         }
         match &wd.predicate_domain {
+            PredicateDomainProof::ByCheckedArguments(requirements) => {
+                if !matches!(
+                    fact,
+                    AtomicFact::LessFact(_)
+                        | AtomicFact::GreaterFact(_)
+                        | AtomicFact::LessEqualFact(_)
+                        | AtomicFact::GreaterEqualFact(_)
+                        | AtomicFact::NotLessFact(_)
+                        | AtomicFact::NotGreaterFact(_)
+                        | AtomicFact::NotLessEqualFact(_)
+                        | AtomicFact::NotGreaterEqualFact(_)
+                ) {
+                    return Err(LeanCompileError::unsupported(
+                        "WD/CheckedArgumentPredicateDomain",
+                    ));
+                }
+                if requirements.len() != args.len() {
+                    return Err(LeanCompileError::new(
+                        "WD/OrderRealDomain",
+                        "Checked argument domains have another arity.",
+                    ));
+                }
+                for (index, requirement) in requirements.iter().enumerate() {
+                    if requirement.argument_index != index
+                        || !matches!(&requirement.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *args[index] && f.set == Obj::StandardSet(StandardSet::R))
+                        || requirement.membership.element != *args[index]
+                        || requirement.membership.set != StandardSet::R
+                    {
+                        return Err(LeanCompileError::new(
+                            "WD/OrderRealDomain",
+                            "Checked argument membership has another subject, carrier or position.",
+                        ));
+                    }
+                    self.compile_structural(
+                        &requirement.membership,
+                        &SourcePosition {
+                            before: args.len() + index,
+                            ..*position
+                        },
+                    )?;
+                }
+            }
             PredicateDomainProof::ByRequirements(requirements) => {
                 if matches!(fact, AtomicFact::NormalAtomicFact(_)) && !requirements.is_empty() {
                     return Err(LeanCompileError::new(

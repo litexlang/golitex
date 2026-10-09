@@ -1,0 +1,15 @@
+# A guarded real quotient distributes over addition when the denominator is nonzero.
+
+have fn quotient(a, b R: b != 0) R = a / b
+
+quotient(6, 2) = 3
+
+thm quotient_distributes:
+    ? forall x, y, z R:
+        z != 0
+        =>:
+            quotient(x + y, z) = quotient(x, z) + quotient(y, z)
+    quotient(x + y, z) = (x + y) / z
+    quotient(x, z) = x / z
+    quotient(y, z) = y / z
+    (x + y) / z = x / z + y / z

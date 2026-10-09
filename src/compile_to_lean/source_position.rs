@@ -1510,7 +1510,7 @@ fn visit_function_formation<T>(
             usize::MAX,
         );
         if let Some(value) =
-            visith_ormation(&domain.well_defined, usize::MAX, &formation, wd, verify)?
+            visit_fact_formation(&domain.well_defined, usize::MAX, &formation, wd, verify)?
         {
             return Ok(Some(value));
         }
@@ -1595,7 +1595,7 @@ fn visit_owner<T>(
             return visit_atomic_formation(proof, position.before, position, wd, verify)
         }
         SourceOwner::FactWD(proof) => {
-            return visith_ormation(proof, position.before, position, wd, verify)
+            return visit_fact_formation(proof, position.before, position, wd, verify)
         }
         SourceOwner::Forall(proof) => {
             let head = parameter_count(&proof.fact.typed_parameters.groups)
@@ -1641,7 +1641,8 @@ fn visit_owner<T>(
                 };
                 let formation =
                     SourcePosition::new(Some(&prior), SourceOwner::FactWD(then), usize::MAX);
-                if let Some(value) = visith_ormation(then, usize::MAX, &formation, wd, verify)? {
+                if let Some(value) = visit_fact_formation(then, usize::MAX, &formation, wd, verify)?
+                {
                     return Ok(Some(value));
                 }
             }
@@ -1671,7 +1672,8 @@ fn visit_owner<T>(
                 };
                 let formation =
                     SourcePosition::new(Some(&prior), SourceOwner::FactWD(then), usize::MAX);
-                if let Some(value) = visith_ormation(then, usize::MAX, &formation, wd, verify)? {
+                if let Some(value) = visit_fact_formation(then, usize::MAX, &formation, wd, verify)?
+                {
                     return Ok(Some(value));
                 }
             }
@@ -1729,7 +1731,7 @@ fn visit_owner<T>(
                 let formation =
                     SourcePosition::new(Some(&prior), SourceOwner::FactWD(conclusion), usize::MAX);
                 if let Some(value) =
-                    visith_ormation(conclusion, usize::MAX, &formation, wd, verify)?
+                    visit_fact_formation(conclusion, usize::MAX, &formation, wd, verify)?
                 {
                     return Ok(Some(value));
                 }
@@ -1821,7 +1823,7 @@ fn visit_owner<T>(
                     usize::MAX,
                 );
                 if let Some(value) =
-                    visith_ormation(&assumed.well_defined, usize::MAX, &formation, wd, verify)?
+                    visit_fact_formation(&assumed.well_defined, usize::MAX, &formation, wd, verify)?
                 {
                     return Ok(Some(value));
                 }
@@ -1869,7 +1871,7 @@ fn visit_owner<T>(
                     };
                     let formation =
                         SourcePosition::new(Some(&prior), SourceOwner::FactWD(goal), usize::MAX);
-                    return visith_ormation(goal, usize::MAX, &formation, wd, verify);
+                    return visit_fact_formation(goal, usize::MAX, &formation, wd, verify);
                 }
             }
         }
@@ -1915,7 +1917,7 @@ fn visit_owner<T>(
                     usize::MAX,
                 );
                 if let Some(value) =
-                    visith_ormation(&derived.well_defined, usize::MAX, &formation, wd, verify)?
+                    visit_fact_formation(&derived.well_defined, usize::MAX, &formation, wd, verify)?
                 {
                     return Ok(Some(value));
                 }
@@ -2011,7 +2013,8 @@ fn visit_header<T>(
             SourceOwner::FactWD(&dom.well_defined),
             usize::MAX,
         );
-        if let Some(value) = visith_ormation(&dom.well_defined, usize::MAX, &formation, wd, verify)?
+        if let Some(value) =
+            visit_fact_formation(&dom.well_defined, usize::MAX, &formation, wd, verify)?
         {
             return Ok(Some(value));
         }
@@ -2422,7 +2425,7 @@ fn visit_atomic_formation<T>(
     Ok(None)
 }
 
-fn visith_ormation<T>(
+fn visit_fact_formation<T>(
     proof: &FactWellDefinedProof,
     before: usize,
     position: &SourcePosition<'_>,

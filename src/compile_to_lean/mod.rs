@@ -28,6 +28,8 @@ mod concrete_prop_tests;
 #[cfg(test)]
 mod function_call_tests;
 #[cfg(test)]
+mod function_return_tests;
+#[cfg(test)]
 mod numeric_function_call_tests;
 #[cfg(test)]
 mod prop_domain_tests;

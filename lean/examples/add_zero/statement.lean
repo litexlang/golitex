@@ -1,5 +1,7 @@
 import Litex
 
+set_option linter.unusedVariables false
+
 namespace LitexCompiled.file_lean_x2f_examples_x2f_add_x5f_zero_x2f_statement_x2e_lit
 
 universe u v1

@@ -510,8 +510,10 @@ Equality and other atomic facts share a search-level ceiling. Stored facts,
 identity/alpha and stored equality paths, followed by closed exact calculation
 and structural membership, form level 0 (`Direct`). Special-property premises
 use level 0; builtin premises use level 1; strategy and definition/forall
-premises use level 2. Rewrite is available once at the highest level and keeps
-the residual goal's level. WD remains mandatory and inherits the current
+premises use level 2. Rewrite is available once at the highest level. Numeric
+and atomic rewrites keep the residual goal's level; direct function-value
+equality substitution caps its residual at Strategy to avoid further generic
+definition/forall expansion. WD remains mandatory and inherits the current
 ceiling. Independent strategy/deep recursion budgets have been removed.
 
 The closed-calculation branch does not consult stored numeric representatives or unfold
@@ -2044,6 +2046,28 @@ The selected equalities are cited, and the rewritten comparison is verified
 with the existing rewrite permission consumed. The
 [tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
 and focused tests also cover equality and `eval` consumers.
+
+### Can stored function values shorten an algebraic equality?
+
+Yes. The equality rewrite `KnownFnValueSubstitution` can reuse a directly
+stored value without writing the expanded middle expression:
+
+```litex
+have fn shift(x R) R = x + 3
+thm affine_value_product:
+    ? forall x R:
+        2 * shift(x) = 2 * x + 6
+    shift(x) = x + 3
+```
+
+The function-value equation is still supplied explicitly. This route replaces
+eligible calls on both sides in one original scalar-tree pass, records the
+source equations, and checks the residual with rewrite off and generic
+definition/forall expansion unavailable. A newly inserted call is not expanded
+again. If a call has several distinct direct values, give an explicit
+intermediate expression. WD, local scope and partial-operation guards remain
+required. The [tracer](../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit)
+also covers coordinate calculations.
 
 ### Can rational exponents compute exact rational values?
 
