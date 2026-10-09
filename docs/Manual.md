@@ -1332,6 +1332,37 @@ negative powers, finite cardinalities and projections retain all WD conditions;
 Detailed output retains the constructor tree under `by_structural_membership`.
 This is type propagation; symbolic equalities and order proofs keep their own rules.
 
+Two fixed scalar rules (preview) consume already available guards. For a real
+`x`, `x != 0` permits `abs(x) > 0`; zero and non-real arguments retain their
+normal rejection boundaries. For real nonnegative `x,y`, `x^2 <= y^2` permits
+`x <= y`, and the reverse-written comparison works in the opposite direction.
+Both nonnegative guards remain required by this rule; a weak squared comparison
+does not establish a strict conclusion. These leaves use the inherited
+builtin-premise ceiling rather than generating case splits or a square-root
+proof. See the [absolute-value positivity tracer](../examples/proof_nodes/atomic/by_builtin_rule/abs_positive_from_nonzero.lit)
+and [square-order tracer](../examples/proof_nodes/atomic/by_builtin_rule/nonnegative_square_order_reflection.lit).
+Detailed output identifies `AbsPositiveFromNonzero` with `argument_nonzero`,
+and `NonnegativeSquareOrderReflection` with `left_nonnegative`,
+`right_nonnegative` and `squared_order`; each field retains its checked source
+proof. These new routes currently have no Litex-to-Lean adapter and compilation
+fails explicitly rather than emitting an assumed proof.
+
+```litex
+forall x R:
+    x != 0
+    =>:
+        abs(x) > 0
+```
+
+```litex
+forall x,y R:
+    x >= 0
+    y >= 0
+    x^2 <= y^2
+    =>:
+        x <= y
+```
+
 This is goal-directed verification, not unrestricted theorem search. A builtin
 rule may ask for its documented premises, but it does not silently build an
 arbitrary chain of other builtin rules. When a mathematically valid jump is

@@ -1,3 +1,4 @@
+pub mod abs_positive_from_nonzero;
 pub mod complex_triangle;
 pub mod exp_ln_order;
 pub mod factorial_order;
@@ -14,6 +15,7 @@ pub mod lcm_order;
 pub mod less;
 pub mod less_equal;
 pub mod log_unit_interval_order;
+pub mod nonnegative_square_order_reflection;
 pub mod normal_atomic;
 pub mod not_equal;
 pub mod not_greater;

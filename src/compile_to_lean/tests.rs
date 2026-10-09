@@ -1,4 +1,4 @@
-use super::compile_run;
+use super::{compile_run, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
@@ -20,7 +20,29 @@ fn combined_unit_preserves_only_legal_scope_dependencies() {
     let source = "1 = 1\n$is_set(1)\n1 $in R\nforall a C:\n    a = a\nforall a R:\n    a $in C\nforall a C, b C:\n    b != 0\n    =>:\n        a / b = a / b\n";
     let (result, runtime) = execute(source);
     assert_eq!(result.statement_results.len(), 6);
-    assert!(compile_run(&result, &runtime, "combined_scope").is_ok());
+    let compiler = LitexToLeanCompiler::new(&result, &runtime);
+    let output = compiler.compile("combined_scope").expect("complete replay");
+    assert_eq!(
+        output,
+        compile_run(&result, &runtime, "combined_scope").expect("compatible entrypoint")
+    );
+}
+
+#[test]
+fn compiler_struct_rejects_a_failed_source_run_after_a_successful_prefix() {
+    let source = "1 = 1\n1 = 2\n";
+    let command =
+        parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])
+            .expect("strict command");
+    let mut runtime = Runtime::new(command);
+    let result = runtime.run_litex_code(source).expect("source outcome");
+    assert!(!result.success);
+    assert!(!result.statement_results[0].is_failed());
+    let error = LitexToLeanCompiler::new(&result, &runtime)
+        .compile("failed_run")
+        .expect_err("a successful prefix cannot become a partial artifact");
+    assert_eq!(error.route, "source_failed");
+    assert_eq!(error.statement_index, None);
 }
 
 #[test]

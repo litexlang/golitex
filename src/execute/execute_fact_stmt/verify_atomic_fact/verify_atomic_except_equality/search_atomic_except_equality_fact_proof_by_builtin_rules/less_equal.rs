@@ -10,6 +10,7 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    NonnegativeSquareOrderReflection(super::nonnegative_square_order_reflection::NonnegativeSquareOrderReflectionProof),
     AbsDifferenceTriangle(super::real_metric_bounds::AbsDifferenceTriangleProof),
     MaxLipschitzFromCoordinateBounds(super::real_metric_bounds::MaxLipschitzFromCoordinateBoundsProof),
     MinLipschitzFromCoordinateBounds(super::real_metric_bounds::MinLipschitzFromCoordinateBoundsProof),
@@ -547,6 +548,10 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(proof) = self.abs_le_implies_neg_upper_proof(fact) {
+            return Ok(Some(proof));
+        }
+
+        if let Some(proof) = self.search_nonnegative_square_order_reflection(fact, verify_state)? {
             return Ok(Some(proof));
         }
 

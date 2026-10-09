@@ -2,7 +2,7 @@
 
 文档由沈嘉辰创建和维护。
 
-最后更新：2026 年 10 月 8 日。
+最后更新：2026 年 10 月 9 日。
 
 官网页面: https://litexlang.com/doc/Litex中文蓝图
 
@@ -28,6 +28,7 @@
 - [7. 追寻与众不同的艺术](#conclusions)
   - [特别感谢](#special-thanks)
 - [附录：编程、数学与Litex形式化](#overview-readers)
+  - [写给数学家：机器检查与人的理解](#reader-mathematicians)
   - [个人思考：Litex补齐了AI推理的范式缺口？](#summary-bottom-up-and-top-down)
 - [附录：源码速览（gallery）](#overview-gallery)
 
@@ -39,13 +40,19 @@ _“语言是人类理性的工具，而不只是表达思想的媒介。”_
 
 _— George Boole，《思维的规律》（1854），第 II 章（节选）_
 
-*Litex 始于 2024 年，是一门以集合与事实组织日常数学的形式化语言。它希望成为形式化语言里的 Python，让更多人逐步成为形式化专家。*
+*Litex 始于 2024 年，是一门以集合与事实组织日常数学的形式化语言。它希望[成为形式化语言里的 Python，让更多人逐步成为形式化专家](#reader-programmers)。*
 
-**促进理解，是 Litex 的核心追求。** 在 AI 时代，这一品质尤为珍贵。Litex 希望保留日常数学的对象与写法，降低形式化的学习和阅读成本；同时借助源码与验证依据，帮助读者看清定义、前提与结论的联系，[加深理解](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)并获得灵感。
+**当 AI 越来越容易生成推理，我们怎样把这些推理变成可以信赖、理解和继续使用的知识？** 一个结论需要明确的前提，一段论证需要可检查的依据，一份成果还需要让别人读懂，并在其上继续构造。随着候选推理不断增加，检查、理解和复用的成本变得更加关键。
 
-**普通事实自动触发局部验证，是 Litex 的默认证明接口。** 作者选择定义、构造和中间结论；语言查找受支持的依据，返回结构化反馈，并把通过的事实存入上下文。这些结果可供 AI 读取，用于修复尝试、复用知识和积累可检查的推理数据。[第 1.1 节](#fact-oriented-interface)给出具体例子。
+形式化语言让机器能够严格检查推理，也让结果可以[在明确的条件下被再次引用](#workflow-reuse)。AI 则让形式化代码更容易生成。但代码通过检查之后，人仍需要看清：它究竟表达了什么，依赖哪些假设，是否忠实于原本的意图。**人需要能够理解和掌握承载自己思想的语言。**
 
-当前构建已提供初始的 `litex -lean -f <source.lit>` 独立文件编译入口，将受支持的验证结果编译为 Lean 证明，接受独立复核。整个 Litex 系统的覆盖及其与现有形式化生态的连接，仍在继续推进。
+**Litex 探索一种让人的理解与机器的检查发生在同一份文本中的形式化语言。** 它以[熟悉的数学对象、条件和事实](#set-theory)组织推理：人选择定义、构造与关键步骤，[AI 协助书写和修复](#interaction-loop)，语言[检查受支持的连接，并留下每一步的依据](#execution-model)。它要检验的是，这种表达方式能否降低人和 AI 构造、审阅、修复与复用可检查知识的成本。
+
+Litex 还包含[到 Lean 的编译器设计](#compatibility)，探索把受支持的验证依据转化为 Lean 证明，让这些表达接受独立复核，并连接现有形式化生态。设计与当前支持范围见 [Litex 到 Lean 编译器设计指南](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md)。预期Litex到Lean的编译器在2026年底完成。
+
+随着 AI 能力增强，人–AI 协作的数学工作流有望让今天难以想象的探索规模成为可能。依赖动辄超过1年的漫长人工核查的传统审稿方式，难以独自跟上候选证明不断增长的节奏；借助形式化语言检查证明的逻辑正确性往往只要几分钟，因此是大势所趋。**数学家应当[理解并掌握手中的形式化工具](#reader-mathematicians)，让数学知识的载体本身成为可以理解、讨论和改进的知识，而非交给 AI 处理的黑盒。** Litex 的目标是大幅降低掌握形式化语言的门槛：通过熟悉的数学表达与[直接陈述事实的证明接口](#fact-oriented-interface)，减少把数学想法转写为计算机语言的负担，让数学家能把更多精力投入数学想法本身。
+
+**从数学出发，Litex 的愿景是让可理解、可检查的推理[走向更广阔的知识世界](#ecosystem-role)。** 数学是自然科学之母；我希望数学触及并惠及的角落，形式化语言也能触及，Litex 也能参与其中成为AI时代可信推理基础设施的一部分。
 
 <a id="overview-spine"></a>
 
@@ -124,7 +131,7 @@ $is_odd(3)
 
 这些记录让人和 AI 都能看到：这一句检查是否成功，语言找到了哪一种依据，以及这一步留下了什么。
 
-**多语种验证反馈。** CLI 可以用多种语言呈现这些 JSON 验证反馈。同一段源码执行 `litex -lang zh -e '1 + 1 = 2'`，会得到中文字段名与说明；选用 `-lang fr` 则得到法文反馈。感谢 AI 工具在翻译上的协助，使多语种验证说明成为可能；选择输出语言不会改变 Litex 源码或验证结果。当前支持的输出语言代码是 `en`、`zh`、`zh-hant`、`fr`、`ru`、`es`、`ar`、`ja`、`ko` 和 `vi`。
+**多语种验证反馈。** CLI 可以用多种语言呈现这些 JSON 验证反馈。同一段源码可以得到中文字段名与说明，也可以选择法文等其他语言的反馈。感谢 AI 工具在翻译上的协助，使多语种验证说明成为可能；选择输出语言不会改变 Litex 源码或验证结果。当前支持的输出语言代码是 `en`、`zh`、`zh-hant`、`fr`、`ru`、`es`、`ar`、`ja`、`ko` 和 `vi`。
 
 **2. 我可以从熟悉的数学公理和符号开始。**
 
@@ -164,7 +171,7 @@ litex> f(4) = 1 / 4
 success
 ```
 
-**把知识保存下来，在其他文件中使用。** 在后文的[牛顿更新例子](#workflow-exploration)中，我把函数定义与不动点定理保存在 `newton.lit`。按[第 3.3 节](#workflow-reuse)组织项目后，我可以在另一个文件中直接引用已有成果：
+**把知识保存下来，在其他文件中使用。** 在后文的[牛顿更新例子](#workflow-exploration)中，我把函数定义与不动点定理保存在 `newton.lit`。按第 3.3 节组织项目后，我可以在另一个文件中直接引用已有成果：
 
 <!-- litex:skip-test -->
 ```litex
@@ -195,7 +202,7 @@ release thm newton::fixed_point(sqrt(2))
 
 想了解抽取过程与支持范围，可以查看 [Python/C 抽取实现](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code)。
 
-**让自己的工具使用数学内容。** `litex -lang en -f example.lit` 输出 JSON，包含语句文本、存储的事实、推导的事实和证明摘要。用户可以提取这些内容，自行建立索引和可视化；官网 [litexlang.com](https://litexlang.com) 首页就有一个可交互的数学概念关系图例子。普通 JSON 概括验证结果，没有记录每一条依赖。字段和边界见 [JSON 输出约定](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract)。
+**让自己的工具使用数学内容。** 验证器的 JSON 输出包含语句文本、存储的事实、推导的事实和证明摘要。用户可以提取这些内容，自行建立索引和可视化；官网 [litexlang.com](https://litexlang.com) 首页就有一个可交互的数学概念关系图例子。普通 JSON 概括验证结果，没有记录每一条依赖。字段和边界见 [JSON 输出约定](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract)。
 
 **把数学写成便于阅读的文稿。** 数学源码也可以转换为 LaTeX，用于讲义和文稿。左侧是一条数学事实，右侧是实际生成的排版源码；转换负责呈现，数学验证另行进行：
 
@@ -215,23 +222,13 @@ release thm newton::fixed_point(sqrt(2))
 
 源码到排版的转换过程见 [LaTeX 转换实现](https://github.com/litexlang/golitex/tree/main/src/compile_to_latex)。
 
-完整的定义、证明与项目配置，见[第 3 节](#mathematical-workflow)。
+完整的定义、证明与项目配置，见第 3 节。
 
 **4. AI 可以和人一起，在明确反馈中推进证明。**
 
 AI 可以协助尝试不同思路、补充步骤和修正错误；人关注问题本身与数学意义；Litex 提供验证反馈。三者共同工作的过程，应当能够积累可检查的成果。
 
 ![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
-
-```mermaid
-flowchart LR
-    Human["人：问题与数学判断"] --> AI["AI：提出并修正证明"]
-    AI --> Litex["Litex：验证与反馈"]
-    Litex --> AI
-    Litex --> Knowledge["已验证的知识"]
-    Knowledge --> Human
-    Knowledge --> AI
-```
 
 **5. 受支持的证明，还能交给 Lean 再检查一次。**
 
@@ -243,7 +240,7 @@ flowchart LR
 1 = 1
 ```
 
-运行 `litex -lean -f lean/examples/one_equals_itself/statement.lit`，会将配对的 Lean 源码输出到标准输出；保存该输出得到同名的 `.lean` 文件。下面保留实际生成的证明形式，仅省略自动生成的命名空间：
+这一例子的配对 Lean 源码具有如下证明形式，仅省略自动生成的命名空间：
 
 ```lean
 import Litex
@@ -257,7 +254,7 @@ theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M :
 
 `Litex.number` 返回 `Obj ℂ`，其中保留原生数字及其良定义证明。`Litex.Same` 在显式的 `Semantics` 参数 `M` 下比较对象表示的数学意义；编译器通过 `Litex.sameRefl` 回放已经检查的反身性路线。这个生成例子已通过 Lean 检查，但不表示完整 Litex 模型或所有证明路线都已实现。
 
-维护中的源码位置是 [Lean 语义接口](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean)与[成对的编译例子](https://github.com/litexlang/golitex/tree/main/lean/examples)。早期复杂函数产物在[第 5 节](#compatibility)明确标为历史实验。
+维护中的源码位置是 [Lean 语义接口](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean)与[成对的编译例子](https://github.com/litexlang/golitex/tree/main/lean/examples)。早期复杂函数产物在第 5 节明确标为历史实验。
 
 无论你是数学家、程序员，还是 Lean 用户，都可以从 Litex 中发现新的知识与视角；感兴趣的话，可以继续阅读文末的[编程、数学与Litex形式化](#overview-readers)。
 
@@ -1111,7 +1108,7 @@ release obj def newton::newton_sqrt_two
 by thm newton::fixed_point(sqrt(2)) => newton::newton_sqrt_two(sqrt(2)) = sqrt(2)
 ```
 
-运行 `litex -strict -f example.lit` 会先加载前面的 `newton.lit`，再检查这个应用。这里的两个片段按上述项目上下文验证；它们不作为独立文件运行。
+验证这个应用时，系统先加载前面的 `newton.lit`。这里的两个片段依赖上述项目上下文。
 
 </details>
 
@@ -1396,9 +1393,9 @@ _“形式证明的每一步逻辑推导，都已被检查直至数学的基础�
 
 _— Thomas Hales，《Formal Proof》（2008）_
 
-Litex 使用自己的验证器检查源码并提供反馈；当前构建也已提供初始的独立文件 `-lean -f` 编译器。独立复核需要满足三个条件：翻译保持原命题的含义，生成的证明没有空洞，而且确实通过 Lean 内核检查。满足这些条件后，才能在已编译的路线内减少对 Litex 验证器本身的依赖，并进一步连接 Mathlib。当前编译器只支持有限范围的结果，尚未覆盖整个 Litex 系统。
+Litex 使用自己的验证器检查源码并提供反馈；也包含到 Lean 的编译器设计和初始实现。独立复核需要满足三个条件：翻译保持原命题的含义，生成的证明没有空洞，而且确实通过 Lean 内核检查。满足这些条件后，才能在已编译的路线内减少对 Litex 验证器本身的依赖，并进一步连接 Mathlib。当前编译器只支持有限范围的结果，尚未覆盖整个 Litex 系统。
 
-> **当前构建：** `litex -lean -f <source.lit>` 编译受支持的独立文件，并拒绝尚未覆盖的路线。当前接口位于 [lean/Litex.lean](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean)，生成的成对例子位于 [lean/examples](https://github.com/litexlang/golitex/tree/main/lean/examples)。下面的复杂函数例子记录早期实验；它尚未由当前编译器重新生成，也未在当前 Lean 环境中重新核验。
+> **设计与实现：** 编译器设计与当前支持范围见 [编译器设计指南](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md)。当前接口位于 [lean/Litex.lean](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean)，生成的成对例子位于 [lean/examples](https://github.com/litexlang/golitex/tree/main/lean/examples)。下面的复杂函数例子记录早期实验；它尚未由当前编译器重新生成，也未在当前 Lean 环境中重新核验。
 
 <details>
 <summary><strong>历史示例：早期 Litex 到 Lean 的编译实验</strong></summary>
@@ -1668,7 +1665,20 @@ Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu
 
 ## 附录：编程、数学与Litex形式化
 
-这一节从 Lean 用户、数学从业者、程序员和其他知识领域读者的经验出发，讨论 Litex 可能带来的知识与视角。您可以选择感兴趣的部分阅读，也可以回到[五个特点](#overview-spine)继续了解语言设计。
+不同的读者可以从不同的问题进入 Litex。下面的表格把这些视角与具体设计对应起来；您可以沿链接阅读例子与边界，再看后面的详细讨论。
+
+| 读者 | 可以怎样理解 Litex | 对应设计与阅读入口 |
+| --- | --- | --- |
+| AI for Math 研究者 | 一个让 AI 逐步提出数学事实、根据验证反馈修正证明，并积累后续可用成果的工作环境。 | [人–AI 协作与反馈](#interaction-loop)、[每句话留下的知识记录](#execution-model)、[成果复用](#workflow-reuse) |
+| 数学家 | 一种自己能够阅读、修改和引用的证明载体，让机器检查与数学理解在同一份源码中相遇。 | [熟悉的数学表达](#set-theory)、[边想边写边检查](#workflow-exploration)、[写给数学家](#reader-mathematicians) |
+| Lean 用户与形式化研究者 | 一种以事实为默认接口的语言设计：作者陈述下一步成立的事实，验证器寻找局部依据；通过编译器设计，为受支持的路线连接 Lean 复核。 | [事实导向接口](#fact-oriented-interface)、[Lean–Litex 对照](#reader-lean)、[Lean 编译与复核](#compatibility) |
+| AI 安全与可信推理研究者 | 一个研究推理依据、显式假设与检查边界如何被审阅的数学试验场；向更广泛 AI 系统的应用仍需探索。 | [验证记录与边界](#execution-model)、[验证器的责任](#automation-implementation)、[生态目标](#ecosystem-role) |
+| 程序员与工具开发者 | 一门用对象、事实和语句组织数学的语言；验证结果可以用于索引与可视化，受支持的计算片段可探索抽取为程序。 | [写给程序员](#reader-programmers)、[计算与交流](#workflow-use) |
+| 其他知识领域的读者 | 一个尝试明确表达领域对象、条件与规则的入口，用形式化检查帮助审阅论证；各行业的适用性需要另行验证。 | [其他领域的探索](#reader-other-domains)、[生态目标](#ecosystem-role) |
+
+这些视角对应的是同一组[语言设计特点](#overview-spine)，各自的价值与适用范围仍须由具体任务检验。
+
+<a id="reader-lean"></a>
 
 ### 写给 Lean 用户
 
@@ -1820,19 +1830,23 @@ Litex 仍检查 `x > 0`，但让它作为普通事实留在上下文中，源码
 
 </details>
 
-### 写给数学从业者
+<a id="reader-mathematicians"></a>
 
-如果您从事数学，您可能首先关心的不是又一种工具，而是数学理解和数学代表的传统价值观在 AI 时代如何被保留。
+### 写给数学家：机器检查与人的理解
 
-AI 正在带来“推理丰盈”：答案与证明可以大规模生成，却不自动可信、可解释，也不必然加深理解。正如[陶哲轩在 2026 年 ICM 公开讲演](https://www.youtube.com/watch?v=M0--ZH1lOzg)所说，数学的未来更需转向证明的验证、阐释与消化。更普遍的问题是：如何把 AI 生成的推理变成可检查、可理解、可复用的共同知识——这不只关乎数学，也关乎各行业的知识生产。
+**数学家需要一种既能由机器检查，又能由自己读懂、修改和引用的证明载体。** 人与 AI 共同探索数学，是 Litex 设计所面向的工作方式。AI 可以协助提出构造、补全证明和修改表达；数学家仍要判断问题是否值得研究、定义是否恰当，以及证明是否带来了理解。
 
-今天的数学圈并不平静：热点轮换很快，AI 让数学问题有时像「挖矿」一样被追逐。就在2026年9月，陶哲轩等25位菲尔兹奖得主警告：AI公司把“快速解题”当作数学进步指标，可能牺牲真正的理解、原创性、学术传承与归属规范，导致AI发展目标与数学共同体严重错位。[原文](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)
+这种协作首先带来检查能力的压力。复杂论文的审阅可能经历漫长的人工核查；如果候选证明持续大量生成，仅靠逐篇人工检查，很难让检查能力随产量一起增长。形式化语言提供了一条路径：把定义、前提、结论和推理步骤明确写下，让机器承担可形式化的逻辑检查。对于已经完成形式化、且处于验证器支持范围内的证明，其他人可以重新运行检查，减少重复人工核查的负担。论文的数学意义、原创性、解释质量与学术归属，仍需要共同体判断。
 
-Litex 想在日常数学表达与形式化验证之间建立可读的工作界面：让领域知识可以明确写成对象、条件与事实，交给机器检查，再回头理解每一步使用的依据。数学价值不只在于得到结论，也在于理解结论怎样成立。
+形式化也改变了证明的引用方式。读者可以看到某个结果的准确陈述、适用条件和依赖，并在后续证明中使用它，由系统检查引用是否满足前提。这样的引用能把证明逐步积累成可继续构造的共同知识；它仍须保留作者、来源和版本信息。蓝图的[工作流与复用](#workflow-reuse)部分讨论了 Litex 如何为这条路径留下记录。
 
-Litex 在源码中分别写清数学对象、关于它们的事实，以及定义和证明步骤，让读者可以沿着熟悉的数学思路阅读。这样的区分首先服务于表达和理解；证明是否容易完成，还取决于具体问题与系统支持。
+但机器能够检查，还不足以让数学家掌握这份知识。Lean 等成熟系统提供了严格的验证与丰富的数学库，也要求使用者学习新的表达方式、证明接口和库组织。AI 可以帮助生成代码，却不能保证作者理解代码中的命题与证明。数学家可能理解自己原本的论证，却难以判断生成的形式化版本是否漏掉条件、改变了量词，或证明了一个较弱的结论。验证器检查的是代码实际表达的命题；数学意图与形式化陈述是否一致，仍需要作者审阅。
 
-数学家最能判断一种新写法是否忠实于数学意图。Litex 想请教的，不只是某条证明能否通过，还包括源码、验证依据和可复用接口是否有助于理解数学。作者希望以这种语言探索为 Math for AI 提供一种新视角，也欢迎读者用真实数学问题检验它。
+**AI 降低了生成形式化代码的成本，语言仍须降低人理解和掌握这些代码的成本。** 如果承载自己思想的证明文本无法由自己审阅和修改，数学家就难以对其表达负责，也难以从他人的证明中学习和继续探索。[陶哲轩等 25 位菲尔兹奖得主在 2026 年 9 月的声明](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)强调，快速产出答案不能取代概念理解、思想传播与数学共同体的消化过程。
+
+Litex 的设计目标，是让同一份证明源码同时服务于机器检查与数学家的阅读：直接写出对象、定义、条件、中间事实和结论，让日常数学思路在形式化文本中保持可见。作者选择数学步骤，AI 协助书写与修复，Litex 检查受支持的连接，并留下验证依据与明确的未完成边界。数学家可以据此审阅数学意图、修改证明，再把结果交给他人检查和复用。[两个参与门槛的例子](#overview-readers)展示了这种接口选择。
+
+这也是检验 Litex 的标准：数学家能否读懂 AI 写下的正式陈述，发现与原意的偏差，理解关键推理，并在明确的条件下复用他人的结果？当前语言、标准库、可信基础与 Lean 编译覆盖仍有边界；降低学习和审阅成本的效果，需要真实数学任务和用户研究来衡量。Litex 希望让数学家在采用人–AI 工作流时，仍能理解并掌握自己的证明载体。
 
 <a id="reader-programmers"></a>
 
@@ -1857,6 +1871,8 @@ Litex:             多集合归属    ≈ dynamic（偏 Python）
 事实表与规则表把一部分依据检索工作从作者转移给语言；[第 1 节](#fact-oriented)说明这条默认路径的搜索边界，[验证实现的分工](#automation-implementation)解释相应的工程成本。作者能少写许多操作，是因为每条受支持的路径都在实现中处理了前提、结果与失败反馈。
 
 还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 3.4 节）——同样标明实验性，且范围很窄，不是整门语言的后端。
+
+<a id="reader-other-domains"></a>
 
 ### 写给其他知识领域的读者
 

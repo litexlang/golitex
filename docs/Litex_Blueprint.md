@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 8, 2026.
+Last updated: October 9, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -28,6 +28,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 - [7. The Art of Seeking What Is Different](#conclusions)
   - [Special Thanks](#special-thanks)
 - [Appendix: Programming, Mathematics, and Formalization with Litex](#overview-readers)
+  - [For Mathematicians: Machine Checking and Human Understanding](#reader-mathematicians)
   - [Personal Reflection: Does Litex Fill a Paradigm Gap in AI Reasoning?](#summary-bottom-up-and-top-down)
 - [Appendix: Source Gallery](#overview-gallery)
 
@@ -39,13 +40,20 @@ _“Language is an instrument of human reason, and not merely a medium for the e
 
 _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
-*Started in 2024, Litex is a formal language that organizes everyday mathematics around sets and facts. It hopes to become a Python for formal languages, helping more people gradually become formalization experts.*
+*Started in 2024, Litex is a formal language that organizes everyday mathematics around sets and facts. It hopes to [become a Python for formal languages, helping more people gradually become formalization experts](#reader-programmers).*
 
-**Fostering understanding is at the heart of Litex.** This quality is especially precious in the AI era. Litex hopes to reduce the effort of learning and reading formal mathematics through familiar objects and ways of writing, while helping readers use source and verification grounds to see connections between definitions, premises, and conclusions, [deepen their understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/), and find inspiration.
+**As AI makes reasoning easier to generate, how can we turn that reasoning into knowledge we can trust, understand, and build on?** A conclusion needs explicit premises, an argument needs checkable grounds, and a result needs to be understood by others who can develop it further. As candidate reasoning grows in volume, the costs of checking, understanding, and reuse become increasingly important.
 
-**Ordinary facts trigger local verification by default in Litex.** Authors choose definitions, constructions, and intermediate conclusions; the language finds supported grounds, returns structured feedback, and stores accepted facts in the context. AI can use these results to repair attempts, reuse knowledge, and collect checkable reasoning data. [Section 1.1](#fact-oriented-interface) gives concrete examples.
+Formal languages let machines rigorously check reasoning and let results be [cited again under explicit conditions](#workflow-reuse). AI makes formal code easier to generate. Even after that code passes checking, people still need to see what it actually expresses, which assumptions it relies on, and whether it faithfully captures their intent. **People need to understand and control the language that carries their own ideas.**
 
-The current build provides an initial `litex -lean -f <source.lit>` entrypoint for standalone files. It compiles supported verification results into Lean proofs for independent rechecking; coverage of the full Litex system and its connection to the existing formalization ecosystem remain work in progress.
+**Litex explores a formal language in which human understanding and machine checking meet in the same text.** It organizes reasoning through [familiar mathematical objects, conditions, and facts](#set-theory): people choose definitions, constructions, and key steps; [AI assists with writing and repair](#interaction-loop); the language [checks supported connections and records the grounds for each step](#execution-model). It asks whether this form of expression can lower the cost for people and AI to construct, review, repair, and reuse checkable knowledge.
+
+Litex also includes a [compiler design for translation to Lean](#compatibility), exploring how supported verification grounds can become Lean proofs for independent rechecking and connection to the existing formalization ecosystem. See the [Litex-to-Lean compiler design guide](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md) for the design and current supported scope. The Litex-to-Lean compiler is expected to be completed by the end of 2026.
+
+As AI grows more capable, Human–AI mathematical workflows could enable exploration on a scale difficult to imagine today. Traditional review, with manual scrutiny that often takes more than a year, cannot alone keep pace with a growing volume of candidate proofs; checking the logical correctness of proofs with formal languages often takes only minutes, making their adoption a growing necessity. **Mathematicians should [understand and control their formal tools](#reader-mathematicians), making the medium of mathematical knowledge itself something they can understand, discuss, and improve, rather than a black box left to AI.** Litex aims to substantially lower the barrier to mastering a formal language: through familiar mathematical expression and [a proof interface that states facts directly](#fact-oriented-interface), it seeks to reduce the effort of translating mathematical ideas into computer language, freeing mathematicians to devote more attention to the ideas themselves.
+
+**Starting from mathematics, Litex’s vision is to bring understandable, checkable reasoning into a [wider world of knowledge](#ecosystem-role).** Mathematics is the mother of the natural sciences; I hope formal languages can reach wherever mathematics reaches and brings benefits, and that Litex can contribute to that journey as part of the infrastructure for trustworthy reasoning in the AI era.
+
 
 <a id="overview-spine"></a>
 
@@ -124,7 +132,7 @@ The JSON record for `$is_odd(3)` shows that the language checks the fact by unfo
 
 These records let both people and AI see whether a statement passed, what kind of grounds the language found, and what the step left behind.
 
-**Multilingual feedback.** The CLI can present this JSON feedback in multiple languages. The same source can be checked with `litex -lang zh -e '1 + 1 = 2'` for Chinese field names and explanations, or with `-lang fr` for French. Thanks in part to AI-assisted translation, this multilingual explanatory copy became feasible; choosing an output language does not change the Litex source or its verification. The current output locales are `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, and `vi`.
+**Multilingual feedback.** The CLI can present this JSON feedback in multiple languages. The same source can receive Chinese field names and explanations, or feedback in French and other languages. Thanks in part to AI-assisted translation, this multilingual explanatory copy became feasible; choosing an output language does not change the Litex source or its verification. The current output locales are `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, and `vi`.
 
 **2. I can start from familiar mathematical axioms and notation.**
 
@@ -164,7 +172,7 @@ litex> f(4) = 1 / 4
 success
 ```
 
-**Save knowledge for use in another file.** In the later [Newton-update example](#workflow-exploration), I save the function definition and fixed-point theorem in `newton.lit`. With the project organized as in [Section 3.3](#workflow-reuse), I can cite the established result from another file:
+**Save knowledge for use in another file.** In the later [Newton-update example](#workflow-exploration), I save the function definition and fixed-point theorem in `newton.lit`. With the project organized as in Section 3.3, I can cite the established result from another file:
 
 <!-- litex:skip-test -->
 ```litex
@@ -195,7 +203,7 @@ release thm newton::fixed_point(sqrt(2))
 
 For extraction details and supported forms, see the [Python/C extraction implementation](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code).
 
-**Use mathematical content in your own tools.** `litex -lang en -f example.lit` emits JSON containing statement text, stored facts, inferred facts, and proof summaries. Readers can extract that content for their own indexes and visualizations. Normal JSON summarizes verification rather than recording every dependency. See the [JSON output contract](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract) for its fields and limits.
+**Use mathematical content in your own tools.** The verifier’s JSON output contains statement text, stored facts, inferred facts, and proof summaries. Readers can extract that content for their own indexes and visualizations; the [litexlang.com](https://litexlang.com) homepage includes an interactive example of a mathematical concept relationship graph. Normal JSON summarizes verification rather than recording every dependency. See the [JSON output contract](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract) for its fields and limits.
 
 **Write mathematics for others to read.** Mathematical source can also be converted to LaTeX for lecture notes or a manuscript. A mathematical fact appears on the left and its actual typesetting source on the right. Conversion handles presentation; mathematical verification is a separate step:
 
@@ -215,23 +223,13 @@ For extraction details and supported forms, see the [Python/C extraction impleme
 
 See the [LaTeX conversion implementation](https://github.com/litexlang/golitex/tree/main/src/compile_to_latex) for how mathematical source is rendered.
 
-See [Section 3](#mathematical-workflow) for the complete definitions, proofs, and project setup.
+See Section 3 for the complete definitions, proofs, and project setup.
 
 **4. AI can work with people to advance proofs through explicit feedback.**
 
 AI can help try different approaches, fill in steps, and correct errors. People focus on the problem and its mathematical meaning; Litex provides verification feedback. Their shared work should accumulate checkable results.
 
 ![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
-
-```mermaid
-flowchart LR
-    Human["Human: problems and mathematical judgment"] --> AI["AI: propose and revise proofs"]
-    AI --> Litex["Litex: verification and feedback"]
-    Litex --> AI
-    Litex --> Knowledge["Verified knowledge"]
-    Knowledge --> Human
-    Knowledge --> AI
-```
 
 **5. A supported proof can also be checked by Lean.**
 
@@ -243,7 +241,7 @@ For example, the source in `lean/examples/one_equals_itself/statement.lit` state
 1 = 1
 ```
 
-Running `litex -lean -f lean/examples/one_equals_itself/statement.lit` emits the paired Lean source to stdout; saving that output yields the `.lean` file. Its proof has this form, with only the generated namespace omitted:
+The paired Lean source for this example has the following proof form, with only the generated namespace omitted:
 
 ```lean
 import Litex
@@ -257,7 +255,7 @@ theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M :
 
 `Litex.number` returns an `Obj ℂ` containing the native number and its well-definedness proof. `Litex.Same` compares represented meanings under the explicit `Semantics` parameter `M`; the compiler replays the checked reflexivity route through `Litex.sameRefl`. This generated example passes Lean checking, but it does not establish a complete Litex model or compilation of every proof route.
 
-The maintained source locations are the [Lean semantic interface](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean) and [paired compiler examples](https://github.com/litexlang/golitex/tree/main/lean/examples). Earlier complex-function output is identified as historical in [Section 5](#compatibility).
+The maintained source locations are the [Lean semantic interface](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean) and [paired compiler examples](https://github.com/litexlang/golitex/tree/main/lean/examples). Earlier complex-function output is identified as historical in Section 5.
 
 Whether you are a mathematician, a programmer, or a Lean user, Litex can offer new knowledge and perspectives; if you are interested, continue with [Programming, Mathematics, and Formalization with Litex](#overview-readers) at the end of this document.
 
@@ -1134,7 +1132,7 @@ release obj def newton::newton_sqrt_two
 by thm newton::fixed_point(sqrt(2)) => newton::newton_sqrt_two(sqrt(2)) = sqrt(2)
 ```
 
-Running `litex -strict -f example.lit` loads the preceding `newton.lit` and checks this application. These two excerpts are verified in the project context described above; they are not standalone files.
+Checking this application first loads the preceding `newton.lit`. These two excerpts depend on the project context described above.
 
 </details>
 
@@ -1438,9 +1436,9 @@ _“A formal proof is a proof in which every logical inference has been checked 
 
 _— Thomas Hales, “Formal Proof” (2008)_
 
-Litex checks source with its own verifier and provides feedback; the current build also has an initial standalone `-lean -f` compiler. Independent rechecking requires three conditions: translation preserves the original proposition, generated proofs contain no holes, and Lean's kernel actually accepts them. Meeting these conditions reduces reliance on Litex's own verifier for the compiled routes and allows further connections to Mathlib. The current compiler supports a limited set of results, not the full Litex system.
+Litex checks source with its own verifier and provides feedback; it also includes a compiler design and initial implementation for translation to Lean. Independent rechecking requires three conditions: translation preserves the original proposition, generated proofs contain no holes, and Lean's kernel actually accepts them. Meeting these conditions reduces reliance on Litex's own verifier for the compiled routes and allows further connections to Mathlib. The current compiler supports a limited set of results, not the full Litex system.
 
-> **Current build:** `litex -lean -f <source.lit>` compiles supported standalone source and rejects unsupported routes. The current interface lives in [lean/Litex.lean](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean), with generated pairs under [lean/examples](https://github.com/litexlang/golitex/tree/main/lean/examples). The complex-function example below records an earlier experiment; it has not been regenerated by the current compiler or rechecked with the current Lean toolchain.
+> **Design and implementation:** See the [compiler design guide](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md) for the design and current supported scope. The current interface lives in [lean/Litex.lean](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean), with generated pairs under [lean/examples](https://github.com/litexlang/golitex/tree/main/lean/examples). The complex-function example below records an earlier experiment; it has not been regenerated by the current compiler or rechecked with the current Lean toolchain.
 
 <details>
 <summary><strong>Historical example: an earlier Litex-to-Lean compilation experiment</strong></summary>
@@ -1714,7 +1712,20 @@ choice-backed product nonemptiness identifies its axiom-of-choice provenance.
 
 ## Appendix: Programming, Mathematics, and Formalization with Litex
 
-This section draws on the experience of Lean users, mathematicians, programmers, and readers in other knowledge domains to discuss the knowledge and perspectives Litex may offer. You can choose the parts that interest you, or return to the [five characteristics](#overview-spine) to continue exploring the language design.
+Different readers can approach Litex through different questions. The table connects these perspectives to concrete designs; follow the links for examples and boundaries, then read the detailed discussion below.
+
+| Reader | How to understand Litex | Design and reading entry points |
+| --- | --- | --- |
+| AI-for-Math researchers | A working environment where AI proposes mathematical facts step by step, repairs proofs using verification feedback, and accumulates results for later use. | [Human–AI collaboration and feedback](#interaction-loop), [knowledge records left by each statement](#execution-model), [result reuse](#workflow-reuse) |
+| Mathematicians | A proof medium they can read, revise, and cite, bringing machine checking and mathematical understanding together in the same source. | [Familiar mathematical expression](#set-theory), [thinking, writing, and checking](#workflow-exploration), [for mathematicians](#reader-mathematicians) |
+| Lean users and formalization researchers | A language design with facts as its default interface: authors state what holds next, and the verifier finds local grounds; the compiler design connects supported routes to Lean rechecking. | [Fact-oriented interface](#fact-oriented-interface), [Lean–Litex comparison](#reader-lean), [Lean compilation and rechecking](#compatibility) |
+| AI safety and trustworthy-reasoning researchers | A mathematical testbed for studying how reasoning grounds, explicit assumptions, and checking boundaries can be inspected; applications to broader AI systems remain to be explored. | [Verification records and boundaries](#execution-model), [verifier responsibilities](#automation-implementation), [ecosystem goals](#ecosystem-role) |
+| Programmers and tool developers | A language that organizes mathematics through objects, facts, and statements; verification results can feed indexes and visualizations, while supported computational fragments can be explored through program extraction. | [For programmers](#reader-programmers), [computation and communication](#workflow-use) |
+| Readers in other knowledge domains | An entry point for trying explicit representations of domain objects, conditions, and rules, with formal checking to aid scrutiny of arguments; applicability in each domain needs separate validation. | [Exploration in other domains](#reader-other-domains), [ecosystem goals](#ecosystem-role) |
+
+These perspectives concern the same [language design characteristics](#overview-spine); their value and scope still need to be tested through concrete tasks.
+
+<a id="reader-lean"></a>
 
 ### For Lean users
 
@@ -1866,19 +1877,23 @@ An ideal workflow could use goals to choose a worthwhile route, then accumulate 
 
 </details>
 
-### For mathematicians
+<a id="reader-mathematicians"></a>
 
-If you work in mathematics, what you may care about first is not yet another tool, but how mathematical understanding—and the traditional values mathematics represents—can be preserved in the AI era.
+### For Mathematicians: Machine Checking and Human Understanding
 
-AI is bringing *reasoning abundance*: answers and proofs can be generated at scale, yet they are not automatically trustworthy or explainable, nor do they necessarily deepen understanding. As [Terence Tao said in his 2026 ICM public lecture](https://www.youtube.com/watch?v=M0--ZH1lOzg), the future of mathematics needs to shift toward verification, exposition, and digestion of proofs. More generally: how can AI-generated reasoning become shared knowledge that is checkable, understandable, and reusable—not only in mathematics, but across knowledge work?
+**Mathematicians need a proof medium that machines can check and that they themselves can read, revise, and cite.** Litex is designed for mathematical work in which people and AI explore together. AI can help propose constructions, complete arguments, and revise expressions; mathematicians still judge whether a question matters, whether definitions are appropriate, and whether a proof brings understanding.
 
-Today’s mathematical world is not calm: hot topics rotate quickly, and AI sometimes makes mathematical problems chaseable like “mining.” In September 2026, Terence Tao and 25 Fields medalists warned that AI companies treating “fast problem-solving” as a measure of mathematical progress may sacrifice genuine understanding, originality, scholarly transmission, and norms of attribution, severely misaligning AI development goals with the mathematical community. [Original post](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)
+This collaboration puts pressure on checking capacity. Reviewing a complex paper can involve a lengthy process of manual scrutiny. If candidate proofs are continually generated in large numbers, checking each one by hand is unlikely to scale with production. Formal languages offer a route: state definitions, premises, conclusions, and reasoning steps explicitly, and let machines perform the logical checks that can be formalized. Once a proof has been formalized within a verifier’s supported scope, others can rerun the check and reduce duplicated manual scrutiny. Mathematical significance, originality, quality of exposition, and attribution still require the community’s judgment.
 
-Litex aims to build a readable working interface between everyday mathematical expression and formal verification. Domain knowledge can be written as objects, conditions, and facts, checked by machine, and then revisited through the grounds used at each step. The value of mathematics lies not only in conclusions, but in understanding how they hold.
+Formalization also changes how proofs can be cited. Readers can inspect a result’s exact statement, conditions, and dependencies, then use it in a later proof with the system checking that its premises are met. Such reuse can accumulate proofs into shared knowledge on which further constructions can depend; it still needs author, source, and version information. The Blueprint’s [workflow and reuse](#workflow-reuse) section discusses how Litex leaves records for this route.
 
-Litex distinguishes mathematical objects, facts about them, and definition and proof steps in its source, helping readers follow a familiar mathematical line of thought. This separation serves expression and understanding; how easily a proof can be completed still depends on the problem and the system's support.
+Machine checking alone, however, does not ensure that mathematicians understand and control this knowledge. Mature systems such as Lean provide rigorous checking and rich mathematical libraries, while requiring users to learn new representations, proof interfaces, and library organization. AI can help generate code without ensuring that the author understands its statement and proof. A mathematician may understand the original argument yet struggle to tell whether its generated formal version omits a condition, changes a quantifier, or proves a weaker conclusion. The verifier checks the proposition actually expressed in code; the author must still inspect whether it matches the intended mathematics.
 
-Mathematicians are well placed to judge whether a new form of writing is faithful to mathematical intent. Litex invites scrutiny of whether its source, verification grounds, and reusable interfaces aid understanding, as well as whether a particular proof passes. The author hopes this language experiment offers Math for AI another perspective and welcomes tests using real mathematics.
+**AI lowers the cost of generating formal code; the language must also lower the cost for people to understand and control that code.** If mathematicians cannot inspect and revise the proof text carrying their own ideas, they struggle to take responsibility for its expression and to learn from and extend others’ proofs. A [September 2026 declaration by Terence Tao and 24 other Fields medalists](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/) emphasizes that rapid production of answers cannot replace conceptual understanding, transmission of ideas, and their digestion by the mathematical community.
+
+Litex’s design goal is for the same proof source to serve machine checking and mathematical reading: write objects, definitions, conditions, intermediate facts, and conclusions directly, keeping familiar mathematical thought visible in formal text. Authors choose the mathematical steps, AI assists with writing and repair, and Litex checks supported connections while leaving verification grounds and explicit unfinished boundaries. Mathematicians can use these to inspect intent, revise a proof, and pass results to others for checking and reuse. The [two participation-barrier examples](#overview-readers) illustrate this interface choice.
+
+This also gives a criterion for evaluating Litex: can mathematicians read AI-written formal statements, detect departures from their intent, understand the key reasoning, and reuse others’ results under explicit conditions? The current language, standard library, trusted base, and Lean compilation coverage retain limitations; improvements in learning and review costs need measurement through real mathematical tasks and user studies. Litex aims to let mathematicians adopt Human–AI workflows while continuing to understand and control the medium of their proofs.
 
 <a id="reader-programmers"></a>
 
@@ -1903,6 +1918,8 @@ Litex:                many-set membership ≈ dynamic (Python-like)
 Fact and rule tables transfer some grounds retrieval from the author to the language. [Section 1](#fact-oriented) explains the boundaries of that default search path, and the [division of verification responsibilities](#automation-implementation) explains the engineering cost. Authors can omit many operations because each supported path handles premises, results, and failure feedback in the implementation.
 
 There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 3.4)—again experimental, and narrow, not a full language backend.
+
+<a id="reader-other-domains"></a>
 
 ### For readers in other knowledge domains
 

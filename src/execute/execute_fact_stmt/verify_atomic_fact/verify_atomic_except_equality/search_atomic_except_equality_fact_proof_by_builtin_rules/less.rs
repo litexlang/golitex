@@ -20,6 +20,7 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    AbsPositiveFromNonzero(super::abs_positive_from_nonzero::AbsPositiveFromNonzeroProof),
     LnNegativeBelowOne(super::scalar_extra_sign::LnNegativeBelowOneProof),
     LnPositiveAboveOne(super::scalar_extra_sign::LnPositiveAboveOneProof),
     ProductPositiveNegativeStrict(super::scalar_extra_sign::ProductPositiveNegativeStrictProof),
@@ -446,6 +447,10 @@ impl Runtime {
                     ));
                 }
             }
+        }
+
+        if let Some(proof) = self.search_abs_positive_from_nonzero(fact, verify_state)? {
+            return Ok(Some(proof));
         }
 
         // Pure shape cites that do not nest verify_fact.
