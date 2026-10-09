@@ -1,0 +1,24 @@
+# Focused gate: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rule/nonnegative_square_order_reflection.lit
+# Formerly rejected in truth search:
+# forall x,y R:
+#     x >= 0
+#     y >= 0
+#     x^2 <= y^2
+#     =>:
+#         x <= y
+
+forall x,y R:
+    x >= 0
+    y >= 0
+    x^2 <= y^2
+    =>:
+        x <= y
+
+forall x,y R:
+    x >= 0
+    y >= 0
+    x^2 >= y^2
+    =>:
+        x >= y
+
+# Boundary: missing necessary signs and weak-to-strict conclusions reject in Rust controls.

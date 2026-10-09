@@ -48,6 +48,22 @@ the selected verification route, object well-definedness evidence, child
 proofs, and citations to earlier facts. Compilation consumes those typed
 results in source order.
 
+The Rust entrypoint makes the execution and compilation stages explicit:
+
+```rust
+let result = runtime.run_litex_code(&source)?;
+let compiler = LitexToLeanCompiler::new(&result, &runtime);
+let lean = compiler.compile(&artifact_namespace)?;
+```
+
+The compiler owns one artifact's replay state and dispatches `ExecStmtResult`
+by its actual Fact/Definition/By variants, then dispatches their typed child
+results. Runtime executes the source once and remains an immutable exact-ID
+citation resolver during compilation. The current result is not self-contained
+after Runtime disposal. `compile` consumes the compiler and returns source only
+when the complete replay succeeds. The existing free `compile_run` API remains
+a convenience entrypoint to this implementation.
+
 For `1 = 1`, the recorded route is reflexivity. For a fact such as
 `a + 0 = a`, a selected rational-normalization route must go through its
 normalization adapter. Recognizing the final equality and substituting an

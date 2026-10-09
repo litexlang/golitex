@@ -10,16 +10,15 @@ and output behavior.
 ## Entry point and owners
 
 ```rust
-pub fn compile_run(
-    result: &RunLitexCodeResult,
-    runtime: &Runtime,
-    artifact_namespace: &str,
-) -> Result<String, LeanCompileError>
+let result = runtime.run_litex_code(&source)?;
+let compiler = LitexToLeanCompiler::new(&result, &runtime);
+let lean = compiler.compile(&artifact_namespace)?;
 ```
 
 | File | Responsibility |
 | --- | --- |
-| [compile_run.rs](compile_run.rs) | Validate the successful run, replay statements and evidence, and return the complete Lean source. |
+| [litex_to_lean_compiler.rs](litex_to_lean_compiler.rs) | Own one artifact's replay state, validate the run, dispatch typed results, and return complete Lean source. |
+| [compile_run.rs](compile_run.rs) | Preserve the existing free-function API by delegating to LitexToLeanCompiler. |
 | [lean_compile_error.rs](lean_compile_error.rs) | Report the source statement index, evidence route, and rejection reason. |
 | [tests.rs](tests.rs) | Exercise supported replay and reject missing, changed, or out-of-scope evidence. |
 | [mod.rs](mod.rs) | Declare the module and export its public API. |
@@ -31,17 +30,31 @@ pub fn compile_run(
 The shared CLI output writer emits Lean source on stdout or a phase diagnostic
 on stderr. `main` uses the same entrypoint for every command.
 
-`Runtime` is borrowed for citation resolution. It does not run a second proof
-search for the compiler. Display strings and presentation JSON are not replay
-inputs.
+`LitexToLeanCompiler` borrows the completed typed result and the same live
+`Runtime` that produced it. It owns the replay scopes, identifier/fact/WD
+registries, universes and exported parameter context. `compile` consumes the
+instance: completed or partially failed replay state cannot be reused for a
+different artifact. The free `compile_run` function remains compatible and
+delegates to this same implementation.
+
+`Runtime` is borrowed only for exact citation resolution; it performs no second
+proof search for the compiler. Result references are not yet an owned closure
+that can survive Runtime disposal. Display strings and presentation JSON are
+not replay inputs.
 
 ## Replay pipeline
 
-`compile_run` rejects a failed or incomplete source run, then visits
+`LitexToLeanCompiler::compile` rejects a failed or incomplete source run, then visits
 `statement_results` in order. It returns the assembled artifact only after
 every statement succeeds. It accepts supported fact statements, `let`, typed
 RHS `have`, ordinary numeric `have` contexts, named `thm`, and explicit `by thm` selections. Other statement and
 object families retain explicit unsupported branches.
+
+`compile_statement_in_scope` dispatches on `ExecStmtResult`. Fact results go to
+`compile_fact_statement`; definition results go to `compile_definition_statement`
+and its `ExecDefineObjStmtResult` dispatcher; by-results go to
+`compile_by_statement`. These are methods of the same state owner, not separate
+mutable compilers. Each handler then replays its existing typed child evidence.
 
 Aliases keep their source IdentifierIds and actual stored defining equalities.
 Their Lean definitions retain the certified RHS object rather than choosing a

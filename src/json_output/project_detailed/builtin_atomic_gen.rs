@@ -17,6 +17,16 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::AbsPositiveFromNonzero(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("AbsPositiveFromNonzero")),
+            ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NonnegativeSquareOrderReflection(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("NonnegativeSquareOrderReflection")),
+            ("left_nonnegative", project_verify_fact(&p.left_nonnegative, runtime)),
+            ("right_nonnegative", project_verify_fact(&p.right_nonnegative, runtime)),
+            ("squared_order", project_verify_fact(&p.squared_order, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsDifferenceTriangle(_)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("AbsDifferenceTriangle")),
         ]),

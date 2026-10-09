@@ -1013,3 +1013,14 @@ The factorial-as-product author tracer now reuses one checked identity-function 
 The 2026-10-07 additions cover [integer reciprocal powers](equal/by_builtin_rule/power_negative_integer_reciprocal.lit), [symbolic complex modulus](equal/by_builtin_rule/complex_modulus_coordinates_symbolic.lit), complex quotient [real](equal/by_builtin_rule/complex_quotient_real_coordinates.lit) and [imaginary](equal/by_builtin_rule/complex_quotient_imaginary_coordinates.lit) coordinates, intrinsic [exponential](atomic/by_builtin_rule/exp_nonzero_intrinsic.lit) and [factorial](atomic/by_builtin_rule/factorial_nonzero_intrinsic.lit) nonzero values, sign bounds/reflection/weak order, and binary min/max bounds/weak order.
 
 Each property has its own strict runnable file and dedicated rule evidence. Monotonicity retains the actual argument orders; an unchanged argument carries structural identity evidence. Quotient WD retains the nonzero denominators. A guarded universal may need the existing source-order introduction when upfront WD cannot reuse the whole stored proposition. The `legacy_six_simple_bt_tests` regressions cover exact original sources, false and invalid-domain boundaries, inherited permissions, repeat/alpha reuse, failed publication, detailed premises, graph edges and all output locales. `run_examples_legacy_six_simple_bt_tracers` collects the 16 dedicated examples; it does not claim whole-corpus coverage.
+
+## Absolute-value positivity and nonnegative square order
+
+[Absolute-value positivity](atomic/by_builtin_rule/abs_positive_from_nonzero.lit)
+consumes the real argument's nonzero evidence.
+[Nonnegative square-order reflection](atomic/by_builtin_rule/nonnegative_square_order_reflection.lit)
+consumes both nonnegative guards and the squared comparison in its actual
+source direction. No explicit cases or contradiction body is required.
+The focused `abs_positive_square_reflection_tests` cover missing and false
+conditions, WD, restricted permissions, rollback, all output languages,
+checked Detailed premises and unsupported Lean compilation.

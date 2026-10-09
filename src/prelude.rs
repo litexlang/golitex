@@ -54,3 +54,8 @@ pub(crate) use crate::execute::{
 };
 
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule;
+
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
+    less::LessFactSearchProofByBuiltinRule,
+    less_equal::LessEqualFactSearchProofByBuiltinRule,
+};
