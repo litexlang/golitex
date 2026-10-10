@@ -284,7 +284,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                         "factor_nonzero_proof",
                         super::verify::project_verify_fact(&r.factor_nonzero_proof, runtime),
                     ),
-                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                    ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
             InferEqualityResult::SubtractiveCancellation(r) => rules.push(object_for(
@@ -305,7 +305,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                         "common_in_c_proof",
                         super::verify::project_verify_fact(&r.common_in_c_proof, runtime),
                     ),
-                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                    ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
             InferEqualityResult::CommonDenominatorCancellation(r) => rules.push(object_for(
@@ -330,7 +330,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                         "denominator_nonzero_proof",
                         super::verify::project_verify_fact(&r.denominator_nonzero_proof, runtime),
                     ),
-                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                    ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
             InferEqualityResult::NonzeroNumeratorCancellation(r) => rules.push(object_for(
@@ -369,7 +369,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                             runtime,
                         ),
                     ),
-                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                    ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
             InferEqualityResult::PositiveRealPower(_) => {}
@@ -389,6 +389,25 @@ pub(super) fn project_have_store_ids(fact_ids: &[FactId], runtime: &Runtime) -> 
         vec![
             ("stores", JsonValue::Array(stores)),
             ("infers", JsonValue::Array(Vec::new())),
+        ],
+    )
+}
+
+fn project_inferred_store(
+    result: &crate::store_fact_and_infer::StoreInferredFactAndInferResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(
+        runtime,
+        vec![
+            (
+                "well_defined",
+                super::wd::project_fact_wd_proof(&result.well_defined, runtime),
+            ),
+            (
+                "store_and_infer",
+                project_store_and_infer(&result.store_and_infer, runtime),
+            ),
         ],
     )
 }

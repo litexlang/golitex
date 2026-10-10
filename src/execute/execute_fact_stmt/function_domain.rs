@@ -1,6 +1,7 @@
 //! Complete function domains, read from checked constructions and memberships.
 //! This is proof consumption: no new Env state, signature cache or shape tag.
 
+use crate::prelude::*;
 use super::{fn_sets_alpha_equal, ObjWellDefinedProof, VerifyFactResult,
     VerifyObjWellDefinedResult, VerifyState};
 use crate::ast::fact::{negate_atomic_fact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, IsNonemptySetFact, LessEqualFact, LessFact, PlainExistFact, QuantifierFreeFact};
@@ -206,7 +207,14 @@ impl Runtime {
             if group.params.is_empty() {
                 continue;
             }
-            let peers = self.exact_property_object_values(&group.param_type);
+            let peers = self.exact_property_object_values_of_shapes(
+                &group.param_type,
+                &[
+                    EqualToObjShape::ListSet,
+                    EqualToObjShape::Range,
+                    EqualToObjShape::ClosedRange,
+                ],
+            );
             for (carrier, path) in peers {
                 let evidence = match &carrier {
                     Obj::SetFormer(SetFormer::ListSet(set)) if set.list.is_empty() => {
@@ -695,7 +703,14 @@ impl Runtime {
                 source: CompleteFunctionDomainSourceProof::FiniteFunction(Box::new(source)),
             })
             .collect();
-        for (value, path) in self.exact_property_object_values(function) {
+        for (value, path) in self.exact_property_object_values_of_shapes(
+            function,
+            &[
+                EqualToObjShape::FnObj,
+                EqualToObjShape::AnonymousFn,
+                EqualToObjShape::InstantiatedTemplateObj,
+            ],
+        ) {
             if let Obj::FnObj(application) = &value {
                 domains.extend(self.complete_application_return_domains(
                     application,
@@ -732,14 +747,18 @@ impl Runtime {
         // Do not read a neighbor's memberships: exact-subject properties are
         // the authority for complete domains, including checked space aliases.
         let mut seen_memberships = HashSet::new();
-        for property in self.known_special_properties_of(function) {
-            let SpecialProperty::Membership(membership) = property else {
-                continue;
-            };
+        for membership in self.known_memberships_of(function) {
             if !seen_memberships.insert(membership.fact_id) {
                 continue;
             }
-            for (carrier, carrier_path) in self.exact_property_object_values(&membership.set) {
+            for (carrier, carrier_path) in self.exact_property_object_values_of_shapes(
+                &membership.set,
+                &[
+                    EqualToObjShape::FnSet,
+                    EqualToObjShape::SeqSet,
+                    EqualToObjShape::FiniteSeqSet,
+                ],
+            ) {
                 let Some(signature) = self.function_space_signature(&carrier) else {
                     continue;
                 };
@@ -785,7 +804,10 @@ impl Runtime {
                 vec![],
             ));
         }
-        for (peer, function_path) in self.exact_property_object_values(&head) {
+        for (peer, function_path) in self.exact_property_object_values_of_shapes(
+            &head,
+            &[EqualToObjShape::InstantiatedTemplateObj],
+        ) {
             let Obj::InstantiatedTemplateObj(instance) = &peer else {
                 continue;
             };
@@ -839,7 +861,14 @@ impl Runtime {
             let Some(return_space) = self.applied_fn_set_return_set(application, &signature) else {
                 continue;
             };
-            let return_peers = self.exact_property_object_values(&return_space);
+            let return_peers = self.exact_property_object_values_of_shapes(
+                &return_space,
+                &[
+                    EqualToObjShape::FnSet,
+                    EqualToObjShape::SeqSet,
+                    EqualToObjShape::FiniteSeqSet,
+                ],
+            );
             let Some((carrier, carrier_path)) = return_peers.into_iter().find(|(carrier, _)| {
                 matches!(
                     carrier,
@@ -912,7 +941,16 @@ impl Runtime {
     /// The caller's WD must retain carrier equality when unfolding an alias.
     /// This is not evidence that the carrier set itself is a function value.
     pub(crate) fn returned_function_signature(&mut self, space: &Obj) -> Option<(FnSet, Obj)> {
-        let peers = self.exact_property_object_values(space);
+        let peers = self.exact_property_object_values_of_shapes(
+            space,
+            &[
+                EqualToObjShape::AnonymousFn,
+                EqualToObjShape::Cart,
+                EqualToObjShape::FnSet,
+                EqualToObjShape::SeqSet,
+                EqualToObjShape::FiniteSeqSet,
+            ],
+        );
         for (carrier, _) in peers {
             let signature = match &carrier {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {

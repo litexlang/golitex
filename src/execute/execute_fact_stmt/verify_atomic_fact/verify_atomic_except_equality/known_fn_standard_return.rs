@@ -3,6 +3,7 @@ use crate::ast::fact::{AtomicFact, Fact, InFact};
 use crate::ast::obj::{FnObjHead, Obj, StandardSet, StructAndFieldAccessObj};
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::prelude::*;
 use crate::runtime::{FactId, Runtime};
 
 pub struct FnApplicationInStandardSupersetProof {
@@ -46,7 +47,14 @@ impl Runtime {
         // Native template/field declarations can supply WD without a stored
         // membership. Their existing producers retain that declaration evidence;
         // this stored-signature leaf must not ignore such an alternative.
-        for (peer, _) in self.exact_property_object_values(&head) {
+        for (peer, _) in self.exact_property_object_values_of_shapes(
+            &head,
+            &[
+                EqualToObjShape::InstantiatedTemplateObj,
+                EqualToObjShape::FieldAccess,
+                EqualToObjShape::Other,
+            ],
+        ) {
             if matches!(
                 peer,
                 Obj::InstantiatedTemplateObj(_) | Obj::StructAndFieldAccessObj(_)

@@ -7,6 +7,7 @@ use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::ExecStmtResult;
 use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
+use crate::prelude::*;
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -99,8 +100,9 @@ fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
     let pair_key = pair_signature.element.ir();
     let env = rt.top_exec_env_mut();
     let candidate = env.special_properties[&pair_key]
+        .memberships
         .iter()
-        .find(|p| p.function_signature().is_some())
+        .find(|fact| matches!(&fact.set, Obj::FunctionSpace(FunctionSpace::FnSet(_))))
         .unwrap()
         .clone();
     // Inject an arity-mismatched candidate ahead of the real definition to
@@ -109,7 +111,7 @@ fn structurally_inapplicable_signature_does_not_hide_a_later_definition() {
     env.special_properties
         .get_mut(&id_key)
         .unwrap()
-        .insert(0, candidate);
+        .prepend_membership_for_test(candidate);
     let before = memory_sizes(&rt);
     for target in targets {
         let proof = rt
@@ -700,7 +702,10 @@ fn memory_sizes(rt: &Runtime) -> Vec<(usize, usize, usize)> {
             (
                 env.facts.facts_by_id.len(),
                 env.well_defined_objects.object_to_wd_id.len(),
-                env.special_properties.values().map(Vec::len).sum(),
+                env.special_properties
+                    .values()
+                    .map(crate::exec_env::ObjectSpecialProperties::len)
+                    .sum(),
             )
         })
         .collect()

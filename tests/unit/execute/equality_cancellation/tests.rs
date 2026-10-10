@@ -125,7 +125,7 @@ fn equality_cancellation_keeps_source_and_all_premises() {
             .local_env
             .facts
             .facts_by_id
-            .get(&cancel.derived.primary_fact_id())
+            .get(&cancel.derived.store_and_infer.primary_fact_id())
             .unwrap()
             .readable_string(),
         "a = b"
@@ -336,7 +336,7 @@ fn equality_cancellation_premise_ceiling_does_not_search_forall() {
 }
 
 #[test]
-fn equality_cancellation_lean_citations_fail_closed_without_infer_replay() {
+fn equality_cancellation_lean_citations_replay_the_selected_inference() {
     for (seed, guard) in [
         ("a*k=b*k", "    k!=0\n"),
         ("a-k=b-k", ""),
@@ -348,9 +348,9 @@ fn equality_cancellation_lean_citations_fail_closed_without_infer_replay() {
         let mut rt = runtime();
         let run = rt.run_litex_code(&source).expect("source run");
         assert!(run.success);
-        let error = crate::compile_to_lean::compile_run(&run, rt, "cancellation_boundary")
-            .expect_err("uncompiled inferred equality must not become a Lean assumption");
-        assert_eq!(error.route, "FactId/Producer", "{error}");
+        let output = crate::compile_to_lean::compile_run(&run, rt, "cancellation_boundary")
+            .expect("the selected inferred equality has a checked compiler consumer");
+        assert!(!output.contains("sorry") && !output.contains("admit"));
     }
 }
 
@@ -429,7 +429,7 @@ fn equality_cancellation_division_retains_all_nonzero_certificates() {
             .local_env
             .facts
             .facts_by_id
-            .get(&r.derived.primary_fact_id())
+            .get(&r.derived.store_and_infer.primary_fact_id())
             .unwrap()
             .readable_string(),
         "a = b"

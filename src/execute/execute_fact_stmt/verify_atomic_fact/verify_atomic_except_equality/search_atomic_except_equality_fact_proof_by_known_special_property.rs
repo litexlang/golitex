@@ -14,6 +14,7 @@ use crate::execute::execute_fact_stmt::known_tuple::{
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::search_equal_fact_proof_by_they_are_the_same;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProof;
+use crate::prelude::*;
 use crate::runtime::{FactId, Runtime};
 
 pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
@@ -464,7 +465,10 @@ impl Runtime {
         }
         let template_head =
             crate::execute::execute_fact_stmt::known_tuple::tuple_function_head(application);
-        let template_peers = self.exact_property_object_values(&template_head);
+        let template_peers = self.exact_property_object_values_of_shapes(
+            &template_head,
+            &[EqualToObjShape::InstantiatedTemplateObj],
+        );
         for (peer, path) in &template_peers {
             let Obj::InstantiatedTemplateObj(instance) = peer else {
                 continue;
@@ -574,7 +578,7 @@ impl Runtime {
                 );
             }
         };
-        let properties = self.known_special_properties_of(&head);
+        let properties = self.known_function_signature_properties_of(&head);
         for property in properties {
             let Some(signature) = property.function_signature() else {
                 continue;
@@ -714,6 +718,7 @@ impl Runtime {
         Some(matches)
     }
 
+    #[cfg(test)]
     pub(in crate::execute) fn known_special_properties_of(
         &self,
         obj: &Obj,
@@ -722,7 +727,7 @@ impl Runtime {
         let mut properties = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(rows) = env.special_properties.get(&key) {
-                properties.extend(rows.iter().cloned());
+                properties.extend(rows.properties_in_order(&env.facts));
             }
         }
         properties

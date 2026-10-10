@@ -3,6 +3,7 @@ use super::helper::*;
 use crate::ast::fact::Fact;
 use crate::ast::obj::*;
 use crate::builtin_theorem::BuiltinTheoremId;
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
@@ -153,7 +154,10 @@ fn prepare_sums_contract(
                     continue;
                 }
                 let literal = rt
-                    .exact_property_object_values(function)
+                    .exact_property_object_values_of_shapes(
+                        function,
+                        &[EqualToObjShape::AnonymousFn],
+                    )
                     .into_iter()
                     .map(|(value, _)| value)
                     .find(|value| {

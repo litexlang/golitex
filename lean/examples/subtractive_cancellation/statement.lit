@@ -1,0 +1,16 @@
+# Removing a shared subtrahend or minuend recovers equality, including nested rational differences.
+
+forall a,b,k R:
+    a-k=b-k
+    =>:
+        a=b
+
+forall a,b,k C:
+    k-a=k-b
+    =>:
+        a=b
+
+forall a,b,x,y Q:
+    (a-x)-y=(b-x)-y
+    =>:
+        a=b

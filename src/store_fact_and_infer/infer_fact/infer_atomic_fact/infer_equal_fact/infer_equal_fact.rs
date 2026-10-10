@@ -25,3 +25,7 @@ impl Runtime {
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/equality_cancellation/tests.rs"]
 mod equality_cancellation_tests;
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/nonadditive_cancellation_capture/tests.rs"]
+mod nonadditive_cancellation_capture_tests;

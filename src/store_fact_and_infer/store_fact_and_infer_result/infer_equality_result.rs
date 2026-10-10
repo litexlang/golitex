@@ -52,7 +52,7 @@ pub struct InferEqualFactNonzeroFactorCancellationResult {
     pub right_in_c_proof: VerifyFactResult,
     pub common_in_c_proof: VerifyFactResult,
     pub factor_nonzero_proof: VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactAndInferResult>,
 }
 
 impl InferEqualFactNonzeroFactorCancellationResult {
@@ -63,7 +63,7 @@ impl InferEqualFactNonzeroFactorCancellationResult {
         right_in_c_proof: VerifyFactResult,
         common_in_c_proof: VerifyFactResult,
         factor_nonzero_proof: VerifyFactResult,
-        derived: StoreFactAndInferResult,
+        derived: StoreInferredFactAndInferResult,
     ) -> Self {
         Self {
             source_fact_id,
@@ -87,7 +87,7 @@ pub struct InferEqualFactSubtractiveCancellationResult {
     pub left_in_c_proof: VerifyFactResult,
     pub right_in_c_proof: VerifyFactResult,
     pub common_in_c_proof: VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactAndInferResult>,
 }
 
 impl InferEqualFactSubtractiveCancellationResult {
@@ -97,7 +97,7 @@ impl InferEqualFactSubtractiveCancellationResult {
         left_in_c_proof: VerifyFactResult,
         right_in_c_proof: VerifyFactResult,
         common_in_c_proof: VerifyFactResult,
-        derived: StoreFactAndInferResult,
+        derived: StoreInferredFactAndInferResult,
     ) -> Self {
         Self {
             source_fact_id,
@@ -117,7 +117,7 @@ pub struct InferEqualFactCommonDenominatorCancellationResult {
     pub right_in_c_proof: VerifyFactResult,
     pub common_in_c_proof: VerifyFactResult,
     pub denominator_nonzero_proof: VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactAndInferResult>,
 }
 
 impl InferEqualFactCommonDenominatorCancellationResult {
@@ -128,7 +128,7 @@ impl InferEqualFactCommonDenominatorCancellationResult {
         right_in_c_proof: VerifyFactResult,
         common_in_c_proof: VerifyFactResult,
         denominator_nonzero_proof: VerifyFactResult,
-        derived: StoreFactAndInferResult,
+        derived: StoreInferredFactAndInferResult,
     ) -> Self {
         Self {
             source_fact_id,
@@ -151,7 +151,7 @@ pub struct InferEqualFactNonzeroNumeratorCancellationResult {
     pub numerator_nonzero_proof: VerifyFactResult,
     pub left_denominator_nonzero_proof: VerifyFactResult,
     pub right_denominator_nonzero_proof: VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactAndInferResult>,
 }
 
 impl InferEqualFactNonzeroNumeratorCancellationResult {
@@ -164,7 +164,7 @@ impl InferEqualFactNonzeroNumeratorCancellationResult {
         numerator_nonzero_proof: VerifyFactResult,
         left_denominator_nonzero_proof: VerifyFactResult,
         right_denominator_nonzero_proof: VerifyFactResult,
-        derived: StoreFactAndInferResult,
+        derived: StoreInferredFactAndInferResult,
     ) -> Self {
         Self {
             source_fact_id,
@@ -184,10 +184,10 @@ impl InferEqualityResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
             Self::AdditiveCancellation(r) => r.derived.store_and_infer.stored_fact_ids(),
-            Self::NonzeroFactorCancellation(r) => r.derived.stored_fact_ids(),
-            Self::SubtractiveCancellation(r) => r.derived.stored_fact_ids(),
-            Self::CommonDenominatorCancellation(r) => r.derived.stored_fact_ids(),
-            Self::NonzeroNumeratorCancellation(r) => r.derived.stored_fact_ids(),
+            Self::NonzeroFactorCancellation(r) => r.derived.store_and_infer.stored_fact_ids(),
+            Self::SubtractiveCancellation(r) => r.derived.store_and_infer.stored_fact_ids(),
+            Self::CommonDenominatorCancellation(r) => r.derived.store_and_infer.stored_fact_ids(),
+            Self::NonzeroNumeratorCancellation(r) => r.derived.store_and_infer.stored_fact_ids(),
             Self::PositiveRealPower(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {

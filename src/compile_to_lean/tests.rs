@@ -4,6 +4,10 @@ use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToL
 mod additive_inference_tests;
 #[path = "../../tests/unit/compile_to_lean/arithmetic_congruence/tests.rs"]
 mod arithmetic_congruence_tests;
+#[path = "../../tests/unit/compile_to_lean/by_definition_in_theorem/tests.rs"]
+mod by_definition_in_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/cancellation_inference/tests.rs"]
+mod cancellation_inference_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
 #[path = "../../tests/unit/compile_to_lean/named_call_wd/tests.rs"]

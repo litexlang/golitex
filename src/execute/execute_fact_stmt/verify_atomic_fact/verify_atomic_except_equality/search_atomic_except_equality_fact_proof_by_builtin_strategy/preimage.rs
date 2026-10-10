@@ -5,6 +5,7 @@ use crate::execute::execute_fact_stmt::function_domain::function_application;
 use crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub struct PreimageMembershipStrategySingleStep {
@@ -116,7 +117,9 @@ impl Runtime {
             })
             .collect();
         if parameters.len() != 1 {
-            for (value, path) in self.exact_property_object_values(&member.element) {
+            for (value, path) in self
+                .exact_property_object_values_of_shapes(&member.element, &[EqualToObjShape::Tuple])
+            {
                 let Obj::ProductShape(ProductShape::Tuple(tuple)) = value else {
                     continue;
                 };

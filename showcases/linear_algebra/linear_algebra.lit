@@ -1,15 +1,16 @@
-# 线性代数讲稿：从平面运算到基与维数
+# Linear Algebra: From Vectors to Coordinates
 #
-# 这是参考 LADR 核心概念编写的课程，不追求原书逐条覆盖。
-# 两章共用一个例子：R² 的两个坐标方向。先计算、再抽象、再证明，最后回到例子。
-# 有限列表一律使用原生 finite_seq，空间固定共同的标量域，公理直接写在结构中。
-# 维数的一般定义需要基存在与基长度唯一；未证明的内容明确留待后续。
+# These lecture notes develop selected ideas from Sheldon Axler's
+# Linear Algebra Done Right. The real plane is our running example:
+# its familiar coordinate operations lead us to vector spaces, subspaces,
+# linear combinations, and bases. Each new definition answers a question
+# raised by the examples that precede it.
 #
-# 第一章：什么是一个向量空间？
-# 1.1 从看得见的计算开始（参考 LADR 1A）
-# 平面向量直接采用长度为2的原生有限序列，两个位置是两个实坐标。
-# 加法与数乘各自在两个坐标上进行。
-# 长度2的原生序列与它的两个坐标一致；这是之后坐标计算所用的表示事实。
+# Chapter 1. Vector Spaces
+# 1.1 Vectors and coordinate operations
+# A vector in the real plane is an ordered pair of real numbers.
+# We represent such a pair by a sequence of length two. Two vectors are
+# equal precisely when their corresponding coordinates are equal.
 claim:
     ? forall x finite_seq(R, 2):
         x = (x(1), x(2))
@@ -39,15 +40,17 @@ have fn plane_add(u, v finite_seq(R, 2)) finite_seq(R, 2) = (u(1) + v(1), u(2) +
 
 have fn plane_smul(a R, v finite_seq(R, 2)) finite_seq(R, 2) = (a * v(1), a * v(2))
 
-# 第一次先看坐标算式。后面构造空间并用通用变量实际验证运算。
+# Addition and scalar multiplication act on each coordinate.
+# The following calculations illustrate these operations in the plane.
 (1 + 3, 2 + 4) = (4, 6)
 
 (3 * 1, 3 * 2) = (3, 6)
 
 (3 * 1 + 4 * 0, 3 * 0 + 4 * 1) = (3, 4)
 
-# 暂时记住最后一行：我们已经用两个方向表示了 (3,4)。第二章会把它叫做线性组合。
-# 向量列表保留顺序与重复。下列两个位置是相同向量；空列表也使用同一原生接口。
+# The last equation expresses (3, 4) in terms of two coordinate directions.
+# We will return to this observation when we study linear combinations.
+# A list of vectors may contain repeated entries; it may also be empty.
 have e1 finite_seq(R, 2) = (1, 0)
 
 have e2 finite_seq(R, 2) = (0, 1)
@@ -58,8 +61,10 @@ repeated_directions(1) = repeated_directions(2)
 
 have empty_directions finite_seq(finite_seq(R, 2), 0) = ()
 
-# 1.2 标量为什么能这样计算？（参考 LADR 1.3、1.6）
-# 域同时给出标量运算和它们满足的公理。函数 inv 的零值不受逆元公理约束。
+# 1.2 The scalar field
+# The laws of vector arithmetic depend on the laws of the scalars.
+# A field supplies addition, multiplication, and their identity and inverse
+# laws. Multiplicative inverses are required only for nonzero scalars.
 struct Field<K nonempty_set>:
     zero K
     one K
@@ -85,7 +90,9 @@ struct Field<K nonempty_set>:
             =>:
                 mul(x, inv(x)) = one
 
-# 下面把实数的 builtin 运算组成一个实际的域对象。各个 claim 检查构造所需的域公理。
+# The real numbers form a field with their usual arithmetic operations.
+# We first establish the field laws, then collect these operations into
+# one field structure.
 have fn real_inv(x R) R by cases:
     case x = 0: 0
     case x != 0: 1 / x
@@ -96,7 +103,7 @@ have fn real_neg(x R) R = -x
 
 have fn real_mul(x, y R) R = x * y
 
-# 非零标量的逆元公理：倒数与原数相乘得到1。
+# For every nonzero real number, multiplication by its reciprocal gives one.
 claim:
     ? forall x R:
         x != 0
@@ -105,7 +112,7 @@ claim:
     real_inv(x) = 1 / x
     real_mul(x, real_inv(x)) = x * real_inv(x) = x * (1 / x) = 1
 
-# 实数运算的结合律与分配律直接来自 builtin 算术。
+# Associativity permits regrouping; distributivity relates the two operations.
 claim:
     ? forall x, y, z R:
         real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
@@ -122,7 +129,7 @@ claim:
     real_add(real_mul(x, y), real_mul(x, z)) = real_mul(x, y) + real_mul(x, z) = x * y + x * z
     real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
 
-# 实数加法与乘法的交换律。
+# Addition and multiplication of real numbers are commutative.
 claim:
     ? forall x, y R:
         real_add(x, y) = real_add(y, x)
@@ -130,7 +137,8 @@ claim:
     real_add(x, y) = x + y = y + x = real_add(y, x)
     real_mul(x, y) = x * y = y * x = real_mul(y, x)
 
-# 零、单位元和取负怎样满足标量公理。
+# Zero is the additive identity, one is the multiplicative identity,
+# and the negative of a real number is its additive inverse.
 claim:
     ? forall x R:
         real_add(0, x) = x
@@ -147,7 +155,8 @@ release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Field
 
 have real_field &Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
 
-# 后面使用 real_field 的实际运算值，而不仅是抽象域公理。
+# The field structure recovers the familiar real arithmetic operations.
+# These identities connect our abstract notation with concrete calculations.
 thm real_field_adapter_values:
     ? forall x, y R:
         real_field.zero = 0
@@ -166,9 +175,10 @@ thm real_field_adapter_values:
     real_field.add(x, y) = real_add(x, y) = x + y
     real_field.mul(x, y) = real_mul(x, y) = x * y
 
-# 1.3 把平面的规律抽象成向量空间（参考 LADR 1.19--1.20）
-# field 是固定的数学背景；记录只存向量零、加法、标量作用。
-# 以后证明“任意向量空间”的定理，就可以同时用于坐标、函数等不同对象。
+# 1.3 Vector spaces
+# A vector space consists of a set of vectors together with addition and
+# scalar multiplication over a fixed field. Its axioms describe the laws
+# shared by coordinate vectors and many other mathematical objects.
 struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
     zero V
     add fn(x, y V) V
@@ -189,9 +199,11 @@ struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
         forall x V:
             smul(field.one, x) = x
 
+# We now show that coordinate addition and scalar multiplication make
+# the real plane a vector space. Equality of vectors reduces each law
+# to an equality of their two coordinates.
 #
-# 回到最初的平面运算：逐项检查公理，才得到 real_plane，不能只假定它是空间。
-# 检查向量加法结合律：分别比较两个坐标。
+# First, vector addition is associative.
 claim:
     ? forall x, y, z finite_seq(R, 2):
         plane_add(plane_add(x, y), z) = plane_add(x, plane_add(y, z))
@@ -205,13 +217,14 @@ claim:
     plane_add(x, plane_add(y, z)) = (x(1) + plane_add(y, z)(1), x(2) + plane_add(y, z)(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2)))
     plane_add(plane_add(x, y), z) = ((x(1) + y(1)) + z(1), (x(2) + y(2)) + z(2)) = (x(1) + (y(1) + z(1)), x(2) + (y(2) + z(2))) = plane_add(x, plane_add(y, z))
 
-# 加法交换律同样逐坐标验证。
+# Commutativity of real addition gives commutativity of vector addition.
 claim:
     ? forall x, y finite_seq(R, 2):
         plane_add(x, y) = plane_add(y, x)
     plane_add(x, y) = (x(1) + y(1), x(2) + y(2)) = (y(1) + x(1), y(2) + x(2)) = plane_add(y, x)
 
-# (0,0) 是零元；把两个坐标取负就构造出了向量逆元。
+# The pair (0, 0) is an additive identity. Negating both coordinates
+# produces an additive inverse for every vector.
 claim:
     ? forall x finite_seq(R, 2):
         plane_add((0, 0), x) = x
@@ -234,7 +247,8 @@ claim:
     plane_add(x, inverse_x) = (x(1) + inverse_x(1), x(2) + inverse_x(2)) = (0, 0)
     witness exist inverse_x2 finite_seq(R, 2) st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
 
-# 数乘分别与标量的乘法、加法相容。
+# Successive scalar multiplications agree with multiplication of the
+# scalars. Adding scalars distributes over their action on a vector.
 claim:
     ? forall a, b R, x finite_seq(R, 2):
         plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
@@ -256,7 +270,7 @@ claim:
     plane_smul(a + b, x) = ((a + b) * x(1), (a + b) * x(2))
     plane_smul(real_field.add(a, b), x) = ((a + b) * x(1), (a + b) * x(2)) = (a * x(1) + b * x(1), a * x(2) + b * x(2)) = plane_add(plane_smul(a, x), plane_smul(b, x))
 
-# 数乘对向量加法的分配律。
+# Scalar multiplication also distributes over vector addition.
 claim:
     ? forall a R, x, y finite_seq(R, 2):
         plane_smul(a, plane_add(x, y)) = plane_add(plane_smul(a, x), plane_smul(a, y))
@@ -277,7 +291,7 @@ claim:
     plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x(1) + a * y(1), a * x(2) + a * y(2))
     plane_smul(a, plane_add(x, y)) = (a * (x(1) + y(1)), a * (x(2) + y(2))) = (a * x(1) + a * y(1), a * x(2) + a * y(2)) = plane_add(plane_smul(a, x), plane_smul(a, y))
 
-# 标量单位元作用于向量后得到原向量。
+# Multiplication by the scalar one leaves every vector unchanged.
 claim:
     ? forall x finite_seq(R, 2):
         plane_smul(real_field.one, x) = x
@@ -293,7 +307,8 @@ release thm struct_member(((0, 0), plane_add, plane_smul), &VectorSpace<R, real_
 
 have real_plane &VectorSpace<R, real_field, finite_seq(R, 2)> = ((0, 0), plane_add, plane_smul)
 
-# 公理与定理的区别：结构给了一个零元，但它的唯一性是可以证明的数学结果。
+# The axioms provide an additive identity. We can now prove that it is
+# unique: any vector acting as an identity must equal the designated zero.
 thm additive_identity_unique:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, identity_candidate V:
         forall x V:
@@ -303,7 +318,8 @@ thm additive_identity_unique:
     space.add(identity_candidate, space.zero) = space.zero
     space.add(identity_candidate, space.zero) = space.add(space.zero, identity_candidate) = identity_candidate
 
-# 逆元存在来自空间公理；结合律和交换律进一步给出逆元唯一性。
+# Additive inverses are unique as well. Associativity and commutativity
+# allow us to compare any two inverses of the same vector.
 thm additive_inverse_exists_unique:
     ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
         exist! y V st {space.add(x, y) = space.zero}
@@ -317,8 +333,10 @@ thm additive_inverse_exists_unique:
             y1 = y2
     witness exist! y2 V st {space.add(x, y2) = space.zero} from y
 
-# 1.4 向量也可以是函数（参考 LADR 1.24--1.25）
-# 定义点运算后，先做实际计算。完整函数空间公理证明可以作为后续讲次扩展。
+# 1.4 Functions as vectors
+# Coordinates are not essential to the idea of a vector. Real-valued
+# functions can also be added and multiplied by scalars, point by point.
+# The following example illustrates these operations on the square function.
 have fn pointwise_add(f, g fn(t R) R) fn(t R) R = fn(t R) R {f(t) + g(t)}
 
 have fn pointwise_smul(a R, f fn(t R) R) fn(t R) R = fn(t R) R {a * f(t)}
@@ -329,8 +347,10 @@ pointwise_add(square, square)(3) = 18
 
 pointwise_smul(2, square)(3) = 18
 
-# 1.5 在一个空间里寻找小空间（参考 LADR 1.33--1.34）
-# 子空间沿用环境空间的运算，因此是已有子集的性质：包含零、对运算封闭。
+# 1.5 Subspaces and decomposition
+# A subspace is a subset of a vector space that contains zero and is
+# closed under addition and scalar multiplication. Its operations are
+# inherited from the surrounding space.
 prop is_subspace(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, U power_set(V)):
     space.zero $in U
     forall u, v V:
@@ -343,7 +363,8 @@ prop is_subspace(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorS
         =>:
             space.smul(a, v) $in U
 
-#
+# The two coordinate axes are natural candidates for subspaces.
+# Each is described by setting one coordinate equal to zero.
 have x_axis power_set(finite_seq(R, 2)) = {p finite_seq(R, 2): p(2) = 0}
 
 have y_axis power_set(finite_seq(R, 2)) = {p finite_seq(R, 2): p(1) = 0}
@@ -352,7 +373,8 @@ e1 $in x_axis
 
 e2 $in y_axis
 
-# 若 (1,1) 在 x 轴上，它的第二坐标就同时是 0 和 1。
+# The vector (1, 1) does not lie on the horizontal axis: its second
+# coordinate is nonzero.
 by contra:
     ? not (1, 1) $in x_axis
     (1, 1) $in x_axis
@@ -448,10 +470,12 @@ claim:
         real_plane.smul(a, v) $in y_axis
     by def $is_subspace(R, real_field, finite_seq(R, 2), real_plane, y_axis)
 
-# 同样是一条直线，平移后就不是子空间：它连零向量都不包含。
+# Being a line is not enough to be a subspace. Translating the horizontal
+# axis upward produces a line that does not contain the zero vector.
 have shifted_line power_set(finite_seq(R, 2)) = {p finite_seq(R, 2): p(2) = 1}
 
-# 原点的第二坐标是0，因此不在第二坐标为1的平移直线上。
+# Every point on this translated line has second coordinate one,
+# whereas the zero vector has second coordinate zero.
 by contra:
     ? not (0, 0) $in shifted_line
     (0, 0) $in shifted_line
@@ -466,7 +490,8 @@ by contra:
     real_plane.zero = (0, 0)
     impossible (0, 0) $in shifted_line
 
-# 任意平面向量都能分成两个坐标轴上的向量。
+# Every vector in the plane is the sum of a horizontal vector and a
+# vertical vector. Its coordinates give these two components directly.
 claim:
     ? forall p finite_seq(R, 2):
         exist horizontal, vertical finite_seq(R, 2) st {horizontal $in x_axis, vertical $in y_axis, p = plane_add(horizontal, vertical)}
@@ -484,7 +509,9 @@ claim:
     plane_add(horizontal, vertical) = (horizontal(1) + vertical(1), horizontal(2) + vertical(2)) = (p(1), p(2)) = p
     witness exist h, v finite_seq(R, 2) st {h $in x_axis, v $in y_axis, p = plane_add(h, v)} from horizontal, vertical
 
-# 两个轴上的分量若合成同一向量，各个分量必相同：这就是本例的直和性质。
+# This decomposition is unique. If two pairs of axis components have
+# the same sum, comparing coordinates shows that the components agree.
+# Thus the plane is the direct sum of its two coordinate axes.
 thm axis_decomposition_unique:
     ? forall left, right, left_again, right_again finite_seq(R, 2):
         left $in x_axis
@@ -524,9 +551,11 @@ thm axis_decomposition_unique:
     left = (left(1), 0) = (left_again(1), 0) = left_again
     right = (0, right(2)) = (0, right_again(2)) = right_again
 
-# 第二章：用一组向量描述整个空间
-# 2.1 从两项相加到有限线性组合（参考 LADR 2.2）
-# 同长度的系数与向量列表相配。trace 从零开始，每次加上一项；终点是和值。
+# Chapter 2. Spanning, Independence, and Bases
+# 2.1 Linear combinations
+# Given a list of vectors and a list of scalars of the same length,
+# we multiply each vector by its scalar and add the results.
+# The partial sums begin at zero and accumulate one term at a time.
 prop is_linear_combination_partial_sum_sequence(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n), trace fn(k closed_range(0, n)) V):
     trace(0) = space.zero
     forall k N+:
@@ -534,17 +563,19 @@ prop is_linear_combination_partial_sum_sequence(K nonempty_set, field &Field<K>,
         =>:
             trace(k) = space.add(trace(k - 1), space.smul(coefficients(k), vectors(k)))
 
-# 给定系数和向量列表，value 是该有限和的结果。
-# n=0 时 trace 的唯一位置是 0，所以结果应当是 space.zero。
+# The value of a linear combination is the final partial sum.
+# For an empty list, no terms are added, so the value is the zero vector.
 prop has_linear_combination_value(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, coefficients finite_seq(K, n), vectors finite_seq(V, n), value V):
     exist trace fn(k closed_range(0, n)) V st {$is_linear_combination_partial_sum_sequence(K, field, V, space, n, coefficients, vectors, trace), value = trace(n)}
 
-# x 是列表的某个线性组合，当且仅当存在一组系数使有限和等于 x。
-# 先定义一般关系。本讲实际证明两项求和；任意长度的选择函数作为后续扩展。
+# A vector is a linear combination of a given list if some choice of
+# coefficients produces it. The definition applies to any finite length;
+# we develop the two-term case for our examples in the plane.
 prop is_linear_combination(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, x V, vectors finite_seq(V, n)):
     exist coefficients finite_seq(K, n) st {$has_linear_combination_value(K, field, V, space, n, coefficients, vectors, x)}
 
-# 两项求和只有0、1、2这三个阶段；先明确这个有限索引事实。
+# A sum of two terms has three stages: the initial zero, the first term,
+# and the completed sum.
 claim:
     ? forall k closed_range(0, 2):
         k = 0 or k = 1 or k = 2
@@ -605,7 +636,8 @@ thm two_term_combination_exists:
     witness exist partial fn(k closed_range(0, 2)) finite_seq(R, 2) st {$is_linear_combination_partial_sum_sequence(R, real_field, finite_seq(R, 2), real_plane, 2, coefficients, vectors, partial), plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))) = partial(2)} from trace
     by def $has_linear_combination_value(R, real_field, finite_seq(R, 2), real_plane, 2, coefficients, vectors, plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2))))
 
-# 任何满足上述过程的两项和值，都等于熟悉的 a*u+b*v；不是只检查了一个特殊 trace。
+# The partial-sum definition agrees with the familiar expression
+# for a two-term combination: the sum of two scalar multiples.
 thm two_term_combination_value:
     ? forall coefficients finite_seq(R, 2), vectors finite_seq(finite_seq(R, 2), 2), value finite_seq(R, 2):
         $has_linear_combination_value(R, real_field, finite_seq(R, 2), real_plane, 2, coefficients, vectors, value)
@@ -628,16 +660,18 @@ thm two_term_combination_value:
     trace(2) = real_plane.add(trace(1), real_plane.smul(coefficients(2), vectors(2))) = real_plane.add(first_term, second_term) = plane_add(first_term, second_term)
     value = trace(2) = real_plane.add(trace(1), real_plane.smul(coefficients(2), vectors(2))) = plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
 
-# 2.2 张成是一个真正的集合（参考 LADR 2.4、2.7）
-# 用给定方向和任意系数能得到的全部向量，组成 span。
+# 2.2 Span
+# The span of a list is the set of all its linear combinations.
+# It describes exactly which vectors can be reached using those directions.
 template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)>:
     have span power_set(V) = {x V: $is_linear_combination(K, field, V, space, n, x, vectors)}
 
-# 使用方式：x $in \span<K, field, V, space, n, vectors>。
+# A list spans the whole space when every vector belongs to its span.
 prop spans(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)):
     \span<K, field, V, space, n, vectors> = V
 
-# 标准方向列表：长度在类型中，取第 k 项直接写 standard_basis(k)。
+# Consider the two standard coordinate directions. We will show that
+# together they span the real plane.
 have standard_basis finite_seq(finite_seq(R, 2), 2) = (e1, e2)
 
 standard_basis(1) = (1, 0)
@@ -690,7 +724,8 @@ claim:
 
 by def finite_seq(R, 2) $subset \span<R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis>
 
-# 两个包含关系给出集合相等：标准方向的张成就是整个平面。
+# Every plane vector lies in the span of the standard directions,
+# and every vector in that span lies in the plane. The sets are therefore equal.
 by extension:
     ? \span<R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis> = finite_seq(R, 2)
     forall v \span<R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis>:
@@ -702,8 +737,10 @@ by def $spans(R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis)
 
 (3, 4) $in \span<R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis>
 
-# 2.3 能描述整个空间，还要没有多余方向（参考 LADR 2.15）
-# 线性无关：只有全部系数为零，才能组合出零向量。
+# 2.3 Linear independence
+# A spanning list may include unnecessary directions. Linear independence
+# rules out this redundancy: a combination equals zero only when all
+# of its coefficients are zero.
 prop has_only_zero_coefficients(K nonempty_set, field &Field<K>, n N, coefficients finite_seq(K, n)):
     forall k N+:
         k <= n
@@ -716,7 +753,8 @@ prop is_linearly_independent(K nonempty_set, field &Field<K>, V nonempty_set, sp
         =>:
             $has_only_zero_coefficients(K, field, n, coefficients)
 
-#
+# For the standard directions, the coefficients of a combination are
+# its two coordinates. A zero combination therefore has zero coefficients.
 claim:
     ? $is_linearly_independent(R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis)
     claim:
@@ -770,7 +808,8 @@ claim:
         by def $has_only_zero_coefficients(R, real_field, 2, coefficients)
     by def $is_linearly_independent(R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis)
 
-# 重复一个方向会产生非零的零组合，因此这个列表不是线性无关的。
+# Repeating a direction creates a dependence: coefficients one and
+# negative one give zero without both coefficients being zero.
 by contra:
     ? not $is_linearly_independent(R, real_field, finite_seq(R, 2), real_plane, 2, repeated_directions)
     $is_linearly_independent(R, real_field, finite_seq(R, 2), real_plane, 2, repeated_directions)
@@ -808,15 +847,19 @@ by contra:
     coefficients(1) = real_field.zero = 0
     impossible 1 = 0
 
-# 2.4 基与唯一坐标（参考 LADR 2.26、2.28）
+# 2.4 Bases and unique coordinates
+# A basis is a list that spans the space and is linearly independent.
+# Spanning ensures that every vector has a representation; independence
+# ensures that the coefficients in that representation are unique.
 prop is_basis(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)):
     $is_linearly_independent(K, field, V, space, n, vectors)
     $spans(K, field, V, space, n, vectors)
 
-#
+# The two standard directions satisfy both conditions and hence form a basis.
 by def $is_basis(R, real_field, finite_seq(R, 2), real_plane, 2, standard_basis)
 
-# 标准坐标确实给出向量本身，接着证明它们也是唯一可能的系数。
+# The coordinates of a plane vector supply its coefficients in the
+# standard basis. We first establish this expansion for an arbitrary vector.
 claim:
     ? forall v finite_seq(R, 2):
         plane_add(plane_smul(v(1), standard_basis(1)), plane_smul(v(2), standard_basis(2))) = v
@@ -852,7 +895,9 @@ claim:
     plane_smul(v(2), standard_basis(2)) = plane_smul(coefficients(2), standard_basis(2))
     plane_add(plane_smul(v(1), standard_basis(1)), plane_smul(v(2), standard_basis(2))) = plane_add(plane_smul(coefficients(1), standard_basis(1)), plane_smul(coefficients(2), standard_basis(2))) = v
 
-# 一个系数对本身就是平面向量。刚证明的标准展开把它还原出来，因此系数唯一。
+# Conversely, expanding a coefficient pair in the standard directions
+# returns that pair. Two expansions of the same vector must therefore
+# use the same coefficients.
 thm standard_coordinates_unique:
     ? forall v finite_seq(R, 2), a, b R:
         v = plane_add(plane_smul(a, standard_basis(1)), plane_smul(b, standard_basis(2)))
@@ -869,7 +914,9 @@ thm standard_coordinates_unique:
     a = coordinates(1) = v(1)
     b = coordinates(2) = v(2)
 
-# 2.5 有限维与维数的含义（参考 LADR 2.9、2.34--2.35）
+# 2.5 Finite-dimensional spaces
+# A vector space is finite-dimensional if some finite list spans it.
+# Our standard basis supplies such a list for the real plane.
 prop is_finite_dimensional(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>):
     exist n N, vectors finite_seq(V, n) st {$spans(K, field, V, space, n, vectors)}
 
@@ -880,18 +927,15 @@ by def $is_finite_dimensional(R, real_field, finite_seq(R, 2), real_plane)
 prop has_basis_length(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N):
     exist vectors finite_seq(V, n) st {$is_basis(K, field, V, space, n, vectors)}
 
-# 下一步必须实际证明：有限维空间存在基；任意两个基的长度相同。
-# 在这两件事完成前，不声明已验证的 dimension 值。
-# 一般维数的目标接口（计划，未执行）：
-# template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>: $is_finite_dimensional(K, field, V, space)>:
-#     have dimension N:
-#         $has_basis_length(K, field, V, space, dimension)
-#
+# In particular, the plane has a basis of length two.
 witness exist vectors finite_seq(finite_seq(R, 2), 2) st {$is_basis(R, real_field, finite_seq(R, 2), real_plane, 2, vectors)} from standard_basis
 
 by def $has_basis_length(R, real_field, finite_seq(R, 2), real_plane, 2)
-# 本讲已证明：标准方向构成基，每个平面向量有唯一的两个实坐标，这个基长度为2。
-# 这解释了“平面是二维”的直观含义。要让 dimension 不依赖所选基，还要证明
-# 任意两个基长度相同，再定义一般 dimension。这里没有假定或伪造该一般定理。
-# 下一讲可集中讲基的删减/扩张与基长度唯一性；完整多项式体系、一般函数空间
-# 公理和维数加法长证明作为按需扩展，不是这份讲稿的完成门槛。
+# We have proved that each plane vector has a unique description by two
+# real coefficients in the standard basis. This is the starting point
+# for the notion of dimension.
+#
+# To define dimension independently of a chosen basis, we must prove
+# that every finite-dimensional space has a basis and that all of its
+# bases have the same length. These general results are the natural
+# continuation of the present lectures.

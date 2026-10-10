@@ -16,7 +16,7 @@ impl LitexToLeanCompiler {
     ) -> Result<Vec<String>, LeanCompileError> {
         match &store.infer {
             InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(_)) => {
-                self.compile_additive_inferences(store, seed, compiled, position)
+                self.compile_equality_inferences(store, seed, compiled, position)
             }
             _ => self.compile_prop_inferences(store, seed, compiled, position),
         }

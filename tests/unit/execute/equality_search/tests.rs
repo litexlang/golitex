@@ -603,12 +603,7 @@ fn free_parameter_objects_failed_aliases_do_not_publish_indexes_or_capture_later
     let mut rt = runtime();
     exec_ok(&mut rt, "have a, b R");
     let before = store_sizes(&rt);
-    let index_before = rt
-        .top_exec_env()
-        .facts
-        .known_equal_to_obj_with_free_params
-        .by_other_side
-        .clone();
+    let index_before = rt.top_exec_env().special_properties.clone();
     let failed = exec(&mut rt,
         "claim:\n    ? 0 = 1\n    let f = fn(x R) R {x+a}\n    let S = {x R: x>a}\n    let F = fn(x R: x>a) R");
     assert!(failed.is_failed());
@@ -626,13 +621,7 @@ fn free_parameter_objects_failed_aliases_do_not_publish_indexes_or_capture_later
         "all three aliases must execute before the false conclusion fails"
     );
     assert_eq!(store_sizes(&rt), before);
-    assert_eq!(
-        rt.top_exec_env()
-            .facts
-            .known_equal_to_obj_with_free_params
-            .by_other_side,
-        index_before
-    );
+    assert_eq!(rt.top_exec_env().special_properties, index_before);
     for name in ["f", "S", "F"] {
         assert!(!rt.plain_atom_is_visible(name));
         assert!(!rt.top_exec_env().definitions.identifiers.contains_key(name));
@@ -645,20 +634,9 @@ fn free_parameter_objects_failed_aliases_do_not_publish_indexes_or_capture_later
     }
     for code in ["f(0)=a", "S={y R: y>a}", "F=fn(y R: y>a) R", "0=1"] {
         let before = store_sizes(&rt);
-        let index_before = rt
-            .top_exec_env()
-            .facts
-            .known_equal_to_obj_with_free_params
-            .by_other_side
-            .clone();
+        let index_before = rt.top_exec_env().special_properties.clone();
         assert!(exec(&mut rt, code).is_failed(), "{code}");
         assert_eq!(store_sizes(&rt), before);
-        assert_eq!(
-            rt.top_exec_env()
-                .facts
-                .known_equal_to_obj_with_free_params
-                .by_other_side,
-            index_before
-        );
+        assert_eq!(rt.top_exec_env().special_properties, index_before);
     }
 }

@@ -1,0 +1,17 @@
+# Equal quotients of a nonzero common numerator have equal nonzero denominators.
+
+forall a,b,k R:
+    k!=0
+    a!=0
+    b!=0
+    k/a=k/b
+    =>:
+        a=b
+
+forall a,b,k C:
+    k!=0
+    a!=0
+    b!=0
+    k/a=k/b
+    =>:
+        a=b

@@ -96,16 +96,11 @@ fn rewrite_fn_equal_to_anonymous_function_subterms(
         }
         let head = super::helper::fn_obj_prefix_obj(&call, 0);
         let mut candidates = Vec::new();
-        for (value, path) in runtime.exact_property_object_values(&head) {
-            if path.len() != 1 {
-                continue;
-            }
-            if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) = value {
-                candidates.push((
-                    function,
-                    FunctionBodySourceProof::KnownEquality(KnownEqualityPathProof::new(path)),
-                ));
-            }
+        for (function, path) in runtime.known_equal_to_anonymous_functions(&head) {
+            candidates.push((
+                function,
+                FunctionBodySourceProof::KnownEquality(KnownEqualityPathProof::new(path)),
+            ));
         }
         if let Some(proof) =
             runtime.checked_anonymous_function_body_expansion(&call, state, None, candidates)?

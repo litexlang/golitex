@@ -1,0 +1,20 @@
+# Equal quotients with a common nonzero denominator have equal numerators, including nested rational quotients.
+
+forall a,b,k R:
+    k!=0
+    a/k=b/k
+    =>:
+        a=b
+
+forall a,b,k C:
+    k!=0
+    a/k=b/k
+    =>:
+        a=b
+
+forall a,b,x,y Q:
+    x!=0
+    y!=0
+    (a/x)/y=(b/x)/y
+    =>:
+        a=b

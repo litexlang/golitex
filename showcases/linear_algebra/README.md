@@ -1,12 +1,18 @@
-# 用 Litex 构建线性代数
+# Linear Algebra in Litex
 
-这份课程讲稿参考 Sheldon Axler 的《Linear Algebra Done Right》（LADR）的主要概念，展示怎样从具体运算逐步构建一个可检查的线性代数体系。正文采用自己的教学顺序，围绕实数平面展开，适合希望了解数学概念如何写成 Litex 代码的读者。
+These lecture notes develop selected ideas from Sheldon Axler's *Linear Algebra
+Done Right*, using the real plane as a running example. They show how familiar
+calculations lead to definitions, how concrete objects satisfy those definitions,
+and how the resulting facts support further mathematics.
 
-从 [linear_algebra.lit](linear_algebra.lit) 顺序阅读即可。动机、计算、定义、构造和证明穿插在同一个文件中：先看两个坐标怎样运算，再构造域与向量空间，接着寻找子空间，最后用方向列表描述整个平面。
+Read [linear_algebra.lit](linear_algebra.lit) from beginning to end. The two
+chapters move from coordinate operations to vector spaces and subspaces, then
+from linear combinations to bases and unique coordinates. Definitions and proofs
+appear alongside the examples that motivate them.
 
-## 从坐标到空间
+## From coordinates to vector spaces
 
-向量直接使用原生有限序列；列表的长度已经在类型中，取元素直接调用序列：
+We begin with the two standard directions in the real plane:
 
 ```litex
 have e1 finite_seq(R, 2) = (1, 0)
@@ -17,33 +23,59 @@ standard_basis(1) = (1, 0)
 standard_basis(2) = (0, 1)
 ```
 
-这几行摘自正文的两个位置。相同接口也能表示重复方向和空列表，无需额外定义 `FiniteList`。
+These lines are drawn from two places in the notes. A vector is an ordered pair
+of real numbers, represented by a finite sequence; a list of vectors is another
+finite sequence. The same representation allows repeated directions and an
+empty list.
 
-`Field` 携带标量运算和域公理，`VectorSpace` 携带向量运算和空间公理。讲稿实际构造了 `real_field` 与 `real_plane`，逐项验证它们满足公理，再从这些公理证明零元和逆元的唯一性。子空间则是已有子集的性质；两个坐标轴满足它，平移直线给出反例。
+Coordinate addition and scalar multiplication suggest the vector space axioms.
+The notes construct the real field and the real plane as instances of `Field`
+and `VectorSpace`, checking their laws before proving that additive identities
+and inverses are unique. The coordinate axes then provide examples of subspaces.
+A translated line provides a counterexample, and the two axes give a unique
+decomposition of every plane vector.
 
-## 从方向到基
+## From directions to unique coordinates
 
-线性组合把系数与同长度的向量列表配对。`span` 是这些组合构成的实际集合，正文中的定义为：
+The span of a list contains all vectors obtained by taking linear combinations
+of its entries. Once the linear combination relation has been defined, this
+mathematical description becomes a set definition:
 
 ```litex
 template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)>:
     have span power_set(V) = {x V: $is_linear_combination(K, field, V, space, n, x, vectors)}
 ```
 
-这段代码使用正文中此前定义的域、空间和线性组合关系。随后证明：两个标准方向张成整个平面，并且线性无关，因此构成基；重复同一个方向则不独立。最后证明每个向量的标准坐标唯一，回到开头的坐标表示。
+This excerpt uses the field, vector space, and linear combination definitions
+introduced earlier in the notes. It illustrates how a mathematical relation
+can define an object that later proofs use directly.
 
-## 阅读地图
+The standard directions span the plane and are linearly independent, so they
+form a basis. Repeating a direction yields a dependent list. The chapter then
+proves that every plane vector has unique coefficients in the standard basis:
+spanning supplies a representation, and independence removes ambiguity.
 
-| 正文位置 | 数学内容 |
+## Reading guide
+
+| Sections | Mathematical progression |
 |---|---|
-| 第一章 1.1–1.3 | 原生序列、坐标运算、实数域、向量空间、公理验证与零元/逆元唯一性 |
-| 第一章 1.4–1.5 | 函数的点运算、坐标轴子空间、平移直线反例、轴分解及其唯一性 |
-| 第二章 2.1–2.2 | 有限线性组合、两项求和、span、标准方向张成平面 |
-| 第二章 2.3–2.4 | 线性无关、重复方向反例、基、标准展开与坐标唯一性 |
-| 第二章 2.5 | 有限维、长度为 2 的基、一般维数定义的动机 |
+| 1.1–1.3 | Coordinate operations; fields; vector spaces; the real plane; uniqueness of zero and additive inverses |
+| 1.4–1.5 | Pointwise operations on functions; subspaces; a translated-line counterexample; unique axis decomposition |
+| 2.1–2.2 | Finite linear combinations; two-term sums; span; the standard directions span the plane |
+| 2.3–2.4 | Linear independence; repeated directions; bases; standard expansion and unique coordinates |
+| 2.5 | Finite-dimensional spaces; a basis of length two; the motivation for dimension |
 
-本版用 Litex **1.0.6-beta** 严格验证了全部 **86 条顶层语句**，源码没有 `trust`、`axiom` 或 `abstract_prop`。它是连贯的两章课程示例，不代表覆盖 LADR 前两章的全部内容。
+These are selected, connected lectures rather than a complete translation of
+*Linear Algebra Done Right*. The general linear combination relation is defined
+for finite lists; the sum construction is developed for two terms. Functions
+illustrate pointwise operations, without a full construction of their vector
+space. Basis extension, equality of basis lengths, and a general definition of
+dimension are topics for subsequent lectures.
 
-一般长度的线性组合关系已定义，求和构造目前验证到两项。一般基的删减与扩张、基长度不变及 `dimension` 的定义留待后续；函数空间目前展示点运算，没有完成全部空间公理。
+All 86 top-level statements have passed strict verification with Litex
+**1.0.6-beta**. The source contains no `trust`, `axiom`, or `abstract_prop`.
 
-[math_collections.md](math_collections.md) 解释概念的依赖与接口选择。[litex.config](litex.config) 将本模块导出为 `linear_algebra`。命令行用法见仓库的 [CLI 文档](../../docs/cli.md)。
+[math_collections.md](math_collections.md) explains the mathematical organization
+and the roles of the main interfaces. [litex.config](litex.config) exports the
+module as `linear_algebra`. For command-line usage, see the repository's
+[CLI documentation](../../docs/cli.md).

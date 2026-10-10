@@ -1,0 +1,22 @@
+# The square of any real satisfies the concrete nonnegativity property.
+# Before: this source verified in Litex but did not compile to Lean.
+# prop is_nonnegative(x R):
+#     x>=0
+# thm squares:
+#     ? forall x R:
+#         $is_nonnegative(x^2)
+#     by def $is_nonnegative(x^2)
+# Former compiler rejection: statement 2, Theorem/ProofStepCapture.
+# Now: the same proof and its explicit theorem invocation compile and pass Lean.
+# Boundary: a false property request must still fail strict verification.
+# Evidence: target/release/litex -strict -lean -f lean/examples/nonnegative_square_property_theorem/statement.lit
+
+prop is_nonnegative(x R):
+    x>=0
+
+thm squares:
+    ? forall x R:
+        $is_nonnegative(x^2)
+    by def $is_nonnegative(x^2)
+
+by thm squares(2) => $is_nonnegative(2^2)

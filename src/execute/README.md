@@ -19,8 +19,8 @@ Function WD, body reduction, codomain reading, complete-domain selection,
 return-space reading, finite-coordinate metadata and eval finite-set enumeration
 consume declarations and
 exact-object `special_properties`. The shared read-only helpers in
-`execute_fact_stmt/helper.rs` inspect only the current object's indexed
-`Membership` / `Equality` facts. A direct equality supplies one endpoint and
+`execute_fact_stmt/helper.rs` inspect only the current object's separated
+membership rows and equality constructor buckets. A direct equality supplies one endpoint and
 its FactId; the consumer never visits that endpoint's properties to extend an
 alias chain. Signature collection reads only the original object's properties. Carrier
 inference and set-builder/power-set/subset projection share this boundary.
@@ -28,8 +28,10 @@ Default struct-view selection remains definition-owned and exact.
 
 Ordinary equality/fact proof search retains its equality graph. An explicit
 proved membership or body equality uses the existing store/index pipeline to
-publish metadata on the object that will be used later. No new Env state,
-property variant, implicit alias closure or inference cache is introduced.
+publish metadata on the object that will be used later. `ObjectSpecialProperties`
+separates membership and selected views from directional, FactId-only equality
+entries. Constructor queries read only their buckets; generic direct equality
+lookup retains every endpoint. See the [storage contract](../exec_env/README.md).
 Existing equality-path evidence carries zero or one cited edge in these
 structural readers; that certificate does not imply a graph-search operation.
 
@@ -382,7 +384,7 @@ calls. Its dedicated
 function expansions, rewritten endpoints and the checked residual. Each step
 captures its original application WD, exact head-to-anonymous-function source,
 selected-body application WD and binder-ID substitution endpoint. The head's
-`SpecialProperty::Equality` supplies the stored `f=AnonymousFn` source; `have fn equal`
+`AnonymousFn` equality bucket supplies the stored `f=AnonymousFn` source; `have fn equal`
 automatically publishes this equality and the function membership.
 
 The source is a known equality to an anonymous function, regardless of how
@@ -423,7 +425,7 @@ Keep this rewrite as a bounded local fallback:
   routes miss. `VerifyState::after_rewrite` admits only `(DefinitionAndForall,
   can_rewrite=true)` and disables rewrite in the returned child. Within the
   builtin rewrite dispatcher, closed numeric substitution stays first.
-- **Body source.** Read the exact function head's indexed `SpecialProperty::Equality`
+- **Body source.** Read the exact function head's `AnonymousFn` equality bucket
   with one stored edge to an anonymous function. Function membership supplies
   a signature, not a body. The edge may come from a local assumption or a
   checked equality as well as `have fn`. This rule does not search stored `f(args)=value`

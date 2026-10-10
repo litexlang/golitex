@@ -12,6 +12,7 @@ use crate::ast::obj::{
 use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::prelude::*;
 use crate::runtime::runtime_ids::FactId;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -114,7 +115,10 @@ impl Runtime {
         }
         // An equality alias retains the checked template's callable contract.
         // Instance WD still checks template parameters and guards before use.
-        for (candidate, path) in self.exact_property_object_values(&head_obj) {
+        for (candidate, path) in self.exact_property_object_values_of_shapes(
+            &head_obj,
+            &[EqualToObjShape::InstantiatedTemplateObj],
+        ) {
             let Obj::InstantiatedTemplateObj(instance) = &candidate else {
                 continue;
             };
@@ -487,7 +491,7 @@ impl Runtime {
     // explicitly published on this object before a structural reader uses them.
     pub(crate) fn collect_in_function_set_candidates(&self, obj: &Obj) -> Vec<(FnSet, FactId)> {
         let mut out = Vec::new();
-        for prop in self.known_special_properties_of(obj) {
+        for prop in self.known_function_signature_properties_of(obj) {
             // Equality to a function space constructs a set alias, not a function.
             if let SpecialProperty::Equality(fact) = &prop {
                 if !matches!(

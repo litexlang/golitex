@@ -1,4 +1,5 @@
 pub(crate) use crate::ast::fact::*;
+pub(crate) use crate::exec_env::{EqualToObjShape, ExecEnv, KnownFactMemory, ObjIR};
 pub(crate) use crate::ast::obj::*;
 pub(crate) use crate::ast::param::*;
 pub(crate) use crate::ast::names::{AtomicName, BoundName};

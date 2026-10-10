@@ -9,6 +9,7 @@ use crate::ast::obj::{
 use crate::execute::execute_by_stmt::proof_verify_state;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
+use crate::prelude::*;
 use crate::rational_expression::exact_rational::EvalRational;
 use crate::rational_expression::helper::{add_objs, mul_objs};
 use crate::runtime::{Runtime, RuntimeResult};
@@ -341,7 +342,14 @@ fn enumerate_set(
     depth: usize,
     context: &mut ActiveAlgoCalls,
 ) -> RuntimeResult<Result<FiniteSetEnumerationResult, ExecEvalStmtFailed>> {
-    let members = runtime.exact_property_object_values(set);
+    let members = runtime.exact_property_object_values_of_shapes(
+        set,
+        &[
+            EqualToObjShape::ListSet,
+            EqualToObjShape::Range,
+            EqualToObjShape::ClosedRange,
+        ],
+    );
     for (candidate, path) in members {
         let mut cites = Vec::new();
         let elements = match &candidate {

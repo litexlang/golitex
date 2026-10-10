@@ -128,10 +128,6 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
                     &mut parent.facts.known_closed_numeric_equal,
                     equal_fact,
                 );
-                parent
-                    .facts
-                    .known_equal_to_obj_with_free_params
-                    .maybe_index(equal_fact);
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::AtomicFact(atomic) => {
@@ -210,8 +206,8 @@ fn merge_well_defined_objects_from(parent: &mut ExecEnv, child: &ExecEnv) -> Run
 
 fn merge_special_object_properties_from(parent: &mut ExecEnv, child: &ExecEnv) {
     for (key, values) in child.special_properties.iter() {
-        for property in values {
-            parent.record_special_property(key.clone(), property.clone());
+        for property in values.properties_in_order(&child.facts) {
+            parent.record_special_property(key.clone(), property);
         }
     }
 }

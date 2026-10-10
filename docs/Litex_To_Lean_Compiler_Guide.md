@@ -461,12 +461,42 @@ also covers a shared addend in different positions and nested rational sums.
 The four cancellation laws in `Litex.lean` are proved from numeric denotation,
 faithful complex embedding and ordinary additive cancellation.
 
-Litex also publishes `a=b` from `a-k=b-k`, `k-a=k-b`, or from `a*k=b*k` /
-`a/k=b/k` with an available `k!=0` certificate. `k/a=k/b` needs both denominators
-nonzero. These other consumed cancellation families remain unsupported;
-their citations reject compilation rather than becoming new assumptions.
-The `equality_cancellation_lean_citations_fail_closed_without_infer_replay`
-test preserves that boundary.
+The compiler also replays the source's subtractive, multiplicative and division
+cancellation results. For example:
+
+```litex
+forall a,b,k R:
+    k!=0
+    a*k=b*k
+    =>:
+        a=b
+```
+
+Subtraction supports `a-k=b-k` and `k-a=k-b`. Multiplication supports all four
+direct common-factor positions. Common-denominator division requires `k!=0`;
+`k/a=k/b` requires the numerator and both denominators to be nonzero. Each rule
+retains its own evidence and calls a proved Core law. Nested cancellation
+replays the actual recursive stores before their later citations. Removing a
+producer, guard or WD certificate rejects compilation; none becomes a premise.
+The [multiplication example](../lean/examples/multiplicative_cancellation/statement.lit)
+includes all positions and a nested rational product.
+
+Definition folding also compiles inside named theorem bodies:
+
+```litex
+prop is_nonnegative(x R):
+    x>=0
+thm squares:
+    ? forall x R:
+        $is_nonnegative(x^2)
+    by def $is_nonnegative(x^2)
+```
+
+This consumes the original by-def result, including goal WD, the selected
+definition proof and its stores. The caller's completed formation can supply
+later WD citations; a constructor checked only inside a closed defining clause
+cannot escape. The [generated pair](../lean/examples/nonnegative_square_property_theorem/statement.lean)
+also contains an explicit invocation of the named property theorem.
 
 ## What successful output establishes
 

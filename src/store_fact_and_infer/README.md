@@ -168,8 +168,12 @@ target/release/litex -f examples/infer/atomic/in_index_cart.lit
 
 ## Object capabilities from facts
 
-`ExecEnv.special_properties` indexes actual `InFact` and `EqualFact` sources
-by exact object key. Structural readers use those local rows and declarations;
+`ExecEnv.special_properties` separates actual membership and selected-view rows
+from directional equality citations, bucketed by the opposite endpoint's
+specific constructor. `SetBuilder`, `ListSet`, `Cart`, range and other readers
+have distinct buckets; there is no general `SetStructure` bucket. Source ASTs
+and FactIds remain in `facts_by_id`. See the [index contract](../exec_env/README.md).
+Structural readers use those exact local sources and declarations;
 they do not expand the subject's equality class. A literal anonymous-function
 equality supplies a body and its signature directly. Carrier inference reads
 only a directly indexed FnSet/seq/finite_seq definition, and stores its checked

@@ -6,6 +6,7 @@ use crate::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
+use crate::prelude::*;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
@@ -59,7 +60,14 @@ impl Runtime {
             return Ok(None);
         }
         let mut transports = Vec::new();
-        let peers = self.exact_property_object_values(&in_fact.set);
+        let peers = self.exact_property_object_values_of_shapes(
+            &in_fact.set,
+            &[
+                EqualToObjShape::FnSet,
+                EqualToObjShape::SeqSet,
+                EqualToObjShape::FiniteSeqSet,
+            ],
+        );
         for (peer, path) in peers {
             if !matches!(
                 &peer,

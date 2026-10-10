@@ -1,6 +1,6 @@
 use crate::ast::fact::{AtomicFact, EqualFact, ExistShapedFact, Fact, OrFact};
 use crate::ast::names::AtomicName;
-use crate::ast::obj::{AnonymousFn, FnSet, FunctionSpace, Obj, SetBuilder, SetFormer};
+use crate::ast::obj::Obj;
 use crate::exec_env::exist_shaped_fact_index_key::{
     exist_shaped_fact_index_key, ExistShapedFactIndexKey,
 };
@@ -30,11 +30,6 @@ pub struct KnownFactMemory {
     // Example: store `a = 10` → key `a` maps to `(10, fact_id)`.
     pub known_closed_numeric_equal: HashMap<ObjIR, Vec<(Obj, FactId)>>,
 
-    // Non-literal side → binder-carrying obj (FnSet / AnonymousFn / SetBuilder) + FactId.
-    // Retained store/merge index. Equality truth search now reaches these
-    // shapes through generating edges and a TheyAreTheSame peer bridge.
-    pub known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory,
-
     // Non-equality atomics bucketed by (prop name, positive polarity).
     // Example: `a > 0` and `not a > 0` land in different buckets.
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
@@ -55,19 +50,6 @@ pub struct KnownFactMemory {
     //           x != 0
     // the then-clause shape is indexed so a goal `a != 0` can find matching foralls.
     pub known_forall_conclusions: KnownForallConclusionMemory,
-}
-
-/// Fact-index: `a = fn(…)` / `a = fn(…){…}` / `a = {x T: …}` with exactly one such side.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum KnownEqualToObjWithFreeParamsShape {
-    FnSet(FnSet),
-    AnonymousFn(AnonymousFn),
-    SetBuilder(SetBuilder),
-}
-
-#[derive(Clone, Default)]
-pub struct KnownEqualToObjWithFreeParamsMemory {
-    pub by_other_side: HashMap<ObjIR, Vec<(KnownEqualToObjWithFreeParamsShape, FactId)>>,
 }
 
 // Equality equivalence-class store for one ExecEnv.
@@ -116,7 +98,6 @@ impl KnownFactMemory {
             facts_by_id: HashMap::new(),
             known_equivalence_classes: KnownEquivalenceClassMemory::new(),
             known_closed_numeric_equal: HashMap::new(),
-            known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
             known_or: OrFactMemory::new(),
             known_exist: ExistShapedFactMemory::new(),
@@ -141,49 +122,6 @@ impl KnownFactMemory {
 impl Default for KnownFactMemory {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-impl KnownEqualToObjWithFreeParamsMemory {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    // When exactly one side is FnSet / AnonymousFn / SetBuilder, index the other.
-    // Example: `trust R_TO_R = fn(x R) R` → key `R_TO_R` stores that FnSet + fact_id.
-    pub fn maybe_index(&mut self, equal_fact: &EqualFact) {
-        let left = free_params_shape_from_obj(&equal_fact.left);
-        let right = free_params_shape_from_obj(&equal_fact.right);
-        match (left, right) {
-            (Some(shape), None) => {
-                self.by_other_side
-                    .entry(equal_fact.right.ir())
-                    .or_default()
-                    .push((shape, equal_fact.fact_id));
-            }
-            (None, Some(shape)) => {
-                self.by_other_side
-                    .entry(equal_fact.left.ir())
-                    .or_default()
-                    .push((shape, equal_fact.fact_id));
-            }
-            _ => {}
-        }
-    }
-}
-
-pub(crate) fn free_params_shape_from_obj(obj: &Obj) -> Option<KnownEqualToObjWithFreeParamsShape> {
-    match obj {
-        Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => {
-            Some(KnownEqualToObjWithFreeParamsShape::FnSet(fn_set.clone()))
-        }
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(
-            KnownEqualToObjWithFreeParamsShape::AnonymousFn(anon.clone()),
-        ),
-        Obj::SetFormer(SetFormer::SetBuilder(set_builder)) => Some(
-            KnownEqualToObjWithFreeParamsShape::SetBuilder(set_builder.clone()),
-        ),
-        _ => None,
     }
 }
 

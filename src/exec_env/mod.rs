@@ -18,7 +18,6 @@ pub use exist_shaped_fact_index_key::{
 };
 pub use known_fact_memory::{
     maybe_index_known_closed_numeric_equal, AtomicExceptEqualityFactMemory, ExistShapedFactMemory,
-    KnownEqualToObjWithFreeParamsMemory, KnownEqualToObjWithFreeParamsShape,
     KnownEquivalenceClassMemory, KnownFactMemory, ObjIR, OrFactMemory,
 };
 pub use known_forall_conclusion_memory::{
@@ -27,4 +26,7 @@ pub use known_forall_conclusion_memory::{
 };
 pub use or_fact_index_key::{AtomicAndChainFactShape, AtomicFactShape, OrFactIndexKey};
 pub use session_view::ExecEnvSessionView;
-pub use special_property::SpecialProperty;
+pub use special_property::{
+    EqualToObjShape, EqualityEndpoint, EqualitySide, ExactEqualityIndex, ObjectSpecialProperties,
+    SpecialProperty,
+};

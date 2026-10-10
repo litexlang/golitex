@@ -12,6 +12,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 };
 use crate::execute::execute_fact_stmt::ObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
@@ -384,7 +385,10 @@ impl Runtime {
                 let Some(checked_domain) = checked_application_domain(app_wd) else {
                     return Ok(None);
                 };
-                let peers = self.exact_property_object_values(&Obj::Identifier(head.clone()));
+                let peers = self.exact_property_object_values_of_shapes(
+                    &Obj::Identifier(head.clone()),
+                    &[EqualToObjShape::AnonymousFn],
+                );
                 let Some((literal, path)) = peers.into_iter().find_map(|(peer, path)| {
                     let Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal)) = peer else {
                         return None;

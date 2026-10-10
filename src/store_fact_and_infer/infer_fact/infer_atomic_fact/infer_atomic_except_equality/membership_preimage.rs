@@ -6,6 +6,7 @@ use crate::execute::execute_fact_stmt::function_preimage::{
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactPreimageResult, InferInFactPreimageSetResult,
@@ -19,7 +20,10 @@ impl Runtime {
         member: &InFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
-        for (root, path) in self.exact_property_object_values(&member.set) {
+        for (root, path) in self.exact_property_object_values_of_shapes(
+            &member.set,
+            &[EqualToObjShape::Preimage, EqualToObjShape::PreimageSet],
+        ) {
             if !matches!(
                 &root,
                 Obj::FunctionSpace(FunctionSpace::Preimage(_) | FunctionSpace::PreimageSet(_))
