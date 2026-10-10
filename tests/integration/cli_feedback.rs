@@ -68,6 +68,45 @@ fn batch(output: &Output, exit: i32, success: bool) -> JsonValue {
 }
 
 #[test]
+fn positive_integer_alias_normalizes_output_and_preserves_domain() {
+    let dir = FixtureDir::new();
+    let code = "Z+ = N+\nℤ+ = ℕ+\nhave n Z+ = 2\nn $in N+\nhave fn successor(k N+) Z+ = k + 1\nsuccessor(n) $in N+\nhave fn identity(k Z+) N+ = k\nidentity(n) = n\n";
+    let json = batch(
+        &dir.run(&["-lang", "en", "-strict", "-e", code], None),
+        0,
+        true,
+    );
+    assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+    let statements = field(&json, "statement_results").as_array().unwrap();
+    for index in [0, 1] {
+        assert_eq!(
+            field(&statements[index], "statement").as_str().unwrap(),
+            "N+ = N+"
+        );
+    }
+    assert_eq!(
+        field(&statements[2], "statement").as_str().unwrap(),
+        "have n N+ = 2"
+    );
+    for statement in statements {
+        let text = field(statement, "statement").as_str().unwrap();
+        assert!(!text.contains("Z+"), "{text}");
+        assert!(!text.contains("ℤ+"), "{text}");
+    }
+    for domain in ["N+", "Z+", "ℕ+", "ℤ+"] {
+        for value in ["0", "-1", "0.5"] {
+            let code = format!("have invalid {domain} = {value}");
+            let json = batch(
+                &dir.run(&["-lang", "en", "-strict", "-e", &code], None),
+                1,
+                false,
+            );
+            assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+        }
+    }
+}
+
+#[test]
 fn normal_json_retains_mathematical_content_for_custom_views() {
     let dir = FixtureDir::new();
     let code = "have x R = 2\nx > 0";

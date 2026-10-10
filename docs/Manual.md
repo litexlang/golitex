@@ -4296,6 +4296,8 @@ cos(pi) = -1
 
 **Public form:** `N+; Z+`.
 
+`Z+` is normalized to `N+` during parsing; both spellings denote the same set `{1, 2, 3, ...}`. Canonical output uses `N+`, including in variable declarations and function domains or codomains.
+
 **Mathematical function.** Positive natural numbers. These are mathematical set objects, not different runtime host types.
 
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
