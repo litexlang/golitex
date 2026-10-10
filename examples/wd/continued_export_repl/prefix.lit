@@ -1,0 +1,15 @@
+# Continued registered-file REPL: retained publication identity.
+# Before: the appended member theorem terminated with inferred predicate WD failure.
+# Now: the open file environment retains its owner for definition lookup.
+# Run: target/release/litex -strict -lang en -f examples/wd/continued_export_repl/prefix.lit -session
+# Then enter the same property theorem again with a fresh name.
+# Boundaries: a different root/import owner never borrows this live environment.
+prop lies_in(X set, S power_set(X)):
+    S $subset X
+
+template<X set>:
+    have Subsets set = {S power_set(X): $lies_in(X, S)}
+
+thm prefix_member_has_property:
+    ? forall X set, S \Subsets<X>:
+        $lies_in(X, S)

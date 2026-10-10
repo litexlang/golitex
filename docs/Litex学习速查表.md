@@ -4,7 +4,7 @@
 
 用本页选择下一条声明、证明步骤或修复方式。Litex 按源码顺序检查语句；已接受的对象和事实成为后续语句的上下文。以下每个可运行代码块都是自足的。
 
-安装见[安装指南](setup_zh.md)。[手册](Manual.md)负责精确的语言契约；[CLI](cli_zh.md)负责命令与输出。
+安装见[安装指南](安装Litex.md)。[手册](Litex手册.md)负责精确的语言契约；[CLI](Litex命令行参考.md)负责命令与输出。
 
 <a id="find-your-next-move"></a>
 
@@ -66,7 +66,7 @@ prop is_above_two(t R):
 by def $is_above_two(3)
 ```
 
-仅声明 `prop` 不证明任何实例。`abstract_prop` 只提供签名。如果下一行需要 `f(x)`，应定义可调用函数，而不是把该值编码成谓词。见 [R02](Manual.md#r02-choose-the-language-form-by-mathematical-role)。
+仅声明 `prop` 不证明任何实例。`abstract_prop` 只提供签名。如果下一行需要 `f(x)`，应定义可调用函数，而不是把该值编码成谓词。见 [R02](Litex手册.md#r02-choose-the-language-form-by-mathematical-role)。
 
 <a id="write-facts-and-hypotheses"></a>
 
@@ -92,7 +92,7 @@ forall x R:
 
 没有箭头时，列出的事实全部是结论。无前提的全称陈述直接列结论。`forall` 绑定变量和前提属于局部，不引入全局对象或全局假设。
 
-裸 `forall` 的主体包含事实。`witness`、`by def` 和 `release thm` 等命令属于证明体。全称结论参数使用一个头部；嵌套量词前查阅[事实契约](Manual.md#factual-statements)。平坦的 `and`/`or` 形式不是任意布尔语法。
+裸 `forall` 的主体包含事实。`witness`、`by def` 和 `release thm` 等命令属于证明体。全称结论参数使用一个头部；嵌套量词前查阅[事实契约](Litex手册.md#factual-statements)。平坦的 `and`/`or` 形式不是任意布尔语法。
 
 实数距离计算中，直接陈述对称性和三角不等式：
 
@@ -102,7 +102,7 @@ forall x,y,z R:
     |x-z| <= |x-y|+|y-z|
 ```
 
-两个坐标误差界也能约束两个最小值或最大值之差。若 `a,b R+` 已检查，要选共同正半径，可写 `have delta R+ = min(a,b)`。自足示例与固定前提边界见[距离与极值预览](Manual.md#r10-expose-absolute-value-bounds)。
+两个坐标误差界也能约束两个最小值或最大值之差。若 `a,b R+` 已检查，要选共同正半径，可写 `have delta R+ = min(a,b)`。自足示例与固定前提边界见[距离与极值预览](Litex手册.md#r10-expose-absolute-value-bounds)。
 
 <a id="definition--theorem--use"></a>
 
@@ -134,7 +134,7 @@ reciprocal(2) * 4 = (reciprocal(2) * 2) * 2 = 1 * 2 = 2
 
 零参数的根 `forall` 仍使用 `name()`。选择目标不能是链、合取、存在或全称事实；应释放结果，再用显式后续步骤。避免重复已发布的结论，除非该步骤进行了必要的表示变换。
 
-见 [R01](Manual.md#r01-define-and-use-a-reciprocal-function)、[P05](Manual.md#p05-a-function-equation-may-need-to-be-exposed-before-substitution) 和[定理调用契约](Manual.md#theorem-fact-shapes-and-call-spelling)。
+见 [R01](Litex手册.md#r01-define-and-use-a-reciprocal-function)、[P05](Litex手册.md#p05-a-function-equation-may-need-to-be-exposed-before-substitution) 和[定理调用契约](Litex手册.md#theorem-fact-shapes-and-call-spelling)。
 
 <a id="existence-and-scope"></a>
 
@@ -165,7 +165,7 @@ claim 不导出全局的 `x` 或 `y`。唯一存在还要求唯一性：`2` 是 
 witness exist! w R st {w = 2} from 2
 ```
 
-见[见证](Manual.md#s35-existential-witnesses)、[唯一见证](Manual.md#s36-unique-existential-witnesses) 和[局部 claim](Manual.md#s33-local-claims)。
+见[见证](Litex手册.md#s35-existential-witnesses)、[唯一见证](Litex手册.md#s36-unique-existential-witnesses) 和[局部 claim](Litex手册.md#s33-local-claims)。
 
 <a id="6-small-proofs-write-the-route-only-when-needed"></a>
 
@@ -185,20 +185,20 @@ forall a, b, k R:
         a = b
 ```
 
-`a+k=b+k` 也会发布 `a=b`，且无需非零条件。公共操作数必须直接出现在两侧。减法支持 `a-k=b-k` 与 `k-a=k-b`。除法支持带 `k!=0` 的 `a/k=b/k`，以及带 `k!=0`、`a!=0`、`b!=0` 的 `k/a=k/b`。减法/除法要求操作数位置匹配；`0/a=0/b` 不能消去分子。非零证书应放在乘积等式之前；若证书后来才出现，应重新陈述等式。展开、重结合和别名匹配不属于该推导规则。见[消去契约](Manual.md#equality-and-structural-inference)。
+`a+k=b+k` 也会发布 `a=b`，且无需非零条件。公共操作数必须直接出现在两侧。减法支持 `a-k=b-k` 与 `k-a=k-b`。除法支持带 `k!=0` 的 `a/k=b/k`，以及带 `k!=0`、`a!=0`、`b!=0` 的 `k/a=k/b`。减法/除法要求操作数位置匹配；`0/a=0/b` 不能消去分子。非零证书应放在乘积等式之前；若证书后来才出现，应重新陈述等式。展开、重结合和别名匹配不属于该推导规则。见[消去契约](Litex手册.md#equality-and-structural-inference)。
 
 | 所需动作 | 命令 | 契约/示例 |
 | --- | --- | --- |
-| 使用肯定形式的具体定义 | `by def $P(args)` | [S47](Manual.md#s47-explicit-definition-folding) |
-| 引用命名结果 | `release thm` / 带选择的 `by thm` | [S25–S26](Manual.md#s25-publish-theorem-conclusions) |
+| 使用肯定形式的具体定义 | `by def $P(args)` | [S47](Litex手册.md#s47-explicit-definition-folding) |
+| 引用命名结果 | `release thm` / 带选择的 `by thm` | [S25–S26](Litex手册.md#s25-publish-theorem-conclusions) |
 | 提供 / 提取见证 | `witness` / `obtain` | [存在性](#existence-and-scope) |
-| 在穷尽分支中证明共同结果 | `by cases:` | [S39](Manual.md#s39-proof-by-exhaustive-cases) |
-| 从分类后的相反命题导出矛盾 | `by contra:`，以 `impossible` 结束 | [S40](Manual.md#s40-proof-by-contradiction) |
-| 检查显式有限集 | `by enumerate finite_set:` | [S41](Manual.md#s41-finite-set-enumeration) |
-| 遍历具体整数区间 | `by for:` | [S44](Manual.md#s44-finite-range-iteration) |
-| 证明自然数不变式 | `by induc n from lower:` | [S42](Manual.md#s42-ordinary-induction) |
-| 使用此前全部归纳情况 | `by strong_induc n from lower:` | [S43](Manual.md#s43-strong-induction) |
-| 证明集合 / 函数相等 | `by extension` / `by fn_extension` | [S45–S46](Manual.md#s45-set-extensionality) |
+| 在穷尽分支中证明共同结果 | `by cases:` | [S39](Litex手册.md#s39-proof-by-exhaustive-cases) |
+| 从分类后的相反命题导出矛盾 | `by contra:`，以 `impossible` 结束 | [S40](Litex手册.md#s40-proof-by-contradiction) |
+| 检查显式有限集 | `by enumerate finite_set:` | [S41](Litex手册.md#s41-finite-set-enumeration) |
+| 遍历具体整数区间 | `by for:` | [S44](Litex手册.md#s44-finite-range-iteration) |
+| 证明自然数不变式 | `by induc n from lower:` | [S42](Litex手册.md#s42-ordinary-induction) |
+| 使用此前全部归纳情况 | `by strong_induc n from lower:` | [S43](Litex手册.md#s43-strong-induction) |
+| 证明集合 / 函数相等 | `by extension` / `by fn_extension` | [S45–S46](Litex手册.md#s45-set-extensionality) |
 
 有限枚举检查每个允许的赋值及其局部前提：
 
@@ -286,7 +286,7 @@ forall x R:
 | 名称在证明后消失 | 导出的是目标，而不是局部绑定变量和辅助内容。 |
 | 定理选择失败 | 结构性匹配返回的原子结论；另行改写。 |
 
-已检查的拒绝与最近修复见[陷阱卡片](Manual.md#pitfalls-and-missing-proof-steps)。搜索失败不反驳事实，也不能单独证明内核有错误。`trust` 假定事实，会留下证明债务，而不是修复验证路线。
+已检查的拒绝与最近修复见[陷阱卡片](Litex手册.md#pitfalls-and-missing-proof-steps)。搜索失败不反驳事实，也不能单独证明内核有错误。`trust` 假定事实，会留下证明债务，而不是修复验证路线。
 
 <a id="objects-and-domains"></a>
 
@@ -299,11 +299,11 @@ forall x R:
 | 集合 | `{1, 2}`、`{x R: x > 0}`、`union(A, B)`、`power_set(S)`；集合构造式受其载体约束。 |
 | 成员关系与包含 | `x $in S`、`A $subset B`；包含与相等的义务不同。 |
 | 函数 | `fn(x R) R`、带保护的定义域、`fn_range(f)`；载体与保护条件约束每次调用。 |
-| 原像 | `preimage(f, y)` 收集输出等于对象 `y` 的输入；`preimage_set(f, Y)` 收集输出属于 `Y` 的输入。两者返回集合，并保留完整输入定义域与保护条件。[预览契约](Manual.md#preview-point-and-set-preimages)。 |
-| 元组/序列 | `(a, b)`、`cart(R, R)`、`finite_seq(S,n)`、`seq(S)`；索引从 1 开始。`release tuple def t` 发布精确的有限序列成员关系和坐标；`release cart def cart(A,B)` 发布完整集合定义。见 [S52](Manual.md#s52-release-a-tuple-definition)。 |
+| 原像 | `preimage(f, y)` 收集输出等于对象 `y` 的输入；`preimage_set(f, Y)` 收集输出属于 `Y` 的输入。两者返回集合，并保留完整输入定义域与保护条件。[预览契约](Litex手册.md#preview-point-and-set-preimages)。 |
+| 元组/序列 | `(a, b)`、`cart(R, R)`、`finite_seq(S,n)`、`seq(S)`；索引从 1 开始。`release tuple def t` 发布精确的有限序列成员关系和坐标；`release cart def cart(A,B)` 发布完整集合定义。见 [S52](Litex手册.md#s52-release-a-tuple-definition)。 |
 | 精确计算 | `eval expression` 检查定义域，发布已验证的源码/结果等式。 |
 
-函数参数载体与返回载体使用外围作用域；不能引用该签名自己的参数。保护条件和函数体可以引用。例如 `fn(x R: x > 0) R {x + 1}` 的定义域依赖保护条件。不要从普通 `forall` 绑定变量的依赖推断任意依赖函数签名。见 [S01](Manual.md#s01-expression-defined-functions)。
+函数参数载体与返回载体使用外围作用域；不能引用该签名自己的参数。保护条件和函数体可以引用。例如 `fn(x R: x > 0) R {x + 1}` 的定义域依赖保护条件。不要从普通 `forall` 绑定变量的依赖推断任意依赖函数签名。见 [S01](Litex手册.md#s01-expression-defined-functions)。
 
 数学结构需要成为带字段的值时，可使用 struct：
 
@@ -317,7 +317,7 @@ p.x = p(1) = 1
 p.y = p(2) = 2
 ```
 
-精确构造和规律契约见[结构](Manual.md#s16-structured-carriers)与[模板](Manual.md#s17-parameterized-declaration-families)。已有内置概念无需局部重定义。
+精确构造和规律契约见[结构](Litex手册.md#s16-structured-carriers)与[模板](Litex手册.md#s17-parameterized-declaration-families)。已有内置概念无需局部重定义。
 
 <a id="supported-syntax-and-recommended-writing"></a>
 
@@ -329,7 +329,7 @@ p.y = p(2) = 2
 | 行内 `forall x R: x > 0 => x != 0` | 使用多行 `forall`，让假设与结论清晰可见。 |
 | 文档列明的 Unicode 别名 | 使用 ASCII 关键字与操作符，便于输入、搜索和诊断。 |
 
-这些是偏好，不是解析器限制。选择仍使用 `by thm ... => fact`。`×` 表示笛卡尔积；数值乘法用 `*`。`⊂` 是真子集，`⊆` 是非严格子集。见[别名参考](Manual.md#unicode-mathematical-input-aliases-preview)。
+这些是偏好，不是解析器限制。选择仍使用 `by thm ... => fact`。`×` 表示笛卡尔积；数值乘法用 `*`。`⊂` 是真子集，`⊆` 是非严格子集。见[别名参考](Litex手册.md#unicode-mathematical-input-aliases-preview)。
 
 普通数学示例优先使用 `|x|`；`abs(x)` 仍被支持。竖线包围完整表达式，`|x|^2` 表示 `abs(x)^2`。嵌套的 `||x||` 表示 `abs(abs(x))`；复数模、范数与基数没有竖线重载。乘法仍须显式书写（`2 * |x|`），诊断保留 `abs(...)`。
 
@@ -371,9 +371,9 @@ litex -lang en -strict -r path/to/project
 | 语句 `success: false` | 阅读 `why_failed.phase` 和 `why_failed.goal`；失败语句不新增成功事实。先前已接受语句仍可使用。 |
 | `session_error` 非 null | 阅读硬错误；当前运行/会话停止。 |
 
-软失败语句会让整体批量运行失败，即使后续语句成功。不要从嵌套证据文本推断成功，也不要把失败断言当成其否定。见 [CLI 结果](cli_zh.md#statement-outcomes)。
+软失败语句会让整体批量运行失败，即使后续语句成功。不要从嵌套证据文本推断成功，也不要把失败断言当成其否定。见 [CLI 结果](Litex命令行参考.md#statement-outcomes)。
 
-`-strict` 拒绝执行的用户 `trust`、`trust have` 和 `axiom`，包括依赖中的内容。抽象谓词签名和命名基础规则的释放仍被允许。验证仍依赖检查器、内置/推导规则和已加载数学；应准确报告显式假设与未解决的证明债务。见[信任契约](Manual.md#trust-and-strict-mode)。
+`-strict` 拒绝执行的用户 `trust`、`trust have` 和 `axiom`，包括依赖中的内容。抽象谓词签名和命名基础规则的释放仍被允许。验证仍依赖检查器、内置/推导规则和已加载数学；应准确报告显式假设与未解决的证明债务。见[信任契约](Litex手册.md#trust-and-strict-mode)。
 
 较大数学发展应遵循相关模块的 `README.md` 和 `math_collections.md`，再查阅[示例](../examples/README.md)与[数学展示](../showcases/math_concepts_in_litex/README.md)。
 

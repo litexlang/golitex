@@ -16,7 +16,7 @@ Markdown 源码：https://github.com/litexlang/golitex/blob/main/docs/FAQ.md
 
 不算。Litex 公开开发，草稿、实验与不完整翻译仍可见，也可复用。只有当前测试、注明日期的状态、显式 `trust` 边界与已知限制支持完成的说法时，才把功能或证明视为完成。
 
-不同自然语言下 Litex 源码相同。批量 Normal JSON 携带 `-lang` 选择的语言（默认 `en`）；中文输出本地化字段名与证明解释，包括 `"语言": "zh"`。见 [`docs/cli.md`](cli_zh.md)。
+不同自然语言下 Litex 源码相同。批量 Normal JSON 携带 `-lang` 选择的语言（默认 `en`）；中文输出本地化字段名与证明解释，包括 `"语言": "zh"`。见 [`docs/cli.md`](Litex命令行参考.md)。
 
 <a id="why-recommend-one-spelling-when-another-is-supported"></a>
 
@@ -24,7 +24,7 @@ Markdown 源码：https://github.com/litexlang/golitex/blob/main/docs/FAQ.md
 
 支持说明语言契约，推荐帮助读者书写一致源码。新代码优先使用 `release thm name(args)`，而非仍支持的裸 `by thm` 别名；使用缩进 `forall`，而非行内全称陈述；使用 `forall`、`R`、`$in` 等英文/ASCII 源码，而非文档列明的 Unicode 别名。其他形式仍被接受。缩进暴露前提/结论边界；规范拼写匹配诊断输出，便于输入与搜索。
 
-`by thm name(args) => fact` 有独立用途：选择一条原子推论。需要这种上下文效果时应保留它。[学习指南](Litex_Learner_Cheatsheet_zh.md#supported-syntax-and-recommended-writing)展示支持与推荐形式；[常见卡点](Litex_Learner_Cheatsheet_zh.md#common-places-to-get-stuck)用小例子解释事实列表与证明命令、定义与实例、定义域、作用域和见证。
+`by thm name(args) => fact` 有独立用途：选择一条原子推论。需要这种上下文效果时应保留它。[学习指南](Litex学习速查表.md#supported-syntax-and-recommended-writing)展示支持与推荐形式；[常见卡点](Litex学习速查表.md#common-places-to-get-stuck)用小例子解释事实列表与证明命令、定义与实例、定义域、作用域和见证。
 
 <a id="how-does-equality-reuse-known-equal-objects"></a>
 
@@ -64,7 +64,7 @@ LaTeX 的启发来自其书写数学的实用设计。
 
 ## Litex 支持多种输出语言吗？
 
-Litex 源语言是共享的。批量 Normal JSON 默认使用英文键。`-lang zh` 将封装与语句键改为中文，并翻译规则名称与解释。源码语法不变；见 [`docs/cli.md`](cli_zh.md)。
+Litex 源语言是共享的。批量 Normal JSON 默认使用英文键。`-lang zh` 将封装与语句键改为中文，并翻译规则名称与解释。源码语法不变；见 [`docs/cli.md`](Litex命令行参考.md)。
 
 <a id="how-is-litex-invented"></a>
 
@@ -413,7 +413,7 @@ Analysis I 翻译具体展示这一区别。陶哲轩原书用有理柯西序列
 
 当前 beta 中，它们是原生符号实数对象，参数是以弧度计的实角。验证器知道小型中央接口，并通过一个规范化器推导奇偶性、差角与倍角公式、选定 `pi` 值、周期性、余函数公式和范围界。
 
-`sin` 和 `cos` 在 `R` 上全定义。使用 `tan(x)` 要求 `cos(x) != 0`，`cot(x)` 要求 `sin(x) != 0`；无定义表达式在相等检查前的良定义性阶段失败。预览仍是符号式的：`eval` 与 Python 提取明确拒绝原生三角表达式。当前解析器也接受实数 `arcsin`、`arccos`、`arctan`、`arccot`，定义域与主值范围规则见[手册](Manual.md#native-real-trigonometry-beta-preview)。`pi` 的精确有理系数可建立主值范围比较，无需小数近似。四分之一角反函数示例使用正向值与显式右逆等式链；`arccot(-1)=3*pi/4` 遵循 `(0,pi)` 分支。这不是复三角或数值求值接口。Lean 编译未连接到当前 Cargo 构建；见 [CLI 边界](cli_zh.md#lean-compiler-boundary)。
+`sin` 和 `cos` 在 `R` 上全定义。使用 `tan(x)` 要求 `cos(x) != 0`，`cot(x)` 要求 `sin(x) != 0`；无定义表达式在相等检查前的良定义性阶段失败。预览仍是符号式的：`eval` 与 Python 提取明确拒绝原生三角表达式。当前解析器也接受实数 `arcsin`、`arccos`、`arctan`、`arccot`，定义域与主值范围规则见[手册](Litex手册.md#native-real-trigonometry-beta-preview)。`pi` 的精确有理系数可建立主值范围比较，无需小数近似。四分之一角反函数示例使用正向值与显式右逆等式链；`arccot(-1)=3*pi/4` 遵循 `(0,pi)` 分支。这不是复三角或数值求值接口。Lean 编译未连接到当前 Cargo 构建；见 [CLI 边界](Litex命令行参考.md#lean-compiler-boundary)。
 
 <a id="does-the-native-c-scalar-system-turn-every-number-into-a-complex-value"></a>
 
@@ -427,7 +427,7 @@ Analysis I 翻译具体展示这一区别。陶哲轩原书用有理柯西序列
 
 本版本原生复数层仍是符号式的。验证现在也进行带 `i * i = (-1)` 的有界精确多项式/有理式规范化，因此 `2 * i + 1 = i * i + 2 + 2 * i` 与 `(1 + i) * (1 - i) = 2` 等恒等式直接通过。除法仍需普通非零 WD 证明。`eval` 与 Python 提取不会因此取得复数运行时表示。
 
-早期 Lean 产物描述独立复数规范化后端，不确立当前 `src/` 流水线的编译覆盖。`C`、`i`、`re`、`img`、`C_abs` 是保留原生形式；把它们用作普通标识符的源码须换名。见[复数标量参考](Manual.md#complex-scalars-beta-preview)。
+早期 Lean 产物描述独立复数规范化后端，不确立当前 `src/` 流水线的编译覆盖。`C`、`i`、`re`、`img`、`C_abs` 是保留原生形式；把它们用作普通标识符的源码须换名。见[复数标量参考](Litex手册.md#complex-scalars-beta-preview)。
 
 <a id="why-not-just-import-a-big-library-and-cite-the-theorem"></a>
 
@@ -607,7 +607,7 @@ AI 可以大幅降低证明器代码的生成成本，常能找到引理名、�
 
 Litex 检验持久产物能否更贴近数学思路。AI 补常规细节，已检查源码保留读者理解和修改论证所需的事实、见证、情况、定义与计算链。表层省略常规步骤时，验证输出仍应暴露论证它的规则、已知事实、定义、定理或显式假设。
 
-这不声称 Lean 证明必定长或不可读。Lean 有强自动化和简洁、精心设计的接口。Litex 检验不同的默认接口：AI 让证明生成充足后，已检查数学能否保持可读？[Lean–Litex 代表性对比](Representative_Lean_Litex_Example_Comparisons_zh.md#ai-lowers-generation-cost-not-automatically-understanding-cost)中的 epsilon 乘积例子是具体测试：持久证明应保留短估计 `|x * y| = |x| * |y| < epsilon * epsilon <= epsilon`，同时保留
+这不声称 Lean 证明必定长或不可读。Lean 有强自动化和简洁、精心设计的接口。Litex 检验不同的默认接口：AI 让证明生成充足后，已检查数学能否保持可读？[Lean–Litex 代表性对比](Lean与Litex示例对比.md#ai-lowers-generation-cost-not-automatically-understanding-cost)中的 epsilon 乘积例子是具体测试：持久证明应保留短估计 `|x * y| = |x| * |y| < epsilon * epsilon <= epsilon`，同时保留
 其附加条件可供审计。
 
 <a id="what-is-fundamentally-different-about-litex"></a>

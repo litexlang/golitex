@@ -34,6 +34,7 @@ identity may need the defining equation as an explicit bridge.
 | Native rules and inference | Find extra guarded laws, calculation limits and inference triggers | [Verification rules](#builtin-verification-rules), [inference](#builtin-inference) |
 | Execution and extraction | Run algorithms/eval and inspect Python/C extraction boundaries | [Executable path](#execution-and-extraction) |
 | Compatibility and evidence | Interpret removed forms, assumptions and verification records | [Compatibility](#removed-and-renamed-public-forms), [coverage](#verification-and-coverage), [appendix](#appendix) |
+| Design context and references | Understand design influences, mathematical sources and related work | [References](#design-context-and-references) |
 
 The native inventory has **51 public statement forms, 93 active object leaves,
 20 builtin atomic families with their negative forms, and two native certificate
@@ -12144,6 +12145,95 @@ The current Normal `statement` rendering of expression-defined functions
 omits the written return carrier. Original fenced source is retained for
 interpretation of return-bound failures. Source facts, execution evidence and
 user assumptions remain distinct throughout the entries.
+
+## Design context and references
+
+Litex brings familiar programming-language ideas into a language for checked
+mathematics. The references below connect particular design choices to their
+sources. Design influences reflect the author's stated inspirations;
+mathematical sources guide definitions and foundations; related work places
+Litex alongside earlier approaches to readable formal mathematics.
+
+### Language design influences
+
+| Reference | Connection to Litex |
+|---|---|
+| [Python](https://docs.python.org/3/reference/lexical_analysis.html#indentation) and [Lisp](https://www.lispworks.com/documentation/HyperSpec/Body/02_a.htm) | Litex's syntax draws on both languages. Python is a reference for readable indentation-based blocks; Lisp is a reference for simplicity and compositional expression. Lisp's elegance is an aspiration for the language as a whole. |
+| [Go](https://go.dev/ref/spec) | Go influenced Litex's syntax and its preference for a small, consistent set of mechanisms. Inspired by Go's emphasis on simplicity and predictable composition, Litex aims to provide one sufficiently good way to serve each purpose and keep it as the single mechanism wherever possible. This reduces competing choices and helps the system remain consistent. Rob Pike's [Simplicity is Complicated](https://go.dev/talks/2015/simplicity-is-complicated.slide) discusses the value of fewer ways to do things and features that interact predictably. |
+| [Lua](https://www.lua.org/manual/5.4/manual.html#pdf-require) | Lua's module-loading approach influenced the import system. Litex declares dependencies in its project manifest; see [project organization](#project-organization) for its loading and naming contracts. |
+| Mathematical textbooks | Textbooks inspired both knowledge ordering and theorem/proof organization. Later material cites definitions and results established earlier; Litex similarly gives later statements access to accepted earlier context and runs project exports in declared order. The mathematical idea of stating a theorem and proving it inspired `claim` and `thm`; see [basic proof-writing decisions](#basic-decisions-before-writing-a-proof). |
+| [C++ templates](https://eel.is/c++draft/temp) and [Go interfaces](https://go.dev/ref/spec#Interface_types) | C++ inspired parameterization and instantiation in Litex's `template` interfaces: one definition can produce objects or functions for different arguments. Go interfaces also influenced the idea that template parameters must satisfy specified properties. The actual mathematical contract is described under [template interfaces](#template-interfaces). |
+| [C/C++ structs](https://eel.is/c++draft/class) | Named fields grouped into a structured value inspired Litex's `struct` interface. Litex applies that organization to mathematical objects, with the conditions and facts described under [advanced interface details](#advanced-interface-details). |
+| [JavaScript anonymous functions](https://tc39.es/ecma262/multipage/ecmascript-language-functions-and-classes.html#sec-arrow-function-definitions) | JavaScript inspired the ability to write a function directly as an expression, without first giving it a name. Litex's anonymous functions carry mathematical domains and well-definedness obligations; see [O80](#o80-anonymous-functions). |
+| Ctrl+F, [grep](https://www.gnu.org/software/grep/manual/) and [sed](https://www.gnu.org/software/sed/manual/) | Familiar search and substitution tools inspired the proof-search model: find an applicable fact in the available context, match its structure, and reuse it with permitted substitutions. The analogy concerns the workflow; Litex searches structured mathematical facts and checks the relevant conditions. See [verification rules](#builtin-verification-rules) and [inference](#builtin-inference). |
+| [TeX](https://www-cs-faculty.stanford.edu/~knuth/abcde.html) | TeX supplies notation for many familiar mathematical objects. That vocabulary strongly influenced the selection of Litex's builtin objects: the aim is to cover much of the everyday mathematics that already has familiar TeX notation. Litex gives those objects domains, definitions and checking rules; their current coverage is recorded in the [object dictionary](#object-dictionary). |
+
+Litex aims for Lisp's elegance and TeX's broad practical usefulness: a language
+that people across mathematics can use routinely. These aspirations guide
+language design and everyday usability.
+The implementation is written in [Rust](https://rust-lang.org/); the
+implementation language and the influences on Litex's surface language have
+different roles.
+
+### Interpreter architecture references
+
+Litex's interpreter architecture draws on the following books. The design aim
+is a straightforward implementation whose path from source text to results is
+easy to follow: tokenize input, parse a statement, dispatch its execution, check
+its obligations, and record accepted information. The [system pipeline](#system-pipeline)
+describes the current components and their responsibilities.
+
+- Harold Abelson and Gerald Jay Sussman, with Julie Sussman,
+  [*Structure and Interpretation of Computer Programs* (SICP)](https://mitpress.mit.edu/9780262510875/structure-and-interpretation-of-computer-programs/),
+  second edition, MIT Press, 1996. Its treatment of abstraction, environments
+  and evaluators provides a conceptual reference for organizing an interpreter
+  from understandable parts; [Chapter 4](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-26.html)
+  develops an evaluator explicitly.
+- Thorsten Ball, [*Writing An Interpreter In Go*](https://interpreterbook.com/).
+  Its step-by-step construction of the Monkey interpreter connects tokens,
+  parsing, an abstract syntax tree, evaluation and a REPL. It is a practical
+  reference for making the source-to-result path visible in working code.
+- Alfred V. Aho and Jeffrey D. Ullman, *Foundations of Computer Science with C*,
+  W. H. Freeman/Computer Science Press, 1995
+  ([author's bibliography](https://www.cs.columbia.edu/~aho/books.html)). This is
+  the C edition of *Foundations of Computer Science*, originally published in
+  1992. It supplies foundational computer-science background for the architecture.
+- Robert Nystrom, [*Crafting Interpreters*](https://craftinginterpreters.com/).
+  Its [tree-walk interpreter](https://craftinginterpreters.com/contents.html)
+  presents scanning, parsing and evaluation as explicit implementation stages;
+  the book also develops a bytecode virtual machine. The relevant architectural
+  reference here is its clear explanation of how the interpreter's parts fit
+  together.
+
+### Mathematical sources
+
+The presentation of Litex's set-theoretic foundations draws on Terence Tao's
+[*Analysis I*](https://terrytao.wordpress.com/books/analysis-i/) and Hao Zhaokuan
+and Yang Yue's *Set Theory: An Exploration of the Concept of Infinity*
+(*集合论：对无穷概念的探索*, Fudan University Press, 2014; listed on
+[Hao's university page](https://philosophy.fudan.edu.cn/64/96/c14253a222358/page.htm)).
+They are references for mathematical definitions, constructions and foundational
+exposition. See [trust boundary](#trust-boundary) for Litex's implemented
+foundation and checking assumptions.
+
+### Related work in formal mathematics
+
+[Mizar](https://mizar.uwb.edu.pl/language/) is important earlier work on expressing
+mathematical writing as machine-checkable text. Its language is derived from
+mathematical vernacular, making it a particularly relevant comparison for
+Litex's readable, fact-oriented interface.
+
+[Isabelle/Isar](https://isabelle.in.tum.de/Isar/) provides a structured proof
+language intended to be readable by humans and checked by a machine. Its
+organization of assumptions, intermediate conclusions and proof structure is
+relevant to the same readability problem that Litex addresses. Both Mizar and
+Isar are related work on readable checked mathematics.
+
+[Lean](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)
+provides a reference for kernel-checked proofs and a target for Litex's supported
+proof translations. Generating Lean output and passing real Lean kernel checking
+are separate gates. Litex's own checker retains its own trusted boundary; see
+[trust boundary](#trust-boundary) for the current preview scope.
 
 ## Appendix
 

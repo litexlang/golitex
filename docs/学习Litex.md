@@ -31,7 +31,7 @@
 
 在网站上，若 Litex 例子旁有编辑器就用它；否则把整块复制到 [在线 playground](https://litexlang.com)。改源码并运行检查。阅读课程或在线试这些小例子，不必先安装。
 
-本地使用请先看 [安装指南](setup.md)，再检查安装是否正常：
+本地使用请先看 [安装指南](安装Litex.md)，再检查安装是否正常：
 
 ```bash
 litex -version
@@ -44,7 +44,7 @@ litex -strict -e '1 + 1 = 2'
 litex -lang en -strict -f first.lit
 ```
 
-本练习请把文件放在没有 `litex.config` 的新目录里，让每个文件独立运行。项目上下文会在可选扩展里介绍。[CLI 参考](cli.md) 说明与安装无关的命令细节。
+本练习请把文件放在没有 `litex.config` 的新目录里，让每个文件独立运行。项目上下文会在可选扩展里介绍。[CLI 参考](Litex命令行参考.md) 说明与安装无关的命令细节。
 
 ## 1. 检查你的第一条事实
 
@@ -155,7 +155,7 @@ by def $is_above_two(3)
 
 `N` 是自然数集（含零）；`Z` 是整数集；`R` 是实数集。`$in` 表示“属于”。花括号如 `{1, 2, 3}` 描述有限展示集合。
 
-同一对象可属于多个集合：`2` 既是自然数、整数，也是实数。写 `have x R` 或 `forall x R` 时，你引入一个属于 `R` 的数学对象，而不是把它变成编程语言里的浮点值。Litex 的 [对象模型](Manual.md#pure-set-object-model) 以集合为基础；对本课程的例子，按隶属关系理解就够了。
+同一对象可属于多个集合：`2` 既是自然数、整数，也是实数。写 `have x R` 或 `forall x R` 时，你引入一个属于 `R` 的数学对象，而不是把它变成编程语言里的浮点值。Litex 的 [对象模型](Litex手册.md#pure-set-object-model) 以集合为基础；对本课程的例子，按隶属关系理解就够了。
 
 ### 倒数需要合法输入
 
@@ -407,7 +407,7 @@ x != 0
 }
 ```
 
-完整结果还包括源码，以及对未满足 `x != 0` 要求的嵌套失败。把实际语句与解释一起读；详细字段名可能随版本变化。机器使用请以 [JSON 约定](cli.md#json-output-contract) 为准。
+完整结果还包括源码，以及对未满足 `x != 0` 要求的嵌套失败。把实际语句与解释一起读；详细字段名可能随版本变化。机器使用请以 [JSON 约定](Litex命令行参考.md#json-output-contract) 为准。
 
 | 你先看到的问题 | 先检查什么 |
 | --- | --- |
@@ -440,7 +440,7 @@ success
 
 本课程例子不使用用户 `trust` 或 `axiom` 语句。`-strict` 拒绝这些语句，包括证明内部或其依赖里的。它仍依赖 Litex 的实现、内置规则与允许的基础接口。它不是对检查器自身的独立证明。
 
-你可能在其他材料里遇到 `trust`。它显式接受事实而不完成证明。用它把练习变绿，会留下证明义务；它并不教你如何证明该练习。需要此功能时读 [trust 边界](Manual.md#trust-and-strict-mode)。
+你可能在其他材料里遇到 `trust`。它显式接受事实而不完成证明。用它把练习变绿，会留下证明义务；它并不教你如何证明该练习。需要此功能时读 [trust 边界](Litex手册.md#trust-and-strict-mode)。
 
 **试一试：** 运行失败 A，找到失败的 `claim`，修复其定义域。再运行失败 B，解释为什么问题不同。最后在新进程中检查修复后的整文件。
 
@@ -520,7 +520,7 @@ AI 模型可以提出你刚写的定义、目标与证明步骤。Litex 提供�
 | LaTeX 渲染 | 阅读与呈现数学 | 渲染可从已解析源码工作；好看输出本身不表示源码已验证。 |
 | Lean 输出 | 把支持的已检查推理重放到另一证明语言 | 预览子集；生成输出必须通过其自身的 Lean 检查，原生数学陈述可能需要适配器。 |
 
-把验证与导出当作分开的步骤。在选择导出路线前，阅读当前 [CLI 参考](cli.md#commands)、[Lean 边界](cli.md#lean-compiler-boundary) 与 [LaTeX 指南](cli.md#latex-conversion-preview)。这些链接描述当前接口；本课程最终文件是已检查的数学产物，不是承诺每条路线都接受其全部语句。
+把验证与导出当作分开的步骤。在选择导出路线前，阅读当前 [CLI 参考](Litex命令行参考.md#commands)、[Lean 边界](Litex命令行参考.md#lean-compiler-boundary) 与 [LaTeX 指南](Litex命令行参考.md#latex-conversion-preview)。这些链接描述当前接口；本课程最终文件是已检查的数学产物，不是承诺每条路线都接受其全部语句。
 
 ### 检查你的理解
 
@@ -564,7 +564,7 @@ reciprocal(2) * 4 = (reciprocal(2) * 2) * 2 = 2
 
 说明你从名字得到了什么：一个具体可复用结果，以及一个显式引用点。与先前匿名 `claim` 比较——其已检查事实在同一文件后续语句中已经可用。名字改善接口；它不会让未检查陈述变真。
 
-把你的第一份发展保存在一份完整文件里。当更大项目需要分文件与依赖时，遵循 [项目组织参考](Manual.md#project-organization)，并同时验证生产者与真实调用方。单独成功的证明本身，不足以证明每个导出接口在另一模块里可用。
+把你的第一份发展保存在一份完整文件里。当更大项目需要分文件与依赖时，遵循 [项目组织参考](Litex手册.md#project-organization)，并同时验证生产者与真实调用方。单独成功的证明本身，不足以证明每个导出接口在另一模块里可用。
 
 ### B. 通过给出见证证明存在性 — 10 分钟
 
@@ -618,7 +618,7 @@ smallest repair. Finish with a clean whole-file check and its result.
 
 [Litex Agent 协作流程图](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png) 展示了人、AI 与验证器之间的这一协作循环。
 
-检查器不决定 agent 是否形式化了你真正想要的问题。在把成功运行当作原问题的答案之前，复查定义、定义域、假设与结论。更长的 agent 会话与重放纪律，见 [Agent Guide](AgentGuide.md)。
+检查器不决定 agent 是否形式化了你真正想要的问题。在把成功运行当作原问题的答案之前，复查定义、定义域、假设与结论。更长的 agent 会话与重放纪律，见 [Agent Guide](Litex智能体指南.md)。
 
 ## 核心检查点答案
 
@@ -635,11 +635,11 @@ smallest repair. Finish with a clean whole-file check and its result.
 
 | 你的下一任务 | 接着读 |
 | --- | --- |
-| 找合适的声明或证明动作 | [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) |
-| 查阅精确语法、语义或证明模式 | [Manual](Manual.md) |
-| 安装 Litex 或理解 CLI 反馈 | [Setup](setup.md) 与 [CLI](cli.md) |
+| 找合适的声明或证明动作 | [Learner Cheatsheet](Litex学习速查表.md) |
+| 查阅精确语法、语义或证明模式 | [Manual](Litex手册.md) |
+| 安装 Litex 或理解 CLI 反馈 | [Setup](安装Litex.md) 与 [CLI](Litex命令行参考.md) |
 | 理解语言的研究方向 | [Litex 蓝图](Litex中文蓝图.md) |
-| 搭建可复现的 agent 工作流 | [Agent Guide](AgentGuide.md) |
+| 搭建可复现的 agent 工作流 | [Agent Guide](Litex智能体指南.md) |
 
 对你的下一份文件，选一个你能在纸上解出的小问题。先写对象与合法输入，精确陈述要证明什么，再一步步按有用的数学动作增长已检查源码。
 

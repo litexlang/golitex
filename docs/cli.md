@@ -16,7 +16,15 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/cli.md
 ## Before You Start
 
 To install Litex, verify the installation, or choose a package for your
-platform, use the short [setup guide](setup.md). To try Litex without a local
+platform, use the short [setup guide](setup.md).
+
+Check `litex -version` and `litex -help`: this reference describes the current
+checkout; an older installed release can have different flags and output.
+If a project uses `[import std]`, follow the setup guide’s std-path and
+compatibility-module loading checks. Ordinary native vocabulary does not
+require std; the currently shipped `basics` module exports no declarations.
+
+To try Litex without a local
 installation, use the [online playground](https://litexlang.com).
 
 ## First Run
@@ -121,6 +129,7 @@ environments and re-execute dependency sources with the same policy. See the
 | `litex -lean -f <file>` | Verify a standalone file and replay supported typed results into Lean source on stdout (preview). |
 | `litex -extractpython <code\|-f\|-r>` | Verify extractable fragments, then emit a Python `extracted_code` artifact (experimental). |
 | `litex -extractc <code\|-f\|-r>` | Same as above, emitting a C99 fragment (experimental). |
+| `litex -latex <-e\|-f\|-r> <input>` | Convert parsed source to a LaTeX artifact without verification (preview); see [LaTeX conversion](#latex-conversion-preview). |
 | `litex -help` | Print usage text. |
 | `litex -version` | Print `Litex <version>`. |
 
@@ -483,6 +492,10 @@ uncompiled forward-inference families remain outside the current profile.
 
 ## Practical Recipes
 
+Run the `examples/` and `lean/examples/` commands from the repository root;
+those paths belong to the checkout, not the installed package. Replace
+`your_file.lit`, `example.lit`, and `chapter.lit` with files you create.
+
 ```bash
 litex -e "1 = 1"
 litex -f examples/claim_obtain_scope.lit
@@ -510,3 +523,10 @@ for saving `.tex`, the font/package requirements, API and coverage.
 Internally `CompileToLatex` and `ExtractExecutableCode` are separate launch
 commands and outcome types. `-latex` goes through the normal command dispatcher;
 it does not share C/Python's verification and executable extraction pipeline.
+
+A continued registered-file session keeps definition lookup attached to the
+publication owner recorded by its open file environment. New diagnostics still
+use `<repl>`. This includes predicates projected by refined template carriers;
+lookup never borrows the live environment for a different root or imported
+export ID. The [continued-export example](../examples/wd/continued_export_repl/README.md)
+records the file-to-REPL workflow.

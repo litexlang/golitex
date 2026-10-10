@@ -1,6 +1,6 @@
 <a id="litex-agent-guide"></a>
 
-# Litex Agent 指南
+# Litex 智能体指南
 
 > **修复证明时，保持同一个活动 Session。普通语句失败不会清除该会话中已经接受的定义和事实。修正失败语句，再提交给同一个进程。**
 
@@ -78,7 +78,7 @@ success
 
 ## 在预期上下文中开始
 
-使用检出版本的 [CLI 契约](cli_zh.md)。开发检出版本用 `cargo build --release` 构建，使用 `target/release/litex`。
+使用检出版本的 [CLI 契约](Litex命令行参考.md)。开发检出版本用 `cargo build --release` 构建，使用 `target/release/litex`。
 
 ```bash
 target/release/litex -lang en -f accepted-prefix.lit -session
@@ -102,12 +102,12 @@ target/release/litex -lang en -f accepted-prefix.lit -session
 
 ## 验证保存的产物并找到参考
 
-使用干净的 `target/release/litex -lang en -f <file>` 检查。要求退出码为 0，解析 JSON 后有 `kind: run`、`success: true` 和 `session_error: null`。需要排除用户公理和 trust 时使用 `-strict`；上述教学公理在严格模式下会被有意拒绝。`-r` 留给显式要求的整模块检查。见 [CLI 输出](cli_zh.md#json-output-contract)。
+使用干净的 `target/release/litex -lang en -f <file>` 检查。要求退出码为 0，解析 JSON 后有 `kind: run`、`success: true` 和 `session_error: null`。需要排除用户公理和 trust 时使用 `-strict`；上述教学公理在严格模式下会被有意拒绝。`-r` 留给显式要求的整模块检查。见 [CLI 输出](Litex命令行参考.md#json-output-contract)。
 
 | 需要 | 阅读 |
 | --- | --- |
-| 语言、定义域、证明命令与数学写法 | [手册](Manual.md) |
-| 入门书写选择 | [学习速查表](Litex_Learner_Cheatsheet_zh.md) |
+| 语言、定义域、证明命令与数学写法 | [手册](Litex手册.md) |
+| 入门书写选择 | [学习速查表](Litex学习速查表.md) |
 | 短小可运行示例及其假设 | [示例](../examples/README.md) |
 | 模块接口与章节依赖 | 所属模块的 `README.md`、`math_collections.md` 和 `litex.config` |
 | 仓库授权与仅限本地的边界 | [AGENTS.md](../AGENTS.md) 和适用的仓库策略技能 |
