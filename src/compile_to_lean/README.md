@@ -127,14 +127,14 @@ certificate family; no independent target theorem search is performed. The
 source Rational tag does not contain a monomial trace, so Lean checks the
 normalization proof rather than replaying an unavailable low-level trace.
 
-`KnownFnValueSubstitution` equality evidence replays directly cited function
-values through the supported arithmetic constructors. The consumer validates
-the visible source equality, exact ordered replacement endpoints, actual
-successful residual and unique citation traversal order. It never follows a
-function alias or instantiates another body to complete the certificate.
-Unsupported constructors still reject the whole artifact. The generated pair
-is `lean/examples/named_function_affine_arithmetic/statement.{lit,lean}`;
-producer and tampering contracts live under `tests/unit/compile_to_lean/known_fn_value_substitution/`.
+`FnApplicationUnfoldSubstitution` equality evidence replays the exact
+head-to-anonymous-function citation, original and selected call WD, binder-ID
+beta substitution, scalar congruence and actual residual. Steps are consumed
+once in original-tree order; inserted bodies and call arguments cannot acquire
+extra expansions. Unsupported constructors and residuals reject the complete
+artifact. Tests live under `tests/unit/compile_to_lean/fn_application_unfold_substitution/`.
+The existing natural-function declaration lacks a visible zero WD producer and
+still rejects at `WD/Producer`; it is independently reproducible without rewrite.
 
 The compiler also supports the phase-3 slice: top-level concrete predicates
 with flat atomic defining clauses, and formula functions with one or two fixed

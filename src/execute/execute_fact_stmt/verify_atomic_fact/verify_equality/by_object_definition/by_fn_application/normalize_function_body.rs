@@ -254,6 +254,23 @@ impl Runtime {
             }
         }
         let candidates = self.function_body_candidates(prefix)?;
+        Ok(self
+            .checked_anonymous_function_body_expansion(prefix, state, expected_body, candidates)?
+            .map(FunctionBodyExpansionProof::Anonymous))
+    }
+
+    pub(crate) fn checked_anonymous_function_body_expansion(
+        &mut self,
+        prefix: &FnObj,
+        state: VerifyState,
+        expected_body: Option<&Obj>,
+        candidates: Vec<(AnonymousFn, FunctionBodySourceProof)>,
+    ) -> RuntimeResult<Option<AnonymousFunctionBodyExpansionProof>> {
+        if prefix.body.len() != 1 {
+            return Ok(None);
+        }
+        let application = Obj::FnObj(prefix.clone());
+        let args: Vec<Obj> = prefix.body[0].iter().map(|a| a.as_ref().clone()).collect();
         for (anon, function_body) in candidates {
             if args.len() != set_bound_parameter_count(&anon.body.set_bound_parameters) {
                 continue;
@@ -279,16 +296,14 @@ impl Runtime {
                     VerifyObjWellDefinedResult::Success(p) => p,
                     VerifyObjWellDefinedResult::Failed { .. } => continue,
                 };
-            return Ok(Some(FunctionBodyExpansionProof::Anonymous(
-                AnonymousFunctionBodyExpansionProof {
-                    application,
-                    application_well_defined,
-                    function_body,
-                    body_application_well_defined,
-                    continued_body: expanded_body.clone(),
-                    expanded_body,
-                },
-            )));
+            return Ok(Some(AnonymousFunctionBodyExpansionProof {
+                application,
+                application_well_defined,
+                function_body,
+                body_application_well_defined,
+                continued_body: expanded_body.clone(),
+                expanded_body,
+            }));
         }
         Ok(None)
     }

@@ -10347,21 +10347,27 @@ forall a, b, c R:
 
 已知闭合数值等式通过在其子项之前匹配整个原始标量项来替换。然后，从更改的子级重建的父级可以在同一结构通道中使用其已知值。例如，对于 `a=0` 和 `cos(a)=1`，整个余弦值获胜。相等、序和 `eval` 保留每个选定的相等引用；剩余验证保留其现有权限。 [数值代换跟踪器](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit) 保留了以前的与进程相关的故障。
 
-已知函数值代换是相等重写（预览），在闭合数值代换之后尝试。它读取现有标量构造器下每个原始函数调用的唯一非平凡直接索引相等。该方程可以沿任一方向书写。例如：
-
+函数定义的一步展开是相等重写（预览），在闭合数值代换后尝试。`have fn equal`
+会自动保存函数属于其函数集，以及函数名等于匿名函数的定义等式。重写从函数头的
+special properties 中读取这条等式，将实参代入函数体：
 
 ```litex
-have fn shift(x R) R = x + 3
-thm affine_value_product:
-    ? forall x R:
-        2 * shift(x) = 2 * x + 6
-    shift(x) = x + 3
+have fn f(x N) N = x + 1
+forall x N:
+    2 * f(x) = 2 + 2 * x
 ```
 
+无需手工保存 `f(x)=x+1`。原始标量表达式中的最外层调用各展开一次；不扫描调用的
+参数或新插入的函数体。若单侧展开恰好得到对侧已有表达式，保留该显式展开端点。
+函数集成员关系只提供签名；此规则不处理连续应用组、非标量构造器或相等类遍历。
 
-存储的 `shift(x)=x+3` 方程为替换提供支持；残差为 `2*(x+3)=2*x+6`。相等两侧的所有符合条件的原始出现都将一次性替换。插入的表达式和重建的父级不会被访问，普通的函数参数、元组和绑定变量不会被遍历。该路由不会发现函数定义、实例化全称定理或遍历相等类。多个不同的 direct 值使该调用不合格；显式中间方程仍然可用。
-
-原始和残留对象必须通过 WD。使用消耗的重写和策略向上取整检查剩余真值，不包括通用定义/forall 扩展。详解输出命名`KnownFnValueSubstitution`并保留有序特有的源码 `FactId`s，重写端点和残留证明；普通输出保留现有的 `builtin_rewrite` 标签。 [仿射和坐标跟踪器](../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit) 具有可执行假、两跳、歧义、作用域和权限控制。 Lean 重放验证这些精确的引用及其支持的算术构造器的端点；编译器仍然明确不支持其他对象/构造器路由。
+原始调用与选中匿名函数的调用都须通过定义域和 guard 检查。残留真值验证的权限
+限制在 Strategy，并关闭重写及通用定义/forall 展开。Detailed 输出使用
+`FnApplicationUnfoldSubstitution`，保留有序展开步骤、函数头等式引用、重写端点及
+残留证明；Normal 输出保留 `builtin_rewrite`。参见
+[验收示例](../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit)。
+Lean 重放使用这些实际证据；既有的自然数函数定义及算术同余导出缺口仍会明确拒绝
+完整导出，Litex 验证已支持上述例子。
 
 <a id="native-numeric-function-rules"></a>
 

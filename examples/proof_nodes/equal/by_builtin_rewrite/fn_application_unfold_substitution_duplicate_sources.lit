@@ -1,5 +1,5 @@
 # Repeating or reversing an identical value equation does not create ambiguity.
-# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution_duplicate_sources.lit
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_duplicate_sources.lit
 have fn shift(x R) R = x + 3
 
 thm repeated_source:

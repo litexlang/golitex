@@ -1243,8 +1243,9 @@ theorem div_closed {a b : ZFSet.{0}}
   have hy0 : y ≠ 0 := fun h => hb0 (congrArg codeComplex h)
   exact (complex_members _).mpr ⟨x / y, div_numbers x y hy0⟩
 
-/-- A concrete candidate for the numeric object interface; this does not
-instantiate the remaining Litex set and function semantics. Every Value is
+/-- A concrete candidate for the numeric object interface. The supported set
+and function contracts have separate instances below; this is not a complete
+interpretation of all Litex objects and rules. Every Value is
 already a genuine ZF set, so its sethood predicate is True. Membership is
 actual ZF membership and equality is faithful
 to the injective encoding; neither proposition is trivialized. Arithmetic is

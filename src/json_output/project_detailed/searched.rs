@@ -552,6 +552,65 @@ fn project_equality_builtin_rewrite(
     proof: &EqualitySearchProofByBuiltinRewrite,
     runtime: &Runtime,
 ) -> JsonValue {
+    if let EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(p) = proof {
+        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof;
+        let expansions = p
+            .expansions
+            .iter()
+            .map(|step| {
+                let source = match &step.function_body {
+                    FunctionBodySourceProof::KnownEquality(path) => {
+                        project_known_equality_path(path, runtime)
+                    }
+                    FunctionBodySourceProof::Template { function_equal, .. } => {
+                        project_known_equality_path(function_equal, runtime)
+                    }
+                };
+                object_for(
+                    runtime,
+                    vec![
+                        ("application", string(step.application.readable_string())),
+                        (
+                            "application_well_defined",
+                            super::wd::project_obj_wd_proof(
+                                &step.application_well_defined,
+                                runtime,
+                            ),
+                        ),
+                        ("function_equal", source),
+                        (
+                            "body_application_well_defined",
+                            super::wd::project_obj_wd_proof(
+                                &step.body_application_well_defined,
+                                runtime,
+                            ),
+                        ),
+                        (
+                            "expanded_body",
+                            string(step.expanded_body.readable_string()),
+                        ),
+                    ],
+                )
+            })
+            .collect();
+        return object_for(
+            runtime,
+            vec![
+                ("type", string("by_builtin_rewrite")),
+                ("rule", string("FnApplicationUnfoldSubstitution")),
+                ("expansions", JsonValue::Array(expansions)),
+                ("rewritten_left", string(p.rewritten_left.readable_string())),
+                (
+                    "rewritten_right",
+                    string(p.rewritten_right.readable_string()),
+                ),
+                (
+                    "residual_equal",
+                    project_verify_fact(&p.residual_equal, runtime),
+                ),
+            ],
+        );
+    }
     let (rule, left, right, ids, residual) = match proof {
         EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(p) => (
             "ClosedNumericEqualSubstitution",
@@ -560,13 +619,7 @@ fn project_equality_builtin_rewrite(
             &p.cited_equal_fact_ids,
             &p.residual_equal,
         ),
-        EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(p) => (
-            "KnownFnValueSubstitution",
-            &p.rewritten_left,
-            &p.rewritten_right,
-            &p.cited_equal_fact_ids,
-            &p.residual_equal,
-        ),
+        EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(_) => unreachable!(),
     };
     let cites = ids
         .iter()

@@ -29,24 +29,29 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
-## Stored function-value substitution
+## One-step function-application unfold substitution
 
-[KnownFnValueSubstitution](equal/by_builtin_rewrite/known_fn_value_substitution.lit)
-reuses explicitly stored affine and coordinate equations inside scalar
-calculations. It substitutes unique direct values on both sides in one original
-tree pass, retains the selected `FactId`s, and checks a Strategy-capped residual
-with rewrite off. Inserted functions, ambiguous values, definition discovery,
-ordinary call arguments and equality-class walks are outside this route.
-Focused producer and compiler tests preserve false/WD/scope/permission and
-certificate-tampering boundaries.
+[FnApplicationUnfoldSubstitution](equal/by_builtin_rewrite/fn_application_unfold_substitution.lit)
+reads the function head's exact equality to an anonymous function. `have fn equal`
+automatically publishes that equality. Each original outermost call unfolds once
+under scalar constructors; call arguments and inserted bodies are leaves.
+The proof retains both call-domain checks, the head equality and the residual.
 
-Independent strict examples cover [repeated calls and both sides](equal/by_builtin_rewrite/known_fn_value_substitution_multiple_calls.lit),
-[power, negation and division](equal/by_builtin_rewrite/known_fn_value_substitution_scalar_arithmetic.lit),
-[exact arguments](equal/by_builtin_rewrite/known_fn_value_substitution_exact_arguments.lit),
-[guarded applications](equal/by_builtin_rewrite/known_fn_value_substitution_guarded.lit)
-and [duplicate source equations](equal/by_builtin_rewrite/known_fn_value_substitution_duplicate_sources.lit).
-The [negative manifest](../negative/known_fn_value_substitution/manifest.json)
-separates false conclusions and WD failures from intentional search limits.
+For example, this verifies directly without an intermediate `f(x)=x+1`:
+
+```litex
+have fn f(x N) N = x + 1
+forall x N:
+    2 * f(x) = 2 + 2 * x
+```
+
+Independent strict examples cover [repeated calls and both sides](equal/by_builtin_rewrite/fn_application_unfold_substitution_multiple_calls.lit),
+[power, negation and division](equal/by_builtin_rewrite/fn_application_unfold_substitution_scalar_arithmetic.lit),
+[argument substitution](equal/by_builtin_rewrite/fn_application_unfold_substitution_exact_arguments.lit),
+[guarded applications and reciprocal cancellation](equal/by_builtin_rewrite/fn_application_unfold_substitution_guarded.lit)
+and [irrelevant repeated application equations](equal/by_builtin_rewrite/fn_application_unfold_substitution_duplicate_sources.lit).
+The [negative manifest](../negative/fn_application_unfold_substitution/manifest.json)
+separates false conclusions and WD failures from bounded search misses.
 
 ## Function-space carriers
 

@@ -952,14 +952,13 @@ Fixed trigonometric interval consumers retain the actual written Less/Greater or
 
 ClosedNumericEqualSubstitution matches whole original scalar terms before children and can match rebuilt parents in that same structural pass. Equality, atomic and eval consumers retain the selected actual equality IDs, rewritten subject and checked residual/evaluation. The exact single-key replacement interface preserves its original-only behavior. See [numeric priority acceptance](../../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit).
 
-Equality's `KnownFnValueSubstitution` uses the same Detailed rewrite envelope:
-`type: by_builtin_rewrite`, `rule: KnownFnValueSubstitution`, `rewritten_left`,
-`rewritten_right`, ordered unique `cited_equal_fact_ids`, and `residual_equal`.
-Each source is an exact direct function-value equality in the original scope;
-the child retains residual WD and its successful truth evidence. It visits only
-original scalar subterms and caps residual truth at Strategy with rewrite off.
-Normal output keeps `builtin_rewrite`. See the
-[function-value tracer](../../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit).
+Equality's `FnApplicationUnfoldSubstitution` Detailed envelope contains
+`type: by_builtin_rewrite`, `rule: FnApplicationUnfoldSubstitution`, ordered
+`expansions`, `rewritten_left`, `rewritten_right`, and `residual_equal`.
+Each expansion records the original call, its WD, `function_equal` path,
+selected anonymous-body call WD and instantiated body. Repeated original calls
+retain distinct checked steps. Normal output keeps `builtin_rewrite`.
+See the [function-definition tracer](../../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit).
 
 First-quadrant evidence has six dedicated named leaves: CosNonzeroOnFirstQuadrant,
 SinNonzeroOnFirstQuadrant, TanPositiveOnFirstQuadrant, CotPositiveOnFirstQuadrant,

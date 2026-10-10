@@ -10981,37 +10981,36 @@ both `a=0` and `cos(a)=1`, the whole cosine value wins. Equality, order and
 existing permissions. The [numeric substitution tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
 preserves the former process-dependent failure.
 
-Known function-value substitution is an equality rewrite (preview), tried
-after closed numeric substitution. It reads the unique nontrivial directly
-indexed equality of each original function call under the existing scalar
-constructors. The equation can be written in either direction. For example:
+One-step function-definition unfolding is an equality rewrite (preview), tried
+after closed numeric substitution. `have fn equal` automatically stores both
+function membership and an equality from the function name to its anonymous
+function. The rewrite reads that equality from the function head's exact
+special properties and substitutes the actual arguments into the body:
 
 ```litex
-have fn shift(x R) R = x + 3
-thm affine_value_product:
-    ? forall x R:
-        2 * shift(x) = 2 * x + 6
-    shift(x) = x + 3
+have fn f(x N) N = x + 1
+forall x N:
+    2 * f(x) = 2 + 2 * x
 ```
 
-The stored `shift(x)=x+3` equation supplies the replacement; the residual is
-`2*(x+3)=2*x+6`. All eligible original occurrences on both equality sides
-are replaced in one pass. Inserted expressions and rebuilt parents are not
-visited, and ordinary function arguments, tuples and binders are not traversed.
-This route does not discover function definitions, instantiate universal
-theorems or walk equality classes. Multiple distinct direct values make that
-call ineligible; an explicit intermediate equation remains available.
+No application-value equation is required. Each original outermost call under
+scalar constructors unfolds once, on both equality sides. Call arguments and
+inserted bodies are not scanned. If one side unfolds exactly to the existing
+opposite endpoint, that endpoint stays unchanged. For example, if `outer(x)`
+unfolds to `inner(x)`, this rewrite does not also unfold `inner(x)`. Calls with several
+application groups, non-scalar constructors and equality-class walks are outside
+this route. A function-set membership alone supplies a signature, not a body. Bare
+anonymous-literal beta equalities retain their existing definition route.
 
-Original and residual objects must pass WD. Residual truth is checked with
-rewrite consumed and a Strategy ceiling, excluding generic definition/forall
-expansion. Detailed output names `KnownFnValueSubstitution` and retains ordered
-unique source `FactId`s, rewritten endpoints and the residual proof; Normal
-output keeps the existing `builtin_rewrite` label. The
-[affine and coordinate tracer](../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit)
-has executable false, two-hop, ambiguity, scope and permission controls.
-Lean replay validates these exact citations and endpoints for its supported
-arithmetic constructors; other object/constructor routes remain explicitly
-unsupported by the compiler.
+Original and selected anonymous-function calls must pass domain and guard
+checks. Residual truth is checked at Strategy with rewrite disabled, excluding
+generic definition/forall expansion. Detailed output names
+`FnApplicationUnfoldSubstitution` and records ordered checked beta steps,
+head-equality citations, rewritten endpoints and the residual proof; Normal
+output retains `builtin_rewrite`. See the [runnable tracer](../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit).
+Lean replay consumes this evidence for supported function and scalar constructors.
+The existing natural-number function-declaration and arithmetic-congruence
+compiler gaps still reject the complete export; Litex verification is supported.
 
 ### Native numeric function rules
 

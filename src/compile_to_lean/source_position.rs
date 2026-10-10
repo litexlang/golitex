@@ -46,6 +46,7 @@ pub(super) enum SourceOwner<'a> {
     PropInference(&'a StoreFactAndInferResult),
     FunctionNormalization(&'a FunctionBodyNormalizationProof),
     FunctionExpansion(&'a AnonymousFunctionBodyExpansionProof),
+    FunctionDefinitionRewrite(&'a [AnonymousFunctionBodyExpansionProof]),
 }
 
 impl<'a> SourcePosition<'a> {
@@ -1380,7 +1381,9 @@ fn fact_reference_in_owner(
         | SourceOwner::ParamTypeWD(_)
         | SourceOwner::ByDef(_)
         | SourceOwner::PropRequirements(_) => Ok(None),
-        SourceOwner::FunctionNormalization(_) | SourceOwner::FunctionExpansion(_) => Ok(None),
+        SourceOwner::FunctionNormalization(_)
+        | SourceOwner::FunctionExpansion(_)
+        | SourceOwner::FunctionDefinitionRewrite(_) => Ok(None),
     }
 }
 
@@ -2122,6 +2125,22 @@ fn visit_owner<T>(
                     if let Some(value) = visit_owner(&expansion, wd, verify)? {
                         return Ok(Some(value));
                     }
+                }
+            }
+        }
+        SourceOwner::FunctionDefinitionRewrite(steps) => {
+            for (index, step) in steps.iter().take(position.before).enumerate().rev() {
+                let prior = SourcePosition {
+                    before: index,
+                    ..*position
+                };
+                let expansion = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::FunctionExpansion(step),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_owner(&expansion, wd, verify)? {
+                    return Ok(Some(value));
                 }
             }
         }

@@ -1,5 +1,5 @@
-# One stored value under negation, power and division by a nonzero constant.
-# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution_scalar_arithmetic.lit
+# One instantiated function body under negation, power and division by a nonzero constant.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_scalar_arithmetic.lit
 # Explicit middle term: -((x+3)^2)/2=-(x^2+6*x+9)/2.
 # Litex verifies this; Lean export currently rejects the residual's unsupported
 # Equality/BuiltinStrategy route. A compiler regression preserves that boundary.
@@ -8,4 +8,3 @@ have fn shift(x R) R = x + 3
 thm scalar_polynomial:
     ? forall x R:
         -(shift(x)^2) / 2 = -(x^2 + 6*x + 9) / 2
-    shift(x) = x + 3

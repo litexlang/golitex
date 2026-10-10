@@ -176,6 +176,18 @@ arbitrary_real >= arbitrary_real
 
 ## 成员关系保留对象表示
 
+`M : Litex.Semantics` 是携带已证明规律的数学解释：`M.Value` 是共同的语义世界，
+`M.mem`、`M.isSet` 解释成员关系与集合身份，`M.number : ℂ → M.Value` 嵌入原生数值，
+`M.standard` 解释 N/Z/Q/R/C。`Representation M α` 则固定 host 值如何指向这个世界，
+以及哪些值满足 WD。生成定理对满足这些规律的 M 成立；原生消费者在证明体中
+明确选用 `Litex.NumericModel.model`。它覆盖已检查的切片，不是全部 Litex 的完整模型。
+
+对于一般对象，只要已有 `h : Litex.In a Litex.C`，现成的
+`Litex.NativeBridge.asComplex a h : ℂ` 就给出唯一的原生复数代表；
+`asComplex_spec` 证明其嵌入等于对象的 denotation。这个接口适用于任意满足契约的 M。
+原对象及 α 保留；该 noncomputable 观察不将对象重新定型，也不推出任意 host 载荷相等。
+`asReal` 提供相应的实数代表，两种观察的相容性及证明无关性已由 Core 证明。
+
 [一般复数对象示例](../lean/examples/complex_object_equals_itself/statement.lit)将自反性扩展到参数：
 
 ```litex
@@ -189,7 +201,7 @@ forall a C:
 {_Host_i1 : Type v1}
 [_rep_i1 : Litex.Representation M _Host_i1]
 (_value_i1 : Litex.Obj (M := M) _Host_i1)
-(_h_param_i1 : Litex.In _value_i1 (Litex.C (M := M)))
+(h_15 : Litex.In _value_i1 (Litex.C (M := M)))
 ```
 
 `a C` 提供成员关系事实，不会把对象表示替换成 Lean 的 `ℂ` 变量。定理结论是 `Litex.Same _value_i1 _value_i1`，由 `Litex.sameRefl _value_i1` 证明。
@@ -220,7 +232,7 @@ forall a C, b C:
 即使这个自反等式，也要求商良定义。[生成文件](../lean/examples/division_equals_itself/statement.lean)为两个参数引入复数成员关系证明，并引入 `b` 的非零前提。传给自反性证明的商就是以下逐字保留的生成表达式：
 
 ```lean
-Litex.div _value_i1 _value_i2 _h_param_i1 _h_param_i2 _h_dom_f1
+Litex.div _value_i1 _value_i2 h_28 h_29 h_1
 ```
 
 三个证明参数分别认证两个操作数的定义域与分母非零。它们保留源码条件，而不是新增数学操作数。输出相等证明之前，编译必须建立或解析这份精确的构造证据。
@@ -256,6 +268,61 @@ Lean 定理以该接口为条件。`lean/Litex.lean` 包含一个明确的候选
 不得以证明空洞或新造的公理代替不受支持的路线。`-strict` 排除源码中的 trust 和用户公理；它并不证明每项 Litex 基础都已有完整的 Lean 解释。
 
 <a id="maintaining-this-guide"></a>
+
+<a id="using-a-generated-result-in-ordinary-mathlib"></a>
+
+## 在普通 Mathlib 中使用生成结果
+
+当前数学子集固定了 18 个角色：数值层级、精确有理数计算、有理数封闭性、复数代数、
+实数序、相等传递性质、任意数值、别名、具体谓词、带条件公式函数、命名定理引用和
+有界集合。倒数乘积例子另外检查这些角色的组合。伴随回归例子不另算新的数学角色。
+
+以[商的分配律源码](../lean/examples/real_quotient_distributes/statement.lit)为例，
+链路是源码 → 原始 typed result → 生成定理 → 手写 Adapter → 普通 Lean Final。
+生成陈述保留 generic 对象、WD 和分母非零证据。Adapter 固定已检查的模型并证明
+表示转换。本地 Final 对外给出普通 Mathlib 定理：
+
+```lean
+theorem realQuotientDistributes (x y z : ℝ) (hz : z ≠ 0) :
+    (x + y) / z = x / z + y / z := by
+  exact Adapter.realQuotientDistributes x y z hz
+```
+
+当本地 `native.Final` 模块可用时，Lean 用户可以这样引用：
+
+```lean
+import native.Final
+
+theorem useCompiledQuotient (x y z : ℝ) (hz : z ≠ 0) :
+    (x + y) / z = x / z + y / z := by
+  exact NativeConsumer.realQuotientDistributes x y z hz
+```
+
+用户的定理陈述只包含实数、普通运算和非零前提。手写 Adapter/Final 属于忽略的
+`scripts/litex_to_lean/native/` 本地验收工具，尚未作为自动发布的 Lean 包交付。
+在另一个固定版本的 Mathlib 项目中，导入保存的生成模块和 `Litex.lean`，再为需要的
+普通数学接口提供已检查的 Adapter/Final。保留生成模块的相对导入路径及其实际
+命名空间。成员证明允许取得原生数值代表，同时原对象的 host 表示保持不变。
+
+本地选定子集的统一检查命令是：
+
+```sh
+cargo build --release
+python3 scripts/litex_to_lean/check.py --subset --work-area .draft/selected-subset --profile-area .draft/selected-subset/replay-profiles
+```
+
+它记录源码与生成文件哈希、实际 typed result 的字段路径和所选规则/证书标签、
+真实 Lean 检查、公理审计以及原生证明引用路径。辅助程序投影 Detailed 结果后，
+直接编译同一份原始 result；JSON 只用于展示验收证据，不进入编译器。
+矩阵按数学角色逐项记录。原生证明引用经过 beta/zeta 简化并沿辅助定理追踪；
+未使用的局部 let 或 lambda 参数不算消费生成证明。这检查证明项中实际保留的引用，
+不证明数学上的唯一必要性，也不等于形式化证明整个 Rust 翻译器的正确性。
+
+任意集合有一个明确的接口差异：`$is_set(A)` 在生成端有证明，原生端的
+`A : ZFSet` 则通过类型表达集合身份，无需发明额外的原生 sethood 谓词。
+整个集合的数值视图仍需 subset 证据。模块、一般局部见证声明、无界理解、
+存在式集合选择、更广的函数体以及未支持的推理/证书路线仍在编译边界外。
+在结果中观察到未被消费的 inference 节点，不代表编译器已支持该推理。
 
 ## 维护本指南
 

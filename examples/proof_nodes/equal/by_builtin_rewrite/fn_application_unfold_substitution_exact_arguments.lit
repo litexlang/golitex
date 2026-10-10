@@ -1,0 +1,8 @@
+# Binder identities keep two different argument lists separate.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_exact_arguments.lit
+# Explicit middle term: 2*(x+2*y)-(y+2*x)=3*y.
+have fn mix(x,y R) R = x + 2*y
+
+thm swapped_arguments:
+    ? forall x,y R:
+        2*mix(x,y) - mix(y,x) = 3*y
