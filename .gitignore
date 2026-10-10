@@ -85,5 +85,7 @@ pending_showcase
 **/experience/
 **/bugs/
 /docs/audits/
+# Local documentation display order.
+/docs/order
 /tests/tooling/acceptance/
 **/__litex_knowledge_base__/

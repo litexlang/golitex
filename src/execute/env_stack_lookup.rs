@@ -154,7 +154,7 @@ impl Runtime {
                 match identifier {
                     IdentifierObj::Plain { id, .. } if *id != stored_id => return None,
                     IdentifierObj::WithExportFileId { export_file_id, .. }
-                        if self.current_file.is_live_root_export(*export_file_id) =>
+                        if definition_source_is_live(self, None, *export_file_id) =>
                     {
                         if self.parse_scope_stack.first()?.plain.get(plain) != Some(&stored_id) {
                             return None;
@@ -164,10 +164,7 @@ impl Runtime {
                         global_mod_id,
                         export_file_id,
                         ..
-                    } if self
-                        .current_file
-                        .is_live_imported_export(*global_mod_id, *export_file_id) =>
-                    {
+                    } if definition_source_is_live(self, Some(*global_mod_id), *export_file_id) => {
                         if self.parse_scope_stack.first()?.plain.get(plain) != Some(&stored_id) {
                             return None;
                         }
@@ -228,7 +225,7 @@ impl Runtime {
                 .finished_export_exec_env(None, *export_file_id)
                 .and_then(|env| lookup(env, plain))
                 .or_else(|| {
-                    if self.current_file.is_live_root_export(*export_file_id) {
+                    if definition_source_is_live(self, None, *export_file_id) {
                         for env in self.execution_environments_stack.iter().rev() {
                             if let Some(def) = lookup(env, plain) {
                                 return Some(def);
@@ -245,10 +242,7 @@ impl Runtime {
                 .finished_export_exec_env(Some(*global_mod_id), *export_file_id)
                 .and_then(|env| lookup(env, plain))
                 .or_else(|| {
-                    if self
-                        .current_file
-                        .is_live_imported_export(*global_mod_id, *export_file_id)
-                    {
+                    if definition_source_is_live(self, Some(*global_mod_id), *export_file_id) {
                         for env in self.execution_environments_stack.iter().rev() {
                             if let Some(def) = lookup(env, plain) {
                                 return Some(def);
@@ -291,3 +285,33 @@ fn stored_identifier_binding_id(
 #[cfg(test)]
 #[path = "../../tests/unit/execute/witness_binding/tests.rs"]
 mod witness_binding_tests;
+
+// Diagnostic REPL locations do not replace the publication identity of the
+// still-open file environment. Read its existing snapshot; never alias names
+// or search a different export's live stack.
+fn definition_source_is_live(
+    runtime: &Runtime,
+    global_mod_id: Option<usize>,
+    export_file_id: usize,
+) -> bool {
+    let matches = |source: &crate::runtime::CodeSource| match global_mod_id {
+        None => source.is_live_root_export(export_file_id),
+        Some(module) => source.is_live_imported_export(module, export_file_id),
+    };
+    if matches(&runtime.current_file) {
+        return true;
+    }
+    if runtime.current_file != crate::runtime::CodeSource::Repl {
+        return false;
+    }
+    runtime
+        .execution_environments_stack
+        .iter()
+        .rev()
+        .filter_map(|env| env.session_view.as_ref())
+        .any(|view| matches(&view.code_source))
+}
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/continued_export_repl_lookup/tests.rs"]
+mod continued_export_repl_lookup_tests;

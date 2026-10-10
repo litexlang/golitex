@@ -1,10 +1,10 @@
 <a id="litex-cli"></a>
 
-# Litex CLI
+# Litex 命令行参考
 
 <!-- CLI 主线：选择命令 → 运行 → 阅读 Normal JSON（或 REPL 文本） -->
 
-这是当前 Litex 流水线（`src/`）的命令行参考。如果尚未安装 Litex，请先阅读简短的[安装指南](setup_zh.md)。
+这是当前 Litex 流水线（`src/`）的命令行参考。如果尚未安装 Litex，请先阅读简短的[安装指南](安装Litex.md)。
 
 由沈嘉辰创建和维护。
 
@@ -18,7 +18,9 @@ Markdown 源码：https://github.com/litexlang/golitex/blob/main/docs/cli.md
 
 ## 开始之前
 
-安装 Litex、检查安装或选择对应平台的安装包，请使用简短的[安装指南](setup_zh.md)。免本地安装试用，请使用[在线 playground](https://litexlang.com)。
+安装 Litex、检查安装或选择对应平台的安装包，请使用简短的[安装指南](安装Litex.md)。免本地安装试用，请使用[在线 playground](https://litexlang.com)。
+
+请核对 `litex -version` 和 `litex -help`：本文描述当前源码版本，旧安装版的选项和输出可能不同。若项目使用 `[import std]`，请按安装指南配置 std 路径并检查兼容模块加载。普通原生词汇不依赖 std；当前随包提供的 `basics` 模块不导出声明。
 
 <a id="first-run"></a>
 
@@ -85,7 +87,7 @@ litex -f examples/claim_obtain_scope.lit
 
 当前白名单不包含 `-compact`、`-detailed`、`-runner`、`-before`、`-isolated`、`-factgraph` 或 `-defgraph`。这些旧命令写法不是本版本的入口。Rust 投影 API 与 CLI 选项相互独立。
 
-`-strict` 在执行时拒绝用户 `trust`、`trust have` 和 `axiom`，包括嵌套证明语句与导入依赖。允许 `abstract_prop` 声明：它只引入谓词签名，不引入已证明实例。调用仍要求参数合法、元数准确并有证明。命名的集合论基础规则释放仍被允许。严格导入绕过缓存环境，以相同策略重新执行依赖源码。见[信任边界](Manual.md#trust-and-strict-mode)。
+`-strict` 在执行时拒绝用户 `trust`、`trust have` 和 `axiom`，包括嵌套证明语句与导入依赖。允许 `abstract_prop` 声明：它只引入谓词签名，不引入已证明实例。调用仍要求参数合法、元数准确并有证明。命名的集合论基础规则释放仍被允许。严格导入绕过缓存环境，以相同策略重新执行依赖源码。见[信任边界](Litex手册.md#trust-and-strict-mode)。
 
 <a id="commands"></a>
 
@@ -100,6 +102,7 @@ litex -f examples/claim_obtain_scope.lit
 | `litex -lean -f <file>` | 验证独立文件，将受支持的带类型结果重放成 Lean 源码，写到标准输出（预览）。 |
 | `litex -extractpython <code\|-f\|-r>` | 验证可提取片段，然后输出 Python `extracted_code` 产物（实验性）。 |
 | `litex -extractc <code\|-f\|-r>` | 同上，输出 C99 片段（实验性）。 |
+| `litex -latex <-e\|-f\|-r> <input>` | 将解析后的源码转换为 LaTeX 产物，不验证源码（预览）；见 [LaTeX 转换](#latex-conversion-preview)。 |
 | `litex -help` | 打印用法文本。 |
 | `litex -version` | 打印 `Litex <version>`。 |
 
@@ -393,6 +396,8 @@ litex -strict -lean -f lean/examples/real_is_complex/statement.lit
 
 ## 实用命令
 
+包含 `examples/` 和 `lean/examples/` 的命令需从仓库根目录运行；这些路径属于源码仓库，不随安装包提供。请把 `your_file.lit`、`example.lit` 和 `chapter.lit` 换成你创建的文件。
+
 ```bash
 litex -e "1 = 1"
 litex -f examples/claim_obtain_scope.lit
@@ -410,3 +415,5 @@ litex -session -f examples/claim_obtain_scope.lit
 使用 `-latex -document` 生成完整 XeLaTeX article，省略 `-document` 则生成片段。十种 `-lang` 选项都选择完整的数学叙述模板。JSON 键在不同语言下保持稳定；`content` 包含 LaTeX，`success` 报告转换结果，`verified` 始终为 false。转换失败时 `content` 为 null，进程以 1 退出。无效启动参数通过公共参数解析器产生标准错误，并以 2 退出。转换不执行或验证源码；`-strict` 和 `-session` 被拒绝。保存 `.tex`、字体/宏包要求、API 与覆盖范围见[编译器指南](../src/compile_to_latex/README.md)。
 
 内部的 `CompileToLatex` 和 `ExtractExecutableCode` 是不同启动命令，也有不同结果类型。`-latex` 经过普通命令分派器；它不共用 C/Python 的验证与可执行代码提取流水线。
+
+续接的已注册文件会话，其定义查找仍关联到已打开文件环境记录的发布所有者。新诊断仍使用 `<repl>`。这也包括由细化 template 载体投影出的谓词；查找绝不借用属于其他根或导出模块 ID 的实时环境。[续接导出示例](../examples/wd/continued_export_repl/README.md)记录文件到 REPL 的工作流。

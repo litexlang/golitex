@@ -4,7 +4,7 @@
 
 本指南通过具体的源码与生成结果示例，解释 Litex 到 Lean 编译的设计原则。它是持续维护的阅读入口，说明编译器为什么这样工作，以及输出意味着什么。
 
-[编译器 README](../src/compile_to_lean/README.md)描述实现细节、内部设计理由、结果类型和扩展点。面向读者的解释和示例讲解放在这里；Rust 控制流与重放记录放在那里。[CLI 文档](cli_zh.md#lean-compiler-boundary)负责命令行契约。
+[编译器 README](../src/compile_to_lean/README.md)描述实现细节、内部设计理由、结果类型和扩展点。面向读者的解释和示例讲解放在这里；Rust 控制流与重放记录放在那里。[CLI 文档](Litex命令行参考.md#lean-compiler-boundary)负责命令行契约。
 
 <a id="from-a-checked-fact-to-a-lean-proof"></a>
 
@@ -19,7 +19,7 @@
 它的[生成 Lean 文件](../lean/examples/one_equals_itself/statement.lean)包含以下声明。这里逐字保留声明，省略外围命名空间：
 
 ```lean
-theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
+theorem h_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
   (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))
 ```
 
@@ -50,7 +50,7 @@ let lean = compiler.compile_run(&result, &artifact_namespace)?;
 
 编译器取得 Runtime 的所有权，并通过方法参数接收已完成的结果，然后分派既有的 `ExecStmtResult` 及其带类型的子枚举。Runtime 被移动而不克隆；编译器只有这一个字段，没有生命周期参数。它的文件结构对应执行器的语句与验证分支。每个分支读取原始主体和选定证据，编译子节点，生成临时 Lean 表达式。它不维护第二套对象、事实、定理或参数模型。
 
-借用的源码位置游标识别原始结果的祖先节点和已完成的阶段前缀。这样既保留先前引用与局部边界，也不必复制 ExecEnv 或维护独立证明注册表。来源 ID 用于命名内部声明；公开的 `fact_<index>` 和 `named_thm_<index>` 名称保持稳定。参数签名来自声明的原始位置，因此后来的 `have` 不能扩展先前定理的输入。
+借用的源码位置游标识别原始结果的祖先节点和已完成的阶段前缀。这样既保留先前引用与局部边界，也不必复制 ExecEnv 或维护独立证明注册表。来源 ID 将每个源码证明声明和引用命名为 `h_<original FactId>`，包括参数、保护条件、推导事实和命名定理。语句位置决定执行顺序，不用于分配证明名称。参数签名来自声明的原始位置，因此后来的 `have` 不能扩展先前定理的输入。
 
 对象构造器可能依赖局部成员关系证明或非零证明。如果导出的命题使用该证明名，生成类型会将所需的实际证明表达式作为局部 `let` 值包含进去。这使 Lean 表达式闭合，而不把已证明事实变成新的定理假设。
 
@@ -59,6 +59,23 @@ Runtime 执行源码一次，然后移动到编译器中，作为只读的精确
 对于 `1 = 1`，记录的路线是自反性。对于 `a + 0 = a` 这样的事实，所选有理式规范化路线必须经过对应的规范化适配器。识别最终等式并改用无关的加零定理，会丢失与源码证明的联系。所选适配器内的固定规范化可以消解数值证书；这不授权无限制的目标证明搜索。
 
 这一区分也规定了支持边界：命题可以在 Litex 中验证通过，但其具体证据路线可能不在当前编译器的支持范围内。编译接受该路线之前，必须为它提供明确的适配器。
+
+<a id="formula-functions-and-concrete-predicates"></a>
+
+## 公式函数与具体谓词
+
+[带保护条件的倒数](../lean/examples/guarded_real_reciprocal/statement.lit)用普通非零要求定义公式：
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+生成的对象使用 `Litex.formulaFn`，求值使用 `Litex.call`。调用的 WD 包含记录的函数空间成员关系、参数成员关系及保护条件证明。对存储的源码证明的引用使用原始 `h_<FactId>` 名称。新检查的数值要求也可直接包含选定的证明表达式。`hf` 等库参数名不会重命名源码引用。
+
+`FunctionSemantics M` 为数值接口增加图构造与求值。具体实例用 Mathlib 的 ZF 集合证明这些规律；源码函数仍是拥有自身身份的图对象。内部值函数体回调不会把源码对象替换为原生实数函数箭头。
+
+当前切片支持一个或两个固定 N/Z/Q/R/C 输入及输出、原子函数保护条件，以及定义体为平坦原子条款的顶层具体谓词。[非负性](../lean/examples/nonnegative_real_property/statement.lit)展示谓词定义与展开；[商的分配](../lean/examples/real_quotient_distributes/statement.lit)展示两个参数。递归或复合公式体，以及使用具体谓词的函数保护条件，仍是不支持的编译路线。
 
 <a id="definitions-and-named-theorem-citations"></a>
 
