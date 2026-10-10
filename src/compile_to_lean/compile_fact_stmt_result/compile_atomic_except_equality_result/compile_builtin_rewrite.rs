@@ -48,7 +48,10 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         if !matches!(
             goal,
-            AtomicFact::InFact(_) | AtomicFact::IsSetFact(_) | AtomicFact::NotEqualFact(_)
+            AtomicFact::InFact(_)
+                | AtomicFact::IsSetFact(_)
+                | AtomicFact::NotEqualFact(_)
+                | AtomicFact::SubsetFact(_)
         ) {
             return Err(LeanCompileError::unsupported(
                 "Atomic/BuiltinRewrite/PredicateTransport",
@@ -210,6 +213,16 @@ impl LitexToLeanCompiler {
                 self.compile_object_reference(&to.element, position)?,
                 self.compile_object_reference(&from.set, position)?,
                 self.compile_object_reference(&to.set, position)?,
+                arguments[0],
+                arguments[1],
+                compiled_child.1,
+            )),
+            (AtomicFact::SubsetFact(from), AtomicFact::SubsetFact(to)) => Ok(format!(
+                "(Litex.subsetOfSame {} {} {} {} {} {} {})",
+                self.compile_object_reference(&from.left, position)?,
+                self.compile_object_reference(&from.right, position)?,
+                self.compile_object_reference(&to.left, position)?,
+                self.compile_object_reference(&to.right, position)?,
                 arguments[0],
                 arguments[1],
                 compiled_child.1,

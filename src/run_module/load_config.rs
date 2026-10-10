@@ -22,7 +22,29 @@ pub fn resolve_std_root(repo_hint: Option<&Path>) -> PathBuf {
         if repo_std.is_dir() {
             return repo_std;
         }
-        return repo_std;
+    }
+    // Installed archives, Homebrew/Scoop, MSI and Debian packages keep std
+    // alongside the real executable or under its installation prefix.
+    if let Ok(executable) = std::env::current_exe() {
+        let executable = executable.canonicalize().unwrap_or(executable);
+        if let Some(bin) = executable.parent() {
+            let mut candidates = vec![bin.join("std")];
+            if let Some(prefix) = bin.parent() {
+                candidates.push(prefix.join("std"));
+                candidates.push(prefix.join("share/litex/std"));
+                if let Some(parent) = prefix.parent() {
+                    candidates.push(parent.join("share/litex/std"));
+                }
+            }
+            for candidate in candidates {
+                if candidate.is_dir() {
+                    return candidate;
+                }
+            }
+        }
+    }
+    if let Some(repo) = repo_hint {
+        return repo.join("std");
     }
     cwd_std
 }

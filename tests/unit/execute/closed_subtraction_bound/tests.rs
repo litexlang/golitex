@@ -179,3 +179,147 @@ fn maintained_subtraction_bound_implications_pass() {
     let run = runtime().run_litex_code(code).unwrap();
     assert!(run.success && run.session_error.is_none());
 }
+
+#[test]
+fn symbolic_endpoint_requires_identical_bound_and_correct_offset_sign() {
+    for (source, target, expected) in [
+        ("x <= b", "x - 1 <= b", true),
+        ("b >= x", "b >= x - 1", true),
+        ("x < b", "x - 0 <= b", true),
+        ("x >= b", "x - (-1) >= b", true),
+        ("b <= x", "b <= x - (-1)", true),
+        ("x <= b", "x - (-1) <= b", false),
+        ("x >= b", "x - 1 >= b", false),
+        ("x <= b", "x - 1 <= c", false),
+        ("x >= b", "x - 1 <= b", false),
+        ("x <= b", "x - c <= b", false),
+    ] {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        });
+        assert!(
+            rt.run_litex_code(&format!("have x, b, c R\ntrust {source}\n"))
+                .unwrap()
+                .success
+        );
+        let goal = fact(&mut rt, target);
+        let before: Vec<_> = rt
+            .execution_environments_stack
+            .iter()
+            .map(|e| {
+                (
+                    e.facts.facts_by_id.len(),
+                    e.well_defined_objects.object_to_wd_id.len(),
+                )
+            })
+            .collect();
+        let result = rt
+            .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+            .unwrap();
+        let after: Vec<_> = rt
+            .execution_environments_stack
+            .iter()
+            .map(|e| {
+                (
+                    e.facts.facts_by_id.len(),
+                    e.well_defined_objects.object_to_wd_id.len(),
+                )
+            })
+            .collect();
+        assert_eq!(before, after);
+        assert_eq!(!result.is_failed(), expected, "{source} => {target}");
+        if expected {
+            let run = rt.run_litex_code(target).unwrap();
+            let json = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt)
+                .stringify();
+            assert!(json.contains("ClosedSubtractionBound"), "{json}");
+            assert!(json.contains("cite_fact_id") && json.contains("translated_bound"));
+        }
+    }
+    assert!(
+        !runtime()
+            .run_litex_code("forall x, b R:\n    x - 1 <= b\n")
+            .unwrap()
+            .success
+    );
+    assert!(
+        !runtime()
+            .run_litex_code("forall x, b R:\n    x <= b\n    =>:\n        x - (1 / 0) <= b\n")
+            .unwrap()
+            .success
+    );
+}
+
+#[test]
+fn strict_subtraction_bound_preserves_source_strictness_and_direction() {
+    for (source, target, expected) in [
+        ("x <= b", "x - 1 < b", true),
+        ("b >= x", "b > x - 1", true),
+        ("x >= b", "x - (-1) > b", true),
+        ("b <= x", "b < x - (-1)", true),
+        ("x < b", "x - 0 < b", true),
+        ("x > b", "x - 0 > b", true),
+        ("x <= b", "x - 0 < b", false),
+        ("x >= b", "x - 0 > b", false),
+        ("x <= b", "x - (-1) < b", false),
+        ("x >= b", "x - 1 > b", false),
+        ("x <= b", "x - 1 < c", false),
+        ("x <= 2", "x - 1 < 1", false),
+        ("x < 2", "x - 1 < 1", true),
+    ] {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+            language: OutputLanguage::English,
+        });
+        assert!(
+            rt.run_litex_code(&format!("have x, b, c R\ntrust {source}\n"))
+                .unwrap()
+                .success
+        );
+        let goal = fact(&mut rt, target);
+        let result = rt
+            .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+            .unwrap();
+        assert_eq!(!result.is_failed(), expected, "{source} => {target}");
+        if expected {
+            let run = rt.run_litex_code(target).unwrap();
+            let json = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt)
+                .stringify();
+            assert!(json.contains("ClosedSubtractionStrictBound"), "{json}");
+            assert!(json.contains("cite_fact_id") && json.contains("translated_bound"));
+        }
+    }
+}
+
+#[test]
+fn symbolic_bound_output_and_compiler_boundaries_are_explicit() {
+    for language in OutputLanguage::ALL {
+        for source in [
+            "forall x,b R:\n    x<=b\n    =>:\n        x-1<=b\n",
+            "forall x,b R:\n    x<=b\n    =>:\n        x-1<b\n",
+            "forall x,b R:\n    x>=b\n    =>:\n        x-(-1)>b\n",
+        ] {
+            let mut rt = Runtime::new(LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language,
+            });
+            let run = rt.run_litex_code(source).unwrap();
+            assert!(run.success && run.session_error.is_none());
+            let normal =
+                crate::json_output::project_run_normal(&run, &rt, "eval", None).stringify();
+            assert!(!normal.contains("unsupported"));
+            let detail = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt)
+                .stringify();
+            assert!(detail.contains("ClosedSubtraction"));
+            assert!(detail.contains("cite_fact_id") && detail.contains("translated_bound"));
+            assert!(crate::compile_to_lean::compile_run(&run, rt, "symbolic_bound").is_err());
+        }
+    }
+}

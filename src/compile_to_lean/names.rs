@@ -118,8 +118,12 @@ impl LitexToLeanCompiler {
         let binders = position.context_parameters().into_iter().map(|(parameter, set, fact_id)| {
             let id = parameter.id.value();
             let fact_id = fact_id.value();
-            let set = standard_term(match set { Obj::StandardSet(set) => set, _ => unreachable!("validated numeric carrier") }).expect("validated numeric carrier");
-            format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : Litex.In _value_i{id} {set})")
+            let proposition = match set {
+                Some(Obj::StandardSet(set)) => format!("Litex.In _value_i{id} {}", standard_term(set).expect("validated numeric carrier")),
+                None => format!("Litex.IsSet _value_i{id}"),
+                _ => unreachable!("validated context carrier"),
+            };
+            format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : {proposition})")
         }).collect::<Vec<_>>();
         if binders.is_empty() {
             String::new()
@@ -288,6 +292,36 @@ impl LitexToLeanCompiler {
         Ok((vec![format!("{{{host} : Type {universe}}} [{instance} : Litex.Representation M {host}] ({value} : Litex.Obj (M := M) {host})"), format!("({hypothesis} : {proposition})")], vec![host, instance, value, hypothesis]))
     }
 
+    pub(in crate::compile_to_lean) fn introduce_set_parameter(
+        &self,
+        parameter: &BoundName,
+        store: &StoreFactAndInferResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        let fact = self.resolve_fact(store.primary_fact_id(), position)?;
+        let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+        if !matches!(&fact, Fact::AtomicFact(AtomicFact::IsSetFact(f)) if f.set.ir() == object.ir())
+        {
+            return Err(LeanCompileError::new(
+                "Parameters/SetSubject",
+                "The set-kind parameter has another original sethood store.",
+            ));
+        }
+        self.validate_store(store, &fact)?;
+        let id = parameter.id.value();
+        let name = format!("h_{}", fact.fact_id().value());
+        let binders = vec![format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"), format!("({name} : Litex.IsSet _value_i{id})")];
+        Ok((
+            binders,
+            vec![
+                format!("_Host_i{id}"),
+                format!("_rep_i{id}"),
+                format!("_value_i{id}"),
+                name,
+            ],
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn fact_proposition(
         &self,
         fact: &Fact,
@@ -319,6 +353,11 @@ impl LitexToLeanCompiler {
                 "Litex.In {} {}",
                 self.compile_object_reference(&fact.element, position)?,
                 self.compile_object_reference(&fact.set, position)?
+            )),
+            AtomicFact::SubsetFact(fact) => Ok(format!(
+                "Litex.Subset {} {}",
+                self.compile_object_reference(&fact.left, position)?,
+                self.compile_object_reference(&fact.right, position)?
             )),
             AtomicFact::IsSetFact(fact) => Ok(format!(
                 "Litex.IsSet {}",
@@ -356,7 +395,6 @@ impl LitexToLeanCompiler {
                 self.compile_normal_atomic_proposition(normal, position)
             }
             AtomicFact::IsFiniteSetFact(_)
-            | AtomicFact::SubsetFact(_)
             | AtomicFact::SupersetFact(_)
             | AtomicFact::ProperSubsetFact(_)
             | AtomicFact::ProperSupersetFact(_)

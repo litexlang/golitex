@@ -74,6 +74,7 @@ impl LitexToLeanCompiler {
                             }
                         })?;
                     }
+                    (ParamType::Set(_), ParamTypeWellDefinedProof::Set) => {}
                     _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
                 }
             }
@@ -100,7 +101,8 @@ impl LitexToLeanCompiler {
         let mut offset = 0;
         for group in groups {
             let set = match &group.param_type {
-                ParamType::Obj(set) => set,
+                ParamType::Obj(set) => Some(set),
+                ParamType::Set(_) => None,
                 _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
             };
             for _ in &group.params {
@@ -111,10 +113,12 @@ impl LitexToLeanCompiler {
                         ..*position
                     },
                 )?;
-                match &source_subject(&proof.membership_checks[offset])? {
-                    Fact::AtomicFact(AtomicFact::InFact(f))
+                match (&source_subject(&proof.membership_checks[offset])?, set) {
+                    (Fact::AtomicFact(AtomicFact::InFact(f)), Some(set))
                         if f.element.ir() == proof.statement.objs_equal_to[offset].ir()
                             && f.set.ir() == set.ir() => {}
+                    (Fact::AtomicFact(AtomicFact::IsSetFact(f)), None)
+                        if f.set.ir() == proof.statement.objs_equal_to[offset].ir() => {}
                     _ => {
                         return Err(LeanCompileError::new(
                             "HaveEqual/Membership",
@@ -154,6 +158,11 @@ impl LitexToLeanCompiler {
                     Fact::AtomicFact(AtomicFact::InFact(stored)),
                     Fact::AtomicFact(AtomicFact::InFact(checked)),
                 ) if stored.element.ir() == left.ir() && stored.set.ir() == checked.set.ir() => {}
+                (
+                    Fact::AtomicFact(AtomicFact::IsSetFact(stored)),
+                    Fact::AtomicFact(AtomicFact::IsSetFact(checked)),
+                ) if stored.set.ir() == left.ir()
+                    && checked.set.ir() == proof.statement.objs_equal_to[index].ir() => {}
                 _ => {
                     return Err(LeanCompileError::new(
                         "HaveEqual/Store",

@@ -1073,3 +1073,11 @@ conditions, WD, restricted permissions, rollback, all output languages,
 checked Detailed premises and unsupported Lean compilation.
 
 The existing `SetBuilderObviouslyEmpty` node also covers [positive membership in the empty set](equal/by_builtin_rule/set_builder_empty_membership.lit), for arbitrary carriers and conjunctions after full builder WD. Negation, disjunction and undefined expressions are tested boundaries.
+
+## Closed subtraction at symbolic endpoints
+
+[Symbolic bound preservation](atomic/by_builtin_rule/closed_subtraction_symbolic_bound.lit)
+uses an existing order bound with the same endpoint and a closed offset of the
+appropriate sign. Its guarded recursive function retains `n <= bound`; the
+certificate records the stored premise and symbolic translated bound. It
+does not infer unrelated endpoints or search for missing premises.

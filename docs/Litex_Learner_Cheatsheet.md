@@ -432,6 +432,3 @@ proof debt accurately. See the [trust contract](Manual.md#trust-and-strict-mode)
 For larger developments, follow the relevant module's `README.md` and
 `math_collections.md`, then consult [examples](../examples/README.md) and
 [math showcases](../showcases/math_concepts_in_litex/README.md).
-
-Verification of this revision is recorded in the
-focused audit (historical task record; retired).

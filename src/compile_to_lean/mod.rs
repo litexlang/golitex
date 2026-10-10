@@ -34,4 +34,6 @@ mod numeric_function_call_tests;
 #[cfg(test)]
 mod prop_domain_tests;
 #[cfg(test)]
+mod set_tests;
+#[cfg(test)]
 mod tests;

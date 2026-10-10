@@ -1,0 +1,2 @@
+# Acceptance-only std module; the shipped std/basics stays empty.
+let version = 1

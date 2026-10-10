@@ -1,6 +1,7 @@
 name: Deploy
 
 on:
+  workflow_dispatch:
   push:
     tags:
       # Release tags are the exact Cargo version, without a leading `v`.
@@ -37,7 +38,11 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          VERSION="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          else
+            VERSION="${GITHUB_REF_NAME}"
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           if [[ "${VERSION%%+*}" == *-* ]]; then
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
@@ -90,25 +95,21 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
-            runner: ubuntu-latest
+            runner: ubuntu-22.04
             os_name: linux
             arch: amd64
-            cross: false
           - target: aarch64-unknown-linux-gnu
-            runner: ubuntu-latest
+            runner: ubuntu-22.04-arm
             os_name: linux
             arch: arm64
-            cross: true
           - target: aarch64-apple-darwin
             runner: macos-latest
             os_name: darwin
             arch: arm64
-            cross: false
           - target: x86_64-pc-windows-msvc
             runner: windows-latest
             os_name: windows
             arch: amd64
-            cross: false
     runs-on: ${{ matrix.runner }}
     env:
       VERSION: ${{ needs.validate.outputs.version }}
@@ -119,17 +120,11 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross
-        if: matrix.cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
-
-      - name: Build (native)
-        if: "!matrix.cross"
+      - name: Build native release
         run: cargo build --release --locked --target ${{ matrix.target }}
 
-      - name: Build (cross)
-        if: matrix.cross
-        run: cross build --release --locked --target ${{ matrix.target }}
+      - name: Installed std CLI regression
+        run: cargo test --release --locked --target ${{ matrix.target }} --test installed_std_cli
 
       - name: Rename binary (unix)
         if: matrix.os_name != 'windows'
@@ -142,7 +137,7 @@ jobs:
           PKG_DIR="package_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${PKG_DIR}"
           cp "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}" "${PKG_DIR}/litex"
-          cp -R std "${PKG_DIR}/std"
+          python3 .github/scripts/release/package_std.py std "${PKG_DIR}/std"
           chmod 755 "${PKG_DIR}/litex"
           COPYFILE_DISABLE=1 tar -czf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${PKG_DIR}" .
 
@@ -159,11 +154,12 @@ jobs:
           $pkgDir = "package_litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
           Copy-Item -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.exe" -Destination (Join-Path $pkgDir "litex.exe")
-          Copy-Item -Recurse -Path std -Destination $pkgDir
+          python .github/scripts/release/package_std.py std (Join-Path $pkgDir 'std')
+          if ($LASTEXITCODE -ne 0) { throw 'std packaging failed' }
           Compress-Archive -Path (Join-Path $pkgDir "*") -DestinationPath "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -Force
 
       - name: Smoke test archive (native)
-        if: (matrix.os_name == 'linux' && matrix.arch == 'amd64') || matrix.os_name == 'darwin'
+        if: matrix.os_name != 'windows'
         run: |
           python3 .github/scripts/release/preflight.py --archive \
             "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" \
@@ -174,6 +170,36 @@ jobs:
         shell: pwsh
         run: |
           python .github/scripts/release/preflight.py --archive "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" --version "${env:VERSION}"
+
+      - name: Setup Homebrew for native installation checks
+        if: matrix.os_name != 'windows'
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+      - name: Homebrew install and std declaration smoke
+        if: matrix.os_name != 'windows'
+        run: |
+          python3 .github/scripts/release/package_manager_smoke.py --manager homebrew \
+            --archive "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" --version "${VERSION}"
+
+      - name: Setup Scoop for native installation checks
+        if: matrix.os_name == 'windows'
+        shell: pwsh
+        run: |
+          $scoopRoot = Join-Path $env:RUNNER_TEMP 'litex-scoop'
+          $installer = Join-Path $env:RUNNER_TEMP 'install-scoop.ps1'
+          Invoke-RestMethod -Uri 'https://get.scoop.sh' -OutFile $installer
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+          & $installer -RunAsAdmin -ScoopDir $scoopRoot
+          if ($LASTEXITCODE -ne 0) { throw 'Scoop setup failed' }
+          (Join-Path $scoopRoot 'shims') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "SCOOP=$scoopRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Scoop install and std declaration smoke
+        if: matrix.os_name == 'windows'
+        shell: pwsh
+        run: |
+          python .github/scripts/release/package_manager_smoke.py --manager scoop --archive "litex_${env:VERSION}_windows_amd64.zip" --version $env:VERSION
+          if ($LASTEXITCODE -ne 0) { throw 'Scoop installed std smoke failed' }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -187,14 +213,16 @@ jobs:
   package-deb:
     name: Package .deb (${{ matrix.arch }})
     needs: [validate, build]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
           - arch: amd64
             deb_arch: amd64
+            runner: ubuntu-22.04
           - arch: arm64
             deb_arch: arm64
+            runner: ubuntu-22.04-arm
     env:
       VERSION: ${{ needs.validate.outputs.version }}
     steps:
@@ -217,27 +245,15 @@ jobs:
               dist/deb/control.template > "${PKG_DIR}/DEBIAN/control"
 
           cp "litex_${VERSION}_linux_${{ matrix.arch }}" "${PKG_DIR}/usr/local/bin/litex"
-          cp -R std "${PKG_DIR}/usr/share/litex/std"
+          python3 .github/scripts/release/package_std.py std "${PKG_DIR}/usr/share/litex/std"
           chmod 755 "${PKG_DIR}/usr/local/bin/litex"
           dpkg-deb --build "${PKG_DIR}" "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
 
-      - name: Smoke test .deb (amd64)
-        if: matrix.arch == 'amd64'
+      - name: Smoke test .deb (native)
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
-          SMOKE_DIR="$(mktemp -d)"
-          trap 'rm -f "${SMOKE_DIR}/smoke.lit" "${SMOKE_DIR}/litex.config"; rmdir "${SMOKE_DIR}"' EXIT
-          printf '%s\n' '[import std]' 'basics' '[export]' 'smoke = "./smoke.lit"' > "${SMOKE_DIR}/litex.config"
-          printf '%s\n' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_DIR}/smoke.lit"
-          cd "${SMOKE_DIR}"
-          if ! OUTPUT=$(LITEX_STD_PATH=/usr/share/litex/std litex -lang en -f smoke.lit); then
-            printf '%s\n' "${OUTPUT}"
-            exit 1
-          fi
-          if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["success"] is True and r["session_error"] is None'; then
-            printf '%s\n' "${OUTPUT}"
-            exit 1
-          fi
+          sudo python3 .github/scripts/release/preflight.py \
+            --installed-binary /usr/local/bin/litex --std /usr/share/litex/std --version "${VERSION}"
 
       - name: Upload .deb
         uses: actions/upload-artifact@v4
@@ -246,13 +262,12 @@ jobs:
           path: litex_${{ env.VERSION }}_${{ matrix.deb_arch }}.deb
 
   # ─────────────────────────────────────────────
-  # Job 4: Package .msi (Windows) - optional
+  # Job 4: Package and verify .msi (Windows)
   # ─────────────────────────────────────────────
   package-msi:
     name: Package .msi
     needs: [validate, build]
     runs-on: windows-latest
-    continue-on-error: true
     env:
       VERSION: ${{ needs.validate.outputs.version }}
     steps:
@@ -265,8 +280,19 @@ jobs:
         with:
           name: binary-windows-amd64
 
+      - name: Install WiX 3.14.1
+        shell: pwsh
+        run: |
+          $wixRoot = Join-Path $env:RUNNER_TEMP 'wix-3.14.1'
+          $wixZip = Join-Path $env:RUNNER_TEMP 'wix-3.14.1.zip'
+          Invoke-WebRequest -Uri 'https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip' -OutFile $wixZip
+          Expand-Archive -Path $wixZip -DestinationPath $wixRoot
+          $wixBin = Split-Path (Get-ChildItem -Path $wixRoot -Recurse -Filter candle.exe | Select-Object -First 1).FullName
+          if (-not $wixBin) { throw 'WiX candle.exe was not found' }
+          $wixBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Install cargo-wix
-        run: cargo install cargo-wix
+        run: cargo install cargo-wix --version 0.3.9 --locked
 
       - name: Init WiX
         run: cargo wix init --force
@@ -283,7 +309,7 @@ jobs:
       - name: Build .msi
         shell: bash
         run: |
-          WIX_VERSION=$(echo "${VERSION}" | sed 's/-.*//')
+          WIX_VERSION=$(echo "${VERSION}" | sed 's/[-+].*//')
           mkdir -p target/release
           cp "litex_${VERSION}_windows_amd64.exe" target/release/litex.exe
           cargo wix --no-build --nocapture -o "litex_${VERSION}_amd64.msi" --install-version "${WIX_VERSION}"
@@ -292,37 +318,17 @@ jobs:
         shell: pwsh
         run: |
           $msi = "litex_${env:VERSION}_amd64.msi"
-          $install = Start-Process msiexec.exe -ArgumentList @('/i', $msi, '/qn', '/norestart') -Wait -PassThru
+          $installRoot = Join-Path $env:ProgramFiles 'litex-lang'
+          $install = Start-Process msiexec.exe -ArgumentList @('/i', $msi, '/qn', '/norestart', "APPLICATIONFOLDER=`"$installRoot`"") -Wait -PassThru
           if ($install.ExitCode -ne 0) {
               throw "MSI installation failed with exit code $($install.ExitCode)"
           }
-          $binary = Join-Path $env:ProgramFiles 'litex-lang\bin\litex.exe'
+          $binary = Join-Path $installRoot 'bin\litex.exe'
           if (-not (Test-Path $binary)) {
             throw "MSI did not install the Litex binary at $binary"
           }
-          $smokeDir = Join-Path $env:TEMP ("litex-msi-smoke-" + [guid]::NewGuid())
-          New-Item -ItemType Directory -Path $smokeDir | Out-Null
-          $installRoot = Split-Path (Split-Path $binary -Parent) -Parent
-          $env:LITEX_STD_PATH = Join-Path $installRoot 'std'
-          if (-not (Test-Path (Join-Path $env:LITEX_STD_PATH 'basics\litex.config'))) {
-            Get-ChildItem -Recurse -Force $installRoot | Select-Object -ExpandProperty FullName
-            throw "MSI did not install std at $env:LITEX_STD_PATH"
-          }
-          Push-Location $smokeDir
-          try {
-            Set-Content -Encoding utf8NoBOM -Path litex.config -Value '[import std]', 'basics', '[export]', 'smoke = "./smoke.lit"'
-            Set-Content -Encoding utf8NoBOM -Path smoke.lit -Value 'quot(-7, 3) = -3', '$dvd(12, 3)'
-            $output = & $binary -lang en -f smoke.lit
-            $exitCode = $LASTEXITCODE
-            $result = ($output -join "`n") | ConvertFrom-Json
-            if ($exitCode -ne 0 -or $result.kind -ne 'run' -or $result.success -ne $true -or $null -ne $result.session_error) {
-              $output
-              throw "MSI smoke test failed"
-            }
-          } finally {
-            Pop-Location
-            Remove-Item -Recurse -Force $smokeDir
-          }
+          python .github/scripts/release/preflight.py --installed-binary $binary --std (Join-Path $installRoot 'std') --version $env:VERSION
+          if ($LASTEXITCODE -ne 0) { throw "MSI installed std smoke failed" }
 
       - name: Upload .msi
         uses: actions/upload-artifact@v4
@@ -334,8 +340,9 @@ jobs:
   # Job 5: Create GitHub Release
   # ─────────────────────────────────────────────
   release:
+    if: github.event_name == 'push'
     name: GitHub Release
-    needs: [validate, build, package-deb]
+    needs: [validate, build, package-deb, package-msi]
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.validate.outputs.version }}
@@ -356,6 +363,12 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      - name: Download .msi artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: msi
+          path: artifacts
+
       - name: List artifacts
         run: ls -lah artifacts/
 
@@ -367,10 +380,12 @@ jobs:
           body: "Release of litex version ${{ env.VERSION }}"
           prerelease: ${{ needs.validate.outputs.prerelease == 'true' }}
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
             artifacts/*.tar.gz
             artifacts/*.zip
             artifacts/*.deb
+            artifacts/*.msi
 
   # ─────────────────────────────────────────────
   # Job 6: Publish to crates.io
@@ -452,8 +467,8 @@ jobs:
               assert_equal "Litex #{version}\n", version_output
               (testpath/"litex.config").write "[import std]\nbasics\n[export]\ntest = \"./test.lit\"\n"
               (testpath/"test.lit").write "quot(-7, 3) = -3\n$dvd(12, 3)\n"
-              ENV["LITEX_STD_PATH"] = (bin/"std").to_s
-              output = JSON.parse(shell_output("#{bin}/litex -lang en -f #{testpath}/test.lit"))
+              ENV.delete("LITEX_STD_PATH")
+              output = JSON.parse(shell_output("#{bin}/litex -lang en -strict -f #{testpath}/test.lit"))
               assert_equal "run", output.fetch("kind")
               assert_equal true, output.fetch("success")
               assert_nil output.fetch("session_error")
@@ -543,6 +558,7 @@ jobs:
   # Job 9: Build and push Docker image
   # ─────────────────────────────────────────────
   publish-docker:
+    if: github.event_name == 'push'
     name: Publish Docker image
     needs: [validate, build]
     runs-on: ubuntu-latest
@@ -558,11 +574,15 @@ jobs:
           pattern: binary-linux-*
           merge-multiple: true
 
-      - name: Prepare binaries for Docker
+      - name: Prepare Docker package context
         run: |
-          cp "litex_${VERSION}_linux_amd64" litex-amd64
-          cp "litex_${VERSION}_linux_arm64" litex-arm64
-          chmod +x litex-amd64 litex-arm64
+          CONTEXT="${RUNNER_TEMP}/litex-docker"
+          mkdir -p "${CONTEXT}"
+          cp Dockerfile "${CONTEXT}/Dockerfile"
+          cp "litex_${VERSION}_linux_amd64" "${CONTEXT}/litex-amd64"
+          cp "litex_${VERSION}_linux_arm64" "${CONTEXT}/litex-arm64"
+          chmod +x "${CONTEXT}/litex-amd64" "${CONTEXT}/litex-arm64"
+          python3 .github/scripts/release/package_std.py std "${CONTEXT}/std"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -588,7 +608,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ runner.temp }}/litex-docker
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.tags.outputs.tags }}

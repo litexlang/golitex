@@ -20,15 +20,12 @@ Then run:
 
 ```bash
 brew install litexlang/tap/litex
-export LITEX_STD_PATH="$(brew --prefix litex)/bin/std"
 ```
 
-Keep that `export` line in your shell startup file (`~/.zshrc` for zsh or
-`~/.bashrc` for Bash) to reuse it in new terminals. Older formulas placed std
-under `$(brew --prefix litex)/share/litex/std`; if `bin/std` is absent, check
-that directory and use its absolute path instead. If Litex is already
-installed, use `brew update` and `brew upgrade litex` to request the tap version;
-this may still differ from the current development checkout.
+This checkout automatically discovers the std installed with the executable.
+No `LITEX_STD_PATH` setup is needed for these package layouts. If Litex is
+already installed, use `brew update` and `brew upgrade litex`; the tap version
+can still differ from the development checkout.
 
 The current release workflow builds the macOS Homebrew archive for Apple
 Silicon only, and Linux archives for `amd64` and `arm64`.
@@ -42,10 +39,7 @@ it. Replace the filename placeholders with the downloaded filename:
 
 ```bash
 sudo dpkg -i ./litex_<version>_<architecture>.deb
-export LITEX_STD_PATH=/usr/share/litex/std
 ```
-
-Keep the `export` line in your shell startup file for new terminals.
 
 ### Windows with Scoop
 
@@ -55,24 +49,19 @@ Git is missing). In a regular PowerShell terminal, run:
 ```powershell
 scoop bucket add litex https://github.com/litexlang/scoop-litex
 scoop install litex
-$env:LITEX_STD_PATH = Join-Path (scoop prefix litex) 'std'
-[Environment]::SetEnvironmentVariable('LITEX_STD_PATH', $env:LITEX_STD_PATH, 'User')
 ```
 
 If you do not use Scoop, download the Windows `amd64` archive from the
 [chosen release](https://github.com/litexlang/golitex/releases), extract
 both `litex.exe` and `std` together, and add the directory containing
-`litex.exe` to your user `Path`. Set the user environment variable
-`LITEX_STD_PATH` to the absolute path of that extracted `std` directory.
-Open a new terminal after changing user environment variables.
+`litex.exe` to your user `Path`. Open a new terminal after changing your user
+`Path`. Keep std with the
+executable; it is discovered automatically.
 
-For a manual installation at `C:\Tools\Litex`, set the current terminal and
-future terminals with:
-
-```powershell
-$env:LITEX_STD_PATH = 'C:\Tools\Litex\std'
-[Environment]::SetEnvironmentVariable('LITEX_STD_PATH', $env:LITEX_STD_PATH, 'User')
-```
+The release workflow also builds a Windows MSI containing the executable and
+std. MSI installation/import checks are required before it can be attached to
+GitHub Releases. These instructions describe this checkout's packaging; verify
+the version of an older downloaded package before expecting the same behavior.
 
 ## Optional std imports
 
@@ -81,11 +70,16 @@ declarations. Native vocabulary such as `quot` and `$dvd` is implemented in
 the kernel and works without importing std or setting `LITEX_STD_PATH`.
 The paths below matter only when a project explicitly uses `[import std]`.
 
-Adding the executable to `PATH` does not configure standard-library discovery.
-For `[import std]`, the current CLI first uses `LITEX_STD_PATH`, then a `std/`
-directory in the working directory, then `std/` in the target project. It does
-not automatically search beside the installed executable. Use an absolute
-`LITEX_STD_PATH` pointing to the **std directory**, not its parent or `basics`.
+For `[import std]`, discovery first uses an explicit `LITEX_STD_PATH`, then
+working-directory `std/`, then the target project's `std/`, then the std
+bundled with the real executable. Symlinks are followed, including Homebrew's
+link into its versioned installation. Archive/Scoop `std/`, Homebrew `bin/std/`,
+MSI application `std/`, and Debian `/usr/share/litex/std` layouts are supported.
+
+`LITEX_STD_PATH` is an optional override for a custom library or an older binary.
+Use the absolute **std directory**, not its parent or `basics`. An invalid
+explicit override is an error; it does not silently fall back to another library.
+Older formulas used `share/litex/std`, which is also discovered by this checkout.
 
 ## Verify the installation
 
@@ -134,8 +128,8 @@ litex -lang en -f smoke.lit
 Require exit `0`, `"kind": "run"`, `"success": true`, and
 `"session_error": null`. If the result says
 `"session_error": "failed to import project"`, first check that
-`LITEX_STD_PATH` contains `basics/litex.config` and that the binary and std
-come from the same release. That message alone does not distinguish a path
+the bundled std contains `basics/litex.config` and that the binary and std
+come from the same release. If `LITEX_STD_PATH` is set, check or unset that override. That message alone does not distinguish a path
 error from other import failures.
 
 To check this checkout rather than a separately installed release, install

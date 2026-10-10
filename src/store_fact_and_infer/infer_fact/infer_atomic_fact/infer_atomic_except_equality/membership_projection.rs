@@ -3,7 +3,7 @@ use crate::ast::obj::{Obj, SetFormer, SetOperator};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferPowerSetMembershipProjectionResult,
-    InferSetBuilderMembershipProjectionResult,
+    InferSetBuilderMembershipProjectionResult, SetBuilderMembershipProjectionStep,
 };
 
 impl Runtime {
@@ -18,18 +18,19 @@ impl Runtime {
             .resolve_set_builder_for_membership_projection(&in_fact.set, verify_state)?
             .is_some()
         {
-            let mut derived = Vec::new();
+            let mut steps = Vec::new();
             let mut pending = vec![in_fact.clone()];
             let mut expanded = std::collections::HashSet::new();
             while let Some(member) = pending.pop() {
                 if !expanded.insert(member.ir()) {
                     continue;
                 }
-                let Some(builder) =
+                let Some((builder, equality_path, template_expansion)) =
                     self.resolve_set_builder_for_membership_projection(&member.set, verify_state)?
                 else {
                     continue;
                 };
+                let mut derived = Vec::new();
                 let base_in = InFact {
                     fact_id: self.global_ids.allocate_fact_id(),
                     element: member.element.clone(),
@@ -37,7 +38,7 @@ impl Runtime {
                     line_file: member.line_file.clone(),
                 };
                 pending.push(base_in.clone());
-                self.store_new_set_builder_projection(
+                self.store_new_set_builder_projection_with_wd(
                     &Fact::AtomicFact(AtomicFact::InFact(base_in)),
                     verify_state,
                     &mut derived,
@@ -61,11 +62,22 @@ impl Runtime {
                         AtomicFact::InFact(member) => Some(member),
                         _ => None,
                     }));
-                    self.store_new_set_builder_projection(&projected, verify_state, &mut derived)?;
+                    self.store_new_set_builder_projection_with_wd(
+                        &projected,
+                        verify_state,
+                        &mut derived,
+                    )?;
                 }
+                steps.push(SetBuilderMembershipProjectionStep {
+                    source_membership: member,
+                    builder,
+                    equality_path,
+                    template_expansion,
+                    derived,
+                });
             }
             rules.push(InferAtomicExceptEqualityResult::InFactSetBuilder(
-                InferSetBuilderMembershipProjectionResult { derived },
+                InferSetBuilderMembershipProjectionResult { steps },
             ));
         }
         if let Some(base) = self.resolve_power_set_base_for_membership_projection(&in_fact.set) {
@@ -107,6 +119,18 @@ impl Runtime {
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
         derived: &mut Vec<crate::store_fact_and_infer::StoreFactAndInferResult>,
     ) -> RuntimeResult<()> {
+        let mut captured = Vec::new();
+        self.store_new_set_builder_projection_with_wd(projected, verify_state, &mut captured)?;
+        derived.extend(captured.into_iter().map(|result| result.store_and_infer));
+        Ok(())
+    }
+
+    pub(super) fn store_new_set_builder_projection_with_wd(
+        &mut self,
+        projected: &Fact,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        derived: &mut Vec<crate::store_fact_and_infer::StoreInferredFactAndInferResult>,
+    ) -> RuntimeResult<()> {
         let key = projected.ir();
         let already_stored = self.execution_environments_stack.iter().rev().any(|env| {
             env.facts.facts_by_id.values().any(|known| {
@@ -115,7 +139,15 @@ impl Runtime {
             })
         });
         if !already_stored {
-            derived.push(self.store_inferred_fact_and_infer(projected, verify_state)?);
+            let captured = self
+                .try_store_inferred_fact_and_infer_with_wd(projected, verify_state)?
+                .ok_or_else(|| {
+                    crate::runtime::RuntimeError::InternalBug(format!(
+                        "inferred fact {} failed well-definedness check",
+                        projected.ir()
+                    ))
+                })?;
+            derived.push(captured);
         }
         Ok(())
     }
@@ -124,13 +156,19 @@ impl Runtime {
         &mut self,
         set: &Obj,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<crate::ast::obj::SetBuilder>> {
+    ) -> RuntimeResult<
+        Option<(
+            crate::ast::obj::SetBuilder,
+            Vec<(Obj, Obj, crate::runtime::FactId)>,
+            bool,
+        )>,
+    > {
         if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = set {
-            return Ok(Some(builder.clone()));
+            return Ok(Some((builder.clone(), Vec::new(), false)));
         }
-        for (value, _) in self.exact_property_object_values(set) {
+        for (value, equality_path) in self.exact_property_object_values(set) {
             if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &value {
-                return Ok(Some(builder.clone()));
+                return Ok(Some((builder.clone(), equality_path, false)));
             }
             // A checked template instance is a definitional set alias. Preserve
             // its argument/guard WD ceiling before substituting the existing
@@ -145,7 +183,7 @@ impl Runtime {
                 if let Some(Obj::SetFormer(SetFormer::SetBuilder(builder))) =
                     self.expanded_have_obj_equal_rhs_of_instantiated_template(instance)?
                 {
-                    return Ok(Some(builder));
+                    return Ok(Some((builder, equality_path, true)));
                 }
             }
         }

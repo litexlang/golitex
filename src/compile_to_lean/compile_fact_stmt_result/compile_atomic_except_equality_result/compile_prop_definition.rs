@@ -2,7 +2,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
-    AtomicExceptEqualityFactSearchProofByDefinition, UserDefinedPropDefinitionProof,
+    AtomicExceptEqualityFactSearchProofByDefinition, BuiltinPropDefinitionProof, UserDefinedPropDefinitionProof,
 };
 use crate::execute::ExecDefPropStmtSuccessResult;
 use crate::prelude::*;
@@ -29,6 +29,17 @@ impl LitexToLeanCompiler {
                     "Concrete predicate folding has another source predicate family.",
                 ))
             }
+            (
+                AtomicFact::SubsetFact(fact),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::Subset(proof),
+                ),
+            ) => self.compile_subset_definition(
+                fact,
+                &proof.requirement_facts,
+                &proof.proof_of_requirement_facts,
+                position,
+            ),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }

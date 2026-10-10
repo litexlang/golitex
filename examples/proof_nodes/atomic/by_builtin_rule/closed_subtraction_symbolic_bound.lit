@@ -1,0 +1,40 @@
+# Before: the stored-bound leaf required closed numeric endpoints.
+# forall x, bound R:
+#     x <= bound
+#     =>:
+#         x - 1 <= bound
+# Former behavior at BuiltinRule: no symbolic-endpoint certificate.
+# Now: identical symbolic endpoints retain direction-compatible closed offsets.
+forall x, bound R:
+    x <= bound
+    =>:
+        x - 1 <= bound
+forall x, bound R:
+    x >= bound
+    =>:
+        x - (-1) >= bound
+# Boundary: missing bounds, different endpoints and opposite offsets reject.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/closed_subtraction_symbolic_bound.lit
+
+template<bound N>:
+    have fn bounded_count(n N: n <= bound) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: bounded_count(n - 1) + 1
+
+# Strict bounds retain the actual positive/negative offset or strict source.
+forall x, bound R:
+    x <= bound
+    =>:
+        x - 1 < bound
+forall x, bound R:
+    x > bound
+    =>:
+        x - 0 > bound
+
+template<bound N>:
+    have fn child(n N: n < bound) N = 0
+
+template<bound N>:
+    have fn bounded_count_with_child(n N: n <= bound) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: bounded_count_with_child(n - 1) + \child<bound>(n - 1)

@@ -20,6 +20,10 @@ use crate::json_output::explain::text::text;
 impl GreaterFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "Subtract to obtain a strict stored bound",
+                "The closed offset or the strict source bound makes the translated bound strict",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_en(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_en(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_en(),
@@ -45,6 +49,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "减法传递严格界",
+                "闭合常数的方向或已存储的严格前提保证减法后的严格界",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh(),
@@ -67,6 +75,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "減法傳遞嚴格界",
+                "閉合常數的方向或已儲存的嚴格前提保證減法後的嚴格界",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh_hant(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh_hant(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_zh_hant(),
@@ -89,6 +101,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "Soustraction et borne stricte",
+                "La constante ou la prémisse stricte garantit la borne stricte translatée",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_fr(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_fr(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_fr(),
@@ -114,6 +130,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "Вычитание и строгая граница",
+                "Константа или строгая предпосылка обеспечивает строгую перенесённую границу",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ru(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ru(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ru(),
@@ -139,6 +159,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "Resta y cota estricta",
+                "La constante o la premisa estricta garantiza la cota trasladada estricta",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_es(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_es(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_es(),
@@ -164,6 +188,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "الطرح والحد الصارم",
+                "الثابت أو الفرضية الصارمة يضمنان حدًا منقولًا صارمًا",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ar(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ar(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ar(),
@@ -188,6 +216,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "減算による厳密な境界",
+                "定数の符号または厳密な前提により減算後の厳密な境界が得られる",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ja(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ja(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ja(),
@@ -213,6 +245,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "뺄셈으로 엄격한 경계 얻기",
+                "상수의 부호 또는 엄격한 전제가 이동된 엄격한 경계를 보장한다",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_ko(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ko(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_ko(),
@@ -238,6 +274,10 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::ClosedSubtractionStrictBound(_) => text(
+                "Trừ để có cận nghiêm ngặt",
+                "Hằng số hoặc tiền đề nghiêm ngặt bảo đảm cận dịch chuyển nghiêm ngặt",
+            ),
             Self::MulLeftNegativeReversesStrictGreater(p) => p.rule_name_and_message_vi(),
             Self::MulRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_vi(),
             Self::MulLeftRightNegativeReversesStrictGreater(p) => p.rule_name_and_message_vi(),
@@ -278,6 +318,7 @@ impl GreaterFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::ClosedSubtractionStrictBound(p) => Some(p.bound.cite_fact_id),
             Self::MulLeftNegativeReversesStrictGreater(_) => None,
             Self::MulRightNegativeReversesStrictGreater(_) => None,
             Self::MulLeftRightNegativeReversesStrictGreater(_) => None,

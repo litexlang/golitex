@@ -794,11 +794,24 @@ pub(super) fn project_obj_wd_by_def(
                         project_obj_wd_proof(&p.param_set_well_defined, runtime),
                     ),
                     (
+                        "defined_params",
+                        project_have_store_and_infer(&p.defined_params, runtime),
+                    ),
+                    (
+                        "assumed_facts",
+                        JsonValue::Array(
+                            p.assumed_facts
+                                .iter()
+                                .map(|f| super::verify::project_assume_dom(f, runtime))
+                                .collect(),
+                        ),
+                    ),
+                    (
                         "fact_well_defined",
                         JsonValue::Array(
-                            p.fact_well_defined
+                            p.assumed_facts
                                 .iter()
-                                .map(|f| project_fact_wd_proof(f, runtime))
+                                .map(|f| project_fact_wd_proof(&f.well_defined, runtime))
                                 .collect(),
                         ),
                     ),

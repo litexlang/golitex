@@ -458,6 +458,8 @@ pub(super) fn project_atomic_builtin_rule(
             ("rule", string("SumOfNonnegatives")),
             ("constructor_tree", project_nonnegative_sum_tree(&p.constructor_tree, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(p)) => project_closed_subtraction_bound("LessFact", &p.bound, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(p)) => project_closed_subtraction_bound("GreaterFact", &p.bound, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p)) => project_closed_subtraction_bound("GreaterEqualFact", &p.bound, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p)) => project_closed_subtraction_bound("LessEqualFact", &p.bound, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative)
@@ -2878,7 +2880,14 @@ fn project_closed_subtraction_bound(
         vec![
             ("type", string("builtin_rule")),
             ("family", string(family)),
-            ("rule", string("ClosedSubtractionBound")),
+            (
+                "rule",
+                string(if matches!(family, "LessFact" | "GreaterFact") {
+                    "ClosedSubtractionStrictBound"
+                } else {
+                    "ClosedSubtractionBound"
+                }),
+            ),
             (
                 "bound",
                 object_for(

@@ -8,9 +8,10 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import shutil
 import unittest
 import xml.etree.ElementTree as ET
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from pathlib import Path
 
 
@@ -22,9 +23,108 @@ sys.path.insert(0, str(SCRIPT_DIRECTORY))
 
 import generate_wix_std  # noqa: E402
 import preflight  # noqa: E402
+import package_std  # noqa: E402
+import package_manager_smoke  # noqa: E402
 
 
 class ReleasePreflightTest(unittest.TestCase):
+    def test_scoop_partial_install_is_cleaned(self) -> None:
+        with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+            root = Path(temporary_directory)
+            archive = root / "archive.zip"
+            archive.write_bytes(b"package")
+            prefix = root / "scoop-install"
+            calls = []
+            def command(command, environment):
+                calls.append(command)
+                source = command[-1]
+                if "scoop install " in source:
+                    prefix.mkdir()
+                    raise RuntimeError("post-install failure")
+                if "scoop uninstall litex-package-smoke" in source:
+                    shutil.rmtree(prefix)
+                return ""
+            server = Mock(server_port=1234)
+            probes = [
+                subprocess.CompletedProcess([], 1, "", ""),
+                subprocess.CompletedProcess([], 0, str(prefix), ""),
+            ]
+            with patch.object(sys, "argv", ["smoke", "--manager", "scoop", "--archive", str(archive), "--version", "1.0.6-beta"]), \
+                    patch.object(package_manager_smoke, "ThreadingHTTPServer", return_value=server), \
+                    patch.object(package_manager_smoke.subprocess, "run", side_effect=probes), \
+                    patch.object(package_manager_smoke, "run", side_effect=command):
+                with self.assertRaisesRegex(RuntimeError, "post-install failure"):
+                    package_manager_smoke.main()
+            self.assertTrue(any("scoop uninstall litex-package-smoke" in call[-1] for call in calls))
+            self.assertFalse(prefix.exists())
+            server.server_close.assert_called_once()
+
+    def test_homebrew_partial_install_is_cleaned_and_formula_restored(self) -> None:
+        with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+            root = Path(temporary_directory)
+            archive = root / "archive.tar.gz"
+            archive.write_bytes(b"package")
+            tap = root / "tap"
+            tap.mkdir()
+            formula = tap / "litex.rb"
+            original = b"original formula\n"
+            formula.write_bytes(original)
+            calls = []
+            def command(command, environment):
+                calls.append(command)
+                if command[:2] == ["brew", "--repository"]:
+                    return str(tap)
+                if command[:2] == ["brew", "install"]:
+                    raise RuntimeError("post-install failure")
+                return ""
+            server = Mock(server_port=1234)
+            probes = [
+                subprocess.CompletedProcess([], 1, "", ""),
+                subprocess.CompletedProcess([], 0, "litex 1.0.6-beta\n", ""),
+            ]
+            with patch.object(sys, "argv", ["smoke", "--manager", "homebrew", "--archive", str(archive), "--version", "1.0.6-beta"]), \
+                    patch.object(package_manager_smoke, "ThreadingHTTPServer", return_value=server), \
+                    patch.object(package_manager_smoke.subprocess, "run", side_effect=probes), \
+                    patch.object(package_manager_smoke, "run", side_effect=command):
+                with self.assertRaisesRegex(RuntimeError, "post-install failure"):
+                    package_manager_smoke.main()
+            self.assertIn(["brew", "uninstall", "--force", "litexlang/tap/litex"], calls)
+            self.assertEqual(formula.read_bytes(), original)
+            server.shutdown.assert_called_once()
+            server.server_close.assert_called_once()
+
+    def test_native_package_manager_checks_use_the_release_formula_and_manifest(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text()
+        url = "http://127.0.0.1:1234/litex.zip"
+        digest = "a" * 64
+        formula = package_manager_smoke.homebrew_formula(workflow, url, "1.0.6-beta", digest)
+        self.assertIn('(bin/"std").install Dir["std/*"]', formula)
+        self.assertIn('ENV.delete("LITEX_STD_PATH")', formula)
+        self.assertIn(url, formula)
+        self.assertNotIn("PLACEHOLDER", formula)
+        self.assertNotIn("SHA_LINUX", formula)
+        manifest = package_manager_smoke.scoop_manifest(workflow, url, "1.0.6-beta", digest)
+        self.assertEqual(manifest["architecture"]["64bit"], {"url": url, "hash": digest})
+        self.assertEqual(manifest["bin"], [["litex.exe", "litex"]])
+        self.assertEqual(manifest["version"], "1.0.6-beta")
+
+    def test_all_std_package_channels_exclude_local_cache_and_drafts(self) -> None:
+        with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+            root = Path(temporary_directory)
+            std = root / "std"
+            (std / "basics").mkdir(parents=True)
+            (std / "basics/litex.config").write_text('[export]\nmain = "./main.lit"\n')
+            (std / "basics/main.lit").write_text('let version = 1\n')
+            for name in ["__litex_knowledge_base__/cache.json", ".draft/probe.lit", "todo.md", ".DS_Store"]:
+                file = std / "basics" / name
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text("local-only")
+            output = root / "package/std"
+            package_std.copy_std(std, output)
+            names = {p.relative_to(output).as_posix() for p in output.rglob("*") if p.is_file()}
+            self.assertEqual(names, {"basics/litex.config", "basics/main.lit"})
+            self.assertEqual(generate_wix_std.collect_files(std), package_std.source_files(std))
+
     def test_reads_only_the_package_version(self) -> None:
         with tempfile.TemporaryDirectory(
             prefix="release-preflight-test.", dir=PRIVATE_ROOT
@@ -123,7 +223,7 @@ class ReleasePreflightTest(unittest.TestCase):
                 with self.assertRaises(preflight.PreflightError):
                     preflight.validate_archive_member(name, is_link)
 
-    def test_archive_smoke_uses_shipped_std_despite_inherited_env(self) -> None:
+    def test_archive_smoke_discovers_shipped_std_from_an_external_project(self) -> None:
         with tempfile.TemporaryDirectory(
             prefix="release-preflight-test.", dir=PRIVATE_ROOT
         ) as temporary_directory:
@@ -149,7 +249,60 @@ class ReleasePreflightTest(unittest.TestCase):
                     patch("builtins.print"):
                 preflight.check_archive(root, archive, "1.0.1-beta")
             smoke_env = run.call_args_list[1].kwargs["env"]
-            self.assertEqual(smoke_env["LITEX_STD_PATH"], str(root / "extracted" / "std"))
+            self.assertNotIn("LITEX_STD_PATH", smoke_env)
+            smoke_project = run.call_args_list[1].kwargs["cwd"]
+            self.assertEqual(smoke_project, root / "external-project")
+            self.assertFalse((smoke_project / "std").exists())
+            self.assertIn("-strict", run.call_args_list[1].args[0])
+            self.assertIn("basics::main::litex_distribution_probe = 1", (smoke_project / "smoke.lit").read_text())
+            self.assertEqual((root / "extracted/std/basics/main.lit").read_bytes(), b"")
+
+    def test_installed_probe_restores_std_on_verification_failure(self) -> None:
+        with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+            root = Path(temporary_directory)
+            install = root / "install"
+            basics = install / "std/basics"
+            basics.mkdir(parents=True)
+            binary = install / "litex"
+            binary.write_text("binary")
+            (basics / "litex.config").write_text('[export]\nmain = "./main.lit"\n')
+            original = b"# intentionally empty\r\n"
+            (basics / "main.lit").write_bytes(original)
+            responses = [
+                subprocess.CompletedProcess([], 0, "Litex 1.0.6-beta\n"),
+                subprocess.CompletedProcess([], 1, '{"kind":"run","success":false}'),
+            ]
+            with patch.object(preflight.subprocess, "run", side_effect=responses):
+                with self.assertRaises(preflight.PreflightError):
+                    preflight.check_installed_binary(root, binary, install / "std", "1.0.6-beta")
+            self.assertEqual((basics / "main.lit").read_bytes(), original)
+
+    def test_msi_is_a_required_release_asset(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text()
+        msi = workflow.split("  package-msi:\n", 1)[1].split("  release:\n", 1)[0]
+        release = workflow.split("  release:\n", 1)[1].split("  publish-crates-io:\n", 1)[0]
+        self.assertNotIn("continue-on-error:", msi)
+        self.assertIn("needs: [validate, build, package-deb, package-msi]", release)
+        self.assertIn("name: msi", release)
+        self.assertIn("artifacts/*.msi", release)
+        self.assertIn("fail_on_unmatched_files: true", release)
+        self.assertIn("--installed-binary $binary", msi)
+        self.assertNotIn("$env:LITEX_STD_PATH =", msi)
+
+    def test_manual_validation_cannot_publish_and_both_linux_architectures_execute(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text()
+        self.assertIn("workflow_dispatch:", workflow)
+        for name in ["release", "publish-docker"]:
+            job = workflow.split(f"  {name}:\n", 1)[1].split("\n  #", 1)[0]
+            self.assertIn("if: github.event_name == 'push'", job)
+        for name in ["publish-crates-io", "publish-homebrew", "publish-scoop", "deploy-web-server"]:
+            job = workflow.split(f"  {name}:\n", 1)[1].split("\n  #", 1)[0]
+            needs = next(line for line in job.splitlines() if line.startswith("    needs:"))
+            self.assertIn("release", needs)
+        self.assertIn("runner: ubuntu-22.04-arm", workflow)
+        self.assertNotIn("cross build", workflow)
+        self.assertIn("--test installed_std_cli", workflow)
+        self.assertIn("Smoke test .deb (native)", workflow)
 
     def test_workflow_archive_smokes_use_shared_preflight(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text(
@@ -176,7 +329,7 @@ class ReleasePreflightTest(unittest.TestCase):
             with self.subTest(obsolete=obsolete):
                 self.assertNotIn(obsolete, workflow)
         self.assertIn('assert_equal "Litex #{version}\\n", version_output', workflow)
-        self.assertIn("LITEX_STD_PATH=/usr/share/litex/std", workflow)
+        self.assertIn("--installed-binary /usr/local/bin/litex --std /usr/share/litex/std", workflow)
         self.assertIn("generate_wix_std.py", workflow)
         self.assertIn('Source="std\\basics\\litex.config"', workflow)
         self.assertIn('ComponentGroup Id="LitexStd"', workflow)

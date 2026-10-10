@@ -20,6 +20,7 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    ClosedSubtractionStrictBound(LessClosedSubtractionStrictBoundBuiltinRuleProof),
     QuotientScalarStrictUpperBound(super::selected_scalar_bt_rules::QuotientScalarBoundProof),
 
     AbsPositiveFromNonzero(super::abs_positive_from_nonzero::AbsPositiveFromNonzeroProof),
@@ -376,6 +377,10 @@ pub struct FromKnownGreaterBuiltinRuleProof {
     pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
 
+pub struct LessClosedSubtractionStrictBoundBuiltinRuleProof {
+    pub bound: super::closed_subtraction_bound::ClosedSubtractionBoundCertificate,
+}
+
 impl Runtime {
     // Builtin search for `a < b`.
     // B0: none (no known-cite / reflexivity for strict < here).
@@ -455,6 +460,16 @@ impl Runtime {
                     ));
                 }
             }
+        }
+
+        if let Some(bound) =
+            self.search_closed_subtraction_strict_bound(&fact.left, &fact.right, false)
+        {
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(
+                    LessClosedSubtractionStrictBoundBuiltinRuleProof { bound },
+                ),
+            ));
         }
 
         if let Some(proof) = self.search_abs_positive_from_nonzero(fact, verify_state)? {

@@ -1287,6 +1287,244 @@ namespace Litex
 
 universe t
 
+/-- This representation exists only for values of the chosen semantic model. -/
+instance semanticValueRepresentation (M : Semantics.{u}) : Representation M M.Value where
+  wd x := M.isSet x
+  denote x := x
+  wd_isSet h := h
+
+def semanticObject {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
+    Obj (M := M) M.Value := ⟨x, hx⟩
+
+theorem semanticObject_denote {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
+    denote (semanticObject x hx) = x := rfl
+
+/-- The bounded set primitives are shared by set builders and function domains.
+The laws are explicit model obligations, proved by the ZF model below. -/
+class SetSemantics (M : Semantics.{u}) where
+  emptyValue : M.Value
+  empty_members : ∀ x, ¬ M.mem x emptyValue
+  empty_isSet : M.isSet emptyValue
+  insertValue : M.Value → M.Value → M.Value
+  insert_members : ∀ a A x, M.mem x (insertValue a A) ↔ x = a ∨ M.mem x A
+  insert_isSet : ∀ a A, M.isSet a → M.isSet A → M.isSet (insertValue a A)
+  sepValue : M.Value → (M.Value → Prop) → M.Value
+  sep_members : ∀ D p x, M.mem x (sepValue D p) ↔ M.mem x D ∧ p x
+  sep_isSet : ∀ D p, M.isSet D → M.isSet (sepValue D p)
+  ext : ∀ A B, M.isSet A → M.isSet B → (∀ x, M.mem x A ↔ M.mem x B) → A = B
+
+noncomputable instance numericSetSemantics : SetSemantics NumericModel.model where
+  emptyValue := (∅ : ZFSet.{0})
+  empty_members := ZFSet.notMem_empty
+  empty_isSet := True.intro
+  insertValue := ZFSet.Insert
+  insert_members _ _ _ := ZFSet.mem_insert_iff
+  insert_isSet _ _ _ _ := True.intro
+  sepValue D p := ZFSet.sep p D
+  sep_members _ _ _ := ZFSet.mem_sep
+  sep_isSet _ _ _ := True.intro
+  ext _ _ _ _ := ZFSet.ext
+
+inductive EmptySetObj where
+  | empty
+
+instance emptySetRepresentation {M : Semantics.{u}} [S : SetSemantics M] :
+    Representation M EmptySetObj where
+  wd _ := True
+  denote _ := S.emptyValue
+  wd_isSet _ := S.empty_isSet
+
+def emptySet {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) EmptySetObj :=
+  ⟨.empty, True.intro⟩
+
+/-- Heterogeneous certified children retain enumeration construction shape.
+The stricter source WD requires a fresh element, even though set insertion
+itself is defined for duplicates. -/
+structure InsertObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  element : Obj (M := M) α
+  tail : Obj (M := M) β
+
+instance insertRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (InsertObj (M := M) α β) where
+  wd s := ¬ In s.element s.tail
+  denote s := S.insertValue (denote s.element) (denote s.tail)
+  wd_isSet {s} _ := S.insert_isSet _ _ (isSet s.element) (isSet s.tail)
+
+def insert {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (h : ¬ In a A) :
+    Obj (M := M) (InsertObj (M := M) α β) := ⟨⟨a, A⟩, h⟩
+
+theorem notInEmpty {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    ¬ In a (emptySet (M := M)) := S.empty_members (denote a)
+
+theorem inInsert_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (x : Obj (M := M) α) (a : Obj (M := M) β) (A : Obj (M := M) γ)
+    (h : ¬ In a A) : In x (insert a A h) ↔ Same x a ∨ In x A :=
+  S.insert_members _ _ _
+
+theorem notInInsert {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (x : Obj (M := M) α) (a : Obj (M := M) β) (A : Obj (M := M) γ)
+    (h : ¬ In a A) (hxa : ¬ Same x a) (hxA : ¬ In x A) :
+    ¬ In x (insert a A h) :=
+  fun hx => ((inInsert_iff x a A h).mp hx).elim hxa hxA
+
+def Subset {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : Prop :=
+  ∀ x, M.mem x (denote A) → M.mem x (denote B)
+
+theorem subsetRefl {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (A : Obj (M := M) α) : Subset A A := fun _ hx => hx
+
+theorem subsetOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (A : Obj (M := M) α) (B : Obj (M := M) β)
+    (C : Obj (M := M) γ) (D : Obj (M := M) δ)
+    (hAC : Same A C) (hBD : Same B D) (hAB : Subset A B) : Subset C D := by
+  intro z hz
+  rw [← hBD]
+  apply hAB z
+  rw [hAC]
+  exact hz
+
+/-- Replay the source subset definition at the semantic-value representation.
+The forall proof comes from the recorded definition child, not target search. -/
+theorem subsetOfForall {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β)
+    (h : ∀ {γ : Type u} [Representation M γ], (a : Obj (M := M) γ) → In a A → In a B) :
+    Subset A B := fun z hz => h (semanticObject z (M.member_isSet hz)) hz
+
+theorem emptySubset {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (A : Obj (M := M) α) :
+    Subset (emptySet (M := M)) A := fun x hx => (S.empty_members x hx).elim
+
+theorem insertSubset {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ)
+    (h : ¬ In a A) (ha : In a B) (hA : Subset A B) : Subset (insert a A h) B := by
+  intro x hx
+  rcases (S.insert_members _ _ _).mp hx with hxa | hxA
+  · exact hxa ▸ ha
+  · exact hA x hxA
+
+theorem setExt {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (hAB : Subset A B) (hBA : Subset B A) :
+    Same A B := S.ext _ _ (isSet A) (isSet B) (fun x => ⟨hAB x, hBA x⟩)
+
+/-- Predicate callbacks are well-typed only on certified members of the bound.
+A membership proof certifies formation; it is not a mathematical argument. -/
+structure SetBuilderObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  bound : Obj (M := M) α
+  predicate : (x : Obj (M := M) M.Value) → In x bound → Prop
+
+namespace SetBuilderObj
+
+def condition {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (s : SetBuilderObj (M := M) α) (x : M.Value) : Prop :=
+  ∃ hx : M.mem x (denote s.bound), s.predicate (semanticObject x (M.member_isSet hx)) hx
+
+end SetBuilderObj
+
+instance setBuilderRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] : Representation M (SetBuilderObj (M := M) α) where
+  wd _ := True
+  denote s := S.sepValue (denote s.bound) s.condition
+  wd_isSet {s} _ := S.sep_isSet _ _ (isSet s.bound)
+
+def setBuilder {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (D : Obj (M := M) α)
+    (p : (x : Obj (M := M) M.Value) → In x D → Prop) :
+    Obj (M := M) (SetBuilderObj (M := M) α) := ⟨⟨D, p⟩, True.intro⟩
+
+theorem inSetBuilder_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (D : Obj (M := M) β)
+    (p : (x : Obj (M := M) M.Value) → In x D → Prop) :
+    In a (setBuilder D p) ↔
+      ∃ ha : In a D, p (semanticObject (denote a) (M.member_isSet ha)) ha := by
+  rw [In, show denote (setBuilder D p) = S.sepValue (denote D)
+    (SetBuilderObj.condition ⟨D, p⟩) from rfl, S.sep_members]
+  exact ⟨fun h => h.2, fun h => ⟨h.choose, h⟩⟩
+
+theorem setBuilderSubset {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] (D : Obj (M := M) α)
+    (p : (x : Obj (M := M) M.Value) → In x D → Prop) : Subset (setBuilder D p) D :=
+  fun _ hx => ((S.sep_members _ _ _).mp hx).1
+
+namespace NativeSetBridge
+
+/-- A numeric pullback observes only the numeric slice. A full numeric-set view
+also needs the corresponding source subset witness, as in the completeness
+lemmas below. Arbitrary objects keep their registered host representation. -/
+def complexView {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (A : Obj (M := M) α) : Set ℂ := {z | In (number z) A}
+
+def realView {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (A : Obj (M := M) α) : Set ℝ := {r | In (number (r : ℂ)) A}
+
+theorem complexView_ofSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (h : Same A B) :
+    complexView A = complexView B :=
+  Set.ext fun z => ⟨fun hz => Eq.mp (congrArg (M.mem (M.number z)) h) hz,
+    fun hz => Eq.mpr (congrArg (M.mem (M.number z)) h) hz⟩
+
+theorem complexView_subset {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (h : Subset A B) :
+    complexView A ⊆ complexView B := fun z hz => h (M.number z) hz
+
+theorem realView_subset {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) (h : Subset A B) :
+    realView A ⊆ realView B := fun r hr => h (M.number (r : ℂ)) hr
+
+theorem complexView_complete {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (A : Obj (M := M) α) (h : Subset A C) (x : M.Value) (hx : M.mem x (denote A)) :
+    ∃ z : ℂ, x = M.number z ∧ z ∈ complexView A := by
+  obtain ⟨z, hz⟩ := (M.complex_members x).mp (h x hx)
+  exact ⟨z, hz, Eq.mp (congrArg (fun y => M.mem y (denote A)) hz) hx⟩
+
+theorem realView_complete {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (A : Obj (M := M) α) (h : Subset A R) (x : M.Value) (hx : M.mem x (denote A)) :
+    ∃ r : ℝ, x = M.number (r : ℂ) ∧ r ∈ realView A := by
+  obtain ⟨r, hr⟩ := (M.real_members x).mp (h x hx)
+  exact ⟨r, hr, Eq.mp (congrArg (fun y => M.mem y (denote A)) hr) hx⟩
+
+theorem complexView_empty {M : Semantics.{u}} [SetSemantics M] :
+    complexView (emptySet (M := M)) = ∅ :=
+  Set.ext fun z => ⟨fun hz => (notInEmpty (number z) hz).elim, fun h => h.elim⟩
+
+theorem complexView_insert {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (z : ℂ) (A : Obj (M := M) α)
+    (h : ¬ In (number z) A) : complexView (insert (number z) A h) =
+      Insert.insert z (complexView A) := by
+  apply Set.ext
+  intro x
+  constructor
+  · intro hx
+    rcases (inInsert_iff (number x) (number z) A h).mp hx with eq | mem
+    · exact Or.inl (M.number_injective eq)
+    · exact Or.inr mem
+  · intro hx
+    rcases hx with eq | mem
+    · exact (inInsert_iff (number x) (number z) A h).mpr (Or.inl (congrArg M.number eq))
+    · exact (inInsert_iff (number x) (number z) A h).mpr (Or.inr mem)
+
+end NativeSetBridge
+
 /-- A graph has exactly its declared domain and one codomain value per input. -/
 def IsFunctionGraph {M : Semantics.{u}} (pair : M.Value → M.Value → M.Value)
     (D B f : M.Value) : Prop :=
@@ -1294,12 +1532,9 @@ def IsFunctionGraph {M : Semantics.{u}} (pair : M.Value → M.Value → M.Value)
     ∀ x, M.mem x D → ∃! y, M.mem (pair x y) f
 
 /-- Additional set/function structure; the existing numeric model is not copied. -/
-class FunctionSemantics (M : Semantics.{u}) where
+class FunctionSemantics (M : Semantics.{u}) extends SetSemantics M where
   pairValue : M.Value → M.Value → M.Value
   pair_injective : Function.Injective2 pairValue
-  sepValue : M.Value → (M.Value → Prop) → M.Value
-  sep_members : ∀ D p x, M.mem x (sepValue D p) ↔ M.mem x D ∧ p x
-  sep_isSet : ∀ D p, M.isSet D → M.isSet (sepValue D p)
   productValue : M.Value → M.Value → M.Value
   product_members : ∀ D E p,
     M.mem p (productValue D E) ↔ ∃ x, M.mem x D ∧ ∃ y, M.mem y E ∧ p = pairValue x y
@@ -1405,11 +1640,9 @@ theorem function_ext (D B f g : ZFSet.{0}) (hf : ZFSet.IsFunc D B f)
     exact (h x y).mpr hp
 
 noncomputable instance numericFunctionSemantics : FunctionSemantics NumericModel.model where
+  toSetSemantics := numericSetSemantics
   pairValue := ZFSet.pair
   pair_injective := ZFSet.pair_injective
-  sepValue D p := ZFSet.sep p D
-  sep_members _ _ _ := ZFSet.mem_sep
-  sep_isSet _ _ _ := True.intro
   productValue := ZFSet.prod
   product_members _ _ _ := ZFSet.mem_prod
   product_isSet _ _ _ _ := True.intro
@@ -1517,18 +1750,6 @@ instance functionSignatureRepresentation {M : Semantics.{u}} [F : FunctionSemant
 
 def fnSet {M : Semantics.{u}} [FunctionSemantics M] (s : FunctionSignature M) :
     Obj (M := M) (FunctionSignature M) := ⟨s, True.intro⟩
-
-/-- This representation exists only for values of the chosen semantic model. -/
-instance semanticValueRepresentation (M : Semantics.{u}) : Representation M M.Value where
-  wd x := M.isSet x
-  denote x := x
-  wd_isSet h := h
-
-def semanticObject {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
-    Obj (M := M) M.Value := ⟨x, hx⟩
-
-theorem semanticObject_denote {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
-    denote (semanticObject x hx) = x := rfl
 
 /-- A formula object denotes a set-theoretic graph, not its interpretation callback.
 The callback is the compiler's recursive interpretation of the source body AST. -/

@@ -376,5 +376,3 @@ litex -lang en -strict -r path/to/project
 `-strict` 拒绝执行的用户 `trust`、`trust have` 和 `axiom`，包括依赖中的内容。抽象谓词签名和命名基础规则的释放仍被允许。验证仍依赖检查器、内置/推导规则和已加载数学；应准确报告显式假设与未解决的证明债务。见[信任契约](Litex手册.md#trust-and-strict-mode)。
 
 较大数学发展应遵循相关模块的 `README.md` 和 `math_collections.md`，再查阅[示例](../examples/README.md)与[数学展示](../showcases/math_concepts_in_litex/README.md)。
-
-本次修订的验证记录在针对性审计中（已停用的历史任务记录）。
