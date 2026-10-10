@@ -269,10 +269,12 @@ equal to the goal arguments. `f = f` uses `SameIr`. `FnSet(t) = g` uses
 then cite the stored `FnSet(x) = g` edge. No membership-specific alpha rule is
 needed. Both endpoint peers are also needed for `g = h` when both are aliases.
 
-The old free-param lookup builtin is removed from truth search. The existing
-`known_equal_to_obj_with_free_params` index and its storage/merge contracts are
-retained; removing that state is a separate migration. Ordinary stored equality
-edges already provide the needed shapes and complete citation paths.
+The old free-param lookup builtin and its unread storage/merge index are removed.
+Ordinary stored equality edges provide truth search and complete citation paths.
+Structural readers use the exact object's classified endpoint buckets for
+anonymous functions, FnSets and set builders, alongside other constructors.
+See the [scoped index contract](../../../../exec_env/README.md); these buckets
+do not authorize structural traversal of an equality class.
 
 ## Output and checks
 

@@ -13,7 +13,6 @@ use crate::ast::obj::{
 };
 use crate::ast::param::ParamType;
 use crate::ast::stmt::TemplateDefEnum;
-use crate::exec_env::SpecialProperty;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::execute_obtain_obj_from_atomic_fact_stmt::project_sole_positive_exist_clause;
 use crate::runtime::runtime_ids::IdentifierId;
@@ -290,14 +289,11 @@ impl Runtime {
             let Some(props) = env.special_properties.get(&key) else {
                 continue;
             };
-            for prop in props {
-                if let SpecialProperty::DefaultStructView(fact) = prop {
-                    if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
-                        carrier,
-                    )) = &fact.set
-                    {
-                        return Some(carrier.clone());
-                    }
+            for fact in &props.default_struct_views {
+                if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) =
+                    &fact.set
+                {
+                    return Some(carrier.clone());
                 }
             }
         }

@@ -14,6 +14,7 @@ use crate::ast::obj::{FnObj, FnObjHead, FunctionSpace, Obj};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
@@ -83,7 +84,8 @@ impl Runtime {
         };
         // An exact indexed equality supplies the body, independently of how
         // the head was introduced. Publish g=anon before using g(4).
-        let members = self.exact_property_object_values(&head_obj);
+        let members =
+            self.exact_property_object_values_of_shapes(&head_obj, &[EqualToObjShape::AnonymousFn]);
         for (candidate, path) in members {
             let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = &candidate else {
                 continue;

@@ -22,7 +22,7 @@ use crate::ast::stmt::LetObjStmt;
 use crate::ast::stmt::TrustHaveStmt;
 use crate::exec_env::known_fact_memory::ObjIR;
 use crate::exec_env::session_view::ExecEnvSessionView;
-use crate::exec_env::SpecialProperty;
+use crate::exec_env::ObjectSpecialProperties;
 use crate::runtime::runtime_ids::WellDefinednessId;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -57,7 +57,7 @@ pub struct ExecEnv {
     pub facts: KnownFactMemory,
 
     /// Object-keyed facts and the explicitly selected default struct view.
-    pub special_properties: HashMap<ObjIR, Vec<SpecialProperty>>,
+    pub special_properties: HashMap<ObjIR, ObjectSpecialProperties>,
 
     /// Algebraic properties proved for predicates in this scope.
     pub prop_rewrite_properties: HashMap<AtomicName, Vec<PropRewriteProperty>>,

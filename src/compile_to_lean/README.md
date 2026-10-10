@@ -186,11 +186,19 @@ The original direct nested call now uses that caller evidence. A constructor
 recorded only inside the closed invocation remains unavailable in the parent;
 the compiler never exports that local WD as a substitute.
 
-Consumed `AdditiveCancellation` inference retains its three membership checks,
-derived fact WD and original store/infer tree. The compiler dispatches that
-result to a proved cancellation lemma, emits the original derived FactId and
-allows later citations in their original scope. Other consumed cancellation
-families retain explicit rejection branches.
+Consumed additive, subtractive, nonzero-factor, common-denominator and nonzero-
+numerator cancellation retain their original membership/nonzero checks, derived
+fact WD and store/infer tree. The compiler dispatches the original rule variant
+to a proved cancellation lemma, emits its actual derived FactId and recursively
+replays later inference. Pending stages cannot cite their future conclusions,
+even when an ancestor sees the completed store. Unreviewed inference families
+retain explicit rejection branches.
+
+Named theorem bodies accept the original by-def result alongside existing fact,
+let, typed-have and by-thm steps. The source request must match its selected
+definition proof subject. Completed by-def exposes the caller's goal WD;
+constructors inside its closed defining-clause proof remain local. Ordinary
+local arbitrary-have declarations still require their separate lowering.
 
 Any failed source, unsupported branch or unavailable evidence rejects the
 entire artifact. No partial Lean file, new axiom, proof hole or fabricated

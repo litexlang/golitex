@@ -204,7 +204,7 @@ fn additive_inference_rejects_future_and_closed_scope_membership_citations() {
 }
 
 #[test]
-fn additive_inference_does_not_enable_other_cancellation_families() {
+fn additive_inference_keeps_other_cancellation_families_independent() {
     for (seed, guards) in [
         ("a*k=b*k", "    k!=0\n"),
         ("a-k=b-k", ""),
@@ -213,9 +213,9 @@ fn additive_inference_does_not_enable_other_cancellation_families() {
     ] {
         let source = format!("forall a, b, k C:\n{guards}    {seed}\n    =>:\n        a=b\n");
         let (result, compiler) = super::execute(&source);
-        let error = super::compile_run(&result, &compiler, "unsupported_cancellation")
-            .expect_err("the selected unsupported inference remains fail-closed");
-        assert_eq!(error.route, "FactId/Producer", "{seed}: {error}");
+        let output = super::compile_run(&result, &compiler, "independent_cancellation")
+            .expect("each selected cancellation has its own evidence consumer");
+        assert!(!output.contains("Litex.addCancel"), "{seed}");
     }
 }
 

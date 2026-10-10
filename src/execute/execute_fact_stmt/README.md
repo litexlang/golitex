@@ -268,7 +268,9 @@ Remaining composition and geo failures are tracked separately.
 No independent strategy/deep depth budget remains.
 
 The function codomain/range leaves of `ByKnownSpecialProperty` read exact-object rows from
-`special_properties`, across visible environments. The shared tuple reader
+the separated membership rows and equality constructor buckets of
+`special_properties`, across visible environments. The [index contract](../../exec_env/README.md)
+preserves scope/source order, directional FactIds and direct-only lookup. The shared tuple reader
 also follows cited stored equality paths for object and Cartesian aliases. It never
 writes that table, verifies a premise, or invokes general equality search.
 The function leaves establish function-application codomain or `fn_range`

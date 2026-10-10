@@ -61,6 +61,11 @@ and [irrelevant repeated application equations](equal/by_builtin_rewrite/fn_appl
 The [negative manifest](../negative/fn_application_unfold_substitution/manifest.json)
 separates false conclusions and WD failures from bounded search misses.
 
+The [classified exact-property tracer](equal/by_object_definition/by_fn_application/classified_exact_properties.lit)
+exercises separate anonymous-function, tuple, cart, set-builder, list and range
+readers while preserving direct equality citations and numeric substitution.
+See the [storage and query contract](../../src/exec_env/README.md).
+
 ## Function-space carriers
 
 [Free function-space parameters](atomic/by_known_forall/fnset_free_parameter_carrier.lit)

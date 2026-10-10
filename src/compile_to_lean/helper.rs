@@ -1,4 +1,5 @@
 use super::LeanCompileError;
+use crate::execute::execute_by_stmt::ExecByDefStmtResult;
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -520,6 +521,10 @@ pub(super) fn validate_statement_capture(
                 ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(proof)),
             )),
         ) => stmt == &proof.statement,
+        (
+            Stmt::By(ByStmt::ByDefStmt(stmt)),
+            ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(proof))),
+        ) => verified_subject(&proof.proof).as_ref() == Some(&Fact::AtomicFact(stmt.fact.clone())),
         (
             Stmt::By(ByStmt::ByThmStmt(stmt)),
             ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))),

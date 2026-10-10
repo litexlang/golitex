@@ -1377,53 +1377,24 @@ fn stored_equalities_supply_cart_members_and_tuple_function_domains() {
 }
 
 #[test]
-fn store_equality_indexes_equal_to_obj_with_free_params() {
-    use crate::exec_env::KnownEqualToObjWithFreeParamsShape;
+fn store_equality_indexes_classified_literal_endpoints() {
+    use crate::exec_env::EqualToObjShape;
 
-    let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "let f = fn(x R) R").is_failed());
-    let fn_set_hits = runtime
-        .top_exec_env()
-        .facts
-        .known_equal_to_obj_with_free_params
-        .by_other_side
-        .values()
-        .flat_map(|v| v.iter())
-        .filter(|(s, _)| matches!(s, KnownEqualToObjWithFreeParamsShape::FnSet(_)))
-        .count();
-    assert_eq!(fn_set_hits, 1, "let f = fn(x R) R must index FnSet on f");
-
-    let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "let g = fn(x R) R {x}").is_failed());
-    let anon_hits = runtime
-        .top_exec_env()
-        .facts
-        .known_equal_to_obj_with_free_params
-        .by_other_side
-        .values()
-        .flat_map(|v| v.iter())
-        .filter(|(s, _)| matches!(s, KnownEqualToObjWithFreeParamsShape::AnonymousFn(_)))
-        .count();
-    assert_eq!(
-        anon_hits, 1,
-        "let g = fn(x R) R {{x}} must index AnonymousFn on g"
-    );
-
-    let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "let s = {x R: x > 0}").is_failed());
-    let sb_hits = runtime
-        .top_exec_env()
-        .facts
-        .known_equal_to_obj_with_free_params
-        .by_other_side
-        .values()
-        .flat_map(|v| v.iter())
-        .filter(|(s, _)| matches!(s, KnownEqualToObjWithFreeParamsShape::SetBuilder(_)))
-        .count();
-    assert_eq!(
-        sb_hits, 1,
-        "let s = {{x R: x > 0}} must index SetBuilder on s"
-    );
+    for (code, shape) in [
+        ("let f = fn(x R) R", EqualToObjShape::FnSet),
+        ("let g = fn(x R) R {x}", EqualToObjShape::AnonymousFn),
+        ("let s = {x R: x > 0}", EqualToObjShape::SetBuilder),
+    ] {
+        let mut runtime = runtime_with_file_env();
+        assert!(!exec_one(&mut runtime, code).is_failed());
+        let hits: usize = runtime
+            .top_exec_env()
+            .special_properties
+            .values()
+            .map(|properties| properties.equalities.indices_for_shapes(&[shape]).len())
+            .sum();
+        assert_eq!(hits, 1, "{code} must index its literal endpoint");
+    }
 }
 
 #[test]
@@ -1567,8 +1538,9 @@ fn fn_obj_application_requires_in_function_set() {
             .top_exec_env()
             .special_properties
             .values()
-            .flatten()
-            .any(|p| p.function_signature().is_some()),
+            .any(|properties| !properties
+                .function_signature_properties(&runtime.top_exec_env().facts)
+                .is_empty()),
         "let f = anon must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
@@ -1675,8 +1647,9 @@ fn have_fn_equal_and_by_exist_slice1() {
             .top_exec_env()
             .special_properties
             .values()
-            .flatten()
-            .any(|p| p.function_signature().is_some()),
+            .any(|properties| !properties
+                .function_signature_properties(&runtime.top_exec_env().facts)
+                .is_empty()),
         "have fn must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
@@ -1728,8 +1701,9 @@ fn have_fn_by_cases_slice2() {
             .top_exec_env()
             .special_properties
             .values()
-            .flatten()
-            .any(|p| p.function_signature().is_some()),
+            .any(|properties| !properties
+                .function_signature_properties(&runtime.top_exec_env().facts)
+                .is_empty()),
         "by cases must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 2").is_failed());
@@ -1780,8 +1754,11 @@ fn have_fn_by_exist_stores_membership_and_properties() {
         .top_exec_env()
         .special_properties
         .values()
-        .flatten()
-        .any(|p| p.function_signature().is_some());
+        .any(|properties| {
+            !properties
+                .function_signature_properties(&runtime.top_exec_env().facts)
+                .is_empty()
+        });
     assert!(props_ok, "by exist! must store InFunctionSet");
 }
 
@@ -2599,13 +2576,13 @@ fn template_body_obtain_from_atomic_fact_wires() {
 }
 
 #[test]
-fn trust_stored_equality_proves_alpha_equal_fn_set_via_free_params_lookup() {
+fn trust_stored_equality_proves_alpha_equal_fn_set_via_generating_edge() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have f set").is_failed());
     assert!(!exec_one(&mut runtime, "trust f = fn(x R) R").is_failed());
     assert!(
         !exec_one(&mut runtime, "f = fn(y R) R").is_failed(),
-        "known_equal_to_obj_with_free_params lookup + ByFnSetAlphaEqual shape match"
+        "generating equality edge + alpha-equal peer bridge"
     );
 }
 
@@ -2977,8 +2954,9 @@ fn trust_in_fn_set_registers_in_function_set_for_application_wd() {
             .top_exec_env()
             .special_properties
             .values()
-            .flatten()
-            .any(|p| p.function_signature().is_some()),
+            .any(|properties| !properties
+                .function_signature_properties(&runtime.top_exec_env().facts)
+                .is_empty()),
         "trust f $in fn(...) must register InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have arg R").is_failed());

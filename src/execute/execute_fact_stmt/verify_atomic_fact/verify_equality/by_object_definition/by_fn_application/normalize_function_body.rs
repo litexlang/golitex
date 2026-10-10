@@ -12,6 +12,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::resu
 use crate::execute::execute_fact_stmt::{
     ObjWellDefinedProof, VerifyObjWellDefinedResult, VerifyState,
 };
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 const MAX_BODY_EXPANSIONS: usize = 64;
@@ -324,7 +325,13 @@ impl Runtime {
             FnObjHead::InstantiatedTemplateObj(inst) => Obj::InstantiatedTemplateObj(inst.clone()),
         };
         let mut candidates = Vec::new();
-        for (candidate, path) in self.exact_property_object_values(&head) {
+        for (candidate, path) in self.exact_property_object_values_of_shapes(
+            &head,
+            &[
+                EqualToObjShape::AnonymousFn,
+                EqualToObjShape::InstantiatedTemplateObj,
+            ],
+        ) {
             match candidate {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => candidates.push((
                     anon,

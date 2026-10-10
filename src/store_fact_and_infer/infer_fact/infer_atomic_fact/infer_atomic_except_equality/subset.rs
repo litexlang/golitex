@@ -85,11 +85,6 @@ impl Runtime {
         if matches!(set, Obj::SetFormer(SetFormer::SetBuilder(_))) {
             return true;
         }
-        for (value, _) in self.exact_property_object_values(set) {
-            if matches!(value, Obj::SetFormer(SetFormer::SetBuilder(_))) {
-                return true;
-            }
-        }
-        false
+        !self.known_equal_to_set_builders(set).is_empty()
     }
 }

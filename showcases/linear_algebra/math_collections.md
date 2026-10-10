@@ -1,52 +1,80 @@
-# 课程的数学主线
+# Mathematical Organization
 
-本课程参考 LADR 的域、向量空间、子空间、线性组合、张成、无关、基与维数。
-采用自己的两章教学顺序，不以原书条目数量作为完成标准。先回答一个可计算
-的问题，再引入概念与真实构造，证明重要结果，最后回到同一个实数平面例子。
+The central question of these lectures is how a small collection of directions
+can describe an entire vector space. We begin with coordinate arithmetic,
+establish the structures in which that question makes sense, and then develop
+span, independence, and bases. The real plane connects the abstract definitions
+to examples throughout.
 
-## 第一章：运算怎样成为空间
+## Vectors, scalars, and operations
 
-平面向量是 finite_seq(R,2)，两个项就是坐标。向量列表还是原生 finite_seq，
-不再叠加 length/entries 记录。一个序列与其坐标对相同，由函数外延性检查。
+A plane vector has type `finite_seq(R, 2)`. Its entries are its coordinates.
+A list of vectors has type `finite_seq(V, n)`, so its order and length belong
+to its representation. No additional record is needed for the list itself.
+Equality of coordinate vectors follows from equality at each index.
 
-Field<K> 同时携带标量运算与直接公理。VectorSpace<K,field,V> 固定共同标量域，
-只存向量零、加法、标量作用和直接空间公理。实数域和 real_plane 都是实际
-构造出来的值；其公理逐项检查，而不是隐藏在公理证书或假设里。
+A field provides scalar operations and the laws governing them. `Field<K>`
+therefore combines these operations with their axioms in one structure.
+Likewise, `VectorSpace<K, field, V>` provides vector addition, a zero vector,
+and scalar multiplication over that fixed field. A predicate alone would not
+supply the operations needed by subsequent constructions.
 
-域和空间是数据结构，必须能调用运算。零元/逆元的存在来自公理，唯一性则
-是真正推导出的定理。函数点加法、点数乘的计算为另一个向量模型提供动机；
-本版没有声称完成一般函数空间的全部公理证明。
+The instances `real_field` and `real_plane` connect this abstract vocabulary
+to real arithmetic and coordinate operations. Their laws are established in
+the notes. Uniqueness of the additive identity and of additive inverses are
+then derived consequences of the vector space axioms.
 
-子空间是已有子集沿用运算并包含零的性质，因此使用 is_subspace。x_axis、
-y_axis 是实际集合，已验证闭包；平移直线不含原点，是已验证的反例。任意
-平面向量能分解为两个轴分量，且分量唯一，这给出本例的直和含义。
+Pointwise addition and scalar multiplication show how functions can play the
+role of vectors. The notes illustrate those operations; establishing all
+vector space laws for a function space is a further development.
 
-## 第二章：方向、描述与坐标
+## Subspaces and decomposition
 
-有限线性组合从零开始逐项加入数乘项。一般关系使用同长度的系数/向量序列
-和部分和函数；本版实际构造两项部分和，并证明结果存在且等于两个数乘项之和。
-这里的 trace 是数学求和过程，不是对列表另加包装。任意长度的选定求和函数
-还需要更一般的存在/唯一性证明，可留到确实需要它的讲次。
+A subspace uses the operations of its surrounding vector space. For a subset
+`U`, the relation `is_subspace(..., U)` expresses containment of zero and
+closure under addition and scalar multiplication. This is a property of an
+existing subset, so it does not require a separate structure with new operations.
 
-span 是实际集合值：所有某个列表的线性组合。先使用向量自己的坐标作为
-系数，证明标准方向张成整个平面。线性无关是零组合只允许零系数；标准方向
-满足它，重复方向则有非零系数的零组合。两者共同给出 is_basis。
+The sets `x_axis` and `y_axis` satisfy this relation. The set `shifted_line`
+does not contain zero and hence is not a subspace. Every plane vector has a
+unique decomposition into a vector from each axis. This concrete result
+introduces the mathematical idea of a direct sum.
 
-基不是又一个数据包装，而是已有列表的两个独立条件。标准展开与坐标唯一性
-已证明。于是平面有限维，且有长度为2的基。维数不依赖基选择的一般结论需要
-基长度唯一性定理，本版只解释其动机，未暴露一个假装已证明的 dimension。
+## Linear combinations and span
 
-```text
-坐标计算 → 原生向量/列表 → Field → VectorSpace 实例
-空间 + 子集 → 子空间 → 轴分解及其唯一性
-数乘与有限和 → 线性组合 → span → 张成
-零组合的系数 → 线性无关 → 基 → 唯一坐标
-有限张成/基长度 → 维数动机 → 后续的一般基长度唯一性
-```
+A finite linear combination pairs each vector with a scalar coefficient.
+The relation `is_linear_combination_partial_sum_sequence` describes successive
+partial sums, beginning with zero. `has_linear_combination_value` identifies
+the final sum, and `is_linear_combination` allows the coefficients to vary.
+These relations distinguish a prescribed coefficient list from the question
+of whether a vector can be expressed using given directions.
 
-## 保持课程轻量
+The definitions apply to an arbitrary finite length. The notes construct the
+two-term partial sums and prove that their value is the usual sum of two
+scalar multiples. A general summation function would additionally require
+existence and uniqueness for arbitrary finite length.
 
-一般基的删减/扩张、基长度不变是自然的下一讲。完整多项式体系、一般函数
-空间构造、维数加法的长证明按需扩展，不是本课程第一版的强制条目。问题若
-只是当前验证器的表达边界，应在经验记录中说明，不把技术故障变成新的数学
-概念或一层永久接口。证明语义、具体检查结果和版本限制分别记录。
+`span` is a set-valued template: it selects precisely the vectors satisfying
+`is_linear_combination` for a given list. The predicate `spans` says that this
+set is the entire ambient space. A separate structure for span would obscure
+its role as an ordinary subset on which membership and equality are used.
+The standard directions span the plane because a vector's own coordinates
+provide suitable coefficients.
+
+## Independence, bases, and dimension
+
+`is_linearly_independent` says that a combination giving zero must have only
+zero coefficients. This is a condition on a list, not additional data attached
+to its entries. The standard directions satisfy it; repeating a direction gives
+a nonzero choice of coefficients whose combination is zero.
+
+`is_basis` combines independence and spanning. Spanning provides coordinates;
+independence makes them unique. The notes prove the standard expansion and
+`standard_coordinates_unique` for the real plane.
+
+`is_finite_dimensional` expresses the existence of a finite spanning list.
+`has_basis_length(..., n)` expresses the existence of a basis with length `n`.
+The plane has such a basis with length two. Defining a general dimension
+requires the further theorems that finite-dimensional spaces have bases and
+that any two bases have equal length. The present notes conclude with this
+motivation; they do not yet define a general `dimension`.

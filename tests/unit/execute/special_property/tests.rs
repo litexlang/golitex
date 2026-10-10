@@ -156,7 +156,7 @@ fn property_rows_keep_the_source_fact_and_are_idempotent() {
     }
     assert_eq!(before, property_count(&rt));
     for (key, properties) in &rt.top_exec_env().special_properties {
-        for property in properties {
+        for property in properties.properties_in_order(&rt.top_exec_env().facts) {
             let source = &rt.top_exec_env().facts.facts_by_id[&property.fact_id()];
             match property {
                 SpecialProperty::Membership(fact) | SpecialProperty::DefaultStructView(fact) => {
@@ -242,6 +242,6 @@ fn property_count(rt: &Runtime) -> usize {
     rt.top_exec_env()
         .special_properties
         .values()
-        .map(Vec::len)
+        .map(crate::exec_env::ObjectSpecialProperties::len)
         .sum()
 }

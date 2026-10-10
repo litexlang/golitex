@@ -240,12 +240,13 @@ impl Runtime {
     }
 
     pub(crate) fn cart_definition_for_set(&self, set: &Obj) -> Option<Cart> {
-        self.exact_property_object_values(set)
+        if let Obj::ProductShape(ProductShape::Cart(cart)) = set {
+            return Some(cart.clone());
+        }
+        self.known_equal_to_carts(set)
             .into_iter()
-            .find_map(|(value, _)| match value {
-                Obj::ProductShape(ProductShape::Cart(cart)) => Some(cart),
-                _ => None,
-            })
+            .next()
+            .map(|(cart, _)| cart)
     }
 
     pub(crate) fn cart_coordinate_membership_requirements(

@@ -71,9 +71,6 @@ impl Runtime {
                         &mut env.facts.known_closed_numeric_equal,
                         equal_fact,
                     );
-                    env.facts
-                        .known_equal_to_obj_with_free_params
-                        .maybe_index(equal_fact);
                     env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
                     env.index_special_property(atomic_fact);
                 }

@@ -1,5 +1,6 @@
 use crate::ast::fact::{AtomicFact, Fact, InFact};
 use crate::ast::obj::{Obj, SetFormer, SetOperator};
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferPowerSetMembershipProjectionResult,
@@ -166,7 +167,13 @@ impl Runtime {
         if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = set {
             return Ok(Some((builder.clone(), Vec::new(), false)));
         }
-        for (value, equality_path) in self.exact_property_object_values(set) {
+        for (value, equality_path) in self.exact_property_object_values_of_shapes(
+            set,
+            &[
+                EqualToObjShape::SetBuilder,
+                EqualToObjShape::InstantiatedTemplateObj,
+            ],
+        ) {
             if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &value {
                 return Ok(Some((builder.clone(), equality_path, false)));
             }
@@ -194,7 +201,9 @@ impl Runtime {
         if let Obj::SetOperator(SetOperator::PowerSet(power)) = set {
             return Some(power.set.as_ref().clone());
         }
-        for (value, _) in self.exact_property_object_values(set) {
+        for (value, _) in
+            self.exact_property_object_values_of_shapes(set, &[EqualToObjShape::PowerSet])
+        {
             if let Obj::SetOperator(SetOperator::PowerSet(power)) = value {
                 return Some(*power.set);
             }

@@ -9,7 +9,10 @@ use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferAtomicFactResult,
-    InferEqualFactAdditiveCancellationResult, InferEqualityResult, InferFactResult,
+    InferEqualFactAdditiveCancellationResult, InferEqualFactSubtractiveCancellationResult,
+    InferEqualFactNonzeroFactorCancellationResult, InferEqualFactCommonDenominatorCancellationResult,
+    InferEqualFactNonzeroNumeratorCancellationResult, InferEqualityResult, InferFactResult,
+    StoreInferredFactAndInferResult,
 };
 
 /// A borrowed position in the original execution evidence, not a replay registry.
@@ -23,7 +26,7 @@ pub(super) struct SourcePosition<'a> {
 // Run: completed statements. Headers: params, dom assumptions, then/body stages.
 // WD/AtomicWD: child WD, then requirements. Call: types, doms, conclusion WD,
 // then returned stores. HaveEqual: RHS WD, membership checks, alias definitions.
-// AdditiveInference: three membership checks, derived WD/store (4), nested infer (5).
+// Cancellation: three memberships, optional nonzero checks, then derived WD/store and nested infer.
 #[derive(Clone, Copy)]
 pub(super) enum SourceOwner<'a> {
     Run(&'a RunLitexCodeResult),
@@ -48,6 +51,10 @@ pub(super) enum SourceOwner<'a> {
     PropInference(&'a StoreFactAndInferResult),
     EqualityInferences(&'a [InferEqualityResult]),
     AdditiveInference(&'a InferEqualFactAdditiveCancellationResult),
+    SubtractiveInference(&'a InferEqualFactSubtractiveCancellationResult),
+    NonzeroFactorInference(&'a InferEqualFactNonzeroFactorCancellationResult),
+    CommonDenominatorInference(&'a InferEqualFactCommonDenominatorCancellationResult),
+    NonzeroNumeratorInference(&'a InferEqualFactNonzeroNumeratorCancellationResult),
     EqualityRequirements(&'a [VerifyFactResult]),
     FunctionNormalization(&'a FunctionBodyNormalizationProof),
     FunctionExpansion(&'a AnonymousFunctionBodyExpansionProof),
@@ -338,27 +345,32 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<(&'a Fact, String), LeanCompileError> {
         let actual = self.source_fact(id, runtime)?;
         let mut ceiling = Some(self);
-        let mut additive_primary_is_stored = false;
+        let mut cancellation_primary_is_stored = false;
         while let Some(current) = ceiling {
-            if let SourceOwner::AdditiveInference(rule) = current.owner {
-                if current.before >= 4 && rule.derived.store_and_infer.primary_fact_id() == id {
-                    additive_primary_is_stored = true;
+            let cancellation = cancellation_stages(current.owner);
+            if let Some((checks, captured)) = &cancellation {
+                if current.before > checks.len() && captured.store_and_infer.primary_fact_id() == id
+                {
+                    cancellation_primary_is_stored = true;
                 }
             }
             let future = match current.owner {
                 // An inner rule may already have published this exact primary
                 // fact while an enclosing rule's nested inference is unfinished.
                 SourceOwner::EqualityInferences(rules) => {
-                    !additive_primary_is_stored
+                    !cancellation_primary_is_stored
                         && rules
                             .iter()
                             .skip(current.before)
                             .any(|rule| rule.stored_fact_ids().contains(&id))
                 }
-                SourceOwner::AdditiveInference(rule) if current.before < 4 => {
-                    rule.derived.store_and_infer.stored_fact_ids().contains(&id)
-                }
-                _ => false,
+                _ => cancellation
+                    .as_ref()
+                    .map(|(checks, captured)| {
+                        current.before <= checks.len()
+                            && captured.store_and_infer.stored_fact_ids().contains(&id)
+                    })
+                    .unwrap_or(false),
             };
             if future {
                 return Err(LeanCompileError::new(
@@ -367,11 +379,22 @@ impl<'a> SourcePosition<'a> {
                 ));
             }
             if let SourceOwner::PropInference(store) = current.owner {
-                if prop_inference_stages(store)
-                    .iter()
-                    .skip(current.before)
-                    .any(|stage| stage.store_and_infer.stored_fact_ids().contains(&id))
-                {
+                let future =
+                    if let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) =
+                        &store.infer
+                    {
+                        !cancellation_primary_is_stored
+                            && rules
+                                .iter()
+                                .skip(current.before)
+                                .any(|rule| rule.stored_fact_ids().contains(&id))
+                    } else {
+                        prop_inference_stages(store)
+                            .iter()
+                            .skip(current.before)
+                            .any(|stage| stage.store_and_infer.stored_fact_ids().contains(&id))
+                    };
+                if future {
                     return Err(LeanCompileError::new(
                         "Inference/FutureProducer",
                         "The cited inference has not occurred at this captured formation stage.",
@@ -820,8 +843,9 @@ fn infer_has_fact(
 ) -> Result<bool, LeanCompileError> {
     if let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer {
         for rule in rules {
-            if let InferEqualityResult::AdditiveCancellation(rule) = rule {
-                let derived = &rule.derived.store_and_infer;
+            if let Some(owner) = equality_cancellation_owner(rule) {
+                let (_, captured) = cancellation_stages(owner).expect("cancellation owner");
+                let derived = &captured.store_and_infer;
                 if derived.primary_fact_id() == id {
                     check_store_subject(derived, actual)?;
                     return Ok(true);
@@ -882,9 +906,9 @@ fn prop_inference_stages(
     if let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer {
         return rules
             .iter()
-            .filter_map(|rule| match rule {
-                InferEqualityResult::AdditiveCancellation(rule) => Some(rule.derived.as_ref()),
-                _ => None,
+            .filter_map(|rule| {
+                let owner = equality_cancellation_owner(rule)?;
+                Some(cancellation_stages(owner).expect("cancellation owner").1)
             })
             .collect();
     }
@@ -1348,6 +1372,15 @@ fn fact_reference_in_owner(
             Ok(None)
         }
         SourceOwner::PropInference(store) => {
+            if let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) =
+                &store.infer
+            {
+                let group = SourcePosition {
+                    owner: SourceOwner::EqualityInferences(rules),
+                    ..*position
+                };
+                return fact_reference_in_owner(&group, id, actual);
+            }
             for derived in prop_inference_stages(store)
                 .into_iter()
                 .take(position.before)
@@ -1365,8 +1398,9 @@ fn fact_reference_in_owner(
         }
         SourceOwner::EqualityInferences(rules) => {
             for rule in rules.iter().take(position.before) {
-                if let InferEqualityResult::AdditiveCancellation(rule) = rule {
-                    let store = &rule.derived.store_and_infer;
+                if let Some(owner) = equality_cancellation_owner(rule) {
+                    let (_, captured) = cancellation_stages(owner).expect("cancellation owner");
+                    let store = &captured.store_and_infer;
                     if store.primary_fact_id() == id {
                         check_store_subject(store, actual)?;
                         return Ok(Some(format!("h_{}", id.value())));
@@ -1378,9 +1412,14 @@ fn fact_reference_in_owner(
             }
             Ok(None)
         }
-        SourceOwner::AdditiveInference(rule) if position.before > 3 => {
-            let store = &rule.derived.store_and_infer;
-            if store.primary_fact_id() == id {
+        owner @ (SourceOwner::AdditiveInference(_)
+        | SourceOwner::SubtractiveInference(_)
+        | SourceOwner::NonzeroFactorInference(_)
+        | SourceOwner::CommonDenominatorInference(_)
+        | SourceOwner::NonzeroNumeratorInference(_)) => {
+            let (checks, captured) = cancellation_stages(owner).expect("cancellation owner");
+            let store = &captured.store_and_infer;
+            if position.before > checks.len() && store.primary_fact_id() == id {
                 check_store_subject(store, actual)?;
                 Ok(Some(format!("h_{}", id.value())))
             } else {
@@ -1425,8 +1464,7 @@ fn fact_reference_in_owner(
         | SourceOwner::ParamTypeWD(_)
         | SourceOwner::ByDef(_)
         | SourceOwner::PropRequirements(_)
-        | SourceOwner::EqualityRequirements(_)
-        | SourceOwner::AdditiveInference(_) => Ok(None),
+        | SourceOwner::EqualityRequirements(_) => Ok(None),
         SourceOwner::FunctionNormalization(_)
         | SourceOwner::FunctionExpansion(_)
         | SourceOwner::FunctionDefinitionRewrite(_) => Ok(None),
@@ -1585,6 +1623,19 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
             std::ptr::eq(a, b)
         }
         (SourceOwner::AdditiveInference(a), SourceOwner::AdditiveInference(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (SourceOwner::SubtractiveInference(a), SourceOwner::SubtractiveInference(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (SourceOwner::NonzeroFactorInference(a), SourceOwner::NonzeroFactorInference(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (
+            SourceOwner::CommonDenominatorInference(a),
+            SourceOwner::CommonDenominatorInference(b),
+        ) => std::ptr::eq(a, b),
+        (SourceOwner::NonzeroNumeratorInference(a), SourceOwner::NonzeroNumeratorInference(b)) => {
             std::ptr::eq(a, b)
         }
         (SourceOwner::EqualityRequirements(a), SourceOwner::EqualityRequirements(b)) => {
@@ -2224,46 +2275,52 @@ fn visit_owner<T>(
         }
         SourceOwner::EqualityInferences(rules) => {
             for (index, rule) in rules.iter().take(position.before).enumerate().rev() {
-                if let InferEqualityResult::AdditiveCancellation(rule) = rule {
+                if let Some(owner) = equality_cancellation_owner(rule) {
+                    let (checks, _) = cancellation_stages(owner).expect("cancellation owner");
                     let prior = SourcePosition {
                         before: index + 1,
                         ..*position
                     };
-                    let complete =
-                        SourcePosition::new(Some(&prior), SourceOwner::AdditiveInference(rule), 5);
+                    let complete = SourcePosition::new(Some(&prior), owner, checks.len() + 2);
                     if let Some(value) = visit_owner(&complete, wd, verify)? {
                         return Ok(Some(value));
                     }
                 }
             }
         }
-        SourceOwner::AdditiveInference(rule) => {
-            if position.before > 4 {
+        owner @ (SourceOwner::AdditiveInference(_)
+        | SourceOwner::SubtractiveInference(_)
+        | SourceOwner::NonzeroFactorInference(_)
+        | SourceOwner::CommonDenominatorInference(_)
+        | SourceOwner::NonzeroNumeratorInference(_)) => {
+            let (checks, captured) = cancellation_stages(owner).expect("cancellation owner");
+            let head = checks.len();
+            if position.before > head + 1 {
                 let prior = SourcePosition {
-                    before: 5,
+                    before: head + 2,
                     ..*position
                 };
                 let nested = SourcePosition::new(
                     Some(&prior),
-                    SourceOwner::PropInference(&rule.derived.store_and_infer),
+                    SourceOwner::PropInference(&captured.store_and_infer),
                     usize::MAX,
                 );
                 if let Some(value) = visit_owner(&nested, wd, verify)? {
                     return Ok(Some(value));
                 }
             }
-            if position.before > 3 {
+            if position.before > head {
                 let prior = SourcePosition {
-                    before: 3,
+                    before: head,
                     ..*position
                 };
                 let formation = SourcePosition::new(
                     Some(&prior),
-                    SourceOwner::FactWD(&rule.derived.well_defined),
+                    SourceOwner::FactWD(&captured.well_defined),
                     usize::MAX,
                 );
                 if let Some(value) = visit_fact_formation(
-                    &rule.derived.well_defined,
+                    &captured.well_defined,
                     usize::MAX,
                     &formation,
                     wd,
@@ -2272,15 +2329,11 @@ fn visit_owner<T>(
                     return Ok(Some(value));
                 }
             }
-            for (index, proof) in [
-                &rule.left_in_c_proof,
-                &rule.right_in_c_proof,
-                &rule.common_in_c_proof,
-            ]
-            .into_iter()
-            .take(position.before.min(3))
-            .enumerate()
-            .rev()
+            for (index, proof) in checks
+                .into_iter()
+                .take(position.before.min(head))
+                .enumerate()
+                .rev()
             {
                 let prior = SourcePosition {
                     before: index,
@@ -2528,6 +2581,14 @@ fn visit_statement<T>(
         ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(proof)))
             if before > 0 =>
         {
+            if let VerifyFactWellDefinedResult::Success(goal) = &proof.goal_wd {
+                let formation =
+                    SourcePosition::new(Some(&position), SourceOwner::FactWD(goal), usize::MAX);
+                if let Some(value) = visit_fact_formation(goal, usize::MAX, &formation, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
             let seed = SourcePosition {
                 before: 1,
                 ..position
@@ -2954,6 +3015,80 @@ fn arithmetic_stages(
         ArithmeticOperatorObjWellDefinedProofByDef::Pow(p) => {
             Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
         }
+        _ => None,
+    }
+}
+
+fn equality_cancellation_owner(rule: &InferEqualityResult) -> Option<SourceOwner<'_>> {
+    match rule {
+        InferEqualityResult::AdditiveCancellation(rule) => {
+            Some(SourceOwner::AdditiveInference(rule))
+        }
+        InferEqualityResult::SubtractiveCancellation(rule) => {
+            Some(SourceOwner::SubtractiveInference(rule))
+        }
+        InferEqualityResult::NonzeroFactorCancellation(rule) => {
+            Some(SourceOwner::NonzeroFactorInference(rule))
+        }
+        InferEqualityResult::CommonDenominatorCancellation(rule) => {
+            Some(SourceOwner::CommonDenominatorInference(rule))
+        }
+        InferEqualityResult::NonzeroNumeratorCancellation(rule) => {
+            Some(SourceOwner::NonzeroNumeratorInference(rule))
+        }
+        InferEqualityResult::PositiveRealPower(_) => None,
+    }
+}
+
+fn cancellation_stages(
+    owner: SourceOwner<'_>,
+) -> Option<(Vec<&VerifyFactResult>, &StoreInferredFactAndInferResult)> {
+    match owner {
+        SourceOwner::AdditiveInference(rule) => Some((
+            vec![
+                &rule.left_in_c_proof,
+                &rule.right_in_c_proof,
+                &rule.common_in_c_proof,
+            ],
+            &rule.derived,
+        )),
+        SourceOwner::SubtractiveInference(rule) => Some((
+            vec![
+                &rule.left_in_c_proof,
+                &rule.right_in_c_proof,
+                &rule.common_in_c_proof,
+            ],
+            &rule.derived,
+        )),
+        SourceOwner::NonzeroFactorInference(rule) => Some((
+            vec![
+                &rule.left_in_c_proof,
+                &rule.right_in_c_proof,
+                &rule.common_in_c_proof,
+                &rule.factor_nonzero_proof,
+            ],
+            &rule.derived,
+        )),
+        SourceOwner::CommonDenominatorInference(rule) => Some((
+            vec![
+                &rule.left_in_c_proof,
+                &rule.right_in_c_proof,
+                &rule.common_in_c_proof,
+                &rule.denominator_nonzero_proof,
+            ],
+            &rule.derived,
+        )),
+        SourceOwner::NonzeroNumeratorInference(rule) => Some((
+            vec![
+                &rule.left_in_c_proof,
+                &rule.right_in_c_proof,
+                &rule.common_in_c_proof,
+                &rule.numerator_nonzero_proof,
+                &rule.left_denominator_nonzero_proof,
+                &rule.right_denominator_nonzero_proof,
+            ],
+            &rule.derived,
+        )),
         _ => None,
     }
 }

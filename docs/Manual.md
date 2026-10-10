@@ -10998,7 +10998,9 @@ after closed numeric substitution. `have fn equal` automatically stores both
 function membership and an equality from the function name to its anonymous
 function. This is one source of the equality, not a requirement that the head
 come from a definition. The rewrite reads any such exact stored equality from
-the function head's special properties and substitutes actual arguments into the body:
+the function head's `AnonymousFn` equality bucket and substitutes actual arguments into the body.
+The [exact-property index](../src/exec_env/README.md) separates that bucket from
+tuple, cart and individual set constructors while retaining the original equality citation:
 
 ```litex
 have fn f(x N) N = x + 1

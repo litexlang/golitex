@@ -1,9 +1,9 @@
 //! Read tuple structure from stored facts. No verifier, inference, or WD writes.
 //! Callers establish subject WD before consuming these local certificates.
 
+use crate::prelude::*;
 use crate::ast::fact::InFact;
 use crate::ast::obj::{Cart, FnObj, FnObjHead, FnSet, FunctionSpace, InstantiatedTemplateObj, Literal, Number, Obj, ProductShape, Tuple};
-use crate::exec_env::SpecialProperty;
 use crate::ast::stmt::TemplateDefEnum;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
     FnApplicationInCodomainKnownSpecialPropertyProof, InFactSearchProofByKnownSpecialProperty,
@@ -114,10 +114,7 @@ impl Runtime {
     ) -> Option<KnownTupleShapeProof> {
         // Prefer membership published on this exact subject. Only a checked
         // equality path may transport another value's Cartesian membership.
-        for property in self.known_special_properties_of(subject) {
-            let SpecialProperty::Membership(membership) = property else {
-                continue;
-            };
+        for membership in self.known_memberships_of(subject) {
             let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else {
                 continue;
             };
@@ -134,10 +131,7 @@ impl Runtime {
             if path.is_empty() {
                 continue;
             }
-            for property in self.known_special_properties_of(&candidate) {
-                let SpecialProperty::Membership(membership) = property else {
-                    continue;
-                };
+            for membership in self.known_memberships_of(&candidate) {
                 let Some((cart, carrier_equal)) = self.known_cart_carrier(&membership.set) else {
                     continue;
                 };
@@ -214,18 +208,20 @@ impl Runtime {
         &self,
         subject: &Obj,
     ) -> Vec<KnownTupleValueProof> {
-        self.exact_property_object_values(subject)
-            .into_iter()
-            .filter_map(|(obj, path)| {
-                let Obj::ProductShape(ProductShape::Tuple(value)) = obj else {
-                    return None;
-                };
-                Some(KnownTupleValueProof {
-                    tuple_equal: KnownEqualityPathProof::new(path),
-                    value,
-                })
-            })
-            .collect()
+        let mut candidates = Vec::new();
+        if let Obj::ProductShape(ProductShape::Tuple(value)) = subject {
+            candidates.push(KnownTupleValueProof {
+                tuple_equal: KnownEqualityPathProof::new(vec![]),
+                value: value.clone(),
+            });
+        }
+        for (value, path) in self.known_equal_to_tuples(subject) {
+            candidates.push(KnownTupleValueProof {
+                tuple_equal: KnownEqualityPathProof::new(path),
+                value,
+            });
+        }
+        candidates
     }
 
     // One checked beta substitution, only after application WD. No residual
@@ -239,7 +235,13 @@ impl Runtime {
         }
         let head = tuple_function_head(app);
         let args: Vec<Obj> = app.body[0].iter().map(|x| x.as_ref().clone()).collect();
-        for (candidate, path) in self.exact_property_object_values(&head) {
+        for (candidate, path) in self.exact_property_object_values_of_shapes(
+            &head,
+            &[
+                EqualToObjShape::AnonymousFn,
+                EqualToObjShape::InstantiatedTemplateObj,
+            ],
+        ) {
             let (anon, template_instance) = match candidate {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => (anon, None),
                 Obj::InstantiatedTemplateObj(instance) => {
@@ -298,7 +300,13 @@ impl Runtime {
                     });
                 }
                 let mut template_matches = Vec::new();
-                for (peer, peer_path) in self.exact_property_object_values(&head) {
+                for (peer, peer_path) in self.exact_property_object_values_of_shapes(
+                    &head,
+                    &[
+                        EqualToObjShape::AnonymousFn,
+                        EqualToObjShape::InstantiatedTemplateObj,
+                    ],
+                ) {
                     let Obj::InstantiatedTemplateObj(instance) = peer else {
                         continue;
                     };
@@ -364,7 +372,9 @@ impl Runtime {
         subject: &Obj,
     ) -> Vec<(KnownEqualityPathProof, KnownFunctionTupleValueProof)> {
         let mut candidates = Vec::new();
-        for (peer, path) in self.exact_property_object_values(subject) {
+        for (peer, path) in
+            self.exact_property_object_values_of_shapes(subject, &[EqualToObjShape::FnObj])
+        {
             let Obj::FnObj(app) = peer else {
                 continue;
             };
@@ -376,14 +386,13 @@ impl Runtime {
     }
 
     fn known_cart_carrier(&self, carrier: &Obj) -> Option<(Cart, KnownEqualityPathProof)> {
-        self.exact_property_object_values(carrier)
+        if let Obj::ProductShape(ProductShape::Cart(cart)) = carrier {
+            return Some((cart.clone(), KnownEqualityPathProof::new(vec![])));
+        }
+        self.known_equal_to_carts(carrier)
             .into_iter()
-            .find_map(|(obj, path)| {
-                let Obj::ProductShape(ProductShape::Cart(cart)) = obj else {
-                    return None;
-                };
-                Some((cart, KnownEqualityPathProof::new(path)))
-            })
+            .next()
+            .map(|(cart, path)| (cart, KnownEqualityPathProof::new(path)))
     }
 }
 
