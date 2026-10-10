@@ -343,13 +343,13 @@ The current implementation grades lookup paths through `VerifyState`: direct evi
 <details>
 <summary><strong>Which steps does Litex check automatically, and which should the author write?</strong></summary>
 
-The equality rewrite `KnownFnValueSubstitution` reuses explicitly stored
-function-value equations under scalar constructors. With `shift(x)=x+3`,
-`2*shift(x)=2*x+6` can omit the expanded middle term. It visits the original
-tree once, cites each selected equation, and checks a residual with generic
-definition/forall expansion and further rewrite disabled. It does not traverse
-inserted values, discover definitions, or choose between several direct values.
-See the [runnable tracer](../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit).
+The equality rewrite `FnApplicationUnfoldSubstitution` reads a function head's
+exact equality to an anonymous function, including the equality automatically
+saved by `have fn`. With `have fn f(t R) R=t+1`, `2*f(x)=2*x+2` can omit the
+expanded middle term. It unfolds each original outermost call once, retains
+checked domains and guards, and checks a residual with further rewrite and
+generic definition/forall expansion disabled. Inserted bodies and ordinary call
+arguments are not traversed. See the [runnable tracer](../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit).
 
 Authors choose definitions, constructions and key intermediate results; Litex checks supported local steps against current knowledge. The boundary depends on the work a step requires: following a fixed structure to check available grounds, or choosing a proof route that has not yet been supplied. It cannot be drawn simply by counting automatic steps.
 

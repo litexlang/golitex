@@ -1,4 +1,0 @@
-# True but intentionally unsupported: the rewrite does not discover definitions.
-have fn shift(t R) R = t + 3
-have x R
-2*shift(x) = 2*x + 6

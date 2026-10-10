@@ -1,5 +1,5 @@
-# Original call guards and division WD remain required.
-# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution_guarded.lit
+# Selected function-body guards and division WD remain required.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_guarded.lit
 have fn guarded(t R: t > 0) R = t + 3
 
 thm guarded_value:
@@ -7,7 +7,6 @@ thm guarded_value:
         x > 0
         =>:
             2*guarded(x) = 2*x + 6
-    guarded(x) = x + 3
 
 # The motivating reciprocal example also keeps its original nonzero guard.
 # Its cancellation is already supported by existing equality rules.
@@ -18,4 +17,3 @@ thm reciprocal_product:
         x != 0
         =>:
             reciprocal(x) * x = 1
-    reciprocal(x) = 1 / x

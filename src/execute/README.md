@@ -373,23 +373,23 @@ for named and anonymous families alike. Definition-unfold residuals keep
 `can_use_rewrite: false`; explicit chains retain their checked endpoints.
 
 
-## Direct function-value equality rewrite
+## One-step function-application unfold substitution
 
-`verify_equality/search_equal_fact_by_known_fn_value_substitution.rs` owns the
-new branch after closed numeric equality substitution. Its success payload is
-`KnownFnValueSubstitutionBuiltinRewriteProof`, in its own data-structure file:
-rewritten left, rewritten right, ordered unique equality citations, then the
-successful residual verification. Original equality WD stays on the parent;
-residual WD stays on that child. No new environment state or index is owned here.
+`verify_equality/search_equal_fact_by_fn_application_unfold_substitution.rs`
+owns one original scalar-tree pass of checked beta substitution. Its dedicated
+`FnApplicationUnfoldSubstitutionBuiltinRewriteProof` retains ordered anonymous
+function expansions, rewritten endpoints and the checked residual. Each step
+captures its original application WD, exact head-to-anonymous-function source,
+selected-body application WD and binder-ID substitution endpoint. `have fn equal`
+already publishes that source equality and membership through existing stores.
 
-The original scalar-tree walk selects only a unique nontrivial direct equality
-for an exact `FnObj` through the existing exact-property reader. It skips
-inserted values and rebuilt parents, and treats ordinary call arguments and
-non-scalar constructors as leaves. The residual inherits a ceiling capped at
-Strategy with rewrite off; neither the general definition normalizer nor
-known-forall search is reopened. Detailed output and Lean replay consume the
-same source citations and child, never rediscover a proof. The persistent
-tracer is `examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution.lit`.
+The walk treats each original outermost call as a leaf; call arguments and
+inserted bodies are not revisited. It does not invoke the recursive function-body
+normalizer. Residual truth stays capped at Strategy with rewrite off. This rewrite
+requires a stored equality edge; bare anonymous literals retain the existing
+parent-checked definition route. No new Runtime/Env state, index or synthetic
+application-value equation is introduced.
+The tracer is `examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit`.
 
 ## Enumeration and eval boundaries
 

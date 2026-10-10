@@ -5,7 +5,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Builtin equality rewrite dispatcher.
-    // Keep closed numeric values first, then direct function-value substitution.
+    // Keep closed numeric values first, then one-step function-definition unfolding.
     pub fn search_equal_fact_proof_by_builtin_rewrite(
         &mut self,
         fact: &EqualFact,
@@ -19,10 +19,10 @@ impl Runtime {
             ));
         }
         if let Some(proof) =
-            self.search_equal_fact_by_known_fn_value_substitution(fact, verify_state)?
+            self.search_equal_fact_by_fn_application_unfold_substitution(fact, verify_state)?
         {
             return Ok(Some(
-                EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(proof),
+                EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(proof),
             ));
         }
         Ok(None)

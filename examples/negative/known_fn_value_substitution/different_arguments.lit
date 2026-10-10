@@ -1,5 +1,0 @@
-# True but intentionally unsupported: a value for mix(x,y) is not one for mix(y,x).
-have fn mix(s,t R) R = s + 2*t
-have x,y R
-mix(x,y) = x + 2*y
-2*mix(y,x) = 2*y + 4*x

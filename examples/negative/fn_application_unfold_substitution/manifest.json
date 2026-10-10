@@ -1,0 +1,37 @@
+[
+  {
+    "file": "wrong_constant.lit",
+    "expected_phase": "search_proof",
+    "kind": "false_conclusion"
+  },
+  {
+    "file": "missing_guard.lit",
+    "expected_phase": "well_defined",
+    "kind": "missing_domain"
+  },
+  {
+    "file": "zero_divisor.lit",
+    "expected_phase": "well_defined",
+    "kind": "undefined_expression"
+  },
+  {
+    "file": "second_substitution.lit",
+    "expected_phase": "search_proof",
+    "kind": "bounded_search"
+  },
+  {
+    "file": "function_argument.lit",
+    "expected_phase": "search_proof",
+    "kind": "bounded_search"
+  },
+  {
+    "file": "membership_only.lit",
+    "expected_phase": "search_proof",
+    "kind": "missing_body"
+  },
+  {
+    "file": "invalid_domain.lit",
+    "expected_phase": "well_defined",
+    "kind": "invalid_domain"
+  }
+]

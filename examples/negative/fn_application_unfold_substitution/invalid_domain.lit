@@ -1,0 +1,3 @@
+# A natural-number function cannot be called at -1.
+have fn f(t N) N=t+1
+2*f(-1)=0

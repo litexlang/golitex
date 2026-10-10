@@ -452,6 +452,74 @@ No proof hole or newly invented axiom may stand in for an unsupported route.
 `-strict` excludes source trust and user axioms; it does not establish that
 every Litex foundation already has a complete Lean interpretation.
 
+## Using a generated result in ordinary Mathlib
+
+The supported mathematical subset has 18 selected roles: numeric hierarchy,
+exact rational arithmetic, rational closure, complex algebra, real order,
+equality transport, arbitrary numeric values, aliases, concrete predicates,
+guarded formula functions, named theorem citations and bounded sets. The
+reciprocal-product example combines these roles in an additional integration
+case. Companion regression examples do not count as new selected roles.
+
+For the [quotient-distribution source](../lean/examples/real_quotient_distributes/statement.lit),
+the chain is source → original typed result → generated theorem → handwritten
+Adapter → ordinary native Final. The generated statement retains generic
+objects, WD and the denominator's nonzero evidence. The Adapter specializes
+the reviewed model and proves the representation conversion. The local Final
+exports this ordinary Mathlib theorem:
+
+```lean
+theorem realQuotientDistributes (x y z : ℝ) (hz : z ≠ 0) :
+    (x + y) / z = x / z + y / z := by
+  exact Adapter.realQuotientDistributes x y z hz
+```
+
+With that local `native.Final` module available, a Lean client can use it:
+
+```lean
+import native.Final
+
+theorem useCompiledQuotient (x y z : ℝ) (hz : z ≠ 0) :
+    (x + y) / z = x / z + y / z := by
+  exact NativeConsumer.realQuotientDistributes x y z hz
+```
+
+The client statement contains only real numbers, arithmetic and the ordinary
+nonzero premise. Local Adapter/Final files are handwritten acceptance tooling
+under ignored `scripts/litex_to_lean/native/`; they are not an automatically
+published Lean package. In another pinned Mathlib project, import the saved
+generated module and `Litex.lean`, then provide a reviewed Adapter/Final for
+the native interface you need. Keep the relative generated-module import path
+and the source file's actual namespace. Membership proofs permit native
+observations without changing the original object's host representation.
+
+The local selected-subset check is:
+
+```sh
+cargo build --release
+python3 scripts/litex_to_lean/check.py --subset --work-area .draft/selected-subset --profile-area .draft/selected-subset/replay-profiles
+```
+
+It records source/generated hashes, actual typed-result field paths and
+selected rule/certificate tags, real Lean checks, standard-axiom audits and
+native proof-reference paths. The helper compiles the same original result
+whose Detailed projection it records; JSON is audit presentation, not compiler
+input. The matrix has one row per selected mathematical role. Native proof
+references are inspected after beta/zeta reduction, including helper paths;
+dead local lets and lambda arguments do not count as a generated-proof use.
+This checks structural proof dependencies, not mathematical necessity or a
+formal proof of the whole Rust translation.
+
+The interpretation of an arbitrary set illustrates a deliberate interface
+difference: `$is_set(A)` has a generated proof, while native `A : ZFSet`
+already expresses sethood through its type. No artificial native sethood
+predicate is needed. Numeric views of a whole set still need subset evidence.
+The selected slice leaves modules, general local witness declarations,
+unbounded comprehension, existence-based set choice, broader formula bodies
+and unsupported inference/certificate routes outside the compiler boundary.
+An observed unused inference node in a result trace does not establish
+compiler support for that inference.
+
 ## Maintaining this guide
 
 Keep new design explanations connected to a real source/generated pair under

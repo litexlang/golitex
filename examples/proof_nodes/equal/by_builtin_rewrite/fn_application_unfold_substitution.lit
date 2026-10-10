@@ -1,0 +1,20 @@
+# Tracer: one-step function-body unfolding inside scalar equality.
+# Before (search_proof failed without an application-value seed):
+# have fn f(x N) N = x + 1
+# forall x N:
+#     2 * f(x) = 2 + 2 * x
+# Now: have fn stores f=AnonymousFn; rewrite instantiates its body once.
+have fn f(x N) N = x + 1
+forall x N:
+    2 * f(x) = 2 + 2 * x
+
+# The original reciprocal-product request needs no intermediate equation.
+have fn reciprocal(t R: t != 0) R = 1 / t
+forall x R:
+    x != 0
+    =>:
+        reciprocal(x) * x = 1
+
+# Boundary: preserve guards; never scan inserted bodies or call arguments.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit
+# Producer and consumer controls: tests/unit/{execute,compile_to_lean}/fn_application_unfold_substitution/tests.rs

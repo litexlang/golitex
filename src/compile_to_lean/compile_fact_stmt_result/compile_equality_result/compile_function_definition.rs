@@ -178,7 +178,7 @@ impl LitexToLeanCompiler {
         Ok(equality)
     }
 
-    fn compile_anonymous_function_expansion(
+    pub(in crate::compile_to_lean) fn compile_anonymous_function_expansion(
         &self,
         proof: &AnonymousFunctionBodyExpansionProof,
         position: &SourcePosition<'_>,
@@ -275,7 +275,7 @@ impl LitexToLeanCompiler {
         }
     }
 
-    fn compile_normalization_value(
+    pub(in crate::compile_to_lean) fn compile_normalization_value(
         &self,
         object: &Obj,
         position: &SourcePosition<'_>,

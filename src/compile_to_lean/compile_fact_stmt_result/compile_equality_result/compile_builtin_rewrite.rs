@@ -19,12 +19,9 @@ impl LitexToLeanCompiler {
                 &p.cited_equal_fact_ids,
                 &p.residual_equal,
             ),
-            EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(p) => (
-                &p.rewritten_left,
-                &p.rewritten_right,
-                &p.cited_equal_fact_ids,
-                &p.residual_equal,
-            ),
+            EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(p) => {
+                return self.compile_fn_definition_rewrite(goal, p, position);
+            }
         };
         if cited_equal_fact_ids.is_empty() {
             return Err(LeanCompileError::new(
@@ -85,7 +82,6 @@ impl LitexToLeanCompiler {
             rewritten_left,
             &equalities,
             &mut used,
-            proof,
             position,
         )?;
         let right = self.compile_cited_equality_substitution(
@@ -93,7 +89,6 @@ impl LitexToLeanCompiler {
             rewritten_right,
             &equalities,
             &mut used,
-            proof,
             position,
         )?;
         if &used != cited_equal_fact_ids {
@@ -114,7 +109,6 @@ impl LitexToLeanCompiler {
         residual: &Obj,
         equalities: &[(FactId, EqualFact)],
         used: &mut Vec<FactId>,
-        proof: &EqualitySearchProofByBuiltinRewrite,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         self.compile_object_reference(original, position)?;
@@ -130,14 +124,7 @@ impl LitexToLeanCompiler {
             .filter(|(_, eq)| {
                 let exact = (eq.left.ir() == original.ir() && eq.right.ir() == residual.ir())
                     || (eq.right.ir() == original.ir() && eq.left.ir() == residual.ir());
-                let eligible = match proof {
-                    EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(_) => {
-                        ClosedNumericExpr::try_from_obj(residual).is_some()
-                    }
-                    EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(_) => {
-                        matches!(original, Obj::FnObj(_))
-                    }
-                };
+                let eligible = ClosedNumericExpr::try_from_obj(residual).is_some();
                 exact && eligible
             })
             .collect();
@@ -156,9 +143,120 @@ impl LitexToLeanCompiler {
         let (operation, pairs) = arithmetic_constructor_pairs(original, residual).ok_or_else(|| LeanCompileError::new("EqualityRewrite/Subterm", "The changed subtree has no eligible exact recorded endpoint or matching owned arithmetic constructor."))?;
         let mut children = Vec::new();
         for (a, b) in pairs {
-            children.push(
-                self.compile_cited_equality_substitution(a, b, equalities, used, proof, position)?,
-            );
+            children
+                .push(self.compile_cited_equality_substitution(a, b, equalities, used, position)?);
+        }
+        Ok(if children.len() == 1 {
+            format!("(congrArg M.{operation} {})", children[0])
+        } else {
+            format!("(congrArg₂ M.{operation} {} {})", children[0], children[1])
+        })
+    }
+    fn compile_fn_definition_rewrite(
+        &self,
+        goal: &EqualFact,
+        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::fn_application_unfold_substitution_builtin_rewrite_proof::FnApplicationUnfoldSubstitutionBuiltinRewriteProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if proof.expansions.is_empty() {
+            return Err(LeanCompileError::new(
+                "EqualityRewrite/Expansions",
+                "A function-definition rewrite must retain its checked beta steps.",
+            ));
+        }
+        match source_subject(&proof.residual_equal)? {
+            Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                if eq.left.ir() == proof.rewritten_left.ir()
+                    && eq.right.ir() == proof.rewritten_right.ir() => {}
+            _ => {
+                return Err(LeanCompileError::new(
+                    "EqualityRewrite/Residual",
+                    "The residual proof has different ordered endpoints.",
+                ))
+            }
+        }
+        let steps = SourcePosition {
+            parent: Some(position),
+            owner: SourceOwner::FunctionDefinitionRewrite(&proof.expansions),
+            before: proof.expansions.len(),
+        };
+        let residual = self.compile_verify(&proof.residual_equal, &steps)?;
+        let completed = SourcePosition {
+            parent: Some(&steps),
+            owner: SourceOwner::Verify(&proof.residual_equal),
+            before: usize::MAX,
+        };
+        let mut next = 0;
+        let left = self.compile_original_fn_definition_subterms(
+            &goal.left,
+            &proof.rewritten_left,
+            &proof.expansions,
+            &mut next,
+            position,
+            &completed,
+        )?;
+        let right = self.compile_original_fn_definition_subterms(
+            &goal.right,
+            &proof.rewritten_right,
+            &proof.expansions,
+            &mut next,
+            position,
+            &completed,
+        )?;
+        if next != proof.expansions.len() {
+            return Err(LeanCompileError::new(
+                "EqualityRewrite/ExpansionOrder",
+                "Every beta step must occur once in original scalar-tree order.",
+            ));
+        }
+        Ok(format!(
+            "(({left}).trans (({}).trans ({right}).symm))",
+            residual.1
+        ))
+    }
+
+    fn compile_original_fn_definition_subterms(
+        &self,
+        original: &Obj,
+        rewritten: &Obj,
+        expansions: &[crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::AnonymousFunctionBodyExpansionProof],
+        next: &mut usize,
+        parent: &SourcePosition<'_>,
+        completed: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if let Some(step) = expansions.get(*next) {
+            if step.application.ir() == original.ir() {
+                use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof;
+                if step.expanded_body.ir() != rewritten.ir()
+                    || !matches!(&step.function_body, FunctionBodySourceProof::KnownEquality(path) if path.path.len() == 1)
+                {
+                    return Err(LeanCompileError::new("EqualityRewrite/Expansion", "The original call must unfold once from an exact head-to-anonymous-function equality."));
+                }
+                let prior = SourcePosition {
+                    parent: Some(parent),
+                    owner: SourceOwner::FunctionDefinitionRewrite(expansions),
+                    before: *next,
+                };
+                let beta = self.compile_anonymous_function_expansion(step, &prior)?;
+                *next += 1;
+                return Ok(beta);
+            }
+        }
+        if original.ir() == rewritten.ir() {
+            return Ok(format!(
+                "(Eq.refl {})",
+                self.compile_normalization_value(original, completed)?
+            ));
+        }
+        // Calls remain leaves here: neither their arguments nor inserted bodies
+        // can be replayed as another step of this one original-tree pass.
+        let (operation, pairs) = arithmetic_constructor_pairs(original, rewritten).ok_or_else(||
+            LeanCompileError::new("EqualityRewrite/Subterm", "The changed subtree has no recorded outermost call or supported scalar constructor."))?;
+        let mut children = Vec::new();
+        for (a, b) in pairs {
+            children.push(self.compile_original_fn_definition_subterms(
+                a, b, expansions, next, parent, completed,
+            )?);
         }
         Ok(if children.len() == 1 {
             format!("(congrArg M.{operation} {})", children[0])

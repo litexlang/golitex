@@ -1,0 +1,4 @@
+# A function-set membership gives no anonymous body.
+have f fn(t R) R
+have x R
+2*f(x)=2*x+2

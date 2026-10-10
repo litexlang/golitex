@@ -1,7 +1,7 @@
 use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToLeanCompiler};
 
-#[path = "../../tests/unit/compile_to_lean/known_fn_value_substitution/tests.rs"]
-mod known_fn_value_substitution_tests;
+#[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
+mod fn_application_unfold_substitution_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
