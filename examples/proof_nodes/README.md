@@ -40,6 +40,14 @@ ordinary call arguments and equality-class walks are outside this route.
 Focused producer and compiler tests preserve false/WD/scope/permission and
 certificate-tampering boundaries.
 
+Independent strict examples cover [repeated calls and both sides](equal/by_builtin_rewrite/known_fn_value_substitution_multiple_calls.lit),
+[power, negation and division](equal/by_builtin_rewrite/known_fn_value_substitution_scalar_arithmetic.lit),
+[exact arguments](equal/by_builtin_rewrite/known_fn_value_substitution_exact_arguments.lit),
+[guarded applications](equal/by_builtin_rewrite/known_fn_value_substitution_guarded.lit)
+and [duplicate source equations](equal/by_builtin_rewrite/known_fn_value_substitution_duplicate_sources.lit).
+The [negative manifest](../negative/known_fn_value_substitution/manifest.json)
+separates false conclusions and WD failures from intentional search limits.
+
 ## Function-space carriers
 
 [Free function-space parameters](atomic/by_known_forall/fnset_free_parameter_carrier.lit)
@@ -1063,3 +1071,5 @@ source direction. No explicit cases or contradiction body is required.
 The focused `abs_positive_square_reflection_tests` cover missing and false
 conditions, WD, restricted permissions, rollback, all output languages,
 checked Detailed premises and unsupported Lean compilation.
+
+The existing `SetBuilderObviouslyEmpty` node also covers [positive membership in the empty set](equal/by_builtin_rule/set_builder_empty_membership.lit), for arbitrary carriers and conjunctions after full builder WD. Negation, disjunction and undefined expressions are tested boundaries.

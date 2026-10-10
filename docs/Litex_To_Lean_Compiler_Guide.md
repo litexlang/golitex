@@ -99,6 +99,35 @@ verifiable in Litex while its particular evidence route is outside the current
 compiler. Such a route needs an explicit adapter before compilation can accept
 it.
 
+## Formula functions and concrete predicates
+
+The [guarded reciprocal](../lean/examples/guarded_real_reciprocal/statement.lit)
+defines a formula with an ordinary nonzero requirement:
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+Its generated object uses `Litex.formulaFn`; evaluation uses `Litex.call`.
+The call's WD contains the recorded function-space membership, argument
+membership and guard proofs. References to stored source proofs use their
+original `h_<FactId>` names. A newly checked numeric requirement can instead
+contain its selected proof expression directly. Library parameter names such
+as `hf` do not rename source citations.
+
+`FunctionSemantics M` adds graph construction and evaluation to the numeric
+interface. The concrete instance proves these laws with Mathlib ZF sets;
+the source function remains an owned graph object. Its internal value-body
+callback does not replace the source object with a native real arrow.
+
+The current slice supports one or two fixed N/Z/Q/R/C inputs and output,
+atomic function guards, and top-level concrete predicates with flat atomic
+defining clauses. [Nonnegativity](../lean/examples/nonnegative_real_property/statement.lit)
+demonstrates predicate definition and unfolding; [quotient distribution](../lean/examples/real_quotient_distributes/statement.lit)
+demonstrates two arguments. Recursive or composed formula bodies and
+concrete-predicate function guards remain unsupported compiler routes.
+
 ## Definitions and named theorem citations
 
 The [named add-zero example](../lean/examples/named_add_zero/statement.lit)

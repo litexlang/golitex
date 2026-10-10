@@ -1,0 +1,10 @@
+# Repeating or reversing an identical value equation does not create ambiguity.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution_duplicate_sources.lit
+have fn shift(x R) R = x + 3
+
+thm repeated_source:
+    ? forall x R:
+        2*shift(x) = 2*x + 6
+    shift(x) = x + 3
+    x + 3 = shift(x)
+    shift(x) = x + 3

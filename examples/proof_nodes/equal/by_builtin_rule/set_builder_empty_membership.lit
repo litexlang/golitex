@@ -1,0 +1,15 @@
+# Node: equal.ByBuiltinRule.SetBuilderObviouslyEmpty
+# Before: only contradictory natural-number order filters were recognized;
+# the bare preimage theorem was rejected in conclusion truth search.
+# Former source goal:
+# {x X: f(x) $in {}} = {}
+# Now: a positive conjunct demanding membership in {} makes any WD builder empty.
+# Boundary: negated membership, a disjunction with a satisfiable branch, and
+# undefined expressions do not receive this rule.
+# Run: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/set_builder_empty_membership.lit
+thm empty_preimage_builder:
+    ? forall X, Y set, f fn(x X) Y:
+        {x X: f(x) $in {}} = {}
+        {} = {x X: f(x) $in {}}
+
+{x N: x >= 0, x $in {}} = {}

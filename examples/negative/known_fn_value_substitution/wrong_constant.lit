@@ -1,0 +1,5 @@
+# False arithmetic conclusion; the stored value is insufficient to prove it.
+have fn shift(t R) R = t + 3
+have x R
+shift(x) = x + 3
+2*shift(x) = 2*x + 7

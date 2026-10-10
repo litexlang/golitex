@@ -37,8 +37,8 @@ pub struct IndexUnionSingletonBuiltinRuleProof {}
 // Example: finite_seq(R, 0) = fn(x {}) R.
 pub struct FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof {}
 
-// Builtin SetBuilderObviouslyEmpty: contradictory N-builder equals {}.
-// Example: {x N: x < 0} = {}.
+// Builtin SetBuilderObviouslyEmpty: an impossible filter makes the builder empty.
+// Examples: {x N: x < 0} = {}, {x X: f(x) $in {}} = {}.
 pub struct SetBuilderObviouslyEmptyBuiltinRuleProof {}
 
 // Builtin ComplexAbsSquaredOfRectForm: C_abs(a + b*i)^2 = a^2 + b^2.
@@ -374,6 +374,16 @@ fn set_builder_obviously_empty_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::SetFormer(SetFormer::SetBuilder(builder)) = left else {
         return false;
     };
+    // Every listed filter is a conjunct. Positive membership in the literal
+    // empty set is impossible regardless of the carrier or element expression.
+    // Enclosing equality WD has already checked the entire builder expression.
+    if builder.facts.iter().any(|filter| {
+        matches!(filter,
+        QuantifierFreeFact::AtomicFact(AtomicFact::InFact(member))
+            if is_empty_list_set(&member.set))
+    }) {
+        return true;
+    }
     let param_ok = matches!(
         builder.param_set.as_ref(),
         Obj::StandardSet(StandardSet::N | StandardSet::NPos)
@@ -724,3 +734,7 @@ fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../../tests/unit/execute/empty_membership_set_builder/tests.rs"]
+mod empty_membership_set_builder_tests;

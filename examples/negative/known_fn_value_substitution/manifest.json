@@ -1,0 +1,10 @@
+[
+  {"file": "wrong_constant.lit", "expected_phase": "search_proof", "kind": "false_conclusion"},
+  {"file": "missing_guard.lit", "expected_phase": "well_defined", "kind": "missing_domain"},
+  {"file": "zero_divisor.lit", "expected_phase": "well_defined", "kind": "undefined_expression"},
+  {"file": "no_stored_value.lit", "expected_phase": "search_proof", "kind": "bounded_search"},
+  {"file": "second_substitution.lit", "expected_phase": "search_proof", "kind": "bounded_search"},
+  {"file": "ambiguous_value.lit", "expected_phase": "search_proof", "kind": "bounded_search"},
+  {"file": "function_argument.lit", "expected_phase": "search_proof", "kind": "bounded_search"},
+  {"file": "different_arguments.lit", "expected_phase": "search_proof", "kind": "bounded_search"}
+]

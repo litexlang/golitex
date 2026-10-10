@@ -1,0 +1,4 @@
+# Application WD must reject an unproved original function guard.
+have fn guarded(t R: t > 0) R = t + 3
+have x R
+2*guarded(x) = 2*x + 6

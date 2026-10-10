@@ -5754,6 +5754,13 @@ finite_set_size({1, 2}) = 2
 
 **Common native properties and proof routes.** Membership projects the base membership and instantiated filters. Introduction can explicitly verify those conditions through set_builder_member; alpha-equivalent bound names describe the same builder.
 
+After the complete builder passes WD, a positive atomic filter `value $in {}`
+makes the builder empty for every carrier; other conjuncts may remain present.
+The `SetBuilderObviouslyEmpty` builtin handles this and its reverse equality.
+A negative membership or an `or` containing a satisfiable branch does not use
+this case. The rule never bypasses a failed partial-expression guard.
+See [empty-membership builders](../examples/proof_nodes/equal/by_builtin_rule/set_builder_empty_membership.lit).
+
 **Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** This is bounded separation, not unrestricted comprehension over a universal set. A direct forall filter must be packaged in real concrete predicate vocabulary.

@@ -1,0 +1,7 @@
+# True but intentionally unsupported: ordinary call arguments are leaves.
+have fn inner(t R) R = t + 3
+have fn outer(t R) R = t + 1
+have x R
+inner(x) = x + 3
+outer(x+3) = x + 4
+2*outer(inner(x)) = 2*x + 8

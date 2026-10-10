@@ -990,3 +990,13 @@ The source/citation and Normal/Detailed/ten-language producer contract is
 
 
 The local scalar migration rules retain dedicated IDs for negative integer reciprocal powers, symbolic complex modulus/quotient coordinates, intrinsic exp/factorial nonzero values, sign and binary extrema. `NegativeIntegerPowerReciprocal` exposes `base_numeric`, `exponent_integer`, and `base_nonzero`. Sign reflection retains its actual equality/nonzero citation and real-domain evidence. Weak monotonicity exposes each argument order; a fixed argument is `same_argument`, while an unequal pair projects its actual checked order. Intrinsic formula/nonzero leaves rely on the enclosing fact's WD certificate, rather than fabricating premise citations. The focused `legacy_six_simple_bt_tests` producer/consumer gate checks these fields and the actual extremum-order premise evidence.
+
+### Checked argument predicate domains
+
+After ordinary domain verification fails, a numeric membership domain may reuse
+an exact argument already checked by the enclosing atomic WD proof. Detailed
+JSON marks the entry `by_checked_argument_membership`, includes its
+`argument_index` and nested structural membership certificate, and retains the
+actual requirement. The referenced argument WD remains in
+`well_defined_of_each_parameter`; this route adds no duplicate WD or cache ID.
+It is domain evidence, not a proof of the comparison's truth.

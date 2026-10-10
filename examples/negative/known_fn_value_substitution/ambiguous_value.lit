@@ -1,0 +1,6 @@
+# True but intentionally unsupported: two distinct value IRs need an explicit choice.
+have fn shift(t R) R = t + 3
+have x R
+shift(x) = x + 3
+shift(x) = 3 + x
+2*shift(x) = 2*x + 6
