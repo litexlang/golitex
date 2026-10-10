@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
@@ -7,6 +7,21 @@ use crate::store_fact_and_infer::{
 };
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_stored_inferences(
+        &self,
+        store: &StoreFactAndInferResult,
+        seed: &Fact,
+        compiled: &(String, String),
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        match &store.infer {
+            InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(_)) => {
+                self.compile_additive_inferences(store, seed, compiled, position)
+            }
+            _ => self.compile_prop_inferences(store, seed, compiled, position),
+        }
+    }
+
     pub(in crate::compile_to_lean) fn validate_parameter_store_capture(
         &self,
         result: &StoreHaveObjAndInferResult,
@@ -62,7 +77,8 @@ impl LitexToLeanCompiler {
                         "Natural membership has exactly one nonnegative projection.",
                     ));
                 }
-                let derived = &sign.derived[0];
+                let captured = &sign.derived[0];
+                let derived = &captured.store_and_infer;
                 let fact = self.resolve_fact(derived.primary_fact_id(), position)?;
                 let bound = match &fact {
                     Fact::AtomicFact(AtomicFact::LessEqualFact(f))
@@ -78,16 +94,22 @@ impl LitexToLeanCompiler {
                     }
                 };
                 self.validate_store(derived, &fact)?;
+                self.compile_fact_wd(&captured.well_defined, &fact, position)?;
+                let formed = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::FactWD(&captured.well_defined),
+                    usize::MAX,
+                );
                 let _ = bound;
                 let compiled = (
-                    self.fact_proposition(&fact, position)?,
+                    self.fact_proposition(&fact, &formed)?,
                     format!(
                         "(Litex.naturalNonnegative {} {})",
-                        self.compile_object_reference(&source.element, position)?,
+                        self.compile_object_reference(&source.element, &formed)?,
                         member.1
                     ),
                 );
-                declarations.push(self.emit_internal_fact(&fact, &compiled, position));
+                declarations.push(self.emit_internal_fact(&fact, &compiled, &formed));
             }
         }
         Ok(declarations)

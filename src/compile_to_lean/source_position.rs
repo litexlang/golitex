@@ -8,7 +8,8 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_o
 use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
+    InferAtomicExceptEqualityResult, InferAtomicFactResult,
+    InferEqualFactAdditiveCancellationResult, InferEqualityResult, InferFactResult,
 };
 
 /// A borrowed position in the original execution evidence, not a replay registry.
@@ -22,6 +23,7 @@ pub(super) struct SourcePosition<'a> {
 // Run: completed statements. Headers: params, dom assumptions, then/body stages.
 // WD/AtomicWD: child WD, then requirements. Call: types, doms, conclusion WD,
 // then returned stores. HaveEqual: RHS WD, membership checks, alias definitions.
+// AdditiveInference: three membership checks, derived WD/store (4), nested infer (5).
 #[derive(Clone, Copy)]
 pub(super) enum SourceOwner<'a> {
     Run(&'a RunLitexCodeResult),
@@ -44,6 +46,9 @@ pub(super) enum SourceOwner<'a> {
     ByDef(&'a ExecByDefStmtSuccess),
     PropRequirements(&'a UserDefinedPropDefinitionProof),
     PropInference(&'a StoreFactAndInferResult),
+    EqualityInferences(&'a [InferEqualityResult]),
+    AdditiveInference(&'a InferEqualFactAdditiveCancellationResult),
+    EqualityRequirements(&'a [VerifyFactResult]),
     FunctionNormalization(&'a FunctionBodyNormalizationProof),
     FunctionExpansion(&'a AnonymousFunctionBodyExpansionProof),
     FunctionDefinitionRewrite(&'a [AnonymousFunctionBodyExpansionProof]),
@@ -333,7 +338,34 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<(&'a Fact, String), LeanCompileError> {
         let actual = self.source_fact(id, runtime)?;
         let mut ceiling = Some(self);
+        let mut additive_primary_is_stored = false;
         while let Some(current) = ceiling {
+            if let SourceOwner::AdditiveInference(rule) = current.owner {
+                if current.before >= 4 && rule.derived.store_and_infer.primary_fact_id() == id {
+                    additive_primary_is_stored = true;
+                }
+            }
+            let future = match current.owner {
+                // An inner rule may already have published this exact primary
+                // fact while an enclosing rule's nested inference is unfinished.
+                SourceOwner::EqualityInferences(rules) => {
+                    !additive_primary_is_stored
+                        && rules
+                            .iter()
+                            .skip(current.before)
+                            .any(|rule| rule.stored_fact_ids().contains(&id))
+                }
+                SourceOwner::AdditiveInference(rule) if current.before < 4 => {
+                    rule.derived.store_and_infer.stored_fact_ids().contains(&id)
+                }
+                _ => false,
+            };
+            if future {
+                return Err(LeanCompileError::new(
+                    "Inference/FutureProducer",
+                    "The cited cancellation has not occurred at this original inference stage.",
+                ));
+            }
             if let SourceOwner::PropInference(store) = current.owner {
                 if prop_inference_stages(store)
                     .iter()
@@ -502,48 +534,6 @@ impl<'a> SourcePosition<'a> {
             position = current.parent;
         }
         Ok(None)
-    }
-
-    pub fn has_visible_inferred_natural_zero(&self) -> bool {
-        let mut position = Some(self);
-        while let Some(current) = position {
-            let found = match current.owner {
-                SourceOwner::Run(run) => {
-                    run.statement_results
-                        .iter()
-                        .take(current.before)
-                        .any(|stmt| {
-                            ordinary_have(stmt)
-                                .map(|p| have_has_natural_zero(p, usize::MAX))
-                                .unwrap_or(false)
-                        })
-                }
-                SourceOwner::Statement(stmt) => ordinary_have(stmt)
-                    .map(|p| have_has_natural_zero(p, current.before))
-                    .unwrap_or(false),
-                SourceOwner::Forall(p) => {
-                    introduction_has_natural_zero(&p.introduced_params, current.before)
-                }
-                SourceOwner::ForallWD(_, p) => {
-                    introduction_has_natural_zero(&p.introduced_params, current.before)
-                }
-                SourceOwner::KnownForall(p) => {
-                    introduction_has_natural_zero(&p.well_defined.introduced_params, current.before)
-                }
-                SourceOwner::Named(p) => match &p.body {
-                    ExecDefThmBodyProof::Forall(b) => {
-                        introduction_has_natural_zero(&b.introduced_params, current.before)
-                    }
-                    _ => false,
-                },
-                _ => false,
-            };
-            if found {
-                return true;
-            }
-            position = current.parent;
-        }
-        false
     }
 }
 
@@ -828,6 +818,20 @@ fn infer_has_fact(
     id: FactId,
     actual: &Fact,
 ) -> Result<bool, LeanCompileError> {
+    if let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer {
+        for rule in rules {
+            if let InferEqualityResult::AdditiveCancellation(rule) = rule {
+                let derived = &rule.derived.store_and_infer;
+                if derived.primary_fact_id() == id {
+                    check_store_subject(derived, actual)?;
+                    return Ok(true);
+                }
+                if infer_has_fact(derived, id, actual)? {
+                    return Ok(true);
+                }
+            }
+        }
+    }
     if let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &store.infer
     {
         for rule in rules {
@@ -860,6 +864,7 @@ fn infer_has_fact(
             }
             if let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(p) = rule {
                 for derived in &p.derived {
+                    let derived = &derived.store_and_infer;
                     if derived.primary_fact_id() == id {
                         check_store_subject(derived, actual)?;
                         return Ok(true);
@@ -874,6 +879,15 @@ fn infer_has_fact(
 fn prop_inference_stages(
     store: &StoreFactAndInferResult,
 ) -> Vec<&crate::store_fact_and_infer::StoreInferredFactAndInferResult> {
+    if let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer {
+        return rules
+            .iter()
+            .filter_map(|rule| match rule {
+                InferEqualityResult::AdditiveCancellation(rule) => Some(rule.derived.as_ref()),
+                _ => None,
+            })
+            .collect();
+    }
     let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &store.infer
     else {
         return Vec::new();
@@ -885,6 +899,9 @@ fn prop_inference_stages(
                 p.derived.iter().collect::<Vec<_>>()
             }
             InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(p) => {
+                p.derived.iter().collect::<Vec<_>>()
+            }
+            InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(p) => {
                 p.derived.iter().collect::<Vec<_>>()
             }
             InferAtomicExceptEqualityResult::InFactSetBuilder(p) => p
@@ -1190,6 +1207,9 @@ fn fact_reference_in_owner(
                     check_store_subject(&then.store_and_infer, actual)?;
                     return Ok(Some(format!("h_{}", id.value())));
                 }
+                if infer_has_fact(&then.store_and_infer, id, actual)? {
+                    return Ok(Some(format!("h_{}", id.value())));
+                }
             }
             Ok(None)
         }
@@ -1343,6 +1363,30 @@ fn fact_reference_in_owner(
             }
             Ok(None)
         }
+        SourceOwner::EqualityInferences(rules) => {
+            for rule in rules.iter().take(position.before) {
+                if let InferEqualityResult::AdditiveCancellation(rule) = rule {
+                    let store = &rule.derived.store_and_infer;
+                    if store.primary_fact_id() == id {
+                        check_store_subject(store, actual)?;
+                        return Ok(Some(format!("h_{}", id.value())));
+                    }
+                    if infer_has_fact(store, id, actual)? {
+                        return Ok(Some(format!("h_{}", id.value())));
+                    }
+                }
+            }
+            Ok(None)
+        }
+        SourceOwner::AdditiveInference(rule) if position.before > 3 => {
+            let store = &rule.derived.store_and_infer;
+            if store.primary_fact_id() == id {
+                check_store_subject(store, actual)?;
+                Ok(Some(format!("h_{}", id.value())))
+            } else {
+                Ok(None)
+            }
+        }
         SourceOwner::WD(proof) => {
             if let Some((_, carriers, parameters, domains, _)) = function_binder(proof) {
                 for store in parameters
@@ -1380,7 +1424,9 @@ fn fact_reference_in_owner(
         | SourceOwner::HaveGroup(_, _)
         | SourceOwner::ParamTypeWD(_)
         | SourceOwner::ByDef(_)
-        | SourceOwner::PropRequirements(_) => Ok(None),
+        | SourceOwner::PropRequirements(_)
+        | SourceOwner::EqualityRequirements(_)
+        | SourceOwner::AdditiveInference(_) => Ok(None),
         SourceOwner::FunctionNormalization(_)
         | SourceOwner::FunctionExpansion(_)
         | SourceOwner::FunctionDefinitionRewrite(_) => Ok(None),
@@ -1458,51 +1504,6 @@ fn alias_in_statement<T>(
     }
 }
 
-fn store_has_natural_zero(store: &StoreFactAndInferResult) -> bool {
-    let source = match &store.store {
-        StoreFactResult::AtomicFact(p) => match &p.fact {
-            AtomicFact::InFact(f) if f.set == Obj::StandardSet(StandardSet::N) => f,
-            _ => return false,
-        },
-        _ => return false,
-    };
-    if let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &store.infer
-    {
-        for rule in rules {
-            if let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(p) = rule {
-                if p.derived.len() != 1 {
-                    return false;
-                }
-                if let StoreFactResult::AtomicFact(derived) = &p.derived[0].store {
-                    if let AtomicFact::LessEqualFact(bound) = &derived.fact {
-                        return matches!(&bound.left, Obj::Literal(Literal::Number(n)) if n.normalized_value == "0")
-                            && bound.right.ir() == source.element.ir();
-                    }
-                }
-            }
-        }
-    }
-    false
-}
-
-fn have_has_natural_zero(proof: &ExecHaveObjInNonemptySetStmtSuccessResult, before: usize) -> bool {
-    proof
-        .store_and_infer_result
-        .store_and_infer_results
-        .iter()
-        .take(before)
-        .any(|store| store_has_natural_zero(store))
-}
-
-fn introduction_has_natural_zero(proof: &IntroduceTypedParametersResult, before: usize) -> bool {
-    proof
-        .defined_params
-        .store_and_infer_results
-        .iter()
-        .take(before)
-        .any(|store| store_has_natural_zero(store))
-}
-
 fn visit_visible<T>(
     start: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
@@ -1514,14 +1515,92 @@ fn visit_visible<T>(
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
+    let mut bounded_wd = |proof: &ObjWellDefinedProof, producer: &SourcePosition<'_>| {
+        if obeys_active_stage_ceilings(start, producer) {
+            wd(proof, producer)
+        } else {
+            Ok(None)
+        }
+    };
+    let mut bounded_verify = |proof: &VerifyFactResult, producer: &SourcePosition<'_>| {
+        if obeys_active_stage_ceilings(start, producer) {
+            verify(proof, producer)
+        } else {
+            Ok(None)
+        }
+    };
     let mut position = Some(start);
     while let Some(current) = position {
-        if let Some(value) = visit_owner(current, wd, verify)? {
+        if let Some(value) = visit_owner(current, &mut bounded_wd, &mut bounded_verify)? {
             return Ok(Some(value));
         }
         position = current.parent;
     }
     Ok(None)
+}
+
+fn obeys_active_stage_ceilings(start: &SourcePosition<'_>, producer: &SourcePosition<'_>) -> bool {
+    // Ancestor traversal must not reopen later stages of an active original owner.
+    let mut active = Some(start);
+    while let Some(ceiling) = active {
+        let mut candidate = Some(producer);
+        while let Some(stage) = candidate {
+            if same_source_owner(ceiling.owner, stage.owner) && stage.before > ceiling.before {
+                return false;
+            }
+            candidate = stage.parent;
+        }
+        active = ceiling.parent;
+    }
+    true
+}
+
+fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
+    match (left, right) {
+        (SourceOwner::Run(a), SourceOwner::Run(b)) => std::ptr::eq(a, b),
+        (SourceOwner::Statement(a), SourceOwner::Statement(b)) => std::ptr::eq(a, b),
+        (SourceOwner::Verify(a), SourceOwner::Verify(b)) => std::ptr::eq(a, b),
+        (SourceOwner::WD(a), SourceOwner::WD(b)) => std::ptr::eq(a, b),
+        (SourceOwner::SetBuilder(a, pa), SourceOwner::SetBuilder(b, pb)) => {
+            std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
+        }
+        (SourceOwner::Named(a), SourceOwner::Named(b)) => std::ptr::eq(a, b),
+        (SourceOwner::Forall(a), SourceOwner::Forall(b)) => std::ptr::eq(a, b),
+        (SourceOwner::EmptyForall(a), SourceOwner::EmptyForall(b)) => std::ptr::eq(a, b),
+        (SourceOwner::ForallWD(_, a), SourceOwner::ForallWD(_, b)) => std::ptr::eq(a, b),
+        (SourceOwner::KnownForall(a), SourceOwner::KnownForall(b)) => std::ptr::eq(a, b),
+        (SourceOwner::Call(a), SourceOwner::Call(b)) => std::ptr::eq(a, b),
+        (SourceOwner::HaveEqualType(a), SourceOwner::HaveEqualType(b)) => std::ptr::eq(a, b),
+        (SourceOwner::AtomicWD(a), SourceOwner::AtomicWD(b)) => std::ptr::eq(a, b),
+        (SourceOwner::FactWD(a), SourceOwner::FactWD(b)) => std::ptr::eq(a, b),
+        (SourceOwner::HaveGroup(a, pa), SourceOwner::HaveGroup(b, pb)) => {
+            std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
+        }
+        (SourceOwner::ParamTypeWD(a), SourceOwner::ParamTypeWD(b)) => std::ptr::eq(a, b),
+        (SourceOwner::PropDefinition(a), SourceOwner::PropDefinition(b)) => std::ptr::eq(a, b),
+        (SourceOwner::ByDef(a), SourceOwner::ByDef(b)) => std::ptr::eq(a, b),
+        (SourceOwner::PropRequirements(a), SourceOwner::PropRequirements(b)) => std::ptr::eq(a, b),
+        (SourceOwner::PropInference(a), SourceOwner::PropInference(b)) => std::ptr::eq(a, b),
+        (SourceOwner::EqualityInferences(a), SourceOwner::EqualityInferences(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (SourceOwner::AdditiveInference(a), SourceOwner::AdditiveInference(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (SourceOwner::EqualityRequirements(a), SourceOwner::EqualityRequirements(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (SourceOwner::FunctionNormalization(a), SourceOwner::FunctionNormalization(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (SourceOwner::FunctionExpansion(a), SourceOwner::FunctionExpansion(b)) => {
+            std::ptr::eq(a, b)
+        }
+        (SourceOwner::FunctionDefinitionRewrite(a), SourceOwner::FunctionDefinitionRewrite(b)) => {
+            std::ptr::eq(a, b)
+        }
+        _ => false,
+    }
 }
 
 fn visit_function_formation<T>(
@@ -1618,6 +1697,23 @@ fn visit_function_formation<T>(
             return Ok(Some(value));
         }
     }
+    for (index, store) in parameters
+        .store_and_infer_results
+        .iter()
+        .take(position.before.saturating_sub(carriers.len()))
+        .enumerate()
+        .rev()
+    {
+        let prior = SourcePosition {
+            before: carriers.len() + index + 1,
+            ..*position
+        };
+        let inference =
+            SourcePosition::new(Some(&prior), SourceOwner::PropInference(store), usize::MAX);
+        if let Some(value) = visit_owner(&inference, wd, verify)? {
+            return Ok(Some(value));
+        }
+    }
     for (index, carrier) in carriers.iter().take(position.before).enumerate().rev() {
         let prior = SourcePosition {
             before: index,
@@ -1709,7 +1805,7 @@ fn visit_owner<T>(
                 }
                 for (index, child) in children.iter().take(position.before).enumerate().rev() {
                     let prior = SourcePosition {
-                        before: index,
+                        before: index + 1,
                         ..*position
                     };
                     if let Some(value) = visit_complete_wd(child, &prior, wd, verify)? {
@@ -1751,6 +1847,18 @@ fn visit_owner<T>(
                     before: head + index,
                     ..*position
                 };
+                let complete = SourcePosition {
+                    before: head + index + 1,
+                    ..*position
+                };
+                let inference = SourcePosition::new(
+                    Some(&complete),
+                    SourceOwner::PropInference(&then.store_and_infer),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_owner(&inference, wd, verify)? {
+                    return Ok(Some(value));
+                }
                 if let Some(value) = visit_complete_verify(&then.verify_result, &prior, wd, verify)?
                 {
                     return Ok(Some(value));
@@ -2074,6 +2182,16 @@ fn visit_owner<T>(
             }
         }
         SourceOwner::PropInference(store) => {
+            if let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) =
+                &store.infer
+            {
+                let group = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityInferences(rules),
+                    position.before,
+                );
+                return visit_owner(&group, wd, verify);
+            }
             for (index, derived) in prop_inference_stages(store)
                 .into_iter()
                 .take(position.before)
@@ -2099,6 +2217,87 @@ fn visit_owner<T>(
                 );
                 if let Some(value) =
                     visit_fact_formation(&derived.well_defined, usize::MAX, &formation, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+        }
+        SourceOwner::EqualityInferences(rules) => {
+            for (index, rule) in rules.iter().take(position.before).enumerate().rev() {
+                if let InferEqualityResult::AdditiveCancellation(rule) = rule {
+                    let prior = SourcePosition {
+                        before: index + 1,
+                        ..*position
+                    };
+                    let complete =
+                        SourcePosition::new(Some(&prior), SourceOwner::AdditiveInference(rule), 5);
+                    if let Some(value) = visit_owner(&complete, wd, verify)? {
+                        return Ok(Some(value));
+                    }
+                }
+            }
+        }
+        SourceOwner::AdditiveInference(rule) => {
+            if position.before > 4 {
+                let prior = SourcePosition {
+                    before: 5,
+                    ..*position
+                };
+                let nested = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::PropInference(&rule.derived.store_and_infer),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_owner(&nested, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+            if position.before > 3 {
+                let prior = SourcePosition {
+                    before: 3,
+                    ..*position
+                };
+                let formation = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::FactWD(&rule.derived.well_defined),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_fact_formation(
+                    &rule.derived.well_defined,
+                    usize::MAX,
+                    &formation,
+                    wd,
+                    verify,
+                )? {
+                    return Ok(Some(value));
+                }
+            }
+            for (index, proof) in [
+                &rule.left_in_c_proof,
+                &rule.right_in_c_proof,
+                &rule.common_in_c_proof,
+            ]
+            .into_iter()
+            .take(position.before.min(3))
+            .enumerate()
+            .rev()
+            {
+                let prior = SourcePosition {
+                    before: index,
+                    ..*position
+                };
+                if let Some(value) = visit_complete_verify(proof, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+        }
+        SourceOwner::EqualityRequirements(proofs) => {
+            for (index, proof) in proofs.iter().take(position.before).enumerate().rev() {
+                let prior = SourcePosition {
+                    before: index,
+                    ..*position
+                };
+                if let Some(value) = visit_complete_verify(proof, &prior, wd, &mut |_, _| Ok(None))?
                 {
                     return Ok(Some(value));
                 }
@@ -2213,6 +2412,24 @@ fn visit_header<T>(
         if let Some(value) =
             visit_fact_formation(&dom.well_defined, usize::MAX, &formation, wd, verify)?
         {
+            return Ok(Some(value));
+        }
+    }
+    for (index, store) in introduced
+        .defined_params
+        .store_and_infer_results
+        .iter()
+        .take(position.before)
+        .enumerate()
+        .rev()
+    {
+        let prior = SourcePosition {
+            before: index + 1,
+            ..*position
+        };
+        let inference =
+            SourcePosition::new(Some(&prior), SourceOwner::PropInference(store), usize::MAX);
+        if let Some(value) = visit_owner(&inference, wd, verify)? {
             return Ok(Some(value));
         }
     }
@@ -2371,6 +2588,16 @@ fn visit_statement<T>(
         ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof)))
             if before > 0 =>
         {
+            let formation = SourcePosition::new(
+                Some(&position),
+                SourceOwner::FactWD(&proof.selected_wd),
+                usize::MAX,
+            );
+            if let Some(value) =
+                visit_fact_formation(&proof.selected_wd, usize::MAX, &formation, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
             let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
                 if closed_leaf(proof.obj()) {
                     wd(proof, position)
@@ -2438,6 +2665,27 @@ fn visit_statement<T>(
         }
         _ => {
             if let Some(proof) = ordinary_have(statement) {
+                for (index, store) in proof
+                    .store_and_infer_result
+                    .store_and_infer_results
+                    .iter()
+                    .take(before)
+                    .enumerate()
+                    .rev()
+                {
+                    let prior = SourcePosition {
+                        before: index + 1,
+                        ..position
+                    };
+                    let inference = SourcePosition::new(
+                        Some(&prior),
+                        SourceOwner::PropInference(store),
+                        usize::MAX,
+                    );
+                    if let Some(value) = visit_owner(&inference, wd, verify)? {
+                        return Ok(Some(value));
+                    }
+                }
                 let mut offset = 0;
                 for (group, captured) in proof.statement.param_def.groups.iter().zip(&proof.groups)
                 {

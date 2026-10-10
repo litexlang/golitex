@@ -1321,6 +1321,10 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                     "selected_proof",
                     project_verify_fact(&s.selected_proof, runtime),
                 ),
+                (
+                    "selected_wd",
+                    super::wd::project_fact_wd_proof(&s.selected_wd, runtime),
+                ),
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),

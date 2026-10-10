@@ -388,7 +388,7 @@ pub enum ExecByThmStmtResult {
 }
 
 // Subject: preserve the resolved callee/arguments beyond the invocation.
-// Stage order: type_proofs → complete domain → dom_proofs → WD → returned stores → selected → store.
+// Stage order: type_proofs → complete domain → dom_proofs → WD → returned stores → selected → caller WD → store.
 pub struct ExecByThmStmtSuccess {
     pub call: crate::ast::stmt::TheoremCall,
     pub callee: ResolvedTheoremCallee,
@@ -400,6 +400,7 @@ pub struct ExecByThmStmtSuccess {
     pub returned_conclusions: Vec<StoreFactAndInferResult>,
     pub selected_proof: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
+    pub selected_wd: crate::execute::execute_fact_stmt::FactWellDefinedProof,
     pub stored: StoreFactAndInferResult,
 }
 

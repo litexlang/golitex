@@ -50,6 +50,10 @@ pub(super) fn project_store_and_infer(
     if !prop_rules.is_empty() {
         entries.push(("prop_definition_rules", JsonValue::Array(prop_rules)));
     }
+    let signed_rules = project_signed_standard_set_infer(&node.infer, runtime);
+    if !signed_rules.is_empty() {
+        entries.push(("signed_standard_set_rules", JsonValue::Array(signed_rules)));
+    }
     let cancellation_rules = project_cancellation_infer(&node.infer, runtime);
     if !cancellation_rules.is_empty() {
         entries.push(("cancellation_rules", JsonValue::Array(cancellation_rules)));
@@ -123,6 +127,67 @@ fn project_prop_definition_infer(infer: &InferFactResult, runtime: &Runtime) -> 
     rules
 }
 
+fn project_signed_standard_set_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+    let atomic = match infer {
+        InferFactResult::AtomicFact(atomic) => vec![atomic],
+        InferFactResult::AndFact(and) => and.components.iter().collect(),
+        InferFactResult::ChainFact(chain) => chain.adjacent_infers.iter().collect(),
+        InferFactResult::OrFact(_)
+        | InferFactResult::ExistShapedFact(_)
+        | InferFactResult::NotForallFact(_)
+        | InferFactResult::ForallFact(_)
+        | InferFactResult::ForallFactWithIff(_) => return Vec::new(),
+    };
+    let mut rules = Vec::new();
+    for atomic in atomic {
+        let InferAtomicFactResult::ExceptEquality(infer) = atomic else {
+            continue;
+        };
+        for rule in infer {
+            let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) = rule else {
+                continue;
+            };
+            rules.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string("InFactSignedStandardSetSign")),
+                    (
+                        "derived",
+                        JsonValue::Array(
+                            proof
+                                .derived
+                                .iter()
+                                .map(|captured| {
+                                    object_for(
+                                        runtime,
+                                        vec![
+                                            (
+                                                "well_defined",
+                                                super::wd::project_fact_wd_proof(
+                                                    &captured.well_defined,
+                                                    runtime,
+                                                ),
+                                            ),
+                                            (
+                                                "store_and_infer",
+                                                project_store_and_infer(
+                                                    &captured.store_and_infer,
+                                                    runtime,
+                                                ),
+                                            ),
+                                        ],
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
+                ],
+            ));
+        }
+    }
+    rules
+}
+
 fn project_cancellation_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
     let mut rules = Vec::new();
     match infer {
@@ -176,7 +241,25 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                         "common_in_c_proof",
                         super::verify::project_verify_fact(&r.common_in_c_proof, runtime),
                     ),
-                    ("derived", project_store_and_infer(&r.derived, runtime)),
+                    (
+                        "derived",
+                        object_for(
+                            runtime,
+                            vec![
+                                (
+                                    "well_defined",
+                                    super::wd::project_fact_wd_proof(
+                                        &r.derived.well_defined,
+                                        runtime,
+                                    ),
+                                ),
+                                (
+                                    "store_and_infer",
+                                    project_store_and_infer(&r.derived.store_and_infer, runtime),
+                                ),
+                            ],
+                        ),
+                    ),
                 ],
             )),
             InferEqualityResult::NonzeroFactorCancellation(r) => rules.push(object_for(

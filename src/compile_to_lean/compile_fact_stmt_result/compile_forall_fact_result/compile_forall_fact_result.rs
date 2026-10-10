@@ -421,7 +421,7 @@ impl LitexToLeanCompiler {
                 before: expected_count + index + 1,
                 ..*position
             };
-            definitions.extend(self.compile_prop_inferences(
+            definitions.extend(self.compile_stored_inferences(
                 &assumed.store_and_infer,
                 fact,
                 &(proposition, hypothesis),
@@ -493,6 +493,19 @@ impl LitexToLeanCompiler {
             self.validate_store(&proved.store_and_infer, &expected)?;
 
             definitions.push(self.emit_internal_fact(&expected, &compiled, position));
+            let complete = SourcePosition {
+                before: head_count + index + 1,
+                ..*position
+            };
+            definitions.extend(self.compile_stored_inferences(
+                &proved.store_and_infer,
+                &expected,
+                &(
+                    compiled.0.clone(),
+                    format!("h_{}", expected.fact_id().value()),
+                ),
+                &complete,
+            )?);
             conclusions.push((compiled.0, format!("h_{}", expected.fact_id().value())));
         }
         let mut conclusion = conclusions.pop().expect("nonempty conclusions");

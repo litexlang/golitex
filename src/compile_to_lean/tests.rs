@@ -1,7 +1,15 @@
 use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToLeanCompiler};
 
+#[path = "../../tests/unit/compile_to_lean/additive_inference/tests.rs"]
+mod additive_inference_tests;
+#[path = "../../tests/unit/compile_to_lean/arithmetic_congruence/tests.rs"]
+mod arithmetic_congruence_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
+#[path = "../../tests/unit/compile_to_lean/named_call_wd/tests.rs"]
+mod named_call_wd_tests;
+#[path = "../../tests/unit/compile_to_lean/natural_function_wd/tests.rs"]
+mod natural_function_wd_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
@@ -2734,7 +2742,7 @@ fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
             .expect("natural membership records its actual nonnegative inference"),
         _ => panic!("actual natural membership inference"),
     };
-    let inferred_id = inferred.primary_fact_id();
+    let inferred_id = inferred.store_and_infer.primary_fact_id();
     match &phase2_atomic(&fact_statement(&result.statement_results[1]).verify_result).searched_proof
     {
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
@@ -2998,13 +3006,23 @@ fn simplification_named_theorem_body_retains_its_local_explicit_call() {
 }
 
 #[test]
-fn simplification_named_call_cannot_export_a_compound_constructor_from_its_local_scope() {
+fn simplification_named_call_replays_the_selected_constructor_in_its_parent_scope() {
     let source = "thm add_zero:\n    ? forall x R:\n        x + 0 = x\nthm add_zero_again:\n    ? forall y R:\n        y + 0 = y\n    by thm add_zero(y) => y + 0 = y\n";
     let (result, compiler) = execute(source);
-    let error = compile_run(&result, &compiler, "simplification_closed_call_constructor")
-        .expect_err("the invocation-local construction is not a preceding parent producer");
-    assert_eq!(error.statement_index, Some(2));
-    assert_eq!(error.route, "WD/Producer");
+    let body = match &named_theorem(&result.statement_results[1]).body {
+        ExecDefThmBodyProof::Forall(body) => body,
+        _ => panic!("recorded forall proof body"),
+    };
+    assert_eq!(body.proof_steps.len(), 1);
+    let call = by_theorem(&body.proof_steps[0]);
+    assert!(matches!(
+        &call.selected_wd,
+        FactWellDefinedProof::Equality(_)
+    ));
+    let output = compile_run(&result, &compiler, "simplification_parent_call_constructor")
+        .expect("the original direct call retains its actual parent WD check");
+    assert!(output.contains(&format!("h_{}", call.stored.primary_fact_id().value())));
+    assert!(!output.contains("sorry") && !output.contains("admit"));
 }
 
 fn named_theorem(statement: &ExecStmtResult) -> &ExecDefThmStmtSuccess {

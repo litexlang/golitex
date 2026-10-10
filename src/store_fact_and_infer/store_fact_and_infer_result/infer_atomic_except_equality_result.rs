@@ -197,7 +197,7 @@ pub struct InferInFactOneSideRealIntervalResult {
 }
 
 pub struct InferInFactSignedStandardSetSignResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactAndInferResult>,
 }
 
 pub struct InferInFactEqualFnSetExpandResult {
@@ -358,7 +358,7 @@ impl InferAtomicExceptEqualityResult {
             Self::InFactSignedStandardSetSign(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
-                    ids.extend(d.stored_fact_ids());
+                    ids.extend(d.store_and_infer.stored_fact_ids());
                 }
                 ids
             }

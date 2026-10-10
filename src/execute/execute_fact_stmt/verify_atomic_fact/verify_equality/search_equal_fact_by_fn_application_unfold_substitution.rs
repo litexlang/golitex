@@ -7,6 +7,10 @@ use crate::prelude::*;
 impl Runtime {
     // If f equals a checked anonymous function, substitute its body once under
     // scalar constructors. Example: f(t)=t+1 gives 2*f(x)=2+2*x directly.
+    // The caller has checked endpoint WD and consumed the fallback permission.
+    // Only original outermost calls unfold; arguments and inserted bodies stay
+    // opaque to this pass. Keep the selected body's own carrier/guard checks.
+    // The head equality may be a forall premise; no have-fn definition is needed.
     pub fn search_equal_fact_by_fn_application_unfold_substitution(
         &mut self,
         fact: &EqualFact,
@@ -14,20 +18,30 @@ impl Runtime {
     ) -> RuntimeResult<Option<FnApplicationUnfoldSubstitutionBuiltinRewriteProof>> {
         // Preserve explicit beta endpoints: if one side alone becomes the
         // existing opposite side, leave that opposite expression untouched.
-        let left_preview = preview_fn_definition_subterms(self, &fact.left)?;
-        let right_preview = preview_fn_definition_subterms(self, &fact.right)?;
+        let left_preview = preview_fn_equal_to_anonymous_function_subterms(self, &fact.left)?;
+        let right_preview = preview_fn_equal_to_anonymous_function_subterms(self, &fact.right)?;
         let left_only = left_preview.ir() == fact.right.ir();
         let right_only = !left_only && right_preview.ir() == fact.left.ir();
         let mut expansions = Vec::new();
         let rewritten_left = if right_only {
             fact.left.clone()
         } else {
-            rewrite_fn_definition_subterms(self, &fact.left, verify_state, &mut expansions)?
+            rewrite_fn_equal_to_anonymous_function_subterms(
+                self,
+                &fact.left,
+                verify_state,
+                &mut expansions,
+            )?
         };
         let rewritten_right = if left_only {
             fact.right.clone()
         } else {
-            rewrite_fn_definition_subterms(self, &fact.right, verify_state, &mut expansions)?
+            rewrite_fn_equal_to_anonymous_function_subterms(
+                self,
+                &fact.right,
+                verify_state,
+                &mut expansions,
+            )?
         };
         if expansions.is_empty() {
             return Ok(None);
@@ -38,6 +52,8 @@ impl Runtime {
             right: rewritten_right.clone(),
             line_file: fact.line_file.clone(),
         };
+        // Finish with bounded algebraic search, without another definition or
+        // rewrite round. One-layer expansion can still produce a large tree.
         let residual_equal = self.verify_equal_fact(
             &residual,
             verify_state.capped_at(VerifyStateLevel::Strategy),
@@ -56,7 +72,7 @@ impl Runtime {
     }
 }
 
-fn rewrite_fn_definition_subterms(
+fn rewrite_fn_equal_to_anonymous_function_subterms(
     runtime: &mut Runtime,
     obj: &Obj,
     state: VerifyState,
@@ -116,7 +132,10 @@ fn rewrite_fn_definition_subterms(
     ))
 }
 
-fn preview_fn_definition_subterms(runtime: &mut Runtime, obj: &Obj) -> RuntimeResult<Obj> {
+fn preview_fn_equal_to_anonymous_function_subterms(
+    runtime: &mut Runtime,
+    obj: &Obj,
+) -> RuntimeResult<Obj> {
     let mut calls = Vec::new();
     super::helper::replace_scalar_subterms(obj, &mut |part, rebuilt| {
         if !rebuilt {

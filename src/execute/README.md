@@ -370,26 +370,137 @@ Complex identities containing the actual imaginary-unit AST node enter
 remain with the existing premise-checking strategy. Indexed union,
 intersection and product explicitly require a nonempty index set in WD,
 for named and anonymous families alike. Definition-unfold residuals keep
-`can_use_rewrite: false`; explicit chains retain their checked endpoints.
+`can_rewrite: false`; explicit chains retain their checked endpoints.
 
 
 ## One-step function-application unfold substitution
 
-`verify_equality/search_equal_fact_by_fn_application_unfold_substitution.rs`
-owns one original scalar-tree pass of checked beta substitution. Its dedicated
+[`search_equal_fact_by_fn_application_unfold_substitution.rs`](execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_by_fn_application_unfold_substitution.rs)
+owns one bounded round of checked beta substitution over original scalar-tree
+calls. Its dedicated
 `FnApplicationUnfoldSubstitutionBuiltinRewriteProof` retains ordered anonymous
 function expansions, rewritten endpoints and the checked residual. Each step
 captures its original application WD, exact head-to-anonymous-function source,
-selected-body application WD and binder-ID substitution endpoint. `have fn equal`
-already publishes that source equality and membership through existing stores.
+selected-body application WD and binder-ID substitution endpoint. The head's
+`SpecialProperty::Equality` supplies the stored `f=AnonymousFn` source; `have fn equal`
+automatically publishes this equality and the function membership.
 
-The walk treats each original outermost call as a leaf; call arguments and
-inserted bodies are not revisited. It does not invoke the recursive function-body
-normalizer. Residual truth stays capped at Strategy with rewrite off. This rewrite
-requires a stored equality edge; bare anonymous literals retain the existing
-parent-checked definition route. No new Runtime/Env state, index or synthetic
-application-value equation is introduced.
-The tracer is `examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit`.
+The source is a known equality to an anonymous function, regardless of how
+the function head was introduced. A local `forall` premise supplies the same
+kind of source as the equality published by `have fn`; this is not a
+definition-only rule. The private helpers are named
+`rewrite_fn_equal_to_anonymous_function_subterms` and
+`preview_fn_equal_to_anonymous_function_subterms` to reflect that source.
+
+For example, the definition supplies the body needed to verify this directly:
+
+```litex
+have fn f(x N) N = x + 1
+forall x N:
+    2 * f(x) = 2 + 2 * x
+```
+
+The [universal-premise tracer](../../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_forall_equality.lit)
+uses no `have fn` declaration:
+
+```litex
+forall f fn(t R: t > 0) R, x R:
+    f = fn(t R: t > 0) R {t}
+    x > 0
+    =>:
+        2 * f(x) = 2 * x
+```
+
+The conclusion depends on the anonymous function's body. Reflexivity
+`f(x)=f(x)` would not demonstrate this source or the substitution.
+
+### Design agreement
+
+Keep this rewrite as a bounded local fallback:
+
+- **Admission and order.** The equality search reaches it only after earlier
+  direct, known-property, builtin, strategy, definition and known-`forall`
+  routes miss. `VerifyState::after_rewrite` admits only `(DefinitionAndForall,
+  can_rewrite=true)` and disables rewrite in the returned child. Within the
+  builtin rewrite dispatcher, closed numeric substitution stays first.
+- **Body source.** Read the exact function head's indexed `SpecialProperty::Equality`
+  with one stored edge to an anonymous function. Function membership supplies
+  a signature, not a body. The edge may come from a local assumption or a
+  checked equality as well as `have fn`. This rule does not search stored `f(args)=value`
+  equations or follow a chain of function aliases. Bare anonymous literals
+  retain the existing parent-checked definition route.
+- **One layer of original calls.** Under supported scalar constructors, each
+  original outermost `FnObj` with one argument group is eligible. Multiple
+  original calls may unfold in the same round. For `f(g(x))`, this pass treats
+  `g(x)` as an opaque argument; a body inserted for `f(x)` is not revisited even
+  if it contains another call. Do not invoke the recursive function-body
+  normalizer from this rule. When unfolding one side already reproduces the
+  submitted opposite endpoint, preserve that opposite endpoint.
+- **Checks and residual.** Preserve both the original application's WD and
+  the selected anonymous function's carrier/guard checks. Prove the rewritten
+  equality at `Strategy` (level 3), with rewrite disabled; do not reopen
+  definition/known-`forall` search or reset child checks to `top_level()`.
+  If these checks or residual proof fail, return an ordinary search miss.
+- **Permission scope.** Ordinary rule premises cannot enable rewrite. A root
+  fact, each conclusion of a top-level `forall`, and each segment of an
+  explicit chain can inherit a separate opportunity. The flag bounds a branch,
+  not the total calls in a theorem or file.
+
+There are two production permission gates: [equality](execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_proof.rs)
+and [other atomic facts](execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof.rs).
+The equality leaf has one production caller, its builtin rewrite dispatcher.
+The separate existing other-atomic function-unfold rule considers only atomic
+arguments that are themselves `FnObj`; it does not share this scalar-tree walk.
+These counts of source locations do not measure runtime invocation frequency.
+
+### Cost observations and future changes
+
+One layer bounds repeated expansion across definitions, not the size or cost
+of the resulting expression. A body can copy a large argument at every
+parameter occurrence. The implementation also performs previews, repeated
+tree construction/IR comparisons, application WD and residual proof search.
+Head lookup uses object-indexed properties in visible scopes; it does not scan
+all functions in the library.
+
+A local assessment on 2026-10-10 used an existing optimized release library
+with SHA256 `fa215416700dadcd43a67310596c44ac5532aaaab19f1ce391d602c8be5b2e46`.
+For `f(t R) R = t+1`, the left side was a balanced sum of `n` copies of
+`2*f(x)`, and the right side was `(2*n)*x+2*n`. Each row is the median of
+nine fresh Runtime instances, timing the repeated, warm call to this leaf.
+
+| Original calls (`n`) | Whole function-unfold leaf |
+| --- | --- |
+| 1 | 0.55 ms |
+| 4 | 5.35 ms |
+| 16 | 82 ms |
+| 64 | 1.33 s |
+
+The leaf timings include its previews, lookup, substitution, selected-call WD
+and residual verification. They exclude setup, parsing, definition execution
+and original equality WD. With a body consisting of eight copies of `t+1`,
+16 calls took about 9.18 s. A no-call miss on a balanced sum of 256 copies of
+`x+1` still took about 12.47 ms (median of 25 calls). These are local wall-clock
+observations, without CPU isolation; they establish neither a universal
+complexity bound nor the share spent on substitution alone.
+
+The bounded usage sample found eight selected equality-unfold proof nodes in
+six dedicated fixtures. Isolated runs of the sets/functions and linear-algebra
+showcase `main.lit` files completed with 75 top-level statement results and
+zero selected unfold nodes. The middle-school source timed out after 30 s and
+was excluded; its timeout was not attributed to this rule. Configuration/module
+mounts, the linear-algebra `main2.lit` export and textbooks were not surveyed.
+Selected serialized proof nodes do not count failed attempts or unique verifier
+calls, so this sample cannot establish corpus-wide invocation frequency.
+
+Keep the admission and one-layer boundaries above. Broader premise eligibility
+or recursive unfolding is a separate design change: first collect attempt,
+success and elapsed-time measurements, examine duplicate lookup/checks and
+whole-tree cloning/IR work, and define an expansion-size or step budget.
+No such additional budget or optimization is implemented by this agreement.
+
+The maintained [positive tracer](../../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit)
+and [negative boundaries](../../examples/negative/fn_application_unfold_substitution/README.md)
+record the supported proof shape and the one-layer/domain limits.
 
 ## Enumeration and eval boundaries
 

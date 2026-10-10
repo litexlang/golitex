@@ -203,17 +203,25 @@ pub fn exec_by_thm_stmt(
         }
     };
 
-    let stored = match store_goal_fact(runtime, &selected)? {
-        Ok(s) => s,
-        Err(msg) => {
+    // This check belongs to the caller after the invocation scope has closed.
+    // Preserve its construction evidence rather than exporting call-local WD.
+    let selected_wd = match runtime
+        .verify_fact_well_definedness(&selected, super::helper::proof_verify_state())?
+    {
+        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(proof) => proof,
+        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Failed(_) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
                 ExecByThmStmtFailed::Store {
                     theorem: thm_name.clone(),
-                    message: msg,
+                    message: "goal well-definedness failed at store".to_string(),
                 },
             )));
         }
     };
+    let stored = runtime.store_fact_and_infer(
+        &selected,
+        crate::execute::execute_fact_stmt::VerifyState::top_level(),
+    )?;
 
     Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(
         ExecByThmStmtSuccess {
@@ -227,6 +235,7 @@ pub fn exec_by_thm_stmt(
             returned_conclusions,
             selected_proof,
             local_env,
+            selected_wd,
             stored,
         },
     )))

@@ -1,4 +1,6 @@
 //! Shared truth-search permissions. Family dispatch preserves these permissions.
+//! Rewrite is a final fallback with one opportunity per branch. Ordinary rule
+//! premises and rewrite residuals must not create a fresh top-level state.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct VerifyState {
@@ -80,7 +82,9 @@ impl VerifyState {
         }
     }
 
-    // Gate and consume the single rewrite opportunity on this branch.
+    // Final fallback only: consume this branch's rewrite permission before
+    // checking replacements or residuals. Independent facts and chain segments
+    // may each inherit a permission; this is not a theorem-wide counter.
     pub fn after_rewrite(self) -> Option<Self> {
         if self.level != VerifyStateLevel::DefinitionAndForall || !self.can_rewrite {
             return None;

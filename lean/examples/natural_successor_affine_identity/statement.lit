@@ -1,0 +1,5 @@
+# The natural-number successor satisfies 2 f(n) = 2 + 2 n and f(2) = 3.
+have fn f(x N) N = x + 1
+forall n N:
+    2 * f(n) = 2 + 2 * n
+f(2) = 3

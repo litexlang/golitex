@@ -1,0 +1,10 @@
+# Apply the real add-zero identity through a named theorem to prove the same identity again.
+
+thm add_zero:
+    ? forall x R:
+        x + 0 = x
+
+thm add_zero_again:
+    ? forall y R:
+        y + 0 = y
+    by thm add_zero(y) => y + 0 = y

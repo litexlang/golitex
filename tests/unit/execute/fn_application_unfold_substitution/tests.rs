@@ -46,7 +46,7 @@ fn unfold(
 ) -> &super::FnApplicationUnfoldSubstitutionBuiltinRewriteProof {
     let EqualFactSearchedProof::ByBuiltinRewrite(
         super::super::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(proof),
-    ) = &equality(statement).searched_proof else { panic!("function-definition rewrite must win") };
+    ) = &equality(statement).searched_proof else { panic!("function-head equality rewrite must win") };
     proof
 }
 
@@ -102,6 +102,96 @@ fn natural_number_tracer_and_reciprocal_are_direct() {
         crate::json_output::project_run_detailed(&result, &runtime, "test", None).stringify();
     assert!(detail.contains("FnApplicationUnfoldSubstitution"));
     assert!(detail.contains("function_equal") && detail.contains("body_application_well_defined"));
+}
+
+#[test]
+fn forall_premise_supplies_anonymous_function_body_without_definition() {
+    let mut runtime = runtime();
+    let result = verified(
+        &mut runtime,
+        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_forall_equality.lit"),
+    );
+    assert_eq!(result.statement_results.len(), 1);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = &result.statement_results[0]
+    else {
+        panic!("universal fact, not a function declaration")
+    };
+    let VerifyFactResult::ForallFact(result) = &statement.verify_result else {
+        panic!("forall verification")
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(forall)) =
+        result.as_ref()
+    else {
+        panic!("local universal scope")
+    };
+    let VerifyFactResult::Equality(result) = &forall.proved_then_facts[0].verify_result else {
+        panic!("conclusion equality")
+    };
+    let VerifyEqualityResult::Success(equal) = result.as_ref() else {
+        panic!("verified conclusion")
+    };
+    let EqualFactSearchedProof::ByBuiltinRewrite(
+        super::super::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(proof),
+    ) = &equal.searched_proof else {
+        panic!("anonymous-function equality substitution")
+    };
+    assert_eq!(proof.expansions.len(), 1);
+    let super::FunctionBodySourceProof::KnownEquality(path) = &proof.expansions[0].function_body
+    else {
+        panic!("stored function-head equality")
+    };
+    assert_eq!(path.path.len(), 1);
+    let (head, anonymous_function, cite_id) = &path.path[0];
+    assert!(forall.assumed_dom_facts[0]
+        .store_and_infer
+        .stored_fact_ids
+        .contains(cite_id));
+    let Some(Fact::AtomicFact(AtomicFact::EqualFact(source))) =
+        forall.local_env.facts.facts_by_id.get(cite_id)
+    else {
+        panic!("binder-local equality citation")
+    };
+    assert_eq!(source.left.ir(), head.ir());
+    assert_eq!(source.right.ir(), anonymous_function.ir());
+    assert!(matches!(
+        anonymous_function,
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
+    ));
+}
+
+#[test]
+fn forall_function_membership_without_body_equality_still_misses() {
+    let mut runtime = runtime();
+    verified(&mut runtime, "have retained_point R=2");
+    rejected(
+        &mut runtime,
+        "forall f fn(t R: t>0) R, x R:\n    x>0\n    =>:\n        2*f(x)=2*x",
+    );
+    verified(&mut runtime, "retained_point=2");
+}
+
+#[test]
+fn forall_anonymous_function_equality_does_not_remove_application_guard() {
+    let mut runtime = runtime();
+    let result = rejected(
+        &mut runtime,
+        "forall f fn(t R: t>0) R, x R:\n    f=fn(t R: t>0) R {t}\n    =>:\n        2*f(x)=2*x",
+    );
+    let ExecStmtResult::Fact(ExecFactStmtResult::Failed(statement)) = &result.statement_results[0]
+    else {
+        panic!("failed universal fact")
+    };
+    let VerifyFactResult::ForallFact(result) = statement else {
+        panic!("forall failure")
+    };
+    let VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {
+        failed_then,
+        ..
+    }) = result.as_ref()
+    else {
+        panic!("failed conclusion")
+    };
+    assert!(failed_then.is_wd_failed());
 }
 
 #[test]
@@ -259,7 +349,7 @@ fn outermost_call_unfolds_without_visiting_its_arguments() {
     );
     let fact = parse_equal(&mut runtime, "2*outer(inner(x))=2*(inner(x)+1)");
     let mut steps = Vec::new();
-    let rewritten = super::rewrite_fn_definition_subterms(
+    let rewritten = super::rewrite_fn_equal_to_anonymous_function_subterms(
         &mut runtime,
         &fact.left,
         VerifyState::top_level(),
@@ -367,6 +457,7 @@ fn run_examples_fn_application_unfold_substitution_positive_corpus() {
         "_exact_arguments",
         "_guarded",
         "_duplicate_sources",
+        "_forall_equality",
     ] {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution{suffix}.lit"));
         let mut runtime = runtime();

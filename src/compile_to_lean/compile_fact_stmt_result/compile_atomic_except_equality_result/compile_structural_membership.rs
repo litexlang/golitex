@@ -246,6 +246,11 @@ impl LitexToLeanCompiler {
                     self.compile_object_reference(b, position)?
                 ))
             }
+            StandardSet::N if matches!(operation, BinaryArithmetic::Add) => Ok(format!(
+                "(Litex.addInN {} {} {ha} {hb})",
+                self.compile_object_reference(a, position)?,
+                self.compile_object_reference(b, position)?
+            )),
             _ => Err(LeanCompileError::unsupported(
                 "StructuralMembership/ArithmeticCarrier",
             )),

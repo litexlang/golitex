@@ -338,7 +338,6 @@ fn equality_cancellation_premise_ceiling_does_not_search_forall() {
 #[test]
 fn equality_cancellation_lean_citations_fail_closed_without_infer_replay() {
     for (seed, guard) in [
-        ("a+k=b+k", ""),
         ("a*k=b*k", "    k!=0\n"),
         ("a-k=b-k", ""),
         ("k-a=k-b", ""),

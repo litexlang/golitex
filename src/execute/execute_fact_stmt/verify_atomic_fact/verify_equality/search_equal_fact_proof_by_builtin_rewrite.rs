@@ -4,8 +4,9 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Builtin equality rewrite dispatcher.
-    // Keep closed numeric values first, then one-step function-definition unfolding.
+    // Final equality fallback, entered after VerifyState::after_rewrite consumes
+    // the branch's permission. Child checks must not reopen rewrite.
+    // Keep closed numeric values first, then unfold from f=AnonymousFn equalities.
     pub fn search_equal_fact_proof_by_builtin_rewrite(
         &mut self,
         fact: &EqualFact,

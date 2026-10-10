@@ -68,7 +68,7 @@ fn natural_nonnegative(stored: &StoreFactAndInferResult) -> &StoreFactAndInferRe
     });
     let signed = signed.next().unwrap();
     assert_eq!(signed.derived.len(), 1);
-    &signed.derived[0]
+    &signed.derived[0].store_and_infer
 }
 
 #[test]
@@ -162,6 +162,61 @@ fn producer_numeric_capture_keeps_actual_ordered_group_and_aggregate_stores() {
             .len(),
         6
     );
+}
+
+#[test]
+fn producer_numeric_capture_signed_inferences_keep_their_original_formation() {
+    let mut rt = runtime();
+    let run = rt
+        .run_litex_code(
+            "have n N, p N+, q Q+, r R+, a Q-, b Z-, c R-, d Q*, nonzero_integer Z*, f R*, g C*\n",
+        )
+        .unwrap();
+    assert!(run.success && run.session_error.is_none());
+    let proof = have(&run.statement_results[0]);
+    for group in &proof.groups {
+        for store in &group.defined_params.store_and_infer_results {
+            let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+                &store.infer
+            else {
+                panic!("signed membership inference")
+            };
+            let sign = rules
+                .iter()
+                .find_map(|rule| match rule {
+                    InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) => {
+                        Some(proof)
+                    }
+                    _ => None,
+                })
+                .expect("signed carrier generates its sign consequences");
+            for captured in &sign.derived {
+                let FactWellDefinedProof::AtomicExceptEquality(formation) = &captured.well_defined
+                else {
+                    panic!("sign consequence has its original atomic WD")
+                };
+                let arguments = atomic_fact_args_ref(seed(&captured.store_and_infer));
+                assert_eq!(
+                    formation.well_defined_of_each_parameter.len(),
+                    arguments.len()
+                );
+                for (argument, wd) in arguments
+                    .iter()
+                    .zip(&formation.well_defined_of_each_parameter)
+                {
+                    assert_eq!(argument.ir(), wd.obj().ir());
+                }
+                assert!(store
+                    .stored_fact_ids()
+                    .contains(&captured.store_and_infer.primary_fact_id()));
+            }
+        }
+    }
+    let detailed =
+        crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+    assert!(detailed.contains("signed_standard_set_rules"));
+    assert!(detailed.contains("InFactSignedStandardSetSign"));
+    assert!(detailed.contains("well_defined"));
 }
 
 #[test]

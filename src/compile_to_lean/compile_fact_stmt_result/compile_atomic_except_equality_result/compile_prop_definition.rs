@@ -357,7 +357,7 @@ impl LitexToLeanCompiler {
                     &member,
                     &after,
                 )?);
-                declarations.extend(self.compile_prop_inferences(
+                declarations.extend(self.compile_stored_inferences(
                     &derived.store_and_infer,
                     &fact,
                     &member,

@@ -133,8 +133,14 @@ beta substitution, scalar congruence and actual residual. Steps are consumed
 once in original-tree order; inserted bodies and call arguments cannot acquire
 extra expansions. Unsupported constructors and residuals reject the complete
 artifact. Tests live under `tests/unit/compile_to_lean/fn_application_unfold_substitution/`.
-The existing natural-function declaration lacks a visible zero WD producer and
-still rejects at `WD/Producer`; it is independently reproducible without rewrite.
+Natural-function declarations retain the signed-membership inference's original
+zero WD constructor. Parameter, forall and function formation replay this
+captured WD before the inferred nonnegative fact; a deleted, wrong or future
+constructor remains an error. The selected `ArithmeticCongruence` strategy
+validates its exact ordered requirement facts and IDs, then compiles each child
+at its original sibling position.
+Natural addition is the new structural N closure; variable N multiplication
+and variable Z arithmetic membership remain explicit unsupported neighbors.
 
 The compiler also supports the phase-3 slice: top-level concrete predicates
 with flat atomic defining clauses, and formula functions with one or two fixed
@@ -174,11 +180,17 @@ all source proof names; only unused-variable and unused-section-variable
 style linters are disabled. Real Lean checking and other warnings remain
 separate required gates.
 
-A compound constructor recorded only inside a closed theorem-call scope is
-not a parent-scope WD producer. A nested call whose enclosing conclusion lacks
-that producer still rejects with `WD/Producer`. The positive nested-call
-regression constructs the object in an earlier parent proof step; the bare
-call remains a source-capture gap, not a newly supported route.
+A theorem invocation retains `selected_wd`, the caller's existing formation
+check after the invocation scope closes and before its selected fact is stored.
+The original direct nested call now uses that caller evidence. A constructor
+recorded only inside the closed invocation remains unavailable in the parent;
+the compiler never exports that local WD as a substitute.
+
+Consumed `AdditiveCancellation` inference retains its three membership checks,
+derived fact WD and original store/infer tree. The compiler dispatches that
+result to a proved cancellation lemma, emits the original derived FactId and
+allows later citations in their original scope. Other consumed cancellation
+families retain explicit rejection branches.
 
 Any failed source, unsupported branch or unavailable evidence rejects the
 entire artifact. No partial Lean file, new axiom, proof hole or fabricated

@@ -69,7 +69,9 @@ impl LitexToLeanCompiler {
             &source_position,
         );
         let compiled = compiled?;
-        self.validate_store(&proof.stored, &source_subject(&proof.selected_proof)?)?;
+        let selected = source_subject(&proof.selected_proof)?;
+        self.compile_fact_wd(&proof.selected_wd, &selected, position)?;
+        self.validate_store(&proof.stored, &selected)?;
         Ok(compiled)
     }
 

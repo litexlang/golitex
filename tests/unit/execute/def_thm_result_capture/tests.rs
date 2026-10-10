@@ -267,6 +267,7 @@ fn by_thm_captures_resolved_declaration_and_actual_selected_fact_producer() {
     let detail =
         crate::json_output::project_stmt_detailed(&run.statement_results[1], &rt).stringify();
     assert!(detail.contains("returned_conclusions") && detail.contains("user_theorem"));
+    assert!(detail.contains("selected_wd"));
 }
 
 #[test]

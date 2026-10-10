@@ -20,7 +20,7 @@ impl LitexToLeanCompiler {
                 &p.residual_equal,
             ),
             EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(p) => {
-                return self.compile_fn_definition_rewrite(goal, p, position);
+                return self.compile_fn_equal_to_anonymous_function_rewrite(goal, p, position);
             }
         };
         if cited_equal_fact_ids.is_empty() {
@@ -152,7 +152,7 @@ impl LitexToLeanCompiler {
             format!("(congrArg₂ M.{operation} {} {})", children[0], children[1])
         })
     }
-    fn compile_fn_definition_rewrite(
+    fn compile_fn_equal_to_anonymous_function_rewrite(
         &self,
         goal: &EqualFact,
         proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::fn_application_unfold_substitution_builtin_rewrite_proof::FnApplicationUnfoldSubstitutionBuiltinRewriteProof,
@@ -161,7 +161,7 @@ impl LitexToLeanCompiler {
         if proof.expansions.is_empty() {
             return Err(LeanCompileError::new(
                 "EqualityRewrite/Expansions",
-                "A function-definition rewrite must retain its checked beta steps.",
+                "A function-head equality rewrite must retain its checked beta steps.",
             ));
         }
         match source_subject(&proof.residual_equal)? {

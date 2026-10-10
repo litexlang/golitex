@@ -1,3 +1,4 @@
+mod compile_additive_inference;
 mod compile_by_stmt_result;
 mod compile_def_prop_stmt_result;
 mod compile_def_thm_stmt_result;

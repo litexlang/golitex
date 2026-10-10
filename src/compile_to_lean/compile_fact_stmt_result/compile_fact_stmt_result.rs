@@ -54,7 +54,7 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let mut declarations = vec![declaration];
-        declarations.extend(self.compile_prop_inferences(
+        declarations.extend(self.compile_stored_inferences(
             store,
             source,
             &(compiled.0, reference),

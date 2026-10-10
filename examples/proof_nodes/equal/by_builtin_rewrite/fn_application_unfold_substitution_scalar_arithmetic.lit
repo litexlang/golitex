@@ -1,8 +1,8 @@
 # One instantiated function body under negation, power and division by a nonzero constant.
 # Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_scalar_arithmetic.lit
 # Explicit middle term: -((x+3)^2)/2=-(x^2+6*x+9)/2.
-# Litex verifies this; Lean export currently rejects the residual's unsupported
-# Equality/BuiltinStrategy route. A compiler regression preserves that boundary.
+# Lean export replays the recorded ArithmeticCongruence residual and its
+# ordered numerator and divisor equality children.
 have fn shift(x R) R = x + 3
 
 thm scalar_polynomial:

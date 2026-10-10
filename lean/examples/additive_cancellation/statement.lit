@@ -1,0 +1,16 @@
+# Cancelling a shared addend recovers equality, including nested rational sums.
+
+forall a, b, k R:
+    a + k = b + k
+    =>:
+        a = b
+
+forall a, b, k C:
+    k + a = b + k
+    =>:
+        a = b
+
+forall a, b, x, y Q:
+    (a + x) + y = (b + x) + y
+    =>:
+        a = b

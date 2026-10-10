@@ -457,9 +457,6 @@ impl LitexToLeanCompiler {
         {
             return Ok(term);
         }
-        if is_exact_zero(object) && position.has_visible_inferred_natural_zero() {
-            return Ok("(Litex.number (M := M) (0 : ℂ))".into());
-        }
         Err(LeanCompileError::new(
             "WD/Producer",
             &format!(
