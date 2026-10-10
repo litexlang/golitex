@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 9, 2026.
+Last updated: October 10, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -30,6 +30,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 - [Appendix: Programming, Mathematics, and Formalization with Litex](#overview-readers)
   - [For Mathematicians: Machine Checking and Human Understanding](#reader-mathematicians)
   - [Personal Reflection: Does Litex Fill a Paradigm Gap in AI Reasoning?](#summary-bottom-up-and-top-down)
+- [Appendix: Litex from a Systems Engineering Perspective](#systems-engineering)
 - [Appendix: Source Gallery](#overview-gallery)
 
 <a id="overview"></a>
@@ -47,6 +48,8 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 Formal languages let machines rigorously check reasoning and let results be [cited again under explicit conditions](#workflow-reuse). AI makes formal code easier to generate. Even after that code passes checking, people still need to see what it actually expresses, which assumptions it relies on, and whether it faithfully captures their intent. **People need to understand and control the language that carries their own ideas.**
 
 **Litex explores a formal language in which human understanding and machine checking meet in the same text.** It organizes reasoning through [familiar mathematical objects, conditions, and facts](#set-theory): people choose definitions, constructions, and key steps; [AI assists with writing and repair](#interaction-loop); the language [checks supported connections and records the grounds for each step](#execution-model). It asks whether this form of expression can lower the cost for people and AI to construct, review, repair, and reuse checkable knowledge.
+
+The concision of Litex source comes from the coordination among objects, facts, statements, and verification procedures developed through sustained iteration. It makes the mechanical work connecting common proof steps part of the language's default checking, letting authors state mathematical steps directly and build on existing knowledge. The [systems engineering perspective](#systems-engineering) follows a small reciprocal function through this design work.
 
 Litex also includes a [compiler design for translation to Lean](#compatibility), exploring how supported verification grounds can become Lean proofs for independent rechecking and connection to the existing formalization ecosystem. See the [Litex-to-Lean compiler design guide](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md) for the design and current supported scope. The Litex-to-Lean compiler is expected to be completed by the end of 2026.
 
@@ -1817,6 +1820,83 @@ There is a second experimental compilation route that programmers often care abo
 Beyond mathematics, Litex hopes to use simple syntax for objects, relations, conditions, and rules, together with clear verification feedback, to invite exploration of another way of expressing the relationship among human intuition, machine verification, and mathematical knowledge. Litex also hopes to explore entry points for formal languages in real knowledge work—from AI safety, explainability of AI outputs, financial risk control, and high-assurance software engineering to physics, chemistry, medicine, law, and engineering.
 
 These are currently directions of exploration, not claims of existing support for those industries. Practitioners without a mathematical background are welcome to take part: use formal tools in their own fields to understand grounds, discover conflicts, and prevent errors.
+
+<a id="systems-engineering"></a>
+
+## Appendix: Litex from a Systems Engineering Perspective
+
+Start with one definition and one verification:
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+The first statement defines the reciprocal function on nonzero real numbers;
+the second checks its value at `2`. These two lines connect three parts of the
+design:
+
+| System role | Concrete content in the example | How it participates in these steps |
+| --- | --- | --- |
+| Objects (Obj) | `reciprocal`, `x`, `1 / x`, `reciprocal(2)` | Represent the function, parameter, body, and call; their conditions of use must be checked. |
+| Facts (Fact) | `x $in R`, `x != 0`, `reciprocal(2) = 1 / 2` | Express parameter conditions and the equality to be checked. Conditions apply in their corresponding local scopes; a checked equality becomes available to later steps. |
+| Statements (Stmt) | `have fn ...` and the following fact statement | Establish a checked function definition, then request verification of a fact; success records the result and extends the current context. |
+
+When defining the function, the system must check under the parameter
+conditions that `1 / x` is meaningful and meets the declared codomain, and
+associate the signature with the body. When checking the second statement,
+it must establish that `2` is real and nonzero, then use the function
+definition to establish the equality. The current Normal output labels the
+second statement's grounds `object_definition` and stores
+`reciprocal(2) = 1 / 2` as an available fact.
+
+Changing the second statement to `reciprocal(0) = 0` stops checking at the
+function call's well-definedness: the parameter condition requires `0 != 0`,
+which cannot hold. The failed statement does not add this equality to the
+accepted context. Function objects, condition facts, definition unfolding,
+equality verification, knowledge storage, and failure feedback all have to
+connect within the same process.
+
+As expressions and proof structures are combined further, these connections
+involve more branches. The [fact-oriented interface](#fact-oriented-interface)
+explains how local grounds are retrieved by goal shape and how permissions
+are restricted when checking rule premises. The systems engineering task is
+to make every supported path account for its conditions, grounds, and context
+changes, while allowing these paths to work together.
+
+Litex's core work is to find a system of expression and verification that can
+support everyday mathematical reasoning. Through sustained experimentation,
+refactoring, and testing against real proofs, I have gradually developed a
+system of objects (Obj), facts (Fact), and statements (Stmt) with consistent
+responsibilities that can be combined, and corresponding mechanical
+verification procedures for common mathematical relationships among them.
+
+The difficulty lies in connecting many small steps. An ordinary mathematical
+fact may involve object domains, function conditions, definition unfolding,
+equality substitution, rule premises, and scope at the same time. Each part
+is often mathematically elementary, yet they must remain consistent across
+different combinations. When necessary support is missing, authors have to
+repeatedly supply steps that could have been mechanical; when verification
+procedures are poorly organized, the system may fail to find existing grounds
+or incur unnecessary search costs.
+
+Litex's iteration continually exposes these breaks through real mathematics,
+refines the expression model, supplies necessary relationships, and adjusts
+verification procedures so that more common steps can be handled
+automatically under explicit premises and controlled search permissions.
+Authors still choose mathematical constructions and key proof routes; the
+language handles the connections that can be checked mechanically. The few
+lines of source users finally see rest on a shared mechanism formed by
+repeatedly coordinating many branches.
+
+AI enables me to sustain this intensive design cycle with my own time and
+resources: propose an organization, implement it, test it against real
+proofs, then refactor in response to failures. My work is to determine through
+these cycles which classifications, relationships, and verification procedures
+can work together over time; AI gives me the capacity to implement, check,
+and repeatedly revise the many details. With my personal time and resources,
+I would have struggled without AI assistance to carry out exploration and
+implementation at the same density in roughly two years.
 
 <a id="overview-gallery"></a>
 

@@ -106,11 +106,13 @@ executable programs is a separate path. Litex makes set membership and facts
 the default authoring layer. Lean can express set theory too; this compares
 their default interfaces, not their current coverage.
 
-The concise surface has an implementation cost. Arithmetic, set construction,
-function application, quantifiers, and proof steps need to work together; each
-combination must have clear premises, verification grounds, stored results, and
-failure feedback. The [Blueprint's design discussion](docs/Litex_Blueprint.md#design-difficulty)
-explains this tradeoff in detail.
+The concision of Litex source comes from the coordination among objects,
+facts, statements, and verification procedures developed through sustained
+iteration. It makes the mechanical work connecting common proof steps part of
+the language's default checking, letting authors state mathematical steps
+directly and build on existing knowledge. The Blueprint's
+[systems engineering perspective](docs/Litex_Blueprint.md#systems-engineering)
+follows a small reciprocal function through this design.
 
 ## Let checked knowledge grow
 

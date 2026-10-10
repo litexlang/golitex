@@ -11035,8 +11035,8 @@ generic definition/forall expansion. Detailed output names
 head-equality citations, rewritten endpoints and the residual proof; Normal
 output retains `builtin_rewrite`. See the [runnable tracer](../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit).
 Lean replay consumes this evidence for supported function and scalar constructors.
-The existing natural-number function-declaration and arithmetic-congruence
-compiler gaps still reject the complete export; Litex verification is supported.
+Focused compiler tests cover natural-number function declarations and
+arithmetic-congruence residuals.
 
 ### Native numeric function rules
 
