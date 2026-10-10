@@ -144,7 +144,7 @@ fn forall_premise_supplies_anonymous_function_body_without_definition() {
     let (head, anonymous_function, cite_id) = &path.path[0];
     assert!(forall.assumed_dom_facts[0]
         .store_and_infer
-        .stored_fact_ids
+        .stored_fact_ids()
         .contains(cite_id));
     let Some(Fact::AtomicFact(AtomicFact::EqualFact(source))) =
         forall.local_env.facts.facts_by_id.get(cite_id)
