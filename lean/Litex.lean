@@ -560,6 +560,16 @@ theorem divInR {M : Semantics.{u}} {α : Type v} {β : Type w}
     change M.divValue (denote a) (denote b) = _
     rw [hx, hy, M.div_numbers _ _ hy0, Complex.ofReal_div]⟩
 
+theorem addInN {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haN : In a N) (hbN : In b N) :
+    In (add a b (naturalToComplex a haN) (naturalToComplex b hbN)) N := by
+  obtain ⟨x, hx⟩ := (M.natural_members (denote a)).mp haN
+  obtain ⟨y, hy⟩ := (M.natural_members (denote b)).mp hbN
+  exact (M.natural_members _).mpr ⟨x + y, by
+    change M.addValue (denote a) (denote b) = _
+    rw [hx, hy, M.add_numbers, Nat.cast_add]⟩
+
 theorem addInQ {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
     (a : Obj (M := M) α) (b : Obj (M := M) β) (haQ : In a Q) (hbQ : In b Q) :
@@ -965,6 +975,56 @@ theorem lt_iff_asReal {α : Type v} {β : Type w}
 end Litex.NativeBridge
 
 namespace Litex
+
+theorem addCancelRightRight {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (k : Obj (M := M) γ)
+    (ha : In a C) (hb : In b C) (hk : In k C)
+    (h : Same (add a k ha hk) (add b k hb hk)) : Same a b := by
+  change M.addValue (denote a) (denote k) = M.addValue (denote b) (denote k) at h
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    NativeBridge.asComplex_spec k hk, M.add_numbers, M.add_numbers] at h
+  exact (NativeBridge.same_iff_asComplex a b ha hb).mpr
+    (add_right_cancel (M.number_injective h))
+
+theorem addCancelRightLeft {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (k : Obj (M := M) γ)
+    (ha : In a C) (hb : In b C) (hk : In k C)
+    (h : Same (add a k ha hk) (add k b hk hb)) : Same a b := by
+  change M.addValue (denote a) (denote k) = M.addValue (denote k) (denote b) at h
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    NativeBridge.asComplex_spec k hk, M.add_numbers, M.add_numbers] at h
+  have he := M.number_injective h
+  rw [add_comm (NativeBridge.asComplex k hk) (NativeBridge.asComplex b hb)] at he
+  exact (NativeBridge.same_iff_asComplex a b ha hb).mpr (add_right_cancel he)
+
+theorem addCancelLeftRight {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (k : Obj (M := M) γ)
+    (ha : In a C) (hb : In b C) (hk : In k C)
+    (h : Same (add k a hk ha) (add b k hb hk)) : Same a b := by
+  change M.addValue (denote k) (denote a) = M.addValue (denote b) (denote k) at h
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    NativeBridge.asComplex_spec k hk, M.add_numbers, M.add_numbers] at h
+  have he := M.number_injective h
+  rw [add_comm (NativeBridge.asComplex k hk) (NativeBridge.asComplex a ha)] at he
+  exact (NativeBridge.same_iff_asComplex a b ha hb).mpr (add_right_cancel he)
+
+theorem addCancelLeftLeft {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (k : Obj (M := M) γ)
+    (ha : In a C) (hb : In b C) (hk : In k C)
+    (h : Same (add k a hk ha) (add k b hk hb)) : Same a b := by
+  change M.addValue (denote k) (denote a) = M.addValue (denote k) (denote b) at h
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    NativeBridge.asComplex_spec k hk, M.add_numbers, M.add_numbers] at h
+  exact (NativeBridge.same_iff_asComplex a b ha hb).mpr
+    (add_left_cancel (M.number_injective h))
 
 theorem leOfSame {M : Semantics.{u}} {α : Type v} {β : Type w}
     {γ : Type x} {δ : Type*}

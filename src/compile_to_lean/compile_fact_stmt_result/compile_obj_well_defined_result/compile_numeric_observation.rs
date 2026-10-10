@@ -136,14 +136,6 @@ impl LitexToLeanCompiler {
                 return Ok(observation);
             }
         }
-        if is_exact_zero(object) && position.has_visible_inferred_natural_zero() {
-            return Ok((
-                "(0 : ℂ)".into(),
-                "(Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))".into(),
-                "(Litex.numberInC (M := M) (0 : ℂ))".into(),
-                EvalRational::new(0, 1),
-            ));
-        }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
             if let Ok((_, Some(set), _, hypothesis)) =
                 position.visible_parameter(*id, &self.runtime)

@@ -139,13 +139,14 @@ Nested Success child evidence is `Vec<Box<ObjWellDefinedProof>>` (subject lives 
 
 Atomic-except-equality search is:
 
-builtin rule → known atomic → builtin strategy → by definition →
-known strategy → known forall → builtin algebraic rewrite → known algebraic rewrite.
+direct → known atomic / special properties → builtin rule → strategies →
+by definition → known forall → builtin rewrite → known rewrite.
 
 Equality search is:
 
-builtin rule → equivalence class → builtin strategy → MatchingOneArgByOne →
-known forall → builtin rewrite (ClosedNumericEqualSubstitution, KnownEqualObjSubstitution, OrderDual).
+direct → special properties / MatchingOneArgByOne → builtin rule → strategies /
+equivalence class → object definition → known forall → builtin rewrite
+(ClosedNumericEqualSubstitution, FnApplicationUnfoldSubstitution).
 
 MatchingOneArgByOne peels same-shape constructors (numeric, FnObj application
 layers, sets/tuples/carts, ranges, sums/products/reduces, struct field access,
@@ -217,7 +218,16 @@ the target's WD is already established.
 | BuiltinRule (2) | KnownSpecialProperty (1) |
 | Strategy (3), including new peer bridges | BuiltinRule (2) |
 | DefinitionAndForall (4) | BuiltinRule (2) |
-| Rewrite, only at (4, true) | (4, false) |
+| Rewrite admission, only at (4, true) | (4, false); the leaf may further cap its residual |
+
+The [function-unfold design agreement](../README.md#design-agreement) keeps
+rewrite as a final fallback. Equality function unfolding considers only
+original outermost scalar-tree calls and caps its residual at `(3, false)`.
+Call arguments and inserted bodies are not revisited. Ordinary rule premises
+do not enable rewrite; independent root facts, top-level universal conclusions
+and chain segments may each inherit an opportunity. See the linked
+[cost observations](../README.md#cost-observations-and-future-changes) before
+considering broader eligibility or recursive expansion.
 
 Family dispatch preserves permissions. Rule admission derives the premise
 state once; recursive WD and inference receive that state rather than creating

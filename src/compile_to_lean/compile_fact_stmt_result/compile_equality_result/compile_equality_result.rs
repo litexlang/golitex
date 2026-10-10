@@ -84,6 +84,14 @@ impl LitexToLeanCompiler {
                 self.compile_function_definition(fact, proof, position)?
             }
             EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof),
+            ) => self.compile_arithmetic_congruence_strategy(
+                fact,
+                &proof.requirement_facts,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
             ) => self.compile_rational(
                 fact,

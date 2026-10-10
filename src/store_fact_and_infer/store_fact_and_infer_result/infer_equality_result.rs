@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::runtime::FactId;
 
-use super::StoreFactAndInferResult;
+use super::{StoreFactAndInferResult, StoreInferredFactAndInferResult};
 
 // One equality-infer rule hit (parallel to EqualitySearchProofBy* arms).
 // Unlike verify (stop at first success), every matching arm is kept in the
@@ -22,7 +22,7 @@ pub struct InferEqualFactAdditiveCancellationResult {
     pub left_in_c_proof: VerifyFactResult,
     pub right_in_c_proof: VerifyFactResult,
     pub common_in_c_proof: VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactAndInferResult>,
 }
 
 impl InferEqualFactAdditiveCancellationResult {
@@ -32,7 +32,7 @@ impl InferEqualFactAdditiveCancellationResult {
         left_in_c_proof: VerifyFactResult,
         right_in_c_proof: VerifyFactResult,
         common_in_c_proof: VerifyFactResult,
-        derived: StoreFactAndInferResult,
+        derived: StoreInferredFactAndInferResult,
     ) -> Self {
         Self {
             source_fact_id,
@@ -183,7 +183,7 @@ impl InferEqualFactNonzeroNumeratorCancellationResult {
 impl InferEqualityResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
-            Self::AdditiveCancellation(r) => r.derived.stored_fact_ids(),
+            Self::AdditiveCancellation(r) => r.derived.store_and_infer.stored_fact_ids(),
             Self::NonzeroFactorCancellation(r) => r.derived.stored_fact_ids(),
             Self::SubtractiveCancellation(r) => r.derived.stored_fact_ids(),
             Self::CommonDenominatorCancellation(r) => r.derived.stored_fact_ids(),

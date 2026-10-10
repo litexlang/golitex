@@ -77,10 +77,20 @@ verify_equal_fact(goal, state)
        2 builtin rules (premises 1)
        3 strategies and searched peer bridges (premises 2)
        4 object definitions and known forall (premises 2)
-       rewrite at (4,true) -> residual at (4,false)
+       rewrite at (4,true) -> child at (4,false); leaf caps its residual
   -> on a search miss, actual literal beta using this equality's checked WD
        only when stage 4 is allowed; residual truth at premise ceiling 2
 ```
+
+`FnApplicationUnfoldSubstitution` is a final builtin rewrite fallback after
+closed numeric substitution. It reads one exact head-to-anonymous-function
+equality, unfolds original outermost calls under scalar constructors once,
+and checks its residual at `(Strategy, false)`. Arguments and inserted bodies
+stay opaque to this pass; both original and selected application domains remain
+checked. The equality may be a local universal premise, independently of any
+`have fn` declaration. The [design agreement](../../../README.md#design-agreement) and
+[cost observations](../../../README.md#cost-observations-and-future-changes)
+own the permission, traversal and performance boundaries.
 
 The literal-beta leaf in `by_fn_application/by_literal_beta.rs` references the
 parent equality's WD side for the exact submitted anonymous-function call.

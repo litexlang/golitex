@@ -1,0 +1,13 @@
+# Tracer: the function body comes from a forall premise, not a have fn declaration.
+# The original internal name fn_definition_subterms obscured this existing source.
+# FnApplicationUnfoldSubstitution reads the exact local f=AnonymousFn equality.
+forall f fn(t R: t > 0) R, x R:
+    f = fn(t R: t > 0) R {t}
+    x > 0
+    =>:
+        2 * f(x) = 2 * x
+
+# Boundary: function membership alone supplies no body; x>0 is still required.
+# f(x)=f(x) would prove only reflexivity, so this tracer checks a body-dependent goal.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_forall_equality.lit
+# Proof-source regression: tests/unit/execute/fn_application_unfold_substitution/tests.rs

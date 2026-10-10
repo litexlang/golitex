@@ -172,19 +172,21 @@ fn fn_application_unfold_substitution_examples_replay_without_holes() {
 }
 
 #[test]
-fn fn_application_unfold_substitution_keeps_unsupported_residual_fail_closed() {
+fn fn_application_unfold_substitution_replays_its_arithmetic_congruence_residual() {
     let source=include_str!("../../../../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_scalar_arithmetic.lit");
     let (result, compiler) = super::execute(source);
-    let error = super::compile_run(&result, &compiler, "unsupported_residual")
-        .expect_err("unsupported successful child rejects the whole artifact");
-    assert_eq!(error.route, "Equality/BuiltinStrategy");
+    let output = super::compile_run(&result, &compiler, "arithmetic_congruence_residual")
+        .expect("the recorded arithmetic congruence residual compiles");
+    assert!(output.contains("congrArg₂ M.divValue"));
+    assert!(!output.contains("sorry") && !output.contains("admit"));
 }
 
 #[test]
-fn fn_application_unfold_substitution_preserves_existing_natural_definition_compiler_boundary() {
+fn fn_application_unfold_substitution_replays_the_original_natural_definition() {
     let source=include_str!("../../../../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit");
     let (result, compiler) = super::execute(source);
-    let error = super::compile_run(&result, &compiler, "natural_definition_unsupported")
-        .expect_err("existing natural function declaration producer remains unsupported");
-    assert_eq!(error.route, "WD/Producer");
+    let output = super::compile_run(&result, &compiler, "natural_definition")
+        .expect("the original natural formula retains its parameter inference WD");
+    assert!(output.contains("Litex.naturalNonnegative"));
+    assert!(!output.contains("sorry") && !output.contains("admit"));
 }

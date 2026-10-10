@@ -36,6 +36,13 @@ reads the function head's exact equality to an anonymous function. `have fn equa
 automatically publishes that equality. Each original outermost call unfolds once
 under scalar constructors; call arguments and inserted bodies are leaves.
 The proof retains both call-domain checks, the head equality and the residual.
+The equality can also be a local premise; it need not originate in a definition.
+
+This is a final equality fallback after earlier proof routes and closed numeric
+substitution miss. Its residual stays at Strategy with rewrite disabled;
+ordinary rule premises cannot reopen it. The
+[design agreement and cost observations](../../src/execute/README.md#design-agreement)
+record these limits, separate branch permissions and the cost of large bodies.
 
 For example, this verifies directly without an intermediate `f(x)=x+1`:
 
@@ -46,6 +53,7 @@ forall x N:
 ```
 
 Independent strict examples cover [repeated calls and both sides](equal/by_builtin_rewrite/fn_application_unfold_substitution_multiple_calls.lit),
+[a guarded universal equality premise](equal/by_builtin_rewrite/fn_application_unfold_substitution_forall_equality.lit),
 [power, negation and division](equal/by_builtin_rewrite/fn_application_unfold_substitution_scalar_arithmetic.lit),
 [argument substitution](equal/by_builtin_rewrite/fn_application_unfold_substitution_exact_arguments.lit),
 [guarded applications and reciprocal cancellation](equal/by_builtin_rewrite/fn_application_unfold_substitution_guarded.lit)

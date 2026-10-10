@@ -1304,9 +1304,21 @@ and deterministic structural membership.
 Special properties (level 1) may use level-0 premises; builtin rules (level 2)
 may use level 1; strategies (level 3) and definition/forall (level 4) may use
 level 2. Rewrite is available at level 4 once per branch. Numeric and atomic
-rewrites keep level 4 with rewriting disabled; direct function-value equality
-substitution caps its residual at level 3, so it does not reopen generic
-definition/forall search. WD checks inherit the current ceiling.
+rewrites keep level 4 with rewriting disabled; one-step function-application
+unfold substitution caps its equality residual at level 3, so it does not
+reopen generic definition/forall search. WD checks inherit the current ceiling.
+
+The function-unfold fallback reads the function head's exact stored equality
+to an anonymous function. `have fn ... = body` publishes such an equality;
+a local `forall` premise or another checked equality can supply it too. It unfolds
+original outermost calls under supported scalar constructors once; call
+arguments and inserted bodies are not revisited. Both application-domain
+checks remain required. Ordinary rule premises and the residual cannot restart
+rewrite. Separate root facts, top-level universal conclusions and chain
+segments can each inherit an opportunity; this is not a theorem-wide limit.
+One layer can still create a large expression. The
+[verifier design agreement and cost observations](../src/execute/README.md#design-agreement)
+record the current boundaries and the evidence needed before widening them.
 
 Closed calculation has no access to the environment or recursive proof search.
 It covers closed numeric equality, real comparisons and standard-set membership
@@ -10981,11 +10993,12 @@ both `a=0` and `cos(a)=1`, the whole cosine value wins. Equality, order and
 existing permissions. The [numeric substitution tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_subterm_priority.lit)
 preserves the former process-dependent failure.
 
-One-step function-definition unfolding is an equality rewrite (preview), tried
+One-step function-application unfold substitution is an equality rewrite (preview), tried
 after closed numeric substitution. `have fn equal` automatically stores both
 function membership and an equality from the function name to its anonymous
-function. The rewrite reads that equality from the function head's exact
-special properties and substitutes the actual arguments into the body:
+function. This is one source of the equality, not a requirement that the head
+come from a definition. The rewrite reads any such exact stored equality from
+the function head's special properties and substitutes actual arguments into the body:
 
 ```litex
 have fn f(x N) N = x + 1
@@ -10993,6 +11006,19 @@ forall x N:
     2 * f(x) = 2 + 2 * x
 ```
 
+A local universal premise can supply the anonymous function without a
+`have fn` declaration, while retaining its domain guard:
+
+```litex
+forall f fn(t R: t > 0) R, x R:
+    f = fn(t R: t > 0) R {t}
+    x > 0
+    =>:
+        2 * f(x) = 2 * x
+```
+
+The [universal-premise tracer](../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution_forall_equality.lit)
+checks a body-dependent conclusion; `f(x)=f(x)` would need only reflexivity.
 No application-value equation is required. Each original outermost call under
 scalar constructors unfolds once, on both equality sides. Call arguments and
 inserted bodies are not scanned. If one side unfolds exactly to the existing

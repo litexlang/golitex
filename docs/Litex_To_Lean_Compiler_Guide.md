@@ -173,6 +173,24 @@ demonstrates predicate definition and unfolding; [quotient distribution](../lean
 demonstrates two arguments. Recursive or composed formula bodies and
 concrete-predicate function guards remain unsupported compiler routes.
 
+The [natural successor](../lean/examples/natural_successor_affine_identity/statement.lit)
+also preserves the natural return condition:
+
+```litex
+have fn f(x N) N = x + 1
+forall n N:
+    2 * f(n) = 2 + 2 * n
+f(2) = 3
+```
+
+The signed-membership result retains its original zero WD before storing
+nonnegativity; `Litex.addInN` proves the body's natural membership. Variable N
+multiplication and Z arithmetic membership are still unsupported consumers.
+The [shifted square quotient](../lean/examples/real_shift_square_quotient/statement.lit)
+replays a selected `ArithmeticCongruence` residual: exact recorded requirement
+facts, IDs and successful children produce ordinary congruence of the semantic
+operations.
+
 ## Definitions and named theorem citations
 
 The [named add-zero example](../lean/examples/named_add_zero/statement.lit)
@@ -201,6 +219,19 @@ Replaying both preserves their actual parameter and premise producers; local
 proof definitions do not become later global declarations. Repeated forall
 facts use their recorded earlier theorem and binder renaming when that is the
 source's selected route.
+
+The [direct nested call](../lean/examples/nested_named_add_zero/statement.lit)
+needs no preliminary object-construction statement:
+
+```litex
+thm add_zero_again:
+    ? forall y R:
+        y + 0 = y
+    by thm add_zero(y) => y + 0 = y
+```
+
+Its result retains `selected_wd`, checked in the caller after the invocation
+scope closes and before storage. Call-local WD cannot replace that evidence.
 
 The [equality transport example](../lean/examples/equality_membership_transport/statement.lit)
 shows another use of citations:
@@ -414,14 +445,28 @@ object. If an ID is missing, or a required inferred fact has no supported
 producer, compilation rejects the route. Searching for another true fact in
 the live environment would hide the missing source dependency.
 
-Direct scalar cancellation now publishes `a=b` from a stored `a+k=b+k`,
-`a-k=b-k`, `k-a=k-b`, or from `a*k=b*k` / `a/k=b/k` with an available
-`k!=0` certificate. `k/a=k/b` also needs both denominators nonzero.
-Its inference evidence
-is retained by Litex, but this compiler does not yet replay it. Citing that
-derived equality rejects compilation at `FactId/Producer`; it is never emitted
-as a new assumption. The producer/consumer boundary is checked by the
-`equality_cancellation_lean_citations_fail_closed_without_infer_replay` test.
+Additive cancellation replays the stored inference, including its original
+membership checks, derived WD and fact identity. For example:
+
+```litex
+forall a, b, k R:
+    a + k = b + k
+    =>:
+        a = b
+```
+
+The compiler emits the inferred equality under its original `h_<FactId>`
+before the conclusion cites it. The [cancellation example](../lean/examples/additive_cancellation/statement.lit)
+also covers a shared addend in different positions and nested rational sums.
+The four cancellation laws in `Litex.lean` are proved from numeric denotation,
+faithful complex embedding and ordinary additive cancellation.
+
+Litex also publishes `a=b` from `a-k=b-k`, `k-a=k-b`, or from `a*k=b*k` /
+`a/k=b/k` with an available `k!=0` certificate. `k/a=k/b` needs both denominators
+nonzero. These other consumed cancellation families remain unsupported;
+their citations reject compilation rather than becoming new assumptions.
+The `equality_cancellation_lean_citations_fail_closed_without_infer_replay`
+test preserves that boundary.
 
 ## What successful output establishes
 

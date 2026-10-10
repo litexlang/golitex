@@ -194,7 +194,7 @@ impl LitexToLeanCompiler {
                 &clause,
                 &completed,
             )?;
-            derived.extend(self.compile_prop_inferences(
+            derived.extend(self.compile_stored_inferences(
                 &captured.store_and_infer,
                 &fact,
                 &clause,

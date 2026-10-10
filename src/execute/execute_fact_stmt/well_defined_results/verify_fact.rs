@@ -236,7 +236,18 @@ impl Runtime {
         fact: &Fact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<crate::store_fact_and_infer::StoreFactAndInferResult> {
-        match self.try_store_inferred_fact_and_infer(fact, verify_state)? {
+        Ok(self
+            .store_inferred_fact_and_infer_with_wd(fact, verify_state)?
+            .store_and_infer)
+    }
+
+    // The mandatory inference path retains its already checked formation.
+    pub(crate) fn store_inferred_fact_and_infer_with_wd(
+        &mut self,
+        fact: &Fact,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<crate::store_fact_and_infer::StoreInferredFactAndInferResult> {
+        match self.try_store_inferred_fact_and_infer_with_wd(fact, verify_state)? {
             Some(ok) => Ok(ok),
             None => Err(crate::runtime::RuntimeError::InternalBug(format!(
                 "inferred fact {} failed well-definedness check",
