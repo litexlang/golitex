@@ -24,6 +24,7 @@ in `plan/src收尾总清单.md`.
 | --- | --- |
 | `python3 examples/test_statements/run.py --binary target/release/litex --require-no-gaps` | Runs the current Stmt manifest, including declared positive and negative cases. |
 | `python3 tests/tooling/run_docs_markdown_files.py` | Runs root `README.md` plus `docs/**/*.md` Litex fences via `target/release/litex`. |
+| `cargo test --release --test installed_std_cli --locked` | Copies the executable into package layouts and verifies a real std export from an external project without a path override. |
 | `cargo test --release runtime_contract_builtin -- --nocapture` | Runs the checked-`1 = 1` runtime smoke test. |
 | `cargo test --release --all-targets --no-fail-fast` | Runs all registered Rust targets; it does not replace the missing full corpus collectors. |
 | A test name containing `run_all` | Does not imply compiler, Lean, textbook, or packaging coverage unless that command lists those targets. |

@@ -1,0 +1,6 @@
+# Two distinct real objects form a finite subset of the real numbers.
+forall a, b R:
+    a != b
+    =>:
+        a $in {a, b}
+        {a, b} $subset R

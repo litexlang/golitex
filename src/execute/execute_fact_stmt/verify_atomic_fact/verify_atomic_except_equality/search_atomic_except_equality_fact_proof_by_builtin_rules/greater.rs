@@ -9,6 +9,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `a > b`.
 pub enum GreaterFactSearchProofByBuiltinRule {
+    ClosedSubtractionStrictBound(GreaterClosedSubtractionStrictBoundBuiltinRuleProof),
     MulLeftNegativeReversesStrictGreater(
         super::order_negative_common_factor::MulLeftNegativeReversesStrictGreaterProof,
     ),
@@ -93,6 +94,10 @@ pub struct NativeEulerGreaterZeroBuiltinRuleProof {}
 pub struct NativeEulerGreaterOneBuiltinRuleProof {}
 
 pub struct NativePiGreaterZeroBuiltinRuleProof {}
+
+pub struct GreaterClosedSubtractionStrictBoundBuiltinRuleProof {
+    pub bound: super::closed_subtraction_bound::ClosedSubtractionBoundCertificate,
+}
 
 impl Runtime {
     // Builtin: known strict less dual, add/mul congruence, R+ membership, native e/pi, then closed decimal.
@@ -212,6 +217,16 @@ impl Runtime {
         }
         if let Some(proof) = self.search_negative_common_factor_greater(fact, verify_state)? {
             return Ok(Some(proof));
+        }
+
+        if let Some(bound) =
+            self.search_closed_subtraction_strict_bound(&fact.left, &fact.right, true)
+        {
+            return Ok(Some(
+                GreaterFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(
+                    GreaterClosedSubtractionStrictBoundBuiltinRuleProof { bound },
+                ),
+            ));
         }
 
         if let Some(proof) = self.search_first_quadrant_positive_greater(fact) {

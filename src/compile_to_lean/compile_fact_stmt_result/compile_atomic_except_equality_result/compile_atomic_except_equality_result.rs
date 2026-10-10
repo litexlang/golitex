@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -85,9 +86,14 @@ impl LitexToLeanCompiler {
                             AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
                                 AtomicFact::InFact(fact) => match rule {
                                     crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(_) => self.compile_complex_arithmetic_closure(fact, position)?,
+                                    InFactSearchProofByBuiltinRule::ListSetElementMembership(_) | InFactSearchProofByBuiltinRule::SetBuilderMembership(_) => self.compile_set_membership_rule(fact, rule, position)?,
                                     _ => self.compile_fn_return_builtin(fact, rule, position)?,
                                 },
                                 _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
+                            },
+                            AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(rule) => match &success.fact {
+                                AtomicFact::SubsetFact(fact) => self.compile_set_subset_rule(fact, rule, position)?,
+                                _ => return Err(LeanCompileError::new("Set/SubsetFamily", "Subset evidence belongs to another atomic family.")),
                             },
                             other => return Err(unsupported_atomic_builtin(other)),
                         },

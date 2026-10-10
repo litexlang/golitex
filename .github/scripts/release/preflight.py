@@ -17,6 +17,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
+from package_std import copy_std
+
 
 SMOKE_SOURCE = "quot(-7, 3) = -3\n$dvd(12, 3)\n"
 SMOKE_CONFIG = '[import std]\nbasics\n\n[export]\nsmoke = "./smoke.lit"\n'
@@ -72,7 +74,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             prefix="release-preflight.", dir=private_root
         ) as temporary_directory:
             work_directory = Path(temporary_directory)
-            if args.archive is not None:
+            if args.installed_binary is not None:
+                if args.std is None:
+                    raise PreflightError("--installed-binary requires --std")
+                check_installed_binary(
+                    work_directory, args.installed_binary.resolve(), args.std.resolve(), version
+                )
+            elif args.archive is not None:
                 archive = args.archive.resolve()
                 if not archive.is_file():
                     raise PreflightError(f"archive does not exist: {archive}")
@@ -90,7 +98,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     repository_root, work_directory, version, platform
                 )
 
-            check_archive(work_directory, archive, version)
+            if args.installed_binary is None:
+                check_archive(work_directory, archive, version)
         print(f"Temporary work directory cleaned: {work_directory}", flush=True)
         print("PREFLIGHT SUCCESS", flush=True)
         return 0
@@ -120,7 +129,15 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         type=Path,
         help="check an existing .tar.gz or .zip instead of building one",
     )
-    return parser.parse_args(argv)
+    source.add_argument(
+        "--installed-binary", type=Path,
+        help="check an installed executable from an external project without a std environment override",
+    )
+    parser.add_argument("--std", type=Path, help="installed std directory, required with --installed-binary")
+    arguments = parser.parse_args(argv)
+    if arguments.std is not None and arguments.installed_binary is None:
+        parser.error("--std is only used with --installed-binary")
+    return arguments
 
 
 def package_version(cargo_toml: Path) -> str:
@@ -201,7 +218,7 @@ def build_local_archive(
     standard_library = repository_root / "std"
     if not (standard_library / "basics" / "litex.config").is_file():
         raise PreflightError("std/basics/litex.config is missing")
-    shutil.copytree(standard_library, package_directory / "std")
+    copy_std(standard_library, package_directory / "std")
 
     archive = work_directory / (
         f"litex_{version}_{platform.os_name}_{platform.arch}"
@@ -251,9 +268,24 @@ def check_archive(
     if not (extracted / "std" / "basics" / "main.lit").is_file():
         raise PreflightError("archive is missing std/basics/main.lit")
 
+    check_installed_binary(work_directory, binary, extracted / "std", version)
+
+
+def check_installed_binary(
+    work_directory: Path, binary: Path, standard_library: Path, version: str
+) -> None:
+    if not binary.is_file():
+        raise PreflightError(f"installed executable is missing: {binary}")
+    basics = standard_library / "basics"
+    if not (basics / "litex.config").is_file() or not (basics / "main.lit").is_file():
+        raise PreflightError(f"installed basics module is missing: {basics}")
+    project = work_directory / "external-project"
+    project.mkdir()
+    environment = dict(os.environ)
+    environment.pop("LITEX_STD_PATH", None)
     version_result = subprocess.run(
         [str(binary), "-version"],
-        cwd=extracted,
+        cwd=project,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -261,22 +293,31 @@ def check_archive(
     )
     validate_version_output(version_result.stdout, version_result.returncode, version)
 
-    smoke_file = extracted / "smoke.lit"
-    smoke_file.write_text(SMOKE_SOURCE, encoding="utf-8")
-    (extracted / "litex.config").write_text(SMOKE_CONFIG, encoding="utf-8")
-    smoke_result = subprocess.run(
-        [str(binary), "-lang", "en", "-f", smoke_file.name],
-        cwd=extracted,
-        env={**os.environ, "LITEX_STD_PATH": str(extracted / "std")},
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
+    smoke_file = project / "smoke.lit"
+    smoke_file.write_text(
+        SMOKE_SOURCE + "basics::main::litex_distribution_probe = 1\n", encoding="utf-8"
     )
-    validate_run_output(smoke_result.stdout, smoke_result.returncode)
+    (project / "litex.config").write_text(SMOKE_CONFIG, encoding="utf-8")
+    # Probe the installed module's actual contents, then restore shipped source.
+    main = basics / "main.lit"
+    original = main.read_bytes()
+    try:
+        main.write_bytes(original + b"\nlet litex_distribution_probe = 1\n")
+        smoke_result = subprocess.run(
+            [str(binary), "-lang", "en", "-strict", "-f", smoke_file.name],
+            cwd=project,
+            env=environment,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        validate_run_output(smoke_result.stdout, smoke_result.returncode)
+    finally:
+        main.write_bytes(original)
     print(
-        "PREFLIGHT smoke: litex.config [import std] basics + "
-        "native quot(-7, 3) and $dvd(12, 3) -> ok",
+        "PREFLIGHT smoke: external project imports bundled std declaration "
+        "without LITEX_STD_PATH -> ok",
         flush=True,
     )
 

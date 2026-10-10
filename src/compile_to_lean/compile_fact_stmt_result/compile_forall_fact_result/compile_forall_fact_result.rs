@@ -17,9 +17,9 @@ impl LitexToLeanCompiler {
             VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) => {
                 self.compile_known_forall(proof, position)
             }
-            VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(_)) => {
-                Err(LeanCompileError::unsupported("Forall/EmptyParameterDomain"))
-            }
+            VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(
+                proof,
+            )) => self.compile_empty_parameter_domain(proof, position),
             VerifyForallFactResult::Failed(_) => Err(LeanCompileError::new(
                 "Forall/Failed",
                 "Failed verification is not proof evidence.",
@@ -314,6 +314,26 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             let position = &group_position;
+            if matches!(&group.param_type, ParamType::Set(_)) {
+                if !matches!(wd, ParamTypeWellDefinedProof::Set) {
+                    return Err(LeanCompileError::new(
+                        "Forall/SetKindWD",
+                        "A set-kind binder requires its actual kind evidence.",
+                    ));
+                }
+                for parameter in &group.params {
+                    let introduced = SourcePosition {
+                        before: offset + 1,
+                        ..*position
+                    };
+                    let (new_binders, new_arguments) =
+                        self.introduce_set_parameter(parameter, &stores[offset], &introduced)?;
+                    binders.extend(new_binders);
+                    introductions.extend(new_arguments);
+                    offset += 1;
+                }
+                continue;
+            }
             let set = match &group.param_type {
                 ParamType::Obj(set) => set,
                 ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {

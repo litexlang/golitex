@@ -8,7 +8,6 @@ use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result::FactWellDefinedProof;
 use crate::prelude::*;
 use crate::runtime::FactId;
 
@@ -897,7 +896,8 @@ impl ListSetObjWellDefinedProof {
 
 pub struct SetBuilderObjWellDefinedProof {
     pub param_set_well_defined: Box<ObjWellDefinedProof>,
-    pub fact_well_defined: Vec<FactWellDefinedProof>,
+    pub defined_params: StoreHaveObjAndInferResult,
+    pub assumed_facts: Vec<AssumeDomFactResult>,
     pub local_env: Box<ExecEnv>,
 }
 

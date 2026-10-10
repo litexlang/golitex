@@ -1,1 +1,2 @@
+mod compile_empty_parameter_domain;
 mod compile_forall_fact_result;

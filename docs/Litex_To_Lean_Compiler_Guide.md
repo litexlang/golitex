@@ -99,6 +99,51 @@ verifiable in Litex while its particular evidence route is outside the current
 compiler. Such a route needs an explicit adapter before compilation can accept
 it.
 
+## Finite sets and bounded builders
+
+[The finite natural set](../lean/examples/finite_natural_set/statement.lit)
+retains its source elements and the proof that they are distinct:
+
+```litex
+have small_naturals set = {1, 2}
+1 $in small_naturals
+small_naturals $subset N
+```
+
+The actual generated representation nests certified `Litex.insert` objects.
+Each child keeps its own host representation. Source `{1, 1}` and
+`{1 + 1, 2}` remain rejected, although native set insertion permits duplicates.
+Enumeration order is construction order; mathematical identity is extensional.
+
+[Nonnegative rational inclusion](../lean/examples/nonnegative_rational_subset/statement.lit)
+uses bounded separation:
+
+```litex
+have nonnegative_rationals set = {x Q: x >= 0}
+have nonnegative_reals set = {x R: x >= 0}
+nonnegative_rationals $subset nonnegative_reals
+```
+
+`Litex.setBuilder` owns the certified bound and a predicate on certified members.
+Its predicate WD is formation evidence, not a claim that the predicate is true.
+Ordered filters retain preceding proof witnesses: in
+`{x R: x != 0, 1 / x > 0}`, the nonzero proof certifies the division. Empty
+bounds require no witness; a selected empty-domain universal result consumes
+its recorded emptiness proof before contradiction elimination.
+
+`SetSemantics M` is proved by the actual ZF model. Function domains inherit
+its same separation operation. Arbitrary `have A set` and `forall A set`
+retain generic host representations; `set` does not denote a universal set.
+A native numeric view observes only numeric members. Interpreting the whole
+set as a real or complex set additionally needs a proved `A $subset R` or
+`A $subset C`. Native consumers close the reviewed model inside their proof
+bodies and expose ordinary ZFSet, Set Complex and Set Real statements.
+
+This slice supports flat atomic filters and supported concrete predicates,
+with the exact recorded membership/subset routes. Compound builder clauses,
+nonempty/finite binder kinds, unbounded comprehension and existence-based
+set selection are outside this compiler profile. They do not become axioms.
+
 ## Formula functions and concrete predicates
 
 The [guarded reciprocal](../lean/examples/guarded_real_reciprocal/statement.lit)
@@ -213,6 +258,40 @@ premises, exact citations and even-exponent restriction.
 
 ## Membership preserves the object's representation
 
+### The explicit mathematical interpretation M
+
+Every generated file declares its interpretation explicitly:
+
+```lean
+variable {M : Litex.Semantics.{u}}
+```
+
+`M` is a proof-bearing mathematical dictionary. `M.Value` is the common
+semantic universe; `M.mem` and `M.isSet` interpret membership and sethood.
+`M.number : ℂ → M.Value` embeds native numbers, `M.standard` interprets
+N/Z/Q/R/C, and the arithmetic fields interpret the owned Litex operations.
+The dictionary also contains proofs of the required laws.
+
+`Representation M α` fixes how a host value of type `α` denotes an element
+of `M.Value` and which host values are well-defined. `Obj α` carries that
+host value together with its WD proof. Source facts concern its denotation:
+
+```text
+a.val : α  -- Representation.denote -->  Litex.denote a : M.Value
+
+Litex.In a A   = M.mem (Litex.denote a) (Litex.denote A)
+Litex.Same a b = (Litex.denote a = Litex.denote b)
+```
+
+The generated theorem holds for every `M` satisfying this interface; the
+compiler does not fix a default interpretation. Current native consumers
+explicitly instantiate `Litex.NumericModel.model`, whose values are Mathlib
+ZF sets. This is a concrete model of the supported slice, not a completed
+interpretation of every Litex object and rule. Function-using output also
+requires the separate proved `Litex.FunctionSemantics M` contract.
+
+### Membership supplies knowledge without changing α
+
 The [generic complex-object example](../lean/examples/complex_object_equals_itself/statement.lit)
 extends reflexivity to a parameter:
 
@@ -229,7 +308,7 @@ verbatim fragments of the generated theorem header, separated for readability:
 {_Host_i1 : Type v1}
 [_rep_i1 : Litex.Representation M _Host_i1]
 (_value_i1 : Litex.Obj (M := M) _Host_i1)
-(_h_param_i1 : Litex.In _value_i1 (Litex.C (M := M)))
+(h_15 : Litex.In _value_i1 (Litex.C (M := M)))
 ```
 
 `a C` supplies a membership fact. It does not replace the object's representation
@@ -251,6 +330,52 @@ and constructed expressions retain their own representations. Proved bridges
 connect their meanings to native numeric mathematics when the required
 membership evidence is available.
 
+### A native numeric representative for a generic object
+
+The [real-is-complex source](../lean/examples/real_is_complex/statement.lit)
+checks `forall a R: a $in C`. Its generated theorem keeps the generic
+host, `Representation`, certified object and ordinary In-R hypothesis, and
+proves In-C with `Litex.realToComplex`. No conversion of the host type occurs.
+
+The `Semantics` contract guarantees a unique native complex representative
+of each complex member. These are the relevant existing fields:
+
+```lean
+number_injective : Function.Injective number
+complex_members : ∀ x, mem x (standard .complex) ↔ ∃ z, x = number z
+```
+
+Core exposes `Litex.NativeBridge.asComplex a h_16 : ℂ` and proves that its
+embedding equals the object's denotation. An illustrative handwritten
+adapter body follows; `h_2` abbreviates the generated real-is-complex theorem,
+and `a`, `M`, `α` and `h_15` come from its context:
+
+```lean
+have h_16 : Litex.In a Litex.C := h_2 a h_15
+let z : ℂ := Litex.NativeBridge.asComplex a h_16
+have hz : Litex.denote a = M.number z :=
+  Litex.NativeBridge.asComplex_spec a h_16
+```
+
+This observation works for any `M : Semantics`, not only NumericModel.
+`asComplex_proofIndependent` proves independence from the membership proof;
+`same_iff_asComplex` identifies semantic equality with equality of native
+complex representatives. `asReal` similarly observes real members, and
+`asComplex_eq_asReal` proves compatibility with the native real-to-complex
+embedding. The observations use classical choice and are noncomputable.
+They leave the original object and its host representation intact. Equality
+of observations does not imply equality of arbitrary host payloads, because
+`Representation.denote` need not be injective.
+
+The compiler already uses this bridge in the
+[add-zero generated proof](../lean/examples/add_zero/statement.lean): the
+source sum stays `Litex.add`, while `asComplex`, `asComplex_spec` and
+`denoteAdd` supply numeric witnesses to check the source-selected rational
+normalization. An observation does not replace the owned operation or select
+a new proof route. A handwritten native Adapter consumes generated proofs
+through these proved conversions; its Final consumer can expose ordinary
+Mathlib binders and propositions.
+
 ## Construction conditions survive compilation
 
 The [division example](../lean/examples/division_equals_itself/statement.lit)
@@ -269,7 +394,7 @@ complex-membership proofs for both parameters and the nonzero premise for `b`.
 The quotient passed to reflexivity is this verbatim generated expression:
 
 ```lean
-Litex.div _value_i1 _value_i2 _h_param_i1 _h_param_i2 _h_dom_f1
+Litex.div _value_i1 _value_i2 h_28 h_29 h_1
 ```
 
 The three proof arguments certify the two operand domains and the nonzero

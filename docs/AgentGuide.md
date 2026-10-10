@@ -157,10 +157,8 @@ the artificial axiom above is deliberately rejected in strict mode. Reserve
 | Module interfaces and chapter dependencies | The owning module's `README.md`, `math_collections.md`, and `litex.config` |
 | Repository authorization and local-only boundaries | [AGENTS.md](../AGENTS.md) and the applicable repository policy skill |
 
-Verified example and controls: 2026-10-07 receipt (historical task record; retired).
-The explicit fresh-process replay was also rechecked with the current worktree
-release build: recheck receipt (historical task record; retired).
-The checks cover same-process retention, a fresh-process rejection, failed
-compound-statement rollback, per-statement commit in a mixed frame, hard-error
-termination, and the axiom's strict-mode rejection. They change no kernel
-semantics and make no agent-performance claim.
+Session boundaries include retaining accepted statements in the same process,
+replaying them in a fresh process, rolling back a failed compound statement,
+committing each successful statement in a mixed frame, stopping on hard errors,
+and rejecting axioms in strict mode. The example above explains these
+boundaries; it makes no agent-performance claim.

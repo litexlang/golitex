@@ -38,6 +38,15 @@ impl LitexToLeanCompiler {
         };
         let mut declarations = Vec::new();
         for rule in rules {
+            if let InferAtomicExceptEqualityResult::InFactSetBuilder(proof) = rule {
+                declarations.extend(self.compile_set_builder_projections(
+                    store,
+                    proof,
+                    member_fact,
+                    member,
+                    position,
+                )?);
+            }
             if let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(sign) = rule {
                 let source = match member_fact {
                     Fact::AtomicFact(AtomicFact::InFact(f))

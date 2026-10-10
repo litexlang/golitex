@@ -8,6 +8,7 @@ and [launch flow](../../src/run/README.md).
 
 | Project | Contract |
 | --- | --- |
+| `installed_std/` | Real imported declaration, bundled std discovery, package layouts and symlink/override boundaries. |
 | `repo/` and `lib_pkg/` | Import a sibling module as `Lib`; use its qualified definitions and theorems. |
 | `export_order_repo/` | Import `A` before ordered root exports; preserve canonical module/export names. |
 | `trusted_template_prefix/` | Load an earlier checked generic template, then instantiate it from the later export. |

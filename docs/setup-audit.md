@@ -1,6 +1,9 @@
 # Setup and CLI verification — 2026-10-10
 
-This audit checks `setup.md`, `setup_zh.md`, `cli.md`, and `cli_zh.md`.
+The earlier sections record behavior before the installed-std repair. See the
+latest section for current implementation and remaining native-platform gates.
+
+This audit checks `setup.md`, `安装Litex.md`, `cli.md`, and `Litex命令行参考.md`.
 It is not an acceptance of every platform installer or the published release.
 
 ## Observed behavior and documentation correction
@@ -119,8 +122,10 @@ check. Temporarily adding this line to the actual `std/basics/main.lit`:
 let version = 1
 ```
 
-made an external project with `[import std] basics` verify:
+made an external project with `[import std] basics` verify (this excerpt
+requires that module context; its executable fixture is linked below):
 
+<!-- litex:skip-test -->
 ```litex
 basics:::version = 1
 basics::main::version = 1
@@ -192,3 +197,59 @@ establish MSI availability. No publishing configuration was changed here.
 The setup and CLI guides now distinguish optional empty-module compatibility
 imports from native mathematical vocabulary. Full fresh installation acceptance
 on Linux and Windows remains outside this macOS audit’s evidence.
+
+
+## Installed std and MSI repair: current acceptance
+
+The earlier environment-only lookup limitation has been repaired in
+[`load_config.rs`](../src/run_module/load_config.rs). Existing explicit/env and
+local-project precedence remains; executable-relative layouts are additional
+fallbacks. Symlinks resolve to the real versioned installation. The fixture
+[`installed_std`](../examples/module_manager/installed_std/README.md) preserves
+the former failure and active imported declaration consumer.
+
+The macOS release executable now passes `installed_std_cli` across archive,
+current/legacy Homebrew, MSI, and Debian filesystem layouts, without env or cwd
+std. File/eval/repository/REPL/continued-session commands, symlink lookup, wrong values, missing imports,
+invalid overrides, and local overrides are exercised. Those are real native
+executions in copied layouts, not actual Windows or Debian installations.
+A native archive built from that executable and clean std passed the real
+`preflight.py --archive` gate: an external strict project consumed a temporarily
+added std declaration, with `LITEX_STD_PATH` removed. Original source was restored.
+
+Release tooling currently has 19 passing Python tests, including source-only
+std packaging, failure cleanup, MSI dependency/attachment, native arm64 lanes,
+and manual-run publishing exclusion. The workflow YAML, Bash steps and generated
+Homebrew Ruby syntax parse. Two complete macOS Rust gates passed 1,485 tests;
+the final focused installed-std target passed five tests. The documentation
+collector passed 877 fences. The real Lean gate passed 42 generated pairs,
+replay profiles, negatives and native consumers. Mechanics passed both the
+mandated tool and an additional run against this task’s actual release binary.
+Formatting is not yet green in the shared worktree: other ongoing Rust edits
+are unformatted, outside this task's changed Rust files.
+
+MSI is now required, downloads pinned WiX 3.14.1/cargo-wix 0.3.9, installs and
+runs the external-project std declaration smoke, and is downloaded and attached
+by the Release job. Missing expected asset classes fail release upload.
+The installed checks no longer inject std environment paths. Unix/Windows/
+Debian/Docker and MSI share a source inventory that excludes knowledge caches,
+hidden drafts/metadata, and local todos.
+
+`Deploy` also has a manual `workflow_dispatch` validation path, with publishing
+jobs excluded. Its native macOS ARM, Linux amd64/arm64 and Windows amd64 runs,
+plus actual Homebrew/Scoop, native Debian and MSI installation checks, remain to be executed against
+these committed changes. This host has no usable Docker socket or Windows
+runtime, and GitHub CLI is unauthenticated. No remote workflow or release was
+run; current changes must not be described as published packages or complete
+all-platform acceptance.
+
+
+The second repair pass fixed manager-check failure cleanup. Previously the
+checker set `installed = True` only after a successful install-command exit,
+so a post-install failure skipped cleanup. It now queries the manager’s
+installed state and removes the test installation when present; Homebrew tap
+source is restored even if cleanup fails. Reduced orchestration controls
+exercise those failure paths; they are not evidence of native Homebrew/Scoop
+installation. All 19 release tooling tests pass. Homebrew setup is pinned to
+`1f8e202ffddf94def7f42f6fa3a482e821489f9c`, the official documented action revision.
+Native platform verification remains pending under the same environment limits.

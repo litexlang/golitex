@@ -39,6 +39,10 @@ path = "tests/integration/test_statements.rs"
 name = "cli_feedback"
 path = "tests/integration/cli_feedback.rs"
 
+[[test]]
+name = "installed_std_cli"
+path = "tests/integration/installed_std_cli.rs"
+
 [dependencies]
 
 [profile.dev]

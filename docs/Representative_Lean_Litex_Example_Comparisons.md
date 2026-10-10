@@ -36,10 +36,10 @@ Blueprint](https://litexlang.com/doc/Litex_Blueprint). For language details,
 see the [Manual](Manual.md) and [CLI reference](cli.md). The current
 preview `-lean -f` output mode replays a restricted set of typed results.
 The [semantic interface](../lean/Litex.lean) and
-[generated problem pairs](../lean/examples/) show that initial numeric slice.
-Earlier material is archived locally under `scripts/legacy_to_lean/`, excluded from Git.
-The semantic discussion below describes that earlier experiment and design
-target; this page does not certify current compiler coverage.
+[generated example pairs](../lean/examples/) illustrate supported routes.
+Use the [compiler guide](Litex_To_Lean_Compiler_Guide.md) for maintained
+source/generated walkthroughs. Historical emitters and design targets in the
+semantic discussion below do not certify current compiler coverage.
 
 The complete `Group` comparison is kept in the Blueprint rather than repeated
 here. This page concentrates on examples that add distinct evidence.
@@ -910,4 +910,4 @@ example collection:
 - [Manual](https://litexlang.com/doc/Manual): syntax and proof forms;
 - [CLI reference](cli.md): current entrypoints, output, sessions, and modules;
 - [Lean semantic interface](../lean/Litex.lean):
-  initial object-interface work; see the [current build boundary](cli.md#lean-compiler-boundary).
+  the maintained replay interface; see the [compiler guide](Litex_To_Lean_Compiler_Guide.md) and [CLI boundary](cli.md#lean-compiler-boundary).

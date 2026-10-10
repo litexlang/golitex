@@ -1,0 +1,5 @@
+# One and two belong to a finite subset of the natural numbers.
+have small_naturals set = {1, 2}
+1 $in small_naturals
+2 $in small_naturals
+small_naturals $subset N

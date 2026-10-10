@@ -6,4 +6,8 @@ mod compile_complex_arithmetic_closure;
 mod compile_known_atomic;
 mod compile_order;
 mod compile_prop_definition;
+mod compile_set_builder_projections;
+mod compile_set_membership_rule;
+mod compile_set_subset_rule;
 mod compile_structural_membership;
+mod compile_subset_definition;

@@ -21,7 +21,7 @@ https://github.com/litexlang/golitex/blob/main/docs/Representative_Lean_Litex_Ex
 
 未跳过的 Litex 块都是自足的，由仓库文档测试检查。明确标为迁移示例的块保留当前内核尚未解决的边界，不是通过的示例。Lean 块直接使用 Mathlib，不依赖 *Mathematics in Lean* 教材包。两边的语法与自动化都可能继续演进。
 
-更完整的设计论证见 [Litex 蓝图](https://litexlang.com/doc/Litex中文蓝图)。语言细节见[手册](Litex手册.md)和 [CLI 参考](Litex命令行参考.md)。当前预览模式 `-lean -f` 重放有限的带类型结果集合。[语义接口](../lean/Litex.lean)与[生成的问题文件对](../lean/examples/)展示首批数值切片。早期资料归档在本地 `scripts/legacy_to_lean/`，不进入 Git。下文语义讨论描述早期实验与设计目标；本页不认证当前编译器覆盖范围。
+更完整的设计论证见 [Litex 蓝图](https://litexlang.com/doc/Litex中文蓝图)。语言细节见[手册](Litex手册.md)和 [CLI 参考](Litex命令行参考.md)。当前预览模式 `-lean -f` 重放有限的带类型结果集合。[语义接口](../lean/Litex.lean)与[生成示例对](../lean/examples/)展示已支持的路线。维护中的源码与生成结果讲解见[编译器指南](Litex到Lean编译器指南.md)。下文语义讨论中的历史输出器与设计目标不代表当前编译器覆盖范围。
 
 完整的 `Group` 对比放在蓝图中，不在此重复。本页集中展示能增加独立证据的示例。示例之后，[第 8 节](#8-a-design-perspective-what-the-author-states-what-the-checker-reconstructs)将它们连接到一个形式化语言设计提案：哪些决定属于数学源码，哪些工作应由检查器重建。
 
@@ -727,4 +727,4 @@ Litex 也不消除可信计算基。检查器、内置与推导规则、导入�
 - [Litex 蓝图](https://litexlang.com/doc/Litex中文蓝图)：设计目标与完整 `Group` 对比；
 - [手册](https://litexlang.com/doc/Manual)：语法与证明形式；
 - [CLI 参考](Litex命令行参考.md)：当前入口、输出、会话与模块；
-- [Lean 语义接口](../lean/Litex.lean)：初期对象接口工作；见[当前构建边界](Litex命令行参考.md#lean-compiler-boundary)。
+- [Lean 语义接口](../lean/Litex.lean)：维护中的重放接口；见[编译器指南](Litex到Lean编译器指南.md)与 [CLI 边界](Litex命令行参考.md#lean-compiler-boundary)。

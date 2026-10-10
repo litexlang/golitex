@@ -47,6 +47,9 @@ impl LitexToLeanCompiler {
                     (Obj::StandardSet(set), ObjWellDefinedProofByDef::StandardSet(_)) => {
                         standard_term(set)?
                     }
+                    (Obj::SetFormer(set), ObjWellDefinedProofByDef::SetFormer(proof)) => {
+                        self.compile_set_former(set, proof, position)?
+                    }
                     (Obj::FunctionSpace(space), ObjWellDefinedProofByDef::FunctionSpace(proof)) => {
                         self.compile_function_space_wd(space, proof, position)?
                     }

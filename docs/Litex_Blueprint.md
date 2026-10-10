@@ -257,7 +257,7 @@ theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M :
 
 `Litex.number` returns an `Obj ℂ` containing the native number and its well-definedness proof. `Litex.Same` compares represented meanings under the explicit `Semantics` parameter `M`; the compiler replays the checked reflexivity route through `Litex.sameRefl`. This generated example passes Lean checking, but it does not establish a complete Litex model or compilation of every proof route.
 
-The maintained source locations are the [Lean semantic interface](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean) and [paired compiler examples](https://github.com/litexlang/golitex/tree/main/lean/examples). Earlier complex-function output is identified as historical in Section 5.
+The maintained source locations are the [Lean semantic interface](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean) and [paired compiler examples](https://github.com/litexlang/golitex/tree/main/lean/examples). Section 5 explains independent rechecking through a maintained example.
 
 Whether you are a mathematician, a programmer, or a Lean user, Litex can offer new knowledge and perspectives; if you are interested, continue with [Programming, Mathematics, and Formalization with Litex](#overview-readers) at the end of this document.
 
@@ -893,14 +893,15 @@ Lean organizes mathematics as typed terms: after elaboration, core expressions a
 
 Litex organizes mathematics as objects and a gradually growing fact context. `e $in S` is a membership fact in the object language, at the same logical layer as equality, order, and other predicates. Therefore the same object can be proved to belong to several unrelated or overlapping sets: membership is a relation among objects, not a unique intrinsic assignment `typeOf(e) = S`.
 
-Object capability lookup uses the facts stored for the object's canonical
-identity. The execution environment's `special_properties` index retains actual
-membership and equality facts, including facts learned after a name's
-introduction. Function-call checking reads signatures from these facts;
-function-body unfolding follows and cites stored equalities. For example,
-`have fn f(x R) R = x + 1` followed by `let g = f` supports `g(4) = 5` directly.
-Membership `g $in fn(x R) R` alone supplies callability without a concrete value.
-Definition-selected default struct field views remain a distinct annotation.
+Object capability lookup reads checked declarations and facts indexed for the
+exact object. Function-call checking needs a signature; evaluating a concrete
+call also needs a function body. Merely writing `let g = f` after
+`have fn f(x R) R = x + 1` does not transfer that callable contract: `g(4) = 5`
+fails well-definedness. An explicit wrapper `have fn g(x R) R = f(x)` supplies
+its own checked signature and body, and supports `g(4) = 5`. Membership
+`g $in fn(x R) R` alone supplies callability without a concrete value.
+See the [function metadata boundary](Manual.md#advanced-interface-details)
+for the distinction between indexed facts and equality transport.
 
 This does not cancel static constraints or inference. Before accepting an expression, Litex still checks domains, return sets, structure fields, and other well-definedness obligations, and derives membership and carrier facts in proofs through dedicated rules. The difference is that such inference adds facts such as `e $in S` to the context, rather than inferring a privileged type `e : T` that decides the object's identity.
 
@@ -1442,197 +1443,77 @@ If the theorem eventually passes verification and human review, the convergence 
 
 ## 5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)
 
-_“A formal proof is a proof in which every logical inference has been checked all the way back to the fundamental axioms of mathematics.”_
+Litex-to-Lean compilation is being extended through checked examples. The goal is to give a readable Litex development an independently checkable proof, while preserving its objects, hypotheses and conclusion. Three pieces work together: Litex checks the source, the compiler replays the recorded evidence, and [lean/Litex.lean](../lean/Litex.lean) gives the generated expressions their meaning in Lean.
 
-_— Thomas Hales, “Formal Proof” (2008)_
+### Start with an arbitrary object
 
-Litex checks source with its own verifier and provides feedback; it also includes a compiler design and initial implementation for translation to Lean. Independent rechecking requires three conditions: translation preserves the original proposition, generated proofs contain no holes, and Lean's kernel actually accepts them. Meeting these conditions reduces reliance on Litex's own verifier for the compiled routes and allows further connections to Mathlib. The current compiler supports a limited set of results, not the full Litex system.
-
-> **Design and implementation:** See the [compiler design guide](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md) for the design and current supported scope. The current interface lives in [lean/Litex.lean](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean), with generated pairs under [lean/examples](https://github.com/litexlang/golitex/tree/main/lean/examples). The complex-function example below records an earlier experiment; it has not been regenerated by the current compiler or rechecked with the current Lean toolchain.
-
-<details>
-<summary><strong>Historical example: an earlier Litex-to-Lean compilation experiment</strong></summary>
-
-The intended Litex–Lean–Mathlib path is:
-
-`Litex source → Litex verification → ToLean compilation → Lean kernel recheck → handwritten adapter → Mathlib theorem`
-
-> Current verification results retain the sources of facts and rules. The initial compiler replays a limited set of these results; extending it requires turning each additional **supported** acceptance path into evidence Lean can check, and rejecting paths it does not yet cover. A rule count alone cannot replace this semantic work on each path. The historical output below uses an earlier interface, not the current `Obj` contract.
-
-Example: we want to prove that the sum of the first `n` positive odd numbers is `n^2`. We first write Litex source:
+The maintained [arbitrary-real example](../lean/examples/arbitrary_real_laws/statement.lit) is small enough to read in full:
 
 ```litex
-have fn kth_odd(k Z) Z = 2 * k - 1
+have arbitrary_real R
+arbitrary_real = arbitrary_real
+arbitrary_real + 0 = arbitrary_real
+arbitrary_real >= arbitrary_real
+```
 
-forall n Z:
-    n >= 1
-    =>:
-        sum(1, n, kth_odd) $in Z
+The first line introduces an arbitrary member of `R`, not a particular numerical value. The remaining facts express reflexivity, adding zero and real order reflexivity. Its [generated Lean proof](../lean/examples/arbitrary_real_laws/statement.lean) retains an object with a generic host representation and a separate membership hypothesis `Litex.In a Litex.R`. Learning that an object is real does not replace its host representation with Lean's `ℝ`.
 
-forall n Z:
-    n^2 $in Z
+This matters beyond a short arithmetic example: a translation must preserve what the author declared, rather than quietly specialize an arbitrary object to a convenient value or representation.
 
-thm sum_first_odds:
-    ? forall n Z:
-        n >= 1
+### What `Litex.lean` says these objects and facts mean
+
+`Representation M α` specifies which values of a host type `α` are well-defined and how they denote values in the semantic universe `M.Value`. A certified object packages its value with that well-definedness proof. The following is an actual declaration from [Litex.lean](../lean/Litex.lean), not generated problem output:
+
+```lean
+structure Obj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  val : α
+  wd : WD (M := M) val
+```
+
+Different host types can represent Litex objects. Source equality compares their denotations; membership relates the denotations of an element and a set. Both are ordinary Lean propositions, with fixed definitions in the semantic interface:
+
+| Source meaning | Lean interface | Semantic content |
+| --- | --- | --- |
+| `a = b` | `Litex.Same a b` | `denote a = denote b`, even across different host representations |
+| `a $in A` | `Litex.In a A` | `M.mem (denote a) (denote A)` |
+| `a < b` | `Litex.Lt a b` | Real denotation witnesses whose values satisfy `<` |
+| A formula-defined function | `Litex.FormulaFn` | A set-theoretic graph, with a domain, guard and checked return membership |
+
+`Same` and `In` therefore have mathematical content. `Representation` does not certify arbitrary Lean types by default, and `Obj` does not make an undefined source operation admissible. For arithmetic, the native bridge connects certified numeric denotations to Lean/Mathlib arithmetic, then transports the checked result back to the source proposition.
+
+### Keep the function's domain in its proof
+
+The [guarded quotient example](../lean/examples/real_quotient_distributes/statement.lit) adds a function and a named theorem:
+
+```litex
+have fn quotient(a, b R: b != 0) R = a / b
+
+quotient(6, 2) = 3
+
+thm quotient_distributes:
+    ? forall x, y, z R:
+        z != 0
         =>:
-            sum(1, n, kth_odd) = n^2
-    by induc n from 1:
-        ? sum(1, n, kth_odd) = n^2
-
-        ? from n = 1:
-            kth_odd(1) = 2 * 1 - 1 = 1
-            sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2
-
-        ? induc:
-            kth_odd(n + 1) = 2 * (n + 1) - 1
-            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+            quotient(x + y, z) = quotient(x, z) + quotient(y, z)
+    quotient(x + y, z) = (x + y) / z
+    quotient(x, z) = x / z
+    quotient(y, z) = y / z
+    (x + y) / z = x / z + y / z
 ```
 
-Compiled to Lean (different Litex versions may generate different output)
+The nonzero guard is part of the function's domain. `Litex.lean` represents the formula as a graph over that guarded domain, with evidence that the body returns a member of `R`. A call requires function membership, argument membership and the guard. Its division constructor additionally requires the denominator's nonzero proof. This preserves Litex's partial division even though Lean's underlying field division is a total operation.
 
-```lean
--- Generated by StmtResultToLeanCompiler from main.lit. DO NOT EDIT.
-import Litex
+The [generated proof](../lean/examples/real_quotient_distributes/statement.lean) replays the function expansions and the selected arithmetic equality, including their domain evidence. Source facts and their citations retain names derived from the original FactIds. The compiler follows those checked results; it does not ask Lean to discover a substitute proof of a potentially different statement.
 
-set_option linter.style.nameCheck false
+### What independent checking establishes
 
-namespace __Compiler_main
+Generated theorems are parameterized by `M : Litex.Semantics`; set and function routes require their additional semantic interfaces. These are explicit contracts with laws to satisfy, rather than unconditionally asserted global axioms. `Litex.lean` also supplies the concrete `NumericModel.model` based on Mathlib's `ZFSet`, together with set/function instances. This gives the implemented interfaces a concrete witness; it does not establish a complete model or compiler for every Litex object and rule.
 
-noncomputable def kth_odd : Litex.Fn Litex.Z Litex.Z :=
-  { call := fun {__alpha} (__arg : __alpha) __arg_in => (((2 : ℤ) * Litex.In.rep __arg __arg_in) - (1 : ℤ)), callOwn := fun (__arg : ℤ) => (((2 : ℤ) * __arg) - (1 : ℤ)) }
+Generating Lean source and checking it with Lean's kernel are separate steps. For a supported route, independent checking validates the generated proposition and proof relative to the stated semantic contracts and Lean's foundations. Broader coverage must be established by extending the interfaces and proof replay, with unsupported routes rejected explicitly.
 
-theorem __fact0 : Litex.In kth_odd (Litex.fnSet Litex.Z Litex.Z) := by
-  exact Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd
+A final theorem stated entirely in ordinary Mathlib concepts needs a further adapter that connects these denotations to the intended native objects and proposition. That conversion and its proof deserve their own review. The maintained [compiler guide](Litex_To_Lean_Compiler_Guide.md) explains source/generated pairs; the [CLI reference](cli.md#lean-compiler-boundary) gives invocation restrictions. Complete source/generated pairs are maintained under [lean/examples](../lean/examples/).
 
-theorem __fact1 : Litex.Same kth_odd ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (((2 : ℤ) * Litex.In.rep __arg __arg_in) - (1 : ℤ)), callOwn := fun (__arg : ℤ) => (((2 : ℤ) * __arg) - (1 : ℤ)) } : Litex.Fn Litex.Z Litex.Z) := by
-  unfold kth_odd
-  exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (((2 : ℤ) * Litex.In.rep __arg __arg_in) - (1 : ℤ)), callOwn := fun (__arg : ℤ) => (((2 : ℤ) * __arg) - (1 : ℤ)) } : Litex.Fn Litex.Z Litex.Z)
-
-theorem __fact2 :
-    ∀ (__p1 : ℤ) (__domain1 : Litex.Le (1 : ℂ) (((__p1) : ℂ))), Litex.In (Litex.sum (1 : ℤ) __p1 kth_odd) Litex.Z := by
-  intro n __domain_f17
-  have __infer2_0 : Litex.Lt (0 : ℂ) (((n) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) (__domain_f17)
-  have __prior2_0 : Litex.In (Litex.sum (1 : ℤ) n kth_odd) Litex.Z := Litex.In.own Litex.Z ((Litex.sum (1 : ℤ) n kth_odd))
-  exact __prior2_0
-
-theorem __fact3 :
-    ∀ (__p1 : ℤ), Litex.In (((((__p1) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) Litex.Z := by
-  intro n
-  have __prior3_0 : Litex.In (((((n) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) Litex.Z := Litex.Rules.complexIntPowNatInZ (n) (2 : ℕ)
-  exact __prior3_0
-
-theorem sum_first_odds :
-    ∀ (n : ℤ) (__domain_f48 : Litex.Le (1 : ℂ) (((n) : ℂ))),
-      Litex.Same (Litex.sum (1 : ℤ) n kth_odd) (((((n) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := by
-  intro n __domain_f48
-  have __step4_29 : ∀ (__p1 : ℤ) (__domain1 : Litex.Le (1 : ℂ) (((__p1) : ℂ))), Litex.Same (Litex.sum (1 : ℤ) __p1 kth_odd) (((((__p1) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := by
-    intro __target_value __domain1
-    have __target_ge_start_real : (((1 : ℤ)) : ℝ) ≤ (__target_value : ℝ) := by
-      simpa [Litex.Le, Litex.OrderValue] using __domain1
-    have __target_ge_start : (1 : ℤ) ≤ __target_value := by
-      exact_mod_cast __target_ge_start_real
-    exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => Litex.Same (Litex.sum (1 : ℤ) __induction_value kth_odd) (((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) (by
-    have __step4_2 : (Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))) ∧ (Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ)) := by
-      exact ⟨Litex.Same.trans ((by
-      unfold Litex.fnApplyCarrier kth_odd
-      exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((1 : ℤ))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num)))) (Litex.Same.refl (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))), Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])⟩
-    have __infer4_3 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (1 : ℂ) := Litex.Same.trans ((__step4_2).1) ((__step4_2).2)
-    have __step4_4 : (Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ))) ∧ (Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))) ∧ (Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ)) ∧ (Litex.Same (1 : ℂ) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ)) := by
-      exact ⟨Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.trans (Litex.Rules.integerRangeSumSingleOwn (1 : ℤ) kth_odd) ((__step4_2).1)))) (Litex.Same.symm ((by
-      unfold Litex.fnApplyCarrier kth_odd
-      exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((1 : ℤ))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num))))), ⟨(__step4_2).1, ⟨(__step4_2).2, Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])⟩⟩⟩
-    have __infer4_5 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) := Litex.Same.trans ((__step4_4).1) ((__step4_4).2.1)
-    have __infer4_6 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (1 : ℂ) := Litex.Same.trans (Litex.Same.trans ((__step4_4).1) ((__step4_4).2.1)) ((__step4_4).2.2.1)
-    have __infer4_7 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans (Litex.Same.trans ((__step4_4).1) ((__step4_4).2.1)) ((__step4_4).2.2.1)) ((__step4_4).2.2.2)
-    have __infer4_8 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans ((__step4_4).2.1) ((__step4_4).2.2.1)) ((__step4_4).2.2.2)
-    have __infer4_9 : Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans ((__step4_4).2.2.1) ((__step4_4).2.2.2)
-    have __infer4_10 : Litex.In (1 : ℂ) Litex.RPos := (Litex.In.congr ((__step4_4).2.2.2) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
-    have __infer4_11 : Litex.Positive (1 : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_10)))
-    have __infer4_12 : Litex.In (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) Litex.RPos := (Litex.In.congr (__infer4_7) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
-    have __infer4_13 : Litex.Positive (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_12)))
-    have __infer4_14 : Litex.In (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) Litex.RPos := (Litex.In.congr (__infer4_8) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
-    have __infer4_15 : Litex.Positive (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_14)))
-    have __infer4_16 : Litex.In (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) Litex.RPos := (Litex.In.congr (__infer4_9) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
-    have __infer4_17 : Litex.Positive (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_16)))
-    exact (by simpa using (__infer4_7))) (fun (__induction_value : ℤ) (__induction_ge_start : (1 : ℤ) ≤ __induction_value) (__induction_hypotheses : Litex.Same (Litex.sum (1 : ℤ) __induction_value kth_odd) (((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) => by
-    have __infer4_18 : Litex.Lt (0 : ℂ) (((__induction_value) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) ((by
-      have __induction_ge_start_real : (((1 : ℤ)) : ℝ) ≤ (__induction_value : ℝ) := by
-        exact_mod_cast __induction_ge_start
-      simpa [Litex.Le, Litex.OrderValue] using __induction_ge_start_real))
-    have __infer4_19 : Litex.In (Litex.sum (1 : ℤ) __induction_value kth_odd) Litex.RPos := (Litex.In.congr (__induction_hypotheses) Litex.RPos).mpr (Litex.Rules.positiveIntegerRationalPowInRPos (__induction_value) (2 : ℤ) (__infer4_18) (by norm_num))
-    have __infer4_20 : Litex.Positive (Litex.sum (1 : ℤ) __induction_value kth_odd) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_19)))
-    have __step4_21 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))) (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ)) := by
-      exact Litex.Same.trans ((by
-      unfold Litex.fnApplyCarrier kth_odd
-      exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((__induction_value + (1 : ℤ)))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num)))) (Litex.Same.refl (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ)))
-    have __step4_22 : (Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))))) ∧ (Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))))) ∧ (Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ)))) ∧ (Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) := by
-      exact ⟨Litex.Rules.integerRangeSumSplitLastOwn (1 : ℤ) __induction_value kth_odd ((by simpa [Litex.Le, Litex.OrderValue] using ((by
-      have __induction_ge_start_real : (((1 : ℤ)) : ℝ) ≤ (__induction_value : ℝ) := by
-        exact_mod_cast __induction_ge_start
-      simpa [Litex.Le, Litex.OrderValue] using __induction_ge_start_real)))), ⟨Litex.Same.intCastAddComplex (__induction_hypotheses) (Litex.Same.intComplex ((Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))))), ⟨Litex.Same.addCongrRightInt (Litex.Same.refl ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ))) (__step4_21), Litex.Same.trans (Litex.Same.refl (((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))))) (Litex.Same.trans (Litex.Same.ofEq ((show ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) = ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) from (by norm_cast <;> ring_nf)))) (Litex.Same.symm (Litex.Same.refl (((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)))))⟩⟩⟩
-    have __infer4_23 : Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) := Litex.Same.trans ((__step4_22).1) ((__step4_22).2.1)
-    have __infer4_24 : Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) := Litex.Same.trans (Litex.Same.trans ((__step4_22).1) ((__step4_22).2.1)) ((__step4_22).2.2.1)
-    have __infer4_25 : Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans (Litex.Same.trans ((__step4_22).1) ((__step4_22).2.1)) ((__step4_22).2.2.1)) ((__step4_22).2.2.2)
-    have __infer4_26 : Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) := Litex.Same.trans ((__step4_22).2.1) ((__step4_22).2.2.1)
-    have __infer4_27 : Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans ((__step4_22).2.1) ((__step4_22).2.2.1)) ((__step4_22).2.2.2)
-    have __infer4_28 : Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans ((__step4_22).2.2.1) ((__step4_22).2.2.2)
-    exact (by simpa using (__infer4_25))) __target_value __target_ge_start
-  have __c4_0 : Litex.Same (Litex.sum (1 : ℤ) n kth_odd) (((((n) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := (by
-    simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step4_29 n (by
-    simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f48))))
-  exact __c4_0
-
-end __Compiler_main
-
-```
-
-The generated code is Lean code, but under Litex's semantics. We add a small adapter that bridges Litex's representation to Mathlib:
-
-```lean
-import Generated
-
-/-! The handwritten interface from generated Litex evidence to native Mathlib. -/
-
-namespace Adapter
-
-/-- Export the generated theorem as ordinary Mathlib equality. -/
-theorem sumFirstOddsNative
-    (n : ℤ)
-    (oneLeN : (1 : ℤ) ≤ n) :
-    ∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2 := by
-  have generated :=
-    __Compiler_main.sum_first_odds n
-      (Litex.OrderBridge.leOfComplexReals (by exact_mod_cast oneLeN))
-  have exactComplexEq :
-      ((Litex.sum (1 : ℤ) n __Compiler_main.kth_odd : ℤ) : ℂ) =
-        ((n ^ 2 : ℤ) : ℂ) := by
-    calc
-      ((Litex.sum (1 : ℤ) n __Compiler_main.kth_odd : ℤ) : ℂ) =
-          ((((n : ℚ) ^ (2 : ℤ) : ℚ) : ℂ)) :=
-        Litex.Same.intComplexEq generated
-      _ = ((n ^ 2 : ℤ) : ℂ) := by norm_cast
-  exact_mod_cast exactComplexEq
-
-end Adapter
-
-```
-
-After bridging, the conclusion can use Mathlib's native interface:
-
-```lean
-import Adapter
-
-/-- A native theorem whose statement is entirely independent of Litex. -/
-theorem firstHundredPositiveOddIntegersSum :
-    ∑ k ∈ Finset.Icc (1 : ℤ) 100, (2 * k - 1) = 10000 := by
-  exact Adapter.sumFirstOddsNative 100 (by norm_num)
-
-```
-
-This early artifact illustrates the representations and adapter that a handoff would require; it does not show that the current `src/` can generate the same proof. A production path must separately check statement preservation, rule coverage, and Lean kernel acceptance.
-
-</details>
+Verification checkpoint, 2026-10-10: both examples above passed strict Litex execution, Lean generation and Lean 4.31.0 checking against the local pinned Mathlib environment. This checks these examples and their semantic interface, not the entire compiler coverage.
 
 <a id="ecosystem-role"></a>
 
@@ -1754,7 +1635,7 @@ Litex: objects and facts → kernel checks and searches for grounds → verified
 
 Lean places objects, propositions, and proofs within a dependent term/type system; Litex distinguishes mathematical objects, facts, and definition and proof steps in its source. The subtype comparison below shows how each language writes a function call when its condition is already known. The comparison concerns expression and reading cost.
 
-Lean remains an important reference point and a rechecking target. Lean proofs elaborate into proof terms checked by its kernel; compiler IR for executable programs is a separate path. The current standalone Litex compiler replays supported results into Lean, while broader coverage and the historical complex-function examples remain separate work. Performance and learning-cost advantages also need measurement on comparable tasks, not inference from interface alone.
+Lean remains an important reference point and a rechecking target. Lean proofs elaborate into proof terms checked by its kernel; compiler IR for executable programs is a separate path. The current standalone Litex compiler replays supported results into Lean, while broader coverage requires additional route-by-route validation. Performance and learning-cost advantages also need measurement on comparable tasks, not inference from interface alone.
 
 <details>
 <summary><strong>Lean–Litex comparison examples</strong></summary>

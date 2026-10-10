@@ -14,15 +14,14 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from package_std import source_files
+
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIRECTORY.parents[2]
 DEFAULT_STD = REPOSITORY_ROOT / "std"
 DEFAULT_OUTPUT = REPOSITORY_ROOT / "wix" / "std.wxs"
 DEFAULT_MAIN = REPOSITORY_ROOT / "wix" / "main.wxs"
 WIX_NAMESPACE = "http://schemas.microsoft.com/wix/2006/wi"
-
-SKIP_NAMES = {"todo.md", ".DS_Store"}
-
 
 def wix_id(prefix: str, relative: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9_.]", "_", relative.replace("\\", "/"))
@@ -33,17 +32,7 @@ def wix_id(prefix: str, relative: str) -> str:
 
 
 def collect_files(std_root: Path) -> list[Path]:
-    files: list[Path] = []
-    for path in sorted(std_root.rglob("*")):
-        if not path.is_file():
-            continue
-        relative_parts = path.relative_to(std_root).parts
-        if any(part.startswith(".") for part in relative_parts):
-            continue
-        if path.name in SKIP_NAMES:
-            continue
-        files.append(path)
-    return files
+    return source_files(std_root)
 
 
 def build_tree(std_root: Path, files: list[Path]) -> dict:

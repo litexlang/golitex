@@ -89,3 +89,16 @@ same-path aliases, authored suffix collisions and real cache skips.
 
 - Topological sort file (config order + recursion is enough)
 - Extra `ensure_imports_ready` pass after recursion
+
+
+## Installed std discovery
+
+`resolve_std_root` preserves explicit `LITEX_STD_PATH`, cwd `std/`, and target
+project `std/` precedence. It then resolves the real executable (following
+symlinks) and checks its adjacent std directory, prefix std, prefix
+`share/litex/std`, and parent-prefix `share/litex/std`. These cover archives,
+Scoop, Homebrew, MSI and Debian without a persistent environment setup.
+An invalid explicit override remains selected and fails normally at import.
+The [installed std fixture](../../examples/module_manager/installed_std/README.md)
+and `installed_std_cli` integration target exercise the lookup from external
+projects; module import/naming and verification contracts stay unchanged.

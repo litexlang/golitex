@@ -14,10 +14,9 @@ Litex 是一个处于 beta 阶段的实验性业余项目，使用中可能遇�
 
 ```bash
 brew install litexlang/tap/litex
-export LITEX_STD_PATH="$(brew --prefix litex)/bin/std"
 ```
 
-把这条 `export` 写入 shell 启动文件（zsh 使用 `~/.zshrc`，Bash 使用 `~/.bashrc`），供新终端使用。旧版 formula 将标准库放在 `$(brew --prefix litex)/share/litex/std`；若没有 `bin/std`，检查该目录并改用它的绝对路径。已经安装过 Litex 时，可运行 `brew update` 和 `brew upgrade litex` 请求 tap 中的版本；它仍可能与当前开发源码不同。
+当前源码版本会自动查找随可执行文件安装的 std；这些安装布局不需要设置 `LITEX_STD_PATH`。已经安装过 Litex 时，可运行 `brew update` 和 `brew upgrade litex`；tap 中的版本仍可能与当前开发源码不同。
 
 当前发布流程只为 Apple Silicon 构建 macOS Homebrew 压缩包，并为 Linux 构建 `amd64` 和 `arm64` 压缩包。
 
@@ -27,10 +26,7 @@ export LITEX_STD_PATH="$(brew --prefix litex)/bin/std"
 
 ```bash
 sudo dpkg -i ./litex_<version>_<architecture>.deb
-export LITEX_STD_PATH=/usr/share/litex/std
 ```
-
-把这条 `export` 写入 shell 启动文件，供新终端使用。
 
 ### Windows：使用 Scoop
 
@@ -39,24 +35,19 @@ export LITEX_STD_PATH=/usr/share/litex/std
 ```powershell
 scoop bucket add litex https://github.com/litexlang/scoop-litex
 scoop install litex
-$env:LITEX_STD_PATH = Join-Path (scoop prefix litex) 'std'
-[Environment]::SetEnvironmentVariable('LITEX_STD_PATH', $env:LITEX_STD_PATH, 'User')
 ```
 
-如果不用 Scoop，可以从[所需发行版](https://github.com/litexlang/golitex/releases)下载 Windows `amd64` 压缩包，把 `litex.exe` 和 `std` 一起解压，并把包含 `litex.exe` 的目录添加到用户的 `Path`。将用户环境变量 `LITEX_STD_PATH` 设置为解压后的 `std` 目录的绝对路径。修改用户环境变量后，打开新终端。
+如果不用 Scoop，可以从[所需发行版](https://github.com/litexlang/golitex/releases)下载 Windows `amd64` 压缩包，把 `litex.exe` 和 `std` 一起解压，并把包含 `litex.exe` 的目录添加到用户的 `Path`。修改用户 `Path` 后打开新终端。保持 std 与可执行文件一起解压；程序会自动找到它。
 
-例如手动安装在 `C:\Tools\Litex` 时，可同时配置当前终端和后续终端：
-
-```powershell
-$env:LITEX_STD_PATH = 'C:\Tools\Litex\std'
-[Environment]::SetEnvironmentVariable('LITEX_STD_PATH', $env:LITEX_STD_PATH, 'User')
-```
+发布流程还会构建包含可执行文件和 std 的 Windows MSI；MSI 安装和导入检查必须通过，才能作为 GitHub Release 附件发布。这里描述的是当前源码的打包行为；下载旧安装包时，应核对版本。
 
 ## 可选的 std 导入
 
 当前 `std/basics` 是不导出任何声明的空兼容模块。`quot`、`$dvd` 等原生词汇由内核实现，不需要导入 std 或设置 `LITEX_STD_PATH`。下面的路径配置只在项目显式使用 `[import std]` 时才需要。
 
-把可执行文件加入 `PATH`，并不会配置标准库查找路径。对于 `[import std]`，当前 CLI 优先使用 `LITEX_STD_PATH`，其次查找工作目录中的 `std/`，再查找目标项目中的 `std/`。它不会自动查找已安装可执行文件旁边的标准库。`LITEX_STD_PATH` 应使用 **std 目录**的绝对路径，不是它的父目录或 `basics` 目录。
+对于 `[import std]`，查找顺序是：显式设置的 `LITEX_STD_PATH`、工作目录的 `std/`、目标项目的 `std/`、真实可执行文件对应安装目录中的 std。程序会跟随符号链接，包括 Homebrew 指向具体安装版本的链接。支持压缩包/Scoop 的 `std/`、Homebrew 的 `bin/std/`、MSI 应用目录的 `std/` 和 Debian 的 `/usr/share/litex/std` 布局。
+
+`LITEX_STD_PATH` 是自定义库或旧二进制使用的可选覆盖路径，应指向 **std 目录**的绝对路径，不是其父目录或 `basics`。显式设置了错误路径时会报错，不会悄悄换用另一份库。当前源码也会自动识别旧 formula 的 `share/litex/std` 布局。
 
 ## 检查安装
 
@@ -95,7 +86,7 @@ $dvd(12, 3)
 litex -lang en -f smoke.lit
 ```
 
-应以 `0` 退出，并包含 `"kind": "run"`、`"success": true` 和 `"session_error": null`。若返回 `"session_error": "failed to import project"`，请先检查 `LITEX_STD_PATH` 指向的目录中是否有 `basics/litex.config`，以及二进制和标准库是否来自同一版本。该消息本身不能区分路径错误和其他导入失败。
+应以 `0` 退出，并包含 `"kind": "run"`、`"success": true` 和 `"session_error": null`。若返回 `"session_error": "failed to import project"`，请先检查随包的 std 中是否有 `basics/litex.config`，以及二进制和 std 是否来自同一版本；若设置过 `LITEX_STD_PATH`，也请检查或取消该覆盖路径。该消息本身不能区分路径错误和其他导入失败。
 
 如果要检查当前检出的源码，而不是另行安装的发行版，先安装 [Rust/Cargo](https://www.rust-lang.org/tools/install)，再从仓库根目录运行：
 

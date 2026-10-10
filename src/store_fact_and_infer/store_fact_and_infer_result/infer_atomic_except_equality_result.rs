@@ -140,7 +140,16 @@ pub struct InferExpandDefinitionResult {
 }
 
 pub struct InferSetBuilderMembershipProjectionResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub steps: Vec<SetBuilderMembershipProjectionStep>,
+}
+
+// Captured at the original resolution/store stages; not a new proof search.
+pub struct SetBuilderMembershipProjectionStep {
+    pub source_membership: crate::ast::fact::InFact,
+    pub builder: crate::ast::obj::SetBuilder,
+    pub equality_path: Vec<(crate::ast::obj::Obj, crate::ast::obj::Obj, FactId)>,
+    pub template_expansion: bool,
+    pub derived: Vec<StoreInferredFactAndInferResult>,
 }
 
 pub struct InferPowerSetMembershipProjectionResult {
@@ -286,8 +295,10 @@ impl InferAtomicExceptEqualityResult {
                 .collect(),
             Self::InFactSetBuilder(r) => {
                 let mut ids = Vec::new();
-                for d in &r.derived {
-                    ids.extend(d.stored_fact_ids());
+                for step in &r.steps {
+                    for d in &step.derived {
+                        ids.extend(d.store_and_infer.stored_fact_ids());
+                    }
                 }
                 ids
             }

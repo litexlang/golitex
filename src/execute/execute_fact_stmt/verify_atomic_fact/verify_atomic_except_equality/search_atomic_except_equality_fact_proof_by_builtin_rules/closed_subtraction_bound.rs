@@ -1,12 +1,11 @@
 //! Transport a stored numeric upper/lower bound through subtraction.
 //! The enclosing fact established WD. This leaf only reads known order rows
-//! and evaluates closed rational endpoints; it does not search a new premise.
+//! and evaluates closed rational offsets/endpoints, or preserves an identical
+//! symbolic endpoint with a direction-compatible offset. No new premise search.
 
-use crate::ast::fact::AtomicFact;
-use crate::ast::obj::{ArithmeticOperator, Obj};
+use crate::prelude::*;
 use crate::rational_expression::exact_rational::EvalRational;
 use crate::rational_expression::NumberCompareResult;
-use crate::runtime::{FactId, Runtime};
 
 pub enum BoundDirection {
     Lower,
@@ -29,8 +28,18 @@ impl Runtime {
         right: &Obj,
         greater_equal: bool,
     ) -> Option<ClosedSubtractionBoundCertificate> {
-        self.closed_subtraction_bound_on_side(left, right, greater_equal)
-            .or_else(|| self.closed_subtraction_bound_on_side(right, left, !greater_equal))
+        self.closed_subtraction_bound_on_side(left, right, greater_equal, false)
+            .or_else(|| self.closed_subtraction_bound_on_side(right, left, !greater_equal, false))
+    }
+
+    pub(super) fn search_closed_subtraction_strict_bound(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        greater: bool,
+    ) -> Option<ClosedSubtractionBoundCertificate> {
+        self.closed_subtraction_bound_on_side(left, right, greater, true)
+            .or_else(|| self.closed_subtraction_bound_on_side(right, left, !greater, true))
     }
 
     fn closed_subtraction_bound_on_side(
@@ -38,12 +47,13 @@ impl Runtime {
         expression: &Obj,
         endpoint: &Obj,
         lower: bool,
+        strict: bool,
     ) -> Option<ClosedSubtractionBoundCertificate> {
         let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = expression else {
             return None;
         };
         let offset = EvalRational::from_obj(&sub.right)?;
-        let target = EvalRational::from_obj(endpoint)?;
+        let target = EvalRational::from_obj(endpoint);
         let base_ir = sub.left.ir();
         for env in self.execution_environments_stack.iter().rev() {
             for rows in env
@@ -53,11 +63,15 @@ impl Runtime {
                 .values()
             {
                 for source in rows {
-                    let (a, b, source_lower, cite_fact_id) = match source {
-                        AtomicFact::GreaterEqualFact(f) => (&f.left, &f.right, true, f.fact_id),
-                        AtomicFact::GreaterFact(f) => (&f.left, &f.right, true, f.fact_id),
-                        AtomicFact::LessEqualFact(f) => (&f.left, &f.right, false, f.fact_id),
-                        AtomicFact::LessFact(f) => (&f.left, &f.right, false, f.fact_id),
+                    let (a, b, source_lower, source_strict, cite_fact_id) = match source {
+                        AtomicFact::GreaterEqualFact(f) => {
+                            (&f.left, &f.right, true, false, f.fact_id)
+                        }
+                        AtomicFact::GreaterFact(f) => (&f.left, &f.right, true, true, f.fact_id),
+                        AtomicFact::LessEqualFact(f) => {
+                            (&f.left, &f.right, false, false, f.fact_id)
+                        }
+                        AtomicFact::LessFact(f) => (&f.left, &f.right, false, true, f.fact_id),
                         _ => continue,
                     };
                     let bound = if source_lower == lower && a.ir() == base_ir {
@@ -67,22 +81,46 @@ impl Runtime {
                     } else {
                         continue;
                     };
-                    let Some(translated) =
-                        EvalRational::from_obj(bound).and_then(|value| value.sub(&offset))
-                    else {
-                        continue;
+                    let translated_bound = if let Some(target) = &target {
+                        let Some(translated) =
+                            EvalRational::from_obj(bound).and_then(|value| value.sub(&offset))
+                        else {
+                            continue;
+                        };
+                        let sufficient = ((!strict || source_strict)
+                            && matches!(
+                                translated.compare(target),
+                                Some(NumberCompareResult::Equal)
+                            ))
+                            || matches!(
+                                (lower, translated.compare(target)),
+                                (true, Some(NumberCompareResult::Greater))
+                                    | (false, Some(NumberCompareResult::Less))
+                            );
+                        if !sufficient {
+                            continue;
+                        }
+                        translated.to_obj()
+                    } else {
+                        // x <= b and c >= 0 imply x-c <= b; dual for c <= 0.
+                        // The endpoint must be identical, not merely another symbol.
+                        let zero = EvalRational::new(0, 1)?;
+                        let sign = offset.compare(&zero)?;
+                        if bound.ir() != endpoint.ir()
+                            || (strict && !source_strict && sign == NumberCompareResult::Equal)
+                            || matches!(
+                                (lower, sign),
+                                (true, NumberCompareResult::Greater)
+                                    | (false, NumberCompareResult::Less)
+                            )
+                        {
+                            continue;
+                        }
+                        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
+                            left: Box::new(bound.clone()),
+                            right: Box::new(offset.to_obj()),
+                        }))
                     };
-                    let sufficient = matches!(
-                        translated.compare(&target),
-                        Some(NumberCompareResult::Equal)
-                    ) || matches!(
-                        (lower, translated.compare(&target)),
-                        (true, Some(NumberCompareResult::Greater))
-                            | (false, Some(NumberCompareResult::Less))
-                    );
-                    if !sufficient {
-                        continue;
-                    }
                     return Some(ClosedSubtractionBoundCertificate {
                         cite_fact_id,
                         source_fact: source.clone(),
@@ -92,8 +130,10 @@ impl Runtime {
                             BoundDirection::Upper
                         },
                         normalized_subtrahend: offset.to_obj(),
-                        translated_bound: translated.to_obj(),
-                        target_bound: target.to_obj(),
+                        translated_bound,
+                        target_bound: target
+                            .as_ref()
+                            .map_or_else(|| endpoint.clone(), |x| x.to_obj()),
                     });
                 }
             }

@@ -1,0 +1,4 @@
+# An arbitrary set is a set and equals itself.
+have A set
+$is_set(A)
+A = A

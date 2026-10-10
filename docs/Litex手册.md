@@ -34,7 +34,7 @@
 
 原生库存有 **51 个公共语句形式、93 个活动对象叶子、20 个内置原子族及其否定形式、两个原生证书谓词**，以及 29 个保留的原生定理接口。稳定的 S/O/F/C 标识符在合并后仍然存在。此清单列出了公共原生语言，而不是每个导入的定理或每个单独的内核重写。
 
-详细参考文献条目现在位于此处。他们的原始库存证据（历史任务记录；已退役）仍然是源码拥有的历史记录；合并审计（历史任务记录；已停用）记录合并情况。流水线和订购审计（历史任务记录；已停用）记录当前全系统章节和阅读序。相等/序配方审核（历史任务记录；已停用）记录检查的代数、翻译、符号和和-of-平方路线。平方/乘积审核（历史任务记录；已停用）通过消去、平方/绝对值转换、相等情况、加权估计和二次式证书扩展了这些路线。幂目录审计（历史任务记录；已停用）记录奇偶校验、整数指数序和共同估计查找扩展名。证明-基础审计（历史任务记录；已停用）记录介绍性书写决策及其配对的作用域/逻辑控制。预期的拒绝和保留的迁移示例被标记并从正栅栏收集器中排除。假设的示例不是严格证明。 S19、S23 和 S24 trust/公理条目有意演示普通模式假设，并具有单独的严格拒绝控件。其他假设的示例在出现的地方进行了标记。每个正栅栏都是独立运行的。
+详细语言参考集中在本手册中。S/O/F/C 条目编号用于稳定导航。预期拒绝和迁移示例带有跳过标记，不属于正向可运行示例。`trust` 与公理示例展示普通模式下的假设，不是严格证明；严格模式的拒绝行为单独说明。可运行代码块应独立执行。
 
 <a id="the-core-reading-model"></a>
 
@@ -90,7 +90,7 @@ x = 0
 
 最后的技术章节继续[高级接口](#advanced-interface-details)、[原生规则](#builtin-verification-rules) 和 [推导](#builtin-inference)，然后是[执行/提取](#execution-and-extraction)。每个深度注释都链接回其字典条目；定义域、事实和作用域在两种视图中具有相同的含义。
 
-[学习者速查表](Litex学习速查表.md) 提供紧凑的学习进展； [示例](../examples/README.md) 提供更长的可运行文件。 [常见问题解答](Litex常见问题.md)、[蓝图](Litex中文蓝图.md) 和 [Lean–Litex 比较](Lean与Litex示例对比.md) 涵盖了基本原理和比较。安装和命令标志属于 [CLI 参考](Litex命令行参考.md)。
+[学习者速查表](Litex学习速查表.md) 提供紧凑的学习进展； [示例](../examples/README.md) 提供更长的可运行文件。 [蓝图](Litex中文蓝图.md) 和 [Lean–Litex 比较](Lean与Litex示例对比.md) 涵盖了基本原理和比较。安装和命令标志属于 [CLI 参考](Litex命令行参考.md)。
 
 <a id="supported-syntax-and-recommended-source-style"></a>
 
@@ -1077,8 +1077,6 @@ forall n N+:
 
 条目表示在审核的版本中需要桥接，其日期为证据，而不是在每个后​​续版本中重复它的永久要求。相同的原理适用于记录的direct-搜索失败。使用当前检查器并保持特定于版本的观察结果与数学契约不同。
 
-证明基本审计（历史任务记录；已停用）记录定义/真值、作用域、量词依赖性、蕴涵方向、析取选择和唯一性的检查片段和控制。
-
 <a id="the-core-loop"></a>
 
 ### 核心循环
@@ -1271,7 +1269,7 @@ S、O 和 F 数是稳定的查找标识符。当相关公共拼写的数学契�
 
 包清单和 CLI 执行在 [cli.md](Litex命令行参考.md) 中进行了描述。导入的标准库接口扩展了原生库存；它们不会仅仅因为示例导入它们而成为原生对象或内置谓词。源码定义的 `$P(...)` 属于具体/抽象谓词条目，而不是内置-族计数。
 
-机器清单（历史任务记录；已停用）通过解析器支持协调所有活动 AST 叶。删除了形式有一个单独的兼容性部分。证书谓词使用 C 标识符，因为它们的真值是由原生定理接口生成/使用的，而不是普通用户谓词定义。保留的定理调用有一个单独的索引。
+已删除的语法见[兼容性说明](#removed-and-renamed-public-forms)。C 条目描述原生证书谓词；它们由原生定理接口生成和使用，不是普通用户谓词定义。保留的原生定理调用另有索引。
 
 性质列表是源码支持的原生族及其实际的保护条件；检查的示例显示了具体支持的用途。他们不承诺自动发现每个数学上等效的拼写或更大的组合。当所列的显式接口承载量化或复合要求时，首选该接口。
 
@@ -1549,8 +1547,7 @@ forall t R:
     t + 0 = t
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/exec_fact_stmt.rs)；清单和验证记录中的 `S02`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/exec_fact_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)。
 
@@ -1578,8 +1575,7 @@ let identity = fn(x R) R {x}
 identity(4) = 4
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_let_stmt.rs)；清单和验证记录中的`S03`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_let_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -1624,8 +1620,7 @@ x != 0
 1 / x $in R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_have_obj_in_nonempty_set_stmt.rs)；清单和验证记录中的`S04`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_obj_in_nonempty_set_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -1652,8 +1647,7 @@ x $in R
 x + 1 / 2 = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_have_obj_equal_stmt.rs)；清单和验证记录中的`S05`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_obj_equal_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -1687,8 +1681,7 @@ have a R:
 a + 1 = 3
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_have_obj_by_exist_facts_stmt.rs);清单和验证记录中的`S06`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_obj_by_exist_facts_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -1715,8 +1708,7 @@ obtain uniq from exist! z R st {z = 1}
 uniq = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_obtain_obj_from_exist_fact_stmt.rs)；清单和验证记录中的 `S07`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_obtain_obj_from_exist_fact_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S35 存在见证](#s35-existential-witnesses)、[S36 独特存在见证](#s36-unique-existential-witnesses)。
 
@@ -1764,8 +1756,7 @@ copy = 2
 copy $in R
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_obtain_obj_from_atomic_fact_stmt.rs);清单和验证记录中的`S08`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_obtain_obj_from_atomic_fact_stmt.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S02 裸事实语句](#s02-bare-factual-statements), [S35 存在见证](#s35-existential-witnesses)、[S36 独特存在见证](#s36-unique-existential-witnesses)、[S07 提取存在见证](#s07-extract-existential-witnesses)。
 
@@ -1797,8 +1788,7 @@ source $in R
 shift(2) = shift(source)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_have_by_fn_preimage_stmt.rs);清单和验证记录中的`S09`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_by_fn_preimage_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -1842,8 +1832,7 @@ $is_set(Img)
 release obj def Img
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_have_by_replacement_axiom_stmt.rs)；清单和验证记录中的`S10`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_by_replacement_axiom_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -1882,8 +1871,7 @@ absolute(-2) = 2
 absolute(3) = 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_have_fn_equal_case_by_case_stmt.rs)；清单和验证记录中的`S11`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_fn_equal_case_by_case_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S01 表达式定义函数](#s01-expression-defined-functions)、[O79 函数空间](#o79-function-spaces)、[O03 函数应用](#o03-function-applications)。
 
@@ -1918,8 +1906,7 @@ countdown(0) = 0
 countdown(1) = countdown(0) = 0
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_have_fn_by_induc_stmt.rs)；清单和验证记录中的`S12`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_fn_by_induc_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S01 表达式定义函数](#s01-expression-defined-functions)、[O79 函数个空格](#o79-function-spaces)、[O03 函数应用](#o03-function-applications)。
 
@@ -1966,8 +1953,7 @@ forall x A:
     $F(x, f(x))
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_have_fn_by_forall_exist_unique_stmt.rs)；清单和验证记录中的`S13`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_have_fn_by_forall_exist_unique_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S01 表达式-定义函数](#s01-expression-defined-functions)、[O79 函数空间](#o79-function-spaces)、[O03 函数应用](#o03-function-applications)。
 
@@ -2003,8 +1989,7 @@ by def $is_positive(2)
 $is_positive(2)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_def_prop_stmt/exec_def_prop_stmt.rs)；清单和验证记录中的`S14`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_prop_stmt/exec_def_prop_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2034,8 +2019,7 @@ forall x R:
         $marked(x)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_def_abstract_prop_stmt/exec_def_abstract_prop_stmt.rs)；清单和验证记录中的`S15`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_abstract_prop_stmt/exec_def_abstract_prop_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2072,8 +2056,7 @@ struct PosPoint:
 (1, 2) $in &PosPoint
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_def_struct_stmt/exec_def_struct_stmt.rs);清单和验证记录中的`S16`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_struct_stmt/exec_def_struct_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2103,8 +2086,7 @@ template<S set>:
 \carrier_copy<R> = R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_def_template_stmt/exec_def_template_stmt.rs)；清单和验证记录中的`S17`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_template_stmt/exec_def_template_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2151,8 +2133,7 @@ thm add_zero:
 release thm add_zero(2)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_def_thm_stmt/exec_def_thm_stmt.rs)；清单和验证记录中的`S18`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_thm_stmt/exec_def_thm_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S33 局部权利要求](#s33-local-claims)、[S34 局部草图](#s34-local-sketches)。
 
@@ -2207,8 +2188,7 @@ axiom background:
 release thm background(2)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_axiom_stmt/exec_axiom_stmt.rs);清单和验证记录中的`S19`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_axiom_stmt/exec_axiom_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S33 局部权利要求](#s33-local-claims)、[S34 局部草图](#s34-local-sketches)、[S18 命名定理](#s18-named-theorems)。
 
@@ -2246,8 +2226,7 @@ have a R = 1
 $is_one(a)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_def_strategy_stmt/exec_def_strategy_stmt.rs)；清单和验证记录中的`S20`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_strategy_stmt/exec_def_strategy_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2285,8 +2264,7 @@ algo nonzero_flag(x R) R by cases:
 eval nonzero_flag(2)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_def_algo_by_cases_stmt/exec_def_algo_by_cases_stmt.rs);清单和验证记录中的`S21`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_algo_by_cases_stmt/exec_def_algo_by_cases_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S01 表达式定义函数](#s01-expression-defined-functions)、[O79 函数空间](#o79-function-spaces)、[O03 函数应用](#o03-function-applications)。
 
@@ -2316,8 +2294,7 @@ algo countdown(n N) N by induc n from 0:
 eval countdown(2)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_def_algo_by_induc_stmt/exec_def_algo_by_induc_stmt.rs)；清单和验证记录中的`S22`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_def_algo_by_induc_stmt/exec_def_algo_by_induc_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S01 表达式定义函数](#s01-expression-defined-functions)、[O79 函数空间](#o79-function-spaces)、[O03 函数应用](#o03-function-applications)。
 
@@ -2346,8 +2323,7 @@ trust:
 7 = 7
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_unsafe_stmt/exec_trust_stmt.rs);清单和验证记录中的`S23`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_unsafe_stmt/exec_trust_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2375,8 +2351,7 @@ trust have denominator R:
 1 / denominator = 1 / denominator
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_unsafe_stmt/exec_trust_have_stmt.rs)；清单和验证记录中的`S24`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_unsafe_stmt/exec_trust_have_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2407,8 +2382,7 @@ release thm zero_sides(2)
 0 + 2 = 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs)；清单和验证记录中的`S25`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2436,8 +2410,7 @@ thm add_zero:
 by thm add_zero(2) => 2 + 0 = 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs)；清单和验证记录中的`S26`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2502,8 +2475,7 @@ claim:
     release struct def p.point
 ```
 
-
-**源码和证据：** [实现](../src/execute/release_one_struct_layer.rs)；清单和验证记录中的`S27`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/release_one_struct_layer.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2532,8 +2504,7 @@ release obj def identity
 identity(2) = 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_release_obj_def_stmt/exec_release_obj_def_stmt.rs)；清单和验证记录中的`S28`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_release_obj_def_stmt/exec_release_obj_def_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2563,8 +2534,7 @@ claim:
     expand: x $in range(1, 3)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_expand_range_stmt.rs)；清单和验证记录中的`S29`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_expand_range_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2591,8 +2561,7 @@ claim:
 release regularity_axiom({1})
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_by_stmt/exec_by_regularity_axiom_stmt.rs);清单和验证记录中的`S30`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_regularity_axiom_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2628,8 +2597,7 @@ claim:
             $is_nonempty_set(A)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_axiom_of_choice_stmt.rs)；清单和验证记录中的`S31`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_axiom_of_choice_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2705,8 +2673,7 @@ claim:
                 exist u S st {$upper_bound(c, u)}
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_by_stmt/exec_by_zorn_lemma_stmt.rs);清单和验证记录中的`S32`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_zorn_lemma_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -2804,8 +2771,7 @@ claim:
 3 = 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_proof_block_stmt/exec_claim_stmt.rs)；清单和验证记录中的`S33`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_proof_block_stmt/exec_claim_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S34 局部草图](#s34-local-sketches)、[S18 命名定理](#s18-named-theorems)。
 
@@ -2833,8 +2799,7 @@ sketch:
 1 = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_proof_block_stmt/exec_sketch_stmt.rs)；清单和验证记录中的`S34`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_proof_block_stmt/exec_sketch_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S33 局部权利要求](#s33-local-claims)、[S18 命名定理](#s18-named-theorems)。
 
@@ -2863,8 +2828,7 @@ obtain a from exist x R st {x = 2}
 a = 2
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs);清单和验证记录中的`S35`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S36 独特存在见证](#s36-unique-existential-witnesses)，[S07 提取存在见证](#s07-extract-existential-witnesses)。
 
@@ -2910,8 +2874,7 @@ obtain a from exist! x R st {x = 2}
 a = 2
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs);清单和验证记录中的`S36`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S35 存在见证](#s35-existential-witnesses)，[S07 提取物存在见证](#s07-extract-existential-witnesses)。
 
@@ -2938,8 +2901,7 @@ prop has_copy(a R):
 witness $has_copy(2) from 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_witness_stmt/exec_witness_atomic_fact.rs)；清单和验证记录中的`S37`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_witness_stmt/exec_witness_atomic_fact.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S35 存在见证](#s35-existential-witnesses)、[S36 独特存在见证](#s36-unique-existential-witnesses)、[S07 提取存在见证](#s07-extract-existential-witnesses)。
 
@@ -2966,8 +2928,7 @@ have a {t R: t > 0}
 a > 0
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_witness_stmt/exec_witness_nonempty_set.rs)；清单和验证记录中的`S38`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_witness_stmt/exec_witness_nonempty_set.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S35 存在见证](#s35-existential-witnesses)、[S36 独特存在见证](#s36-unique-existential-witnesses)、[S07 提取存在见证](#s07-extract-existential-witnesses)。
 
@@ -2996,8 +2957,7 @@ by cases:
     case 1 = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_cases_stmt.rs)；清单和验证记录中的`S39`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_cases_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3044,8 +3004,7 @@ by contra:
     impossible 1 != 1
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_by_stmt/exec_by_contra_stmt.rs);清单和验证记录中的`S40`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_contra_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3108,8 +3067,7 @@ by enumerate finite_set:
         x < 3
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_by_stmt/exec_by_enumerate_finite_set_stmt.rs);清单和验证记录中的`S41`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_enumerate_finite_set_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3157,8 +3115,7 @@ by induc n from 0:
     ? n = n
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs)；清单和验证记录中的`S42`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3228,8 +3185,7 @@ by strong_induc m from 0:
     ? m = m
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs)；清单和验证记录中的`S43`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3256,8 +3212,7 @@ by for:
         n < 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_for_stmt.rs)；清单和验证记录中的`S44`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_for_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3282,8 +3237,7 @@ by for:
 by extension intersect(R, R) = R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_extension_stmt.rs)；清单和验证记录中的`S45`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_extension_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3317,8 +3271,7 @@ by fn_extension:
     ? add1 = add2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/exec_by_fn_extension_stmt.rs)；清单和验证记录中的`S46`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_fn_extension_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3367,8 +3320,7 @@ prop is_zero(x R):
 by def $is_zero(0)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_by_stmt/exec_by_def_stmt.rs);清单和验证记录中的`S47`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/exec_by_def_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3427,8 +3379,7 @@ have a set
 $same(a, a)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_register_stmt/exec_register_reflexive_prop_stmt.rs)；清单和验证记录中的`S48`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_register_stmt/exec_register_reflexive_prop_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3479,8 +3430,7 @@ forall a, b set:
         $same(b, a)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_register_stmt/exec_register_symmetric_prop_stmt.rs)；清单和验证记录中的`S49`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_register_stmt/exec_register_symmetric_prop_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3513,8 +3463,7 @@ register transitive:
             $same(x, z)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_register_stmt/exec_register_transitive_prop_stmt.rs)；清单和验证记录中的`S50`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_register_stmt/exec_register_transitive_prop_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3542,8 +3491,7 @@ eval 2 + 3
 2 + 3 = 5
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_eval_stmt/exec_eval_stmt.rs);清单和验证记录中的`S51`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_eval_stmt/exec_eval_stmt.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)。
 
@@ -3572,8 +3520,7 @@ t(1)=1
 t(2)=2
 ```
 
-
-**源码和证据：** [执行器](../src/execute/execute_release_tuple_def_stmt.rs)、[可运行跟踪器](../examples/stmt_nodes/release_and_expand/release_tuple_def.lit) 和接受（历史任务记录；已停用）。
+**源码：** [执行器](../src/execute/execute_release_tuple_def_stmt.rs)、[可运行跟踪器](../examples/stmt_nodes/release_and_expand/release_tuple_def.lit)。
 
 **相关条目：** [O78 有限元组](#o78-finite-tuples)。 `release cart def cart(A,B)` 发布此处描述了完整的集合定义；此命令发布事实关于单个值。
 
@@ -3815,8 +3762,7 @@ b = a = 2
 b + 1 = 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O02`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -3848,8 +3794,7 @@ forall x R:
     shift(x) $in R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs)；清单和验证记录中的`O03`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S01 表达式-定义函数](#s01-expression-defined-functions)、[S46 函数外延性](#s46-function-extensionality)。
 
@@ -3880,8 +3825,7 @@ forall x R:
 not 1 / 2 $in Z
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O04`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -3910,8 +3854,7 @@ re(i) = 0
 img(i) = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O05`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -3942,8 +3885,7 @@ exp(1) = e
 ln(e) = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O06`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -3982,8 +3924,7 @@ sin(pi) = 0
 cos(pi) = -1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O07`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4011,8 +3952,7 @@ cos(pi) = -1
 2 $in N
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O08`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4040,8 +3980,7 @@ cos(pi) = -1
 2 $in Z+
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O09`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等](#s05-typed-values-given-by-equality) 给出的值。
 
@@ -4069,8 +4008,7 @@ cos(pi) = -1
 0 $in Z
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O10`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4098,8 +4036,7 @@ cos(pi) = -1
 -3 $in Q
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O11`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4127,8 +4064,7 @@ sqrt(2) $in R
 1 / 2 $in R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O12`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4156,8 +4092,7 @@ i $in C
 2 + 3 * i $in C
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O13`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4185,8 +4120,7 @@ i $in C
 2 $in Q+
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O14`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4214,8 +4148,7 @@ i $in C
 2 $in R+
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O15`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4243,8 +4176,7 @@ i $in C
 -2 $in Q-
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O16`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4272,8 +4204,7 @@ i $in C
 -2 $in Z-
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs);清单和验证记录中的`O17`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4301,8 +4232,7 @@ i $in C
 -2 $in R-
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O18`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等](#s05-typed-values-given-by-equality) 给出的值。
 
@@ -4330,8 +4260,7 @@ i $in C
 -2 $in Q*
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O19`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4359,8 +4288,7 @@ i $in C
 -2 $in Z*
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O20`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -4388,8 +4316,7 @@ i $in C
 -2 $in R*
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O21`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4417,8 +4344,7 @@ i $in C*
 2 $in C*
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O22`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -4448,8 +4374,7 @@ forall a, b C:
     a + 0 = a
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O23`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4479,8 +4404,7 @@ forall a C:
     a - 0 = a
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O24`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4509,8 +4433,7 @@ forall a C:
     a + (-a) = 0
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O25`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4540,8 +4463,7 @@ forall a, b C:
     a * 1 = a
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O26`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4574,8 +4496,7 @@ forall x R:
     exp(x) = e^x
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O27`（历史任务记录；已退役）。 [实数-幂 WD 跟踪器](../examples/wd/pow_real_domains.lit) 和证明日志（历史任务记录；已停用）涵盖了后续的符号式-定义域扩展。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4607,8 +4528,7 @@ forall x R:
     |x| >= 0
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O28`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4637,8 +4557,7 @@ forall x R:
     min(x, x) = x
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O29`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4667,8 +4586,7 @@ forall x R:
     max(x, x) = x
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O30`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4696,8 +4614,7 @@ floor(3.7) = 3
 floor(-1.2) = -2
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O31` 在盘点和验证记录中（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4725,8 +4642,7 @@ ceil(3.2) = 4
 ceil(-1.2) = -1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O32`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4755,8 +4671,7 @@ sign(0) = 0
 sign(2) = 1
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O33`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4784,8 +4699,7 @@ sign(2) = 1
 7 % 3 = 1
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O34`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4813,8 +4727,7 @@ quot(-7, 3) = -3
 quot(7, 3) = 2
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O35`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4842,8 +4755,7 @@ gcd(54, -24) = 6
 gcd(0, 3) = 3
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O36`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4877,8 +4789,7 @@ lcm(12, -18) = 36
 lcm(0, 3) = 0
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O37` 在盘点和验证记录中（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4906,8 +4817,7 @@ lcm(0, 3) = 0
 3! = 6
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O38`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4935,8 +4845,7 @@ sin(0) = 0
 sin(pi / 2) = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O39`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4970,8 +4879,7 @@ cos(0) = 1
 cos(pi) = -1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O40`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -4999,8 +4907,7 @@ tan(0) = 0
 tan(pi / 4) = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O41`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5028,8 +4935,7 @@ cot(pi / 4) = 1
 cot(pi / 2) = 0
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O42`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5057,8 +4963,7 @@ arcsin(0) = 0
 arcsin(1) = pi / 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O43`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5086,8 +4991,7 @@ arccos(1) = 0
 arccos(0) = pi / 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O44`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5115,8 +5019,7 @@ arctan(0) = 0
 arctan(1) $in R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O45`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5144,8 +5047,7 @@ arccot(0) = pi / 2
 arccot(1) $in R
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O46`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5173,8 +5075,7 @@ exp(0) = 1
 exp(1) = e
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O47`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5202,8 +5103,7 @@ ln(1) = 0
 ln(e) = 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O48`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5231,8 +5131,7 @@ log(2, 8) = 3
 log(2, 1) = 0
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O49`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5260,8 +5159,7 @@ sqrt(4) = 2
 sqrt((-3)^2) = |-3| = 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O50`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5289,8 +5187,7 @@ re(2 + 3 * i) = 2
 re(i) = 0
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O51`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5318,8 +5215,7 @@ img(2 + 3 * i) = 3
 img(2) = 0
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)；清单和验证记录中的`O52`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5347,8 +5243,7 @@ C_abs(i) = 1
 C_abs(-3) = 3
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs);清单和验证记录中的`O53`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [O01 除法](#o01-division)。
 
@@ -5378,8 +5273,7 @@ union(R, Z) = union(Z, R)
 union({1}, {}) = {1}
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)； `O54` 在盘点和验证记录中（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -5407,8 +5301,7 @@ intersect(R, Z) = intersect(Z, R)
 intersect({1}, {}) = {}
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O55`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5436,8 +5329,7 @@ set_minus({1}, {1}) = {}
 set_minus(R, {}) = R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O56`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5465,8 +5357,7 @@ family_union({{1, 2}}) = {1, 2}
 family_union(power_set({1, 2})) = {1, 2}
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O57`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5498,8 +5389,7 @@ release thm family_intersect_member(1, family_intersect({{1}}))
 1 $in family_intersect({{1}})
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O58`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S25 发布定理结论](#s25-publish-theorem-conclusions)。
 
@@ -5528,8 +5418,7 @@ by def {1} $subset {1, 2}
 {1} $in power_set({1, 2})
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)； `O59` 在盘点和验证记录中（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5559,8 +5448,7 @@ $is_set(result)
 result = result
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O60`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S25 发布定理结论](#s25-publish-theorem-conclusions)。
 
@@ -5590,8 +5478,7 @@ $is_set(result)
 result = result
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O61`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S25 发布定理结论](#s25-publish-theorem-conclusions)。
 
@@ -5621,8 +5508,7 @@ $is_set(product_set)
 product_set = product_set
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O62`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S25 发布定理结论](#s25-publish-theorem-conclusions)。
 
@@ -5651,8 +5537,7 @@ finite_set_size({1, 2}) = 2
 1 $in {1, 2}
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O63`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5684,8 +5569,7 @@ forall x {t R: t > 0}:
     x > 0
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs);清单和验证记录中的`O64`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等](#s05-typed-values-given-by-equality) 给出的值。
 
@@ -5713,8 +5597,7 @@ forall x {t R: t > 0}:
 not 3 $in range(1, 3)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs);清单和验证记录中的`O65`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5742,8 +5625,7 @@ not 3 $in range(1, 3)
 2 $in 1...2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)；清单和验证记录中的`O66`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5771,8 +5653,7 @@ finite_seq(R, 0) = fn(k {}) R
 finite_seq(R, 2) = fn(k closed_range(1, 2)) R
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs);清单和验证记录中的`O67`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S01 表达式-定义函数](#s01-expression-defined-functions)、[S46 函数外延性](#s46-function-extensionality)。
 
@@ -5800,8 +5681,7 @@ seq(R) = fn(k N+) R
 seq(N) = fn(k N+) N
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs);清单和验证记录中的`O68`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S01 表达式-定义函数](#s01-expression-defined-functions)、[S46 函数外延性](#s46-function-extensionality)。
 
@@ -5829,8 +5709,7 @@ seq(N) = fn(k N+) N
 not 0 $in '(0,)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O69`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -5858,8 +5737,7 @@ not 0 $in '(0,)
 1 $in '[0,)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O70`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -5887,8 +5765,7 @@ not 0 $in '(0,)
 not 0 $in '(,0)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O71`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -5916,8 +5793,7 @@ not 0 $in '(,0)
 -1 $in '(,0]
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O72`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5945,8 +5821,7 @@ not 0 $in '(,0)
 not 0 $in '(0,2)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O73`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5974,8 +5849,7 @@ not 0 $in '(0,2)
 not 0 $in '(0,2]
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O74`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6003,8 +5877,7 @@ not 0 $in '(0,2]
 not 2 $in '[0,2)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O75`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6032,8 +5905,7 @@ not 2 $in '[0,2)
 2 $in '[0,2]
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O76`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6062,8 +5934,7 @@ not 2 $in '[0,2)
 finite_set_size(cart()) = 1
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O77`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6100,8 +5971,7 @@ p(2) = 2
 (fn(x R) R {x}, 0)(1)(2) = 2
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O78`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6134,8 +6004,7 @@ identity $in fn(t R) R
 fn(x R) R = fn(t R) R
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs);清单和验证记录中的`O79`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S01 表达式-定义函数](#s01-expression-defined-functions)、[S46 函数外延性](#s46-function-extensionality)。
 
@@ -6165,8 +6034,7 @@ fn(x R) R {x + 1}(2) = 3
 fn(x R: x != 0) R {1 / x}(2) = 1 / 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs)；清单和验证记录中的 `O80`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S01 表达式-定义函数](#s01-expression-defined-functions)、[S46 函数外延性](#s46-function-extensionality)。
 
@@ -6195,8 +6063,7 @@ fn_range(constant) = {1}
 constant(2) $in fn_range(constant)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs);清单和验证记录中的`O81`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S01 表达式-定义函数](#s01-expression-defined-functions)、[S46 函数外延性](#s46-function-extensionality)。
 
@@ -6261,8 +6128,7 @@ sum(1, 3, fn(k Z) Z {k}) = 6
 sum(2, 2, fn(k Z) Z {k}) = 2
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs);清单和验证记录中的`O82`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等](#s05-typed-values-given-by-equality) 给出的值。
 
@@ -6298,8 +6164,7 @@ product(1, 3, fn(k Z) Z {k}) = 6
 product(2, 2, fn(k Z) Z {k}) = 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)；清单和验证记录中的`O83`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等](#s05-typed-values-given-by-equality) 给出的值。
 
@@ -6327,8 +6192,7 @@ finite_set_sum({}, fn(k Z) Z {k}) = 0
 finite_set_sum({1, 2}, fn(k Z) Z {k}) = 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)；清单和验证记录中的`O84`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6356,8 +6220,7 @@ finite_set_product({}, fn(k Z) Z {k}) = 1
 finite_set_product({2, 3}, fn(k Z) Z {k}) = 6
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)；清单和验证记录中的`O85`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -6387,8 +6250,7 @@ reduce(2, 1, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 7) = 7
 reduce(1, 2, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 0) = 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)；清单和验证记录中的`O86`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6428,8 +6290,7 @@ finite_set_reduce({}, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 7) = 7
 finite_set_reduce({1,2}, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 0) = finite_set_sum({1,2}, fn(k Z) Z {k}) = 3
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)；清单和验证记录中的`O87`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -6457,8 +6318,7 @@ finite_set_size({}) = 0
 finite_set_size({1,2}) = 2
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs);清单和验证记录中的`O88`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的值由相等](#s05-typed-values-given-by-equality) 给出。
 
@@ -6486,8 +6346,7 @@ finite_set_max({1,3,2}) = 3
 finite_set_max({1,3,2}) $in {1,3,2}
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O89`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -6521,8 +6380,7 @@ finite_set_min({1,3,2}) = 1
 finite_set_min({1,3,2}) $in {1,3,2}
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)；清单和验证记录中的`O90`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等](#s05-typed-values-given-by-equality) 给出的值。
 
@@ -6563,8 +6421,7 @@ struct PosPoint:
 (1, 2) $in &PosPoint
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs);清单和验证记录中的`O91`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S16 结构化载体](#s16-structured-carriers)、[S27 开一层 struct 定义层](#s27-open-one-struct-definition-layer)。
 
@@ -6601,8 +6458,7 @@ forall p &Point:
     p.y = p.y
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O92`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S16 结构化载体](#s16-structured-carriers)、[S27 开一层 struct 定义层](#s27-open-one-struct-definition-layer)。
 
@@ -6642,8 +6498,7 @@ template<S set>:
 \carrier_copy<R> = R
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)；清单和验证记录中的`O93`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership), [S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality), [S17 参数化声明族](#s17-parameterized-declaration-families)、[S28 重放和对象定义](#s28-replay-an-object-definition)。
 
@@ -6861,8 +6716,7 @@ by enumerate finite_set:
 by extension {1, 2} = {2, 1}
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md);清单和验证记录中的`F02`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -6890,8 +6744,7 @@ by extension {1, 2} = {2, 1}
 not 2 < 1
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs);清单和验证记录中的`F03`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -6919,8 +6772,7 @@ not 2 < 1
 not 1 > 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)；清单和验证记录中的`F04`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -6949,8 +6801,7 @@ not 1 > 2
 not 2 <= 1
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)；清单和验证记录中的`F05`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -6979,8 +6830,7 @@ not 2 <= 1
 not 1 >= 2
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)；清单和验证记录中的`F06`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7009,8 +6859,7 @@ $is_set(R)
 $is_set(fn(x R) R {x})
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)；清单和验证记录中的`F07`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7039,8 +6888,7 @@ not $is_nonempty_set({})
 witness $is_nonempty_set({x R: x > 0}) from 1
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs);清单和验证记录中的`F08`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7069,8 +6917,7 @@ $is_finite_set({1, 2})
 not $is_finite_set(N)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)；清单和验证记录中的`F09`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7101,8 +6948,7 @@ by contra:
     impossible 2 $in {1}
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs);清单和验证记录中的`F10`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7133,8 +6979,7 @@ by contra:
     impossible 2 $in {1}
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)；清单和验证记录中的`F11`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7164,8 +7009,7 @@ by contra:
     impossible {1} != {1}
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)；清单和验证记录中的`F12`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7195,8 +7039,7 @@ by contra:
     impossible {1} != {1}
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs);清单和验证记录中的`F13`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7225,8 +7068,7 @@ not $prime(6)
 not $prime(1)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)；清单和验证记录中的`F14`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7260,8 +7102,7 @@ by def $coprime(14, 25)
 not $coprime(14, 21)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs);清单和验证记录中的`F15`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)。
 
@@ -7299,8 +7140,7 @@ by contra:
     impossible 5 % 2 = 0
 ```
 
-
-**源码与证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)；清单与验证记录中的 `F16`（已停用的历史任务记录）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员与非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 反证法](#s40-proof-by-contradiction)。
 
@@ -7330,8 +7170,7 @@ have fn id1(x {1}) {1} = x
 by def $injective({1}, {1}, id1)
 ```
 
-
-**源码与证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)；清单与验证记录中的 `F17`（已停用的历史任务记录）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员与非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 反证法](#s40-proof-by-contradiction)、[S01 表达式定义的函数](#s01-expression-defined-functions)、[S35 存在见证](#s35-existential-witnesses)。
 
@@ -7363,8 +7202,7 @@ claim:
 by def $surjective(R, R, identity)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)；清单和验证记录中的`F18`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目:** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)、[S01 表达式定义的函数](#s01-expression-defined-functions)、[S35 存在见证](#s35-existential-witnesses)。
 
@@ -7406,8 +7244,7 @@ by def $surjective({1}, {1}, id1)
 by def $bijective({1}, {1}, id1)
 ```
 
-
-**源码和证据:** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs);清单和验证记录中的`F19`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)、[S01 表达式定义的函数](#s01-expression-defined-functions)、[S35 存在见证](#s35-existential-witnesses)。
 
@@ -7438,8 +7275,7 @@ forall alpha {1}:
 by def $is_choice_function_for({1}, power_set({1}), family, choice)
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)；清单和验证记录中的`F20`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)、[S02 裸事实语句](#s02-bare-factual-statements)、[S47 显式定义折叠](#s47-explicit-definition-folding)、[S40 证明 by 矛盾](#s40-proof-by-contradiction)、[S01 表达式定义的函数](#s01-expression-defined-functions)、[S35 存在见证](#s35-existential-witnesses)。
 
@@ -7465,8 +7301,7 @@ release thm real_least_upper_bound_exists({0}, 1)
 exist L R st {$is_real_least_upper_bound({0}, L)}
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs)；清单和验证记录中的`C01`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs)。
 
 **相关条目：** [S25 发布定理结论](#s25-publish-theorem-conclusions)、[S07 提取存在见证](#s07-extract-existential-witnesses)。
 
@@ -7492,8 +7327,7 @@ release thm real_greatest_lower_bound_exists({0}, -1)
 exist L R st {$is_real_greatest_lower_bound({0}, L)}
 ```
 
-
-**源码和证据：** [实现](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs)；清单和验证记录中的`C02`（历史任务记录；已退役）。
+**源码：** [实现](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs)。
 
 **相关条目：** [S25 发布定理结论](#s25-publish-theorem-conclusions)，[S07 提取存在见证](#s07-extract-existential-witnesses)。
 
@@ -7926,8 +7760,6 @@ not 1 < 1
 
 
 **匹配边界：** 相等的数学表达式可能具有不同的对象形状。 [R08](#r08-scale-an-inequality-with-the-correct-sign) 和 [R10](#r10-expose-absolute-value-bounds) 中使用的界规则消耗显式从零减去的结果。书写 `0-x = -x <= M` 暴露相等并存储匹配的界；期望检查者在每个序前提中发明重写可能会失败。类似地，序规则可能会消耗存储的前提，而不是递归地发现它。请参阅 R06 的非负差异的两种拼写和 R09 的显式非负被加数。
-
-**证据：** P12/P13 控制和检查的对应项记录在配方审核中（历史任务记录；已停用）。
 
 <a id="recommended-mathematical-formulations"></a>
 
@@ -8367,7 +8199,7 @@ claim:
 
 如果可用的前提已经是 `-x<=M`，则相应的桥接器是 `0-x = -x <= M`。这是相等传递，没有额外的符号假设。保持上面经过精确验证的反向三角形方向；嵌套的绝对值或反向拼写可能需要额外的步骤。
 
-**R06–R10 的证据：** 所有正代码块在配方审核中都是独立的严格证明（历史任务记录；已停用）。它还记录较短的路由/删除尝试和符号/strictness/定义域控制。 [原生序表](#order-and-comparison-rules) 给出了更广泛的带保护条件的族；这些配方给出了检查的证明序列。
+参见[原生序规则表](#order-and-comparison-rules)中的前提条件；这些配方展示完整的证明步骤。
 
 <a id="r11-product-signs-zero-factors-and-cancellation"></a>
 
@@ -8769,8 +8601,7 @@ not 1 = 0
 not 2*1*0 <= (-1)*1^2+0^2/(-1)
 ```
 
-
-**针对 R11–R14 的证据：** 平方/乘积审核（历史任务记录；已停用）记录严格独立示例、假符号/zero/平方对照、direct-搜索观察和删除检查。 Direct 事实和复合证明分别标记。不需要 `trust`、`axiom` 或导入。
+直接事实和组合证明分别标记。这些示例不使用 `trust`、`axiom` 或导入。
 
 <a id="r15-power-signs-and-two-kinds-of-monotonicity"></a>
 
@@ -9024,8 +8855,7 @@ forall a, u, v R:
 0^2 = 0
 ```
 
-
-**证据：** 幂目录审核（历史任务记录；已停用）记录清理严格检查、被拒绝定义域/严格控制和删除变体。 Direct 事实、组成的奇偶校验证明、归纳和未证明实数指数搜索目标是单独的覆盖范围类别。
+直接事实、组合的奇偶性证明、归纳和未证明的实数指数目标是不同的覆盖类别。
 
 <a id="r16-common-real-inequalities-at-a-glance"></a>
 
@@ -9416,7 +9246,7 @@ p.x = 1
 
 将 template 读取为普通定义语句的参数化对应项。主体与外部出现的定义是同一类型（`have …`、`have fn …` 和其他受支持的定义形式）：Litex 检查它，就好像尖括号参数已经引入并满足标头一样条件。然后，实例化 `\name<args>` 会为这些具体参数提供相应定义的对象或函数。
 
-这就是为什么 `template` 是必要的，并且不能用简单的 `fn_set`/普通函数（其定义域写为 `set`）来代替。 Litex 函数参数的范围必须大于一个固定的集合。绑定变量类型 `set` 不是这样的集合：它是表面参数类型，意思是“集合”，而不是集合-of-all-集合的元素。因此，由任意集合索引的族属于 template 标头，而不是作为假函数参数。被拒绝形式 `have fn identity_set(A set) set = A` 之前已记录在 [Bare 事实和 `have`](#bare-facts-and-have) 下；有关更长的阅读，请参阅 [为什么 Litex 有 `template`？](Litex常见问题.md#why-does-litex-have-template)。
+这就是为什么 `template` 是必要的，并且不能用简单的 `fn_set`/普通函数（其定义域写为 `set`）来代替。 Litex 函数参数的范围必须大于一个固定的集合。绑定变量类型 `set` 不是这样的集合：它是表面参数类型，意思是“集合”，而不是集合-of-all-集合的元素。因此，由任意集合索引的族属于 template 标头，而不是作为假函数参数。被拒绝形式 `have fn identity_set(A set) set = A` 之前已记录在 [Bare 事实和 `have`](#bare-facts-and-have) 下。
 
 
 ```litex
@@ -10378,7 +10208,7 @@ forall a, b R+:
 ```
 
 
-> **预览：** 序内置函数现在也关闭这些形状 （每个规则都有自己的证明有效负载）：甚至幂 `0 <= a^2` / `0 < a^2` 来自 `a != 0`；正-基础幂 `0 <= a^n` / `0 < a^n`；非负底座带 `n $in N+`； `0 <= sqrt(x)` / `0 < sqrt(x)` 和 sqrt 单调性； `n $in N+` ⇒ `1 <= n`; `log` 序/符号，带底座 `> 1`；欧几里德 `0 <= a % b < b`（mod/div 对象 WD 今天仍然需要显式 `!= 0` 前提）；减法电桥 `a <= b` ↔ `0 <= b - a`（和严格）； 序传递性;当 `0 < a` 和 `1 < b` 时，正-除数单调除法和 `a / b < a`；负-除数序翻盖； div↔产品桥>（`a <= b / c`来自`c * a <= b`，`a <= b * c`来自`a / c <= b`）； 字面量数值界削弱（包括整数前身提升）； 整数后继/邻接/前驱/至少差一； 正甚至 `1 < i`； `finite_set_max` / `finite_set_min` 成员界; 联盟基数 `<=` 和;和投影陪域基数 `<=` 定义域。 还有 `finite_set_size` 非负 / 至少一个 / 子集比较。 载体 → 符号急切再推断：`x $in N` ⇒ `0 <= x`； `x $in R+/R-/R*` ⇒ `0 < x` (+ `0 <= x`、`x != 0`) / `x < 0` (+ `x <= 0`、`x != 0`) / `x != 0`。 严格签名有理数/整数载体同样发布非零；单独的 `N` 则不然。 仍然验证时间（不急于推断）：界 → 符号拼写 (`a >= 1` ⇒ `0 < a`, `a <= -1` ⇒ `a <= 0`);乘以 `(-1)` 序翻转； 和 `u - v = 0` ⇒ `u = v` (`EqualFromKnownDifferenceZero`)。 相等幂规律（预览）：`a^m * a^n = a^(m+n)`、`(a^m)^n = a^(m*n)`、 `(a*b)^n = a^n * b^n`（具有自然指数的复数基数，或非零复数基数具有自然指数） 整数指数）。可以写入第一-幂因子，而不需要`^1`：`a^(n+1) = a^n * a`，包括因子、序和相等>方向。另外 `1/a = a^(-1)`、`a/b = a * b^(-1)` 表示非零分母。 相等身份第 2 波（预览）：`1^a = 1`（`N` 中的 `a`）、`0^n = 0` （`N+` 中的 `n`）； sqrt 平方 / 零 / 一 / of-平方 / 乘积 / 商; 否定 / 乘积 / 平方的绝对值； log base-self / of-one / of-幂 // arg-幂 / 乘积 / 商 / 倒数 / 改变基数； `0 % 5 = 0`、`a % 1 = 0`、`1 % 5 = 1`，嵌套同模吸收。 商正性、sqrt 分母、log 非零条件和整数 mod-结果载体在其proof_nodes 中进行检查。 相等身份第 3 波（预览）：`min`/`max` 幂等且可交换； `||a|| = |a|`； `exp(ln(x)) = x`（`R+` 中的 `x`）； `ln(exp(x)) = x` （`R` 中的 `x`；原生 `exp` 返回 `R+`，满足 ln WD）； `floor(n) = n` / `ceil(n) = n`（`n` 位于 `Z`）； `a % a = 0` (`a != 0`)。 相等身份第 4 波（预览）：`floor(ceil(n)) = n`、> `ceil(floor(n)) = n`（`Z` 中的 `n`）； `sqrt(a^2) = |a|`。 相等身份第 5 波（预览）：`quot(a, 1) = a`； `quot(a, a) = 1`（`N+` 中的 `a`）； `lcm` 可交换/幂等-abs； `gcd` 可交换/幂等-abs /> 零-|gcdproof_nodes 绑定非零整数参数作为 `Z*`|； `(n+1)! = (n+1) * n!`（`N` 中的 `n`；原生阶乘返回 `N+`）。 相等身份第 6 波（预览）：`0 <= a` 时为 `|a| = a`； `|a| = 0 - a` 当 `a <= 0` 时； `sign(a) = 1` 当 `0 < a` 时； `sign(a) = 0 - 1` 当 `a < 0` 时；有序 `min`/`max` 当 `a <= b` 或 `b <= a` 时。 相等身份第 7 波（预览）：`a % gcd(a, b) = 0`/> `(a * b) % a = 0`（非零除数；原生 gcd 返回 `N+`）； `a = b` 来自 `a <= b` 和 `b <= a`； `a - b = 0` 来自 `a = b`； `b = 0` 来自 `a * b = 0` 和 `a != 0`； `sign(0 - a) = 0 - sign(a)`； `sign(a) * |a| = a`； `|a| = sign(a) * a`； `sign(a * b) = sign(a) * sign(b)`（原生符号返回 `Z`，> 可用于实数和复数算术 WD）； `a = c - b` 来自已知的 `a + b = c`。 相等恒等式第 9 波（预览）：集合代数空 `union(A, {}) = A` / `union({}, A) = A`； `intersect(A, {}) = {}` // `intersect({}, A) = {}`; `set_minus(A, A) = {}` / `set_minus(A, {}) = A` `set_minus({}, A) = {}`; `union`/`intersect` 可交换且幂等； `B $subset A` ⇒ `intersect(A, B) = B`; `not $is_nonempty_set(A)` ⇒ `A = {}`; `$is_finite_set(S)` ⇒ `finite_set_size(power_set(S)) = 2^finite_set_size(S)`; 还有关联/分配/De Morgan 集合恒等式和 `intersect(A, set_minus(B, A)) = {}`。 相等身份第 10 波（预览）：空聚合 `finite_set_sum({}, f) = 0`； `finite_set_product({}, f) = 1`； `finite_set_reduce({}, f, op, seed) = seed`；当 `end < start` 时，空范围 `reduce`/`sum`/`product`。 相等身份第 11 波（预览）：剩余对象等式 — 联合吸收/集合-减去从子集恢复；从大小 0 开始为空； 普通有限-函数坐标；有限-集合尺寸集合-减号/联合； `closed_range(a,a) = {a}`；单-项 `sum`/`product`；减少↔sum桥； `b^(log(b,x)) = x`。 相等身份第 12 波（预览）： `union(A, set_minus(B, A)) = union(A, B)`； `set_minus(B, intersect(A, B)) = set_minus(B, A)`；复数 `re(i)=0`, `img(i)=1`, `re(1)=1`, `img(1)=0`, `re(1+i)=1`, `img(1+i)=1`, `C_abs(i)=1`; `(a % (k*m)) % m = a % m`；最后-项 `sum`/`product` 拆分；列表 `finite_set_sum`/`finite_set_product` 扩展（针对当前添加/乘法/聚合载体 WD 缩小 `trust`）。 相等身份第 13 波 + 闭合三角（预览）：`e = exp(1)`、`ln(e)=1`； `sin(0)/cos(0)/tan(0)`、`sin(pi/2)`、`cos(pi)`、`sin(pi)`、毕达哥拉斯； `re(a)=a` / `img(a)=0` 为 `a R`； `re/img(a+b*i)`； `C_abs` on 非负实数 / 图像缩放；字面量 `range`/`closed_range` 扩展； `power_set({})`/`power_set({a})`； `family_union({})`；空-因子 `cart`; 交并并； set_minus 链；常量 `fn_range`（字面量匿名可以）； `seq(S)=fn(x N+) S` 和 `finite_seq(S,n)=fn(x closed_range(1,n)) S`（索引 1 到 n；长度 0 具有空定义域）。 相等身份第 14 波 / Obj P0–P2（预览）：WD 修复非常基本 `ln(e)`、`tan(0)`、毕达哥拉斯、`sum`/`product` Add/Mul、匿名 `fn_range`、 `finite_seq` 有限性，并且reduce-single不再需要>狭隘信任；空-索引运算符身份已由 WD 停用；单例 `index_union`； `{x N: x < 0}={}`； `cot(pi/2)=0`； `C_abs(a+b*i)^2=a^2+b^2`； `exp(a+b)=exp(a)exp(b)`； `log(a^b,c)=log(a,c)/b`；乘积的 `re/img`； `sin/cos` 角加法； `reduce(s,s,f,add,0)=f(s)`。空绝对交集（预览，已解决）：无 `family_intersect({})={}`（空 ∩ 是 Universe 类；空索引交集也是 WD 的被拒绝）。相等身份第 15 波（预览）：有限-集合 Fubini — `∑_X ∑_Y f((x,y)) = ∑_Y ∑_X f((x,y))` 和 `∑_X ∑_Y f((x,y)) = ∑_{cart(X,Y)} f`。 NotIn 区间（预览版）：开端点/外部界。 NotIn / NotIsFiniteSet（预览）：`x $in B` ⇒ `not x $in set_minus(A, B)`； `not $is_finite_set(N)`（和其他标准载体）。 更大的加/乘（预览，A10）：`a > b` ⇒ `a + c > b + c` / `c + a > c + b`； `0 < k` 和 `a > b` ⇒ `a * k > b * k` / `k * a > k * b`。 相等身份第 8 波（预览）：欧几里得 `a = d * quot(a, d) + (a % d)`； `(a - (a % b)) % b = 0`（当前 mod/quot WD 的窄 `trust` 非零除数）； `a = 0` 从已知> `a^2 + b^2 = 0`； `(-1)^(2 * m + 1) = -1`（`N` 中的 `m`）； `lcm(a, b) * gcd(a, b) = |a * b|`（对当前 lcm/gcd WD 的信任度较低）。 NotEqual 剩菜（预览，A9 部分）：`$is_nonempty_set(A)` ⇒ `A != {}`； `n $in N` 和 `1 <= n` ⇒ `n != 0`； `a != 0` ⇒ `a^n != 0`（整数指数）； `a != 0` 和 `b != 0` ⇒ `a / b != 0`； `a * b != 0` ⇒ `a != 0`; `0 < a` ⇒ `sqrt(a) != 0`; `a != 0` ⇒ `a^2 + b^2 != 0`; `a != -b` ⇒ `a + b != 0`; `x $in A` 和 `y $notin A` ⇒ `x != y`。 严格序 add/mul（预览，A10 部分）：`a < b` ⇒ `a + c < b + c`； `0 < k` 和 `a < b` ⇒ `a * k < b * k`（以及左因子形式）。 > [`examples/proof_nodes/atomic/by_builtin_rule/`](../examples/proof_nodes/atomic/by_builtin_rule/) 和 [`examples/proof_nodes/equal/by_builtin_rule/`](../examples/proof_nodes/equal/by_builtin_rule/) 下每个已接受的规则一个 `.lit`。 内置策略（预览）：结构需求策略与带类型的证据（一项策略 ↔ 一项结果 struct）。相等策略包括极值反对称、有限-集合乘积逐点、mod 合同性以及有理数与非零前提恒等式。原子策略涵盖附加符号、非零乘积、结构序、数值载体闭包、> 集合成员关系 / 子集分解，以及递归 `$is_finite_set` // `$is_nonempty_set` 构造器。 [`examples/proof_nodes/atomic/by_builtin_strategy/`](../examples/proof_nodes/atomic/by_builtin_strategy/) 和 [`examples/proof_nodes/equal/by_builtin_strategy/`](../examples/proof_nodes/equal/by_builtin_strategy/) 下的示踪剂。
+规则的数学前提与边界见[序与比较规则](#order-and-comparison-rules)及对应的 S/O/F/C 条目。可运行示例按验证路线组织在 [proof_nodes](../examples/proof_nodes/README.md) 中。
 
 显示有限-集合成员关系也可以使用结构策略路由：
 
@@ -11295,9 +11125,9 @@ eval sum(1, 3, fn(k Z) Z {k})
 
 正可运行围栏是独立的。大多数运行在严格模式中；假设演示在普通模式下运行，并且在严格模式下明确为被拒绝。预期的负示例单独测试并被正 Markdown 收集器跳过。上下文两行倒数片段在完整的 R01 示例中进行了验证，如果没有绑定变量，则不会执行。
 
-接受使用当前源码释放 CLI 正常 JSON：退出 0、`kind: run`、`success: true`，并且没有会话错误。旧的 `-compact`、`-runner`、`-before`、`-isolated` 和字面量 `try:` 配方不适用于此版本。原型边界和更正的代码保留在库存日记帐中； failed 搜索永远不会被算作相对的事实的证明。
+接受使用当前源码释放 CLI 正常 JSON：退出 0、`kind: run`、`success: true`，并且没有会话错误。旧的 `-compact`、`-runner`、`-before`、`-isolated` 和字面量 `try:` 配方不适用于此版本。条目中明确标注原型边界和预期拒绝；搜索失败不能当作相反事实的证明。
 
-原始样本证据（历史任务记录；已停用）是历史检查点。库存和证据（历史任务记录；已退役）记录合并之前的扩展参考版本；合并审计（历史任务记录；退役）记录合并；流水线审计（历史任务记录；已停用）记录后续组织和源码支持的系统映射。对象-性质族已审查源码的条件并执行代表情况。这不是每个实例化相等、每个内核规则 ID 或每个导入的定理的穷尽列表。
+条目与示例说明已覆盖的规则形状，不是对每个实例化相等、每条内核规则或每个导入定理的穷尽列表。历史验证结果不代表当前版本重新运行了全部示例。
 
 表达式定义的函数的当前正常 `statement` 渲染省略了写入的返回载体。保留原始隔离的源码，用于返回界故障的解释。源码事实、执行证据和用户假设在整个条目​​ 中保持不同。
 
@@ -11384,7 +11214,7 @@ Litex 的集合理论基础的介绍借鉴了陶哲轩的 [*分析 I*](https://t
 
 Litex 不是 Lean、Coq 或 Isabelle 的替代品。检查器、内置对象、内置验证与推导规则、导入假设，以及每个显式 `trust` 或 `axiom` 都与信任边界有关。`trust` 记录假设，不是证明。因此成功的 Litex 检查是相对于检查器、内置规则及可见可信输入的结论。要求拒绝用户 `trust`、`trust have` 和 `axiom` 时使用 `-strict`，包括模板 trust-have 以及局部证明体或导入依赖中的假设。纯 `abstract_prop` 声明允许：只引入谓词签名，不引入已证明实例或定义体。命名集合论基础规则的释放仍属于固定数学基础，在严格模式下允许。
 
-Lean复查是一个单独的预览方向。 `litex -lean -f <file>` 从独立的源码文件重放受支持的带类型的验证结果。 [语义接口](../lean/Litex.lean) 和 [生成的问题对](../lean/examples/) 覆盖初始数值切片；生成和实数Lean内核检查仍然是分开的。不受支持的证明路线会编译失败，而不是变成假设。开发材料和早期的 ABI 仅是局部，忽略了 `scripts/`。有关当前限制，请参阅 [CLI 边界](Litex命令行参考.md#lean-compiler-boundary)。
+Lean 独立复核是预览功能。`litex -lean -f <file>` 从独立源码文件重放受支持的带类型验证结果。[语义接口](../lean/Litex.lean)和[生成示例对](../lean/examples/)记录已支持的路线；生成源码与通过 Lean 内核检查是两个独立步骤。不支持的证明路线会导致编译失败，而不会变成假设。维护中的示例见[编译器指南](Litex到Lean编译器指南.md)，调用限制见 [CLI 边界](Litex命令行参考.md#lean-compiler-boundary)。
 
 <a id="documentation-and-test-contract"></a>
 
@@ -11399,8 +11229,6 @@ Lean复查是一个单独的预览方向。 `litex -lean -f <file>` 从独立的
 ### 维护职责
 
 将拼写的数学契约保留在其 S/O/F/C 条目中。扩展原生规则部分以获取其他规律形状，而不是该定义的另一个副本。使用 P 条目作为 failed/工作对，使用 R 条目来获得完整的推荐配方。将项目和输出契约保留在其专用指南部分中。当代码更改时，请一起更新相关的条目和受影响的示例。
-
-合并审核（历史任务记录；已停用）记录如何保留、移动或替换早期手册部分。历史参考证据保留其原始审核路径；它并不是默默地被重新贴上新标签。
 
 <a id="latex-conversion-preview"></a>
 

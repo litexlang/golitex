@@ -42,25 +42,7 @@ predicates**, plus the 29 reserved native theorem interfaces. Stable S/O/F/C
 identifiers survive the merge. This inventories the public native language,
 not every imported theorem or every individual kernel rewrite.
 
-The detailed Reference entries now live here. Their original
-inventory evidence (historical task record; retired) remains a
-historical source-owned record; the merge audit (historical task record; retired)
-records the consolidation. The pipeline and ordering audit (historical task record; retired)
-records the current whole-system chapter and reading order.
-The equality/order recipe audit (historical task record; retired)
-records the checked algebra, translation, sign and sum-of-squares routes.
-The square/product audit (historical task record; retired)
-extends those routes with cancellation, square/absolute-value conversion,
-equality cases, weighted estimates and quadratic certificates.
-The power catalog audit (historical task record; retired)
-records the parity, integer-exponent order and common-estimate lookup extension.
-The proof-basics audit (historical task record; retired)
-records the introductory writing decisions and their paired scope/logic controls.
-Expected rejections and retained migration examples are labelled and excluded
-from the positive fence collector. An assumed example is not a strict proof.
-The S19, S23 and S24 trust/axiom entries intentionally demonstrate ordinary-mode
-assumptions and have separate strict rejection controls. Other assumed examples
-are labelled where they occur. Every positive fence runs in isolation.
+The language guide and detailed reference share this manual, with stable S/O/F/C entry identifiers. Expected rejections and migration examples carry skip markers and are excluded from positive runnable examples. Trust and axiom examples demonstrate ordinary-mode assumptions, not strict proofs; strict-mode rejection is described separately. Runnable code blocks are intended to be self-contained.
 
 ### The core reading model
 
@@ -127,7 +109,7 @@ in both views.
 
 The [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) supplies compact learning
 developments; [examples](../examples/README.md) supply longer runnable files.
-The [FAQ](FAQ.md), [Blueprint](Litex_Blueprint.md), and
+The [Blueprint](Litex_Blueprint.md) and
 [Lean–Litex comparisons](Representative_Lean_Litex_Example_Comparisons.md)
 cover rationale and comparisons. Installation and command flags belong in
 the [CLI reference](cli.md).
@@ -1304,10 +1286,6 @@ not a permanent requirement to repeat it in every later version. The same
 principle applies to a recorded direct-search miss. Use the current checker
 and keep version-specific observations distinct from the mathematical contract.
 
-The proof-basics audit (historical task record; retired) records
-the checked snippets and controls for definition/truth, scope, quantifier
-dependency, implication direction, disjunction selection and uniqueness.
-
 ### The core loop
 
 For an ordinary atomic fact, Litex follows this public progression:
@@ -1586,11 +1564,7 @@ not become native objects or builtin predicates merely because an example
 imports them. A source-defined `$P(...)` belongs to the concrete/abstract
 predicate entries, rather than the builtin-family count.
 
-The machine inventory (historical task record; retired) reconciles
-all active AST leaves with parser support. Removed forms have a separate
-compatibility section. Certificate predicates use C identifiers because their
-truth is produced/consumed by native theorem interfaces rather than ordinary
-user predicate definitions. Reserved theorem calls have a separate index.
+Removed forms have a separate [compatibility section](#removed-and-renamed-public-forms). C entries describe certificate predicates generated and consumed by native theorem interfaces, rather than ordinary user predicate definitions. Reserved theorem calls have a separate index.
 
 Property lists are source-backed native families with their actual guards;
 the checked examples show concrete supported uses. They do not promise that
@@ -1874,7 +1848,7 @@ forall t R:
     t + 0 = t
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/exec_fact_stmt.rs); `S02` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/exec_fact_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership).
 
@@ -1899,7 +1873,7 @@ let identity = fn(x R) R {x}
 identity(4) = 4
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_let_stmt.rs); `S03` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_let_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -1963,7 +1937,7 @@ x != 0
 1 / x $in R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_obj_in_nonempty_set_stmt.rs); `S04` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_obj_in_nonempty_set_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -1987,7 +1961,7 @@ x $in R
 x + 1 / 2 = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_obj_equal_stmt.rs); `S05` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_obj_equal_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2022,7 +1996,7 @@ have a R:
 a + 1 = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_obj_by_exist_facts_stmt.rs); `S06` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_obj_by_exist_facts_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2046,7 +2020,7 @@ obtain uniq from exist! z R st {z = 1}
 uniq = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_obtain_obj_from_exist_fact_stmt.rs); `S07` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_obtain_obj_from_exist_fact_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S35 Existential witnesses](#s35-existential-witnesses), [S36 Unique existential witnesses](#s36-unique-existential-witnesses).
 
@@ -2094,7 +2068,7 @@ copy = 2
 copy $in R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_obtain_obj_from_atomic_fact_stmt.rs); `S08` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_obtain_obj_from_atomic_fact_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S35 Existential witnesses](#s35-existential-witnesses), [S36 Unique existential witnesses](#s36-unique-existential-witnesses), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
@@ -2123,7 +2097,7 @@ source $in R
 shift(2) = shift(source)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_by_fn_preimage_stmt.rs); `S09` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_by_fn_preimage_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2165,7 +2139,7 @@ $is_set(Img)
 release obj def Img
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_by_replacement_axiom_stmt.rs); `S10` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_by_replacement_axiom_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2214,7 +2188,7 @@ absolute(-2) = 2
 absolute(3) = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_fn_equal_case_by_case_stmt.rs); `S11` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_fn_equal_case_by_case_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
@@ -2246,7 +2220,7 @@ countdown(0) = 0
 countdown(1) = countdown(0) = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_fn_by_induc_stmt.rs); `S12` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_fn_by_induc_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
@@ -2290,7 +2264,7 @@ forall x A:
     $F(x, f(x))
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_have_fn_by_forall_exist_unique_stmt.rs); `S13` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_have_fn_by_forall_exist_unique_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
@@ -2323,7 +2297,7 @@ by def $is_positive(2)
 $is_positive(2)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_prop_stmt/exec_def_prop_stmt.rs); `S14` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_prop_stmt/exec_def_prop_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2350,7 +2324,7 @@ forall x R:
         $marked(x)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_abstract_prop_stmt/exec_def_abstract_prop_stmt.rs); `S15` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_abstract_prop_stmt/exec_def_abstract_prop_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2384,7 +2358,7 @@ struct PosPoint:
 (1, 2) $in &PosPoint
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_struct_stmt/exec_def_struct_stmt.rs); `S16` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_struct_stmt/exec_def_struct_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2411,7 +2385,7 @@ template<S set>:
 \carrier_copy<R> = R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_template_stmt/exec_def_template_stmt.rs); `S17` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_template_stmt/exec_def_template_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2465,7 +2439,7 @@ thm add_zero:
 release thm add_zero(2)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_thm_stmt/exec_def_thm_stmt.rs); `S18` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_thm_stmt/exec_def_thm_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S33 Local claims](#s33-local-claims), [S34 Local sketches](#s34-local-sketches).
 
@@ -2533,7 +2507,7 @@ axiom background:
 release thm background(2)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_axiom_stmt/exec_axiom_stmt.rs); `S19` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_axiom_stmt/exec_axiom_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S33 Local claims](#s33-local-claims), [S34 Local sketches](#s34-local-sketches), [S18 Named theorems](#s18-named-theorems).
 
@@ -2568,7 +2542,7 @@ have a R = 1
 $is_one(a)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_strategy_stmt/exec_def_strategy_stmt.rs); `S20` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_strategy_stmt/exec_def_strategy_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2611,7 +2585,7 @@ algo nonzero_flag(x R) R by cases:
 eval nonzero_flag(2)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_algo_by_cases_stmt/exec_def_algo_by_cases_stmt.rs); `S21` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_algo_by_cases_stmt/exec_def_algo_by_cases_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
@@ -2638,7 +2612,7 @@ algo countdown(n N) N by induc n from 0:
 eval countdown(2)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_def_algo_by_induc_stmt/exec_def_algo_by_induc_stmt.rs); `S22` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_def_algo_by_induc_stmt/exec_def_algo_by_induc_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S01 Expression-defined functions](#s01-expression-defined-functions), [O79 Function spaces](#o79-function-spaces), [O03 Function applications](#o03-function-applications).
 
@@ -2664,7 +2638,7 @@ trust:
 7 = 7
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_unsafe_stmt/exec_trust_stmt.rs); `S23` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_unsafe_stmt/exec_trust_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2689,7 +2663,7 @@ trust have denominator R:
 1 / denominator = 1 / denominator
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_unsafe_stmt/exec_trust_have_stmt.rs); `S24` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_unsafe_stmt/exec_trust_have_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2717,7 +2691,7 @@ release thm zero_sides(2)
 0 + 2 = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs); `S25` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2742,7 +2716,7 @@ thm add_zero:
 by thm add_zero(2) => 2 + 0 = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs); `S26` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_thm_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2820,7 +2794,7 @@ claim:
     release struct def p.point
 ```
 
-**Source and evidence:** [implementation](../src/execute/release_one_struct_layer.rs); `S27` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/release_one_struct_layer.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2846,7 +2820,7 @@ release obj def identity
 identity(2) = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_release_obj_def_stmt/exec_release_obj_def_stmt.rs); `S28` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_release_obj_def_stmt/exec_release_obj_def_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2873,7 +2847,7 @@ claim:
     expand: x $in range(1, 3)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_expand_range_stmt.rs); `S29` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_expand_range_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2897,7 +2871,7 @@ claim:
 release regularity_axiom({1})
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_regularity_axiom_stmt.rs); `S30` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_regularity_axiom_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -2932,7 +2906,7 @@ claim:
             $is_nonempty_set(A)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_axiom_of_choice_stmt.rs); `S31` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_axiom_of_choice_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3005,7 +2979,7 @@ claim:
                 exist u S st {$upper_bound(c, u)}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_zorn_lemma_stmt.rs); `S32` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_zorn_lemma_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3104,7 +3078,7 @@ claim:
 3 = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_proof_block_stmt/exec_claim_stmt.rs); `S33` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_proof_block_stmt/exec_claim_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S34 Local sketches](#s34-local-sketches), [S18 Named theorems](#s18-named-theorems).
 
@@ -3129,7 +3103,7 @@ sketch:
 1 = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_proof_block_stmt/exec_sketch_stmt.rs); `S34` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_proof_block_stmt/exec_sketch_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S33 Local claims](#s33-local-claims), [S18 Named theorems](#s18-named-theorems).
 
@@ -3155,7 +3129,7 @@ obtain a from exist x R st {x = 2}
 a = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs); `S35` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S36 Unique existential witnesses](#s36-unique-existential-witnesses), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
@@ -3219,7 +3193,7 @@ obtain a from exist! x R st {x = 2}
 a = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs); `S36` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_witness_stmt/exec_witness_exist_fact.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S35 Existential witnesses](#s35-existential-witnesses), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
@@ -3243,7 +3217,7 @@ prop has_copy(a R):
 witness $has_copy(2) from 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_witness_stmt/exec_witness_atomic_fact.rs); `S37` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_witness_stmt/exec_witness_atomic_fact.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S35 Existential witnesses](#s35-existential-witnesses), [S36 Unique existential witnesses](#s36-unique-existential-witnesses), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
@@ -3267,7 +3241,7 @@ have a {t R: t > 0}
 a > 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_witness_stmt/exec_witness_nonempty_set.rs); `S38` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_witness_stmt/exec_witness_nonempty_set.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S35 Existential witnesses](#s35-existential-witnesses), [S36 Unique existential witnesses](#s36-unique-existential-witnesses), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
@@ -3293,7 +3267,7 @@ by cases:
     case 1 = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_cases_stmt.rs); `S39` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_cases_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3336,7 +3310,7 @@ by contra:
     impossible 1 != 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_contra_stmt.rs); `S40` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_contra_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3407,7 +3381,7 @@ by enumerate finite_set:
         x < 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_enumerate_finite_set_stmt.rs); `S41` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_enumerate_finite_set_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3461,7 +3435,7 @@ by induc n from 0:
     ? n = n
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs); `S42` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3536,7 +3510,7 @@ by strong_induc m from 0:
     ? m = m
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs); `S43` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3560,7 +3534,7 @@ by for:
         n < 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_for_stmt.rs); `S44` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_for_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3582,7 +3556,7 @@ by for:
 by extension intersect(R, R) = R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_extension_stmt.rs); `S45` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_extension_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3613,7 +3587,7 @@ by fn_extension:
     ? add1 = add2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_fn_extension_stmt.rs); `S46` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_fn_extension_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3666,7 +3640,7 @@ prop is_zero(x R):
 by def $is_zero(0)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/exec_by_def_stmt.rs); `S47` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/exec_by_def_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3764,7 +3738,7 @@ have a set
 $same(a, a)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_register_stmt/exec_register_reflexive_prop_stmt.rs); `S48` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_register_stmt/exec_register_reflexive_prop_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3816,7 +3790,7 @@ forall a, b set:
         $same(b, a)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_register_stmt/exec_register_symmetric_prop_stmt.rs); `S49` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_register_stmt/exec_register_symmetric_prop_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3846,7 +3820,7 @@ register transitive:
             $same(x, z)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_register_stmt/exec_register_transitive_prop_stmt.rs); `S50` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_register_stmt/exec_register_transitive_prop_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3871,7 +3845,7 @@ eval 2 + 3
 2 + 3 = 5
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_eval_stmt/exec_eval_stmt.rs); `S51` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_eval_stmt/exec_eval_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
@@ -3897,7 +3871,7 @@ t(1)=1
 t(2)=2
 ```
 
-**Source and evidence:** [executor](../src/execute/execute_release_tuple_def_stmt.rs), [runnable tracer](../examples/stmt_nodes/release_and_expand/release_tuple_def.lit), and acceptance (historical task record; retired).
+**Source:** [executor](../src/execute/execute_release_tuple_def_stmt.rs), [runnable tracer](../examples/stmt_nodes/release_and_expand/release_tuple_def.lit).
 
 **Related entries:** [O78 Finite tuples](#o78-finite-tuples). `release cart def cart(A,B)` publishes the complete set definition described there; this command publishes facts about an individual value.
 
@@ -4135,7 +4109,7 @@ b = a = 2
 b + 1 = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O02` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4167,7 +4141,7 @@ forall x R:
     shift(x) $in R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs); `O03` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
@@ -4195,7 +4169,7 @@ forall x R:
 not 1 / 2 $in Z
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O04` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4221,7 +4195,7 @@ re(i) = 0
 img(i) = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O05` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4249,7 +4223,7 @@ exp(1) = e
 ln(e) = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O06` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4289,7 +4263,7 @@ sin(pi) = 0
 cos(pi) = -1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O07` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4314,7 +4288,7 @@ cos(pi) = -1
 2 $in N
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O08` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4339,7 +4313,7 @@ cos(pi) = -1
 2 $in Z+
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O09` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4364,7 +4338,7 @@ cos(pi) = -1
 0 $in Z
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O10` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4389,7 +4363,7 @@ cos(pi) = -1
 -3 $in Q
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O11` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4414,7 +4388,7 @@ sqrt(2) $in R
 1 / 2 $in R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O12` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4439,7 +4413,7 @@ i $in C
 2 + 3 * i $in C
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O13` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4464,7 +4438,7 @@ i $in C
 2 $in Q+
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O14` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4489,7 +4463,7 @@ i $in C
 2 $in R+
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O15` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4514,7 +4488,7 @@ i $in C
 -2 $in Q-
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O16` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4539,7 +4513,7 @@ i $in C
 -2 $in Z-
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O17` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4564,7 +4538,7 @@ i $in C
 -2 $in R-
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O18` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4589,7 +4563,7 @@ i $in C
 -2 $in Q*
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O19` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4614,7 +4588,7 @@ i $in C
 -2 $in Z*
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O20` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4639,7 +4613,7 @@ i $in C
 -2 $in R*
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O21` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4664,7 +4638,7 @@ i $in C*
 2 $in C*
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O22` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -4691,7 +4665,7 @@ forall a, b C:
     a + 0 = a
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O23` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4718,7 +4692,7 @@ forall a C:
     a - 0 = a
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O24` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4744,7 +4718,7 @@ forall a C:
     a + (-a) = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O25` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4771,7 +4745,7 @@ forall a, b C:
     a * 1 = a
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O26` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4801,7 +4775,7 @@ forall x R:
     exp(x) = e^x
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O27` in the inventory and verification record (historical task record; retired). The [real-power WD tracer](../examples/wd/pow_real_domains.lit) and proof journal (historical task record; retired) cover the subsequent symbolic-domain extension.
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4831,7 +4805,7 @@ forall x R:
     |x| >= 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O28` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4857,7 +4831,7 @@ forall x R:
     min(x, x) = x
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O29` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4883,7 +4857,7 @@ forall x R:
     max(x, x) = x
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O30` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4908,7 +4882,7 @@ floor(3.7) = 3
 floor(-1.2) = -2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O31` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4933,7 +4907,7 @@ ceil(3.2) = 4
 ceil(-1.2) = -1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O32` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4959,7 +4933,7 @@ sign(0) = 0
 sign(2) = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O33` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -4984,7 +4958,7 @@ sign(2) = 1
 7 % 3 = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O34` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5009,7 +4983,7 @@ quot(-7, 3) = -3
 quot(7, 3) = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O35` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5034,7 +5008,7 @@ gcd(54, -24) = 6
 gcd(0, 3) = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O36` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5068,7 +5042,7 @@ lcm(12, -18) = 36
 lcm(0, 3) = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O37` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5093,7 +5067,7 @@ lcm(0, 3) = 0
 3! = 6
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O38` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5118,7 +5092,7 @@ sin(0) = 0
 sin(pi / 2) = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O39` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5152,7 +5126,7 @@ cos(0) = 1
 cos(pi) = -1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O40` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5177,7 +5151,7 @@ tan(0) = 0
 tan(pi / 4) = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O41` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5202,7 +5176,7 @@ cot(pi / 4) = 1
 cot(pi / 2) = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O42` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5227,7 +5201,7 @@ arcsin(0) = 0
 arcsin(1) = pi / 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O43` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5252,7 +5226,7 @@ arccos(1) = 0
 arccos(0) = pi / 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O44` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5277,7 +5251,7 @@ arctan(0) = 0
 arctan(1) $in R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O45` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5302,7 +5276,7 @@ arccot(0) = pi / 2
 arccot(1) $in R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O46` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5327,7 +5301,7 @@ exp(0) = 1
 exp(1) = e
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O47` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5352,7 +5326,7 @@ ln(1) = 0
 ln(e) = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O48` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5377,7 +5351,7 @@ log(2, 8) = 3
 log(2, 1) = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O49` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5402,7 +5376,7 @@ sqrt(4) = 2
 sqrt((-3)^2) = |-3| = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O50` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5427,7 +5401,7 @@ re(2 + 3 * i) = 2
 re(i) = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O51` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5452,7 +5426,7 @@ img(2 + 3 * i) = 3
 img(2) = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O52` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5477,7 +5451,7 @@ C_abs(i) = 1
 C_abs(-3) = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs); `O53` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/scalar.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [O01 Division](#o01-division).
 
@@ -5504,7 +5478,7 @@ union(R, Z) = union(Z, R)
 union({1}, {}) = {1}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O54` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5529,7 +5503,7 @@ intersect(R, Z) = intersect(Z, R)
 intersect({1}, {}) = {}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O55` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5554,7 +5528,7 @@ set_minus({1}, {1}) = {}
 set_minus(R, {}) = R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O56` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5579,7 +5553,7 @@ family_union({{1, 2}}) = {1, 2}
 family_union(power_set({1, 2})) = {1, 2}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O57` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5608,7 +5582,7 @@ release thm family_intersect_member(1, family_intersect({{1}}))
 1 $in family_intersect({{1}})
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O58` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S25 Publish theorem conclusions](#s25-publish-theorem-conclusions).
 
@@ -5634,7 +5608,7 @@ by def {1} $subset {1, 2}
 {1} $in power_set({1, 2})
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O59` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5661,7 +5635,7 @@ $is_set(result)
 result = result
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O60` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S25 Publish theorem conclusions](#s25-publish-theorem-conclusions).
 
@@ -5688,7 +5662,7 @@ $is_set(result)
 result = result
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O61` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S25 Publish theorem conclusions](#s25-publish-theorem-conclusions).
 
@@ -5715,7 +5689,7 @@ $is_set(product_set)
 product_set = product_set
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O62` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S25 Publish theorem conclusions](#s25-publish-theorem-conclusions).
 
@@ -5741,7 +5715,7 @@ finite_set_size({1, 2}) = 2
 1 $in {1, 2}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O63` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5775,7 +5749,7 @@ forall x {t R: t > 0}:
     x > 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs); `O64` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5800,7 +5774,7 @@ forall x {t R: t > 0}:
 not 3 $in range(1, 3)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O65` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5825,7 +5799,7 @@ not 3 $in range(1, 3)
 2 $in 1...2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O66` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5850,7 +5824,7 @@ finite_seq(R, 0) = fn(k {}) R
 finite_seq(R, 2) = fn(k closed_range(1, 2)) R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O67` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
@@ -5875,7 +5849,7 @@ seq(R) = fn(k N+) R
 seq(N) = fn(k N+) N
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O68` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
@@ -5900,7 +5874,7 @@ seq(N) = fn(k N+) N
 not 0 $in '(0,)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O69` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5925,7 +5899,7 @@ not 0 $in '(0,)
 1 $in '[0,)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O70` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5950,7 +5924,7 @@ not 0 $in '(0,)
 not 0 $in '(,0)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O71` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5975,7 +5949,7 @@ not 0 $in '(,0)
 -1 $in '(,0]
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O72` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6000,7 +5974,7 @@ not 0 $in '(,0)
 not 0 $in '(0,2)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O73` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6025,7 +5999,7 @@ not 0 $in '(0,2)
 not 0 $in '(0,2]
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O74` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6050,7 +6024,7 @@ not 0 $in '(0,2]
 not 2 $in '[0,2)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O75` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6075,7 +6049,7 @@ not 2 $in '[0,2)
 2 $in '[0,2]
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O76` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6101,7 +6075,7 @@ not 2 $in '[0,2)
 finite_set_size(cart()) = 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O77` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6140,7 +6114,7 @@ p(2) = 2
 (fn(x R) R {x}, 0)(1)(2) = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O78` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6170,7 +6144,7 @@ identity $in fn(t R) R
 fn(x R) R = fn(t R) R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs); `O79` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
@@ -6197,7 +6171,7 @@ fn(x R) R {x + 1}(2) = 3
 fn(x R: x != 0) R {1 / x}(2) = 1 / 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs); `O80` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
@@ -6223,7 +6197,7 @@ fn_range(constant) = {1}
 constant(2) $in fn_range(constant)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs); `O81` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/core.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
@@ -6281,7 +6255,7 @@ sum(1, 3, fn(k Z) Z {k}) = 6
 sum(2, 2, fn(k Z) Z {k}) = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O82` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6325,7 +6299,7 @@ product(1, 3, fn(k Z) Z {k}) = 6
 product(2, 2, fn(k Z) Z {k}) = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O83` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6350,7 +6324,7 @@ finite_set_sum({}, fn(k Z) Z {k}) = 0
 finite_set_sum({1, 2}, fn(k Z) Z {k}) = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O84` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6375,7 +6349,7 @@ finite_set_product({}, fn(k Z) Z {k}) = 1
 finite_set_product({2, 3}, fn(k Z) Z {k}) = 6
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O85` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6402,7 +6376,7 @@ reduce(2, 1, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 7) = 7
 reduce(1, 2, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 0) = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O86` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6458,7 +6432,7 @@ finite_set_reduce({}, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 7) = 7
 finite_set_reduce({1,2}, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 0) = finite_set_sum({1,2}, fn(k Z) Z {k}) = 3
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); `O87` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6483,7 +6457,7 @@ finite_set_size({}) = 0
 finite_set_size({1,2}) = 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O88` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6508,7 +6482,7 @@ finite_set_max({1,3,2}) = 3
 finite_set_max({1,3,2}) $in {1,3,2}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O89` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6553,7 +6527,7 @@ finite_set_min({1,3,2}) = 1
 finite_set_min({1,3,2}) $in {1,3,2}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs); `O90` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/sets.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -6591,7 +6565,7 @@ struct PosPoint:
 (1, 2) $in &PosPoint
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O91` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S16 Structured carriers](#s16-structured-carriers), [S27 Open one struct definition layer](#s27-open-one-struct-definition-layer).
 
@@ -6630,7 +6604,7 @@ forall p &Point:
     p.y = p.y
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O92` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S16 Structured carriers](#s16-structured-carriers), [S27 Open one struct definition layer](#s27-open-one-struct-definition-layer).
 
@@ -6667,7 +6641,7 @@ template<S set>:
 \carrier_copy<R> = R
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs); `O93` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S17 Parameterized declaration families](#s17-parameterized-declaration-families), [S28 Replay an object definition](#s28-replay-an-object-definition).
 
@@ -6891,7 +6865,7 @@ by enumerate finite_set:
 by extension {1, 2} = {2, 1}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md); `F02` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -6916,7 +6890,7 @@ by extension {1, 2} = {2, 1}
 not 2 < 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs); `F03` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -6941,7 +6915,7 @@ not 2 < 1
 not 1 > 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs); `F04` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -6967,7 +6941,7 @@ not 1 > 2
 not 2 <= 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs); `F05` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -6993,7 +6967,7 @@ not 2 <= 1
 not 1 >= 2
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs); `F06` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7019,7 +6993,7 @@ $is_set(R)
 $is_set(fn(x R) R {x})
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs); `F07` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7045,7 +7019,7 @@ not $is_nonempty_set({})
 witness $is_nonempty_set({x R: x > 0}) from 1
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs); `F08` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7071,7 +7045,7 @@ $is_finite_set({1, 2})
 not $is_finite_set(N)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs); `F09` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7099,7 +7073,7 @@ by contra:
     impossible 2 $in {1}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F10` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7127,7 +7101,7 @@ by contra:
     impossible 2 $in {1}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F11` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7154,7 +7128,7 @@ by contra:
     impossible {1} != {1}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F12` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7181,7 +7155,7 @@ by contra:
     impossible {1} != {1}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F13` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7207,7 +7181,7 @@ not $prime(6)
 not $prime(1)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F14` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7241,7 +7215,7 @@ by def $coprime(14, 25)
 not $coprime(14, 21)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F15` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7280,7 +7254,7 @@ by contra:
     impossible 5 % 2 = 0
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F16` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction).
 
@@ -7307,7 +7281,7 @@ have fn id1(x {1}) {1} = x
 by def $injective({1}, {1}, id1)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F17` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction), [S01 Expression-defined functions](#s01-expression-defined-functions), [S35 Existential witnesses](#s35-existential-witnesses).
 
@@ -7336,7 +7310,7 @@ claim:
 by def $surjective(R, R, identity)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F18` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction), [S01 Expression-defined functions](#s01-expression-defined-functions), [S35 Existential witnesses](#s35-existential-witnesses).
 
@@ -7382,7 +7356,7 @@ by def $surjective({1}, {1}, id1)
 by def $bijective({1}, {1}, id1)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F19` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction), [S01 Expression-defined functions](#s01-expression-defined-functions), [S35 Existential witnesses](#s35-existential-witnesses).
 
@@ -7410,7 +7384,7 @@ forall alpha {1}:
 by def $is_choice_function_for({1}, power_set({1}), family, choice)
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs); `F20` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/builtin_prop_definition.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements), [S47 Explicit definition folding](#s47-explicit-definition-folding), [S40 Proof by contradiction](#s40-proof-by-contradiction), [S01 Expression-defined functions](#s01-expression-defined-functions), [S35 Existential witnesses](#s35-existential-witnesses).
 
@@ -7433,7 +7407,7 @@ release thm real_least_upper_bound_exists({0}, 1)
 exist L R st {$is_real_least_upper_bound({0}, L)}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs); `C01` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs).
 
 **Related entries:** [S25 Publish theorem conclusions](#s25-publish-theorem-conclusions), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
@@ -7456,7 +7430,7 @@ release thm real_greatest_lower_bound_exists({0}, -1)
 exist L R st {$is_real_greatest_lower_bound({0}, L)}
 ```
 
-**Source and evidence:** [implementation](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs); `C02` in the inventory and verification record (historical task record; retired).
+**Source:** [implementation](../src/execute/execute_by_stmt/builtin_thm/real_analysis.rs).
 
 **Related entries:** [S25 Publish theorem conclusions](#s25-publish-theorem-conclusions), [S07 Extract existential witnesses](#s07-extract-existential-witnesses).
 
@@ -7901,9 +7875,6 @@ bound; expecting the checker to invent that rewriting inside every order
 premise can miss. Similarly, an order rule may consume a stored premise
 rather than recursively discovering it. See R06's two spellings of a
 nonnegative difference and R09's explicit nonnegative summands.
-
-**Evidence:** P12/P13 controls and the checked counterparts are recorded in
-the recipe audit (historical task record; retired).
 
 ## Recommended mathematical formulations
 
@@ -8370,11 +8341,7 @@ If the available premise is already `-x<=M`, the corresponding bridge is
 Keep the exact verified reverse-triangle orientation above; a nested absolute
 value or converse spelling can require additional steps.
 
-**Evidence for R06–R10:** all positive code blocks are self-contained strict
-proofs in the recipe audit (historical task record; retired).
-It also records shorter-route/deletion attempts and sign/strictness/domain
-controls. [The native order table](#order-and-comparison-rules) gives the
-broader guarded families; these recipes give the checked proof sequences.
+See [the native order table](#order-and-comparison-rules) for guarded rule families; these recipes supply complete proof sequences.
 
 ### R11. Product signs, zero factors and cancellation
 
@@ -8794,11 +8761,7 @@ not 1 = 0
 not 2*1*0 <= (-1)*1^2+0^2/(-1)
 ```
 
-**Evidence for R11–R14:** the
-square/product audit (historical task record; retired)
-records the strict standalone examples, false sign/zero/square controls,
-direct-search observations and deletion checks. Direct facts and composed
-proofs are labelled separately. None requires `trust`, `axiom`, or imports.
+Direct facts and composed proofs are labelled separately. These examples require no `trust`, `axiom`, or imports.
 
 ### R15. Power signs and two kinds of monotonicity
 
@@ -9064,10 +9027,7 @@ direction below `1`, sign changes on negative bases and zero-exponent behavior.
 0^2 = 0
 ```
 
-**Evidence:** the power catalog audit (historical task record; retired)
-records clean strict checks, rejected domain/strictness controls and deletion
-variants. Direct facts, composed parity proofs, induction and unproved
-real-exponent search targets are separate coverage categories.
+Direct facts, composed parity proofs, induction and unproved real-exponent goals are separate coverage categories.
 
 ### R16. Common real inequalities at a glance
 
@@ -9665,8 +9625,7 @@ set: it is a surface parameter kind meaning "a set," not an element of a
 set-of-all-sets. So a family indexed by an arbitrary set belongs in the
 template header, not as a fake function argument. The rejected form
 `have fn identity_set(A set) set = A` is recorded earlier under
-[Bare facts and `have`](#bare-facts-and-have); for a longer reading see
-[Why does Litex have `template`?](FAQ.md#why-does-litex-have-template).
+[Bare facts and `have`](#bare-facts-and-have).
 
 ```litex
 template<S set, z S>:
@@ -10768,136 +10727,7 @@ forall a, b R+:
         log(2, a) < log(2, b)
 ```
 
-> **Preview:** order builtins now also close these shapes
-> (each rule has its own proof payload): even powers `0 <= a^2` / `0 < a^2`
-> from `a != 0`; positive-base powers `0 <= a^n` / `0 < a^n`; nonnegative base
-> with `n $in N+`; `0 <= sqrt(x)` / `0 < sqrt(x)` and sqrt monotonicity;
-> `n $in N+` ⇒ `1 <= n`; `log` order/sign with base `> 1`; Euclidean
-> `0 <= a % b < b` (mod/div object WD still needs an explicit `!= 0` premise
-> today); subtraction bridges `a <= b` ↔ `0 <= b - a` (and strict);
-> order transitivity; positive-divisor monotone division and `a / b < a` when
-> `0 < a` and `1 < b`; negative-divisor order flip; div↔product bridges
-> (`a <= b / c` from `c * a <= b`, and `a <= b * c` from `a / c <= b`);
-> literal numeric bound weakening (including integer predecessor lift);
-> integer successor / adjacency / predecessor / difference-at-least-one;
-> positive even `1 < i`; `finite_set_max` / `finite_set_min` member bounds;
-> union cardinality `<=` sum; and surjection codomain cardinality `<=` domain.
-> Also `finite_set_size` nonnegative / at-least-one / subset comparison.
-> Carrier → sign is eager infer again: `x $in N` ⇒ `0 <= x`;
-> `x $in R+/R-/R*` ⇒ `0 < x` (+ `0 <= x`, `x != 0`) / `x < 0` (+ `x <= 0`, `x != 0`) / `x != 0`.
-> Strict signed rational/integer carriers likewise publish nonzero; `N` alone does not.
-> Still verify-time (not eager infer): bound → sign spelling
-> (`a >= 1` ⇒ `0 < a`, `a <= -1` ⇒ `a <= 0`); mul-by-`(-1)` order flip;
-> and `u - v = 0` ⇒ `u = v` (`EqualFromKnownDifferenceZero`).
-> Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
-> `(a*b)^n = a^n * b^n` (complex bases with natural exponents, or nonzero
-> complex bases with integer exponents). A first-power factor may be written
-> without `^1`: `a^(n+1) = a^n * a`, including either factor order and equality
-> direction. Also
-> `1/a = a^(-1)`, `a/b = a * b^(-1)` for nonzero denominators.
-> Equality identities wave 2 (preview): `1^a = 1` (`a` in `N`), `0^n = 0`
-> (`n` in `N+`); sqrt square / zero / one / of-square / product / quotient;
-> abs of negation / product / square; log base-self / of-one / of-power /
-> arg-power / product / quotient / reciprocal / change-of-base;
-> `0 % 5 = 0`, `a % 1 = 0`, `1 % 5 = 1`, nested same-mod absorption.
-> Quotient positivity, sqrt denominators, log nonzero conditions, and integer
-> mod-result carriers are checked in their proof_nodes.
-> Equality identities wave 3 (preview): `min`/`max` idempotent and commutative;
-> `||a|| = |a|`; `exp(ln(x)) = x` (`x` in `R+`); `ln(exp(x)) = x`
-> (`x` in `R`; native `exp` returns `R+`, satisfying ln WD);
-> `floor(n) = n` / `ceil(n) = n` (`n` in `Z`); `a % a = 0` (`a != 0`).
-> Equality identities wave 4 (preview): `floor(ceil(n)) = n`,
-> `ceil(floor(n)) = n` (`n` in `Z`); `sqrt(a^2) = |a|`.
-> Equality identities wave 5 (preview): `quot(a, 1) = a`;
-> `quot(a, a) = 1` (`a` in `N+`);
-> `lcm` commutative / idempotent-abs; `gcd` commutative / idempotent-abs /
-> zero-|gcd proof_nodes bind nonzero integer arguments as `Z*`|;
-> `(n+1)! = (n+1) * n!` (`n` in `N`; native factorial returns `N+`).
-> Equality identities wave 6 (preview): `|a| = a` when `0 <= a`;
-> `|a| = 0 - a` when `a <= 0`; `sign(a) = 1` when `0 < a`;
-> `sign(a) = 0 - 1` when `a < 0`; ordered `min`/`max` when `a <= b` or `b <= a`.
-> Equality identities wave 7 (preview): `a % gcd(a, b) = 0` /
-> `(a * b) % a = 0` (nonzero divisor; native gcd returns `N+`); `a = b` from `a <= b` and `b <= a`; `a - b = 0` from `a = b`;
-> `b = 0` from `a * b = 0` and `a != 0`; `sign(0 - a) = 0 - sign(a)`;
-> `sign(a) * |a| = a`; `|a| = sign(a) * a`;
-> `sign(a * b) = sign(a) * sign(b)` (native sign returns `Z`,
-> usable in real and complex arithmetic WD);
-> `a = c - b` from known `a + b = c`.
-> Equality identities wave 9 (preview): set algebra empties
-> `union(A, {}) = A` / `union({}, A) = A`; `intersect(A, {}) = {}` /
-> `intersect({}, A) = {}`; `set_minus(A, A) = {}` / `set_minus(A, {}) = A` /
-> `set_minus({}, A) = {}`; `union`/`intersect` commutative and idempotent;
-> `B $subset A` ⇒ `intersect(A, B) = B`; `not $is_nonempty_set(A)` ⇒ `A = {}`;
-> `$is_finite_set(S)` ⇒ `finite_set_size(power_set(S)) = 2^finite_set_size(S)`;
-> also associative / distributive / De Morgan set identities and
-> `intersect(A, set_minus(B, A)) = {}`.
-> Equality identities wave 10 (preview): empty aggregates
-> `finite_set_sum({}, f) = 0`; `finite_set_product({}, f) = 1`;
-> `finite_set_reduce({}, f, op, seed) = seed`; empty-range
-> `reduce`/`sum`/`product` when `end < start`.
-> Equality identities wave 11 (preview): remaining Obj equalities —
-> union absorption / set-minus recovery from subset; empty from size 0;
-> Ordinary finite-function coordinates; finite-set size set-minus / union;
-> `closed_range(a,a) = {a}`; single-term `sum`/`product`; reduce↔sum bridges;
-> `b^(log(b,x)) = x`.
-> Equality identities wave 12 (preview): `union(A, set_minus(B, A)) = union(A, B)`;
-> `set_minus(B, intersect(A, B)) = set_minus(B, A)`; complex `re(i)=0`,
-> `img(i)=1`, `re(1)=1`, `img(1)=0`, `re(1+i)=1`, `img(1+i)=1`, `C_abs(i)=1`;
-> `(a % (k*m)) % m = a % m`; last-term `sum`/`product` split; list
-> `finite_set_sum`/`finite_set_product` expansion (narrow `trust` for current
-> Add/Mul / aggregate carrier WD).
-> Equality identities wave 13 + closed trig (preview): `e = exp(1)`, `ln(e)=1`;
-> `sin(0)/cos(0)/tan(0)`, `sin(pi/2)`, `cos(pi)`, `sin(pi)`, Pythagorean;
-> `re(a)=a` / `img(a)=0` for `a R`; `re/img(a+b*i)`; `C_abs` on nonnegative
-> reals / imag-scaled; literal `range`/`closed_range` expansion;
-> `power_set({})`/`power_set({a})`; `family_union({})`; empty-factor `cart`;
-> union-over-intersect; set_minus chain; constant `fn_range` (literal
-> anonymous ok); `seq(S)=fn(x N+) S` and
-> `finite_seq(S,n)=fn(x closed_range(1,n)) S` (indices 1 through n; length 0 has empty domain).
-> Equality identities wave 14 / Obj P0–P2 (preview): WD fixes so basic
-> `ln(e)`, `tan(0)`, Pythagorean, `sum`/`product` Add/Mul, anonymous
-> `fn_range`, `finite_seq` finiteness, and reduce-single no longer need
-> narrow trust; empty-index operator identities are retired by WD; singleton `index_union`;
-> `{x N: x < 0}={}`; `cot(pi/2)=0`; `C_abs(a+b*i)^2=a^2+b^2`;
-> `exp(a+b)=exp(a)exp(b)`; `log(a^b,c)=log(a,c)/b`; `re/img` of products;
-> `sin/cos` angle-addition; `reduce(s,s,f,add,0)=f(s)`. Empty absolute
-> intersection (preview, settled): no `family_intersect({})={}` (vacuous ∩ is
-> the universe class; empty indexed intersections are also rejected by WD). Equality identities
-> wave 15 (preview): finite-set Fubini —
-> `∑_X ∑_Y f((x,y)) = ∑_Y ∑_X f((x,y))`, and
-> `∑_X ∑_Y f((x,y)) = ∑_{cart(X,Y)} f`.
-> NotIn interval (preview): open endpoint / outside bounds.
-> NotIn / NotIsFiniteSet (preview): `x $in B` ⇒ `not x $in set_minus(A, B)`;
-> `not $is_finite_set(N)` (and other standard carriers).
-> Greater add/mul (preview, A10): `a > b` ⇒ `a + c > b + c` / `c + a > c + b`;
-> `0 < k` and `a > b` ⇒ `a * k > b * k` / `k * a > k * b`.
-> Equality identities wave 8 (preview): Euclidean
-> `a = d * quot(a, d) + (a % d)`; `(a - (a % b)) % b = 0` (narrow `trust`
-> nonzero divisor for current mod/quot WD); `a = 0` from known
-> `a^2 + b^2 = 0`; `(-1)^(2 * m + 1) = -1` (`m` in `N`);
-> `lcm(a, b) * gcd(a, b) = |a * b|` (narrow trust for current lcm/gcd WD).
-> NotEqual leftovers (preview, A9 partial): `$is_nonempty_set(A)` ⇒ `A != {}`;
-> `n $in N` and `1 <= n` ⇒ `n != 0`; `a != 0` ⇒ `a^n != 0` (integer exponent);
-> `a != 0` and `b != 0` ⇒ `a / b != 0`; `a * b != 0` ⇒ `a != 0`;
-> `0 < a` ⇒ `sqrt(a) != 0`; `a != 0` ⇒ `a^2 + b^2 != 0`;
-> `a != -b` ⇒ `a + b != 0`; `x $in A` and `y $notin A` ⇒ `x != y`.
-> Strict order add/mul (preview, A10 partial): `a < b` ⇒ `a + c < b + c`;
-> `0 < k` and `a < b` ⇒ `a * k < b * k` (and left-factor forms).
-> One `.lit` per accepted rule under
-> [`examples/proof_nodes/atomic/by_builtin_rule/`](../examples/proof_nodes/atomic/by_builtin_rule/)
-> and
-> [`examples/proof_nodes/equal/by_builtin_rule/`](../examples/proof_nodes/equal/by_builtin_rule/).
->
-> Builtin strategy (preview): structural requirement strategies
-> with typed evidence (one strategy ↔ one result struct). Equality strategies
-> include extremum antisymmetry, finite-set product pointwise, mod congruence,
-> and rational identities with nonzero premises. Atomic strategies cover
-> additive sign, nonzero product, structural order, numeric carrier closure,
-> set membership / subset decomposition, and recursive `$is_finite_set` /
-> `$is_nonempty_set` constructors. Tracers under
-> [`examples/proof_nodes/atomic/by_builtin_strategy/`](../examples/proof_nodes/atomic/by_builtin_strategy/)
-> and
-> [`examples/proof_nodes/equal/by_builtin_strategy/`](../examples/proof_nodes/equal/by_builtin_strategy/).
+Use [order and comparison rules](#order-and-comparison-rules), the S/O/F/C entries and the [proof-node examples](../examples/proof_nodes/README.md) to find each rule's mathematical premises and verification route.
 
 Displayed finite-set membership can also use the structural strategy route:
 
@@ -10941,9 +10771,17 @@ forall x Z:
 
 `ClosedSubtractionBound` records the original upper/lower bound citation, the
 exact subtrahend, the translated bound and the target endpoint. Both weak
-comparison orientations are supported. A bound must be sufficient; unknown
-constants, opposite bounds, undefined expressions and exact arithmetic overflow
-fail closed. This leaf performs no new premise search. See the
+comparison orientations are supported. An identical symbolic endpoint is also
+supported when the closed offset preserves direction: `x <= b` yields
+`x - 1 <= b`, while `x >= b` yields `x - (-1) >= b`. The certificate retains
+the actual translated symbolic expression, such as `b - 1`. Strict comparisons
+use `ClosedSubtractionStrictBound`: a proper translated bound suffices, or an
+already strict source may retain strictness at the translated endpoint.
+Thus `x <= b` yields `x - 1 < b`, but does not yield `x - 0 < b`.
+A bound must be
+sufficient; different symbolic endpoints, unknown constants, opposite bounds,
+undefined expressions and exact arithmetic overflow fail closed. This leaf
+performs no new premise search. See the
 [subtraction-bound tracer](../examples/proof_nodes/atomic/by_builtin_rule/closed_subtraction_bound.lit).
 
 Equality from two-sided weak order accepts either spelling of each direction:
@@ -11131,8 +10969,7 @@ strict premises as stronger evidence. Strict goals require a strictly negative
 factor and strict argument order. The existing positive/nonnegative routes
 remain first. See the [strict](../examples/proof_nodes/atomic/by_builtin_rule/negative_common_factor_order.lit)
 and [weak](../examples/proof_nodes/atomic/by_builtin_rule/nonpositive_common_factor_weak_order.lit)
-acceptance artifacts. These source examples are verified on the archived
-isolated overlay while the shared startup API build is pending.
+examples. Their sign and order premises are part of the rule contract.
 
 Known closed numeric equalities are substituted by matching whole original
 scalar terms before their children. A parent rebuilt from changed children
@@ -12130,16 +11967,10 @@ is verified inside the full R01 example, not executed without its binders.
 Acceptance uses current-source release CLI Normal JSON: exit 0, `kind: run`,
 `success: true`, and no session error. Old `-compact`, `-runner`, `-before`,
 `-isolated` and literal `try:` recipes do not apply to this build. Prototype
-boundaries and corrected code are retained in the inventory journal; a failed
+boundaries and expected rejections are labelled in the entries; a failed
 search is never counted as a proof of the opposite fact.
 
-The original sample evidence (historical task record; retired) is a
-historical checkpoint. The inventory and evidence (historical task record; retired)
-records the expanded Reference edition before consolidation; the
-merge audit (historical task record; retired) records consolidation; the
-pipeline audit (historical task record; retired) records the subsequent organization and source-backed system map. Object-property families have source-reviewed
-conditions and executed representative cases. This is not an exhaustive list
-of every instantiated equality, every kernel rule ID or every imported theorem.
+Entries and examples describe covered rule shapes, not every instantiated equality, kernel rule or imported theorem. Historical verification results do not establish a fresh run of every example on the current version.
 
 The current Normal `statement` rendering of expression-defined functions
 omits the written return carrier. Original fenced source is retained for
@@ -12281,11 +12112,11 @@ foundation and are allowed under strict mode.
 Lean rechecking is a separate preview direction. `litex -lean -f <file>`
 replays supported typed verification results from a standalone source file.
 The [semantic interface](../lean/Litex.lean) and
-[generated problem pairs](../lean/examples/) cover the initial numeric slice;
+[generated example pairs](../lean/examples/) document supported routes;
 generation and real Lean kernel checking remain separate gates. Unsupported
-proof routes fail compilation rather than becoming assumptions. Development
-material and the earlier ABI are local-only under ignored `scripts/`.
-See the [CLI boundary](cli.md#lean-compiler-boundary) for current restrictions.
+proof routes fail compilation rather than becoming assumptions. See the
+[compiler guide](Litex_To_Lean_Compiler_Guide.md) for maintained examples and the
+[CLI boundary](cli.md#lean-compiler-boundary) for invocation restrictions.
 
 ### Documentation and test contract
 
@@ -12310,10 +12141,6 @@ rule sections for additional law shapes, not another copy of that definition.
 Use P entries for a failed/working pair and R entries for complete recommended
 formulations. Keep project and output contracts in their dedicated guide sections.
 When code changes, update the relevant entry and affected examples together.
-
-The merge audit (historical task record; retired) records how earlier Manual
-sections were retained, moved or replaced. Historical Reference evidence stays
-at its original audit paths; it is not silently relabelled as a fresh run.
 
 <a id="latex-conversion-preview"></a>
 

@@ -77,6 +77,53 @@ impl LitexToLeanCompiler {
                 before: 0,
             };
             let position = &group_position;
+            if matches!(&group.param_type, ParamType::Set(_)) {
+                if !matches!(
+                    &captured.param_type_well_defined,
+                    ParamTypeWellDefinedProof::Set
+                ) || !matches!(&captured.nonempty_check, ParamTypeFactCheckResult::Set)
+                {
+                    return Err(LeanCompileError::new(
+                        "Have/SetStages",
+                        "An arbitrary set has set-kind WD and no nonempty obligation.",
+                    ));
+                }
+                self.validate_parameter_store_capture(&captured.defined_params)?;
+                if captured.defined_params.store_and_infer_results.len() != group.params.len() {
+                    return Err(LeanCompileError::new(
+                        "Have/SetStores",
+                        "Every arbitrary set needs its original sethood store.",
+                    ));
+                }
+                for (parameter, store) in group
+                    .params
+                    .iter()
+                    .zip(&captured.defined_params.store_and_infer_results)
+                {
+                    introduced_count += 1;
+                    let introduced = SourcePosition {
+                        before: introduced_count,
+                        ..source_position
+                    };
+                    let fact = self.resolve_fact(store.primary_fact_id(), &introduced)?;
+                    let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+                    match &fact {
+                        Fact::AtomicFact(AtomicFact::IsSetFact(f)) if f.set.ir() == object.ir() => {
+                        }
+                        _ => {
+                            return Err(LeanCompileError::new(
+                                "Have/SetSubject",
+                                "The captured sethood belongs to another source parameter.",
+                            ))
+                        }
+                    }
+                    self.validate_store(store, &fact)?;
+                    let id = parameter.id.value();
+                    let fact_id = fact.fact_id().value();
+                    declarations.push(format!("variable {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : Litex.IsSet _value_i{id})"));
+                }
+                continue;
+            }
             let set = match &group.param_type {
                 ParamType::Obj(Obj::StandardSet(set)) => set,
                 _ => return Err(LeanCompileError::unsupported("Have/NumericCarrier")),

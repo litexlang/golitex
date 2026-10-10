@@ -62,6 +62,43 @@ Runtime 执行源码一次，然后移动到编译器中，作为只读的精确
 
 <a id="formula-functions-and-concrete-predicates"></a>
 
+## 有限集合与有界 builder
+
+[有限自然数集合](../lean/examples/finite_natural_set/statement.lit)保留源码元素及其两两不等证明：
+
+```litex
+have small_naturals set = {1, 2}
+1 $in small_naturals
+small_naturals $subset N
+```
+
+生成表示逐项使用认证的 `Litex.insert` 对象，每个元素保持原来的 host 表示。
+`{1, 1}` 和 `{1 + 1, 2}` 仍按源码 WD 规则被拒绝。枚举顺序属于构造顺序，
+集合的数学相等由成员决定。
+
+[非负有理数集合包含关系](../lean/examples/nonnegative_rational_subset/statement.lit)使用有界分离：
+
+```litex
+have nonnegative_rationals set = {x Q: x >= 0}
+have nonnegative_reals set = {x R: x >= 0}
+nonnegative_rationals $subset nonnegative_reals
+```
+
+`Litex.setBuilder` 保留认证的界集，并对认证的成员解释筛选条件。
+谓词 WD 只证明表达式合法，不证明所有元素都满足它。条件按源码顺序保留证明：
+在 `{x R: x != 0, 1 / x > 0}` 中，前面的非零证明认证后面的除法。
+空界集不需要选择元素；空域全称证明先消费记录的空集等式，再消去矛盾。
+
+`SetSemantics M` 的规律由实际 ZF 模型证明，函数域共用其中的分离操作。
+`have A set` 与 `forall A set` 保持 generic host 表示；`set` 不表示一个万能集合。
+原生数值集合视图只观察相应的数值成员。若要把它解释为整个集合，还必须有
+`A $subset R` 或 `A $subset C` 的证明。原生消费者在证明体中固定已检查的模型，
+对外只给出普通 ZFSet、Set Complex 与 Set Real 陈述。
+
+当前切片支持平坦原子筛选条件及已支持的具体谓词，按实际记录的成员、subset 路线重放。
+复合 builder 条款、nonempty/finite 参数种类、无界理解与存在式集合选择仍在编译边界外，
+不会被变成公理。
+
 ## 公式函数与具体谓词
 
 [带保护条件的倒数](../lean/examples/guarded_real_reciprocal/statement.lit)用普通非零要求定义公式：

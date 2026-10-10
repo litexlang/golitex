@@ -1,0 +1,10 @@
+# Tracer: consume a declaration from std bundled with an installed executable.
+# Before: from an unrelated directory, with no LITEX_STD_PATH or local std,
+# basics:::version = 1
+# failed with session_error: "failed to import project".
+# Now: the executable's installation layout supplies the std module.
+basics:::version = 1
+basics::main::version = 1
+# Boundary: a missing/invalid explicit std override must still fail.
+# Evidence: cargo test --release --test installed_std_cli --locked
+# The test copies this project and std fixture into actual install layouts.

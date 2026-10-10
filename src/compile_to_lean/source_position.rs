@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{SetBuilderObjWellDefinedProof, SetFormerObjWellDefinedProofByDef};
 use super::helper::verified_subject;
 use super::LeanCompileError;
 use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByDefStmtSuccess};
@@ -27,8 +28,10 @@ pub(super) enum SourceOwner<'a> {
     Statement(&'a ExecStmtResult),
     Verify(&'a VerifyFactResult),
     WD(&'a ObjWellDefinedProof),
+    SetBuilder(&'a SetBuilder, &'a SetBuilderObjWellDefinedProof),
     Named(&'a ExecDefThmStmtSuccess),
     Forall(&'a VerifyForallFactSuccess),
+    EmptyForall(&'a crate::execute::execute_fact_stmt::verify_forall_fact::VerifyEmptyParameterDomainForallProof),
     ForallWD(&'a ForallFact, &'a ForallFactWellDefinedProof),
     KnownForall(&'a VerifyKnownForallFactProof),
     Call(&'a ExecByThmStmtSuccess),
@@ -55,7 +58,7 @@ impl<'a> SourcePosition<'a> {
     }
 
     /// Only already completed top-level ordinary-have introductions are arguments.
-    pub fn context_parameters(&self) -> Vec<(&'a BoundName, &'a Obj, FactId)> {
+    pub fn context_parameters(&self) -> Vec<(&'a BoundName, Option<&'a Obj>, FactId)> {
         let mut parameters = Vec::new();
         let mut position = Some(self);
         while let Some(current) = position {
@@ -109,11 +112,14 @@ impl<'a> SourcePosition<'a> {
             match current.owner {
                 SourceOwner::Named(_)
                 | SourceOwner::Forall(_)
+                | SourceOwner::EmptyForall(_)
                 | SourceOwner::ForallWD(_, _)
                 | SourceOwner::KnownForall(_)
                 | SourceOwner::Call(_)
                 | SourceOwner::HaveEqualType(_) => return true,
-                SourceOwner::PropDefinition(_) | SourceOwner::ByDef(_) => return true,
+                SourceOwner::PropDefinition(_)
+                | SourceOwner::ByDef(_)
+                | SourceOwner::SetBuilder(_, _) => return true,
                 SourceOwner::WD(proof) if function_binder(proof).is_some() => return true,
                 _ => {}
             }
@@ -255,12 +261,14 @@ impl<'a> SourcePosition<'a> {
             let env = match current.owner {
                 SourceOwner::Named(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
+                SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::HaveEqualType(p) => Some(p.type_local_env.as_ref()),
                 SourceOwner::PropDefinition(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ByDef(p) => Some(p.local_env.as_ref()),
+                SourceOwner::SetBuilder(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::WD(p) => function_binder(p).map(|(_, _, _, _, env)| env),
                 _ => None,
             };
@@ -287,12 +295,14 @@ impl<'a> SourcePosition<'a> {
             let env = match current.owner {
                 SourceOwner::Named(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
+                SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::HaveEqualType(p) => Some(p.type_local_env.as_ref()),
                 SourceOwner::PropDefinition(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ByDef(p) => Some(p.local_env.as_ref()),
+                SourceOwner::SetBuilder(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::WD(p) => function_binder(p).map(|(_, _, _, _, env)| env),
                 _ => None,
             };
@@ -321,6 +331,22 @@ impl<'a> SourcePosition<'a> {
         runtime: &'a Runtime,
     ) -> Result<(&'a Fact, String), LeanCompileError> {
         let actual = self.source_fact(id, runtime)?;
+        let mut ceiling = Some(self);
+        while let Some(current) = ceiling {
+            if let SourceOwner::PropInference(store) = current.owner {
+                if prop_inference_stages(store)
+                    .iter()
+                    .skip(current.before)
+                    .any(|stage| stage.store_and_infer.stored_fact_ids().contains(&id))
+                {
+                    return Err(LeanCompileError::new(
+                        "Inference/FutureProducer",
+                        "The cited inference has not occurred at this captured formation stage.",
+                    ));
+                }
+            }
+            ceiling = current.parent;
+        }
         let mut position = Some(self);
         while let Some(current) = position {
             if let Some(reference) = fact_reference_in_owner(current, id, actual)? {
@@ -341,16 +367,18 @@ impl<'a> SourcePosition<'a> {
         &self,
         id: IdentifierId,
         runtime: &'a Runtime,
-    ) -> Result<(&'a BoundName, &'a Obj, FactId, String), LeanCompileError> {
+    ) -> Result<(&'a BoundName, Option<&'a Obj>, FactId, String), LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
             if let Some((name, carrier, store)) = parameter_in_owner(current, id) {
                 let fact_id = store.primary_fact_id();
                 let fact = self.source_fact(fact_id, runtime)?;
                 let object = Obj::Identifier(IdentifierObj::from_bound_name(name));
-                match fact {
-                    Fact::AtomicFact(AtomicFact::InFact(f))
+                match (fact, carrier) {
+                    (Fact::AtomicFact(AtomicFact::InFact(f)), Some(carrier))
                         if f.element.ir() == object.ir() && f.set.ir() == carrier.ir() => {}
+                    (Fact::AtomicFact(AtomicFact::IsSetFact(f)), None)
+                        if f.set.ir() == object.ir() => {}
                     _ => {
                         return Err(LeanCompileError::new(
                             "Parameters/Subject",
@@ -521,7 +549,7 @@ impl<'a> SourcePosition<'a> {
 fn append_have_parameters<'a>(
     proof: &'a ExecHaveObjInNonemptySetStmtSuccessResult,
     before: usize,
-    out: &mut Vec<(&'a BoundName, &'a Obj, FactId)>,
+    out: &mut Vec<(&'a BoundName, Option<&'a Obj>, FactId)>,
 ) {
     let mut index = 0;
     for group in &proof.statement.param_def.groups {
@@ -529,13 +557,19 @@ fn append_have_parameters<'a>(
             if index >= before {
                 return;
             }
-            if let (ParamType::Obj(carrier), Some(store)) = (
-                &group.param_type,
-                proof
-                    .store_and_infer_result
-                    .store_and_infer_results
-                    .get(index),
-            ) {
+            let carrier = match &group.param_type {
+                ParamType::Obj(carrier) => Some(carrier),
+                ParamType::Set(_) => None,
+                _ => {
+                    index += 1;
+                    continue;
+                }
+            };
+            if let Some(store) = proof
+                .store_and_infer_result
+                .store_and_infer_results
+                .get(index)
+            {
                 out.push((parameter, carrier, store.primary_fact_id()));
             }
             index += 1;
@@ -597,13 +631,15 @@ fn parameter_from_groups<'a>(
     stores: &'a [std::rc::Rc<StoreFactAndInferResult>],
     before: usize,
     id: IdentifierId,
-) -> Option<(&'a BoundName, &'a Obj, &'a StoreFactAndInferResult)> {
+) -> Option<(&'a BoundName, Option<&'a Obj>, &'a StoreFactAndInferResult)> {
     let mut index = 0;
     for group in groups {
         for parameter in &group.params {
             if index < before && parameter.id == id {
-                let ParamType::Obj(carrier) = &group.param_type else {
-                    return None;
+                let carrier = match &group.param_type {
+                    ParamType::Obj(carrier) => Some(carrier),
+                    ParamType::Set(_) => None,
+                    _ => return None,
                 };
                 return stores
                     .get(index)
@@ -618,7 +654,7 @@ fn parameter_from_groups<'a>(
 fn parameter_in_owner<'a>(
     position: &SourcePosition<'a>,
     id: IdentifierId,
-) -> Option<(&'a BoundName, &'a Obj, &'a StoreFactAndInferResult)> {
+) -> Option<(&'a BoundName, Option<&'a Obj>, &'a StoreFactAndInferResult)> {
     match position.owner {
         SourceOwner::Forall(p) => parameter_from_groups(
             &p.fact.typed_parameters.groups,
@@ -647,6 +683,21 @@ fn parameter_in_owner<'a>(
             position.before,
             id,
         ),
+        SourceOwner::SetBuilder(set, proof)
+            if position.before > 1 && set.param_binding.id == id =>
+        {
+            proof
+                .defined_params
+                .store_and_infer_results
+                .first()
+                .map(|store| {
+                    (
+                        &set.param_binding,
+                        Some(set.param_set.as_ref()),
+                        store.as_ref(),
+                    )
+                })
+        }
         SourceOwner::WD(proof) => {
             let (signature, carriers, parameters, _, _) = function_binder(proof)?;
             let before = position.before.saturating_sub(carriers.len());
@@ -654,10 +705,9 @@ fn parameter_in_owner<'a>(
             for group in &signature.set_bound_parameters.groups {
                 for parameter in &group.params {
                     if index < before && parameter.id == id {
-                        return parameters
-                            .store_and_infer_results
-                            .get(index)
-                            .map(|store| (parameter, group.param_type.as_ref(), store.as_ref()));
+                        return parameters.store_and_infer_results.get(index).map(|store| {
+                            (parameter, Some(group.param_type.as_ref()), store.as_ref())
+                        });
                     }
                     index += 1;
                 }
@@ -781,10 +831,18 @@ fn infer_has_fact(
     {
         for rule in rules {
             let derived = match rule {
-                InferAtomicExceptEqualityResult::NormalAtomicParamTypes(p) => Some(&p.derived),
-                InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(p) => {
-                    Some(&p.derived)
+                InferAtomicExceptEqualityResult::NormalAtomicParamTypes(p) => {
+                    Some(p.derived.iter().collect::<Vec<_>>())
                 }
+                InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(p) => {
+                    Some(p.derived.iter().collect::<Vec<_>>())
+                }
+                InferAtomicExceptEqualityResult::InFactSetBuilder(p) => Some(
+                    p.steps
+                        .iter()
+                        .flat_map(|step| &step.derived)
+                        .collect::<Vec<_>>(),
+                ),
                 _ => None,
             };
             if let Some(derived) = derived {
@@ -828,6 +886,11 @@ fn prop_inference_stages(
             InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(p) => {
                 p.derived.iter().collect::<Vec<_>>()
             }
+            InferAtomicExceptEqualityResult::InFactSetBuilder(p) => p
+                .steps
+                .iter()
+                .flat_map(|step| &step.derived)
+                .collect::<Vec<_>>(),
             _ => Vec::new(),
         })
         .collect()
@@ -1097,6 +1160,14 @@ fn fact_reference_in_owner(
             });
             statement_reference(statement, id, actual, top, position.before)
         }
+        SourceOwner::EmptyForall(p) => {
+            if position.before > 0 && p.empty_carrier_store.primary_fact_id() == id {
+                check_store_subject(&p.empty_carrier_store, actual)?;
+                Ok(Some(format!("h_{}", id.value())))
+            } else {
+                Ok(None)
+            }
+        }
         SourceOwner::Forall(p) => {
             if let Some(reference) = header_reference(
                 &p.fact.typed_parameters.groups,
@@ -1194,6 +1265,35 @@ fn fact_reference_in_owner(
             {
                 if store.primary_fact_id() == id {
                     check_store_subject(store, actual)?;
+                    return Ok(Some(format!("h_{}", id.value())));
+                }
+            }
+            Ok(None)
+        }
+        SourceOwner::SetBuilder(_, p) => {
+            for store in p
+                .defined_params
+                .store_and_infer_results
+                .iter()
+                .take(position.before.saturating_sub(1))
+            {
+                if store.primary_fact_id() == id || infer_has_fact(store, id, actual)? {
+                    if store.primary_fact_id() == id {
+                        check_store_subject(store, actual)?;
+                    }
+                    return Ok(Some(format!("h_{}", id.value())));
+                }
+            }
+            for assumed in p
+                .assumed_facts
+                .iter()
+                .take(position.before.saturating_sub(2))
+            {
+                let store = &assumed.store_and_infer;
+                if store.primary_fact_id() == id || infer_has_fact(store, id, actual)? {
+                    if store.primary_fact_id() == id {
+                        check_store_subject(store, actual)?;
+                    }
                     return Ok(Some(format!("h_{}", id.value())));
                 }
             }
@@ -1565,6 +1665,30 @@ fn visit_owner<T>(
             if let Some(value) = visit_function_formation(proof, position, wd, verify)? {
                 return Ok(Some(value));
             }
+            if let ObjWellDefinedProof::ByDef {
+                obj: Obj::SetFormer(SetFormer::SetBuilder(set)),
+                proof:
+                    ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(
+                        captured,
+                    )),
+            } = proof
+            {
+                let scope = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::SetBuilder(set, captured),
+                    position.before,
+                );
+                let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
+                    if closed_leaf(proof.obj()) {
+                        wd(proof, position)
+                    } else {
+                        Ok(None)
+                    }
+                };
+                if let Some(value) = visit_owner(&scope, &mut closed, &mut |_, _| Ok(None))? {
+                    return Ok(Some(value));
+                }
+            }
             if let Some((children, requirements)) = arithmetic_stages(proof) {
                 for (index, requirement) in requirements
                     .iter()
@@ -1596,6 +1720,19 @@ fn visit_owner<T>(
         }
         SourceOwner::FactWD(proof) => {
             return visit_fact_formation(proof, position.before, position, wd, verify)
+        }
+        SourceOwner::EmptyForall(proof) => {
+            if position.before > 0 {
+                let prior = SourcePosition {
+                    before: 0,
+                    ..*position
+                };
+                if let Some(value) =
+                    visit_complete_verify(&proof.empty_carrier_proof, &prior, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
         }
         SourceOwner::Forall(proof) => {
             let head = parameter_count(&proof.fact.typed_parameters.groups)
@@ -1793,6 +1930,47 @@ fn visit_owner<T>(
                     if let Some(value) = visit_complete_wd(proof, &prior, wd, verify)? {
                         return Ok(Some(value));
                     }
+                }
+            }
+        }
+        SourceOwner::SetBuilder(_, proof) => {
+            for (i, assumed) in proof
+                .assumed_facts
+                .iter()
+                .take(position.before.saturating_sub(2))
+                .enumerate()
+                .rev()
+            {
+                let prior = SourcePosition {
+                    before: 2 + i,
+                    ..*position
+                };
+                let inferred = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::PropInference(&assumed.store_and_infer),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_owner(&inferred, wd, verify)? {
+                    return Ok(Some(value));
+                }
+                let formation = SourcePosition::new(
+                    Some(&prior),
+                    SourceOwner::FactWD(&assumed.well_defined),
+                    usize::MAX,
+                );
+                if let Some(value) = visit_owner(&formation, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+            if position.before > 0 {
+                let prior = SourcePosition {
+                    before: 0,
+                    ..*position
+                };
+                if let Some(value) =
+                    visit_complete_wd(&proof.param_set_well_defined, &prior, wd, verify)?
+                {
+                    return Ok(Some(value));
                 }
             }
         }
@@ -2464,6 +2642,17 @@ fn arithmetic_stages(
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
     if let ObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(proof),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ListSet(proof)),
         ..
     } = proof
     {

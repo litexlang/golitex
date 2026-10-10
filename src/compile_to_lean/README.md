@@ -144,8 +144,30 @@ guards. The additional `FunctionSemantics M` interface has a proved ZF model
 in the same `lean/Litex.lean`. Its body callbacks interpret source objects,
 without replacing their representations with native real arrows.
 
-Sets, recursive/composed formula bodies, concrete-predicate function guards,
-local declarations, general consumed inference and module compilation retain
+The phase-4 set slice preserves arbitrary `have A set` and set-kind universal
+binders as generic certified parameters. Empty and finite enumerations retain
+heterogeneous child objects and every actual pairwise inequality. The generated
+insertion constructors consume those proofs rather than silently deduplicating
+source values. Bounded builders retain their certified bound, exact binder
+store, and ordered predicate WD/store stages. Earlier filters become proof
+witnesses in later filter types; formation does not assert filter truth.
+
+`SetSemantics M` supplies reviewed empty/insertion/separation/extensionality
+laws. `FunctionSemantics M` extends the same set interface, so builder bounds
+and function domains share separation. The actual ZF model proves every law
+in `lean/Litex.lean`. Selected finite membership/subset, builder membership,
+subset-definition and empty-domain universal routes replay their recorded
+children. Builder inference retains its actual selected builder, exact equality
+path and each inferred fact's original WD before storage. Missing, changed or
+future producers reject instead of being recovered from the final environment.
+
+Numeric `Set` views are pullbacks. A full real/complex-set interpretation also
+requires the corresponding source subset witness. Native Adapter/Final checks
+consume the generated set proofs through proved denotation/membership bridges.
+
+Recursive/composed formula bodies, concrete-predicate function guards,
+nonempty/finite binder kinds, compound builder clauses, local declarations,
+unreviewed consumed inference and module compilation retain
 explicit unsupported branches. Exact certificates, orientations, argument
 match evidence and residual children must be preserved. Generated files keep
 all source proof names; only unused-variable and unused-section-variable

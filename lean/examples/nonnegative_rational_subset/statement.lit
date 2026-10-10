@@ -1,0 +1,4 @@
+# Nonnegative rational numbers form a subset of the nonnegative real numbers.
+have nonnegative_rationals set = {x Q: x >= 0}
+have nonnegative_reals set = {x R: x >= 0}
+nonnegative_rationals $subset nonnegative_reals

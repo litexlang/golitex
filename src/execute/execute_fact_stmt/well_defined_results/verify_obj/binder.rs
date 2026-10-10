@@ -19,6 +19,10 @@ use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/set_builder_lean_capture/tests.rs"]
+mod set_builder_lean_capture;
+
 impl Runtime {
     // `fn(x R: x > 0) R` — param types → binders → dom WD → ret_set WD; keep local_env.
     pub(super) fn verify_fn_set_obj_well_definedness(
@@ -120,10 +124,11 @@ impl Runtime {
             rt.verify_set_builder_obj_well_definedness_in_local(value, verify_state.clone())
         })?;
         match inner {
-            Ok((param_set_well_defined, fact_well_defined)) => {
+            Ok((param_set_well_defined, defined_params, assumed_facts)) => {
                 let proof = SetBuilderObjWellDefinedProof {
                     param_set_well_defined,
-                    fact_well_defined,
+                    defined_params,
+                    assumed_facts,
                     local_env,
                 };
                 self.finish_binder_obj_success(
@@ -414,7 +419,11 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<
         Result<
-            (Box<ObjWellDefinedProof>, Vec<FactWellDefinedProof>),
+            (
+                Box<ObjWellDefinedProof>,
+                StoreHaveObjAndInferResult,
+                Vec<AssumeDomFactResult>,
+            ),
             FailToVerifySetBuilderObjWellDefined,
         >,
     > {
@@ -439,14 +448,12 @@ impl Runtime {
                 param_type: ParamType::Obj(value.param_set.as_ref().clone()),
             }],
         };
-        self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let defined_params =
+            self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
 
-        let fact_well_defined =
+        let assumed_facts =
             match self.verify_quantifier_free_facts_well_defined(&value.facts, verify_state)? {
-                Ok(proofs) => proofs
-                    .into_iter()
-                    .map(|assumed| assumed.well_defined)
-                    .collect(),
+                Ok(proofs) => proofs,
                 Err((failed_index, succeeded, failed_fact)) => {
                     return Ok(Err(FailToVerifySetBuilderObjWellDefined::Fact {
                         failed_index,
@@ -457,7 +464,7 @@ impl Runtime {
                 }
             };
 
-        Ok(Ok((param_set_well_defined, fact_well_defined)))
+        Ok(Ok((param_set_well_defined, defined_params, assumed_facts)))
     }
 
     fn verify_set_bound_param_types_well_defined(

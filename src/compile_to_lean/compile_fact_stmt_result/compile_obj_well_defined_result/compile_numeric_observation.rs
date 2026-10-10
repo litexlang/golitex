@@ -10,7 +10,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if let Ok((_, set, _, hypothesis)) = position.visible_parameter(*id, &self.runtime) {
+            if let Ok((_, Some(set), _, hypothesis)) =
+                position.visible_parameter(*id, &self.runtime)
+            {
                 if set == &Obj::StandardSet(StandardSet::R) {
                     return Ok(hypothesis);
                 }
@@ -143,7 +145,9 @@ impl LitexToLeanCompiler {
             ));
         }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if let Ok((_, set, _, hypothesis)) = position.visible_parameter(*id, &self.runtime) {
+            if let Ok((_, Some(set), _, hypothesis)) =
+                position.visible_parameter(*id, &self.runtime)
+            {
                 if set == &Obj::StandardSet(StandardSet::C) {
                     return self.numeric_member(object, &hypothesis, position);
                 }
@@ -334,7 +338,8 @@ impl LitexToLeanCompiler {
                 // An identifier WD carries no numeric assertion. Its actual
                 // preceding membership proof supplies the observation separately.
                 if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = obj {
-                    if let Ok((_, set, _, member)) = position.visible_parameter(*id, &self.runtime)
+                    if let Ok((_, Some(set), _, member)) =
+                        position.visible_parameter(*id, &self.runtime)
                     {
                         if set == &Obj::StandardSet(StandardSet::C) {
                             return self.numeric_member(obj, &member, position);

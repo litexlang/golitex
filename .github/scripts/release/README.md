@@ -1,4 +1,4 @@
-# Local release preflight
+# Release packaging and installed std checks
 
 Run the native release lane before pushing a version tag:
 
@@ -6,47 +6,76 @@ Run the native release lane before pushing a version tag:
 python3 .github/scripts/release/preflight.py
 ```
 
-The command reads the package version and Rust host target, builds the release
-binary inside a unique `private/release-preflight.*` directory, packages the
-binary together with `std/`, extracts that archive, checks the binary version,
-and runs the same archive smoke test used by the GitHub release workflow. The
-temporary directory is removed on both success and ordinary failure.
+It builds with `--locked`, packages the binary and clean std source, extracts
+the archive, checks `Litex <version>`, and imports a real std declaration from
+an external project with `LITEX_STD_PATH` unset. The temporary declaration
+`let litex_distribution_probe = 1` is appended to the extracted basics module
+and restored byte-for-byte in a `finally` block. The consumer verifies
+`basics::main::litex_distribution_probe = 1` in strict mode, so empty-module
+loading or native arithmetic alone cannot satisfy the package check.
+Tool-managed `private/release-preflight.*` directories are removed on success
+and ordinary failure. Production `std/basics` remains an empty compatibility
+module; native vocabulary does not require that module.
 
-The version check requires exit code zero and the documented plain-text output
-`Litex <version>` from `-version`; the smoke test requires Normal run JSON.
-The extracted smoke project imports `basics` through `litex.config` and exports
-`smoke.lit`; imports are not statements in Litex source.
-The archive smoke overrides any inherited `LITEX_STD_PATH` with the extracted
-standard library, so a local installation cannot mask a broken release archive.
-Local builds use `--locked`, matching the workflow's dependency lockfile gate.
-
-To check an archive that has already been built:
+To check a previously built archive or an installed package:
 
 ```bash
-python3 .github/scripts/release/preflight.py \
-  --archive litex_0.9.116-beta_darwin_arm64.tar.gz \
-  --version 0.9.116-beta
+python3 .github/scripts/release/preflight.py --archive <archive> --version <Cargo-version>
+sudo python3 .github/scripts/release/preflight.py \
+  --installed-binary /usr/local/bin/litex --std /usr/share/litex/std
 ```
 
-Focused tests:
+The installed check temporarily writes the probe into its supplied std path;
+use the permissions needed by that installation. The probe is restored even
+when verification fails. `--std` locates the file for inventory/probing, not a
+runtime environment override: the child process must discover std itself.
 
-```bash
-python3 .github/scripts/release/test_preflight.py
-```
+## Runtime discovery and distribution
 
-This is a native-lane preflight, not an emulator for every GitHub runner. A
-macOS ARM host verifies the `darwin-arm64` artifact path; Linux and Windows
-artifacts still require their native GitHub matrix jobs. Publishing to
-crates.io, GitHub Releases, package repositories, and remote servers is not
-performed locally.
+The runtime keeps the established precedence: explicit `LITEX_STD_PATH`, cwd
+`std/`, then target-project `std/`. If none selects an existing local directory,
+it follows the real executable through symlinks and searches these installed
+layouts, in order:
 
-## Release readiness and remaining boundaries
+1. executable-directory `std/` (archives, Scoop, current Homebrew);
+2. installation-prefix `std/` (MSI's application `bin/` sibling);
+3. prefix `share/litex/std/` (legacy Homebrew and `/usr/bin` layouts);
+4. parent-prefix `share/litex/std/` (`/usr/local/bin` with Debian `/usr/share`).
 
-Use the exact `[package]` version as the tag, without a leading `v`, and commit
-the workflow fixes before tagging. A tag points to a commit; rerunning an old
-tag's workflow does not pick up uncommitted or later script changes.
+An invalid explicit override remains an error. Installing std does not import
+its names automatically; project manifests still select modules explicitly.
+`package_std.py` is the shared source inventory for archive, Debian, Docker and
+WiX packaging. It excludes knowledge caches, hidden drafts/metadata and local
+`todo.md` files. Binary and std are taken from the same release checkout.
 
-Run the same local quality gates as the release workflow:
+The Windows MSI is required. Its WiX fragment links every std file into the
+product feature, and its installation must pass the same external-project
+probe. The Release job depends on MSI success, downloads the MSI artifact,
+attaches `.msi` alongside `.tar.gz`, `.zip` and `.deb`, and fails if an expected
+asset class is missing. WiX 3.14.1 and cargo-wix 0.3.9 are pinned.
+
+## Native gates and publishing boundary
+
+The build matrix executes archive and installed-layout tests on macOS ARM,
+Linux amd64/arm64, and Windows amd64. Both Debian architectures have a native
+installation/probe job. Each Unix build also installs its archive through the
+actual generated Homebrew formula, and the Windows build installs its ZIP
+through the generated Scoop manifest. `package_manager_smoke.py` supplies the
+archive via a loopback server, checks installed std, then removes only that
+test installation; its Homebrew tap edits are restored. Cleanup queries actual manager state,
+including an installation command that failed after creating the package.
+No manifest is published. The Homebrew setup action is pinned to the official
+2026.07.10.1 revision, rather than a moving branch. Linux uses Ubuntu 22.04 runners rather than building
+against a newer Ubuntu libc than the Debian bookworm runtime.
+
+`Deploy` supports `workflow_dispatch`: it derives the version from Cargo,
+builds/packages/tests, and uploads Actions artifacts without publishing a
+GitHub Release, crates.io package, tap, Scoop bucket, Docker image or web-server
+installation. Tag pushes use the exact Cargo version without leading `v` and
+perform publishing only after the required jobs succeed. This manual run is
+the validation path for a proposed release, not a substitute for executing it.
+
+Local quality gates:
 
 ```bash
 cargo fmt --all -- --check
@@ -55,49 +84,20 @@ cargo test --release --all-targets --locked
 cargo package --list --allow-dirty --locked --offline
 ```
 
-The release workflow also publishes to crates.io, updates the Homebrew tap and
-Scoop bucket, pushes GHCR images, and installs the amd64 Debian package on the
-web server. Check credentials and permissions for `CRATES_IO_TOKEN`,
-`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, and the `WEB_DEPLOY_*` secrets in the
-repository settings. Local GitHub CLI authentication does not prove that those
-Actions secrets are configured.
+Run the registered real-Lean/textbook gates too before release. Cargo test names
+alone do not establish their execution. A native macOS check cannot establish
+Windows MSI execution or Linux runtime compatibility. Remote publication also
+needs `CRATES_IO_TOKEN`, `HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, and the
+`WEB_DEPLOY_*` secrets; local CLI authentication does not prove those secrets.
 
-Installed standard libraries are currently discovered through `LITEX_STD_PATH`
-or a project/current-directory `std/`. The CLI does not automatically find the
-Debian `/usr/share/litex/std`, Homebrew `bin/std`, MSI application `std`, or Scoop
-installation `std` directories. Installed-package smoke tests explicitly set
-the path; users outside a project with `std/` need to set it too. Docker sets
-`LITEX_STD_PATH=/usr/share/litex/std` in the image. For Debian installations:
+Docker currently sets `LITEX_STD_PATH=/usr/share/litex/std` in its image and
+checks the published amd64 image. Actual arm64 Docker execution remains a
+separate gate. Intel macOS is outside the current artifact matrix.
 
-```bash
-export LITEX_STD_PATH=/usr/share/litex/std
-```
+## Historical audit records
 
-The Linux arm64 archive is cross-built and has no execution smoke gate. Docker
-currently pushes the multi-architecture image before its amd64 smoke test;
-there is no arm64 execution smoke. Validate Linux binaries against the Debian
-bookworm runtime and the actual web-server system before relying on compatibility.
-These runtime checks cannot be replaced by a successful macOS preflight.
-
-MSI is optional (`continue-on-error: true`) and is not downloaded or attached by
-the GitHub Release job. Its WiX build and installation still need a Windows
-runner. After `cargo wix init --force`, the workflow regenerates `wix/std.wxs`
-with `.github/scripts/release/generate_wix_std.py` so `File/@Source` paths are
-package-root relative (`std\...`). The script also inserts
-`<ComponentGroupRef Id="LitexStd" />` into the generated `wix/main.wxs`
-`Product/Feature[@Id="Binaries"]`. That explicit incoming reference links the
-`LitexStd` component group and its entire std directory tree into the MSI.
-Previously, a standalone `FeatureRef Id="Binaries"` fragment referenced the
-product feature but the product never referenced that fragment; installation
-could succeed with only the binary and license. Merely compiling `std.wxs` or
-checking its source paths does not prove the std components are included.
-The generator rejects missing or ambiguous product features and preserves WiX
-preprocessor directives. Python tests exercise the CLI, resolve the product-to-group
-and group-to-component references, check repeat runs, and reject unexpected
-templates. The Windows install/import smoke remains the final runtime gate.
-macOS artifacts cover ARM only; the generated Homebrew formula has no Intel macOS
-artifact selection. Toolchain, runner, `cross`, and `cargo-wix` versions are
-not all pinned, so a rerun may use newer build tools.
+The following observations apply to their named earlier snapshots, not the
+current automatic-discovery and mandatory-MSI implementation.
 
 On 2026-10-08 the local release audit passed Rust formatting, nine Python
 preflight tests, 1,260 release-mode Rust tests at the 1.0.2-beta source snapshot,
