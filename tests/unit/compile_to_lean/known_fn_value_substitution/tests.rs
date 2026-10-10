@@ -111,3 +111,56 @@ fn known_fn_value_substitution_cannot_cite_an_equality_from_a_closed_scope() {
         &["FactId/Resolution"],
     );
 }
+
+#[test]
+fn known_fn_value_substitution_new_arithmetic_examples_replay_without_holes() {
+    for file in [
+        "known_fn_value_substitution_multiple_calls.lit",
+        "known_fn_value_substitution_exact_arguments.lit",
+        "known_fn_value_substitution_duplicate_sources.lit",
+        "known_fn_value_substitution_guarded.lit",
+    ] {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("examples/proof_nodes/equal/by_builtin_rewrite")
+            .join(file);
+        let (result, compiler) = super::execute(&std::fs::read_to_string(path).unwrap());
+        let output = super::compile_run(&result, &compiler, "fn_value_examples")
+            .unwrap_or_else(|error| panic!("{file}: {}", error.route));
+        assert!(
+            !output.contains("sorry") && !output.contains("admit"),
+            "{file}"
+        );
+        assert!(output.contains("congrArg"), "{file}");
+    }
+}
+
+#[test]
+fn known_fn_value_substitution_rejects_an_unsupported_residual_without_a_partial_artifact() {
+    let source = include_str!(
+        "../../../../examples/proof_nodes/equal/by_builtin_rewrite/known_fn_value_substitution_scalar_arithmetic.lit"
+    );
+    let (result, compiler) = super::execute(source);
+    let error = super::compile_run(&result, &compiler, "fn_value_unsupported_residual")
+        .expect_err("unsupported successful child must reject the complete artifact");
+    assert_eq!(error.route, "Equality/BuiltinStrategy");
+}
+
+#[test]
+fn known_fn_value_substitution_rejects_a_citation_for_a_different_application() {
+    let source =
+        "have fn shift(t R) R=t+3\nhave x,y R\nshift(x)=x+3\nshift(y)=y+3\n2*shift(x)=2*x+6\n";
+    let (mut result, compiler) = super::execute(source);
+    super::compile_run(&result, &compiler, "fn_value_arguments_before_tampering")
+        .expect("original source replay");
+    let wrong_application =
+        super::equality_proof(&super::fact_statement(&result.statement_results[3]).verify_result)
+            .fact
+            .fact_id;
+    rewrite(&mut result.statement_results[4]).cited_equal_fact_ids[0] = wrong_application;
+    super::phase2_rejected(
+        &result,
+        &compiler,
+        "wrong_fn_application",
+        &["EqualityRewrite/"],
+    );
+}

@@ -1,0 +1,7 @@
+# True but intentionally unsupported: inserted inner(x) is not visited again.
+have fn inner(t R) R = t + 3
+have fn outer(t R) R = inner(t)
+have x R
+outer(x) = inner(x)
+inner(x) = x + 3
+2*outer(x) = 2*x + 6

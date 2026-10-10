@@ -1,4 +1,12 @@
 # Tracer: numeric predicate domains reuse checked argument WD.
+# Former rejected MIL goal (before proof-body execution):
+# ? forall X finite_set, A, B power_set(X):
+#     $is_finite_set(A)
+#     $is_finite_set(B)
+#     $is_nonempty_set(B)
+#     B $subset A
+#     =>:
+#         finite_set_size(set_minus(A, B)) < finite_set_size(A)
 # Before: the comparison goal rechecked the finite-difference cardinality
 # under a lower ceiling and failed its real-membership domain before the body.
 # The active proof supplies the cardinality's natural type; no trust is used.

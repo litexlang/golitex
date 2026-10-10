@@ -260,3 +260,186 @@ fn scalar_walk_does_not_rewrite_function_arguments_or_new_parents() {
     assert_eq!(rewritten.ir(), fact.left.ir());
     assert!(citations.is_empty());
 }
+
+#[test]
+fn run_examples_known_fn_value_substitution_positive_corpus() {
+    for file in [
+        "known_fn_value_substitution.lit",
+        "known_fn_value_substitution_multiple_calls.lit",
+        "known_fn_value_substitution_scalar_arithmetic.lit",
+        "known_fn_value_substitution_exact_arguments.lit",
+        "known_fn_value_substitution_guarded.lit",
+        "known_fn_value_substitution_duplicate_sources.lit",
+    ] {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("examples/proof_nodes/equal/by_builtin_rewrite")
+            .join(file);
+        let mut runtime = runtime();
+        let result = verified(&mut runtime, &std::fs::read_to_string(path).unwrap());
+        let detail =
+            crate::json_output::project_run_detailed(&result, &runtime, "test", None).stringify();
+        assert!(
+            detail.contains("KnownFnValueSubstitution"),
+            "{file}: {detail}"
+        );
+    }
+}
+
+#[test]
+fn run_examples_known_fn_value_substitution_negative_manifest() {
+    use crate::knowledge_base::JsonValue;
+    let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("examples/negative/known_fn_value_substitution");
+    let manifest = JsonValue::parse(include_str!(
+        "../../../../examples/negative/known_fn_value_substitution/manifest.json"
+    ))
+    .unwrap();
+    for entry in manifest.as_array().unwrap() {
+        let entry = entry.as_object().unwrap();
+        let file = entry.get("file").unwrap().as_str().unwrap();
+        let phase = entry.get("expected_phase").unwrap().as_str().unwrap();
+        let source = std::fs::read_to_string(directory.join(file)).unwrap();
+        let (prefix, target) = source.trim_end().rsplit_once('\n').unwrap();
+        let mut runtime = runtime();
+        verified(&mut runtime, prefix);
+        for _ in 0..2 {
+            let before = runtime.top_exec_env().facts.facts_by_id.len();
+            let result = rejected(&mut runtime, target);
+            assert_eq!(result.statement_results.len(), 1, "{file}");
+            let projected =
+                crate::json_output::project_stmt_normal(&result.statement_results[0], &runtime);
+            let fields = projected.as_object().unwrap();
+            assert_eq!(
+                fields
+                    .get("why_failed")
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .get("phase")
+                    .unwrap()
+                    .as_str()
+                    .unwrap(),
+                phase,
+                "{file}"
+            );
+            for key in ["stores", "infers"] {
+                assert!(
+                    fields.get(key).unwrap().as_array().unwrap().is_empty(),
+                    "{file}"
+                );
+            }
+            assert_eq!(
+                runtime.top_exec_env().facts.facts_by_id.len(),
+                before,
+                "{file}"
+            );
+            verified(&mut runtime, "1=1");
+        }
+    }
+}
+
+#[test]
+fn repeated_identical_source_values_keep_one_valid_citation() {
+    let mut runtime = runtime();
+    let result = verified(&mut runtime,
+        "have fn shift(t R) R=t+3\nhave x R\nshift(x)=x+3\nx+3=shift(x)\nshift(x)=x+3\n2*shift(x)=2*x+6\n");
+    let EqualFactSearchedProof::ByBuiltinRewrite(
+        super::super::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(proof),
+    ) = &equality(&result.statement_results[5]).searched_proof else {
+        panic!("duplicate values still permit function-value substitution");
+    };
+    assert_eq!(proof.cited_equal_fact_ids.len(), 1);
+    let source_ids: Vec<_> = result.statement_results[2..5]
+        .iter()
+        .map(|statement| equality(statement).fact.fact_id)
+        .collect();
+    assert!(source_ids.contains(&proof.cited_equal_fact_ids[0]));
+}
+
+#[test]
+fn ambiguity_in_one_call_does_not_disable_an_independent_unique_value() {
+    let mut runtime = runtime();
+    let result = verified(&mut runtime,
+        "have fn ambiguous(t R) R=t+3\nhave fn unique(t R) R=t+1\nhave x R\nambiguous(x)=x+3\nambiguous(x)=3+x\nunique(x)=x+1\n2*unique(x)+ambiguous(x)=2*x+2+ambiguous(x)\n");
+    let EqualFactSearchedProof::ByBuiltinRewrite(
+        super::super::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(proof),
+    ) = &equality(&result.statement_results[6]).searched_proof else {
+        panic!("the unique call still supplies one rewrite");
+    };
+    assert_eq!(
+        proof.cited_equal_fact_ids,
+        vec![equality(&result.statement_results[5]).fact.fact_id]
+    );
+}
+
+#[test]
+fn exact_argument_values_require_each_application_and_recover_after_failure() {
+    let mut runtime = runtime();
+    verified(
+        &mut runtime,
+        "have fn mix(s,t R) R=s+2*t\nhave x,y R\nmix(x,y)=x+2*y\n",
+    );
+    rejected(&mut runtime, "2*mix(y,x)=2*y+4*x");
+    rejected(&mut runtime, "2*mix(x,y)=2*y+4*x");
+    verified(&mut runtime, "mix(y,x)=y+2*x");
+    let result = verified(&mut runtime, "2*mix(x,y)-mix(y,x)=3*y");
+    let EqualFactSearchedProof::ByBuiltinRewrite(
+        super::super::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(proof),
+    ) = &equality(&result.statement_results[0]).searched_proof else {
+        panic!("two exact applications");
+    };
+    assert_eq!(proof.cited_equal_fact_ids.len(), 2);
+}
+
+#[test]
+fn scalar_arithmetic_matrix_checks_carriers_orientations_and_false_neighbors() {
+    for carrier in ["R", "Q", "Z", "C"] {
+        for offset in [1, 2, 3] {
+            for reversed in [false, true] {
+                let mut runtime = runtime();
+                verified(
+                    &mut runtime,
+                    &format!(
+                        "have fn shifted(t {carrier}) {carrier}=t+{offset}\nhave x {carrier}\n"
+                    ),
+                );
+                let value = if reversed {
+                    format!("x+{offset}=shifted(x)")
+                } else {
+                    format!("shifted(x)=x+{offset}")
+                };
+                verified(&mut runtime, &value);
+                let result = verified(&mut runtime, &format!("2*shifted(x)=2*x+{}", 2 * offset));
+                assert!(matches!(&equality(&result.statement_results[0]).searched_proof,
+                    EqualFactSearchedProof::ByBuiltinRewrite(
+                        super::super::by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite::KnownFnValueSubstitution(_))));
+                rejected(
+                    &mut runtime,
+                    &format!("2*shifted(x)=2*x+{}", 2 * offset + 1),
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn function_value_evidence_projects_in_every_output_language() {
+    for language in OutputLanguage::ALL {
+        let mut runtime = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: true,
+            strict: true,
+            language,
+        });
+        let result = verified(&mut runtime, AFFINE);
+        let projected =
+            crate::json_output::project_stmt_detailed(&result.statement_results[3], &runtime)
+                .stringify();
+        assert!(
+            projected.contains("KnownFnValueSubstitution"),
+            "{}",
+            language.as_str()
+        );
+        crate::json_output::project_stmt_normal(&result.statement_results[3], &runtime);
+    }
+}
