@@ -1,0 +1,17 @@
+# Z+ and N+ are input spellings of the same positive-natural set.
+# Existing behavior: both parse as StandardSet::NPos and display as N+.
+# Run: target/release/litex -lang en -strict -f examples/tokenize/positive_integer_alias.lit
+# Boundary: zero, negative integers and nonintegers are excluded.
+# Rejection and normalized-output checks: cargo test --release --test cli_feedback positive_integer_alias
+
+Z+ = N+
+ℤ+ = ℕ+
+have n Z+ = 2
+n $in N+
+have fn successor(k N+) Z+ = k + 1
+successor(n) $in N+
+have fn identity(k Z+) N+ = k
+identity(n) = n
+not 0 $in Z+
+not -1 $in Z+
+not 0.5 $in Z+

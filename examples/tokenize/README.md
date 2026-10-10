@@ -15,6 +15,7 @@ Exit 0 is enough.
 ```text
 line_continuation.lit      trailing \\ joins the next physical line
 unicode_math_aliases.lit   Unicode math aliases share ASCII Litex semantics
+positive_integer_alias.lit Z+ and N+ share one canonical positive-natural set
 ```
 
 ## Run all
