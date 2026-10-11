@@ -1,0 +1,181 @@
+release obj def geo::vec
+release obj def geo::dot
+release obj def geo::det
+release obj def geo::distance_sq
+
+thm imo_1960_problem_3:
+    ? forall point_a, point_b, point_c, p1, p2 cart(R, R), a, h, tan_alpha R, n, k1, k2 Z:
+        # ABC is a right triangle with right angle at A.
+        $geo::is_right_angle(point_b, point_a, point_c)
+        # BC has length a, and the altitude from A to BC has length h.
+        $predicate::is_altitude_length(point_a, point_b, point_c, h, a)
+        h > 0
+        # n is odd and greater than 1; k1 and k2 index the central segment.
+        n > 1
+        2 * k1 = n - 1
+        2 * k2 = n + 1
+        $predicate::is_division_point(p1, point_b, point_c, k1, n)
+        $predicate::is_division_point(p2, point_b, point_c, k2, n)
+        # alpha is the acute angle under which A sees that central segment.
+        $predicate::is_acute_subtended_tangent(point_a, p1, p2, tan_alpha)
+        =>:
+            tan_alpha * (n^2 - 1) * a = 4 * n * h
+
+
+    # Coordinate consequences of the two central division indices.
+
+    by def $geo::is_right_angle(point_b, point_a, point_c)
+    by def $predicate::is_altitude_length(point_a, point_b, point_c, h, a)
+    by def $predicate::is_division_point(p1, point_b, point_c, k1, n)
+    by def $predicate::is_division_point(p2, point_b, point_c, k2, n)
+    by def $predicate::is_acute_subtended_tangent(point_a, p1, p2, tan_alpha)
+
+    by thm theorem::central_coordinate(p1(1), point_a(1), point_b(1), point_c(1), n, k1) => 2 * n * (p1(1) - point_a(1)) = (n + 1) * (point_b(1) - point_a(1)) + (n - 1) * (point_c(1) - point_a(1))
+    by thm theorem::central_coordinate(p1(2), point_a(2), point_b(2), point_c(2), n, k1) => 2 * n * (p1(2) - point_a(2)) = (n + 1) * (point_b(2) - point_a(2)) + (n - 1) * (point_c(2) - point_a(2))
+    by thm theorem::central_coordinate_reverse(p2(1), point_a(1), point_b(1), point_c(1), n, k2) => 2 * n * (p2(1) - point_a(1)) = (n - 1) * (point_b(1) - point_a(1)) + (n + 1) * (point_c(1) - point_a(1))
+    by thm theorem::central_coordinate_reverse(p2(2), point_a(2), point_b(2), point_c(2), n, k2) => 2 * n * (p2(2) - point_a(2)) = (n - 1) * (point_b(2) - point_a(2)) + (n + 1) * (point_c(2) - point_a(2))
+
+
+
+
+
+    have d R = geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2))
+    have cross R = geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2))
+    have area R = geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c))
+
+    claim:
+        ? 4*n^2*d = (n^2-1)*a^2
+        have ray1 cart(R, R) = geo::vec(point_a, p1)
+        have ray2 cart(R, R) = geo::vec(point_a, p2)
+        have ab cart(R, R) = geo::vec(point_a, point_b)
+        have ac cart(R, R) = geo::vec(point_a, point_c)
+        geo::dot(geo::vec(point_a, p1), geo::vec(point_a, p2)) = geo::dot(ray1, ray2)
+        geo::dot(geo::vec(point_a, point_b), geo::vec(point_a, point_c)) = geo::dot(ab, ac)
+        # Pythagoras in vector form: |BC|^2 = |AB|^2 + |AC|^2.
+        ray1 = (p1(1)-point_a(1),p1(2)-point_a(2))
+        ray2 = (p2(1)-point_a(1),p2(2)-point_a(2))
+        ray1(1) = p1(1)-point_a(1)
+        ray1(2) = p1(2)-point_a(2)
+        ray2(1) = p2(1)-point_a(1)
+        ray2(2) = p2(2)-point_a(2)
+        ray1(1)*ray2(1) = (p1(1)-point_a(1))*(p2(1)-point_a(1))
+        ray1(2)*ray2(2) = (p1(2)-point_a(2))*(p2(2)-point_a(2))
+        ab = (point_b(1)-point_a(1),point_b(2)-point_a(2))
+        ac = (point_c(1)-point_a(1),point_c(2)-point_a(2))
+        ab(1) = point_b(1)-point_a(1)
+        ab(2) = point_b(2)-point_a(2)
+        ac(1) = point_c(1)-point_a(1)
+        ac(2) = point_c(2)-point_a(2)
+        ab(1)*ac(1) = (point_b(1)-point_a(1))*(point_c(1)-point_a(1))
+        ab(2)*ac(2) = (point_b(2)-point_a(2))*(point_c(2)-point_a(2))
+        ab(1)*ab(1) = ab(1)^2 = (point_b(1)-point_a(1))^2
+        ab(2)*ab(2) = ab(2)^2 = (point_b(2)-point_a(2))^2
+        ac(1)*ac(1) = ac(1)^2 = (point_c(1)-point_a(1))^2
+        ac(2)*ac(2) = ac(2)^2 = (point_c(2)-point_a(2))^2
+
+        d = geo::dot(ray1,ray2)
+        by thm theorem::pythagoras(point_a, point_b, point_c) => geo::distance_sq(point_b, point_c) = geo::distance_sq(point_a, point_b) + geo::distance_sq(point_a, point_c)
+
+        # Dot product and determinant for the two rays AP1 and AP2.
+        geo::dot(ray1,ray2) = ray1(1)*ray2(1)+ray1(2)*ray2(2)
+        geo::dot(ray1,ray2) = (p1(1)-point_a(1))*(p2(1)-point_a(1))+(p1(2)-point_a(2))*(p2(2)-point_a(2))
+        release thm theorem::central_product(p1(1)-point_a(1),p2(1)-point_a(1),point_b(1)-point_a(1),point_c(1)-point_a(1),n)
+        release thm theorem::central_product(p1(2)-point_a(2),p2(2)-point_a(2),point_b(2)-point_a(2),point_c(2)-point_a(2),n)
+        4*n^2*((p1(1)-point_a(1))*(p2(1)-point_a(1))+(p1(2)-point_a(2))*(p2(2)-point_a(2))) = (4*n^2*(p1(1)-point_a(1))*(p2(1)-point_a(1)))+(4*n^2*(p1(2)-point_a(2))*(p2(2)-point_a(2)))
+        (4*n^2*(p1(1)-point_a(1))*(p2(1)-point_a(1)))+(4*n^2*(p1(2)-point_a(2))*(p2(2)-point_a(2))) = ((n^2-1)*((point_b(1)-point_a(1))^2+(point_c(1)-point_a(1))^2)+2*(n^2+1)*(point_b(1)-point_a(1))*(point_c(1)-point_a(1)))+((n^2-1)*((point_b(2)-point_a(2))^2+(point_c(2)-point_a(2))^2)+2*(n^2+1)*(point_b(2)-point_a(2))*(point_c(2)-point_a(2)))
+        ((n^2-1)*((point_b(1)-point_a(1))^2+(point_c(1)-point_a(1))^2)+2*(n^2+1)*(point_b(1)-point_a(1))*(point_c(1)-point_a(1)))+((n^2-1)*((point_b(2)-point_a(2))^2+(point_c(2)-point_a(2))^2)+2*(n^2+1)*(point_b(2)-point_a(2))*(point_c(2)-point_a(2))) = (n^2-1)*((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2)+2*(n^2+1)*((point_b(1)-point_a(1))*(point_c(1)-point_a(1))+(point_b(2)-point_a(2))*(point_c(2)-point_a(2)))
+        4*n^2*((p1(1)-point_a(1))*(p2(1)-point_a(1))+(p1(2)-point_a(2))*(p2(2)-point_a(2))) = (n^2-1)*((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2)+2*(n^2+1)*((point_b(1)-point_a(1))*(point_c(1)-point_a(1))+(point_b(2)-point_a(2))*(point_c(2)-point_a(2)))
+        geo::dot(ab,ac) = ab(1)*ac(1)+ab(2)*ac(2)
+        geo::dot(ab,ac) = (point_b(1)-point_a(1))*(point_c(1)-point_a(1))+(point_b(2)-point_a(2))*(point_c(2)-point_a(2))
+        (point_b(1)-point_a(1))*(point_c(1)-point_a(1))+(point_b(2)-point_a(2))*(point_c(2)-point_a(2)) = 0
+        geo::dot(ab,ab) = ab(1)*ab(1)+ab(2)*ab(2)
+        geo::dot(ab,ab) = ab(1)^2+ab(2)^2
+        geo::distance_sq(point_a,point_b) = geo::dot(geo::vec(point_a,point_b),geo::vec(point_a,point_b))
+        geo::dot(geo::vec(point_a,point_b),geo::vec(point_a,point_b)) = geo::dot(ab,ab)
+        geo::distance_sq(point_a,point_b) = geo::dot(ab,ab)
+        geo::dot(ab,ab) = (point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2
+        geo::distance_sq(point_a,point_b) = (point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2
+        geo::dot(ac,ac) = ac(1)*ac(1)+ac(2)*ac(2)
+        geo::dot(ac,ac) = ac(1)^2+ac(2)^2
+        geo::distance_sq(point_a,point_c) = geo::dot(geo::vec(point_a,point_c),geo::vec(point_a,point_c))
+        geo::dot(geo::vec(point_a,point_c),geo::vec(point_a,point_c)) = geo::dot(ac,ac)
+        geo::distance_sq(point_a,point_c) = geo::dot(ac,ac)
+        geo::dot(ac,ac) = (point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2
+        geo::distance_sq(point_a,point_c) = (point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2
+        (point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2 = ((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2)+((point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2)
+        ((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2)+((point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2) = geo::distance_sq(point_a,point_b)+geo::distance_sq(point_a,point_c)
+        (point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2 = geo::distance_sq(point_b,point_c)
+        2*(n^2+1)*((point_b(1)-point_a(1))*(point_c(1)-point_a(1))+(point_b(2)-point_a(2))*(point_c(2)-point_a(2))) = 0
+        (n^2-1)*((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2)+2*(n^2+1)*((point_b(1)-point_a(1))*(point_c(1)-point_a(1))+(point_b(2)-point_a(2))*(point_c(2)-point_a(2))) = (n^2-1)*((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2)
+        (n^2-1)*((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2) = (n^2-1)*geo::distance_sq(point_b,point_c)
+        (n^2-1)*((point_b(1)-point_a(1))^2+(point_b(2)-point_a(2))^2+(point_c(1)-point_a(1))^2+(point_c(2)-point_a(2))^2)+2*(n^2+1)*((point_b(1)-point_a(1))*(point_c(1)-point_a(1))+(point_b(2)-point_a(2))*(point_c(2)-point_a(2))) = (n^2-1)*geo::distance_sq(point_b,point_c)
+        4*n^2*geo::dot(ray1,ray2) = 4*n^2*((p1(1)-point_a(1))*(p2(1)-point_a(1))+(p1(2)-point_a(2))*(p2(2)-point_a(2)))
+        4*n^2*((p1(1)-point_a(1))*(p2(1)-point_a(1))+(p1(2)-point_a(2))*(p2(2)-point_a(2))) = (n^2-1)*geo::distance_sq(point_b,point_c)
+        4 * n^2 * geo::dot(ray1, ray2) = (n^2 - 1) * geo::distance_sq(point_b, point_c)
+        (n^2-1)*geo::distance_sq(point_b,point_c) = (n^2-1)*a^2
+        4*n^2*geo::dot(ray1,ray2) = (n^2-1)*a^2
+        4*n^2*d = 4*n^2*geo::dot(ray1,ray2)
+
+    claim:
+        ? n*cross = area
+        have ray1 cart(R, R) = geo::vec(point_a, p1)
+        have ray2 cart(R, R) = geo::vec(point_a, p2)
+        have ab cart(R, R) = geo::vec(point_a, point_b)
+        have ac cart(R, R) = geo::vec(point_a, point_c)
+        geo::det(geo::vec(point_a, p1), geo::vec(point_a, p2)) = geo::det(ray1, ray2)
+        geo::det(geo::vec(point_a, point_b), geo::vec(point_a, point_c)) = geo::det(ab, ac)
+        ray1 = (p1(1)-point_a(1),p1(2)-point_a(2))
+        ray2 = (p2(1)-point_a(1),p2(2)-point_a(2))
+        ray1(1) = p1(1)-point_a(1)
+        ray1(2) = p1(2)-point_a(2)
+        ray2(1) = p2(1)-point_a(1)
+        ray2(2) = p2(2)-point_a(2)
+        ab = (point_b(1)-point_a(1),point_b(2)-point_a(2))
+        ac = (point_c(1)-point_a(1),point_c(2)-point_a(2))
+        ab(1) = point_b(1)-point_a(1)
+        ab(2) = point_b(2)-point_a(2)
+        ac(1) = point_c(1)-point_a(1)
+        ac(2) = point_c(2)-point_a(2)
+        cross = geo::det(ray1,ray2)
+        area = geo::det(ab,ac)
+        by thm theorem::central_det(p1(1)-point_a(1), p1(2)-point_a(2), p2(1)-point_a(1), p2(2)-point_a(2), point_b(1)-point_a(1), point_b(2)-point_a(2), point_c(1)-point_a(1), point_c(2)-point_a(2), n) => n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
+
+        geo::det(ray1,ray2) = ray1(1)*ray2(2)-ray1(2)*ray2(1)
+        ray1(1)*ray2(2) = (p1(1)-point_a(1))*(p2(2)-point_a(2))
+        ray1(2)*ray2(1) = (p1(2)-point_a(2))*(p2(1)-point_a(1))
+        geo::det(ray1,ray2) = (p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1))
+        geo::det(ab,ac) = ab(1)*ac(2)-ab(2)*ac(1)
+        ab(1)*ac(2) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))
+        ab(2)*ac(1) = (point_b(2)-point_a(2))*(point_c(1)-point_a(1))
+        geo::det(ab,ac) = (point_b(1)-point_a(1))*(point_c(2)-point_a(2))-(point_b(2)-point_a(2))*(point_c(1)-point_a(1))
+        n*geo::det(ray1,ray2) = n*((p1(1)-point_a(1))*(p2(2)-point_a(2))-(p1(2)-point_a(2))*(p2(1)-point_a(1)))
+        n*geo::det(ray1,ray2) = geo::det(ab,ac)
+        n*cross = n*geo::det(ray1,ray2)
+
+    (n*cross)^2 = area^2
+    n^2 * cross^2 = (n*cross)^2
+    n^2 * cross^2 = area^2
+
+    # Combine the tangent and altitude identities without division.
+    tan_alpha*geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)) = tan_alpha*d
+    (tan_alpha*geo::dot(geo::vec(point_a,p1),geo::vec(point_a,p2)))^2 = (tan_alpha*d)^2
+    geo::det(geo::vec(point_a,p1),geo::vec(point_a,p2))^2 = cross^2
+    (tan_alpha*d)^2 = cross^2
+    geo::det(geo::vec(point_a,point_b),geo::vec(point_a,point_c))^2 = area^2
+    (h*a)^2 = area^2
+    by thm theorem::central_tangent_square(tan_alpha, d, cross, area, a, h, n) => (tan_alpha * (n^2 - 1) * a)^2 = (4 * n * h)^2
+
+    n-1 > 0
+    n+1 > 0
+    (n-1)*(n+1) > 0
+    (n-1)*(n+1) = n^2-1
+    n^2-1 > 0
+    n^2-1 >= 0
+    tan_alpha*(n^2-1) >= 0
+    a >= 0
+    tan_alpha*(n^2-1)*a >= 0
+    4*n*h > 0
+    4*n*h >= 0
+    sqrt((tan_alpha*(n^2-1)*a)^2) = tan_alpha*(n^2-1)*a
+    sqrt((4*n*h)^2) = 4*n*h
+    sqrt((tan_alpha*(n^2-1)*a)^2) = sqrt((4*n*h)^2)

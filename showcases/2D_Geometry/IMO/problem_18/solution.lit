@@ -1,0 +1,779 @@
+thm nonnegative_order_from_squares_18:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        x^2 >= y^2
+        =>:
+            x >= y
+    by contra:
+        ? x >= y
+        x < y
+        x + y >= 0
+        y-x>0
+        0<=x
+        0<y
+        0<x+y
+        x+y>0
+        (y - x) * (x + y) > 0
+        (y-x)*(x+y)=y^2-x^2
+        y^2 - x^2 > 0
+        0<y^2-x^2
+        0+x^2<(y^2-x^2)+x^2
+        0+x^2=x^2
+        (y^2-x^2)+x^2=y^2
+        x^2<y^2
+        y^2 > x^2
+        impossible x^2 >= y^2
+
+# Nonnegative reals with equal squares are equal.
+thm nonnegative_equal_from_squares_18:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        x^2 = y^2
+        =>:
+            x = y
+    x^2 >= y^2
+    y^2 >= x^2
+    by thm nonnegative_order_from_squares_18(x, y)
+    by thm nonnegative_order_from_squares_18(y, x)
+    x = y
+
+# A nondegenerate triangle has distinct first and second vertices.
+thm positive_of_nonnegative_square_positive_18:
+    ? forall s R:
+        s >= 0
+        s^2 > 0
+        =>:
+            s > 0
+    by contra:
+        ? s > 0
+        s <= 0
+        s = 0
+        s^2 = 0
+        impossible s^2 > 0
+
+# One-dimensional squared-distance identity for an affine point.
+thm affine_square_identity_18:
+    ? forall a, b, c, m, t R:
+        m = (1 - t) * a + t * b
+        =>:
+            (c - m)^2 = (1 - t) * (c - a)^2 + t * (c - b)^2 - t * (1 - t) * (b - a)^2
+    c - m = c - ((1 - t) * a + t * b)
+    c - ((1 - t) * a + t * b) = (1 - t) * (c - a) + t * (c - b)
+    c - m = (1 - t) * (c - a) + t * (c - b)
+    (c - m)^2 = ((1 - t) * (c - a) + t * (c - b))^2
+    ((1 - t) * (c - a) + t * (c - b))^2 = (1 - t) * (c - a)^2 + t * (c - b)^2 - t * (1 - t) * ((c - a) - (c - b))^2
+    (c - a) - (c - b) = b - a
+    ((c - a) - (c - b))^2 = (b - a)^2
+    (1 - t) * (c - a)^2 + t * (c - b)^2 - t * (1 - t) * ((c - a) - (c - b))^2 = (1 - t) * (c - a)^2 + t * (c - b)^2 - t * (1 - t) * (b - a)^2
+    (c - m)^2 = (1 - t) * (c - a)^2 + t * (c - b)^2 - t * (1 - t) * (b - a)^2
+
+# Metric Stewart identity for a point m on segment ab.
+thm stewart_product_identity_18:
+    ? forall x, y, u, v, w R:
+        (x + y) * (v^2 + x * y) = y * u^2 + x * w^2
+        =>:
+            (v + u - x) * (v + w - y) * (x + y + w + u) = (v + u + x) * (v + w + y) * (w + u - x - y)
+    ((v + u - x) * (v + w - y) * (x + y + w + u)) - ((v + u + x) * (v + w + y) * (w + u - x - y)) = 2 * (((x + y) * (v^2 + x * y)) - (y * u^2 + x * w^2))
+    ((x + y) * (v^2 + x * y)) - (y * u^2 + x * w^2) = 0
+    2 * (((x + y) * (v^2 + x * y)) - (y * u^2 + x * w^2)) = 0
+    ((v + u - x) * (v + w - y) * (x + y + w + u)) - ((v + u + x) * (v + w + y) * (w + u - x - y)) = 0
+    (v + u - x) * (v + w - y) * (x + y + w + u) = (v + u + x) * (v + w + y) * (w + u - x - y)
+
+# Convert a positive-denominator cross product into a ratio equality.
+thm positive_cross_ratio_18:
+    ? forall p, q, A, B R:
+        q > 0
+        A > 0
+        p * A = q * B
+        =>:
+            p / q = B / A
+    q * A > 0
+    q * A != 0
+    (p * A) / (q * A) = (q * B) / (q * A)
+    (p * A) / (q * A) = p / q
+    (q * B) / (q * A) = B / A
+    p / q = B / A
+
+# Convert a positive-denominator triple cross product into a product ratio equality.
+thm positive_triple_ratio_18:
+    ? forall B1, B2, B3, A1, A2, A3 R:
+        A1 > 0
+        A2 > 0
+        A3 > 0
+        B1 * B2 * A3 = A1 * A2 * B3
+        =>:
+            (B1 / A1) * (B2 / A2) = B3 / A3
+    A1*A2>0
+    0<A1*A2
+    0<A3
+    A1 * A2 * A3 > 0
+    A1 * A2 * A3 != 0
+    (B1 * B2 * A3) / (A1 * A2 * A3) = (A1 * A2 * B3) / (A1 * A2 * A3)
+    (B1 * B2 * A3) / (A1 * A2 * A3) = (B1 / A1) * (B2 / A2)
+    (A1 * A2 * B3) / (A1 * A2 * A3) = B3 / A3
+    (B1 / A1) * (B2 / A2) = B3 / A3
+
+# Algebraic radius-ratio identity after the three area equations and Stewart.
+thm radius_ratio_core_18:
+    ? forall x, y, u, v, w, r1, r2, r, q1, q2, q R:
+        x > 0
+        y > 0
+        u > 0
+        v > 0
+        w > 0
+        r1 > 0
+        r2 > 0
+        r > 0
+        q1 > 0
+        q2 > 0
+        q > 0
+        v + u + x > 0
+        v + w + y > 0
+        x + y + w + u > 0
+        r1 * (x + v + u) = q1 * (v + u - x)
+        r2 * (y + v + w) = q2 * (v + w - y)
+        r * (x + y + w + u) = q * (w + u - x - y)
+        (x + y) * (v^2 + x * y) = y * u^2 + x * w^2
+        =>:
+            (r1 / q1) * (r2 / q2) = r / q
+    by thm stewart_product_identity_18(x, y, u, v, w)
+    q1 != 0
+    q2 != 0
+    q != 0
+    by thm positive_cross_ratio_18(r1, q1, v + u + x, v + u - x)
+    by thm positive_cross_ratio_18(r2, q2, v + w + y, v + w - y)
+    by thm positive_cross_ratio_18(r, q, x + y + w + u, w + u - x - y)
+    r1 / q1 = (v + u - x) / (v + u + x)
+    r2 / q2 = (v + w - y) / (v + w + y)
+    r / q = (w + u - x - y) / (x + y + w + u)
+    by thm positive_triple_ratio_18(v + u - x, v + w - y, w + u - x - y, v + u + x, v + w + y, x + y + w + u)
+    (r1 / q1) * (r2 / q2) = ((v + u - x) / (v + u + x)) * (r2 / q2)
+    ((v + u - x) / (v + u + x)) * (r2 / q2) = ((v + u - x) / (v + u + x)) * ((v + w - y) / (v + w + y))
+    ((v + u - x) / (v + u + x)) * ((v + w - y) / (v + w + y)) = (w + u - x - y) / (x + y + w + u)
+    (w + u - x - y) / (x + y + w + u) = r / q
+    (r1 / q1) * (r2 / q2) = r / q
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+# Dot product.
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+
+# 2D determinant (signed parallelogram area / cross product z-component).
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+# Squared Euclidean distance |ab|^2 (avoids square roots).
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+# General form: the line ax + by + c = 0 (a, b not both zero).
+prop is_on_segment(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, t <= 1, p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
+
+# p lies on the ray from a through distinct point b (t >= 0).
+prop is_triangle(a, b, c cart(R, R)):
+    det(vec(a, b), vec(a, c)) != 0
+
+# Triangle abc is isosceles with apex a (ab = ac), not the general "two sides equal".
+have fn segment_length(p, q cart(R, R)) R = sqrt((q(1) - p(1))^2 + (q(2) - p(2))^2)
+
+# Twice the (unsigned) area of triangle pqr.
+have fn double_area(p, q, r cart(R, R)) R = sqrt(det(vec(p, q), vec(p, r))^2)
+
+# radius is the radius of the incircle of triangle pqr.
+prop is_incircle_radius(p, q, r cart(R, R), radius R):
+    $is_triangle(p, q, r)
+    radius > 0
+    radius * (segment_length(p, q) + segment_length(q, r) + segment_length(r, p)) = double_area(p, q, r)
+
+# radius is the radius of the excircle of triangle pqr lying in the angle at r.
+prop is_excircle_radius_in_angle_at_third_vertex(p, q, r cart(R, R), radius R):
+    $is_triangle(p, q, r)
+    radius > 0
+    radius * (segment_length(r, p) + segment_length(r, q) - segment_length(p, q)) = double_area(p, q, r)
+thm determinant_coordinates_18:
+    ? forall a,b,c cart(R,R):
+        det(vec(a,b),vec(a,c)) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+    vec(a,b) = (b(1)-a(1),b(2)-a(2))
+    vec(a,c) = (c(1)-a(1),c(2)-a(2))
+    vec(a,b)(1) = (b(1)-a(1),b(2)-a(2))(1) = b(1)-a(1)
+    vec(a,b)(2) = (b(1)-a(1),b(2)-a(2))(2) = b(2)-a(2)
+    vec(a,c)(1) = (c(1)-a(1),c(2)-a(2))(1) = c(1)-a(1)
+    vec(a,c)(2) = (c(1)-a(1),c(2)-a(2))(2) = c(2)-a(2)
+    det(vec(a,b),vec(a,c)) = vec(a,b)(1)*vec(a,c)(2)-vec(a,b)(2)*vec(a,c)(1) = (b(1)-a(1))*(c(2)-a(2))-(b(2)-a(2))*(c(1)-a(1))
+thm segment_length_value_18:
+    ? forall p,q cart(R,R):
+        segment_length(p,q)=sqrt((q(1)-p(1))^2+(q(2)-p(2))^2)
+    0<=(q(1)-p(1))^2
+    0<=(q(2)-p(2))^2
+    0<=(q(1)-p(1))^2+(q(2)-p(2))^2
+    segment_length(p,q)=sqrt((q(1)-p(1))^2+(q(2)-p(2))^2)
+thm segment_length_square_18:
+    ? forall p,q cart(R,R):
+        0 <= segment_length(p,q)
+        segment_length(p,q)^2 = (q(1)-p(1))^2+(q(2)-p(2))^2
+    0 <= (q(1)-p(1))^2
+    0 <= (q(2)-p(2))^2
+    0 <= (q(1)-p(1))^2+(q(2)-p(2))^2
+    0 <= sqrt((q(1)-p(1))^2+(q(2)-p(2))^2)
+    sqrt((q(1)-p(1))^2+(q(2)-p(2))^2)^2 = (q(1)-p(1))^2+(q(2)-p(2))^2
+    by thm segment_length_value_18(p,q)
+    segment_length(p,q) = sqrt((q(1)-p(1))^2+(q(2)-p(2))^2)
+    0 <= segment_length(p,q)
+    segment_length(p,q)^2 = sqrt((q(1)-p(1))^2+(q(2)-p(2))^2)^2
+    segment_length(p,q)^2 = (q(1)-p(1))^2+(q(2)-p(2))^2
+thm triangle_first_two_distinct_18:
+    ? forall p, q, r cart(R, R):
+        $is_triangle(p, q, r)
+        =>:
+            p != q
+    by thm determinant_coordinates_18(p,q,r)
+    by def $is_triangle(p, q, r)
+    det(vec(p, q), vec(p, r)) != 0
+    by contra:
+        ? p != q
+        p = q
+        p(1) = q(1)
+        p(2) = q(2)
+        vec(p, q) = (q(1) - p(1), q(2) - p(2))
+        vec(p, r) = (r(1) - p(1), r(2) - p(2))
+        det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
+        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        q(1) - p(1) = 0
+        q(2) - p(2) = 0
+        (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1)) = 0
+        det(vec(p, q), vec(p, r)) = 0
+        impossible det(vec(p, q), vec(p, r)) != 0
+
+# A nondegenerate triangle has distinct first and third vertices.
+thm triangle_first_third_distinct_18:
+    ? forall p, q, r cart(R, R):
+        $is_triangle(p, q, r)
+        =>:
+            p != r
+    by thm determinant_coordinates_18(p,q,r)
+    by def $is_triangle(p, q, r)
+    det(vec(p, q), vec(p, r)) != 0
+    by contra:
+        ? p != r
+        p = r
+        p(1) = r(1)
+        p(2) = r(2)
+        vec(p, q) = (q(1) - p(1), q(2) - p(2))
+        vec(p, r) = (r(1) - p(1), r(2) - p(2))
+        det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
+        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        r(1) - p(1) = 0
+        r(2) - p(2) = 0
+        (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1)) = 0
+        det(vec(p, q), vec(p, r)) = 0
+        impossible det(vec(p, q), vec(p, r)) != 0
+
+# A nondegenerate triangle has distinct second and third vertices.
+thm triangle_second_third_distinct_18:
+    ? forall p, q, r cart(R, R):
+        $is_triangle(p, q, r)
+        =>:
+            q != r
+    by thm determinant_coordinates_18(p,q,r)
+    by def $is_triangle(p, q, r)
+    det(vec(p, q), vec(p, r)) != 0
+    by contra:
+        ? q != r
+        q = r
+        q(1) = r(1)
+        q(2) = r(2)
+        vec(p, q) = (q(1) - p(1), q(2) - p(2))
+        vec(p, r) = (r(1) - p(1), r(2) - p(2))
+        det(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(2) - vec(p, q)(2) * vec(p, r)(1)
+        det(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1))
+        q(1) - p(1) = r(1) - p(1)
+        q(2) - p(2) = r(2) - p(2)
+        (q(1) - p(1)) * (r(2) - p(2)) = (q(1) - p(1)) * (q(2) - p(2))
+        (q(1) - p(1)) * (q(2) - p(2)) = (q(2) - p(2)) * (q(1) - p(1))
+        (q(2) - p(2)) * (q(1) - p(1)) = (q(2) - p(2)) * (r(1) - p(1))
+        (q(1) - p(1)) * (r(2) - p(2)) = (q(2) - p(2)) * (r(1) - p(1))
+        (q(1) - p(1)) * (r(2) - p(2)) - (q(2) - p(2)) * (r(1) - p(1)) = 0
+        det(vec(p, q), vec(p, r)) = 0
+        impossible det(vec(p, q), vec(p, r)) != 0
+
+# Squared Euclidean distance in coordinates.
+thm distance_sq_coordinates_18:
+    ? forall p, q cart(R, R):
+        distance_sq(p, q) = (q(1) - p(1))^2 + (q(2) - p(2))^2
+    vec(p, q) = (q(1) - p(1), q(2) - p(2))
+    vec(p, q)(1) = q(1) - p(1)
+    vec(p, q)(2) = q(2) - p(2)
+    dot(vec(p, q), vec(p, q)) = vec(p, q)(1) * vec(p, q)(1) + vec(p, q)(2) * vec(p, q)(2)
+    distance_sq(p, q) = dot(vec(p, q), vec(p, q))
+    vec(p,q)(1)*vec(p,q)(1)=(q(1)-p(1))*(q(1)-p(1))
+    (q(1)-p(1))*(q(1)-p(1))=(q(1)-p(1))^2
+    vec(p,q)(1)*vec(p,q)(1)=(q(1)-p(1))^2
+    vec(p,q)(2)*vec(p,q)(2)=(q(2)-p(2))*(q(2)-p(2))
+    (q(2)-p(2))*(q(2)-p(2))=(q(2)-p(2))^2
+    vec(p,q)(2)*vec(p,q)(2)=(q(2)-p(2))^2
+    vec(p,q)(1)*vec(p,q)(1)+vec(p,q)(2)*vec(p,q)(2)=(q(1)-p(1))^2+(q(2)-p(2))^2
+    dot(vec(p, q), vec(p, q)) = (q(1) - p(1))^2 + (q(2) - p(2))^2
+    distance_sq(p, q) = (q(1) - p(1))^2 + (q(2) - p(2))^2
+
+# Distinct points have positive squared distance.
+thm distance_sq_positive_of_ne_18:
+    ? forall p, q cart(R, R):
+        p != q
+        =>:
+            distance_sq(p, q) > 0
+    by contra:
+        ? distance_sq(p, q) > 0
+        distance_sq(p, q) <= 0
+        by thm distance_sq_coordinates_18(p, q)
+        (q(1) - p(1))^2 + (q(2) - p(2))^2 <= 0
+        0 <= (q(1) - p(1))^2
+        0 <= (q(2) - p(2))^2
+        (q(1) - p(1))^2 <= (q(1) - p(1))^2 + (q(2) - p(2))^2
+        (q(2) - p(2))^2 <= (q(1) - p(1))^2 + (q(2) - p(2))^2
+        (q(1) - p(1))^2 <= 0
+        (q(2) - p(2))^2 <= 0
+        (q(1) - p(1))^2 = 0
+        (q(2) - p(2))^2 = 0
+        q(1) - p(1) = 0
+        q(2) - p(2) = 0
+        p(1) = q(1)
+        p(2) = q(2)
+        p = (p(1), p(2))
+        q = (q(1), q(2))
+        (p(1), p(2)) = (q(1), q(2))
+        p = (p(1), p(2)) = (q(1), q(2)) = q
+        p = q
+        impossible p != q
+
+# A nonnegative real with positive square is positive.
+thm segment_stewart_18:
+    ? forall a, b, c, m cart(R, R), t, x, y, z, u, v, w R:
+        0 <= t
+        t <= 1
+        m(1) = (1 - t) * a(1) + t * b(1)
+        m(2) = (1 - t) * a(2) + t * b(2)
+        x >= 0
+        y >= 0
+        z >= 0
+        x^2 = distance_sq(a, m)
+        y^2 = distance_sq(m, b)
+        z^2 = distance_sq(a, b)
+        u^2 = distance_sq(a, c)
+        v^2 = distance_sq(m, c)
+        w^2 = distance_sq(b, c)
+        =>:
+            x + y = z
+            (x + y) * (v^2 + x * y) = y * u^2 + x * w^2
+    by thm distance_sq_coordinates_18(a, m)
+    by thm distance_sq_coordinates_18(m, b)
+    by thm distance_sq_coordinates_18(a, b)
+    by thm distance_sq_coordinates_18(a, c)
+    by thm distance_sq_coordinates_18(m, c)
+    by thm distance_sq_coordinates_18(b, c)
+    m(1) = (1 - t) * a(1) + t * b(1)
+    (1 - t) * a(1) + t * b(1) = a(1) + t * (b(1) - a(1))
+    m(1) = a(1) + t * (b(1) - a(1))
+    m(1)-a(1)=(a(1)+t*(b(1)-a(1)))-a(1)
+    (a(1)+t*(b(1)-a(1)))-a(1)=t*(b(1)-a(1))
+    m(1) - a(1) = t * (b(1) - a(1))
+    m(2) = (1 - t) * a(2) + t * b(2)
+    (1 - t) * a(2) + t * b(2) = a(2) + t * (b(2) - a(2))
+    m(2) = a(2) + t * (b(2) - a(2))
+    m(2)-a(2)=(a(2)+t*(b(2)-a(2)))-a(2)
+    (a(2)+t*(b(2)-a(2)))-a(2)=t*(b(2)-a(2))
+    m(2) - a(2) = t * (b(2) - a(2))
+    (m(1) - a(1))^2 = (t * (b(1) - a(1)))^2
+    (m(2) - a(2))^2 = (t * (b(2) - a(2)))^2
+    (t * (b(1) - a(1)))^2 = t^2 * (b(1) - a(1))^2
+    (t * (b(2) - a(2)))^2 = t^2 * (b(2) - a(2))^2
+    (m(1) - a(1))^2 + (m(2) - a(2))^2 = (t * (b(1) - a(1)))^2 + (t * (b(2) - a(2)))^2
+    (t * (b(1) - a(1)))^2 + (t * (b(2) - a(2)))^2 = t^2 * (b(1) - a(1))^2 + t^2 * (b(2) - a(2))^2
+    t^2 * (b(1) - a(1))^2 + t^2 * (b(2) - a(2))^2 = t^2 * ((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    (m(1) - a(1))^2 + (m(2) - a(2))^2 = t^2 * ((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    distance_sq(a, m) = (m(1) - a(1))^2 + (m(2) - a(2))^2
+    t^2 * ((b(1) - a(1))^2 + (b(2) - a(2))^2) = t^2 * distance_sq(a, b)
+    distance_sq(a, m) = t^2 * distance_sq(a, b)
+    b(1) - m(1) = b(1) - ((1 - t) * a(1) + t * b(1))
+    b(1) - ((1 - t) * a(1) + t * b(1)) = b(1) - (1 - t) * a(1) - t * b(1)
+    b(1) - (1 - t) * a(1) - t * b(1) = b(1) * (1 - t) - (1 - t) * a(1)
+    b(1) * (1 - t) - (1 - t) * a(1) = (1 - t) * (b(1) - a(1))
+    b(1) - m(1) = (1 - t) * (b(1) - a(1))
+    b(2) - m(2) = b(2) - ((1 - t) * a(2) + t * b(2))
+    b(2) - ((1 - t) * a(2) + t * b(2)) = b(2) - (1 - t) * a(2) - t * b(2)
+    b(2) - (1 - t) * a(2) - t * b(2) = b(2) * (1 - t) - (1 - t) * a(2)
+    b(2) * (1 - t) - (1 - t) * a(2) = (1 - t) * (b(2) - a(2))
+    b(2) - m(2) = (1 - t) * (b(2) - a(2))
+    (b(1) - m(1))^2 = ((1 - t) * (b(1) - a(1)))^2
+    (b(2) - m(2))^2 = ((1 - t) * (b(2) - a(2)))^2
+    ((1 - t) * (b(1) - a(1)))^2 = (1 - t)^2 * (b(1) - a(1))^2
+    ((1 - t) * (b(2) - a(2)))^2 = (1 - t)^2 * (b(2) - a(2))^2
+    (b(1) - m(1))^2 + (b(2) - m(2))^2 = ((1 - t) * (b(1) - a(1)))^2 + ((1 - t) * (b(2) - a(2)))^2
+    ((1 - t) * (b(1) - a(1)))^2 + ((1 - t) * (b(2) - a(2)))^2 = (1 - t)^2 * (b(1) - a(1))^2 + (1 - t)^2 * (b(2) - a(2))^2
+    (1 - t)^2 * (b(1) - a(1))^2 + (1 - t)^2 * (b(2) - a(2))^2 = (1 - t)^2 * ((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    (b(1) - m(1))^2 + (b(2) - m(2))^2 = (1 - t)^2 * ((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    distance_sq(m, b) = (b(1) - m(1))^2 + (b(2) - m(2))^2
+    (1 - t)^2 * ((b(1) - a(1))^2 + (b(2) - a(2))^2) = (1 - t)^2 * distance_sq(a, b)
+    distance_sq(m, b) = (1 - t)^2 * distance_sq(a, b)
+    x^2 = distance_sq(a, m)
+    distance_sq(a, m) = t^2 * distance_sq(a, b)
+    x^2 = t^2 * distance_sq(a, b)
+    z^2 = distance_sq(a, b)
+    distance_sq(a, b) = z^2
+    t^2 * distance_sq(a, b) = t^2 * z^2
+    x^2 = t^2 * z^2
+    t^2 * z^2 = (t * z)^2
+    x^2 = (t * z)^2
+    y^2 = distance_sq(m, b)
+    distance_sq(m, b) = (1 - t)^2 * distance_sq(a, b)
+    y^2 = (1 - t)^2 * distance_sq(a, b)
+    z^2 = distance_sq(a, b)
+    distance_sq(a, b) = z^2
+    (1 - t)^2 * distance_sq(a, b) = (1 - t)^2 * z^2
+    y^2 = (1 - t)^2 * z^2
+    (1 - t)^2 * z^2 = ((1 - t) * z)^2
+    y^2 = ((1 - t) * z)^2
+    0<=z
+    0<=1-t
+    0<=t*z
+    0<=(1-t)*z
+    t * z >= 0
+    (1 - t) * z >= 0
+    by thm nonnegative_equal_from_squares_18(x, t * z)
+    by thm nonnegative_equal_from_squares_18(y, (1 - t) * z)
+    x = t * z
+    y = (1 - t) * z
+    x + y = t * z + (1 - t) * z
+    t * z + (1 - t) * z = (t + (1 - t)) * z
+    t + (1 - t) = 1
+    (t + (1 - t)) * z = 1 * z
+    1 * z = z
+    x + y = z
+    by thm affine_square_identity_18(a(1), b(1), c(1), m(1), t)
+    by thm affine_square_identity_18(a(2), b(2), c(2), m(2), t)
+    (c(1) - m(1))^2 = (1 - t) * (c(1) - a(1))^2 + t * (c(1) - b(1))^2 - t * (1 - t) * (b(1) - a(1))^2
+    (c(2) - m(2))^2 = (1 - t) * (c(2) - a(2))^2 + t * (c(2) - b(2))^2 - t * (1 - t) * (b(2) - a(2))^2
+    (c(1) - m(1))^2 + (c(2) - m(2))^2 = ((1 - t) * (c(1) - a(1))^2 + t * (c(1) - b(1))^2 - t * (1 - t) * (b(1) - a(1))^2) + ((1 - t) * (c(2) - a(2))^2 + t * (c(2) - b(2))^2 - t * (1 - t) * (b(2) - a(2))^2)
+    ((1 - t) * (c(1) - a(1))^2 + t * (c(1) - b(1))^2 - t * (1 - t) * (b(1) - a(1))^2) + ((1 - t) * (c(2) - a(2))^2 + t * (c(2) - b(2))^2 - t * (1 - t) * (b(2) - a(2))^2) = (1 - t) * ((c(1) - a(1))^2 + (c(2) - a(2))^2) + t * ((c(1) - b(1))^2 + (c(2) - b(2))^2) - t * (1 - t) * ((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    (c(1) - m(1))^2 + (c(2) - m(2))^2 = (1 - t) * ((c(1) - a(1))^2 + (c(2) - a(2))^2) + t * ((c(1) - b(1))^2 + (c(2) - b(2))^2) - t * (1 - t) * ((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    distance_sq(m, c) = (c(1) - m(1))^2 + (c(2) - m(2))^2
+    distance_sq(a, c) = (c(1) - a(1))^2 + (c(2) - a(2))^2
+    distance_sq(b, c) = (c(1) - b(1))^2 + (c(2) - b(2))^2
+    distance_sq(a, b) = (b(1) - a(1))^2 + (b(2) - a(2))^2
+    (c(1) - a(1))^2 + (c(2) - a(2))^2 = distance_sq(a, c)
+    (c(1) - b(1))^2 + (c(2) - b(2))^2 = distance_sq(b, c)
+    (b(1) - a(1))^2 + (b(2) - a(2))^2 = distance_sq(a, b)
+    (1 - t) * ((c(1) - a(1))^2 + (c(2) - a(2))^2) = (1 - t) * distance_sq(a, c)
+    t * ((c(1) - b(1))^2 + (c(2) - b(2))^2) = t * distance_sq(b, c)
+    t * (1 - t) * ((b(1) - a(1))^2 + (b(2) - a(2))^2) = t * (1 - t) * distance_sq(a, b)
+    (1 - t) * ((c(1) - a(1))^2 + (c(2) - a(2))^2) + t * ((c(1) - b(1))^2 + (c(2) - b(2))^2) - t * (1 - t) * ((b(1) - a(1))^2 + (b(2) - a(2))^2) = (1 - t) * distance_sq(a, c) + t * distance_sq(b, c) - t * (1 - t) * distance_sq(a, b)
+    distance_sq(m, c) = (1 - t) * distance_sq(a, c) + t * distance_sq(b, c) - t * (1 - t) * distance_sq(a, b)
+    v^2 = distance_sq(m, c)
+    distance_sq(a, c) = u^2
+    distance_sq(b, c) = w^2
+    distance_sq(a, b) = z^2
+    (1 - t) * distance_sq(a, c) = (1 - t) * u^2
+    t * distance_sq(b, c) = t * w^2
+    t * (1 - t) * distance_sq(a, b) = t * (1 - t) * z^2
+    (1 - t) * distance_sq(a, c) + t * distance_sq(b, c) - t * (1 - t) * distance_sq(a, b) = (1 - t) * u^2 + t * w^2 - t * (1 - t) * z^2
+    v^2 = (1 - t) * u^2 + t * w^2 - t * (1 - t) * z^2
+    x * y = (t * z) * ((1 - t) * z)
+    (t * z) * ((1 - t) * z) = t * (1 - t) * z^2
+    x * y = t * (1 - t) * z^2
+    v^2 + x * y = ((1 - t) * u^2 + t * w^2 - t * (1 - t) * z^2) + t * (1 - t) * z^2
+    ((1 - t) * u^2 + t * w^2 - t * (1 - t) * z^2) + t * (1 - t) * z^2 = (1 - t) * u^2 + t * w^2
+    v^2 + x * y = (1 - t) * u^2 + t * w^2
+    (x + y) * (v^2 + x * y) = z * ((1 - t) * u^2 + t * w^2)
+    z * ((1 - t) * u^2 + t * w^2) = ((1 - t) * z) * u^2 + (t * z) * w^2
+    ((1 - t) * z) * u^2 = y * u^2
+    (t * z) * w^2 = x * w^2
+    ((1 - t) * z) * u^2 + (t * z) * w^2 = y * u^2 + x * w^2
+    (x + y) * (v^2 + x * y) = y * u^2 + x * w^2
+
+# The product identity equivalent to Stewart's theorem.
+thm problem_18:
+    ? forall a, b, c, m cart(R, R), r1, r2, r, q1, q2, q R:
+        # NL: ABC is a triangle.
+        $is_triangle(a, b, c)
+        # NL: M is a point on the side AB of triangle ABC.
+        $is_on_segment(m, a, b)
+        # NL: r1 is the radius of the inscribed circle of triangle AMC.
+        $is_incircle_radius(a, m, c, r1)
+        # NL: r2 is the radius of the inscribed circle of triangle BMC.
+        $is_incircle_radius(b, m, c, r2)
+        # NL: r is the radius of the inscribed circle of triangle ABC.
+        $is_incircle_radius(a, b, c, r)
+        # NL: q1 is the radius of the escribed circle of triangle AMC that lies in angle ACB.
+        $is_excircle_radius_in_angle_at_third_vertex(a, m, c, q1)
+        # NL: q2 is the radius of the escribed circle of triangle BMC that lies in angle ACB.
+        $is_excircle_radius_in_angle_at_third_vertex(b, m, c, q2)
+        # NL: q is the radius of the escribed circle of triangle ABC that lies in angle ACB.
+        $is_excircle_radius_in_angle_at_third_vertex(a, b, c, q)
+        =>:
+            # NL: (r1/q1)(r2/q2) = r/q.
+            (r1 / q1) * (r2 / q2) = r / q
+    by def $is_on_segment(m, a, b)
+    obtain t from exist t R st {0 <= t, t <= 1, m(1) = (1 - t) * a(1) + t * b(1), m(2) = (1 - t) * a(2) + t * b(2)}
+    by def $is_incircle_radius(a, m, c, r1)
+    by def $is_incircle_radius(b, m, c, r2)
+    by def $is_incircle_radius(a, b, c, r)
+    by def $is_excircle_radius_in_angle_at_third_vertex(a, m, c, q1)
+    by def $is_excircle_radius_in_angle_at_third_vertex(b, m, c, q2)
+    by def $is_excircle_radius_in_angle_at_third_vertex(a, b, c, q)
+
+    by thm segment_length_square_18(a,m)
+    by thm segment_length_square_18(m,b)
+    by thm segment_length_square_18(a,b)
+    by thm segment_length_square_18(a,c)
+    by thm segment_length_square_18(m,c)
+    by thm segment_length_square_18(b,c)
+    by thm segment_length_square_18(c,a)
+    by thm segment_length_square_18(b,m)
+    by thm segment_length_square_18(c,m)
+    by thm segment_length_square_18(c,b)
+    by thm segment_length_value_18(a,m)
+    by thm segment_length_value_18(m,b)
+    by thm segment_length_value_18(a,b)
+    by thm segment_length_value_18(a,c)
+    by thm segment_length_value_18(m,c)
+    by thm segment_length_value_18(b,c)
+    by thm segment_length_value_18(c,a)
+    by thm segment_length_value_18(b,m)
+    by thm segment_length_value_18(c,m)
+    by thm segment_length_value_18(c,b)
+    have x R = segment_length(a, m)
+    have y R = segment_length(m, b)
+    have z R = segment_length(a, b)
+    have u R = segment_length(a, c)
+    have v R = segment_length(m, c)
+    have w R = segment_length(b, c)
+
+    segment_length(a, m) = sqrt((m(1) - a(1))^2 + (m(2) - a(2))^2)
+    x = sqrt((m(1) - a(1))^2 + (m(2) - a(2))^2)
+    (m(1) - a(1))^2 + (m(2) - a(2))^2 >= 0
+    sqrt((m(1) - a(1))^2 + (m(2) - a(2))^2) >= 0
+    x >= 0
+    segment_length(m, b) = sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2)
+    y = sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2)
+    (b(1) - m(1))^2 + (b(2) - m(2))^2 >= 0
+    sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2) >= 0
+    y >= 0
+    segment_length(a, b) = sqrt((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    z = sqrt((b(1) - a(1))^2 + (b(2) - a(2))^2)
+    (b(1) - a(1))^2 + (b(2) - a(2))^2 >= 0
+    sqrt((b(1) - a(1))^2 + (b(2) - a(2))^2) >= 0
+    z >= 0
+    by thm distance_sq_coordinates_18(a, m)
+    sqrt((m(1) - a(1))^2 + (m(2) - a(2))^2)^2 = (m(1) - a(1))^2 + (m(2) - a(2))^2
+    x^2 = sqrt((m(1) - a(1))^2 + (m(2) - a(2))^2)^2
+    x^2 = (m(1) - a(1))^2 + (m(2) - a(2))^2
+    x^2 = distance_sq(a, m)
+    by thm distance_sq_coordinates_18(m, b)
+    sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2)^2 = (b(1) - m(1))^2 + (b(2) - m(2))^2
+    y^2 = sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2)^2
+    y^2 = (b(1) - m(1))^2 + (b(2) - m(2))^2
+    y^2 = distance_sq(m, b)
+    by thm distance_sq_coordinates_18(a, b)
+    sqrt((b(1) - a(1))^2 + (b(2) - a(2))^2)^2 = (b(1) - a(1))^2 + (b(2) - a(2))^2
+    z^2 = sqrt((b(1) - a(1))^2 + (b(2) - a(2))^2)^2
+    z^2 = (b(1) - a(1))^2 + (b(2) - a(2))^2
+    z^2 = distance_sq(a, b)
+
+    segment_length(a, c) = sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2)
+    u = sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2)
+    (c(1) - a(1))^2 + (c(2) - a(2))^2 >= 0
+    sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2) >= 0
+    u >= 0
+    by thm distance_sq_coordinates_18(a, c)
+    sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2)^2 = (c(1) - a(1))^2 + (c(2) - a(2))^2
+    u^2 = sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2)^2
+    u^2 = (c(1) - a(1))^2 + (c(2) - a(2))^2
+    u^2 = distance_sq(a, c)
+
+    segment_length(m, c) = sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2)
+    v = sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2)
+    (c(1) - m(1))^2 + (c(2) - m(2))^2 >= 0
+    sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2) >= 0
+    v >= 0
+    by thm distance_sq_coordinates_18(m, c)
+    sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2)^2 = (c(1) - m(1))^2 + (c(2) - m(2))^2
+    v^2 = sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2)^2
+    v^2 = (c(1) - m(1))^2 + (c(2) - m(2))^2
+    v^2 = distance_sq(m, c)
+
+    segment_length(b, c) = sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2)
+    w = sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2)
+    (c(1) - b(1))^2 + (c(2) - b(2))^2 >= 0
+    sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2) >= 0
+    w >= 0
+    by thm distance_sq_coordinates_18(b, c)
+    sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2)^2 = (c(1) - b(1))^2 + (c(2) - b(2))^2
+    w^2 = sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2)^2
+    w^2 = (c(1) - b(1))^2 + (c(2) - b(2))^2
+    w^2 = distance_sq(b, c)
+
+    by thm segment_stewart_18(a, b, c, m, t, x, y, z, u, v, w)
+    x + y = z
+    (x + y) * (v^2 + x * y) = y * u^2 + x * w^2
+
+    by thm triangle_first_two_distinct_18(a, m, c)
+    a != m
+    by thm distance_sq_positive_of_ne_18(a, m)
+    distance_sq(a, m) > 0
+    x^2 > 0
+    by thm positive_of_nonnegative_square_positive_18(x)
+    x > 0
+
+    by thm triangle_first_two_distinct_18(b, m, c)
+    b != m
+    m != b
+    by thm distance_sq_positive_of_ne_18(m, b)
+    distance_sq(m, b) > 0
+    y^2 > 0
+    by thm positive_of_nonnegative_square_positive_18(y)
+    y > 0
+
+    by thm triangle_first_third_distinct_18(a, m, c)
+    a != c
+    by thm distance_sq_positive_of_ne_18(a, c)
+    distance_sq(a, c) > 0
+    u^2 > 0
+    by thm positive_of_nonnegative_square_positive_18(u)
+    u > 0
+
+    by thm triangle_second_third_distinct_18(a, m, c)
+    m != c
+    by thm distance_sq_positive_of_ne_18(m, c)
+    distance_sq(m, c) > 0
+    v^2 > 0
+    by thm positive_of_nonnegative_square_positive_18(v)
+    v > 0
+
+    by thm triangle_second_third_distinct_18(a, b, c)
+    b != c
+    by thm distance_sq_positive_of_ne_18(b, c)
+    distance_sq(b, c) > 0
+    w^2 > 0
+    by thm positive_of_nonnegative_square_positive_18(w)
+    w > 0
+    v + u + x > 0
+    v + w + y > 0
+    x + y + w + u > 0
+
+    segment_length(a, m) = x
+    segment_length(m, b) = y
+    segment_length(a, b) = z
+    segment_length(a, c) = u
+    segment_length(m, c) = v
+    segment_length(b, c) = w
+    segment_length(c, a) = sqrt((a(1) - c(1))^2 + (a(2) - c(2))^2)
+    (a(1) - c(1))^2 + (a(2) - c(2))^2 = (c(1) - a(1))^2 + (c(2) - a(2))^2
+    sqrt((a(1) - c(1))^2 + (a(2) - c(2))^2) = sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2)
+    sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2) = u
+    segment_length(c, a) = sqrt((c(1) - a(1))^2 + (c(2) - a(2))^2)
+    segment_length(c, a) = u
+    segment_length(b, m) = sqrt((m(1) - b(1))^2 + (m(2) - b(2))^2)
+    (m(1) - b(1))^2 + (m(2) - b(2))^2 = (b(1) - m(1))^2 + (b(2) - m(2))^2
+    sqrt((m(1) - b(1))^2 + (m(2) - b(2))^2) = sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2)
+    sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2) = y
+    segment_length(b, m) = sqrt((b(1) - m(1))^2 + (b(2) - m(2))^2)
+    segment_length(b, m) = y
+    segment_length(c, m) = sqrt((m(1) - c(1))^2 + (m(2) - c(2))^2)
+    (m(1) - c(1))^2 + (m(2) - c(2))^2 = (c(1) - m(1))^2 + (c(2) - m(2))^2
+    sqrt((m(1) - c(1))^2 + (m(2) - c(2))^2) = sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2)
+    sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2) = v
+    segment_length(c, m) = sqrt((c(1) - m(1))^2 + (c(2) - m(2))^2)
+    segment_length(c, m) = v
+    segment_length(c, b) = sqrt((b(1) - c(1))^2 + (b(2) - c(2))^2)
+    (b(1) - c(1))^2 + (b(2) - c(2))^2 = (c(1) - b(1))^2 + (c(2) - b(2))^2
+    sqrt((b(1) - c(1))^2 + (b(2) - c(2))^2) = sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2)
+    sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2) = w
+    segment_length(c, b) = sqrt((c(1) - b(1))^2 + (c(2) - b(2))^2)
+    segment_length(c, b) = w
+
+    r1 * (segment_length(a, m) + segment_length(m, c) + segment_length(c, a)) = double_area(a, m, c)
+    segment_length(a, m) + segment_length(m, c) + segment_length(c, a) = x + segment_length(m, c) + segment_length(c, a)
+    r1 * (segment_length(a, m) + segment_length(m, c) + segment_length(c, a)) = r1 * (x + segment_length(m, c) + segment_length(c, a))
+    r1 * (x + segment_length(m, c) + segment_length(c, a)) = double_area(a, m, c)
+    x + segment_length(m, c) + segment_length(c, a) = x + v + segment_length(c, a)
+    r1 * (x + segment_length(m, c) + segment_length(c, a)) = r1 * (x + v + segment_length(c, a))
+    r1 * (x + v + segment_length(c, a)) = double_area(a, m, c)
+    x + v + segment_length(c, a) = x + v + u
+    r1 * (x + v + segment_length(c, a)) = r1 * (x + v + u)
+    r1 * (x + v + u) = double_area(a, m, c)
+    q1 * (segment_length(c, a) + segment_length(c, m) - segment_length(a, m)) = double_area(a, m, c)
+    segment_length(c, a) + segment_length(c, m) - segment_length(a, m) = u + segment_length(c, m) - segment_length(a, m)
+    q1 * (segment_length(c, a) + segment_length(c, m) - segment_length(a, m)) = q1 * (u + segment_length(c, m) - segment_length(a, m))
+    q1 * (u + segment_length(c, m) - segment_length(a, m)) = double_area(a, m, c)
+    u + segment_length(c, m) - segment_length(a, m) = u + v - segment_length(a, m)
+    q1 * (u + segment_length(c, m) - segment_length(a, m)) = q1 * (u + v - segment_length(a, m))
+    q1 * (u + v - segment_length(a, m)) = double_area(a, m, c)
+    u + v - segment_length(a, m) = u + v - x
+    q1 * (u + v - segment_length(a, m)) = q1 * (u + v - x)
+    q1 * (u + v - x) = double_area(a, m, c)
+    u + v - x = v + u - x
+    q1 * (u + v - x) = q1 * (v + u - x)
+    q1 * (v + u - x) = double_area(a, m, c)
+    r1 * (x + v + u) = q1 * (v + u - x)
+
+    r2 * (segment_length(b, m) + segment_length(m, c) + segment_length(c, b)) = double_area(b, m, c)
+    segment_length(b, m) + segment_length(m, c) + segment_length(c, b) = y + segment_length(m, c) + segment_length(c, b)
+    r2 * (segment_length(b, m) + segment_length(m, c) + segment_length(c, b)) = r2 * (y + segment_length(m, c) + segment_length(c, b))
+    r2 * (y + segment_length(m, c) + segment_length(c, b)) = double_area(b, m, c)
+    y + segment_length(m, c) + segment_length(c, b) = y + v + segment_length(c, b)
+    r2 * (y + segment_length(m, c) + segment_length(c, b)) = r2 * (y + v + segment_length(c, b))
+    r2 * (y + v + segment_length(c, b)) = double_area(b, m, c)
+    y + v + segment_length(c, b) = y + v + w
+    r2 * (y + v + segment_length(c, b)) = r2 * (y + v + w)
+    r2 * (y + v + w) = double_area(b, m, c)
+
+    q2 * (segment_length(c, b) + segment_length(c, m) - segment_length(b, m)) = double_area(b, m, c)
+    segment_length(c, b) + segment_length(c, m) - segment_length(b, m) = w + segment_length(c, m) - segment_length(b, m)
+    q2 * (segment_length(c, b) + segment_length(c, m) - segment_length(b, m)) = q2 * (w + segment_length(c, m) - segment_length(b, m))
+    q2 * (w + segment_length(c, m) - segment_length(b, m)) = double_area(b, m, c)
+    w + segment_length(c, m) - segment_length(b, m) = w + v - segment_length(b, m)
+    q2 * (w + segment_length(c, m) - segment_length(b, m)) = q2 * (w + v - segment_length(b, m))
+    q2 * (w + v - segment_length(b, m)) = double_area(b, m, c)
+    w + v - segment_length(b, m) = w + v - y
+    q2 * (w + v - segment_length(b, m)) = q2 * (w + v - y)
+    q2 * (w + v - y) = double_area(b, m, c)
+    w + v - y = v + w - y
+    q2 * (w + v - y) = q2 * (v + w - y)
+    q2 * (v + w - y) = double_area(b, m, c)
+    r2 * (y + v + w) = q2 * (v + w - y)
+
+    r * (segment_length(a, b) + segment_length(b, c) + segment_length(c, a)) = double_area(a, b, c)
+    segment_length(a, b) + segment_length(b, c) + segment_length(c, a) = z + segment_length(b, c) + segment_length(c, a)
+    r * (segment_length(a, b) + segment_length(b, c) + segment_length(c, a)) = r * (z + segment_length(b, c) + segment_length(c, a))
+    r * (z + segment_length(b, c) + segment_length(c, a)) = double_area(a, b, c)
+    z + segment_length(b, c) + segment_length(c, a) = z + w + segment_length(c, a)
+    r * (z + segment_length(b, c) + segment_length(c, a)) = r * (z + w + segment_length(c, a))
+    r * (z + w + segment_length(c, a)) = double_area(a, b, c)
+    z + w + segment_length(c, a) = z + w + u
+    r * (z + w + segment_length(c, a)) = r * (z + w + u)
+    r * (z + w + u) = double_area(a, b, c)
+    z + w + u = x + y + w + u
+    r * (z + w + u) = r * (x + y + w + u)
+    r * (x + y + w + u) = double_area(a, b, c)
+
+    q * (segment_length(c, a) + segment_length(c, b) - segment_length(a, b)) = double_area(a, b, c)
+    segment_length(c, a) + segment_length(c, b) - segment_length(a, b) = u + segment_length(c, b) - segment_length(a, b)
+    q * (segment_length(c, a) + segment_length(c, b) - segment_length(a, b)) = q * (u + segment_length(c, b) - segment_length(a, b))
+    q * (u + segment_length(c, b) - segment_length(a, b)) = double_area(a, b, c)
+    u + segment_length(c, b) - segment_length(a, b) = u + w - segment_length(a, b)
+    q * (u + segment_length(c, b) - segment_length(a, b)) = q * (u + w - segment_length(a, b))
+    q * (u + w - segment_length(a, b)) = double_area(a, b, c)
+    u + w - segment_length(a, b) = u + w - z
+    q * (u + w - segment_length(a, b)) = q * (u + w - z)
+    q * (u + w - z) = double_area(a, b, c)
+    u + w - z = w + u - z
+    q * (u + w - z) = q * (w + u - z)
+    q * (w + u - z) = double_area(a, b, c)
+    w + u - z = w + u - (x + y)
+    w + u - (x + y) = w + u - x - y
+    w + u - z = w + u - x - y
+    q * (w + u - z) = q * (w + u - x - y)
+    q * (w + u - x - y) = double_area(a, b, c)
+    r * (x + y + w + u) = q * (w + u - x - y)
+
+    by thm radius_ratio_core_18(x, y, u, v, w, r1, r2, r, q1, q2, q)

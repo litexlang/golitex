@@ -1,0 +1,34 @@
+release obj def geo::vec
+release obj def geo::dot
+release obj def geo::det
+release obj def geo::distance_sq
+
+# Predicates specific to IMO 1960 Problem 3.
+
+# P is the k-th division point when segment BC is divided into n equal parts.
+prop is_division_point(p, b, c cart(R, R), k, n R):
+    b != c
+    n > 0
+    0 <= k
+    k <= n
+    p(1) * n = b(1) * (n - k) + c(1) * k
+    p(2) * n = b(2) * (n - k) + c(2) * k
+
+# h is the (unsigned) altitude from A to BC, whose length is base_length.
+# The determinant identity is the coordinate form of equal triangle areas.
+prop is_altitude_length(a, b, c cart(R, R), h, base_length R):
+    b != c
+    h >= 0
+    base_length > 0
+    base_length^2 = geo::distance_sq(b, c)
+    (h * base_length)^2 = geo::det(geo::vec(a, b), geo::vec(a, c))^2
+
+# t is the tangent of the acute, undirected angle subtended by P1P2 at A.
+# Positivity of the dot product selects the acute angle; squaring removes
+# orientation from the determinant.
+prop is_acute_subtended_tangent(a, p1, p2 cart(R, R), t R):
+    a != p1
+    a != p2
+    geo::dot(geo::vec(a, p1), geo::vec(a, p2)) > 0
+    t >= 0
+    (t * geo::dot(geo::vec(a, p1), geo::vec(a, p2)))^2 = geo::det(geo::vec(a, p1), geo::vec(a, p2))^2

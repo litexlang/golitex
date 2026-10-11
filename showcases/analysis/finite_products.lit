@@ -1,0 +1,93 @@
+# Selected finite-product representation results from the local Analysis development.
+# The index length n is positive. No infinite-product existence or choice is proved.
+prop is_in_infinite_cartesian_product(I set, U set, X fn(alpha I) power_set(U), c fn(alpha I) U):
+    forall alpha I:
+        c(alpha) $in X(alpha)
+
+prop has_coordinate_values_in_family(n N+, U set, X fn(i_index closed_range(1, n)) power_set(U), f fn(i_index closed_range(1, n)) U):
+    forall i_index closed_range(1, n):
+        f(i_index) $in X(i_index)
+
+thm finite_cartesian_product_choice_function_representation:
+    ? forall n N+, U set, X fn(i_index closed_range(1, n)) power_set(U), set_C, P set:
+        set_C = {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)}
+        P = {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}
+        =>:
+            $maps::has_equal_cardinality(set_C, P)
+    finite_seq(U, n) = fn(j_index closed_range(1, n)) U
+    by extension:
+        ? set_C = P
+        claim:
+            ? forall chosen_left set_C:
+                chosen_left $in P
+            chosen_left $in {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)}
+            release thm set_builder_member(chosen_left, {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)})
+            chosen_left $in fn(j_index closed_range(1, n)) U
+            release thm set_builder_member(chosen_left, {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)})
+            chosen_left $in P
+        claim:
+            ? forall chosen_right P:
+                chosen_right $in set_C
+            chosen_right $in {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}
+            release thm set_builder_member(chosen_right, {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)})
+            chosen_right $in finite_seq(U, n)
+            release thm set_builder_member(chosen_right, {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)})
+            chosen_right $in set_C
+    have fn choice_identity(chosen_point set_C) P = chosen_point
+    claim:
+        ? forall left_point, right_point set_C:
+            choice_identity(left_point) = choice_identity(right_point)
+            =>:
+                left_point = right_point
+        choice_identity(left_point) = left_point
+        choice_identity(right_point) = right_point
+        left_point = choice_identity(left_point) = choice_identity(right_point) = right_point
+    by def $maps::is_injective_fn(set_C, P, choice_identity)
+    claim:
+        ? forall target_point P:
+            exist source_point set_C st {target_point = choice_identity(source_point)}
+        target_point $in set_C
+        witness exist source_point set_C st {target_point = choice_identity(source_point)} from target_point:
+            choice_identity(target_point) = target_point
+            target_point = choice_identity(target_point)
+    by def $maps::is_surjective_fn(set_C, P, choice_identity)
+    by def $maps::is_bijective_fn(set_C, P, choice_identity)
+    witness exist chosen_map fn(source_point set_C) P st {$maps::is_bijective_fn(set_C, P, chosen_map)} from choice_identity
+    by def $maps::has_equal_cardinality(set_C, P)
+
+prop is_finite_cartesian_product_for_family(n N+, U set, X fn(i_index closed_range(1, n)) power_set(U), set_C set):
+    set_C = {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)}
+
+thm finite_index_product_agrees_with_chapter3_cartesian_product:
+    ? forall n N+, U set, X fn(i_index closed_range(1, n)) power_set(U), set_C, P set:
+        $is_finite_cartesian_product_for_family(n, U, X, set_C)
+        P = {function_candidate fn(j_index closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, function_candidate)}
+        =>:
+            $maps::has_equal_cardinality(set_C, P)
+    finite_seq(U, n) = fn(j_index closed_range(1, n)) U
+    set_C = {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)}
+    by extension:
+        ? P = {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}
+        claim:
+            ? forall chosen_infinite P:
+                chosen_infinite $in {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}
+            chosen_infinite $in {function_candidate fn(j_index closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, function_candidate)}
+            release thm set_builder_member(chosen_infinite, {function_candidate fn(j_index closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, function_candidate)})
+            claim:
+                ? forall selected_index closed_range(1, n):
+                    chosen_infinite(selected_index) $in X(selected_index)
+                chosen_infinite(selected_index) $in X(selected_index)
+            by def $has_coordinate_values_in_family(n, U, X, chosen_infinite)
+            release thm set_builder_member(chosen_infinite, {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)})
+        claim:
+            ? forall chosen_finite {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}:
+                chosen_finite $in P
+            release thm set_builder_member(chosen_finite, {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)})
+            claim:
+                ? forall selected_index closed_range(1, n):
+                    chosen_finite(selected_index) $in X(selected_index)
+                chosen_finite(selected_index) $in X(selected_index)
+            by def $is_in_infinite_cartesian_product(closed_range(1, n), U, X, chosen_finite)
+            release thm set_builder_member(chosen_finite, {function_candidate fn(j_index closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, function_candidate)})
+            chosen_finite $in P
+    by thm finite_cartesian_product_choice_function_representation(n, U, X, set_C, P)

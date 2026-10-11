@@ -75,3 +75,5 @@ pub mod by_factorial_predecessor;
 pub mod by_integer_interval;
 
 pub mod by_scalar_extra;
+
+pub mod by_finite_seq_reconstruction;

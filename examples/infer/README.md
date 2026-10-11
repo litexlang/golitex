@@ -41,6 +41,11 @@ Callable-field range and indexed-family consequences are covered by
 `atomic/field_fn_range.lit` and `atomic/field_indexed_family.lit`.
 `equal/nonzero_real_square.lit` checks positive membership transported from
 a nonzero real square while retaining the negative/zero/complex boundaries.
+`equal/positive_real_power_bounded_premises.lit` keeps optional power, base and
+exponent checks within builtin reasoning. Missing optional evidence skips the
+inference; explicit definition proofs remain usable. Focused
+`positive_power_inference` tests check actual inferred memberships and retain
+zero, unknown-sign and complex boundaries.
 
 Direct scalar cancellation has one tracer per rule:
 `equal/additive_cancellation.lit`, `equal/subtractive_cancellation.lit`,

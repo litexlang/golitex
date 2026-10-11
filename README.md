@@ -225,7 +225,10 @@ litex -e '∅ ∩ ℕ ⊆ ℕ'
 For other platforms and checkout builds, use the [setup guide](docs/setup.md).
 The [CLI reference](docs/cli.md) explains commands and verification output;
 the [Manual](docs/Manual.md) and [examples](examples/README.md) are starting
-points for writing more Litex. The full argument and further source examples
+points for writing more Litex. [Building Analysis in Litex](showcases/analysis/README.md)
+shows selected definitions and proofs growing into mathematical context, with
+the incomplete textbook scope stated explicitly. The full argument and further
+source examples
 are in the [Blueprint](docs/Litex_Blueprint.md) and
 [中文蓝图](docs/Litex中文蓝图.md).
 

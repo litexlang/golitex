@@ -1,0 +1,1770 @@
+have fn tri_weight(a, c, s, u, v R) R = u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c
+
+
+have fn dist_A(a, c, s, u, v R) R = (u * a + v * c)^2 + (v * s)^2
+
+have fn dist_B(a, c, s, u, v R) R = ((u - 1) * a + v * c)^2 + (v * s)^2
+
+have fn dist_D(a, c, s, u, v R) R = (u * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+
+
+thm condition_implies_radius_bound:
+    ? forall a, c, s R:
+        s > 0
+        c > 0
+        a > c
+        c^2 + s^2 = 1
+        a <= c + sqrt(3) * s
+        =>:
+            a^2 + 1 - 2 * a * c <= 4 * s^2
+    3 > 0
+    sqrt(3) > 0
+    sqrt(3)^2 = 3
+    a - c > 0
+    0 <= (c + sqrt(3) * s) - a
+    (c + sqrt(3) * s) - a = sqrt(3) * s - (a - c)
+    0 <= sqrt(3) * s - (a - c)
+    a - c <= sqrt(3) * s
+    sqrt(3) * s > 0
+    0 <= sqrt(3) * s - (a - c)
+    0 < sqrt(3) * s
+    0 < (a - c) + sqrt(3) * s
+    0 <= (a - c) + sqrt(3) * s
+    0 <= (sqrt(3) * s - (a - c)) * ((a - c) + sqrt(3) * s)
+    (sqrt(3) * s - (a - c)) * ((a - c) + sqrt(3) * s) = (sqrt(3) * s)^2 - (a - c)^2
+    0 <= (sqrt(3) * s)^2 - (a - c)^2
+    (a - c)^2 <= (sqrt(3) * s)^2
+    (sqrt(3) * s)^2 = sqrt(3)^2 * s^2
+    sqrt(3)^2 * s^2 = 3 * s^2
+    (sqrt(3) * s)^2 = 3 * s^2
+    (a - c)^2 <= 3 * s^2
+    (a - c)^2 = a^2 - 2 * a * c + c^2
+    a^2 - 2 * a * c + c^2 <= 3 * s^2
+    0 <= 3 * s^2 - (a^2 - 2 * a * c + c^2)
+    (3 * s^2 + s^2) - ((a^2 - 2 * a * c + c^2) + s^2) = 3 * s^2 - (a^2 - 2 * a * c + c^2)
+    0 <= (3 * s^2 + s^2) - ((a^2 - 2 * a * c + c^2) + s^2)
+    (a^2 - 2 * a * c + c^2) + s^2 <= 3 * s^2 + s^2
+    3 * s^2 + s^2 = 4 * s^2
+    (a^2 - 2 * a * c + c^2) + s^2 <= 4 * s^2
+    (a^2 - 2 * a * c + c^2) + s^2 = a^2 - 2 * a * c + c^2 + s^2
+    a^2 - 2 * a * c + c^2 + s^2 = a^2 - 2 * a * c + (c^2 + s^2)
+    a^2 - 2 * a * c + (c^2 + s^2) = a^2 - 2 * a * c + 1
+    a^2 - 2 * a * c + 1 = a^2 + 1 - 2 * a * c
+    a^2 - 2 * a * c + c^2 + s^2 = a^2 + 1 - 2 * a * c
+    a^2 + 1 - 2 * a * c <= 4 * s^2
+
+
+thm triangle_weight_identity:
+    ? forall a, c, s, u, v R:
+        c^2 + s^2 = 1
+        =>:
+            (1 - u - v) * dist_A(a, c, s, u, v) + u * dist_B(a, c, s, u, v) + v * dist_D(a, c, s, u, v) = tri_weight(a, c, s, u, v)
+    dist_A(a, c, s, u, v) = (u * a + v * c)^2 + (v * s)^2
+    dist_B(a, c, s, u, v) = ((u - 1) * a + v * c)^2 + (v * s)^2
+    dist_D(a, c, s, u, v) = (u * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+    tri_weight(a, c, s, u, v) = u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c
+    (1-u-v)*dist_A(a,c,s,u,v)=(1-u-v)*((u*a+v*c)^2+(v*s)^2)
+    u*dist_B(a,c,s,u,v)=u*(((u-1)*a+v*c)^2+(v*s)^2)
+    v*dist_D(a,c,s,u,v)=v*((u*a+(v-1)*c)^2+((v-1)*s)^2)
+    (1-u-v)*dist_A(a,c,s,u,v)+u*dist_B(a,c,s,u,v)=(1-u-v)*((u*a+v*c)^2+(v*s)^2)+u*(((u-1)*a+v*c)^2+(v*s)^2)
+    (1 - u - v) * dist_A(a, c, s, u, v) + u * dist_B(a, c, s, u, v) + v * dist_D(a, c, s, u, v) = (1 - u - v) * ((u * a + v * c)^2 + (v * s)^2) + u * (((u - 1) * a + v * c)^2 + (v * s)^2) + v * ((u * a + (v - 1) * c)^2 + ((v - 1) * s)^2)
+    (1 - u - v) * ((u * a + v * c)^2 + (v * s)^2) + u * (((u - 1) * a + v * c)^2 + (v * s)^2) + v * ((u * a + (v - 1) * c)^2 + ((v - 1) * s)^2) = u * (1 - u) * a^2 + v * (1 - v) * (c^2 + s^2) - 2 * u * v * a * c
+    u * (1 - u) * a^2 + v * (1 - v) * (c^2 + s^2) - 2 * u * v * a * c = u * (1 - u) * a^2 + v * (1 - v) * 1 - 2 * u * v * a * c
+    u * (1 - u) * a^2 + v * (1 - v) * 1 - 2 * u * v * a * c = u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c
+    (1 - u - v) * dist_A(a, c, s, u, v) + u * dist_B(a, c, s, u, v) + v * dist_D(a, c, s, u, v) = tri_weight(a, c, s, u, v)
+
+
+
+thm triangle_weight_upper_bound:
+    ? forall a, c, s, u, v R:
+        s > 0
+        c^2 + s^2 = 1
+        a^2 + 1 - 2 * a * c <= 4 * s^2
+        =>:
+            tri_weight(a, c, s, u, v) <= 1
+    s*s>0
+    s*s=s^2
+    s^2 > 0
+    tri_weight(a, c, s, u, v) = u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c
+    a^2 + 1 - 2 * a * c - 4 * s^2 * tri_weight(a, c, s, u, v) = a^2 + 1 - 2 * a * c - 4 * s^2 * (u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c)
+    (a^2 + 1 - 2 * a * c - 4 * s^2 * (u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c)) - ((2 * s * (u * a + v * c) - a * s)^2 + (2 * v * s^2 - (1 - a * c))^2) = -(a^2 + 4 * s^2 * v^2) * (c^2 + s^2 - 1)
+    c^2 + s^2 - 1 = 0
+    -(a^2 + 4 * s^2 * v^2) * (c^2 + s^2 - 1) = 0
+    (a^2 + 1 - 2 * a * c - 4 * s^2 * (u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c)) - ((2 * s * (u * a + v * c) - a * s)^2 + (2 * v * s^2 - (1 - a * c))^2) = 0
+    a^2 + 1 - 2 * a * c - 4 * s^2 * (u * (1 - u) * a^2 + v * (1 - v) - 2 * u * v * a * c) = (2 * s * (u * a + v * c) - a * s)^2 + (2 * v * s^2 - (1 - a * c))^2
+    a^2 + 1 - 2 * a * c - 4 * s^2 * tri_weight(a, c, s, u, v) = (2 * s * (u * a + v * c) - a * s)^2 + (2 * v * s^2 - (1 - a * c))^2
+    (2 * s * (u * a + v * c) - a * s)^2 >= 0
+    (2 * v * s^2 - (1 - a * c))^2 >= 0
+    (2 * s * (u * a + v * c) - a * s)^2 + (2 * v * s^2 - (1 - a * c))^2 >= 0
+    a^2 + 1 - 2 * a * c - 4 * s^2 * tri_weight(a, c, s, u, v) >= 0
+    0<=a^2+1-2*a*c-4*s^2*tri_weight(a,c,s,u,v)
+    0+4*s^2*tri_weight(a,c,s,u,v)<=(a^2+1-2*a*c-4*s^2*tri_weight(a,c,s,u,v))+4*s^2*tri_weight(a,c,s,u,v)
+    0+4*s^2*tri_weight(a,c,s,u,v)=4*s^2*tri_weight(a,c,s,u,v)
+    (a^2+1-2*a*c-4*s^2*tri_weight(a,c,s,u,v))+4*s^2*tri_weight(a,c,s,u,v)=a^2+1-2*a*c
+    4 * s^2 * tri_weight(a, c, s, u, v) <= a^2 + 1 - 2 * a * c
+    4 * s^2 * tri_weight(a, c, s, u, v) <= 4 * s^2
+    4 * s^2 > 0
+    4 * s^2 != 0
+    (4 * s^2 * tri_weight(a, c, s, u, v)) / (4 * s^2) <= (4 * s^2) / (4 * s^2)
+    (4 * s^2 * tri_weight(a, c, s, u, v)) / (4 * s^2) = tri_weight(a, c, s, u, v)
+    (4 * s^2) / (4 * s^2) = 1
+    tri_weight(a, c, s, u, v) <= 1
+
+
+
+
+thm weighted_three_strict:
+    ? forall w0, w1, w2, x0, x1, x2 R:
+        w0 >= 0
+        w1 >= 0
+        w2 >= 0
+        w0 + w1 + w2 = 1
+        x0 > 1
+        x1 > 1
+        x2 > 1
+        =>:
+            w0 * x0 + w1 * x1 + w2 * x2 > 1
+    have e0 R=x0-1
+    have e1 R=x1-1
+    have e2 R=x2-1
+    0<e0
+    0<e1
+    0<e2
+    0<=w0
+    0<=w1
+    0<=w2
+    0<=e0
+    0<=e1
+    0<=e2
+    0<=w0*e0
+    0<=w1*e1
+    0<=w2*e2
+    by cases:
+        ? w0*e0+w1*e1+w2*e2>0
+        case w0>0:
+            0<w0
+            0<w0*e0
+            0<w0*e0+w1*e1
+            0<w0*e0+w1*e1+w2*e2
+            w0*e0+w1*e1+w2*e2>0
+        case w0<=0:
+            w0=0
+            by cases:
+                ? w0*e0+w1*e1+w2*e2>0
+                case w1>0:
+                    0<w1
+                    0<w1*e1
+                    0<w0*e0+w1*e1
+                    0<w0*e0+w1*e1+w2*e2
+                    w0*e0+w1*e1+w2*e2>0
+                case w1<=0:
+                    w1=0
+                    w0+w1=0
+                    (w0+w1+w2)-w2=w0+w1
+                    (w0+w1+w2)-w2=0
+                    w0+w1+w2=w2
+                    w2=1
+                    0<w2
+                    0<w2*e2
+                    0<=w0*e0+w1*e1
+                    0<w0*e0+w1*e1+w2*e2
+                    w0*e0+w1*e1+w2*e2>0
+    w0*e0=w0*(x0-1)
+    w1*e1=w1*(x1-1)
+    w2*e2=w2*(x2-1)
+    w0*e0+w1*e1+w2*e2=w0*(x0-1)+w1*(x1-1)+w2*(x2-1)
+    w0*(x0-1)+w1*(x1-1)+w2*(x2-1)=w0*x0+w1*x1+w2*x2-(w0+w1+w2)
+    w0*x0+w1*x1+w2*x2-(w0+w1+w2)=w0*x0+w1*x1+w2*x2-1
+    w0*x0+w1*x1+w2*x2-1>0
+    0<(w0*x0+w1*x1+w2*x2)-1
+    0+1<((w0*x0+w1*x1+w2*x2)-1)+1
+    0+1=1
+    ((w0*x0+w1*x1+w2*x2)-1)+1=w0*x0+w1*x1+w2*x2
+    1<w0*x0+w1*x1+w2*x2
+    w0*x0+w1*x1+w2*x2>1
+
+
+
+thm triangle_covered_by_three_unit_disks:
+    ? forall a, c, s, u, v R:
+        s > 0
+        c^2 + s^2 = 1
+        a^2 + 1 - 2 * a * c <= 4 * s^2
+        u >= 0
+        v >= 0
+        u + v <= 1
+        =>:
+            dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+    by thm triangle_weight_identity(a, c, s, u, v)
+    by thm triangle_weight_upper_bound(a, c, s, u, v)
+    1 - (u + v) >= 0
+    1 - (u + v) = 1 - u - v
+    1 - u - v >= 0
+    by cases:
+        ? dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+        case dist_A(a, c, s, u, v) <= 1:
+            dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+        case dist_A(a, c, s, u, v) > 1:
+            by cases:
+                ? dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+                case dist_B(a, c, s, u, v) <= 1:
+                    dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+                case dist_B(a, c, s, u, v) > 1:
+                    by cases:
+                        ? dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+                        case dist_D(a, c, s, u, v) <= 1:
+                            dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+                        case dist_D(a, c, s, u, v) > 1:
+                            (1 - u - v) + u + v = 1
+                            by thm weighted_three_strict(1 - u - v, u, v, dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_D(a, c, s, u, v))
+                            tri_weight(a, c, s, u, v) > 1
+                            impossible tri_weight(a, c, s, u, v) <= 1
+
+
+
+have fn dist_C(a, c, s, u, v R) R = ((u - 1) * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+
+
+thm map_reflected_A_to_C:
+    ? forall a, c, s, u, v R:
+        dist_A(a, c, s, 1 - u, 1 - v) <= 1
+        =>:
+            dist_C(a, c, s, u, v) <= 1
+    dist_C(a, c, s, u, v) = ((u - 1) * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+    dist_A(a, c, s, 1 - u, 1 - v) = ((1 - u) * a + (1 - v) * c)^2 + ((1 - v) * s)^2
+    ((u - 1) * a + (v - 1) * c)^2 = ((1 - u) * a + (1 - v) * c)^2
+    ((v - 1) * s)^2 = ((1 - v) * s)^2
+    by contra:
+        ? dist_C(a, c, s, u, v) <= 1
+        dist_C(a, c, s, u, v) > 1
+        dist_A(a, c, s, 1 - u, 1 - v) = ((u - 1) * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+        dist_C(a, c, s, u, v) = ((u - 1) * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+        dist_A(a, c, s, 1 - u, 1 - v) = dist_C(a, c, s, u, v)
+        dist_A(a, c, s, 1 - u, 1 - v) > 1
+        impossible dist_A(a, c, s, 1 - u, 1 - v) <= 1
+    dist_C(a, c, s, u, v) <= 1
+
+
+thm map_reflected_B_to_D:
+    ? forall a, c, s, u, v R:
+        dist_B(a, c, s, 1 - u, 1 - v) <= 1
+        =>:
+            dist_D(a, c, s, u, v) <= 1
+    dist_D(a, c, s, u, v) = (u * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+    dist_B(a, c, s, 1 - u, 1 - v) = (((1 - u) - 1) * a + (1 - v) * c)^2 + ((1 - v) * s)^2
+    (u * a + (v - 1) * c)^2 = (((1 - u) - 1) * a + (1 - v) * c)^2
+    ((v - 1) * s)^2 = ((1 - v) * s)^2
+    by contra:
+        ? dist_D(a, c, s, u, v) <= 1
+        dist_D(a, c, s, u, v) > 1
+        dist_B(a, c, s, 1 - u, 1 - v) = (u * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+        dist_D(a, c, s, u, v) = (u * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+        dist_B(a, c, s, 1 - u, 1 - v) = dist_D(a, c, s, u, v)
+        dist_B(a, c, s, 1 - u, 1 - v) > 1
+        impossible dist_B(a, c, s, 1 - u, 1 - v) <= 1
+    dist_D(a, c, s, u, v) <= 1
+
+
+thm map_reflected_D_to_B:
+    ? forall a, c, s, u, v R:
+        dist_D(a, c, s, 1 - u, 1 - v) <= 1
+        =>:
+            dist_B(a, c, s, u, v) <= 1
+    dist_B(a, c, s, u, v) = ((u - 1) * a + v * c)^2 + (v * s)^2
+    dist_D(a, c, s, 1 - u, 1 - v) = ((1 - u) * a + ((1 - v) - 1) * c)^2 + (((1 - v) - 1) * s)^2
+    ((u - 1) * a + v * c)^2 = ((1 - u) * a + ((1 - v) - 1) * c)^2
+    (v * s)^2 = (((1 - v) - 1) * s)^2
+    by contra:
+        ? dist_B(a, c, s, u, v) <= 1
+        dist_B(a, c, s, u, v) > 1
+        dist_D(a, c, s, 1 - u, 1 - v) = ((u - 1) * a + v * c)^2 + (v * s)^2
+        dist_B(a, c, s, u, v) = ((u - 1) * a + v * c)^2 + (v * s)^2
+        dist_D(a, c, s, 1 - u, 1 - v) = dist_B(a, c, s, u, v)
+        dist_D(a, c, s, 1 - u, 1 - v) > 1
+        impossible dist_D(a, c, s, 1 - u, 1 - v) <= 1
+    dist_B(a, c, s, u, v) <= 1
+
+
+thm parallelogram_covered_by_four_unit_disks:
+    ? forall a, c, s, u, v R:
+        s > 0
+        c^2 + s^2 = 1
+        a^2 + 1 - 2 * a * c <= 4 * s^2
+        u >= 0
+        u <= 1
+        v >= 0
+        v <= 1
+        =>:
+            dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+    by cases:
+        ? dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+        case u+v<=1:
+            by thm triangle_covered_by_three_unit_disks(a,c,s,u,v)
+            by cases:
+                ? dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+                case dist_A(a,c,s,u,v)<=1:
+                    dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+                case dist_B(a,c,s,u,v)<=1:
+                    dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+                case dist_D(a,c,s,u,v)<=1:
+                    dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+        case u+v>1:
+            0<=1-u
+            0<=1-v
+            0<u+v-1
+            1-(u+v-1)<1-0
+            1-0=1
+            1-(u+v-1)<1
+            1-(u+v-1)<=1
+            (1-u)+(1-v)=1-(u+v-1)
+            (1-u)+(1-v)<=1
+            by thm triangle_covered_by_three_unit_disks(a,c,s,1-u,1-v)
+            by cases:
+                ? dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+                case dist_A(a,c,s,1-u,1-v)<=1:
+                    by thm map_reflected_A_to_C(a,c,s,u,v)
+                    dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+                case dist_B(a,c,s,1-u,1-v)<=1:
+                    by thm map_reflected_B_to_D(a,c,s,u,v)
+                    dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+                case dist_D(a,c,s,1-u,1-v)<=1:
+                    by thm map_reflected_D_to_B(a,c,s,u,v)
+                    dist_A(a,c,s,u,v)<=1 or dist_B(a,c,s,u,v)<=1 or dist_C(a,c,s,u,v)<=1 or dist_D(a,c,s,u,v)<=1
+
+
+thm outside_point_bounds_13:
+    ? forall a,c,s,u,v R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        a > c + sqrt(3) * s
+        2 * a * s^2 * u = a - c
+        2 * s^2 * v = 1 - a * c
+        =>:
+            u >= 0
+            u <= 1
+            v >= 0
+            v <= 1
+    0<c
+    c<a
+    0<a
+    a > 0
+    s*s>0
+    s*s=s^2
+    2*a>0
+    s^2 > 0
+    2 * a * s^2 > 0
+    2 * s^2 > 0
+    a - c > 0
+    1 - a * c > 0
+    0<s^2
+    0<=s^2
+    0<2*a*s^2
+    0<=2*a*s^2
+    0<2*s^2
+    0<=2*s^2
+    0<4*s^2
+    0<=4*s^2
+    2 * a * s^2 * u > 0
+    by contra:
+        ? u > 0
+        u <= 0
+        2 * a * s^2 * u <= 2 * a * s^2 * 0
+        2 * a * s^2 * 0 = 0
+        2 * a * s^2 * u <= 0
+        impossible 2 * a * s^2 * u > 0
+    u > 0
+    u >= 0
+    2 * s^2 * v > 0
+    by contra:
+        ? v > 0
+        v <= 0
+        2 * s^2 * v <= 2 * s^2 * 0
+        2 * s^2 * 0 = 0
+        2 * s^2 * v <= 0
+        impossible 2 * s^2 * v > 0
+    v > 0
+    v >= 0
+    (a - c)^2 >= 0
+    s^2 > 0
+    (a - c)^2 + s^2 > 0
+    c * ((a - c)^2 + s^2) > 0
+    2 * a * s^2 * (1 - u - v) - c * ((a - c)^2 + s^2) = - (2 * a * s^2 * u - (a - c)) - a * (2 * s^2 * v - (1 - a * c)) + (2 * a - c) * (c^2 + s^2 - 1)
+    2 * a * s^2 * u - (a - c) = 0
+    2 * s^2 * v - (1 - a * c) = 0
+    c^2 + s^2 - 1 = 0
+    - (2 * a * s^2 * u - (a - c)) - a * (2 * s^2 * v - (1 - a * c)) + (2 * a - c) * (c^2 + s^2 - 1) = 0
+    2 * a * s^2 * (1 - u - v) - c * ((a - c)^2 + s^2) = 0
+    2 * a * s^2 * (1 - u - v) = c * ((a - c)^2 + s^2)
+    2 * a * s^2 * (1 - u - v) > 0
+    by contra:
+        ? 1 - u - v > 0
+        1 - u - v <= 0
+        2 * a * s^2 * (1 - u - v) <= 2 * a * s^2 * 0
+        2 * a * s^2 * 0 = 0
+        2 * a * s^2 * (1 - u - v) <= 0
+        impossible 2 * a * s^2 * (1 - u - v) > 0
+    1 - u - v > 0
+    u + v < u + v + (1 - u - v)
+    u + v + (1 - u - v) = 1
+    u + v < 1
+    u < u + v
+    u < 1
+    u <= 1
+    v < u + v
+    v < 1
+    v <= 1
+
+thm outside_point_radius_certificate_13:
+    ? forall a,c,s,u,v,da R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        a > c + sqrt(3) * s
+        2 * a * s^2 * u = a - c
+        2 * s^2 * v = 1 - a * c
+        da = (u * a + v * c)^2 + (v * s)^2
+        =>:
+            da > 1
+            2 * s^2 * (u * a + v * c) = a * s^2
+    0<c
+    c<a
+    0<a
+    a > 0
+    s*s>0
+    s*s=s^2
+    2*a>0
+    s^2 > 0
+    2 * a * s^2 > 0
+    2 * s^2 > 0
+    a - c > 0
+    1 - a * c > 0
+    0<s^2
+    0<=s^2
+    0<2*a*s^2
+    0<=2*a*s^2
+    0<2*s^2
+    0<=2*s^2
+    0<4*s^2
+    0<=4*s^2
+    2 * a * s^2 * u - (a - c) = 0
+    2 * s^2 * v - (1 - a * c) = 0
+    c^2 + s^2 - 1 = 0
+    sqrt(3) > 0
+    sqrt(3)^2 = 3
+    0 < a - (c + sqrt(3) * s)
+    a - (c + sqrt(3) * s) = (a - c) - sqrt(3) * s
+    0 < (a - c) - sqrt(3) * s
+    a - c > sqrt(3) * s
+    sqrt(3) * s > 0
+    a - c + sqrt(3) * s > 0
+    ((a - c) - sqrt(3) * s) * ((a - c) + sqrt(3) * s) > 0
+    ((a - c) - sqrt(3) * s) * ((a - c) + sqrt(3) * s) = (a - c)^2 - (sqrt(3) * s)^2
+    (a - c)^2 - (sqrt(3) * s)^2 > 0
+    (sqrt(3) * s)^2 = sqrt(3)^2 * s^2
+    sqrt(3)^2 * s^2 = 3 * s^2
+    (sqrt(3) * s)^2 = 3 * s^2
+    (a - c)^2 - (sqrt(3) * s)^2 = (a - c)^2 - 3 * s^2
+    (a - c)^2 - 3 * s^2 > 0
+    3 * s^2 < 3 * s^2 + ((a - c)^2 - 3 * s^2)
+    3 * s^2 + ((a - c)^2 - 3 * s^2) = (a - c)^2
+    (a - c)^2 > 3 * s^2
+    (a - c)^2 + s^2 > 3 * s^2 + s^2
+    3 * s^2 + s^2 = 4 * s^2
+    (a - c)^2 + s^2 > 4 * s^2
+    da = (u * a + v * c)^2 + (v * s)^2
+    2 * s^2 * (u * a + v * c) - a * s^2 = (2 * a * s^2 * u - (a - c)) + c * (2 * s^2 * v - (1 - a * c)) - a * (c^2 + s^2 - 1)
+    (2 * a * s^2 * u - (a - c)) + c * (2 * s^2 * v - (1 - a * c)) - a * (c^2 + s^2 - 1) = 0
+    2 * s^2 * (u * a + v * c) - a * s^2 = 0
+    2 * s^2 * (u * a + v * c) = a * s^2
+    (2 * s^2 * (u * a + v * c))^2 = (a * s^2)^2
+    (2 * s^2 * v)^2 = (1 - a * c)^2
+    4 * s^2 * da = 4 * s^2 * ((u * a + v * c)^2 + (v * s)^2)
+    s^2 * (4 * s^2 * da) = s^2 * (4 * s^2 * ((u * a + v * c)^2 + (v * s)^2))
+    s^2 * (4 * s^2 * ((u * a + v * c)^2 + (v * s)^2)) = 4 * s^4 * (u * a + v * c)^2 + 4 * s^6 * v^2
+    (2 * s^2 * (u * a + v * c))^2 = 4 * s^4 * (u * a + v * c)^2
+    (2 * s^2 * v)^2 = 4 * s^4 * v^2
+    s^2 * (2 * s^2 * v)^2 = 4 * s^6 * v^2
+    (2 * s^2 * (u * a + v * c))^2 + s^2 * (2 * s^2 * v)^2 = 4 * s^4 * (u * a + v * c)^2 + 4 * s^6 * v^2
+    s^2 * (4 * s^2 * da) = (2 * s^2 * (u * a + v * c))^2 + s^2 * (2 * s^2 * v)^2
+    (2 * s^2 * (u * a + v * c))^2 + s^2 * (2 * s^2 * v)^2 = (a * s^2)^2 + s^2 * (1 - a * c)^2
+    (a * s^2)^2 + s^2 * (1 - a * c)^2 - s^2 * ((a - c)^2 + s^2) = s^2 * (a - 1) * (a + 1) * (c^2 + s^2 - 1)
+    s^2 * (a - 1) * (a + 1) * (c^2 + s^2 - 1) = 0
+    (a * s^2)^2 + s^2 * (1 - a * c)^2 - s^2 * ((a - c)^2 + s^2) = 0
+    (a * s^2)^2 + s^2 * (1 - a * c)^2 = s^2 * ((a - c)^2 + s^2)
+    s^2 * (4 * s^2 * da) = s^2 * ((a - c)^2 + s^2)
+    s^2 * ((a - c)^2 + s^2) > s^2 * (4 * s^2)
+    s^2 * (4 * s^2 * da) > s^2 * (4 * s^2)
+    s^2 * (4 * s^2) > 0
+    by contra:
+        ? da > 1
+        da <= 1
+        s^2 * (4 * s^2 * da) <= s^2 * (4 * s^2 * 1)
+        s^2 * (4 * s^2 * 1) = s^2 * (4 * s^2)
+        impossible s^2 * (4 * s^2 * da) > s^2 * (4 * s^2)
+
+thm positive_multiplier_cancel_13:
+    ? forall k,x,y R:
+        k > 0
+        k * x = k * y
+        =>:
+            x = y
+    k != 0
+    (k*x)/k = x
+    (k*y)/k = y
+    x = (k*x)/k = (k*y)/k = y
+
+thm circumcenter_distance_relations_13:
+    ? forall a,c,s,x,y,da,db,dc,dd R:
+        2*x = a
+        2*c*x+2*s*y = 1
+        c^2+s^2 = 1
+        da = x^2+y^2
+        db = (x-a)^2+y^2
+        dd = (x-c)^2+(y-s)^2
+        dc = (x-a-c)^2+(y-s)^2
+        =>:
+            db = da
+            dd = da
+            dc = da+2*a*c
+    a-2*x = 0
+    c^2+s^2-1 = 0
+    2*c*x+2*s*y-1 = 0
+    db-da = ((x-a)^2+y^2)-(x^2+y^2)
+    ((x-a)^2+y^2)-(x^2+y^2) = a*(a-2*x)
+    a*(a-2*x) = 0
+    db-da = 0
+    db = da
+    dd-da = ((x-c)^2+(y-s)^2)-(x^2+y^2)
+    ((x-c)^2+(y-s)^2)-(x^2+y^2) = (c^2+s^2-1)-(2*c*x+2*s*y-1)
+    (c^2+s^2-1)-(2*c*x+2*s*y-1) = 0
+    dd-da = 0
+    dd = da
+    dc-da-2*a*c = ((x-a-c)^2+(y-s)^2)-(x^2+y^2)-2*a*c
+    ((x-a-c)^2+(y-s)^2)-(x^2+y^2)-2*a*c = a*(a-2*x)+(c^2+s^2-1)-(2*c*x+2*s*y-1)
+    a*(a-2*x)+(c^2+s^2-1)-(2*c*x+2*s*y-1) = 0
+    dc-da-2*a*c = 0
+    (dc-da-2*a*c)+(da+2*a*c) = 0+(da+2*a*c)
+    (dc-da-2*a*c)+(da+2*a*c) = dc
+    0+(da+2*a*c) = da+2*a*c
+    dc = (dc-da-2*a*c)+(da+2*a*c) = 0+(da+2*a*c) = da+2*a*c
+    dc = da+2*a*c
+
+thm outside_point_modular_certificate_13:
+    ? forall a, c, s, u, v, da, db, dc, dd R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        a > c + sqrt(3) * s
+        2 * a * s^2 * u = a - c
+        2 * s^2 * v = 1 - a * c
+        da = (u * a + v * c)^2 + (v * s)^2
+        db = ((u - 1) * a + v * c)^2 + (v * s)^2
+        dd = (u * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+        dc = ((u - 1) * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+        =>:
+            u >= 0
+            u <= 1
+            v >= 0
+            v <= 1
+            da > 1
+            db > 1
+            dc > 1
+            dd > 1
+    by thm outside_point_bounds_13(a,c,s,u,v)
+    by thm outside_point_radius_certificate_13(a,c,s,u,v,da)
+    have x R = u*a+v*c
+    have y R = v*s
+    0<c
+    c<a
+    0<a
+    s*s>0
+    s*s=s^2
+    s^2>0
+    2*s^2*x = a*s^2
+    s^2*(2*x) = 2*s^2*x
+    a*s^2 = s^2*a
+    s^2*(2*x) = s^2*a
+    by thm positive_multiplier_cancel_13(s^2,2*x,a)
+    2*x=a
+    c*(2*x)=c*a
+    2*c*x=c*(2*x)
+    2*c*x=c*(2*x)=c*a
+    2*s*y=2*s*(v*s)
+    2*s*(v*s)=2*s^2*v
+    2*s*y=1-a*c
+    2*c*x+2*s*y=c*a+(1-a*c)
+    c*a+(1-a*c)=1
+    2*c*x+2*s*y=1
+    da=x^2+y^2
+    (u-1)*a+v*c=(u*a+v*c)-a
+    (u*a+v*c)-a=x-a
+    (u-1)*a+v*c=(u*a+v*c)-a=x-a
+    db=(x-a)^2+y^2
+    u*a+(v-1)*c=(u*a+v*c)-c
+    (u*a+v*c)-c=x-c
+    u*a+(v-1)*c=(u*a+v*c)-c=x-c
+    (v-1)*s=v*s-s
+    v*s-s=y-s
+    (v-1)*s=v*s-s=y-s
+    dd=(x-c)^2+(y-s)^2
+    (u-1)*a+(v-1)*c=(u*a+v*c)-a-c
+    (u*a+v*c)-a-c=x-a-c
+    (u-1)*a+(v-1)*c=(u*a+v*c)-a-c=x-a-c
+    dc=(x-a-c)^2+(y-s)^2
+    by thm circumcenter_distance_relations_13(a,c,s,x,y,da,db,dc,dd)
+    db=da
+    dd=da
+    dc=da+2*a*c
+    da>1
+    db>1
+    dd>1
+    2*a*c>0
+    da<da+2*a*c
+    da<dc
+    1<da
+    da<dc
+    1<dc
+    dc>1
+
+thm circumcenter_equations_give_outside_point:
+    ? forall a, c, s, u, v R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        a > c + sqrt(3) * s
+        2 * a * s^2 * u = a - c
+        2 * s^2 * v = 1 - a * c
+        =>:
+            u >= 0
+            u <= 1
+            v >= 0
+            v <= 1
+            dist_A(a, c, s, u, v) > 1
+            dist_B(a, c, s, u, v) > 1
+            dist_C(a, c, s, u, v) > 1
+            dist_D(a, c, s, u, v) > 1
+    dist_A(a, c, s, u, v) = (u * a + v * c)^2 + (v * s)^2
+    dist_B(a, c, s, u, v) = ((u - 1) * a + v * c)^2 + (v * s)^2
+    dist_C(a, c, s, u, v) = ((u - 1) * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+    dist_D(a, c, s, u, v) = (u * a + (v - 1) * c)^2 + ((v - 1) * s)^2
+    by thm outside_point_modular_certificate_13(a,c,s,u,v,dist_A(a, c, s, u, v),dist_B(a, c, s, u, v),dist_C(a, c, s, u, v),dist_D(a, c, s, u, v))
+
+thm condition_failure_gives_uncovered_point:
+    ? forall a, c, s R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        a > c + sqrt(3) * s
+        =>:
+            exist u, v R st {u >= 0, u <= 1, v >= 0, v <= 1, dist_A(a, c, s, u, v) > 1, dist_B(a, c, s, u, v) > 1, dist_C(a, c, s, u, v) > 1, dist_D(a, c, s, u, v) > 1}
+    0<c
+    c<a
+    0<a
+    s*s>0
+    s*s=s^2
+    a > 0
+    s^2 > 0
+    2 * a * s^2 > 0
+    2 * a * s^2 != 0
+    2 * s^2 > 0
+    2 * s^2 != 0
+    witness exist u, v R st {u >= 0, u <= 1, v >= 0, v <= 1, dist_A(a, c, s, u, v) > 1, dist_B(a, c, s, u, v) > 1, dist_C(a, c, s, u, v) > 1, dist_D(a, c, s, u, v) > 1} from (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2):
+        2 * a * s^2 * ((a - c) / (2 * a * s^2)) = a - c
+        2 * s^2 * ((1 - a * c) / (2 * s^2)) = 1 - a * c
+        by thm circumcenter_equations_give_outside_point(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
+        dist_A(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2)) = dist_A(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
+        dist_B(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2)) = dist_B(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
+        dist_C(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2)) = dist_C(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
+        dist_D(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2)) = dist_D(a, c, s, (a - c) / (2 * a * s^2), (1 - a * c) / (2 * s^2))
+
+
+# A coordinate point (u,v) ranges over the parallelogram when 0 <= u,v <= 1.
+# This proposition says that every such point lies in at least one of the four
+# closed unit disks centered at the vertices.
+
+prop four_vertex_unit_disks_cover(a, c, s R):
+    forall u, v R:
+        u >= 0
+        u <= 1
+        v >= 0
+        v <= 1
+        =>:
+            dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+
+
+thm radius_condition_implies_cover:
+    ? forall a, c, s R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        a <= c + sqrt(3) * s
+        =>:
+            $four_vertex_unit_disks_cover(a, c, s)
+    by thm condition_implies_radius_bound(a, c, s)
+    by def:
+        ? $four_vertex_unit_disks_cover(a, c, s)
+    claim:
+        ? forall u, v R:
+            u >= 0
+            u <= 1
+            v >= 0
+            v <= 1
+            =>:
+                dist_A(a, c, s, u, v) <= 1 or dist_B(a, c, s, u, v) <= 1 or dist_C(a, c, s, u, v) <= 1 or dist_D(a, c, s, u, v) <= 1
+        by thm parallelogram_covered_by_four_unit_disks(a, c, s, u, v)
+
+
+thm four_way_cover_with_all_outside_forces_first_inside:
+    ? forall dA, dB, dC, dD R:
+        dA <= 1 or dB <= 1 or dC <= 1 or dD <= 1
+        dA > 1
+        dB > 1
+        dC > 1
+        dD > 1
+        =>:
+            dA <= 1
+    by cases:
+        ? dA <= 1
+        case dA <= 1:
+            dA <= 1
+        case dB <= 1:
+            impossible dB > 1
+        case dC <= 1:
+            impossible dC > 1
+        case dD <= 1:
+            impossible dD > 1
+
+
+thm cover_implies_radius_condition:
+    ? forall a, c, s R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        $four_vertex_unit_disks_cover(a, c, s)
+        =>:
+            a <= c + sqrt(3) * s
+    by contra:
+        ? a <= c + sqrt(3) * s
+        a > c + sqrt(3) * s
+        by thm condition_failure_gives_uncovered_point(a, c, s)
+        obtain u, v from exist u, v R st {u >= 0, u <= 1, v >= 0, v <= 1, dist_A(a, c, s, u, v) > 1, dist_B(a, c, s, u, v) > 1, dist_C(a, c, s, u, v) > 1, dist_D(a, c, s, u, v) > 1}
+        by def:
+            ? $four_vertex_unit_disks_cover(a, c, s)
+        by thm four_way_cover_with_all_outside_forces_first_inside(dist_A(a, c, s, u, v), dist_B(a, c, s, u, v), dist_C(a, c, s, u, v), dist_D(a, c, s, u, v))
+        impossible dist_A(a, c, s, u, v) > 1
+
+
+prop imo_1967_problem_1_criterion(a, c, s R):
+    forall:
+        $four_vertex_unit_disks_cover(a, c, s)
+        =>:
+            a <= c + sqrt(3) * s
+    forall:
+        a <= c + sqrt(3) * s
+        =>:
+            $four_vertex_unit_disks_cover(a, c, s)
+
+
+thm imo_1967_problem_1:
+    ? forall a, c, s R:
+        s > 0
+        c > 0
+        a > c
+        a * c < 1
+        c^2 + s^2 = 1
+        =>:
+            $imo_1967_problem_1_criterion(a, c, s)
+    claim:
+        ? forall:
+            $four_vertex_unit_disks_cover(a, c, s)
+            =>:
+                a <= c + sqrt(3) * s
+        by thm cover_implies_radius_condition(a, c, s)
+    claim:
+        ? forall:
+            a <= c + sqrt(3) * s
+            =>:
+                $four_vertex_unit_disks_cover(a, c, s)
+        by thm radius_condition_implies_cover(a, c, s)
+    by def:
+        ? $imo_1967_problem_1_criterion(a, c, s)
+
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+# Dot product.
+
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+
+# 2D determinant (signed parallelogram area / cross product z-component).
+
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+# Squared Euclidean distance |ab|^2 (avoids square roots).
+
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+# General form: the line ax + by + c = 0 (a, b not both zero).
+
+prop is_parallel(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    det(vec(a, b), vec(c, d)) = 0
+
+# Directed segments ab and cd are perpendicular.
+
+prop is_parallelogram(a, b, c, d cart(R, R)):
+    $is_parallel(a, b, d, c)
+    $is_parallel(a, d, b, c)
+
+# Quadrilateral abcd is a rectangle.
+
+prop is_acute_triangle(a, b, d cart(R, R)):
+    dot(vec(a, b), vec(a, d)) > 0
+    dot(vec(b, a), vec(b, d)) > 0
+    dot(vec(d, a), vec(d, b)) > 0
+
+# The point with affine coordinates (u,v) in the parallelogram generated by AB and AD.
+
+have fn parallelogram_point(a, b, d cart(R, R), u, v R) cart(R, R) = ((1 - u - v) * a(1) + u * b(1) + v * d(1), (1 - u - v) * a(2) + u * b(2) + v * d(2))
+
+# The four closed unit disks centered at A, B, C, D cover parallelogram ABCD.
+
+prop four_unit_disks_cover(a, b, c, d cart(R, R)):
+    forall u, v R:
+        u >= 0
+        u <= 1
+        v >= 0
+        v <= 1
+        =>:
+            distance_sq(parallelogram_point(a, b, d, u, v), a) <= 1 or distance_sq(parallelogram_point(a, b, d, u, v), b) <= 1 or distance_sq(parallelogram_point(a, b, d, u, v), c) <= 1 or distance_sq(parallelogram_point(a, b, d, u, v), d) <= 1
+
+# Segment PQ has the positive length `length`.
+
+prop has_length(p, q cart(R, R), length R):
+    length > 0
+    distance_sq(p, q) = length^2
+
+# The directed angle PQR has measure theta, represented in an arbitrary orthonormal basis.
+
+prop has_angle_measure(p, q, r cart(R, R), theta R):
+    exist first_length, second_length, ex, ey, fx, fy, ca, sa R st {first_length > 0, second_length > 0, ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, ca = cos(theta), sa = sin(theta), sa > 0, p(1) = q(1) + first_length * ex, p(2) = q(2) + first_length * ey, r(1) = q(1) + second_length * (ca * ex + sa * fx), r(2) = q(2) + second_length * (ca * ey + sa * fy)}
+
+thm rotated_square_sum_13:
+    ? forall ex, ey, fx, fy, x, y R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        =>:
+            (x * ex + y * fx)^2 + (x * ey + y * fy)^2 = x^2 + y^2
+    (x * ex + y * fx)^2 + (x * ey + y * fy)^2 = x^2 * (ex^2 + ey^2) + 2 * x * y * (ex * fx + ey * fy) + y^2 * (fx^2 + fy^2)
+    x^2 * (ex^2 + ey^2) + 2 * x * y * (ex * fx + ey * fy) + y^2 * (fx^2 + fy^2) = x^2 * 1 + 2 * x * y * 0 + y^2 * 1
+    x^2 * 1 + 2 * x * y * 0 + y^2 * 1 = x^2 + y^2
+
+
+thm equal_squares_13:
+    ? forall x, y R:
+        x = y
+        =>:
+            x^2 = y^2
+    x - y = 0
+    x^2 - y^2 = (x - y) * (x + y)
+    (x - y) * (x + y) = 0
+    x^2 - y^2 = 0
+    x^2 = y^2
+
+# Two equalities are preserved inside the affine context x + y - z.
+
+thm affine_sum_sub_congruence_13:
+    ? forall x, x2, y, y2, z R:
+        x = x2
+        y = y2
+        =>:
+            x + y - z = x2 + y2 - z
+    x - x2 = 0
+    y - y2 = 0
+    (x + y - z) - (x2 + y2 - z) = (x - x2) + (y - y2)
+    (x - x2) + (y - y2) = 0
+    (x + y - z) - (x2 + y2 - z) = 0
+    x + y - z = x2 + y2 - z
+
+# Equal endpoints give equal coordinate differences.
+
+thm subtraction_congruence_13:
+    ? forall x, x2, y, y2 R:
+        x = x2
+        y = y2
+        =>:
+            x - y = x2 - y2
+    x - x2 = 0
+    y - y2 = 0
+    (x - y) - (x2 - y2) = (x - x2) - (y - y2)
+    (x - x2) - (y - y2) = 0
+    (x - y) - (x2 - y2) = 0
+    x - y = x2 - y2
+
+# If the coordinate difference between two points is expressed in an orthonormal basis,
+# their squared distance is x^2+y^2.
+
+thm two_product_sum_congruence_13:
+    ? forall a1,a2,a3,a4,b1,b2,b3,b4 R:
+        a1=b1
+        a2=b2
+        a3=b3
+        a4=b4
+        =>:
+            a1*a2+a3*a4=b1*b2+b3*b4
+    a1*a2=b1*a2
+    b1*a2=b1*b2
+    a1*a2=b1*b2
+    a3*a4=b3*a4
+    b3*a4=b3*b4
+    a3*a4=b3*b4
+    a1*a2+a3*a4=b1*b2+a3*a4
+    b1*b2+a3*a4=b1*b2+b3*b4
+    a1*a2+a3*a4=b1*b2+a3*a4=b1*b2+b3*b4
+
+thm rotated_components_give_distance_13:
+    ? forall p, q cart(R, R), ex, ey, fx, fy, x, y R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        q(1) - p(1) = x * ex + y * fx
+        q(2) - p(2) = x * ey + y * fy
+        =>:
+            distance_sq(p, q) = x^2 + y^2
+    distance_sq(p, q) = dot(vec(p, q), vec(p, q))
+    vec(p, q) = (q(1) - p(1), q(2) - p(2))
+    vec(p, q)(1) = q(1) - p(1)
+    vec(p, q)(2) = q(2) - p(2)
+    dot(vec(p, q), vec(p, q)) = vec(p, q)(1) * vec(p, q)(1) + vec(p, q)(2) * vec(p, q)(2)
+    by thm two_product_sum_congruence_13(vec(p,q)(1),vec(p,q)(1),vec(p,q)(2),vec(p,q)(2),q(1)-p(1),q(1)-p(1),q(2)-p(2),q(2)-p(2))
+    vec(p,q)(1)*vec(p,q)(1)+vec(p,q)(2)*vec(p,q)(2) = (q(1)-p(1))*(q(1)-p(1))+(q(2)-p(2))*(q(2)-p(2))
+    dot(vec(p, q), vec(p, q)) = (q(1) - p(1)) * (q(1) - p(1)) + (q(2) - p(2)) * (q(2) - p(2))
+    (q(1) - p(1)) * (q(1) - p(1)) = (q(1) - p(1))^2
+    (q(2) - p(2)) * (q(2) - p(2)) = (q(2) - p(2))^2
+    distance_sq(p, q) = (q(1) - p(1))^2 + (q(2) - p(2))^2
+    by thm equal_squares_13(q(1) - p(1), x * ex + y * fx)
+    by thm equal_squares_13(q(2) - p(2), x * ey + y * fy)
+    (q(1) - p(1))^2 + (q(2) - p(2))^2 = (x * ex + y * fx)^2 + (x * ey + y * fy)^2
+    distance_sq(p, q) = (x * ex + y * fx)^2 + (x * ey + y * fy)^2
+    by thm rotated_square_sum_13(ex, ey, fx, fy, x, y)
+    distance_sq(p, q) = x^2 + y^2
+
+# A common orthonormal basis preserves dot products as well as squared distances.
+
+thm rotated_components_give_dot_13:
+    ? forall p, q, r cart(R, R), ex, ey, fx, fy, x, y, z, w R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        q(1) - p(1) = x * ex + y * fx
+        q(2) - p(2) = x * ey + y * fy
+        r(1) - p(1) = z * ex + w * fx
+        r(2) - p(2) = z * ey + w * fy
+        =>:
+            dot(vec(p, q), vec(p, r)) = x * z + y * w
+    vec(p, q) = (q(1) - p(1), q(2) - p(2))
+    vec(p, r) = (r(1) - p(1), r(2) - p(2))
+    vec(p, q)(1) = q(1) - p(1)
+    vec(p, q)(2) = q(2) - p(2)
+    vec(p, r)(1) = r(1) - p(1)
+    vec(p, r)(2) = r(2) - p(2)
+    dot(vec(p, q), vec(p, r)) = vec(p, q)(1) * vec(p, r)(1) + vec(p, q)(2) * vec(p, r)(2)
+    by thm two_product_sum_congruence_13(vec(p,q)(1),vec(p,r)(1),vec(p,q)(2),vec(p,r)(2),q(1)-p(1),r(1)-p(1),q(2)-p(2),r(2)-p(2))
+    vec(p,q)(1)*vec(p,r)(1)+vec(p,q)(2)*vec(p,r)(2) = (q(1)-p(1))*(r(1)-p(1))+(q(2)-p(2))*(r(2)-p(2))
+    dot(vec(p, q), vec(p, r)) = (q(1) - p(1)) * (r(1) - p(1)) + (q(2) - p(2)) * (r(2) - p(2))
+    by thm two_product_sum_congruence_13(q(1)-p(1),r(1)-p(1),q(2)-p(2),r(2)-p(2),x*ex+y*fx,z*ex+w*fx,x*ey+y*fy,z*ey+w*fy)
+    (q(1) - p(1)) * (r(1) - p(1)) + (q(2) - p(2)) * (r(2) - p(2)) = (x * ex + y * fx) * (z * ex + w * fx) + (x * ey + y * fy) * (z * ey + w * fy)
+    (x * ex + y * fx) * (z * ex + w * fx) + (x * ey + y * fy) * (z * ey + w * fy) = x * z * (ex^2 + ey^2) + (x * w + y * z) * (ex * fx + ey * fy) + y * w * (fx^2 + fy^2)
+    x * z * (ex^2 + ey^2) + (x * w + y * z) * (ex * fx + ey * fy) + y * w * (fx^2 + fy^2) = x * z * 1 + (x * w + y * z) * 0 + y * w * 1
+    x * z * 1 + (x * w + y * z) * 0 + y * w * 1 = x * z + y * w
+    dot(vec(p, q), vec(p, r)) = x * z + y * w
+
+
+thm acute_coordinates_give_parameter_range_13:
+    ? forall a, b, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy R:
+        side_a > 0
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        distance_sq(a, d) = 1
+        dot(vec(a, b), vec(a, d)) > 0
+        dot(vec(b, a), vec(b, d)) > 0
+        dot(vec(d, a), vec(d, b)) > 0
+        =>:
+            ca > 0
+            side_a > ca
+            side_a * ca < 1
+            ca^2 + sa^2 = 1
+    0 < side_a
+    0 <= side_a
+    by thm subtraction_congruence_13(b(1), a(1) + side_a * ex, a(1), a(1))
+    b(1) - a(1) = (a(1) + side_a * ex) - a(1)
+    (a(1) + side_a * ex) - a(1) = side_a * ex
+    b(1) - a(1) = side_a * ex
+    by thm subtraction_congruence_13(b(2), a(2) + side_a * ey, a(2), a(2))
+    b(2) - a(2) = (a(2) + side_a * ey) - a(2)
+    (a(2) + side_a * ey) - a(2) = side_a * ey
+    b(2) - a(2) = side_a * ey
+    by thm subtraction_congruence_13(d(1), a(1) + ca * ex + sa * fx, a(1), a(1))
+    d(1) - a(1) = (a(1) + ca * ex + sa * fx) - a(1)
+    (a(1) + ca * ex + sa * fx) - a(1) = ca * ex + sa * fx
+    d(1) - a(1) = ca * ex + sa * fx
+    by thm subtraction_congruence_13(d(2), a(2) + ca * ey + sa * fy, a(2), a(2))
+    d(2) - a(2) = (a(2) + ca * ey + sa * fy) - a(2)
+    (a(2) + ca * ey + sa * fy) - a(2) = ca * ey + sa * fy
+    d(2) - a(2) = ca * ey + sa * fy
+    b(1) - a(1) = side_a * ex + 0 * fx
+    b(2) - a(2) = side_a * ey + 0 * fy
+    d(1) - a(1) = ca * ex + sa * fx
+    d(2) - a(2) = ca * ey + sa * fy
+    by thm rotated_components_give_dot_13(a, b, d, ex, ey, fx, fy, side_a, 0, ca, sa)
+    side_a * ca + 0 * sa = side_a * ca
+    dot(vec(a, b), vec(a, d)) = side_a * ca
+    side_a * ca > 0
+    by contra:
+        ? ca > 0
+        ca <= 0
+        side_a * ca <= side_a * 0
+        side_a * 0 = 0
+        side_a * ca <= 0
+        impossible side_a * ca > 0
+    ca > 0
+
+    by thm subtraction_congruence_13(a(1), a(1), b(1), a(1) + side_a * ex)
+    a(1) - b(1) = a(1) - (a(1) + side_a * ex)
+    a(1) - (a(1) + side_a * ex) = (-side_a) * ex + 0 * fx
+    a(1) - b(1) = (-side_a) * ex + 0 * fx
+    by thm subtraction_congruence_13(a(2), a(2), b(2), a(2) + side_a * ey)
+    a(2) - b(2) = a(2) - (a(2) + side_a * ey)
+    a(2) - (a(2) + side_a * ey) = (-side_a) * ey + 0 * fy
+    a(2) - b(2) = (-side_a) * ey + 0 * fy
+    by thm subtraction_congruence_13(d(1), a(1) + ca * ex + sa * fx, b(1), a(1) + side_a * ex)
+    d(1) - b(1) = (a(1) + ca * ex + sa * fx) - (a(1) + side_a * ex)
+    (a(1) + ca * ex + sa * fx) - (a(1) + side_a * ex) = (ca - side_a) * ex + sa * fx
+    d(1) - b(1) = (ca - side_a) * ex + sa * fx
+    by thm subtraction_congruence_13(d(2), a(2) + ca * ey + sa * fy, b(2), a(2) + side_a * ey)
+    d(2) - b(2) = (a(2) + ca * ey + sa * fy) - (a(2) + side_a * ey)
+    (a(2) + ca * ey + sa * fy) - (a(2) + side_a * ey) = (ca - side_a) * ey + sa * fy
+    d(2) - b(2) = (ca - side_a) * ey + sa * fy
+    by thm rotated_components_give_dot_13(b, a, d, ex, ey, fx, fy, -side_a, 0, ca - side_a, sa)
+    (-side_a) * (ca - side_a) + 0 * sa = side_a * (side_a - ca)
+    dot(vec(b, a), vec(b, d)) = side_a * (side_a - ca)
+    side_a * (side_a - ca) > 0
+    by contra:
+        ? side_a - ca > 0
+        side_a - ca <= 0
+        side_a * (side_a - ca) <= side_a * 0
+        side_a * 0 = 0
+        side_a * (side_a - ca) <= 0
+        impossible side_a * (side_a - ca) > 0
+    side_a - ca > 0
+    side_a > ca
+
+    by thm rotated_components_give_distance_13(a, d, ex, ey, fx, fy, ca, sa)
+    ca^2 + sa^2 = 1
+    by thm subtraction_congruence_13(a(1), a(1), d(1), a(1) + ca * ex + sa * fx)
+    a(1) - d(1) = a(1) - (a(1) + ca * ex + sa * fx)
+    a(1) - (a(1) + ca * ex + sa * fx) = (-ca) * ex + (-sa) * fx
+    a(1) - d(1) = (-ca) * ex + (-sa) * fx
+    by thm subtraction_congruence_13(a(2), a(2), d(2), a(2) + ca * ey + sa * fy)
+    a(2) - d(2) = a(2) - (a(2) + ca * ey + sa * fy)
+    a(2) - (a(2) + ca * ey + sa * fy) = (-ca) * ey + (-sa) * fy
+    a(2) - d(2) = (-ca) * ey + (-sa) * fy
+    by thm subtraction_congruence_13(b(1), a(1) + side_a * ex, d(1), a(1) + ca * ex + sa * fx)
+    b(1) - d(1) = (a(1) + side_a * ex) - (a(1) + ca * ex + sa * fx)
+    (a(1) + side_a * ex) - (a(1) + ca * ex + sa * fx) = (side_a - ca) * ex + (-sa) * fx
+    b(1) - d(1) = (side_a - ca) * ex + (-sa) * fx
+    by thm subtraction_congruence_13(b(2), a(2) + side_a * ey, d(2), a(2) + ca * ey + sa * fy)
+    b(2) - d(2) = (a(2) + side_a * ey) - (a(2) + ca * ey + sa * fy)
+    (a(2) + side_a * ey) - (a(2) + ca * ey + sa * fy) = (side_a - ca) * ey + (-sa) * fy
+    b(2) - d(2) = (side_a - ca) * ey + (-sa) * fy
+    by thm rotated_components_give_dot_13(d, a, b, ex, ey, fx, fy, -ca, -sa, side_a - ca, -sa)
+    (-ca) * (side_a - ca) + (-sa) * (-sa) = ca^2 + sa^2 - side_a * ca
+    dot(vec(d, a), vec(d, b)) = ca^2 + sa^2 - side_a * ca
+    ca^2 + sa^2 - side_a * ca = 1 - side_a * ca
+    dot(vec(d, a), vec(d, b)) = 1 - side_a * ca
+    1 - side_a * ca > 0
+    side_a * ca < 1
+
+# The affine coordinates become ordinary coordinates in the rotated frame.
+
+thm rigid_parallelogram_point_coordinates_13:
+    ? forall a, b, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy, u, v R:
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        =>:
+            parallelogram_point(a, b, d, u, v) = (a(1) + (u * side_a + v * ca) * ex + v * sa * fx, a(2) + (u * side_a + v * ca) * ey + v * sa * fy)
+    parallelogram_point(a, b, d, u, v) = ((1 - u - v) * a(1) + u * b(1) + v * d(1), (1 - u - v) * a(2) + u * b(2) + v * d(2))
+    parallelogram_point(a, b, d, u, v) = ((1 - u - v) * a(1) + u * (a(1) + side_a * ex) + v * (a(1) + ca * ex + sa * fx), (1 - u - v) * a(2) + u * (a(2) + side_a * ey) + v * (a(2) + ca * ey + sa * fy))
+    (1 - u - v) * a(1) + u * (a(1) + side_a * ex) + v * (a(1) + ca * ex + sa * fx) = a(1) + (u * side_a + v * ca) * ex + v * sa * fx
+    (1 - u - v) * a(2) + u * (a(2) + side_a * ey) + v * (a(2) + ca * ey + sa * fy) = a(2) + (u * side_a + v * ca) * ey + v * sa * fy
+    ((1 - u - v) * a(1) + u * (a(1) + side_a * ex) + v * (a(1) + ca * ex + sa * fx), (1 - u - v) * a(2) + u * (a(2) + side_a * ey) + v * (a(2) + ca * ey + sa * fy)) = (a(1) + (u * side_a + v * ca) * ex + v * sa * fx, a(2) + (u * side_a + v * ca) * ey + v * sa * fy)
+    parallelogram_point(a, b, d, u, v) = (a(1) + (u * side_a + v * ca) * ex + v * sa * fx, a(2) + (u * side_a + v * ca) * ey + v * sa * fy)
+
+# The affine point has normalized squared distance dist_A from vertex A.
+
+thm rigid_distance_A_13:
+    ? forall a, b, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy, u, v R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        =>:
+            distance_sq(parallelogram_point(a, b, d, u, v), a) = dist_A(side_a, ca, sa, u, v)
+    parallelogram_point(a, b, d, u, v) = ((1 - u - v) * a(1) + u * b(1) + v * d(1), (1 - u - v) * a(2) + u * b(2) + v * d(2))
+    parallelogram_point(a, b, d, u, v)(1) = (1 - u - v) * a(1) + u * b(1) + v * d(1)
+    parallelogram_point(a, b, d, u, v)(2) = (1 - u - v) * a(2) + u * b(2) + v * d(2)
+    parallelogram_point(a, b, d, u, v)(1) = (1 - u - v) * a(1) + u * (a(1) + side_a * ex) + v * (a(1) + ca * ex + sa * fx)
+    (1 - u - v) * a(1) + u * (a(1) + side_a * ex) + v * (a(1) + ca * ex + sa * fx) = a(1) + (u * side_a + v * ca) * ex + v * sa * fx
+    parallelogram_point(a, b, d, u, v)(2) = (1 - u - v) * a(2) + u * (a(2) + side_a * ey) + v * (a(2) + ca * ey + sa * fy)
+    (1 - u - v) * a(2) + u * (a(2) + side_a * ey) + v * (a(2) + ca * ey + sa * fy) = a(2) + (u * side_a + v * ca) * ey + v * sa * fy
+    vec(parallelogram_point(a, b, d, u, v), a) = (a(1) - parallelogram_point(a, b, d, u, v)(1), a(2) - parallelogram_point(a, b, d, u, v)(2))
+    distance_sq(parallelogram_point(a, b, d, u, v), a) = dot(vec(parallelogram_point(a, b, d, u, v), a), vec(parallelogram_point(a, b, d, u, v), a))
+    vec(parallelogram_point(a, b, d, u, v), a)(1) = a(1) - parallelogram_point(a, b, d, u, v)(1)
+    vec(parallelogram_point(a, b, d, u, v), a)(2) = a(2) - parallelogram_point(a, b, d, u, v)(2)
+    dot(vec(parallelogram_point(a, b, d, u, v), a), vec(parallelogram_point(a, b, d, u, v), a)) = vec(parallelogram_point(a, b, d, u, v), a)(1) * vec(parallelogram_point(a, b, d, u, v), a)(1) + vec(parallelogram_point(a, b, d, u, v), a)(2) * vec(parallelogram_point(a, b, d, u, v), a)(2)
+    vec(parallelogram_point(a, b, d, u, v), a)(1) * vec(parallelogram_point(a, b, d, u, v), a)(1) + vec(parallelogram_point(a, b, d, u, v), a)(2) * vec(parallelogram_point(a, b, d, u, v), a)(2) = (a(1) - parallelogram_point(a, b, d, u, v)(1)) * (a(1) - parallelogram_point(a, b, d, u, v)(1)) + (a(2) - parallelogram_point(a, b, d, u, v)(2)) * (a(2) - parallelogram_point(a, b, d, u, v)(2))
+    (a(1) - parallelogram_point(a, b, d, u, v)(1)) * (a(1) - parallelogram_point(a, b, d, u, v)(1)) + (a(2) - parallelogram_point(a, b, d, u, v)(2)) * (a(2) - parallelogram_point(a, b, d, u, v)(2)) = (a(1) - parallelogram_point(a, b, d, u, v)(1))^2 + (a(2) - parallelogram_point(a, b, d, u, v)(2))^2
+    distance_sq(parallelogram_point(a, b, d, u, v), a) = (a(1) - parallelogram_point(a, b, d, u, v)(1))^2 + (a(2) - parallelogram_point(a, b, d, u, v)(2))^2
+    a(1) - parallelogram_point(a, b, d, u, v)(1) = a(1) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx)
+    a(1) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx) = -((u * side_a + v * ca) * ex + v * sa * fx)
+    a(1) - parallelogram_point(a, b, d, u, v)(1) = -((u * side_a + v * ca) * ex + v * sa * fx)
+    by thm equal_squares_13(a(1) - parallelogram_point(a, b, d, u, v)(1), -((u * side_a + v * ca) * ex + v * sa * fx))
+    (a(1) - parallelogram_point(a, b, d, u, v)(1))^2 = (-((u * side_a + v * ca) * ex + v * sa * fx))^2
+    (-((u * side_a + v * ca) * ex + v * sa * fx))^2 = ((u * side_a + v * ca) * ex + v * sa * fx)^2
+    (a(1) - parallelogram_point(a, b, d, u, v)(1))^2 = ((u * side_a + v * ca) * ex + v * sa * fx)^2
+    a(2) - parallelogram_point(a, b, d, u, v)(2) = a(2) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy)
+    a(2) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy) = -((u * side_a + v * ca) * ey + v * sa * fy)
+    a(2) - parallelogram_point(a, b, d, u, v)(2) = -((u * side_a + v * ca) * ey + v * sa * fy)
+    by thm equal_squares_13(a(2) - parallelogram_point(a, b, d, u, v)(2), -((u * side_a + v * ca) * ey + v * sa * fy))
+    (a(2) - parallelogram_point(a, b, d, u, v)(2))^2 = (-((u * side_a + v * ca) * ey + v * sa * fy))^2
+    (-((u * side_a + v * ca) * ey + v * sa * fy))^2 = ((u * side_a + v * ca) * ey + v * sa * fy)^2
+    (a(2) - parallelogram_point(a, b, d, u, v)(2))^2 = ((u * side_a + v * ca) * ey + v * sa * fy)^2
+    (a(1) - parallelogram_point(a, b, d, u, v)(1))^2 + (a(2) - parallelogram_point(a, b, d, u, v)(2))^2 = ((u * side_a + v * ca) * ex + v * sa * fx)^2 + ((u * side_a + v * ca) * ey + v * sa * fy)^2
+    distance_sq(parallelogram_point(a, b, d, u, v), a) = ((u * side_a + v * ca) * ex + v * sa * fx)^2 + ((u * side_a + v * ca) * ey + v * sa * fy)^2
+    by thm rotated_square_sum_13(ex, ey, fx, fy, u * side_a + v * ca, v * sa)
+    distance_sq(parallelogram_point(a, b, d, u, v), a) = (u * side_a + v * ca)^2 + (v * sa)^2
+    dist_A(side_a, ca, sa, u, v) = (u * side_a + v * ca)^2 + (v * sa)^2
+
+
+# The affine point has normalized squared distance dist_B from vertex B.
+
+thm rigid_distance_B_13:
+    ? forall a, b, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy, u, v R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        =>:
+            distance_sq(parallelogram_point(a, b, d, u, v), b) = dist_B(side_a, ca, sa, u, v)
+    by thm rigid_parallelogram_point_coordinates_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+    b(1) - parallelogram_point(a, b, d, u, v)(1) = (a(1) + side_a * ex) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx)
+    (a(1) + side_a * ex) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx) = ((1 - u) * side_a - v * ca) * ex + (-v * sa) * fx
+    b(1) - parallelogram_point(a, b, d, u, v)(1) = ((1 - u) * side_a - v * ca) * ex + (-v * sa) * fx
+    b(2) - parallelogram_point(a, b, d, u, v)(2) = (a(2) + side_a * ey) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy)
+    (a(2) + side_a * ey) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy) = ((1 - u) * side_a - v * ca) * ey + (-v * sa) * fy
+    b(2) - parallelogram_point(a, b, d, u, v)(2) = ((1 - u) * side_a - v * ca) * ey + (-v * sa) * fy
+    by thm rotated_components_give_distance_13(parallelogram_point(a, b, d, u, v), b, ex, ey, fx, fy, (1 - u) * side_a - v * ca, -v * sa)
+    distance_sq(parallelogram_point(a, b, d, u, v), b) = ((1 - u) * side_a - v * ca)^2 + (-v * sa)^2
+    dist_B(side_a, ca, sa, u, v) = ((u - 1) * side_a + v * ca)^2 + (v * sa)^2
+    ((1 - u) * side_a - v * ca)^2 + (-v * sa)^2 = ((u - 1) * side_a + v * ca)^2 + (v * sa)^2
+    distance_sq(parallelogram_point(a, b, d, u, v), b) = dist_B(side_a, ca, sa, u, v)
+
+
+# The affine point has normalized squared distance dist_D from vertex D.
+
+thm rigid_distance_D_13:
+    ? forall a, b, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy, u, v R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        =>:
+            distance_sq(parallelogram_point(a, b, d, u, v), d) = dist_D(side_a, ca, sa, u, v)
+    by thm rigid_parallelogram_point_coordinates_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+    d(1) - parallelogram_point(a, b, d, u, v)(1) = (a(1) + ca * ex + sa * fx) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx)
+    (a(1) + ca * ex + sa * fx) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx) = (-u * side_a + (1 - v) * ca) * ex + ((1 - v) * sa) * fx
+    d(1) - parallelogram_point(a, b, d, u, v)(1) = (-u * side_a + (1 - v) * ca) * ex + ((1 - v) * sa) * fx
+    d(2) - parallelogram_point(a, b, d, u, v)(2) = (a(2) + ca * ey + sa * fy) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy)
+    (a(2) + ca * ey + sa * fy) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy) = (-u * side_a + (1 - v) * ca) * ey + ((1 - v) * sa) * fy
+    d(2) - parallelogram_point(a, b, d, u, v)(2) = (-u * side_a + (1 - v) * ca) * ey + ((1 - v) * sa) * fy
+    by thm rotated_components_give_distance_13(parallelogram_point(a, b, d, u, v), d, ex, ey, fx, fy, -u * side_a + (1 - v) * ca, (1 - v) * sa)
+    distance_sq(parallelogram_point(a, b, d, u, v), d) = (-u * side_a + (1 - v) * ca)^2 + ((1 - v) * sa)^2
+    dist_D(side_a, ca, sa, u, v) = (u * side_a + (v - 1) * ca)^2 + ((v - 1) * sa)^2
+    (-u * side_a + (1 - v) * ca)^2 + ((1 - v) * sa)^2 = (u * side_a + (v - 1) * ca)^2 + ((v - 1) * sa)^2
+    distance_sq(parallelogram_point(a, b, d, u, v), d) = dist_D(side_a, ca, sa, u, v)
+
+# The affine point has normalized squared distance dist_C from the opposite vertex C.
+
+thm rigid_distance_C_13:
+    ? forall a, b, c, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy, u, v R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        c(1) = b(1) + d(1) - a(1)
+        c(2) = b(2) + d(2) - a(2)
+        =>:
+            distance_sq(parallelogram_point(a, b, d, u, v), c) = dist_C(side_a, ca, sa, u, v)
+    by thm rigid_parallelogram_point_coordinates_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+    by thm affine_sum_sub_congruence_13(b(1), a(1) + side_a * ex, d(1), a(1) + ca * ex + sa * fx, a(1))
+    c(1) = (a(1) + side_a * ex) + (a(1) + ca * ex + sa * fx) - a(1)
+    (a(1) + side_a * ex) + (a(1) + ca * ex + sa * fx) - a(1) = a(1) + (side_a + ca) * ex + sa * fx
+    c(1) = a(1) + (side_a + ca) * ex + sa * fx
+    by thm affine_sum_sub_congruence_13(b(2), a(2) + side_a * ey, d(2), a(2) + ca * ey + sa * fy, a(2))
+    c(2) = (a(2) + side_a * ey) + (a(2) + ca * ey + sa * fy) - a(2)
+    (a(2) + side_a * ey) + (a(2) + ca * ey + sa * fy) - a(2) = a(2) + (side_a + ca) * ey + sa * fy
+    c(2) = a(2) + (side_a + ca) * ey + sa * fy
+    c(1) - parallelogram_point(a, b, d, u, v)(1) = (a(1) + (side_a + ca) * ex + sa * fx) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx)
+    (a(1) + (side_a + ca) * ex + sa * fx) - (a(1) + (u * side_a + v * ca) * ex + v * sa * fx) = ((1 - u) * side_a + (1 - v) * ca) * ex + ((1 - v) * sa) * fx
+    c(1) - parallelogram_point(a, b, d, u, v)(1) = ((1 - u) * side_a + (1 - v) * ca) * ex + ((1 - v) * sa) * fx
+    c(2) - parallelogram_point(a, b, d, u, v)(2) = (a(2) + (side_a + ca) * ey + sa * fy) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy)
+    (a(2) + (side_a + ca) * ey + sa * fy) - (a(2) + (u * side_a + v * ca) * ey + v * sa * fy) = ((1 - u) * side_a + (1 - v) * ca) * ey + ((1 - v) * sa) * fy
+    c(2) - parallelogram_point(a, b, d, u, v)(2) = ((1 - u) * side_a + (1 - v) * ca) * ey + ((1 - v) * sa) * fy
+    by thm rotated_components_give_distance_13(parallelogram_point(a, b, d, u, v), c, ex, ey, fx, fy, (1 - u) * side_a + (1 - v) * ca, (1 - v) * sa)
+    distance_sq(parallelogram_point(a, b, d, u, v), c) = ((1 - u) * side_a + (1 - v) * ca)^2 + ((1 - v) * sa)^2
+    dist_C(side_a, ca, sa, u, v) = ((u - 1) * side_a + (v - 1) * ca)^2 + ((v - 1) * sa)^2
+    ((1 - u) * side_a + (1 - v) * ca)^2 + ((1 - v) * sa)^2 = ((u - 1) * side_a + (v - 1) * ca)^2 + ((v - 1) * sa)^2
+    distance_sq(parallelogram_point(a, b, d, u, v), c) = dist_C(side_a, ca, sa, u, v)
+
+# Four equal distance values preserve the four-way unit-disk covering disjunction.
+
+thm four_way_cover_congruence_13:
+    ? forall xA, xB, xC, xD, yA, yB, yC, yD R:
+        xA = yA
+        xB = yB
+        xC = yC
+        xD = yD
+        xA <= 1 or xB <= 1 or xC <= 1 or xD <= 1
+        =>:
+            yA <= 1 or yB <= 1 or yC <= 1 or yD <= 1
+    by cases:
+        ? yA <= 1 or yB <= 1 or yC <= 1 or yD <= 1
+        case xA <= 1:
+            yA <= 1
+            yA <= 1 or yB <= 1 or yC <= 1 or yD <= 1
+        case xB <= 1:
+            yB <= 1
+            yA <= 1 or yB <= 1 or yC <= 1 or yD <= 1
+        case xC <= 1:
+            yC <= 1
+            yA <= 1 or yB <= 1 or yC <= 1 or yD <= 1
+        case xD <= 1:
+            yD <= 1
+            yA <= 1 or yB <= 1 or yC <= 1 or yD <= 1
+
+# Rigid motions preserve the covering predicate: geometric cover implies its
+# normalized coordinate form.
+
+thm geometric_cover_implies_normalized_cover_13:
+    ? forall a, b, c, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        c(1) = b(1) + d(1) - a(1)
+        c(2) = b(2) + d(2) - a(2)
+        $four_unit_disks_cover(a, b, c, d)
+        =>:
+            $four_vertex_unit_disks_cover(side_a, ca, sa)
+    by def $four_unit_disks_cover(a, b, c, d)
+    claim:
+        ? forall u, v R:
+            u >= 0
+            u <= 1
+            v >= 0
+            v <= 1
+            =>:
+                dist_A(side_a, ca, sa, u, v) <= 1 or dist_B(side_a, ca, sa, u, v) <= 1 or dist_C(side_a, ca, sa, u, v) <= 1 or dist_D(side_a, ca, sa, u, v) <= 1
+        by thm rigid_distance_A_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        by thm rigid_distance_B_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        by thm rigid_distance_C_13(a, b, c, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        by thm rigid_distance_D_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        by thm four_way_cover_congruence_13(distance_sq(parallelogram_point(a, b, d, u, v), a), distance_sq(parallelogram_point(a, b, d, u, v), b), distance_sq(parallelogram_point(a, b, d, u, v), c), distance_sq(parallelogram_point(a, b, d, u, v), d), dist_A(side_a, ca, sa, u, v), dist_B(side_a, ca, sa, u, v), dist_C(side_a, ca, sa, u, v), dist_D(side_a, ca, sa, u, v))
+    by def:
+        ? $four_vertex_unit_disks_cover(side_a, ca, sa)
+
+# Conversely, the normalized coordinate cover implies the geometric cover.
+
+thm normalized_cover_implies_geometric_cover_13:
+    ? forall a, b, c, d cart(R, R), side_a, ca, sa, ex, ey, fx, fy R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        b(1) = a(1) + side_a * ex
+        b(2) = a(2) + side_a * ey
+        d(1) = a(1) + ca * ex + sa * fx
+        d(2) = a(2) + ca * ey + sa * fy
+        c(1) = b(1) + d(1) - a(1)
+        c(2) = b(2) + d(2) - a(2)
+        $four_vertex_unit_disks_cover(side_a, ca, sa)
+        =>:
+            $four_unit_disks_cover(a, b, c, d)
+    by def $four_vertex_unit_disks_cover(side_a, ca, sa)
+    claim:
+        ? forall u, v R:
+            u >= 0
+            u <= 1
+            v >= 0
+            v <= 1
+            =>:
+                distance_sq(parallelogram_point(a, b, d, u, v), a) <= 1 or distance_sq(parallelogram_point(a, b, d, u, v), b) <= 1 or distance_sq(parallelogram_point(a, b, d, u, v), c) <= 1 or distance_sq(parallelogram_point(a, b, d, u, v), d) <= 1
+        by thm rigid_distance_A_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        by thm rigid_distance_B_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        by thm rigid_distance_C_13(a, b, c, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        by thm rigid_distance_D_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy, u, v)
+        dist_A(side_a, ca, sa, u, v) = distance_sq(parallelogram_point(a, b, d, u, v), a)
+        dist_B(side_a, ca, sa, u, v) = distance_sq(parallelogram_point(a, b, d, u, v), b)
+        dist_C(side_a, ca, sa, u, v) = distance_sq(parallelogram_point(a, b, d, u, v), c)
+        dist_D(side_a, ca, sa, u, v) = distance_sq(parallelogram_point(a, b, d, u, v), d)
+        by thm four_way_cover_congruence_13(dist_A(side_a, ca, sa, u, v), dist_B(side_a, ca, sa, u, v), dist_C(side_a, ca, sa, u, v), dist_D(side_a, ca, sa, u, v), distance_sq(parallelogram_point(a, b, d, u, v), a), distance_sq(parallelogram_point(a, b, d, u, v), b), distance_sq(parallelogram_point(a, b, d, u, v), c), distance_sq(parallelogram_point(a, b, d, u, v), d))
+    by def:
+        ? $four_unit_disks_cover(a, b, c, d)
+
+
+thm positive_equal_from_equal_squares:
+    ? forall x, y R:
+        x > 0
+        y > 0
+        x^2 = y^2
+        =>:
+            x = y
+    x^2 - y^2 = 0
+    x^2 - y^2 = (x - y) * (x + y)
+    (x - y) * (x + y) = 0
+    x + y > 0
+    by contra:
+        ? x = y
+        x != y
+        x - y != 0
+        (x - y) * (x + y) != 0
+        impossible (x - y) * (x + y) = 0
+
+
+thm scaled_unit_components_give_distance:
+    ? forall p, q cart(R, R), length, ux, uy R:
+        ux^2 + uy^2 = 1
+        q(1) = p(1) + length * ux
+        q(2) = p(2) + length * uy
+        =>:
+            distance_sq(p, q) = length^2
+    (-uy)^2+ux^2=ux^2+uy^2=1
+    ux*(-uy)+uy*ux=0
+    by thm subtraction_congruence_13(q(1),p(1)+length*ux,p(1),p(1))
+    q(1)-p(1)=(p(1)+length*ux)-p(1)
+    (p(1)+length*ux)-p(1)=length*ux
+    q(1)-p(1)=length*ux+0*-uy
+    by thm subtraction_congruence_13(q(2),p(2)+length*uy,p(2),p(2))
+    q(2)-p(2)=(p(2)+length*uy)-p(2)
+    (p(2)+length*uy)-p(2)=length*uy
+    q(2)-p(2)=length*uy+0*ux
+    by thm rotated_components_give_distance_13(p,q,ux,uy,-uy,ux,length,0)
+    length^2+0^2=length^2
+    distance_sq(p,q)=length^2
+
+thm direct_atom_unpack_13:
+    ? forall a, b, d cart(R, R), side_a, alpha R:
+        $has_length(a, b, side_a)
+        $has_length(a, d, 1)
+        $has_angle_measure(b, a, d, alpha)
+        =>:
+            exist ex, ey, fx, fy, ca, sa R st {ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, ca = cos(alpha), sa = sin(alpha), sa > 0, b(1) = a(1) + side_a * ex, b(2) = a(2) + side_a * ey, d(1) = a(1) + ca * ex + sa * fx, d(2) = a(2) + ca * ey + sa * fy}
+    by def $has_length(a, b, side_a)
+    by def $has_length(a, d, 1)
+    by def $has_angle_measure(b, a, d, alpha)
+    obtain first_length0, second_length0, ex0, ey0, fx0, fy0, ca0, sa0 from exist first_length0, second_length0, ex0, ey0, fx0, fy0, ca0, sa0 R st {first_length0 > 0, second_length0 > 0, ex0^2 + ey0^2 = 1, fx0^2 + fy0^2 = 1, ex0 * fx0 + ey0 * fy0 = 0, ca0 = cos(alpha), sa0 = sin(alpha), sa0 > 0, b(1) = a(1) + first_length0 * ex0, b(2) = a(2) + first_length0 * ey0, d(1) = a(1) + second_length0 * (ca0 * ex0 + sa0 * fx0), d(2) = a(2) + second_length0 * (ca0 * ey0 + sa0 * fy0)}
+    by thm scaled_unit_components_give_distance(a, b, first_length0, ex0, ey0)
+    first_length0^2 = side_a^2
+    by thm positive_equal_from_equal_squares(first_length0, side_a)
+    first_length0 * ex0 = side_a * ex0
+    first_length0 * ey0 = side_a * ey0
+    a(1) + first_length0 * ex0 = a(1) + side_a * ex0
+    a(2) + first_length0 * ey0 = a(2) + side_a * ey0
+    b(1) = a(1) + side_a * ex0
+    b(2) = a(2) + side_a * ey0
+    cos(alpha)^2 + sin(alpha)^2 = 1
+    ca0^2 = cos(alpha)^2
+    sa0^2 = sin(alpha)^2
+    ca0^2 + sa0^2 = cos(alpha)^2 + sin(alpha)^2
+    ca0^2 + sa0^2 = 1
+    (ca0 * ex0 + sa0 * fx0)^2 + (ca0 * ey0 + sa0 * fy0)^2 = ca0^2 * (ex0^2 + ey0^2) + sa0^2 * (fx0^2 + fy0^2) + 2 * ca0 * sa0 * (ex0 * fx0 + ey0 * fy0)
+    ex0^2 + ey0^2 = 1
+    fx0^2 + fy0^2 = 1
+    ex0 * fx0 + ey0 * fy0 = 0
+    ca0^2 * (ex0^2 + ey0^2) = ca0^2 * 1
+    sa0^2 * (fx0^2 + fy0^2) = sa0^2 * 1
+    2 * ca0 * sa0 * (ex0 * fx0 + ey0 * fy0) = 2 * ca0 * sa0 * 0
+    2 * ca0 * sa0 * 0 = 0
+    ca0^2 * 1 + sa0^2 * 1 + 0 = ca0^2 + sa0^2
+    ca0^2 * (ex0^2 + ey0^2) + sa0^2 * (fx0^2 + fy0^2) + 2 * ca0 * sa0 * (ex0 * fx0 + ey0 * fy0) = ca0^2 + sa0^2
+    (ca0 * ex0 + sa0 * fx0)^2 + (ca0 * ey0 + sa0 * fy0)^2 = 1
+    by thm scaled_unit_components_give_distance(a, d, second_length0, ca0 * ex0 + sa0 * fx0, ca0 * ey0 + sa0 * fy0)
+    second_length0^2 = 1^2
+    1 > 0
+    by thm positive_equal_from_equal_squares(second_length0, 1)
+    second_length0 * (ca0 * ex0 + sa0 * fx0) = 1 * (ca0 * ex0 + sa0 * fx0)
+    second_length0 * (ca0 * ey0 + sa0 * fy0) = 1 * (ca0 * ey0 + sa0 * fy0)
+    1 * (ca0 * ex0 + sa0 * fx0) = ca0 * ex0 + sa0 * fx0
+    1 * (ca0 * ey0 + sa0 * fy0) = ca0 * ey0 + sa0 * fy0
+    a(1) + second_length0 * (ca0 * ex0 + sa0 * fx0) = a(1) + ca0 * ex0 + sa0 * fx0
+    a(2) + second_length0 * (ca0 * ey0 + sa0 * fy0) = a(2) + ca0 * ey0 + sa0 * fy0
+    d(1) = a(1) + ca0 * ex0 + sa0 * fx0
+    d(2) = a(2) + ca0 * ey0 + sa0 * fy0
+    witness exist ex, ey, fx, fy, ca, sa R st {ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, ca = cos(alpha), sa = sin(alpha), sa > 0, b(1) = a(1) + side_a * ex, b(2) = a(2) + side_a * ey, d(1) = a(1) + ca * ex + sa * fx, d(2) = a(2) + ca * ey + sa * fy} from ex0, ey0, fx0, fy0, ca0, sa0
+
+
+thm orthonormal_basis_determinant_nonzero_13:
+    ? forall ex, ey, fx, fy R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        =>:
+            ex * fy - ey * fx != 0
+    (ex * fy - ey * fx)^2 = (ex^2 + ey^2) * (fx^2 + fy^2) - (ex * fx + ey * fy)^2
+    (ex^2 + ey^2) * (fx^2 + fy^2) - (ex * fx + ey * fy)^2 = 1 * 1 - 0^2
+    1 * 1 - 0^2 = 1
+    (ex * fy - ey * fx)^2 = 1
+    by contra:
+        ? ex * fy - ey * fx != 0
+        ex * fy - ey * fx = 0
+        (ex * fy - ey * fx)^2 = (ex * fy - ey * fx)*(ex * fy - ey * fx) = (ex * fy - ey * fx)*0 = 0
+        impossible (ex * fy - ey * fx)^2 = 1
+
+
+thm scaled_basis_determinant_nonzero_13:
+    ? forall side_a, ca, sa, ex, ey, fx, fy R:
+        side_a > 0
+        sa > 0
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        =>:
+            (side_a * ex) * (ca * ey + sa * fy) - (side_a * ey) * (ca * ex + sa * fx) != 0
+    by thm orthonormal_basis_determinant_nonzero_13(ex, ey, fx, fy)
+    (side_a * ex) * (ca * ey + sa * fy) - (side_a * ey) * (ca * ex + sa * fx) = side_a * sa * (ex * fy - ey * fx)
+    side_a * sa > 0
+    ex * fy - ey * fx != 0
+    side_a * sa * (ex * fy - ey * fx) != 0
+
+
+thm independent_parallel_offsets_zero_13:
+    ? forall ux, uy, vx, vy, xx, xy R:
+        ux * vy - uy * vx != 0
+        ux * xy - uy * xx = 0
+        vx * xy - vy * xx = 0
+        =>:
+            xx = 0
+            xy = 0
+    (ux * vy - uy * vx) * xx = ux * (vy * xx) - vx * (uy * xx)
+    ux * xy = uy * xx
+    vx * xy = vy * xx
+    vy * xx = vx * xy
+    uy * xx = ux * xy
+    ux * (vy * xx) = ux * (vx * xy)
+    vx * (uy * xx) = vx * (ux * xy)
+    ux * (vx * xy) - vx * (ux * xy) = 0
+    ux * (vy * xx) - vx * (uy * xx) = 0
+    (ux * vy - uy * vx) * xx = 0
+    by contra:
+        ? xx = 0
+        xx != 0
+        (ux * vy - uy * vx) * xx != 0
+        impossible (ux * vy - uy * vx) * xx = 0
+    xx = 0
+    uy * xx = uy * 0
+    uy * 0 = 0
+    uy * xx = 0
+    ux * xy = 0
+    vy * xx = vy * 0
+    vy * 0 = 0
+    vy * xx = 0
+    vx * xy = 0
+    by contra:
+        ? xy = 0
+        xy != 0
+        by contra:
+            ? ux = 0
+            ux != 0
+            ux * xy != 0
+            impossible ux * xy = 0
+        ux = 0
+        by contra:
+            ? vx = 0
+            vx != 0
+            vx * xy != 0
+            impossible vx * xy = 0
+        vx = 0
+        ux * vy - uy * vx = 0
+        impossible ux * vy - uy * vx != 0
+    xy = 0
+
+
+thm parallelogram_vertex_13:
+    ? forall a, b, c, d cart(R, R), ux, uy, vx, vy, xx, xy R:
+        b(1) - a(1) = ux
+        b(2) - a(2) = uy
+        d(1) - a(1) = vx
+        d(2) - a(2) = vy
+        c(1) - d(1) - b(1) + a(1) = xx
+        c(2) - d(2) - b(2) + a(2) = xy
+        ux * vy - uy * vx != 0
+        ux * (c(2) - d(2)) - uy * (c(1) - d(1)) = 0
+        vx * (c(2) - b(2)) - vy * (c(1) - b(1)) = 0
+        =>:
+            c(1) = b(1) + d(1) - a(1)
+            c(2) = b(2) + d(2) - a(2)
+    (c(2) - d(2) - b(2) + a(2)) + (b(2) - a(2)) = xy + (b(2) - a(2))
+    (c(2) - d(2) - b(2) + a(2)) + (b(2) - a(2)) = c(2) - d(2)
+    xy + (b(2) - a(2)) = (b(2) - a(2)) + xy
+    c(2) - d(2) = (b(2) - a(2)) + xy
+    (c(1) - d(1) - b(1) + a(1)) + (b(1) - a(1)) = xx + (b(1) - a(1))
+    (c(1) - d(1) - b(1) + a(1)) + (b(1) - a(1)) = c(1) - d(1)
+    xx + (b(1) - a(1)) = (b(1) - a(1)) + xx
+    c(1) - d(1) = (b(1) - a(1)) + xx
+    ux * (c(2) - d(2)) - uy * (c(1) - d(1)) = ux * ((b(2) - a(2)) + xy) - uy * ((b(1) - a(1)) + xx)
+    ux * ((b(2) - a(2)) + xy) = ux * (uy + xy)
+    uy * ((b(1) - a(1)) + xx) = uy * (ux + xx)
+    ux * ((b(2) - a(2)) + xy) - uy * ((b(1) - a(1)) + xx) = ux * (uy + xy) - uy * (ux + xx)
+    ux * (uy + xy) - uy * (ux + xx) = ux * xy - uy * xx
+    ux * ((b(2) - a(2)) + xy) - uy * ((b(1) - a(1)) + xx) = ux * xy - uy * xx
+    ux * (c(2) - d(2)) - uy * (c(1) - d(1)) = ux * xy - uy * xx
+    ux * xy - uy * xx = 0
+    (c(2) - d(2) - b(2) + a(2)) + (d(2) - a(2)) = xy + (d(2) - a(2))
+    (c(2) - d(2) - b(2) + a(2)) + (d(2) - a(2)) = c(2) - b(2)
+    xy + (d(2) - a(2)) = (d(2) - a(2)) + xy
+    c(2) - b(2) = (d(2) - a(2)) + xy
+    (c(1) - d(1) - b(1) + a(1)) + (d(1) - a(1)) = xx + (d(1) - a(1))
+    (c(1) - d(1) - b(1) + a(1)) + (d(1) - a(1)) = c(1) - b(1)
+    xx + (d(1) - a(1)) = (d(1) - a(1)) + xx
+    c(1) - b(1) = (d(1) - a(1)) + xx
+    vx * (c(2) - b(2)) - vy * (c(1) - b(1)) = vx * ((d(2) - a(2)) + xy) - vy * ((d(1) - a(1)) + xx)
+    vx * ((d(2) - a(2)) + xy) = vx * (vy + xy)
+    vy * ((d(1) - a(1)) + xx) = vy * (vx + xx)
+    vx * ((d(2) - a(2)) + xy) - vy * ((d(1) - a(1)) + xx) = vx * (vy + xy) - vy * (vx + xx)
+    vx * (vy + xy) - vy * (vx + xx) = vx * xy - vy * xx
+    vx * ((d(2) - a(2)) + xy) - vy * ((d(1) - a(1)) + xx) = vx * xy - vy * xx
+    vx * (c(2) - b(2)) - vy * (c(1) - b(1)) = vx * xy - vy * xx
+    vx * xy - vy * xx = 0
+    by thm independent_parallel_offsets_zero_13(ux, uy, vx, vy, xx, xy)
+    xx = 0
+    xy = 0
+    (c(1) - d(1) - b(1) + a(1)) + (b(1) - a(1)) = 0 + (b(1) - a(1))
+    (c(1) - d(1) - b(1) + a(1)) + (b(1) - a(1)) = c(1) - d(1)
+    0 + (b(1) - a(1)) = b(1) - a(1)
+    c(1) - d(1) = b(1) - a(1)
+    (c(2) - d(2) - b(2) + a(2)) + (b(2) - a(2)) = 0 + (b(2) - a(2))
+    (c(2) - d(2) - b(2) + a(2)) + (b(2) - a(2)) = c(2) - d(2)
+    0 + (b(2) - a(2)) = b(2) - a(2)
+    c(2) - d(2) = b(2) - a(2)
+    c(1) - d(1) + d(1) = b(1) - a(1) + d(1)
+    c(1) - d(1) + d(1) = c(1)
+    b(1) - a(1) + d(1) = b(1) + d(1) - a(1)
+    c(1) = b(1) + d(1) - a(1)
+    c(2) - d(2) + d(2) = b(2) - a(2) + d(2)
+    c(2) - d(2) + d(2) = c(2)
+    b(2) - a(2) + d(2) = b(2) + d(2) - a(2)
+    c(2) = b(2) + d(2) - a(2)
+
+
+# A library parallelogram with independent adjacent sides has the affine fourth vertex C = B + D - A.
+
+thm two_product_difference_congruence_13:
+    ? forall a1,a2,a3,a4,b1,b2,b3,b4 R:
+        a1=b1
+        a2=b2
+        a3=b3
+        a4=b4
+        =>:
+            a1*a2-a3*a4=b1*b2-b3*b4
+    a1*a2=b1*a2
+    b1*a2=b1*b2
+    a1*a2=b1*b2
+    a3*a4=b3*a4
+    b3*a4=b3*b4
+    a3*a4=b3*b4
+    a1*a2-a3*a4=b1*b2-a3*a4
+    b1*b2-a3*a4=b1*b2-b3*b4
+    a1*a2-a3*a4=b1*b2-a3*a4=b1*b2-b3*b4
+
+thm determinant_difference_coordinates_13:
+    ? forall a,b,c,d cart(R,R):
+        det(vec(a,b),vec(c,d))=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+    vec(a,b)=(b(1)-a(1),b(2)-a(2))
+    vec(c,d)=(d(1)-c(1),d(2)-c(2))
+    vec(a,b)(1)=b(1)-a(1)
+    vec(a,b)(2)=b(2)-a(2)
+    vec(c,d)(1)=d(1)-c(1)
+    vec(c,d)(2)=d(2)-c(2)
+    det(vec(a,b),vec(c,d))=vec(a,b)(1)*vec(c,d)(2)-vec(a,b)(2)*vec(c,d)(1)
+    by thm two_product_difference_congruence_13(vec(a,b)(1),vec(c,d)(2),vec(a,b)(2),vec(c,d)(1),b(1)-a(1),d(2)-c(2),b(2)-a(2),d(1)-c(1))
+    vec(a,b)(1)*vec(c,d)(2)-vec(a,b)(2)*vec(c,d)(1)=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+    det(vec(a,b),vec(c,d))=(b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+
+thm library_parallelogram_vertex_13:
+    ? forall a, b, c, d cart(R, R), ux, uy, vx, vy R:
+        $is_parallelogram(a, b, c, d)
+        b(1) - a(1) = ux
+        b(2) - a(2) = uy
+        d(1) - a(1) = vx
+        d(2) - a(2) = vy
+        ux * vy - uy * vx != 0
+        =>:
+            c(1) = b(1) + d(1) - a(1)
+            c(2) = b(2) + d(2) - a(2)
+    by def $is_parallelogram(a, b, c, d)
+    by def $is_parallel(a, b, d, c)
+    by def $is_parallel(a, d, b, c)
+    vec(a, b) = (b(1) - a(1), b(2) - a(2))
+    vec(d, c) = (c(1) - d(1), c(2) - d(2))
+    vec(a, d) = (d(1) - a(1), d(2) - a(2))
+    vec(b, c) = (c(1) - b(1), c(2) - b(2))
+    by thm determinant_difference_coordinates_13(a,b,d,c)
+    by thm determinant_difference_coordinates_13(a,d,b,c)
+    det(vec(a, b), vec(d, c)) = (b(1) - a(1)) * (c(2) - d(2)) - (b(2) - a(2)) * (c(1) - d(1))
+    det(vec(a, d), vec(b, c)) = (d(1) - a(1)) * (c(2) - b(2)) - (d(2) - a(2)) * (c(1) - b(1))
+    (b(1) - a(1)) * (c(2) - d(2)) - (b(2) - a(2)) * (c(1) - d(1)) = 0
+    (d(1) - a(1)) * (c(2) - b(2)) - (d(2) - a(2)) * (c(1) - b(1)) = 0
+    ux * (c(2) - d(2)) = (b(1) - a(1)) * (c(2) - d(2))
+    uy * (c(1) - d(1)) = (b(2) - a(2)) * (c(1) - d(1))
+    by thm two_product_difference_congruence_13(ux,c(2)-d(2),uy,c(1)-d(1),b(1)-a(1),c(2)-d(2),b(2)-a(2),c(1)-d(1))
+    ux * (c(2) - d(2)) - uy * (c(1) - d(1)) = (b(1) - a(1)) * (c(2) - d(2)) - (b(2) - a(2)) * (c(1) - d(1))
+    ux * (c(2) - d(2)) - uy * (c(1) - d(1)) = 0
+    vx * (c(2) - b(2)) = (d(1) - a(1)) * (c(2) - b(2))
+    vy * (c(1) - b(1)) = (d(2) - a(2)) * (c(1) - b(1))
+    by thm two_product_difference_congruence_13(vx,c(2)-b(2),vy,c(1)-b(1),d(1)-a(1),c(2)-b(2),d(2)-a(2),c(1)-b(1))
+    vx * (c(2) - b(2)) - vy * (c(1) - b(1)) = (d(1) - a(1)) * (c(2) - b(2)) - (d(2) - a(2)) * (c(1) - b(1))
+    vx * (c(2) - b(2)) - vy * (c(1) - b(1)) = 0
+    by thm parallelogram_vertex_13(a, b, c, d, ux, uy, vx, vy, c(1) - d(1) - b(1) + a(1), c(2) - d(2) - b(2) + a(2))
+
+# NL: The four closed unit disks can cover the parallelogram only if the stated inequality holds.
+
+thm imo_1967_problem_1_necessity:
+    ? forall a, b, c, d cart(R, R), side_a, alpha R:
+        # NL: ABCD is a parallelogram.
+        $is_parallelogram(a, b, c, d)
+        # NL: AB has length side_a.
+        $has_length(a, b, side_a)
+        # NL: AD has length 1.
+        $has_length(a, d, 1)
+        # NL: angle BAD equals alpha.
+        $has_angle_measure(b, a, d, alpha)
+        # NL: Triangle ABD is acute.
+        $is_acute_triangle(a, b, d)
+        # NL: The four closed unit disks centered at A, B, C, D cover ABCD.
+        $four_unit_disks_cover(a, b, c, d)
+        =>:
+            # NL: side_a <= cos(alpha) + sqrt(3) * sin(alpha).
+            side_a <= cos(alpha) + sqrt(3) * sin(alpha)
+    by thm direct_atom_unpack_13(a, b, d, side_a, alpha)
+    obtain ex, ey, fx, fy, ca, sa from exist ex, ey, fx, fy, ca, sa R st {ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, ca = cos(alpha), sa = sin(alpha), sa > 0, b(1) = a(1) + side_a * ex, b(2) = a(2) + side_a * ey, d(1) = a(1) + ca * ex + sa * fx, d(2) = a(2) + ca * ey + sa * fy}
+    by thm scaled_basis_determinant_nonzero_13(side_a, ca, sa, ex, ey, fx, fy)
+    by thm subtraction_congruence_13(b(1), a(1) + side_a * ex, a(1), a(1))
+    b(1) - a(1) = (a(1) + side_a * ex) - a(1)
+    (a(1) + side_a * ex) - a(1) = side_a * ex
+    b(1) - a(1) = side_a * ex
+    by thm subtraction_congruence_13(b(2), a(2) + side_a * ey, a(2), a(2))
+    b(2) - a(2) = (a(2) + side_a * ey) - a(2)
+    (a(2) + side_a * ey) - a(2) = side_a * ey
+    b(2) - a(2) = side_a * ey
+    by thm subtraction_congruence_13(d(1), a(1) + ca * ex + sa * fx, a(1), a(1))
+    d(1) - a(1) = (a(1) + ca * ex + sa * fx) - a(1)
+    (a(1) + ca * ex + sa * fx) - a(1) = ca * ex + sa * fx
+    d(1) - a(1) = ca * ex + sa * fx
+    by thm subtraction_congruence_13(d(2), a(2) + ca * ey + sa * fy, a(2), a(2))
+    d(2) - a(2) = (a(2) + ca * ey + sa * fy) - a(2)
+    (a(2) + ca * ey + sa * fy) - a(2) = ca * ey + sa * fy
+    d(2) - a(2) = ca * ey + sa * fy
+    by thm library_parallelogram_vertex_13(a, b, c, d, side_a * ex, side_a * ey, ca * ex + sa * fx, ca * ey + sa * fy)
+    by def $is_acute_triangle(a, b, d)
+    by thm acute_coordinates_give_parameter_range_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy)
+    by thm imo_1967_problem_1(side_a, ca, sa)
+    by def $imo_1967_problem_1_criterion(side_a, ca, sa)
+    by thm geometric_cover_implies_normalized_cover_13(a, b, c, d, side_a, ca, sa, ex, ey, fx, fy)
+    side_a <= ca + sqrt(3) * sa
+    ca + sqrt(3) * sa = cos(alpha) + sqrt(3) * sin(alpha)
+    side_a <= cos(alpha) + sqrt(3) * sin(alpha)
+
+# NL: Conversely, the stated inequality guarantees that the four closed unit disks cover the parallelogram.
+
+thm imo_1967_problem_1_sufficiency:
+    ? forall a, b, c, d cart(R, R), side_a, alpha R:
+        # NL: ABCD is a parallelogram.
+        $is_parallelogram(a, b, c, d)
+        # NL: AB has length side_a.
+        $has_length(a, b, side_a)
+        # NL: AD has length 1.
+        $has_length(a, d, 1)
+        # NL: angle BAD equals alpha.
+        $has_angle_measure(b, a, d, alpha)
+        # NL: Triangle ABD is acute.
+        $is_acute_triangle(a, b, d)
+        # NL: side_a <= cos(alpha) + sqrt(3) * sin(alpha).
+        side_a <= cos(alpha) + sqrt(3) * sin(alpha)
+        =>:
+            # NL: The four closed unit disks centered at A, B, C, D cover ABCD.
+            $four_unit_disks_cover(a, b, c, d)
+    by thm direct_atom_unpack_13(a, b, d, side_a, alpha)
+    obtain ex, ey, fx, fy, ca, sa from exist ex, ey, fx, fy, ca, sa R st {ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, ca = cos(alpha), sa = sin(alpha), sa > 0, b(1) = a(1) + side_a * ex, b(2) = a(2) + side_a * ey, d(1) = a(1) + ca * ex + sa * fx, d(2) = a(2) + ca * ey + sa * fy}
+    by thm scaled_basis_determinant_nonzero_13(side_a, ca, sa, ex, ey, fx, fy)
+    by thm subtraction_congruence_13(b(1), a(1) + side_a * ex, a(1), a(1))
+    b(1) - a(1) = (a(1) + side_a * ex) - a(1)
+    (a(1) + side_a * ex) - a(1) = side_a * ex
+    b(1) - a(1) = side_a * ex
+    by thm subtraction_congruence_13(b(2), a(2) + side_a * ey, a(2), a(2))
+    b(2) - a(2) = (a(2) + side_a * ey) - a(2)
+    (a(2) + side_a * ey) - a(2) = side_a * ey
+    b(2) - a(2) = side_a * ey
+    by thm subtraction_congruence_13(d(1), a(1) + ca * ex + sa * fx, a(1), a(1))
+    d(1) - a(1) = (a(1) + ca * ex + sa * fx) - a(1)
+    (a(1) + ca * ex + sa * fx) - a(1) = ca * ex + sa * fx
+    d(1) - a(1) = ca * ex + sa * fx
+    by thm subtraction_congruence_13(d(2), a(2) + ca * ey + sa * fy, a(2), a(2))
+    d(2) - a(2) = (a(2) + ca * ey + sa * fy) - a(2)
+    (a(2) + ca * ey + sa * fy) - a(2) = ca * ey + sa * fy
+    d(2) - a(2) = ca * ey + sa * fy
+    by thm library_parallelogram_vertex_13(a, b, c, d, side_a * ex, side_a * ey, ca * ex + sa * fx, ca * ey + sa * fy)
+    by def $is_acute_triangle(a, b, d)
+    by thm acute_coordinates_give_parameter_range_13(a, b, d, side_a, ca, sa, ex, ey, fx, fy)
+    by thm imo_1967_problem_1(side_a, ca, sa)
+    by def $imo_1967_problem_1_criterion(side_a, ca, sa)
+    cos(alpha) + sqrt(3) * sin(alpha) = ca + sqrt(3) * sa
+    side_a <= ca + sqrt(3) * sa
+    by thm normalized_cover_implies_geometric_cover_13(a, b, c, d, side_a, ca, sa, ex, ey, fx, fy)

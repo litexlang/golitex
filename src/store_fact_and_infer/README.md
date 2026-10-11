@@ -80,10 +80,42 @@ Positive-real power transport first checks `0 < a^n` using existing builtin
 rules, with a child ceiling capped at BuiltinRule and inherited from the caller.
 For a real nonzero square this reuses `EvenPowPositiveFromNonzero`; it avoids
 searching for the unnecessary stronger premise `0 < a`. If that bounded check
-fails, the existing positive-base/real-exponent route retains the original
-caller ceiling. The exponent membership and ordinary inferred-store WD remain
-checked. No global permission, state, result shape or user-goal search changes.
-Tracer: `examples/infer/equal/nonzero_real_square.lit`.
+fails, the positive-base fallback and real-exponent membership use the same
+inherited BuiltinRule ceiling. Missing optional evidence skips this inference;
+ordinary inferred-store WD retains the original caller ceiling. No global
+permission, state, result shape or user-goal search changes. Tracers:
+`examples/infer/equal/nonzero_real_square.lit` and
+`examples/infer/equal/positive_real_power_bounded_premises.lit`.
+
+### Optional premise search boundary
+
+| Inference | Ceiling for optional truth premises |
+|---|---|
+| Positive-real power transport | BuiltinRule |
+| Scalar addition/subtraction/product/quotient cancellation | KnownSpecialProperty |
+| Strict lower bound to positivity | KnownSpecialProperty |
+| Weak integer lower bound to natural membership | KnownSpecialProperty |
+| Subset of a known finite upper set | KnownSpecialProperty |
+
+These ceilings are inherited restrictions, never fresh root permissions.
+An unavailable optional premise leaves the accepted seed intact. Explicit
+proofs can establish and store the missing certificate for a later seed.
+
+Construction and derived-fact WD are separate obligations. Template builder
+projection checks the selected template instance before expansion; preimage
+projection checks its complete callable domain and generated builder. Both
+retain the caller's permissions and required evidence. Every inferred store
+still passes through ordinary fact WD. Capping or omitting those checks merely
+because they occur during inference would change the formation contract.
+
+Focused release coverage for this boundary and its recursive consumers:
+
+```bash
+cargo test --release --lib -- store_fact_and_infer:: function_preimages native_scalar_codomain finite_set_cardinality_rule chain_fact mixed_equality_order_chain
+```
+
+The [2026-10-11 call audit](optional_premise_audit.md) records the complete
+optional/construction classification and the executed positive/negative gates.
 
 **Other atomics**
 
