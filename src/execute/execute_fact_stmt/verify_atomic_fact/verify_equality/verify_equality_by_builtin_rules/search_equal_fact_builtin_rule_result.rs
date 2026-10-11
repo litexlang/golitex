@@ -130,6 +130,9 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    FiniteSeqReconstruction(
+        super::by_finite_seq_reconstruction::FiniteSeqReconstructionBuiltinRuleProof,
+    ),
     ScalarExtra(super::by_scalar_extra::ScalarExtraEqualityProof),
     IntegerInterval(super::by_integer_interval::IntegerIntervalEqualityProof),
     FactorialPredecessor(super::by_factorial_predecessor::FactorialPredecessorProof),

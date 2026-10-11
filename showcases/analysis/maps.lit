@@ -1,0 +1,18 @@
+# Injective, surjective and bijective maps, then equal cardinality.
+# Selected definitions; no cardinal arithmetic or choice theorem is assumed.
+prop is_injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+prop is_surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
+
+prop is_bijective_fn(S, T set, f fn(x S) T):
+    $is_injective_fn(S, T, f)
+    $is_surjective_fn(S, T, f)
+
+prop has_equal_cardinality(S, T set):
+    exist f fn(x S) T st {$is_bijective_fn(S, T, f)}

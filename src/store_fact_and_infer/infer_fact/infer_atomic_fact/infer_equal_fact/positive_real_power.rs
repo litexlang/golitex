@@ -6,8 +6,8 @@ use crate::store_fact_and_infer::{InferEqualFactPositiveRealPowerResult, StoreFa
 
 impl Runtime {
     // When: stored `a^x = y` (or swapped) with checked positive real power.
-    // Infers: `y $in R+`. First reuse bounded positivity rules for the power;
-    // then retain the original positive-base/real-exponent route as fallback.
+    // Infers: `y $in R+`. Optional power/base/exponent premises use bounded
+    // local reasoning; definition/strategy search belongs to an explicit goal.
     // Example: `have a R*`, `have y R = a^2` ⇒ `y $in R+`.
     pub(super) fn infer_equal_fact_positive_real_power(
         &mut self,
@@ -52,6 +52,7 @@ impl Runtime {
         let Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) = maybe_power else {
             return Ok(None);
         };
+        let premise_state = verify_state.capped_at(VerifyStateLevel::BuiltinRule);
         let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
         }));
@@ -64,10 +65,7 @@ impl Runtime {
         // A real nonzero square is positive even when its base has unknown sign.
         // Reuse that existing builtin proof before searching for `0 < base`.
         if self
-            .verify_atomic_fact(
-                &power_positive,
-                verify_state.capped_at(VerifyStateLevel::BuiltinRule),
-            )?
+            .verify_atomic_fact(&power_positive, premise_state)?
             .is_failed()
         {
             let base_positive = AtomicFact::LessFact(LessFact {
@@ -77,7 +75,7 @@ impl Runtime {
                 line_file: equal_fact.line_file.clone(),
             });
             if self
-                .verify_atomic_fact(&base_positive, verify_state)?
+                .verify_atomic_fact(&base_positive, premise_state)?
                 .is_failed()
             {
                 return Ok(None);
@@ -90,7 +88,7 @@ impl Runtime {
             line_file: equal_fact.line_file.clone(),
         });
         if self
-            .verify_atomic_fact(&exponent_in_r, verify_state)?
+            .verify_atomic_fact(&exponent_in_r, premise_state)?
             .is_failed()
         {
             return Ok(None);
@@ -109,3 +107,7 @@ impl Runtime {
         Ok(Some(stored))
     }
 }
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/positive_power_inference/tests.rs"]
+mod tests;

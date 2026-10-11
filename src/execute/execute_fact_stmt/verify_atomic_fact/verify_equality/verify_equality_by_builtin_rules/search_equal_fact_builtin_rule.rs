@@ -19,6 +19,11 @@ impl Runtime {
                 EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(proof),
             ));
         }
+        if let Some(proof) = self.search_finite_seq_reconstruction(fact) {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::FiniteSeqReconstruction(proof),
+            ));
+        }
         if let Some(proof) = self.search_empty_function_graph(fact, verify_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(
                 proof,

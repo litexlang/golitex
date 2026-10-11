@@ -12,6 +12,25 @@ pub(super) fn project_equality_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::FiniteSeqReconstruction(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("FiniteSeqReconstruction")),
+                ("cite_fact_id", string(p.membership.fact_id.to_string())),
+                (
+                    "membership",
+                    string(
+                        crate::ast::fact::AtomicFact::InFact(p.membership.clone())
+                            .readable_string(),
+                    ),
+                ),
+                (
+                    "reversed",
+                    crate::knowledge_base::JsonValue::Bool(p.reversed),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::ScalarExtra(p) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_extra::ScalarExtraEqualityProof as P;
             let mut entries = vec![

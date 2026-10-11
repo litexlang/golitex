@@ -1,0 +1,97 @@
+release obj def geo::vec
+
+release obj def geo::dot
+
+release obj def geo::det
+
+release obj def geo::distance_sq
+
+thm central_coordinate:
+    ? forall p, a, b, c, n, k R:
+        p * n = b * (n - k) + c * k
+        2 * k = n - 1
+        =>:
+            2 * n * (p - a) = (n + 1) * (b - a) + (n - 1) * (c - a)
+    2 * (n - k) = 2 * n - 2 * k = 2 * n - (n - 1) = n + 1
+    2 * n * p = 2 * (p * n) = 2 * (b * (n - k) + c * k) = b * (2 * (n - k)) + c * (2 * k) = b * (n + 1) + c * (n - 1)
+    2 * n * (p - a) = 2 * n * p - 2 * n * a = b * (n + 1) + c * (n - 1) - 2 * n * a = (n + 1) * (b - a) + (n - 1) * (c - a)
+
+thm central_coordinate_reverse:
+    ? forall p, a, b, c, n, k R:
+        p * n = b * (n - k) + c * k
+        2 * k = n + 1
+        =>:
+            2 * n * (p - a) = (n - 1) * (b - a) + (n + 1) * (c - a)
+    2 * (n - k) = 2 * n - 2 * k = 2 * n - (n + 1) = n - 1
+    p * n = c * (n - (n - k)) + b * (n - k)
+    by thm central_coordinate(p, a, c, b, n, n - k) => 2 * n * (p - a) = (n + 1) * (c - a) + (n - 1) * (b - a)
+    2 * n * (p - a) = (n + 1) * (c - a) + (n - 1) * (b - a) = (n - 1) * (b - a) + (n + 1) * (c - a)
+
+thm pythagoras:
+    ? forall a, b, c cart(R, R):
+        geo::dot(geo::vec(a,b),geo::vec(a,c)) = 0
+        =>:
+            geo::distance_sq(b,c) = geo::distance_sq(a,b) + geo::distance_sq(a,c)
+    geo::vec(a, b) = (b(1) - a(1), b(2) - a(2))
+    geo::vec(a, b)(1) = b(1) - a(1)
+    geo::vec(a, b)(2) = b(2) - a(2)
+    geo::vec(a, c) = (c(1) - a(1), c(2) - a(2))
+    geo::vec(a, c)(1) = c(1) - a(1)
+    geo::vec(a, c)(2) = c(2) - a(2)
+    geo::vec(b, c) = (c(1) - b(1), c(2) - b(2))
+    geo::vec(b, c)(1) = c(1) - b(1)
+    geo::vec(b, c)(2) = c(2) - b(2)
+    geo::vec(a, b)(1)*geo::vec(a, c)(1) = (b(1)-a(1))*(c(1)-a(1))
+    geo::vec(a, b)(2)*geo::vec(a, c)(2) = (b(2)-a(2))*(c(2)-a(2))
+    geo::dot(geo::vec(a, b), geo::vec(a, c)) = geo::vec(a, b)(1)*geo::vec(a, c)(1)+geo::vec(a, b)(2)*geo::vec(a, c)(2) = (b(1)-a(1))*(c(1)-a(1))+(b(2)-a(2))*(c(2)-a(2))
+    (b(1)-a(1))*(c(1)-a(1))+(b(2)-a(2))*(c(2)-a(2)) = 0
+    geo::vec(a, b)(1)*geo::vec(a, b)(1) = geo::vec(a, b)(1)^2 = (b(1)-a(1))^2
+    geo::vec(a, b)(2)*geo::vec(a, b)(2) = geo::vec(a, b)(2)^2 = (b(2)-a(2))^2
+    geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::vec(a, b)(1)*geo::vec(a, b)(1)+geo::vec(a, b)(2)*geo::vec(a, b)(2) = geo::vec(a, b)(1)^2+geo::vec(a, b)(2)^2 = (b(1)-a(1))^2+(b(2)-a(2))^2
+    geo::distance_sq(a, b) = geo::dot(geo::vec(a, b), geo::vec(a, b))
+    geo::vec(a, c)(1)*geo::vec(a, c)(1) = geo::vec(a, c)(1)^2 = (c(1)-a(1))^2
+    geo::vec(a, c)(2)*geo::vec(a, c)(2) = geo::vec(a, c)(2)^2 = (c(2)-a(2))^2
+    geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::vec(a, c)(1)*geo::vec(a, c)(1)+geo::vec(a, c)(2)*geo::vec(a, c)(2) = geo::vec(a, c)(1)^2+geo::vec(a, c)(2)^2 = (c(1)-a(1))^2+(c(2)-a(2))^2
+    geo::distance_sq(a, c) = geo::dot(geo::vec(a, c), geo::vec(a, c))
+    geo::vec(b, c)(1)*geo::vec(b, c)(1) = geo::vec(b, c)(1)^2 = (c(1)-b(1))^2
+    geo::vec(b, c)(2)*geo::vec(b, c)(2) = geo::vec(b, c)(2)^2 = (c(2)-b(2))^2
+    geo::dot(geo::vec(b, c), geo::vec(b, c)) = geo::vec(b, c)(1)*geo::vec(b, c)(1)+geo::vec(b, c)(2)*geo::vec(b, c)(2) = geo::vec(b, c)(1)^2+geo::vec(b, c)(2)^2 = (c(1)-b(1))^2+(c(2)-b(2))^2
+    geo::distance_sq(b, c) = geo::dot(geo::vec(b, c), geo::vec(b, c))
+    geo::distance_sq(b, c) = (c(1)-b(1))^2+(c(2)-b(2))^2 = ((b(1)-a(1))^2+(b(2)-a(2))^2)+((c(1)-a(1))^2+(c(2)-a(2))^2)-2*((b(1)-a(1))*(c(1)-a(1))+(b(2)-a(2))*(c(2)-a(2))) = ((b(1)-a(1))^2+(b(2)-a(2))^2)+((c(1)-a(1))^2+(c(2)-a(2))^2) = geo::distance_sq(a, b)+geo::distance_sq(a, c)
+
+thm central_product:
+    ? forall p, q, x, y, n R:
+        2*n*p = (n+1)*x+(n-1)*y
+        2*n*q = (n-1)*x+(n+1)*y
+        =>:
+            4*n^2*p*q = (n^2-1)*(x^2+y^2)+2*(n^2+1)*x*y
+    4*n^2*p*q = (2*n*p)*(2*n*q) = ((n+1)*x+(n-1)*y)*((n-1)*x+(n+1)*y) = (n^2-1)*(x^2+y^2)+2*(n^2+1)*x*y
+
+thm central_det:
+    ? forall p, q, r, s, x, y, u, v, n R:
+        2*n*p = (n+1)*x+(n-1)*u
+        2*n*q = (n+1)*y+(n-1)*v
+        2*n*r = (n-1)*x+(n+1)*u
+        2*n*s = (n-1)*y+(n+1)*v
+        n > 1
+        =>:
+            n*(p*s-q*r) = x*v-y*u
+    (2*n*p)*(2*n*s) = ((n+1)*x+(n-1)*u)*((n-1)*y+(n+1)*v)
+    (2*n*q)*(2*n*r) = ((n+1)*y+(n-1)*v)*((n-1)*x+(n+1)*u)
+    4*n^2*(p*s-q*r) = (2*n*p)*(2*n*s)-(2*n*q)*(2*n*r) = ((n+1)*x+(n-1)*u)*((n-1)*y+(n+1)*v)-((n+1)*y+(n-1)*v)*((n-1)*x+(n+1)*u) = 4*n*(x*v-y*u)
+    4*n > 0
+    n*(p*s-q*r) = (4*n^2*(p*s-q*r))/(4*n) = (4*n*(x*v-y*u))/(4*n) = x*v-y*u
+
+thm central_tangent_square:
+    ? forall t, d, cross, f, a, h, n R:
+        (t*d)^2 = cross^2
+        4*n^2*d = (n^2-1)*a^2
+        n^2*cross^2 = f^2
+        (h*a)^2 = f^2
+        a > 0
+        =>:
+            (t*(n^2-1)*a)^2 = (4*n*h)^2
+    (t*(n^2-1)*a)^2*a^2 = (t*((n^2-1)*a^2))^2 = (t*(4*n^2*d))^2 = 16*n^4*(t*d)^2 = 16*n^4*cross^2 = 16*n^2*(n^2*cross^2) = 16*n^2*f^2 = 16*n^2*(h*a)^2 = (4*n*h)^2*a^2
+    a*a > 0
+    a^2 = a*a
+    (t*(n^2-1)*a)^2 = ((t*(n^2-1)*a)^2*a^2)/a^2 = ((4*n*h)^2*a^2)/a^2 = (4*n*h)^2

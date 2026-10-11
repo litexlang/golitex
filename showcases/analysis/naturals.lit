@@ -1,0 +1,11 @@
+# A reusable induction example inspired by the natural-number development
+# in Terence Tao's Analysis I. N and exponentiation are Litex builtins.
+thm power_two_lower_bound:
+    ? forall n N:
+        2^n >= n + 1
+    by induc n from 0:
+        ? 2^n >= n + 1
+        ? from n = 0:
+            2^0 = 1 = 0 + 1
+        ? induc:
+            2^(n + 1) = 2^n * 2^1 = 2^n * 2 >= (n + 1) * 2 = (n + 1 + 1) + n >= n + 1 + 1

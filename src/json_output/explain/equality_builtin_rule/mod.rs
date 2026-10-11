@@ -237,6 +237,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_en(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_en(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_en(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "Reconstruct an exact finite sequence from its ordered coordinates".into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_en(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_en(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_en(),
@@ -483,6 +487,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_zh(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_zh(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_zh(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "由完整有限序列的有序坐标重构序列".into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_zh(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_zh(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_zh(),
@@ -729,6 +737,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_zh_hant(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_zh_hant(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_zh_hant(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "由完整有限序列的有序座標重構序列".into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_zh_hant(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_zh_hant(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_zh_hant(),
@@ -975,6 +987,12 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_fr(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_fr(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_fr(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message:
+                    "Reconstruire une suite finie exacte à partir de ses coordonnées ordonnées"
+                        .into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_fr(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_fr(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_fr(),
@@ -1221,6 +1239,11 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_ru(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_ru(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_ru(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "Восстановить конечную последовательность по упорядоченным координатам"
+                    .into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_ru(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_ru(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_ru(),
@@ -1467,6 +1490,12 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_es(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_es(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_es(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message:
+                    "Reconstruir una secuencia finita exacta a partir de sus coordenadas ordenadas"
+                        .into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_es(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_es(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_es(),
@@ -1713,6 +1742,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_ar(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_ar(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_ar(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "إعادة بناء المتتالية المنتهية من إحداثياتها المرتبة".into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_ar(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_ar(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_ar(),
@@ -1959,6 +1992,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_ja(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_ja(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_ja(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "有限列を順序付き座標から復元する".into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_ja(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_ja(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_ja(),
@@ -2205,6 +2242,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_ko(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_ko(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_ko(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "유한 수열을 순서 있는 좌표로 재구성합니다".into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_ko(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_ko(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_ko(),
@@ -2451,6 +2492,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SetMinusChainToUnion(p) => p.rule_name_and_message_vi(),
             Self::FnRangeOfConstantAnonymousFn(p) => p.rule_name_and_message_vi(),
             Self::FnRangeOfEmptyDomain(p) => p.rule_name_and_message_vi(),
+            Self::FiniteSeqReconstruction(_) => BuiltinRuleText {
+                rule_name: "FiniteSeqReconstruction".into(),
+                message: "Dựng lại dãy hữu hạn từ các tọa độ có thứ tự".into(),
+            },
             Self::EmptyFunctionGraph(p) => p.rule_name_and_message_vi(),
             Self::EmptyDomainFunctionSpaceSingleton(p) => p.rule_name_and_message_vi(),
             Self::SeqEqualsFnOnNPos(p) => p.rule_name_and_message_vi(),
@@ -2499,6 +2544,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::FiniteSeqReconstruction(p) => Some(p.membership.fact_id),
             Self::EqualFromKnownDifferenceZero(p) => Some(p.cite_fact_id),
             _ => None,
         }

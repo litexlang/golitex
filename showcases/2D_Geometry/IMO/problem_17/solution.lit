@@ -1,0 +1,3910 @@
+prop circle_tangent_to_line(center cart(R, R), radius, line_a, line_b, line_c R):
+    radius > 0
+    line_a^2 + line_b^2 > 0
+    (line_a * center(1) + line_b * center(2) + line_c)^2 = radius^2 * (line_a^2 + line_b^2)
+
+# Two circles are internally tangent (small inside big, touching at one point)
+
+prop line_is_external_common_tangent(line_a, line_b, line_c R, center1 cart(R, R), radius1 R, center2 cart(R, R), radius2 R):
+    line_a^2 + line_b^2 > 0
+    radius1 > 0
+    radius2 > 0
+    # Both circles tangent to line
+    (line_a * center1(1) + line_b * center1(2) + line_c)^2 = radius1^2 * (line_a^2 + line_b^2)
+    (line_a * center2(1) + line_b * center2(2) + line_c)^2 = radius2^2 * (line_a^2 + line_b^2)
+    # Same side: signed distances have same sign
+    (line_a * center1(1) + line_b * center1(2) + line_c) * (line_a * center2(1) + line_b * center2(2) + line_c) > 0
+
+prop lines_are_distinct(line1_a, line1_b, line1_c, line2_a, line2_b, line2_c R):
+    (line1_a * line2_b - line1_b * line2_a)^2 + (line1_a * line2_c - line1_c * line2_a)^2 + (line1_b * line2_c - line1_c * line2_b)^2 > 0
+
+# A line ax+by+c=0 is an external common tangent to two circles (both on same side)
+
+thm multiplication_congruence_17:
+    ? forall x, x2, y, y2 R:
+        x = x2
+        y = y2
+        =>:
+            x * y = x2 * y2
+    x - x2 = 0
+    y - y2 = 0
+    x * y - x2 * y2 = (x - x2) * y + x2 * (y - y2)
+    (x - x2) * y + x2 * (y - y2) = 0
+    x * y - x2 * y2 = 0
+    x * y = x2 * y2
+
+# A scaled value has the corresponding scaled square.
+
+thm subtraction_congruence_17:
+    ? forall x, x2, y, y2 R:
+        x = x2
+        y = y2
+        =>:
+            x - y = x2 - y2
+    x - x2 = 0
+    y - y2 = 0
+    (x - y) - (x2 - y2) = (x - x2) - (y - y2)
+    (x - x2) - (y - y2) = 0
+    (x - y) - (x2 - y2) = 0
+    x - y = x2 - y2
+
+# Equal real factors give equal products.
+
+thm addition_congruence_17:
+    ? forall x, x2, y, y2 R:
+        x = x2
+        y = y2
+        =>:
+            x + y = x2 + y2
+    x - x2 = 0
+    y - y2 = 0
+    (x + y) - (x2 + y2) = (x - x2) + (y - y2)
+    (x - x2) + (y - y2) = 0
+    (x + y) - (x2 + y2) = 0
+    x + y = x2 + y2
+
+# A vector collinear with a unit direction is its scalar projection times
+# that direction.  This converts the determinant form of collinearity into
+# explicit component coordinates without choosing a special axis.
+
+thm midpoint_radius_gives_diameter_17:
+    ? forall ax, ay, bx, byy, ox, oy, radius R:
+        ox = (ax + bx) / 2
+        oy = (ay + byy) / 2
+        (ax - ox)^2 + (ay - oy)^2 = radius^2
+        =>:
+            (bx - ax)^2 + (byy - ay)^2 = (2 * radius)^2
+    by thm multiplication_congruence_17(2, 2, ox, (ax + bx) / 2)
+    2 * ox = 2 * ((ax + bx) / 2)
+    2 * ((ax + bx) / 2) = ax + bx
+    2 * ox = ax + bx
+    by thm subtraction_congruence_17(ax + bx, 2 * ox, 2 * ax, 2 * ax)
+    (ax + bx) - 2 * ax = 2 * ox - 2 * ax
+    (ax + bx) - 2 * ax = bx - ax
+    2 * ox - 2 * ax = 2 * (ox - ax)
+    bx - ax = 2 * (ox - ax)
+    by thm multiplication_congruence_17(2, 2, oy, (ay + byy) / 2)
+    2 * oy = 2 * ((ay + byy) / 2)
+    2 * ((ay + byy) / 2) = ay + byy
+    2 * oy = ay + byy
+    by thm subtraction_congruence_17(ay + byy, 2 * oy, 2 * ay, 2 * ay)
+    (ay + byy) - 2 * ay = 2 * oy - 2 * ay
+    (ay + byy) - 2 * ay = byy - ay
+    2 * oy - 2 * ay = 2 * (oy - ay)
+    byy - ay = 2 * (oy - ay)
+    (ox - ax)^2 = (ax - ox)^2
+    (oy - ay)^2 = (ay - oy)^2
+    by thm multiplication_congruence_17(bx - ax, 2 * (ox - ax), bx - ax, 2 * (ox - ax))
+    (bx - ax) * (bx - ax) = (2 * (ox - ax)) * (2 * (ox - ax))
+    (bx - ax)^2 = (bx - ax) * (bx - ax)
+    (2 * (ox - ax)) * (2 * (ox - ax)) = 4 * (ox - ax)^2
+    (bx - ax)^2 = 4 * (ox - ax)^2
+    by thm multiplication_congruence_17(byy - ay, 2 * (oy - ay), byy - ay, 2 * (oy - ay))
+    (byy - ay) * (byy - ay) = (2 * (oy - ay)) * (2 * (oy - ay))
+    (byy - ay)^2 = (byy - ay) * (byy - ay)
+    (2 * (oy - ay)) * (2 * (oy - ay)) = 4 * (oy - ay)^2
+    (byy - ay)^2 = 4 * (oy - ay)^2
+    by thm addition_congruence_17((bx - ax)^2, 4 * (ox - ax)^2, (byy - ay)^2, 4 * (oy - ay)^2)
+    (bx - ax)^2 + (byy - ay)^2 = 4 * (ox - ax)^2 + 4 * (oy - ay)^2
+    4 * (ox - ax)^2 + 4 * (oy - ay)^2 = 4 * ((ox - ax)^2 + (oy - ay)^2)
+    (bx - ax)^2 + (byy - ay)^2 = 4 * ((ox - ax)^2 + (oy - ay)^2)
+    (ox - ax)^2 + (oy - ay)^2 = radius^2
+    4 * ((ox - ax)^2 + (oy - ay)^2) = 4 * radius^2
+    4 * radius^2 = (2 * radius)^2
+
+# Evaluating a global line obtained from local orthonormal coordinates gives
+# exactly the corresponding local affine expression.
+
+thm diameter_direction_basis_17:
+    ? forall ax, ay, bx, byy, radius R:
+        radius > 0
+        (bx - ax)^2 + (byy - ay)^2 = (2 * radius)^2
+        =>:
+            exist ex, ey, fx, fy R st {ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, bx - ax = 2 * radius * ex, byy - ay = 2 * radius * ey, fx = -ey, fy = ex}
+    2 * radius > 0
+    2 * radius != 0
+    (2 * radius)^2 > 0
+    ((bx - ax) / (2 * radius))^2 + ((byy - ay) / (2 * radius))^2 = ((bx - ax)^2 + (byy - ay)^2) / (2 * radius)^2
+    ((bx - ax)^2 + (byy - ay)^2) / (2 * radius)^2 = (2 * radius)^2 / (2 * radius)^2
+    (2 * radius)^2 / (2 * radius)^2 = 1
+    ((bx - ax) / (2 * radius))^2 + ((byy - ay) / (2 * radius))^2 = 1
+    (-(byy - ay) / (2 * radius))^2 + ((bx - ax) / (2 * radius))^2 = ((byy - ay) / (2 * radius))^2 + ((bx - ax) / (2 * radius))^2
+    ((byy-ay)/(2*radius))^2+((bx-ax)/(2*radius))^2=((bx-ax)/(2*radius))^2+((byy-ay)/(2*radius))^2
+    ((byy-ay)/(2*radius))^2+((bx-ax)/(2*radius))^2=1
+    (-(byy - ay) / (2 * radius))^2 + ((bx - ax) / (2 * radius))^2 = 1
+    ((bx - ax) / (2 * radius)) * (-(byy - ay) / (2 * radius)) + ((byy - ay) / (2 * radius)) * ((bx - ax) / (2 * radius)) = 0
+    2 * radius * ((bx - ax) / (2 * radius)) = bx - ax
+    2 * radius * ((byy - ay) / (2 * radius)) = byy - ay
+    witness exist ex, ey, fx, fy R st {ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, bx - ax = 2 * radius * ex, byy - ay = 2 * radius * ey, fx = -ey, fy = ex} from (bx - ax) / (2 * radius), (byy - ay) / (2 * radius), -(byy - ay) / (2 * radius), (bx - ax) / (2 * radius)
+
+# The endpoints of a circle diameter are 2R apart.
+
+
+thm unit_collinear_components_17:
+    ? forall ex, ey, vx, vy R:
+        ex^2 + ey^2 = 1
+        vx * ey - vy * ex = 0
+        =>:
+            exist t R st {vx = t * ex, vy = t * ey}
+    have scalar R = vx * ex + vy * ey
+    (vx * ey - vy * ex) * ey = 0 * ey
+    (vx * ey - vy * ex) * ey = vx * ey^2 - vy * ex * ey
+    0 * ey = 0
+    vx * ey^2 - vy * ex * ey = 0
+    vy * ex * ey = vx * ey^2
+    scalar * ex = (vx * ex + vy * ey) * ex
+    (vx * ex + vy * ey) * ex = vx * ex^2 + vy * ex * ey
+    by thm addition_congruence_17(vx * ex^2, vx * ex^2, vy * ex * ey, vx * ey^2)
+    vx * ex^2 + vy * ex * ey = vx * ex^2 + vx * ey^2
+    vx * ex^2 + vx * ey^2 = vx * (ex^2 + ey^2)
+    vx * (ex^2 + ey^2) = vx
+    scalar * ex = vx
+    vx = scalar * ex
+    (vx * ey - vy * ex) * ex = 0 * ex
+    (vx * ey - vy * ex) * ex = vx * ex * ey - vy * ex^2
+    0 * ex = 0
+    vx * ex * ey - vy * ex^2 = 0
+    vx * ex * ey = vy * ex^2
+    scalar * ey = (vx * ex + vy * ey) * ey
+    (vx * ex + vy * ey) * ey = vx * ex * ey + vy * ey^2
+    by thm addition_congruence_17(vx * ex * ey, vy * ex^2, vy * ey^2, vy * ey^2)
+    vx * ex * ey + vy * ey^2 = vy * ex^2 + vy * ey^2
+    vy * ex^2 + vy * ey^2 = vy * (ex^2 + ey^2)
+    vy * (ex^2 + ey^2) = vy
+    scalar * ey = vy
+    vy = scalar * ey
+    witness exist t R st {vx = t * ex, vy = t * ey} from scalar
+
+# A point collinear with the endpoints of an oriented diameter splits the
+# diameter into two signed scalar components.  Positivity is deliberately not
+# assumed here; it will follow later from the semicircle equation.
+
+thm diameter_collinear_split_17:
+    ? forall ax, ay, bx, byy, dx, dy, ex, ey, radius R:
+        ex^2 + ey^2 = 1
+        bx - ax = 2 * radius * ex
+        byy - ay = 2 * radius * ey
+        (dx - ax) * ey - (dy - ay) * ex = 0
+        =>:
+            exist p, q R st {dx - ax = p * ex, dy - ay = p * ey, bx - dx = q * ex, byy - dy = q * ey, p + q = 2 * radius}
+    by thm unit_collinear_components_17(ex, ey, dx - ax, dy - ay)
+    obtain scalar_p from exist t R st {dx - ax = t * ex, dy - ay = t * ey}
+    have scalar_q R = 2 * radius - scalar_p
+    by thm subtraction_congruence_17(bx - ax, 2 * radius * ex, dx - ax, scalar_p * ex)
+    (bx - ax) - (dx - ax) = 2 * radius * ex - scalar_p * ex
+    (bx - ax) - (dx - ax) = bx - dx
+    2 * radius * ex - scalar_p * ex = (2 * radius - scalar_p) * ex
+    (2 * radius - scalar_p) * ex = scalar_q * ex
+    bx - dx = scalar_q * ex
+    by thm subtraction_congruence_17(byy - ay, 2 * radius * ey, dy - ay, scalar_p * ey)
+    (byy - ay) - (dy - ay) = 2 * radius * ey - scalar_p * ey
+    (byy - ay) - (dy - ay) = byy - dy
+    2 * radius * ey - scalar_p * ey = (2 * radius - scalar_p) * ey
+    (2 * radius - scalar_p) * ey = scalar_q * ey
+    byy - dy = scalar_q * ey
+    scalar_p + scalar_q = scalar_p + (2 * radius - scalar_p)
+    scalar_p + (2 * radius - scalar_p) = 2 * radius
+    scalar_p + scalar_q = 2 * radius
+    witness exist p, q R st {dx - ax = p * ex, dy - ay = p * ey, bx - dx = q * ex, byy - dy = q * ey, p + q = 2 * radius} from scalar_p, scalar_q
+
+# A nonzero vector perpendicular to a unit direction determines a positive
+# oriented normal coordinate.  The normal is chosen by the sign of the
+# determinant, so no square-root choice is hidden in the statement.
+
+thm reverse_difference_dot_zero_17:
+    ? forall ex, ey, cx, cy, dx, dy R:
+        (dx - cx) * ex + (dy - cy) * ey = 0
+        =>:
+            ex * (cx - dx) + ey * (cy - dy) = 0
+    ex * (cx - dx) + ey * (cy - dy) = -((dx - cx) * ex + (dy - cy) * ey)
+    -((dx - cx) * ex + (dy - cy) * ey) = 0
+
+# Nonnegative reals are ordered by their squares.
+
+thm distinct_points_positive_distance_sq_17:
+    ? forall p, q cart(R, R):
+        p != q
+        =>:
+            (p(1) - q(1))^2 + (p(2) - q(2))^2 > 0
+    by contra:
+        ? (p(1) - q(1))^2 + (p(2) - q(2))^2 > 0
+        (p(1) - q(1))^2 + (p(2) - q(2))^2 <= 0
+        0 <= (p(1) - q(1))^2
+        0 <= (p(2) - q(2))^2
+        (p(1) - q(1))^2 <= (p(1) - q(1))^2 + (p(2) - q(2))^2
+        (p(2) - q(2))^2 <= (p(1) - q(1))^2 + (p(2) - q(2))^2
+        (p(1) - q(1))^2 <= 0
+        (p(2) - q(2))^2 <= 0
+        (p(1) - q(1))^2 = 0
+        (p(2) - q(2))^2 = 0
+        p(1) - q(1) = 0
+        p(2) - q(2) = 0
+        p(1) = q(1)
+        p(2) = q(2)
+        p = (p(1), p(2))
+        q = (q(1), q(2))
+        (p(1), p(2)) = (q(1), q(2))
+        p = (p(1), p(2)) = (q(1), q(2)) = q
+        p = q
+        impossible p != q
+
+# Reversing both coordinate differences preserves a zero dot product.
+
+thm oriented_perpendicular_components_17:
+    ? forall ex, ey, cx, cy R:
+        ex^2 + ey^2 = 1
+        ex * cx + ey * cy = 0
+        cx^2 + cy^2 > 0
+        =>:
+            exist fx, fy, h R st {fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, h > 0, cx = h * fx, cy = h * fy}
+    have k R = ex * cy - ey * cx
+    (ex * cx + ey * cy) * ex = 0 * ex
+    (ex * cx + ey * cy) * ex = ex^2 * cx + ex * ey * cy
+    0 * ex = 0
+    ex^2 * cx + ex * ey * cy = 0
+    (ex^2 * cx + ex * ey * cy) - ex * ey * cy = 0 - ex * ey * cy
+    (ex^2 * cx + ex * ey * cy) - ex * ey * cy = ex^2 * cx
+    0 - ex * ey * cy = -ex * ey * cy
+    ex^2 * cx = -ex * ey * cy
+    -ex * ey * cy = ex^2 * cx
+    k = ex * cy - ey * cx
+    k * (-ey) = (ex * cy - ey * cx) * (-ey)
+    (ex * cy - ey * cx) * (-ey) = -ex * ey * cy + ey^2 * cx
+    k * (-ey) = -ex * ey * cy + ey^2 * cx
+    by thm addition_congruence_17(-ex * ey * cy, ex^2 * cx, ey^2 * cx, ey^2 * cx)
+    -ex * ey * cy + ey^2 * cx = ex^2 * cx + ey^2 * cx
+    ex^2 * cx + ey^2 * cx = (ex^2 + ey^2) * cx
+    (ex^2 + ey^2) * cx = cx
+    k * (-ey) = cx
+    (ex * cx + ey * cy) * ey = 0 * ey
+    (ex * cx + ey * cy) * ey = ex * ey * cx + ey^2 * cy
+    0 * ey = 0
+    ex * ey * cx + ey^2 * cy = 0
+    (ex * ey * cx + ey^2 * cy) - ex * ey * cx = 0 - ex * ey * cx
+    (ex * ey * cx + ey^2 * cy) - ex * ey * cx = ey^2 * cy
+    0 - ex * ey * cx = -ex * ey * cx
+    ey^2 * cy = -ex * ey * cx
+    -ex * ey * cx = ey^2 * cy
+    k = ex * cy - ey * cx
+    k * ex = (ex * cy - ey * cx) * ex
+    (ex * cy - ey * cx) * ex = ex^2 * cy - ex * ey * cx
+    k * ex = ex^2 * cy - ex * ey * cx
+    by thm addition_congruence_17(ex^2 * cy, ex^2 * cy, -ex * ey * cx, ey^2 * cy)
+    ex^2 * cy + (-ex * ey * cx) = ex^2 * cy + ey^2 * cy
+    ex^2 * cy - ex * ey * cx = ex^2 * cy + (-ex * ey * cx)
+    ex^2 * cy - ex * ey * cx = ex^2 * cy + ey^2 * cy
+    ex^2 * cy + ey^2 * cy = (ex^2 + ey^2) * cy
+    (ex^2 + ey^2) * cy = cy
+    k * ex = cy
+    cx^2 = (k * (-ey))^2
+    cy^2 = (k * ex)^2
+    (k * (-ey))^2 = k^2 * ey^2
+    (k * ex)^2 = k^2 * ex^2
+    cx^2 + cy^2 = k^2 * ey^2 + k^2 * ex^2
+    k^2 * ey^2 + k^2 * ex^2 = k^2 * (ex^2 + ey^2)
+    k^2 * (ex^2 + ey^2) = k^2
+    cx^2 + cy^2 = k^2
+    k^2 = cx^2 + cy^2
+    k^2 > 0
+    by cases:
+        ? exist fx, fy, h R st {fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, h > 0, cx = h * fx, cy = h * fy}
+        case k > 0:
+            (-ey)^2 + ex^2 = 1
+            ex * (-ey) + ey * ex = 0
+            cx = k * (-ey)
+            cy = k * ex
+            witness exist fx, fy, h R st {fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, h > 0, cx = h * fx, cy = h * fy} from -ey, ex, k
+        case k <= 0:
+            by contra:
+                ? k < 0
+                k >= 0
+                k = 0
+                k^2 = 0
+                impossible k^2 > 0
+            0 - k > 0 - 0
+            0 - k = -k
+            0 - 0 = 0
+            -k > 0
+            ey^2 + (-ex)^2 = 1
+            ex * ey + ey * (-ex) = 0
+            cx = (-k) * ey
+            cy = (-k) * (-ex)
+            witness exist fx, fy, h R st {fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, h > 0, cx = h * fx, cy = h * fy} from ey, -ex, -k
+
+# In normalized coordinates D=(0,0), A=(-p,0), B=(q,0), C=(0,h),
+# the two corner-circle centers are (-u,u),(v,v), and the incircle
+# center is (x,r).  The signed side-distance equations force the incircle
+# center to be the midpoint of the two corner-circle centers.
+
+thm affine_coordinates_17:
+    ? forall ax, ay, bx, byy, cx, cy, dx, dy, ex, ey, nx, ny, p, q, h R:
+        dx - ax = p * ex
+        dy - ay = p * ey
+        bx - dx = q * ex
+        byy - dy = q * ey
+        cx - dx = h * nx
+        cy - dy = h * ny
+        =>:
+            ax = dx - p * ex
+            ay = dy - p * ey
+            bx = dx + q * ex
+            byy = dy + q * ey
+            cx = dx + h * nx
+            cy = dy + h * ny
+    (dx - ax) - p * ex = 0
+    (dx - p * ex) - ax = (dx - ax) - p * ex
+    (dx - p * ex) - ax = 0
+    dx - p * ex = ax
+    ax = dx - p * ex
+    (dy - ay) - p * ey = 0
+    (dy - p * ey) - ay = (dy - ay) - p * ey
+    (dy - p * ey) - ay = 0
+    dy - p * ey = ay
+    ay = dy - p * ey
+
+    (bx - dx) - q * ex = 0
+    bx - (dx + q * ex) = (bx - dx) - q * ex
+    bx - (dx + q * ex) = 0
+    bx = dx + q * ex
+
+    (byy - dy) - q * ey = 0
+    byy - (dy + q * ey) = (byy - dy) - q * ey
+    byy - (dy + q * ey) = 0
+    byy = dy + q * ey
+
+    (cx - dx) - h * nx = 0
+    cx - (dx + h * nx) = (cx - dx) - h * nx
+    cx - (dx + h * nx) = 0
+    cx = dx + h * nx
+
+    (cy - dy) - h * ny = 0
+    cy - (dy + h * ny) = (cy - dy) - h * ny
+    cy - (dy + h * ny) = 0
+    cy = dy + h * ny
+
+# Every point has affine coordinates in an orthonormal basis.
+
+thm rotated_square_sum_17:
+    ? forall ex, ey, fx, fy, x, y R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        =>:
+            (x * ex + y * fx)^2 + (x * ey + y * fy)^2 = x^2 + y^2
+    (x * ex + y * fx)^2 + (x * ey + y * fy)^2 = x^2 * (ex^2 + ey^2) + 2 * x * y * (ex * fx + ey * fy) + y^2 * (fx^2 + fy^2)
+    x^2 * (ex^2 + ey^2) + 2 * x * y * (ex * fx + ey * fy) + y^2 * (fx^2 + fy^2) = x^2 * 1 + 2 * x * y * 0 + y^2 * 1
+    x^2 * 1 + 2 * x * y * 0 + y^2 * 1 = x^2 + y^2
+
+# Coordinate components in a unit orthogonal basis determine squared distance.
+
+thm positive_left_factor_cancellation_17:
+    ? forall factor_17, left_17, right_17 R:
+        factor_17 > 0
+        factor_17 * left_17 = factor_17 * right_17
+        =>:
+            left_17 = right_17
+    by contra:
+        ? left_17 <= right_17
+        left_17 > right_17
+        factor_17 * left_17 > factor_17 * right_17
+        impossible factor_17 * left_17 = factor_17 * right_17
+    by contra:
+        ? left_17 >= right_17
+        left_17 < right_17
+        factor_17 * left_17 < factor_17 * right_17
+        impossible factor_17 * left_17 = factor_17 * right_17
+    left_17 = right_17
+
+# Tangency to a line through the frame origin determines the squared normal coordinate.
+
+thm diameter_altitude_product_17:
+    ? forall p, q, h, radius R:
+        p + q = 2 * radius
+        ((p - q) / 2)^2 + h^2 = radius^2
+        =>:
+            h^2 = p * q
+    (p + q)^2 = (2 * radius)^2
+    (2 * radius)^2 = 4 * radius^2
+    (p + q)^2 = 4 * radius^2
+    4 * (((p - q) / 2)^2 + h^2) = 4 * radius^2
+    4 * (((p - q) / 2)^2 + h^2) = (p - q)^2 + 4 * h^2
+    (p - q)^2 + 4 * h^2 = 4 * radius^2
+    (p + q)^2 = p^2 + 2 * p * q + q^2
+    (p - q)^2 = p^2 - 2 * p * q + q^2
+    p^2 - 2 * p * q + q^2 + 4 * h^2 = p^2 + 2 * p * q + q^2
+    by thm subtraction_congruence_17(p^2 - 2 * p * q + q^2 + 4 * h^2, p^2 + 2 * p * q + q^2, p^2 - 2 * p * q + q^2, p^2 - 2 * p * q + q^2)
+    (p^2 - 2 * p * q + q^2 + 4 * h^2) - (p^2 - 2 * p * q + q^2) = (p^2 + 2 * p * q + q^2) - (p^2 - 2 * p * q + q^2)
+    (p^2 - 2 * p * q + q^2 + 4 * h^2) - (p^2 - 2 * p * q + q^2) = 4 * h^2
+    (p^2 + 2 * p * q + q^2) - (p^2 - 2 * p * q + q^2) = 4 * p * q
+    4 * h^2 = 4 * p * q
+    4 * p * q = 4 * (p * q)
+    4 * h^2 = 4 * (p * q)
+    4 > 0
+    by thm positive_left_factor_cancellation_17(4, h^2, p * q)
+    h^2 = p * q
+
+# The equation of the diameter circle in the D-based orthonormal frame.
+
+thm positive_legs_from_sum_product_17:
+    ? forall p, q, h, radius R:
+        radius > 0
+        p + q = 2 * radius
+        h != 0
+        h^2 = p * q
+        =>:
+            p > 0
+            q > 0
+    h^2 > 0
+    p * q > 0
+    2 * radius > 0
+    p + q > 0
+    by contra:
+        ? p > 0
+        p <= 0
+        by contra:
+            ? p != 0
+            p = 0
+            p * q = 0
+            impossible p * q > 0
+        by contra:
+            ? p < 0
+            p >= 0
+            p = 0
+            impossible p != 0
+        by contra:
+            ? q < 0
+            q >= 0
+            p * q <= 0 * q
+            0 * q = 0
+            p * q <= 0
+            impossible p * q > 0
+        p < 0
+        q < 0
+        p + q < 0 + 0
+        0 + 0 = 0
+        p + q < 0
+        impossible p + q > 0
+    by contra:
+        ? q > 0
+        q <= 0
+        0 < p
+        0 <= p
+        q <= 0
+        0 <= 0
+        p * q <= p * 0
+        p * 0 = 0
+        p * q <= 0
+        impossible p * q > 0
+
+# Equal real quantities remain equal after subtracting equal quantities.
+
+thm p17_line_frame_bridge:
+    ? forall ax, ay, bx, byy, dx, dy, px, py, ex, ey, nx, ny, scale, x, y, line_a, line_b, line_c R:
+        scale > 0
+        bx - ax = scale * ex
+        byy - ay = scale * ey
+        line_a * ax + line_b * ay + line_c = 0
+        line_a * bx + line_b * byy + line_c = 0
+        line_a * dx + line_b * dy + line_c = 0
+        px = dx + x * ex + y * nx
+        py = dy + x * ey + y * ny
+        =>:
+            line_a * ex + line_b * ey = 0
+            line_a * px + line_b * py + line_c = (line_a * nx + line_b * ny) * y
+    (line_a * bx + line_b * byy + line_c) - (line_a * ax + line_b * ay + line_c) = 0 - 0
+    (line_a * bx + line_b * byy + line_c) - (line_a * ax + line_b * ay + line_c) = line_a * (bx - ax) + line_b * (byy - ay)
+    line_a * (bx - ax) + line_b * (byy - ay) = 0
+    by thm multiplication_congruence_17(line_a, line_a, bx - ax, scale * ex)
+    line_a * (bx - ax) = line_a * (scale * ex)
+    by thm multiplication_congruence_17(line_b, line_b, byy - ay, scale * ey)
+    line_b * (byy - ay) = line_b * (scale * ey)
+    by thm addition_congruence_17(line_a * (bx - ax), line_a * (scale * ex), line_b * (byy - ay), line_b * (scale * ey))
+    line_a * (bx - ax) + line_b * (byy - ay) = line_a * (scale * ex) + line_b * (scale * ey)
+    line_a * (scale * ex) + line_b * (scale * ey) = 0
+    line_a * (scale * ex) + line_b * (scale * ey) = scale * (line_a * ex + line_b * ey)
+    scale * (line_a * ex + line_b * ey) = 0
+    by contra:
+        ? line_a * ex + line_b * ey = 0
+        line_a * ex + line_b * ey != 0
+        scale * (line_a * ex + line_b * ey) != 0
+        impossible scale * (line_a * ex + line_b * ey) = 0
+    line_a * ex + line_b * ey = 0
+
+    line_a * px + line_b * py + line_c = line_a * (dx + x * ex + y * nx) + line_b * (dy + x * ey + y * ny) + line_c
+    line_a * (dx + x * ex + y * nx) + line_b * (dy + x * ey + y * ny) + line_c = (line_a * dx + line_b * dy + line_c) + x * (line_a * ex + line_b * ey) + y * (line_a * nx + line_b * ny)
+    by thm multiplication_congruence_17(x, x, line_a * ex + line_b * ey, 0)
+    x * (line_a * ex + line_b * ey) = x * 0
+    x * 0 = 0
+    x * (line_a * ex + line_b * ey) = 0
+    by thm addition_congruence_17(line_a * dx + line_b * dy + line_c, 0, x * (line_a * ex + line_b * ey), 0)
+    (line_a * dx + line_b * dy + line_c) + x * (line_a * ex + line_b * ey) = 0 + 0
+    by thm addition_congruence_17((line_a * dx + line_b * dy + line_c) + x * (line_a * ex + line_b * ey), 0 + 0, y * (line_a * nx + line_b * ny), y * (line_a * nx + line_b * ny))
+    (line_a * dx + line_b * dy + line_c) + x * (line_a * ex + line_b * ey) + y * (line_a * nx + line_b * ny) = 0 + 0 + y * (line_a * nx + line_b * ny)
+    line_a * px + line_b * py + line_c = 0 + 0 + y * (line_a * nx + line_b * ny)
+    0 + 0 + y * (line_a * nx + line_b * ny) = (line_a * nx + line_b * ny) * y
+    line_a * px + line_b * py + line_c = (line_a * nx + line_b * ny) * y
+
+# Convert the two AB-side determinants from geometric point form to the
+# raw D-frame factors used by the side-sign normalization theorem.
+
+thm orthonormal_coordinate_decomposition_17:
+    ? forall px, py, dx, dy, ex, ey, fx, fy R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        =>:
+            exist x, y R st {px = dx + x * ex + y * fx, py = dy + x * ey + y * fy}
+    have det R = ex * fy - ey * fx
+    (ex * fy - ey * fx)^2 = (ex^2 + ey^2) * (fx^2 + fy^2) - (ex * fx + ey * fy)^2
+    (ex^2 + ey^2) * (fx^2 + fy^2) - (ex * fx + ey * fy)^2 = 1 * 1 - 0^2
+    1 * 1 - 0^2 = 1
+    (ex * fy - ey * fx)^2 = 1
+    det = ex * fy - ey * fx
+    det^2 = (ex * fy - ey * fx)^2
+    det^2 = 1
+    witness exist x, y R st {px = dx + x * ex + y * fx, py = dy + x * ey + y * fy} from det * ((px - dx) * fy - (py - dy) * fx), det * (ex * (py - dy) - ey * (px - dx)):
+        (det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx = det * ((((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx))
+        (((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx) = (ex * fy - ey * fx) * (px - dx)
+        det * ((((px - dx) * fy - (py - dy) * fx) * ex) + ((ex * (py - dy) - ey * (px - dx)) * fx)) = det * ((ex * fy - ey * fx) * (px - dx))
+        det * ((ex * fy - ey * fx) * (px - dx)) = det * (det * (px - dx))
+        det * (det * (px - dx)) = det^2 * (px - dx)
+        det^2 * (px - dx) = px - dx
+        px = dx + (px - dx)
+        dx + (px - dx) = dx + ((det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx)
+        px = dx + ((det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx)
+        px = dx + (det * ((px - dx) * fy - (py - dy) * fx)) * ex + (det * (ex * (py - dy) - ey * (px - dx))) * fx
+        (det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy = det * ((((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy))
+        (((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy) = (ex * fy - ey * fx) * (py - dy)
+        det * ((((px - dx) * fy - (py - dy) * fx) * ey) + ((ex * (py - dy) - ey * (px - dx)) * fy)) = det * ((ex * fy - ey * fx) * (py - dy))
+        det * ((ex * fy - ey * fx) * (py - dy)) = det * (det * (py - dy))
+        det * (det * (py - dy)) = det^2 * (py - dy)
+        det^2 * (py - dy) = py - dy
+        py = dy + (py - dy)
+        dy + (py - dy) = dy + ((det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy)
+        py = dy + ((det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy)
+        py = dy + (det * ((px - dx) * fy - (py - dy) * fx)) * ey + (det * (ex * (py - dy) - ey * (px - dx))) * fy
+
+# Equal products with a positive common left factor have equal right factors.
+
+thm tangent_line_normal_square_17:
+    ? forall line_a, line_b, ex, ey, y, radius, value R:
+        ex^2 + ey^2 = 1
+        line_a * ex + line_b * ey = 0
+        line_a^2 + line_b^2 > 0
+        value = (-line_a * ey + line_b * ex) * y
+        value^2 = radius^2 * (line_a^2 + line_b^2)
+        =>:
+            y^2 = radius^2
+    have normal R = -line_a * ey + line_b * ex
+    have tangent R = line_a * ex + line_b * ey
+    normal = -line_a * ey + line_b * ex
+    tangent = line_a * ex + line_b * ey
+    normal^2 + tangent^2 = (-line_a * ey + line_b * ex)^2 + (line_a * ex + line_b * ey)^2
+    (-line_a * ey + line_b * ex)^2 + (line_a * ex + line_b * ey)^2 = (line_a^2 + line_b^2) * (ex^2 + ey^2)
+    (line_a^2 + line_b^2) * (ex^2 + ey^2) = line_a^2 + line_b^2
+    tangent = 0
+    tangent^2 = 0
+    by thm addition_congruence_17(normal^2, normal^2, tangent^2, 0)
+    normal^2 + tangent^2 = normal^2 + 0
+    normal^2 + 0 = normal^2
+    normal^2 + tangent^2 = normal^2
+    normal^2 = normal^2 + tangent^2
+    normal^2 + tangent^2 = line_a^2 + line_b^2
+    normal^2 = line_a^2 + line_b^2
+    normal^2 > 0
+    -line_a * ey + line_b * ex = normal
+    by thm multiplication_congruence_17(-line_a * ey + line_b * ex, normal, y, y)
+    (-line_a * ey + line_b * ex) * y = normal * y
+    value = normal * y
+    value^2 = (normal * y)^2
+    (normal * y)^2 = normal^2 * y^2
+    radius^2 * (line_a^2 + line_b^2) = radius^2 * normal^2
+    normal^2 * y^2 = normal^2 * radius^2
+    by thm positive_left_factor_cancellation_17(normal^2, y^2, radius^2)
+    y^2 = radius^2
+
+# Tangency in an arbitrary orthonormal frame determines the squared normal coordinate.
+
+thm tangent_line_general_normal_square_17:
+    ? forall line_a, line_b, ex, ey, nx, ny, y, radius, value R:
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        line_a * ex + line_b * ey = 0
+        line_a^2 + line_b^2 > 0
+        value = (line_a * nx + line_b * ny) * y
+        value^2 = radius^2 * (line_a^2 + line_b^2)
+        =>:
+            y^2 = radius^2
+    have k R = ex * ny - ey * nx
+    (ex * nx + ey * ny) * ex = 0 * ex
+    (ex * nx + ey * ny) * ex = ex^2 * nx + ex * ey * ny
+    0 * ex = 0
+    ex^2 * nx + ex * ey * ny = 0
+    (ex^2 * nx + ex * ey * ny) - ex * ey * ny = 0 - ex * ey * ny
+    (ex^2 * nx + ex * ey * ny) - ex * ey * ny = ex^2 * nx
+    0 - ex * ey * ny = -ex * ey * ny
+    ex^2 * nx = -ex * ey * ny
+    -ex * ey * ny = ex^2 * nx
+    k = ex * ny - ey * nx
+    k * (-ey) = (ex * ny - ey * nx) * (-ey)
+    (ex * ny - ey * nx) * (-ey) = -ex * ey * ny + ey^2 * nx
+    k * (-ey) = -ex * ey * ny + ey^2 * nx
+    by thm addition_congruence_17(-ex * ey * ny, ex^2 * nx, ey^2 * nx, ey^2 * nx)
+    -ex * ey * ny + ey^2 * nx = ex^2 * nx + ey^2 * nx
+    ex^2 * nx + ey^2 * nx = (ex^2 + ey^2) * nx
+    (ex^2 + ey^2) * nx = nx
+    k * (-ey) = nx
+
+    (ex * nx + ey * ny) * ey = 0 * ey
+    (ex * nx + ey * ny) * ey = ex * ey * nx + ey^2 * ny
+    0 * ey = 0
+    ex * ey * nx + ey^2 * ny = 0
+    (ex * ey * nx + ey^2 * ny) - ex * ey * nx = 0 - ex * ey * nx
+    (ex * ey * nx + ey^2 * ny) - ex * ey * nx = ey^2 * ny
+    0 - ex * ey * nx = -ex * ey * nx
+    ey^2 * ny = -ex * ey * nx
+    -ex * ey * nx = ey^2 * ny
+    k = ex * ny - ey * nx
+    k * ex = (ex * ny - ey * nx) * ex
+    (ex * ny - ey * nx) * ex = ex^2 * ny - ex * ey * nx
+    k * ex = ex^2 * ny - ex * ey * nx
+    by thm addition_congruence_17(ex^2 * ny, ex^2 * ny, -ex * ey * nx, ey^2 * ny)
+    ex^2 * ny + (-ex * ey * nx) = ex^2 * ny + ey^2 * ny
+    ex^2 * ny - ex * ey * nx = ex^2 * ny + (-ex * ey * nx)
+    ex^2 * ny - ex * ey * nx = ex^2 * ny + ey^2 * ny
+    ex^2 * ny + ey^2 * ny = (ex^2 + ey^2) * ny
+    (ex^2 + ey^2) * ny = ny
+    k * ex = ny
+
+    nx^2 = (k * (-ey))^2
+    ny^2 = (k * ex)^2
+    (k * (-ey))^2 = k^2 * ey^2
+    (k * ex)^2 = k^2 * ex^2
+    nx^2 + ny^2 = k^2 * ey^2 + k^2 * ex^2
+    k^2 * ey^2 + k^2 * ex^2 = k^2 * (ex^2 + ey^2)
+    by thm multiplication_congruence_17(k^2, k^2, ex^2 + ey^2, 1)
+    k^2 * (ex^2 + ey^2) = k^2 * 1
+    k^2 * 1 = k^2
+    k^2 * (ex^2 + ey^2) = k^2
+    nx^2 + ny^2 = k^2
+    k^2 = nx^2 + ny^2
+    k^2 = 1
+
+    have rotated R = -line_a * ey + line_b * ex
+    have normal R = line_a * nx + line_b * ny
+    normal = line_a * nx + line_b * ny
+    rotated = -line_a * ey + line_b * ex
+    line_a * nx = line_a * (k * (-ey))
+    line_a * (k * (-ey)) = k * (-line_a * ey)
+    line_b * ny = line_b * (k * ex)
+    line_b * (k * ex) = k * (line_b * ex)
+    line_a * nx + line_b * ny = k * (-line_a * ey) + k * (line_b * ex)
+    k * (-line_a * ey) + k * (line_b * ex) = k * (-line_a * ey + line_b * ex)
+    normal = k * (-line_a * ey + line_b * ex)
+    by thm multiplication_congruence_17(k, k, -line_a * ey + line_b * ex, rotated)
+    k * (-line_a * ey + line_b * ex) = k * rotated
+    normal = k * rotated
+
+    have rotated_value R = rotated * y
+    by thm multiplication_congruence_17(line_a * nx + line_b * ny, normal, y, y)
+    (line_a * nx + line_b * ny) * y = normal * y
+    value = normal * y
+    by thm multiplication_congruence_17(normal, k * rotated, y, y)
+    normal * y = (k * rotated) * y
+    (k * rotated) * y = k * (rotated * y)
+    by thm multiplication_congruence_17(k, k, rotated * y, rotated_value)
+    k * (rotated * y) = k * rotated_value
+    value = k * rotated_value
+    value^2 = (k * rotated_value)^2
+    (k * rotated_value)^2 = k^2 * rotated_value^2
+    k^2 * rotated_value^2 = rotated_value^2
+    value^2 = rotated_value^2
+    rotated_value^2 = radius^2 * (line_a^2 + line_b^2)
+    by thm multiplication_congruence_17(rotated, -line_a * ey + line_b * ex, y, y)
+    rotated * y = (-line_a * ey + line_b * ex) * y
+    rotated_value = (-line_a * ey + line_b * ex) * y
+    by thm tangent_line_normal_square_17(line_a, line_b, ex, ey, y, radius, rotated_value)
+    y^2 = radius^2
+
+# The altitude to a diameter satisfies the geometric-mean identity once the
+# circle equation is written in D-based normalized coordinates.
+
+thm ab_tangency_normal_square_probe:
+    ? forall px, py, dx, dy, ex, ey, nx, ny, x, y, radius, line_a, line_b, line_c R:
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        px = dx + x * ex + y * nx
+        py = dy + x * ey + y * ny
+        line_a^2 + line_b^2 > 0
+        line_a * dx + line_b * dy + line_c = 0
+        line_a * ex + line_b * ey = 0
+        (line_a * px + line_b * py + line_c)^2 = radius^2 * (line_a^2 + line_b^2)
+        =>:
+            y^2 = radius^2
+    by thm multiplication_congruence_17(line_a, line_a, px, dx + x * ex + y * nx)
+    line_a * px = line_a * (dx + x * ex + y * nx)
+    by thm multiplication_congruence_17(line_b, line_b, py, dy + x * ey + y * ny)
+    line_b * py = line_b * (dy + x * ey + y * ny)
+    by thm addition_congruence_17(line_a * px, line_a * (dx + x * ex + y * nx), line_b * py, line_b * (dy + x * ey + y * ny))
+    line_a * px + line_b * py = line_a * (dx + x * ex + y * nx) + line_b * (dy + x * ey + y * ny)
+    by thm addition_congruence_17(line_a * px + line_b * py, line_a * (dx + x * ex + y * nx) + line_b * (dy + x * ey + y * ny), line_c, line_c)
+    line_a * px + line_b * py + line_c = line_a * (dx + x * ex + y * nx) + line_b * (dy + x * ey + y * ny) + line_c
+    line_a * (dx + x * ex + y * nx) + line_b * (dy + x * ey + y * ny) + line_c = (line_a * dx + line_b * dy + line_c) + x * (line_a * ex + line_b * ey) + (line_a * nx + line_b * ny) * y
+    (line_a * dx + line_b * dy + line_c) + x * (line_a * ex + line_b * ey) + (line_a * nx + line_b * ny) * y = (line_a * nx + line_b * ny) * y
+    line_a * px + line_b * py + line_c = (line_a * nx + line_b * ny) * y
+    have value R = line_a * px + line_b * py + line_c
+    value = (line_a * nx + line_b * ny) * y
+    value^2 = (line_a * px + line_b * py + line_c)^2
+    value^2 = radius^2 * (line_a^2 + line_b^2)
+    by thm tangent_line_general_normal_square_17(line_a, line_b, ex, ey, nx, ny, y, radius, value)
+
+thm center_axis_tangency_squares_probe:
+    ? forall ax, ay, bx, byy, cx, cy, dx, dy, px, py, ex, ey, nx, ny, p, q, h, x, y, radius, ab_a, ab_b, ab_c, cd_a, cd_b, cd_c R:
+        p > 0
+        q > 0
+        h > 0
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        dx - ax = p * ex
+        dy - ay = p * ey
+        bx - dx = q * ex
+        byy - dy = q * ey
+        cx - dx = h * nx
+        cy - dy = h * ny
+        px = dx + x * ex + y * nx
+        py = dy + x * ey + y * ny
+        ab_a^2 + ab_b^2 > 0
+        ab_a * ax + ab_b * ay + ab_c = 0
+        ab_a * bx + ab_b * byy + ab_c = 0
+        ab_a * dx + ab_b * dy + ab_c = 0
+        (ab_a * px + ab_b * py + ab_c)^2 = radius^2 * (ab_a^2 + ab_b^2)
+        cd_a^2 + cd_b^2 > 0
+        cd_a * dx + cd_b * dy + cd_c = 0
+        cd_a * cx + cd_b * cy + cd_c = 0
+        (cd_a * px + cd_b * py + cd_c)^2 = radius^2 * (cd_a^2 + cd_b^2)
+        =>:
+            x^2 = radius^2
+            y^2 = radius^2
+    p + q > 0
+    by thm addition_congruence_17(bx - dx, q * ex, dx - ax, p * ex)
+    (bx - dx) + (dx - ax) = q * ex + p * ex
+    (bx - dx) + (dx - ax) = bx - ax
+    q * ex + p * ex = (p + q) * ex
+    bx - ax = (p + q) * ex
+    by thm addition_congruence_17(byy - dy, q * ey, dy - ay, p * ey)
+    (byy - dy) + (dy - ay) = q * ey + p * ey
+    (byy - dy) + (dy - ay) = byy - ay
+    q * ey + p * ey = (p + q) * ey
+    byy - ay = (p + q) * ey
+    by thm p17_line_frame_bridge(ax, ay, bx, byy, dx, dy, px, py, ex, ey, nx, ny, p + q, x, y, ab_a, ab_b, ab_c)
+    ab_a * ex + ab_b * ey = 0
+    ab_a * px + ab_b * py + ab_c = (ab_a * nx + ab_b * ny) * y
+    have ab_value R = ab_a * px + ab_b * py + ab_c
+    ab_value = (ab_a * nx + ab_b * ny) * y
+    ab_value^2 = (ab_a * px + ab_b * py + ab_c)^2
+    ab_value^2 = radius^2 * (ab_a^2 + ab_b^2)
+    by thm tangent_line_general_normal_square_17(ab_a, ab_b, ex, ey, nx, ny, y, radius, ab_value)
+    y^2 = radius^2
+
+    px = dx + y * nx + x * ex
+    py = dy + y * ny + x * ey
+    by thm p17_line_frame_bridge(dx, dy, cx, cy, dx, dy, px, py, nx, ny, ex, ey, h, y, x, cd_a, cd_b, cd_c)
+    cd_a * nx + cd_b * ny = 0
+    cd_a * px + cd_b * py + cd_c = (cd_a * ex + cd_b * ey) * x
+    have cd_value R = cd_a * px + cd_b * py + cd_c
+    cd_value = (cd_a * ex + cd_b * ey) * x
+    cd_value^2 = (cd_a * px + cd_b * py + cd_c)^2
+    cd_value^2 = radius^2 * (cd_a^2 + cd_b^2)
+    by thm tangent_line_general_normal_square_17(cd_a, cd_b, nx, ny, ex, ey, x, radius, cd_value)
+    x^2 = radius^2
+
+thm multiplication_congruence_side_17:
+    ? forall x, x2, y, y2 R:
+        x = x2
+        y = y2
+        =>:
+            x * y = x2 * y2
+    x - x2 = 0
+    y - y2 = 0
+    x * y - x2 * y2 = (x - x2) * y + x2 * (y - y2)
+    (x - x2) * y + x2 * (y - y2) = 0
+    x * y - x2 * y2 = 0
+    x * y = x2 * y2
+
+# Normalize the raw AB-side determinant product in the D-based frame.
+
+thm ab_raw_determinant_product_normalizes_17:
+    ? forall p, q, h, x, y, ex, ey, nx, ny R:
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        ((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)) * (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx))) > 0
+        =>:
+            ((p + q) * y) * ((p + q) * h) > 0
+    have k R = ex * ny - ey * nx
+    (ex * ny - ey * nx)^2 = (ex^2 + ey^2) * (nx^2 + ny^2) - (ex * nx + ey * ny)^2
+    (ex^2 + ey^2) * (nx^2 + ny^2) - (ex * nx + ey * ny)^2 = 1 * 1 - 0^2
+    1 * 1 - 0^2 = 1
+    (ex * ny - ey * nx)^2 = 1
+    k = ex * ny - ey * nx
+    k^2 = (ex * ny - ey * nx)^2
+    k^2 = 1
+
+    ((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx) = (p + q) * (x * ex * ey + p * ex * ey + y * ex * ny - x * ey * ex - p * ey * ex - y * ey * nx)
+    (p + q) * (x * ex * ey + p * ex * ey + y * ex * ny - x * ey * ex - p * ey * ex - y * ey * nx) = (p + q) * (y * ex * ny - y * ey * nx)
+    (p + q) * (y * ex * ny - y * ey * nx) = (p + q) * y * (ex * ny - ey * nx)
+    (p + q) * y * (ex * ny - ey * nx) = (p + q) * y * k
+    ((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx) = (p + q) * y * k
+
+    ((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx) = (p + q) * (p * ex * ey + h * ex * ny - p * ey * ex - h * ey * nx)
+    (p + q) * (p * ex * ey + h * ex * ny - p * ey * ex - h * ey * nx) = (p + q) * (h * ex * ny - h * ey * nx)
+    (p + q) * (h * ex * ny - h * ey * nx) = (p + q) * h * (ex * ny - ey * nx)
+    (p + q) * h * (ex * ny - ey * nx) = (p + q) * h * k
+    ((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx) = (p + q) * h * k
+
+    by thm multiplication_congruence_side_17((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)), (p + q) * y * k, (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx)), (p + q) * h * k)
+    ((p + q) * y * k) * ((p + q) * h * k) = (((p + q) * y) * ((p + q) * h)) * k^2
+    (((p + q) * y) * ((p + q) * h)) * k^2 = ((p + q) * y) * ((p + q) * h)
+    ((p + q) * y) * ((p + q) * h) > 0
+
+# The AB-side product and tangency square select the positive root.
+
+thm nonnegative_order_from_squares_17:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        x^2 >= y^2
+        =>:
+            x >= y
+    by contra:
+        ? x >= y
+        x < y
+        x + y >= 0
+        y-x>0
+        0<=x
+        0<y
+        0<x+y
+        x+y>0
+        (y - x) * (x + y) > 0
+        (y-x)*(x+y)=y^2-x^2
+        y^2 - x^2 > 0
+        0<y^2-x^2
+        0+x^2<(y^2-x^2)+x^2
+        0+x^2=x^2
+        (y^2-x^2)+x^2=y^2
+        x^2<y^2
+        y^2 > x^2
+        impossible x^2 >= y^2
+
+# Nonnegative reals with equal squares are equal.
+
+
+
+thm positive_equal_from_squares_17:
+    ? forall x, y R:
+        x > 0
+        y > 0
+        x^2 = y^2
+        =>:
+            x = y
+    x >= 0
+    y >= 0
+    x^2 >= y^2
+    y^2 >= x^2
+    by thm nonnegative_order_from_squares_17(x, y)
+    by thm nonnegative_order_from_squares_17(y, x)
+    x = y
+
+# Negating one side of an equality can be transferred to the other side.
+
+thm ab_positive_root_17:
+    ? forall p, q, h, y, radius R:
+        p > 0
+        q > 0
+        h > 0
+        radius > 0
+        ((p + q) * y) * ((p + q) * h) > 0
+        y^2 = radius^2
+        =>:
+            y = radius
+    p + q > 0
+    (p + q) * (p + q) > 0
+    (p + q) * (p + q) = (p + q)^2
+    (p + q)^2 > 0
+    (p + q)^2 * h > 0
+    ((p + q) * y) * ((p + q) * h) = (p + q)^2 * h * y
+    (p + q)^2 * h * y > 0
+    by contra:
+        ? y > 0
+        y <= 0
+        0 < (p + q)^2 * h
+        0 <= (p + q)^2 * h
+        y <= 0
+        (p + q)^2 * h * y <= (p + q)^2 * h * 0
+        (p + q)^2 * h * 0 = 0
+        (p + q)^2 * h * y <= 0
+        impossible (p + q)^2 * h * y > 0
+    by thm positive_equal_from_squares_17(y, radius)
+
+# Cancel a common squared factor from a strict negative product.
+
+thm segment_foot_selects_positive_side_17:
+    ? forall p, q, h, ell, x, y, r, t R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        r > 0
+        t >= 0
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        y^2 = r^2
+        p * (x + p) + h * y = t * ell^2
+        (h * (x + p) - p * y)^2 = y^2 * ell^2
+        =>:
+            y > 0
+    by contra:
+        ? y > 0
+        y <= 0
+        r^2 > 0
+        y^2 > 0
+        by contra:
+            ? y != 0
+            y = 0
+            y^2 = 0
+            impossible y^2 > 0
+        by contra:
+            ? y < 0
+            y >= 0
+            y = 0
+            impossible y != 0
+
+        # The hypotenuse inequality ell < p+q follows without division.
+        p + q > 0
+        q * (p + q) > 0
+        h^2 + p^2 = p * q + p^2
+        ell^2 = h^2 + p^2
+        ell^2 = p * q + p^2
+        (p + q)^2 - ell^2 = (p + q)^2 - (p * q + p^2)
+        (p + q)^2 - (p * q + p^2) = q * (p + q)
+        (p + q)^2 - ell^2 = q * (p + q)
+        (p + q)^2 - ell^2 > 0
+        (p + q)^2 > ell^2
+        (p + q)^2 >= ell^2
+        by thm nonnegative_order_from_squares_17(p + q, ell)
+        p + q >= ell
+        by contra:
+            ? p + q > ell
+            p + q <= ell
+            p + q = ell
+            (p + q)^2 - ell^2 = 0
+            impossible (p + q)^2 - ell^2 > 0
+        (p + q) - ell > 0
+
+        # The nonnegative segment parameter forces x+p to be positive.
+        ell^2 > 0
+        t * ell^2 >= 0
+        p * (x + p) + h * y >= 0
+        0 < h
+        y < 0
+        h * y < h * 0
+        h * 0 = 0
+        h * y < 0
+        0 - (h * y) > 0 - 0
+        0 - (h * y) = -h * y
+        0 - 0 = 0
+        -h * y > 0
+        (p * (x + p) + h * y) + (-h * y) > 0
+        p * (x + p) = (p * (x + p) + h * y) + (-h * y)
+        p * (x + p) > 0
+        by contra:
+            ? x + p > 0
+            x + p <= 0
+            0 < p
+            0 <= p
+            x + p <= 0
+            p * (x + p) <= p * 0
+            p * 0 = 0
+            p * (x + p) <= 0
+            impossible p * (x + p) > 0
+        x + p > 0
+
+        # Hence the positive square root is h(x+p)-py, not its negative.
+        h * (x + p) > 0
+        0 < p
+        y < 0
+        p * y < p * 0
+        p * 0 = 0
+        p * y < 0
+        0 - (p * y) > 0 - 0
+        0 - (p * y) = -p * y
+        0 - 0 = 0
+        -p * y > 0
+        0 < h * (x + p)
+        0 < -p * y
+        0 < h * (x + p) + (-p * y)
+        h * (x + p) - p * y = h * (x + p) + (-p * y)
+        h * (x + p) - p * y > 0
+        0 - y > 0 - 0
+        0 - y = -y
+        0 - 0 = 0
+        -y > 0
+        (-y) * ell > 0
+        ((-y) * ell)^2 = y^2 * ell^2
+        (h * (x + p) - p * y)^2 = ((-y) * ell)^2
+        by thm positive_equal_from_squares_17(h * (x + p) - p * y, (-y) * ell)
+        h * (x + p) - p * y = (-y) * ell
+        -p * y = -p * y
+        by thm subtraction_congruence_17(h * (x + p) - p * y, (-y) * ell, -p * y, -p * y)
+        (h * (x + p) - p * y) - (-p * y) = ((-y) * ell) - (-p * y)
+        (h * (x + p) - p * y) - (-p * y) = h * (x + p)
+        ((-y) * ell) - (-p * y) = y * (p - ell)
+        h * (x + p) = y * (p - ell)
+
+        # Substitution into the projection equation gives opposite signs.
+        h = h
+        by thm multiplication_congruence_17(h, h, p * (x + p) + h * y, t * ell^2)
+        h * (p * (x + p) + h * y) = h * (t * ell^2)
+        h * (t * ell^2) = h * t * ell^2
+        h * (p * (x + p) + h * y) = h * t * ell^2
+        h * (p * (x + p) + h * y) = p * h * (x + p) + h^2 * y
+        p = p
+        by thm multiplication_congruence_17(p, p, h * (x + p), y * (p - ell))
+        p * (h * (x + p)) = p * (y * (p - ell))
+        p * (h * (x + p)) = p * h * (x + p)
+        p * h * (x + p) = p * (y * (p - ell))
+        y = y
+        by thm multiplication_congruence_17(h^2, p * q, y, y)
+        h^2 * y = (p * q) * y
+        by thm addition_congruence_17(p * h * (x + p), p * (y * (p - ell)), h^2 * y, (p * q) * y)
+        p * h * (x + p) + h^2 * y = p * (y * (p - ell)) + (p * q) * y
+        p * (y * (p - ell)) + (p * q) * y = p * y * (p + q - ell)
+        h * t * ell^2 = p * y * (p + q - ell)
+        0 <= h
+        0 <= t
+        0 <= ell^2
+        0 <= h * t
+        0 <= h * t * ell^2
+        h * t * ell^2 >= 0
+        0 < p + q - ell
+        p * y < 0
+        p * y * (p + q - ell) < 0 * (p + q - ell)
+        0 * (p + q - ell) = 0
+        p * y * (p + q - ell) < 0
+        0 - (p * y * (p + q - ell)) > 0 - 0
+        0 - (p * y * (p + q - ell)) = -(p * y * (p + q - ell))
+        0 - 0 = 0
+        -(p * y * (p + q - ell)) > 0
+        0 <= h * t * ell^2
+        0 < -(p * y * (p + q - ell))
+        0 < h * t * ell^2 + (-(p * y * (p + q - ell)))
+        h * t * ell^2 + (-(p * y * (p + q - ell))) > 0
+        h * t * ell^2 - p * y * (p + q - ell) = h * t * ell^2 + (-(p * y * (p + q - ell)))
+        h * t * ell^2 - p * y * (p + q - ell) > 0
+        h * t * ell^2 - p * y * (p + q - ell) = 0
+        impossible h * t * ell^2 - p * y * (p + q - ell) > 0
+
+# A diameter vector of length 2R determines an oriented orthonormal basis.
+
+thm negated_zero_17:
+    ? forall w R:
+        -w = 0
+        =>:
+            w = 0
+    (-w) + w = 0 + w
+    (-w) + w = 0
+    0 + w = w
+    0 + w = 0
+    w = 0
+
+thm zero_difference_equal_17:
+    ? forall aa,bb R:
+        aa-bb=0
+        =>:
+            aa=bb
+    (aa-bb)+bb=0+bb
+    (aa-bb)+bb=aa
+    0+bb=bb
+    aa=(aa-bb)+bb=0+bb=bb
+
+thm global_foot_affine_coordinates_17:
+    ? forall ax,ay,cx,cy,ux,uy,dx,dy,ex,ey,nx,ny,p,h,s,t,u,v R:
+        t=1-s
+        u=-p+t*p
+        v=t*h
+        ax=dx-p*ex
+        ay=dy-p*ey
+        cx=dx+h*nx
+        cy=dy+h*ny
+        ux=(1-s)*cx+s*ax
+        uy=(1-s)*cy+s*ay
+        =>:
+            ux=dx+u*ex+v*nx
+            uy=dy+u*ey+v*ny
+    by thm multiplication_congruence_17(1 - s, t, cx, dx + h * nx)
+    (1 - s) * cx = t * (dx + h * nx)
+    by thm multiplication_congruence_17(s, s, ax, dx - p * ex)
+    s * ax = s * (dx - p * ex)
+    by thm addition_congruence_17((1 - s) * cx, t * (dx + h * nx), s * ax, s * (dx - p * ex))
+    (1 - s) * cx + s * ax = t * (dx + h * nx) + s * (dx - p * ex)
+    ux = t * (dx + h * nx) + s * (dx - p * ex)
+    by thm addition_congruence_17(t, 1 - s, s, s)
+    t + s = (1 - s) + s
+    (1 - s) + s = 1
+    t + s = 1
+    by thm multiplication_congruence_17(t, 1 - s, p, p)
+    t * p = (1 - s) * p
+    by thm addition_congruence_17(-p, -p, t * p, (1 - s) * p)
+    -p + t * p = -p + (1 - s) * p
+    u = -p + (1 - s) * p
+    -p + (1 - s) * p = -(s * p)
+    u = -(s * p)
+    v = t * h
+
+    t * (dx + h * nx) + s * (dx - p * ex) = (t + s) * dx + (-(s * p)) * ex + (t * h) * nx
+    by thm multiplication_congruence_17(t + s, 1, dx, dx)
+    (t + s) * dx = 1 * dx
+    1 * dx = dx
+    (t + s) * dx = dx
+    by thm addition_congruence_17((t + s) * dx, dx, (-(s * p)) * ex, (-(s * p)) * ex)
+    (t + s) * dx + (-(s * p)) * ex = dx + (-(s * p)) * ex
+    by thm addition_congruence_17((t + s) * dx + (-(s * p)) * ex, dx + (-(s * p)) * ex, (t * h) * nx, (t * h) * nx)
+    (t + s) * dx + (-(s * p)) * ex + (t * h) * nx = dx + (-(s * p)) * ex + (t * h) * nx
+    t * (dx + h * nx) + s * (dx - p * ex) = dx + (-(s * p)) * ex + (t * h) * nx
+
+    by thm multiplication_congruence_17(u, -(s * p), ex, ex)
+    u * ex = (-(s * p)) * ex
+    by thm addition_congruence_17(dx, dx, u * ex, (-(s * p)) * ex)
+    dx + u * ex = dx + (-(s * p)) * ex
+    by thm multiplication_congruence_17(v, t * h, nx, nx)
+    v * nx = (t * h) * nx
+    by thm addition_congruence_17(dx + u * ex, dx + (-(s * p)) * ex, v * nx, (t * h) * nx)
+    dx + u * ex + v * nx = dx + (-(s * p)) * ex + (t * h) * nx
+    t * (dx + h * nx) + s * (dx - p * ex) = dx + u * ex + v * nx
+    ux = dx + u * ex + v * nx
+
+    by thm multiplication_congruence_17(1 - s, t, cy, dy + h * ny)
+    (1 - s) * cy = t * (dy + h * ny)
+    by thm multiplication_congruence_17(s, s, ay, dy - p * ey)
+    s * ay = s * (dy - p * ey)
+    by thm addition_congruence_17((1 - s) * cy, t * (dy + h * ny), s * ay, s * (dy - p * ey))
+    (1 - s) * cy + s * ay = t * (dy + h * ny) + s * (dy - p * ey)
+    uy = t * (dy + h * ny) + s * (dy - p * ey)
+
+    t * (dy + h * ny) + s * (dy - p * ey) = (t + s) * dy + (-(s * p)) * ey + (t * h) * ny
+    by thm multiplication_congruence_17(t + s, 1, dy, dy)
+    (t + s) * dy = 1 * dy
+    1 * dy = dy
+    (t + s) * dy = dy
+    by thm addition_congruence_17((t + s) * dy, dy, (-(s * p)) * ey, (-(s * p)) * ey)
+    (t + s) * dy + (-(s * p)) * ey = dy + (-(s * p)) * ey
+    by thm addition_congruence_17((t + s) * dy + (-(s * p)) * ey, dy + (-(s * p)) * ey, (t * h) * ny, (t * h) * ny)
+    (t + s) * dy + (-(s * p)) * ey + (t * h) * ny = dy + (-(s * p)) * ey + (t * h) * ny
+    t * (dy + h * ny) + s * (dy - p * ey) = dy + (-(s * p)) * ey + (t * h) * ny
+
+    by thm multiplication_congruence_17(u, -(s * p), ey, ey)
+    u * ey = (-(s * p)) * ey
+    by thm addition_congruence_17(dy, dy, u * ey, (-(s * p)) * ey)
+    dy + u * ey = dy + (-(s * p)) * ey
+    by thm multiplication_congruence_17(v, t * h, ny, ny)
+    v * ny = (t * h) * ny
+    by thm addition_congruence_17(dy + u * ey, dy + (-(s * p)) * ey, v * ny, (t * h) * ny)
+    dy + u * ey + v * ny = dy + (-(s * p)) * ey + (t * h) * ny
+    t * (dy + h * ny) + s * (dy - p * ey) = dy + u * ey + v * ny
+    uy = dy + u * ey + v * ny
+
+thm frame_dot_and_norm_17:
+    ? forall zx,zy,wx,wy,ex,ey,nx,ny,xx,yy,p,h R:
+        ex^2+ey^2=1
+        nx^2+ny^2=1
+        ex*nx+ey*ny=0
+        zx=xx*ex+yy*nx
+        zy=xx*ey+yy*ny
+        wx=-p*ex-h*nx
+        wy=-p*ey-h*ny
+        =>:
+            zx*wx+zy*wy=-(xx*p+yy*h)
+            zx^2+zy^2=xx^2+yy^2
+    by thm multiplication_congruence_17(zx, (xx) * ex + (yy) * nx, wx, -p * ex - h * nx)
+    (zx) * (wx) = ((xx) * ex + (yy) * nx) * (-p * ex - h * nx)
+    by thm multiplication_congruence_17(zy, (xx) * ey + (yy) * ny, wy, -p * ey - h * ny)
+    (zy) * (wy) = ((xx) * ey + (yy) * ny) * (-p * ey - h * ny)
+    by thm addition_congruence_17((zx) * (wx), ((xx) * ex + (yy) * nx) * (-p * ex - h * nx), (zy) * (wy), ((xx) * ey + (yy) * ny) * (-p * ey - h * ny))
+    (zx) * (wx) + (zy) * (wy) = ((xx) * ex + (yy) * nx) * (-p * ex - h * nx) + ((xx) * ey + (yy) * ny) * (-p * ey - h * ny)
+    ((xx) * ex + (yy) * nx) * (-p * ex - h * nx) + ((xx) * ey + (yy) * ny) * (-p * ey - h * ny) = (-((xx) * p)) * (ex^2 + ey^2) + (-((xx) * h + (yy) * p)) * (ex * nx + ey * ny) + (-((yy) * h)) * (nx^2 + ny^2)
+    by thm multiplication_congruence_17(-((xx) * p), -((xx) * p), ex^2 + ey^2, 1)
+    (-((xx) * p)) * (ex^2 + ey^2) = (-((xx) * p)) * 1
+    by thm multiplication_congruence_17(-((xx) * h + (yy) * p), -((xx) * h + (yy) * p), ex * nx + ey * ny, 0)
+    (-((xx) * h + (yy) * p)) * (ex * nx + ey * ny) = (-((xx) * h + (yy) * p)) * 0
+    by thm addition_congruence_17((-((xx) * p)) * (ex^2 + ey^2), (-((xx) * p)) * 1, (-((xx) * h + (yy) * p)) * (ex * nx + ey * ny), (-((xx) * h + (yy) * p)) * 0)
+    (-((xx) * p)) * (ex^2 + ey^2) + (-((xx) * h + (yy) * p)) * (ex * nx + ey * ny) = (-((xx) * p)) * 1 + (-((xx) * h + (yy) * p)) * 0
+    by thm multiplication_congruence_17(-((yy) * h), -((yy) * h), nx^2 + ny^2, 1)
+    (-((yy) * h)) * (nx^2 + ny^2) = (-((yy) * h)) * 1
+    by thm addition_congruence_17((-((xx) * p)) * (ex^2 + ey^2) + (-((xx) * h + (yy) * p)) * (ex * nx + ey * ny), (-((xx) * p)) * 1 + (-((xx) * h + (yy) * p)) * 0, (-((yy) * h)) * (nx^2 + ny^2), (-((yy) * h)) * 1)
+    (-((xx) * p)) * (ex^2 + ey^2) + (-((xx) * h + (yy) * p)) * (ex * nx + ey * ny) + (-((yy) * h)) * (nx^2 + ny^2) = (-((xx) * p)) * 1 + (-((xx) * h + (yy) * p)) * 0 + (-((yy) * h)) * 1
+    (-((xx) * p)) * 1 + (-((xx) * h + (yy) * p)) * 0 + (-((yy) * h)) * 1 = -((xx) * p + (yy) * h)
+    ((xx) * ex + (yy) * nx) * (-p * ex - h * nx) + ((xx) * ey + (yy) * ny) * (-p * ey - h * ny) = -((xx) * p + (yy) * h)
+    (zx) * (wx) + (zy) * (wy) = -((xx) * p + (yy) * h)
+    by thm multiplication_congruence_17(zx, (xx) * ex + (yy) * nx, zx, (xx) * ex + (yy) * nx)
+    (zx) * (zx) = ((xx) * ex + (yy) * nx) * ((xx) * ex + (yy) * nx)
+    (zx)^2 = (zx) * (zx)
+    ((xx) * ex + (yy) * nx) * ((xx) * ex + (yy) * nx) = ((xx) * ex + (yy) * nx)^2
+    (zx)^2 = ((xx) * ex + (yy) * nx)^2
+    by thm multiplication_congruence_17(zy, (xx) * ey + (yy) * ny, zy, (xx) * ey + (yy) * ny)
+    (zy) * (zy) = ((xx) * ey + (yy) * ny) * ((xx) * ey + (yy) * ny)
+    (zy)^2 = (zy) * (zy)
+    ((xx) * ey + (yy) * ny) * ((xx) * ey + (yy) * ny) = ((xx) * ey + (yy) * ny)^2
+    (zy)^2 = ((xx) * ey + (yy) * ny)^2
+    by thm addition_congruence_17((zx)^2, ((xx) * ex + (yy) * nx)^2, (zy)^2, ((xx) * ey + (yy) * ny)^2)
+    (zx)^2 + (zy)^2 = ((xx) * ex + (yy) * nx)^2 + ((xx) * ey + (yy) * ny)^2
+    by thm rotated_square_sum_17(ex, ey, nx, ny, xx, yy)
+    ((xx) * ex + (yy) * nx)^2 + ((xx) * ey + (yy) * ny)^2 = (xx)^2 + (yy)^2
+    (zx)^2 + (zy)^2 = (xx)^2 + (yy)^2
+
+thm scalar_foot_frame_gives_positive_side_17:
+    ? forall p,q,h,ell,x,y,r,t,u,v R:
+        p>0
+        q>0
+        h>0
+        ell>0
+        r>0
+        t>=0
+        t<=1
+        h^2=p*q
+        ell^2=h^2+p^2
+        y^2=r^2
+        u=-p+t*p
+        v=t*h
+        (u-x)*p+(v-y)*h=0
+        (u-x)^2+(v-y)^2=r^2
+        =>:
+            y>0
+    by thm subtraction_congruence_17(u, -p + t * p, x, x)
+    u - x = (-p + t * p) - x
+    by thm subtraction_congruence_17(v, t * h, y, y)
+    v - y = t * h - y
+    by thm multiplication_congruence_17(u - x, (-p + t * p) - x, p, p)
+    (u - x) * p = ((-p + t * p) - x) * p
+    by thm multiplication_congruence_17(v - y, t * h - y, h, h)
+    (v - y) * h = (t * h - y) * h
+    by thm addition_congruence_17((u - x) * p, ((-p + t * p) - x) * p, (v - y) * h, (t * h - y) * h)
+    (u - x) * p + (v - y) * h = ((-p + t * p) - x) * p + (t * h - y) * h
+    ((-p + t * p) - x) * p + (t * h - y) * h = 0
+    ((-p + t * p) - x) * p + (t * h - y) * h = t * (h^2 + p^2) - (p * (x + p) + h * y)
+    t * (h^2 + p^2) - (p * (x + p) + h * y) = 0
+    by thm zero_difference_equal_17(t*(h^2+p^2),p*(x+p)+h*y)
+    t*(h^2+p^2)=p*(x+p)+h*y
+    p * (x + p) + h * y = t * (h^2 + p^2)
+    h^2 + p^2 = ell^2
+    by thm multiplication_congruence_17(t, t, h^2 + p^2, ell^2)
+    t * (h^2 + p^2) = t * ell^2
+    p * (x + p) + h * y = t * ell^2
+
+    ((u - x) * p + (v - y) * h)^2 + ((u - x) * h - (v - y) * p)^2 = ((u - x)^2 + (v - y)^2) * (p^2 + h^2)
+    ((u - x) * p + (v - y) * h)^2 = 0
+    by thm addition_congruence_17(((u - x) * p + (v - y) * h)^2, 0, ((u - x) * h - (v - y) * p)^2, ((u - x) * h - (v - y) * p)^2)
+    ((u - x) * p + (v - y) * h)^2 + ((u - x) * h - (v - y) * p)^2 = 0 + ((u - x) * h - (v - y) * p)^2
+    0 + ((u - x) * h - (v - y) * p)^2 = ((u - x) * h - (v - y) * p)^2
+    by thm multiplication_congruence_17((u - x)^2 + (v - y)^2, r^2, p^2 + h^2, p^2 + h^2)
+    ((u - x)^2 + (v - y)^2) * (p^2 + h^2) = r^2 * (p^2 + h^2)
+    ((u - x) * h - (v - y) * p)^2 = r^2 * (p^2 + h^2)
+    p^2 + h^2 = ell^2
+    by thm multiplication_congruence_17(r^2, r^2, p^2 + h^2, ell^2)
+    r^2 * (p^2 + h^2) = r^2 * ell^2
+    ((u - x) * h - (v - y) * p)^2 = r^2 * ell^2
+    by thm multiplication_congruence_17(u - x, (-p + t * p) - x, h, h)
+    (u - x) * h = ((-p + t * p) - x) * h
+    by thm multiplication_congruence_17(v - y, t * h - y, p, p)
+    (v - y) * p = (t * h - y) * p
+    by thm subtraction_congruence_17((u - x) * h, ((-p + t * p) - x) * h, (v - y) * p, (t * h - y) * p)
+    (u - x) * h - (v - y) * p = ((-p + t * p) - x) * h - (t * h - y) * p
+    ((-p + t * p) - x) * h - (t * h - y) * p = -(h * (x + p) - p * y)
+    (u - x) * h - (v - y) * p = -(h * (x + p) - p * y)
+    by thm multiplication_congruence_17((u - x) * h - (v - y) * p, -(h * (x + p) - p * y), (u - x) * h - (v - y) * p, -(h * (x + p) - p * y))
+    ((u - x) * h - (v - y) * p) * ((u - x) * h - (v - y) * p) = (-(h * (x + p) - p * y)) * (-(h * (x + p) - p * y))
+    ((u - x) * h - (v - y) * p)^2 = ((u - x) * h - (v - y) * p) * ((u - x) * h - (v - y) * p)
+    (-(h * (x + p) - p * y)) * (-(h * (x + p) - p * y)) = (h * (x + p) - p * y)^2
+    ((u - x) * h - (v - y) * p)^2 = (h * (x + p) - p * y)^2
+    (h * (x + p) - p * y)^2 = r^2 * ell^2
+    r^2 * ell^2 = y^2 * ell^2
+    (h * (x + p) - p * y)^2 = y^2 * ell^2
+
+    by thm segment_foot_selects_positive_side_17(p, q, h, ell, x, y, r, t)
+
+thm adapter_ac_global_foot_positive_side_17:
+    ? forall ax, ay, cx, cy, sx, sy, ux, uy, dx, dy, ex, ey, nx, ny, p, q, h, ell, x, y, r, s R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        r > 0
+        s >= 0
+        s <= 1
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        y^2 = r^2
+        ax = dx - p * ex
+        ay = dy - p * ey
+        cx = dx + h * nx
+        cy = dy + h * ny
+        sx = dx + x * ex + y * nx
+        sy = dy + x * ey + y * ny
+        ux = (1 - s) * cx + s * ax
+        uy = (1 - s) * cy + s * ay
+        (ux - sx) * (ax - cx) + (uy - sy) * (ay - cy) = 0
+        (ux - sx)^2 + (uy - sy)^2 = r^2
+        =>:
+            y > 0
+    have t R = 1 - s
+    have u R = -p + t * p
+    have v R = t * h
+
+    1 - s >= 0
+    0 <= s
+    1 - s <= 1 - 0
+    1 - 0 = 1
+    1 - s <= 1
+    t >= 0
+    t <= 1
+
+    by thm global_foot_affine_coordinates_17(ax,ay,cx,cy,ux,uy,dx,dy,ex,ey,nx,ny,p,h,s,t,u,v)
+    by thm subtraction_congruence_17(ux, dx + u * ex + v * nx, sx, dx + x * ex + y * nx)
+    ux - sx = (dx + u * ex + v * nx) - (dx + x * ex + y * nx)
+    (dx + u * ex + v * nx) - (dx + x * ex + y * nx) = (u - x) * ex + (v - y) * nx
+    ux - sx = (u - x) * ex + (v - y) * nx
+    by thm subtraction_congruence_17(uy, dy + u * ey + v * ny, sy, dy + x * ey + y * ny)
+    uy - sy = (dy + u * ey + v * ny) - (dy + x * ey + y * ny)
+    (dy + u * ey + v * ny) - (dy + x * ey + y * ny) = (u - x) * ey + (v - y) * ny
+    uy - sy = (u - x) * ey + (v - y) * ny
+    by thm subtraction_congruence_17(ax, dx - p * ex, cx, dx + h * nx)
+    ax - cx = (dx - p * ex) - (dx + h * nx)
+    (dx - p * ex) - (dx + h * nx) = -1 * p * ex - h * nx
+    ax - cx = -p * ex - h * nx
+    by thm subtraction_congruence_17(ay, dy - p * ey, cy, dy + h * ny)
+    ay - cy = (dy - p * ey) - (dy + h * ny)
+    (dy - p * ey) - (dy + h * ny) = -1 * p * ey - h * ny
+    ay - cy = -p * ey - h * ny
+
+    by thm frame_dot_and_norm_17(ux-sx,uy-sy,ax-cx,ay-cy,ex,ey,nx,ny,u-x,v-y,p,h)
+    (ux-sx)*(ax-cx)+(uy-sy)*(ay-cy)=-((u-x)*p+(v-y)*h)
+    -((u-x)*p+(v-y)*h)=0
+    by thm negated_zero_17((u-x)*p+(v-y)*h)
+    (u-x)*p+(v-y)*h=0
+    (ux-sx)^2+(uy-sy)^2=(u-x)^2+(v-y)^2
+    (u-x)^2+(v-y)^2=r^2
+    by thm scalar_foot_frame_gives_positive_side_17(p,q,h,ell,x,y,r,t,u,v)
+    y>0
+
+thm pos_adapter_ac_global_foot_positive_side_17:
+    ? forall ax, ay, cx, cy, sx, sy, ux, uy, dx, dy, ex, ey, nx, ny, p, q, h, ell, x, y, r, s R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        r > 0
+        s >= 0
+        s <= 1
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        y^2 = r^2
+        ax = dx - p * ex
+        ay = dy - p * ey
+        cx = dx + h * nx
+        cy = dy + h * ny
+        sx = dx + x * ex + y * nx
+        sy = dy + x * ey + y * ny
+        ux = (1 - s) * cx + s * ax
+        uy = (1 - s) * cy + s * ay
+        (ux - sx) * (ax - cx) + (uy - sy) * (ay - cy) = 0
+        (ux - sx)^2 + (uy - sy)^2 = r^2
+        =>:
+            y > 0
+    by thm adapter_ac_global_foot_positive_side_17(ax,ay,cx,cy,sx,sy,ux,uy,dx,dy,ex,ey,nx,ny,p,q,h,ell,x,y,r,s)
+
+thm scalar_foot_frame_equations_17:
+    ? forall p,h,ell,x,y,r,t,u,v R:
+        ell^2=h^2+p^2
+        y^2=r^2
+        u=-p+t*p
+        v=t*h
+        (u-x)*p+(v-y)*h=0
+        (u-x)^2+(v-y)^2=r^2
+        =>:
+            p*(x+p)+h*y=t*ell^2
+            (h*(x+p)-p*y)^2=y^2*ell^2
+    by thm subtraction_congruence_17(u, -p + t * p, x, x)
+    u - x = (-p + t * p) - x
+    by thm subtraction_congruence_17(v, t * h, y, y)
+    v - y = t * h - y
+    by thm multiplication_congruence_17(u - x, (-p + t * p) - x, p, p)
+    (u - x) * p = ((-p + t * p) - x) * p
+    by thm multiplication_congruence_17(v - y, t * h - y, h, h)
+    (v - y) * h = (t * h - y) * h
+    by thm addition_congruence_17((u - x) * p, ((-p + t * p) - x) * p, (v - y) * h, (t * h - y) * h)
+    (u - x) * p + (v - y) * h = ((-p + t * p) - x) * p + (t * h - y) * h
+    ((-p + t * p) - x) * p + (t * h - y) * h = 0
+    ((-p + t * p) - x) * p + (t * h - y) * h = t * (h^2 + p^2) - (p * (x + p) + h * y)
+    t * (h^2 + p^2) - (p * (x + p) + h * y) = 0
+    by thm zero_difference_equal_17(t*(h^2+p^2),p*(x+p)+h*y)
+    t*(h^2+p^2)=p*(x+p)+h*y
+    p * (x + p) + h * y = t * (h^2 + p^2)
+    h^2 + p^2 = ell^2
+    by thm multiplication_congruence_17(t, t, h^2 + p^2, ell^2)
+    t * (h^2 + p^2) = t * ell^2
+    p * (x + p) + h * y = t * ell^2
+
+    ((u - x) * p + (v - y) * h)^2 + ((u - x) * h - (v - y) * p)^2 = ((u - x)^2 + (v - y)^2) * (p^2 + h^2)
+    ((u - x) * p + (v - y) * h)^2 = 0
+    by thm addition_congruence_17(((u - x) * p + (v - y) * h)^2, 0, ((u - x) * h - (v - y) * p)^2, ((u - x) * h - (v - y) * p)^2)
+    ((u - x) * p + (v - y) * h)^2 + ((u - x) * h - (v - y) * p)^2 = 0 + ((u - x) * h - (v - y) * p)^2
+    0 + ((u - x) * h - (v - y) * p)^2 = ((u - x) * h - (v - y) * p)^2
+    by thm multiplication_congruence_17((u - x)^2 + (v - y)^2, r^2, p^2 + h^2, p^2 + h^2)
+    ((u - x)^2 + (v - y)^2) * (p^2 + h^2) = r^2 * (p^2 + h^2)
+    ((u - x) * h - (v - y) * p)^2 = r^2 * (p^2 + h^2)
+    p^2 + h^2 = ell^2
+    by thm multiplication_congruence_17(r^2, r^2, p^2 + h^2, ell^2)
+    r^2 * (p^2 + h^2) = r^2 * ell^2
+    ((u - x) * h - (v - y) * p)^2 = r^2 * ell^2
+    by thm multiplication_congruence_17(u - x, (-p + t * p) - x, h, h)
+    (u - x) * h = ((-p + t * p) - x) * h
+    by thm multiplication_congruence_17(v - y, t * h - y, p, p)
+    (v - y) * p = (t * h - y) * p
+    by thm subtraction_congruence_17((u - x) * h, ((-p + t * p) - x) * h, (v - y) * p, (t * h - y) * p)
+    (u - x) * h - (v - y) * p = ((-p + t * p) - x) * h - (t * h - y) * p
+    ((-p + t * p) - x) * h - (t * h - y) * p = -(h * (x + p) - p * y)
+    (u - x) * h - (v - y) * p = -(h * (x + p) - p * y)
+    by thm multiplication_congruence_17((u - x) * h - (v - y) * p, -(h * (x + p) - p * y), (u - x) * h - (v - y) * p, -(h * (x + p) - p * y))
+    ((u - x) * h - (v - y) * p) * ((u - x) * h - (v - y) * p) = (-(h * (x + p) - p * y)) * (-(h * (x + p) - p * y))
+    ((u - x) * h - (v - y) * p)^2 = ((u - x) * h - (v - y) * p) * ((u - x) * h - (v - y) * p)
+    (-(h * (x + p) - p * y)) * (-(h * (x + p) - p * y)) = (h * (x + p) - p * y)^2
+    ((u - x) * h - (v - y) * p)^2 = (h * (x + p) - p * y)^2
+    (h * (x + p) - p * y)^2 = r^2 * ell^2
+    r^2 * ell^2 = y^2 * ell^2
+    (h * (x + p) - p * y)^2 = y^2 * ell^2
+
+
+thm ac_global_foot_scalar_data_17:
+    ? forall ax, ay, cx, cy, sx, sy, ux, uy, dx, dy, ex, ey, nx, ny, p, q, h, ell, x, y, r, s R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        r > 0
+        s >= 0
+        s <= 1
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        y^2 = r^2
+        ax = dx - p * ex
+        ay = dy - p * ey
+        cx = dx + h * nx
+        cy = dy + h * ny
+        sx = dx + x * ex + y * nx
+        sy = dy + x * ey + y * ny
+        ux = (1 - s) * cx + s * ax
+        uy = (1 - s) * cy + s * ay
+        (ux - sx) * (ax - cx) + (uy - sy) * (ay - cy) = 0
+        (ux - sx)^2 + (uy - sy)^2 = r^2
+        =>:
+            1 - s <= 1
+            p * (x + p) + h * y = (1 - s) * ell^2
+            (h * (x + p) - p * y)^2 = y^2 * ell^2
+    have t R = 1 - s
+    have u R = -p + t * p
+    have v R = t * h
+
+    1 - s >= 0
+    0 <= s
+    1 - s <= 1 - 0
+    1 - 0 = 1
+    1 - s <= 1
+    t >= 0
+    t <= 1
+
+    by thm global_foot_affine_coordinates_17(ax,ay,cx,cy,ux,uy,dx,dy,ex,ey,nx,ny,p,h,s,t,u,v)
+    by thm subtraction_congruence_17(ux, dx + u * ex + v * nx, sx, dx + x * ex + y * nx)
+    ux - sx = (dx + u * ex + v * nx) - (dx + x * ex + y * nx)
+    (dx + u * ex + v * nx) - (dx + x * ex + y * nx) = (u - x) * ex + (v - y) * nx
+    ux - sx = (u - x) * ex + (v - y) * nx
+    by thm subtraction_congruence_17(uy, dy + u * ey + v * ny, sy, dy + x * ey + y * ny)
+    uy - sy = (dy + u * ey + v * ny) - (dy + x * ey + y * ny)
+    (dy + u * ey + v * ny) - (dy + x * ey + y * ny) = (u - x) * ey + (v - y) * ny
+    uy - sy = (u - x) * ey + (v - y) * ny
+    by thm subtraction_congruence_17(ax, dx - p * ex, cx, dx + h * nx)
+    ax - cx = (dx - p * ex) - (dx + h * nx)
+    (dx - p * ex) - (dx + h * nx) = -1 * p * ex - h * nx
+    ax - cx = -p * ex - h * nx
+    by thm subtraction_congruence_17(ay, dy - p * ey, cy, dy + h * ny)
+    ay - cy = (dy - p * ey) - (dy + h * ny)
+    (dy - p * ey) - (dy + h * ny) = -1 * p * ey - h * ny
+    ay - cy = -p * ey - h * ny
+
+    by thm frame_dot_and_norm_17(ux-sx,uy-sy,ax-cx,ay-cy,ex,ey,nx,ny,u-x,v-y,p,h)
+    (ux-sx)*(ax-cx)+(uy-sy)*(ay-cy)=-((u-x)*p+(v-y)*h)
+    -((u-x)*p+(v-y)*h)=0
+    by thm negated_zero_17((u-x)*p+(v-y)*h)
+    (u-x)*p+(v-y)*h=0
+    (ux-sx)^2+(uy-sy)^2=(u-x)^2+(v-y)^2
+    (u-x)^2+(v-y)^2=r^2
+    by thm scalar_foot_frame_equations_17(p,h,ell,x,y,r,t,u,v)
+    by thm multiplication_congruence_17(t, 1 - s, ell^2, ell^2)
+    t * ell^2 = (1 - s) * ell^2
+    p * (x + p) + h * y = (1 - s) * ell^2
+
+thm atomic_scale_bound:
+    ? forall h, s, v R:
+        h > 0
+        s <= 1
+        v > 0
+        =>:
+            h * (s * v) <= h * v
+    0 < v
+    0 <= v
+    0 < h
+    0 <= h
+    s * v <= 1 * v
+    1 * v = v
+    s * v <= v
+    h * (s * v) <= h * v
+
+# Equal sums with a common right summand have equal remaining terms.
+
+thm incircle_two_side_selector_probe:
+    ? forall p, q, h, ell, m, x, y, r, t, s R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        m > 0
+        r > 0
+        y > 0
+        y^2 = r^2
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        m^2 = h^2 + q^2
+        t <= 1
+        s <= 1
+        p * (x + p) + h * y = t * ell^2
+        q * (q - x) + h * y = s * m^2
+        (h * (x + p) - p * y)^2 = y^2 * ell^2
+        (h * (x - q) + q * y)^2 = y^2 * m^2
+        =>:
+            h * (x + p) - p * y = y * ell
+            h * (x - q) + q * y = -y * m
+    0 < p
+    0 < q
+    0 < h
+    0 < ell
+    0 < m
+    0 < y
+    have left R = h * (x + p) - p * y
+    have right R = h * (x - q) + q * y
+
+    y * ell > 0
+    0 < y * ell
+    (y * ell) * (y * ell) > 0
+    (y * ell) * (y * ell) = (y * ell)^2
+    (y * ell)^2 > 0
+    y^2 * ell^2 = (y * ell)^2
+    left^2 = (h * (x + p) - p * y)^2
+    left^2 = y^2 * ell^2
+    left^2 = (y * ell)^2
+    left^2 > 0
+    by contra:
+        ? left > 0
+        left <= 0
+        by contra:
+            ? left != 0
+            left = 0
+            by thm multiplication_congruence_17(left,0,left,0)
+            left * left = 0 * 0
+            left^2 = left * left = 0 * 0 = 0
+            impossible left^2 > 0
+        left != 0
+        by contra:
+            ? left < 0
+            left >= 0
+            left = 0
+            impossible left != 0
+        0 - left > 0 - 0
+        0 - left = -left
+        0 - 0 = 0
+        -left > 0
+        (-left)^2 = left^2 = (y * ell)^2
+        by thm positive_equal_from_squares_17(-left, y * ell)
+        -left = y * ell
+        -1 * (-left) = -1 * (y * ell)
+        -1 * (-left) = left
+        -1 * (y * ell) = -y * ell
+        left = -y * ell
+        h * (x + p) - p * y = -y * ell
+        (h * (x + p) - p * y) + p * y = (-y * ell) + p * y
+        (h * (x + p) - p * y) + p * y = h * (x + p)
+        (-y * ell) + p * y = y * (p - ell)
+        h * (x + p) = y * (p - ell)
+
+        h * (q * (q - x) + h * y) = h * (s * m^2)
+        h * (q * (q - x) + h * y) = q * h * (q - x) + h^2 * y
+        q * h * (q - x) + h^2 * y = q * (h * (q - x)) + h^2 * y
+        h * (q - x) = h * (p + q) - h * (x + p)
+        q * (h * (q - x)) + h^2 * y = q * (h * (p + q) - h * (x + p)) + h^2 * y
+        q * (h * (p + q) - h * (x + p)) + h^2 * y = q * h * (p + q) - q * (h * (x + p)) + h^2 * y
+        q * (h * (x + p)) = q * (y * (p - ell))
+        q * h * (p + q) - q * (h * (x + p)) + h^2 * y = q * h * (p + q) - q * (y * (p - ell)) + h^2 * y
+        h^2 * y = (p * q) * y
+        q * h * (p + q) - q * (y * (p - ell)) + h^2 * y = q * h * (p + q) - q * (y * (p - ell)) + (p * q) * y
+        q * h * (p + q) - q * (y * (p - ell)) + (p * q) * y = q * h * (p + q) - q * y * (p - ell) + (p * q) * y
+        q * h * (p + q) - q * y * (p - ell) + (p * q) * y = q * h * (p + q) - q * y * p + q * y * ell + p * q * y
+        q * h * (p + q) - q * y * p + q * y * ell + p * q * y = q * h * (p + q) + q * y * ell
+        h * (s * m^2) = q * h * (p + q) + q * y * ell
+        m^2 = h^2 + q^2
+        h^2 + q^2 = (p * q) + q^2
+        (p * q) + q^2 = q * (p + q)
+        m^2 = q * (p + q)
+        q * h * (p + q) = h * (q * (p + q))
+        h * (q * (p + q)) = h * m^2
+        q * h * (p + q) = h * m^2
+        h * (s * m^2) = q * h * (p + q) + q * y * ell
+        q * h * (p + q) + q * y * ell = h * m^2 + q * y * ell
+        h * (s * m^2) = h * m^2 + q * y * ell
+        q * y * ell > 0
+        h * m^2 + q * y * ell > h * m^2 + 0
+        h * m^2 + 0 = h * m^2
+        h * m^2 + q * y * ell > h * m^2
+        h * (s * m^2) > h * m^2
+        by thm atomic_scale_bound(h, s, m^2)
+        h * (s * m^2) <= h * m^2
+        impossible h * (s * m^2) > h * m^2
+    left > 0
+    by thm positive_equal_from_squares_17(left, y * ell)
+    left = y * ell
+    h * (x + p) - p * y = y * ell
+
+    y * m > 0
+    0 < y * m
+    (y * m) * (y * m) > 0
+    (y * m) * (y * m) = (y * m)^2
+    (y * m)^2 > 0
+    y^2 * m^2 = (y * m)^2
+    right^2 = (h * (x - q) + q * y)^2
+    right^2 = y^2 * m^2
+    right^2 = (y * m)^2
+    right^2 > 0
+    by contra:
+        ? right < 0
+        right >= 0
+        by contra:
+            ? right != 0
+            right = 0
+            by thm multiplication_congruence_17(right,0,right,0)
+            right * right = 0 * 0
+            right^2 = right * right = 0 * 0 = 0
+            impossible right^2 > 0
+        right != 0
+        by contra:
+            ? right > 0
+            right <= 0
+            right = 0
+            impossible right != 0
+        right > 0
+        by thm positive_equal_from_squares_17(right, y * m)
+        right = y * m
+        h * (x - q) + q * y = y * m
+        (h * (x - q) + q * y) - q * y = (y * m) - q * y
+        (h * (x - q) + q * y) - q * y = h * (x - q)
+        (y * m) - q * y = y * (m - q)
+        h * (x - q) = y * (m - q)
+
+        h * (p * (x + p) + h * y) = h * (t * ell^2)
+        h * (p * (x + p) + h * y) = p * h * (x + p) + h^2 * y
+        h * (x + p) = h * (x - q) + h * (p + q)
+        p * h * (x + p) + h^2 * y = p * (h * (x - q) + h * (p + q)) + h^2 * y
+        p * (h * (x - q) + h * (p + q)) + h^2 * y = p * (h * (x - q)) + p * h * (p + q) + h^2 * y
+        p * (h * (x - q)) = p * (y * (m - q))
+        p * (h * (x - q)) + p * h * (p + q) + h^2 * y = p * (y * (m - q)) + p * h * (p + q) + h^2 * y
+        h^2 * y = (p * q) * y
+        p * (y * (m - q)) + p * h * (p + q) + h^2 * y = p * (y * (m - q)) + p * h * (p + q) + (p * q) * y
+        p * (y * (m - q)) + p * h * (p + q) + (p * q) * y = p * y * (m - q) + p * h * (p + q) + (p * q) * y
+        p * y * (m - q) + p * h * (p + q) + (p * q) * y = p * y * m - p * y * q + p * h * (p + q) + p * q * y
+        p * y * m - p * y * q + p * h * (p + q) + p * q * y = p * y * m + p * h * (p + q)
+        h * (t * ell^2) = p * y * m + p * h * (p + q)
+        ell^2 = h^2 + p^2
+        h^2 + p^2 = (p * q) + p^2
+        (p * q) + p^2 = p * (p + q)
+        ell^2 = p * (p + q)
+        p * h * (p + q) = h * (p * (p + q))
+        h * (p * (p + q)) = h * ell^2
+        p * h * (p + q) = h * ell^2
+        h * (t * ell^2) = p * y * m + p * h * (p + q)
+        p * y * m + p * h * (p + q) = p * y * m + h * ell^2
+        h * (t * ell^2) = p * y * m + h * ell^2
+        p * y * m > 0
+        p * y * m + h * ell^2 > 0 + h * ell^2
+        0 + h * ell^2 = h * ell^2
+        p * y * m + h * ell^2 > h * ell^2
+        h * (t * ell^2) > h * ell^2
+        by thm atomic_scale_bound(h, t, ell^2)
+        h * (t * ell^2) <= h * ell^2
+        impossible h * (t * ell^2) > h * ell^2
+    right < 0
+    0 - right > 0 - 0
+    0 - right = -right
+    0 - 0 = 0
+    -right > 0
+    (-right)^2 = right^2 = (y * m)^2
+    by thm positive_equal_from_squares_17(-right, y * m)
+    -right = y * m
+    -1 * (-right) = -1 * (y * m)
+    -1 * (-right) = right
+    -1 * (y * m) = -y * m
+    right = -y * m
+    h * (x - q) + q * y = -y * m
+
+thm common_factor_negative_product_17:
+    ? forall k, x, y R:
+        (k * x) * (k * y) < 0
+        =>:
+            x * y < 0
+    by contra:
+        ? x * y < 0
+        x * y >= 0
+        k^2 >= 0
+        k^2 * (x * y) >= 0
+        (k * x) * (k * y) = k^2 * (x * y)
+        (k * x) * (k * y) >= 0
+        impossible (k * x) * (k * y) < 0
+
+thm cd_opposite_side_coordinates_probe:
+    ? forall cx, cy, dx, dy, p2x, p2y, p3x, p3y, ex, ey, nx, ny, h, x2, y2, x3, y3, line_a, line_b, line_c R:
+        h > 0
+        cx - dx = h * nx
+        cy - dy = h * ny
+        line_a * cx + line_b * cy + line_c = 0
+        line_a * dx + line_b * dy + line_c = 0
+        p2x = dx + x2 * ex + y2 * nx
+        p2y = dy + x2 * ey + y2 * ny
+        p3x = dx + x3 * ex + y3 * nx
+        p3y = dy + x3 * ey + y3 * ny
+        (line_a * p2x + line_b * p2y + line_c) * (line_a * p3x + line_b * p3y + line_c) < 0
+        =>:
+            x2 * x3 < 0
+    p2x = dx + y2 * nx + x2 * ex
+    p2y = dy + y2 * ny + x2 * ey
+    by thm p17_line_frame_bridge(dx, dy, cx, cy, dx, dy, p2x, p2y, nx, ny, ex, ey, h, y2, x2, line_a, line_b, line_c)
+    line_a * p2x + line_b * p2y + line_c = (line_a * ex + line_b * ey) * x2
+
+    p3x = dx + y3 * nx + x3 * ex
+    p3y = dy + y3 * ny + x3 * ey
+    by thm p17_line_frame_bridge(dx, dy, cx, cy, dx, dy, p3x, p3y, nx, ny, ex, ey, h, y3, x3, line_a, line_b, line_c)
+    line_a * p3x + line_b * p3y + line_c = (line_a * ex + line_b * ey) * x3
+
+    by thm multiplication_congruence_side_17(line_a * p2x + line_b * p2y + line_c, (line_a * ex + line_b * ey) * x2, line_a * p3x + line_b * p3y + line_c, (line_a * ex + line_b * ey) * x3)
+    ((line_a * ex + line_b * ey) * x2) * ((line_a * ex + line_b * ey) * x3) < 0
+    by thm common_factor_negative_product_17(line_a * ex + line_b * ey, x2, x3)
+
+thm equality_transitivity_17:
+    ? forall x, y, z R:
+        x = y
+        y = z
+        =>:
+            x = z
+    x - y = 0
+    y - z = 0
+    x - z = (x - y) + (y - z)
+    (x - y) + (y - z) = 0
+    x - z = 0
+    x = z
+
+
+thm positive_radius_negative_root_17:
+    ? forall z,r R:
+        r>0
+        z=-r
+        =>:
+            z<0
+    by thm addition_congruence_17(z,-r,r,r)
+    z+r=(-r)+r
+    (-r)+r=0
+    z+r=0
+    by contra:
+        ? z<0
+        z>=0
+        0<=z
+        0<r
+        0+0<z+r
+        0+0=0
+        0<z+r
+        impossible z+r=0
+    z<0
+
+thm negation_symmetry_17:
+    ? forall x, y R:
+        -x = y
+        =>:
+            x = -y
+    x + y = x + (-x) = 0
+    x = x + y - y = 0 - y = -y
+
+# Equal positive square roots with an opposite-sign partner have fixed signs.
+
+thm opposite_square_roots_positive_first_17:
+    ? forall x, y, r, s R:
+        r > 0
+        s > 0
+        x^2 = r^2
+        y^2 = s^2
+        x * y < 0
+        x > 0
+        =>:
+            x = r
+            y = -s
+    0 < x
+    0 <= x
+    by thm positive_equal_from_squares_17(x, r)
+    x = r
+    by contra:
+        ? y < 0
+        y >= 0
+        0 <= y
+        x * y >= 0
+        impossible x * y < 0
+    y < 0
+    0-y>0-0
+    0-y=-y
+    0-0=0
+    -y > 0
+    (-y)^2 = y^2 = s^2
+    by thm positive_equal_from_squares_17(-y, s)
+    -y = s
+    by thm negation_symmetry_17(y, s)
+    y = -s
+
+
+thm opposite_square_roots_negative_first_17:
+    ? forall x, y, r, s R:
+        r > 0
+        s > 0
+        x^2 = r^2
+        y^2 = s^2
+        x * y < 0
+        x < 0
+        =>:
+            x = -r
+            y = s
+    x <= 0
+    0-x>0-0
+    0-x=-x
+    0-0=0
+    -x > 0
+    (-x)^2 = x^2 = r^2
+    by thm positive_equal_from_squares_17(-x, r)
+    -x = r
+    by thm negation_symmetry_17(x, r)
+    x = -r
+    by contra:
+        ? y > 0
+        y <= 0
+        x * y >= 0
+        impossible x * y < 0
+    y > 0
+    by thm positive_equal_from_squares_17(y, s)
+    y = s
+
+# A positive sum and a nonzero square product force both factors positive.
+
+thm opposite_label_split_probe:
+    ? forall x, y, r, s R:
+        r > 0
+        s > 0
+        x^2 = r^2
+        y^2 = s^2
+        x * y < 0
+        =>:
+            x = r or x = -r
+    by cases:
+        ? x = r or x = -r
+        case x > 0:
+            by thm opposite_square_roots_positive_first_17(x, y, r, s)
+            x = r
+            x = r or x = -r
+        case x <= 0:
+            by contra:
+                ? x != 0
+                x = 0
+                x * y = 0
+                impossible x * y < 0
+            by contra:
+                ? x < 0
+                x >= 0
+                x = 0
+                impossible x != 0
+            x < 0
+            by thm opposite_square_roots_negative_first_17(x, y, r, s)
+            x = -r
+            x = r or x = -r
+
+thm internal_tangent_right_circle_scalar_17:
+    ? forall p, q, h, v, radius R:
+        p > 0
+        q > 0
+        h > 0
+        v > 0
+        radius > v
+        p + q = 2 * radius
+        h^2 = p * q
+        (v - (q - p) / 2)^2 + v^2 = (radius - v)^2
+        =>:
+            (v + p)^2 = h^2 + p^2
+    by thm subtraction_congruence_17(p + q, 2 * radius, 2 * p, 2 * p)
+    (p + q) - 2 * p = 2 * radius - 2 * p
+    (p + q) - 2 * p = q - p
+    2 * radius - 2 * p = 2 * (radius - p)
+    q - p = 2 * (radius - p)
+    by thm multiplication_congruence_17(q - p, 2 * (radius - p), 1 / 2, 1 / 2)
+    (q - p) * (1 / 2) = (2 * (radius - p)) * (1 / 2)
+    (q - p) * (1 / 2) = (q - p) / 2
+    (2 * (radius - p)) * (1 / 2) = radius - p
+    (q - p) / 2 = radius - p
+    v - (q - p) / 2 = v - (radius - p)
+    by thm multiplication_congruence_17(v - (q - p) / 2, v - (radius - p), v - (q - p) / 2, v - (radius - p))
+    (v - (q - p) / 2) * (v - (q - p) / 2) = (v - (radius - p)) * (v - (radius - p))
+    (v - (q - p) / 2)^2 = (v - (q - p) / 2) * (v - (q - p) / 2)
+    (v - (radius - p)) * (v - (radius - p)) = (v - (radius - p))^2
+    (v - (q - p) / 2)^2 = (v - (radius - p))^2
+    by thm addition_congruence_17((v - (q - p) / 2)^2, (v - (radius - p))^2, v^2, v^2)
+    (v - (q - p) / 2)^2 + v^2 = (v - (radius - p))^2 + v^2
+    (v - (q - p) / 2)^2 + v^2 = (radius - v)^2
+    (v - (radius - p))^2 + v^2 = (v - (q - p) / 2)^2 + v^2
+    by thm equality_transitivity_17((v - (radius - p))^2 + v^2, (v - (q - p) / 2)^2 + v^2, (radius - v)^2)
+    (v - (radius - p))^2 + v^2 = (radius - v)^2
+    (v - (radius - p))^2 + v^2 = v^2 - 2 * v * (radius - p) + (radius - p)^2 + v^2
+    (radius - v)^2 = radius^2 - 2 * radius * v + v^2
+    v^2 - 2 * v * (radius - p) + (radius - p)^2 + v^2 = (v - (radius - p))^2 + v^2
+    by thm equality_transitivity_17(v^2 - 2 * v * (radius - p) + (radius - p)^2 + v^2, (v - (radius - p))^2 + v^2, (radius - v)^2)
+    v^2 - 2 * v * (radius - p) + (radius - p)^2 + v^2 = (radius - v)^2
+    by thm equality_transitivity_17(v^2 - 2 * v * (radius - p) + (radius - p)^2 + v^2, (radius - v)^2, radius^2 - 2 * radius * v + v^2)
+    v^2 - 2 * v * (radius - p) + (radius - p)^2 + v^2 = radius^2 - 2 * radius * v + v^2
+    2 * v^2 - 2 * v * radius + 2 * v * p + (radius - p)^2 = radius^2 - 2 * radius * v + v^2
+    2 * v^2 - 2 * v * radius + 2 * v * p + radius^2 - 2 * radius * p + p^2 = radius^2 - 2 * radius * v + v^2
+    by thm subtraction_congruence_17(2 * v^2 - 2 * v * radius + 2 * v * p + radius^2 - 2 * radius * p + p^2, radius^2 - 2 * radius * v + v^2, radius^2 - 2 * radius * v + v^2, radius^2 - 2 * radius * v + v^2)
+    (2 * v^2 - 2 * v * radius + 2 * v * p + radius^2 - 2 * radius * p + p^2) - (radius^2 - 2 * radius * v + v^2) = (radius^2 - 2 * radius * v + v^2) - (radius^2 - 2 * radius * v + v^2)
+    (radius^2 - 2 * radius * v + v^2) - (radius^2 - 2 * radius * v + v^2) = 0
+    (2 * v^2 - 2 * v * radius + 2 * v * p + radius^2 - 2 * radius * p + p^2) - (radius^2 - 2 * radius * v + v^2) = 0
+    v^2 + 2 * v * p - 2 * radius * p + p^2 = (2 * v^2 - 2 * v * radius + 2 * v * p + radius^2 - 2 * radius * p + p^2) - (radius^2 - 2 * radius * v + v^2)
+    by thm equality_transitivity_17(v^2 + 2 * v * p - 2 * radius * p + p^2, (2 * v^2 - 2 * v * radius + 2 * v * p + radius^2 - 2 * radius * p + p^2) - (radius^2 - 2 * radius * v + v^2), 0)
+    v^2 + 2 * v * p - 2 * radius * p + p^2 = 0
+    v^2 + 2 * v * p + p^2 = (v^2 + 2 * v * p - 2 * radius * p + p^2) + 2 * radius * p
+    (v^2 + 2 * v * p - 2 * radius * p + p^2) + 2 * radius * p = 0 + 2 * radius * p
+    by thm addition_congruence_17(v^2 + 2 * v * p - 2 * radius * p + p^2, 0, 2 * radius * p, 2 * radius * p)
+    (v^2 + 2 * v * p - 2 * radius * p + p^2) + 2 * radius * p = 0 + 2 * radius * p
+    0 + 2 * radius * p = 2 * radius * p
+    by thm equality_transitivity_17(v^2 + 2 * v * p + p^2, (v^2 + 2 * v * p - 2 * radius * p + p^2) + 2 * radius * p, 0 + 2 * radius * p)
+    v^2 + 2 * v * p + p^2 = 0 + 2 * radius * p
+    by thm equality_transitivity_17(v^2 + 2 * v * p + p^2, 0 + 2 * radius * p, 2 * radius * p)
+    v^2 + 2 * v * p + p^2 = 2 * radius * p
+    by thm multiplication_congruence_17(p + q, 2 * radius, p, p)
+    (p + q) * p = (2 * radius) * p
+    (2 * radius) * p = 2 * radius * p
+    2 * radius * p = (2 * radius) * p
+    (2 * radius) * p = (p + q) * p
+    by thm equality_transitivity_17(v^2 + 2 * v * p + p^2, 2 * radius * p, (2 * radius) * p)
+    v^2 + 2 * v * p + p^2 = (2 * radius) * p
+    by thm equality_transitivity_17(v^2 + 2 * v * p + p^2, (2 * radius) * p, (p + q) * p)
+    v^2 + 2 * v * p + p^2 = (p + q) * p
+    v^2 + 2 * v * p + p^2 = p^2 + p * q
+    (v + p)^2 = v^2 + 2 * v * p + p^2
+    (v + p)^2 = p^2 + p * q
+    by thm addition_congruence_17(h^2, p * q, p^2, p^2)
+    h^2 + p^2 = p * q + p^2
+    p * q + p^2 = p^2 + p * q
+    by thm equality_transitivity_17((v + p)^2, p^2 + p * q, h^2 + p^2)
+    (v + p)^2 = h^2 + p^2
+
+# The left corner is the same scalar configuration after exchanging p and q.
+
+thm internal_tangent_left_circle_scalar_17:
+    ? forall p, q, h, u, radius R:
+        p > 0
+        q > 0
+        h > 0
+        u > 0
+        radius > u
+        p + q = 2 * radius
+        h^2 = p * q
+        (u + (q - p) / 2)^2 + u^2 = (radius - u)^2
+        =>:
+            (u + q)^2 = h^2 + q^2
+    q + p = p + q
+    q + p = 2 * radius
+    q * p = p * q
+    h^2 = q * p
+    u - (p - q) / 2 = u + (q - p) / 2
+    by thm multiplication_congruence_17(u - (p - q) / 2, u + (q - p) / 2, u - (p - q) / 2, u + (q - p) / 2)
+    (u - (p - q) / 2) * (u - (p - q) / 2) = (u + (q - p) / 2) * (u + (q - p) / 2)
+    (u - (p - q) / 2)^2 = (u - (p - q) / 2) * (u - (p - q) / 2)
+    (u + (q - p) / 2) * (u + (q - p) / 2) = (u + (q - p) / 2)^2
+    by thm equality_transitivity_17((u - (p - q) / 2)^2, (u - (p - q) / 2) * (u - (p - q) / 2), (u + (q - p) / 2) * (u + (q - p) / 2))
+    (u - (p - q) / 2)^2 = (u + (q - p) / 2) * (u + (q - p) / 2)
+    by thm equality_transitivity_17((u - (p - q) / 2)^2, (u + (q - p) / 2) * (u + (q - p) / 2), (u + (q - p) / 2)^2)
+    (u - (p - q) / 2)^2 = (u + (q - p) / 2)^2
+    by thm addition_congruence_17((u - (p - q) / 2)^2, (u + (q - p) / 2)^2, u^2, u^2)
+    (u - (p - q) / 2)^2 + u^2 = (u + (q - p) / 2)^2 + u^2
+    (u + (q - p) / 2)^2 + u^2 = (radius - u)^2
+    by thm equality_transitivity_17((u - (p - q) / 2)^2 + u^2, (u + (q - p) / 2)^2 + u^2, (radius - u)^2)
+    (u - (p - q) / 2)^2 + u^2 = (radius - u)^2
+    by thm internal_tangent_right_circle_scalar_17(q, p, h, u, radius)
+    (u + q)^2 = h^2 + q^2
+
+
+# Positive scaling preserves an upper bound; used by the incircle side selector.
+
+thm right_triangle_similarity_products_17:
+    ? forall p,q,h,ell,m R:
+        p>0
+        q>0
+        h>0
+        ell>0
+        m>0
+        h^2=p*q
+        ell^2=h^2+p^2
+        m^2=h^2+q^2
+        =>:
+            h*ell=p*m
+            h*m=q*ell
+            ell*m=h*(p+q)
+            ell^2+m^2=(p+q)^2
+    (h * ell)^2 = h^2 * ell^2
+    h^2 * ell^2 = (p * q) * (h^2 + p^2)
+    (p * m)^2 = p^2 * m^2
+    p^2 * m^2 = p^2 * (h^2 + q^2)
+    (p * q) * (h^2 + p^2) = (p * q) * (p * q + p^2)
+    p^2 * (h^2 + q^2) = p^2 * (p * q + q^2)
+    (p * q) * (p * q + p^2) = p^2 * (p * q + q^2)
+    (p * q) * (h^2 + p^2) = p^2 * (h^2 + q^2)
+    (h * ell)^2 = (p * m)^2
+    h * ell > 0
+    p * m > 0
+    by thm positive_equal_from_squares_17(h * ell, p * m)
+    h * ell = p * m
+
+    (h * m)^2 = h^2 * m^2
+    h^2 * m^2 = (p * q) * (h^2 + q^2)
+    (q * ell)^2 = q^2 * ell^2
+    q^2 * ell^2 = q^2 * (h^2 + p^2)
+    (p * q) * (h^2 + q^2) = (p * q) * (p * q + q^2)
+    q^2 * (h^2 + p^2) = q^2 * (p * q + p^2)
+    (p * q) * (p * q + q^2) = q^2 * (p * q + p^2)
+    (p * q) * (h^2 + q^2) = q^2 * (h^2 + p^2)
+    (h * m)^2 = (q * ell)^2
+    h * m > 0
+    q * ell > 0
+    by thm positive_equal_from_squares_17(h * m, q * ell)
+    h * m = q * ell
+
+    # The product ell*m is the altitude times the hypotenuse p+q.
+    (ell * m)^2 = ell^2 * m^2
+    ell^2 * m^2 = (h^2 + p^2) * (h^2 + q^2)
+    (h * (p + q))^2 = h^2 * (p + q)^2
+    (h^2 + p^2) * (h^2 + q^2) = (p * q + p^2) * (p * q + q^2)
+    h^2 * (p + q)^2 = (p * q) * (p + q)^2
+    (p * q + p^2) * (p * q + q^2) = (p * q) * (p + q)^2
+    (h^2 + p^2) * (h^2 + q^2) = h^2 * (p + q)^2
+    (ell * m)^2 = (h * (p + q))^2
+    ell * m > 0
+    p + q > 0
+    h * (p + q) > 0
+    by thm positive_equal_from_squares_17(ell * m, h * (p + q))
+    ell * m = h * (p + q)
+
+    # Subtract the two signed side-distance equations.
+    ell^2 + m^2 = (h^2 + p^2) + (h^2 + q^2)
+    (h^2 + p^2) + (h^2 + q^2) = (p * q + p^2) + (p * q + q^2)
+    (p * q + p^2) + (p * q + q^2) = (p + q)^2
+    ell^2 + m^2 = (p + q)^2
+
+thm normalized_midpoint_17:
+    ? forall p, q, h, ell, m, r, u, v, x R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        m > 0
+        r > 0
+        u > 0
+        v > 0
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        m^2 = h^2 + q^2
+        (v + p)^2 = ell^2
+        (u + q)^2 = m^2
+        h * x - p * r + h * p = r * ell
+        h * x + q * r - h * q = -r * m
+        =>:
+            2 * r = u + v
+            2 * x = v - u
+    # Recover the positive square roots occurring in the two corner circles.
+    v + p > 0
+    u + q > 0
+    by thm positive_equal_from_squares_17(v + p, ell)
+    by thm positive_equal_from_squares_17(u + q, m)
+    v + p = ell
+    u + q = m
+
+    # Pythagoras and h^2=pq give the two similarity identities.
+    by thm right_triangle_similarity_products_17(p,q,h,ell,m)
+    (h * x - p * r + h * p) - (h * x + q * r - h * q) = r * ell - (-r * m)
+    (h * x - p * r + h * p) - (h * x + q * r - h * q) = h * (p + q) - r * (p + q)
+    r * ell - (-r * m) = r * (ell + m)
+    h * (p + q) - r * (p + q) = r * (ell + m)
+    (h * (p + q) - r * (p + q)) + r * (p + q) = r * (ell + m) + r * (p + q)
+    (h * (p + q) - r * (p + q)) + r * (p + q) = h * (p + q)
+    r * (ell + m) + r * (p + q) = r * (p + q + ell + m)
+    h * (p + q) = r * (p + q + ell + m)
+
+    # The right-triangle identity converts this to 2r=ell+m-p-q.
+    (ell + m)^2 = ell^2 + m^2 + 2 * ell * m
+    ell^2 + m^2 = (h^2 + p^2) + (h^2 + q^2)
+    (h^2 + p^2) + (h^2 + q^2) = (p * q + p^2) + (p * q + q^2)
+    (p * q + p^2) + (p * q + q^2) = (p + q)^2
+    ell^2 + m^2 = (p + q)^2
+    (ell + m)^2 - (p + q)^2 = (ell^2 + m^2 + 2 * ell * m) - (p + q)^2
+    (ell^2 + m^2 + 2 * ell * m) - (p + q)^2 = ((p + q)^2 + 2 * ell * m) - (p + q)^2
+    ((p + q)^2 + 2 * ell * m) - (p + q)^2 = 2 * ell * m
+    (ell * m) * 2 = (h * (p + q)) * 2
+    (ell * m) * 2 = 2 * ell * m
+    (h * (p + q)) * 2 = 2 * h * (p + q)
+    2 * ell * m = 2 * h * (p + q)
+    (ell + m)^2 - (p + q)^2 = 2 * h * (p + q)
+    (ell + m - p - q) * (ell + m + p + q) = 2 * h * (p + q)
+    (h * (p + q)) * 2 = (r * (p + q + ell + m)) * 2
+    (h * (p + q)) * 2 = 2 * h * (p + q)
+    (r * (p + q + ell + m)) * 2 = 2 * r * (ell + m + p + q)
+    2 * h * (p + q) = 2 * r * (ell + m + p + q)
+    2 * r * (ell + m + p + q) = 2 * h * (p + q)
+    2 * r * (ell + m + p + q) = (ell + m - p - q) * (ell + m + p + q)
+    2 * r * (ell + m + p + q) - (ell + m - p - q) * (ell + m + p + q) = (ell + m - p - q) * (ell + m + p + q) - (ell + m - p - q) * (ell + m + p + q)
+    (ell + m - p - q) * (ell + m + p + q) - (ell + m - p - q) * (ell + m + p + q) = 0
+    2 * r * (ell + m + p + q) - (ell + m - p - q) * (ell + m + p + q) = 0
+    2 * r * (ell + m + p + q) - (ell + m - p - q) * (ell + m + p + q) = (2 * r - (ell + m - p - q)) * (ell + m + p + q)
+    (2 * r - (ell + m - p - q)) * (ell + m + p + q) = 0
+    0 < ell
+    0 < m
+    0 < p
+    0 < q
+    ell+m>0
+    0<ell+m
+    ell+m+p>0
+    0<ell+m+p
+    ell + m + p + q > 0
+    ell + m + p + q != 0
+    by contra:
+        ? 2 * r = ell + m - p - q
+        2 * r != ell + m - p - q
+        2 * r - (ell + m - p - q) != 0
+        (2 * r - (ell + m - p - q)) * (ell + m + p + q) != 0
+        impossible (2 * r - (ell + m - p - q)) * (ell + m + p + q) = 0
+    2 * r = ell + m - p - q
+    ell + m - p - q = (v + p) + m - p - q
+    (v + p) + m - p - q = (v + p) + (u + q) - p - q
+    (v + p) + (u + q) - p - q = u + v
+    ell + m - p - q = u + v
+    2 * r = u + v
+
+    # Substitute the radius relation into the first signed-distance equation.
+    (h * x - p * r + h * p) * 2 = (r * ell) * 2
+    (h * x - p * r + h * p) * 2 = 2 * h * x - 2 * p * r + 2 * h * p
+    (r * ell) * 2 = 2 * r * ell
+    2 * h * x - 2 * p * r + 2 * h * p = 2 * r * ell
+    2 * h * x - 2 * p * r + 2 * h * p = 2 * h * x - p * (2 * r) + 2 * h * p
+    2 * r * ell = (2 * r) * ell
+    2 * h * x - p * (2 * r) + 2 * h * p = (2 * r) * ell
+    (2 * r) * p = (u + v) * p
+    (2 * r) * p = p * (2 * r)
+    (u + v) * p = p * (u + v)
+    p * (2 * r) = p * (u + v)
+    (2 * r) * ell = (u + v) * ell
+    2 * h * x - p * (2 * r) + 2 * h * p = 2 * h * x - p * (u + v) + 2 * h * p
+    2 * h * x - p * (u + v) + 2 * h * p = 2 * h * x - p * (2 * r) + 2 * h * p
+    2 * h * x - p * (u + v) + 2 * h * p = (2 * r) * ell
+    2 * h * x - p * (u + v) + 2 * h * p = (u + v) * ell
+    (2 * h * x - p * (u + v) + 2 * h * p) + p * (u + v) = ((u + v) * ell) + p * (u + v)
+    (2 * h * x - p * (u + v) + 2 * h * p) + p * (u + v) = 2 * h * x + 2 * h * p
+    ((u + v) * ell) + p * (u + v) = (u + v) * (ell + p)
+    2 * h * x + 2 * h * p = (u + v) * (ell + p)
+    u = m - q
+    v = ell - p
+    u + v = (m - q) + v
+    (m - q) + v = (m - q) + (ell - p)
+    u + v = (m - q) + (ell - p)
+    (u + v) * (ell + p) = ((m - q) + (ell - p)) * (ell + p)
+    ((m - q) + (ell - p)) * (ell + p) = ell * m + p * m + ell^2 - q * ell - p^2 - p * q
+    p * m = h * ell
+    q * ell = h * m
+    ell * m + p * m + ell^2 - q * ell - p^2 - p * q = ell * m + h * ell + ell^2 - q * ell - p^2 - p * q
+    ell * m + h * ell + ell^2 - q * ell - p^2 - p * q = ell * m + h * ell + ell^2 - h * m - p^2 - p * q
+    ell * m + h * ell + ell^2 - h * m - p^2 - p * q = ell * m + h * ell + (h^2 + p^2) - h * m - p^2 - p * q
+    ell * m + h * ell + (h^2 + p^2) - h * m - p^2 - p * q = ell * m + h * ell + (p * q + p^2) - h * m - p^2 - p * q
+    ell * m + h * ell + (p * q + p^2) - h * m - p^2 - p * q = ell * m + h * ell - h * m
+    ell * m + h * ell - h * m = h * (p + q) + h * ell - h * m
+    h * (p + q) + h * ell - h * m = h * (ell - m + p + q)
+    (u + v) * (ell + p) = h * (ell - m + p + q)
+    v - u + 2 * p = (ell - p) - u + 2 * p
+    (ell - p) - u + 2 * p = (ell - p) - (m - q) + 2 * p
+    (ell - p) - (m - q) + 2 * p = ell - m + p + q
+    v - u + 2 * p = ell - m + p + q
+    h * (v - u + 2 * p) = h * (ell - m + p + q)
+    h * (ell - m + p + q) = h * (v - u + 2 * p)
+    (u + v) * (ell + p) = h * (v - u + 2 * p)
+    2 * h * x + 2 * h * p = h * (v - u + 2 * p)
+    (2 * h * x + 2 * h * p) - h * (v - u + 2 * p) = h * (v - u + 2 * p) - h * (v - u + 2 * p)
+    h * (v - u + 2 * p) - h * (v - u + 2 * p) = 0
+    (2 * h * x + 2 * h * p) - h * (v - u + 2 * p) = 0
+    (2 * h * x + 2 * h * p) - h * (v - u + 2 * p) = h * (2 * x - (v - u))
+    h * (2 * x - (v - u)) = 0
+    h != 0
+    by contra:
+        ? 2 * x = v - u
+        2 * x != v - u
+        2 * x - (v - u) != 0
+        h * (2 * x - (v - u)) != 0
+        impossible h * (2 * x - (v - u)) = 0
+    2 * x = v - u
+
+# A unit orthogonal basis preserves squared norm.
+
+thm orthonormal_affine_line_evaluation_17:
+    ? forall px, py, dx, dy, ex, ey, fx, fy, x, y, local_a, local_b, local_c R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        px = dx + x * ex + y * fx
+        py = dy + x * ey + y * fy
+        =>:
+            ((local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py + (local_c - (local_a * ex + local_b * fx) * dx - (local_a * ey + local_b * fy) * dy)) = local_a * x + local_b * y + local_c
+    by thm multiplication_congruence_17(local_a * ex + local_b * fx, local_a * ex + local_b * fx, px, dx + x * ex + y * fx)
+    (local_a * ex + local_b * fx) * px = (local_a * ex + local_b * fx) * (dx + x * ex + y * fx)
+    by thm multiplication_congruence_17(local_a * ey + local_b * fy, local_a * ey + local_b * fy, py, dy + x * ey + y * fy)
+    (local_a * ey + local_b * fy) * py = (local_a * ey + local_b * fy) * (dy + x * ey + y * fy)
+    by thm addition_congruence_17((local_a * ex + local_b * fx) * px, (local_a * ex + local_b * fx) * (dx + x * ex + y * fx), (local_a * ey + local_b * fy) * py, (local_a * ey + local_b * fy) * (dy + x * ey + y * fy))
+    (local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py = (local_a * ex + local_b * fx) * (dx + x * ex + y * fx) + (local_a * ey + local_b * fy) * (dy + x * ey + y * fy)
+    ((local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py + (local_c - (local_a * ex + local_b * fx) * dx - (local_a * ey + local_b * fy) * dy)) = ((local_a * ex + local_b * fx) * (dx + x * ex + y * fx) + (local_a * ey + local_b * fy) * (dy + x * ey + y * fy) + (local_c - (local_a * ex + local_b * fx) * dx - (local_a * ey + local_b * fy) * dy))
+    ((local_a * ex + local_b * fx) * (dx + x * ex + y * fx) + (local_a * ey + local_b * fy) * (dy + x * ey + y * fy) + (local_c - (local_a * ex + local_b * fx) * dx - (local_a * ey + local_b * fy) * dy)) = local_a * x * (ex^2 + ey^2) + local_b * y * (fx^2 + fy^2) + (local_a * y + local_b * x) * (ex * fx + ey * fy) + local_c
+    local_a * x * (ex^2 + ey^2) + local_b * y * (fx^2 + fy^2) + (local_a * y + local_b * x) * (ex * fx + ey * fy) + local_c = local_a * x + local_b * y + local_c
+
+# Named global coefficients require explicit congruence bridges: local `have`
+# definitions are facts, not automatic rewrite rules.
+
+thm orthonormal_affine_line_evaluation_named_17:
+    ? forall px, py, dx, dy, ex, ey, fx, fy, x, y, local_a, local_b, local_c, ta, tb, tc R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        px = dx + x * ex + y * fx
+        py = dy + x * ey + y * fy
+        ta = local_a * ex + local_b * fx
+        tb = local_a * ey + local_b * fy
+        tc = (local_c - (local_a * ex + local_b * fx) * dx) - (local_a * ey + local_b * fy) * dy
+        =>:
+            ta * px + tb * py + tc = local_a * x + local_b * y + local_c
+    by thm orthonormal_affine_line_evaluation_17(px, py, dx, dy, ex, ey, fx, fy, x, y, local_a, local_b, local_c)
+    by thm multiplication_congruence_17(ta, local_a * ex + local_b * fx, px, px)
+    ta * px = (local_a * ex + local_b * fx) * px
+    by thm multiplication_congruence_17(tb, local_a * ey + local_b * fy, py, py)
+    tb * py = (local_a * ey + local_b * fy) * py
+    by thm addition_congruence_17(ta * px, (local_a * ex + local_b * fx) * px, tb * py, (local_a * ey + local_b * fy) * py)
+    ta * px + tb * py = (local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py
+    by thm addition_congruence_17(ta * px + tb * py, (local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py, tc, (local_c - (local_a * ex + local_b * fx) * dx) - (local_a * ey + local_b * fy) * dy)
+    ta * px + tb * py + tc = (local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py + ((local_c - (local_a * ex + local_b * fx) * dx) - (local_a * ey + local_b * fy) * dy)
+    (local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py + ((local_c - (local_a * ex + local_b * fx) * dx) - (local_a * ey + local_b * fy) * dy) = ((local_a * ex + local_b * fx) * px + (local_a * ey + local_b * fy) * py + (local_c - (local_a * ex + local_b * fx) * dx - (local_a * ey + local_b * fy) * dy))
+    ta * px + tb * py + tc = local_a * x + local_b * y + local_c
+
+# In an orthonormal frame based at d, the three normalized circles admit
+# the explicit second external common tangent used in the main proof.
+
+thm scaled_square_congruence_17:
+    ? forall value_17, scale_17, radius_17, normal_17, square_17 R:
+        value_17 = scale_17 * normal_17
+        scale_17^2 = radius_17^2
+        normal_17^2 = square_17
+        =>:
+            value_17^2 = radius_17^2 * square_17
+    value_17 * value_17 = scale_17 * normal_17 * (scale_17 * normal_17)
+    value_17^2 = value_17 * value_17
+    scale_17 * normal_17 * (scale_17 * normal_17) = scale_17^2 * normal_17^2
+    value_17^2 = scale_17^2 * normal_17^2
+    by thm multiplication_congruence_17(scale_17^2, radius_17^2, normal_17^2, square_17)
+    scale_17^2 * normal_17^2 = radius_17^2 * square_17
+    value_17^2 = radius_17^2 * square_17
+
+# Two positive scaled values have positive product; the first scale is half a positive sum.
+
+thm two_positive_half_scaled_products_17:
+    ? forall common_value_17, second_value_17, third_value_17, common_sum_17, second_scale_17, third_scale_17, common_normal_17 R:
+        common_value_17 = (common_sum_17 / 2) * common_normal_17
+        second_value_17 = second_scale_17 * common_normal_17
+        third_value_17 = third_scale_17 * common_normal_17
+        common_sum_17 > 0
+        second_scale_17 > 0
+        third_scale_17 > 0
+        common_normal_17 > 0
+        =>:
+            common_value_17 * second_value_17 > 0
+            common_value_17 * third_value_17 > 0
+    common_sum_17 / 2 > 0
+    (common_sum_17 / 2) * common_normal_17 > 0
+    second_scale_17 * common_normal_17 > 0
+    third_scale_17 * common_normal_17 > 0
+    common_value_17 > 0
+    second_value_17 > 0
+    third_value_17 > 0
+    common_value_17 * second_value_17 > 0
+    common_value_17 * third_value_17 > 0
+
+# Equal real summands give equal sums.
+
+thm half_of_twice_square_17:
+    ? forall x,s R:
+        2*x=s
+        =>:
+            x=s/2
+            (s/2)^2=x^2
+    by thm multiplication_congruence_17(2*x,s,1/2,1/2)
+    (2*x)*(1/2)=s*(1/2)
+    (2*x)*(1/2)=x
+    s*(1/2)=s/2
+    x=s/2
+    by thm multiplication_congruence_17(s/2,x,s/2,x)
+    (s/2)*(s/2)=x*x
+    (s/2)^2=(s/2)*(s/2)
+    x*x=x^2
+    (s/2)^2=x^2
+
+thm scalar_common_tangent_data_17:
+    ? forall u,v R:
+        u>0
+        v>0
+        =>:
+            u^2+v^2>0
+            2*u*v*(u+v)>0
+            (v^2-u^2)^2+(-2*u*v)^2=(u^2+v^2)^2
+            (v^2-u^2)*(-u)+(-2*u*v)*u+2*u*v*(u+v)=u*(u^2+v^2)
+            (v^2-u^2)*v+(-2*u*v)*v+2*u*v*(u+v)=v*(u^2+v^2)
+            (v^2-u^2)*((v-u)/2)+(-2*u*v)*((u+v)/2)+2*u*v*(u+v)=((u+v)/2)*(u^2+v^2)
+    0<u
+    0<v
+    u*u>0
+    v*v>0
+    u*u=u^2
+    v*v=v^2
+    u^2>0
+    0<=v^2
+    u^2+v^2>0
+    0<u*v
+    0<2*u*v
+    0<u+v
+    2*u*v*(u+v)>0
+    (v^2-u^2)^2+(-2*u*v)^2=(u^2+v^2)^2
+    (v^2-u^2)*(-u)+(-2*u*v)*u+2*u*v*(u+v)=u*(u^2+v^2)
+    (v^2-u^2)*v+(-2*u*v)*v+2*u*v*(u+v)=v*(u^2+v^2)
+    (v^2-u^2)*((v-u)/2)+(-2*u*v)*((u+v)/2)+2*u*v*(u+v)=((u+v)/2)*(u^2+v^2)
+
+thm affine_value_congruence_17:
+    ? forall a,a0,b,b0,c,c0,x,y R:
+        a=a0
+        b=b0
+        c=c0
+        =>:
+            a*x+b*y+c=a0*x+b0*y+c0
+    by thm multiplication_congruence_17(a,a0,x,x)
+    by thm multiplication_congruence_17(b,b0,y,y)
+    by thm addition_congruence_17(a*x,a0*x,b*y,b0*y)
+    by thm addition_congruence_17(a*x+b*y,a0*x+b0*y,c,c0)
+    a*x+b*y+c=a0*x+b0*y+c0
+
+thm square_congruence_17:
+    ? forall x,y R:
+        x=y
+        =>:
+            x^2=y^2
+    by thm multiplication_congruence_17(x,y,x,y)
+    x*x=y*y
+    x^2=x*x
+    y*y=y^2
+    x^2=y^2
+
+thm named_scalar_common_tangent_data_17:
+    ? forall u,v,a,b,c,n R:
+        u>0
+        v>0
+        a=v^2-u^2
+        b=-2*u*v
+        c=2*u*v*(u+v)
+        n=u^2+v^2
+        =>:
+            n>0
+            c>0
+            a^2+b^2=n^2
+            a*(-u)+b*u+c=u*n
+            a*v+b*v+c=v*n
+            a*((v-u)/2)+b*((u+v)/2)+c=((u+v)/2)*n
+    by thm scalar_common_tangent_data_17(u,v)
+    n>0
+    c>0
+    by thm square_congruence_17(a,v^2-u^2)
+    by thm square_congruence_17(b,-2*u*v)
+    by thm square_congruence_17(n,u^2+v^2)
+    by thm addition_congruence_17(a^2,(v^2-u^2)^2,b^2,(-2*u*v)^2)
+    a^2+b^2=(v^2-u^2)^2+(-2*u*v)^2=(u^2+v^2)^2=n^2
+    by thm affine_value_congruence_17(a,v^2-u^2,b,-2*u*v,c,2*u*v*(u+v),-u,u)
+    by thm multiplication_congruence_17(u,u,n,u^2+v^2)
+    a*(-u)+b*(u)+c=(v^2-u^2)*(-u)+(-2*u*v)*(u)+2*u*v*(u+v)=(u)*(u^2+v^2)=(u)*n
+    by thm affine_value_congruence_17(a,v^2-u^2,b,-2*u*v,c,2*u*v*(u+v),v,v)
+    by thm multiplication_congruence_17(v,v,n,u^2+v^2)
+    a*(v)+b*(v)+c=(v^2-u^2)*(v)+(-2*u*v)*(v)+2*u*v*(u+v)=(v)*(u^2+v^2)=(v)*n
+    by thm affine_value_congruence_17(a,v^2-u^2,b,-2*u*v,c,2*u*v*(u+v),(v-u)/2,(u+v)/2)
+    by thm multiplication_congruence_17((u+v)/2,(u+v)/2,n,u^2+v^2)
+    a*((v-u)/2)+b*((u+v)/2)+c=(v^2-u^2)*((v-u)/2)+(-2*u*v)*((u+v)/2)+2*u*v*(u+v)=((u+v)/2)*(u^2+v^2)=((u+v)/2)*n
+
+thm normalized_common_tangent_constructor_17:
+    ? forall d, c1, c2, c3 cart(R, R), ex, ey, fx, fy, u, v, r1, r2, r3 R:
+        u > 0
+        v > 0
+        r1 > 0
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        c2(1) = d(1) + (-u) * ex + u * fx
+        c2(2) = d(2) + (-u) * ey + u * fy
+        c3(1) = d(1) + v * ex + v * fx
+        c3(2) = d(2) + v * ey + v * fy
+        c1(1) = d(1) + ((v - u) / 2) * ex + ((u + v) / 2) * fx
+        c1(2) = d(2) + ((v - u) / 2) * ey + ((u + v) / 2) * fy
+        r2 = u
+        r3 = v
+        2 * r1 = u + v
+        =>:
+            exist tangent_a, tangent_b, tangent_c R st {$line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, c1, r1, c2, r2), $line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, c1, r1, c3, r3), tangent_a * d(1) + tangent_b * d(2) + tangent_c > 0}
+    have local_a R=v^2-u^2
+    have local_b R=-2*u*v
+    have local_c R=2*u*v*(u+v)
+    have ta R=local_a*ex+local_b*fx
+    have tb R=local_a*ey+local_b*fy
+    have tc R=(local_c-(local_a*ex+local_b*fx)*d(1))-(local_a*ey+local_b*fy)*d(2)
+    have norm_sq R=u^2+v^2
+    by thm named_scalar_common_tangent_data_17(u,v,local_a,local_b,local_c,norm_sq)
+    norm_sq>0
+    local_c>0
+    by thm orthonormal_affine_line_evaluation_named_17(c2(1),c2(2),d(1),d(2),ex,ey,fx,fy,-u,u,local_a,local_b,local_c,ta,tb,tc)
+    ta*c2(1)+tb*c2(2)+tc=local_a*(-u)+local_b*(u)+local_c=(u)*norm_sq
+    by thm orthonormal_affine_line_evaluation_named_17(c3(1),c3(2),d(1),d(2),ex,ey,fx,fy,v,v,local_a,local_b,local_c,ta,tb,tc)
+    ta*c3(1)+tb*c3(2)+tc=local_a*(v)+local_b*(v)+local_c=(v)*norm_sq
+    by thm orthonormal_affine_line_evaluation_named_17(c1(1),c1(2),d(1),d(2),ex,ey,fx,fy,(v-u)/2,(u+v)/2,local_a,local_b,local_c,ta,tb,tc)
+    ta*c1(1)+tb*c1(2)+tc=local_a*((v-u)/2)+local_b*((u+v)/2)+local_c=((u+v)/2)*norm_sq
+    by thm orthonormal_affine_line_evaluation_named_17(d(1),d(2),d(1),d(2),ex,ey,fx,fy,0,0,local_a,local_b,local_c,ta,tb,tc)
+    ta*d(1)+tb*d(2)+tc=local_a*0+local_b*0+local_c=local_c
+    ta*d(1)+tb*d(2)+tc>0
+    by thm rotated_square_sum_17(ex,ey,fx,fy,local_a,local_b)
+    by thm square_congruence_17(ta,local_a*ex+local_b*fx)
+    by thm square_congruence_17(tb,local_a*ey+local_b*fy)
+    by thm addition_congruence_17(ta^2,(local_a*ex+local_b*fx)^2,tb^2,(local_a*ey+local_b*fy)^2)
+    ta^2+tb^2=(local_a*ex+local_b*fx)^2+(local_a*ey+local_b*fy)^2=local_a^2+local_b^2=norm_sq^2
+    0<norm_sq
+    norm_sq*norm_sq>0
+    norm_sq*norm_sq=norm_sq^2
+    norm_sq^2>0
+    ta^2+tb^2>0
+    by thm half_of_twice_square_17(r1,u+v)
+    by thm square_congruence_17(u,r2)
+    by thm square_congruence_17(v,r3)
+    by thm scaled_square_congruence_17(ta*c1(1)+tb*c1(2)+tc,(u+v)/2,r1,norm_sq,ta^2+tb^2)
+    by thm scaled_square_congruence_17(ta*c2(1)+tb*c2(2)+tc,u,r2,norm_sq,ta^2+tb^2)
+    by thm scaled_square_congruence_17(ta*c3(1)+tb*c3(2)+tc,v,r3,norm_sq,ta^2+tb^2)
+    u+v>0
+    by thm two_positive_half_scaled_products_17(ta*c1(1)+tb*c1(2)+tc,ta*c2(1)+tb*c2(2)+tc,ta*c3(1)+tb*c3(2)+tc,u+v,u,v,norm_sq)
+    witness exist tangent_a,tangent_b,tangent_c R st {$line_is_external_common_tangent(tangent_a,tangent_b,tangent_c,c1,r1,c2,r2),$line_is_external_common_tangent(tangent_a,tangent_b,tangent_c,c1,r1,c3,r3),tangent_a*d(1)+tangent_b*d(2)+tangent_c>0} from ta,tb,tc:
+        by def $line_is_external_common_tangent(ta,tb,tc,c1,r1,c2,r2)
+        by def $line_is_external_common_tangent(ta,tb,tc,c1,r1,c3,r3)
+
+thm line_discriminant_positive_17:
+    ? forall la, lb, lc, aa, ab, ac, dx, dy R:
+        aa^2 + ab^2 > 0
+        la * dx + lb * dy + lc > 0
+        aa * dx + ab * dy + ac = 0
+        la * ab - lb * aa = 0
+        la * ac - lc * aa = 0
+        lb * ac - lc * ab = 0
+        =>:
+            0 = 1
+    
+    # Convert minors to direct equalities
+    la * ab = lb * aa
+    la * ac = lc * aa
+    lb * ac = lc * ab
+    
+    # Expand the second line equation by multiplying by la
+    la * 0 = 0
+    la * (aa * dx + ab * dy + ac) = la * 0
+    la * (aa * dx + ab * dy + ac) = 0
+    la * aa * dx + la * ab * dy + la * ac = la * (aa * dx + ab * dy + ac)
+    la * aa * dx + la * ab * dy + la * ac = 0
+    
+    # Use multiplication congruence to substitute la*ab=lb*aa in the dy term
+    by thm multiplication_congruence_17(la * ab, lb * aa, dy, dy)
+    la * ab * dy = lb * aa * dy
+    
+    # Use addition congruence to update the full expression
+    by thm addition_congruence_17(la * aa * dx + la * ab * dy, la * aa * dx + lb * aa * dy, la * ac, lc * aa)
+    la * aa * dx + la * ab * dy + la * ac = la * aa * dx + lb * aa * dy + lc * aa
+    la * aa * dx + lb * aa * dy + lc * aa = 0
+    
+    # Factor out aa
+    aa * (la * dx + lb * dy + lc) = la * aa * dx + lb * aa * dy + lc * aa
+    aa * (la * dx + lb * dy + lc) = 0
+    
+    # Similarly derive ab*(la*dx+lb*dy+lc)=0
+    # Expand by lb
+    lb * 0 = 0
+    lb * (aa * dx + ab * dy + ac) = lb * 0
+    lb * (aa * dx + ab * dy + ac) = 0
+    lb * aa * dx + lb * ab * dy + lb * ac = lb * (aa * dx + ab * dy + ac)
+    lb * aa * dx + lb * ab * dy + lb * ac = 0
+    
+    # Use la*ab=lb*aa to substitute in the dx term
+    by thm multiplication_congruence_17(lb * aa, la * ab, dx, dx)
+    lb * aa * dx = la * ab * dx
+    
+    # Update the expression
+    by thm addition_congruence_17(lb * aa * dx, la * ab * dx, lb * ab * dy + lb * ac, lb * ab * dy + lb * ac)
+    lb * aa * dx + lb * ab * dy + lb * ac = la * ab * dx + lb * ab * dy + lb * ac
+    la * ab * dx + lb * ab * dy + lb * ac = 0
+    
+    # Use lb*ac=lc*ab to substitute in the ac term
+    by thm addition_congruence_17(la * ab * dx + lb * ab * dy, la * ab * dx + lb * ab * dy, lb * ac, lc * ab)
+    la * ab * dx + lb * ab * dy + lb * ac = la * ab * dx + lb * ab * dy + lc * ab
+    la * ab * dx + lb * ab * dy + lc * ab = 0
+    
+    # Factor out ab
+    ab * (la * dx + lb * dy + lc) = la * ab * dx + lb * ab * dy + lc * ab
+    ab * (la * dx + lb * dy + lc) = 0
+    
+    # Now derive the quadratic form contradiction
+    # Multiply aa*(la*dx+lb*dy+lc)=0 by aa
+    by thm multiplication_congruence_17(aa, aa, aa * (la * dx + lb * dy + lc), 0)
+    aa * (aa * (la * dx + lb * dy + lc)) = aa * 0
+    aa * 0 = 0
+    aa^2 * (la * dx + lb * dy + lc) = 0
+    
+    # Multiply ab*(la*dx+lb*dy+lc)=0 by ab
+    by thm multiplication_congruence_17(ab, ab, ab * (la * dx + lb * dy + lc), 0)
+    ab * (ab * (la * dx + lb * dy + lc)) = ab * 0
+    ab * 0 = 0
+    ab^2 * (la * dx + lb * dy + lc) = 0
+    
+    # Combine using addition congruence
+    0 + 0 = 0
+    by thm addition_congruence_17(aa^2 * (la * dx + lb * dy + lc), 0, ab^2 * (la * dx + lb * dy + lc), 0)
+    aa^2 * (la * dx + lb * dy + lc) + ab^2 * (la * dx + lb * dy + lc) = 0 + 0
+    aa^2 * (la * dx + lb * dy + lc) + ab^2 * (la * dx + lb * dy + lc) = 0
+    
+    # Factor out the common expression
+    (aa^2 + ab^2) * (la * dx + lb * dy + lc) = 0
+    
+    # But this contradicts our premises
+    aa^2 + ab^2 > 0
+    la * dx + lb * dy + lc > 0
+    (aa^2 + ab^2) * (la * dx + lb * dy + lc) > 0
+    
+    by contra:
+        ? 0 = 1
+        0 != 1
+        impossible (aa^2 + ab^2) * (la * dx + lb * dy + lc) = 0
+    0 = 1
+
+# A nondegenerate line vanishing at a point is distinct from a line
+# taking a strictly positive value at that point.
+
+thm line_distinct_at_point_17:
+    ? forall la, lb, lc, aa, ab, ac, dx, dy R:
+        aa^2 + ab^2 > 0
+        la * dx + lb * dy + lc > 0
+        aa * dx + ab * dy + ac = 0
+        =>:
+            $lines_are_distinct(la, lb, lc, aa, ab, ac)
+    by contra:
+        ? (la * ab - lb * aa)^2 + (la * ac - lc * aa)^2 + (lb * ac - lc * ab)^2 > 0
+        (la * ab - lb * aa)^2 + (la * ac - lc * aa)^2 + (lb * ac - lc * ab)^2 <= 0
+        0 <= (la * ab - lb * aa)^2
+        0 <= (la * ac - lc * aa)^2
+        0 <= (lb * ac - lc * ab)^2
+        (la * ab - lb * aa)^2 <= (la * ab - lb * aa)^2 + (la * ac - lc * aa)^2 + (lb * ac - lc * ab)^2
+        (la * ac - lc * aa)^2 <= (la * ab - lb * aa)^2 + (la * ac - lc * aa)^2 + (lb * ac - lc * ab)^2
+        (lb * ac - lc * ab)^2 <= (la * ab - lb * aa)^2 + (la * ac - lc * aa)^2 + (lb * ac - lc * ab)^2
+        (la * ab - lb * aa)^2 <= 0
+        (la * ac - lc * aa)^2 <= 0
+        (lb * ac - lc * ab)^2 <= 0
+        (la * ab - lb * aa)^2 = 0
+        (la * ac - lc * aa)^2 = 0
+        (lb * ac - lc * ab)^2 = 0
+        la * ab - lb * aa = 0
+        la * ac - lc * aa = 0
+        lb * ac - lc * ab = 0
+        by thm line_discriminant_positive_17(la, lb, lc, aa, ab, ac, dx, dy)
+        0 = 1
+        impossible 0 = 1
+    (la * ab - lb * aa)^2 + (la * ac - lc * aa)^2 + (lb * ac - lc * ab)^2 > 0
+    by def $lines_are_distinct(la, lb, lc, aa, ab, ac)
+
+thm foot_equations_radius_substitution_probe_17:
+    ? forall h, x, p, q, y, r, ell, m R:
+        y = r
+        h * x - p * y + h * p = y * ell
+        h * x + q * y - h * q = -y * m
+        =>:
+            h * x - p * r + h * p = r * ell
+            h * x + q * r - h * q = -r * m
+    by thm multiplication_congruence_17(p, p, y, r)
+    p * y = p * r
+    by thm subtraction_congruence_17(h * x, h * x, p * y, p * r)
+    h * x - p * y = h * x - p * r
+    by thm addition_congruence_17(h * x - p * y, h * x - p * r, h * p, h * p)
+    h * x - p * y + h * p = h * x - p * r + h * p
+    by thm multiplication_congruence_17(y, r, ell, ell)
+    y * ell = r * ell
+    h * x - p * r + h * p = h * x - p * y + h * p
+    by thm equality_transitivity_17(h * x - p * r + h * p, h * x - p * y + h * p, y * ell)
+    h * x - p * r + h * p = y * ell
+    by thm equality_transitivity_17(h * x - p * r + h * p, y * ell, r * ell)
+    h * x - p * r + h * p = r * ell
+
+    by thm multiplication_congruence_17(q, q, y, r)
+    q * y = q * r
+    by thm addition_congruence_17(h * x, h * x, q * y, q * r)
+    h * x + q * y = h * x + q * r
+    by thm subtraction_congruence_17(h * x + q * y, h * x + q * r, h * q, h * q)
+    h * x + q * y - h * q = h * x + q * r - h * q
+    -y = -r
+    by thm multiplication_congruence_17(-y, -r, m, m)
+    -y * m = -r * m
+    h * x + q * r - h * q = h * x + q * y - h * q
+    by thm equality_transitivity_17(h * x + q * r - h * q, h * x + q * y - h * q, -y * m)
+    h * x + q * r - h * q = -y * m
+    by thm equality_transitivity_17(h * x + q * r - h * q, -y * m, -r * m)
+    h * x + q * r - h * q = -r * m
+
+# Rewrite both affine-frame coordinates when the axial scalar is identified.
+
+thm positive_root_distance_substitution_probe_17:
+    ? forall z, r, a, b R:
+        z = r
+        (z - a)^2 + r^2 = b
+        =>:
+            (r - a)^2 + r^2 = b
+    by thm subtraction_congruence_17(z, r, a, a)
+    z - a = r - a
+    by thm multiplication_congruence_17(z - a, r - a, z - a, r - a)
+    (z - a)^2 = (r - a)^2
+    by thm addition_congruence_17((z - a)^2, (r - a)^2, r^2, r^2)
+    (z - a)^2 + r^2 = (r - a)^2 + r^2
+    by thm equality_transitivity_17((r - a)^2 + r^2, (z - a)^2 + r^2, b)
+    (r - a)^2 + r^2 = b
+
+
+thm negative_root_distance_substitution_probe_17:
+    ? forall z, r, a, b R:
+        z = -r
+        (z - a)^2 + r^2 = b
+        =>:
+            (r + a)^2 + r^2 = b
+    by thm subtraction_congruence_17(z, -r, a, a)
+    z - a = (-r) - a
+    by thm multiplication_congruence_17(z - a, (-r) - a, z - a, (-r) - a)
+    (z - a)^2 = ((-r) - a)^2
+    by thm addition_congruence_17((z - a)^2, ((-r) - a)^2, r^2, r^2)
+    (z - a)^2 + r^2 = ((-r) - a)^2 + r^2
+    ((-r) - a)^2 + r^2 = (r + a)^2 + r^2
+    by thm equality_transitivity_17((r + a)^2 + r^2, (z - a)^2 + r^2, b)
+    (r + a)^2 + r^2 = b
+
+# Substitute the positive normal coordinate into both side-distance equations.
+
+thm center_axis_coordinate_substitution_probe_17:
+    ? forall d, c cart(R, R), ex, ey, nx, ny, z, s, r R:
+        z = s
+        c(1) = d(1) + z * ex + r * nx
+        c(2) = d(2) + z * ey + r * ny
+        =>:
+            c(1) = d(1) + s * ex + r * nx
+            c(2) = d(2) + s * ey + r * ny
+    by thm multiplication_congruence_17(z, s, ex, ex)
+    z * ex = s * ex
+    by thm addition_congruence_17(d(1), d(1), z * ex, s * ex)
+    d(1) + z * ex = d(1) + s * ex
+    by thm addition_congruence_17(d(1) + z * ex, d(1) + s * ex, r * nx, r * nx)
+    d(1) + z * ex + r * nx = d(1) + s * ex + r * nx
+    by thm equality_transitivity_17(c(1), d(1) + z * ex + r * nx, d(1) + s * ex + r * nx)
+    c(1) = d(1) + s * ex + r * nx
+
+    by thm multiplication_congruence_17(z, s, ey, ey)
+    z * ey = s * ey
+    by thm addition_congruence_17(d(2), d(2), z * ey, s * ey)
+    d(2) + z * ey = d(2) + s * ey
+    by thm addition_congruence_17(d(2) + z * ey, d(2) + s * ey, r * ny, r * ny)
+    d(2) + z * ey + r * ny = d(2) + s * ey + r * ny
+    by thm equality_transitivity_17(c(2), d(2) + z * ey + r * ny, d(2) + s * ey + r * ny)
+    c(2) = d(2) + s * ey + r * ny
+
+# Convert doubled axial/normal scalars into the half-sum affine coordinates.
+
+thm center_half_coordinate_substitution_probe_17:
+    ? forall d, c cart(R, R), ex, ey, nx, ny, x, y, a, b R:
+        2 * x = a
+        2 * y = b
+        c(1) = d(1) + x * ex + y * nx
+        c(2) = d(2) + x * ey + y * ny
+        =>:
+            c(1) = d(1) + (a / 2) * ex + (b / 2) * nx
+            c(2) = d(2) + (a / 2) * ey + (b / 2) * ny
+    by thm half_of_twice_square_17(x,a)
+    x = a / 2
+    by thm half_of_twice_square_17(y,b)
+    y = b / 2
+    by thm multiplication_congruence_17(x, a / 2, ex, ex)
+    x * ex = (a / 2) * ex
+    by thm multiplication_congruence_17(y, b / 2, nx, nx)
+    y * nx = (b / 2) * nx
+    by thm addition_congruence_17(d(1), d(1), x * ex, (a / 2) * ex)
+    d(1) + x * ex = d(1) + (a / 2) * ex
+    by thm addition_congruence_17(d(1) + x * ex, d(1) + (a / 2) * ex, y * nx, (b / 2) * nx)
+    d(1) + x * ex + y * nx = d(1) + (a / 2) * ex + (b / 2) * nx
+    by thm equality_transitivity_17(c(1), d(1) + x * ex + y * nx, d(1) + (a / 2) * ex + (b / 2) * nx)
+    c(1) = d(1) + (a / 2) * ex + (b / 2) * nx
+    by thm multiplication_congruence_17(x, a / 2, ey, ey)
+    x * ey = (a / 2) * ey
+    by thm multiplication_congruence_17(y, b / 2, ny, ny)
+    y * ny = (b / 2) * ny
+    by thm addition_congruence_17(d(2), d(2), x * ey, (a / 2) * ey)
+    d(2) + x * ey = d(2) + (a / 2) * ey
+    by thm addition_congruence_17(d(2) + x * ey, d(2) + (a / 2) * ey, y * ny, (b / 2) * ny)
+    d(2) + x * ey + y * ny = d(2) + (a / 2) * ey + (b / 2) * ny
+    by thm equality_transitivity_17(c(2), d(2) + x * ey + y * ny, d(2) + (a / 2) * ey + (b / 2) * ny)
+    c(2) = d(2) + (a / 2) * ey + (b / 2) * ny
+
+# Two-label scalar tail.  No label orientation is assumed: it is derived from
+# opposite signed square roots, and both possible assignments are handled.
+
+thm common_tangent_pair_witness_17:
+    ? forall c1,c2,c3 cart(R,R),r1,r2,r3,ta,tb,tc,aa,ab,ac R:
+        $line_is_external_common_tangent(ta,tb,tc,c1,r1,c2,r2)
+        $line_is_external_common_tangent(ta,tb,tc,c1,r1,c3,r3)
+        $lines_are_distinct(ta,tb,tc,aa,ab,ac)
+        =>:
+            exist tangent_a,tangent_b,tangent_c R st {$line_is_external_common_tangent(tangent_a,tangent_b,tangent_c,c1,r1,c2,r2),$line_is_external_common_tangent(tangent_a,tangent_b,tangent_c,c1,r1,c3,r3),$lines_are_distinct(tangent_a,tangent_b,tangent_c,aa,ab,ac)}
+    witness exist tangent_a,tangent_b,tangent_c R st {$line_is_external_common_tangent(tangent_a,tangent_b,tangent_c,c1,r1,c2,r2),$line_is_external_common_tangent(tangent_a,tangent_b,tangent_c,c1,r1,c3,r3),$lines_are_distinct(tangent_a,tangent_b,tangent_c,aa,ab,ac)} from ta,tb,tc:
+        $line_is_external_common_tangent(ta,tb,tc,c1,r1,c2,r2)
+        $line_is_external_common_tangent(ta,tb,tc,c1,r1,c3,r3)
+        $lines_are_distinct(ta,tb,tc,aa,ab,ac)
+
+thm two_label_scalar_tail_probe_17:
+    ? forall d, c1, c2, c3 cart(R, R), ex, ey, nx, ny, p, q, h, ell, m, x, y, x2, x3, r1, r2, r3, radius, aa, ab, ac R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        m > 0
+        r1 > 0
+        r2 > 0
+        r3 > 0
+        radius > r2
+        radius > r3
+        p + q = 2 * radius
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        m^2 = h^2 + q^2
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        c1(1) = d(1) + x * ex + y * nx
+        c1(2) = d(2) + x * ey + y * ny
+        c2(1) = d(1) + x2 * ex + r2 * nx
+        c2(2) = d(2) + x2 * ey + r2 * ny
+        c3(1) = d(1) + x3 * ex + r3 * nx
+        c3(2) = d(2) + x3 * ey + r3 * ny
+        y = r1
+        x2^2 = r2^2
+        x3^2 = r3^2
+        x2 * x3 < 0
+        (x2 - (q - p) / 2)^2 + r2^2 = (radius - r2)^2
+        (x3 - (q - p) / 2)^2 + r3^2 = (radius - r3)^2
+        h * x - p * y + h * p = y * ell
+        h * x + q * y - h * q = -y * m
+        aa^2 + ab^2 > 0
+        aa * d(1) + ab * d(2) + ac = 0
+        =>:
+            exist tangent_a, tangent_b, tangent_c R st {$line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, c1, r1, c2, r2), $line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, c1, r1, c3, r3), $lines_are_distinct(tangent_a, tangent_b, tangent_c, aa, ab, ac)}
+    by thm foot_equations_radius_substitution_probe_17(h, x, p, q, y, r1, ell, m)
+    h * x - p * r1 + h * p = r1 * ell
+    h * x + q * r1 - h * q = -r1 * m
+    by thm opposite_label_split_probe(x2, x3, r2, r3)
+    by cases:
+        ? exist tangent_a, tangent_b, tangent_c R st {$line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, c1, r1, c2, r2), $line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, c1, r1, c3, r3), $lines_are_distinct(tangent_a, tangent_b, tangent_c, aa, ab, ac)}
+        case x2 = r2:
+            x2 > 0
+            by thm opposite_square_roots_positive_first_17(x2, x3, r2, r3)
+            x3 = -r3
+            by thm positive_root_distance_substitution_probe_17(x2, r2, (q - p) / 2, (radius - r2)^2)
+            (r2 - (q - p) / 2)^2 + r2^2 = (radius - r2)^2
+            by thm internal_tangent_right_circle_scalar_17(p, q, h, r2, radius)
+            (r2 + p)^2 = h^2 + p^2
+            by thm negative_root_distance_substitution_probe_17(x3, r3, (q - p) / 2, (radius - r3)^2)
+            (r3 + (q - p) / 2)^2 + r3^2 = (radius - r3)^2
+            by thm internal_tangent_left_circle_scalar_17(p, q, h, r3, radius)
+            (r3 + q)^2 = h^2 + q^2
+            by thm normalized_midpoint_17(p, q, h, ell, m, r1, r3, r2, x)
+            2 * r1 = r3 + r2
+            2 * x = r2 - r3
+            by thm multiplication_congruence_17(2, 2, y, r1)
+            2 * y = 2 * r1
+            by thm equality_transitivity_17(2 * y, 2 * r1, r3 + r2)
+            2 * y = r3 + r2
+            by thm center_axis_coordinate_substitution_probe_17(d, c3, ex, ey, nx, ny, x3, -r3, r3)
+            c3(1) = d(1) + (-r3) * ex + r3 * nx
+            c3(2) = d(2) + (-r3) * ey + r3 * ny
+            by thm center_axis_coordinate_substitution_probe_17(d, c2, ex, ey, nx, ny, x2, r2, r2)
+            c3(1) = d(1) + (-r3) * ex + r3 * nx
+            c3(2) = d(2) + (-r3) * ey + r3 * ny
+            c2(1) = d(1) + r2 * ex + r2 * nx
+            c2(2) = d(2) + r2 * ey + r2 * ny
+            by thm center_half_coordinate_substitution_probe_17(d, c1, ex, ey, nx, ny, x, y, r2 - r3, r3 + r2)
+            c1(1) = d(1) + ((r2 - r3) / 2) * ex + ((r3 + r2) / 2) * nx
+            c1(2) = d(2) + ((r2 - r3) / 2) * ey + ((r3 + r2) / 2) * ny
+            by thm normalized_common_tangent_constructor_17(d, c1, c3, c2, ex, ey, nx, ny, r3, r2, r1, r3, r2)
+            obtain ta, tb, tc from exist ta, tb, tc R st {$line_is_external_common_tangent(ta, tb, tc, c1, r1, c3, r3), $line_is_external_common_tangent(ta, tb, tc, c1, r1, c2, r2), ta * d(1) + tb * d(2) + tc > 0}
+            by thm line_distinct_at_point_17(ta, tb, tc, aa, ab, ac, d(1), d(2))
+            by thm common_tangent_pair_witness_17(c1,c2,c3,r1,r2,r3,ta,tb,tc,aa,ab,ac)
+        case x2 = -r2:
+            by thm positive_radius_negative_root_17(x2,r2)
+            x2 < 0
+            by thm opposite_square_roots_negative_first_17(x2, x3, r2, r3)
+            x3 = r3
+            by thm negative_root_distance_substitution_probe_17(x2, r2, (q - p) / 2, (radius - r2)^2)
+            (r2 + (q - p) / 2)^2 + r2^2 = (radius - r2)^2
+            by thm internal_tangent_left_circle_scalar_17(p, q, h, r2, radius)
+            (r2 + q)^2 = h^2 + q^2
+            by thm positive_root_distance_substitution_probe_17(x3, r3, (q - p) / 2, (radius - r3)^2)
+            (r3 - (q - p) / 2)^2 + r3^2 = (radius - r3)^2
+            by thm internal_tangent_right_circle_scalar_17(p, q, h, r3, radius)
+            (r3 + p)^2 = h^2 + p^2
+            by thm normalized_midpoint_17(p, q, h, ell, m, r1, r2, r3, x)
+            2 * r1 = r2 + r3
+            2 * x = r3 - r2
+            by thm multiplication_congruence_17(2, 2, y, r1)
+            2 * y = 2 * r1
+            by thm equality_transitivity_17(2 * y, 2 * r1, r2 + r3)
+            2 * y = r2 + r3
+            by thm center_axis_coordinate_substitution_probe_17(d, c2, ex, ey, nx, ny, x2, -r2, r2)
+            c2(1) = d(1) + (-r2) * ex + r2 * nx
+            c2(2) = d(2) + (-r2) * ey + r2 * ny
+            by thm center_axis_coordinate_substitution_probe_17(d, c3, ex, ey, nx, ny, x3, r3, r3)
+            c2(1) = d(1) + (-r2) * ex + r2 * nx
+            c2(2) = d(2) + (-r2) * ey + r2 * ny
+            c3(1) = d(1) + r3 * ex + r3 * nx
+            c3(2) = d(2) + r3 * ey + r3 * ny
+            by thm center_half_coordinate_substitution_probe_17(d, c1, ex, ey, nx, ny, x, y, r3 - r2, r2 + r3)
+            c1(1) = d(1) + ((r3 - r2) / 2) * ex + ((r2 + r3) / 2) * nx
+            c1(2) = d(2) + ((r3 - r2) / 2) * ey + ((r2 + r3) / 2) * ny
+            by thm normalized_common_tangent_constructor_17(d, c1, c2, c3, ex, ey, nx, ny, r2, r3, r1, r2, r3)
+            obtain ta, tb, tc from exist ta, tb, tc R st {$line_is_external_common_tangent(ta, tb, tc, c1, r1, c2, r2), $line_is_external_common_tangent(ta, tb, tc, c1, r1, c3, r3), ta * d(1) + tb * d(2) + tc > 0}
+            by thm line_distinct_at_point_17(ta, tb, tc, aa, ab, ac, d(1), d(2))
+            by thm common_tangent_pair_witness_17(c1,c2,c3,r1,r2,r3,ta,tb,tc,aa,ab,ac)
+
+thm multiplication_congruence_inline:
+    ? forall x, x2, y, y2 R:
+        x = x2
+        y = y2
+        =>:
+            x * y = x2 * y2
+    x - x2 = 0
+    y - y2 = 0
+    x * y - x2 * y2 = (x - x2) * y + x2 * (y - y2)
+    (x - x2) * y + x2 * (y - y2) = 0
+    x * y - x2 * y2 = 0
+    x * y = x2 * y2
+
+
+have fn det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+# Squared Euclidean distance |ab|^2 (avoids square roots).
+
+have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)
+
+# 2D determinant (signed parallelogram area / cross product z-component).
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+# Dot product.
+
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+# General form: the line ax + by + c = 0 (a, b not both zero).
+
+prop is_midpoint(m, a, b cart(R, R)):
+    m(1) = (a(1) + b(1)) / 2
+    m(2) = (a(2) + b(2)) / 2
+
+# p lies on the affine line through a and b (any real parameter t).
+# Allows a = b (then only p = a); use is_on_line when a distinct line is required.
+
+have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}
+
+# Cosine of angle pqr at q, without square roots:
+#   cos^2 = num^2 / den, where
+#   num = qp · qr,  den = |qp|^2 * |qr|^2.
+# Requires nonzero arms (p != q, r != q).
+
+prop is_on_line(p, a, b cart(R, R)):
+    a != b
+    p $in line_through_points(a, b)
+
+# p lies on the extension of segment ab beyond b (t > 1); a != b required.
+
+prop is_on_segment(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, t <= 1, p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
+
+# p lies on the ray from a through distinct point b (t >= 0).
+
+prop is_perpendicular(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    dot(vec(a, b), vec(c, d)) = 0
+
+# Set l is a line in the plane (equals some line(a, b, c)).
+
+prop circles_internally_tangent(center_small cart(R, R), radius_small R, center_big cart(R, R), radius_big R):
+    radius_small > 0
+    radius_big > radius_small
+    distance_sq(center_small, center_big) = (radius_big - radius_small)^2
+
+# A circle is internally tangent to the specified semicircular arc on diameter AB.
+
+prop circle_internally_tangent_to_semicircle(center_small cart(R, R), radius_small R, center_big cart(R, R), radius_big R, point_a, point_b, arc_point cart(R, R)):
+    $circles_internally_tangent(center_small, radius_small, center_big, radius_big)
+    det(vec(point_a, point_b), vec(point_a, center_small)) * det(vec(point_a, point_b), vec(point_a, arc_point)) > 0
+
+# Two coefficient triples represent distinct projective lines.
+
+thm dot_of_vectors_coordinates_17:
+    ? forall p,q,a,b cart(R,R):
+        dot(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(1)-a(1))+(q(2)-p(2))*(b(2)-a(2))
+    vec(p,q)=(q(1)-p(1),q(2)-p(2))
+    vec(a,b)=(b(1)-a(1),b(2)-a(2))
+    vec(p,q)(1)=q(1)-p(1)
+    vec(p,q)(2)=q(2)-p(2)
+    vec(a,b)(1)=b(1)-a(1)
+    vec(a,b)(2)=b(2)-a(2)
+    dot(vec(p,q),vec(a,b))=vec(p,q)(1)*vec(a,b)(1)+vec(p,q)(2)*vec(a,b)(2)
+    by thm multiplication_congruence_17(vec(p,q)(1),q(1)-p(1),vec(a,b)(1),b(1)-a(1))
+    by thm multiplication_congruence_17(vec(p,q)(2),q(2)-p(2),vec(a,b)(2),b(2)-a(2))
+    by thm addition_congruence_17(vec(p,q)(1)*vec(a,b)(1),(q(1)-p(1))*(b(1)-a(1)),vec(p,q)(2)*vec(a,b)(2),(q(2)-p(2))*(b(2)-a(2)))
+    dot(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(1)-a(1))+(q(2)-p(2))*(b(2)-a(2))
+
+thm squared_distance_coordinates_17:
+    ? forall p,q cart(R,R):
+        distance_sq(p,q)=(q(1)-p(1))^2+(q(2)-p(2))^2
+    by thm dot_of_vectors_coordinates_17(p,q,p,q)
+    (q(1)-p(1))*(q(1)-p(1))=(q(1)-p(1))^2
+    (q(2)-p(2))*(q(2)-p(2))=(q(2)-p(2))^2
+    by thm addition_congruence_17((q(1)-p(1))*(q(1)-p(1)),(q(1)-p(1))^2,(q(2)-p(2))*(q(2)-p(2)),(q(2)-p(2))^2)
+    distance_sq(p,q)=dot(vec(p,q),vec(p,q))
+    distance_sq(p,q)=(q(1)-p(1))^2+(q(2)-p(2))^2
+
+thm det_of_vectors_coordinates_17:
+    ? forall p,q,a,b cart(R,R):
+        det(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(2)-a(2))-(q(2)-p(2))*(b(1)-a(1))
+    vec(p,q)=(q(1)-p(1),q(2)-p(2))
+    vec(a,b)=(b(1)-a(1),b(2)-a(2))
+    vec(p,q)(1)=q(1)-p(1)
+    vec(p,q)(2)=q(2)-p(2)
+    vec(a,b)(1)=b(1)-a(1)
+    vec(a,b)(2)=b(2)-a(2)
+    det(vec(p,q),vec(a,b))=vec(p,q)(1)*vec(a,b)(2)-vec(p,q)(2)*vec(a,b)(1)
+    by thm multiplication_congruence_17(vec(p,q)(1),q(1)-p(1),vec(a,b)(2),b(2)-a(2))
+    by thm multiplication_congruence_17(vec(p,q)(2),q(2)-p(2),vec(a,b)(1),b(1)-a(1))
+    by thm subtraction_congruence_17(vec(p,q)(1)*vec(a,b)(2),(q(1)-p(1))*(b(2)-a(2)),vec(p,q)(2)*vec(a,b)(1),(q(2)-p(2))*(b(1)-a(1)))
+    det(vec(p,q),vec(a,b))=(q(1)-p(1))*(b(2)-a(2))-(q(2)-p(2))*(b(1)-a(1))
+
+thm on_line_zero_determinant_17:
+    ? forall point,a,b cart(R,R):
+        $is_on_line(point,a,b)
+        =>:
+            det(vec(a,point),vec(a,b))=0
+    thm membership_transport_17:
+        ? forall source_carrier,target_carrier set,member source_carrier:
+            source_carrier=target_carrier
+            =>:
+                member $in target_carrier
+    by def $is_on_line(point,a,b)
+    a!=b
+    point $in line_through_points(a,b)
+    line_through_points(a,b)={p cart(R,R):det(vec(a,p),vec(a,b))=0}
+    release thm membership_transport_17(line_through_points(a,b),{p cart(R,R):det(vec(a,p),vec(a,b))=0},point)
+    det(vec(a,point),vec(a,b))=0
+
+thm rotated_components_give_distance_17:
+    ? forall p, q cart(R, R), ex, ey, fx, fy, x, y R:
+        ex^2 + ey^2 = 1
+        fx^2 + fy^2 = 1
+        ex * fx + ey * fy = 0
+        q(1) - p(1) = x * ex + y * fx
+        q(2) - p(2) = x * ey + y * fy
+        =>:
+            distance_sq(p, q) = x^2 + y^2
+    distance_sq(p,q)=dot(vec(p,q),vec(p,q))
+    vec(p,q)=(q(1)-p(1),q(2)-p(2))
+    vec(p,q)(1)=q(1)-p(1)
+    vec(p,q)(2)=q(2)-p(2)
+    dot(vec(p,q),vec(p,q))=vec(p,q)(1)*vec(p,q)(1)+vec(p,q)(2)*vec(p,q)(2)
+    by thm multiplication_congruence_17(vec(p,q)(1),q(1)-p(1),vec(p,q)(1),q(1)-p(1))
+    vec(p,q)(1)*vec(p,q)(1)=(q(1)-p(1))*(q(1)-p(1))
+    (q(1)-p(1))*(q(1)-p(1))=(q(1)-p(1))^2
+    vec(p,q)(1)*vec(p,q)(1)=(q(1)-p(1))^2
+    by thm multiplication_congruence_17(vec(p,q)(2),q(2)-p(2),vec(p,q)(2),q(2)-p(2))
+    vec(p,q)(2)*vec(p,q)(2)=(q(2)-p(2))*(q(2)-p(2))
+    (q(2)-p(2))*(q(2)-p(2))=(q(2)-p(2))^2
+    vec(p,q)(2)*vec(p,q)(2)=(q(2)-p(2))^2
+    by thm addition_congruence_17(vec(p,q)(1)*vec(p,q)(1),(q(1)-p(1))^2,vec(p,q)(2)*vec(p,q)(2),(q(2)-p(2))^2)
+    vec(p,q)(1)*vec(p,q)(1)+vec(p,q)(2)*vec(p,q)(2)=(q(1)-p(1))^2+(q(2)-p(2))^2
+    distance_sq(p,q)=(q(1)-p(1))^2+(q(2)-p(2))^2
+    by thm multiplication_congruence_17(q(1)-p(1),x*ex+y*fx,q(1)-p(1),x*ex+y*fx)
+    (q(1)-p(1))*(q(1)-p(1))=(x*ex+y*fx)*(x*ex+y*fx)
+    (q(1)-p(1))^2=(q(1)-p(1))*(q(1)-p(1))
+    (x*ex+y*fx)*(x*ex+y*fx)=(x*ex+y*fx)^2
+    (q(1)-p(1))^2=(x*ex+y*fx)^2
+    by thm multiplication_congruence_17(q(2)-p(2),x*ey+y*fy,q(2)-p(2),x*ey+y*fy)
+    (q(2)-p(2))*(q(2)-p(2))=(x*ey+y*fy)*(x*ey+y*fy)
+    (q(2)-p(2))^2=(q(2)-p(2))*(q(2)-p(2))
+    (x*ey+y*fy)*(x*ey+y*fy)=(x*ey+y*fy)^2
+    (q(2)-p(2))^2=(x*ey+y*fy)^2
+    by thm addition_congruence_17((q(1)-p(1))^2,(x*ex+y*fx)^2,(q(2)-p(2))^2,(x*ey+y*fy)^2)
+    (q(1)-p(1))^2+(q(2)-p(2))^2=(x*ex+y*fx)^2+(x*ey+y*fy)^2
+    distance_sq(p,q)=(x*ex+y*fx)^2+(x*ey+y*fy)^2
+    by thm rotated_square_sum_17(ex,ey,fx,fy,x,y)
+    distance_sq(p,q)=x^2+y^2
+
+thm diameter_circle_equation_in_frame_17:
+    ? forall point_a, point_b, point_c, point_d, center cart(R, R), ex, ey, nx, ny, p, q, h, radius R:
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        center(1) = (point_a(1) + point_b(1)) / 2
+        center(2) = (point_a(2) + point_b(2)) / 2
+        point_a(1) = point_d(1) - p * ex
+        point_a(2) = point_d(2) - p * ey
+        point_b(1) = point_d(1) + q * ex
+        point_b(2) = point_d(2) + q * ey
+        point_c(1) = point_d(1) + h * nx
+        point_c(2) = point_d(2) + h * ny
+        distance_sq(center, point_c) = radius^2
+        =>:
+            ((p - q) / 2)^2 + h^2 = radius^2
+    point_a(1) = point_d(1) - p * ex
+    point_b(1) = point_d(1) + q * ex
+    point_c(1) = point_d(1) + h * nx
+    center(1) = (point_a(1) + point_b(1)) / 2
+    by thm addition_congruence_17(point_a(1), point_d(1) - p * ex, point_b(1), point_d(1) + q * ex)
+    point_a(1) + point_b(1) = (point_d(1) - p * ex) + (point_d(1) + q * ex)
+    by thm multiplication_congruence_17(point_a(1) + point_b(1), (point_d(1) - p * ex) + (point_d(1) + q * ex), 1 / 2, 1 / 2)
+    (point_a(1) + point_b(1)) * (1 / 2) = ((point_d(1) - p * ex) + (point_d(1) + q * ex)) * (1 / 2)
+    (point_a(1) + point_b(1)) / 2 = (point_a(1) + point_b(1)) * (1 / 2)
+    ((point_d(1) - p * ex) + (point_d(1) + q * ex)) * (1 / 2) = ((point_d(1) - p * ex) + (point_d(1) + q * ex)) / 2
+    center(1) = ((point_d(1) - p * ex) + (point_d(1) + q * ex)) / 2
+    ((point_d(1) - p * ex) + (point_d(1) + q * ex)) / 2 = point_d(1) + ((q - p) / 2) * ex
+    center(1) = point_d(1) + ((q - p) / 2) * ex
+    point_c(1) - center(1) = (point_d(1) + h * nx) - (point_d(1) + ((q - p) / 2) * ex)
+    (point_d(1) + h * nx) - (point_d(1) + ((q - p) / 2) * ex) = ((p - q) / 2) * ex + h * nx
+    point_c(1) - center(1) = ((p - q) / 2) * ex + h * nx
+    point_a(2) = point_d(2) - p * ey
+    point_b(2) = point_d(2) + q * ey
+    point_c(2) = point_d(2) + h * ny
+    center(2) = (point_a(2) + point_b(2)) / 2
+    by thm addition_congruence_17(point_a(2), point_d(2) - p * ey, point_b(2), point_d(2) + q * ey)
+    point_a(2) + point_b(2) = (point_d(2) - p * ey) + (point_d(2) + q * ey)
+    by thm multiplication_congruence_17(point_a(2) + point_b(2), (point_d(2) - p * ey) + (point_d(2) + q * ey), 1 / 2, 1 / 2)
+    (point_a(2) + point_b(2)) * (1 / 2) = ((point_d(2) - p * ey) + (point_d(2) + q * ey)) * (1 / 2)
+    (point_a(2) + point_b(2)) / 2 = (point_a(2) + point_b(2)) * (1 / 2)
+    ((point_d(2) - p * ey) + (point_d(2) + q * ey)) * (1 / 2) = ((point_d(2) - p * ey) + (point_d(2) + q * ey)) / 2
+    center(2) = ((point_d(2) - p * ey) + (point_d(2) + q * ey)) / 2
+    ((point_d(2) - p * ey) + (point_d(2) + q * ey)) / 2 = point_d(2) + ((q - p) / 2) * ey
+    center(2) = point_d(2) + ((q - p) / 2) * ey
+    point_c(2) - center(2) = (point_d(2) + h * ny) - (point_d(2) + ((q - p) / 2) * ey)
+    (point_d(2) + h * ny) - (point_d(2) + ((q - p) / 2) * ey) = ((p - q) / 2) * ey + h * ny
+    point_c(2) - center(2) = ((p - q) / 2) * ey + h * ny
+    by thm rotated_components_give_distance_17(center, point_c, ex, ey, nx, ny, (p - q) / 2, h)
+    distance_sq(center, point_c) = ((p - q) / 2)^2 + h^2
+    ((p - q) / 2)^2 + h^2 = radius^2
+
+# Scalar consequences of internal tangency for the two corner circles.
+
+thm ab_geometry_product_to_raw_17:
+    ? forall ax, ay, bx, byy, cx, cy, sx, sy, dx, dy, ex, ey, nx, ny, p, q, h, x, y R:
+        dx - ax = p * ex
+        dy - ay = p * ey
+        bx - dx = q * ex
+        byy - dy = q * ey
+        cx - dx = h * nx
+        cy - dy = h * ny
+        sx = dx + x * ex + y * nx
+        sy = dy + x * ey + y * ny
+        =>:
+            det(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy))) = ((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)) * (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx)))
+    by thm addition_congruence_17(bx - dx, q * ex, dx - ax, p * ex)
+    (bx - dx) + (dx - ax) = q * ex + p * ex
+    (bx - dx) + (dx - ax) = bx - ax
+    q * ex + p * ex = (p + q) * ex
+    bx - ax = (p + q) * ex
+    by thm addition_congruence_17(byy - dy, q * ey, dy - ay, p * ey)
+    (byy - dy) + (dy - ay) = q * ey + p * ey
+    (byy - dy) + (dy - ay) = byy - ay
+    q * ey + p * ey = (p + q) * ey
+    byy - ay = (p + q) * ey
+
+    sx - (dx + x * ex + y * nx) = 0
+    (sx - dx) - (x * ex + y * nx) = sx - (dx + x * ex + y * nx)
+    (sx - dx) - (x * ex + y * nx) = 0
+    sx - dx = x * ex + y * nx
+    by thm addition_congruence_17(sx - dx, x * ex + y * nx, dx - ax, p * ex)
+    (sx - dx) + (dx - ax) = (x * ex + y * nx) + p * ex
+    (sx - dx) + (dx - ax) = sx - ax
+    (x * ex + y * nx) + p * ex = (x + p) * ex + y * nx
+    sx - ax = (x + p) * ex + y * nx
+
+    sy - (dy + x * ey + y * ny) = 0
+    (sy - dy) - (x * ey + y * ny) = sy - (dy + x * ey + y * ny)
+    (sy - dy) - (x * ey + y * ny) = 0
+    sy - dy = x * ey + y * ny
+    by thm addition_congruence_17(sy - dy, x * ey + y * ny, dy - ay, p * ey)
+    (sy - dy) + (dy - ay) = (x * ey + y * ny) + p * ey
+    (sy - dy) + (dy - ay) = sy - ay
+    (x * ey + y * ny) + p * ey = (x + p) * ey + y * ny
+    sy - ay = (x + p) * ey + y * ny
+
+    by thm addition_congruence_17(cx - dx, h * nx, dx - ax, p * ex)
+    (cx - dx) + (dx - ax) = h * nx + p * ex
+    (cx - dx) + (dx - ax) = cx - ax
+    h * nx + p * ex = p * ex + h * nx
+    cx - ax = p * ex + h * nx
+    by thm addition_congruence_17(cy - dy, h * ny, dy - ay, p * ey)
+    (cy - dy) + (dy - ay) = h * ny + p * ey
+    (cy - dy) + (dy - ay) = cy - ay
+    h * ny + p * ey = p * ey + h * ny
+    cy - ay = p * ey + h * ny
+
+    (ax,ay)(1)=ax
+    (ax,ay)(2)=ay
+    (bx,byy)(1)=bx
+    (bx,byy)(2)=byy
+    (cx,cy)(1)=cx
+    (cx,cy)(2)=cy
+    (sx,sy)(1)=sx
+    (sx,sy)(2)=sy
+    vec((ax,ay),(bx,byy))=((bx,byy)(1)-(ax,ay)(1),(bx,byy)(2)-(ax,ay)(2))
+    vec((ax,ay),(bx,byy))(1)=(bx,byy)(1)-(ax,ay)(1)
+    by thm subtraction_congruence_17((bx,byy)(1),bx,(ax,ay)(1),ax)
+    (bx,byy)(1)-(ax,ay)(1)=bx-ax
+    vec((ax,ay),(bx,byy))(1)=bx-ax=(p+q)*ex
+    vec((ax,ay),(bx,byy))(2)=(bx,byy)(2)-(ax,ay)(2)
+    by thm subtraction_congruence_17((bx,byy)(2),byy,(ax,ay)(2),ay)
+    (bx,byy)(2)-(ax,ay)(2)=byy-ay
+    vec((ax,ay),(bx,byy))(2)=byy-ay=(p+q)*ey
+    vec((ax,ay),(sx,sy))=((sx,sy)(1)-(ax,ay)(1),(sx,sy)(2)-(ax,ay)(2))
+    vec((ax,ay),(sx,sy))(1)=(sx,sy)(1)-(ax,ay)(1)
+    by thm subtraction_congruence_17((sx,sy)(1),sx,(ax,ay)(1),ax)
+    (sx,sy)(1)-(ax,ay)(1)=sx-ax
+    vec((ax,ay),(sx,sy))(1)=sx-ax=(x+p)*ex+y*nx
+    vec((ax,ay),(sx,sy))(2)=(sx,sy)(2)-(ax,ay)(2)
+    by thm subtraction_congruence_17((sx,sy)(2),sy,(ax,ay)(2),ay)
+    (sx,sy)(2)-(ax,ay)(2)=sy-ay
+    vec((ax,ay),(sx,sy))(2)=sy-ay=(x+p)*ey+y*ny
+    vec((ax,ay),(cx,cy))=((cx,cy)(1)-(ax,ay)(1),(cx,cy)(2)-(ax,ay)(2))
+    vec((ax,ay),(cx,cy))(1)=(cx,cy)(1)-(ax,ay)(1)
+    by thm subtraction_congruence_17((cx,cy)(1),cx,(ax,ay)(1),ax)
+    (cx,cy)(1)-(ax,ay)(1)=cx-ax
+    vec((ax,ay),(cx,cy))(1)=cx-ax=p*ex+h*nx
+    vec((ax,ay),(cx,cy))(2)=(cx,cy)(2)-(ax,ay)(2)
+    by thm subtraction_congruence_17((cx,cy)(2),cy,(ax,ay)(2),ay)
+    (cx,cy)(2)-(ax,ay)(2)=cy-ay
+    vec((ax,ay),(cx,cy))(2)=cy-ay=p*ey+h*ny
+    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy)))=vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(sx,sy))(2)-vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(sx,sy))(1)
+    by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(1),(p+q)*ex,vec((ax,ay),(sx,sy))(2),(x+p)*ey+y*ny)
+    by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(2),(p+q)*ey,vec((ax,ay),(sx,sy))(1),(x+p)*ex+y*nx)
+    by thm subtraction_congruence_17(vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(sx,sy))(2),((p+q)*ex)*((x+p)*ey+y*ny),vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(sx,sy))(1),((p+q)*ey)*((x+p)*ex+y*nx))
+    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy)))=((p+q)*ex)*((x+p)*ey+y*ny)-((p+q)*ey)*((x+p)*ex+y*nx)
+    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy)))=vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(cx,cy))(2)-vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(cx,cy))(1)
+    by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(1),(p+q)*ex,vec((ax,ay),(cx,cy))(2),p*ey+h*ny)
+    by thm multiplication_congruence_17(vec((ax,ay),(bx,byy))(2),(p+q)*ey,vec((ax,ay),(cx,cy))(1),p*ex+h*nx)
+    by thm subtraction_congruence_17(vec((ax,ay),(bx,byy))(1)*vec((ax,ay),(cx,cy))(2),((p+q)*ex)*(p*ey+h*ny),vec((ax,ay),(bx,byy))(2)*vec((ax,ay),(cx,cy))(1),((p+q)*ey)*(p*ex+h*nx))
+    det(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy)))=((p+q)*ex)*(p*ey+h*ny)-((p+q)*ey)*(p*ex+h*nx)
+    by thm multiplication_congruence_17(det(vec((ax,ay),(bx,byy)),vec((ax,ay),(sx,sy))),((p+q)*ex)*((x+p)*ey+y*ny)-((p+q)*ey)*((x+p)*ex+y*nx),det(vec((ax,ay),(bx,byy)),vec((ax,ay),(cx,cy))),((p+q)*ex)*(p*ey+h*ny)-((p+q)*ey)*(p*ex+h*nx))
+
+thm ab_positive_side_root_17:
+    ? forall ax, ay, bx, byy, cx, cy, sx, sy, dx, dy, ex, ey, nx, ny, p, q, h, x, y, radius R:
+        p > 0
+        q > 0
+        h > 0
+        radius > 0
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        dx - ax = p * ex
+        dy - ay = p * ey
+        bx - dx = q * ex
+        byy - dy = q * ey
+        cx - dx = h * nx
+        cy - dy = h * ny
+        sx = dx + x * ex + y * nx
+        sy = dy + x * ey + y * ny
+        (det(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy)))) > 0
+        y^2 = radius^2
+        =>:
+            y = radius
+    by thm ab_geometry_product_to_raw_17(ax, ay, bx, byy, cx, cy, sx, sy, dx, dy, ex, ey, nx, ny, p, q, h, x, y)
+    (det(vec((ax, ay), (bx, byy)), vec((ax, ay), (sx, sy))) * det(vec((ax, ay), (bx, byy)), vec((ax, ay), (cx, cy)))) = ((((p + q) * ex) * ((x + p) * ey + y * ny) - ((p + q) * ey) * ((x + p) * ex + y * nx)) * (((p + q) * ex) * (p * ey + h * ny) - ((p + q) * ey) * (p * ex + h * nx)))
+    by thm ab_raw_determinant_product_normalizes_17(p, q, h, x, y, ex, ey, nx, ny)
+    ((p + q) * y) * ((p + q) * h) > 0
+    by thm ab_positive_root_17(p, q, h, y, radius)
+    y = radius
+
+thm ac_geometric_foot_bridge_perpendicular_coordinate_equation_ac_bridge_17:
+    ? forall p, q, a, b cart(R, R):
+        $is_perpendicular(p, q, a, b)
+        =>:
+            (q(1) - p(1)) * (b(1) - a(1)) + (q(2) - p(2)) * (b(2) - a(2)) = 0
+    by def $is_perpendicular(p,q,a,b)
+    dot(vec(p,q),vec(a,b))=0
+    by thm dot_of_vectors_coordinates_17(p,q,a,b)
+    (q(1)-p(1))*(b(1)-a(1))+(q(2)-p(2))*(b(2)-a(2))=0
+
+thm ac_geometric_foot_bridge_distance_sq_coordinates_ac_bridge_17:
+    ? forall p, q cart(R, R):
+        distance_sq(p, q) = (q(1) - p(1))^2 + (q(2) - p(2))^2
+    by thm squared_distance_coordinates_17(p,q)
+    distance_sq(p,q)=(q(1)-p(1))^2+(q(2)-p(2))^2
+
+thm ac_geometric_foot_positive_side_17:
+    ? forall point_a, point_c, center, touch cart(R, R), dx, dy, ex, ey, nx, ny, p, q, h, ell, x, y, r R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        r > 0
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        y^2 = r^2
+        point_a(1) = dx - p * ex
+        point_a(2) = dy - p * ey
+        point_c(1) = dx + h * nx
+        point_c(2) = dy + h * ny
+        center(1) = dx + x * ex + y * nx
+        center(2) = dy + x * ey + y * ny
+        $is_on_segment(touch, point_c, point_a)
+        $is_perpendicular(center, touch, point_c, point_a)
+        distance_sq(center, touch) = r^2
+        =>:
+            y > 0
+    by def $is_on_segment(touch, point_c, point_a)
+    obtain s from exist s R st {0 <= s, s <= 1, touch(1) = (1 - s) * point_c(1) + s * point_a(1), touch(2) = (1 - s) * point_c(2) + s * point_a(2)}
+    s >= 0
+
+    by thm ac_geometric_foot_bridge_perpendicular_coordinate_equation_ac_bridge_17(center, touch, point_c, point_a)
+    (touch(1) - center(1)) * (point_a(1) - point_c(1)) + (touch(2) - center(2)) * (point_a(2) - point_c(2)) = 0
+
+    by thm ac_geometric_foot_bridge_distance_sq_coordinates_ac_bridge_17(center, touch)
+    distance_sq(center, touch) = (touch(1) - center(1))^2 + (touch(2) - center(2))^2
+    (touch(1) - center(1))^2 + (touch(2) - center(2))^2 = r^2
+
+    by thm adapter_ac_global_foot_positive_side_17(point_a(1), point_a(2), point_c(1), point_c(2), center(1), center(2), touch(1), touch(2), dx, dy, ex, ey, nx, ny, p, q, h, ell, x, y, r, s)
+
+thm bridge_perpendicular_coordinate_equation_ac_bridge_17:
+    ? forall p, q, a, b cart(R, R):
+        $is_perpendicular(p, q, a, b)
+        =>:
+            (q(1) - p(1)) * (b(1) - a(1)) + (q(2) - p(2)) * (b(2) - a(2)) = 0
+    by def $is_perpendicular(p,q,a,b)
+    dot(vec(p,q),vec(a,b))=0
+    by thm dot_of_vectors_coordinates_17(p,q,a,b)
+    (q(1)-p(1))*(b(1)-a(1))+(q(2)-p(2))*(b(2)-a(2))=0
+
+thm bridge_distance_sq_coordinates_ac_bridge_17:
+    ? forall p, q cart(R, R):
+        distance_sq(p, q) = (q(1) - p(1))^2 + (q(2) - p(2))^2
+    by thm squared_distance_coordinates_17(p,q)
+    distance_sq(p,q)=(q(1)-p(1))^2+(q(2)-p(2))^2
+
+thm incircle_joint_geometric_selector_probe_17:
+    ? forall point_a, point_b, point_c, center, touch_bc, touch_ca cart(R, R), dx, dy, ex, ey, nx, ny, p, q, h, ell, m, x, y, r R:
+        p > 0
+        q > 0
+        h > 0
+        ell > 0
+        m > 0
+        r > 0
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        h^2 = p * q
+        ell^2 = h^2 + p^2
+        m^2 = h^2 + q^2
+        y^2 = r^2
+        point_a(1) = dx - p * ex
+        point_a(2) = dy - p * ey
+        point_b(1) = dx + q * ex
+        point_b(2) = dy + q * ey
+        point_c(1) = dx + h * nx
+        point_c(2) = dy + h * ny
+        center(1) = dx + x * ex + y * nx
+        center(2) = dy + x * ey + y * ny
+        $is_on_segment(touch_ca, point_c, point_a)
+        $is_perpendicular(center, touch_ca, point_c, point_a)
+        distance_sq(center, touch_ca) = r^2
+        $is_on_segment(touch_bc, point_b, point_c)
+        $is_perpendicular(center, touch_bc, point_b, point_c)
+        distance_sq(center, touch_bc) = r^2
+        =>:
+            h * (x + p) - p * y = y * ell
+            h * (x - q) + q * y = -y * m
+
+    # AC segment parameter and its coordinate/perpendicular/distance equations.
+    by def $is_on_segment(touch_ca, point_c, point_a)
+    obtain sa from exist sa R st {0 <= sa, sa <= 1, touch_ca(1) = (1 - sa) * point_c(1) + sa * point_a(1), touch_ca(2) = (1 - sa) * point_c(2) + sa * point_a(2)}
+    by thm bridge_perpendicular_coordinate_equation_ac_bridge_17(center, touch_ca, point_c, point_a)
+    (touch_ca(1) - center(1)) * (point_a(1) - point_c(1)) + (touch_ca(2) - center(2)) * (point_a(2) - point_c(2)) = 0
+    by thm bridge_distance_sq_coordinates_ac_bridge_17(center, touch_ca)
+    distance_sq(center, touch_ca) = (touch_ca(1) - center(1))^2 + (touch_ca(2) - center(2))^2
+    (touch_ca(1) - center(1))^2 + (touch_ca(2) - center(2))^2 = r^2
+
+    by thm pos_adapter_ac_global_foot_positive_side_17(point_a(1), point_a(2), point_c(1), point_c(2), center(1), center(2), touch_ca(1), touch_ca(2), dx, dy, ex, ey, nx, ny, p, q, h, ell, x, y, r, sa)
+    y > 0
+    by thm ac_global_foot_scalar_data_17(point_a(1), point_a(2), point_c(1), point_c(2), center(1), center(2), touch_ca(1), touch_ca(2), dx, dy, ex, ey, nx, ny, p, q, h, ell, x, y, r, sa)
+    1 - sa <= 1
+    p * (x + p) + h * y = (1 - sa) * ell^2
+    (h * (x + p) - p * y)^2 = y^2 * ell^2
+    1 - sa >= 0
+
+    # BC has the reflected frame e'=-e, with B=D-q*e' and x'=-x.
+    by def $is_on_segment(touch_bc, point_b, point_c)
+    obtain kb from exist kb R st {0 <= kb, kb <= 1, touch_bc(1) = (1 - kb) * point_b(1) + kb * point_c(1), touch_bc(2) = (1 - kb) * point_b(2) + kb * point_c(2)}
+    (-ex)^2 + (-ey)^2 = 1
+    # Reflecting the tangent axis preserves orthogonality: multiply the
+    # original dot product by -1, then normalize the polynomial shape.
+    by thm multiplication_congruence_17(ex * nx + ey * ny, 0, -1, -1)
+    (ex * nx + ey * ny) * (-1) = 0 * (-1)
+    (-ex) * nx + (-ey) * ny = (ex * nx + ey * ny) * (-1)
+    0 * (-1) = 0
+    (-ex) * nx + (-ey) * ny = 0
+    h^2 = q * p
+    point_b(1) = dx - q * (-ex)
+    point_b(2) = dy - q * (-ey)
+    center(1) = dx + (-x) * (-ex) + y * nx
+    center(2) = dy + (-x) * (-ey) + y * ny
+    touch_bc(1) = (1 - (1 - kb)) * point_c(1) + (1 - kb) * point_b(1)
+    touch_bc(2) = (1 - (1 - kb)) * point_c(2) + (1 - kb) * point_b(2)
+    1 - kb >= 0
+    1 - kb <= 1
+
+    by thm bridge_perpendicular_coordinate_equation_ac_bridge_17(center, touch_bc, point_b, point_c)
+    (touch_bc(1) - center(1)) * (point_c(1) - point_b(1)) + (touch_bc(2) - center(2)) * (point_c(2) - point_b(2)) = 0
+    # Reversing the side direction negates the whole dot product.
+    by thm multiplication_congruence_17((touch_bc(1) - center(1)) * (point_c(1) - point_b(1)) + (touch_bc(2) - center(2)) * (point_c(2) - point_b(2)), 0, -1, -1)
+    ((touch_bc(1) - center(1)) * (point_c(1) - point_b(1)) + (touch_bc(2) - center(2)) * (point_c(2) - point_b(2))) * (-1) = 0 * (-1)
+    (touch_bc(1) - center(1)) * (point_b(1) - point_c(1)) + (touch_bc(2) - center(2)) * (point_b(2) - point_c(2)) = ((touch_bc(1) - center(1)) * (point_c(1) - point_b(1)) + (touch_bc(2) - center(2)) * (point_c(2) - point_b(2))) * (-1)
+    0 * (-1) = 0
+    (touch_bc(1) - center(1)) * (point_b(1) - point_c(1)) + (touch_bc(2) - center(2)) * (point_b(2) - point_c(2)) = 0
+    by thm bridge_distance_sq_coordinates_ac_bridge_17(center, touch_bc)
+    distance_sq(center, touch_bc) = (touch_bc(1) - center(1))^2 + (touch_bc(2) - center(2))^2
+    (touch_bc(1) - center(1))^2 + (touch_bc(2) - center(2))^2 = r^2
+
+    by thm ac_global_foot_scalar_data_17(point_b(1), point_b(2), point_c(1), point_c(2), center(1), center(2), touch_bc(1), touch_bc(2), dx, dy, -ex, -ey, nx, ny, q, p, h, m, -x, y, r, 1 - kb)
+    1 - (1 - kb) <= 1
+    q * ((-x) + q) + h * y = (1 - (1 - kb)) * m^2
+    (-x) + q = q - x
+    1 - (1 - kb) = kb
+    by thm multiplication_congruence_17(q, q, (-x) + q, q - x)
+    q * ((-x) + q) = q * (q - x)
+    by thm addition_congruence_17(q * ((-x) + q), q * (q - x), h * y, h * y)
+    q * ((-x) + q) + h * y = q * (q - x) + h * y
+    by thm multiplication_congruence_17(1 - (1 - kb), kb, m^2, m^2)
+    (1 - (1 - kb)) * m^2 = kb * m^2
+    q * (q - x) + h * y = kb * m^2
+    (h * ((-x) + q) - q * y)^2 = y^2 * m^2
+    (h * (x - q) + q * y)^2 = y^2 * m^2
+
+    by thm incircle_two_side_selector_probe(p, q, h, ell, m, x, y, r, 1 - sa, kb)
+
+thm circle_frame_internal_tangency_equation_17:
+    ? forall point_a,point_b,point_d,center,gamma cart(R,R),ex,ey,nx,ny,p,q,x,y,radius,r R:
+        ex^2+ey^2=1
+        nx^2+ny^2=1
+        ex*nx+ey*ny=0
+        point_a(1)=point_d(1)-p*ex
+        point_a(2)=point_d(2)-p*ey
+        point_b(1)=point_d(1)+q*ex
+        point_b(2)=point_d(2)+q*ey
+        gamma(1)=(point_a(1)+point_b(1))/2
+        gamma(2)=(point_a(2)+point_b(2))/2
+        center(1)=point_d(1)+x*ex+y*nx
+        center(2)=point_d(2)+x*ey+y*ny
+        distance_sq(center,gamma)=(radius-r)^2
+        =>:
+            (x-(q-p)/2)^2+y^2=(radius-r)^2
+    by thm addition_congruence_17(point_a(1),point_d(1)-p*ex,point_b(1),point_d(1)+q*ex)
+    by thm multiplication_congruence_17(point_a(1)+point_b(1),(point_d(1)-p*ex)+(point_d(1)+q*ex),1/2,1/2)
+    (point_a(1)+point_b(1))/2=(point_a(1)+point_b(1))*(1/2)
+    ((point_d(1)-p*ex)+(point_d(1)+q*ex))*(1/2)=point_d(1)+((q-p)/2)*ex
+    gamma(1)=point_d(1)+((q-p)/2)*ex
+    by thm addition_congruence_17(point_a(2),point_d(2)-p*ey,point_b(2),point_d(2)+q*ey)
+    by thm multiplication_congruence_17(point_a(2)+point_b(2),(point_d(2)-p*ey)+(point_d(2)+q*ey),1/2,1/2)
+    (point_a(2)+point_b(2))/2=(point_a(2)+point_b(2))*(1/2)
+    ((point_d(2)-p*ey)+(point_d(2)+q*ey))*(1/2)=point_d(2)+((q-p)/2)*ey
+    gamma(2)=point_d(2)+((q-p)/2)*ey
+    by thm subtraction_congruence_17(gamma(1),point_d(1)+((q-p)/2)*ex,center(1),point_d(1)+x*ex+y*nx)
+    (point_d(1)+((q-p)/2)*ex)-(point_d(1)+x*ex+y*nx)=((q-p)/2-x)*ex+(-y)*nx
+    gamma(1)-center(1)=((q-p)/2-x)*ex+(-y)*nx
+    by thm subtraction_congruence_17(gamma(2),point_d(2)+((q-p)/2)*ey,center(2),point_d(2)+x*ey+y*ny)
+    (point_d(2)+((q-p)/2)*ey)-(point_d(2)+x*ey+y*ny)=((q-p)/2-x)*ey+(-y)*ny
+    gamma(2)-center(2)=((q-p)/2-x)*ey+(-y)*ny
+    by thm rotated_components_give_distance_17(center,gamma,ex,ey,nx,ny,(q-p)/2-x,-y)
+    distance_sq(center,gamma)=((q-p)/2-x)^2+(-y)^2
+    ((q-p)/2-x)^2+(-y)^2=(x-(q-p)/2)^2+y^2
+    distance_sq(center,gamma)=(x-(q-p)/2)^2+y^2
+    (x-(q-p)/2)^2+y^2=(radius-r)^2
+
+thm positive_side_square_17:
+    ? forall h,p R:
+        h>0
+        =>:
+            h^2+p^2>0
+    0<h
+    h*h>0
+    h*h=h^2
+    h^2>0
+    0<h^2
+    0<=p^2
+    0+0<h^2+p^2
+    0+0=0
+    0<h^2+p^2
+    h^2+p^2>0
+
+thm positive_scalar_square_root_17:
+    ? forall t R:
+        t>=0
+        t>0
+        =>:
+            sqrt(t)>0
+            sqrt(t)^2=t
+    0<=t
+    0<t
+    0<=sqrt(t)
+    0<sqrt(t)
+    sqrt(t)>0
+    sqrt(t)^2=t
+
+thm solution_suffix_integration_probe_17:
+    ? forall point_a, point_b, point_c, point_d, center_gamma, center_1, center_2, center_3, touch_bc, touch_ca cart(R, R), ex, ey, nx, ny, p, q, h, x_1, y_1, x_2, y_2, x_3, y_3, radius_gamma, radius_1, radius_2, radius_3, line_ab_a, line_ab_b, line_ab_c, line_cd_a, line_cd_b, line_cd_c R:
+        p > 0
+        q > 0
+        h > 0
+        radius_1 > 0
+        radius_2 > 0
+        radius_3 > 0
+        radius_gamma > radius_2
+        radius_gamma > radius_3
+        p + q = 2 * radius_gamma
+        h^2 = p * q
+        ex^2 + ey^2 = 1
+        nx^2 + ny^2 = 1
+        ex * nx + ey * ny = 0
+        point_a(1) = point_d(1) - p * ex
+        point_a(2) = point_d(2) - p * ey
+        point_b(1) = point_d(1) + q * ex
+        point_b(2) = point_d(2) + q * ey
+        point_c(1) = point_d(1) + h * nx
+        point_c(2) = point_d(2) + h * ny
+        center_gamma(1) = (point_a(1) + point_b(1)) / 2
+        center_gamma(2) = (point_a(2) + point_b(2)) / 2
+        center_1(1) = point_d(1) + x_1 * ex + y_1 * nx
+        center_1(2) = point_d(2) + x_1 * ey + y_1 * ny
+        center_2(1) = point_d(1) + x_2 * ex + y_2 * nx
+        center_2(2) = point_d(2) + x_2 * ey + y_2 * ny
+        center_3(1) = point_d(1) + x_3 * ex + y_3 * nx
+        center_3(2) = point_d(2) + x_3 * ey + y_3 * ny
+        y_1^2 = radius_1^2
+        x_2^2 = radius_2^2
+        y_2^2 = radius_2^2
+        x_3^2 = radius_3^2
+        y_3^2 = radius_3^2
+        y_2 = radius_2
+        y_3 = radius_3
+        $is_on_segment(touch_ca, point_c, point_a)
+        $is_perpendicular(center_1, touch_ca, point_c, point_a)
+        distance_sq(center_1, touch_ca) = radius_1^2
+        $is_on_segment(touch_bc, point_b, point_c)
+        $is_perpendicular(center_1, touch_bc, point_b, point_c)
+        distance_sq(center_1, touch_bc) = radius_1^2
+        distance_sq(center_2, center_gamma) = (radius_gamma - radius_2)^2
+        distance_sq(center_3, center_gamma) = (radius_gamma - radius_3)^2
+        line_cd_a * point_c(1) + line_cd_b * point_c(2) + line_cd_c = 0
+        line_cd_a * point_d(1) + line_cd_b * point_d(2) + line_cd_c = 0
+        (line_cd_a * center_2(1) + line_cd_b * center_2(2) + line_cd_c) * (line_cd_a * center_3(1) + line_cd_b * center_3(2) + line_cd_c) < 0
+        line_ab_a^2 + line_ab_b^2 > 0
+        line_ab_a * point_d(1) + line_ab_b * point_d(2) + line_ab_c = 0
+        =>:
+            exist tangent_a, tangent_b, tangent_c R st {$line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, center_1, radius_1, center_2, radius_2), $line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, center_1, radius_1, center_3, radius_3), $lines_are_distinct(tangent_a, tangent_b, tangent_c, line_ab_a, line_ab_b, line_ab_c)}
+
+    # Construct the two positive side lengths of the right triangle.
+    by thm positive_side_square_17(h,p)
+    h^2 + p^2 > 0
+    0 <= h^2 + p^2
+    h^2 + p^2 >= 0
+    by thm positive_scalar_square_root_17(h^2+p^2)
+    sqrt(h^2 + p^2) > 0
+    have ell R = sqrt(h^2 + p^2)
+    ell > 0
+    by thm multiplication_congruence_inline(ell, sqrt(h^2 + p^2), ell, sqrt(h^2 + p^2))
+    ell * ell = sqrt(h^2 + p^2) * sqrt(h^2 + p^2)
+    ell^2 = ell * ell
+    ell^2 = sqrt(h^2 + p^2) * sqrt(h^2 + p^2)
+    sqrt(h^2 + p^2) * sqrt(h^2 + p^2) = sqrt(h^2 + p^2)^2
+    sqrt(h^2 + p^2)^2 = h^2 + p^2
+    ell^2 = h^2 + p^2
+
+    by thm positive_side_square_17(h,q)
+    h^2 + q^2 > 0
+    0 <= h^2 + q^2
+    h^2 + q^2 >= 0
+    by thm positive_scalar_square_root_17(h^2+q^2)
+    sqrt(h^2 + q^2) > 0
+    have m R = sqrt(h^2 + q^2)
+    m > 0
+    by thm multiplication_congruence_inline(m, sqrt(h^2 + q^2), m, sqrt(h^2 + q^2))
+    m * m = sqrt(h^2 + q^2) * sqrt(h^2 + q^2)
+    m^2 = m * m
+    m^2 = sqrt(h^2 + q^2) * sqrt(h^2 + q^2)
+    sqrt(h^2 + q^2) * sqrt(h^2 + q^2) = sqrt(h^2 + q^2)^2
+    sqrt(h^2 + q^2)^2 = h^2 + q^2
+    m^2 = h^2 + q^2
+
+    # The incircle foot on AC selects the positive AB-side coordinate.
+    by thm ac_geometric_foot_positive_side_17(point_a, point_c, center_1, touch_ca, point_d(1), point_d(2), ex, ey, nx, ny, p, q, h, ell, x_1, y_1, radius_1)
+    y_1 > 0
+    by thm positive_equal_from_squares_17(y_1, radius_1)
+    y_1 = radius_1
+
+    # The two incircle feet give the scalar equations used by the tangent tail.
+    by thm incircle_joint_geometric_selector_probe_17(point_a, point_b, point_c, center_1, touch_bc, touch_ca, point_d(1), point_d(2), ex, ey, nx, ny, p, q, h, ell, m, x_1, y_1, radius_1)
+    h * (x_1 + p) - p * y_1 = y_1 * ell
+    h * (x_1 - q) + q * y_1 = -y_1 * m
+    h * (x_1 + p) - p * y_1 = h * x_1 - p * y_1 + h * p
+    h * (x_1 - q) + q * y_1 = h * x_1 + q * y_1 - h * q
+    h * x_1 - p * y_1 + h * p = y_1 * ell
+    h * x_1 + q * y_1 - h * q = -y_1 * m
+
+    # Reuse the proved frame transport for each actual internal-tangency equation.
+    by thm circle_frame_internal_tangency_equation_17(point_a,point_b,point_d,center_2,center_gamma,ex,ey,nx,ny,p,q,x_2,y_2,radius_gamma,radius_2)
+    (x_2-(q-p)/2)^2+y_2^2=(radius_gamma-radius_2)^2
+    by thm addition_congruence_17((x_2-(q-p)/2)^2,(x_2-(q-p)/2)^2,y_2^2,radius_2^2)
+    (x_2-(q-p)/2)^2+y_2^2=(x_2-(q-p)/2)^2+radius_2^2
+    by thm equality_transitivity_17((x_2-(q-p)/2)^2+radius_2^2,(x_2-(q-p)/2)^2+y_2^2,(radius_gamma-radius_2)^2)
+    (x_2-(q-p)/2)^2+radius_2^2=(radius_gamma-radius_2)^2
+
+    by thm circle_frame_internal_tangency_equation_17(point_a,point_b,point_d,center_3,center_gamma,ex,ey,nx,ny,p,q,x_3,y_3,radius_gamma,radius_3)
+    (x_3-(q-p)/2)^2+y_3^2=(radius_gamma-radius_3)^2
+    by thm addition_congruence_17((x_3-(q-p)/2)^2,(x_3-(q-p)/2)^2,y_3^2,radius_3^2)
+    (x_3-(q-p)/2)^2+y_3^2=(x_3-(q-p)/2)^2+radius_3^2
+    by thm equality_transitivity_17((x_3-(q-p)/2)^2+radius_3^2,(x_3-(q-p)/2)^2+y_3^2,(radius_gamma-radius_3)^2)
+    (x_3-(q-p)/2)^2+radius_3^2=(radius_gamma-radius_3)^2
+
+    # Opposite sides of CD give the unlabeled sign split.
+    point_c(1) - point_d(1) = h * nx
+    point_c(2) - point_d(2) = h * ny
+    by thm cd_opposite_side_coordinates_probe(point_c(1), point_c(2), point_d(1), point_d(2), center_2(1), center_2(2), center_3(1), center_3(2), ex, ey, nx, ny, h, x_2, y_2, x_3, y_3, line_cd_a, line_cd_b, line_cd_c)
+    x_2 * x_3 < 0
+
+    # Rewrite the known positive-side normal coordinates in the exact form
+    # required by the scalar tail theorem.
+    by thm multiplication_congruence_17(y_2, radius_2, nx, nx)
+    y_2 * nx = radius_2 * nx
+    by thm addition_congruence_17(point_d(1) + x_2 * ex, point_d(1) + x_2 * ex, y_2 * nx, radius_2 * nx)
+    point_d(1) + x_2 * ex + y_2 * nx = point_d(1) + x_2 * ex + radius_2 * nx
+    by thm equality_transitivity_17(center_2(1), point_d(1) + x_2 * ex + y_2 * nx, point_d(1) + x_2 * ex + radius_2 * nx)
+    center_2(1) = point_d(1) + x_2 * ex + radius_2 * nx
+    by thm multiplication_congruence_17(y_2, radius_2, ny, ny)
+    y_2 * ny = radius_2 * ny
+    by thm addition_congruence_17(point_d(2) + x_2 * ey, point_d(2) + x_2 * ey, y_2 * ny, radius_2 * ny)
+    point_d(2) + x_2 * ey + y_2 * ny = point_d(2) + x_2 * ey + radius_2 * ny
+    by thm equality_transitivity_17(center_2(2), point_d(2) + x_2 * ey + y_2 * ny, point_d(2) + x_2 * ey + radius_2 * ny)
+    center_2(2) = point_d(2) + x_2 * ey + radius_2 * ny
+
+    by thm multiplication_congruence_17(y_3, radius_3, nx, nx)
+    y_3 * nx = radius_3 * nx
+    by thm addition_congruence_17(point_d(1) + x_3 * ex, point_d(1) + x_3 * ex, y_3 * nx, radius_3 * nx)
+    point_d(1) + x_3 * ex + y_3 * nx = point_d(1) + x_3 * ex + radius_3 * nx
+    by thm equality_transitivity_17(center_3(1), point_d(1) + x_3 * ex + y_3 * nx, point_d(1) + x_3 * ex + radius_3 * nx)
+    center_3(1) = point_d(1) + x_3 * ex + radius_3 * nx
+    by thm multiplication_congruence_17(y_3, radius_3, ny, ny)
+    y_3 * ny = radius_3 * ny
+    by thm addition_congruence_17(point_d(2) + x_3 * ey, point_d(2) + x_3 * ey, y_3 * ny, radius_3 * ny)
+    point_d(2) + x_3 * ey + y_3 * ny = point_d(2) + x_3 * ey + radius_3 * ny
+    by thm equality_transitivity_17(center_3(2), point_d(2) + x_3 * ey + y_3 * ny, point_d(2) + x_3 * ey + radius_3 * ny)
+    center_3(2) = point_d(2) + x_3 * ey + radius_3 * ny
+
+    by thm two_label_scalar_tail_probe_17(point_d, center_1, center_2, center_3, ex, ey, nx, ny, p, q, h, ell, m, x_1, y_1, x_2, x_3, radius_1, radius_2, radius_3, radius_gamma, line_ab_a, line_ab_b, line_ab_c)
+
+thm problem_17:
+    ? forall point_a, point_b, point_c, point_d, center_gamma, center_1, center_2, center_3, touch_ab, touch_bc, touch_ca cart(R, R), radius_gamma, radius_1, radius_2, radius_3, line_ab_a, line_ab_b, line_ab_c, line_cd_a, line_cd_b, line_cd_c R:
+        # NL: A semicircular arc γ is drawn on AB as diameter.
+        radius_gamma > 0
+        $is_midpoint(center_gamma, point_a, point_b)
+        distance_sq(center_gamma, point_a) = radius_gamma^2
+        distance_sq(center_gamma, point_b) = radius_gamma^2
+        
+        # NL: C is a point on γ other than A and B.
+        distance_sq(center_gamma, point_c) = radius_gamma^2
+        point_c != point_a
+        point_c != point_b
+        
+        # NL: D is the foot of the perpendicular from C to AB.
+        $is_on_line(point_d, point_a, point_b)
+        $is_perpendicular(point_c, point_d, point_a, point_b)
+        
+        # NL: γ_1, γ_2, γ_3 are all tangent to the line AB.
+        radius_1 > 0
+        radius_2 > 0
+        radius_3 > 0
+        line_ab_a^2 + line_ab_b^2 > 0
+        line_ab_a * point_a(1) + line_ab_b * point_a(2) + line_ab_c = 0
+        line_ab_a * point_b(1) + line_ab_b * point_b(2) + line_ab_c = 0
+        $circle_tangent_to_line(center_1, radius_1, line_ab_a, line_ab_b, line_ab_c)
+        $circle_tangent_to_line(center_2, radius_2, line_ab_a, line_ab_b, line_ab_c)
+        $circle_tangent_to_line(center_3, radius_3, line_ab_a, line_ab_b, line_ab_c)
+        
+        # NL: γ_1 is inscribed in △ABC (incircle).
+        $is_on_segment(touch_ab, point_a, point_b)
+        distance_sq(center_1, touch_ab) = radius_1^2
+        $is_perpendicular(center_1, touch_ab, point_a, point_b)
+        $is_on_segment(touch_bc, point_b, point_c)
+        distance_sq(center_1, touch_bc) = radius_1^2
+        $is_perpendicular(center_1, touch_bc, point_b, point_c)
+        $is_on_segment(touch_ca, point_c, point_a)
+        distance_sq(center_1, touch_ca) = radius_1^2
+        $is_perpendicular(center_1, touch_ca, point_c, point_a)
+        
+        # NL: γ_2 and γ_3 are tangent to CD (on opposite sides).
+        line_cd_a^2 + line_cd_b^2 > 0
+        line_cd_a * point_c(1) + line_cd_b * point_c(2) + line_cd_c = 0
+        line_cd_a * point_d(1) + line_cd_b * point_d(2) + line_cd_c = 0
+        $circle_tangent_to_line(center_2, radius_2, line_cd_a, line_cd_b, line_cd_c)
+        $circle_tangent_to_line(center_3, radius_3, line_cd_a, line_cd_b, line_cd_c)
+        (line_cd_a * center_2(1) + line_cd_b * center_2(2) + line_cd_c) * (line_cd_a * center_3(1) + line_cd_b * center_3(2) + line_cd_c) < 0
+        
+        # NL: γ_2 and γ_3 are internally tangent to the semicircular arc γ.
+        $circle_internally_tangent_to_semicircle(center_2, radius_2, center_gamma, radius_gamma, point_a, point_b, point_c)
+        $circle_internally_tangent_to_semicircle(center_3, radius_3, center_gamma, radius_gamma, point_a, point_b, point_c)
+        
+        =>:
+            # NL: The three circles share a common external tangent distinct from AB.
+            exist tangent_a, tangent_b, tangent_c R st {$line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, center_1, radius_1, center_2, radius_2), $line_is_external_common_tangent(tangent_a, tangent_b, tangent_c, center_1, radius_1, center_3, radius_3), $lines_are_distinct(tangent_a, tangent_b, tangent_c, line_ab_a, line_ab_b, line_ab_c)}
+    # Proof: construct the second common tangent from the given geometric data.
+    thm coordinate_determinant_value_17:
+        ? forall a,b,s cart(R,R):
+            det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))=det(vec(a,b),vec(a,s))
+        by thm det_of_vectors_coordinates_17(a,b,a,s)
+        (a(1),a(2))(1)=a(1)
+        (a(1),a(2))(2)=a(2)
+        (b(1),b(2))(1)=b(1)
+        (b(1),b(2))(2)=b(2)
+        (s(1),s(2))(1)=s(1)
+        (s(1),s(2))(2)=s(2)
+        by thm det_of_vectors_coordinates_17((a(1),a(2)),(b(1),b(2)),(a(1),a(2)),(s(1),s(2)))
+        by thm subtraction_congruence_17((b(1),b(2))(1),b(1),(a(1),a(2))(1),a(1))
+        (b(1),b(2))(1)-(a(1),a(2))(1)=b(1)-a(1)
+        by thm subtraction_congruence_17((b(1),b(2))(2),b(2),(a(1),a(2))(2),a(2))
+        (b(1),b(2))(2)-(a(1),a(2))(2)=b(2)-a(2)
+        by thm subtraction_congruence_17((s(1),s(2))(1),s(1),(a(1),a(2))(1),a(1))
+        (s(1),s(2))(1)-(a(1),a(2))(1)=s(1)-a(1)
+        by thm subtraction_congruence_17((s(1),s(2))(2),s(2),(a(1),a(2))(2),a(2))
+        (s(1),s(2))(2)-(a(1),a(2))(2)=s(2)-a(2)
+        by thm multiplication_congruence_17((b(1),b(2))(1)-(a(1),a(2))(1),b(1)-a(1),(s(1),s(2))(2)-(a(1),a(2))(2),s(2)-a(2))
+        ((b(1),b(2))(1)-(a(1),a(2))(1))*((s(1),s(2))(2)-(a(1),a(2))(2))=(b(1)-a(1))*(s(2)-a(2))
+        by thm multiplication_congruence_17((b(1),b(2))(2)-(a(1),a(2))(2),b(2)-a(2),(s(1),s(2))(1)-(a(1),a(2))(1),s(1)-a(1))
+        ((b(1),b(2))(2)-(a(1),a(2))(2))*((s(1),s(2))(1)-(a(1),a(2))(1))=(b(2)-a(2))*(s(1)-a(1))
+        by thm subtraction_congruence_17(((b(1),b(2))(1)-(a(1),a(2))(1))*((s(1),s(2))(2)-(a(1),a(2))(2)),(b(1)-a(1))*(s(2)-a(2)),((b(1),b(2))(2)-(a(1),a(2))(2))*((s(1),s(2))(1)-(a(1),a(2))(1)),(b(2)-a(2))*(s(1)-a(1)))
+        det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))=((b(1),b(2))(1)-(a(1),a(2))(1))*((s(1),s(2))(2)-(a(1),a(2))(2))-((b(1),b(2))(2)-(a(1),a(2))(2))*((s(1),s(2))(1)-(a(1),a(2))(1))=(b(1)-a(1))*(s(2)-a(2))-(b(2)-a(2))*(s(1)-a(1))=det(vec(a,b),vec(a,s))
+
+    thm coordinate_semicircle_side_transport_17:
+        ? forall a,b,s,c cart(R,R):
+            det(vec(a,b),vec(a,s))*det(vec(a,b),vec(a,c))>0
+            =>:
+                det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))*det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2))))>0
+        by thm coordinate_determinant_value_17(a,b,s)
+        by thm coordinate_determinant_value_17(a,b,c)
+        by thm multiplication_congruence_17(det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2)))),det(vec(a,b),vec(a,s)),det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2)))),det(vec(a,b),vec(a,c)))
+        det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(s(1),s(2))))*det(vec((a(1),a(2)),(b(1),b(2))),vec((a(1),a(2)),(c(1),c(2))))=det(vec(a,b),vec(a,s))*det(vec(a,b),vec(a,c))>0
+
+    # First expose the exact polynomial content of the geometric hypotheses.
+    by def $is_midpoint(center_gamma, point_a, point_b)
+    by def $is_on_line(point_d, point_a, point_b)
+    by def $is_perpendicular(point_c, point_d, point_a, point_b)
+    by def $circle_tangent_to_line(center_1, radius_1, line_ab_a, line_ab_b, line_ab_c)
+    by def $circle_tangent_to_line(center_2, radius_2, line_ab_a, line_ab_b, line_ab_c)
+    by def $circle_tangent_to_line(center_3, radius_3, line_ab_a, line_ab_b, line_ab_c)
+    by def $is_on_segment(touch_ab, point_a, point_b)
+    by def $is_perpendicular(center_1, touch_ab, point_a, point_b)
+    by def $is_on_segment(touch_bc, point_b, point_c)
+    by def $is_perpendicular(center_1, touch_bc, point_b, point_c)
+    by def $is_on_segment(touch_ca, point_c, point_a)
+    by def $is_perpendicular(center_1, touch_ca, point_c, point_a)
+    by def $circle_tangent_to_line(center_2, radius_2, line_cd_a, line_cd_b, line_cd_c)
+    by def $circle_tangent_to_line(center_3, radius_3, line_cd_a, line_cd_b, line_cd_c)
+    by def $circle_internally_tangent_to_semicircle(center_2, radius_2, center_gamma, radius_gamma, point_a, point_b, point_c)
+    by def $circle_internally_tangent_to_semicircle(center_3, radius_3, center_gamma, radius_gamma, point_a, point_b, point_c)
+    by def $circles_internally_tangent(center_2, radius_2, center_gamma, radius_gamma)
+    by def $circles_internally_tangent(center_3, radius_3, center_gamma, radius_gamma)
+
+    # Build an oriented orthonormal basis along the diameter AB.
+    by thm squared_distance_coordinates_17(center_gamma,point_a)
+    distance_sq(center_gamma,point_a)=(point_a(1)-center_gamma(1))^2+(point_a(2)-center_gamma(2))^2
+    by thm midpoint_radius_gives_diameter_17(point_a(1), point_a(2), point_b(1), point_b(2), center_gamma(1), center_gamma(2), radius_gamma)
+    by thm diameter_direction_basis_17(point_a(1), point_a(2), point_b(1), point_b(2), radius_gamma)
+    obtain ex, ey, fx, fy from exist ex, ey, fx, fy R st {ex^2 + ey^2 = 1, fx^2 + fy^2 = 1, ex * fx + ey * fy = 0, point_b(1) - point_a(1) = 2 * radius_gamma * ex, point_b(2) - point_a(2) = 2 * radius_gamma * ey, fx = -ey, fy = ex}
+
+    # Convert D collinear with AB into signed diameter coordinates AD=p and DB=q.
+    by thm on_line_zero_determinant_17(point_d,point_a,point_b)
+    det(vec(point_a, point_d), vec(point_a, point_b)) = 0
+    by thm det_of_vectors_coordinates_17(point_a,point_d,point_a,point_b)
+    det(vec(point_a,point_d),vec(point_a,point_b))=(point_d(1)-point_a(1))*(point_b(2)-point_a(2))-(point_d(2)-point_a(2))*(point_b(1)-point_a(1))
+    by thm multiplication_congruence_17(point_d(1) - point_a(1), point_d(1) - point_a(1), point_b(2) - point_a(2), 2 * radius_gamma * ey)
+    (point_d(1) - point_a(1)) * (point_b(2) - point_a(2)) = (point_d(1) - point_a(1)) * (2 * radius_gamma * ey)
+    by thm multiplication_congruence_17(point_d(2) - point_a(2), point_d(2) - point_a(2), point_b(1) - point_a(1), 2 * radius_gamma * ex)
+    (point_d(2) - point_a(2)) * (point_b(1) - point_a(1)) = (point_d(2) - point_a(2)) * (2 * radius_gamma * ex)
+    by thm subtraction_congruence_17((point_d(1) - point_a(1)) * (point_b(2) - point_a(2)), (point_d(1) - point_a(1)) * (2 * radius_gamma * ey), (point_d(2) - point_a(2)) * (point_b(1) - point_a(1)), (point_d(2) - point_a(2)) * (2 * radius_gamma * ex))
+    (point_d(1) - point_a(1)) * (point_b(2) - point_a(2)) - (point_d(2) - point_a(2)) * (point_b(1) - point_a(1)) = (point_d(1) - point_a(1)) * (2 * radius_gamma * ey) - (point_d(2) - point_a(2)) * (2 * radius_gamma * ex)
+    (point_d(1) - point_a(1)) * (2 * radius_gamma * ey) - (point_d(2) - point_a(2)) * (2 * radius_gamma * ex) = 2 * radius_gamma * ((point_d(1) - point_a(1)) * ey - (point_d(2) - point_a(2)) * ex)
+    2 * radius_gamma * ((point_d(1) - point_a(1)) * ey - (point_d(2) - point_a(2)) * ex) = 0
+    2 * radius_gamma > 0
+    2 * radius_gamma != 0
+    by contra:
+        ? (point_d(1) - point_a(1)) * ey - (point_d(2) - point_a(2)) * ex = 0
+        (point_d(1) - point_a(1)) * ey - (point_d(2) - point_a(2)) * ex != 0
+        2 * radius_gamma * ((point_d(1) - point_a(1)) * ey - (point_d(2) - point_a(2)) * ex) != 0
+        impossible 2 * radius_gamma * ((point_d(1) - point_a(1)) * ey - (point_d(2) - point_a(2)) * ex) = 0
+    (point_d(1) - point_a(1)) * ey - (point_d(2) - point_a(2)) * ex = 0
+    by thm diameter_collinear_split_17(point_a(1), point_a(2), point_b(1), point_b(2), point_d(1), point_d(2), ex, ey, radius_gamma)
+    obtain p, q from exist p, q R st {point_d(1) - point_a(1) = p * ex, point_d(2) - point_a(2) = p * ey, point_b(1) - point_d(1) = q * ex, point_b(2) - point_d(2) = q * ey, p + q = 2 * radius_gamma}
+
+    # Orient a unit normal from D toward C and write C-D=h*n with h>0.
+    by thm dot_of_vectors_coordinates_17(point_c,point_d,point_a,point_b)
+    dot(vec(point_c,point_d),vec(point_a,point_b))=(point_d(1)-point_c(1))*(point_b(1)-point_a(1))+(point_d(2)-point_c(2))*(point_b(2)-point_a(2))
+    by thm multiplication_congruence_17(point_d(1) - point_c(1), point_d(1) - point_c(1), point_b(1) - point_a(1), 2 * radius_gamma * ex)
+    (point_d(1) - point_c(1)) * (point_b(1) - point_a(1)) = (point_d(1) - point_c(1)) * (2 * radius_gamma * ex)
+    by thm multiplication_congruence_17(point_d(2) - point_c(2), point_d(2) - point_c(2), point_b(2) - point_a(2), 2 * radius_gamma * ey)
+    (point_d(2) - point_c(2)) * (point_b(2) - point_a(2)) = (point_d(2) - point_c(2)) * (2 * radius_gamma * ey)
+    by thm addition_congruence_17((point_d(1) - point_c(1)) * (point_b(1) - point_a(1)), (point_d(1) - point_c(1)) * (2 * radius_gamma * ex), (point_d(2) - point_c(2)) * (point_b(2) - point_a(2)), (point_d(2) - point_c(2)) * (2 * radius_gamma * ey))
+    (point_d(1) - point_c(1)) * (point_b(1) - point_a(1)) + (point_d(2) - point_c(2)) * (point_b(2) - point_a(2)) = (point_d(1) - point_c(1)) * (2 * radius_gamma * ex) + (point_d(2) - point_c(2)) * (2 * radius_gamma * ey)
+    (point_d(1) - point_c(1)) * (2 * radius_gamma * ex) + (point_d(2) - point_c(2)) * (2 * radius_gamma * ey) = 2 * radius_gamma * ((point_d(1) - point_c(1)) * ex + (point_d(2) - point_c(2)) * ey)
+    2 * radius_gamma * ((point_d(1) - point_c(1)) * ex + (point_d(2) - point_c(2)) * ey) = 0
+    by contra:
+        ? (point_d(1) - point_c(1)) * ex + (point_d(2) - point_c(2)) * ey = 0
+        (point_d(1) - point_c(1)) * ex + (point_d(2) - point_c(2)) * ey != 0
+        2 * radius_gamma * ((point_d(1) - point_c(1)) * ex + (point_d(2) - point_c(2)) * ey) != 0
+        impossible 2 * radius_gamma * ((point_d(1) - point_c(1)) * ex + (point_d(2) - point_c(2)) * ey) = 0
+    by thm reverse_difference_dot_zero_17(ex, ey, point_c(1), point_c(2), point_d(1), point_d(2))
+    ex * (point_c(1) - point_d(1)) + ey * (point_c(2) - point_d(2)) = 0
+
+    by thm distinct_points_positive_distance_sq_17(point_c, point_d)
+    by thm oriented_perpendicular_components_17(ex, ey, point_c(1) - point_d(1), point_c(2) - point_d(2))
+    obtain nx, ny, h from exist nx, ny, h R st {nx^2 + ny^2 = 1, ex * nx + ey * ny = 0, h > 0, point_c(1) - point_d(1) = h * nx, point_c(2) - point_d(2) = h * ny}
+
+    # Convert the directed difference equations into affine coordinates in the D-based frame.
+    by thm affine_coordinates_17(point_a(1), point_a(2), point_b(1), point_b(2), point_c(1), point_c(2), point_d(1), point_d(2), ex, ey, nx, ny, p, q, h)
+
+    # The circle equation in the D-based frame gives the geometric-mean identity.
+    by thm diameter_circle_equation_in_frame_17(point_a, point_b, point_c, point_d, center_gamma, ex, ey, nx, ny, p, q, h, radius_gamma)
+    ((p - q) / 2)^2 + h^2 = radius_gamma^2
+    by thm diameter_altitude_product_17(p, q, h, radius_gamma)
+    h^2 = p * q
+
+    # The positive altitude and positive diameter radius select the interior split.
+    by thm positive_legs_from_sum_product_17(p, q, h, radius_gamma)
+    p > 0
+    q > 0
+
+    # Transfer the geometric AB line coefficients to the D-based frame.
+    point_a(1) - (point_d(1) - p * ex) = 0
+    (point_a(1) + p * ex) - point_d(1) = point_a(1) - (point_d(1) - p * ex)
+    (point_a(1) + p * ex) - point_d(1) = 0
+    point_a(1) + p * ex = point_d(1)
+    point_d(1) = point_a(1) + p * ex
+    point_a(2) - (point_d(2) - p * ey) = 0
+    (point_a(2) + p * ey) - point_d(2) = point_a(2) - (point_d(2) - p * ey)
+    (point_a(2) + p * ey) - point_d(2) = 0
+    point_a(2) + p * ey = point_d(2)
+    point_d(2) = point_a(2) + p * ey
+    point_d(1) = point_a(1) + p * ex + 0 * nx
+    point_d(2) = point_a(2) + p * ey + 0 * ny
+    by thm p17_line_frame_bridge(point_a(1), point_a(2), point_b(1), point_b(2), point_a(1), point_a(2), point_d(1), point_d(2), ex, ey, nx, ny, 2 * radius_gamma, p, 0, line_ab_a, line_ab_b, line_ab_c)
+    line_ab_a * ex + line_ab_b * ey = 0
+    line_ab_a * point_d(1) + line_ab_b * point_d(2) + line_ab_c = (line_ab_a * nx + line_ab_b * ny) * 0
+    line_ab_a * point_d(1) + line_ab_b * point_d(2) + line_ab_c = 0
+
+    # Give each circle center coordinates in the orthonormal frame based at D.
+    by thm orthonormal_coordinate_decomposition_17(center_1(1), center_1(2), point_d(1), point_d(2), ex, ey, nx, ny)
+    obtain x_1, y_1 from exist x_1, y_1 R st {center_1(1) = point_d(1) + x_1 * ex + y_1 * nx, center_1(2) = point_d(2) + x_1 * ey + y_1 * ny}
+    by thm orthonormal_coordinate_decomposition_17(center_2(1), center_2(2), point_d(1), point_d(2), ex, ey, nx, ny)
+    obtain x_2, y_2 from exist x_2, y_2 R st {center_2(1) = point_d(1) + x_2 * ex + y_2 * nx, center_2(2) = point_d(2) + x_2 * ey + y_2 * ny}
+    by thm orthonormal_coordinate_decomposition_17(center_3(1), center_3(2), point_d(1), point_d(2), ex, ey, nx, ny)
+    obtain x_3, y_3 from exist x_3, y_3 R st {center_3(1) = point_d(1) + x_3 * ex + y_3 * nx, center_3(2) = point_d(2) + x_3 * ey + y_3 * ny}
+
+    # AB tangency fixes the squared normal coordinate of the incircle center.
+    by thm ab_tangency_normal_square_probe(center_1(1), center_1(2), point_d(1), point_d(2), ex, ey, nx, ny, x_1, y_1, radius_1, line_ab_a, line_ab_b, line_ab_c)
+    y_1^2 = radius_1^2
+
+    # Tangency to both AB and CD fixes both coordinate squares of each corner circle.
+    by thm center_axis_tangency_squares_probe(point_a(1), point_a(2), point_b(1), point_b(2), point_c(1), point_c(2), point_d(1), point_d(2), center_2(1), center_2(2), ex, ey, nx, ny, p, q, h, x_2, y_2, radius_2, line_ab_a, line_ab_b, line_ab_c, line_cd_a, line_cd_b, line_cd_c)
+    x_2^2 = radius_2^2
+    y_2^2 = radius_2^2
+    by thm center_axis_tangency_squares_probe(point_a(1), point_a(2), point_b(1), point_b(2), point_c(1), point_c(2), point_d(1), point_d(2), center_3(1), center_3(2), ex, ey, nx, ny, p, q, h, x_3, y_3, radius_3, line_ab_a, line_ab_b, line_ab_c, line_cd_a, line_cd_b, line_cd_c)
+    x_3^2 = radius_3^2
+    y_3^2 = radius_3^2
+
+    # The semicircle-side conditions select the positive AB-side roots.
+    point_a = (point_a(1), point_a(2))
+    point_b = (point_b(1), point_b(2))
+    point_c = (point_c(1), point_c(2))
+    center_2 = (center_2(1), center_2(2))
+    by thm coordinate_semicircle_side_transport_17(point_a,point_b,center_2,point_c)
+    det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (center_2(1), center_2(2)))) * det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (point_c(1), point_c(2)))) > 0
+    by thm ab_positive_side_root_17(point_a(1), point_a(2), point_b(1), point_b(2), point_c(1), point_c(2), center_2(1), center_2(2), point_d(1), point_d(2), ex, ey, nx, ny, p, q, h, x_2, y_2, radius_2)
+    y_2 = radius_2
+    center_3 = (center_3(1), center_3(2))
+    by thm coordinate_semicircle_side_transport_17(point_a,point_b,center_3,point_c)
+    det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (center_3(1), center_3(2)))) * det(vec((point_a(1), point_a(2)), (point_b(1), point_b(2))), vec((point_a(1), point_a(2)), (point_c(1), point_c(2)))) > 0
+    by thm ab_positive_side_root_17(point_a(1), point_a(2), point_b(1), point_b(2), point_c(1), point_c(2), center_3(1), center_3(2), point_d(1), point_d(2), ex, ey, nx, ny, p, q, h, x_3, y_3, radius_3)
+    y_3 = radius_3
+
+    # Complete the geometric adapters and construct the second common tangent.
+    by thm solution_suffix_integration_probe_17(point_a, point_b, point_c, point_d, center_gamma, center_1, center_2, center_3, touch_bc, touch_ca, ex, ey, nx, ny, p, q, h, x_1, y_1, x_2, y_2, x_3, y_3, radius_gamma, radius_1, radius_2, radius_3, line_ab_a, line_ab_b, line_ab_c, line_cd_a, line_cd_b, line_cd_c)

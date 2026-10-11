@@ -400,3 +400,15 @@ branch checks its own declared arguments/guards with the existing bounded
 `try_verify_fn_obj_against_fn_set` API. Success-only argument WD and requirement
 proofs are retained in `TemplateApplicationDomainProof::Rechecked`; no new
 cache field, provenance lookup, or fresh verifier permission is introduced.
+
+Finite-sequence reconstruction is an equality builtin leaf: a stored direct
+`x $in finite_seq(S,n)` with literal n certifies the complete domain and allows
+`x=(x(1),...,x(n))` in either orientation. It checks exact subject identity,
+ordered literal indices and matching length after ordinary goal WD. It performs
+no premise search or storage writes. `FiniteSeqReconstruction` evidence retains
+the original membership and FactId. Detailed output exposes the FactId;
+Normal output displays the cited membership.
+Carrier aliases and symbolic lengths are outside this leaf. The dedicated
+acceptance file is `examples/proof_nodes/equal/by_builtin_rule/finite_seq_reconstruction.lit`;
+negative, scope, permission and provenance tests are in
+`tests/unit/execute/equality_search/finite_seq_reconstruction.rs`.

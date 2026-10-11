@@ -223,6 +223,13 @@ and [exact rational inequality](atomic/by_builtin_rule/closed_rational_inequalit
 Aggregate rejection controls live in `../test_objs/negative/` and the shared
 budget/domain/publication checks in `exec_eval_stmt_tests`.
 
+[Finite sequence reconstruction](equal/by_builtin_rule/finite_seq_reconstruction.lit)
+checks `x=(x(1),...,x(n))` directly from stored `finite_seq(S,n)` membership
+with literal length, retaining the membership FactId. Wrong length, order,
+subject and incomplete domains remain rejected; this leaf does not resolve
+symbolic lengths or carrier aliases. Rust tests live in
+`tests/unit/execute/equality_search/finite_seq_reconstruction.rs`.
+
 Known tuple-property routes have dedicated tracers for
 [reconstruction](equal/by_known_special_property/tuple_reconstruction.lit),
 [stored-equality projection](equal/by_known_special_property/tuple_projection.lit),

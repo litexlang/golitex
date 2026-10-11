@@ -11,31 +11,6 @@
 # A vector in the real plane is an ordered pair of real numbers.
 # We represent such a pair by a sequence of length two. Two vectors are
 # equal precisely when their corresponding coordinates are equal.
-claim:
-    ? forall x finite_seq(R, 2):
-        x = (x(1), x(2))
-    have coordinates finite_seq(R, 2) = (x(1), x(2))
-    claim:
-        ? forall k N+:
-            k <= 2
-            =>:
-                x(k) = coordinates(k)
-        k $in closed_range(1, 2)
-        expand: k $in closed_range(1, 2)
-        k $in closed_range(1, 2)
-        expand: k $in closed_range(1, 2)
-        k = 1 or k = 2
-        by cases:
-            ? x(k) = coordinates(k)
-            case k = 1:
-                coordinates(1) = x(1)
-                x(k) = x(1) = coordinates(1) = coordinates(k)
-            case k = 2:
-                coordinates(2) = x(2)
-                x(k) = x(2) = coordinates(2) = coordinates(k)
-    by fn_extension x = coordinates
-    x = coordinates = (x(1), x(2))
-
 have fn plane_add(u, v finite_seq(R, 2)) finite_seq(R, 2) = (u(1) + v(1), u(2) + v(2))
 
 have fn plane_smul(a R, v finite_seq(R, 2)) finite_seq(R, 2) = (a * v(1), a * v(2))

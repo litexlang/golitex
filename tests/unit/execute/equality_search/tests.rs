@@ -9,6 +9,9 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
+#[path = "finite_seq_reconstruction.rs"]
+mod finite_seq_reconstruction;
+
 #[path = "known_tuple.rs"]
 mod known_tuple;
 

@@ -1,0 +1,31 @@
+# Tracer: bounded optional PositiveRealPower premises.
+# Before: the same square equality triggered full searches for 0 < x and
+# 0 < y even when neither sign was a premise. In IMO 17 these optional
+# positive-base probes consumed 116.747s of a 128.347s accepted prefix.
+# forall x, y R:
+#     x^2 = y^2
+#     =>:
+#         x^2 >= 0
+# Now: optional premises use existing facts and builtin reasoning. A proved
+# positive base or a nonzero real square still publishes positive membership.
+# Boundary: zero/unknown real squares and negative odd powers do not gain R+.
+# Evidence: target/release/litex -strict -lang en -f examples/infer/equal/positive_real_power_bounded_premises.lit
+# Focused Rust tests: cargo test --release positive_power_inference -- --nocapture
+# Accepted 2026-10-11: four focused tests and all three related strict tracers
+# pass. The unchanged local IMO 17 file passed all 103 declarations in 884.577s
+# on the updated release kernel with stderr-only statement timing.
+
+forall x, y R:
+    x^2 = y^2
+    =>:
+        x^2 >= 0
+
+have positive_base R+
+have exponent R
+have positive_value R = positive_base^exponent
+positive_value $in R+
+
+have nonzero_base R*
+have square R = nonzero_base^2
+square $in R+
+1 / square $in R

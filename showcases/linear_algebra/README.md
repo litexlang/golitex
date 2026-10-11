@@ -72,8 +72,7 @@ illustrate pointwise operations, without a full construction of their vector
 space. Basis extension, equality of basis lengths, and a general definition of
 dimension are topics for subsequent lectures.
 
-All 86 top-level statements have passed strict verification with Litex
-**1.0.6-beta**. The source contains no `trust`, `axiom`, or `abstract_prop`.
+The source contains no `trust`, `axiom`, or `abstract_prop`.
 
 [math_collections.md](math_collections.md) explains the mathematical organization
 and the roles of the main interfaces. [litex.config](litex.config) exports the

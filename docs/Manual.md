@@ -5829,6 +5829,8 @@ not 3 $in range(1, 3)
 
 **Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
+**Automatic reconstruction (preview).** For a stored membership in `finite_seq(S,n)` with literal length n, equality builtin search accepts `x=(x(1),...,x(n))` and its reverse, with every coordinate in order and on the same exact subject. Zero length reconstructs `()` and length one uses `tuple(x(1))`. The rule cites the original membership FactId; it performs no additional premise search. Arbitrary symbolic lengths or aliased carrier sets are not resolved by this leaf. Litex-to-Lean compilation of this new builtin evidence remains unsupported and fails closed.
+
 **Nearest boundary.** A function merely defined at some coordinates need not have this complete domain. Index zero and n+1 are outside a positive length-n sequence.
 
 **Checked example.**

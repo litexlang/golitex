@@ -68,18 +68,25 @@ with their required mathematical vocabulary included locally.
 
 ## IMO examples
 
-The seven problems below comprise nine solution packages, all checked in strict
-mode with the 2026-10-06 release build used for this collection.
+The twelve problems below comprise fifteen independent solution packages.
+Each package includes its required definitions and proofs in mathematical order.
+All fifteen packages pass strict verification with Litex 1.0.6-beta, checked
+at these paths on 2026-10-11.
 
 | IMO problem | Mathematical theme | Sources and coverage |
 |---|---|---|
+| 1960, Problem 3 | A central subdivision of the hypotenuse and an acute angle | [Solution 1](IMO/problem_1/Solution-1/solution.lit) and [Solution 2](IMO/problem_1/Solution-2/solution.lit) derive the tangent identity from the right triangle, its altitude and the odd subdivision count. |
 | 1960, Problem 6 | Cone, inscribed sphere and a sharp volume ratio | [Solution 1](IMO/problem_2/Solution-1/solution_part_b.lit) includes both parts and an attaining configuration. [Solution 2](IMO/problem_2/Solution-2/solution_part_a.lit) is the alternative for part (a). This solid-geometry application is reduced to its plane axial section and scalar relations. |
 | 1961, Problem 4 | Interior points, barycentric weights and cevian ratios | [Both ratio bounds](IMO/problem_3/solution.lit), with incidence and noncollinearity retained. |
 | 1961, Problem 5 | Triangle construction from two sides and a median-angle condition | [Necessity, construction and equality cases](IMO/problem_4/solution.lit). |
 | 1962, Problem 6 | Circumcenter, incenter and Euler's distance relation | [Scalar alternative](IMO/problem_5/Solution-1/solution.lit) and [full geometric configuration](IMO/problem_5/Solution-2/solution.lit). The latter derives the circle data before proving the squared and principal-root identities. |
 | 1963, Problem 3 | An equiangular polygon with monotone side lengths | [Normalized side-chain proof](IMO/problem_7/solution.lit). The formal interface uses the source's trigonometric closure equations. |
 | 1966, Problem 6 | Small triangles cut off by three interior side points | [Area bound](IMO/problem_12/solution.lit), expressed through squared unsigned areas. |
+| 1967, Problem 1 | Covering a parallelogram by four closed unit disks | [Necessity and sufficiency](IMO/problem_13/solution.lit), retaining arbitrary placement and the original acute-angle conditions. |
 | 1968, Problem 1 | Consecutive integer side lengths and a doubled angle | [Unique-existence proof](IMO/problem_15/solution.lit), with the witness `(4,5,6)` and all angle-order alternatives. |
+| 1969, Problem 4 | A semicircle, an incircle and two internally tangent circles | [Common external tangent construction](IMO/problem_17/solution.lit), distinct from the diameter line, derived from the original incidence, tangency and side conditions. |
+| 1970, Problem 1 | A cevian and inradius/exradius ratios | [Geometric ratio identity](IMO/problem_18/solution.lit), with the Stewart relation and radius equations derived from the triangle configuration. |
+| 1970, Problem 6 | One hundred points with no three collinear | [Seventy-percent triangle bound](IMO/problem_20/solution.lit), combining geometric five-point bounds with finite incidence counting. |
 
 Read the theorem's actual assumptions and conclusion when using a result. The
 scalar and normalized variants expose their chosen mathematical models; they
