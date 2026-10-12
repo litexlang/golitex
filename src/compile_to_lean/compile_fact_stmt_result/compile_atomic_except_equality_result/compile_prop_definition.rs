@@ -223,11 +223,40 @@ impl LitexToLeanCompiler {
         compiled: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
+        if !matches!(seed, Fact::AtomicFact(AtomicFact::NormalAtomicFact(_))) {
+            return Ok(Vec::new());
+        }
+        self.validate_store(&store.store, seed)?;
+        let rules = match &store.infer {
+            Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) => {
+                rules
+            }
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Prop/InferFamily",
+                    "The stored predicate has another inference family.",
+                ))
+            }
+        };
+        let scope = SourcePosition {
+            parent: Some(position),
+            owner: SourceOwner::PropInference(store),
+            before: 0,
+        };
+        self.compile_prop_inference_rules(rules, seed, compiled, &scope)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_prop_inference_rules(
+        &self,
+        rules: &[InferAtomicExceptEqualityResult],
+        seed: &Fact,
+        compiled: &(String, String),
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
         let normal = match seed {
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal)) => normal,
             _ => return Ok(Vec::new()),
         };
-        self.validate_store(store, seed)?;
         let (declaration, _, _) = position.visible_prop(&normal.predicate)?;
         let substitution = self.prop_argument_substitution(declaration, normal)?;
         let parameters = declaration
@@ -242,15 +271,6 @@ impl LitexToLeanCompiler {
                     .map(|parameter| (parameter, &group.param_type))
             })
             .collect::<Vec<_>>();
-        let rules = match &store.infer {
-            InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) => rules,
-            _ => {
-                return Err(LeanCompileError::new(
-                    "Prop/InferFamily",
-                    "The stored predicate has another inference family.",
-                ))
-            }
-        };
         let witness_ids = declaration
             .defined_params
             .store_and_infer_results
@@ -284,8 +304,10 @@ impl LitexToLeanCompiler {
                 _ => continue,
             };
             for (index, derived) in derived.iter().enumerate() {
-                let fact = match &derived.store_and_infer.store {
+                let fact = match &derived.store {
                     StoreFactResult::AtomicFact(fact) => Fact::AtomicFact(fact.fact.clone()),
+                    StoreFactResult::AndFact(fact) => Fact::AndFact(fact.fact.clone()),
+                    StoreFactResult::ChainFact(fact) => Fact::ChainFact(fact.fact.clone()),
                     _ => return Err(LeanCompileError::unsupported("Prop/InferCompoundClause")),
                 };
                 let witness_index = if body {
@@ -314,18 +336,17 @@ impl LitexToLeanCompiler {
                     }
                 }
                 let prior = SourcePosition {
-                    parent: Some(position),
-                    owner: SourceOwner::PropInference(store),
                     before: completed,
+                    ..*position
                 };
-                if self.resolve_fact(derived.store_and_infer.primary_fact_id(), &prior)? != fact {
+                if self.resolve_fact(derived.store.primary_fact_id(), &prior)? != fact {
                     return Err(LeanCompileError::new(
                         "Prop/InferIdentity",
                         "The captured derived store differs from its exact source fact ID.",
                     ));
                 }
                 self.compile_fact_wd(&derived.well_defined, &fact, &prior)?;
-                self.validate_store(&derived.store_and_infer, &fact)?;
+                self.validate_store(&derived.store, &fact)?;
                 let formed = SourcePosition {
                     parent: Some(&prior),
                     owner: SourceOwner::FactWD(&derived.well_defined),
@@ -347,21 +368,11 @@ impl LitexToLeanCompiler {
                 };
                 let member = (self.fact_proposition(&fact, &formed)?, proof);
                 declarations.push(self.emit_internal_fact(&fact, &member, position));
-                let after = SourcePosition {
-                    before: completed + 1,
-                    ..prior
-                };
-                declarations.extend(self.compile_parameter_inferences(
-                    &derived.store_and_infer,
+                declarations.extend(self.compile_stored_projections(
+                    &derived.store,
                     &fact,
                     &member,
-                    &after,
-                )?);
-                declarations.extend(self.compile_stored_inferences(
-                    &derived.store_and_infer,
-                    &fact,
-                    &member,
-                    &after,
+                    &formed,
                 )?);
                 completed += 1;
             }

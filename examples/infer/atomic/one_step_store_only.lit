@@ -1,0 +1,52 @@
+# Tracer: inference stores direct consequences without triggering more inference.
+# Before: the same FnRange membership repeatedly inferred itself and overflowed
+# the process stack; builder projections could generate unbounded new elements.
+# Former failing source:
+# have f fn(t R) R
+# forall x R:
+#     f $in fn(t R) fn_range(f)
+#     x $in fn_range(f)
+#     =>:
+#         x = x
+# Now: these strict statements finish after storing direct consequences.
+# Boundary: an inferred predicate is stored; its own consequences require an
+# explicit new statement. Inferred facts still require ordinary WD evidence.
+# Run: target/release/litex -strict -lang en -f examples/infer/atomic/one_step_store_only.lit
+
+have f, g fn(t R) R
+
+forall x R:
+    f $in fn(t R) fn_range(f)
+    x $in fn_range(f)
+    =>:
+        x = x
+
+forall x R:
+    f $in fn(t R) fn_range(g)
+    g $in fn(t R) fn_range(f)
+    x $in fn_range(f)
+    =>:
+        x = x
+
+forall S set, x R:
+    S = {y R: y + 1 $in S}
+    x $in S
+    =>:
+        x = x
+
+forall S set, x S:
+    S = {y cart(S): 0 = 0}
+    x $in S
+    =>:
+        x = x
+
+prop inner(x R):
+    x = x
+prop outer(x R):
+    $inner(x)
+
+have value R
+by def $outer(value)
+# This explicit seed runs inner's own inference, rather than chaining from outer.
+$inner(value)
+value = value

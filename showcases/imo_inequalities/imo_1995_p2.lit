@@ -1,0 +1,124 @@
+# IMO 1995 P2. No trust or axioms; all supporting inequalities proved below.
+
+thm minimum_cube_bound:
+    ? forall m, u, v R:
+        m > 0
+        u >= 0
+        v >= 0
+        =>:
+            (3*m+u+v)^3 >= 27*m*(m+u)*(m+v)
+    u*v >= 0
+    (u-v)^2 >= 0
+    (u-v)^2+u*v >= 0
+    9*m*((u-v)^2+u*v) >= 0
+    u+v >= 0
+    (u+v)^3 >= 0
+    9*m*((u-v)^2+u*v)+(u+v)^3 >= 0
+    (3*m+u+v)^3 - 27*m*(m+u)*(m+v) = 9*m*((u-v)^2+u*v)+(u+v)^3 >= 0
+    0 <= (3*m+u+v)^3 - 27*m*(m+u)*(m+v)
+
+thm three_variable_am_gm:
+    ? forall x, y, z R:
+        x > 0
+        y > 0
+        z > 0
+        x*y*z = 1
+        =>:
+            x+y+z >= 3
+    by cases:
+        ? (x+y+z)^3 >= 27
+        case x <= y:
+            by cases:
+                ? (x+y+z)^3 >= 27
+                case x <= z:
+                    y-x >= 0
+                    z-x >= 0
+                    release thm minimum_cube_bound(x, y-x, z-x)
+                    (x+y+z)^3 = (3*x+(y-x)+(z-x))^3 >= 27*x*(x+(y-x))*(x+(z-x)) = 27*x*y*z = 27*(x*y*z) = 27
+                case x > z:
+                    x-z >= 0
+                    y-z >= 0
+                    release thm minimum_cube_bound(z, x-z, y-z)
+                    (x+y+z)^3 = (3*z+(x-z)+(y-z))^3 >= 27*z*(z+(x-z))*(z+(y-z)) = 27*x*y*z = 27*(x*y*z) = 27
+        case x > y:
+            by cases:
+                ? (x+y+z)^3 >= 27
+                case y <= z:
+                    x-y >= 0
+                    z-y >= 0
+                    release thm minimum_cube_bound(y, x-y, z-y)
+                    (x+y+z)^3 = (3*y+(x-y)+(z-y))^3 >= 27*y*(y+(x-y))*(y+(z-y)) = 27*x*y*z = 27*(x*y*z) = 27
+                case y > z:
+                    x-z >= 0
+                    y-z >= 0
+                    release thm minimum_cube_bound(z, x-z, y-z)
+                    (x+y+z)^3 = (3*z+(x-z)+(y-z))^3 >= 27*z*(z+(x-z))*(z+(y-z)) = 27*x*y*z = 27*(x*y*z) = 27
+    by contra:
+        ? x+y+z >= 3
+        x+y+z < 3
+        x+y+z > 0
+        (x+y+z)^3 < 3^3 = 27
+        impossible (x+y+z)^3 >= 27
+
+claim:
+    ? forall a, b, c R+:
+        a^3*(b+c) != 0
+    a^3 > 0
+    b+c > 0
+    a^3*(b+c) > 0
+
+claim:
+    ? forall a, b, c R+:
+        a*b*c = 1
+        =>:
+            1/(a^3*(b+c))+1/(b^3*(c+a))+1/(c^3*(a+b)) >= 3/2
+    have x R+ = 1/a
+    have y R+ = 1/b
+    have z R+ = 1/c
+    x*y*z = (1/a)*(1/b)*(1/c) = 1/(a*b*c) = 1
+    release thm three_variable_am_gm(x,y,z)
+    have s R = x+y+z
+    x+y > 0
+    y+z > 0
+    z+x > 0
+    x+z > 0
+    y+x > 0
+    z+y > 0
+    (y+z)*(x+z) > 0
+    (z+x)*(y+x) > 0
+    (x+y)*(z+y) > 0
+    (x-y)^2/((y+z)*(x+z)) >= 0
+    (y-z)^2/((z+x)*(y+x)) >= 0
+    (z-x)^2/((x+y)*(z+y)) >= 0
+    have d R = (x-y)^2/((y+z)*(x+z))+(y-z)^2/((z+x)*(y+x))+(z-x)^2/((x+y)*(z+y))
+    d >= 0
+    s = x+y+z >= 3
+    s > 0
+    s/2 > 0
+    (s/2)*d >= 0
+    x^2/(y+z)+y^2/(z+x)+z^2/(x+y) = (x+y+z)/2+((x+y+z)/2)*((x-y)^2/((y+z)*(x+z))+(y-z)^2/((z+x)*(y+x))+(z-x)^2/((x+y)*(z+y))) = s/2+(s/2)*d >= s/2 >= 3/2
+    1/b+1/c = y+z > 0
+    1/c+1/a = z+x > 0
+    1/a+1/b = x+y > 0
+    b*c > 0
+    b+c > 0
+    a^2 > 0
+    a^2*(b+c) > 0
+    (b+c)/(b*c) > 0
+    1/b+1/c = (b+c)/(b*c)
+    x^2/(y+z) = (1/a)^2/(1/b+1/c) = (1/a)^2/((b+c)/(b*c)) = (b*c)/(a^2*(b+c)) = (a*b*c)/(a^3*(b+c)) = 1/(a^3*(b+c))
+    c*a > 0
+    c+a > 0
+    b^2 > 0
+    b^2*(c+a) > 0
+    (c+a)/(c*a) > 0
+    1/c+1/a = (c+a)/(c*a)
+    y^2/(z+x) = (1/b)^2/(1/c+1/a) = (1/b)^2/((c+a)/(c*a)) = (c*a)/(b^2*(c+a)) = (a*b*c)/(b^3*(c+a)) = 1/(b^3*(c+a))
+    a*b > 0
+    a+b > 0
+    c^2 > 0
+    c^2*(a+b) > 0
+    (a+b)/(a*b) > 0
+    1/a+1/b = (a+b)/(a*b)
+    z^2/(x+y) = (1/c)^2/(1/a+1/b) = (1/c)^2/((a+b)/(a*b)) = (a*b)/(c^2*(a+b)) = (a*b*c)/(c^3*(a+b)) = 1/(c^3*(a+b))
+    1/(a^3*(b+c))+1/(b^3*(c+a))+1/(c^3*(a+b)) = x^2/(y+z)+y^2/(z+x)+z^2/(x+y)

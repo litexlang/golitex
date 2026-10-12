@@ -73,9 +73,10 @@ impl LitexToLeanCompiler {
                     &proof.left_path,
                     position,
                 )?;
-                let bridge = self.compile_equality_search(
+                let bridge = self.compile_equality_search_with_parent_wd(
                     &proof.bridge.fact,
                     &proof.bridge.searched_proof,
+                    Some(&proof.bridge.well_defined_proof),
                     position,
                 )?;
                 let right_path = self.compile_equality_path(

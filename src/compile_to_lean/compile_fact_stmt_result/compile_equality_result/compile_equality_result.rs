@@ -1,6 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -26,8 +27,12 @@ impl LitexToLeanCompiler {
                 let position = &formed;
                 ensure_object(&success.fact.left, &success.well_defined_proof.left)?;
                 ensure_object(&success.fact.right, &success.well_defined_proof.right)?;
-                let proof =
-                    self.compile_equality_search(&success.fact, &success.searched_proof, position)?;
+                let proof = self.compile_equality_search_with_parent_wd(
+                    &success.fact,
+                    &success.searched_proof,
+                    Some(&success.well_defined_proof),
+                    position,
+                )?;
                 Ok((format!("Litex.Same {left} {right}"), proof))
             }
             VerifyEqualityResult::Failed(_) => Err(LeanCompileError::new(
@@ -41,6 +46,16 @@ impl LitexToLeanCompiler {
         &self,
         fact: &EqualFact,
         proof: &EqualFactSearchedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        self.compile_equality_search_with_parent_wd(fact, proof, None, position)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_equality_search_with_parent_wd(
+        &self,
+        fact: &EqualFact,
+        proof: &EqualFactSearchedProof,
+        parent_wd: Option<&EqualFactWellDefinedProof>,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let left = self.compile_object_reference(&fact.left, position)?;
@@ -81,7 +96,7 @@ impl LitexToLeanCompiler {
                 self.compile_equivalence_class(fact, proof, position)?
             }
             EqualFactSearchedProof::ByObjectDefinition(proof) => {
-                self.compile_function_definition(fact, proof, position)?
+                self.compile_function_definition(fact, proof, parent_wd, position)?
             }
             EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof),

@@ -15,7 +15,7 @@ definition for proof and extraction without claiming IEEE-754 behavior.
 ## Modeling conventions
 
 `newton_sqrt_two_step` is total on `R` because executable extraction currently
-uses an ordinary `R -> R` interface. The zero branch returns one. The checked
+uses an ordinary `fn(x R) R` interface. The zero branch returns one. The checked
 trajectory starts from one and the explicit unrolled values stay above one, so
 the residual calculation uses only the ordinary Newton branch.
 

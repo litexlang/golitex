@@ -15,10 +15,9 @@ impl Runtime {
                 "infer not forall: cannot negate body into exist counterexample".to_string(),
             ));
         };
-        let derived_exist = Box::new(self.store_inferred_fact_and_infer(
-            &exist_shaped_fact_to_fact(&derived_exist),
-            verify_state,
-        )?);
+        let derived_exist = Box::new(
+            self.store_inferred_fact(&exist_shaped_fact_to_fact(&derived_exist), verify_state)?,
+        );
         Ok(InferNotForallFactResult { derived_exist })
     }
 }

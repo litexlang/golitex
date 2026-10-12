@@ -1,0 +1,2240 @@
+# Adapted from Mathematics in Lean; rewritten in Litex. See NOTICE.md.
+# Chapter 2 — Basics, explicit ambient laws
+#
+# Universal theorem headers state their ambient laws directly. First-class
+# structure values and their derived properties are retained later in the chapter.
+
+# 2.2 Proving identities in algebraic structures
+
+# Ambient operations and their laws are explicit in each theorem header.
+thm add_neg_cancel:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            add(a, neg(a)) = zero
+    add(a, neg(a)) = add(neg(a), a) = zero
+
+thm add_zero:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            add(a, zero) = a
+    add(a, zero) = add(zero, a) = a
+
+thm add_left_cancel_in_additive_commutative_group:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        add(a, b) = add(a, c)
+        =>:
+            b = c
+    add(neg(a), a) = zero
+    b = add(zero, b) = add(add(neg(a), a), b) = add(neg(a), add(a, b)) = add(neg(a), add(a, c)) = add(add(neg(a), a), c) = add(zero, c) = c
+
+thm self_sub:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            add(a, neg(a)) = zero
+    release thm add_neg_cancel(A, add, zero, neg, a)
+
+thm one_add_one_eq_two:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            add(one, one) = add(one, one)
+
+thm two_mul:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            mul(add(one, one), a) = add(a, a)
+    mul(one, a) = a
+    mul(add(one, one), a) = add(mul(one, a), mul(one, a)) = add(a, a)
+
+# Tracer for the representation comparison:
+#   struct-first: ring.mul(a, ring.zero) = ring.zero
+#   explicit ambient operations: mul(a, zero) = zero
+thm mul_zero:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            mul(a, zero) = zero
+    add(zero, zero) = zero
+    release thm add_zero(A, add, zero, neg, mul(a, zero))
+    add(mul(a, zero), mul(a, zero)) = mul(a, add(zero, zero)) = mul(a, zero) = add(mul(a, zero), zero)
+    release thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(a, zero), mul(a, zero), zero)
+
+thm zero_mul:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            mul(zero, a) = zero
+    add(zero, zero) = zero
+    release thm add_zero(A, add, zero, neg, mul(zero, a))
+    add(mul(zero, a), mul(zero, a)) = mul(add(zero, zero), a) = mul(zero, a) = add(mul(zero, a), zero)
+    release thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(zero, a), mul(zero, a), zero)
+
+thm neg_add_cancel_left:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            add(neg(a), add(a, b)) = b
+    add(neg(a), a) = zero
+    add(neg(a), add(a, b)) = add(add(neg(a), a), b) = add(zero, b) = b
+
+thm add_neg_cancel_right:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            add(add(a, b), neg(b)) = a
+    release thm add_neg_cancel(A, add, zero, neg, b)
+    release thm add_zero(A, add, zero, neg, a)
+    add(add(a, b), neg(b)) = add(a, add(b, neg(b))) = add(a, zero) = a
+
+thm add_left_cancel:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        add(a, b) = add(a, c)
+        =>:
+            b = c
+    release thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, a, b, c)
+
+thm add_right_cancel:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        add(a, b) = add(c, b)
+        =>:
+            a = c
+    add(b, a) = add(a, b) = add(c, b) = add(b, c)
+    release thm add_left_cancel(A, add, zero, neg, b, a, c)
+
+thm add_reorder_four:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c, d A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            add(add(a, b), add(c, d)) = add(add(a, c), add(b, d))
+    add(b, c) = add(c, b)
+    add(b, add(c, d)) = add(add(b, c), d) = add(add(c, b), d) = add(c, add(b, d))
+    add(add(a, b), add(c, d)) = add(a, add(b, add(c, d))) = add(a, add(c, add(b, d))) = add(add(a, c), add(b, d))
+
+thm eq_neg_of_add_eq_zero:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        add(a, b) = zero
+        =>:
+            b = neg(a)
+    release thm add_neg_cancel(A, add, zero, neg, a)
+    release thm add_left_cancel(A, add, zero, neg, a, b, neg(a))
+
+thm neg_eq_of_add_eq_zero:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        add(a, b) = zero
+        =>:
+            neg(a) = b
+    release thm eq_neg_of_add_eq_zero(A, add, zero, neg, a, b)
+
+thm neg_zero:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            neg(zero) = zero
+    release thm neg_eq_of_add_eq_zero(A, add, zero, neg, zero, zero)
+
+thm neg_neg:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            neg(neg(a)) = a
+    release thm neg_eq_of_add_eq_zero(A, add, zero, neg, neg(a), a)
+
+thm mul_neg_right:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            mul(a, neg(b)) = neg(mul(a, b))
+    release thm mul_zero(A, add, zero, neg, mul, one, a)
+    release thm add_neg_cancel(A, add, zero, neg, b)
+    add(mul(a, b), mul(a, neg(b))) = mul(a, add(b, neg(b))) = mul(a, zero) = zero
+    release thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(a, neg(b)))
+
+thm neg_mul_left:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            mul(neg(a), b) = neg(mul(a, b))
+    release thm zero_mul(A, add, zero, neg, mul, one, b)
+    release thm add_neg_cancel(A, add, zero, neg, a)
+    add(mul(a, b), mul(neg(a), b)) = mul(add(a, neg(a)), b) = mul(zero, b) = zero
+    release thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(neg(a), b))
+
+thm neg_mul_neg:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u, v A:
+            add(u, v) = add(v, u)
+        =>:
+            mul(neg(a), neg(b)) = mul(a, b)
+    release thm neg_mul_left(A, add, zero, neg, mul, one, a, neg(b))
+    release thm mul_neg_right(A, add, zero, neg, mul, one, a, b)
+    release thm neg_neg(A, add, zero, neg, mul(a, b))
+    mul(neg(a), neg(b)) = neg(mul(a, neg(b))) = neg(neg(mul(a, b))) = mul(a, b)
+
+thm commutative_mul_reorder_four:
+    ? forall A set, mul fn(x, y A) A, a, b, c, d A:
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v A:
+            mul(u, v) = mul(v, u)
+        =>:
+            mul(mul(a, b), mul(c, d)) = mul(mul(a, c), mul(b, d))
+    mul(b, c) = mul(c, b)
+    mul(b, mul(c, d)) = mul(mul(b, c), d) = mul(mul(c, b), d) = mul(c, mul(b, d))
+    mul(mul(a, b), mul(c, d)) = mul(a, mul(b, mul(c, d))) = mul(a, mul(c, mul(b, d))) = mul(mul(a, c), mul(b, d))
+
+thm _group_left_cancel:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b, c A:
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(inv(u), u) = one
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), a) = one
+    b = mul(one, b) = mul(mul(inv(a), a), b) = mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+
+thm _group_mul_one:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(inv(u), u) = one
+        =>:
+            mul(a, one) = a
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, one)) = mul(mul(inv(a), a), one) = mul(one, one) = one = mul(inv(a), a)
+    release thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, one), a)
+
+thm mul_inv_cancel:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(inv(u), u) = one
+        =>:
+            mul(a, inv(a)) = one
+    mul(inv(a), a) = one
+    release thm _group_mul_one(A, mul, one, inv, inv(a))
+    mul(inv(a), mul(a, inv(a))) = mul(mul(inv(a), a), inv(a)) = mul(one, inv(a)) = inv(a) = mul(inv(a), one)
+    release thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
+
+thm mul_one:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(inv(u), u) = one
+        =>:
+            mul(a, one) = a
+    release thm _group_mul_one(A, mul, one, inv, a)
+
+thm mul_inv_rev:
+    ? forall A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b A:
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(inv(u), u) = one
+        =>:
+            inv(mul(a, b)) = mul(inv(b), inv(a))
+    thm multiply_right_equal:
+        ? forall u, v, w A:
+            u = v
+            =>:
+                mul(u, w) = mul(v, w)
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b) = mul(one, b) = b
+    mul(mul(inv(b), inv(a)), mul(a, b)) = mul(inv(b), mul(inv(a), mul(a, b))) = mul(inv(b), b) = one
+    release thm mul_inv_cancel(A, mul, one, inv, mul(a, b))
+    release thm _group_mul_one(A, mul, one, inv, mul(inv(b), inv(a)))
+    by thm multiply_right_equal(mul(mul(inv(b), inv(a)), mul(a, b)), one, inv(mul(a, b))) => mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b)))
+    mul(inv(b), inv(a)) = mul(mul(inv(b), inv(a)), one) = mul(mul(inv(b), inv(a)), mul(mul(a, b), inv(mul(a, b)))) = mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b))) = inv(mul(a, b))
+
+# 2.5 Proving facts about algebraic structures
+
+# Strict comparison uses the explicit ambient relation here,
+# so this presentation does not need a separate structure-view equivalence.
+
+thm lattice_le_trans:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, x, y, z A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        (x, y) $in le_rel
+        (y, z) $in le_rel
+        =>:
+            (x, z) $in le_rel
+
+thm lattice_meet_comm:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, x, y A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        =>:
+            meet(x, y) = meet(y, x)
+    (meet(x, y), y) $in le_rel
+    (meet(x, y), x) $in le_rel
+    (meet(x, y), meet(y, x)) $in le_rel
+    (meet(y, x), x) $in le_rel
+    (meet(y, x), y) $in le_rel
+    (meet(y, x), meet(x, y)) $in le_rel
+
+thm lattice_meet_assoc:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, x, y, z A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        =>:
+            meet(meet(x, y), z) = meet(x, meet(y, z))
+    release thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), x)
+    release thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), y)
+    (meet(meet(x, y), z), z) $in le_rel
+    (meet(meet(x, y), z), meet(y, z)) $in le_rel
+    (meet(meet(x, y), z), meet(x, meet(y, z))) $in le_rel
+    (meet(x, meet(y, z)), x) $in le_rel
+    release thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), y)
+    release thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), z)
+    (meet(x, meet(y, z)), meet(x, y)) $in le_rel
+    (meet(x, meet(y, z)), meet(meet(x, y), z)) $in le_rel
+
+thm lattice_join_comm:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, x, y A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        =>:
+            join(x, y) = join(y, x)
+    (y, join(x, y)) $in le_rel
+    (x, join(x, y)) $in le_rel
+    (join(y, x), join(x, y)) $in le_rel
+    (x, join(y, x)) $in le_rel
+    (y, join(y, x)) $in le_rel
+    (join(x, y), join(y, x)) $in le_rel
+
+thm lattice_join_assoc:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, x, y, z A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        =>:
+            join(join(x, y), z) = join(x, join(y, z))
+    release thm lattice_le_trans(A, le_rel, meet, join, x, join(x, y), join(join(x, y), z))
+    release thm lattice_le_trans(A, le_rel, meet, join, y, join(x, y), join(join(x, y), z))
+    (z, join(join(x, y), z)) $in le_rel
+    (join(y, z), join(join(x, y), z)) $in le_rel
+    (join(x, join(y, z)), join(join(x, y), z)) $in le_rel
+    (x, join(x, join(y, z))) $in le_rel
+    release thm lattice_le_trans(A, le_rel, meet, join, y, join(y, z), join(x, join(y, z)))
+    release thm lattice_le_trans(A, le_rel, meet, join, z, join(y, z), join(x, join(y, z)))
+    (join(x, y), join(x, join(y, z))) $in le_rel
+    (join(join(x, y), z), join(x, join(y, z))) $in le_rel
+
+thm lattice_meet_join_absorb:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, x, y A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        =>:
+            meet(x, join(x, y)) = x
+    (meet(x, join(x, y)), x) $in le_rel
+    (x, x) $in le_rel
+    (x, join(x, y)) $in le_rel
+    (x, meet(x, join(x, y))) $in le_rel
+
+thm lattice_join_meet_absorb:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, x, y A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        =>:
+            join(x, meet(x, y)) = x
+    (x, join(x, meet(x, y))) $in le_rel
+    (x, x) $in le_rel
+    (meet(x, y), x) $in le_rel
+    (join(x, meet(x, y)), x) $in le_rel
+
+thm lattice_join_meet_distributive_of_meet_join_distributive:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, a, b, c A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        forall x, y, z A:
+            meet(x, join(y, z)) = join(meet(x, y), meet(x, z))
+        =>:
+            join(a, meet(b, c)) = meet(join(a, b), join(a, c))
+    release thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), a)
+    release thm lattice_meet_join_absorb(A, le_rel, meet, join, a, b)
+    release thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), c)
+    release thm lattice_meet_comm(A, le_rel, meet, join, c, a)
+    release thm lattice_meet_comm(A, le_rel, meet, join, c, b)
+    meet(join(a, b), c) = meet(c, join(a, b)) = join(meet(c, a), meet(c, b)) = join(meet(a, c), meet(c, b)) = join(meet(a, c), meet(b, c))
+    release thm lattice_join_assoc(A, le_rel, meet, join, a, meet(a, c), meet(b, c))
+    release thm lattice_join_meet_absorb(A, le_rel, meet, join, a, c)
+    meet(join(a, b), join(a, c)) = join(meet(join(a, b), a), meet(join(a, b), c)) = join(a, meet(join(a, b), c)) = join(a, join(meet(a, c), meet(b, c))) = join(join(a, meet(a, c)), meet(b, c)) = join(a, meet(b, c))
+
+thm lattice_meet_join_distributive_of_join_meet_distributive:
+    ? forall A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A, a, b, c A:
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v A:
+            (meet(u, v), u) $in le_rel
+        forall u, v A:
+            (meet(u, v), v) $in le_rel
+        forall u, v A:
+            (u, join(u, v)) $in le_rel
+        forall u, v A:
+            (v, join(u, v)) $in le_rel
+        forall u, v, w A:
+            (w, u) $in le_rel
+            (w, v) $in le_rel
+            =>:
+                (w, meet(u, v)) $in le_rel
+        forall u, v, w A:
+            (u, w) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (join(u, v), w) $in le_rel
+        forall x, y, z A:
+            join(x, meet(y, z)) = meet(join(x, y), join(x, z))
+        =>:
+            meet(a, join(b, c)) = join(meet(a, b), meet(a, c))
+    release thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), a)
+    release thm lattice_join_meet_absorb(A, le_rel, meet, join, a, b)
+    release thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), c)
+    release thm lattice_join_comm(A, le_rel, meet, join, c, a)
+    release thm lattice_join_comm(A, le_rel, meet, join, c, b)
+    join(meet(a, b), c) = join(c, meet(a, b)) = meet(join(c, a), join(c, b)) = meet(join(a, c), join(c, b)) = meet(join(a, c), join(b, c))
+    release thm lattice_meet_assoc(A, le_rel, meet, join, a, join(a, c), join(b, c))
+    release thm lattice_meet_join_absorb(A, le_rel, meet, join, a, c)
+    join(meet(a, b), meet(a, c)) = meet(join(meet(a, b), a), join(meet(a, b), c)) = meet(a, join(meet(a, b), c)) = meet(a, meet(join(a, c), join(b, c))) = meet(meet(a, join(a, c)), join(b, c)) = meet(a, join(b, c))
+
+# Ordered-ring theorems state both component law families directly, using
+# the operations and relation as their mathematical subjects.
+thm ring_sub_nonnegative_of_le:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, le_rel power_set(cart(A, A)), a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v A:
+            add(u, v) = add(v, u)
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v, w A:
+            (u, v) $in le_rel
+            =>:
+                (add(w, u), add(w, v)) $in le_rel
+        forall u, v A:
+            (zero, u) $in le_rel
+            (zero, v) $in le_rel
+            =>:
+                (zero, mul(u, v)) $in le_rel
+        (a, b) $in le_rel
+        =>:
+            (zero, add(b, neg(a))) $in le_rel
+    (add(neg(a), a), add(neg(a), b)) $in le_rel
+    add(neg(a), a) = zero
+    add(neg(a), b) = add(b, neg(a))
+    (zero, add(b, neg(a))) = (add(neg(a), a), add(neg(a), b))
+
+thm ring_le_of_sub_nonnegative:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, le_rel power_set(cart(A, A)), a, b A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v A:
+            add(u, v) = add(v, u)
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v, w A:
+            (u, v) $in le_rel
+            =>:
+                (add(w, u), add(w, v)) $in le_rel
+        forall u, v A:
+            (zero, u) $in le_rel
+            (zero, v) $in le_rel
+            =>:
+                (zero, mul(u, v)) $in le_rel
+        (zero, add(b, neg(a))) $in le_rel
+        =>:
+            (a, b) $in le_rel
+    (add(a, zero), add(a, add(b, neg(a)))) $in le_rel
+    release thm add_zero(A, add, zero, neg, a)
+    release thm add_neg_cancel(A, add, zero, neg, a)
+    release thm add_zero(A, add, zero, neg, b)
+    add(a, b) = add(b, a)
+    add(add(a, b), neg(a)) = add(add(b, a), neg(a))
+    add(a, add(b, neg(a))) = add(add(a, b), neg(a)) = add(add(b, a), neg(a)) = add(b, add(a, neg(a))) = add(b, zero) = b
+    (a, b) = (add(a, zero), add(a, add(b, neg(a))))
+
+thm ring_mul_le_mul_right_of_nonnegative:
+    ? forall A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, le_rel power_set(cart(A, A)), a, b, c A:
+        forall u, v, w A:
+            add(add(u, v), w) = add(u, add(v, w))
+        forall u, v, w A:
+            mul(mul(u, v), w) = mul(u, mul(v, w))
+        forall u, v, w A:
+            mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        forall u, v, w A:
+            mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+        forall u A:
+            add(zero, u) = u
+        forall u A:
+            add(neg(u), u) = zero
+        forall u A:
+            mul(one, u) = u
+        forall u A:
+            mul(u, one) = u
+        forall u A:
+            (u, u) $in le_rel
+        forall u, v A:
+            add(u, v) = add(v, u)
+        forall u, v, w A:
+            (u, v) $in le_rel
+            (v, w) $in le_rel
+            =>:
+                (u, w) $in le_rel
+        forall u, v A:
+            (u, v) $in le_rel
+            (v, u) $in le_rel
+            =>:
+                u = v
+        forall u, v, w A:
+            (u, v) $in le_rel
+            =>:
+                (add(w, u), add(w, v)) $in le_rel
+        forall u, v A:
+            (zero, u) $in le_rel
+            (zero, v) $in le_rel
+            =>:
+                (zero, mul(u, v)) $in le_rel
+        (a, b) $in le_rel
+        (zero, c) $in le_rel
+        =>:
+            (mul(a, c), mul(b, c)) $in le_rel
+    release thm ring_sub_nonnegative_of_le(A, add, zero, neg, mul, one, le_rel, a, b)
+    (zero, mul(add(b, neg(a)), c)) $in le_rel
+    release thm neg_mul_left(A, add, zero, neg, mul, one, a, c)
+    mul(add(b, neg(a)), c) = add(mul(b, c), mul(neg(a), c)) = add(mul(b, c), neg(mul(a, c)))
+    (zero, add(mul(b, c), neg(mul(a, c)))) = (zero, mul(add(b, neg(a)), c))
+    release thm ring_le_of_sub_nonnegative(A, add, zero, neg, mul, one, le_rel, mul(a, c), mul(b, c))
+
+thm metric_distance_nonnegative:
+    ? forall X set, dist fn(x, y X) R, x, y X:
+        forall u, v X:
+            dist(u, v) >= 0
+        forall u, v X:
+            dist(u, v) = 0
+            =>:
+                u = v
+        forall u, v X:
+            u = v
+            =>:
+                dist(u, v) = 0
+        forall u, v X:
+            dist(u, v) = dist(v, u)
+        forall u, v, w X:
+            dist(u, w) <= dist(u, v) + dist(v, w)
+        =>:
+            dist(x, y) >= 0
+
+thm metric_eq_of_distance_zero:
+    ? forall X set, dist fn(x, y X) R, x, y X:
+        forall u, v X:
+            dist(u, v) >= 0
+        forall u, v X:
+            dist(u, v) = 0
+            =>:
+                u = v
+        forall u, v X:
+            u = v
+            =>:
+                dist(u, v) = 0
+        forall u, v X:
+            dist(u, v) = dist(v, u)
+        forall u, v, w X:
+            dist(u, w) <= dist(u, v) + dist(v, w)
+        dist(x, y) = 0
+        =>:
+            x = y
+
+thm metric_distance_self_zero:
+    ? forall X set, dist fn(x, y X) R, x X:
+        forall u, v X:
+            dist(u, v) >= 0
+        forall u, v X:
+            dist(u, v) = 0
+            =>:
+                u = v
+        forall u, v X:
+            u = v
+            =>:
+                dist(u, v) = 0
+        forall u, v X:
+            dist(u, v) = dist(v, u)
+        forall u, v, w X:
+            dist(u, w) <= dist(u, v) + dist(v, w)
+        =>:
+            dist(x, x) = 0
+
+# Structure interfaces and derived properties
+#
+# The explicit ambient-law development above is the main Chapter 2 narrative.
+# The declarations below retain the same chapter's first-class structure
+# values, construction laws, and structure-facing theorem variants.
+
+# Structure view of 2.1 — Calculating
+
+# Representative polynomial calculation. The source presents several `rw`
+# and `ring` variants; Litex keeps the mathematical identity once and lets
+# exact polynomial normalization check it directly.
+forall a, b R:
+    (a + b) * (a + b) = a * a + 2 * (a * b) + b * b
+
+# Structure view of 2.2 — Proving Identities in Algebraic Structures
+
+# The source states its results under one `[Ring R]` or `[Group G]` ambient
+# structure. This retained Litex interface likewise bundles the operations and
+# laws in a struct value. Its `*_laws` predicates are candidate-construction
+# relations used by the structure-oriented development itself.
+
+# An additive commutative group has associative addition, a left identity, a
+# left inverse, and commutativity. Right-facing laws are derived below.
+prop additive_commutative_group_laws(A set, add fn(x, y A) A, zero A, neg fn(x A) A):
+    forall x, y, z A:
+        add(add(x, y), z) = add(x, add(y, z))
+    forall x A:
+        add(zero, x) = x
+    forall x A:
+        add(neg(x), x) = zero
+    forall x, y A:
+        add(x, y) = add(y, x)
+
+# A ring adds associative multiplication, a multiplicative identity, and both
+# distributive laws to the additive carrier. Multiplication is not assumed to
+# be commutative.
+prop ring_laws(A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A):
+    $additive_commutative_group_laws(A, add, zero, neg)
+    forall x, y, z A:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x, y, z A:
+        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+    forall x, y, z A:
+        mul(add(x, y), z) = add(mul(x, z), mul(y, z))
+    forall x A:
+        mul(one, x) = x
+    forall x A:
+        mul(x, one) = x
+
+# A multiplicative group uses only a left identity and left inverse as primitive
+# laws. The source's right-facing laws are mathematical consequences.
+prop group_laws(A set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall x, y, z A:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x A:
+        mul(one, x) = x
+    forall x A:
+        mul(inv(x), x) = one
+
+# Result (source label: add_zero_structure). Commutativity turns the primitive left zero
+# law into the right zero law.
+thm add_zero_from_laws:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            add(a, zero) = a
+    add(a, zero) = add(zero, a) = a
+
+# Result (source label: add_neg_cancel_structure). The same symmetry turns the primitive
+# left inverse law into a right inverse law.
+thm add_neg_cancel_from_laws:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            add(a, neg(a)) = zero
+    add(a, neg(a)) = add(neg(a), a) = zero
+
+# A canonical additive commutative group is one operation-bearing object. The
+# nonempty carrier records the existence of its zero; downstream theorems pass
+# `group` rather than a loose list of addition operations.
+struct AdditiveCommutativeGroup<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x s:
+            add(zero, x) = x
+        forall x s:
+            add(neg(x), x) = zero
+        forall x, y s:
+            add(x, y) = add(y, x)
+
+# A group likewise bundles multiplication, one, inverse, and the primitive
+# left-facing group laws used in the source proof.
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(one, x) = x
+        forall x s:
+            mul(inv(x), x) = one
+
+# A typed group object owns both its fields and the laws installed when it was
+# defined.  These helpers keep consumers on that object instead of rebuilding
+# a separate `group_laws` operation bag from its projections.
+thm _group_left_cancel_struct:
+    ? forall s nonempty_set, group &Group<s>, a, b, c s:
+        group.mul(a, b) = group.mul(a, c)
+        =>:
+            b = c
+    group.mul(group.inv(a), group.mul(a, b)) = group.mul(group.inv(a), group.mul(a, c))
+    group.mul(group.inv(a), a) = group.one
+    group.mul(group.one, b) = b
+    group.mul(group.one, c) = c
+    group.mul(group.mul(group.inv(a), a), b) = group.mul(group.one, b)
+    group.mul(group.mul(group.inv(a), a), c) = group.mul(group.one, c)
+    group.mul(group.inv(a), group.mul(a, b)) = group.mul(group.mul(group.inv(a), a), b) = group.mul(group.one, b) = b
+    group.mul(group.inv(a), group.mul(a, c)) = group.mul(group.mul(group.inv(a), a), c) = group.mul(group.one, c) = c
+
+thm group_mul_one:
+    ? forall s nonempty_set, group &Group<s>, a s:
+        group.mul(a, group.one) = a
+    group.mul(group.inv(a), a) = group.one
+    group.mul(group.one, group.one) = group.one
+    group.mul(group.mul(group.inv(a), a), group.one) = group.mul(group.one, group.one)
+    group.mul(group.inv(a), group.mul(a, group.one)) = group.mul(group.mul(group.inv(a), a), group.one) = group.mul(group.one, group.one) = group.one
+    group.mul(group.inv(a), group.mul(a, group.one)) = group.mul(group.inv(a), a)
+    release thm _group_left_cancel_struct(s, group, group.inv(a), group.mul(a, group.one), a)
+
+# A ring exposes its five primitive operations directly. Its laws compose the
+# additive-group relation rather than storing a nested parent object.
+struct Ring<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    one s
+    <=>:
+        $additive_commutative_group_laws(s, add, zero, neg)
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x, y, z s:
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        forall x, y, z s:
+            mul(add(x, y), z) = add(mul(x, z), mul(y, z))
+        forall x s:
+            mul(one, x) = x
+        forall x s:
+            mul(x, one) = x
+
+# Subtraction and the ring numeral two are derived constructions, not extra
+# primitive fields. They retain the source-facing expressions for later use.
+template<s nonempty_set, group &AdditiveCommutativeGroup<s>>:
+    have fn additive_sub(x, y s) s = group.add(x, group.neg(y))
+
+template<s nonempty_set, ring &Ring<s>>:
+    have ring_two s = ring.add(ring.one, ring.one)
+
+# The bundled object gives the same derived right inverse as the source-facing
+# candidate relation above. This is the first canonical-structure use probe.
+thm add_neg_cancel_structure:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
+        group.add(a, group.neg(a)) = group.zero
+    group.add(a, group.neg(a)) = group.add(group.neg(a), a) = group.zero
+
+# Result (source label: add_zero_structure). Commutativity turns the stored left identity
+# into a right identity without passing a separate list of operations around.
+thm add_zero_structure:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
+        group.add(a, group.zero) = a
+    group.add(a, group.zero) = group.add(group.zero, a) = a
+
+# Result (source label: add_left_cancel_structure). Apply the stored inverse on the left
+# of both equal sums, reassociate, and reduce both sides to their remaining term.
+thm add_left_cancel_in_additive_commutative_group_structure:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a, b, c s:
+        group.add(a, b) = group.add(a, c)
+        =>:
+            b = c
+    group.add(group.neg(a), group.add(a, b)) = group.add(group.neg(a), group.add(a, c))
+    group.add(group.neg(a), a) = group.zero
+    group.add(group.zero, b) = b
+    group.add(group.zero, c) = c
+    group.add(group.neg(a), group.add(a, b)) = group.add(group.add(group.neg(a), a), b) = group.add(group.zero, b) = b
+    group.add(group.neg(a), group.add(a, c)) = group.add(group.add(group.neg(a), a), c) = group.add(group.zero, c) = c
+
+# Result (source label: self_sub_structure). The derived subtraction operation is addition
+# of the stored inverse, so self-subtraction is the checked inverse law.
+thm self_sub_structure:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
+        \additive_sub<s, group>(a, a) = group.zero
+    \additive_sub<s, group>(a, a) = group.add(a, group.neg(a))
+    release thm add_neg_cancel_structure(s, group, a)
+
+# Result (source label: one_add_one_eq_two_structure). `ring_two` is the derived numeral
+# one plus one; it is deliberately a construction rather than a Ring field.
+thm one_add_one_eq_two_structure:
+    ? forall s nonempty_set, ring &Ring<s>:
+        ring.add(ring.one, ring.one) = \ring_two<s, ring>
+    \ring_two<s, ring> = ring.add(ring.one, ring.one)
+
+# Result (source label: two_mul_structure). Distributivity expands `ring_two`; the stored
+# additive group and multiplicative left identity simplify the two summands.
+thm two_mul_structure:
+    ? forall s nonempty_set, ring &Ring<s>, a s:
+        ring.mul(\ring_two<s, ring>, a) = ring.add(a, a)
+    \ring_two<s, ring> = ring.add(ring.one, ring.one)
+    ring.mul(ring.one, a) = a
+    ring.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.add(a, a)
+    ring.mul(\ring_two<s, ring>, a) = ring.mul(ring.add(ring.one, ring.one), a) = ring.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.add(a, a)
+
+# Result (source label: mul_zero_structure). Distributivity duplicates `a * 0`; additive
+# cancellation removes the common summand and yields the multiplicative zero law.
+thm mul_zero_structure:
+    ? forall s nonempty_set, ring &Ring<s>, a s:
+        ring.mul(a, ring.zero) = ring.zero
+    by thm mul_zero(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one, a) => ring.mul(a, ring.zero) = ring.zero
+thm zero_mul_structure:
+    ? forall s nonempty_set, ring &Ring<s>, a s:
+        ring.mul(ring.zero, a) = ring.zero
+    by thm zero_mul(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one, a) => ring.mul(ring.zero, a) = ring.zero
+thm neg_add_cancel_left_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            add(neg(a), add(a, b)) = b
+    add(neg(a), a) = zero
+    add(zero, b) = b
+    add(add(neg(a), a), b) = add(zero, b)
+    add(neg(a), add(a, b)) = add(add(neg(a), a), b) = add(zero, b) = b
+
+# Result (source label: add_neg_cancel_right_structure). The companion calculation uses
+# the derived right inverse and right identity.
+thm add_neg_cancel_right_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            add(add(a, b), neg(b)) = a
+    release thm add_neg_cancel_from_laws(A, add, zero, neg, b)
+    release thm add_zero_from_laws(A, add, zero, neg, a)
+    add(add(a, b), neg(b)) = add(a, add(b, neg(b))) = add(a, zero) = a
+
+# Result (source label: add_left_cancel_structure). Apply the same left inverse to both
+# sides and simplify.
+thm add_left_cancel_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        add(a, b) = add(a, c)
+        =>:
+            b = c
+    release thm neg_add_cancel_left_structure(A, add, zero, neg, a, b)
+    release thm neg_add_cancel_left_structure(A, add, zero, neg, a, c)
+    add(neg(a), add(a, b)) = add(neg(a), add(a, c))
+    b = add(neg(a), add(a, b)) = add(neg(a), add(a, c)) = c
+
+# Result (source label: add_right_cancel_structure). Commutativity reduces right
+# cancellation to the preceding theorem.
+thm add_right_cancel_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        add(a, b) = add(c, b)
+        =>:
+            a = c
+    add(b, a) = add(a, b) = add(c, b) = add(b, c)
+    release thm add_left_cancel_structure(A, add, zero, neg, b, a, c)
+
+# Result (source label: mul_zero_structure). Distributivity gives a duplicated summand;
+# additive cancellation then removes it, exactly as in the source proof.
+thm mul_zero_from_laws:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        $ring_laws(A, add, zero, neg, mul, one)
+        =>:
+            mul(a, zero) = zero
+    add(zero, zero) = zero
+    mul(a, zero) = mul(a, add(zero, zero)) = add(mul(a, zero), mul(a, zero))
+    release thm add_zero_from_laws(A, add, zero, neg, mul(a, zero))
+    add(mul(a, zero), mul(a, zero)) = mul(a, zero) = add(mul(a, zero), zero)
+    release thm add_left_cancel_structure(A, add, zero, neg, mul(a, zero), mul(a, zero), zero)
+
+# Result (source label: zero_mul_structure). Multiplication is not commutative, so the
+# companion proof uses the other distributive law before the same cancellation.
+thm zero_mul_from_laws:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        $ring_laws(A, add, zero, neg, mul, one)
+        =>:
+            mul(zero, a) = zero
+    add(zero, zero) = zero
+    mul(zero, a) = mul(add(zero, zero), a) = add(mul(zero, a), mul(zero, a))
+    release thm add_zero_from_laws(A, add, zero, neg, mul(zero, a))
+    add(mul(zero, a), mul(zero, a)) = mul(zero, a) = add(mul(zero, a), zero)
+    release thm add_left_cancel_structure(A, add, zero, neg, mul(zero, a), mul(zero, a), zero)
+
+# Result (source label: self_sub_structure). Subtraction is addition of the explicit
+# inverse, so this is exactly add_neg_cancel_structure.
+thm self_add_neg_from_laws:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            add(a, neg(a)) = zero
+    release thm add_neg_cancel_from_laws(A, add, zero, neg, a)
+
+# Result (source label: one_add_one_eq_two_structure). With operations explicit, the ring
+# numeral two is represented by add(one, one), so the identity is definitional.
+thm ring_two_reflexive_from_laws:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A:
+        $ring_laws(A, add, zero, neg, mul, one)
+        =>:
+            add(one, one) = add(one, one)
+
+# Result (source label: two_mul_structure). Right distributivity expands the explicit
+# numeral two and the left identity removes both copies of one.
+thm two_mul_from_laws:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        $ring_laws(A, add, zero, neg, mul, one)
+        =>:
+            mul(add(one, one), a) = add(a, a)
+    mul(one, a) = a
+    add(mul(one, a), mul(one, a)) = add(a, a)
+    mul(add(one, one), a) = add(mul(one, a), mul(one, a)) = add(a, a)
+
+# Reassociate four summands and exchange the two middle terms. This is the
+# small additive-normalization interface used by the sum-of-squares identity.
+thm add_reorder_four_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c, d A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            add(add(a, b), add(c, d)) = add(add(a, c), add(b, d))
+    add(add(a, b), add(c, d)) = add(a, add(b, add(c, d)))
+    add(b, add(c, d)) = add(add(b, c), d)
+    add(b, c) = add(c, b)
+    add(add(b, c), d) = add(add(c, b), d) = add(c, add(b, d))
+    add(a, add(b, add(c, d))) = add(a, add(c, add(b, d)))
+    add(a, add(c, add(b, d))) = add(add(a, c), add(b, d))
+
+# In an additive group, a summand whose sum with x is zero is -x.
+thm eq_neg_of_add_eq_zero_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, x, y A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        add(x, y) = zero
+        =>:
+            y = neg(x)
+    release thm add_neg_cancel_from_laws(A, add, zero, neg, x)
+    add(x, y) = zero = add(x, neg(x))
+    release thm add_left_cancel_structure(A, add, zero, neg, x, y, neg(x))
+
+# Result (source label: neg_eq_of_add_eq_zero_structure). The preceding inverse-
+# uniqueness theorem gives the same equality in the opposite orientation.
+thm neg_eq_of_add_eq_zero_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, x, y A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        add(x, y) = zero
+        =>:
+            neg(x) = y
+    release thm eq_neg_of_add_eq_zero_structure(A, add, zero, neg, x, y)
+
+# Result (source label: neg_zero_structure). Zero is its own additive inverse. Apply the
+# preceding theorem to zero plus zero, whose value follows from the group laws.
+thm neg_zero_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            neg(zero) = zero
+    release thm neg_eq_of_add_eq_zero_structure(A, add, zero, neg, zero, zero)
+
+# Negation is involutive.
+thm neg_neg_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, x A:
+        $additive_commutative_group_laws(A, add, zero, neg)
+        =>:
+            neg(neg(x)) = x
+    add(neg(x), x) = zero
+    release thm eq_neg_of_add_eq_zero_structure(A, add, zero, neg, neg(x), x)
+    x = neg(neg(x))
+
+# Multiplying by an additive inverse gives the additive inverse of the product.
+thm mul_neg_right_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
+        $ring_laws(A, add, zero, neg, mul, one)
+        =>:
+            mul(x, neg(y)) = neg(mul(x, y))
+    release thm mul_zero_from_laws(A, add, zero, neg, mul, one, x)
+    release thm add_neg_cancel_from_laws(A, add, zero, neg, y)
+    add(mul(x, y), mul(x, neg(y))) = mul(x, add(y, neg(y))) = mul(x, zero) = zero
+    release thm eq_neg_of_add_eq_zero_structure(A, add, zero, neg, mul(x, y), mul(x, neg(y)))
+
+thm neg_mul_left_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
+        $ring_laws(A, add, zero, neg, mul, one)
+        =>:
+            mul(neg(x), y) = neg(mul(x, y))
+    release thm zero_mul_from_laws(A, add, zero, neg, mul, one, y)
+    release thm add_neg_cancel_from_laws(A, add, zero, neg, x)
+    add(mul(x, y), mul(neg(x), y)) = mul(add(x, neg(x)), y) = mul(zero, y) = zero
+    release thm eq_neg_of_add_eq_zero_structure(A, add, zero, neg, mul(x, y), mul(neg(x), y))
+
+thm neg_mul_neg_structure:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
+        $ring_laws(A, add, zero, neg, mul, one)
+        =>:
+            mul(neg(x), neg(y)) = mul(x, y)
+    release thm neg_mul_left_structure(A, add, zero, neg, mul, one, x, neg(y))
+    release thm mul_neg_right_structure(A, add, zero, neg, mul, one, x, y)
+    release thm neg_neg_structure(A, add, zero, neg, mul(x, y))
+    mul(neg(x), neg(y)) = neg(mul(x, neg(y))) = neg(neg(mul(x, y))) = mul(x, y)
+
+# Four factors in a commutative multiplication can exchange the middle pair.
+thm commutative_mul_reorder_four_structure:
+    ? forall A set, mul fn(x, y A) A, a, b, c, d A:
+        forall x, y, z A:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x, y A:
+            mul(x, y) = mul(y, x)
+        =>:
+            mul(mul(a, b), mul(c, d)) = mul(mul(a, c), mul(b, d))
+    mul(mul(a, b), mul(c, d)) = mul(a, mul(b, mul(c, d)))
+    mul(b, mul(c, d)) = mul(mul(b, c), d)
+    mul(b, c) = mul(c, b)
+    mul(mul(b, c), d) = mul(mul(c, b), d) = mul(c, mul(b, d))
+    mul(a, mul(b, mul(c, d))) = mul(a, mul(c, mul(b, d)))
+    mul(a, mul(c, mul(b, d))) = mul(mul(a, c), mul(b, d))
+
+# Private proof machinery for the three source group results. Multiplying both
+# sides on the left by inv(a) proves left cancellation.
+thm _group_left_cancel_structure:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b, c A:
+        $group_laws(A, mul, one, inv)
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c))
+    mul(inv(a), a) = one
+    mul(one, b) = b
+    mul(one, c) = c
+    mul(mul(inv(a), a), b) = mul(one, b)
+    mul(mul(inv(a), a), c) = mul(one, c)
+    mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b) = mul(one, b) = b
+    mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+
+# The right identity follows by cancelling inv(a) from the two expressions.
+thm _group_mul_one_structure:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            mul(a, one) = a
+    mul(inv(a), a) = one
+    mul(one, one) = one
+    mul(mul(inv(a), a), one) = mul(one, one)
+    mul(inv(a), mul(a, one)) = mul(mul(inv(a), a), one) = mul(one, one) = one
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, one)) = mul(inv(a), a)
+    release thm _group_left_cancel_structure(A, mul, one, inv, inv(a), mul(a, one), a)
+
+# Result (source label: mul_inv_cancel_structure). Apply left cancellation after deriving
+# the right identity for inv(a).
+thm mul_inv_cancel_structure:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            mul(a, inv(a)) = one
+    mul(inv(a), a) = one
+    mul(one, inv(a)) = inv(a)
+    mul(mul(inv(a), a), inv(a)) = mul(one, inv(a))
+    mul(inv(a), mul(a, inv(a))) = mul(mul(inv(a), a), inv(a)) = mul(one, inv(a)) = inv(a)
+    release thm _group_mul_one_structure(A, mul, one, inv, inv(a))
+    mul(inv(a), one) = inv(a)
+    mul(inv(a), mul(a, inv(a))) = mul(inv(a), one)
+    release thm _group_left_cancel_structure(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
+
+# Result (source label: mul_one_structure). The public source theorem cites the checked
+# carrier-parametric identity calculation above.
+thm mul_one_structure:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            mul(a, one) = a
+    release thm _group_mul_one_structure(A, mul, one, inv, a)
+
+# Result (source label: mul_inv_rev_structure). The inverse of a product reverses the
+# factors. First verify that inv(b)inv(a) is a left inverse of ab, then compare
+# it with the chosen inverse using the checked right inverse law.
+thm mul_inv_rev_structure:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            inv(mul(a, b)) = mul(inv(b), inv(a))
+    witness $is_nonempty_set(A) from one
+    by thm mul_inv_rev(A, mul, one, inv, a, b) => inv(mul(a, b)) = mul(inv(b), inv(a))
+claim:
+    ? forall a, b, c, d, endpoint R:
+        a <= b
+        b < c
+        c <= d
+        d < endpoint
+        =>:
+            a < endpoint
+    a <= b < c <= d < endpoint
+
+# Structure view of 2.4 — More on Order and Divisibility
+
+# The binary minimum is symmetric. The source's repeated tactic variants
+# collapse to this single direct real-order fact.
+claim:
+    ? forall a, b R:
+        finite_set_min(union({a}, {b})) = finite_set_min(union({b}, {a}))
+    union({a}, {b}) = union({b}, {a})
+
+# Minimum is associative. Each direction shows that one nested minimum is a
+# lower bound for both inputs of the other, then antisymmetry gives equality.
+claim:
+    ? forall a, b, c R:
+        min(min(a, b), c) = min(a, min(b, c))
+    by cases:
+        ? min(min(a, b), c) = min(a, min(b, c))
+        case a <= b:
+            min(a, b) = a
+            by cases:
+                ? min(min(a, b), c) = min(a, min(b, c))
+                case b <= c:
+                    a <= c
+                    min(b, c) = b
+                    min(a, b) <= c
+                    a <= min(b, c)
+                    min(min(a, b), c) = min(a, b) = a
+                    min(a, min(b, c)) = a
+                case b > c:
+                    c <= b
+                    min(b, c) = c
+                    by cases:
+                        ? min(min(a, b), c) = min(a, min(b, c))
+                        case a <= c:
+                            min(a, b) <= c
+                            a <= min(b, c)
+                            min(min(a, b), c) = min(a, b) = a
+                            min(a, min(b, c)) = a
+                        case a > c:
+                            c <= a
+                            c <= min(a, b)
+                            min(b, c) <= a
+                            min(min(a, b), c) = c
+                            min(a, min(b, c)) = min(b, c) = c
+        case a > b:
+            b <= a
+            min(a, b) = b
+            by cases:
+                ? min(min(a, b), c) = min(a, min(b, c))
+                case b <= c:
+                    min(b, c) = b
+                    min(a, b) <= c
+                    min(b, c) <= a
+                    min(min(a, b), c) = min(a, b) = b
+                    min(a, min(b, c)) = min(b, c) = b
+                case b > c:
+                    c <= b <= a
+                    min(b, c) = c
+                    c <= min(a, b)
+                    min(b, c) <= a
+                    min(min(a, b), c) = c
+                    min(a, min(b, c)) = min(b, c) = c
+claim:
+    ? forall a, b, c R:
+        min(a, b) + c = min(a + c, b + c)
+    by cases:
+        ? min(a, b) + c = min(a + c, b + c)
+        case a <= b:
+            a + c <= b + c
+            min(a, b) = a
+            min(a + c, b + c) = a + c
+            min(a, b) + c = a + c = min(a + c, b + c)
+        case a > b:
+            b <= a
+            b + c <= a + c
+            min(a, b) = b
+            min(a + c, b + c) = b + c
+            min(a, b) + c = b + c = min(a + c, b + c)
+
+# Weak reverse triangle inequality follows by subtracting |b| from the triangle bound.
+forall a, b R:
+    abs(a) - abs(b) <= abs(a - b)
+
+# Divisibility is defined here with integer witnesses. This keeps the corpus
+# self-contained while allowing the visible source inputs to remain natural.
+prop divides(a Z, b Z):
+    exist k Z st {b = a * k}
+
+# A positive divisor of a nonzero integer is at most its absolute value.
+thm _positive_divisor_le_abs:
+    ? forall d N+, a Z:
+        $divides(d, a)
+        a != 0
+        =>:
+            d <= abs(a)
+    obtain k from exist k Z st {a = d * k}
+    by contra:
+        ? k != 0
+        k = 0
+        a = d * k = d * 0 = 0
+        impossible a != 0
+    by cases:
+        ? abs(k) > 0
+        case k > 0:
+            0 <= k
+            abs(k) = k > 0
+        case k <= 0:
+            by contra:
+                ? k < 0
+                0 <= k
+                k = 0
+                impossible k != 0
+            0 = k + (-k) < 0 + (-k) = -k
+            -k > 0
+            abs(k) = -k > 0
+    abs(k) $in N+
+    1 <= abs(k)
+    d * 1 <= d * abs(k)
+    abs(d) = d
+    abs(a) = abs(d * k) = abs(d) * abs(k) = d * abs(k)
+    d = d * 1 <= d * abs(k) = abs(a)
+
+# For a nonzero pair, the positive common divisors form a finite nonempty set.
+# This is the well-definedness bridge for the source-local gcd construction.
+thm _gcd_divisor_set_is_finite_and_nonempty:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $is_finite_set({d N+: $divides(d, a), $divides(d, b)})
+            $is_nonempty_set({d N+: $divides(d, a), $divides(d, b)})
+    have CarrierC power_set(N+) = {d N+: $divides(d, a), $divides(d, b)}
+    claim:
+        ? $is_finite_set(CarrierC)
+        by cases:
+            ? $is_finite_set(CarrierC)
+            case a != 0:
+                claim:
+                    ? forall d CarrierC:
+                        d $in closed_range(1, abs(a))
+                    d $in CarrierC
+                    d $in N+
+                    d >= 1
+                    $divides(d, a)
+                    release thm _positive_divisor_le_abs(d, a)
+                    d <= abs(a)
+                by def CarrierC $subset closed_range(1, abs(a))
+                CarrierC $subset closed_range(1, abs(a))
+                CarrierC = set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC))
+                $is_finite_set(set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC)))
+                $is_finite_set(CarrierC)
+            case b != 0:
+                claim:
+                    ? forall d CarrierC:
+                        d $in closed_range(1, abs(b))
+                    d $in CarrierC
+                    d $in N+
+                    d >= 1
+                    $divides(d, b)
+                    release thm _positive_divisor_le_abs(d, b)
+                    d <= abs(b)
+                by def CarrierC $subset closed_range(1, abs(b))
+                CarrierC $subset closed_range(1, abs(b))
+                CarrierC = set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC))
+                $is_finite_set(set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC)))
+                $is_finite_set(CarrierC)
+    witness $is_nonempty_set({d N+: $divides(d, a), $divides(d, b)}) from 1:
+        1 $in N+
+        witness exist k Z st {a = 1 * k} from a:
+            a = 1 * a
+        by def $divides(1, a)
+        $divides(1, a)
+        witness exist k Z st {b = 1 * k} from b:
+            b = 1 * b
+        by def $divides(1, b)
+        $divides(1, b)
+        release thm set_builder_member(1, {d N+: $divides(d, a), $divides(d, b)})
+        1 $in {d N+: $divides(d, a), $divides(d, b)}
+        1 $in CarrierC
+    {d N+: $divides(d, a), $divides(d, b)} $subset CarrierC
+    release thm subset_of_finite_set_is_finite({d N+: $divides(d, a), $divides(d, b)}, CarrierC)
+    $is_finite_set({d N+: $divides(d, a), $divides(d, b)})
+    $is_nonempty_set({d N+: $divides(d, a), $divides(d, b)})
+
+# The native gcd object is the greatest positive common divisor and is
+# well-defined when the input pair is not all zero.
+
+
+thm gcd_positive:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            gcd(a, b) $in N+
+
+thm gcd_divides_left:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), a)
+    release thm gcd_positive(a, b)
+    a % gcd(a, b) = 0
+    exist k Z st {a = gcd(a, b) * k}
+    by def:
+        ? $divides(gcd(a, b), a)
+
+thm gcd_divides_right:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), b)
+    release thm gcd_positive(a, b)
+    b % gcd(a, b) = 0
+    exist k Z st {b = gcd(a, b) * k}
+    by def:
+        ? $divides(gcd(a, b), b)
+
+thm common_divisor_le_gcd:
+    ? forall a, b Z, d N+:
+        a != 0 or b != 0
+        $divides(d, a)
+        $divides(d, b)
+        =>:
+            d <= gcd(a, b)
+    release thm gcd_positive(a, b)
+    obtain ka from exist ka Z st {a = d * ka}
+    obtain kb from exist kb Z st {b = d * kb}
+    a = d * ka + 0
+    b = d * kb + 0
+    a % d = 0
+    b % d = 0
+
+thm gcd_euclidean_base:
+    ? forall a Z:
+        a != 0
+        =>:
+            gcd(a, 0) = abs(a)
+    release thm gcd_positive(a, 0)
+    release thm gcd_divides_left(a, 0)
+    release thm _positive_divisor_le_abs(gcd(a, 0), a)
+    gcd(a, 0) <= abs(a)
+    abs(a) > 0
+    abs(a) $in N+
+    by cases:
+        ? $divides(abs(a), a)
+        case a >= 0:
+            abs(a) = a
+            a = a * 1
+            abs(a) * 1 = a * 1
+            a = abs(a) * 1
+            witness exist k Z st {a = abs(a) * k} from 1
+            by def $divides(abs(a), a)
+        case a < 0:
+            a <= 0
+            abs(a) = -a
+            a = (-a) * (-1) = abs(a) * (-1)
+            witness exist k Z st {a = abs(a) * k} from -1
+            by def $divides(abs(a), a)
+    witness exist k Z st {0 = abs(a) * k} from 0:
+        0 = abs(a) * 0
+    by def $divides(abs(a), 0)
+    $divides(abs(a), 0)
+    release thm common_divisor_le_gcd(a, 0, abs(a))
+    abs(a) <= gcd(a, 0)
+
+# Divisibility transitivity on the source's natural-number carrier.
+claim:
+    ? forall x, y, z N:
+        $divides(x, y)
+        $divides(y, z)
+        =>:
+            $divides(x, z)
+    obtain k from exist k Z st {y = x * k}
+    obtain l from exist l Z st {z = y * l}
+    witness exist m Z st {z = x * m} from k * l:
+        z = y * l = (x * k) * l = x * (k * l)
+    by def:
+        ? $divides(x, z)
+
+# A factor divides any product containing it. Commutativity places x first and
+# exposes y*z as the witness.
+claim:
+    ? forall x, y, z N:
+        $divides(x, y * x * z)
+    witness exist k Z st {y * x * z = x * k} from y * z:
+        y * x * z = x * (y * z)
+    by def:
+        ? $divides(x, y * x * z)
+
+# Every natural number divides its square, witnessed by the number itself in Z.
+claim:
+    ? forall x N:
+        $divides(x, x^2)
+    witness exist k Z st {x^2 = x * k} from x:
+        x^2 = x * x
+    by def:
+        ? $divides(x, x^2)
+
+# Gcd symmetry on the nonzero natural pairs supported by the local construction.
+# Unlike the source's total Nat.gcd, this gcd is undefined
+# at (0,0), so this is an explicit nonzero adaptation rather than a claim of
+# total-source equivalence. Both guard orientations make the two calls visibly
+# well-defined. Each gcd divides both inputs, hence each is at most the other.
+thm gcd_comm:
+    ? forall a, b N:
+        a != 0 or b != 0
+        b != 0 or a != 0
+        =>:
+            gcd(a, b) = gcd(b, a)
+    release thm gcd_positive(a, b)
+    release thm gcd_divides_left(a, b)
+    release thm gcd_divides_right(a, b)
+    release thm common_divisor_le_gcd(b, a, gcd(a, b))
+    gcd(a, b) <= gcd(b, a)
+    release thm gcd_positive(b, a)
+    release thm gcd_divides_left(b, a)
+    release thm gcd_divides_right(b, a)
+    release thm common_divisor_le_gcd(a, b, gcd(b, a))
+    gcd(b, a) <= gcd(a, b)
+
+# Structure view of 2.5 — Proving Facts about Algebraic Structures
+
+# A partial order is one mathematical object even though it has only one
+# primitive relation. Its laws belong to the object rather than every caller.
+prop partial_order_laws(s set, le_rel power_set(cart(s, s))):
+    forall x s:
+        (x, x) $in le_rel
+    forall x, y, z s:
+        (x, y) $in le_rel
+        (y, z) $in le_rel
+        =>:
+            (x, z) $in le_rel
+    forall x, y s:
+        (x, y) $in le_rel
+        (y, x) $in le_rel
+        =>:
+            x = y
+
+template<s set>:
+    have PartialOrder set = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}
+
+# In a generic partial-order object, strict comparison means non-strict
+# comparison together with inequality.
+prop is_less_than_in_order(A set, order \PartialOrder<A>, x, y A):
+    (x, y) $in order
+    x != y
+
+# Source equivalence `x < y ↔ x ≤ y ∧ x ≠ y`, checked through the
+# supported direct forall-iff verifier (both definitional directions).
+forall A set, order \PartialOrder<A>, x, y A:
+    =>:
+        $is_less_than_in_order(A, order, x, y)
+    <=>:
+        (x, y) $in order
+        x != y
+
+# A lattice packages a partial order with callable meet and join operations.
+# The final two law families are the universal properties: meet is the
+# greatest lower bound and join is the least upper bound.
+struct Lattice<s nonempty_set>:
+    order \PartialOrder<s>
+    meet fn(x, y s) s
+    join fn(x, y s) s
+    <=>:
+        forall x, y s:
+            (meet(x, y), x) $in order
+        forall x, y s:
+            (meet(x, y), y) $in order
+        forall x, y s:
+            (x, join(x, y)) $in order
+        forall x, y s:
+            (y, join(x, y)) $in order
+        forall x, y, z s:
+            (z, x) $in order
+            (z, y) $in order
+            =>:
+                (z, meet(x, y)) $in order
+        forall x, y, z s:
+            (x, z) $in order
+            (y, z) $in order
+            =>:
+                (join(x, y), z) $in order
+
+# The stored order relation is transitive. Naming this standard projection lets
+# later lattice proofs compose inequalities without reopening the struct laws.
+thm transport_membership:
+    ? forall A, B set, element A:
+        A = B
+        =>:
+            element $in B
+
+thm partial_order_le_trans:
+    ? forall s set, order \PartialOrder<s>, x, y, z s:
+        (x, y) $in order
+        (y, z) $in order
+        =>:
+            (x, z) $in order
+    \PartialOrder<s> = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}
+    by thm transport_membership(\PartialOrder<s>, {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}, order) => order $in {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}
+
+# Membership in the partial-order carrier exposes the same three relation laws.
+thm partial_order_laws_from_member:
+    ? forall s set, order \PartialOrder<s>:
+        $partial_order_laws(s, order)
+    \PartialOrder<s> = {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}
+    by thm transport_membership(\PartialOrder<s>, {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}, order) => order $in {le_rel power_set(cart(s, s)): $partial_order_laws(s, le_rel)}
+
+
+thm partial_order_le_antisymm:
+    ? forall s set, order \PartialOrder<s>, x, y s:
+        (x, y) $in order
+        (y, x) $in order
+        =>:
+            x = y
+    release thm partial_order_laws_from_member(s, order)
+
+thm partial_order_le_refl:
+    ? forall s set, order \PartialOrder<s>, x s:
+        (x, x) $in order
+    release thm partial_order_laws_from_member(s, order)
+
+thm lattice_le_trans_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y, z s:
+        (x, y) $in lattice.order
+        (y, z) $in lattice.order
+        =>:
+            (x, z) $in lattice.order
+    release thm partial_order_le_trans(s, lattice.order, x, y, z)
+
+# The source's meet-commutativity example follows because each meet is a lower
+# bound for the arguments of the other meet; antisymmetry then identifies them.
+thm lattice_meet_comm_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.meet(x, y) = lattice.meet(y, x)
+    (lattice.meet(x, y), y) $in lattice.order
+    (lattice.meet(x, y), x) $in lattice.order
+    (lattice.meet(x, y), lattice.meet(y, x)) $in lattice.order
+    (lattice.meet(y, x), x) $in lattice.order
+    (lattice.meet(y, x), y) $in lattice.order
+    (lattice.meet(y, x), lattice.meet(x, y)) $in lattice.order
+    release thm partial_order_le_antisymm(s, lattice.order, lattice.meet(x, y), lattice.meet(y, x))
+
+# The source's meet-associativity example compares the two nested meets as
+# greatest lower bounds of x, y, and z. Transitivity supplies the four
+# component bounds; the meet universal property and antisymmetry finish.
+thm lattice_meet_assoc_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y, z s:
+        lattice.meet(lattice.meet(x, y), z) = lattice.meet(x, lattice.meet(y, z))
+    (lattice.meet(lattice.meet(x, y), z), lattice.meet(x, y)) $in lattice.order
+    (lattice.meet(x, y), x) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, lattice.meet(lattice.meet(x, y), z), lattice.meet(x, y), x)
+    (lattice.meet(x, y), y) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, lattice.meet(lattice.meet(x, y), z), lattice.meet(x, y), y)
+    (lattice.meet(lattice.meet(x, y), z), z) $in lattice.order
+    (lattice.meet(lattice.meet(x, y), z), lattice.meet(y, z)) $in lattice.order
+    (lattice.meet(lattice.meet(x, y), z), lattice.meet(x, lattice.meet(y, z))) $in lattice.order
+    (lattice.meet(x, lattice.meet(y, z)), x) $in lattice.order
+    (lattice.meet(x, lattice.meet(y, z)), lattice.meet(y, z)) $in lattice.order
+    (lattice.meet(y, z), y) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, lattice.meet(x, lattice.meet(y, z)), lattice.meet(y, z), y)
+    (lattice.meet(y, z), z) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, lattice.meet(x, lattice.meet(y, z)), lattice.meet(y, z), z)
+    (lattice.meet(x, lattice.meet(y, z)), lattice.meet(x, y)) $in lattice.order
+    (lattice.meet(x, lattice.meet(y, z)), lattice.meet(lattice.meet(x, y), z)) $in lattice.order
+    release thm partial_order_le_antisymm(s, lattice.order, lattice.meet(lattice.meet(x, y), z), lattice.meet(x, lattice.meet(y, z)))
+
+# The join-commutativity example is dual: each join is an upper bound for the
+# arguments of the other join, and antisymmetry closes the equality.
+thm lattice_join_comm_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.join(x, y) = lattice.join(y, x)
+    (y, lattice.join(x, y)) $in lattice.order
+    (x, lattice.join(x, y)) $in lattice.order
+    (lattice.join(y, x), lattice.join(x, y)) $in lattice.order
+    (x, lattice.join(y, x)) $in lattice.order
+    (y, lattice.join(y, x)) $in lattice.order
+    (lattice.join(x, y), lattice.join(y, x)) $in lattice.order
+    release thm partial_order_le_antisymm(s, lattice.order, lattice.join(x, y), lattice.join(y, x))
+
+# The source's join-associativity example is the order-dual argument. Each
+# nested join is an upper bound for x, y, and z, so the least-upper-bound law
+# gives both comparisons and antisymmetry identifies the joins.
+thm lattice_join_assoc_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y, z s:
+        lattice.join(lattice.join(x, y), z) = lattice.join(x, lattice.join(y, z))
+    (x, lattice.join(x, y)) $in lattice.order
+    (lattice.join(x, y), lattice.join(lattice.join(x, y), z)) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, x, lattice.join(x, y), lattice.join(lattice.join(x, y), z))
+    (y, lattice.join(x, y)) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, y, lattice.join(x, y), lattice.join(lattice.join(x, y), z))
+    (z, lattice.join(lattice.join(x, y), z)) $in lattice.order
+    (lattice.join(y, z), lattice.join(lattice.join(x, y), z)) $in lattice.order
+    (lattice.join(x, lattice.join(y, z)), lattice.join(lattice.join(x, y), z)) $in lattice.order
+    (x, lattice.join(x, lattice.join(y, z))) $in lattice.order
+    (y, lattice.join(y, z)) $in lattice.order
+    (lattice.join(y, z), lattice.join(x, lattice.join(y, z))) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, y, lattice.join(y, z), lattice.join(x, lattice.join(y, z)))
+    (z, lattice.join(y, z)) $in lattice.order
+    release thm lattice_le_trans_structure(s, lattice, z, lattice.join(y, z), lattice.join(x, lattice.join(y, z)))
+    (lattice.join(x, y), lattice.join(x, lattice.join(y, z))) $in lattice.order
+    (lattice.join(lattice.join(x, y), z), lattice.join(x, lattice.join(y, z))) $in lattice.order
+    release thm partial_order_le_antisymm(s, lattice.order, lattice.join(lattice.join(x, y), z), lattice.join(x, lattice.join(y, z)))
+
+# Result (source label: absorb1). The meet is below x. Conversely, x is below
+# both x and x join y, so it is below their meet; antisymmetry gives equality.
+thm lattice_meet_join_absorb_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.meet(x, lattice.join(x, y)) = x
+    (lattice.meet(x, lattice.join(x, y)), x) $in lattice.order
+    release thm partial_order_le_refl(s, lattice.order, x)
+    (x, lattice.join(x, y)) $in lattice.order
+    (x, lattice.meet(x, lattice.join(x, y))) $in lattice.order
+    release thm partial_order_le_antisymm(s, lattice.order, lattice.meet(x, lattice.join(x, y)), x)
+
+# Result (source label: absorb2). This is the order-dual argument: x and
+# x meet y are below x, so their join is below x, while x is below the join.
+thm lattice_join_meet_absorb_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.join(x, lattice.meet(x, y)) = x
+    (x, lattice.join(x, lattice.meet(x, y))) $in lattice.order
+    release thm partial_order_le_refl(s, lattice.order, x)
+    (lattice.meet(x, y), x) $in lattice.order
+    (lattice.join(x, lattice.meet(x, y)), x) $in lattice.order
+    release thm partial_order_le_antisymm(s, lattice.order, lattice.join(x, lattice.meet(x, y)), x)
+
+# A distributive lattice adds no new operations to a lattice. This residual
+# property records the source's four standard left and right distribution
+# laws while retaining the same callable meet and join.
+prop is_distributive_lattice(s nonempty_set, lattice &Lattice<s>):
+    forall x, y, z s:
+        lattice.meet(x, lattice.join(y, z)) = lattice.join(lattice.meet(x, y), lattice.meet(x, z))
+        lattice.meet(lattice.join(x, y), z) = lattice.join(lattice.meet(x, z), lattice.meet(y, z))
+        lattice.join(x, lattice.meet(y, z)) = lattice.meet(lattice.join(x, y), lattice.join(x, z))
+        lattice.join(lattice.meet(x, y), z) = lattice.meet(lattice.join(x, z), lattice.join(y, z))
+
+# The source next assumes only meet-over-join distributivity and derives the
+# dual join-over-meet law. Expand the right side once, commute the inner meets,
+# distribute again, reassociate, and absorb the repeated a term.
+thm lattice_join_meet_distributive_of_meet_join_distributive_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, a, b, c s:
+        forall x, y, z s:
+            lattice.meet(x, lattice.join(y, z)) = lattice.join(lattice.meet(x, y), lattice.meet(x, z))
+        =>:
+            lattice.join(a, lattice.meet(b, c)) = lattice.meet(lattice.join(a, b), lattice.join(a, c))
+    lattice.meet(lattice.join(a, b), lattice.join(a, c)) = lattice.join(lattice.meet(lattice.join(a, b), a), lattice.meet(lattice.join(a, b), c))
+    release thm lattice_meet_comm_structure(s, lattice, lattice.join(a, b), a)
+    release thm lattice_meet_join_absorb_structure(s, lattice, a, b)
+    release thm lattice_meet_comm_structure(s, lattice, lattice.join(a, b), c)
+    lattice.meet(c, lattice.join(a, b)) = lattice.join(lattice.meet(c, a), lattice.meet(c, b))
+    release thm lattice_meet_comm_structure(s, lattice, c, a)
+    release thm lattice_meet_comm_structure(s, lattice, c, b)
+    lattice.meet(lattice.join(a, b), c) = lattice.meet(c, lattice.join(a, b)) = lattice.join(lattice.meet(c, a), lattice.meet(c, b)) = lattice.join(lattice.meet(a, c), lattice.meet(c, b)) = lattice.join(lattice.meet(a, c), lattice.meet(b, c))
+    release thm lattice_join_assoc_structure(s, lattice, a, lattice.meet(a, c), lattice.meet(b, c))
+    release thm lattice_join_meet_absorb_structure(s, lattice, a, c)
+    lattice.meet(lattice.join(a, b), lattice.join(a, c)) = lattice.join(lattice.meet(lattice.join(a, b), a), lattice.meet(lattice.join(a, b), c)) = lattice.join(a, lattice.meet(lattice.join(a, b), c)) = lattice.join(a, lattice.join(lattice.meet(a, c), lattice.meet(b, c))) = lattice.join(lattice.join(a, lattice.meet(a, c)), lattice.meet(b, c)) = lattice.join(a, lattice.meet(b, c))
+
+# Conversely, join-over-meet distributivity implies meet-over-join
+# distributivity by the order-dual calculation with join and meet exchanged.
+thm lattice_meet_join_distributive_of_join_meet_distributive_structure:
+    ? forall s nonempty_set, lattice &Lattice<s>, a, b, c s:
+        forall x, y, z s:
+            lattice.join(x, lattice.meet(y, z)) = lattice.meet(lattice.join(x, y), lattice.join(x, z))
+        =>:
+            lattice.meet(a, lattice.join(b, c)) = lattice.join(lattice.meet(a, b), lattice.meet(a, c))
+    lattice.join(lattice.meet(a, b), lattice.meet(a, c)) = lattice.meet(lattice.join(lattice.meet(a, b), a), lattice.join(lattice.meet(a, b), c))
+    release thm lattice_join_comm_structure(s, lattice, lattice.meet(a, b), a)
+    release thm lattice_join_meet_absorb_structure(s, lattice, a, b)
+    release thm lattice_join_comm_structure(s, lattice, lattice.meet(a, b), c)
+    lattice.join(c, lattice.meet(a, b)) = lattice.meet(lattice.join(c, a), lattice.join(c, b))
+    release thm lattice_join_comm_structure(s, lattice, c, a)
+    release thm lattice_join_comm_structure(s, lattice, c, b)
+    lattice.join(lattice.meet(a, b), c) = lattice.join(c, lattice.meet(a, b)) = lattice.meet(lattice.join(c, a), lattice.join(c, b)) = lattice.meet(lattice.join(a, c), lattice.join(c, b)) = lattice.meet(lattice.join(a, c), lattice.join(b, c))
+    release thm lattice_meet_assoc_structure(s, lattice, a, lattice.join(a, c), lattice.join(b, c))
+    release thm lattice_meet_join_absorb_structure(s, lattice, a, c)
+    lattice.join(lattice.meet(a, b), lattice.meet(a, c)) = lattice.meet(lattice.join(lattice.meet(a, b), a), lattice.join(lattice.meet(a, b), c)) = lattice.meet(a, lattice.join(lattice.meet(a, b), c)) = lattice.meet(a, lattice.meet(lattice.join(a, c), lattice.join(b, c))) = lattice.meet(lattice.meet(a, lattice.join(a, c)), lattice.join(b, c)) = lattice.meet(a, lattice.join(b, c))
+
+# The source's strict ordered ring combines an existing ring object with an
+# existing partial-order object. This residual property adds only the
+# compatibility laws; it does not receive or reconstruct loose operations.
+prop is_ordered_ring(s nonempty_set, ring &Ring<s>, order \PartialOrder<s>):
+    forall a, b, c s:
+        (a, b) $in order
+        =>:
+            (ring.add(c, a), ring.add(c, b)) $in order
+    forall a, b s:
+        (ring.zero, a) $in order
+        (ring.zero, b) $in order
+        =>:
+            (ring.zero, ring.mul(a, b)) $in order
+
+# Adding -a to a <= b gives 0 <= b-a.
+thm ring_sub_nonnegative_of_le_structure:
+    ? forall s nonempty_set, ring &Ring<s>, order \PartialOrder<s>, a, b s:
+        $is_ordered_ring(s, ring, order)
+        (a, b) $in order
+        =>:
+            (ring.zero, ring.add(b, ring.neg(a))) $in order
+    release thm partial_order_laws_from_member(s, order)
+    by thm ring_sub_nonnegative_of_le(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one, order, a, b) => (ring.zero, ring.add(b, ring.neg(a))) $in order
+thm ring_le_of_sub_nonnegative_structure:
+    ? forall s nonempty_set, ring &Ring<s>, order \PartialOrder<s>, a, b s:
+        $is_ordered_ring(s, ring, order)
+        (ring.zero, ring.add(b, ring.neg(a))) $in order
+        =>:
+            (a, b) $in order
+    release thm partial_order_laws_from_member(s, order)
+    by thm ring_le_of_sub_nonnegative(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one, order, a, b) => (a, b) $in order
+thm ring_mul_le_mul_right_of_nonnegative_structure:
+    ? forall s nonempty_set, ring &Ring<s>, order \PartialOrder<s>, a, b, c s:
+        $is_ordered_ring(s, ring, order)
+        (a, b) $in order
+        (ring.zero, c) $in order
+        =>:
+            (ring.mul(a, c), ring.mul(b, c)) $in order
+    release thm partial_order_laws_from_member(s, order)
+    by thm ring_mul_le_mul_right_of_nonnegative(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one, order, a, b, c) => (ring.mul(a, c), ring.mul(b, c)) $in order
+prop metric_space_laws(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) >= 0
+    forall x, y X:
+        dist(x, y) = 0
+        =>:
+            x = y
+    forall x, y X:
+        x = y
+        =>:
+            dist(x, y) = 0
+    forall x, y X:
+        dist(x, y) = dist(y, x)
+    forall x, y, z X:
+        dist(x, z) <= dist(x, y) + dist(y, z)
+
+# A metric space is the distance function constrained by its three laws.
+# Consumers expose its function signature and require carrier membership.
+template<X set>:
+    have MetricSpace set = {dist fn(x, y X) R: $metric_space_laws(X, dist)}
+thm metric_distance_nonnegative_structure:
+    ? forall X set, metric fn(u, v X) R, x, y X:
+        metric $in \MetricSpace<X>
+        =>:
+            metric(x, y) >= 0
+    \MetricSpace<X> = {dist fn(u, v X) R: $metric_space_laws(X, dist)}
+    by thm transport_membership(\MetricSpace<X>, {dist fn(u, v X) R: $metric_space_laws(X, dist)}, metric) => metric $in {dist fn(u, v X) R: $metric_space_laws(X, dist)}
+
+
+thm metric_eq_of_distance_zero_structure:
+    ? forall X set, metric fn(u, v X) R, x, y X:
+        metric $in \MetricSpace<X>
+        metric(x, y) = 0
+        =>:
+            x = y
+    \MetricSpace<X> = {dist fn(u, v X) R: $metric_space_laws(X, dist)}
+    by thm transport_membership(\MetricSpace<X>, {dist fn(u, v X) R: $metric_space_laws(X, dist)}, metric) => metric $in {dist fn(u, v X) R: $metric_space_laws(X, dist)}
+
+
+thm metric_distance_self_zero_structure:
+    ? forall X set, metric fn(u, v X) R, x X:
+        metric $in \MetricSpace<X>
+        =>:
+            metric(x, x) = 0
+    \MetricSpace<X> = {dist fn(u, v X) R: $metric_space_laws(X, dist)}
+    by thm transport_membership(\MetricSpace<X>, {dist fn(u, v X) R: $metric_space_laws(X, dist)}, metric) => metric $in {dist fn(u, v X) R: $metric_space_laws(X, dist)}

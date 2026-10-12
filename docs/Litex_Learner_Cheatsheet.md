@@ -234,6 +234,7 @@ Finite enumeration checks each permitted assignment and its local premises:
 by enumerate finite_set:
     ? forall x {1, 2}:
         x > 0
+    x > 0
 ```
 
 An induction supplies a base and successor step. The induction hypothesis is
@@ -253,6 +254,12 @@ claim:
             (n + 1) * 2 = (n + 1) + (n + 1) >= (n + 1) + 1
             2^(n + 1) = 2^n * 2 >= (n + 1) * 2 >= (n + 1) + 1
 ```
+
+`claim`, `sketch`, `strategy`, block proof methods and every `case` branch
+require a nonempty proof process after the goal. Comments do not count.
+Named `thm` bodies remain optional when their goals already verify. Inline
+proof commands remain available; a witness with a trailing `:` must have
+actual indented proof statements.
 
 ## Common places to get stuck
 

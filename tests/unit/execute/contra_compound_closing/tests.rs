@@ -228,7 +228,7 @@ fn malformed_tails_and_cases_compound_tail_stay_rejected() {
         }
         assert!(rt.run_litex_code("have q R = 2").unwrap().success);
     }
-    assert!(runtime().run_litex_code("by cases:\n    ? 1 = 1\n    case 1 = 1\n    case 1 != 1:\n        impossible 1 = 1").unwrap().success);
+    assert!(runtime().run_litex_code("by cases:\n    ? 1 = 1\n    case 1 = 1:\n        1 = 1\n    case 1 != 1:\n        impossible 1 = 1").unwrap().success);
 }
 
 #[test]
@@ -359,7 +359,7 @@ fn fact_family(fact: &Fact) -> &'static str {
 }
 
 fn closing_sources() -> Vec<(&'static str, String)> {
-    let negative_exist = "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1\n";
+    let negative_exist = "by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\n    x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1\n";
     let unique = "by contra:\n    ? exist! x {0} st {x = 0}\n    obtain a from exist y {0} st {y = 0, y != 0}\n    impossible a != 0\n";
     vec![
         ("atomic", "by contra:\n    ? 1 = 1\n    impossible 1 = 1".into()),

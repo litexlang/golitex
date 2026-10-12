@@ -27,8 +27,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local
-            || proof.auto_opened_struct_layers.is_some()
+        if proof.auto_opened_struct_layers.is_some()
             || proof.groups.len() != proof.statement.param_def.groups.len()
         {
             return Err(LeanCompileError::unsupported("Have/ContextProfile"));
@@ -117,10 +116,15 @@ impl LitexToLeanCompiler {
                             ))
                         }
                     }
-                    self.validate_store(store, &fact)?;
+                    self.validate_store(&store.store, &fact)?;
                     let id = parameter.id.value();
                     let fact_id = fact.fact_id().value();
-                    declarations.push(format!("variable {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : Litex.IsSet _value_i{id})"));
+                    if local {
+                        declarations.push(format!("let _value_i{id} := Litex.semanticObject (M := M) (M.standard Litex.StandardSetValue.complex) (M.standard_isSet Litex.StandardSetValue.complex)"));
+                        declarations.push(format!("have h_{fact_id} : Litex.IsSet _value_i{id} := Litex.isSet _value_i{id}"));
+                    } else {
+                        declarations.push(format!("variable {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : Litex.IsSet _value_i{id})"));
+                    }
                 }
                 continue;
             }
@@ -160,12 +164,16 @@ impl LitexToLeanCompiler {
                 }
             }
             let check_name = format!("h_{}", nonempty_subject.fact_id().value());
-            declarations.push(format!(
-                "theorem {check_name}{} : {} := {}",
-                self.context_header(position),
-                nonempty.0,
-                nonempty.1
-            ));
+            declarations.push(if local {
+                format!("have {check_name} : {} := {}", nonempty.0, nonempty.1)
+            } else {
+                format!(
+                    "theorem {check_name}{} : {} := {}",
+                    self.context_header(position),
+                    nonempty.0,
+                    nonempty.1
+                )
+            });
             self.validate_parameter_store_capture(&captured.defined_params)?;
             if captured.defined_params.store_and_infer_results.len() != group.params.len() {
                 return Err(LeanCompileError::new(
@@ -188,15 +196,40 @@ impl LitexToLeanCompiler {
                     owner: SourceOwner::ParamTypeWD(&captured.param_type_well_defined),
                     before: 1,
                 };
-                let (binders, arguments) = self.introduce_numeric_parameter(
-                    parameter,
-                    &carrier,
-                    store,
-                    &carrier_position,
-                )?;
-                declarations.push(format!("variable {}", binders.join(" ")));
-                let _ = arguments;
                 let fact = self.resolve_fact(store.primary_fact_id(), &parameter_position)?;
+                if local {
+                    let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+                    if !matches!(&fact, Fact::AtomicFact(AtomicFact::InFact(member))
+                        if member.element.ir() == object.ir() && member.set.ir() == carrier.ir())
+                    {
+                        return Err(LeanCompileError::new(
+                            "Have/ParameterSubject",
+                            "The captured membership belongs to another local parameter or carrier.",
+                        ));
+                    }
+                    self.validate_store(&store.store, &fact)?;
+                    let id = parameter.id.value();
+                    let member_id = store.primary_fact_id().value();
+                    declarations.push(format!(
+                        "obtain ⟨_witness_i{id}, _member_i{id}⟩ := {check_name}"
+                    ));
+                    declarations.push(format!(
+                        "let _value_i{id} := Litex.semanticObject (M := M) _witness_i{id} (M.member_isSet _member_i{id})"
+                    ));
+                    declarations.push(format!(
+                        "have h_{member_id} : Litex.In _value_i{id} {} := _member_i{id}",
+                        standard_term(set)?,
+                    ));
+                } else {
+                    let (binders, arguments) = self.introduce_numeric_parameter(
+                        parameter,
+                        &carrier,
+                        store,
+                        &carrier_position,
+                    )?;
+                    declarations.push(format!("variable {}", binders.join(" ")));
+                    let _ = arguments;
+                }
                 let member = (
                     self.fact_proposition(&fact, &carrier_position)?,
                     format!("h_{}", store.primary_fact_id().value()),

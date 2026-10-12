@@ -86,7 +86,10 @@ impl LitexToLeanCompiler {
         let mut offset = 0;
         for (group, wd) in groups.iter().zip(&proof.param_type_well_defined) {
             let set = match &group.param_type {
-                ParamType::Obj(set @ Obj::StandardSet(_)) => set,
+                ParamType::Obj(set) => {
+                    self.compile_numeric_carrier(set, position)?;
+                    set
+                }
                 _ => return Err(LeanCompileError::unsupported("Prop/ParameterCarrier")),
             };
             let group_position = SourcePosition {
@@ -128,7 +131,7 @@ impl LitexToLeanCompiler {
                         ))
                     }
                 }
-                self.validate_store(store, &fact)?;
+                self.validate_store(&store.store, &fact)?;
                 let id = parameter.id.value();
                 binders.push(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"));
                 let member = (
@@ -153,7 +156,10 @@ impl LitexToLeanCompiler {
             .zip(&proof.assumed_iff_facts)
             .enumerate()
         {
-            if !matches!(fact, Fact::AtomicFact(_)) {
+            if !matches!(
+                fact,
+                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
+            ) {
                 return Err(LeanCompileError::unsupported("Prop/CompoundClause"));
             }
             let prior = SourcePosition {
@@ -161,7 +167,7 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             self.compile_fact_wd(&assumed.well_defined, fact, &prior)?;
-            self.validate_store(&assumed.store_and_infer, fact)?;
+            self.validate_store(&assumed.store_and_infer.store, fact)?;
             let formed = SourcePosition {
                 parent: Some(&prior),
                 owner: SourceOwner::FactWD(&assumed.well_defined),
@@ -175,7 +181,7 @@ impl LitexToLeanCompiler {
                 before: count + index + 1,
                 ..*position
             };
-            let mut derived = self.compile_parameter_inferences(
+            let mut derived = self.compile_set_builder_parameter_inferences(
                 &assumed.store_and_infer,
                 fact,
                 &clause,

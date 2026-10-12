@@ -1,6 +1,7 @@
 by enumerate finite_set:
     ? forall x {1, 2}:
         x = 1 or x = 2
+    x = 1 or x = 2
 
 forall x {1, 2}:
     x = 1 or x = 2

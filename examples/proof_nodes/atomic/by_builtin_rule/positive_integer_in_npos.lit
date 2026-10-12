@@ -29,7 +29,8 @@ claim:
     n >= 1
     by cases:
         ? n = 1 or n > 1
-        case n = 1
+        case n = 1:
+            n = 1 or n > 1
         case n != 1:
             by contra:
                 ? n > 1

@@ -25,9 +25,8 @@ sketch:
 # P05: y + 0 = y
 sketch:
     have x R = 1
-    claim:
-        ? forall y R:
-            y + 0 = y
+    forall y R:
+        y + 0 = y
 
 # P06: 2 $in x
 sketch:

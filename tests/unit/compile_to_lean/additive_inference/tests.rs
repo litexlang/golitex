@@ -11,7 +11,8 @@ const SOURCE: &str = "forall a, b, k C:\n    a+k=b+k\n    =>:\n        a=b\n";
 fn additive_rule_mut(
     store: &mut StoreFactAndInferResult,
 ) -> &mut InferEqualFactAdditiveCancellationResult {
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &mut store.infer
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+        &mut store.infer
     else {
         panic!("stored equality inference")
     };
@@ -59,7 +60,7 @@ fn additive_inference_retains_derived_wd_and_original_ids() {
     let FactWellDefinedProof::Equality(wd) = &rule.derived.well_defined else {
         panic!("retained equality formation")
     };
-    let StoreFactResult::AtomicFact(derived) = &rule.derived.store_and_infer.store else {
+    let StoreFactResult::AtomicFact(derived) = &rule.derived.store else {
         panic!("derived equality store")
     };
     let AtomicFact::EqualFact(equal) = &derived.fact else {
@@ -117,7 +118,7 @@ fn additive_inference_rejects_wrong_derived_wd_and_deleted_inferences() {
             };
             std::mem::swap(&mut wd.left, &mut wd.right);
         } else {
-            let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) =
+            let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
                 &mut store.infer
             else {
                 panic!("equality inference")
@@ -142,7 +143,7 @@ fn additive_inference_rejects_changed_derived_subject_and_missing_nested_step() 
     let (mut result, compiler) = super::execute(SOURCE);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let rule = additive_rule_mut(&mut forall.assumed_dom_facts[0].store_and_infer);
-    let StoreFactResult::AtomicFact(stored) = &mut rule.derived.store_and_infer.store else {
+    let StoreFactResult::AtomicFact(stored) = &mut rule.derived.store else {
         panic!("derived atomic store")
     };
     let AtomicFact::EqualFact(equal) = &mut stored.fact else {
@@ -153,14 +154,13 @@ fn additive_inference_rejects_changed_derived_subject_and_missing_nested_step() 
         .expect_err("the original exact fact ID cannot acquire another subject");
     assert_eq!(error.route, "Inference/AdditiveIdentity");
 
-    let nested = "forall a, b, x, y Q:\n    (a+x)+y=(b+x)+y\n    =>:\n        a=b\n";
+    let nested = "forall a, b, x, y Q:\n    (a+x)+y=(b+x)+y\n    a+x=b+x\n    =>:\n        a=b\n";
     let (mut result, compiler) = super::execute(nested);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
-    let outer = additive_rule_mut(&mut forall.assumed_dom_facts[0].store_and_infer);
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) =
-        &mut outer.derived.store_and_infer.infer
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+        &mut forall.assumed_dom_facts[1].store_and_infer.infer
     else {
-        panic!("nested equality inference")
+        panic!("explicit second cancellation seed")
     };
     rules.clear();
     let error = super::compile_run(&result, &compiler, "missing_nested_cancellation")
@@ -182,7 +182,7 @@ fn additive_inference_rejects_future_and_closed_scope_membership_citations() {
             let forall = super::forall_proof_mut(&mut result.statement_results[0]);
             additive_rule_mut(&mut forall.assumed_dom_facts[0].store_and_infer)
                 .derived
-                .store_and_infer
+                .store
                 .primary_fact_id()
         };
         let forall = super::forall_proof_mut(&mut result.statement_results[index]);
@@ -239,16 +239,16 @@ fn additive_inference_wd_cursor_keeps_nested_constructors_after_the_current_stag
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let nested_id = {
         let outer = additive_rule_mut(&mut forall.assumed_dom_facts[0].store_and_infer);
-        let nested = additive_rule_mut(&mut outer.derived.store_and_infer);
+        let nested = outer;
         let FactWellDefinedProof::Equality(formation) = &mut nested.derived.well_defined else {
             panic!("nested cancellation formation")
         };
         // This visitor-only marker occurs in the nested retained WD, with its
         // original standalone statement removed from the source-result prefix.
         formation.left = marker_wd;
-        nested.derived.store_and_infer.primary_fact_id()
+        nested.derived.store.primary_fact_id()
     };
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) =
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
         &forall.assumed_dom_facts[0].store_and_infer.infer
     else {
         panic!("original equality inference group")
@@ -260,17 +260,17 @@ fn additive_inference_wd_cursor_keeps_nested_constructors_after_the_current_stag
             _ => None,
         })
         .unwrap();
-    let primary_id = outer.derived.store_and_infer.primary_fact_id();
+    let primary_id = outer.derived.store.primary_fact_id();
     let completed_source = SourcePosition::new(None, SourceOwner::Forall(forall), 5);
     for parent in [None, Some(&completed_source)] {
         let group = SourcePosition::new(parent, SourceOwner::EqualityInferences(rules), 0);
-        let current = SourcePosition::new(Some(&group), SourceOwner::AdditiveInference(outer), 4);
+        let current = SourcePosition::new(Some(&group), SourceOwner::AdditiveInference(outer), 3);
         assert!(current
             .with_visible_wd(&marker_object, &mut |_, _| Ok(()))
             .unwrap()
             .is_none());
         let completed = SourcePosition {
-            before: 5,
+            before: 4,
             ..current
         };
         assert!(completed
@@ -278,13 +278,17 @@ fn additive_inference_wd_cursor_keeps_nested_constructors_after_the_current_stag
             .unwrap()
             .is_some());
         if parent.is_some() {
-            current
+            assert_eq!(primary_id, nested_id);
+            assert_eq!(
+                current
+                    .visible_fact(primary_id, &compiler.runtime)
+                    .unwrap_err()
+                    .route,
+                "Inference/FutureProducer"
+            );
+            completed
                 .visible_fact(primary_id, &compiler.runtime)
-                .expect("the original primary seed is already stored before its nested inference");
-            let error = current
-                .visible_fact(nested_id, &compiler.runtime)
-                .expect_err("the nested result has not been inferred at the primary store stage");
-            assert_eq!(error.route, "Inference/FutureProducer");
+                .expect("the direct conclusion follows its original WD");
         }
     }
 }

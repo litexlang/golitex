@@ -4,7 +4,7 @@ use crate::store_fact_and_infer::InferFactResult;
 
 impl Runtime {
     // Derive extra facts from an already-stored fact; each derived fact goes through
-    // `store_inferred_fact_and_infer` (WD then store+infer).
+    // `store_inferred_fact` (WD then store+infer).
     // Example: after storing `a $in {x R: x > 0}`, infer also stores `a $in R` and `a > 0`.
     pub fn infer_fact(
         &mut self,

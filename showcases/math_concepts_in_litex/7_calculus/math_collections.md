@@ -34,7 +34,7 @@ for the first-version stop line.
 - **Meaning:** function values approach `L` as inputs in a supplied real subset
   approach `x0` through a punctured neighborhood.
 - **Form:** `prop has_function_limit(E,f,x0,L)`.
-- **Rejected form:** globalizing every function to `R -> R` or silently
+- **Rejected form:** globalizing every function to `fn(x R) R` or silently
   evaluating outside `E`.
 - **Dependencies:** real subsets, punctured neighborhoods, absolute distance.
 - **Use:** continuity and derivative difference quotients.

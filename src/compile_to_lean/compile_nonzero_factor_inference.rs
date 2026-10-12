@@ -29,7 +29,6 @@ impl LitexToLeanCompiler {
             ));
         };
         let captured = &rule.derived;
-        let derived = &captured.store_and_infer;
         let fact = self.cancellation_fact(captured, position, "Inference/NonzeroFactor")?;
         let Fact::AtomicFact(AtomicFact::EqualFact(equal)) = &fact else {
             unreachable!("the captured store is an equality")
@@ -102,12 +101,6 @@ impl LitexToLeanCompiler {
         } else {
             self.context_application(&name, &after)
         };
-        declarations.extend(self.compile_stored_inferences(
-            derived,
-            &fact,
-            &(conclusion.0, reference),
-            &after,
-        )?);
         Ok(declarations)
     }
 }

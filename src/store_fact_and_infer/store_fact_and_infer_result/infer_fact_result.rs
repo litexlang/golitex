@@ -1,7 +1,8 @@
+use crate::ast::fact::Fact;
 use crate::ast::names::AtomicName;
 use crate::runtime::FactId;
 
-use super::{InferAtomicFactResult, StoreFactAndInferResult};
+use super::{InferAtomicFactResult, StoreInferredFactResult};
 
 // infer_fact: only generate extra facts and store them (via store_inferred / store_fact_and_infer).
 // Never used to poke unrelated ExecEnv indexes — that belongs to store_fact.
@@ -21,8 +22,24 @@ pub struct InferAndFactResult {
 }
 
 pub struct InferChainFactResult {
-    pub adjacent_infers: Vec<InferAtomicFactResult>,
+    pub adjacent_infers: Vec<InferChainAdjacentResult>,
     pub transitive_closures: Vec<InferChainTransitiveClosureResult>,
+}
+
+pub struct InferChainAdjacentResult {
+    pub edge_index: usize,
+    pub fact: Fact,
+    pub infer: InferAtomicFactResult,
+}
+
+impl InferChainAdjacentResult {
+    pub fn new(edge_index: usize, fact: Fact, infer: InferAtomicFactResult) -> Self {
+        Self {
+            edge_index,
+            fact,
+            infer,
+        }
+    }
 }
 
 pub struct InferChainTransitiveClosureResult {
@@ -30,7 +47,7 @@ pub struct InferChainTransitiveClosureResult {
     pub start_object_index: usize,
     pub end_object_index: usize,
     pub premise_edge_indexes: Vec<usize>,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub enum ChainTransitiveCite {
@@ -62,7 +79,7 @@ pub enum InferExistUniqueFactResult {
 }
 
 pub struct InferExistUniqueUniquenessForallResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub enum InferNotExistFactResult {
@@ -72,11 +89,11 @@ pub enum InferNotExistFactResult {
 }
 
 pub struct InferNotExistDemorganForallResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferNotForallFactResult {
-    pub derived_exist: Box<StoreFactAndInferResult>,
+    pub derived_exist: Box<StoreInferredFactResult>,
 }
 
 pub enum InferForallFactResult {
@@ -103,10 +120,10 @@ impl InferFactResult {
             Self::ChainFact(r) => {
                 let mut ids = Vec::new();
                 for a in &r.adjacent_infers {
-                    ids.extend(a.stored_fact_ids());
+                    ids.extend(a.infer.stored_fact_ids());
                 }
                 for c in &r.transitive_closures {
-                    ids.extend(c.derived.stored_fact_ids());
+                    ids.extend(c.derived.store.stored_fact_ids());
                 }
                 ids
             }

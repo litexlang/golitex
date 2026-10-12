@@ -122,24 +122,26 @@ fn finite_guards_skip_only_proved_false_premises_and_reject_false_conclusions() 
             format!("by {method}:\n    ? forall n {{0, 1, 2}}:\n        n > 0\n        =>:\n");
         check(
             &mut runtime(true),
-            &(prefix.clone() + "            n != 0"),
+            &(prefix.clone() + "            n != 0\n    n != 0"),
             &[true],
         );
         check(
             &mut runtime(true),
-            &(prefix + "            n = 0"),
+            &(prefix + "            n = 0\n    1 = 1"),
             &[false],
         );
         check(
             &mut runtime(true),
-            &format!("by {method}:\n    ? forall n {{}}:\n        n = n"),
+            &format!("by {method}:\n    ? forall n {{}}:\n        n = n\n    n = n"),
             &[true],
         );
-        check(&mut runtime(true), &format!("have a R\nby {method}:\n    ? forall n {{0}}:\n        a = 0\n        =>:\n            0 = 1"), &[true, false]);
-        check(&mut runtime(true), &format!("have a R\nby {method}:\n    ? forall n {{0}}:\n        a = 0\n        =>:\n            a = 0"), &[true, true]);
+        check(&mut runtime(true), &format!("have a R\nby {method}:\n    ? forall n {{0}}:\n        a = 0\n        =>:\n            0 = 1\n    1 = 1"), &[true, false]);
+        check(&mut runtime(true), &format!("have a R\nby {method}:\n    ? forall n {{0}}:\n        a = 0\n        =>:\n            a = 0\n    a = 0"), &[true, true]);
         check(
             &mut runtime(true),
-            &format!("by {method}:\n    ? forall p cart({{0, 1}}, {{2, 3}}):\n        p = p"),
+            &format!(
+                "by {method}:\n    ? forall p cart({{0, 1}}, {{2, 3}}):\n        p = p\n    1 = 1"
+            ),
             &[false],
         );
     }
@@ -151,7 +153,7 @@ fn finite_numeric_carriers_verify_symbolic_arithmetic_and_each_assignment() {
         let mut rt = runtime(true);
         let run = rt
             .run_litex_code(&format!(
-                "by {method}:\n    ? forall n {{0, 1}}:\n        n + 0 = n"
+                "by {method}:\n    ? forall n {{0, 1}}:\n        n + 0 = n\n    n + 0 = n"
             ))
             .unwrap();
         assert!(
@@ -189,22 +191,22 @@ fn finite_numeric_carriers_verify_symbolic_arithmetic_and_each_assignment() {
         check(&mut rt, "have n R = 5", &[true]);
         check(
             &mut runtime(true),
-            &format!("by {method}:\n    ? forall n {{0, 1}}:\n        n + 0 = 0"),
+            &format!("by {method}:\n    ? forall n {{0, 1}}:\n        n + 0 = 0\n    1 = 1"),
             &[false],
         );
         check(
             &mut runtime(true),
-            &format!("by {method}:\n    ? forall n {{0, {{1}}}}:\n        n + 0 = n"),
+            &format!("by {method}:\n    ? forall n {{0, {{1}}}}:\n        n + 0 = n\n    1 = 1"),
             &[false],
         );
         check(
             &mut runtime(true),
-            &format!("by {method}:\n    ? forall n {{{{1}}}}:\n        n + 0 = n"),
+            &format!("by {method}:\n    ? forall n {{{{1}}}}:\n        n + 0 = n\n    1 = 1"),
             &[false],
         );
         check(
             &mut runtime(true),
-            &format!("by {method}:\n    ? forall n {{0, 1}}:\n        n / 0 = n"),
+            &format!("by {method}:\n    ? forall n {{0, 1}}:\n        n / 0 = n\n    1 = 1"),
             &[false],
         );
     }

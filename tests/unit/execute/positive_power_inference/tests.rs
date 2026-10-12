@@ -32,7 +32,8 @@ fn seed_rules(result: &ExecStmtResult) -> &[InferEqualityResult] {
         panic!("local introduction expected")
     };
     let seed = &proof.assumed_dom_facts.last().unwrap().store_and_infer;
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &seed.infer else {
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &seed.infer
+    else {
         panic!("equality inference expected")
     };
     rules

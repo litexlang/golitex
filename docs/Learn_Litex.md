@@ -454,6 +454,7 @@ have fn reciprocal(x R: x != 0) R = 1 / x
 claim:
     ? forall x R:
         reciprocal(x) * x = 1
+    reciprocal(x) * x = 1
 ```
 
 `x` is an arbitrary real number here. Nothing excludes zero, so the goal

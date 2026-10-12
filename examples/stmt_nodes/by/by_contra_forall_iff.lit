@@ -19,6 +19,8 @@ by contra:
     obtain a from exist y {0} st {0 != 0 or 0 != 0, 0 = 0 or 0 = 0}
     by cases:
         ? 0 != 0
-        case 0 != 0
-        case 0 != 0
+        case 0 != 0:
+            0 != 0
+        case 0 != 0:
+            0 != 0
     impossible 0 != 0

@@ -372,6 +372,17 @@ impl Runtime {
             });
         }
 
+        // Checked Cartesian membership or tuple equality gives a field the
+        // same complete finite domain as any other finite-function value.
+        // Reuse that route with its original membership/equality evidence.
+        if !self.finite_function_signatures(&head_obj).is_empty() {
+            let finite =
+                self.verify_in_function_set_headed_fn_obj_well_definedness(value, verify_state)?;
+            if !finite.is_failed() {
+                return Ok(finite);
+            }
+        }
+
         let mut candidate_spaces: Vec<FnSet> = self
             .collect_in_function_set_candidates(&head_obj)
             .into_iter()

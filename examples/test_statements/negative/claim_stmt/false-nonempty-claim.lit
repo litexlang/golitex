@@ -1,0 +1,4 @@
+# A nonempty process must still prove its goal.
+claim:
+    ? 1 = 2
+    1 = 1

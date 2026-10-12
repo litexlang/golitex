@@ -3,3 +3,4 @@ by enumerate finite_set:
         n > 0
         =>:
             n = 0
+    1 = 1

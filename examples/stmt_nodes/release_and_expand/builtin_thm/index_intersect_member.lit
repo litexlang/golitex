@@ -10,5 +10,6 @@ thm singleton_indexed_member:
     by enumerate finite_set:
         ? forall idx {1}:
             x $in A(idx)
+        idx = 1
     release thm index_intersect_member(x, index_intersect({1}, X, A))
 # Boundary: the exact function domain and a nonempty index are still required.

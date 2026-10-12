@@ -5,4 +5,5 @@ claim:
             x >= 0
     by cases:
         ? x >= 0
-        case x = 0
+        case x = 0:
+            x >= 0

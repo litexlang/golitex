@@ -3,3 +3,4 @@
 
 strategy bad:
     ? 1 = 1
+    1 = 1

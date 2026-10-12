@@ -13,7 +13,7 @@ use crate::ast::param::{
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactFamilyUnionResult, InferInFactIndexCartResult,
-    InferInFactIndexIntersectResult, InferInFactIndexUnionResult, StoreFactAndInferResult,
+    InferInFactIndexIntersectResult, InferInFactIndexUnionResult, StoreInferredFactResult,
 };
 
 impl Runtime {
@@ -71,7 +71,7 @@ impl Runtime {
             facts: vec![QuantifierFreeFact::AtomicFact(body_in)],
             line_file: in_fact.line_file.clone(),
         });
-        let Some(stored) = self.try_store_inferred_fact_and_infer(&exist, verify_state)? else {
+        let Some(stored) = self.try_store_inferred_fact(&exist, verify_state)? else {
             return Ok(None);
         };
         Ok(Some(InferAtomicExceptEqualityResult::InFactFamilyUnion(
@@ -89,7 +89,7 @@ impl Runtime {
         let Obj::SetOperator(SetOperator::IndexUnion(index_union)) = &in_fact.set else {
             return Ok(None);
         };
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
+        let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         let ambient_id = self.global_ids.allocate_fact_id();
         let ambient = AtomicFact::InFact(InFact {
             fact_id: ambient_id,
@@ -98,7 +98,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         if let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(ambient), verify_state)?
+            self.try_store_inferred_fact(&Fact::AtomicFact(ambient), verify_state)?
         {
             derived.push(stored);
         }
@@ -132,7 +132,7 @@ impl Runtime {
             facts: vec![QuantifierFreeFact::AtomicFact(element_in_fiber)],
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&exist, verify_state)? {
+        if let Some(stored) = self.try_store_inferred_fact(&exist, verify_state)? {
             derived.push(stored);
         }
         if derived.is_empty() {
@@ -151,7 +151,7 @@ impl Runtime {
         let Obj::SetOperator(SetOperator::IndexIntersect(index_intersect)) = &in_fact.set else {
             return Ok(None);
         };
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
+        let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         let ambient_id = self.global_ids.allocate_fact_id();
         let ambient = AtomicFact::InFact(InFact {
             fact_id: ambient_id,
@@ -160,7 +160,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         if let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(ambient), verify_state)?
+            self.try_store_inferred_fact(&Fact::AtomicFact(ambient), verify_state)?
         {
             derived.push(stored);
         }
@@ -195,7 +195,7 @@ impl Runtime {
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(element_in_fiber)],
             line_file: in_fact.line_file.clone(),
         });
-        if let Some(stored) = self.try_store_inferred_fact_and_infer(&forall, verify_state)? {
+        if let Some(stored) = self.try_store_inferred_fact(&forall, verify_state)? {
             derived.push(stored);
         }
         if derived.is_empty() {
@@ -217,7 +217,7 @@ impl Runtime {
         let Obj::SetOperator(SetOperator::IndexCart(index_cart)) = &in_fact.set else {
             return Ok(None);
         };
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
+        let mut derived: Vec<StoreInferredFactResult> = Vec::new();
 
         let binder = self.fresh_internal_param();
         let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(FnSet {
@@ -239,7 +239,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         if let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(fn_set_in), verify_state)?
+            self.try_store_inferred_fact(&Fact::AtomicFact(fn_set_in), verify_state)?
         {
             derived.push(stored);
         }
@@ -253,7 +253,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         if let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(choice), verify_state)?
+            self.try_store_inferred_fact(&Fact::AtomicFact(choice), verify_state)?
         {
             derived.push(stored);
         }

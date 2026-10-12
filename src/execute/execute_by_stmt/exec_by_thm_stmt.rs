@@ -126,6 +126,7 @@ pub fn exec_by_thm_stmt(
                 Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
             };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
+        let mut dom_stores = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
             if proof.is_failed() {
@@ -138,11 +139,12 @@ pub fn exec_by_thm_stmt(
                     },
                 )));
             }
-            let _ = rt.store_fact_and_infer(
+            let stored = rt.store_fact_and_infer(
                 dom,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
             dom_proofs.push(proof);
+            dom_stores.push(stored);
         }
         let conclusions_wd =
             match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
@@ -183,6 +185,7 @@ pub fn exec_by_thm_stmt(
             type_proofs,
             function_domain,
             dom_proofs,
+            dom_stores,
             conclusions_wd,
             returned_conclusions,
             selected_proof,
@@ -193,6 +196,7 @@ pub fn exec_by_thm_stmt(
         type_proofs,
         function_domain,
         dom_proofs,
+        dom_stores,
         conclusions_wd,
         returned_conclusions,
         selected_proof,
@@ -231,6 +235,7 @@ pub fn exec_by_thm_stmt(
             type_proofs,
             function_domain,
             dom_proofs,
+            dom_stores,
             conclusions_wd,
             returned_conclusions,
             selected_proof,

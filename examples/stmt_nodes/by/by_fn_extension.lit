@@ -7,5 +7,4 @@ by fn_extension f = g
 
 have fn add1(x R, y R) R = x + y
 have fn add2(a R, b R) R = a + b
-by fn_extension:
-    ? add1 = add2
+by fn_extension add1 = add2

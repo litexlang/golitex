@@ -53,12 +53,12 @@ fn check(code: &str, needles: &[&str]) {
 
 #[test]
 fn false_claim_conclusion_retains_the_exact_goal() {
-    check("claim:\n    ? 1 = 2\n", &["conclusion", "1 = 2"]);
+    check("claim:\n    ? 1 = 2\n    1 = 1\n", &["conclusion", "1 = 2"]);
 }
 
 #[test]
 fn extension_retains_nested_failed_claim() {
-    check("by extension:\n    ? {1} = {2}\n    claim:\n        ? forall x {1}:\n            x $in {2}\n", &["proof_body", "conclusion", "x $in {2}"]);
+    check("by extension:\n    ? {1} = {2}\n    claim:\n        ? forall x {1}:\n            x $in {2}\n        1 = 1\n", &["proof_body", "conclusion", "x $in {2}"]);
 }
 
 #[test]
@@ -76,5 +76,8 @@ fn contradiction_retains_failed_body_before_closing() {
 
 #[test]
 fn ill_defined_claim_retains_wd_before_body() {
-    check("claim:\n    ? 1 / 0 = 1 / 0\n", &["goal_wd", "1 / 0"]);
+    check(
+        "claim:\n    ? 1 / 0 = 1 / 0\n    1 / 0 = 1 / 0\n",
+        &["goal_wd", "1 / 0"],
+    );
 }

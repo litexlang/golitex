@@ -16,7 +16,7 @@ impl Runtime {
         tb.expect(SKETCH)?;
         tb.expect_colon_end_of_header()?;
         self.push_parse_scope();
-        let proof = self.parse_body_stmts(&tb.body);
+        let proof = self.parse_nonempty_proof_body(&tb.body, &tb, "sketch");
         self.pop_parse_scope();
         let proof = proof?;
         Ok(Stmt::ProofBlock(ProofBlockStmt::SketchStmt(SketchStmt {

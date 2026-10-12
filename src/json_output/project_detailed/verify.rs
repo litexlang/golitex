@@ -2,7 +2,7 @@
 
 use super::searched::{
     project_atomic_except_searched, project_equal_searched, project_exist_searched,
-    project_or_searched,
+    project_known_forall, project_or_searched,
 };
 use super::store::{project_store_and_infer, project_verify_facts};
 use super::wd::{
@@ -191,6 +191,13 @@ fn project_and(result: &VerifyAndFactResult, runtime: &Runtime) -> JsonValue {
                     string(Fact::AndFact(s.fact.clone()).readable_string()),
                 ),
                 ("components", project_verify_facts(&s.components, runtime)),
+                (
+                    "searched_proof",
+                    s.known_forall
+                        .as_ref()
+                        .map(|proof| project_known_forall(proof, runtime))
+                        .unwrap_or(JsonValue::Null),
+                ),
             ],
         ),
         VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToVerifyWellDefined {
@@ -250,6 +257,13 @@ fn project_chain(result: &VerifyChainFactResult, runtime: &Runtime) -> JsonValue
                     string(Fact::ChainFact(s.fact.clone()).readable_string()),
                 ),
                 ("adjacent", project_verify_facts(&s.adjacent, runtime)),
+                (
+                    "searched_proof",
+                    s.known_forall
+                        .as_ref()
+                        .map(|proof| project_known_forall(proof, runtime))
+                        .unwrap_or(JsonValue::Null),
+                ),
             ],
         ),
         VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToVerifyWellDefined {

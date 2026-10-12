@@ -15,18 +15,21 @@ appear alongside the examples that motivate them.
 We begin with the two standard directions in the real plane:
 
 ```litex
-have e1 finite_seq(R, 2) = (1, 0)
-have e2 finite_seq(R, 2) = (0, 1)
-have standard_basis finite_seq(finite_seq(R, 2), 2) = (e1, e2)
+have e1 R × R = (1, 0)
+have e2 R × R = (0, 1)
+have standard_basis finite_seq(R × R, 2) = (e1, e2)
 
 standard_basis(1) = (1, 0)
 standard_basis(2) = (0, 1)
 ```
 
-These lines are drawn from two places in the notes. A vector is an ordered pair
-of real numbers, represented by a finite sequence; a list of vectors is another
-finite sequence. The same representation allows repeated directions and an
-empty list.
+These lines are drawn from two places in the notes. We write the real plane
+$\mathbb{R}^2 = \mathbb{R} \times \mathbb{R}$ as `R × R` in Litex,
+equivalently `cart(R, R)`.
+This is the same set as `finite_seq(R, 2)`: its elements are ordered pairs of
+real numbers, with coordinates accessed as `v(1)` and `v(2)`.
+A list of vectors has type `finite_seq(R × R, n)`, allowing repeated
+directions and an empty list.
 
 Coordinate addition and scalar multiplication suggest the vector space axioms.
 The notes construct the real field and the real plane as instances of `Field`
@@ -73,6 +76,8 @@ space. Basis extension, equality of basis lengths, and a general definition of
 dimension are topics for subsequent lectures.
 
 The source contains no `trust`, `axiom`, or `abstract_prop`.
+The inverse operation is defined only for nonzero scalars, and the same
+standard expansion is reused in the proofs of spanning and independence.
 
 [math_collections.md](math_collections.md) explains the mathematical organization
 and the roles of the main interfaces. [litex.config](litex.config) exports the

@@ -4,16 +4,34 @@ use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToL
 mod additive_inference_tests;
 #[path = "../../tests/unit/compile_to_lean/arithmetic_congruence/tests.rs"]
 mod arithmetic_congruence_tests;
+#[path = "../../tests/unit/compile_to_lean/bounded_set_combinations/tests.rs"]
+mod bounded_set_combinations_tests;
 #[path = "../../tests/unit/compile_to_lean/by_definition_in_theorem/tests.rs"]
 mod by_definition_in_theorem_tests;
 #[path = "../../tests/unit/compile_to_lean/cancellation_inference/tests.rs"]
 mod cancellation_inference_tests;
+#[path = "../../tests/unit/compile_to_lean/chain_and/tests.rs"]
+mod chain_and_tests;
+#[path = "../../tests/unit/compile_to_lean/composed_formula_predicate_guards/tests.rs"]
+mod composed_formula_predicate_guards_tests;
+#[path = "../../tests/unit/compile_to_lean/compound_theorem_returns/tests.rs"]
+mod compound_theorem_returns_tests;
+#[path = "../../tests/unit/compile_to_lean/concrete_predicate_transport/tests.rs"]
+mod concrete_predicate_transport_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
+#[path = "../../tests/unit/compile_to_lean/inference_publication_once/tests.rs"]
+mod inference_publication_once_tests;
+#[path = "../../tests/unit/compile_to_lean/local_arbitrary_have/tests.rs"]
+mod local_arbitrary_have_tests;
 #[path = "../../tests/unit/compile_to_lean/named_call_wd/tests.rs"]
 mod named_call_wd_tests;
 #[path = "../../tests/unit/compile_to_lean/natural_function_wd/tests.rs"]
 mod natural_function_wd_tests;
+#[path = "../../tests/unit/compile_to_lean/numeric_carrier_closure/tests.rs"]
+mod numeric_carrier_closure_tests;
+#[path = "../../tests/unit/compile_to_lean/subset_numeric_membership/tests.rs"]
+mod subset_numeric_membership_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::prelude::*;
 
@@ -2734,7 +2752,7 @@ fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
         .defined_params
         .store_and_infer_results[0];
     let inferred = match &store.infer {
-        InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) => rules
+        Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) => rules
             .iter()
             .find_map(|rule| match rule {
                 InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) => {
@@ -2746,7 +2764,7 @@ fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
             .expect("natural membership records its actual nonnegative inference"),
         _ => panic!("actual natural membership inference"),
     };
-    let inferred_id = inferred.store_and_infer.primary_fact_id();
+    let inferred_id = inferred.store.primary_fact_id();
     match &phase2_atomic(&fact_statement(&result.statement_results[1]).verify_result).searched_proof
     {
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(

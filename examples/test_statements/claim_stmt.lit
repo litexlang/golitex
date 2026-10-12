@@ -2,9 +2,10 @@
 # AST: Stmt::ProofBlock::ClaimStmt
 # Run all scenarios and boundaries: python3 examples/test_statements/run.py --leaf ClaimStmt
 
-# case: bodyless-claim
+# case: explicit-proof-claim
 claim:
     ? 1 = 1
+    1 = 1
 
 # case: universal-local-function
 claim:

@@ -327,6 +327,14 @@ impl Tokenizer {
                     .into());
                 }
                 let body = self.parse_level(lines, i, next_indent, source_path)?;
+                if body.is_empty() {
+                    return Err(RuntimeParseError::new(
+                        "block header requires a nonempty body",
+                        line_no,
+                        source_path.clone(),
+                    )
+                    .into());
+                }
                 items.push(TokenBlock::new(
                     header_tokens,
                     body,

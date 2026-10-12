@@ -5,6 +5,7 @@
 
 /// Symbols matched longest-first while scanning a line.
 pub fn key_symbols_sorted_by_len_desc() -> Vec<&'static str> {
+    // Retain `->` as one token only for the parser's removed-syntax diagnostic.
     let mut symbols = vec![
         "<=>", "...", ":::", "::", "!=", "<=", ">=", "=>", "->", "N+", "Z+", "Q+", "R+", "Z-",
         "Q-", "R-", "Z*", "Q*", "R*", "C*", "ℕ+", "ℤ+", "ℚ+", "ℝ+", "ℤ-", "ℚ-", "ℝ-", "ℤ*", "ℚ*",

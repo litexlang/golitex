@@ -69,7 +69,8 @@ fn builder_projection_retains_selected_alias_path_and_each_actual_wd() {
         panic!("actual introduction")
     };
     let store = &p.introduced_params.defined_params.store_and_infer_results[0];
-    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &store.infer
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+        &store.infer
     else {
         panic!("membership inference")
     };

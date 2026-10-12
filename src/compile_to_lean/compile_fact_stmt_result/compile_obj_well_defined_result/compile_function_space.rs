@@ -1,3 +1,4 @@
+use crate::compile_to_lean::compile_function_template::function_guard_fact;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -113,7 +114,7 @@ impl LitexToLeanCompiler {
             member.0.replace('\n', "\n  "),
             member.1.replace('\n', "\n  ")
         );
-        let domains = self.compile_function_domains(signature)?;
+        let domains = self.compile_function_domains(signature, position)?;
         let guard = self.compile_function_guard_template(signature, position)?;
         let body = self.compile_function_body_template(function, position)?;
         let constructor = if domains.len() == 2 {
@@ -135,7 +136,7 @@ impl LitexToLeanCompiler {
         assumed: &[AssumeDomFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        self.compile_function_domains(signature)?;
+        self.compile_function_domains(signature, position)?;
         let groups = &signature.set_bound_parameters.groups;
         let parameters = groups
             .iter()
@@ -211,7 +212,7 @@ impl LitexToLeanCompiler {
                     ))
                 }
             }
-            self.validate_store(store, &fact)?;
+            self.validate_store(&store.store, &fact)?;
             let id = parameter.id.value();
             let hypothesis = format!("h_{}", fact.fact_id().value());
             lines.push(format!(
@@ -222,22 +223,19 @@ impl LitexToLeanCompiler {
             lines.extend(self.compile_parameter_inferences(store, &fact, &member, &introduced)?);
         }
         for (index, (source, paired)) in signature.dom_facts.iter().zip(assumed).enumerate() {
-            let QuantifierFreeFact::AtomicFact(source) = source else {
-                return Err(LeanCompileError::unsupported("Function/CompoundGuard"));
-            };
-            let fact = Fact::AtomicFact(source.clone());
+            let fact = function_guard_fact(source)?;
             let prior = SourcePosition {
                 before: groups.len() + parameters.len() + index,
                 ..*position
             };
             self.compile_fact_wd(&paired.well_defined, &fact, &prior)?;
-            self.validate_store(&paired.store_and_infer, &fact)?;
+            self.validate_store(&paired.store_and_infer.store, &fact)?;
             let formed = SourcePosition {
                 parent: Some(&prior),
                 owner: SourceOwner::FactWD(&paired.well_defined),
                 before: usize::MAX,
             };
-            let raw = self.compile_function_raw_fact(source, signature, position)?;
+            let raw = self.compile_function_raw_clause(&fact, signature, position)?;
             let compiled = (
                 self.fact_proposition(&fact, &formed)?,
                 format!("(by\n  change {raw}\n  exact {})", guards[index]),
@@ -248,7 +246,13 @@ impl LitexToLeanCompiler {
             };
             lines.push(self.emit_internal_fact(&fact, &compiled, &completed));
             let compiled = (compiled.0, format!("h_{}", fact.fact_id().value()));
-            lines.extend(self.compile_parameter_inferences(
+            lines.extend(self.compile_set_builder_parameter_inferences(
+                &paired.store_and_infer,
+                &fact,
+                &compiled,
+                &completed,
+            )?);
+            lines.extend(self.compile_stored_inferences(
                 &paired.store_and_infer,
                 &fact,
                 &compiled,
@@ -274,7 +278,7 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let domains = self.compile_function_domains(signature)?;
+        let domains = self.compile_function_domains(signature, position)?;
         let parameters = signature
             .set_bound_parameters
             .groups

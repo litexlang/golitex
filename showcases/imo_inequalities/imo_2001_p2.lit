@@ -1,0 +1,127 @@
+# IMO 2001 P2.
+
+thm weighted_square_bound:
+    ? forall a, b, c R+, r, t, u R:
+        (a*r+b*t+c*u)^2 <= (a+b+c)*(a*r^2+b*t^2+c*u^2)
+    a*b > 0
+    b*c > 0
+    c*a > 0
+    (a*b)*(r-t)^2 >= 0
+    (b*c)*(t-u)^2 >= 0
+    (c*a)*(u-r)^2 >= 0
+    (a*b)*(r-t)^2+(b*c)*(t-u)^2 >= 0
+    (a*b)*(r-t)^2+(b*c)*(t-u)^2+(c*a)*(u-r)^2 >= 0
+    (a+b+c)*(a*r^2+b*t^2+c*u^2)-(a*r+b*t+c*u)^2 = (a*b)*(r-t)^2+(b*c)*(t-u)^2+(c*a)*(u-r)^2 >= 0
+    0 <= (a+b+c)*(a*r^2+b*t^2+c*u^2)-(a*r+b*t+c*u)^2
+
+thm weighted_reciprocal_bound:
+    ? forall a, b, c, r, t, u R+:
+        (a/r+b/t+c/u)*(a*r+b*t+c*u) >= (a+b+c)^2
+    a*b > 0
+    b*c > 0
+    c*a > 0
+    r*t > 0
+    t*u > 0
+    u*r > 0
+    (a*b)*(r-t)^2 >= 0
+    (b*c)*(t-u)^2 >= 0
+    (c*a)*(u-r)^2 >= 0
+    ((a*b)*(r-t)^2)/(r*t) >= 0
+    ((b*c)*(t-u)^2)/(t*u) >= 0
+    ((c*a)*(u-r)^2)/(u*r) >= 0
+    ((a*b)*(r-t)^2)/(r*t)+((b*c)*(t-u)^2)/(t*u) >= 0
+    ((a*b)*(r-t)^2)/(r*t)+((b*c)*(t-u)^2)/(t*u)+((c*a)*(u-r)^2)/(u*r) >= 0
+    (a/r+b/t+c/u)*(a*r+b*t+c*u)-(a+b+c)^2 = ((a*b)*(r-t)^2)/(r*t)+((b*c)*(t-u)^2)/(t*u)+((c*a)*(u-r)^2)/(u*r) >= 0
+    0 <= (a/r+b/t+c/u)*(a*r+b*t+c*u)-(a+b+c)^2
+
+thm cubic_radical_bound:
+    ? forall a, b, c R+:
+        a^3+b^3+c^3+24*a*b*c <= (a+b+c)^3
+    a*(b-c)^2 >= 0
+    b*(c-a)^2 >= 0
+    c*(a-b)^2 >= 0
+    a*(b-c)^2+b*(c-a)^2 >= 0
+    a*(b-c)^2+b*(c-a)^2+c*(a-b)^2 >= 0
+    3*(a*(b-c)^2+b*(c-a)^2+c*(a-b)^2) >= 0
+    (a+b+c)^3-(a^3+b^3+c^3+24*a*b*c) = 3*(a*(b-c)^2+b*(c-a)^2+c*(a-b)^2) >= 0
+    0 <= (a+b+c)^3-(a^3+b^3+c^3+24*a*b*c)
+
+claim:
+    ? forall a, b, c R+:
+        a^2+8*b*c > 0
+        a^2+8*b*c >= 0
+    a^2 > 0
+    b*c > 0
+    8*(b*c) > 0
+    8*b*c = 8*(b*c) > 0
+    a^2+8*b*c > 0
+
+claim:
+    ? forall a, b, c R+:
+        sqrt(a^2+8*b*c) > 0
+        sqrt(a^2+8*b*c) != 0
+    a^2+8*b*c > 0
+    sqrt(a^2+8*b*c) > 0
+
+thm weighted_radical_upper:
+    ? forall a, b, c, r, t, u R+:
+        r^2 = a^2+8*b*c
+        t^2 = b^2+8*c*a
+        u^2 = c^2+8*a*b
+        =>:
+            a*r+b*t+c*u <= (a+b+c)^2
+    a+b > 0
+    a+b+c > 0
+    a*r > 0
+    b*t > 0
+    c*u > 0
+    a*r+b*t > 0
+    a*r+b*t+c*u > 0
+    (a+b+c)^2 >= 0
+    release thm weighted_square_bound(a,b,c,r,t,u)
+    release thm cubic_radical_bound(a,b,c)
+    a*r^2+b*t^2+c*u^2 = a*(a^2+8*b*c)+b*(b^2+8*c*a)+c*(c^2+8*a*b) = a^3+b^3+c^3+24*a*b*c
+    (a*r+b*t+c*u)^2 <= (a+b+c)*(a*r^2+b*t^2+c*u^2) = (a+b+c)*(a^3+b^3+c^3+24*a*b*c) <= (a+b+c)*(a+b+c)^3 = ((a+b+c)^2)^2
+    by contra:
+        ? a*r+b*t+c*u <= (a+b+c)^2
+        a*r+b*t+c*u > (a+b+c)^2
+        (a*r+b*t+c*u)^2 > ((a+b+c)^2)^2
+        impossible (a*r+b*t+c*u)^2 <= ((a+b+c)^2)^2
+
+thm radical_fraction_lower:
+    ? forall a, b, c, r, t, u R+:
+        r^2 = a^2+8*b*c
+        t^2 = b^2+8*c*a
+        u^2 = c^2+8*a*b
+        =>:
+            a/r+b/t+c/u >= 1
+    release thm weighted_radical_upper(a,b,c,r,t,u)
+    release thm weighted_reciprocal_bound(a,b,c,r,t,u)
+    a*r > 0
+    b*t > 0
+    c*u > 0
+    a*r+b*t > 0
+    a*r+b*t+c*u > 0
+    by contra:
+        ? a/r+b/t+c/u >= 1
+        a/r+b/t+c/u < 1
+        (a/r+b/t+c/u)*(a*r+b*t+c*u) < 1*(a*r+b*t+c*u) = a*r+b*t+c*u <= (a+b+c)^2
+        impossible (a/r+b/t+c/u)*(a*r+b*t+c*u) >= (a+b+c)^2
+
+claim:
+    ? forall a, b, c R+:
+        a/sqrt(a^2+8*b*c)+b/sqrt(b^2+8*c*a)+c/sqrt(c^2+8*a*b) >= 1
+    a^2+8*b*c >= 0
+    b^2+8*c*a >= 0
+    c^2+8*a*b >= 0
+    sqrt(a^2+8*b*c) > 0
+    sqrt(b^2+8*c*a) > 0
+    sqrt(c^2+8*a*b) > 0
+    have r R+ = sqrt(a^2+8*b*c)
+    have t R+ = sqrt(b^2+8*c*a)
+    have u R+ = sqrt(c^2+8*a*b)
+    r^2 = sqrt(a^2+8*b*c)^2 = a^2+8*b*c
+    t^2 = sqrt(b^2+8*c*a)^2 = b^2+8*c*a
+    u^2 = sqrt(c^2+8*a*b)^2 = c^2+8*a*b
+    release thm radical_fraction_lower(a,b,c,r,t,u)
+    a/sqrt(a^2+8*b*c)+b/sqrt(b^2+8*c*a)+c/sqrt(c^2+8*a*b) = a/r+b/t+c/u >= 1

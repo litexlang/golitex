@@ -152,7 +152,7 @@ impl LitexToLeanCompiler {
                 ))
             }
         }
-        self.validate_store(store, &membership)?;
+        self.validate_store(&store.store, &membership)?;
         let id = set.param_binding.id.value();
         let member_name = format!("h_{}", membership.fact_id().value());
         let member = (
@@ -164,7 +164,10 @@ impl LitexToLeanCompiler {
         let mut clauses = Vec::new();
         for (i, (source, captured)) in set.facts.iter().zip(&proof.assumed_facts).enumerate() {
             let fact = crate::instantiate::quantifier_free_fact_to_fact(source.clone());
-            if !matches!(&fact, Fact::AtomicFact(_)) {
+            if !matches!(
+                &fact,
+                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
+            ) {
                 return Err(LeanCompileError::unsupported(
                     "SetBuilder/CompoundPredicate",
                 ));
@@ -174,7 +177,7 @@ impl LitexToLeanCompiler {
                 ..scope
             };
             self.compile_fact_wd(&captured.well_defined, &fact, &prior)?;
-            self.validate_store(&captured.store_and_infer, &fact)?;
+            self.validate_store(&captured.store_and_infer.store, &fact)?;
             let formed = SourcePosition {
                 parent: Some(&prior),
                 owner: SourceOwner::FactWD(&captured.well_defined),
@@ -188,7 +191,7 @@ impl LitexToLeanCompiler {
                 before: 3 + i,
                 ..scope
             };
-            let mut derived = self.compile_parameter_inferences(
+            let mut derived = self.compile_set_builder_parameter_inferences(
                 &captured.store_and_infer,
                 &fact,
                 &clause,

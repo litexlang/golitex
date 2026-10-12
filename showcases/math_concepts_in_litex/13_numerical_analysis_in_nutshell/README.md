@@ -19,11 +19,11 @@ lake env lean ../showcases/math_concepts_in_litex/13_numerical_analysis_in_nutsh
 ```
 
 The two `# [-extract]` blocks are concatenated in source order before the
-extractor verifies and emits `newton_sqrt_two_step : R -> R`. The agreement
+extractor verifies and emits `newton_sqrt_two_step` with carrier `fn(x R) R`. The agreement
 proof between those blocks remains part of full-module verification and is not
 sent to Python or C extraction. The step's explicit `x = 0` restart totalizes
 the formula for this experimental backend. The proved iteration uses
-`newton_sqrt_two : R+ -> R+`, starts at one, remains positive, and therefore
+`newton_sqrt_two` with carrier `fn(x R+) R+`, starts at one, remains positive, and therefore
 never takes the restart branch. The proof is over exact real arithmetic;
 generated Python and C use floating point, so the proof does not cover
 rounding, overflow, or NaN behavior.

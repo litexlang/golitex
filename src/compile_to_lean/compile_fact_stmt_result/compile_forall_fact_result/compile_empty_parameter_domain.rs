@@ -44,7 +44,7 @@ impl LitexToLeanCompiler {
             before: 0,
         };
         let equality = self.compile_verify(&proof.empty_carrier_proof, &scope)?;
-        self.validate_store(&proof.empty_carrier_store, &empty_subject)?;
+        self.validate_store(&proof.empty_carrier_store.store, &empty_subject)?;
         let completed = SourcePosition { before: 1, ..scope };
         let header = SourcePosition {
             parent: Some(&completed),

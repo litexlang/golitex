@@ -236,7 +236,7 @@ fn finite_set_extrema_membership_preserves_wd_and_target() {
         ("finite_set_max", "FiniteSetMaxMember"),
         ("finite_set_min", "FiniteSetMinMember"),
     ] {
-        let source = format!("claim:\n    ? forall S finite_set:\n        S $subset R\n        $is_nonempty_set(S)\n        =>:\n            {operator}(S) $in S\n");
+        let source = format!("claim:\n    ? forall S finite_set:\n        S $subset R\n        $is_nonempty_set(S)\n        =>:\n            {operator}(S) $in S\n    {operator}(S) $in S\n");
         let mut rt = runtime(OutputLanguage::English);
         let result = exec(&mut rt, &source);
         assert!(
@@ -265,7 +265,7 @@ fn finite_set_extrema_membership_preserves_wd_and_target() {
 
 #[test]
 fn positive_common_divisor_gcd_bound_requires_both_residues() {
-    let code = "claim:\n    ? forall a, b Z, d N+:\n        a != 0 or b != 0\n        a % d = 0\n        b % d = 0\n        =>:\n            d <= gcd(a,b)\n";
+    let code = "claim:\n    ? forall a, b Z, d N+:\n        a != 0 or b != 0\n        a % d = 0\n        b % d = 0\n        =>:\n            d <= gcd(a,b)\n    d <= gcd(a,b)\n";
     let mut rt = runtime(OutputLanguage::English);
     let result = exec(&mut rt, code);
     assert!(
@@ -339,7 +339,7 @@ fn strict_lower_bound_positive_infer_keeps_source_and_bound_proof() {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
         panic!("fact success")
     };
-    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
         &success.store_and_infer_result.infer
     else {
         panic!("infer")
@@ -356,7 +356,23 @@ fn strict_lower_bound_positive_infer_keeps_source_and_bound_proof() {
         success.store_and_infer_result.primary_fact_id()
     );
     assert!(!proof.bound_nonnegative_proof.is_failed());
-    let derived = proof.derived.primary_fact_id();
+    let crate::execute::execute_fact_stmt::FactWellDefinedProof::AtomicExceptEquality(formation) =
+        &proof.derived.well_defined
+    else {
+        panic!("retained positive consequence formation")
+    };
+    let crate::store_fact_and_infer::StoreFactResult::AtomicFact(stored) = &proof.derived.store
+    else {
+        panic!("positive consequence store")
+    };
+    assert_eq!(formation.well_defined_of_each_parameter.len(), 2);
+    for (argument, wd) in crate::ast::fact::atomic_fact_args_ref(&stored.fact)
+        .iter()
+        .zip(&formation.well_defined_of_each_parameter)
+    {
+        assert_eq!(argument.ir(), wd.obj().ir());
+    }
+    let derived = proof.derived.store.primary_fact_id();
     let fact = rt.fact_by_id_in_stack(derived).expect("derived positive");
     assert!(fact.readable_string().contains("0 < x"));
     assert!(project_stmt_normal(&result, &rt)
@@ -381,7 +397,7 @@ fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
         let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
             panic!("bound success")
         };
-        let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+        let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
             &success.store_and_infer_result.infer
         else {
             panic!("infer")
@@ -399,6 +415,23 @@ fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
         );
         assert!(!proof.integer_proof.is_failed());
         assert!(!proof.bound_nonnegative_proof.is_failed());
+        let crate::execute::execute_fact_stmt::FactWellDefinedProof::AtomicExceptEquality(
+            formation,
+        ) = &proof.derived.well_defined
+        else {
+            panic!("retained natural consequence formation")
+        };
+        let crate::store_fact_and_infer::StoreFactResult::AtomicFact(stored) = &proof.derived.store
+        else {
+            panic!("natural consequence store")
+        };
+        assert_eq!(formation.well_defined_of_each_parameter.len(), 2);
+        for (argument, wd) in crate::ast::fact::atomic_fact_args_ref(&stored.fact)
+            .iter()
+            .zip(&formation.well_defined_of_each_parameter)
+        {
+            assert_eq!(argument.ir(), wd.obj().ir());
+        }
         let VerifyFactResult::AtomicExceptEquality(integer) = &proof.integer_proof else {
             panic!("integer proof")
         };
@@ -416,7 +449,7 @@ fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
                 .readable_string(),
             "n $in Z"
         );
-        let derived = proof.derived.primary_fact_id();
+        let derived = proof.derived.store.primary_fact_id();
         assert_eq!(
             rt.fact_by_id_in_stack(derived).unwrap().readable_string(),
             "n $in N"

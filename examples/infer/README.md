@@ -129,3 +129,8 @@ the already checked seed or increase its permissions. The focused
 `normal_atomic_expand_bounded_wd` Rust tests retain invalid-call and false-fact
 rejection, renamed-carrier parameter projection, and the original Direct-level
 WD boundary.
+
+`atomic/one_step_store_only.lit` is the inference boundary tracer. A source seed
+may publish several direct facts, but an inferred fact only stores. Reusing a
+stored consequence as an explicit statement starts its next inference step.
+The inferred-fact WD check does not infer on its temporary binder assumptions.

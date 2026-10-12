@@ -24,8 +24,10 @@ impl LitexToLeanCompiler {
             VerifyFactResult::ForallFact(result) => {
                 self.compile_verify_forall_result(result, position)
             }
-            VerifyFactResult::AndFact(_) => Err(LeanCompileError::unsupported("AndFact")),
-            VerifyFactResult::ChainFact(_) => Err(LeanCompileError::unsupported("ChainFact")),
+            VerifyFactResult::AndFact(result) => self.compile_verify_and_result(result, position),
+            VerifyFactResult::ChainFact(result) => {
+                self.compile_verify_chain_result(result, position)
+            }
             VerifyFactResult::OrFact(_) => Err(LeanCompileError::unsupported("OrFact")),
             VerifyFactResult::ExistShapedFact(_) => {
                 Err(LeanCompileError::unsupported("ExistShapedFact"))

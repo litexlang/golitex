@@ -1,0 +1,107 @@
+# IMO 2006 P3.
+
+thm cubic_product_bound:
+    ? forall x, y, z R:
+        x+y+z = 0
+        =>:
+            54*(x*y*z)^2 <= (x^2+y^2+z^2)^3
+    z = (x+y+z)-(x+y) = 0-(x+y) = -x-y
+    ((x-y)*(x+2*y)*(2*x+y))^2 >= 0
+    2*((x-y)*(x+2*y)*(2*x+y))^2 >= 0
+    (x^2+y^2+z^2)^3-54*(x*y*z)^2 = (x^2+y^2+(-x-y)^2)^3-54*(x*y*(-x-y))^2 = 2*((x-y)*(x+2*y)*(2*x+y))^2 >= 0
+    0 <= (x^2+y^2+z^2)^3-54*(x*y*z)^2
+
+thm quartic_balance:
+    ? forall p, q R:
+        p >= 0
+        q >= 0
+        =>:
+            256*(p^3*q) <= 27*(p+q)^4
+    p*q >= 0
+    27*p^2 >= 0
+    14*(p*q) >= 0
+    3*q^2 >= 0
+    27*p^2+14*(p*q) >= 0
+    27*p^2+14*(p*q)+3*q^2 >= 0
+    (p-3*q)^2*(27*p^2+14*(p*q)+3*q^2) >= 0
+    27*(p+q)^4-256*(p^3*q) = (p-3*q)^2*(27*p^2+14*(p*q)+3*q^2) >= 0
+    0 <= 27*(p+q)^4-256*(p^3*q)
+
+thm substituted_quartic_bound:
+    ? forall x, y, z, s R:
+        x+y+z = 0
+        =>:
+            (x*y*z*s)^2 <= (x^2+y^2+z^2+s^2)^4/512
+    have p R = x^2+y^2+z^2
+    x^2+y^2 >= 0
+    x^2+y^2+z^2 >= 0
+    p = x^2+y^2+z^2 >= 0
+    s^2 >= 0
+    release thm cubic_product_bound(x,y,z)
+    54*(x*y*z)^2 <= (x^2+y^2+z^2)^3 = p^3
+    (x*y*z)^2 = (54*(x*y*z)^2)/54 <= p^3/54
+    release thm quartic_balance(p,s^2)
+    p^3*s^2 = (256*(p^3*s^2))/256 <= (27*(p+s^2)^4)/256
+    (x*y*z*s)^2 = (x*y*z)^2*s^2 <= (p^3/54)*s^2 = (p^3*s^2)/54 <= ((27*(p+s^2)^4)/256)/54 = (p+s^2)^4/512 = (x^2+y^2+z^2+s^2)^4/512
+
+thm original_quartic_square:
+    ? forall a, b, c R:
+        (a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2))^2 <= 81*(a^2+b^2+c^2)^4/512
+    have x R = a-b
+    have y R = b-c
+    have z R = c-a
+    have s R = a+b+c
+    x+y+z = (a-b)+(b-c)+(c-a) = 0
+    release thm substituted_quartic_bound(x,y,z,s)
+    a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2) = -((a-b)*(b-c)*(c-a)*(a+b+c)) = -(x*y*z*s)
+    x^2+y^2+z^2+s^2 = (a-b)^2+(b-c)^2+(c-a)^2+(a+b+c)^2 = 3*(a^2+b^2+c^2)
+    (a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2))^2 = (-(x*y*z*s))^2 = (x*y*z*s)^2 <= (x^2+y^2+z^2+s^2)^4/512 = (3*(a^2+b^2+c^2))^4/512 = 81*(a^2+b^2+c^2)^4/512
+
+claim:
+    ? forall a, b, c R:
+        abs(a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2)) <= (9*sqrt(2)/32)*(a^2+b^2+c^2)^2
+    sqrt(2) > 0
+    sqrt(2)^2 = 2
+    9*sqrt(2) > 0
+    9*sqrt(2)/32 > 0
+    (a^2+b^2+c^2)^2 >= 0
+    (9*sqrt(2)/32)*(a^2+b^2+c^2)^2 >= 0
+    ((9*sqrt(2)/32)*(a^2+b^2+c^2)^2)^2 = (81*sqrt(2)^2/1024)*(a^2+b^2+c^2)^4 = (81*2/1024)*(a^2+b^2+c^2)^4 = 81*(a^2+b^2+c^2)^4/512
+    release thm original_quartic_square(a,b,c)
+    (a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2))^2 <= 81*(a^2+b^2+c^2)^4/512 = ((9*sqrt(2)/32)*(a^2+b^2+c^2)^2)^2
+
+thm quartic_equality_witness:
+    ? forall r, a, b, c R:
+        r^2 = 2
+        a = 1+r/3
+        b = r/3
+        c = -1+r/3
+        =>:
+            a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2) = 2*r
+            a^2+b^2+c^2 = 8/3
+    a-b = (1+r/3)-(r/3) = 1
+    b-c = (r/3)-(-1+r/3) = 1
+    c-a = (-1+r/3)-(1+r/3) = -2
+    a+b+c = (1+r/3)+(r/3)+(-1+r/3) = r
+    a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2) = -((a-b)*(b-c)*(c-a)*(a+b+c)) = -(1*1*(-2)*r) = 2*r
+    a^2+b^2+c^2 = (1+r/3)^2+(r/3)^2+(-1+r/3)^2 = 2+r^2/3 = 2+2/3 = 8/3
+
+claim:
+    ? forall M R:
+        forall a, b, c R:
+            abs(a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2)) <= M*(a^2+b^2+c^2)^2
+        =>:
+            M >= 9*sqrt(2)/32
+    sqrt(2) > 0
+    have r R+ = sqrt(2)
+    r^2 = sqrt(2)^2 = 2
+    have a R = 1+r/3
+    have b R = r/3
+    have c R = -1+r/3
+    release thm quartic_equality_witness(r,a,b,c)
+    2*r > 0
+    abs(2*r) = 2*r
+    abs(a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2)) <= M*(a^2+b^2+c^2)^2
+    2*r = abs(2*r) = abs(a*b*(a^2-b^2)+b*c*(b^2-c^2)+c*a*(c^2-a^2)) <= M*(a^2+b^2+c^2)^2 = M*(8/3)^2 = (64/9)*M
+    9*r/32 = (2*r)/(64/9) <= ((64/9)*M)/(64/9) = M
+    9*sqrt(2)/32 = 9*r/32 <= M

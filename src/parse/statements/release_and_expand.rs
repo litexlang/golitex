@@ -217,7 +217,7 @@ impl Runtime {
             parse_optional_trailing_proof_colon(&mut tb, "release axiom_of_choice")?;
         let proof = if has_proof_body {
             self.push_parse_scope();
-            let proof = self.parse_body_stmts(&tb.body);
+            let proof = self.parse_nonempty_proof_body(&tb.body, &tb, "release axiom_of_choice");
             self.pop_parse_scope();
             proof?
         } else {
@@ -264,7 +264,7 @@ impl Runtime {
         let has_proof_body = parse_optional_trailing_proof_colon(&mut tb, "release zorn_lemma")?;
         let proof = if has_proof_body {
             self.push_parse_scope();
-            let proof = self.parse_body_stmts(&tb.body);
+            let proof = self.parse_nonempty_proof_body(&tb.body, &tb, "release zorn_lemma");
             self.pop_parse_scope();
             proof?
         } else {

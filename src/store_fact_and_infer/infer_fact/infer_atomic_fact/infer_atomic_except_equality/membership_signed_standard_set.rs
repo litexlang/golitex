@@ -3,7 +3,7 @@ use crate::ast::obj::{Literal, Number, Obj, StandardSet};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactSignedStandardSetSignResult,
-    StoreInferredFactAndInferResult,
+    StoreInferredFactResult,
 };
 
 impl Runtime {
@@ -35,7 +35,7 @@ impl Runtime {
         in_fact: &InFact,
         set: &StandardSet,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<Vec<StoreInferredFactAndInferResult>>> {
+    ) -> RuntimeResult<Option<Vec<StoreInferredFactResult>>> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
         let zero = zero_obj();
@@ -45,7 +45,7 @@ impl Runtime {
             StandardSet::N => {
                 // `x $in N` ⇒ `0 <= x`.
                 let fact_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact_and_infer_with_wd(
+                derived.push(self.store_inferred_fact(
                     &Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
                         fact_id,
                         left: zero,
@@ -58,7 +58,7 @@ impl Runtime {
             StandardSet::NPos | StandardSet::QPos | StandardSet::RPos => {
                 // `x $in R+` / `Q+` / `N+` ⇒ `0 < x` and `0 <= x`.
                 let strict_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact_and_infer_with_wd(
+                derived.push(self.store_inferred_fact(
                     &Fact::AtomicFact(AtomicFact::LessFact(LessFact {
                         fact_id: strict_id,
                         left: zero.clone(),
@@ -68,7 +68,7 @@ impl Runtime {
                     verify_state,
                 )?);
                 let weak_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact_and_infer_with_wd(
+                derived.push(self.store_inferred_fact(
                     &Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
                         fact_id: weak_id,
                         left: zero,
@@ -81,7 +81,7 @@ impl Runtime {
             StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg => {
                 // `x $in R-` / `Q-` / `Z-` ⇒ `x < 0` and `x <= 0`.
                 let strict_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact_and_infer_with_wd(
+                derived.push(self.store_inferred_fact(
                     &Fact::AtomicFact(AtomicFact::LessFact(LessFact {
                         fact_id: strict_id,
                         left: element.clone(),
@@ -91,7 +91,7 @@ impl Runtime {
                     verify_state,
                 )?);
                 let weak_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact_and_infer_with_wd(
+                derived.push(self.store_inferred_fact(
                     &Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
                         fact_id: weak_id,
                         left: element,
@@ -104,7 +104,7 @@ impl Runtime {
             StandardSet::QStar | StandardSet::ZStar | StandardSet::RStar | StandardSet::CStar => {
                 // `x $in R*` / … ⇒ `x != 0`.
                 let fact_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact_and_infer_with_wd(
+                derived.push(self.store_inferred_fact(
                     &Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
                         fact_id,
                         left: element,
@@ -131,7 +131,7 @@ impl Runtime {
                 | StandardSet::RNeg
         ) {
             let fact_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact_and_infer_with_wd(
+            derived.push(self.store_inferred_fact(
                 &Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
                     fact_id,
                     left: in_fact.element.clone(),

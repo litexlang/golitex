@@ -98,15 +98,18 @@ fn adjacent_predicate_and_object_entry_points_keep_their_type_boundary() {
 fn unstructured_induction_has_a_base_scope_without_its_hypothesis() {
     let bad = "prop bad(n Z):\n    1 = 2\n";
     check(
-        &format!("{bad}by induc n from 0:\n    ? $bad(n)\n$bad(0)\n1 = 2\n"),
+        &format!("{bad}by induc n from 0:\n    ? $bad(n)\n    1 = 1\n$bad(0)\n1 = 2\n"),
         &[true, false, false, false],
     );
     check(
-        &format!("{bad}by strong_induc n from 0:\n    ? $bad(n)\n"),
+        &format!("{bad}by strong_induc n from 0:\n    ? $bad(n)\n    1 = 1\n"),
         &[true, false],
     );
-    check("by induc n from 0:\n    ? n = n\n", &[true]);
-    check("by strong_induc n from 0:\n    ? n = n\n", &[true]);
+    check("by induc n from 0:\n    ? n = n\n    n = n\n", &[true]);
+    check(
+        "by strong_induc n from 0:\n    ? n = n\n    n = n\n",
+        &[true],
+    );
 }
 
 #[test]

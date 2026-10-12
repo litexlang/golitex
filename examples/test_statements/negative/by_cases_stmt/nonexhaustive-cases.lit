@@ -4,4 +4,5 @@
 have x R
 by cases:
     ? x = 0
-    case x = 0
+    case x = 0:
+        1 = 1

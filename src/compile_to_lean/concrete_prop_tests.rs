@@ -57,7 +57,7 @@ fn concrete_prop_inference_retains_actual_constructor_formation_before_store() {
     else {
         panic!("predicate seed");
     };
-    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
         &seed.store_and_infer_result.infer
     else {
         panic!("predicate infer dispatcher");
@@ -71,7 +71,7 @@ fn concrete_prop_inference_retains_actual_constructor_formation_before_store() {
     assert_eq!(members.derived.len(), 1);
     assert_eq!(body.derived.len(), 1);
     let derived = &body.derived[0];
-    let StoreFactResult::AtomicFact(stored) = &derived.store_and_infer.store else {
+    let StoreFactResult::AtomicFact(stored) = &derived.store else {
         panic!("atomic defining clause");
     };
     let AtomicFact::EqualFact(equality) = &stored.fact else {
@@ -82,7 +82,7 @@ fn concrete_prop_inference_retains_actual_constructor_formation_before_store() {
     };
     assert_eq!(wd.left.obj().ir(), equality.left.ir());
     assert_eq!(wd.right.obj().ir(), equality.right.ir());
-    let actual_id = derived.store_and_infer.primary_fact_id();
+    let actual_id = derived.store.primary_fact_id();
     assert!(seed
         .store_and_infer_result
         .stored_fact_ids()
@@ -155,7 +155,7 @@ fn concrete_prop_rejects_reordered_domain_and_body_inferences() {
     else {
         panic!("predicate seed");
     };
-    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
         &mut seed.store_and_infer_result.infer
     else {
         panic!("predicate infer dispatcher");

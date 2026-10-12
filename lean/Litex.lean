@@ -570,6 +570,66 @@ theorem addInN {M : Semantics.{u}} {α : Type v} {β : Type w}
     change M.addValue (denote a) (denote b) = _
     rw [hx, hy, M.add_numbers, Nat.cast_add]⟩
 
+theorem mulInN {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haN : In a N) (hbN : In b N) :
+    In (mul a b (naturalToComplex a haN) (naturalToComplex b hbN)) N := by
+  obtain ⟨x, hx⟩ := (M.natural_members (denote a)).mp haN
+  obtain ⟨y, hy⟩ := (M.natural_members (denote b)).mp hbN
+  exact (M.natural_members _).mpr ⟨x * y, by
+    change M.mulValue (denote a) (denote b) = _
+    rw [hx, hy, M.mul_numbers, Nat.cast_mul]⟩
+
+theorem addInZ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haZ : In a Z) (hbZ : In b Z) :
+    In (add a b (integerToComplex a haZ) (integerToComplex b hbZ)) Z := by
+  obtain ⟨x, hx⟩ := (M.integer_members (denote a)).mp haZ
+  obtain ⟨y, hy⟩ := (M.integer_members (denote b)).mp hbZ
+  exact (M.integer_members _).mpr ⟨x + y, by
+    change M.addValue (denote a) (denote b) = _
+    rw [hx, hy, M.add_numbers, Int.cast_add]⟩
+
+theorem subInZ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haZ : In a Z) (hbZ : In b Z) :
+    In (sub a b (integerToComplex a haZ) (integerToComplex b hbZ)) Z := by
+  obtain ⟨x, hx⟩ := (M.integer_members (denote a)).mp haZ
+  obtain ⟨y, hy⟩ := (M.integer_members (denote b)).mp hbZ
+  exact (M.integer_members _).mpr ⟨x - y, by
+    change M.subValue (denote a) (denote b) = _
+    rw [hx, hy, M.sub_numbers, Int.cast_sub]⟩
+
+theorem mulInZ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haZ : In a Z) (hbZ : In b Z) :
+    In (mul a b (integerToComplex a haZ) (integerToComplex b hbZ)) Z := by
+  obtain ⟨x, hx⟩ := (M.integer_members (denote a)).mp haZ
+  obtain ⟨y, hy⟩ := (M.integer_members (denote b)).mp hbZ
+  exact (M.integer_members _).mpr ⟨x * y, by
+    change M.mulValue (denote a) (denote b) = _
+    rw [hx, hy, M.mul_numbers, Int.cast_mul]⟩
+
+theorem powStructuralInN {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β))
+    (haN : In p.val.base N) (heN : In p.val.exponent N) : In p N := by
+  obtain ⟨a, ha⟩ := (M.natural_members (denote p.val.base)).mp haN
+  obtain ⟨n, he⟩ := (M.natural_members (denote p.val.exponent)).mp heN
+  exact (M.natural_members _).mpr ⟨a ^ n, by
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    rw [ha, he, M.pow_numbers_nat, Nat.cast_pow]⟩
+
+theorem powStructuralInZ {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β))
+    (haZ : In p.val.base Z) (heN : In p.val.exponent N) : In p Z := by
+  obtain ⟨a, ha⟩ := (M.integer_members (denote p.val.base)).mp haZ
+  obtain ⟨n, he⟩ := (M.natural_members (denote p.val.exponent)).mp heN
+  exact (M.integer_members _).mpr ⟨a ^ n, by
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    rw [ha, he, M.pow_numbers_nat, Int.cast_pow]⟩
+
 theorem addInQ {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
     (a : Obj (M := M) α) (b : Obj (M := M) β) (haQ : In a Q) (hbQ : In b Q) :
@@ -1202,6 +1262,54 @@ theorem leTrans {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
   obtain ⟨s', t, hs', ht, hst⟩ := hbc
   have middle : s = s' := Complex.ofReal_injective (M.number_injective (hs.symm.trans hs'))
   exact ⟨r, t, hr, ht, le_trans hrs (middle ▸ hst)⟩
+
+theorem ltTrans {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
+    (hab : Lt a b) (hbc : Lt b c) : Lt a c := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := hab
+  obtain ⟨s', t, hs', ht, hst⟩ := hbc
+  have middle : s = s' := Complex.ofReal_injective (M.number_injective (hs.symm.trans hs'))
+  exact ⟨r, t, hr, ht, lt_trans hrs (middle ▸ hst)⟩
+
+theorem ltLeTrans {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
+    (hab : Lt a b) (hbc : Le b c) : Lt a c := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := hab
+  obtain ⟨s', t, hs', ht, hst⟩ := hbc
+  have middle : s = s' := Complex.ofReal_injective (M.number_injective (hs.symm.trans hs'))
+  exact ⟨r, t, hr, ht, lt_of_lt_of_le hrs (middle ▸ hst)⟩
+
+theorem leLtTrans {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
+    (hab : Le a b) (hbc : Lt b c) : Lt a c := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := hab
+  obtain ⟨s', t, hs', ht, hst⟩ := hbc
+  have middle : s = s' := Complex.ofReal_injective (M.number_injective (hs.symm.trans hs'))
+  exact ⟨r, t, hr, ht, lt_of_le_of_lt hrs (middle ▸ hst)⟩
+
+theorem integerToNaturalOfNonnegative {M : Semantics.{u}} {α : Type v}
+    [Representation M α]
+    (a : Obj (M := M) α) (haZ : In a Z) (ha0 : Le (number 0) a) : In a N := by
+  obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
+  obtain ⟨r, s, hr, hs, hrs⟩ := ha0
+  change M.number 0 = M.number (r : ℂ) at hr
+  have hr0 : r = 0 := Complex.ofReal_injective (M.number_injective hr).symm
+  have hsz : s = (z : ℝ) := Complex.ofReal_injective (by
+    have hcast : (s : ℂ) = (z : ℂ) := M.number_injective (hs.symm.trans hz)
+    exact_mod_cast hcast)
+  have nonnegative : (0 : ℝ) ≤ (z : ℝ) := by simpa only [hr0, hsz] using hrs
+  have hz0 : 0 ≤ z := by exact_mod_cast nonnegative
+  have castEq : (z.toNat : ℂ) = (z : ℂ) := by exact_mod_cast Int.toNat_of_nonneg hz0
+  exact (M.natural_members _).mpr ⟨z.toNat, hz.trans (congrArg M.number castEq.symm)⟩
+
+theorem weakIntegerLowerBoundInN {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (bound : Obj (M := M) α) (a : Obj (M := M) β)
+    (haZ : In a Z) (hbound : Le (number 0) bound) (h : Le bound a) : In a N :=
+  integerToNaturalOfNonnegative a haZ (leTrans (number 0) bound a hbound h)
 
 theorem leAdd {M : Semantics.{u}} {α : Type v} {β : Type w}
     {γ : Type x} {δ : Type*}

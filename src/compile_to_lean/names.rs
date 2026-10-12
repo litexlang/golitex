@@ -283,7 +283,7 @@ impl LitexToLeanCompiler {
                 ))
             }
         }
-        self.validate_store(store, &fact)?;
+        self.validate_store(&store.store, &fact)?;
         let proposition = self.fact_proposition(&fact, position)?;
 
         let member = (proposition.clone(), hypothesis.clone());
@@ -307,7 +307,7 @@ impl LitexToLeanCompiler {
                 "The set-kind parameter has another original sethood store.",
             ));
         }
-        self.validate_store(store, &fact)?;
+        self.validate_store(&store.store, &fact)?;
         let id = parameter.id.value();
         let name = format!("h_{}", fact.fact_id().value());
         let binders = vec![format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"), format!("({name} : Litex.IsSet _value_i{id})")];
@@ -329,6 +329,27 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         match fact {
             Fact::AtomicFact(atomic) => self.atomic_proposition(atomic, position),
+            Fact::AndFact(fact) => {
+                let propositions = fact
+                    .facts
+                    .iter()
+                    .map(|atomic| self.atomic_proposition(atomic, position))
+                    .collect::<Result<Vec<_>, _>>()?;
+                conjunction_proposition(propositions)
+            }
+            Fact::ChainFact(fact) => {
+                let propositions = (0..fact.prop_names.len())
+                    .map(|index| {
+                        let edge = crate::compile_to_lean::compile_compound_fact::chain_edge(
+                            fact,
+                            index,
+                            fact.fact_id,
+                        )?;
+                        self.atomic_proposition(&edge, position)
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                conjunction_proposition(propositions)
+            }
             _ => Err(LeanCompileError::unsupported("Declaration/CompoundFact")),
         }
     }
@@ -455,6 +476,9 @@ impl LitexToLeanCompiler {
         if let Some(term) =
             position.with_visible_wd(object, &mut |wd, producer| self.compile_wd(wd, producer))?
         {
+            return Ok(term);
+        }
+        if let Some(term) = self.compile_callee_constructor_reference(object, position)? {
             return Ok(term);
         }
         Err(LeanCompileError::new(

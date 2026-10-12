@@ -15,9 +15,8 @@ abstract_prop selected(X, f)
 claim:
     ? forall X set:
         {f fn(x X) X: $selected(X, f)} $in power_set(fn(x X) X)
-    claim:
-        ? forall member {f fn(x X) X: $selected(X, f)}:
-            member $in fn(x X) X
+    forall member {f fn(x X) X: $selected(X, f)}:
+        member $in fn(x X) X
     by def:
         ? {f fn(x X) X: $selected(X, f)} $subset fn(x X) X
 template<X set>:

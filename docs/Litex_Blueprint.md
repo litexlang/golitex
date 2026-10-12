@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 10, 2026.
+Last updated: October 12, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -26,6 +26,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 - [5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)](#compatibility)
 - [6. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
 - [7. The Art of Seeking What Is Different](#conclusions)
+  - [Litex's Mathematical Values](#mathematical-values)
   - [Special Thanks](#special-thanks)
 - [Appendix: Programming, Mathematics, and Formalization with Litex](#overview-readers)
   - [For Mathematicians: Machine Checking and Human Understanding](#reader-mathematicians)
@@ -757,7 +758,9 @@ A failed statement adds neither `stores` nor `infers` to the accepted context. A
 
 </details>
 
-The record lets people inspect local grounds, gives AI feedback for revision, and can supply material for a dependency graph of definitions and facts. By comparing source, established definitions and facts, and the verification method for the step, readers can ask why it holds and how the reasoning connects from one step to the next. Section 4 discusses collaboration; Section 5 discusses the goal of handing supported internal evidence to Lean for independent rechecking. Both depend on clear boundaries between accepted statements and stopped attempts.
+**Seeing why a statement holds and how it connects to other statements is one way these records can support mathematical understanding.** In the fragment above, readers can follow the connection from the definition `a = 1`, through definition reduction and numerical calculation, to `a + 1 = 2`; the accepted equality then becomes available to later reasoning. Reading source alongside JSON feedback makes definitions, grounds, and consequences available for inspection, comparison, and reuse. Detailed JSON exposes finer verification evidence and fact citations; Normal JSON provides summaries and accepted facts, without recording every dependency.
+
+These records provide a basis for tools that help readers explore connections among definitions and facts, revisit a proof's premises, and identify intermediate results useful in another argument. This is a concrete route toward the [goal of helping mathematicians see connections](#reader-mathematicians); its effect on learning and understanding needs evaluation on real tasks. Section 4 discusses collaboration; Section 5 discusses handing supported internal evidence to Lean for independent rechecking. Both depend on clear boundaries between accepted statements and stopped attempts.
 
 ![Litex fact-relation graph example](https://litexlang.com/_next/image?url=%2Fassets%2Fknowledge_graph.png&w=640&q=75)
 
@@ -1562,6 +1565,20 @@ Litex seeks to explore how mathematics and formalization can transform science a
 
 **I hope formal languages can reach wherever mathematics reaches and brings benefits—and that Litex can, too.**
 
+<a id="mathematical-values"></a>
+
+### Litex's Mathematical Values
+
+Litex aims to uphold these mathematical values, echoing related principles in the [Leiden Declaration on Artificial Intelligence and Mathematics](https://leidendeclaration.ai/):
+
+1. **Understanding.** [Fact-oriented source and verification feedback](#fact-oriented-interface) help people follow each step.
+2. **Fidelity.** [Explicit definitions, conditions, and quantifiers](#set-theory) let people review the intended mathematics.
+3. **Transparency.** Source code presents the proof; [verification records](#execution-model) show the grounds for verification.
+4. **Review.** [Rechecking saved source and reusing modules](#workflow-reuse) help peers review and cite results.
+5. **Responsibility.** In [human–AI–Litex collaboration](#interaction-loop), people choose the mathematical route and remain responsible.
+6. **Openness.** [Open source](https://github.com/litexlang/golitex) and multilingual feedback invite participation; reused work still needs attribution.
+7. **Honesty.** [Independent Lean rechecking](#compatibility) (still being extended).
+
 <details>
 <summary><strong>A note from the author</strong></summary>
 
@@ -1785,9 +1802,11 @@ Machine checking alone, however, does not ensure that mathematicians understand 
 
 **AI lowers the cost of generating formal code; the language must also lower the cost for people to understand and control that code.** If mathematicians cannot inspect and revise the proof text carrying their own ideas, they struggle to take responsibility for its expression and to learn from and extend others’ proofs. A [September 2026 declaration by Terence Tao and 24 other Fields medalists](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/) emphasizes that rapid production of answers cannot replace conceptual understanding, transmission of ideas, and their digestion by the mathematical community.
 
-Litex’s design goal is for the same proof source to serve machine checking and mathematical reading: write objects, definitions, conditions, intermediate facts, and conclusions directly, keeping familiar mathematical thought visible in formal text. Authors choose the mathematical steps, AI assists with writing and repair, and Litex checks supported connections while leaving verification grounds and explicit unfinished boundaries. Mathematicians can use these to inspect intent, revise a proof, and pass results to others for checking and reuse. The [two participation-barrier examples](#overview-readers) illustrate this interface choice.
+**An important part of mathematical understanding is seeing connections.** In [*Philosophical Investigations*, §122](https://www.wittgensteinproject.org/w/index.php?title=Philosophische_Untersuchungen), Wittgenstein links understanding with “seeing connections.” He is discussing how a clear presentation of language use brings understanding; applied to mathematics, this suggests asking how a conclusion grows from definitions and assumptions, why intermediate steps connect, and where the same structure can be reused.
 
-This also gives a criterion for evaluating Litex: can mathematicians read AI-written formal statements, detect departures from their intent, understand the key reasoning, and reuse others’ results under explicit conditions? The current language, standard library, trusted base, and Lean compilation coverage retain limitations; improvements in learning and review costs need measurement through real mathematical tasks and user studies. Litex aims to let mathematicians adopt Human–AI workflows while continuing to understand and control the medium of their proofs.
+This gives a concrete response to the concern that AI can solve problems without advancing human understanding. Litex’s design goal is for the same proof source to serve machine checking and mathematical reading: authors choose the mathematical steps, AI assists with writing and repair, and Litex checks supported connections. The [JSON knowledge records](#execution-model) expose verification grounds, accepted facts, and, in the Detailed projection, finer premise and citation evidence. Readers can trace why a statement holds, inspect its connections to earlier knowledge, and see what it contributes to later reasoning. Keeping these connections open to inspection gives AI-assisted proofs a basis for explanation, learning, and reuse. The [two participation-barrier examples](#overview-readers) illustrate how familiar expression helps people participate in this process.
+
+This also gives a criterion for evaluating Litex: can mathematicians read AI-written formal statements, detect departures from their intent, explain the connections among proof steps, identify reusable structures, and reuse others’ results under explicit conditions? The current language, standard library, trusted base, and Lean compilation coverage retain limitations; improvements in learning and review costs need measurement through real mathematical tasks and user studies. Litex aims to let mathematicians adopt Human–AI workflows while continuing to understand and control the medium of their proofs.
 
 <a id="reader-programmers"></a>
 

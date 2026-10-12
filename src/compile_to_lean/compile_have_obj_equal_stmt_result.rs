@@ -138,7 +138,7 @@ impl LitexToLeanCompiler {
             };
             let position = &alias_position;
             let equal = self.resolve_fact(stores[count + index].primary_fact_id(), position)?;
-            self.validate_store(&stores[count + index], &equal)?;
+            self.validate_store(&stores[count + index].store, &equal)?;
             let left =
                 alias_equality_subject(&equal, parameter, &proof.statement.objs_equal_to[index])?;
             declarations.push(self.bind_alias(
@@ -170,7 +170,7 @@ impl LitexToLeanCompiler {
                     ))
                 }
             }
-            self.validate_store(&stores[index], &member_fact)?;
+            self.validate_store(&stores[index].store, &member_fact)?;
             let member = (
                 self.fact_proposition(&member_fact, position)?,
                 members[index].1.clone(),

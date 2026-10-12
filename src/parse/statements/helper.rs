@@ -17,6 +17,18 @@ impl Runtime {
         Ok(stmts)
     }
 
+    pub(in super::super) fn parse_nonempty_proof_body(
+        &mut self,
+        body: &[TokenBlock],
+        block: &TokenBlock,
+        syntax_name: &str,
+    ) -> RuntimeResult<Vec<Stmt>> {
+        if body.is_empty() {
+            return Err(block.parse_error(format!("{syntax_name}: expects a nonempty proof body")));
+        }
+        self.parse_body_stmts(body)
+    }
+
     // `impossible <atomic>` / `impossible not <atomic>` — always one AtomicFact.
     pub(in super::super) fn parse_impossible_atomic_fact(
         &mut self,

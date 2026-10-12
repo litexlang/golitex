@@ -139,8 +139,10 @@ captured WD before the inferred nonnegative fact; a deleted, wrong or future
 constructor remains an error. The selected `ArithmeticCongruence` strategy
 validates its exact ordered requirement facts and IDs, then compiles each child
 at its original sibling position.
-Natural addition is the new structural N closure; variable N multiplication
-and variable Z arithmetic membership remain explicit unsupported neighbors.
+Structural membership includes N addition/multiplication and Z
+addition/subtraction/multiplication/negation, plus closed nonnegative integer
+powers in N/Z. The original base, exponent and carrier evidence is checked.
+Natural subtraction and integer division do not acquire false closure laws.
 
 The compiler also supports the phase-3 slice: top-level concrete predicates
 with flat atomic defining clauses, and formula functions with one or two fixed
@@ -171,10 +173,18 @@ Numeric `Set` views are pullbacks. A full real/complex-set interpretation also
 requires the corresponding source subset witness. Native Adapter/Final checks
 consume the generated set proofs through proved denotation/membership bridges.
 
-Recursive/composed formula bodies, concrete-predicate function guards,
-nonempty/finite binder kinds, compound builder clauses, local declarations,
-unreviewed consumed inference and module compilation retain
-explicit unsupported branches. Exact certificates, orientations, argument
+Earlier one/two-input formula calls may occur in a formula body. Concrete
+predicate guards and numeric RHS/let aliases replay their original definitions;
+flat And/chain clauses keep ordered WD, stores and original component IDs.
+Bounded builders accept these supported flat filters and their actual member
+projections. KnownSubset consumes both its recorded member and subset citation.
+The generated pairs include composed_real_formula, chain_guard_reciprocal,
+closed_unit_interval and subset_real_membership_order.
+
+Recursive/higher-order bodies, nonempty/finite binder kinds, local prop/function
+or nested theorem definitions, general compound logic, unreviewed consumed
+inference and module compilation retain explicit unsupported branches.
+Exact certificates, orientations, argument
 match evidence and residual children must be preserved. Generated files keep
 all source proof names; only unused-variable and unused-section-variable
 style linters are disabled. Real Lean checking and other warnings remain
@@ -182,15 +192,16 @@ separate required gates.
 
 A theorem invocation retains `selected_wd`, the caller's existing formation
 check after the invocation scope closes and before its selected fact is stored.
-The original direct nested call now uses that caller evidence. A constructor
-recorded only inside the closed invocation remains unavailable in the parent;
-the compiler never exports that local WD as a substitute.
+The original direct nested call now uses that caller evidence. A compound
+constructor recorded only inside the closed invocation remains unavailable in
+the parent. The existing closed-leaf traversal permits numeric literals and
+standard sets; it does not export local binders, truth or general construction WD.
 
 Consumed additive, subtractive, nonzero-factor, common-denominator and nonzero-
 numerator cancellation retain their original membership/nonzero checks, derived
-fact WD and store/infer tree. The compiler dispatches the original rule variant
-to a proved cancellation lemma, emits its actual derived FactId and recursively
-replays later inference. Pending stages cannot cite their future conclusions,
+fact WD and direct store. The compiler dispatches the original rule variant
+to a proved cancellation lemma, emits its actual derived FactId without recursively
+replaying another infer stage. Pending stages cannot cite their future conclusions,
 even when an ancestor sees the completed store. Unreviewed inference families
 retain explicit rejection branches.
 
@@ -198,7 +209,51 @@ Named theorem bodies accept the original by-def result alongside existing fact,
 let, typed-have and by-thm steps. The source request must match its selected
 definition proof subject. Completed by-def exposes the caller's goal WD;
 constructors inside its closed defining-clause proof remain local. Ordinary
-local arbitrary-have declarations still require their separate lowering.
+local arbitrary-have declarations now eliminate the captured nonempty numeric
+carrier inside the proof. Set-kind local declarations use a certified semantic
+set witness; only the original IsSet fact is published. Dependent typed-have
+and let retain their own IDs. The exported theorem is rendered from the original
+goal, so local witnesses and membership proofs do not become outer parameters.
+
+Flat And/chains replay verification, actual storage projections, independent
+inference seed IDs and numeric transitive closures in order. Conditional
+integer-lower-bound and strict-positive rules retain their already computed
+WD and direct storage. A derived And/Chain still publishes its actual indexed
+components, without inventing a nested infer stage. Pending WD/store positions
+continue to reject their future producers.
+
+Explicit by-thm calls also replay flat And/Chain returned packages. Original
+domain proofs are followed by their captured `dom_stores`; all conclusion WD
+finishes before any return package is published. Direct component selection
+uses the package's actual stored FactIds, preserving the invocation's strict
+selection contract. Caller `selected_wd` remains separate from the closed
+invocation. `named_compound_theorem_returns` includes two scalar wrappers whose
+final proofs genuinely cite the selected invocation stores.
+
+Concrete predicate equality transport uses the exact previous declaration,
+predicate identity, polarity and arity, with ordered source equality proofs.
+The declaration's raw predicate acts on semantic denotations. `congrArg` and
+`Eq.mp` transport the original cited proof; generic host types remain intact.
+`concrete_predicate_equality_transport` uses the transported fact as a real
+function-domain guard, rather than unfolding a replacement proof.
+
+Natural membership inference is published once per captured producer. Parameter
+introductions keep their builder/sign projections; paired projection consumers
+use builder-only replay plus the general stored-inference consumer. Completed
+parameter inference supplies original literal WD to subsequent predicate and
+builder clauses. Completion labels and exact Atomic/Prop owner aliases preserve
+nearest pending-stage limits; first-sign WD cannot cite its own future truth.
+The natural_polynomial_formulas pair includes a concrete natural-output prop.
+
+Phases 8-12 passed their final combined checkpoint on 2026-10-11: 74 actual
+source/generated pairs, the original S01-S18/I01 matrix and 19 new mathematical
+cross-cases, pinned real Lean, 64 exports per native layer and an ordinary Lake
+client. The local completion matrix separates whole-file checks, selected
+original result stages and actual native signatures. Ten new native interfaces
+are closed evaluations, six are generic and three mix both scopes. Handwritten
+adapters choose the proved model explicitly; this is not automatic native
+interface generation or support for every Litex evidence variant. Receipts and
+reproduction commands remain in the local-only compiler workspace.
 
 Any failed source, unsupported branch or unavailable evidence rejects the
 entire artifact. No partial Lean file, new axiom, proof hole or fabricated

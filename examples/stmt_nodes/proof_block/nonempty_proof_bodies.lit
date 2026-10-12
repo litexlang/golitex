@@ -1,0 +1,41 @@
+# Tracer: explicit proof processes cannot be empty.
+# Before (accepted):
+# claim:
+#     ? exist x R st {x = 0}
+# Former behavior: an empty process went directly to the final goal check.
+# Now: supply the witness explicitly; the goal is checked and exported.
+claim:
+    ? exist x R st {x = 0}
+    witness exist x R st {x = 0} from 0
+
+# Named theorem bodies remain optional and still require goal verification.
+thm reflexive:
+    ? forall x R:
+        x = x
+
+# Inline proof commands remain available. A trailing colon requires a body.
+witness exist y R st {y = 2} from 2
+witness exist z R st {z = 3} from 3:
+    z = 3
+by extension {1} = {1}
+by extension:
+    ? {2} = {2}
+    2 = 2
+
+by enumerate finite_set:
+    ? forall n {0, 1}:
+        n >= 0
+    n >= 0
+by induc n from 0:
+    ? n = n
+    n = n
+
+# A checked contradiction tail counts as a process step on its own.
+by contra:
+    ? 1 != 2
+    impossible 1 = 2
+
+# Boundary: missing/comment-only processes and empty colon bodies parse-error.
+# Nonempty bodies do not admit unsupported goals; thm still checks its goal.
+# Evidence: cargo test --release parse::nonempty_proof_body_tests
+# Run: target/release/litex -lang en -strict -f examples/stmt_nodes/proof_block/nonempty_proof_bodies.lit

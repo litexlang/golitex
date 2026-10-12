@@ -57,4 +57,5 @@ sketch:
     by enumerate finite_set:
         ? forall x {-1, 0, 1}:
             x $in closed_range(-1, 1)
+        x $in closed_range(-1, 1)
     by extension closed_range(-1, 1) = {-1, 0, 1}

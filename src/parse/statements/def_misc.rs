@@ -227,7 +227,7 @@ impl Runtime {
         tb.expect_colon_end_of_header()?;
         if tb.body.is_empty() {
             return Err(tb.parse_error(
-                "strategy: expects a `? forall ...` goal block and optional proof body",
+                "strategy: expects a `? forall ...` goal block and a nonempty proof body",
             ));
         }
         let mut goal = tb.body[0].clone();
@@ -235,7 +235,7 @@ impl Runtime {
         let proof_blocks = &tb.body[1..];
         let prove_process =
             self.with_forall_params_occupied(&forall_fact.typed_parameters, &tb, |this| {
-                this.parse_body_stmts(proof_blocks)
+                this.parse_nonempty_proof_body(proof_blocks, &tb, "strategy")
             })?;
         self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefStrategyStmt(

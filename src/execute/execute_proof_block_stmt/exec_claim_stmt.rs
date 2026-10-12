@@ -19,6 +19,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 // Example:
 //   claim:
 //       ? 1 = 1
+//       1 = 1
 pub fn exec_claim_stmt(
     runtime: &mut Runtime,
     stmt: &ClaimStmt,

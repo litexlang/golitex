@@ -5,7 +5,8 @@
 # case: single-exhaustive-case
 by cases:
     ? 1 = 1
-    case 1 = 1
+    case 1 = 1:
+        1 = 1
 
 # case: two-cases-from-premise
 claim:
@@ -15,8 +16,10 @@ claim:
             x >= 0
     by cases:
         ? x >= 0
-        case x = 0
-        case x = 1
+        case x = 0:
+            x >= 0
+        case x = 1:
+            x >= 0
 
 # case: case-proof-bodies
 claim:

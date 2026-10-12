@@ -62,9 +62,45 @@ impl LitexToLeanCompiler {
                     self.compile_object_reference(&proof.element, position)?
                 ))
             }
-            StructuralMembershipReason::KnownSubset(_) => Err(LeanCompileError::unsupported(
-                "StructuralMembership/KnownSubset",
-            )),
+            StructuralMembershipReason::KnownSubset(known) => {
+                let (AtomicFact::InFact(member), AtomicFact::SubsetFact(subset)) =
+                    (&known.member_proof.fact, &known.subset_proof.fact)
+                else {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/SubsetFamily",
+                        "Subset membership requires its actual member and subset premise subjects.",
+                    ));
+                };
+                if member.element.ir() != proof.element.ir()
+                    || member.set.ir() != subset.left.ir()
+                    || subset.right.ir() != Obj::StandardSet(proof.set.clone()).ir()
+                {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/SubsetSubject",
+                        "The recorded member and subset do not connect this element to its target carrier.",
+                    ));
+                }
+                let (
+                    AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(member_cite),
+                    AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(subset_cite),
+                ) = (
+                    known.member_proof.searched_proof.as_ref(),
+                    known.subset_proof.searched_proof.as_ref(),
+                )
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/SubsetCitation",
+                    ));
+                };
+                let member =
+                    self.compile_known_atomic(member_cite, &known.member_proof.fact, position)?;
+                let subset =
+                    self.compile_known_atomic(subset_cite, &known.subset_proof.fact, position)?;
+                Ok(format!(
+                    "({subset} (Litex.denote {}) {member})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
             StructuralMembershipReason::Add { left, right } => {
                 self.compile_structural_binary(proof, left, right, BinaryArithmetic::Add, position)
             }
@@ -147,6 +183,17 @@ impl LitexToLeanCompiler {
                 let ha_c = self.compile_structural(base, position)?;
                 let he_z = self.compile_structural(exponent, position)?;
                 match proof.set {
+                    StandardSet::N | StandardSet::Z => {
+                        let suffix = if proof.set == StandardSet::N {
+                            "N"
+                        } else {
+                            "Z"
+                        };
+                        Ok(format!(
+                            "(Litex.powStructuralIn{suffix} {} {ha_c} {he_z})",
+                            self.compile_object_reference(&proof.element, position)?
+                        ))
+                    }
                     StandardSet::C => Ok(format!(
                         "(Litex.powStructuralInC {} {ha_c} {he_z})",
                         self.compile_object_reference(&proof.element, position)?
@@ -170,7 +217,6 @@ impl LitexToLeanCompiler {
                 "StructuralMembership/Intrinsic",
             )),
         }?;
-        if proof.set == StandardSet::R {}
         Ok(compiled)
     }
 
@@ -246,11 +292,27 @@ impl LitexToLeanCompiler {
                     self.compile_object_reference(b, position)?
                 ))
             }
-            StandardSet::N if matches!(operation, BinaryArithmetic::Add) => Ok(format!(
-                "(Litex.addInN {} {} {ha} {hb})",
-                self.compile_object_reference(a, position)?,
-                self.compile_object_reference(b, position)?
-            )),
+            StandardSet::N
+                if matches!(operation, BinaryArithmetic::Add | BinaryArithmetic::Mul) =>
+            {
+                Ok(format!(
+                    "(Litex.{name}InN {} {} {ha} {hb})",
+                    self.compile_object_reference(a, position)?,
+                    self.compile_object_reference(b, position)?
+                ))
+            }
+            StandardSet::Z
+                if matches!(
+                    operation,
+                    BinaryArithmetic::Add | BinaryArithmetic::Sub | BinaryArithmetic::Mul
+                ) =>
+            {
+                Ok(format!(
+                    "(Litex.{name}InZ {} {} {ha} {hb})",
+                    self.compile_object_reference(a, position)?,
+                    self.compile_object_reference(b, position)?
+                ))
+            }
             _ => Err(LeanCompileError::unsupported(
                 "StructuralMembership/ArithmeticCarrier",
             )),

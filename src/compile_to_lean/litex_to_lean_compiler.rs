@@ -59,16 +59,19 @@ impl LitexToLeanCompiler {
             declarations.push(compiled);
         }
         let universes = self.source_universes(result)?;
-        let sets = if result.statement_results.iter().any(statement_uses_sets) {
+        let uses_functions = result
+            .statement_results
+            .iter()
+            .any(statement_uses_functions);
+        // FunctionSemantics already supplies its SetSemantics parent. A
+        // second data-carrying instance would give mixed set/function terms
+        // conflicting interpretations of the same source set constructors.
+        let sets = if !uses_functions && result.statement_results.iter().any(statement_uses_sets) {
             "\nset_option linter.unusedSectionVars false\nvariable [_setSemantics : Litex.SetSemantics M]"
         } else {
             ""
         };
-        let functions = if result
-            .statement_results
-            .iter()
-            .any(statement_uses_functions)
-        {
+        let functions = if uses_functions {
             "\nset_option linter.unusedSectionVars false\nvariable [_functionSemantics : Litex.FunctionSemantics M]"
         } else {
             ""
@@ -108,12 +111,26 @@ fn fact_uses_functions(fact: &Fact) -> bool {
         Fact::AtomicFact(fact) => atomic_fact_args_ref(fact)
             .into_iter()
             .any(object_uses_functions),
+        Fact::AndFact(fact) => fact.facts.iter().any(|fact| {
+            atomic_fact_args_ref(fact)
+                .into_iter()
+                .any(object_uses_functions)
+        }),
+        Fact::ChainFact(fact) => fact.objs.iter().any(object_uses_functions),
         Fact::ForallFact(fact) => {
             fact.dom_facts.iter().any(fact_uses_functions)
                 || fact.then_facts.iter().any(|fact| match fact {
                     ExistOrAndChainAtomicFact::AtomicFact(fact) => atomic_fact_args_ref(fact)
                         .into_iter()
                         .any(object_uses_functions),
+                    ExistOrAndChainAtomicFact::AndFact(fact) => fact.facts.iter().any(|fact| {
+                        atomic_fact_args_ref(fact)
+                            .into_iter()
+                            .any(object_uses_functions)
+                    }),
+                    ExistOrAndChainAtomicFact::ChainFact(fact) => {
+                        fact.objs.iter().any(object_uses_functions)
+                    }
                     _ => false,
                 })
         }
@@ -180,6 +197,11 @@ fn object_uses_sets(object: &Obj) -> bool {
 fn fact_uses_sets(fact: &Fact) -> bool {
     match fact {
         Fact::AtomicFact(f) => atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a)),
+        Fact::AndFact(f) => f
+            .facts
+            .iter()
+            .any(|f| atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a))),
+        Fact::ChainFact(f) => f.objs.iter().any(object_uses_sets),
         Fact::ForallFact(f) => {
             f.typed_parameters
                 .groups
@@ -190,6 +212,11 @@ fn fact_uses_sets(fact: &Fact) -> bool {
                     ExistOrAndChainAtomicFact::AtomicFact(a) => {
                         atomic_fact_args_ref(a).iter().any(|a| object_uses_sets(a))
                     }
+                    ExistOrAndChainAtomicFact::AndFact(f) => f
+                        .facts
+                        .iter()
+                        .any(|f| atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a))),
+                    ExistOrAndChainAtomicFact::ChainFact(f) => f.objs.iter().any(object_uses_sets),
                     _ => false,
                 })
         }

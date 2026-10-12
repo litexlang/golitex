@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
@@ -144,6 +144,11 @@ impl LitexToLeanCompiler {
                     commuted,
                 )
             };
+        // The checked child has now formed its exact endpoints. Its WD is
+        // available to the conversion, without publishing its equality truth.
+        let checked_child =
+            SourcePosition::new(Some(position), SourceOwner::Verify(child), usize::MAX);
+        let position = &checked_child;
         let b = self.compile_numeric_observation(denominator, position)?;
         let c = self.compile_numeric_observation(factor, position)?;
         let x = self.compile_numeric_observation(&equation.left, position)?;

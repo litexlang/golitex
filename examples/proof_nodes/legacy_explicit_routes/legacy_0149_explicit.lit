@@ -5,8 +5,10 @@ claim:
             u<v
     by cases:
         ? u<v
-        case u-v<0
-        case 0<v-u
+        case u-v<0:
+            u<v
+        case 0<v-u:
+            u<v
 
 forall u,v R:
     u-v<0 or 0<v-u

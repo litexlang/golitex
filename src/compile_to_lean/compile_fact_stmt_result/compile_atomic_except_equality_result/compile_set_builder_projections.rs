@@ -72,8 +72,10 @@ impl LitexToLeanCompiler {
             )]);
             let mut next = 0;
             for derived in &step.derived {
-                let fact = match &derived.store_and_infer.store {
+                let fact = match &derived.store {
                     StoreFactResult::AtomicFact(s) => Fact::AtomicFact(s.fact.clone()),
+                    StoreFactResult::AndFact(s) => Fact::AndFact(s.fact.clone()),
+                    StoreFactResult::ChainFact(s) => Fact::ChainFact(s.fact.clone()),
                     _ => {
                         return Err(LeanCompileError::unsupported(
                             "SetBuilder/CompoundProjection",
@@ -104,7 +106,7 @@ impl LitexToLeanCompiler {
                     before: offset,
                 };
                 self.compile_fact_wd(&derived.well_defined, &fact, &prior)?;
-                self.validate_store(&derived.store_and_infer, &fact)?;
+                self.validate_store(&derived.store, &fact)?;
                 let formed = SourcePosition {
                     parent: Some(&prior),
                     owner: SourceOwner::FactWD(&derived.well_defined),
@@ -112,14 +114,8 @@ impl LitexToLeanCompiler {
                 };
                 let compiled = (self.fact_proposition(&fact, &formed)?, term);
                 declarations.push(self.emit_internal_fact(&fact, &compiled, position));
-                declarations.extend(self.compile_parameter_inferences(
-                    &derived.store_and_infer,
-                    &fact,
-                    &compiled,
-                    &formed,
-                )?);
-                declarations.extend(self.compile_stored_inferences(
-                    &derived.store_and_infer,
+                declarations.extend(self.compile_stored_projections(
+                    &derived.store,
                     &fact,
                     &compiled,
                     &formed,

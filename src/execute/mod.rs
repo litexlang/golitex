@@ -79,6 +79,9 @@ mod native_scalar_codomain_tests;
 #[path = "../../tests/unit/execute/obtain_binding/mod.rs"]
 mod obtain_binding_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/execute/order_bound_capture/tests.rs"]
+mod order_bound_capture_tests;
+#[cfg(test)]
 mod order_stage_a_remainder_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/special_property/tests.rs"]

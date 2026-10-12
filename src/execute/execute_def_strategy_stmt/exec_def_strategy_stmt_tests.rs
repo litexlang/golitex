@@ -29,7 +29,7 @@ fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
 #[test]
 fn def_strategy_forall_refl_succeeds() {
     let mut runtime = runtime_with_file_env();
-    let code = "strategy refl_on_r:\n    ? forall x R:\n        x = x";
+    let code = "strategy refl_on_r:\n    ? forall x R:\n        x = x\n    x = x";
     let r = exec_one(&mut runtime, code);
     match &r {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(

@@ -15,9 +15,8 @@ claim:
 
 template<I, S, T set, f fn(x S) T, family fn(j I) power_set(T)>:
     have fn family_preimages(j I) power_set(S) = {x S: f(x) $in family(j)}
-claim:
-    ? forall I, S, T set, f fn(x S) T, family fn(j I) power_set(T), j I:
-        \family_preimages<I, S, T, f, family>(j) = {x S: f(x) $in family(j)}
+forall I, S, T set, f fn(x S) T, family fn(j I) power_set(T), j I:
+    \family_preimages<I, S, T, f, family>(j) = {x S: f(x) $in family(j)}
 
 template<c R>:
     have fn reciprocal_shift(x R: x != c) R = 1 / (x - c)

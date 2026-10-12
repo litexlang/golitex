@@ -8,9 +8,22 @@ env and may **store routine consequences**. It is not open-ended proof search.
 | Step | Role |
 |---|---|
 | `store_fact` | Index by shape into known-\* / ExecEnv (no math consequences) |
-| `infer_fact` | Generate extra facts only via `store_inferred_*` |
+| `infer_fact` | Generate direct facts only via `store_inferred_fact` |
 | `store_fact_and_infer` | `{ store, infer }` for a verified seed |
-| `store_inferred_fact_and_infer` | WD-check then store+infer (for infer children) |
+| `store_inferred_fact` | WD-check then store only (no infer children) |
+
+Forward inference runs once per seed. Its derived facts are checked and indexed
+without another inference pass. Formation checks inherit `without_inference()`
+so their temporary binder assumptions cannot reopen inference. A later explicit
+statement can verify the stored consequence and use it as a new seed.
+`StoreInferredFactResult { well_defined, store }` records these actual stages;
+there is no child infer tree. `StoreFactAndInferResult.infer` is absent in
+store-only formation scopes.
+
+The strict acceptance file is
+[`one_step_store_only.lit`](../../examples/infer/atomic/one_step_store_only.lit).
+It covers exact and mutual FnRange cycles, growing builder elements and the
+explicit next-seed boundary.
 
 Callers verify the seed first. Nested WD/proof inside a statement uses
 `verify_*` / `store_*` — not a second `exec_stmt`.
@@ -63,9 +76,9 @@ store_fact_and_infer/
   inherit the caller's permissions capped at KnownSpecialProperty. Missing
   premises skip the rule without rejecting the accepted source equality.
   Each result retains the source FactId, common operand, premise proofs and
-  ordinary WD-checked derived store/infer tree. The equality graph skips
-  already-known endpoints. Each recursive cancellation removes the outer
-  arithmetic constructor. Later nonzero facts do not retrigger older seeds.
+  ordinary WD-checked derived store. The equality graph skips
+  already-known endpoints. Each cancellation removes one outer
+  arithmetic constructor; a derived equality does not cancel again automatically. Later nonzero facts do not retrigger older seeds.
   Tracers: `examples/infer/equal/{additive,subtractive,nonzero_factor,common_denominator,nonzero_numerator}_cancellation.lit`; focused tests:
   `equality_cancellation`. Lean replay of a citation to these uncompiled
   consequences remains fail-closed at `FactId/Producer`.
@@ -147,7 +160,7 @@ optional/construction classification and the executed positive/negative gates.
   and nonnegative `b` certificates, publishes `n $in N` in the same scope.
   `InferWeakIntegerLowerBoundInNResult` retains the bound's source FactId,
   the integer and nonnegative-bound proof results, then the ordinary derived
-  store/infer result. Each premise check inherits the caller's ceiling and is
+  store result. Each premise check inherits the caller's ceiling and is
   capped at KnownSpecialProperty; no strategy/forall or permission reset is
   used. An exact visible N-membership guard in the existing membership bucket
   stops the N-to-sign projection cycle. Normal output lists the consequence;
@@ -178,19 +191,14 @@ replaced by another same-named field. Tracers: `atomic/field_fn_range.lit` and
 
 ## Tracers
 
-Set-builder membership projection skips an exact visible fact before recursively
-storing that consequence. A stored `s = {x s: 0 = 0}` otherwise projects
-`element $in s` from that same already-stored membership indefinitely, including
-during a freshly parsed builder's WD check. This guard is local to the builder's
-carrier/body projections: it does not change truth lookup, global storage,
-permission, or result shapes. A per-call visited queue still projects existing
-carrier memberships, including positive And/Chain components, because a carrier
-equality may arrive after the original membership. It never selects an Or branch.
-New consequences follow the ordinary WD → store → infer path. The maintained strict tracer is
-`examples/infer/atomic/set_builder_projection_replay.lit`; focused tests also
-cover mutual carrier cycles, repeated body membership, false/undefined rejection,
-late carrier definitions, exact free owners, no Or selection, WD locality, and
-failed-statement rollback.
+Set-builder membership projection stores only the seed's immediate carrier and
+body clauses. It skips exact visible consequences, visits no descendant
+memberships and never selects an Or branch. A carrier equality arriving later
+can be consumed by an explicit new membership statement. Cartesian membership
+stored by that projection does not automatically publish coordinates; an
+explicit Cartesian seed can do so. The older
+`examples/infer/atomic/set_builder_projection_replay.lit` describes the carrier
+replay boundary; `one_step_store_only.lit` owns the new termination contract.
 
 One rule → one file under `examples/infer/` (see that README).
 

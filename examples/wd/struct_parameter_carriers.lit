@@ -12,8 +12,7 @@ forall t &Point<N,R>:
     t $in &Point<Z,R>
 forall t &Point<Z,R>:
     t $in &Point<N,R>
-by extension:
-    ? &Point<N,R> = &Point<Z,R>
+by extension &Point<N,R> = &Point<Z,R>
 
 # A parameter that occurs in a field keeps that field's actual carrier.
 struct FieldParameterPoint<K nonempty_set,S nonempty_set>:

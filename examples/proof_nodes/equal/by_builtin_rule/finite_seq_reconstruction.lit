@@ -7,18 +7,14 @@
 # Boundary: wrong length, order, receiver, or partial domain must reject.
 # Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/finite_seq_reconstruction.lit
 # Rust: equality_search::finite_seq_reconstruction tests.
-claim:
-    ? forall x finite_seq(R, 2):
-        x = (x(1), x(2))
+forall x finite_seq(R, 2):
+    x = (x(1), x(2))
 
-claim:
-    ? forall S set, x finite_seq(S, 3):
-        (x(1), x(2), x(3)) = x
+forall S set, x finite_seq(S, 3):
+    (x(1), x(2), x(3)) = x
 
-claim:
-    ? forall x finite_seq(R, 1):
-        x = tuple(x(1))
+forall x finite_seq(R, 1):
+    x = tuple(x(1))
 
-claim:
-    ? forall x finite_seq(R, 0):
-        x = ()
+forall x finite_seq(R, 0):
+    x = ()

@@ -6,7 +6,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactIntersectBothResult,
     InferInFactListSetOrEqualitiesResult, InferInFactListSetSingletonEqualResult,
-    InferInFactSetMinusSplitResult, InferInFactUnionOrResult, StoreFactAndInferResult,
+    InferInFactSetMinusSplitResult, InferInFactUnionOrResult, StoreInferredFactResult,
 };
 
 impl Runtime {
@@ -56,9 +56,8 @@ impl Runtime {
                 right: singleton.as_ref().clone(),
                 line_file: lf,
             });
-            let derived = Box::new(
-                self.store_inferred_fact_and_infer(&Fact::AtomicFact(atomic), verify_state)?,
-            );
+            let derived =
+                Box::new(self.store_inferred_fact(&Fact::AtomicFact(atomic), verify_state)?);
             return Ok(Some(
                 InferAtomicExceptEqualityResult::InFactListSetSingletonEqual(
                     InferInFactListSetSingletonEqualResult { derived },
@@ -83,7 +82,7 @@ impl Runtime {
             facts: branches,
             line_file: lf,
         });
-        let derived = Box::new(self.store_inferred_fact_and_infer(&or_fact, verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&or_fact, verify_state)?);
         Ok(Some(
             InferAtomicExceptEqualityResult::InFactListSetOrEqualities(
                 InferInFactListSetOrEqualitiesResult { derived },
@@ -121,7 +120,7 @@ impl Runtime {
             ],
             line_file: lf,
         });
-        let derived = Box::new(self.store_inferred_fact_and_infer(&or_fact, verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&or_fact, verify_state)?);
         Ok(Some(InferAtomicExceptEqualityResult::InFactUnionOr(
             InferInFactUnionOrResult { derived },
         )))
@@ -136,9 +135,9 @@ impl Runtime {
             return Ok(None);
         };
         let lf = in_fact.line_file.clone();
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::with_capacity(2);
+        let mut derived: Vec<StoreInferredFactResult> = Vec::with_capacity(2);
         let left_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact_and_infer(
+        derived.push(self.store_inferred_fact(
             &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: left_id,
                 element: in_fact.element.clone(),
@@ -148,7 +147,7 @@ impl Runtime {
             verify_state,
         )?);
         let right_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact_and_infer(
+        derived.push(self.store_inferred_fact(
             &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: right_id,
                 element: in_fact.element.clone(),
@@ -172,9 +171,9 @@ impl Runtime {
         };
         let lf = in_fact.line_file.clone();
         let right_set = sm.right.as_ref().clone();
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
+        let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         let in_left_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact_and_infer(
+        derived.push(self.store_inferred_fact(
             &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: in_left_id,
                 element: in_fact.element.clone(),
@@ -184,7 +183,7 @@ impl Runtime {
             verify_state,
         )?);
         let not_in_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact_and_infer(
+        derived.push(self.store_inferred_fact(
             &Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
                 fact_id: not_in_id,
                 element: in_fact.element.clone(),
@@ -196,7 +195,7 @@ impl Runtime {
         if let Obj::SetFormer(SetFormer::ListSet(list_set)) = &right_set {
             if let [excluded] = list_set.list.as_slice() {
                 let ne_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact_and_infer(
+                derived.push(self.store_inferred_fact(
                     &Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
                         fact_id: ne_id,
                         left: in_fact.element.clone(),

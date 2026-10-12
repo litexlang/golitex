@@ -6,6 +6,12 @@ and sequence limits. It demonstrates how definitions and checked facts become
 context for later constructions. It is a selected public view of a larger
 local development, not a completed formalization of the book.
 
+For space, this showcase includes only examples needed for the progression
+below. Decimal encodings and the proof that the real numbers are uncountable
+are omitted. Partial proof fragments and examples whose intended claim or
+conditions are unclear are not included; omitted material is not claimed as
+completed.
+
 ## From natural numbers to reusable facts
 
 Induction makes an infinite family of inequalities checkable by displaying

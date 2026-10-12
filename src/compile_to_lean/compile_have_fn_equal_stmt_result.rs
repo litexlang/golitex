@@ -99,7 +99,7 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
-        self.validate_store(&stores.membership, &membership)?;
+        self.validate_store(&stores.membership.store, &membership)?;
         let declaration = self.bind_alias(
             &proof.statement.name,
             named_object,
@@ -122,7 +122,7 @@ impl LitexToLeanCompiler {
         };
         let defining_equal = self.resolve_fact(stores.defining_equal_fact_id, &after_equal)?;
         alias_equality_subject(&defining_equal, &proof.statement.name, &anonymous)?;
-        self.validate_store(&stores.defining_equal, &defining_equal)?;
+        self.validate_store(&stores.defining_equal.store, &defining_equal)?;
         let equal = (
             self.fact_proposition(&defining_equal, &after_equal)?,
             format!("(Litex.sameRefl {object})"),

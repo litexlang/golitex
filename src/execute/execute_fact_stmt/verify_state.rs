@@ -6,6 +6,7 @@
 pub struct VerifyState {
     level: VerifyStateLevel,
     can_rewrite: bool,
+    can_infer: bool,
 }
 
 // Order denotes the maximum available truth-search stage, not recursion depth.
@@ -26,6 +27,7 @@ impl VerifyState {
         Self {
             level,
             can_rewrite: false,
+            can_infer: true,
         }
     }
 
@@ -34,6 +36,7 @@ impl VerifyState {
         Self {
             level: VerifyStateLevel::DefinitionAndForall,
             can_rewrite: true,
+            can_infer: true,
         }
     }
 
@@ -42,6 +45,19 @@ impl VerifyState {
         Self {
             level: self.level.min(ceiling),
             can_rewrite: false,
+            can_infer: self.can_infer,
+        }
+    }
+
+    pub fn allows_inference(self) -> bool {
+        self.can_infer
+    }
+
+    // Derived-fact formation must not reopen inference in its binder scopes.
+    pub fn without_inference(self) -> Self {
+        Self {
+            can_infer: false,
+            ..self
         }
     }
 
@@ -71,6 +87,7 @@ impl VerifyState {
         Some(Self {
             level,
             can_rewrite: false,
+            can_infer: self.can_infer,
         })
     }
 
@@ -79,6 +96,7 @@ impl VerifyState {
         Self {
             level: self.level,
             can_rewrite: false,
+            can_infer: self.can_infer,
         }
     }
 

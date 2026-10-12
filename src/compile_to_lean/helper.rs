@@ -497,6 +497,18 @@ pub(super) fn verified_subject(result: &VerifyFactResult) -> Option<Fact> {
             VerifyForallFactResult::Success(proof) => Some(Fact::ForallFact(proof.fact().clone())),
             _ => None,
         },
+        VerifyFactResult::AndFact(result) => match result.as_ref() {
+            crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult::Success(proof) => {
+                Some(Fact::AndFact(proof.fact.clone()))
+            }
+            _ => None,
+        },
+        VerifyFactResult::ChainFact(result) => match result.as_ref() {
+            crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof) => {
+                Some(Fact::ChainFact(proof.fact.clone()))
+            }
+            _ => None,
+        },
         _ => None,
     }
 }
@@ -513,6 +525,16 @@ pub(super) fn validate_statement_capture(
             Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(stmt))),
             ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
                 ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(proof)),
+            )),
+        ) => stmt == &proof.statement,
+        (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjInNonemptySetStmt(
+                stmt,
+            ))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                    ExecHaveObjInNonemptySetStmtResult::Success(proof),
+                ),
             )),
         ) => stmt == &proof.statement,
         (
@@ -634,8 +656,46 @@ pub(super) fn instantiated_fact_matches(
                     .zip(right)
                     .all(|(a, b)| instantiated_object_matches(a, b, substitution))
         }
+        (Fact::AndFact(expected), Fact::AndFact(actual)) => {
+            expected.facts.len() == actual.facts.len()
+                && expected
+                    .facts
+                    .iter()
+                    .zip(&actual.facts)
+                    .all(|(expected, actual)| {
+                        instantiated_fact_matches(
+                            &Fact::AtomicFact(expected.clone()),
+                            &Fact::AtomicFact(actual.clone()),
+                            substitution,
+                        )
+                    })
+        }
+        (Fact::ChainFact(expected), Fact::ChainFact(actual)) => {
+            expected.prop_names == actual.prop_names
+                && expected.objs.len() == actual.objs.len()
+                && expected
+                    .objs
+                    .iter()
+                    .zip(&actual.objs)
+                    .all(|(expected, actual)| {
+                        instantiated_object_matches(expected, actual, substitution)
+                    })
+        }
         _ => false,
     }
+}
+
+pub(super) fn conjunction_proposition(
+    propositions: Vec<String>,
+) -> Result<String, LeanCompileError> {
+    let mut propositions = propositions.into_iter().rev();
+    let Some(mut proposition) = propositions.next() else {
+        return Err(LeanCompileError::unsupported("Compound/EmptyConjunction"));
+    };
+    for left in propositions {
+        proposition = format!("({left} ∧ {proposition})");
+    }
+    Ok(proposition)
 }
 
 pub(super) fn conjunction_projection(proof: &str, index: usize, count: usize) -> String {

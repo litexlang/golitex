@@ -5,3 +5,4 @@
 by for:
     ? forall p cart({1, 2}, {3, 4}):
         p = p
+    p = p

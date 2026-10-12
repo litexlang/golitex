@@ -1,7 +1,8 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution;
 use crate::prelude::*;
 use crate::rational_expression::ClosedNumericExpr;
 
@@ -31,10 +32,125 @@ impl LitexToLeanCompiler {
                     false,
                     position,
                 ),
-            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(_) =>
-                Err(LeanCompileError::unsupported("Atomic/BuiltinRewrite/FnUnfold")),
+            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(proof) =>
+                self.compile_atomic_function_unfold(goal, proof, position),
             AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(proof) => self.compile_order_dual(goal, proof, position),
         }
+    }
+
+    fn compile_atomic_function_unfold(
+        &self,
+        goal: &AtomicFact,
+        proof: &AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let residual = match &proof.rewritten_fact {
+            Fact::AtomicFact(fact) if same_atomic_family(goal, fact) => fact,
+            _ => return Err(LeanCompileError::new(
+                "AtomicFnUnfold/Family",
+                "The recorded residual changes the original predicate, polarity or argument arity.",
+            )),
+        };
+        if proof.unfold_equal_proofs.is_empty() {
+            return Err(LeanCompileError::new(
+                "AtomicFnUnfold/Stages",
+                "The selected function-unfold route has no actual equality verification.",
+            ));
+        }
+        let scope = SourcePosition::new(Some(position), SourceOwner::AtomicFnUnfold(proof), 0);
+        let original = atomic_fact_args_ref(goal);
+        let rewritten = atomic_fact_args_ref(residual);
+        let mut checked = Vec::new();
+        let mut index = 0;
+        for (argument, endpoint) in original.iter().zip(&rewritten) {
+            if argument.ir() == endpoint.ir() {
+                checked.push(None);
+                continue;
+            }
+            if !matches!(argument, Obj::FnObj(_)) {
+                return Err(LeanCompileError::new("AtomicFnUnfold/Argument", "Only an original top-level function application may change in this selected route."));
+            }
+            let equal = proof.unfold_equal_proofs.get(index).ok_or_else(|| {
+                LeanCompileError::new(
+                    "AtomicFnUnfold/Stages",
+                    "A changed argument has no ordered actual unfolding equality.",
+                )
+            })?;
+            match source_subject(equal)? {
+                Fact::AtomicFact(AtomicFact::EqualFact(fact)) if fact.left.ir() == argument.ir() && fact.right.ir() == endpoint.ir() => {}
+                _ => return Err(LeanCompileError::new("AtomicFnUnfold/EqualitySubject", "The recorded unfolding equality has another original argument or expanded endpoint.")),
+            }
+            checked.push(Some(
+                self.compile_verify(
+                    equal,
+                    &SourcePosition {
+                        before: index,
+                        ..scope
+                    },
+                )?
+                .1,
+            ));
+            index += 1;
+        }
+        if index != proof.unfold_equal_proofs.len() {
+            return Err(LeanCompileError::new(
+                "AtomicFnUnfold/Stages",
+                "The payload adds or reorders an equality beyond the changed source arguments.",
+            ));
+        }
+        let complete = SourcePosition {
+            before: index,
+            ..scope
+        };
+        if source_subject(&proof.proof_of_rewritten_fact)? != proof.rewritten_fact {
+            return Err(LeanCompileError::new("AtomicFnUnfold/ChildSubject", "The successful child does not prove the exact original residual fact and identity."));
+        }
+        let child = self.compile_verify(&proof.proof_of_rewritten_fact, &complete)?;
+        let original_terms = original
+            .iter()
+            .map(|arg| self.compile_object_reference(arg, &complete))
+            .collect::<Result<Vec<_>, _>>()?;
+        let rewritten_terms = rewritten
+            .iter()
+            .map(|arg| self.compile_object_reference(arg, &complete))
+            .collect::<Result<Vec<_>, _>>()?;
+        let variables = (0..original.len())
+            .map(|index| format!("_unfold_arg{index}"))
+            .collect::<Vec<_>>();
+        let predicate = self.compile_atomic_raw_proposition(goal, &variables, &complete)?;
+        let from = rewritten_terms
+            .iter()
+            .map(|term| format!("(Litex.denote {term})"))
+            .collect::<Vec<_>>();
+        let to = original_terms
+            .iter()
+            .map(|term| format!("(Litex.denote {term})"))
+            .collect::<Vec<_>>();
+        let mut current = from.clone();
+        let mut equality = format!(
+            "(Eq.refl ((fun {} => {predicate}) {}))",
+            variables
+                .iter()
+                .map(|name| format!("({name} : M.Value)"))
+                .collect::<Vec<_>>()
+                .join(" "),
+            current.join(" ")
+        );
+        for (index, argument) in checked.iter().enumerate() {
+            let Some(argument) = argument else {
+                continue;
+            };
+            let mut next = current.clone();
+            next[index] = to[index].clone();
+            let mut application = current.clone();
+            application[index] = "_unfold_value".into();
+            let congruence = format!("(congrArg (fun (_unfold_value : M.Value) => (fun {} => {predicate}) {}) ({argument}).symm)", variables.iter().map(|name| format!("({name} : M.Value)")).collect::<Vec<_>>().join(" "), application.join(" "));
+            equality = format!("(({equality}).trans {congruence})");
+            current = next;
+        }
+        // Semantic argument equalities transport this same captured predicate;
+        // the child, equality verifications and actual definition routes stay live.
+        Ok(format!("(by\n  change (fun {} => {predicate}) {}\n  have _unfold_child : (fun {} => {predicate}) {} := {}\n  exact Eq.mp {equality} _unfold_child\n)", variables.iter().map(|name| format!("({name} : M.Value)")).collect::<Vec<_>>().join(" "), to.join(" "), variables.iter().map(|name| format!("({name} : M.Value)")).collect::<Vec<_>>().join(" "), from.join(" "), child.1))
     }
 
     pub(in crate::compile_to_lean) fn compile_atomic_equality_rewrite(
@@ -52,6 +168,10 @@ impl LitexToLeanCompiler {
                 | AtomicFact::IsSetFact(_)
                 | AtomicFact::NotEqualFact(_)
                 | AtomicFact::SubsetFact(_)
+                | AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_)
         ) {
             return Err(LeanCompileError::unsupported(
                 "Atomic/BuiltinRewrite/PredicateTransport",
@@ -244,6 +364,22 @@ impl LitexToLeanCompiler {
                 arguments[1],
                 compiled_child.1,
             )),
+            (
+                from @ (AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_)),
+                to @ (AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_)),
+            ) => self.compile_order_known_atomic_transport(
+                from,
+                to,
+                &arguments,
+                &compiled_child.1,
+                position,
+            ),
             _ => Err(LeanCompileError::unsupported(
                 "Atomic/BuiltinRewrite/PredicateTransport",
             )),

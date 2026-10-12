@@ -403,17 +403,13 @@ impl LitexToLeanCompiler {
             };
             let position = &domain_position;
             self.compile_fact_wd(&assumed.well_defined, fact, position)?;
-            self.validate_store(&assumed.store_and_infer, fact)?;
-            let atomic = match fact {
-                Fact::AtomicFact(atomic) => atomic,
-                _ => return Err(LeanCompileError::unsupported("Forall/CompoundDomain")),
-            };
+            self.validate_store(&assumed.store_and_infer.store, fact)?;
             let formation = SourcePosition {
                 parent: Some(position),
                 owner: SourceOwner::FactWD(&assumed.well_defined),
                 before: usize::MAX,
             };
-            let proposition = self.atomic_proposition(atomic, &formation)?;
+            let proposition = self.fact_proposition(fact, &formation)?;
             let hypothesis = format!("h_{}", fact.fact_id().value());
             binders.push(format!("({hypothesis} : {proposition})"));
             introductions.push(hypothesis.clone());
@@ -474,9 +470,9 @@ impl LitexToLeanCompiler {
             let position = &then_position;
             let expected = match fact {
                 ExistOrAndChainAtomicFact::AtomicFact(atomic) => Fact::AtomicFact(atomic.clone()),
-                ExistOrAndChainAtomicFact::AndFact(_)
-                | ExistOrAndChainAtomicFact::ChainFact(_)
-                | ExistOrAndChainAtomicFact::OrFact(_)
+                ExistOrAndChainAtomicFact::AndFact(and) => Fact::AndFact(and.clone()),
+                ExistOrAndChainAtomicFact::ChainFact(chain) => Fact::ChainFact(chain.clone()),
+                ExistOrAndChainAtomicFact::OrFact(_)
                 | ExistOrAndChainAtomicFact::ExistFact(_)
                 | ExistOrAndChainAtomicFact::ExistUniqueFact(_)
                 | ExistOrAndChainAtomicFact::NotExistFact(_) => {
@@ -490,7 +486,7 @@ impl LitexToLeanCompiler {
                     "Verified conclusion differs from the source conclusion.",
                 ));
             }
-            self.validate_store(&proved.store_and_infer, &expected)?;
+            self.validate_store(&proved.store_and_infer.store, &expected)?;
 
             definitions.push(self.emit_internal_fact(&expected, &compiled, position));
             let complete = SourcePosition {

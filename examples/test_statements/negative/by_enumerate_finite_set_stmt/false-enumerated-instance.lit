@@ -4,3 +4,4 @@
 by enumerate finite_set:
     ? forall x {0, 1}:
         x = 0
+    1 = 1

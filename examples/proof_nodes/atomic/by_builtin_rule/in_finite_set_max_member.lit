@@ -8,9 +8,8 @@
 #         =>:
 #             finite_set_max(S) $in S
 # Empty/infinite/non-real input remains rejected by WD (Rust controls).
-claim:
-    ? forall S finite_set:
-        S $subset R
-        $is_nonempty_set(S)
-        =>:
-            finite_set_max(S) $in S
+forall S finite_set:
+    S $subset R
+    $is_nonempty_set(S)
+    =>:
+        finite_set_max(S) $in S

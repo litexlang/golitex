@@ -670,7 +670,10 @@ pub(super) fn project_known_atomic(
     object_for(runtime, entries)
 }
 
-fn project_known_forall(proof: &SearchProofByKnownForallFact, runtime: &Runtime) -> JsonValue {
+pub(super) fn project_known_forall(
+    proof: &SearchProofByKnownForallFact,
+    runtime: &Runtime,
+) -> JsonValue {
     let mut entries = vec![
         ("type", string("by_known_forall")),
         ("cite_fact_id", string(proof.cite.fact_id.to_string())),
@@ -685,6 +688,31 @@ fn project_known_forall(proof: &SearchProofByKnownForallFact, runtime: &Runtime)
                 .forall_parameters_match_what_args
                 .iter()
                 .map(|o: &Obj| string(o.readable_string()))
+                .collect(),
+        ),
+    ));
+    entries.push((
+        "param_type_requirements",
+        JsonValue::Array(
+            proof
+                .instantiation_requirements
+                .param_type_requirements
+                .iter()
+                .map(|requirement| {
+                    object_for(
+                        runtime,
+                        vec![
+                            ("param_id", string(requirement.param_id.to_string())),
+                            ("arg", string(requirement.arg.readable_string())),
+                            (
+                                "fact_id",
+                                string(requirement.type_fact.fact_id().to_string()),
+                            ),
+                            ("fact", string(requirement.type_fact.readable_string())),
+                            ("proof", project_verify_fact(&requirement.proof, runtime)),
+                        ],
+                    )
+                })
                 .collect(),
         ),
     ));

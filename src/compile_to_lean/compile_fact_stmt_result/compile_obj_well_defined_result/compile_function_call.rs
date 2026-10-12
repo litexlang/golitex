@@ -1,3 +1,4 @@
+use crate::compile_to_lean::compile_function_template::function_guard_fact;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -52,10 +53,8 @@ impl LitexToLeanCompiler {
             | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => fn_set,
             _ => return Err(LeanCompileError::unsupported("WD/FnObj/DomainEvidence")),
         };
-        let domains = self.compile_function_domains(signature)?;
-        let Obj::StandardSet(output) = signature.ret_set.as_ref() else {
-            return Err(LeanCompileError::unsupported("Function/ReturnCarrier"));
-        };
+        let domains = self.compile_function_domains(signature, position)?;
+        let output = self.compile_numeric_carrier(&signature.ret_set, position)?;
         if application.body.len() != 1 || application.body[0].len() + 1 != domains.len() {
             return Err(LeanCompileError::new(
                 "WD/FnObj/Arity",
@@ -155,16 +154,8 @@ impl LitexToLeanCompiler {
                     ));
                 }
             } else {
-                let QuantifierFreeFact::AtomicFact(guard) =
-                    &signature.dom_facts[index - arguments.len()]
-                else {
-                    return Err(LeanCompileError::unsupported("Function/CompoundGuard"));
-                };
-                if !instantiated_fact_matches(
-                    &Fact::AtomicFact(guard.clone()),
-                    &subject,
-                    &substitution,
-                ) {
+                let guard = function_guard_fact(&signature.dom_facts[index - arguments.len()])?;
+                if !instantiated_fact_matches(&guard, &subject, &substitution) {
                     return Err(LeanCompileError::new(
                         "WD/FnObj/GuardSubject",
                         "The guard proof is not the recorded clause instantiated at these arguments.",
@@ -290,7 +281,7 @@ impl LitexToLeanCompiler {
                 argument_terms.join(" "),
                 requirement_terms[..arguments.len()].join(" ")
             ),
-            output.clone(),
+            output,
         ))
     }
 }
@@ -309,9 +300,8 @@ impl LitexToLeanCompiler {
         rule: &InFactSearchProofByKnownSpecialProperty,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let Obj::StandardSet(target) = &goal.set else {
-            return Err(LeanCompileError::unsupported("FunctionReturn/Target"));
-        };
+        let target = self.compile_numeric_carrier(&goal.set, position)?;
+        let target = &target;
         let proof = position.with_visible_wd(&goal.element, &mut |wd, producer| {
             let ObjWellDefinedProof::ByDef {
                 obj: Obj::FnObj(application),
@@ -357,7 +347,7 @@ impl LitexToLeanCompiler {
                         }
                         ids.push(entry.cite_signature_fact_id);
                         let (signature, _) = self.compile_fn_return_citation(entry.cite_signature_fact_id, &head, &head_term, Some(&entry.function_equal), position)?;
-                        if signature.ret_set.as_ref() != &Obj::StandardSet(entry.source_set.clone()) {
+                        if self.compile_numeric_carrier(&signature.ret_set, position)? != entry.source_set {
                             return Err(LeanCompileError::new("FunctionReturn/SourceCarrier", "The recorded source upper bound differs from its exact signature citation."));
                         }
                         fn_return_bridge(&entry.source_set, target)?;
@@ -452,9 +442,8 @@ impl LitexToLeanCompiler {
         rule: &InFactSearchProofByBuiltinRule,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let Obj::StandardSet(target) = &goal.set else {
-            return Err(LeanCompileError::unsupported("FunctionReturn/Target"));
-        };
+        let target = self.compile_numeric_carrier(&goal.set, position)?;
+        let target = &target;
         match rule {
             InFactSearchProofByBuiltinRule::AnonymousFnApplicationScalarCodomain(p) => {
                 position.with_visible_wd(&goal.element, &mut |wd, producer| {
@@ -464,7 +453,7 @@ impl LitexToLeanCompiler {
                     let FnObjHead::AnonymousFnLiteral(literal) = application.head.as_ref() else {
                         return Err(LeanCompileError::new("FunctionReturn/LiteralSubject", "The scalar literal rule has another function head."));
                     };
-                    if literal.body.ret_set.as_ref() != &Obj::StandardSet(p.codomain.clone())
+                    if self.compile_numeric_carrier(&literal.body.ret_set, position)? != p.codomain
                         || !matches!(&evidence.domain_fn_set, Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }) if fn_set == &literal.body)
                     {
                         return Err(LeanCompileError::new("FunctionReturn/LiteralSignature", "The literal scalar codomain differs from the actual source signature."));
@@ -602,7 +591,7 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let domains = self.compile_function_domains(signature)?;
+        let domains = self.compile_function_domains(signature, position)?;
         let arguments = &application.body[0];
         let offset = usize::from(matches!(
             evidence.domain_fn_set,
@@ -649,16 +638,8 @@ impl LitexToLeanCompiler {
                     return Err(LeanCompileError::new("FunctionReturn/DomainSubject", "The original argument membership does not meet this recorded alternate domain."));
                 }
             } else {
-                let QuantifierFreeFact::AtomicFact(guard) =
-                    &signature.dom_facts[index - parameters.len()]
-                else {
-                    return Err(LeanCompileError::unsupported("Function/CompoundGuard"));
-                };
-                if !instantiated_fact_matches(
-                    &Fact::AtomicFact(guard.clone()),
-                    &subject,
-                    &substitution,
-                ) {
+                let guard = function_guard_fact(&signature.dom_facts[index - parameters.len()])?;
+                if !instantiated_fact_matches(&guard, &subject, &substitution) {
                     return Err(LeanCompileError::new("FunctionReturn/DomainSubject", "The original guard proof does not meet the source return signature at these arguments."));
                 }
             }

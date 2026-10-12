@@ -15,7 +15,6 @@ template<n N+>:
 template<n N+>:
     have fn infinite_first(value &SequenceFields<n>) R = value.infinite(1)
 
-claim:
-    ? forall n N+, value &SequenceFields<n>:
-        value.finite(1) $in R
-        value.infinite(1) $in R
+forall n N+, value &SequenceFields<n>:
+    value.finite(1) $in R
+    value.infinite(1) $in R

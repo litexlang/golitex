@@ -3,3 +3,4 @@
 
 by enumerate finite_set:
     ? forall x {1, 2} => x $in {1, 2}
+    x $in {1, 2}

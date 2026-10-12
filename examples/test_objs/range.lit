@@ -67,6 +67,7 @@ sketch:
     by enumerate finite_set:
         ? forall x {-2, -1, 0}:
             x $in range(-2, 1)
+        x $in range(-2, 1)
     by extension range(-2, 1) = {-2, -1, 0}
 
 

@@ -71,11 +71,9 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let derived =
-                    Box::new(self.store_inferred_fact_and_infer(
-                        &Fact::AtomicFact(conclusion),
-                        verify_state,
-                    )?);
+                let derived = Box::new(
+                    self.store_inferred_fact(&Fact::AtomicFact(conclusion), verify_state)?,
+                );
                 closures.push(InferChainTransitiveClosureResult {
                     cite: ChainTransitiveCite::BuiltinEquality,
                     start_object_index: start,
@@ -129,11 +127,9 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let derived =
-                    Box::new(self.store_inferred_fact_and_infer(
-                        &Fact::AtomicFact(conclusion),
-                        verify_state,
-                    )?);
+                let derived = Box::new(
+                    self.store_inferred_fact(&Fact::AtomicFact(conclusion), verify_state)?,
+                );
                 closures.push(InferChainTransitiveClosureResult {
                     cite: if path_is_equality {
                         ChainTransitiveCite::BuiltinEquality
@@ -166,11 +162,9 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let derived =
-                    Box::new(self.store_inferred_fact_and_infer(
-                        &Fact::AtomicFact(conclusion),
-                        verify_state,
-                    )?);
+                let derived = Box::new(
+                    self.store_inferred_fact(&Fact::AtomicFact(conclusion), verify_state)?,
+                );
                 closures.push(InferChainTransitiveClosureResult {
                     cite: ChainTransitiveCite::KnownTransitive {
                         prop_name: prop_name.clone(),

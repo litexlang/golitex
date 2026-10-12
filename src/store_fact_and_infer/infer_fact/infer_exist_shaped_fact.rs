@@ -59,9 +59,8 @@ impl Runtime {
             return Ok(InferExistUniqueFactResult::NoInfer);
         }
         let uniqueness = self.build_exist_unique_component_uniqueness_forall_fact(plain)?;
-        let derived = Box::new(
-            self.store_inferred_fact_and_infer(&Fact::ForallFact(uniqueness), verify_state)?,
-        );
+        let derived =
+            Box::new(self.store_inferred_fact(&Fact::ForallFact(uniqueness), verify_state)?);
         Ok(InferExistUniqueFactResult::UniquenessForall(
             InferExistUniqueUniquenessForallResult { derived },
         ))
@@ -78,8 +77,7 @@ impl Runtime {
         let Some(forall) = self.not_exist_to_demorgan_forall(plain)? else {
             return Ok(InferNotExistFactResult::NoInfer);
         };
-        let derived =
-            Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&Fact::ForallFact(forall), verify_state)?);
         Ok(InferNotExistFactResult::DemorganForall(
             InferNotExistDemorganForallResult { derived },
         ))

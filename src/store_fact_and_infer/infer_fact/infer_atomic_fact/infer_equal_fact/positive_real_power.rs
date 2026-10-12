@@ -2,7 +2,7 @@ use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessFact};
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, StandardSet};
 use crate::execute::execute_fact_stmt::VerifyStateLevel;
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::{InferEqualFactPositiveRealPowerResult, StoreFactAndInferResult};
+use crate::store_fact_and_infer::{InferEqualFactPositiveRealPowerResult, StoreInferredFactResult};
 
 impl Runtime {
     // When: stored `a^x = y` (or swapped) with checked positive real power.
@@ -14,7 +14,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferEqualFactPositiveRealPowerResult>> {
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
+        let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         if let Some(r) = self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.left,
             &equal_fact.right,
@@ -45,7 +45,7 @@ impl Runtime {
         target: &Obj,
         equal_fact: &EqualFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<StoreFactAndInferResult>> {
+    ) -> RuntimeResult<Option<StoreInferredFactResult>> {
         if maybe_power.ir() == target.ir() {
             return Ok(None);
         }
@@ -99,8 +99,8 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::RPos),
             line_file: equal_fact.line_file.clone(),
         });
-        let Some(stored) = self
-            .try_store_inferred_fact_and_infer(&Fact::AtomicFact(target_in_r_pos), verify_state)?
+        let Some(stored) =
+            self.try_store_inferred_fact(&Fact::AtomicFact(target_in_r_pos), verify_state)?
         else {
             return Ok(None);
         };

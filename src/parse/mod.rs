@@ -32,6 +32,10 @@ mod statements;
 mod input_integrity_tests;
 
 #[cfg(test)]
+#[path = "../../tests/unit/parse/nonempty_proof_bodies.rs"]
+mod nonempty_proof_body_tests;
+
+#[cfg(test)]
 #[path = "../../tests/unit/parse/function_signature_scopes.rs"]
 mod function_signature_scope_tests;
 
@@ -42,6 +46,10 @@ mod reserved_object_binding_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/parse/retired_product_syntax.rs"]
 mod retired_product_syntax_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/parse/retired_function_arrow.rs"]
+mod retired_function_arrow_tests;
 
 #[cfg(test)]
 #[path = "../../tests/unit/parse/absolute_value_bars.rs"]

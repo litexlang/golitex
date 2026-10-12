@@ -73,8 +73,7 @@ impl Runtime {
             line_file: source.line_file.clone(),
         }
         .into();
-        let Some(derived) = self.try_store_inferred_fact_and_infer_with_wd(&equality, state)?
-        else {
+        let Some(derived) = self.try_store_inferred_fact(&equality, state)? else {
             return Ok(None);
         };
         Ok(Some(
@@ -131,8 +130,7 @@ impl Runtime {
             line_file: source.line_file.clone(),
         }
         .into();
-        let Some(derived) = self.try_store_inferred_fact_and_infer_with_wd(&equality, state)?
-        else {
+        let Some(derived) = self.try_store_inferred_fact(&equality, state)? else {
             return Ok(None);
         };
         Ok(Some(

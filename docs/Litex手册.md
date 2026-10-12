@@ -588,6 +588,7 @@ forall:
 by enumerate finite_set:
     ? forall x {}:
         x != x
+    x != x
 ```
 
 
@@ -838,7 +839,11 @@ struct NonzeroPair:
 
 证明进程回答了一个问题：为什么可以将当前的语句添加到已验证的上下文中？检查器跟踪一小段集合路由，并报告成功的路由或 failed 的点。
 
-对于写为 `by ...:` 后跟一个或多个 `?` 目标的证明路线，普通证明-语句列表可能为空。其中情况 Litex 安装路由生成的假设，运行零用户证明语句，并立即执行相同的最终目标检查。这并不是承认：未封闭的目标仍然失败。在方法需要的地方仍然需要结构定义，例如 `case` 臂和有限-集合归纳的基座/台阶接头。 `by contra` 是空尾规则的唯一例外：它的最后一个语句必须始终是显式 `impossible fact`。
+`claim`、`sketch`、`strategy`，以及外延、枚举、范围证明和归纳的块形式，都要求非空的证明过程。`?` 目标不是证明步骤；只有目标或注释会产生解析错误。每个 `case` 分支，以及明确写出的归纳基础和后继步骤正文，也都必须非空。`impossible fact` 本身算一个证明步骤，因此反证过程可以只有这个结束语句。
+
+命名 `thm` 在普通验证已能证明目标时可以省略证明过程。`by extension A = B`、`by def $P(args)` 和 `witness ... from value` 等一行命令仍然有效。见证、选择公理或 Zorn 命令明确写了末尾的正文冒号 `:` 时，必须有实际的缩进证明语句。正文非空不代表证明成立；目标和每个证明步骤仍需正常验证。
+
+所有缩进冒号块都必须有实际源码正文。只有注释的正文在生成 token 块时就会被拒绝；这也适用于 `trust:` 和 `have x R:` 等明确写出的事实正文。
 
 <a id="basic-decisions-before-writing-a-proof"></a>
 
@@ -1021,8 +1026,10 @@ claim:
             $is_result(x)
     by cases:
         ? $is_result(x)
-        case $is_first(x)
-        case $is_second(x)
+        case $is_first(x):
+            $is_result(x)
+        case $is_second(x):
+            $is_result(x)
 ```
 
 
@@ -2954,7 +2961,8 @@ a > 0
 ```litex
 by cases:
     ? 1 = 1
-    case 1 = 1
+    case 1 = 1:
+        1 = 1
 ```
 
 **源码：** [实现](../src/execute/execute_by_stmt/exec_by_cases_stmt.rs)。
@@ -2963,21 +2971,22 @@ by cases:
 
 <a id="bodyless-proof-cases"></a>
 
-#### 无证明体的分情形证明
+#### 有明确证明过程的分情形证明
 
-当情况假设已证明每个目标时，请忽略分支主体及其冒号。无主体形式运行零证明语句，并且仍然执行普通的分支最终检查：
+每个证明分支都要求冒号和非空正文，即使分支假设已经能支持目标。对于矛盾分支，单独一个经过检查的 `impossible` 结束语句也算完整过程：
 
 
 ```litex
 by cases:
     ? 1 = 1
-    case 1 = 1
+    case 1 = 1:
+        1 = 1
     case 1 != 1:
         impossible 1 = 1
 ```
 
 
-此简写仅适用于证明 `by cases`。函数和算法情况仍需要返回表达式。
+函数和算法的分支使用独立的返回表达式语法。
 
 <a id="proof-by-contradiction"></a>
 
@@ -3034,6 +3043,7 @@ by contra:
 by enumerate finite_set:
     ? forall x {0}:
         x != 1
+    x != 1
 by contra:
     ? not exist x {0} st {x = 1}
     obtain a from exist x {0} st {x = 1}
@@ -3065,6 +3075,7 @@ by contra:
 by enumerate finite_set:
     ? forall x {1, 2}:
         x < 3
+    x < 3
 ```
 
 **源码：** [实现](../src/execute/execute_by_stmt/exec_by_enumerate_finite_set_stmt.rs)。
@@ -3086,6 +3097,7 @@ by enumerate finite_set:
         n > 0
         =>:
             n != 0
+    n != 0
 ```
 
 
@@ -3113,6 +3125,7 @@ by enumerate finite_set:
 ```litex
 by induc n from 0:
     ? n = n
+    n = n
 ```
 
 **源码：** [实现](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs)。
@@ -3183,6 +3196,7 @@ claim:
 ```litex
 by strong_induc m from 0:
     ? m = m
+    m = m
 ```
 
 **源码：** [实现](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs)。
@@ -3210,6 +3224,7 @@ by strong_induc m from 0:
 by for:
     ? forall n range(0, 3):
         n < 3
+    n < 3
 ```
 
 **源码：** [实现](../src/execute/execute_by_stmt/exec_by_for_stmt.rs)。
@@ -3267,8 +3282,7 @@ by fn_extension f = g
 
 have fn add1(x R, y R) R = x + y
 have fn add2(a R, b R) R = a + b
-by fn_extension:
-    ? add1 = add2
+by fn_extension add1 = add2
 ```
 
 **源码：** [实现](../src/execute/execute_by_stmt/exec_by_fn_extension_stmt.rs)。
@@ -3290,8 +3304,7 @@ by fn_extension f = g
 <!-- litex:skip-test -->
 
 ```litex
-by fn_extension:
-    ? f = g
+by fn_extension f = g
 ```
 > 仅在定义域真子集上局部一致，仍只是普通 `forall`；全局外延性仍要求完整定义域相等。
 
@@ -6712,9 +6725,11 @@ not x $in Z
 by enumerate finite_set:
     ? forall x {1, 2}:
         x $in {2, 1}
+    x $in {2, 1}
 by enumerate finite_set:
     ? forall x {2, 1}:
         x $in {1, 2}
+    x $in {1, 2}
 by extension {1, 2} = {2, 1}
 ```
 
@@ -7643,6 +7658,7 @@ by def $prime(5)
 by for:
     ? forall divisor range(2, 5):
         5 % divisor != 0
+    5 % divisor != 0
 by def $prime(5)
 ```
 
@@ -9002,7 +9018,9 @@ finite_set_size(cart()) = 1
 
 在接受函数之前，`have fn f(x S) T = body` 和 `fn(x S) T {body}` 都必须在声明的参数类型和定义域条件下证明 `body $in T`。返回参数仍需要此证明：`have fn f(x Z) N = x` 是被拒绝，因为 `x $in N` 不是来自 `x $in Z`。 `have fn f(x N) Z = x` 有效，受限定义 `have fn f(x Z: x >= 0) N = x` 也有效。
 
-> **预览：** `A -> B` 是简单函数集合 `fn(_ A) B` 的糖（内部绑定变量 `__param_<id>`）。它是右关联的： `A -> B -> C` 表示 `A -> (B -> C)`。算术上，`×`、`∩` 和 `∪` 的绑定比 `->` 更紧密，因此 `R × R -> R` 表示 `(R × R) -> R`。使用 `=>` 表示逻辑蕴涵； `->` 只是函数-集合箭头。此糖不支持> `{body}`或定义域 `: conditions` — 书写那些具有完整`fn(...)`的人。 这两种拼写都不允许返回引用其自己的定义域绑定变量的集合。 **预览：** 每个 `fn` / anonymous-fn 参数定义域和返回集合必须相对于签名进行固定：两者都不能引用其自己的任何参数。 `fn(x R, y Z) R` 和 `fn(p cart(R, Z)) R` 是有效形状； `fn(x R, y S(x)) R`、`fn(x R) {x}` 和 `fn(S power_set(R)) fn(x S) R` 解析期间为被拒绝。 定义域 `: conditions` 和函数主体可以指参数。 普通量词绑定变量（例如 `forall S set, x S`）保持顺序。
+函数集合使用 `fn(x A) B`，嵌套函数集合使用 `fn(x A) fn(y B) C`。原来的 `A -> B` 写法已移除，会报解析错误。逻辑蕴涵仍使用 `=>`。
+
+> **预览：** 每个 `fn` / anonymous-fn 参数定义域和返回集合必须相对于签名进行固定：两者都不能引用其自己的任何参数。 `fn(x R, y Z) R` 和 `fn(p cart(R, Z)) R` 是有效形状； `fn(x R, y S(x)) R`、`fn(x R) {x}` 和 `fn(S power_set(R)) fn(x S) R` 解析期间为被拒绝。 定义域 `: conditions` 和函数主体可以指参数。 普通量词绑定变量（例如 `forall S set, x S`）保持顺序。
 
 函数参数名称在解析其载体时未注册它们而被收集。解析器注册定义域条件的绑定，在解析返回的对象之前关闭该作用域，并为匿名或命名函数主体重新打开相同的 ID。因此，嵌套返回空间无法捕获外部函数参数，包括其自身的条件或主体内部。 WD 对构建的对象独立实施相同的限制。规则还适用于 `have fn`、`algo` 和由 `have fn ... by exist!` 派生的签名。它不会更改普通 `forall` / `exist` 参数依赖项。
 
@@ -10579,6 +10597,7 @@ by extension:
     claim:
         ? forall y fn_range(mapping_identity):
             y $in {1, 2, 3}
+        y $in {1, 2, 3}
     claim:
         ? forall y {1, 2, 3}:
             y $in fn_range(mapping_identity)
@@ -11006,7 +11025,7 @@ g_2 <= 1 / 64
 ```
 
 
-收敛语句与递归序列 `sqrt_two_newton_iterate` 本身有关。其数学更新具有证明所需的精确正-实数接口。一个单独的总包装器为实验提取器提供了当前支持的 `R -> R` 接口，最终的 claim 将该包装器连接回经过验证的更新。
+收敛语句与递归序列 `sqrt_two_newton_iterate` 本身有关。其数学更新具有证明所需的精确正-实数接口。一个单独的总包装器为实验提取器提供了当前支持的 `fn(x R) R` 接口，最终的 claim 将该包装器连接回经过验证的更新。
 
 当前可执行文件定义是从完整的源码复制而来的。它的标记块是独立的；完整的源码提供正-返回证明和上述递归收敛开发。
 
@@ -11078,7 +11097,7 @@ for _ in range(2):
 
 协议检查很重要：更改非零实现分支（例如除以 `3` 而不是 `2`）是被拒绝，因为它不再与检查的函数匹配。正-实数融合开发还继续限制数学公式而不仅仅是其 Python 拼写。
 
-这条路径是实验性的，并且故意比 Litex 语言更窄。尽管确切的递归迭代在上面可见，但当前提取器仅发出受支持的 `R -> R` 步骤，而不发出 `N` 索引递归或任何证明。 `x = 0`重启是显式提取的累加策略，不是牛顿普通公式；证明的轨迹从正开始并保持在正，因此它不会采用分支。最后，Litex 不等式是精确的实数事实，而生成的 Python 和 C 使用 IEEE-754 浮动点。它们不证明舍入、溢出、编译器选择或特殊值（例如 NaN）的目标行为； Python NaN 达到防御断言，因为它不满足生成的分支。
+这条路径是实验性的，并且故意比 Litex 语言更窄。尽管确切的递归迭代在上面可见，但当前提取器仅发出受支持的 `fn(x R) R` 步骤，而不发出 `N` 索引递归或任何证明。 `x = 0`重启是显式提取的累加策略，不是牛顿普通公式；证明的轨迹从正开始并保持在正，因此它不会采用分支。最后，Litex 不等式是精确的实数事实，而生成的 Python 和 C 使用 IEEE-754 浮动点。它们不证明舍入、溢出、编译器选择或特殊值（例如 NaN）的目标行为； Python NaN 达到防御断言，因为它不满足生成的分支。
 
 <a id="aggregate-evaluation-and-published-results"></a>
 

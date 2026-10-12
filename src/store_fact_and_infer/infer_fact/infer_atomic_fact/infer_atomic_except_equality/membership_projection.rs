@@ -20,16 +20,12 @@ impl Runtime {
             .is_some()
         {
             let mut steps = Vec::new();
-            let mut pending = vec![in_fact.clone()];
-            let mut expanded = std::collections::HashSet::new();
-            while let Some(member) = pending.pop() {
-                if !expanded.insert(member.ir()) {
-                    continue;
-                }
+            {
+                let member = in_fact.clone();
                 let Some((builder, equality_path, template_expansion)) =
                     self.resolve_set_builder_for_membership_projection(&member.set, verify_state)?
                 else {
-                    continue;
+                    return Ok(rules);
                 };
                 let mut derived = Vec::new();
                 let base_in = InFact {
@@ -38,8 +34,7 @@ impl Runtime {
                     set: builder.param_set.as_ref().clone(),
                     line_file: member.line_file.clone(),
                 };
-                pending.push(base_in.clone());
-                self.store_new_set_builder_projection_with_wd(
+                self.store_new_set_builder_projection(
                     &Fact::AtomicFact(AtomicFact::InFact(base_in)),
                     verify_state,
                     &mut derived,
@@ -51,23 +46,7 @@ impl Runtime {
                         continue;
                     };
                     let projected = crate::instantiate::quantifier_free_fact_to_fact(qf);
-                    // A visible membership may predate a builder equality. Its
-                    // newly available carrier conditions still need projection.
-                    let atomics = match &projected {
-                        Fact::AtomicFact(atomic) => vec![atomic.clone()],
-                        Fact::AndFact(and) => and.facts.clone(),
-                        Fact::ChainFact(chain) => self.chain_adjacent_atomics(chain)?,
-                        _ => Vec::new(), // An Or does not establish either branch.
-                    };
-                    pending.extend(atomics.into_iter().filter_map(|atomic| match atomic {
-                        AtomicFact::InFact(member) => Some(member),
-                        _ => None,
-                    }));
-                    self.store_new_set_builder_projection_with_wd(
-                        &projected,
-                        verify_state,
-                        &mut derived,
-                    )?;
+                    self.store_new_set_builder_projection(&projected, verify_state, &mut derived)?;
                 }
                 steps.push(SetBuilderMembershipProjectionStep {
                     source_membership: member,
@@ -89,9 +68,8 @@ impl Runtime {
                 right: base,
                 line_file: in_fact.line_file.clone(),
             });
-            let derived = Box::new(
-                self.store_inferred_fact_and_infer(&Fact::AtomicFact(subset), verify_state)?,
-            );
+            let derived =
+                Box::new(self.store_inferred_fact(&Fact::AtomicFact(subset), verify_state)?);
             rules.push(InferAtomicExceptEqualityResult::InFactPowerSet(
                 InferPowerSetMembershipProjectionResult { derived },
             ));
@@ -111,26 +89,14 @@ impl Runtime {
 impl Runtime {
     // The source membership is stored before inference. A builder reached
     // through equality can project that same membership (or cycle through a
-    // second carrier). Skip repeated storage, while the local projection queue
-    // still visits known carriers whose defining conditions arrived later.
+    // second carrier). Skip repeated storage; a later explicit membership
+    // statement can project newly available carrier conditions.
     // This guard belongs to this projection rule, not to truth search/store.
     pub(super) fn store_new_set_builder_projection(
         &mut self,
         projected: &Fact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-        derived: &mut Vec<crate::store_fact_and_infer::StoreFactAndInferResult>,
-    ) -> RuntimeResult<()> {
-        let mut captured = Vec::new();
-        self.store_new_set_builder_projection_with_wd(projected, verify_state, &mut captured)?;
-        derived.extend(captured.into_iter().map(|result| result.store_and_infer));
-        Ok(())
-    }
-
-    pub(super) fn store_new_set_builder_projection_with_wd(
-        &mut self,
-        projected: &Fact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
-        derived: &mut Vec<crate::store_fact_and_infer::StoreInferredFactAndInferResult>,
+        derived: &mut Vec<crate::store_fact_and_infer::StoreInferredFactResult>,
     ) -> RuntimeResult<()> {
         let key = projected.ir();
         let already_stored = self.execution_environments_stack.iter().rev().any(|env| {
@@ -141,7 +107,7 @@ impl Runtime {
         });
         if !already_stored {
             let captured = self
-                .try_store_inferred_fact_and_infer_with_wd(projected, verify_state)?
+                .try_store_inferred_fact(projected, verify_state)?
                 .ok_or_else(|| {
                     crate::runtime::RuntimeError::InternalBug(format!(
                         "inferred fact {} failed well-definedness check",

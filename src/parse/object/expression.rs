@@ -1,41 +1,22 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::ast::obj::{
-    Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj, FnSet,
-    FunctionSpace, IntegerOperator, Intersect, Mod, Mul, Neg, Obj, Pow, ProductShape, SetFormer,
-    SetOperator, StructAndFieldAccessObj, Sub, Union,
+    Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj,
+    IntegerOperator, Intersect, Mod, Mul, Neg, Obj, Pow, ProductShape, SetFormer, SetOperator,
+    StructAndFieldAccessObj, Sub, Union,
 };
-use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::{
-    ADD, BANG, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, SUB,
+    ADD, BANG, DIV, DOT, DOT_DOT_DOT, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, SUB,
     UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
 pub fn parse_obj(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    parse_fn_arrow(rt, tb)
-}
-
-// `A -> B` desugars to `fn(__param_<id> A) B` (right-associative).
-// Example: `R -> R -> Z` = `R -> (R -> Z)`.
-fn parse_fn_arrow(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    let left = parse_unicode_union(rt, tb)?;
-    if tb.peek() != Some(FN_ARROW) {
-        return Ok(left);
+    let obj = parse_unicode_union(rt, tb)?;
+    if tb.peek() == Some("->") {
+        return Err(tb.parse_error("function-set arrow `->` is removed; use `fn(x A) B`"));
     }
-    tb.advance()?;
-    let right = parse_fn_arrow(rt, tb)?;
-    let param = rt.fresh_internal_param();
-    Ok(Obj::FunctionSpace(FunctionSpace::FnSet(FnSet {
-        set_bound_parameters: SetBoundParameterList {
-            groups: vec![SetBoundParameterGroup {
-                params: vec![param],
-                param_type: Box::new(left),
-            }],
-        },
-        dom_facts: vec![],
-        ret_set: Box::new(right),
-    })))
+    Ok(obj)
 }
 
 fn parse_unicode_union(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {

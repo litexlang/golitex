@@ -89,6 +89,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | [by/by_contra_imaginary_unit.lit](by/by_contra_imaginary_unit.lit) | Imaginary-unit contradiction with explicit substitution | `i*i = 0*0 = 0` supplies the squared-zero side; the original `impossible i*i != 0` closes the proof |
 | `by/induction_base_scope.lit` | Separate induction base and step scopes | `by induc` / `by strong_induc` |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
+| [proof_block/nonempty_proof_bodies.lit](proof_block/nonempty_proof_bodies.lit) | Required proof processes | Missing claim/process bodies and empty trailing proof colons are parse errors; named theorem omission and inline commands remain supported |
 | `by/finite_set_conditional_proof_steps.lit` | Conditional enumeration and nested proof steps | finite list guards, live binder names, and local nested `by def` |
 | `unsafe/template_strict_policy.lit` | Strict template trust policy | ordinary run accepts; strict rejects template trust-have |
 | `command/eval_source_domain.lit` | Source WD before eval | valid natural-domain calls compute; invalid calls reject |
