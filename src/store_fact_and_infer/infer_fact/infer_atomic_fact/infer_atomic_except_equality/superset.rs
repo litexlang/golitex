@@ -34,8 +34,7 @@ impl Runtime {
             ))],
             line_file: superset.line_file.clone(),
         };
-        let derived =
-            Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&Fact::ForallFact(forall), verify_state)?);
         Ok(InferSupersetElementwiseMembershipResult { derived })
     }
 }

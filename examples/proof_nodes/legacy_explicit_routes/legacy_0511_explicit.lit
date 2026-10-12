@@ -5,8 +5,10 @@ claim:
             not a>b
     by cases:
         ? not a>b
-        case a<=b
-        case b>=a
+        case a<=b:
+            not a>b
+        case b>=a:
+            not a>b
 
 forall a,b R:
     a<=b or b>=a

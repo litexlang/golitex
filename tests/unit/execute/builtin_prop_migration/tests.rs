@@ -214,7 +214,7 @@ fn checked_mapping_definitions_retain_source_and_derived_fact_ids() {
         else {
             panic!("checked definition");
         };
-        let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+        let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
             &result.stored.infer
         else {
             panic!("atomic inference");

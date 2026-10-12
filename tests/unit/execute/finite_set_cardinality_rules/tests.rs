@@ -305,9 +305,9 @@ fn subset_finite_upper_bound_infer_publishes_direct_evidence() {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
         panic!("fact success")
     };
-    let crate::store_fact_and_infer::InferFactResult::AtomicFact(
+    let Some(crate::store_fact_and_infer::InferFactResult::AtomicFact(
         crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
-    ) = &success.store_and_infer_result.infer
+    )) = &success.store_and_infer_result.infer
     else {
         panic!("infer rules")
     };

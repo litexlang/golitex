@@ -2,8 +2,7 @@ trust:
     forall a R, b R:
         a + b = b + a
 
-claim:
-    ? forall x R:
-        x = 1
-        =>:
-            x + 2 = 2 + x
+forall x R:
+    x = 1
+    =>:
+        x + 2 = 2 + x

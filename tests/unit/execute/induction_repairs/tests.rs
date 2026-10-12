@@ -57,19 +57,19 @@ fn induction_nested_cases_use_parent_guards_and_keep_chain_components() {
 fn induction_goal_wd_uses_the_induction_domain_without_ih() {
     for keyword in ["induc", "strong_induc"] {
         check(
-            &format!("have fn f(x N) N = x\nby {keyword} n from 0:\n    ? f(n) = f(n)\n"),
+            &format!("have fn f(x N) N = x\nby {keyword} n from 0:\n    ? f(n) = f(n)\n    f(n) = f(n)\n"),
             &[true, true],
         );
         check(
-            &format!("have fn f(x N) N = x\nby {keyword} n from -1:\n    ? f(n) = f(n)\n"),
+            &format!("have fn f(x N) N = x\nby {keyword} n from -1:\n    ? f(n) = f(n)\n    f(n) = f(n)\n"),
             &[true, false],
         );
         check(
-            &format!("by {keyword} n from 0:\n    ? n / n = n / n\n"),
+            &format!("by {keyword} n from 0:\n    ? n / n = n / n\n    1 = 1\n"),
             &[false],
         );
         check(
-            &format!("by {keyword} n from 0.5:\n    ? n = n\n"),
+            &format!("by {keyword} n from 0.5:\n    ? n = n\n    1 = 1\n"),
             &[false],
         );
     }
@@ -117,11 +117,11 @@ fn induction_recovers_binders_inside_collections_functions_and_sets() {
         "finite_set_size({n})",
     ] {
         check(
-            &format!("by induc n from 0:\n    ? {obj} = {obj}\n"),
+            &format!("by induc n from 0:\n    ? {obj} = {obj}\n    {obj} = {obj}\n"),
             &[true],
         );
         check(
-            &format!("by strong_induc n from 0:\n    ? {obj} = {obj}\n"),
+            &format!("by strong_induc n from 0:\n    ? {obj} = {obj}\n    {obj} = {obj}\n"),
             &[true],
         );
     }
@@ -130,12 +130,18 @@ fn induction_recovers_binders_inside_collections_functions_and_sets() {
 #[test]
 fn induction_constant_goals_preserve_proof_only_binders_and_allow_unused_ones() {
     for keyword in ["induc", "strong_induc"] {
-        check(&format!("by {keyword} n from 0:\n    ? 0 = 0\n"), &[true]);
-        check(&format!("by {keyword} n from 0:\n    ? 0 = 1\n"), &[false]);
+        check(
+            &format!("by {keyword} n from 0:\n    ? 0 = 0\n    0 = 0\n"),
+            &[true],
+        );
+        check(
+            &format!("by {keyword} n from 0:\n    ? 0 = 1\n    1 = 1\n"),
+            &[false],
+        );
         for body in [
             "let a = n",
             "have a Z = n",
-            "claim:\n        ? forall u {n}:\n            u = u",
+            "claim:\n        ? forall u {n}:\n            u = u\n        u = u",
             "witness exist u Z st {u = n} from n",
         ] {
             check(
@@ -153,8 +159,8 @@ fn induction_json_preserves_failed_stages_and_successful_case_evidence() {
     use crate::knowledge_base::JsonValue;
     for keyword in ["induc", "strong_induc"] {
         for (body, phase, subphase, index_key) in [
-            ("? n > 0", "base", "goal", "goal_index"),
-            ("? n = 0", "step", "goal", "goal_index"),
+            ("? n > 0\n    1 = 1", "base", "goal", "goal_index"),
+            ("? n = 0\n    1 = 1", "step", "goal", "goal_index"),
             (
                 "? n = n\n    have a {1} = 0",
                 "base",
@@ -339,7 +345,7 @@ fn induction_failure_details_survive_chinese_output_keys() {
         language: OutputLanguage::Chinese,
     });
     let run = rt
-        .run_litex_code("by induc n from 0:\n    ? n = 0\n")
+        .run_litex_code("by induc n from 0:\n    ? n = 0\n    1 = 1\n")
         .unwrap();
     assert!(!run.success);
     let normal = crate::json_output::project_stmt_normal(&run.statement_results[0], &rt);

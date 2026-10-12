@@ -133,22 +133,42 @@ fn nonnegative_rational_builder_subset_replays_universal_definition_and_projecti
 
 #[test]
 fn finite_formation_cannot_drop_its_distinctness_evidence() {
-    let (mut result, compiler) = execute("have A set = {1, 2}\n");
-    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-        ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(p)),
-    )) = &mut result.statement_results[0]
-    else {
-        panic!("set equality")
-    };
-    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::SetFormer(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ListSet(wd)), .. }) = &mut p.equal_to_well_defined[0] else { panic!("finite WD") };
-    wd.requirement_fact_verified.clear();
-    assert_eq!(
-        compiler
-            .compile_run(&result, "missing_distinctness")
-            .unwrap_err()
-            .route,
-        "ListSet/Stages"
-    );
+    for change in ["missing", "reversed"] {
+        let (mut result, compiler) = execute("have A set = {1, 2}\n");
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(p)),
+        )) = &mut result.statement_results[0]
+        else {
+            panic!("set equality")
+        };
+        let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::SetFormer(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::ListSet(wd)), .. }) = &mut p.equal_to_well_defined[0] else { panic!("finite WD") };
+        assert_eq!(wd.requirement_fact_verified.len(), 1);
+        let expected_route = if change == "missing" {
+            wd.requirement_fact_verified.clear();
+            "ListSet/Stages"
+        } else {
+            let VerifyFactResult::AtomicExceptEquality(proof) =
+                &mut wd.requirement_fact_verified[0]
+            else {
+                panic!("original pairwise inequality");
+            };
+            let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
+                panic!("successful pairwise inequality");
+            };
+            let AtomicFact::NotEqualFact(fact) = &mut proof.fact else {
+                panic!("actual distinctness subject");
+            };
+            std::mem::swap(&mut fact.left, &mut fact.right);
+            "ListSet/DistinctSubject"
+        };
+        assert_eq!(
+            compiler
+                .compile_run(&result, "missing_distinctness")
+                .unwrap_err()
+                .route,
+            expected_route
+        );
+    }
 }
 
 #[test]
@@ -189,9 +209,9 @@ fn builder_projection_cannot_omit_its_recorded_alias_resolution() {
     let store =
         std::rc::Rc::get_mut(&mut p.introduced_params.defined_params.store_and_infer_results[0])
             .expect("owned source introduction");
-    let crate::store_fact_and_infer::InferFactResult::AtomicFact(
+    let Some(crate::store_fact_and_infer::InferFactResult::AtomicFact(
         crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
-    ) = &mut store.infer
+    )) = &mut store.infer
     else {
         panic!("inference")
     };
@@ -231,9 +251,9 @@ fn builder_projection_cannot_replace_its_selected_builder() {
     let store =
         std::rc::Rc::get_mut(&mut p.introduced_params.defined_params.store_and_infer_results[0])
             .expect("owned source introduction");
-    let crate::store_fact_and_infer::InferFactResult::AtomicFact(
+    let Some(crate::store_fact_and_infer::InferFactResult::AtomicFact(
         crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
-    ) = &mut store.infer
+    )) = &mut store.infer
     else {
         panic!("inference")
     };

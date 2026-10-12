@@ -26,5 +26,6 @@ template<n N>:
 claim:
     ? forall n N, value R:
         fn(j closed_range(1, n)) R {value} $in finite_seq(R, n)
+    fn(j closed_range(1, n)) R {value} $in finite_seq(R, n)
 
 fn(k closed_range(1, 0)) R {0} $in finite_seq(R, 0)

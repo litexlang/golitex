@@ -3,6 +3,7 @@
 
 claim:
     ? 1 = 1
+    1 = 1
 
 # Goal fact is stored; can be reused.
 1 = 1
@@ -11,3 +12,4 @@ claim:
 claim:
     ? forall x R:
         x = x
+    x = x

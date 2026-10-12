@@ -5,8 +5,10 @@ claim:
             a<=b
     by cases:
         ? a<=b
-        case a-b<=0
-        case 0<=b-a
+        case a-b<=0:
+            a<=b
+        case 0<=b-a:
+            a<=b
 
 forall a,b R:
     a-b<=0 or 0<=b-a

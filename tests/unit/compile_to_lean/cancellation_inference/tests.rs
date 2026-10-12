@@ -1,7 +1,7 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferEqualityResult, InferFactResult, StoreInferredFactAndInferResult,
+    InferAtomicFactResult, InferEqualityResult, InferFactResult, StoreInferredFactResult,
 };
 
 const CASES: [(&str, &str, &str); 4] = [
@@ -20,7 +20,8 @@ fn source(seed: &str, guards: &str, carrier: &str) -> String {
 }
 
 fn rules_mut(store: &mut StoreFactAndInferResult) -> &mut Vec<InferEqualityResult> {
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &mut store.infer
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+        &mut store.infer
     else {
         panic!("recorded equality inference group")
     };
@@ -36,7 +37,7 @@ fn parts_mut(
     &mut VerifyFactResult,
     &mut VerifyFactResult,
     Vec<&mut VerifyFactResult>,
-    &mut StoreInferredFactAndInferResult,
+    &mut StoreInferredFactResult,
 ) {
     match rule {
         InferEqualityResult::SubtractiveCancellation(p) => (
@@ -113,7 +114,7 @@ fn cancellation_inference_emits_original_ids_and_retained_formation() {
         let source_id = store.primary_fact_id();
         let (captured_source, _, _, _, _, _, captured) = parts_mut(&mut rules_mut(store)[0]);
         assert_eq!(*captured_source, source_id);
-        let StoreFactResult::AtomicFact(stored) = &captured.store_and_infer.store else {
+        let StoreFactResult::AtomicFact(stored) = &captured.store else {
             panic!("derived equality store")
         };
         let AtomicFact::EqualFact(equal) = &stored.fact else {
@@ -222,8 +223,7 @@ fn cancellation_inference_rejects_wrong_formation_subject_and_deleted_producer()
                     };
                     std::mem::swap(&mut wd.left, &mut wd.right);
                 } else {
-                    let StoreFactResult::AtomicFact(stored) = &mut captured.store_and_infer.store
-                    else {
+                    let StoreFactResult::AtomicFact(stored) = &mut captured.store else {
                         panic!("atomic store")
                     };
                     let AtomicFact::EqualFact(equal) = &mut stored.fact else {
@@ -284,7 +284,7 @@ fn cancellation_inference_rejects_future_and_closed_scope_member_citations() {
                 let store = &mut forall.assumed_dom_facts.last_mut().unwrap().store_and_infer;
                 parts_mut(&mut rules_mut(store)[0])
                     .6
-                    .store_and_infer
+                    .store
                     .primary_fact_id()
             };
             let forall =
@@ -315,19 +315,15 @@ fn nonzero_numerator_cursor_keeps_all_guard_and_nested_stages_ordered() {
     let (mut result, compiler) = super::execute(&input);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let store = &forall.assumed_dom_facts.last().unwrap().store_and_infer;
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer else {
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
+    else {
         panic!("equality inference")
     };
     let InferEqualityResult::NonzeroNumeratorCancellation(rule) = &rules[0] else {
         panic!("nonzero numerator cancellation")
     };
-    let primary = rule.derived.store_and_infer.primary_fact_id();
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(nested)) =
-        &rule.derived.store_and_infer.infer
-    else {
-        panic!("nested subtraction inference")
-    };
-    let nested_id = nested[0].stored_fact_ids()[0];
+    let primary = rule.derived.store.primary_fact_id();
+    assert_eq!(rule.derived.stored_fact_ids(), vec![primary]);
     let completed = SourcePosition::new(None, SourceOwner::Forall(forall), usize::MAX);
     let group = SourcePosition::new(Some(&completed), SourceOwner::EqualityInferences(rules), 0);
     let formation = SourcePosition::new(
@@ -349,13 +345,6 @@ fn nonzero_numerator_cursor_keeps_all_guard_and_nested_stages_ordered() {
     stored
         .visible_fact(primary, &compiler.runtime)
         .expect("the primary store follows all six premises and WD");
-    assert_eq!(
-        stored
-            .visible_fact(nested_id, &compiler.runtime)
-            .unwrap_err()
-            .route,
-        "Inference/FutureProducer"
-    );
 }
 
 #[test]
@@ -364,7 +353,8 @@ fn cancellation_inference_seed_cursor_blocks_all_future_family_stores() {
         let (mut result, compiler) = super::execute(&source(seed, guards, "C"));
         let forall = super::forall_proof_mut(&mut result.statement_results[0]);
         let store = &forall.assumed_dom_facts.last().unwrap().store_and_infer;
-        let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer
+        let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+            &store.infer
         else {
             panic!("equality inference group")
         };
@@ -389,17 +379,18 @@ fn cancellation_inference_seed_cursor_blocks_all_future_family_stores() {
 
 #[test]
 fn cancellation_inference_requires_every_nested_and_nonzero_citation_stage() {
-    for (seed, guards) in [
-        ("(a*x)*y=(b*x)*y", "    x!=0\n    y!=0\n"),
-        ("(a-x)-y=(b-x)-y", ""),
-        ("(a/x)/y=(b/x)/y", "    x!=0\n    y!=0\n"),
+    for (seed, guards, residual) in [
+        ("(a*x)*y=(b*x)*y", "    x!=0\n    y!=0\n", "a*x=b*x"),
+        ("(a-x)-y=(b-x)-y", "", "a-x=b-x"),
+        ("(a/x)/y=(b/x)/y", "    x!=0\n    y!=0\n", "a/x=b/x"),
     ] {
-        let input = format!("forall a, b, x, y Q:\n{guards}    {seed}\n    =>:\n        a=b\n");
+        let input = format!(
+            "forall a, b, x, y Q:\n{guards}    {seed}\n    {residual}\n    =>:\n        a=b\n"
+        );
         let (mut result, compiler) = super::execute(&input);
         let forall = super::forall_proof_mut(&mut result.statement_results[0]);
         let store = &mut forall.assumed_dom_facts.last_mut().unwrap().store_and_infer;
-        let captured = parts_mut(&mut rules_mut(store)[0]).6;
-        rules_mut(&mut captured.store_and_infer).clear();
+        rules_mut(store).clear();
         let error = super::compile_run(&result, &compiler, "missing_nested_producer")
             .expect_err("the final citation cannot skip its nested original producer");
         assert_eq!(error.route, "FactId/Producer", "{seed}");
@@ -411,7 +402,7 @@ fn cancellation_inference_requires_every_nested_and_nonzero_citation_stage() {
             let forall = super::forall_proof_mut(&mut result.statement_results[0]);
             let store = &mut forall.assumed_dom_facts.last_mut().unwrap().store_and_infer;
             let (_, _, _, _, _, mut nonzeros, captured) = parts_mut(&mut rules_mut(store)[0]);
-            let forbidden = captured.store_and_infer.primary_fact_id();
+            let forbidden = captured.store.primary_fact_id();
             super::atomic_proof_mut(nonzeros[guard]).searched_proof =
                 AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(
                     AtomicExceptEqualityFactSearchProofByKnownAtomicFact {

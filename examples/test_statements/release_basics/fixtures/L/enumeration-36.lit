@@ -1,3 +1,4 @@
 by enumerate finite_set:
     ? forall x {}:
         x = x
+    x = x

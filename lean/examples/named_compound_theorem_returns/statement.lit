@@ -1,0 +1,15 @@
+# A real square is nonnegative and equals the product of its factors; select both returned package families explicitly.
+thm square_packages:
+    ? forall x R:
+        x*x=x^2=x*x
+        0<=x^2 and x*x=x^2
+    x*x=x^2=x*x
+    0<=x^2 and x*x=x^2
+thm nonnegative_square_from_package:
+    ? forall x R:
+        0<=x^2
+    by thm square_packages(x) => 0<=x^2
+thm square_product_from_package:
+    ? forall x R:
+        x*x=x^2
+    by thm square_packages(x) => x*x=x^2

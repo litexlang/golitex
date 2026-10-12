@@ -1,5 +1,12 @@
-# B05: Arrow sugar for nested fixed return carriers
+# B05: Explicit nested function sets
 # Intended: accept; run via examples/test_function_sets/run.py
+# Before:
+# let Curried = R -> R -> R
+# Curried = fn(x R) fn(y R) R
+# Former behavior: accepted as sugar for the same nested function set.
+# Now: use explicit fn signatures; binder names may differ under alpha equality.
+# Boundary: arrow syntax is rejected by parse::retired_function_arrow_tests.
+# Evidence: target/release/litex -strict -f examples/test_function_sets/basic/b05.lit
 
-let Curried = R -> R -> R
-Curried = fn(x R) fn(y R) R
+let Curried = fn(x R) fn(y R) R
+Curried = fn(a R) fn(b R) R

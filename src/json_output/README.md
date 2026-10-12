@@ -56,7 +56,7 @@ Stores that perform direct scalar cancellation additionally expose
 source fact, common operand, three C-membership proofs, required nonzero proofs,
 and derived store tree. Common-numerator cancellation retains separate
 nonzero proofs for both denominators as well as the numerator.
-And/Chain atomic components retain the same entries; nested cancellation
+And/Chain seed components retain the same entries; an inferred cancellation
 evidence stays under `derived`. The existing Normal `infers` list contains
 the published equality. Unrelated store nodes keep their previous shape.
 
@@ -136,6 +136,32 @@ Successful `have_fn_by_forall_exist_unique` now exposes `source_forall` and
 `fn_set_well_defined`; failures identify the source / FnSet / property stage.
 See `examples/stmt_nodes/definition/forall_source_replay.lit` for an unused
 outer binder and renamed existential witness.
+
+Successful Chain/And verification exposes its original whole-known application
+under `searched_proof` (`by_known_forall`) when that route was selected; the
+field is null on the ordered adjacent/component route. Empty `adjacent` or
+`components` therefore does not hide the selected citation. The shared known-
+forall projection also retains ordered `param_type_requirements`, with the
+original parameter ID, argument, type-fact ID/subject and verification proof,
+before domain proofs. These fields only display existing typed evidence.
+
+Detailed chain stores additionally expose `chain_adjacent_infers`, retaining
+each original `edge_index`, inference seed `fact_id` and subject. These seed IDs
+can differ from adjacent verification and stored projection IDs. Numeric
+`chain_transitive_closures` retain the original start/end indexes, derived WD,
+and the derived store stage. Conditional order rules expose their actual
+source, integer certificate when required, nonnegative-bound certificate,
+derived `well_defined`, and `store` in `conditional_order_rules`.
+The owning Rust capture is:
+
+```rust
+InferChainAdjacentResult { edge_index, fact, infer }
+StoreInferredFactResult { well_defined, store }
+```
+
+This preserves evidence already computed at the original producer. It does
+not add proof search or change Normal output. Detailed JSON remains presentation;
+the Lean compiler consumes the typed result and its exact-ID citation context.
 
 ## Template definition facts
 

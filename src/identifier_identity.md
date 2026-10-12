@@ -103,7 +103,7 @@ same-name definition into an imported predicate, template, or struct.
   `SetBuilder` is the equality-specific `ByTheyAreTheSame` stage. It is
   independent of builtin permission: binders may differ; free structure must match.
   Named shapes are reached through `ByEquivalenceClass` stored paths and one
-  restricted peer proof. See [the equality structure](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md). Example: `R -> R = R -> R`,
+  restricted peer proof. See [the equality structure](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md). Example: `fn(x R) R = fn(y R) R`,
   `{x R: x > 0} = {y R: y > 0}`. Membership reuse goes through known `$in` +
   arg equality (no dedicated `$in` alpha rule).
 - Some stmt-only binder slots (induction / `for`) may still be bare `String`;

@@ -15,7 +15,7 @@ impl Runtime {
         tb.expect_colon_end_of_header()?;
         if tb.body.is_empty() {
             return Err(
-                tb.parse_error("claim: expects a `? <fact>` goal block and optional proof body")
+                tb.parse_error("claim: expects a `? <fact>` goal block and a nonempty proof body")
             );
         }
         let mut goal = tb.body[0].clone();
@@ -23,11 +23,11 @@ impl Runtime {
         let proof_blocks = &tb.body[1..];
         let proof = if let Some(params) = Self::forall_params_of_fact(&fact) {
             self.with_forall_params_occupied(params, &tb, |this| {
-                this.parse_body_stmts(proof_blocks)
+                this.parse_nonempty_proof_body(proof_blocks, &tb, "claim")
             })?
         } else {
             self.push_parse_scope();
-            let proof = self.parse_body_stmts(proof_blocks);
+            let proof = self.parse_nonempty_proof_body(proof_blocks, &tb, "claim");
             self.pop_parse_scope();
             proof?
         };

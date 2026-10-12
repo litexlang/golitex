@@ -71,7 +71,7 @@ impl LitexToLeanCompiler {
         let compiled = compiled?;
         let selected = source_subject(&proof.selected_proof)?;
         self.compile_fact_wd(&proof.selected_wd, &selected, position)?;
-        self.validate_store(&proof.stored, &selected)?;
+        self.validate_store(&proof.stored.store, &selected)?;
         Ok(compiled)
     }
 
@@ -125,7 +125,7 @@ impl LitexToLeanCompiler {
                                 return Err(LeanCompileError::new(
                                     "ByThm/TypeProof",
                                     "The membership proves another parameter or carrier.",
-                                ))
+                                ));
                             }
                         }
                         application_arguments.push(self.compile_object_reference(
@@ -153,17 +153,23 @@ impl LitexToLeanCompiler {
                         ExistOrAndChainAtomicFact::AtomicFact(atomic) => {
                             Ok(Fact::AtomicFact(atomic.clone()))
                         }
+                        ExistOrAndChainAtomicFact::AndFact(fact) => Ok(Fact::AndFact(fact.clone())),
+                        ExistOrAndChainAtomicFact::ChainFact(fact) => {
+                            Ok(Fact::ChainFact(fact.clone()))
+                        }
                         _ => Err(LeanCompileError::unsupported("ByThm/CompoundConclusion")),
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 (fact.dom_facts.iter().collect::<Vec<_>>(), conclusions)
             }
-            (Fact::AtomicFact(_), TheoremCallArguments::Bare) if proof.type_proofs.is_empty() => {
-                (Vec::new(), vec![registered.fact.clone()])
-            }
+            (
+                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_),
+                TheoremCallArguments::Bare,
+            ) if proof.type_proofs.is_empty() => (Vec::new(), vec![registered.fact.clone()]),
             _ => return Err(LeanCompileError::unsupported("ByThm/CallShape")),
         };
         if domains.len() != proof.dom_proofs.len()
+            || domains.len() != proof.dom_stores.len()
             || conclusions.len() != proof.returned_conclusions.len()
             || conclusions.len() != proof.conclusions_wd.len()
             || conclusions.is_empty()
@@ -173,7 +179,12 @@ impl LitexToLeanCompiler {
                 "The invocation has different premise, returned-store or WD stages.",
             ));
         }
-        for (index, (domain, result)) in domains.iter().zip(&proof.dom_proofs).enumerate() {
+        for (index, ((domain, result), stored)) in domains
+            .iter()
+            .zip(&proof.dom_proofs)
+            .zip(&proof.dom_stores)
+            .enumerate()
+        {
             let domain_position = SourcePosition {
                 before: proof.type_proofs.len() + index,
                 ..*position
@@ -186,8 +197,16 @@ impl LitexToLeanCompiler {
                 ));
             }
             let subject = source_subject(result)?;
+            self.validate_store(&stored.store, &subject)?;
             definitions.push(self.emit_internal_fact(&subject, &compiled, &domain_position));
             application_arguments.push(format!("h_{}", subject.fact_id().value()));
+            let published = SourcePosition {
+                before: proof.type_proofs.len() + index + 1,
+                ..*position
+            };
+            let reference = (compiled.0, format!("h_{}", subject.fact_id().value()));
+            definitions
+                .extend(self.compile_stored_inferences(stored, &subject, &reference, &published)?);
         }
         let application = if application_arguments.is_empty() {
             self.context_application(
@@ -204,6 +223,9 @@ impl LitexToLeanCompiler {
                 application_arguments.join(" ")
             )
         };
+        let mut returned_facts = Vec::new();
+        // The runtime forms every conclusion before publishing any returned
+        // package. Later formation cannot cite an earlier returned truth.
         for (index, ((expected, stored), wd)) in conclusions
             .iter()
             .zip(&proof.returned_conclusions)
@@ -212,34 +234,60 @@ impl LitexToLeanCompiler {
         {
             let fact = match &stored.store {
                 StoreFactResult::AtomicFact(stored) => Fact::AtomicFact(stored.fact.clone()),
+                StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
+                StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
                 _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
             };
-            self.validate_store(stored, &fact)?;
+            self.validate_store(&stored.store, &fact)?;
             if !instantiated_fact_matches(expected, &fact, &substitution) {
                 return Err(LeanCompileError::new(
                     "ByThm/ReturnedSubject",
                     "The returned producer differs from this theorem instance.",
                 ));
             }
-            let conclusion_position = SourcePosition {
+            let formation = SourcePosition {
                 before: proof.type_proofs.len() + proof.dom_proofs.len() + index,
                 ..*position
             };
-            self.compile_fact_wd(wd, &fact, &conclusion_position)?;
-            let formed = SourcePosition {
-                before: proof.type_proofs.len() + proof.dom_proofs.len() + index + 1,
+            self.compile_fact_wd(wd, &fact, &formation)?;
+            returned_facts.push(fact);
+        }
+        let return_head =
+            proof.type_proofs.len() + proof.dom_proofs.len() + proof.conclusions_wd.len();
+        for (index, (fact, stored)) in returned_facts
+            .iter()
+            .zip(&proof.returned_conclusions)
+            .enumerate()
+        {
+            let prior = SourcePosition {
+                before: return_head + index,
                 ..*position
             };
             let compiled = (
-                self.fact_proposition(&fact, &formed)?,
+                self.fact_proposition(fact, &prior)?,
                 conjunction_projection(&application, index, conclusions.len()),
             );
-            definitions.push(self.emit_internal_fact(&fact, &compiled, &formed));
+            definitions.push(self.emit_internal_fact(fact, &compiled, &prior));
+            let published = SourcePosition {
+                before: return_head + index + 1,
+                ..*position
+            };
+            let reference = (compiled.0, format!("h_{}", fact.fact_id().value()));
+            // These projections and inferred producers remain local to this
+            // invocation. Selection below admits only the direct source atoms.
+            definitions
+                .extend(self.compile_stored_inferences(stored, fact, &reference, &published)?);
         }
         let returned_ids: Vec<_> = proof
             .returned_conclusions
             .iter()
-            .map(StoreFactAndInferResult::primary_fact_id)
+            .flat_map(|store| {
+                store
+                    .store
+                    .atomic_components()
+                    .into_iter()
+                    .map(|(id, _)| id)
+            })
             .collect();
         let allowed = match &proof.selected_proof {
             VerifyFactResult::Equality(result) => match result.as_ref() {
@@ -270,7 +318,10 @@ impl LitexToLeanCompiler {
             _ => false,
         };
         if !allowed {
-            return Err(LeanCompileError::new("ByThm/SelectionProvenance", "The selection does not directly cite an unreversed atom returned by this invocation."));
+            return Err(LeanCompileError::new(
+                "ByThm/SelectionProvenance",
+                "The selection does not directly cite an unreversed atomic component returned by this invocation.",
+            ));
         }
         let selection_position = SourcePosition {
             before: proof.type_proofs.len()

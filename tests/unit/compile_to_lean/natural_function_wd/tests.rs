@@ -3,7 +3,7 @@ use crate::execute::{ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-    StoreInferredFactAndInferResult,
+    StoreInferredFactResult,
 };
 use std::rc::Rc;
 
@@ -33,9 +33,9 @@ fn anonymous(result: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedProof
     proof
 }
 
-fn nonnegative(proof: &mut AnonymousFnObjWellDefinedProof) -> &mut StoreInferredFactAndInferResult {
+fn nonnegative(proof: &mut AnonymousFnObjWellDefinedProof) -> &mut StoreInferredFactResult {
     let store = Rc::get_mut(&mut proof.defined_params.store_and_infer_results[0]).unwrap();
-    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
         &mut store.infer
     else {
         panic!("original parameter membership inference")
@@ -52,7 +52,7 @@ fn nonnegative(proof: &mut AnonymousFnObjWellDefinedProof) -> &mut StoreInferred
         .unwrap()
 }
 
-fn zero_wd(proof: &mut StoreInferredFactAndInferResult) -> &mut ObjWellDefinedProof {
+fn zero_wd(proof: &mut StoreInferredFactResult) -> &mut ObjWellDefinedProof {
     let FactWellDefinedProof::AtomicExceptEquality(formation) = &mut proof.well_defined else {
         panic!("original nonnegative atomic formation")
     };
@@ -63,7 +63,7 @@ fn zero_wd(proof: &mut StoreInferredFactAndInferResult) -> &mut ObjWellDefinedPr
 fn natural_function_wd_retains_the_original_nonnegative_constructor() {
     let (mut result, compiler) = super::execute(DECLARATION);
     let capture = nonnegative(anonymous(&mut result.statement_results[0]));
-    let StoreFactResult::AtomicFact(stored) = &capture.store_and_infer.store else {
+    let StoreFactResult::AtomicFact(stored) = &capture.store else {
         panic!("original nonnegative store")
     };
     let AtomicFact::LessEqualFact(bound) = &stored.fact else {
@@ -169,18 +169,15 @@ fn natural_function_wd_rejects_wrong_captured_return_membership_children() {
 }
 
 #[test]
-fn natural_function_wd_keeps_other_structural_carriers_unsupported() {
-    for source in [
-        "have fn double(x N) N=2*x\n",
-        "have fn successor(x Z) Z=x+1\n",
+fn natural_function_wd_replays_natural_multiplication_and_integer_addition() {
+    for (source, law) in [
+        ("have fn double(x N) N=2*x\n", "Litex.mulInN"),
+        ("have fn successor(x Z) Z=x+1\n", "Litex.addInZ"),
     ] {
         let (result, compiler) = super::execute(source);
-        super::phase2_rejected(
-            &result,
-            &compiler,
-            "unsupported_structural_neighbor",
-            &["StructuralMembership/ArithmeticCarrier"],
-        );
+        let output = super::compile_run(&result, &compiler, "numeric_closure")
+            .expect("the actual structural carrier evidence is supported");
+        assert!(output.contains(law));
     }
 }
 

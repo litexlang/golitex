@@ -39,7 +39,7 @@ impl Runtime {
             line_file: subset.line_file.clone(),
         }
         .into();
-        let derived = Box::new(self.store_inferred_fact_and_infer(&finite, verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&finite, verify_state)?);
         Ok(Some(InferSubsetFiniteUpperBoundResult {
             source_fact_id: subset.fact_id,
             upper_finite_proof,
@@ -76,8 +76,7 @@ impl Runtime {
             ))],
             line_file: subset.line_file.clone(),
         };
-        let derived =
-            Box::new(self.store_inferred_fact_and_infer(&Fact::ForallFact(forall), verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&Fact::ForallFact(forall), verify_state)?);
         Ok(Some(InferSubsetElementwiseMembershipResult { derived }))
     }
 

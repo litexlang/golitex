@@ -139,8 +139,8 @@ set as a real or complex set additionally needs a proved `A $subset R` or
 `A $subset C`. Native consumers close the reviewed model inside their proof
 bodies and expose ordinary ZFSet, Set Complex and Set Real statements.
 
-This slice supports flat atomic filters and supported concrete predicates,
-with the exact recorded membership/subset routes. Compound builder clauses,
+This slice supports atomic and flat And/chain filters and supported concrete
+predicates, with the exact recorded membership/subset routes. General compound logic,
 nonempty/finite binder kinds, unbounded comprehension and existence-based
 set selection are outside this compiler profile. They do not become axioms.
 
@@ -167,11 +167,16 @@ the source function remains an owned graph object. Its internal value-body
 callback does not replace the source object with a native real arrow.
 
 The current slice supports one or two fixed N/Z/Q/R/C inputs and output,
-atomic function guards, and top-level concrete predicates with flat atomic
+numeric RHS/let carrier aliases, direct and concrete-predicate function guards,
+and top-level concrete predicates with atomic or flat And/chain
 defining clauses. [Nonnegativity](../lean/examples/nonnegative_real_property/statement.lit)
 demonstrates predicate definition and unfolding; [quotient distribution](../lean/examples/real_quotient_distributes/statement.lit)
-demonstrates two arguments. Recursive or composed formula bodies and
-concrete-predicate function guards remain unsupported compiler routes.
+demonstrates two arguments. The
+[composed formula](../lean/examples/composed_real_formula/statement.lit) calls
+earlier one/two-input functions in its body, while the
+[chain guard](../lean/examples/chain_guard_reciprocal/statement.lit) retains a
+concrete predicate's two inequalities before constructing the reciprocal.
+Recursive and higher-order formula bodies remain outside this slice.
 
 The [natural successor](../lean/examples/natural_successor_affine_identity/statement.lit)
 also preserves the natural return condition:
@@ -184,8 +189,13 @@ f(2) = 3
 ```
 
 The signed-membership result retains its original zero WD before storing
-nonnegativity; `Litex.addInN` proves the body's natural membership. Variable N
-multiplication and Z arithmetic membership are still unsupported consumers.
+nonnegativity; `Litex.addInN` proves the body's natural membership.
+[Natural polynomial formulas](../lean/examples/natural_polynomial_formulas/statement.lit)
+and [integer polynomial formulas](../lean/examples/integer_polynomial_formulas/statement.lit)
+also preserve N multiplication, Z arithmetic and closed nonnegative powers
+through the original membership certificates. N subtraction and Z division
+still require their actual additional conditions; arithmetic syntax alone
+does not establish those closures.
 The [shifted square quotient](../lean/examples/real_shift_square_quotient/statement.lit)
 replays a selected `ArithmeticCongruence` residual: exact recorded requirement
 facts, IDs and successful children produce ordinary congruence of the semantic
@@ -221,9 +231,14 @@ facts use their recorded earlier theorem and binder renaming when that is the
 source's selected route.
 
 The [direct nested call](../lean/examples/nested_named_add_zero/statement.lit)
-needs no preliminary object-construction statement:
+needs no preliminary object-construction statement. This block includes the
+`add_zero` declaration so it can run independently:
 
 ```litex
+thm add_zero:
+    ? forall x R:
+        x + 0 = x
+
 thm add_zero_again:
     ? forall y R:
         y + 0 = y
@@ -276,8 +291,24 @@ arbitrary_real >= arbitrary_real
 
 The compiler checks the recorded nonempty proof and emits a generic certified
 object and In-R hypothesis. Later theorem headers retain those parameters; it
-does not define the object to be zero. This stage's arbitrary-have profile is
-top-level numeric context; local witness/proof declarations need later support.
+does not define the object to be zero. Top-level declarations remain context
+parameters. Inside a named proof, the
+[local witness example](../lean/examples/local_witness_additive_identity/statement.lit)
+instead eliminates the recorded nonempty carrier inside that proof:
+
+```litex
+thm local_witness_cancel:
+    ? forall x R:
+        x+0=x
+    have y R
+    (x+0)+y=x+y
+```
+
+The selected cancellation uses the local witness, but the exported statement
+still quantifies only over the original `x` and its membership. Numeric and
+set-kind local have, dependent typed-have and let have separate evidence and
+scope checks. A local prop/function definition or nested named theorem remains
+a separate unsupported scope extension.
 
 [Real squares](../lean/examples/real_squares_nonnegative/statement.lit) and
 [weak-order transitivity](../lean/examples/weak_order_transitivity/statement.lit)
@@ -589,11 +620,90 @@ The interpretation of an arbitrary set illustrates a deliberate interface
 difference: `$is_set(A)` has a generated proof, while native `A : ZFSet`
 already expresses sethood through its type. No artificial native sethood
 predicate is needed. Numeric views of a whole set still need subset evidence.
-The selected slice leaves modules, general local witness declarations,
-unbounded comprehension, existence-based set choice, broader formula bodies
+The selected slice leaves modules, general existential witness declarations,
+unbounded comprehension, existence-based set choice, recursive/higher-order formula bodies
 and unsupported inference/certificate routes outside the compiler boundary.
 An observed unused inference node in a result trace does not establish
 compiler support for that inference.
+
+## Composing the mathematical slice
+
+The [compound-return example](../lean/examples/named_compound_theorem_returns/statement.lit)
+selects individual facts from named chain and conjunction returns:
+
+```litex
+thm square_packages:
+    ? forall x R:
+        x*x=x^2=x*x
+        0<=x^2 and x*x=x^2
+    x*x=x^2=x*x
+    0<=x^2 and x*x=x^2
+thm nonnegative_square_from_package:
+    ? forall x R:
+        0<=x^2
+    by thm square_packages(x) => 0<=x^2
+```
+
+The compiler consumes the actual invocation's domain proofs and captured
+domain stores, then forms every returned conclusion before publishing its
+stored components. Selection cites an original direct component FactId. A
+later fact uses the caller's own recorded WD; compound constructors inside a
+closed invocation are not exported. Numeric literals and standard sets retain
+the existing closed-leaf rule. The second wrapper in the complete example
+selects the product equality from the chain. The local handwritten native
+consumer combines these two generated wrapper proofs into
+`(x : ℝ) → 0 ≤ x ^ 2 ∧ x * x = x ^ 2`.
+
+The [predicate-transport example](../lean/examples/concrete_predicate_equality_transport/statement.lit)
+uses semantic equality to transfer a concrete property before a guarded call:
+
+```litex
+prop transport_nonnegative(x R):
+    x >= 0
+have fn transport_guarded_square(x R: $transport_nonnegative(x)) R = x^2
+
+forall a,b R:
+    a=b
+    $transport_nonnegative(a)
+    =>:
+        $transport_nonnegative(b)
+        transport_guarded_square(b)=b^2
+```
+
+The declarations in this block define nonnegativity and a square function guarded
+by that property. The selected proof cites the previous predicate fact and
+the ordered equality evidence. Since the predicate is defined on semantic
+denotations, Lean's congruence and equality elimination transfer that cited
+proof. This does not require equality of the objects' host payloads, and their
+host types stay generic. The native consumer exposes ordinary reals:
+`(a b : ℝ) → a = b → 0 ≤ a → 0 ≤ b`.
+
+The [natural polynomial example](../lean/examples/natural_polynomial_formulas/statement.lit)
+also defines a concrete property of the natural-output square function.
+Natural membership's original nonnegative inference is emitted once, with its
+own FactId. Predicate and bounded-builder clauses can reuse literal WD from
+completed parameter inference. A pending inference still cannot cite its own
+future fact, even if an ancestor contains the complete result.
+
+These examples use the same owning compiler, typed result branches and proved
+semantic interface. The native adapters select a model explicitly and remain
+handwritten local tooling. General disjunction/existential proofs, induction,
+recursive or higher-order functions, local prop/function definitions and
+nested theorem definitions are separate extensions.
+
+The selected slice passed its combined phases 8-12 checkpoint on 2026-10-11.
+The gate checks 74 actual source/generated pairs, including 19 new mathematical
+cross-cases, and 64 interfaces in each native layer. An ordinary pinned Lake
+client imports only `native.Final` and checks 64 direct applications plus six
+combinations. Live dependency audits connect native proofs to their intended
+generated declarations after beta/zeta reduction; unused citations do not count.
+The local completion matrix distinguishes whole-file checking, selected result
+stages and actual native statements. Among the 19 new interfaces, ten are closed,
+six generic and three mixed. The natural-output property and additional local
+declaration statements are checked in their generated files without separate
+native exports. These checks establish the reviewed subset, not every proof
+route that Litex can verify. All tooling and acceptance evidence remain local
+under `scripts/litex_to_lean/`.
 
 ## Maintaining this guide
 

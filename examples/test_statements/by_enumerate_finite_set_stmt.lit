@@ -6,19 +6,23 @@
 by enumerate finite_set:
     ? forall x {1, 2}:
         x > 0
+    x > 0
 
 # case: two-independent-domains
 by enumerate finite_set:
     ? forall x {1, 2}, y {3, 4}:
         x < y
+    x < y
 
 # case: singleton-and-empty
 by enumerate finite_set:
     ? forall x {0}:
         x = 0
+    x = 0
 by enumerate finite_set:
     ? forall x {}:
         x = x
+    x = x
 
 # case: constant-proof-body
 by enumerate finite_set:

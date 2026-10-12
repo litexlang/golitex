@@ -326,6 +326,37 @@ impl LitexToLeanCompiler {
                 "WD/ForallSubject",
                 "Quantified WD evidence has another source fact family.",
             )),
+            (FactWellDefinedProof::AndFact { components }, Fact::AndFact(fact)) => {
+                if components.len() != fact.facts.len() || components.is_empty() {
+                    return Err(LeanCompileError::unsupported("WD/AndArity"));
+                }
+                for (index, (wd, atomic)) in components.iter().zip(&fact.facts).enumerate() {
+                    let prior = SourcePosition {
+                        before: index,
+                        ..*position
+                    };
+                    self.compile_atomic_wd(wd, atomic, &prior)?;
+                }
+                Ok(())
+            }
+            (FactWellDefinedProof::ChainFact { adjacent }, Fact::ChainFact(fact)) => {
+                if adjacent.len() != fact.prop_names.len() || adjacent.is_empty() {
+                    return Err(LeanCompileError::unsupported("WD/ChainArity"));
+                }
+                for (index, wd) in adjacent.iter().enumerate() {
+                    let atomic = crate::compile_to_lean::compile_compound_fact::chain_edge(
+                        fact,
+                        index,
+                        fact.fact_id,
+                    )?;
+                    let prior = SourcePosition {
+                        before: index,
+                        ..*position
+                    };
+                    self.compile_atomic_wd(wd, &atomic, &prior)?;
+                }
+                Ok(())
+            }
             (
                 FactWellDefinedProof::AndFact { .. }
                 | FactWellDefinedProof::ChainFact { .. }

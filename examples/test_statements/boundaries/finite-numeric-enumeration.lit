@@ -4,3 +4,4 @@
 by enumerate finite_set:
     ? forall n {0, 1}:
         n + 0 = n
+    n + 0 = n

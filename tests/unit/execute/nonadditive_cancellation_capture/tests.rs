@@ -2,7 +2,7 @@ use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::knowledge_base::JsonValue;
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferEqualityResult, InferFactResult, StoreInferredFactAndInferResult,
+    InferAtomicFactResult, InferEqualityResult, InferFactResult, StoreInferredFactResult,
 };
 
 fn execute(source: &str) -> (Runtime, RunLitexCodeResult) {
@@ -35,13 +35,14 @@ fn forall(run: &RunLitexCodeResult) -> &VerifyForallFactSuccess {
 }
 
 fn rules(store: &StoreFactAndInferResult) -> &[InferEqualityResult] {
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer else {
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
+    else {
         panic!("stored equality inference")
     };
     rules
 }
 
-fn captured(rule: &InferEqualityResult) -> (FactId, &StoreInferredFactAndInferResult) {
+fn captured(rule: &InferEqualityResult) -> (FactId, &StoreInferredFactResult) {
     match rule {
         InferEqualityResult::SubtractiveCancellation(rule) => (rule.source_fact_id, &rule.derived),
         InferEqualityResult::NonzeroFactorCancellation(rule) => {
@@ -68,7 +69,7 @@ fn assert_original_capture(
         let FactWellDefinedProof::Equality(formation) = &capture.well_defined else {
             panic!("original derived equality formation")
         };
-        let StoreFactResult::AtomicFact(derived) = &capture.store_and_infer.store else {
+        let StoreFactResult::AtomicFact(derived) = &capture.store else {
             panic!("derived atomic store")
         };
         let AtomicFact::EqualFact(equality) = &derived.fact else {
@@ -83,12 +84,18 @@ fn assert_original_capture(
             Some(&Fact::AtomicFact(derived.fact.clone())),
             "capture keeps the exact fact actually published in the local scope"
         );
-        let mut descendants = vec![derived.fact_id];
-        descendants.extend(assert_original_capture(proof, &capture.store_and_infer));
+        let descendants = vec![derived.fact_id];
         assert_eq!(rule.stored_fact_ids(), descendants);
         ids.extend(descendants);
     }
-    assert_eq!(store.infer.stored_fact_ids(), ids);
+    assert_eq!(
+        store
+            .infer
+            .as_ref()
+            .expect("seed inference")
+            .stored_fact_ids(),
+        ids
+    );
     ids
 }
 
@@ -109,7 +116,7 @@ fn assert_json_captures(value: &JsonValue) -> usize {
             if is_capture {
                 let derived = object.get("derived").unwrap().as_object().unwrap();
                 assert!(derived.get("well_defined").is_some());
-                assert!(derived.get("store_and_infer").is_some());
+                assert!(derived.get("store").is_some());
             }
             usize::from(is_capture)
                 + object

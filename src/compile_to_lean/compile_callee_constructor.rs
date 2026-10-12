@@ -1,0 +1,155 @@
+use crate::compile_to_lean::helper::*;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::SearchProofByKnownForallFact;
+use crate::prelude::*;
+use std::collections::HashMap;
+
+impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_callee_constructor_reference(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        if !matches!(object, Obj::ArithmeticOperator(_) | Obj::FnObj(_)) {
+            return Ok(None);
+        }
+        position.with_visible_callee_instance(&mut |application, caller| {
+            let resolved = self.resolve_fact(application.cite.fact_id, caller)?;
+            let Fact::ForallFact(source) = &resolved else {
+                return Err(LeanCompileError::unsupported("WD/CalleeFamily"));
+            };
+            let registered = self.cited_fact_reference(application.cite.fact_id, caller)?;
+            if *registered.0 != resolved {
+                return Err(LeanCompileError::unsupported("WD/CalleeIdentity"));
+            }
+            let ForallConclusionLocation::DirectThenFact(location) = &application.cite.location else {
+                return Err(LeanCompileError::unsupported("WD/CalleeLocation"));
+            };
+            let selected = source.then_facts.get(location.then_fact_index)
+                .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeLocation"))?;
+            let parameters = source.typed_parameters.ordered_param_ids();
+            if parameters.len() != application.forall_parameters_match_what_args.len() {
+                return Err(LeanCompileError::unsupported("WD/CalleeArguments"));
+            }
+            let substitution: HashMap<_,_> = parameters.into_iter()
+                .zip(application.forall_parameters_match_what_args.iter().cloned()).collect();
+            let roots: Vec<&Obj> = match selected {
+                ExistOrAndChainAtomicFact::ChainFact(chain) => chain.objs.iter().collect(),
+                ExistOrAndChainAtomicFact::AndFact(and) => and.facts.iter().flat_map(atomic_fact_args_ref).collect(),
+                _=>return Err(LeanCompileError::unsupported("WD/CalleeConclusionFamily")),
+            };
+            let Some(pattern) = roots.into_iter().find_map(|root| exact_constructor_pattern(root,object,&substitution)) else {
+                return Ok(None);
+            };
+            let found = caller.with_visible_forall_constructor(
+                application.cite.fact_id,
+                location.then_fact_index,
+                pattern,
+                &mut |fact, introduced, assumed, wd, site, _declaration| {
+                    if fact != source || wd.obj().ir() != pattern.ir() {
+                        return Err(LeanCompileError::unsupported("WD/CalleeConstructorSubject"));
+                    }
+                    self.compile_callee_constructor_factory(fact,introduced,assumed,wd,site,application,caller)
+                },
+            )?;
+            found.map(Some).ok_or_else(|| LeanCompileError::new("WD/CalleeProducer", "The selected prior forall has no original constructor at this exact argument stage."))
+        })
+    }
+
+    fn compile_callee_constructor_factory(
+        &self,
+        source: &ForallFact,
+        introduced: &IntroduceTypedParametersResult,
+        assumed: &[AssumeDomFactResult],
+        wd: &ObjWellDefinedProof,
+        site: &SourcePosition<'_>,
+        application: &SearchProofByKnownForallFact,
+        caller: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let header = SourcePosition {
+            before: 0,
+            ..*site
+                .callee_header()
+                .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeHeader"))?
+        };
+        let (mut binders, _, definitions) =
+            self.compile_forall_head(source, introduced, assumed, &header)?;
+        for parameter in source
+            .typed_parameters
+            .groups
+            .iter()
+            .flat_map(|group| &group.params)
+        {
+            let level = format!("Type v{}}}", parameter.id.value());
+            for binder in &mut binders {
+                *binder = binder.replace(&level, "Type _}");
+            }
+        }
+        // `site` has the original source header and the precise WD subtree.
+        // It never opens the callee's proved then facts as new assumptions.
+        let constructor = self.compile_wd(wd, site)?;
+        let body = if definitions.is_empty() {
+            constructor
+        } else {
+            format!(
+                "(show Litex.Obj (M := M) _ from by\n  {}\n  exact {constructor}\n)",
+                definitions.join("\n").replace('\n', "\n  ")
+            )
+        };
+        let factory = if binders.is_empty() {
+            body
+        } else {
+            format!("(fun {} => {body})", binders.join(" "))
+        };
+        let requirements =
+            SourcePosition::new(Some(caller), SourceOwner::KnownApplication(application), 0);
+        let (definitions, arguments) =
+            self.compile_known_application_requirements(source, application, &requirements)?;
+        let applied = if arguments.is_empty() {
+            factory
+        } else {
+            format!("({factory} {})", arguments.join(" "))
+        };
+        if definitions.is_empty() {
+            Ok(applied)
+        } else {
+            Ok(format!(
+                "(show Litex.Obj (M := M) _ from by\n  {}\n  exact {applied}\n)",
+                definitions.join("\n").replace('\n', "\n  ")
+            ))
+        }
+    }
+}
+
+fn exact_constructor_pattern<'a>(
+    pattern: &'a Obj,
+    object: &Obj,
+    substitution: &HashMap<IdentifierId, Obj>,
+) -> Option<&'a Obj> {
+    if matches!(pattern, Obj::ArithmeticOperator(_) | Obj::FnObj(_))
+        && instantiated_object_matches(pattern, object, substitution)
+    {
+        return Some(pattern);
+    }
+    let children: Vec<&Obj> = match pattern {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(value)) => vec![&value.left, &value.right],
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(value)) => vec![&value.left, &value.right],
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(value)) => vec![&value.left, &value.right],
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(value)) => vec![&value.left, &value.right],
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(value)) => {
+            vec![&value.base, &value.exponent]
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(value)) => vec![&value.arg],
+        Obj::FnObj(application) => application
+            .body
+            .iter()
+            .flatten()
+            .map(|argument| argument.as_ref())
+            .collect(),
+        _ => vec![],
+    };
+    children
+        .into_iter()
+        .find_map(|child| exact_constructor_pattern(child, object, substitution))
+}

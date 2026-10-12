@@ -1561,21 +1561,21 @@ fn fn_obj_application_requires_in_function_set() {
 }
 
 #[test]
-fn fn_arrow_sugar_desugars_to_fn_set() {
+fn explicit_fn_sets_have_fixed_return_carriers() {
     let mut runtime = runtime_with_file_env();
     assert!(
-        !exec_one(&mut runtime, "let S = R -> R").is_failed(),
-        "R -> R must parse and WD as FnSet"
+        !exec_one(&mut runtime, "let S = fn(x R) R").is_failed(),
+        "explicit FnSet must parse and WD"
     );
     assert!(!exec_one(&mut runtime, "S = S").is_failed());
     assert!(
-        !exec_one(&mut runtime, "let T = R -> R -> Z").is_failed(),
-        "right-associative arrow must WD"
+        !exec_one(&mut runtime, "let T = fn(x R) fn(y R) Z").is_failed(),
+        "nested fixed return carriers must WD"
     );
     assert!(!exec_one(&mut runtime, "T = T").is_failed());
     assert!(
-        !exec_one(&mut runtime, "let U = R × R -> R").is_failed(),
-        "cart must bind tighter than arrow"
+        !exec_one(&mut runtime, "let U = fn(p R × R) R").is_failed(),
+        "cart parameter carrier must WD"
     );
     assert!(!exec_one(&mut runtime, "U = U").is_failed());
 }
@@ -2639,7 +2639,7 @@ fn anonymous_fn_alpha_equal_and_free_params_lookup_builtins() {
 fn fn_set_and_set_builder_alpha_equal_builtins() {
     let mut runtime = runtime_with_file_env();
     assert!(
-        !exec_one(&mut runtime, "R -> R = R -> R").is_failed(),
+        !exec_one(&mut runtime, "fn(x R) R = fn(y R) R").is_failed(),
         "two literal FnSets must be alpha-equal"
     );
     assert!(
@@ -2647,13 +2647,13 @@ fn fn_set_and_set_builder_alpha_equal_builtins() {
         "SetBuilders must be alpha-equal under binder rename"
     );
     assert!(
-        !exec_one(&mut runtime, "forall f R -> R:\n    f $in R -> R").is_failed(),
+        !exec_one(&mut runtime, "forall f fn(x R) R:\n    f $in fn(y R) R").is_failed(),
         "forall membership must bridge via FnSet alpha equality"
     );
 
     let mut runtime = runtime_with_file_env();
     assert!(
-        exec_one(&mut runtime, "R -> N = R -> R").is_failed(),
+        exec_one(&mut runtime, "fn(x R) N = fn(y R) R").is_failed(),
         "different FnSet return sets must not alpha-equal"
     );
     assert!(
@@ -3073,7 +3073,7 @@ fn claim_stores_goal_and_sketch_checks_body() {
     use crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
 
     let mut runtime = runtime_with_file_env();
-    let claim = exec_one(&mut runtime, "claim:\n    ? 1 = 1\n");
+    let claim = exec_one(&mut runtime, "claim:\n    ? 1 = 1\n    1 = 1\n");
     assert!(!claim.is_failed(), "claim should succeed");
     assert!(matches!(
         claim,

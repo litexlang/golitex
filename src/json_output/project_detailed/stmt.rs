@@ -1309,6 +1309,15 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                 ),
                 ("dom_proofs", project_verify_facts(&s.dom_proofs, runtime)),
                 (
+                    "dom_stores",
+                    JsonValue::Array(
+                        s.dom_stores
+                            .iter()
+                            .map(|stored| project_store_and_infer(stored, runtime))
+                            .collect(),
+                    ),
+                ),
+                (
                     "returned_conclusions",
                     JsonValue::Array(
                         s.returned_conclusions

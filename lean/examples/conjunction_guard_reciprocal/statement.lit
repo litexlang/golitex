@@ -1,0 +1,6 @@
+# A conjunction predicate certifies nonzero division while preserving both defining clauses.
+prop conjunction_guard(x R):
+    x != 0 and x = x
+have fn conjunction_inv(x R: $conjunction_guard(x)) R = 1 / x
+by def $conjunction_guard(2)
+conjunction_inv(2) = 1 / 2

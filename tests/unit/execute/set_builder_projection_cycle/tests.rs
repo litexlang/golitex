@@ -142,7 +142,7 @@ fn false_builder_and_undefined_carrier_reject_and_rollback() {
     assert!(rt.run_litex_code("have s set\n").unwrap().success);
     let before = sizes(&rt);
     for code in [
-        "claim:\n    ? forall object s:\n        object $in {x s: 0 = 1}\n",
+        "claim:\n    ? forall object s:\n        object $in {x s: 0 = 1}\n    object $in {x s: 0 = 1}\n",
         "ghost = {x ghost: 0 = 0}\n",
         "0 = 1\n",
     ] {

@@ -227,7 +227,10 @@ The [CLI reference](docs/cli.md) explains commands and verification output;
 the [Manual](docs/Manual.md) and [examples](examples/README.md) are starting
 points for writing more Litex. [Building Analysis in Litex](showcases/analysis/README.md)
 shows selected definitions and proofs growing into mathematical context, with
-the incomplete textbook scope stated explicitly. The full argument and further
+the incomplete textbook scope stated explicitly.
+[Mathematics in Litex](showcases/Mathematics-in-Litex/README.md) adapts selected
+material from *Mathematics in Lean*, following witnesses, sets and functions
+through recursive constructions and algebraic structures. The full argument and further
 source examples
 are in the [Blueprint](docs/Litex_Blueprint.md) and
 [中文蓝图](docs/Litex中文蓝图.md).
@@ -246,6 +249,8 @@ Jiachen Shen (沈嘉辰), creator of Litex, is a mathematics PhD student at Fuda
 showed him that mathematics and programming can meet in a real language;
 Litex explores whether formal source can follow more closely the way people
 construct mathematical arguments.
+
+The Blueprint describes Litex's [mathematical values](docs/Litex_Blueprint.md#mathematical-values) ([中文](docs/Litex中文蓝图.md#mathematical-values)).
 
 Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu,
 Sheng Xu, Keyao Zhu, and Zhaoxuan Hong for their support and advice.

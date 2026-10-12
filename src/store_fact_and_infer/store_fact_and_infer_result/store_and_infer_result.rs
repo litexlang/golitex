@@ -6,7 +6,7 @@ use super::{InferFactResult, StoreFactResult};
 // Option A: always store then infer as two explicit stages.
 pub struct StoreFactAndInferResult {
     pub store: StoreFactResult,
-    pub infer: InferFactResult,
+    pub infer: Option<InferFactResult>,
 }
 
 impl StoreFactAndInferResult {
@@ -20,7 +20,9 @@ impl StoreFactAndInferResult {
 
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         let mut ids = self.store.stored_fact_ids();
-        ids.extend(self.infer.stored_fact_ids());
+        if let Some(infer) = &self.infer {
+            ids.extend(infer.stored_fact_ids());
+        }
         ids
     }
 }

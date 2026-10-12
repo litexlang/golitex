@@ -34,13 +34,13 @@ fn field_sequence_calls_reject_wrong_indices_and_continue_after_failure() {
             .success
     );
     for code in [
-        "claim:\n    ? forall value &SequenceFields<2>:\n        value.finite(0) $in R\n",
-        "claim:\n    ? forall value &SequenceFields<2>:\n        value.finite(3) $in R\n",
-        "claim:\n    ? forall value &SequenceFields<2>:\n        value.infinite(0) $in R\n",
+        "claim:\n    ? forall value &SequenceFields<2>:\n        value.finite(0) $in R\n    value.finite(0) $in R\n",
+        "claim:\n    ? forall value &SequenceFields<2>:\n        value.finite(3) $in R\n    value.finite(3) $in R\n",
+        "claim:\n    ? forall value &SequenceFields<2>:\n        value.infinite(0) $in R\n    value.infinite(0) $in R\n",
     ] {
         let run = runtime.run_litex_code(code).unwrap();
         assert!(!run.success && run.session_error.is_none(), "{code}");
-        assert!(runtime.run_litex_code("claim:\n    ? forall value &SequenceFields<2>:\n        value.finite(1) $in R\n        value.infinite(1) $in R\n").unwrap().success);
+        assert!(runtime.run_litex_code("claim:\n    ? forall value &SequenceFields<2>:\n        value.finite(1) $in R\n        value.infinite(1) $in R\n    value.finite(1) $in R\n    value.infinite(1) $in R\n").unwrap().success);
     }
 }
 

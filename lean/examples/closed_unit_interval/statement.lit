@@ -1,0 +1,6 @@
+# The closed unit interval contains one half and each member satisfies its two bounds.
+have Interval set={x R: 0<=x<=1}
+(1/2) $in Interval
+forall x Interval:
+    0<=x<=1
+Interval $subset R

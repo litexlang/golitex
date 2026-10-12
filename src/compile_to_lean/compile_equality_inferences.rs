@@ -2,26 +2,16 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferEqualityResult, InferFactResult, StoreInferredFactAndInferResult,
-};
+use crate::store_fact_and_infer::{InferEqualityResult, StoreInferredFactResult};
 
 impl LitexToLeanCompiler {
-    pub(in crate::compile_to_lean) fn compile_equality_inferences(
+    pub(in crate::compile_to_lean) fn compile_equality_inference_rules(
         &self,
-        store: &StoreFactAndInferResult,
-        seed: &Fact,
+        rules: &[InferEqualityResult],
+        source: &EqualFact,
         compiled: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer
-        else {
-            return Ok(Vec::new());
-        };
-        let Fact::AtomicFact(AtomicFact::EqualFact(source)) = seed else {
-            return Err(LeanCompileError::unsupported("Inference/EqualitySeed"));
-        };
-        self.validate_store(store, seed)?;
         let mut declarations = Vec::new();
         for (index, rule) in rules.iter().enumerate() {
             let group = SourcePosition::new(
@@ -55,12 +45,12 @@ impl LitexToLeanCompiler {
 
     pub(in crate::compile_to_lean) fn cancellation_fact(
         &self,
-        captured: &StoreInferredFactAndInferResult,
+        captured: &StoreInferredFactResult,
         position: &SourcePosition<'_>,
         route: &str,
     ) -> Result<Fact, LeanCompileError> {
-        let derived = &captured.store_and_infer;
-        let fact = match &derived.store {
+        let derived = &captured.store;
+        let fact = match derived {
             StoreFactResult::AtomicFact(stored) => match &stored.fact {
                 AtomicFact::EqualFact(equal) => Fact::AtomicFact(equal.clone().into()),
                 _ => return Err(LeanCompileError::unsupported(&format!("{route}Conclusion"))),

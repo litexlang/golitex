@@ -67,7 +67,7 @@ impl Runtime {
                 return Err(tb.parse_error("by extension: goal expects an equality fact"));
             };
             self.push_parse_scope();
-            let proof = self.parse_body_stmts(&tb.body[1..]);
+            let proof = self.parse_nonempty_proof_body(&tb.body[1..], tb, "by extension");
             self.pop_parse_scope();
             let proof = proof?;
             (eq.left, eq.right, proof)
@@ -111,7 +111,7 @@ impl Runtime {
                 return Err(tb.parse_error("by fn_extension: goal expects an equality fact"));
             };
             self.push_parse_scope();
-            let proof = self.parse_body_stmts(&tb.body[1..]);
+            let proof = self.parse_nonempty_proof_body(&tb.body[1..], tb, "by fn_extension");
             self.pop_parse_scope();
             let proof = proof?;
             (eq.left, eq.right, proof)
@@ -169,7 +169,7 @@ impl Runtime {
         let forall_fact = self.parse_goal_forall_fact(&mut goal, "by enumerate finite_set")?;
         let proof =
             self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
-                this.parse_body_stmts(&tb.body[1..])
+                this.parse_nonempty_proof_body(&tb.body[1..], tb, "by enumerate finite_set")
             })?;
         Ok(Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(
             ByEnumerateFiniteSetStmt {
@@ -194,7 +194,7 @@ impl Runtime {
         let forall_fact = self.parse_goal_forall_fact(&mut goal, "by for")?;
         let proof =
             self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
-                this.parse_body_stmts(&tb.body[1..])
+                this.parse_nonempty_proof_body(&tb.body[1..], tb, "by for")
             })?;
         Ok(Stmt::By(ByStmt::ByForStmt(ByForStmt {
             forall_fact,
@@ -242,23 +242,16 @@ impl Runtime {
             let mut arm = child.clone();
             arm.expect(CASE)?;
             let case = self.parse_and_chain_atomic_fact_allow_not(&mut arm)?;
-            let bodyless = arm.body.is_empty();
-            if bodyless {
-                if arm.peek() == Some(COLON) {
-                    arm.expect(COLON)?;
-                }
-            } else {
-                arm.expect(COLON)?;
-            }
+            arm.expect(COLON)?;
             if !arm.exceed_end_of_head() {
                 return Err(arm.parse_error("case: expected end of head after condition"));
+            }
+            if arm.body.is_empty() {
+                return Err(arm.parse_error("case: expects a nonempty proof body"));
             }
 
             self.push_parse_scope();
             let arm_result = (|| {
-                if bodyless {
-                    return Ok((Vec::new(), None));
-                }
                 let n = arm.body.len();
                 let last_is_impossible =
                     arm.body[n - 1].header.first().map(String::as_str) == Some(IMPOSSIBLE);
@@ -562,7 +555,7 @@ impl Runtime {
 
             let rest = &tb.body[goal_count..];
             let (proof, base_proof, step_proof) =
-                self.parse_induc_proof_sections(rest, &param, &induc_from, strong, syntax)?;
+                self.parse_induc_proof_sections(rest, tb, &param, &induc_from, strong, syntax)?;
             Ok((to_prove, proof, base_proof, step_proof))
         })();
         self.pop_parse_scope();
@@ -595,13 +588,14 @@ impl Runtime {
     fn parse_induc_proof_sections(
         &mut self,
         rest: &[TokenBlock],
+        block: &TokenBlock,
         param: &str,
         induc_from: &Obj,
         strong: bool,
         syntax: &str,
     ) -> RuntimeResult<(Vec<Stmt>, Option<Vec<Stmt>>, Option<Vec<Stmt>>)> {
         if rest.is_empty() {
-            return Ok((Vec::new(), None, None));
+            return Err(block.parse_error(format!("{syntax}: expects a nonempty proof body")));
         }
         if rest.iter().any(is_induc_structured_header_block) {
             let mut base_proof = None;
@@ -615,7 +609,11 @@ impl Runtime {
                     }
                     let mut header = child.clone();
                     self.expect_induc_base_header(&mut header, param, induc_from, syntax)?;
-                    base_proof = Some(self.parse_body_stmts(&header.body)?);
+                    base_proof = Some(self.parse_nonempty_proof_body(
+                        &header.body,
+                        &header,
+                        &format!("{syntax} ? from"),
+                    )?);
                 } else if is_induc_step_header_block(child, strong) {
                     if step_proof.is_some() {
                         return Err(child.parse_error(format!(
@@ -631,7 +629,11 @@ impl Runtime {
                         header.expect(INDUC)?;
                     }
                     header.expect_colon_end_of_header()?;
-                    step_proof = Some(self.parse_body_stmts(&header.body)?);
+                    step_proof = Some(self.parse_nonempty_proof_body(
+                        &header.body,
+                        &header,
+                        &format!("{syntax} ? {}", if strong { STRONG_INDUC } else { INDUC }),
+                    )?);
                 } else if is_induc_step_header_block(child, !strong) {
                     return Err(child.parse_error(format!(
                         "{syntax}: expected `? {}:` for this induction method",
@@ -651,7 +653,11 @@ impl Runtime {
             }
             Ok((Vec::new(), base_proof, step_proof))
         } else {
-            Ok((self.parse_body_stmts(rest)?, None, None))
+            Ok((
+                self.parse_nonempty_proof_body(rest, block, syntax)?,
+                None,
+                None,
+            ))
         }
     }
 

@@ -1,7 +1,7 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::KnownEqualityPathProof;
 use crate::runtime::FactId;
 
-use super::{StoreFactAndInferResult, StoreInferredFactAndInferResult};
+use super::StoreInferredFactResult;
 
 // One non-equal atomic infer rule hit (parallel to AtomicExceptEquality search
 // proof arms). Verify keeps a single winning proof; infer pushes every hit into
@@ -69,7 +69,7 @@ pub enum InferAtomicExceptEqualityResult {
 }
 
 pub struct InferNormalAtomicParamTypesProjectedResult {
-    pub derived: Vec<StoreInferredFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub enum InferBuiltinDefinitionResult {
@@ -85,39 +85,39 @@ pub enum InferBuiltinDefinitionResult {
 }
 pub struct InferInjectiveDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferSurjectiveDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferPrimeDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferCoprimeDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferProperSubsetDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferProperSupersetDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferDvdDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferBijectiveDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 pub struct InferChoiceFunctionDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 impl InferBuiltinDefinitionResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
@@ -136,7 +136,7 @@ impl InferBuiltinDefinitionResult {
 }
 
 pub struct InferExpandDefinitionResult {
-    pub derived: Vec<StoreInferredFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferSetBuilderMembershipProjectionResult {
@@ -149,55 +149,55 @@ pub struct SetBuilderMembershipProjectionStep {
     pub builder: crate::ast::obj::SetBuilder,
     pub equality_path: Vec<(crate::ast::obj::Obj, crate::ast::obj::Obj, FactId)>,
     pub template_expansion: bool,
-    pub derived: Vec<StoreInferredFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferPowerSetMembershipProjectionResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferInFactListSetSingletonEqualResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferInFactListSetOrEqualitiesResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferInFactUnionOrResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferInFactIntersectBothResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactSetMinusSplitResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactCartCoordinatesResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactRangeResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactClosedRangeResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactRealIntervalResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactOneSideRealIntervalResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactSignedStandardSetSignResult {
-    pub derived: Vec<StoreInferredFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactEqualFnSetExpandResult {
@@ -207,62 +207,62 @@ pub struct InferInFactEqualFnSetExpandResult {
 pub struct InferInFactEqualFnSetTransport {
     pub membership_fact_id: FactId,
     pub carrier_equal: KnownEqualityPathProof,
-    pub derived: StoreFactAndInferResult,
+    pub derived: StoreInferredFactResult,
 }
 
 pub struct InferInFactFnRangeResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactFiniteSeqExpandResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferInFactSeqExpandResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferInFactFamilyUnionResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferInFactIndexUnionResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactIndexIntersectResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactIndexCartResult {
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferStrictLowerBoundPositiveResult {
     pub source_fact_id: FactId,
     pub bound_nonnegative_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferWeakIntegerLowerBoundInNResult {
     pub source_fact_id: FactId,
     pub integer_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
     pub bound_nonnegative_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferSubsetFiniteUpperBoundResult {
     pub source_fact_id: FactId,
     pub upper_finite_proof: crate::execute::execute_fact_stmt::VerifyFactResult,
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferSubsetElementwiseMembershipResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 pub struct InferSupersetElementwiseMembershipResult {
-    pub derived: Box<StoreFactAndInferResult>,
+    pub derived: Box<StoreInferredFactResult>,
 }
 
 impl InferAtomicExceptEqualityResult {
@@ -272,14 +272,14 @@ impl InferAtomicExceptEqualityResult {
             Self::NormalAtomicParamTypes(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
-                    ids.extend(d.store_and_infer.stored_fact_ids());
+                    ids.extend(d.store.stored_fact_ids());
                 }
                 ids
             }
             Self::NormalAtomicExpandDefinition(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
-                    ids.extend(d.store_and_infer.stored_fact_ids());
+                    ids.extend(d.store.stored_fact_ids());
                 }
                 ids
             }
@@ -297,7 +297,7 @@ impl InferAtomicExceptEqualityResult {
                 let mut ids = Vec::new();
                 for step in &r.steps {
                     for d in &step.derived {
-                        ids.extend(d.store_and_infer.stored_fact_ids());
+                        ids.extend(d.store.stored_fact_ids());
                     }
                 }
                 ids
@@ -358,7 +358,7 @@ impl InferAtomicExceptEqualityResult {
             Self::InFactSignedStandardSetSign(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
-                    ids.extend(d.store_and_infer.stored_fact_ids());
+                    ids.extend(d.store.stored_fact_ids());
                 }
                 ids
             }
@@ -402,8 +402,8 @@ impl InferAtomicExceptEqualityResult {
             }
             Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
             Self::SubsetFiniteUpperBound(r) => r.derived.stored_fact_ids(),
-            Self::StrictLowerBoundPositive(r) => r.derived.stored_fact_ids(),
-            Self::WeakIntegerLowerBoundInN(r) => r.derived.stored_fact_ids(),
+            Self::StrictLowerBoundPositive(r) => r.derived.store.stored_fact_ids(),
+            Self::WeakIntegerLowerBoundInN(r) => r.derived.store.stored_fact_ids(),
             Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),
         }
     }
@@ -414,7 +414,7 @@ pub struct InferInFactPreimageResult {
     pub source_equal: KnownEqualityPathProof,
     pub construction:
         crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactPreimageSetResult {
@@ -422,5 +422,5 @@ pub struct InferInFactPreimageSetResult {
     pub source_equal: KnownEqualityPathProof,
     pub construction:
         crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
-    pub derived: Vec<StoreFactAndInferResult>,
+    pub derived: Vec<StoreInferredFactResult>,
 }

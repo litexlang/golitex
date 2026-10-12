@@ -6,8 +6,7 @@
 by extension {1} = {1}
 
 # case: reordered-list-set
-by extension:
-    ? {1, 2} = {2, 1}
+by extension {1, 2} = {2, 1}
 
 # case: empty-set
 by extension {} = {}

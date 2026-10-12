@@ -1,0 +1,47 @@
+# Tracer: Cartesian field values retain their exact finite function domain.
+#
+# Before (rejected):
+# struct Pointed:
+#     point R × R
+#     tag R
+# (0, 0) $in R × R
+# release thm struct_member(((0, 0), 0), &Pointed)
+# have item &Pointed = ((0, 0), 0)
+# item.point = (0, 0)
+# item.point(2) = 0
+# Former behavior: the field-headed call had no matching function signature.
+# Publishing coordinate-set membership could then raise an inference WD error.
+#
+# Now: checked tuple equality or Cartesian membership supplies the existing
+# finite-function evidence, including the complete domain and source FactId.
+# Boundary: indices 0 and 3, noninteger indices, false coordinates, and
+# scalar fields remain rejected by the cartesian_field_coordinates tests.
+# Gate: target/release/litex -lang en -strict -f examples/wd/cartesian_field_coordinates.lit
+
+struct Pointed:
+    point R × R
+    tag R
+
+(0, 0) $in R × R
+
+release thm struct_member(((0, 0), 0), &Pointed)
+
+have item &Pointed = ((0, 0), 0)
+
+item.point = (0, 0)
+
+item.point(1) = 0
+
+item.point(2) = 0
+
+have horizontal_axis power_set(R × R) = {p R × R: p(2) = 0}
+
+(0, 0) $in horizontal_axis
+
+item.point $in horizontal_axis
+
+forall item2 &Pointed:
+    item2.point $in R × R
+    =>:
+        item2.point(1) $in R
+        item2.point(2) $in R

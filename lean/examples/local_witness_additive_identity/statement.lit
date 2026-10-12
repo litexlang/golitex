@@ -1,0 +1,39 @@
+# Local witnesses remain inside a named proof of the original additive identity.
+thm local_witness_cancel:
+    ? forall x R:
+        x+0=x
+    have y R
+    (x+0)+y=x+y
+
+thm dependent_local_values:
+    ? forall x R:
+        x+0=x
+    have y R
+    have shifted R=y+1
+    let second_shift=shifted+1
+    second_shift=shifted+1
+    (x+0)+second_shift=x+second_shift
+
+thm local_sets:
+    ? 1=1
+    have A, B set
+    $is_set(A)
+    let alias=A
+    alias=A
+    have D set=A
+    D=A
+
+thm local_witness_again:
+    ? forall x R:
+        x+0=x
+    have y R
+    (x+0)+y=x+y
+
+thm local_numeric_members:
+    ? 1=1
+    have n N, z Z, q Q, r R, c C
+    n $in C
+    z $in C
+    q $in C
+    r $in C
+    c $in C

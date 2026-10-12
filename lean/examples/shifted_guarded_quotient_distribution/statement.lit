@@ -1,0 +1,27 @@
+# A shifted guarded quotient distributes over addition and a named theorem evaluates its combined inputs.
+prop shifted_denominator_nonzero(x R):
+    x+1!=0
+have fn shifted_quotient(a,b R: $shifted_denominator_nonzero(b)) R=a/(b+1)
+thm shifted_quotient_distributes:
+    ? forall a,b,c R:
+        $shifted_denominator_nonzero(c)
+        =>:
+            shifted_quotient(a+b,c)=shifted_quotient(a,c)+shifted_quotient(b,c)
+    shifted_quotient(a+b,c)=(a+b)/(c+1)
+    shifted_quotient(a,c)=a/(c+1)
+    shifted_quotient(b,c)=b/(c+1)
+    (a+b)/(c+1)=a/(c+1)+b/(c+1)
+
+by def $shifted_denominator_nonzero(1)
+
+let shifted_combined=shifted_quotient(2,1)+shifted_quotient(4,1)
+
+by thm shifted_quotient_distributes(2,4,1) => shifted_quotient(2+4,1)=shifted_quotient(2,1)+shifted_quotient(4,1)
+
+shifted_quotient(2,1)=1
+
+shifted_quotient(4,1)=2
+
+shifted_quotient(2,1)+shifted_quotient(4,1)=1+2
+
+shifted_combined=3

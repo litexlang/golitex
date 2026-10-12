@@ -63,9 +63,7 @@ impl Runtime {
             else {
                 continue;
             };
-            let Some(stored) =
-                self.try_store_inferred_fact_and_infer_with_wd(&obligation, verify_state)?
-            else {
+            let Some(stored) = self.try_store_inferred_fact(&obligation, verify_state)? else {
                 return Err(crate::runtime::RuntimeError::InternalBug(format!(
                     "inferred fact {} failed well-definedness check",
                     obligation.ir()
@@ -113,9 +111,7 @@ impl Runtime {
             // A lower caller ceiling can leave child WD unavailable (for example,
             // an existential over finite_seq(R, 1)); do not commit that child or
             // abort the seed. Explicit definition proofs retain their WD checks.
-            if let Some(stored) =
-                self.try_store_inferred_fact_and_infer_with_wd(&instantiated, verify_state)?
-            {
+            if let Some(stored) = self.try_store_inferred_fact(&instantiated, verify_state)? {
                 derived.push(stored);
             }
         }

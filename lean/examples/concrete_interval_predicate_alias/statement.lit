@@ -1,0 +1,8 @@
+# A concrete unit-interval predicate defines a bounded real set whose alias preserves membership.
+prop is_unit_interval(x R):
+    0<=x<=1
+have Guarded set={t R:$is_unit_interval(t)}
+let Alias=Guarded
+by def $is_unit_interval(1/2)
+(1/2) $in Guarded
+(1/2) $in Alias

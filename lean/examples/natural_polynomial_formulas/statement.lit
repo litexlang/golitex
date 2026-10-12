@@ -1,0 +1,9 @@
+# Doubling and squaring natural numbers remain natural, with exact evaluations.
+have fn double(x N) N=2*x
+have fn square(x N) N=x^2
+double(3)=6
+square(3)=9
+
+prop natural_square_result(x N):
+    square(x) $in N
+by def $natural_square_result(3)

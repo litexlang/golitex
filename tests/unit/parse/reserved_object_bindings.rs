@@ -61,7 +61,7 @@ fn reserved_parameter_cannot_silently_become_a_constant_or_standard_set() {
         "forall U set:\n    {e U: e=e}={e U: e=e}\n",
         "template<e R>:\n    have picked R=e\n",
         "struct Box<e set>:\n    value e\n    tag N\n",
-        "by induc e from 0:\n    ? e=e\n",
+        "by induc e from 0:\n    ? e=e\n    e=e\n",
     ] { rejected_binding(code); }
 }
 

@@ -1,0 +1,5 @@
+# A weak real inequality followed by a strict inequality gives a strict endpoint bound.
+forall mixed_a,mixed_b,mixed_c R:
+    mixed_a<=mixed_b<mixed_c
+    =>:
+        mixed_a<mixed_c

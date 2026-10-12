@@ -342,6 +342,7 @@ have fn reciprocal(x R: x != 0) R = 1 / x
 claim:
     ? forall x R:
         reciprocal(x) * x = 1
+    reciprocal(x) * x = 1
 ```
 
 这里 `x` 是任意实数。没有排除零，所以目标含有输入条件缺失的函数应用。先修复目标，再谈扩展证明：

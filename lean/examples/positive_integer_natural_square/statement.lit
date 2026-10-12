@@ -1,0 +1,9 @@
+# A positive integer is natural and its square has a natural-valued guarded formula.
+forall positive_integer Z:
+    1<=positive_integer
+    =>:
+        positive_integer $in N
+
+have fn positive_integer_square(positive_integer Z:1<=positive_integer) N=positive_integer^2
+
+positive_integer_square(3)=9

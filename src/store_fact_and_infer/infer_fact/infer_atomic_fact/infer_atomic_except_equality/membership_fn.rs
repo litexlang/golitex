@@ -12,7 +12,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactEqualFnSetExpandResult,
     InferInFactEqualFnSetTransport, InferInFactFiniteSeqExpandResult, InferInFactFnRangeResult,
-    InferInFactSeqExpandResult, StoreFactAndInferResult,
+    InferInFactSeqExpandResult, StoreInferredFactResult,
 };
 use std::collections::HashMap;
 
@@ -84,7 +84,7 @@ impl Runtime {
                 line_file: in_fact.line_file.clone(),
             });
             if let Some(stored) =
-                self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
+                self.try_store_inferred_fact(&Fact::AtomicFact(expanded), verify_state)?
             {
                 transports.push(InferInFactEqualFnSetTransport {
                     membership_fact_id: in_fact.fact_id,
@@ -117,7 +117,7 @@ impl Runtime {
         let Some(body) = self.resolve_fn_set_body_for_fn_range(fn_range.function.as_ref()) else {
             return Ok(None);
         };
-        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
+        let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         let codomain_id = self.global_ids.allocate_fact_id();
         let codomain = AtomicFact::InFact(InFact {
             fact_id: codomain_id,
@@ -126,7 +126,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(codomain), verify_state)?
+            self.try_store_inferred_fact(&Fact::AtomicFact(codomain), verify_state)?
         else {
             return Ok(None);
         };
@@ -136,9 +136,7 @@ impl Runtime {
             if let Some(exist) =
                 self.preimage_exist_fact_from_fn_set(in_fact, fn_range.function.as_ref(), &body)?
             {
-                if let Some(stored) =
-                    self.try_store_inferred_fact_and_infer(&exist, verify_state)?
-                {
+                if let Some(stored) = self.try_store_inferred_fact(&exist, verify_state)? {
                     derived.push(stored);
                 }
             }
@@ -170,7 +168,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
+            self.try_store_inferred_fact(&Fact::AtomicFact(expanded), verify_state)?
         else {
             return Ok(None);
         };
@@ -205,7 +203,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         let Some(stored) =
-            self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(expanded), verify_state)?
+            self.try_store_inferred_fact(&Fact::AtomicFact(expanded), verify_state)?
         else {
             return Ok(None);
         };

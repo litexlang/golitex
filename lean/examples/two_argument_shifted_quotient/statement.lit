@@ -1,0 +1,7 @@
+# A quotient uses a nonzero predicate on a composed shifted denominator.
+have fn shift(x R) R = x + 1
+prop Pnonzero(x R):
+    x != 0
+have fn guarded_pair(a,b R: $Pnonzero(shift(b))) R = a / shift(b)
+$Pnonzero(shift(1))
+guarded_pair(6,1) = 3

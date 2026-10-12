@@ -2,11 +2,9 @@
 # Run: target/release/litex -strict -f examples/proof_nodes/equal/by_they_are_the_same/by_fn_set_alpha_equal.lit
 # Renaming the bound parameter x to y preserves the parameter set and return set.
 # Separate binders have different IDs, so this is alpha identity rather than SameIr.
-# Arrow syntax below has the same bound-parameter behavior; membership also uses it.
+# Membership also compares explicit function sets with renamed binders.
 
 fn(x R) R = fn(y R) R
 
-R -> R = R -> R
-
-forall f R -> R:
-    f $in R -> R
+forall f fn(x R) R:
+    f $in fn(y R) R

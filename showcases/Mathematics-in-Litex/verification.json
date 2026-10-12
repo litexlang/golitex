@@ -1,0 +1,112 @@
+{
+  "status": "accepted",
+  "date": "2026-10-11",
+  "scope": "preface and selected Chapters 1–8; not complete upstream MIL",
+  "source_revision": "6dfa2c166a410d2f0f278d327ea81ae0fa6d3c32",
+  "executable": {
+    "version": "Litex 1.0.6-beta",
+    "sha256": "2e0e05bb5ab1e4398c0ac9675784e3ef59148c2aeb75684008d5a59a83874c5f",
+    "build": "release build of the working checkout; tested executable held fixed"
+  },
+  "module_gate": {
+    "status": "accepted",
+    "reproduction_command": "litex -lang en -strict -r showcases/Mathematics-in-Litex",
+    "exit_code": 0,
+    "kind": "run",
+    "target": "repo",
+    "path": "showcases/Mathematics-in-Litex",
+    "success": true,
+    "session_error": null
+  },
+  "independent_readme_examples": [
+    {
+      "example": 1,
+      "line": 11,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    },
+    {
+      "example": 2,
+      "line": 31,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    },
+    {
+      "example": 3,
+      "line": 62,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    }
+  ],
+  "exports": [
+    {
+      "alias": "Introduction",
+      "file": "Introduction.lit",
+      "sha256": "8b2730e2a3e350ff837b9190d4342e3a47e3e83bbd4124f44a957cbbf49465c7"
+    },
+    {
+      "alias": "chap1",
+      "file": "chapter01-introduction.lit",
+      "sha256": "792d4ae14c0c97b76dea524234e7ff4dcfc774f42f62692a7d966504c43e8767"
+    },
+    {
+      "alias": "chap2",
+      "file": "chapter02-basics.lit",
+      "sha256": "ddb916b656a4c9d69df5079b5e02d2fb3f53d5d8eaa4afe7054d8c0d903411aa"
+    },
+    {
+      "alias": "chap3",
+      "file": "chapter03-logic.lit",
+      "sha256": "c5480becd349d688c3245d924759913a523eb155a4c76de437d39cedc7477967"
+    },
+    {
+      "alias": "chap4",
+      "file": "chapter04-sets-and-functions.lit",
+      "sha256": "f446e58cdf233f61321f3f9fdb714ae5737f1b8584874b80939aa5a0843c7a33"
+    },
+    {
+      "alias": "chap5",
+      "file": "chapter05-elementary-number-theory.lit",
+      "sha256": "7c38a1c07da9ce4c3b34efa4bfa2876b9999687287d8fb607d13907b7b511b30"
+    },
+    {
+      "alias": "chap6",
+      "file": "chapter06-discrete-mathematics.lit",
+      "sha256": "867b1bb4c24279de7b8528a5ddfe0ff45e4d5f4266a99cd6fbf4f5334d64e86f"
+    },
+    {
+      "alias": "chap7",
+      "file": "chapter07-structures.lit",
+      "sha256": "750e076093cbcf1472d5a19ed015134f29ee5c33e53e5d07c635e2e056de39aa"
+    },
+    {
+      "alias": "chap8",
+      "file": "chapter08-hierarchies.lit",
+      "sha256": "1eaa358f3171d397cfa1e03c2267b15565b1772165dd526a0330615b6daa5ddd"
+    }
+  ],
+  "manifest_sha256": "f3901f283ef2769617256d83debffc23b49640c7a8c3405bdad4f3fa259ebd6f",
+  "source_audit": {
+    "mathematical_code_changed": false,
+    "active_user_trust": 0,
+    "active_user_axiom": 0,
+    "active_abstract_prop": 0,
+    "external_module_imports": 0,
+    "export_count": 9,
+    "local_document_links_and_anchors_checked": 19,
+    "license_matches_pinned_source": true
+  },
+  "source_prefix_gate": {
+    "scope": "source preface and selected Chapters 1–8; does not replace the public module gate",
+    "exit_code": 0,
+    "kind": "run",
+    "success": true,
+    "session_error": null
+  }
+}

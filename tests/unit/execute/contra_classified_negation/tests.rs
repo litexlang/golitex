@@ -86,7 +86,7 @@ fn previously_accepted_counterexample_clause_shapes_remain_usable() {
 #[test]
 fn enumeration_then_contra_proves_k005_and_retains_scoped_evidence() {
     let mut rt = runtime();
-    let run = rt.run_litex_code("by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1").unwrap();
+    let run = rt.run_litex_code("by enumerate finite_set:\n    ? forall x {0}:\n        x != 1\n    x != 1\nby contra:\n    ? not exist x {0} st {x = 1}\n    obtain a from exist x {0} st {x = 1}\n    a != 1\n    impossible a = 1").unwrap();
     assert!(run.success, "{:?}", run.session_error);
     let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(s))) =
         &run.statement_results[1]
@@ -311,7 +311,7 @@ fn iff_negation_checks_the_complete_equivalence_truth_table() {
 
 #[test]
 fn forall_iff_goal_parses_and_closes_with_classified_counterexample() {
-    check(&mut runtime(), "by contra:\n    ? forall x {0}:\n        =>:\n            0 = 0\n        <=>:\n            0 = 0\n    obtain a from exist y {0} st {0 != 0 or 0 != 0, 0 = 0 or 0 = 0}\n    by cases:\n        ? 0 != 0\n        case 0 != 0\n        case 0 != 0\n    impossible 0 != 0", &[true]);
+    check(&mut runtime(), "by contra:\n    ? forall x {0}:\n        =>:\n            0 = 0\n        <=>:\n            0 = 0\n    obtain a from exist y {0} st {0 != 0 or 0 != 0, 0 = 0 or 0 = 0}\n    by cases:\n        ? 0 != 0\n        case 0 != 0:\n            0 != 0\n        case 0 != 0:\n            0 != 0\n    impossible 0 != 0", &[true]);
     check(&mut runtime(), "by contra:\n    ? forall x {0}:\n        =>:\n            0 = 0\n        <=>:\n            0 = 1\n    impossible 0 = 0", &[false]);
     let run = runtime()
         .run_litex_code("by contra:\n    ? 0 = 0:\n        0 = 0\n    impossible 0 != 0")

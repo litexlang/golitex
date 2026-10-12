@@ -50,15 +50,16 @@ fn ids_from_receipts(result: &StoreHaveObjAndInferResult) -> Vec<FactId> {
         .collect()
 }
 
-fn seed(stored: &StoreFactAndInferResult) -> &AtomicFact {
-    match &stored.store {
+fn seed(stored: &StoreFactResult) -> &AtomicFact {
+    match stored {
         StoreFactResult::AtomicFact(p) => &p.fact,
         _ => panic!("numeric declaration's atomic seed"),
     }
 }
 
-fn natural_nonnegative(stored: &StoreFactAndInferResult) -> &StoreFactAndInferResult {
-    let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) = &stored.infer
+fn natural_nonnegative(stored: &StoreFactAndInferResult) -> &StoreFactResult {
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+        &stored.infer
     else {
         panic!("atomic membership inference")
     };
@@ -68,7 +69,7 @@ fn natural_nonnegative(stored: &StoreFactAndInferResult) -> &StoreFactAndInferRe
     });
     let signed = signed.next().unwrap();
     assert_eq!(signed.derived.len(), 1);
-    &signed.derived[0].store_and_infer
+    &signed.derived[0].store
 }
 
 #[test]
@@ -105,7 +106,7 @@ fn producer_numeric_capture_keeps_actual_ordered_group_and_aggregate_stores() {
                 stored,
                 &p.store_and_infer_result.store_and_infer_results[offset]
             ));
-            let AtomicFact::InFact(member) = seed(stored) else {
+            let AtomicFact::InFact(member) = seed(&stored.store) else {
                 panic!("recorded member seed")
             };
             assert_eq!(
@@ -118,13 +119,13 @@ fn producer_numeric_capture_keeps_actual_ordered_group_and_aggregate_stores() {
             assert_eq!(&member.set, set);
             assert_eq!(
                 rt.fact_by_id_in_stack(stored.primary_fact_id()),
-                Some(&Fact::AtomicFact(seed(stored).clone()))
+                Some(&Fact::AtomicFact(seed(&stored.store).clone()))
             );
             offset += 1;
         }
     }
     for stored in &p.groups[0].defined_params.store_and_infer_results {
-        let AtomicFact::InFact(member) = seed(stored) else {
+        let AtomicFact::InFact(member) = seed(&stored.store) else {
             panic!()
         };
         let derived = natural_nonnegative(stored);
@@ -176,7 +177,7 @@ fn producer_numeric_capture_signed_inferences_keep_their_original_formation() {
     let proof = have(&run.statement_results[0]);
     for group in &proof.groups {
         for store in &group.defined_params.store_and_infer_results {
-            let InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules)) =
+            let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
                 &store.infer
             else {
                 panic!("signed membership inference")
@@ -195,7 +196,7 @@ fn producer_numeric_capture_signed_inferences_keep_their_original_formation() {
                 else {
                     panic!("sign consequence has its original atomic WD")
                 };
-                let arguments = atomic_fact_args_ref(seed(&captured.store_and_infer));
+                let arguments = atomic_fact_args_ref(seed(&captured.store));
                 assert_eq!(
                     formation.well_defined_of_each_parameter.len(),
                     arguments.len()
@@ -208,7 +209,7 @@ fn producer_numeric_capture_signed_inferences_keep_their_original_formation() {
                 }
                 assert!(store
                     .stored_fact_ids()
-                    .contains(&captured.store_and_infer.primary_fact_id()));
+                    .contains(&captured.store.primary_fact_id()));
             }
         }
     }
@@ -241,14 +242,15 @@ fn producer_numeric_capture_keeps_typed_rhs_seed_and_equality_stores() {
         .flat_map(|g| &g.params)
         .collect();
     for (index, parameter) in parameters.iter().enumerate() {
-        let AtomicFact::InFact(member) = seed(&captured.store_and_infer_results[index]) else {
+        let AtomicFact::InFact(member) = seed(&captured.store_and_infer_results[index].store)
+        else {
             panic!("membership before equality")
         };
         assert_eq!(
             member.element.ir(),
             Obj::Identifier(IdentifierObj::from_bound_name(parameter)).ir()
         );
-        let AtomicFact::EqualFact(equal) = seed(&captured.store_and_infer_results[index + 2])
+        let AtomicFact::EqualFact(equal) = seed(&captured.store_and_infer_results[index + 2].store)
         else {
             panic!("actual defining equality store")
         };
@@ -344,7 +346,7 @@ fn producer_numeric_capture_deleted_or_changed_receipts_cannot_be_hidden_by_flat
     let stored = &captured.store_and_infer_results[0];
     assert_ne!(
         rt.fact_by_id_in_stack(stored.primary_fact_id()),
-        Some(&Fact::AtomicFact(seed(stored).clone()))
+        Some(&Fact::AtomicFact(seed(&stored.store).clone()))
     );
     assert!(matches!(
         &p.statement.param_def.groups[0].param_type,

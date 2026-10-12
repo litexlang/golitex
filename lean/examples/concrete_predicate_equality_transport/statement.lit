@@ -1,0 +1,10 @@
+# Transfer nonnegativity between equal reals and use the transported guard in a square formula.
+prop transport_nonnegative(x R):
+    x>=0
+have fn transport_guarded_square(x R: $transport_nonnegative(x)) R=x^2
+forall a,b R:
+    a=b
+    $transport_nonnegative(a)
+    =>:
+        $transport_nonnegative(b)
+        transport_guarded_square(b)=b^2

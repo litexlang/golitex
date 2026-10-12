@@ -253,6 +253,7 @@ strategy s:
 ```text
 claim:
     ? 1 = 1
+    1 = 1
 
 sketch:
     1 = 1
@@ -260,6 +261,11 @@ sketch:
 
 Tracers: `examples/stmt_nodes/proof_block/claim.lit`,
 `sketch.lit`.
+
+`claim`, `sketch`, and `strategy` require a nonempty proof process. A goal or
+comment does not count as a process. Named `thm` bodies remain optional.
+Tokenizer also rejects comment-only colon blocks, including explicit fact
+bodies; every indented block must have actual source content.
 
 ### `trust`
 
@@ -290,7 +296,8 @@ witness exist u R st {0 < u, u < 1} from 1 / 2:
     1 / 2 < 1
 ```
 
-Optional trailing `:` + indented proof body (full Stmt). Flat header means empty proof.
+Optional trailing `:` requires a nonempty indented proof body (full Stmt).
+Flat headers omit the process and still verify all witness obligations.
 Tracers: `witness/*.lit`
 
 ### `eval`
@@ -312,8 +319,8 @@ release thm Name
 release thm Name(args…)
 release struct def <obj>
 release obj def name
-release zorn_lemma: set S, prop P, prop U, prop M:
-release axiom_of_choice: set F:
+release zorn_lemma: set S, prop P, prop U, prop M
+release axiom_of_choice: set F
 release regularity_axiom(S)
 expand: e $in range(…)
 expand: e $in closed_range(…)
@@ -327,13 +334,16 @@ Old `by enumerate range` / `by closed_range as cases` / `by zorn_lemma` /
 
 Tracers: `definition/release_*.lit`, `release_and_expand/*.lit`
 
+Choice/Zorn headers may omit the proof process. A trailing proof-body `:`
+requires a nonempty indented process.
+
 ---
 
 ## Statements — `by` proof directives
 
 | Form | Sketch | Tracer |
 |---|---|---|
-| cases | `by cases:` + `? fact` + `case cond:` [proof] [`impossible atomic`] | `by/by_cases.lit` |
+| cases | `by cases:` + `? fact` + `case cond:` + nonempty proof (possibly just `impossible atomic`) | `by/by_cases.lit` |
 | contra | `by contra:` + `? fact` + proof + `impossible atomic` | `by/by_contra.lit` |
 | def | `by def <atomic>` or `by def:` + `? <atomic>` (positive only) | `by/by_def.lit` |
 | thm | `by thm Call => <atomic>` | `by/by_thm.lit` |
@@ -345,6 +355,10 @@ Tracers: `definition/release_*.lit`, `release_and_expand/*.lit`
 | for | `by for:` + `? forall …` | `by/by_for.lit` |
 
 Finite-set induc forms `by induc S:` / `by induc S in A:` are **removed**.
+Block extension/fn_extension, enumeration, for and induction require actual
+proof statements after their goals. Explicit induction base/step sections
+each require a nonempty process. Inline extension/fn_extension commands and
+goal-only `by def:` remain supported; those commands have no separate process.
 Range expand / choice / Zorn / regularity live under `release` / `expand` above.
 ---
 
@@ -454,10 +468,13 @@ Tracer: `examples/wd/fact/forall.lit`
 Precedence low → high:
 
 ```text
-->   ∪   ∩   ×   + -   * / %   ...   unary-   ^   postfix . ( ) [ ]
+∪   ∩   ×   + -   * / %   ...   unary-   ^   postfix . ( ) [ ]
 ```
 
 ### Primaries
+
+Function-set arrow syntax `A -> B` is removed; write `fn(x A) B`.
+Nested returns use `fn(x A) fn(y B) C`. Logical implication still uses `=>`.
 
 | Family | Examples |
 |---|---|
@@ -475,7 +492,7 @@ Precedence low → high:
 | trig / explog | `sin cos tan cot arcsin arccos arctan arccot` ; `sqrt exp ln` ; `log(base, x)` |
 | finite | `finite_set_size` `finite_set_max` `finite_set_min` `finite_set_product` |
 | seq spaces | `seq(S)`, `finite_seq(S, n)` |
-| fn space | `fn(x A) B`, `fn(x A: x > 0) B`, `A -> B` (sugar, right-assoc) |
+| fn space | `fn(x A) B`, `fn(x A: x > 0) B` |
 | anonymous fn | `fn(x R) R {x + 1}` |
 | apply / field / bang | `f(a)`, `f(a)(b)`, `obj(i)`, `obj.field`, postfix `n!` (= `factorial(n)`) |
 | struct view | `&Point`, `&Pair<R>`, `&Lib::facts::Pair`, `&Lib:::Tagged<R>` |

@@ -5,11 +5,14 @@
 # case: zero-start-equality
 by induc n from 0:
     ? n = n
+    n = n
 
 # case: positive-start-order
 by induc k from 2:
     ? k >= 2
+    k >= 2
 
 # case: compound-goal-and-scopes
 by induc m from 0:
     ? m = m or m > m
+    m = m or m > m

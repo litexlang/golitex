@@ -1,0 +1,214 @@
+# IMO 1983 P6: inequality and both directions of the equality characterization.
+
+thm ascending_bound:
+    ? forall m, x, y R:
+        m > 0
+        x >= 0
+        y >= 0
+        =>:
+            (m+x+y)^2*(m+y)*x+(m+y)^2*m*y-m^2*(m+x+y)*(x+y) >= m^2*(x^2+y^2)
+    x*y >= 0
+    x+y >= 0
+    x^3 >= 0
+    y^3 >= 0
+    x^2*y >= 0
+    x*y^2 >= 0
+    4*(x^2*y) >= 0
+    3*(x*y^2) >= 0
+    x^3+4*(x^2*y)+3*(x*y^2)+y^3 >= 0
+    m*(x^3+4*(x^2*y)+3*(x*y^2)+y^3) >= 0
+    m^2*(x*y) >= 0
+    (x*y)*(x+y)^2 >= 0
+    m^2*(x*y)+m*(x^3+4*(x^2*y)+3*(x*y^2)+y^3)+(x*y)*(x+y)^2 >= 0
+    (m+x+y)^2*(m+y)*x+(m+y)^2*m*y-m^2*(m+x+y)*(x+y)-m^2*(x^2+y^2) = m^2*(x*y)+m*(x^3+4*(x^2*y)+3*(x*y^2)+y^3)+(x*y)*(x+y)^2 >= 0
+    0 <= (m+x+y)^2*(m+y)*x+(m+y)^2*m*y-m^2*(m+x+y)*(x+y)-m^2*(x^2+y^2)
+
+thm reverse_bound:
+    ? forall m, x, y R:
+        m > 0
+        x >= 0
+        y >= 0
+        x < m
+        =>:
+            (m+x+y)^2*m*(x+y)-m^2*(m+y)*y-(m+y)^2*(m+x+y)*x >= m^2*x^2
+    m-x > 0
+    m+x >= m > 0
+    m+x+y >= m+x > 0
+    (m-x)*(m+x+y) > 0
+    y^2*((m-x)*(m+x+y)) >= 0
+    x*y >= 0
+    m*y >= 0
+    x^2 >= 0
+    x^2+x*y >= 0
+    x^2+x*y+m*y >= 0
+    m*x >= 0
+    (m*x)*(x^2+x*y+m*y) >= 0
+    y^2*((m-x)*(m+x+y))+(m*x)*(x^2+x*y+m*y) >= 0
+    (m+x+y)^2*m*(x+y)-m^2*(m+y)*y-(m+y)^2*(m+x+y)*x-m^2*x^2 = y^2*((m-x)*(m+x+y))+(m*x)*(x^2+x*y+m*y) >= 0
+    0 <= (m+x+y)^2*m*(x+y)-m^2*(m+y)*y-(m+y)^2*(m+x+y)*x-m^2*x^2
+
+thm ascending_sides:
+    ? forall a, b, c R:
+        c > 0
+        a >= b
+        b >= c
+        =>:
+            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= c^2*((a-b)^2+(b-c)^2)
+    a-b >= 0
+    b-c >= 0
+    release thm ascending_bound(c,a-b,b-c)
+    a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = (c+(a-b)+(b-c))^2*(c+(b-c))*(a-b)+(c+(b-c))^2*c*(b-c)-c^2*(c+(a-b)+(b-c))*((a-b)+(b-c)) >= c^2*((a-b)^2+(b-c)^2)
+
+thm reverse_sides:
+    ? forall a, b, c R:
+        b > 0
+        a >= c
+        c >= b
+        a < b+c
+        =>:
+            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= b^2*(a-c)^2
+    a-c >= 0
+    c-b >= 0
+    a-c < (b+c)-c = b
+    release thm reverse_bound(b,a-c,c-b)
+    a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = (b+(a-c)+(c-b))^2*b*((a-c)+(c-b))-b^2*(b+(c-b))*(c-b)-(b+(c-b))^2*(b+(a-c)+(c-b))*(a-c) >= b^2*(a-c)^2
+
+claim:
+    ? forall a, b, c R+:
+        a < b+c
+        b < c+a
+        c < a+b
+        =>:
+            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= 0
+    by cases:
+        ? a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= 0
+        case a >= b:
+            by cases:
+                ? a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= 0
+                case b >= c:
+                    (a-b)^2+(b-c)^2 >= 0
+                    c^2*((a-b)^2+(b-c)^2) >= 0
+                    release thm ascending_sides(a,b,c)
+                    a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= c^2*((a-b)^2+(b-c)^2) >= 0
+                case b < c:
+                    by cases:
+                        ? a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= 0
+                        case a >= c:
+                            b^2*(a-c)^2 >= 0
+                            release thm reverse_sides(a,b,c)
+                            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= b^2*(a-c)^2 >= 0
+                        case a < c:
+                            (c-a)^2+(a-b)^2 >= 0
+                            b^2*((c-a)^2+(a-b)^2) >= 0
+                            release thm ascending_sides(c,a,b)
+                            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = c^2*a*(c-a)+a^2*b*(a-b)+b^2*c*(b-c) >= b^2*((c-a)^2+(a-b)^2) >= 0
+        case a < b:
+            by cases:
+                ? a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= 0
+                case a >= c:
+                    c^2*(b-a)^2 >= 0
+                    release thm reverse_sides(b,c,a)
+                    a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = b^2*c*(b-c)+c^2*a*(c-a)+a^2*b*(a-b) >= c^2*(b-a)^2 >= 0
+                case a < c:
+                    by cases:
+                        ? a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) >= 0
+                        case b >= c:
+                            (b-c)^2+(c-a)^2 >= 0
+                            a^2*((b-c)^2+(c-a)^2) >= 0
+                            release thm ascending_sides(b,c,a)
+                            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = b^2*c*(b-c)+c^2*a*(c-a)+a^2*b*(a-b) >= a^2*((b-c)^2+(c-a)^2) >= 0
+                        case b < c:
+                            a^2*(c-b)^2 >= 0
+                            release thm reverse_sides(c,a,b)
+                            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = c^2*a*(c-a)+a^2*b*(a-b)+b^2*c*(b-c) >= a^2*(c-b)^2 >= 0
+
+thm ascending_equality:
+    ? forall a, b, c R+:
+        a >= b
+        b >= c
+        a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+        =>:
+            a = b
+            b = c
+    release thm ascending_sides(a,b,c)
+    c^2 > 0
+    c^2*((a-b)^2+(b-c)^2) <= 0
+    (a-b)^2+(b-c)^2 = (c^2*((a-b)^2+(b-c)^2))/c^2 <= 0/c^2 = 0
+    (a-b)^2+(b-c)^2 >= 0
+    (a-b)^2+(b-c)^2 = 0
+    a-b = 0
+    b-c = 0
+
+thm reverse_equality:
+    ? forall a, b, c R+:
+        a >= c
+        c >= b
+        a < b+c
+        a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+        =>:
+            a = b
+            b = c
+    release thm reverse_sides(a,b,c)
+    b^2 > 0
+    b^2*(a-c)^2 <= 0
+    (a-c)^2 = (b^2*(a-c)^2)/b^2 <= 0/b^2 = 0
+    (a-c)^2 >= 0
+    (a-c)^2 = 0
+    a-c = 0
+    a = c
+    a*b > 0
+    a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = a^2*b*(a-b)+b^2*a*(b-a)+a^2*a*(a-a) = a*b*(a-b)^2
+    a*b*(a-b)^2 = a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+    (a-b)^2 = (a*b*(a-b)^2)/(a*b) = 0/(a*b) = 0
+    a-b = 0
+
+claim:
+    ? forall a, b, c R+:
+        a < b+c
+        b < c+a
+        c < a+b
+        a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+        =>:
+            a = b
+            b = c
+    by cases:
+        ? a = b and b = c
+        case a >= b:
+            by cases:
+                ? a = b and b = c
+                case b >= c:
+                    release thm ascending_equality(a,b,c)
+                case b < c:
+                    by cases:
+                        ? a = b and b = c
+                        case a >= c:
+                            release thm reverse_equality(a,b,c)
+                        case a < c:
+                            c^2*a*(c-a)+a^2*b*(a-b)+b^2*c*(b-c) = a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+                            release thm ascending_equality(c,a,b)
+        case a < b:
+            by cases:
+                ? a = b and b = c
+                case a >= c:
+                    b^2*c*(b-c)+c^2*a*(c-a)+a^2*b*(a-b) = a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+                    release thm reverse_equality(b,c,a)
+                case a < c:
+                    by cases:
+                        ? a = b and b = c
+                        case b >= c:
+                            b^2*c*(b-c)+c^2*a*(c-a)+a^2*b*(a-b) = a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+                            release thm ascending_equality(b,c,a)
+                        case b < c:
+                            c^2*a*(c-a)+a^2*b*(a-b)+b^2*c*(b-c) = a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+                            release thm reverse_equality(c,a,b)
+
+claim:
+    ? forall a, b, c R+:
+        a = b
+        b = c
+        =>:
+            a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = 0
+    a-b = 0
+    b-c = 0
+    c-a = 0
+    a^2*b*(a-b)+b^2*c*(b-c)+c^2*a*(c-a) = a^2*b*0+b^2*c*0+c^2*a*0 = 0

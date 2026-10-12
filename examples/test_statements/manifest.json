@@ -3489,7 +3489,7 @@
       "file_strict": true,
       "cases": [
         {
-          "name": "bodyless-claim",
+          "name": "explicit-proof-claim",
           "strict": true,
           "expect": {
             "success": true
@@ -3517,12 +3517,8 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [
-              false
-            ],
-            "failed_phase": [
-              "claim"
-            ]
+            "statement_success": [],
+            "session_error_contains": "claim: expects a nonempty proof body"
           }
         },
         {
@@ -3535,6 +3531,20 @@
               true
             ],
             "session_error_contains": "undefined name `local`"
+          }
+        },
+        {
+          "name": "false-nonempty-claim",
+          "file": "negative/claim_stmt/false-nonempty-claim.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "claim"
+            ]
           }
         }
       ]

@@ -722,6 +722,7 @@ fn fnset_carrier_matching_runtime() -> Runtime {
     claim:
         ? forall member {function fn(x X) X: $fnset_selected(X, function)}:
             member $in fn(x X) X
+        member $in fn(x X) X
     by def:
         ? {function fn(x X) X: $fnset_selected(X, function)} $subset fn(x X) X
 "#,

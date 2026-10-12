@@ -85,6 +85,16 @@ impl LitexToLeanCompiler {
                 arguments[0],
                 registered.1,
             )),
+            (AtomicFact::SubsetFact(known), AtomicFact::SubsetFact(given)) => Ok(format!(
+                "(Litex.subsetOfSame {} {} {} {} {} {} {})",
+                self.compile_object_reference(&known.left, position)?,
+                self.compile_object_reference(&known.right, position)?,
+                self.compile_object_reference(&given.left, position)?,
+                self.compile_object_reference(&given.right, position)?,
+                arguments[0],
+                arguments[1],
+                registered.1,
+            )),
             (AtomicFact::NotEqualFact(known), AtomicFact::NotEqualFact(given)) => Ok(format!(
                 "(Litex.notSameOfSame {} {} {} {} {} {} {})",
                 self.compile_object_reference(&known.left, position)?,
@@ -111,9 +121,71 @@ impl LitexToLeanCompiler {
                 &registered.1,
                 position,
             ),
+            (AtomicFact::NormalAtomicFact(_), AtomicFact::NormalAtomicFact(_)) => self
+                .compile_concrete_known_atomic_transport(
+                    cited,
+                    goal,
+                    &arguments,
+                    &registered.1,
+                    position,
+                ),
             _ => Err(LeanCompileError::unsupported(
                 "KnownAtomic/PredicateTransport",
             )),
         }
+    }
+
+    // Same is equality of M.Value denotations, not equality of the host Obj
+    // carriers. The preceding dispatcher has checked the original predicate,
+    // polarity, ordered arity, citation and every selected equality winner.
+    fn compile_concrete_known_atomic_transport(
+        &self,
+        cited: &AtomicFact,
+        goal: &AtomicFact,
+        arguments: &[String],
+        citation: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let variables = (0..arguments.len())
+            .map(|index| format!("_known_argument_{index}"))
+            .collect::<Vec<_>>();
+        let binders = variables
+            .iter()
+            .map(|variable| format!("({variable} : M.Value)"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        // This renderer uses the actual prior concrete declaration and its
+        // IdentifierIds. It does not run definition verification or search.
+        let meaning = self.compile_atomic_raw_proposition(goal, &variables, position)?;
+        let predicate = format!("(fun {binders} => {meaning})");
+        let values = |fact: &AtomicFact| {
+            atomic_fact_args_ref(fact)
+                .iter()
+                .map(|argument| {
+                    self.compile_object_reference(argument, position)
+                        .map(|object| format!("(Litex.denote {object})"))
+                })
+                .collect::<Result<Vec<_>, LeanCompileError>>()
+        };
+        let cited_values = values(cited)?;
+        let goal_values = values(goal)?;
+        let apply = |values: &[String]| format!("({predicate} {})", values.join(" "));
+        let mut current = cited_values.clone();
+        let mut equality = format!("(Eq.refl {})", apply(&current));
+        for (index, argument_equality) in arguments.iter().enumerate() {
+            let mut changed = current.clone();
+            changed[index] = "_known_value".to_string();
+            let lifted = format!(
+                "(congrArg (fun (_known_value : M.Value) => {}) {argument_equality})",
+                apply(&changed),
+            );
+            equality = format!("(({equality}).trans {lifted})");
+            current[index] = goal_values[index].clone();
+        }
+        Ok(format!(
+            "(show {} from by\n  have _known_citation : {} := {citation}\n  exact Eq.mp {equality} _known_citation\n)",
+            apply(&goal_values),
+            apply(&cited_values),
+        ))
     }
 }

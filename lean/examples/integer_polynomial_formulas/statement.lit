@@ -1,0 +1,11 @@
+# Integer affine, product, negation and square formulas retain integer membership.
+have fn successor(x Z) Z=x+1
+have fn difference(x,y Z) Z=x-y
+have fn integer_product(x,y Z) Z=x*y
+have fn opposite(x Z) Z=-x
+have fn square(x Z) Z=x^2
+successor(2)=3
+difference(5,2)=3
+integer_product(-2,3)=-6
+opposite(2)=-2
+square(-3)=9

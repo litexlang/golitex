@@ -48,7 +48,7 @@ impl Runtime {
             line_file,
         }
         .into();
-        let derived = Box::new(self.store_inferred_fact_and_infer(&positive, verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&positive, verify_state)?);
         Ok(Some(InferStrictLowerBoundPositiveResult {
             source_fact_id,
             bound_nonnegative_proof,
@@ -129,7 +129,7 @@ impl Runtime {
                 return Ok(None);
             }
         }
-        let derived = Box::new(self.store_inferred_fact_and_infer(&natural.into(), verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&natural.into(), verify_state)?);
         Ok(Some(InferWeakIntegerLowerBoundInNResult {
             source_fact_id,
             integer_proof,

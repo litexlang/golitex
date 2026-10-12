@@ -1,0 +1,6 @@
+# A reciprocal on the open unit interval uses both inequalities of its predicate guard.
+prop bounded(x R):
+    0 < x < 1
+have fn bounded_inv(x R: $bounded(x)) R = 1 / x
+by def $bounded(1 / 2)
+bounded_inv(1 / 2) = 2

@@ -66,3 +66,26 @@ pub(crate) fn flatten_def_prop_params(list: &TypedParameterList) -> Vec<BoundNam
     }
     out
 }
+
+impl crate::runtime::Runtime {
+    pub(crate) fn remember_formed_atomic_subjects(&mut self, fact: &crate::ast::fact::Fact) {
+        // The caller has checked the source or inferred fact formation.
+        // Cache only its direct atomic subjects in this scope, never the bound
+        // internals of a quantified fact. Exploratory verify does not record WD.
+        if let crate::ast::fact::Fact::AtomicFact(atomic) = fact {
+            for obj in crate::ast::fact::atomic_fact_args_ref(atomic) {
+                // Named objects have their own definition evidence. Recording
+                // a second WD cache entry for each alias adds no certificate.
+                if matches!(obj, crate::ast::obj::Obj::Identifier(_)) {
+                    continue;
+                }
+                if self.well_defined_visible_in_stack(obj).is_none() {
+                    let id = self.global_ids.allocate_well_definedness_id();
+                    self.top_exec_env_mut()
+                        .well_defined_objects
+                        .record(obj.clone(), id);
+                }
+            }
+        }
+    }
+}

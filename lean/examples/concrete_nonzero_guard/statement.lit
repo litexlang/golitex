@@ -1,0 +1,6 @@
+# A concrete nonzero predicate certifies a reciprocal formula and its exact evaluation.
+prop Pnonzero(x R):
+    x != 0
+have fn reciprocal_guard(x R: $Pnonzero(x)) R = 1 / x
+$Pnonzero(2)
+reciprocal_guard(2) = 1 / 2

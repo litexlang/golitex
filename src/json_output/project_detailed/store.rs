@@ -46,26 +46,151 @@ pub(super) fn project_store_and_infer(
         ("stores", JsonValue::Array(stores)),
         ("infers", JsonValue::Array(infers)),
     ];
-    let prop_rules = project_prop_definition_infer(&node.infer, runtime);
+    let Some(infer) = &node.infer else {
+        return object_for(runtime, entries);
+    };
+    let prop_rules = project_prop_definition_infer(infer, runtime);
     if !prop_rules.is_empty() {
         entries.push(("prop_definition_rules", JsonValue::Array(prop_rules)));
     }
-    let signed_rules = project_signed_standard_set_infer(&node.infer, runtime);
+    let signed_rules = project_signed_standard_set_infer(infer, runtime);
     if !signed_rules.is_empty() {
         entries.push(("signed_standard_set_rules", JsonValue::Array(signed_rules)));
     }
-    let cancellation_rules = project_cancellation_infer(&node.infer, runtime);
+    let cancellation_rules = project_cancellation_infer(infer, runtime);
     if !cancellation_rules.is_empty() {
         entries.push(("cancellation_rules", JsonValue::Array(cancellation_rules)));
     }
+    let order_rules = project_conditional_order_infer(infer, runtime);
+    if !order_rules.is_empty() {
+        entries.push(("conditional_order_rules", JsonValue::Array(order_rules)));
+    }
+    if let InferFactResult::ChainFact(chain) = infer {
+        entries.push((
+            "chain_adjacent_infers",
+            JsonValue::Array(
+                chain
+                    .adjacent_infers
+                    .iter()
+                    .map(|edge| {
+                        object_for(
+                            runtime,
+                            vec![
+                                ("edge_index", JsonValue::Number(edge.edge_index as f64)),
+                                ("fact_id", string(edge.fact.fact_id().to_string())),
+                                ("fact", string(edge.fact.readable_string())),
+                            ],
+                        )
+                    })
+                    .collect(),
+            ),
+        ));
+        entries.push((
+            "chain_transitive_closures",
+            JsonValue::Array(
+                chain
+                    .transitive_closures
+                    .iter()
+                    .map(|closure| {
+                        object_for(
+                            runtime,
+                            vec![
+                                (
+                                    "start_object_index",
+                                    JsonValue::Number(closure.start_object_index as f64),
+                                ),
+                                (
+                                    "end_object_index",
+                                    JsonValue::Number(closure.end_object_index as f64),
+                                ),
+                                (
+                                    "well_defined",
+                                    super::wd::project_fact_wd_proof(
+                                        &closure.derived.well_defined,
+                                        runtime,
+                                    ),
+                                ),
+                                ("store", project_store(&closure.derived.store, runtime)),
+                            ],
+                        )
+                    })
+                    .collect(),
+            ),
+        ));
+    }
     object_for(runtime, entries)
+}
+
+fn project_conditional_order_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+    let atomic = match infer {
+        InferFactResult::AtomicFact(atomic) => vec![atomic],
+        InferFactResult::AndFact(and) => and.components.iter().collect(),
+        InferFactResult::ChainFact(chain) => chain
+            .adjacent_infers
+            .iter()
+            .map(|edge| &edge.infer)
+            .collect(),
+        _ => return Vec::new(),
+    };
+    let mut result = Vec::new();
+    for atomic in atomic {
+        let InferAtomicFactResult::ExceptEquality(rules) = atomic else {
+            continue;
+        };
+        for rule in rules {
+            let (name, source, integer, bound, derived) = match rule {
+                InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(proof) => (
+                    "WeakIntegerLowerBoundInN",
+                    proof.source_fact_id,
+                    Some(&proof.integer_proof),
+                    &proof.bound_nonnegative_proof,
+                    &proof.derived,
+                ),
+                InferAtomicExceptEqualityResult::StrictLowerBoundPositive(proof) => (
+                    "StrictLowerBoundPositive",
+                    proof.source_fact_id,
+                    None,
+                    &proof.bound_nonnegative_proof,
+                    &proof.derived,
+                ),
+                _ => continue,
+            };
+            let mut fields = vec![
+                ("rule", string(name)),
+                ("source", fact_id_entry(runtime, source)),
+            ];
+            if let Some(integer) = integer {
+                fields.push((
+                    "integer_proof",
+                    super::verify::project_verify_fact(integer, runtime),
+                ));
+            }
+            fields.extend([
+                (
+                    "bound_nonnegative_proof",
+                    super::verify::project_verify_fact(bound, runtime),
+                ),
+                (
+                    "well_defined",
+                    super::wd::project_fact_wd_proof(&derived.well_defined, runtime),
+                ),
+                ("store", project_store(&derived.store, runtime)),
+            ]);
+            result.push(object_for(runtime, fields));
+        }
+    }
+    result
 }
 
 fn project_prop_definition_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
     let atomic = match infer {
         InferFactResult::AtomicFact(atomic) => vec![atomic],
         InferFactResult::AndFact(and) => and.components.iter().collect(),
-        InferFactResult::ChainFact(chain) => chain.adjacent_infers.iter().collect(),
+        InferFactResult::ChainFact(chain) => chain
+            .adjacent_infers
+            .iter()
+            .map(|edge| &edge.infer)
+            .collect(),
         InferFactResult::OrFact(_)
         | InferFactResult::ExistShapedFact(_)
         | InferFactResult::NotForallFact(_)
@@ -107,13 +232,7 @@ fn project_prop_definition_infer(infer: &InferFactResult, runtime: &Runtime) -> 
                                                     runtime,
                                                 ),
                                             ),
-                                            (
-                                                "store_and_infer",
-                                                project_store_and_infer(
-                                                    &result.store_and_infer,
-                                                    runtime,
-                                                ),
-                                            ),
+                                            ("store", project_store(&result.store, runtime)),
                                         ],
                                     )
                                 })
@@ -131,7 +250,11 @@ fn project_signed_standard_set_infer(infer: &InferFactResult, runtime: &Runtime)
     let atomic = match infer {
         InferFactResult::AtomicFact(atomic) => vec![atomic],
         InferFactResult::AndFact(and) => and.components.iter().collect(),
-        InferFactResult::ChainFact(chain) => chain.adjacent_infers.iter().collect(),
+        InferFactResult::ChainFact(chain) => chain
+            .adjacent_infers
+            .iter()
+            .map(|edge| &edge.infer)
+            .collect(),
         InferFactResult::OrFact(_)
         | InferFactResult::ExistShapedFact(_)
         | InferFactResult::NotForallFact(_)
@@ -168,13 +291,7 @@ fn project_signed_standard_set_infer(infer: &InferFactResult, runtime: &Runtime)
                                                     runtime,
                                                 ),
                                             ),
-                                            (
-                                                "store_and_infer",
-                                                project_store_and_infer(
-                                                    &captured.store_and_infer,
-                                                    runtime,
-                                                ),
-                                            ),
+                                            ("store", project_store(&captured.store, runtime)),
                                         ],
                                     )
                                 })
@@ -201,10 +318,7 @@ fn project_cancellation_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec
         }
         InferFactResult::ChainFact(chain) => {
             for atomic in &chain.adjacent_infers {
-                rules.extend(project_cancellation_atomic(atomic, runtime));
-            }
-            for closure in &chain.transitive_closures {
-                rules.extend(project_cancellation_infer(&closure.derived.infer, runtime));
+                rules.extend(project_cancellation_atomic(&atomic.infer, runtime));
             }
         }
         InferFactResult::OrFact(_)
@@ -253,10 +367,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                                         runtime,
                                     ),
                                 ),
-                                (
-                                    "store_and_infer",
-                                    project_store_and_infer(&r.derived.store_and_infer, runtime),
-                                ),
+                                ("store", project_store(&r.derived.store, runtime)),
                             ],
                         ),
                     ),
@@ -394,7 +505,7 @@ pub(super) fn project_have_store_ids(fact_ids: &[FactId], runtime: &Runtime) -> 
 }
 
 fn project_inferred_store(
-    result: &crate::store_fact_and_infer::StoreInferredFactAndInferResult,
+    result: &crate::store_fact_and_infer::StoreInferredFactResult,
     runtime: &Runtime,
 ) -> JsonValue {
     object_for(
@@ -404,10 +515,7 @@ fn project_inferred_store(
                 "well_defined",
                 super::wd::project_fact_wd_proof(&result.well_defined, runtime),
             ),
-            (
-                "store_and_infer",
-                project_store_and_infer(&result.store_and_infer, runtime),
-            ),
+            ("store", project_store(&result.store, runtime)),
         ],
     )
 }
@@ -438,5 +546,21 @@ pub(super) fn project_have_store_and_infer(
                 ),
             ),
         ],
+    )
+}
+
+fn project_store(store: &StoreFactResult, runtime: &Runtime) -> JsonValue {
+    object_for(
+        runtime,
+        vec![(
+            "stores",
+            JsonValue::Array(
+                store
+                    .stored_fact_ids()
+                    .into_iter()
+                    .map(|id| fact_id_entry(runtime, id))
+                    .collect(),
+            ),
+        )],
     )
 }

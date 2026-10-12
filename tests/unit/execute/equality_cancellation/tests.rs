@@ -36,7 +36,8 @@ fn forall(result: &ExecStmtResult) -> &VerifyForallFactSuccess {
 }
 
 fn equality_rules(store: &StoreFactAndInferResult) -> &[InferEqualityResult] {
-    let InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules)) = &store.infer else {
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
+    else {
         panic!("equality inference")
     };
     rules
@@ -125,7 +126,7 @@ fn equality_cancellation_keeps_source_and_all_premises() {
             .local_env
             .facts
             .facts_by_id
-            .get(&cancel.derived.store_and_infer.primary_fact_id())
+            .get(&cancel.derived.store.primary_fact_id())
             .unwrap()
             .readable_string(),
         "a = b"
@@ -429,7 +430,7 @@ fn equality_cancellation_division_retains_all_nonzero_certificates() {
             .local_env
             .facts
             .facts_by_id
-            .get(&r.derived.store_and_infer.primary_fact_id())
+            .get(&r.derived.store.primary_fact_id())
             .unwrap()
             .readable_string(),
         "a = b"

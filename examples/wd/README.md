@@ -48,6 +48,11 @@ Receiver and argument WD remain mandatory. The `field_sequence_calls` tests
 reject finite index zero/overflow, infinite index zero, and nonfunction fields,
 and continue in the same runtime after each ordinary failure.
 
+[Cartesian field coordinates](cartesian_field_coordinates.lit) use checked
+Cartesian membership or tuple equality to supply a field's complete finite
+function domain. Coordinate access retains the original source evidence;
+out-of-range indices, false coordinates, and scalar calls remain rejected.
+
 [Finite extrema](finite_extrema_real_carrier.lit) require all three conditions:
 finiteness, nonemptiness, and `S $subset R`. Real literals, aliases and checked
 generic domains remain valid; `{i}` is rejected by the

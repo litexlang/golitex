@@ -15,7 +15,7 @@ impl LitexToLeanCompiler {
             ExecFactStmtResult::Success(success) => {
                 let compiled = self.compile_verify(&success.verify_result, position)?;
                 let source = source_subject(&success.verify_result)?;
-                self.validate_store(&success.store_and_infer_result, &source)?;
+                self.validate_store(&success.store_and_infer_result.store, &source)?;
                 self.compile_completed_fact_statement(
                     &source,
                     compiled,
@@ -41,7 +41,7 @@ impl LitexToLeanCompiler {
         index: usize,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        self.validate_store(store, source)?;
+        self.validate_store(&store.store, source)?;
         let declaration = self.emit_fact(source, compiled.clone(), index, local, position);
         let name = format!("h_{}", source.fact_id().value());
         let reference = if local {

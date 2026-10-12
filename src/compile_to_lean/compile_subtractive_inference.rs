@@ -28,7 +28,6 @@ impl LitexToLeanCompiler {
             ));
         };
         let captured = &rule.derived;
-        let derived = &captured.store_and_infer;
         let fact = self.cancellation_fact(captured, position, "Inference/Subtractive")?;
         let Fact::AtomicFact(AtomicFact::EqualFact(equal)) = &fact else {
             unreachable!("the captured store is an equality")
@@ -79,19 +78,6 @@ impl LitexToLeanCompiler {
         );
         let conclusion = (self.fact_proposition(&fact, &formed)?, proof);
         declarations.push(self.emit_internal_fact(&fact, &conclusion, position));
-        let after = SourcePosition::new(Some(position), SourceOwner::SubtractiveInference(rule), 4);
-        let name = format!("h_{}", fact.fact_id().value());
-        let reference = if after.is_local() {
-            name
-        } else {
-            self.context_application(&name, &after)
-        };
-        declarations.extend(self.compile_stored_inferences(
-            derived,
-            &fact,
-            &(conclusion.0, reference),
-            &after,
-        )?);
         Ok(declarations)
     }
 }

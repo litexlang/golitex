@@ -44,7 +44,7 @@
     {
       "id": "B05",
       "group": "basic",
-      "title": "Arrow sugar for nested fixed return carriers",
+      "title": "Explicit nested function sets",
       "expect": "accept",
       "phase": null,
       "file": "basic/b05.lit",

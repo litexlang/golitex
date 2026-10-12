@@ -1,0 +1,8 @@
+# Squaring a member of a finite natural set uses its subset certificate to satisfy the numeric function domain.
+have fn square_nat(x N) N=x^2
+have Allowed_naturals set={1,2}
+
+Allowed_naturals $subset N
+
+forall allowed_value Allowed_naturals:
+    square_nat(allowed_value) $in N

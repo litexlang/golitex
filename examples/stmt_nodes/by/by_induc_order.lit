@@ -7,15 +7,19 @@
 
 by induc k from 0:
     ? k >= k
+    k >= k
 
 by strong_induc k from 0:
     ? k <= k
+    k <= k
 
 by induc k from 0:
     ? 2^k = 2^k
+    2^k = 2^k
 
 by induc k from 0:
     ? k = k or k > k
+    k = k or k > k
 
 # Original showcase theorem: binder recovery, natural powers, and mixed order chains.
 claim:

@@ -14,12 +14,11 @@ thm alpha_theorem:
         =>:
             $alpha_conclusion(fn(j R) R {j+a})
 
-claim:
-    ? forall a R:
-        $alpha_assumption(fn(k R) R {k+a})
-        $alpha_conclusion(fn(k R) R {k+a})
-        =>:
-            $alpha_conclusion(fn(j R) R {j+a})
+forall a R:
+    $alpha_assumption(fn(k R) R {k+a})
+    $alpha_conclusion(fn(k R) R {k+a})
+    =>:
+        $alpha_conclusion(fn(j R) R {j+a})
 
 claim:
     ? forall:

@@ -228,63 +228,38 @@ impl Runtime {
 }
 
 impl Runtime {
-    // Infer-produced fact: WD must succeed, then store_fact + infer_fact.
-    // WD evidence is checked at the caller ceiling before the inferred fact commits.
-    // Example: membership projection stores `a $in R` through this path.
-    pub(crate) fn store_inferred_fact_and_infer(
+    // An inferred conclusion keeps its WD evidence and stores without inference.
+    pub(crate) fn store_inferred_fact(
         &mut self,
         fact: &Fact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<crate::store_fact_and_infer::StoreFactAndInferResult> {
-        Ok(self
-            .store_inferred_fact_and_infer_with_wd(fact, verify_state)?
-            .store_and_infer)
+    ) -> RuntimeResult<crate::store_fact_and_infer::StoreInferredFactResult> {
+        self.try_store_inferred_fact(fact, verify_state)?
+            .ok_or_else(|| {
+                crate::runtime::RuntimeError::InternalBug(format!(
+                    "inferred fact {} failed well-definedness check",
+                    fact.ir()
+                ))
+            })
     }
 
-    // The mandatory inference path retains its already checked formation.
-    pub(crate) fn store_inferred_fact_and_infer_with_wd(
+    // WD failure skips an optional consequence; it never stores an unchecked fact.
+    pub(crate) fn try_store_inferred_fact(
         &mut self,
         fact: &Fact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<crate::store_fact_and_infer::StoreInferredFactAndInferResult> {
-        match self.try_store_inferred_fact_and_infer_with_wd(fact, verify_state)? {
-            Some(ok) => Ok(ok),
-            None => Err(crate::runtime::RuntimeError::InternalBug(format!(
-                "inferred fact {} failed well-definedness check",
-                fact.ir()
-            ))),
-        }
-    }
-
-    // Soft variant: WD failure yields None (rule may skip) instead of SessionError.
-    // Example: optional order flip when `(-1)*x` is not yet known real.
-    pub(crate) fn try_store_inferred_fact_and_infer(
-        &mut self,
-        fact: &Fact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<crate::store_fact_and_infer::StoreFactAndInferResult>> {
-        Ok(self
-            .try_store_inferred_fact_and_infer_with_wd(fact, verify_state)?
-            .map(|result| result.store_and_infer))
-    }
-
-    // Retain the original formation check for result consumers. The old helper
-    // discards this evidence after the same single WD/store pipeline completes.
-    pub(crate) fn try_store_inferred_fact_and_infer_with_wd(
-        &mut self,
-        fact: &Fact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<crate::store_fact_and_infer::StoreInferredFactAndInferResult>> {
-        let well_defined = match self.verify_fact_well_definedness(fact, verify_state)? {
+    ) -> RuntimeResult<Option<crate::store_fact_and_infer::StoreInferredFactResult>> {
+        // Binder assumptions introduced during formation must also store only.
+        let state = verify_state.without_inference();
+        let well_defined = match self.verify_fact_well_definedness(fact, state)? {
             VerifyFactWellDefinedResult::Success(proof) => proof,
             VerifyFactWellDefinedResult::Failed(_) => return Ok(None),
         };
-        let store_and_infer = self.store_fact_and_infer(fact, verify_state)?;
-        Ok(Some(
-            crate::store_fact_and_infer::StoreInferredFactAndInferResult {
-                well_defined,
-                store_and_infer,
-            },
-        ))
+        let store = self.store_fact(fact)?;
+        self.remember_formed_atomic_subjects(fact);
+        Ok(Some(crate::store_fact_and_infer::StoreInferredFactResult {
+            well_defined,
+            store,
+        }))
     }
 }

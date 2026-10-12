@@ -2,7 +2,7 @@ use super::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
 
 #[test]
-fn finite_seq_reconstruction_accepts_bodyless_claims() {
+fn finite_seq_reconstruction_accepts_direct_forall_facts() {
     let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/examples/proof_nodes/equal/by_builtin_rule/finite_seq_reconstruction.lit"
@@ -92,11 +92,11 @@ fn finite_seq_reconstruction_does_not_leak_claim_binders() {
     let mut rt = runtime();
     exec_ok(
         &mut rt,
-        "claim:\n    ? forall x finite_seq(R,2):\n        x=(x(1),x(2))",
+        "claim:\n    ? forall x finite_seq(R,2):\n        x=(x(1),x(2))\n    x=(x(1),x(2))",
     );
     exec_ok(&mut rt, "have x seq(R)");
     assert!(exec(&mut rt, "x=(x(1),x(2))").is_failed());
     exec_ok(&mut rt, "have y finite_seq(R,2)");
-    assert!(exec(&mut rt, "claim:\n    ? y=(y(2),y(1))").is_failed());
+    assert!(exec(&mut rt, "claim:\n    ? y=(y(2),y(1))\n    y=(y(2),y(1))").is_failed());
     exec_ok(&mut rt, "y=(y(1),y(2))");
 }

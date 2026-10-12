@@ -1,5 +1,10 @@
 mod compile_additive_inference;
 mod compile_by_stmt_result;
+mod compile_callee_constructor;
+mod compile_chain_closures;
+mod compile_compound_fact;
+mod compile_compound_known_forall;
+mod compile_compound_stores;
 mod compile_def_prop_stmt_result;
 mod compile_def_thm_stmt_result;
 mod compile_define_obj_stmt_result;
@@ -13,6 +18,7 @@ mod compile_have_obj_equal_stmt_result;
 mod compile_have_obj_in_nonempty_set_stmt_result;
 mod compile_let_stmt_result;
 mod compile_nonzero_factor_inference;
+mod compile_order_bound_inferences;
 mod compile_run;
 mod compile_stmt_result;
 mod compile_store_result;

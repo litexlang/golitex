@@ -130,7 +130,7 @@ impl Runtime {
         )))
     }
 
-    // Flat header => proof []. Trailing `:` => parse stashed indented body (may be empty).
+    // Flat header => proof []. Trailing `:` requires a nonempty indented body.
     fn parse_witness_optional_proof_body(
         &mut self,
         tb: &mut TokenBlock,
@@ -144,7 +144,7 @@ impl Runtime {
                     "{syntax_name}: unexpected token after trailing `:`"
                 )));
             }
-            return self.parse_body_stmts(proof_blocks);
+            return self.parse_nonempty_proof_body(proof_blocks, tb, syntax_name);
         }
         if !tb.exceed_end_of_head() {
             return Err(tb.parse_error(format!(

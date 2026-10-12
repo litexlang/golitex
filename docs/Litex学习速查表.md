@@ -206,6 +206,7 @@ forall a, b, k R:
 by enumerate finite_set:
     ? forall x {1, 2}:
         x > 0
+    x > 0
 ```
 
 归纳提供基础情况与后继步骤。归纳假设只在步骤中可用；证明辅助内容留在各自情况内：

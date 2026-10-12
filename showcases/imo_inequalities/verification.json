@@ -1,0 +1,92 @@
+{
+  "checked_on": "2026-10-11",
+  "binary_sha256": "0be34d26405f77ed7e01bb8b02f40813dc145acc274e3220c41276bc47d4a45f",
+  "note": "Clean standalone showcase-path verification; times measure supplied-proof checking, not proof discovery. Proof files match the previously checked local originals byte for byte.",
+  "runs": [
+    {
+      "id": "imo_2006_p3",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_2006_p3.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "seconds": 9.601401207968593,
+      "source_sha256": "15b4ca5f265cce1f0430a3245c240909e97c1100913dfae3ac7580cd9146d9cc"
+    },
+    {
+      "id": "imo_1983_p6",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_1983_p6.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "seconds": 4.271483583841473,
+      "source_sha256": "8466d930f10af1cf3cb0ae07838ec7d24bea73b513d499939785867413443551"
+    },
+    {
+      "id": "imo_1995_p2",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_1995_p2.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "seconds": 4.1520284581929445,
+      "source_sha256": "cdb75693e7a8eef6270b5299fbffa6aa9aa37c863e1cb071f52c1403fdaf71ef"
+    },
+    {
+      "id": "imo_2001_p2",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_2001_p2.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "seconds": 8.094232957810163,
+      "source_sha256": "ac21d7379d1feefdc1e612c36e330b4de08e05f5815158f848d79b478b36cf41"
+    },
+    {
+      "id": "imo_2005_p3",
+      "command": [
+        "target/release/litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_2005_p3.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "seconds": 2.9356205000076443,
+      "source_sha256": "ef1a997fc6351211ebd97d15673d703f7bae5b33a56748736bf51fae8c40d0e4"
+    }
+  ]
+}

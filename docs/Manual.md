@@ -754,6 +754,7 @@ A universal over the literal empty display can be checked by finite enumeration:
 by enumerate finite_set:
     ? forall x {}:
         x != x
+    x != x
 ```
 
 This enumeration uses the literal `{}`. It does not discharge
@@ -1021,14 +1022,23 @@ The proof process answers one question: why may the current statement be added
 to the verified context? The checker follows a small set of routes and reports
 the route that succeeded or the point that failed.
 
-For a proof route written as `by ...:` followed by one or more `?` goals, the
-ordinary proof-statement list may be empty. In that case Litex installs the
-route's generated assumptions, runs zero user proof statements, and immediately
-performs the same final goal checks. This is not an admission: an unclosed goal
-still fails. Structural definitions remain required where the method needs
-them, such as `case` arms and the base/step headers of finite-set induction.
-`by contra` is the sole exception to the empty-tail rule: its last statement
-must always be an explicit `impossible fact`.
+`claim`, `sketch`, `strategy`, and block forms of extensionality, enumeration,
+range proofs and induction require a nonempty proof process. A `?` goal is the
+target, not a proof step; goals alone or comments alone produce a parse error.
+Every `case` branch and each explicitly written induction base/step section
+also needs a nonempty body. An `impossible fact` closing statement counts as a
+proof step, so a contradiction body may consist of that statement alone.
+
+Named `thm` declarations may omit their proof process when ordinary verification
+already closes the target. Inline commands such as `by extension A = B`,
+`by def $P(args)` and `witness ... from value` remain available. Adding a trailing
+proof-body `:` to a witness, Choice or Zorn command requires actual indented
+proof statements. These syntax checks do not establish truth: every goal and
+proof step must still pass ordinary verification.
+
+Any indented colon block must contain actual source content. A comment-only
+body is rejected while building the token blocks, before statement parsing.
+This also applies to explicit fact bodies such as `trust:` and `have x R:`.
 
 ### Basic decisions before writing a proof
 
@@ -1221,8 +1231,10 @@ claim:
             $is_result(x)
     by cases:
         ? $is_result(x)
-        case $is_first(x)
-        case $is_second(x)
+        case $is_first(x):
+            $is_result(x)
+        case $is_second(x):
+            $is_result(x)
 ```
 
 Use the [fact-shape grammar](#binder-and-fact-shape-guide) when combining
@@ -3276,29 +3288,30 @@ a > 0
 ```litex
 by cases:
     ? 1 = 1
-    case 1 = 1
+    case 1 = 1:
+        1 = 1
 ```
 
 **Source:** [implementation](../src/execute/execute_by_stmt/exec_by_cases_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
 
-#### Bodyless proof cases
+#### Explicit proof cases
 
-When a case assumption already proves every target, omit both the branch body
-and its colon. The bodyless form runs zero proof statements and still performs
-the ordinary branch-final checks:
+Every proof case requires `:` and a nonempty body, even when the branch
+assumption already supports its target. A checked `impossible` tail alone is
+a complete process for a contradictory branch:
 
 ```litex
 by cases:
     ? 1 = 1
-    case 1 = 1
+    case 1 = 1:
+        1 = 1
     case 1 != 1:
         impossible 1 = 1
 ```
 
-This shorthand is only for proof `by cases`. Function and algorithm cases
-still require their return expressions.
+Function and algorithm cases use their separate return-expression syntax.
 
 <a id="proof-by-contradiction"></a>
 
@@ -3364,6 +3377,7 @@ A universal exclusion can be used in an explicit negative-existence proof:
 by enumerate finite_set:
     ? forall x {0}:
         x != 1
+    x != 1
 by contra:
     ? not exist x {0} st {x = 1}
     obtain a from exist x {0} st {x = 1}
@@ -3391,6 +3405,7 @@ by contra:
 by enumerate finite_set:
     ? forall x {1, 2}:
         x < 3
+    x < 3
 ```
 
 **Source:** [implementation](../src/execute/execute_by_stmt/exec_by_enumerate_finite_set_stmt.rs).
@@ -3420,6 +3435,7 @@ by enumerate finite_set:
         n > 0
         =>:
             n != 0
+    n != 0
 ```
 
 Optional proof bodies may use the quantified names and nested proof methods.
@@ -3445,6 +3461,7 @@ helper facts stay local; only the verified universal is stored outside.
 ```litex
 by induc n from 0:
     ? n = n
+    n = n
 ```
 
 **Source:** [implementation](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs).
@@ -3520,6 +3537,7 @@ claim:
 ```litex
 by strong_induc m from 0:
     ? m = m
+    m = m
 ```
 
 **Source:** [implementation](../src/execute/execute_by_stmt/exec_by_induc_stmt.rs).
@@ -3544,6 +3562,7 @@ by strong_induc m from 0:
 by for:
     ? forall n range(0, 3):
         n < 3
+    n < 3
 ```
 
 **Source:** [implementation](../src/execute/execute_by_stmt/exec_by_for_stmt.rs).
@@ -3595,8 +3614,7 @@ by fn_extension f = g
 
 have fn add1(x R, y R) R = x + y
 have fn add2(a R, b R) R = a + b
-by fn_extension:
-    ? add1 = add2
+by fn_extension add1 = add2
 ```
 
 **Source:** [implementation](../src/execute/execute_by_stmt/exec_by_fn_extension_stmt.rs).
@@ -3623,8 +3641,7 @@ by fn_extension f = g
 
 <!-- litex:skip-test -->
 ```litex
-by fn_extension:
-    ? f = g
+by fn_extension f = g
 ```
 >
 > Local agreement on a proper subset of the domain remains an ordinary
@@ -6875,9 +6892,11 @@ its negation.
 by enumerate finite_set:
     ? forall x {1, 2}:
         x $in {2, 1}
+    x $in {2, 1}
 by enumerate finite_set:
     ? forall x {2, 1}:
         x $in {1, 2}
+    x $in {1, 2}
 by extension {1, 2} = {2, 1}
 ```
 
@@ -7764,6 +7783,7 @@ by def $prime(5)
 by for:
     ? forall divisor range(2, 5):
         5 % divisor != 0
+    5 % divisor != 0
 by def $prime(5)
 ```
 
@@ -9226,14 +9246,10 @@ the function is accepted. Returning a parameter still requires this proof:
 `x $in Z`. `have fn f(x N) Z = x` is valid, as is the restricted definition
 `have fn f(x Z: x >= 0) N = x`.
 
-> **Preview:** `A -> B` is sugar for the simple function set
-> `fn(_ A) B` (internal binder `__param_<id>`). It is right-associative:
-> `A -> B -> C` means `A -> (B -> C)`. Arithmetic, `×`, `∩`, and `∪` bind
-> tighter than `->`, so `R × R -> R` means `(R × R) -> R`. Use `=>` for logical
-> implication; `->` is only the function-set arrow. This sugar does not support
-> `{body}` or domain `: conditions` — write those with full `fn(...)`.
-> Neither spelling permits a return set that refers to its own domain binder.
->
+Function sets use `fn(x A) B`. Nested function sets use `fn(x A) fn(y B) C`.
+The former `A -> B` spelling is removed and reports a parse error. Use `=>`
+for logical implication.
+
 > **Preview:** every `fn` / anonymous-fn parameter domain and return set
 > must be fixed relative to that signature: neither may refer to any of its own
 > parameters. `fn(x R, y Z) R` and `fn(p cart(R, Z)) R` are valid shapes;
@@ -9456,6 +9472,13 @@ checks that `y` is defined directly with a struct carrier that defines `z`.
 This WD traversal does not store any field carrier, tuple bridge, or struct
 law. The final field's carrier matters only when a surrounding operation needs
 it, for example when calling a function-valued field.
+
+A checked Cartesian membership or tuple equality also supplies a field's
+complete finite function domain. For example, after `item.point = (0, 0)`,
+the field-headed call `item.point(2)` uses the same finite-function evidence
+as an ordinary tuple variable. Receiver WD and the exact index domain still
+apply; indices zero and three remain invalid for this pair. See the
+[Cartesian field coordinate tracer](../examples/wd/cartesian_field_coordinates.lit).
 
 When the receiver has the required definition-owned view, a reflexive field
 fact can be well-defined before opening. An explicit `release struct def f(t)`
@@ -11276,6 +11299,7 @@ by extension:
     claim:
         ? forall y fn_range(mapping_identity):
             y $in {1, 2, 3}
+        y $in {1, 2, 3}
     claim:
         ? forall y {1, 2, 3}:
             y $in fn_range(mapping_identity)
@@ -11499,9 +11523,16 @@ After an accepted or trusted fact is stored, builtin inference may add routine
 consequences to the same environment. These consequences become ordinary
 known information for later statements.
 
-Inference may chain through newly inferred facts, but it stops cyclic
-re-expansion. This supports routine carrier, definition, and structure
-consequences without promising arbitrary logical closure.
+Inference runs once for an accepted seed. Each direct consequence is checked
+for well-definedness and stored without another inference pass. Temporary
+binder facts used while checking an inferred consequence also store only.
+An explicit later statement may reuse that consequence as a new inference seed.
+This separates routine publication from recursively expanding every new fact.
+
+For example, if `outer` defines `inner`, storing `$outer(value)` may publish
+`$inner(value)`. It does not also publish all of `inner`'s defining clauses.
+Writing `$inner(value)` as the next checked statement requests that next step.
+See the [strict one-step tracer](../examples/infer/atomic/one_step_store_only.lit).
 
 ### Verification versus inference
 
@@ -11542,7 +11573,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | `exist!` | A universal saying any two complete witness tuples satisfying the body are componentwise equal. |
 | `not exist` | The corresponding universal De Morgan negation when the body shape is supported. |
 | `not forall` | An existential counterexample: domain facts plus negated conclusions, all quantifier-free by syntax. |
-| Equality/order chain | Atomic consequences from its transitive closure, followed by the ordinary inference for each consequence. |
+| Equality/order chain | Atomic consequences from its finite transitive closure; those consequences are stored without another infer pass. |
 
 An outer `and`, `or`, or `forall` does not receive the same general extra
 inference pass merely because it was stored. Their locally processed atomic
@@ -11635,8 +11666,9 @@ and nonzero proofs are retained. Premise checks inherit the caller's ceiling
 and use at most KnownSpecialProperty, without strategy or forall search.
 `k*a=b*k` is also supported. Matching requires a directly identical common
 operand; the rule does not expand or reassociate expressions, or chase aliases.
-Derived equality uses ordinary WD/store/infer and can trigger another strictly
-smaller cancellation. An already-known remaining equality is skipped.
+Derived equality retains ordinary WD and storage, without another cancellation
+pass. Publish the checked intermediate equality explicitly to request its next
+cancellation. An already-known remaining equality is skipped.
 Zero or an unavailable required nonzero proof does not cancel; in particular,
 `0/a=0/b` supplies no equality of `a` and `b`. A quotient with an unproved or
 zero denominator fails WD before its source equality can be stored. A nonzero fact arriving
@@ -11834,7 +11866,7 @@ g_2 <= 1 / 64
 The convergence statements are about the recursive sequence
 `sqrt_two_newton_iterate` itself. Its mathematical update has the precise
 positive-real interface needed by the proof. A separate total wrapper gives
-the experimental extractor its currently supported `R -> R` interface, and
+the experimental extractor its currently supported `fn(x R) R` interface, and
 the final claim connects that wrapper back to the proved update.
 
 The current executable definition is copied from the complete source. Its
@@ -11908,7 +11940,7 @@ spelling.
 
 This path is experimental and deliberately narrower than the Litex language.
 Although the exact recursive iterate is visible above, the current extractor
-emits only the supported `R -> R` step, not the `N`-indexed recursion or any
+emits only the supported `fn(x R) R` step, not the `N`-indexed recursion or any
 proof. The `x = 0` restart is an explicit totalization policy for extraction,
 not Newton's ordinary formula; the proved trajectory starts positive and stays
 positive, so it does not take that branch. Finally, the Litex inequalities are

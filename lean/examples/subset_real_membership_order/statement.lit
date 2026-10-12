@@ -1,0 +1,9 @@
+# A member of a subset of the reals has real membership and a reflexive real order.
+forall A set, x A:
+    A $subset R
+    =>:
+        x $in R
+forall S set, x S:
+    S $subset R
+    =>:
+        x<=x

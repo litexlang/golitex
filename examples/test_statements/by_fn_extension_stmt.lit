@@ -10,8 +10,7 @@ by fn_extension ext_f = ext_g
 # case: binary-alpha-renaming
 have fn ext_add(x, y R) R = x + y
 have fn ext_add_again(a, b R) R = a + b
-by fn_extension:
-    ? ext_add = ext_add_again
+by fn_extension ext_add = ext_add_again
 
 # case: natural-function-equality
 have fn ext_nat(n N) N = n + 1

@@ -8,12 +8,18 @@ to examples throughout.
 
 ## Vectors, scalars, and operations
 
-A plane vector has type `finite_seq(R, 2)`. Its entries are its coordinates.
+The real plane is $\mathbb{R}^2 = \mathbb{R} \times \mathbb{R}$.
+A plane vector is an ordered pair of real numbers, with type `R × R`
+(or `cart(R, R)`).
+This Cartesian product is the same set as `finite_seq(R, 2)`, so its
+coordinates are accessed as `v(1)` and `v(2)`.
 A list of vectors has type `finite_seq(V, n)`, so its order and length belong
 to its representation. No additional record is needed for the list itself.
 Equality of coordinate vectors follows from equality at each index.
 
-A field provides scalar operations and the laws governing them. `Field<K>`
+A field provides scalar operations and the laws governing them.
+Its inverse operation has domain `x K: x != zero`; no inverse is assigned
+to zero. `Field<K>`
 therefore combines these operations with their axioms in one structure.
 Likewise, `VectorSpace<K, field, V>` provides vector addition, a zero vector,
 and scalar multiplication over that fixed field. A predicate alone would not
@@ -43,7 +49,7 @@ introduces the mathematical idea of a direct sum.
 ## Linear combinations and span
 
 A finite linear combination pairs each vector with a scalar coefficient.
-The relation `is_linear_combination_partial_sum_sequence` describes successive
+The relation `is_partial_sum` describes successive
 partial sums, beginning with zero. `has_linear_combination_value` identifies
 the final sum, and `is_linear_combination` allows the coefficients to vary.
 These relations distinguish a prescribed coefficient list from the question

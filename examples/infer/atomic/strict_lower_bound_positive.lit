@@ -7,11 +7,10 @@
 #             0 < log(2, x)
 #     1 < 2
 # Now: the original premise publishes positivity before target WD.
-claim:
-    ? forall x R:
-        1 < x
-        =>:
-            0 < log(2, x)
+forall x R:
+    1 < x
+    =>:
+        0 < log(2, x)
 forall b, x R:
     0 <= b
     b < x

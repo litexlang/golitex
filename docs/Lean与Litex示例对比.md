@@ -578,7 +578,8 @@ claim:
             (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1
             (product(1, a, factorial_factor) + 1) % k != 0
             impossible (product(1, a, factorial_factor) + 1) % k = 0
-        case k > a
+        case k > a:
+            k > a
     witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
 ```
 

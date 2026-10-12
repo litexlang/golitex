@@ -1,0 +1,10 @@
+# Real carrier aliases preserve function domains, return sets and predicate guards.
+have NumericDomain set = R
+let NumericRange = NumericDomain
+have fn alias_identity(x NumericDomain) NumericRange = x
+alias_identity(2) = 2
+prop alias_nonzero(x NumericDomain):
+    x != 0
+have fn alias_reciprocal(x NumericRange: $alias_nonzero(x)) NumericDomain = 1 / x
+by def $alias_nonzero(2)
+alias_reciprocal(2) = 1 / 2

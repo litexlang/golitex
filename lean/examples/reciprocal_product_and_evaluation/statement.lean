@@ -46,11 +46,17 @@ theorem h_95 : Litex.Same (_object_i3 (M := M)) (Litex.formulaFn (M := M) Litex.
   exact (Litex.divInR (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.NativeBridge.inOfDenoteNumber (Litex.number (M := M) (1 : ℂ)) (1 : ℂ) (Litex.R (M := M)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInROfEq (1 : ℂ) (1 : ℝ) (by norm_num))) h_45 ((Litex.div (Litex.number (M := M) (1 : ℂ)) _value_i4 (Litex.numberInC (M := M) (1 : ℂ)) (Litex.realToComplex _value_i4 h_45) h_3)).wd.2.2))) :=
   (Litex.sameRefl (_object_i3 (M := M)))
 
-theorem h_98 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host_i6] (_value_i6 : Litex.Obj (M := M) _Host_i6) (h_222 : Litex.In _value_i6 (Litex.R (M := M))) (h_96 : ((prop_1 (M := M)) _value_i6)), (let h_226 : ¬ Litex.Same _value_i6 (Litex.number (M := M) (0 : ℂ)) :=
+theorem h_98 : ∀ {_Host_i6 : Type v6} [_rep_i6 : Litex.Representation M _Host_i6] (_value_i6 : Litex.Obj (M := M) _Host_i6) (h_102 : Litex.In _value_i6 (Litex.R (M := M))) (h_96 : ((prop_1 (M := M)) _value_i6)), (let h_106 : ¬ Litex.Same _value_i6 (Litex.number (M := M) (0 : ℂ)) :=
   (by rcases h_96 with ⟨h_2, h_1⟩; exact h_1);
-Litex.Same (Litex.mul (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _value_i6 (h_94 (M := M)) h_222 h_226) _value_i6 (Litex.realToComplex (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _value_i6 (h_94 (M := M)) h_222 h_226) (Litex.callInOutput (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _value_i6 (h_94 (M := M)) h_222 h_226))) (Litex.realToComplex _value_i6 h_222)) (Litex.number (M := M) (1 : ℂ))) :=
+Litex.Same (Litex.mul (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _value_i6 (h_94 (M := M)) h_102 h_106) _value_i6 (Litex.realToComplex (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _value_i6 (h_94 (M := M)) h_102 h_106) (Litex.callInOutput (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) _value_i6 (h_94 (M := M)) h_102 h_106))) (Litex.realToComplex _value_i6 h_102)) (Litex.number (M := M) (1 : ℂ))) :=
   (by
-    intro _Host_i6 _rep_i6 _value_i6 h_222 h_96
+    intro _Host_i6 _rep_i6 _value_i6 h_102 h_96
+    have h_103 : Litex.In _value_i6 (Litex.R (M := M)) :=
+      (by rcases h_96 with ⟨h_2, h_1⟩; exact h_2)
+    have h_106 : ¬ Litex.Same _value_i6 (Litex.number (M := M) (0 : ℂ)) :=
+      (by rcases h_96 with ⟨h_2, h_1⟩; exact h_1)
+    have h_222 : Litex.In _value_i6 (Litex.R (M := M)) :=
+      h_102
     have h_223 : Litex.In _value_i6 (Litex.R (M := M)) :=
       (by rcases h_96 with ⟨h_2, h_1⟩; exact h_2)
     have h_226 : ¬ Litex.Same _value_i6 (Litex.number (M := M) (0 : ℂ)) :=
@@ -145,6 +151,10 @@ Litex.Same (Litex.mul (Litex.call Litex.StandardSetValue.real Litex.StandardSetV
       (h_894 (M := M))
     have h_1555 : ((prop_1 (M := M)) (_object_i8 (M := M))) :=
       (h_896 (M := M))
+    have h_1565 : Litex.In (_object_i8 (M := M)) (Litex.R (M := M)) :=
+      (by rcases h_1555 with ⟨h_2, h_1⟩; exact h_2)
+    have h_1568 : ¬ Litex.Same (_object_i8 (M := M)) (Litex.number (M := M) (0 : ℂ)) :=
+      (by rcases h_1555 with ⟨h_2, h_1⟩; exact h_1)
     have h_1556 : Litex.Same (Litex.mul (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) (_object_i8 (M := M)) (h_94 (M := M)) (h_894 (M := M)) (h_954 (M := M))) (_object_i8 (M := M)) (Litex.realToComplex (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) (_object_i8 (M := M)) (h_94 (M := M)) (h_894 (M := M)) (h_954 (M := M))) (Litex.callInOutput (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) (_object_i8 (M := M)) (h_94 (M := M)) (h_894 (M := M)) (h_954 (M := M))))) (Litex.realToComplex (_object_i8 (M := M)) h_1554)) (Litex.number (M := M) (1 : ℂ)) :=
       ((h_98 (M := M)) (_object_i8 (M := M)) h_1554 h_1555)
     exact (((Litex.sameRefl (Litex.mul (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) (_object_i8 (M := M)) (h_94 (M := M)) (h_894 (M := M)) (h_954 (M := M))) (_object_i8 (M := M)) (Litex.realToComplex (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) (_object_i8 (M := M)) (h_94 (M := M)) (h_894 (M := M)) (h_954 (M := M))) (Litex.callInOutput (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i4 : M.Value) => (¬ (_raw_i4 = (M.number (0 : ℂ))))) (_object_i3 (M := M)) (_object_i8 (M := M)) (h_94 (M := M)) (h_894 (M := M)) (h_954 (M := M))))) (Litex.realToComplex (_object_i8 (M := M)) h_1554)))).symm.trans ((h_1556).trans (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))))

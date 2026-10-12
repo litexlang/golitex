@@ -11,12 +11,20 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_o
 };
 use crate::prelude::*;
 use std::collections::HashMap;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::{
+    ByParentCheckedBetaObjectDefinitionProof, ParentCheckedBetaFunctionBody,
+    ParentEqualitySide,
+};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
+use crate::execute::execute_fact_stmt::function_domain::function_domains_alpha_equal;
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_function_definition(
         &self,
         fact: &EqualFact,
         proof: &EqualitySearchProofByObjectDefinition,
+        parent_wd: Option<&EqualFactWellDefinedProof>,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match proof {
@@ -99,10 +107,14 @@ impl LitexToLeanCompiler {
                     EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(_) => Err(
                         LeanCompileError::unsupported("FunctionDefinition/Induction"),
                     ),
-                    EqualitySearchProofByFnApplicationObjectDefinition::ParentCheckedBeta(_) => {
-                        Err(LeanCompileError::unsupported(
-                            "FunctionDefinition/ParentCheckedBeta",
-                        ))
+                    EqualitySearchProofByFnApplicationObjectDefinition::ParentCheckedBeta(
+                        proof,
+                    ) => {
+                        let parent_wd = parent_wd.ok_or_else(|| LeanCompileError::new(
+                            "FunctionDefinition/ParentFormation",
+                            "Parent-checked beta requires this equality's original formation result.",
+                        ))?;
+                        self.compile_parent_checked_beta(fact, proof, parent_wd, position)
                     }
                 }
             }
@@ -116,6 +128,233 @@ impl LitexToLeanCompiler {
                 Err(LeanCompileError::unsupported("FunctionDefinition/Template"))
             }
         }
+    }
+
+    fn compile_parent_checked_beta(
+        &self,
+        fact: &EqualFact,
+        proof: &ByParentCheckedBetaObjectDefinitionProof,
+        parent_wd: &EqualFactWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        ensure_object(&fact.left, &parent_wd.left)?;
+        ensure_object(&fact.right, &parent_wd.right)?;
+        match proof {
+            ByParentCheckedBetaObjectDefinitionProof::OneSide(proof) => {
+                let (application, other, wd, reversed) = match proof.parent_well_defined_side {
+                    ParentEqualitySide::Left => (&fact.left, &fact.right, &parent_wd.left, false),
+                    ParentEqualitySide::Right => (&fact.right, &fact.left, &parent_wd.right, true),
+                };
+                if proof.residual_equal.left.ir() != proof.expanded_body.ir()
+                    || proof.residual_equal.right.ir() != other.ir()
+                {
+                    return Err(LeanCompileError::new(
+                        "FunctionDefinition/ParentResidual",
+                        "The parent-checked residual differs from the exact expanded and other endpoints.",
+                    ));
+                }
+                let beta = self.compile_parent_checked_function_body(
+                    application,
+                    wd,
+                    &proof.function_body,
+                    &proof.expanded_body,
+                    position,
+                )?;
+                let residual = self.compile_equality_search(
+                    &proof.residual_equal,
+                    &proof.residual_proof,
+                    position,
+                )?;
+                let equality = format!("(({beta}).trans {residual})");
+                Ok(if reversed {
+                    format!("({equality}).symm")
+                } else {
+                    equality
+                })
+            }
+            ByParentCheckedBetaObjectDefinitionProof::TwoSides(proof) => {
+                if proof.residual_equal.left.ir() != proof.left_expanded_body.ir()
+                    || proof.residual_equal.right.ir() != proof.right_expanded_body.ir()
+                {
+                    return Err(LeanCompileError::new(
+                        "FunctionDefinition/ParentResidual",
+                        "The two-sided parent residual differs from the ordered expanded endpoints.",
+                    ));
+                }
+                let left = self.compile_parent_checked_function_body(
+                    &fact.left,
+                    &parent_wd.left,
+                    &proof.left_function_body,
+                    &proof.left_expanded_body,
+                    position,
+                )?;
+                let right = self.compile_parent_checked_function_body(
+                    &fact.right,
+                    &parent_wd.right,
+                    &proof.right_function_body,
+                    &proof.right_expanded_body,
+                    position,
+                )?;
+                let residual = self.compile_equality_search(
+                    &proof.residual_equal,
+                    &proof.residual_proof,
+                    position,
+                )?;
+                Ok(format!(
+                    "(({left}).trans (({residual}).trans ({right}).symm))"
+                ))
+            }
+        }
+    }
+
+    fn compile_parent_checked_function_body(
+        &self,
+        application: &Obj,
+        parent_wd: &ObjWellDefinedProof,
+        source: &ParentCheckedBetaFunctionBody,
+        expanded: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Obj::FnObj(call) = application else {
+            return Err(LeanCompileError::new(
+                "FunctionDefinition/ParentApplication",
+                "The parent beta endpoint is not a function application.",
+            ));
+        };
+        let ObjWellDefinedProof::ByDef {
+            obj,
+            proof: ObjWellDefinedProofByDef::FnObj(call_wd),
+        } = parent_wd
+        else {
+            return Err(LeanCompileError::new(
+                "FunctionDefinition/ParentCallWD",
+                "Parent beta has no original selected call constructor.",
+            ));
+        };
+        if obj.ir() != application.ir() {
+            return Err(LeanCompileError::new(
+                "FunctionDefinition/ParentCallWD",
+                "The selected parent constructor certifies another application.",
+            ));
+        }
+        let actual_domain = match call_wd.domain_fn_set.as_ref() {
+            Some(FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. })
+            | Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }) => fn_set,
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/ParentCallDomain",
+                ))
+            }
+        };
+        let (function, known_path) = match source {
+            ParentCheckedBetaFunctionBody::KnownAnonymousFunction {
+                function,
+                function_equal,
+                checked_domain,
+            } => {
+                if checked_domain != actual_domain {
+                    return Err(LeanCompileError::new("FunctionDefinition/ParentDomain", "The beta body's checked domain differs from the exact parent call evidence."));
+                }
+                if !matches!(call.head.as_ref(), FnObjHead::Identifier(_)) {
+                    return Err(LeanCompileError::new(
+                        "FunctionDefinition/ParentHead",
+                        "A known-body beta proof has another source head family.",
+                    ));
+                }
+                (function, Some(function_equal))
+            }
+            ParentCheckedBetaFunctionBody::AnonymousLiteral => {
+                let FnObjHead::AnonymousFnLiteral(function) = call.head.as_ref() else {
+                    return Err(LeanCompileError::new(
+                        "FunctionDefinition/ParentHead",
+                        "Literal beta evidence has another original head family.",
+                    ));
+                };
+                (function.as_ref(), None)
+            }
+            ParentCheckedBetaFunctionBody::TemplateAnonymousFunction { .. } => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/ParentTemplate",
+                ))
+            }
+            ParentCheckedBetaFunctionBody::KnownFiniteFunctionCoordinate { .. }
+            | ParentCheckedBetaFunctionBody::ReturnedFiniteFunctionCoordinate { .. } => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/ParentFiniteCoordinate",
+                ))
+            }
+            ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication { .. }
+            | ParentCheckedBetaFunctionBody::ReturnedKnownFunctionApplication { .. } => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/ParentReturnedFunction",
+                ))
+            }
+        };
+        if !function_domains_alpha_equal(&function.body, actual_domain)
+            || call.body.len() != 1
+            || !(1..=2).contains(&call.body[0].len())
+        {
+            return Err(LeanCompileError::new("FunctionDefinition/ParentDomain", "The selected literal does not match the parent's complete one/two-argument domain."));
+        }
+        let parameters = function
+            .body
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|group| &group.params)
+            .collect::<Vec<_>>();
+        if parameters.len() != call.body[0].len() {
+            return Err(LeanCompileError::new(
+                "FunctionDefinition/ParentArguments",
+                "The original beta arguments differ from the literal's ordered parameters.",
+            ));
+        }
+        let mut substitution = HashMap::new();
+        for (parameter, argument) in parameters.iter().zip(&call.body[0]) {
+            if substitution
+                .insert(parameter.id, argument.as_ref().clone())
+                .is_some()
+            {
+                return Err(LeanCompileError::new(
+                    "FunctionDefinition/ParentParameterIdentity",
+                    "The selected literal repeats a source binder identity.",
+                ));
+            }
+        }
+        if !instantiated_object_matches(&function.equal_to, expanded, &substitution) {
+            return Err(LeanCompileError::new("FunctionDefinition/ParentSubstitution", "The captured beta endpoint is not the exact binder-ID substitution of the selected body."));
+        }
+        let actual = self.compile_wd(parent_wd, position)?;
+        let (literal, head_equal) = if let Some(path) = known_path {
+            let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.clone()));
+            let head = function_head_object(call.head.as_ref())?;
+            let equality = self.compile_equality_path(&head, &literal, path, position)?;
+            (self.compile_object_reference(&literal, position)?, equality)
+        } else {
+            (
+                "_litex_original.val.function".to_string(),
+                "rfl".to_string(),
+            )
+        };
+        let domains = self.compile_function_domains(&function.body, position)?;
+        let guard = self.compile_function_guard_template(&function.body, position)?;
+        let body = self.compile_function_body_template(function, position)?;
+        let endpoint = self.compile_normalization_value(expanded, position)?;
+        let application_value = self.compile_normalization_value(application, position)?;
+        let (argument, domain_proof, body_equality) = if parameters.len() == 1 {
+            (
+                "(Litex.denote _litex_original.val.argument)".to_string(),
+                format!("((Litex.FunctionSignature.one_domain {} {guard} _).mpr _litex_original.wd.2)", domains.join(" ")),
+                format!("(show _litex_formula.val.bodyValue (Litex.denote _litex_original.val.argument) = {endpoint} from rfl)"),
+            )
+        } else {
+            (
+                "(Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
+                format!("((Litex.FunctionSignature.two_domain {} {guard} _ _).mpr _litex_original.wd.2)", domains.join(" ")),
+                format!("(by change {body} (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).1 (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).2 = {endpoint}; simp only [Litex.FunctionSemantics.unpair_pair])"),
+            )
+        };
+        Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {argument}) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd {argument} {domain_proof}\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"))
     }
 
     fn compile_function_normalization(
@@ -261,7 +500,7 @@ impl LitexToLeanCompiler {
         let literal_position = SourcePosition { before: 2, ..step };
         let selected = self.compile_wd(&proof.body_application_well_defined, &literal_position)?;
         let completed = SourcePosition { before: 3, ..step };
-        let domains = self.compile_function_domains(&function.body)?;
+        let domains = self.compile_function_domains(&function.body, &completed)?;
         let guard = self.compile_function_guard_template(&function.body, &completed)?;
         let body = self.compile_function_body_template(function, &completed)?;
         let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;

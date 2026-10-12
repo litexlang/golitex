@@ -52,7 +52,7 @@ impl LitexToLeanCompiler {
             before: 1,
         };
         let compiled = self.compile_verify(&proof.proof, &scope)?;
-        self.validate_store(&proof.stored, &source)?;
+        self.validate_store(&proof.stored.store, &source)?;
         self.compile_completed_fact_statement(
             &source,
             compiled,

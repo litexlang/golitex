@@ -6,3 +6,4 @@ prop P(x R):
 strategy bad:
     ? forall x R:
         $P(x)
+    1 = 1

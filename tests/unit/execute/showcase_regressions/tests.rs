@@ -32,26 +32,32 @@ fn induction_recovers_order_and_nested_arithmetic_binders() {
         "k = k or k > k",
         "k = k = k",
     ] {
-        check(&format!("by induc k from 0:\n    ? {goal}\n"), true);
+        check(
+            &format!("by induc k from 0:\n    ? {goal}\n    {goal}\n"),
+            true,
+        );
     }
     check(
         "by induc k from 0:\n    ? not k > k\n    k <= k\n    k + 1 <= k + 1\n",
         true,
     );
-    check("by strong_induc k from 0:\n    ? k >= k\n", true);
+    check(
+        "by strong_induc k from 0:\n    ? k >= k\n    k >= k\n",
+        true,
+    );
 }
 
 #[test]
 fn induction_rejects_false_base_false_step_and_noninteger_start() {
     for code in [
-        "by induc k from 0:\n    ? k > 0\n",
-        "by induc k from 0:\n    ? k = 0\n",
-        "by induc k from 0.5:\n    ? k = k\n",
-        "by strong_induc k from 0:\n    ? k = 0\n",
+        "by induc k from 0:\n    ? k > 0\n    k > 0\n",
+        "by induc k from 0:\n    ? k = 0\n    k = 0\n",
+        "by induc k from 0.5:\n    ? k = k\n    k = k\n",
+        "by strong_induc k from 0:\n    ? k = 0\n    k = 0\n",
     ] {
         check(code, false);
     }
-    check("by induc k from 0:\n    ? k = 0\n0 = 1\n", false);
+    check("by induc k from 0:\n    ? k = 0\n    k = 0\n0 = 1\n", false);
 }
 
 #[test]
@@ -62,11 +68,11 @@ fn dependent_claim_and_theorem_types_are_checked_in_order() {
     );
     check("thm dependent_identity:\n    ? forall A nonempty_set, f fn(x A) A, a A:\n        f(a) = f(a)\n", true);
     check(
-        "claim:\n    ? forall A nonempty_set, a A, b A:\n        a = b\n",
+        "claim:\n    ? forall A nonempty_set, a A, b A:\n        a = b\n    a = b\n",
         false,
     );
     check(
-        "claim:\n    ? forall A nonempty_set, a A:\n        a = a\n0 = 1\n",
+        "claim:\n    ? forall A nonempty_set, a A:\n        a = a\n    a = a\n0 = 1\n",
         false,
     );
 }

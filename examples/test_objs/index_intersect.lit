@@ -50,5 +50,6 @@ sketch:
         by enumerate finite_set:
             ? forall idx {1}:
                 x $in A(idx)
+            x $in A(idx)
         release thm index_intersect_member(x, index_intersect({1}, N, A))
     by extension index_intersect({1}, N, A) = {1}
