@@ -10,7 +10,7 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 impl LitexToLeanCompiler {
-    pub(in crate::compile_to_lean) fn compile_compound_known_forall(
+    pub(in crate::compile_to_lean) fn compile_known_application(
         &self,
         goal: &Fact,
         proof: &SearchProofByKnownForallFact,
@@ -42,6 +42,7 @@ impl LitexToLeanCompiler {
         let pattern_args = compound_arguments(&selected)?;
         let goal_args = compound_arguments(goal)?;
         let same_shape = match (&selected, goal) {
+            (Fact::AtomicFact(a), Fact::AtomicFact(b)) => same_atomic_family(a, b),
             (Fact::AndFact(a), Fact::AndFact(b)) => {
                 a.facts.len() == b.facts.len()
                     && a.facts
@@ -381,6 +382,16 @@ impl LitexToLeanCompiler {
                         "CompoundKnown/StructureSubject",
                     ));
                 }
+                if let (Obj::FnObj(pattern), Obj::FnObj(_)) = (pattern, goal) {
+                    return self.compile_known_function_match(
+                        pattern,
+                        goal,
+                        child_matches,
+                        substitution,
+                        bound,
+                        position,
+                    );
+                }
                 let (operation, pairs) =
                     arithmetic_constructor_pairs(pattern, goal).ok_or_else(|| {
                         LeanCompileError::unsupported("CompoundKnown/StructureConstructor")
@@ -421,6 +432,82 @@ impl LitexToLeanCompiler {
                 Ok((old, equality))
             }
         }
+    }
+
+    fn compile_known_function_match(
+        &self,
+        pattern: &FnObj,
+        goal_object: &Obj,
+        matches: &[ForallConclusionArgMatchProof],
+        substitution: &HashMap<IdentifierId, Obj>,
+        bound: &mut HashSet<IdentifierId>,
+        position: Option<&SourcePosition<'_>>,
+    ) -> Result<(Obj, String), LeanCompileError> {
+        let Obj::FnObj(goal) = goal_object else {
+            return Err(LeanCompileError::unsupported(
+                "KnownApplication/FunctionConstructor",
+            ));
+        };
+        let (FnObjHead::Identifier(pattern_head), FnObjHead::Identifier(goal_head)) =
+            (pattern.head.as_ref(), goal.head.as_ref())
+        else {
+            return Err(LeanCompileError::unsupported(
+                "KnownApplication/FunctionHead",
+            ));
+        };
+        if pattern.body.len() != 1
+            || goal.body.len() != 1
+            || pattern.body[0].len() != goal.body[0].len()
+            || !(1..=2).contains(&goal.body[0].len())
+            || matches.len() != goal.body[0].len() + 1
+        {
+            return Err(LeanCompileError::unsupported(
+                "KnownApplication/FunctionArity",
+            ));
+        }
+        let mut children = Vec::new();
+        let mut proofs = Vec::new();
+        // The capture stores arguments first and the function prefix last.
+        for (index, (a, b)) in pattern.body[0].iter().zip(&goal.body[0]).enumerate() {
+            let (child, proof) = self.compile_forall_argument_match(
+                a,
+                b,
+                &matches[index],
+                substitution,
+                bound,
+                position,
+            )?;
+            children.push(Box::new(child));
+            proofs.push(proof);
+        }
+        let (head, head_equal) = self.compile_forall_argument_match(
+            &Obj::Identifier(pattern_head.clone()),
+            &Obj::Identifier(goal_head.clone()),
+            matches.last().unwrap(),
+            substitution,
+            bound,
+            position,
+        )?;
+        let mut old = goal_object.clone();
+        let Obj::FnObj(call) = &mut old else {
+            unreachable!()
+        };
+        call.head = Box::new(FnObjHead::from_obj(head));
+        call.body[0] = children;
+        let Some(position) = position else {
+            return Ok((old, String::new()));
+        };
+        self.compile_object_reference(&old, position)?;
+        self.compile_object_reference(goal_object, position)?;
+        let argument_equal = if proofs.len() == 1 {
+            proofs[0].clone()
+        } else {
+            format!(
+                "(congrArg₂ (Litex.FunctionSemantics.pairValue (M := M)) {} {})",
+                proofs[0], proofs[1]
+            )
+        };
+        Ok((old, format!("(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {head_equal} {argument_equal})")))
     }
 
     fn render_strict_match_equal(
@@ -578,6 +665,7 @@ fn local_verified_fact(fact: &Fact, compiled: &(String, String)) -> String {
 
 fn compound_arguments(fact: &Fact) -> Result<Vec<&Obj>, LeanCompileError> {
     match fact {
+        Fact::AtomicFact(fact) => Ok(atomic_fact_args_ref(fact)),
         Fact::AndFact(fact) => Ok(fact.facts.iter().flat_map(atomic_fact_args_ref).collect()),
         Fact::ChainFact(fact) => Ok(fact.objs.iter().collect()),
         _ => Err(LeanCompileError::unsupported("CompoundKnown/FactFamily")),
@@ -586,6 +674,7 @@ fn compound_arguments(fact: &Fact) -> Result<Vec<&Obj>, LeanCompileError> {
 
 fn compound_atomics(fact: &Fact) -> Result<Vec<AtomicFact>, LeanCompileError> {
     match fact {
+        Fact::AtomicFact(fact) => Ok(vec![fact.clone()]),
         Fact::AndFact(fact) => Ok(fact.facts.clone()),
         Fact::ChainFact(fact) => (0..fact.prop_names.len())
             .map(|index| chain_edge(fact, index, fact.fact_id))
@@ -597,6 +686,9 @@ fn compound_atomics(fact: &Fact) -> Result<Vec<AtomicFact>, LeanCompileError> {
 fn replace_compound_arguments(fact: &Fact, args: &[Obj]) -> Result<Fact, LeanCompileError> {
     let mut fact = fact.clone();
     match &mut fact {
+        Fact::AtomicFact(atomic) if atomic_fact_args_ref(atomic).len() == args.len() => {
+            replace_atomic_arguments(atomic, args)?;
+        }
         Fact::ChainFact(chain) if chain.objs.len() == args.len() => {
             chain.objs.clone_from_slice(args)
         }

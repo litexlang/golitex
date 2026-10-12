@@ -115,7 +115,7 @@ fn inferred_store_only_builder_stores_one_growth_step() {
 }
 
 #[test]
-fn inferred_store_only_quantified_formation_does_not_infer_its_binder() {
+fn inferred_store_only_subset_rule_stores_its_quantified_conclusion() {
     let mut rt = runtime();
     let result = run(&mut rt, "N $subset R\n");
     let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
@@ -132,15 +132,10 @@ fn inferred_store_only_quantified_formation_does_not_infer_its_binder() {
             _ => None,
         })
         .unwrap();
-    let FactWellDefinedProof::ForallFact(formation) = &projected.well_defined else {
-        panic!("quantified formation")
+    let StoreFactResult::ForallFact(stored) = &projected.store else {
+        panic!("the named subset rule stores its universal conclusion directly")
     };
-    assert!(formation
-        .introduced_params
-        .defined_params
-        .store_and_infer_results
-        .iter()
-        .all(|store| store.infer.is_none()));
+    assert_eq!(stored.fact.typed_parameters.groups.len(), 1);
     assert_eq!(projected.stored_fact_ids().len(), 1);
 }
 
@@ -190,4 +185,57 @@ fn inferred_store_only_invalid_formation_never_stores() {
     let result = rt.run_litex_code("0 / 0 = 0\n").unwrap();
     assert!(!result.success && result.session_error.is_none());
     assert!(rt.top_exec_env().facts.facts_by_id.is_empty());
+}
+
+#[test]
+fn inferred_store_only_prime_rule_stores_its_named_conclusions_without_wd() {
+    use crate::store_fact_and_infer::InferBuiltinDefinitionResult;
+    let mut rt = runtime();
+    let result = run(&mut rt, "$prime(5)\n");
+    let seed = stored(&result.statement_results[0]);
+    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+        &seed.infer
+    else {
+        panic!("prime seed inference")
+    };
+    let prime = rules
+        .iter()
+        .find_map(|rule| match rule {
+            InferAtomicExceptEqualityResult::BuiltinDefinition(
+                InferBuiltinDefinitionResult::Prime(proof),
+            ) => Some(proof),
+            _ => None,
+        })
+        .expect("the named prime rule");
+    assert_eq!(prime.source_fact_id, seed.primary_fact_id());
+    assert_eq!(prime.derived.len(), 2);
+    let StoreFactResult::ForallFact(trial) = &prime.derived[1].store else {
+        panic!("trial-divisor conclusion")
+    };
+    assert!(Fact::ForallFact(trial.fact.clone())
+        .readable_string()
+        .contains("5 %"));
+    assert!(rt.fact_by_id_in_stack(trial.fact.fact_id).is_some());
+    let count = rt.top_exec_env().facts.facts_by_id.len();
+    let rejected = rt.run_litex_code("$prime(4)\n").unwrap();
+    assert!(!rejected.success && rejected.session_error.is_none());
+    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), count);
+}
+
+#[test]
+fn inferred_store_only_general_subset_carrier_uses_known_inputs_and_rolls_back_a_miss() {
+    let mut rt = runtime();
+    run(
+        &mut rt,
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/wd/known_subset_general_carrier.lit"
+        )),
+    );
+    let count = rt.top_exec_env().facts.facts_by_id.len();
+    let rejected = rt
+        .run_litex_code("forall X, Y set, K power_set(X), point Y:\n    point $in X\n")
+        .unwrap();
+    assert!(!rejected.success && rejected.session_error.is_none());
+    assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), count);
 }

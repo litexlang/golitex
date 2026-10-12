@@ -69,7 +69,7 @@ pub(crate) fn flatten_def_prop_params(list: &TypedParameterList) -> Vec<BoundNam
 
 impl crate::runtime::Runtime {
     pub(crate) fn remember_formed_atomic_subjects(&mut self, fact: &crate::ast::fact::Fact) {
-        // The caller has checked the source or inferred fact formation.
+        // Formation is established by user-fact verification or the named infer rule.
         // Cache only its direct atomic subjects in this scope, never the bound
         // internals of a quantified fact. Exploratory verify does not record WD.
         if let crate::ast::fact::Fact::AtomicFact(atomic) = fact {

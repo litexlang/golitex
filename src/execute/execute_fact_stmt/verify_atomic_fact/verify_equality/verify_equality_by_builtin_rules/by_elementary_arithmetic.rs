@@ -7,6 +7,9 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equi
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ElementaryArithmeticProof {
+    ZeroToPositiveRealPower {
+        requirements: Vec<VerifyFactResult>,
+    },
     SqrtSquareNonpositive(SqrtSquareNonpositiveProof),
     ModNegation {
         requirements: Vec<VerifyFactResult>,
@@ -41,6 +44,7 @@ impl SqrtSquareNonpositiveProof {
 impl ElementaryArithmeticProof {
     pub fn rule_id(&self) -> &'static str {
         match self {
+            Self::ZeroToPositiveRealPower { .. } => "ZeroToPositiveRealPower",
             Self::SqrtSquareNonpositive(_) => "SqrtSquareNonpositive",
             Self::ModNegation { .. } => "ModNegation",
             Self::ModNaturalPower { .. } => "ModNaturalPower",
@@ -59,6 +63,17 @@ impl Runtime {
     ) -> RuntimeResult<Option<ElementaryArithmeticProof>> {
         use ElementaryArithmeticProof as P;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            // Zero to a strictly positive real exponent is zero; 0^0 remains 1.
+            // Example: r in R+ => 0^r = 0, including r = 1/n for n in N+.
+            if let Some((base, exponent)) = pow_args(left) {
+                if is_number(base, "0") && is_number(right, "0") {
+                    let requirements =
+                        self.elementary_members(&[(exponent, StandardSet::RPos)], state.clone())?;
+                    if requirements.iter().all(|proof| !proof.is_failed()) {
+                        return Ok(Some(P::ZeroToPositiveRealPower { requirements }));
+                    }
+                }
+            }
             // Principal sqrt(x^2)=-x when x<=0; no arbitrary abs rewrite.
             if let Obj::ExpLogOperator(ExpLogOperator::Sqrt(root)) = left {
                 if let Some((base, exponent)) = pow_args(&root.arg) {

@@ -99,11 +99,7 @@ impl Runtime {
             set: Obj::StandardSet(StandardSet::RPos),
             line_file: equal_fact.line_file.clone(),
         });
-        let Some(stored) =
-            self.try_store_inferred_fact(&Fact::AtomicFact(target_in_r_pos), verify_state)?
-        else {
-            return Ok(None);
-        };
+        let stored = self.store_inferred_fact(&Fact::AtomicFact(target_in_r_pos))?;
         Ok(Some(stored))
     }
 }

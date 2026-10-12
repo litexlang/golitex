@@ -41,9 +41,7 @@ impl Runtime {
                 line_file: source.line_file.clone(),
             }
             .into();
-            let Some(derived) = self.try_store_inferred_fact(&equality, state)? else {
-                continue;
-            };
+            let derived = self.store_inferred_fact(&equality)?;
             rules.push(
                 crate::store_fact_and_infer::InferEqualityResult::NonzeroFactorCancellation(
                     crate::store_fact_and_infer::InferEqualFactNonzeroFactorCancellationResult::new(

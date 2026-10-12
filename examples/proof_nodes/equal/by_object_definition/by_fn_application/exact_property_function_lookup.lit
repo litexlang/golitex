@@ -26,15 +26,18 @@ wrapped_shift(3) = 5
 
 have Carrier set = finite_seq(R, 2)
 have carrier_member Carrier
+carrier_member $in finite_seq(R, 2)
 carrier_member(2) $in R
 let carrier_alias = carrier_member
 carrier_alias $in Carrier
+carrier_alias $in finite_seq(R, 2)
 carrier_alias(2) $in R
 
 have Base set = finite_seq(R, 2)
 have SpaceAlias set = Base
 SpaceAlias = finite_seq(R, 2)
 have member SpaceAlias
+member $in finite_seq(R, 2)
 member(2) $in R
 
 let pair = (1, 2)

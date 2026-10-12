@@ -237,6 +237,24 @@ impl LitexToLeanCompiler {
                     NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(p),
                 ),
             ) => self.compile_not_equal_from_known_strict_order(goal, &p.premise_proof, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::DiffNonzeroFromInequality(p),
+                ),
+            ) => self.compile_difference_nonzero(goal, &p.operands_unequal_proof, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::DivNonzeroFromFactors(p),
+                ),
+            ) => self.compile_quotient_nonzero(goal, &p.proof_of_requirement_facts, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::InequalityFromDifferenceNonzero(p),
+                ),
+            ) => self.compile_inequality_from_difference_nonzero(goal, &p.premise_proof, position),
             _ => Err(LeanCompileError::unsupported("Order/BuiltinFamilyOrRule")),
         }
     }
@@ -616,6 +634,188 @@ impl LitexToLeanCompiler {
                 "(fun _litex_equal => {inequality} _litex_equal.symm)"
             ))
         }
+    }
+
+    pub(in crate::compile_to_lean) fn compile_difference_nonzero(
+        &self,
+        goal: &AtomicFact,
+        premise: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroDifference/Family"));
+        };
+        let Fact::AtomicFact(AtomicFact::NotEqualFact(operands)) = source_subject(premise)? else {
+            return Err(LeanCompileError::new(
+                "NonzeroDifference/Premise",
+                "The recorded child must prove inequality of the exact ordered subtraction operands.",
+            ));
+        };
+        // The selected rule owns the route. Its exact child disambiguates the
+        // subtraction endpoint when the closed zero is itself a subtraction.
+        let matches_operands = |sub: &Sub| {
+            operands.left.ir() == sub.left.ir() && operands.right.ir() == sub.right.ir()
+        };
+        let (difference, zero, reversed) = match (&fact.left, &fact.right) {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)), zero)
+                if matches_operands(sub) =>
+            {
+                (sub, zero, false)
+            }
+            (zero, Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)))
+                if matches_operands(sub) =>
+            {
+                (sub, zero, true)
+            }
+            _ => {
+                return Err(LeanCompileError::new(
+                    "NonzeroDifference/Premise",
+                    "The recorded inequality has different or reordered subtraction operands.",
+                ))
+            }
+        };
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::new(
+                "NonzeroDifference/Zero",
+                "The selected difference rule requires an exactly certified zero endpoint.",
+            ));
+        }
+        let child = self.compile_verify(premise, position)?;
+        let left = self.compile_numeric_observation(&difference.left, position)?;
+        let right = self.compile_numeric_observation(&difference.right, position)?;
+        let nonzero = format!(
+            "(Litex.subNonzeroOfNotSame {} {} {} {} {})",
+            self.compile_object_reference(&difference.left, position)?,
+            self.compile_object_reference(&difference.right, position)?,
+            left.2,
+            right.2,
+            child.1,
+        );
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!(
+            "(fun _litex_equal => {nonzero} (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))",
+            zero_value.1,
+            zero_value.0,
+        ))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_quotient_nonzero(
+        &self,
+        goal: &AtomicFact,
+        proofs: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("NonzeroQuotient/Family"));
+        };
+        if proofs.len() != 2 {
+            return Err(LeanCompileError::new(
+                "NonzeroQuotient/Requirements",
+                "The selected quotient rule requires exactly two ordered factor proofs.",
+            ));
+        }
+        let numerator = source_subject(&proofs[0])?;
+        let denominator = source_subject(&proofs[1])?;
+        let matches_factors = |div: &Div| {
+            ensure_nonzero_subject(&numerator, &div.left).is_ok()
+                && ensure_nonzero_subject(&denominator, &div.right).is_ok()
+        };
+        let (quotient, zero, reversed) = match (&fact.left, &fact.right) {
+            (Obj::ArithmeticOperator(ArithmeticOperator::Div(div)), zero) if matches_factors(div) => (div, zero, false),
+            (zero, Obj::ArithmeticOperator(ArithmeticOperator::Div(div))) if matches_factors(div) => (div, zero, true),
+            _ => return Err(LeanCompileError::new("NonzeroQuotient/Subjects", "The selected children must prove nonzero of the exact numerator and denominator, in that order.")),
+        };
+        let zero_value = self.compile_numeric_observation(zero, position)?;
+        if !zero_value.3.as_ref().is_some_and(EvalRational::is_zero) {
+            return Err(LeanCompileError::new(
+                "NonzeroQuotient/Zero",
+                "The selected quotient rule requires an exactly certified zero endpoint.",
+            ));
+        }
+        let first = self.compile_verify(&proofs[0], position)?;
+        let second = self.compile_verify(&proofs[1], position)?;
+        let left = self.compile_numeric_observation(&quotient.left, position)?;
+        let right = self.compile_numeric_observation(&quotient.right, position)?;
+        let nonzero = format!(
+            "(Litex.divNonzero {} {} {} {} {} {})",
+            self.compile_object_reference(&quotient.left, position)?,
+            self.compile_object_reference(&quotient.right, position)?,
+            left.2,
+            right.2,
+            first.1,
+            second.1
+        );
+        let equality = if reversed {
+            "_litex_equal.symm"
+        } else {
+            "_litex_equal"
+        };
+        Ok(format!("(fun _litex_equal => {nonzero} (({equality}).trans (({}).trans (congrArg M.number (by norm_num : {} = (0 : ℂ))))))", zero_value.1, zero_value.0))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_inequality_from_difference_nonzero(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::NotEqualFact(fact) = goal else {
+            return Err(LeanCompileError::unsupported("DifferenceInequality/Family"));
+        };
+        let AtomicFact::NotEqualFact(known) = &premise.fact else {
+            return Err(LeanCompileError::unsupported(
+                "DifferenceInequality/PremiseFamily",
+            ));
+        };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = &known.left else {
+            return Err(LeanCompileError::unsupported(
+                "DifferenceInequality/Constructor",
+            ));
+        };
+        if !is_zero(&known.right) {
+            return Err(LeanCompileError::new(
+                "DifferenceInequality/Zero",
+                "The recorded known difference must be compared with literal zero.",
+            ));
+        }
+        let forward = sub.left.ir() == fact.left.ir() && sub.right.ir() == fact.right.ir();
+        let reverse = sub.left.ir() == fact.right.ir() && sub.right.ir() == fact.left.ir();
+        if !forward && !reverse {
+            return Err(LeanCompileError::new(
+                "DifferenceInequality/Subjects",
+                "The recorded difference has other source endpoints.",
+            ));
+        }
+        let proof = match premise.searched_proof.as_ref() {
+            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
+                self.compile_known_atomic(p, &premise.fact, position)?
+            }
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "DifferenceInequality/KnownRoute",
+                ))
+            }
+        };
+        let left = self.compile_numeric_observation(&sub.left, position)?;
+        let right = self.compile_numeric_observation(&sub.right, position)?;
+        let inequality = format!(
+            "(Litex.notSameOfSubNonzero {} {} {} {} {})",
+            self.compile_object_reference(&sub.left, position)?,
+            self.compile_object_reference(&sub.right, position)?,
+            left.2,
+            right.2,
+            proof
+        );
+        Ok(if forward {
+            inequality
+        } else {
+            format!("(fun h => {inequality} h.symm)")
+        })
     }
 
     pub(in crate::compile_to_lean) fn compile_order_known_atomic_transport(

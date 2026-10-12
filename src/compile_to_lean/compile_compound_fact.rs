@@ -18,7 +18,7 @@ impl LitexToLeanCompiler {
             if !proof.adjacent.is_empty() {
                 return Err(LeanCompileError::unsupported("Chain/CompetingRoutes"));
             }
-            return self.compile_compound_known_forall(
+            return self.compile_known_application(
                 &Fact::ChainFact(proof.fact.clone()),
                 known,
                 position,
@@ -65,7 +65,7 @@ impl LitexToLeanCompiler {
             if !proof.components.is_empty() {
                 return Err(LeanCompileError::unsupported("And/CompetingRoutes"));
             }
-            return self.compile_compound_known_forall(
+            return self.compile_known_application(
                 &Fact::AndFact(proof.fact.clone()),
                 known,
                 position,

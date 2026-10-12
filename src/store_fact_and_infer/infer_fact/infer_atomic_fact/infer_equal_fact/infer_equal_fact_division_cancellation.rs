@@ -51,7 +51,7 @@ impl Runtime {
         right: &Obj,
         common: &Obj,
         premise_state: VerifyState,
-        state: VerifyState,
+        _state: VerifyState,
     ) -> RuntimeResult<Option<crate::store_fact_and_infer::InferEqualityResult>> {
         if self.cancellation_equality_already_known(left, right) {
             return Ok(None);
@@ -73,9 +73,7 @@ impl Runtime {
             line_file: source.line_file.clone(),
         }
         .into();
-        let Some(derived) = self.try_store_inferred_fact(&equality, state)? else {
-            return Ok(None);
-        };
+        let derived = self.store_inferred_fact(&equality)?;
         Ok(Some(
             crate::store_fact_and_infer::InferEqualityResult::CommonDenominatorCancellation(
                 crate::store_fact_and_infer::InferEqualFactCommonDenominatorCancellationResult::new(
@@ -98,7 +96,7 @@ impl Runtime {
         right: &Obj,
         common: &Obj,
         premise_state: VerifyState,
-        state: VerifyState,
+        _state: VerifyState,
     ) -> RuntimeResult<Option<crate::store_fact_and_infer::InferEqualityResult>> {
         if self.cancellation_equality_already_known(left, right) {
             return Ok(None);
@@ -130,9 +128,7 @@ impl Runtime {
             line_file: source.line_file.clone(),
         }
         .into();
-        let Some(derived) = self.try_store_inferred_fact(&equality, state)? else {
-            return Ok(None);
-        };
+        let derived = self.store_inferred_fact(&equality)?;
         Ok(Some(
             crate::store_fact_and_infer::InferEqualityResult::NonzeroNumeratorCancellation(
                 crate::store_fact_and_infer::InferEqualFactNonzeroNumeratorCancellationResult::new(

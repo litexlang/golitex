@@ -50,3 +50,7 @@ by def $outer(value)
 # This explicit seed runs inner's own inference, rather than chaining from outer.
 $inner(value)
 value = value
+
+# Before: prime truth succeeded but derived forall WD raised InternalBug.
+# The named prime rule now owns this direct conclusion; it stores without WD.
+$prime(5)

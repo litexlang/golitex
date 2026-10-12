@@ -17,9 +17,22 @@ forall S set, p \pairs<S>:
 
 template<S set>:
     have streams set = {p cart(N, fn(index N+) S): p(1) >= 0}
-claim:
-    ? forall S set, p \streams<S>, index N+:
-        p(2)(index) $in S
+# Before: this claim depended on a second infer pass during goal formation.
+# claim:
+#     ? forall S set, p \streams<S>, index N+:
+#         p(2)(index) $in S
+#     have stream fn(k N+) S = p(2)
+#     stream(index) $in S
+#     p(2)(index) = stream(index)
+# The literal carrier lemma retains the original value goal and uses the
+# same checked coordinate alias. The template projection is then an explicit seed.
+thm cart_stream_value:
+    ? forall S set, p cart(N, fn(index N+) S), input N+:
+        p(2)(input) $in S
     have stream fn(k N+) S = p(2)
-    stream(index) $in S
-    p(2)(index) = stream(index)
+    stream(input) $in S
+    p(2)(input) = stream(input)
+
+forall S set, p \streams<S>, input N+:
+    p $in cart(N, fn(index N+) S)
+    p(2)(input) $in S

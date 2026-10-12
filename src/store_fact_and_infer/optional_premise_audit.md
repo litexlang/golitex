@@ -5,6 +5,12 @@ second confirmed instance of an optional truth premise using the caller's
 full strategy/definition search permission. It made no additional Rust behavior
 change. The README's stale description of the power fallback was corrected.
 
+
+This is a historical audit of the WD-before-storage implementation. The
+current [one-step contract](one_step_acceptance.md) stores internally generated
+conclusions under their named rule without rechecking derived WD; its genuine
+applicability premises still use bounded verification with inference disabled.
+
 ## Central before/after invariant
 
 Before the preceding repair, the fallback inside `positive_real_power.rs` used:

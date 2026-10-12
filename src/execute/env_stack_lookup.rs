@@ -69,6 +69,31 @@ impl Runtime {
         self.lookup_named_definition(name, |env, plain| env.lookup_def_prop(plain))
     }
 
+    // Source qualification and a continued REPL spelling may resolve to the
+    // same declaration. Identity belongs to that visible declaration, never
+    // to its printed name or a definition with equal clauses elsewhere.
+    pub(crate) fn predicates_share_visible_definition(
+        &self,
+        left: &AtomicName,
+        right: &AtomicName,
+    ) -> bool {
+        if left == right {
+            return true;
+        }
+        if let (Some(left), Some(right)) =
+            (self.def_prop_visible(left), self.def_prop_visible(right))
+        {
+            return std::ptr::eq(left, right);
+        }
+        if let (Some(left), Some(right)) = (
+            self.def_abstract_prop_visible(left),
+            self.def_abstract_prop_visible(right),
+        ) {
+            return std::ptr::eq(left, right);
+        }
+        false
+    }
+
     pub(crate) fn def_abstract_prop_visible(
         &self,
         name: &AtomicName,

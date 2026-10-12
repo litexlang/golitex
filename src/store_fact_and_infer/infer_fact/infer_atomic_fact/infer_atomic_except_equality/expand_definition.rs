@@ -37,7 +37,7 @@ impl Runtime {
     fn infer_normal_atomic_param_types(
         &mut self,
         normal: &NormalAtomicFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferNormalAtomicParamTypesProjectedResult>> {
         if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
@@ -63,12 +63,7 @@ impl Runtime {
             else {
                 continue;
             };
-            let Some(stored) = self.try_store_inferred_fact(&obligation, verify_state)? else {
-                return Err(crate::runtime::RuntimeError::InternalBug(format!(
-                    "inferred fact {} failed well-definedness check",
-                    obligation.ir()
-                )));
-            };
+            let stored = self.store_inferred_fact(&obligation)?;
             derived.push(stored);
         }
         if derived.is_empty() {
@@ -82,7 +77,7 @@ impl Runtime {
     fn infer_normal_atomic_expand_definition(
         &mut self,
         normal: &NormalAtomicFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferExpandDefinitionResult>> {
         if self.def_abstract_prop_visible(&normal.predicate).is_some() {
             return Ok(None);
@@ -107,11 +102,10 @@ impl Runtime {
             let Ok(instantiated) = self.inst_fact(iff_fact, &subst) else {
                 continue;
             };
-            // Definition expansion is an optional consequence of a checked seed.
-            // A lower caller ceiling can leave child WD unavailable (for example,
-            // an existential over finite_seq(R, 1)); do not commit that child or
-            // abort the seed. Explicit definition proofs retain their WD checks.
-            if let Some(stored) = self.try_store_inferred_fact(&instantiated, verify_state)? {
+            // The checked definition and exact substitution certify this clause.
+            // Store it directly; do not recheck its formation or infer its children.
+            {
+                let stored = self.store_inferred_fact(&instantiated)?;
                 derived.push(stored);
             }
         }

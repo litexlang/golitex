@@ -27,8 +27,8 @@ fn continued_export_repl_lookup_projects_the_original_refined_property() {
         .unwrap();
     assert!(
         result.success && result.session_error.is_none(),
-        "{:?}",
-        result.session_error
+        "{}",
+        crate::json_output::emit_run_detailed(&result, &rt, "test", None)
     );
     assert_eq!(rt.current_file, CodeSource::Repl);
 }
@@ -51,6 +51,20 @@ fn continued_export_repl_lookup_does_not_borrow_another_owner() {
             name: "lies_in".into()
         })
         .is_none());
+    assert!(rt.predicates_share_visible_definition(
+        &AtomicName::plain("lies_in".into()),
+        &AtomicName::WithExportFileId {
+            export_file_id: 0,
+            name: "lies_in".into()
+        }
+    ));
+    assert!(!rt.predicates_share_visible_definition(
+        &AtomicName::plain("lies_in".into()),
+        &AtomicName::WithExportFileId {
+            export_file_id: 1,
+            name: "lies_in".into()
+        }
+    ));
     let rt = runtime(CodeSource::ImportedExport {
         path: "prefix.lit".into(),
         global_mod_id: 7,

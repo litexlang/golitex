@@ -68,7 +68,7 @@ impl Runtime {
         )))
     }
 
-    fn build_function_preimage(
+    pub(crate) fn build_function_preimage(
         &mut self,
         root: &Obj,
         source: &CompleteFunctionDomainProof,

@@ -24,10 +24,14 @@ mod fn_application_unfold_substitution_tests;
 mod inference_publication_once_tests;
 #[path = "../../tests/unit/compile_to_lean/local_arbitrary_have/tests.rs"]
 mod local_arbitrary_have_tests;
+#[path = "../../tests/unit/compile_to_lean/mobius_nonzero/tests.rs"]
+mod mobius_nonzero_tests;
 #[path = "../../tests/unit/compile_to_lean/named_call_wd/tests.rs"]
 mod named_call_wd_tests;
 #[path = "../../tests/unit/compile_to_lean/natural_function_wd/tests.rs"]
 mod natural_function_wd_tests;
+#[path = "../../tests/unit/compile_to_lean/nonzero_difference/tests.rs"]
+mod nonzero_difference_tests;
 #[path = "../../tests/unit/compile_to_lean/numeric_carrier_closure/tests.rs"]
 mod numeric_carrier_closure_tests;
 #[path = "../../tests/unit/compile_to_lean/subset_numeric_membership/tests.rs"]

@@ -103,13 +103,6 @@ pub(super) fn project_store_and_infer(
                                     "end_object_index",
                                     JsonValue::Number(closure.end_object_index as f64),
                                 ),
-                                (
-                                    "well_defined",
-                                    super::wd::project_fact_wd_proof(
-                                        &closure.derived.well_defined,
-                                        runtime,
-                                    ),
-                                ),
                                 ("store", project_store(&closure.derived.store, runtime)),
                             ],
                         )
@@ -170,10 +163,6 @@ fn project_conditional_order_infer(infer: &InferFactResult, runtime: &Runtime) -
                     "bound_nonnegative_proof",
                     super::verify::project_verify_fact(bound, runtime),
                 ),
-                (
-                    "well_defined",
-                    super::wd::project_fact_wd_proof(&derived.well_defined, runtime),
-                ),
                 ("store", project_store(&derived.store, runtime)),
             ]);
             result.push(object_for(runtime, fields));
@@ -224,16 +213,7 @@ fn project_prop_definition_infer(infer: &InferFactResult, runtime: &Runtime) -> 
                                 .map(|result| {
                                     object_for(
                                         runtime,
-                                        vec![
-                                            (
-                                                "well_defined",
-                                                super::wd::project_fact_wd_proof(
-                                                    &result.well_defined,
-                                                    runtime,
-                                                ),
-                                            ),
-                                            ("store", project_store(&result.store, runtime)),
-                                        ],
+                                        vec![("store", project_store(&result.store, runtime))],
                                     )
                                 })
                                 .collect(),
@@ -283,16 +263,7 @@ fn project_signed_standard_set_infer(infer: &InferFactResult, runtime: &Runtime)
                                 .map(|captured| {
                                     object_for(
                                         runtime,
-                                        vec![
-                                            (
-                                                "well_defined",
-                                                super::wd::project_fact_wd_proof(
-                                                    &captured.well_defined,
-                                                    runtime,
-                                                ),
-                                            ),
-                                            ("store", project_store(&captured.store, runtime)),
-                                        ],
+                                        vec![("store", project_store(&captured.store, runtime))],
                                     )
                                 })
                                 .collect(),
@@ -359,16 +330,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                         "derived",
                         object_for(
                             runtime,
-                            vec![
-                                (
-                                    "well_defined",
-                                    super::wd::project_fact_wd_proof(
-                                        &r.derived.well_defined,
-                                        runtime,
-                                    ),
-                                ),
-                                ("store", project_store(&r.derived.store, runtime)),
-                            ],
+                            vec![("store", project_store(&r.derived.store, runtime))],
                         ),
                     ),
                 ],
@@ -510,13 +472,7 @@ fn project_inferred_store(
 ) -> JsonValue {
     object_for(
         runtime,
-        vec![
-            (
-                "well_defined",
-                super::wd::project_fact_wd_proof(&result.well_defined, runtime),
-            ),
-            ("store", project_store(&result.store, runtime)),
-        ],
+        vec![("store", project_store(&result.store, runtime))],
     )
 }
 

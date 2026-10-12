@@ -458,13 +458,13 @@ fn intersection_contracts_reject_missing_fibers_empty_family_and_bad_shapes() {
 #[test]
 fn literal_tuple_extensionality_checks_all_coordinates_and_complete_domains() {
     for code in [
-        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates(a, (1, 2))",
-        "have a cart({1}, {2})\nrelease thm tuple_equal_from_coordinates((1, 2), a)",
-        "have a cart({1}, {2}, {3})\nrelease thm tuple_equal_from_coordinates(a, (1, 2, 3))",
+        "have a cart({1}, {2})\na(1) $in {1}\na(2) $in {2}\nrelease thm tuple_equal_from_coordinates(a, (1, 2))",
+        "have a cart({1}, {2})\na(1) $in {1}\na(2) $in {2}\nrelease thm tuple_equal_from_coordinates((1, 2), a)",
+        "have a cart({1}, {2}, {3})\na(1) $in {1}\na(2) $in {2}\na(3) $in {3}\nrelease thm tuple_equal_from_coordinates(a, (1, 2, 3))",
         "release thm tuple_equal_from_coordinates((),())",
-        "have a cart({7})\nby thm tuple_equal_from_coordinates(a,tuple(7)) => a=tuple(7)",
-        "have a cart({R},{Z})\nrelease thm tuple_equal_from_coordinates(a,(R,Z))",
-        "have a cart({R},{Z})\nby thm tuple_equal_from_coordinates((R,Z),a) => (R,Z)=a",
+        "have a cart({7})\na(1) $in {7}\nby thm tuple_equal_from_coordinates(a,tuple(7)) => a=tuple(7)",
+        "have a cart({R},{Z})\na(1) $in {R}\na(2) $in {Z}\nrelease thm tuple_equal_from_coordinates(a,(R,Z))",
+        "have a cart({R},{Z})\na(1) $in {R}\na(2) $in {Z}\nby thm tuple_equal_from_coordinates((R,Z),a) => (R,Z)=a",
     ] {
         let mut rt = runtime();
         let result = rt.run_litex_code(code).unwrap();
@@ -526,7 +526,7 @@ fn literal_tuple_extensionality_checks_all_coordinates_and_complete_domains() {
             "release thm tuple_equal_from_coordinates(z,z2)",
         ),
         (
-            "have f,g cart({0},R)\nf(1)=g(1)",
+            "have f,g cart({0},R)\nf(1) $in {0}\ng(1) $in {0}\nf(1)=g(1)",
             "release thm tuple_equal_from_coordinates(f,g)",
         ),
     ] {
@@ -569,8 +569,20 @@ fn native_tuple_exact_domain_output_keeps_release_and_selected_proofs_in_ten_lan
         });
         let run = rt.run_litex_code(source).unwrap();
         assert!(run.success && run.session_error.is_none(), "{language:?}");
-        for index in [0, 2, 5, 7, 8] {
-            let stmt = &run.statement_results[index];
+        for (index, stmt) in run
+            .statement_results
+            .iter()
+            .enumerate()
+            .filter(|(_, stmt)| {
+                matches!(
+                    stmt,
+                    ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(_))
+                        | ExecStmtResult::By(
+                            crate::execute::execute_by_stmt::ExecByStmtResult::Thm(_)
+                        )
+                )
+            })
+        {
             let normal = project_stmt_normal(stmt, &rt).stringify();
             let detailed = project_stmt_detailed(stmt, &rt).stringify();
             crate::knowledge_base::JsonValue::parse(&normal).unwrap();

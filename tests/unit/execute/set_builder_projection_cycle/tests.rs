@@ -37,7 +37,8 @@ fn template_builder_projects_carrier_coordinates_and_conditions() {
         "template<S set>:\n    have pairs set = {p cart(N, S): p(1) >= 0}\n",
         "forall S set, p \\pairs<S>:\n    p(1) >= 0\n    p(2) $in S\n",
         "template<S set>:\n    have streams set = {p cart(N, fn(index N+) S): p(1) >= 0}\n",
-        "claim:\n    ? forall S set, p \\streams<S>, index N+:\n        p(2)(index) $in S\n    have stream fn(k N+) S = p(2)\n    stream(index) $in S\n    p(2)(index) = stream(index)\n",
+        "thm cart_stream_value:\n    ? forall S set, p cart(N, fn(index N+) S), input N+:\n        p(2)(input) $in S\n    have stream fn(k N+) S = p(2)\n    stream(input) $in S\n    p(2)(input) = stream(input)\n",
+        "forall S set, p \\streams<S>, input N+:\n    p $in cart(N, fn(index N+) S)\n    p(2)(input) $in S\n",
     ] {
         assert!(exec_template_builder_statement(&mut rt, code), "{code}");
     }
@@ -162,7 +163,7 @@ fn late_carrier_equalities_retain_conditions_without_selecting_or_branches() {
     ] {
         let mut rt = runtime(true);
         // The ordinary Carrier membership predates its defining equality.
-        let code = format!("claim:\n    ? forall Carrier set, value R:\n        value $in Carrier\n        Carrier = {{x R: x > 0}}\n        =>:\n            value > 0\n    release thm set_builder_member(value, {{x {domain}: {condition}}})\n    value > 0\n");
+        let code = format!("claim:\n    ? forall Carrier set, value R:\n        value $in Carrier\n        Carrier = {{x R: x > 0}}\n        =>:\n            value > 0\n    release thm set_builder_member(value, {{x {domain}: {condition}}})\n    value $in Carrier\n    value > 0\n");
         let run = rt.run_litex_code(&code).unwrap();
         assert!(run.success && run.session_error.is_none(), "{code}");
         assert_eq!(rt.execution_environments_stack.len(), 1);

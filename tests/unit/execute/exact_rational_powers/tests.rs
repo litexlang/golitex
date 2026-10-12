@@ -34,6 +34,32 @@ fn check(source: &str, expected: bool) -> String {
 }
 
 #[test]
+fn zero_positive_real_power_retains_positive_exponent_evidence() {
+    for source in ["have r R+\n0^r=0", "have r R+\n0=0^r"] {
+        let detailed = check(source, true);
+        assert!(detailed.contains("ZeroToPositiveRealPower"), "{detailed}");
+        assert!(detailed.contains("requirements"), "{detailed}");
+        assert!(detailed.contains("r $in R+"), "{detailed}");
+    }
+    check("thm zero_fractional_root:\n    ? forall n N+:\n        1/n $in R+\n        =>:\n            0^(1/n)=0", true);
+    check("0^0=1\n0^2=0", true);
+}
+
+#[test]
+fn zero_positive_real_power_rejects_nonpositive_and_unsupported_exponents() {
+    for source in [
+        "0^0=0",
+        "0^(-1)=0",
+        "have r R\n0^r=0",
+        "thm zero_nonnegative_exponent:\n    ? forall r R:\n        r>=0\n        =>:\n            0^r=0",
+        "have z C\n0^z=0",
+        "have r R+\n2^r=0",
+    ] {
+        check(source, false);
+    }
+}
+
+#[test]
 fn exact_roots_accept_reduced_fractional_and_decimal_exponents() {
     for source in [
         "8^(1/3)=2",

@@ -33,6 +33,7 @@ pub use result::{
 pub use search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty;
 
 pub mod known_fn_standard_return;
+pub mod known_literal_tuple_numeric_coordinate;
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/known_search/tests.rs"]
 mod known_search_tests;

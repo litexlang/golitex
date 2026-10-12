@@ -355,6 +355,12 @@ checked domains and guards, and checks a residual with further rewrite and
 generic definition/forall expansion disabled. Inserted bodies and ordinary call
 arguments are not traversed. See the [runnable tracer](../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit).
 
+The [plane identity example](../examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit)
+checks `plane_add((0,0),x)=(x(1),x(2))=x` without separate zero-coordinate
+statements. Each coordinate sum retains proofs that one summand is zero and
+the other equals its target; the function domain and coordinate indices remain
+checked, without reopening general rewrite search.
+
 Authors choose definitions, constructions and key intermediate results; Litex checks supported local steps against current knowledge. The boundary depends on the work a step requires: following a fixed structure to check available grounds, or choosing a proof route that has not yet been supplied. It cannot be drawn simply by counting automatic steps.
 
 **Check types through a uniform structure.** This expression contains several layers of addition, but the author need not supply a separate type fact for each layer:
@@ -796,6 +802,14 @@ Litex source
 ```
 
 JSON is generated directly from internal execution results and summarizes the check. Relation graphs offer another way to view those results; independent Lean rechecking remains a goal to be integrated.
+
+Forward inference runs once for a checked seed. Each named rule certifies its
+direct conclusions and stores them without another WD or inference pass. Its
+result retains the source and genuine applicability evidence; a Lean adapter
+uses that instance data with proved rules and constructors in `Litex.lean`. An explicit
+later statement can verify a stored conclusion and start the next step. See
+the [one-step tracer](../examples/infer/atomic/one_step_store_only.lit) and the
+[current acceptance checkpoint](../src/store_fact_and_infer/one_step_acceptance.md).
 
 </details>
 

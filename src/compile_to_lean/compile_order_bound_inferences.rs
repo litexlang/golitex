@@ -137,11 +137,10 @@ impl LitexToLeanCompiler {
                 before: checks.len(),
                 ..current
             };
-            self.compile_fact_wd(&captured.well_defined, &fact, &formation)?;
             self.validate_store(derived, &fact)?;
             let formed = SourcePosition::new(
                 Some(&formation),
-                SourceOwner::FactWD(&captured.well_defined),
+                SourceOwner::InferredStore(&captured.store),
                 usize::MAX,
             );
             let b = self.compile_object_reference(bound, &formed)?;

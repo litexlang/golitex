@@ -1,9 +1,8 @@
-use crate::execute::execute_fact_stmt::FactWellDefinedProof;
 use crate::prelude::*;
 
-/// An inferred conclusion is formed, then indexed without further inference.
+/// The enclosing named infer rule certifies this conclusion and its construction.
+/// Storage does not repeat verification or start another inference pass.
 pub struct StoreInferredFactResult {
-    pub well_defined: FactWellDefinedProof,
     pub store: StoreFactResult,
 }
 

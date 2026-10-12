@@ -12,7 +12,7 @@ impl Runtime {
     pub(super) fn infer_superset_elementwise_membership(
         &mut self,
         superset: &SupersetFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<InferSupersetElementwiseMembershipResult> {
         let binder = self.fresh_internal_param();
         let forall = ForallFact {
@@ -34,7 +34,7 @@ impl Runtime {
             ))],
             line_file: superset.line_file.clone(),
         };
-        let derived = Box::new(self.store_inferred_fact(&Fact::ForallFact(forall), verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&Fact::ForallFact(forall))?);
         Ok(InferSupersetElementwiseMembershipResult { derived })
     }
 }

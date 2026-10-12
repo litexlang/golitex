@@ -1086,6 +1086,32 @@ theorem addCancelLeftLeft {M : Semantics.{u}}
   exact (NativeBridge.same_iff_asComplex a b ha hb).mpr
     (add_left_cancel (M.number_injective h))
 
+/-- Replay the selected unequal-operands rule for a nonzero difference. -/
+theorem subNonzeroOfNotSame {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a C) (hb : In b C) (hab : ¬ Same a b) :
+    ¬ Same (sub a b ha hb) (number 0) := by
+  intro h
+  apply hab
+  change M.subValue (denote a) (denote b) = M.number 0 at h
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    M.sub_numbers] at h
+  exact (NativeBridge.same_iff_asComplex a b ha hb).mpr
+    (sub_eq_zero.mp (M.number_injective h))
+
+/-- Replay a known nonzero difference without searching for another inequality. -/
+theorem notSameOfSubNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a C) (hb : In b C)
+    (hsub : ¬ Same (sub a b ha hb) (number 0)) : ¬ Same a b := by
+  intro hab
+  apply hsub
+  change M.subValue (denote a) (denote b) = M.number 0
+  rw [NativeBridge.asComplex_spec a ha, NativeBridge.asComplex_spec b hb,
+    M.sub_numbers, (NativeBridge.same_iff_asComplex a b ha hb).mp hab, sub_self]
+
 /-- Replay the source's shared-subtrahend and shared-minuend cancellation rules. -/
 theorem subCancelRightRight {M : Semantics.{u}}
     {α : Type v} {β : Type w} {γ : Type x}
@@ -1378,6 +1404,21 @@ theorem mulNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
   exact NativeBridge.notSameOfNativeNonzero _ (x * y)
     (NativeBridge.denoteMul a b haC hbC x y hx hy)
     (mul_ne_zero (NativeBridge.nativeNonzeroOfDenote a x hx ha0)
+      (NativeBridge.nativeNonzeroOfDenote b y hy hb0))
+
+theorem divNonzero {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (haC : In a C) (hbC : In b C)
+    (ha0 : ¬ Same a (number 0)) (hb0 : ¬ Same b (number 0)) :
+    ¬ Same (div a b haC hbC hb0) (number 0) := by
+  let x := NativeBridge.asComplex a haC
+  let y := NativeBridge.asComplex b hbC
+  have hx := NativeBridge.asComplex_spec a haC
+  have hy := NativeBridge.asComplex_spec b hbC
+  exact NativeBridge.notSameOfNativeNonzero _ (x / y)
+    (NativeBridge.denoteDiv a b haC hbC hb0 x y hx hy)
+    (div_ne_zero (NativeBridge.nativeNonzeroOfDenote a x hx ha0)
       (NativeBridge.nativeNonzeroOfDenote b y hy hb0))
 
 end Litex

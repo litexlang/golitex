@@ -1,0 +1,18 @@
+# Formerly rejected on the pinned pre-repair binary:
+# have r R+
+# 0^r = 0
+# Now uses ZeroToPositiveRealPower with a checked positive-real exponent.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/zero_to_positive_real_power.lit
+have r R+
+0^r = 0
+0 = 0^r
+
+thm zero_fractional_root:
+    ? forall n N+:
+        1 / n $in R+
+        =>:
+            0^(1 / n) = 0
+
+# Boundary: zero exponent keeps the natural-power convention.
+# Executable rejection tests cover 0^0=0, negative and untyped exponents.
+0^0 = 1

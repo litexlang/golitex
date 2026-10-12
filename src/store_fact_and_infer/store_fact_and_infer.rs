@@ -14,7 +14,7 @@ impl Runtime {
         let store = self.store_fact(fact)?;
         self.remember_formed_atomic_subjects(fact);
         let infer = if verify_state.allows_inference() {
-            Some(self.infer_fact(fact, verify_state.without_inference())?)
+            Some(self.infer_fact(fact, verify_state)?)
         } else {
             None
         };

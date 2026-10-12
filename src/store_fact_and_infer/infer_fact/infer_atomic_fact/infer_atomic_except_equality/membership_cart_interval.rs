@@ -44,7 +44,7 @@ impl Runtime {
     fn infer_in_fact_cart(
         &mut self,
         in_fact: &InFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::ProductShape(ProductShape::Cart(cart)) = &in_fact.set else {
             return Ok(None);
@@ -65,7 +65,8 @@ impl Runtime {
                 set: factor.as_ref().clone(),
                 line_file: in_fact.line_file.clone(),
             }));
-            if let Some(stored) = self.try_store_inferred_fact(&membership, verify_state)? {
+            {
+                let stored = self.store_inferred_fact(&membership)?;
                 derived.push(stored);
             }
         }
@@ -124,56 +125,54 @@ impl Runtime {
         start: Obj,
         end: Obj,
         end_inclusive: bool,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Vec<StoreInferredFactResult>> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
         let mut derived = Vec::new();
 
         let in_z_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: in_z_id,
                 element: element.clone(),
                 set: Obj::StandardSet(StandardSet::Z),
                 line_file: lf.clone(),
-            })),
-            verify_state,
-        )?);
+            })))?,
+        );
 
         let lower_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
-                fact_id: lower_id,
-                left: start.clone(),
-                right: element.clone(),
-                line_file: lf.clone(),
-            })),
-            verify_state,
-        )?);
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::LessEqualFact(
+                LessEqualFact {
+                    fact_id: lower_id,
+                    left: start.clone(),
+                    right: element.clone(),
+                    line_file: lf.clone(),
+                },
+            )))?,
+        );
 
         if end_inclusive {
             let upper_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+            derived.push(self.store_inferred_fact(&Fact::AtomicFact(
+                AtomicFact::LessEqualFact(LessEqualFact {
                     fact_id: upper_id,
                     left: element.clone(),
                     right: end.clone(),
                     line_file: lf.clone(),
-                })),
-                verify_state,
-            )?);
+                }),
+            ))?);
         } else {
             let upper_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+            derived.push(
+                self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::LessFact(LessFact {
                     fact_id: upper_id,
                     left: element.clone(),
                     right: end.clone(),
                     line_file: lf.clone(),
-                })),
-                verify_state,
-            )?);
+                })))?,
+            );
         }
 
         // A positive integer literal lower bound makes this integer interval
@@ -185,30 +184,28 @@ impl Runtime {
         );
         if positive_start {
             let positive_carrier_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::InFact(InFact {
+            derived.push(
+                self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
                     fact_id: positive_carrier_id,
                     element: element.clone(),
                     set: Obj::StandardSet(StandardSet::NPos),
                     line_file: lf.clone(),
-                })),
-                verify_state,
-            )?);
+                })))?,
+            );
         }
 
         if let Some(singleton) =
             self.singleton_value_for_integer_interval(&start, &end, end_inclusive)
         {
             let eq_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+            derived.push(
+                self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                     fact_id: eq_id,
                     left: element,
                     right: singleton,
                     line_file: lf,
-                })),
-                verify_state,
-            )?);
+                })))?,
+            );
         }
 
         Ok(derived)
@@ -241,7 +238,7 @@ impl Runtime {
     fn infer_in_fact_real_interval(
         &mut self,
         in_fact: &InFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::IntervalObj(interval)) = &in_fact.set else {
             return Ok(None);
@@ -274,62 +271,57 @@ impl Runtime {
         let mut derived = Vec::new();
 
         let in_r_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: in_r_id,
                 element: element.clone(),
                 set: Obj::StandardSet(StandardSet::R),
                 line_file: lf.clone(),
-            })),
-            verify_state,
-        )?);
+            })))?,
+        );
 
         if left_closed {
             let lower_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+            derived.push(self.store_inferred_fact(&Fact::AtomicFact(
+                AtomicFact::LessEqualFact(LessEqualFact {
                     fact_id: lower_id,
                     left: start,
                     right: element.clone(),
                     line_file: lf.clone(),
-                })),
-                verify_state,
-            )?);
+                }),
+            ))?);
         } else {
             let lower_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+            derived.push(
+                self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::LessFact(LessFact {
                     fact_id: lower_id,
                     left: start,
                     right: element.clone(),
                     line_file: lf.clone(),
-                })),
-                verify_state,
-            )?);
+                })))?,
+            );
         }
 
         if right_closed {
             let upper_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+            derived.push(self.store_inferred_fact(&Fact::AtomicFact(
+                AtomicFact::LessEqualFact(LessEqualFact {
                     fact_id: upper_id,
                     left: element,
                     right: end,
                     line_file: lf,
-                })),
-                verify_state,
-            )?);
+                }),
+            ))?);
         } else {
             let upper_id = self.global_ids.allocate_fact_id();
-            derived.push(self.store_inferred_fact(
-                &Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+            derived.push(
+                self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::LessFact(LessFact {
                     fact_id: upper_id,
                     left: element,
                     right: end,
                     line_file: lf,
-                })),
-                verify_state,
-            )?);
+                })))?,
+            );
         }
 
         Ok(Some(InferAtomicExceptEqualityResult::InFactRealInterval(
@@ -340,7 +332,7 @@ impl Runtime {
     fn infer_in_fact_one_side_real_interval(
         &mut self,
         in_fact: &InFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(interval)) = &in_fact.set else {
             return Ok(None);
@@ -350,15 +342,14 @@ impl Runtime {
         let mut derived = Vec::new();
 
         let in_r_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: in_r_id,
                 element: element.clone(),
                 set: Obj::StandardSet(StandardSet::R),
                 line_file: lf.clone(),
-            })),
-            verify_state,
-        )?);
+            })))?,
+        );
 
         // Lower* = ray (a, +∞) / [a, +∞); Upper* = (−∞, a) / (−∞, a].
         let bound_id = self.global_ids.allocate_fact_id();
@@ -392,7 +383,7 @@ impl Runtime {
                 })
             }
         };
-        derived.push(self.store_inferred_fact(&Fact::AtomicFact(bound), verify_state)?);
+        derived.push(self.store_inferred_fact(&Fact::AtomicFact(bound))?);
 
         Ok(Some(
             InferAtomicExceptEqualityResult::InFactOneSideRealInterval(

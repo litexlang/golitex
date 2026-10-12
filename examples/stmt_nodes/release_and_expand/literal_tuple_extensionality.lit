@@ -7,12 +7,19 @@
 claim:
     ? forall a cart({1},{2}):
         a=(1,2)
+    a(1) $in {1}
+    a(2) $in {2}
     release thm tuple_equal_from_coordinates(a,(1,2))
 
 sketch:
     have a cart({1},{2},{3})
+    a(1) $in {1}
+    a(2) $in {2}
+    a(3) $in {3}
     release thm tuple_equal_from_coordinates(a,(1,2,3))
 
 sketch:
     have a cart({1},{2})
+    a(1) $in {1}
+    a(2) $in {2}
     release thm tuple_equal_from_coordinates((1,2),a)

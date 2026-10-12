@@ -10,20 +10,27 @@ env and may **store routine consequences**. It is not open-ended proof search.
 | `store_fact` | Index by shape into known-\* / ExecEnv (no math consequences) |
 | `infer_fact` | Generate direct facts only via `store_inferred_fact` |
 | `store_fact_and_infer` | `{ store, infer }` for a verified seed |
-| `store_inferred_fact` | WD-check then store only (no infer children) |
+| `store_inferred_fact` | Direct store; correctness belongs to the named infer rule |
 
-Forward inference runs once per seed. Its derived facts are checked and indexed
-without another inference pass. Formation checks inherit `without_inference()`
-so their temporary binder assumptions cannot reopen inference. A later explicit
-statement can verify the stored consequence and use it as a new seed.
-`StoreInferredFactResult { well_defined, store }` records these actual stages;
-there is no child infer tree. `StoreFactAndInferResult.infer` is absent in
-store-only formation scopes.
+Forward inference runs once per seed. Each named rule guarantees formation and
+truth of its direct conclusions from the checked source and its own applicable
+conditions. Conclusions store without another WD or inference pass. A later
+explicit statement can verify a stored conclusion and use it as a new seed.
+`StoreInferredFactResult { store }` records the actual storage stage. The owning
+infer enum retains the rule identity, source IDs and genuine condition proofs.
+Lean uses this instance data with a proved rule and certified constructors from
+`Litex.lean`; it does not need a fabricated conclusion-WD result.
+Inference permissions remain disabled in temporary scopes used for checking
+rule premises, so those checks cannot open another inference chain.
 
 The strict acceptance file is
 [`one_step_store_only.lit`](../../examples/infer/atomic/one_step_store_only.lit).
 It covers exact and mutual FnRange cycles, growing builder elements and the
 explicit next-seed boundary.
+
+The [acceptance checkpoint](one_step_acceptance.md) records the passing gates
+and any remaining verification work. The former derived-WD failure-policy
+question is superseded by named-rule direct storage.
 
 Callers verify the seed first. Nested WD/proof inside a statement uses
 `verify_*` / `store_*` — not a second `exec_stmt`.
@@ -76,7 +83,7 @@ store_fact_and_infer/
   inherit the caller's permissions capped at KnownSpecialProperty. Missing
   premises skip the rule without rejecting the accepted source equality.
   Each result retains the source FactId, common operand, premise proofs and
-  ordinary WD-checked derived store. The equality graph skips
+  direct rule-certified store. The equality graph skips
   already-known endpoints. Each cancellation removes one outer
   arithmetic constructor; a derived equality does not cancel again automatically. Later nonzero facts do not retrigger older seeds.
   Tracers: `examples/infer/equal/{additive,subtractive,nonzero_factor,common_denominator,nonzero_numerator}_cancellation.lit`; focused tests:
@@ -95,7 +102,7 @@ For a real nonzero square this reuses `EvenPowPositiveFromNonzero`; it avoids
 searching for the unnecessary stronger premise `0 < a`. If that bounded check
 fails, the positive-base fallback and real-exponent membership use the same
 inherited BuiltinRule ceiling. Missing optional evidence skips this inference;
-ordinary inferred-store WD retains the original caller ceiling. No global
+rule premise checking retains the original caller ceiling. No global
 permission, state, result shape or user-goal search changes. Tracers:
 `examples/infer/equal/nonzero_real_square.lit` and
 `examples/infer/equal/positive_real_power_bounded_premises.lit`.
@@ -114,9 +121,9 @@ These ceilings are inherited restrictions, never fresh root permissions.
 An unavailable optional premise leaves the accepted seed intact. Explicit
 proofs can establish and store the missing certificate for a later seed.
 
-Construction and derived-fact WD are separate obligations. Template builder
-projection checks the selected template instance before expansion; preimage
-projection checks its complete callable domain and generated builder. Both
+Template builder projection expands a checked source instance. Preimage
+projection retains its complete-domain certificate and directly constructs its
+builder; the inferred builder and projected conclusions do not repeat WD. Both
 retain the caller's permissions and required evidence. Every inferred store
 still passes through ordinary fact WD. Capping or omitting those checks merely
 because they occur during inference would change the formation contract.

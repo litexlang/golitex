@@ -300,6 +300,9 @@ impl LitexToLeanCompiler {
         rule: &InFactSearchProofByKnownSpecialProperty,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(proof) = rule {
+            return self.compile_known_subset_member(goal, proof, position);
+        }
         let target = self.compile_numeric_carrier(&goal.set, position)?;
         let target = &target;
         let proof = position.with_visible_wd(&goal.element, &mut |wd, producer| {

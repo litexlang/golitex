@@ -56,6 +56,15 @@ forall q preimage(square, 4):
     q $in preimage_set(square, {4})
 
 forall q preimage_set(square, {4}):
+    square(q) $in {4}
+    square(q) = 4
     q $in preimage(square, 4)
 
-by extension preimage(square, 4) = preimage_set(square, {4})
+by extension:
+    ? preimage(square, 4) = preimage_set(square, {4})
+    claim:
+        ? forall q preimage_set(square, {4}):
+            q $in preimage(square, 4)
+        square(q) $in {4}
+        square(q) = 4
+        q $in preimage(square, 4)

@@ -192,21 +192,6 @@ fn producer_numeric_capture_signed_inferences_keep_their_original_formation() {
                 })
                 .expect("signed carrier generates its sign consequences");
             for captured in &sign.derived {
-                let FactWellDefinedProof::AtomicExceptEquality(formation) = &captured.well_defined
-                else {
-                    panic!("sign consequence has its original atomic WD")
-                };
-                let arguments = atomic_fact_args_ref(seed(&captured.store));
-                assert_eq!(
-                    formation.well_defined_of_each_parameter.len(),
-                    arguments.len()
-                );
-                for (argument, wd) in arguments
-                    .iter()
-                    .zip(&formation.well_defined_of_each_parameter)
-                {
-                    assert_eq!(argument.ir(), wd.obj().ir());
-                }
                 assert!(store
                     .stored_fact_ids()
                     .contains(&captured.store.primary_fact_id()));

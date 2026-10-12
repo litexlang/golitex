@@ -29,6 +29,13 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+[Checked-zero addition](equal/by_builtin_rule/add_zero_from_equalities.lit)
+checks `a+b=c` from `b=c`, `a=0`, or `a=c`, `b=0`, including reversed goals.
+The [literal coordinate carrier](atomic/by_known_special_property/literal_tuple_numeric_coordinate.lit)
+retains the chosen coordinate's closed numeric evidence after the whole call
+passes WD. Their composition verifies `plane_add((0,0),x)=(x(1),x(2))=x`
+without another rewrite round. These new evidence routes have no Lean replay yet.
+
 ## One-step function-application unfold substitution
 
 [FnApplicationUnfoldSubstitution](equal/by_builtin_rewrite/fn_application_unfold_substitution.lit)

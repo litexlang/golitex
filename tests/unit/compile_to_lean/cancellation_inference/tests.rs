@@ -117,14 +117,9 @@ fn cancellation_inference_emits_original_ids_and_retained_formation() {
         let StoreFactResult::AtomicFact(stored) = &captured.store else {
             panic!("derived equality store")
         };
-        let AtomicFact::EqualFact(equal) = &stored.fact else {
+        let AtomicFact::EqualFact(_equal) = &stored.fact else {
             panic!("derived equality")
         };
-        let FactWellDefinedProof::Equality(wd) = &captured.well_defined else {
-            panic!("derived equality formation")
-        };
-        assert_eq!(wd.left.obj().ir(), equal.left.ir());
-        assert_eq!(wd.right.obj().ir(), equal.right.ir());
         let derived_id = stored.fact_id;
         let output = super::compile_run(&result, &compiler, "cancellation_capture").unwrap();
         assert!(output.contains(&format!("have h_{}", derived_id.value())));
@@ -134,40 +129,47 @@ fn cancellation_inference_emits_original_ids_and_retained_formation() {
 }
 
 #[test]
-fn cancellation_inference_recurses_through_nested_and_mixed_original_stores() {
-    for (seed, guards, first, second) in [
+fn cancellation_inference_replays_explicit_nested_and_mixed_steps() {
+    for (seed, guards, residual, first, second) in [
         (
             "(a*x)*y=(b*x)*y",
             "    x!=0\n    y!=0\n",
+            "a*x=b*x",
             "mulCancelRightRight",
             "mulCancelRightRight",
         ),
         (
             "(a-x)-y=(b-x)-y",
             "",
+            "a-x=b-x",
             "subCancelRightRight",
             "subCancelRightRight",
         ),
         (
             "(a/x)/y=(b/x)/y",
             "    x!=0\n    y!=0\n",
+            "a/x=b/x",
             "divCancelCommonDenominator",
             "divCancelCommonDenominator",
         ),
         (
             "(a-x)*y=(b-x)*y",
             "    y!=0\n",
+            "a-x=b-x",
             "mulCancelRightRight",
             "subCancelRightRight",
         ),
         (
             "(a+x)/y=(b+x)/y",
             "    y!=0\n",
+            "a+x=b+x",
             "divCancelCommonDenominator",
             "addCancelRightRight",
         ),
     ] {
-        let source = format!("forall a, b, x, y Q:\n{guards}    {seed}\n    =>:\n        a=b\n");
+        let source = format!(
+            "forall a, b, x, y Q:\n{guards}    {seed}\n    =>:\n        {residual}\n        a=b\n"
+        );
         let (result, compiler) = super::execute(&source);
         let output = super::compile_run(&result, &compiler, "nested_cancellation")
             .unwrap_or_else(|error| panic!("{seed}: {error}"));
@@ -209,7 +211,7 @@ fn cancellation_inference_rejects_changed_source_operand_and_member_evidence() {
 #[test]
 fn cancellation_inference_rejects_wrong_formation_subject_and_deleted_producer() {
     for (seed, guards, _) in CASES {
-        for change in ["formation", "subject", "deleted"] {
+        for change in ["subject", "deleted"] {
             let (mut result, compiler) = super::execute(&source(seed, guards, "C"));
             let forall = super::forall_proof_mut(&mut result.statement_results[0]);
             let store = &mut forall.assumed_dom_facts.last_mut().unwrap().store_and_infer;
@@ -217,26 +219,16 @@ fn cancellation_inference_rejects_wrong_formation_subject_and_deleted_producer()
                 rules_mut(store).clear();
             } else {
                 let (_, _, _, _, _, _, captured) = parts_mut(&mut rules_mut(store)[0]);
-                if change == "formation" {
-                    let FactWellDefinedProof::Equality(wd) = &mut captured.well_defined else {
-                        panic!("equality formation")
-                    };
-                    std::mem::swap(&mut wd.left, &mut wd.right);
-                } else {
-                    let StoreFactResult::AtomicFact(stored) = &mut captured.store else {
-                        panic!("atomic store")
-                    };
-                    let AtomicFact::EqualFact(equal) = &mut stored.fact else {
-                        panic!("equality store")
-                    };
-                    equal.right = super::number_object("7");
-                }
+                let StoreFactResult::AtomicFact(stored) = &mut captured.store else {
+                    panic!("atomic store")
+                };
+                let AtomicFact::EqualFact(equal) = &mut stored.fact else {
+                    panic!("equality store")
+                };
+                equal.right = super::number_object("7");
             }
             let error = super::compile_run(&result, &compiler, "invalid_cancellation")
                 .expect_err("wrong or missing captured stages do not become assumptions");
-            if change == "formation" {
-                assert_eq!(error.route, "WD/Subject");
-            }
             if change == "subject" {
                 assert!(error.route.ends_with("Identity"));
             }
@@ -311,7 +303,8 @@ fn cancellation_inference_rejects_future_and_closed_scope_member_citations() {
 #[test]
 fn nonzero_numerator_cursor_keeps_all_guard_and_nested_stages_ordered() {
     let input = source("k/(a-x)=k/(b-x)", "    k!=0\n    a-x!=0\n    b-x!=0\n", "Q")
-        .replace("a, b, k Q", "a, b, k, x Q");
+        .replace("a, b, k Q", "a, b, k, x Q")
+        .replace("        a=b", "        a-x=b-x\n        a=b");
     let (mut result, compiler) = super::execute(&input);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let store = &forall.assumed_dom_facts.last().unwrap().store_and_infer;
@@ -385,11 +378,15 @@ fn cancellation_inference_requires_every_nested_and_nonzero_citation_stage() {
         ("(a/x)/y=(b/x)/y", "    x!=0\n    y!=0\n", "a/x=b/x"),
     ] {
         let input = format!(
-            "forall a, b, x, y Q:\n{guards}    {seed}\n    {residual}\n    =>:\n        a=b\n"
+            "forall a, b, x, y Q:\n{guards}    {seed}\n    =>:\n        {residual}\n        a=b\n"
         );
         let (mut result, compiler) = super::execute(&input);
         let forall = super::forall_proof_mut(&mut result.statement_results[0]);
-        let store = &mut forall.assumed_dom_facts.last_mut().unwrap().store_and_infer;
+        let store = &mut forall
+            .proved_then_facts
+            .first_mut()
+            .unwrap()
+            .store_and_infer;
         rules_mut(store).clear();
         let error = super::compile_run(&result, &compiler, "missing_nested_producer")
             .expect_err("the final citation cannot skip its nested original producer");

@@ -105,11 +105,10 @@ impl LitexToLeanCompiler {
                     owner: SourceOwner::PropInference(owner),
                     before: offset,
                 };
-                self.compile_fact_wd(&derived.well_defined, &fact, &prior)?;
                 self.validate_store(&derived.store, &fact)?;
                 let formed = SourcePosition {
                     parent: Some(&prior),
-                    owner: SourceOwner::FactWD(&derived.well_defined),
+                    owner: SourceOwner::InferredStore(&derived.store),
                     before: usize::MAX,
                 };
                 let compiled = (self.fact_proposition(&fact, &formed)?, term);

@@ -4,7 +4,7 @@ use crate::runtime::FactId;
 
 use super::{InferAtomicFactResult, StoreInferredFactResult};
 
-// infer_fact: only generate extra facts and store them (via store_inferred / store_fact_and_infer).
+// infer_fact: generate one layer of consequences and store them via store_inferred_fact.
 // Never used to poke unrelated ExecEnv indexes — that belongs to store_fact.
 pub enum InferFactResult {
     AtomicFact(InferAtomicFactResult),

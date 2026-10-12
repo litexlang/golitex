@@ -412,15 +412,21 @@ impl InferAtomicExceptEqualityResult {
 pub struct InferInFactPreimageResult {
     pub source_fact_id: FactId,
     pub source_equal: KnownEqualityPathProof,
-    pub construction:
-        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub construction: InferPreimageConstructionResult,
     pub derived: Vec<StoreInferredFactResult>,
 }
 
 pub struct InferInFactPreimageSetResult {
     pub source_fact_id: FactId,
     pub source_equal: KnownEqualityPathProof,
-    pub construction:
-        crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+    pub construction: InferPreimageConstructionResult,
     pub derived: Vec<StoreInferredFactResult>,
+}
+
+// The source domain certificate licenses this generated builder and its projections.
+// User-object verification retains its separate checked construction result.
+pub struct InferPreimageConstructionResult {
+    pub source:
+        Box<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
+    pub builder: crate::ast::obj::SetBuilder,
 }

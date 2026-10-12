@@ -5,6 +5,7 @@
 #     =>:
 #         a=b
 # Now: both common subtrahend and common minuend publish a=b.
+# Nested cancellation: the checked intermediate equality starts the next inference.
 # Boundary: a-k=k-b does not justify a=b; no crossed-position cancellation.
 # Tests: tests/unit/execute/equality_cancellation/tests.rs
 # Owner: src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_equal_fact/infer_equal_fact_subtractive_cancellation.rs
@@ -23,4 +24,5 @@ forall a, b, k R:
 forall a, b, x, y Q:
     (x-a)-y=(x-b)-y
     =>:
+        x-a=x-b
         a=b

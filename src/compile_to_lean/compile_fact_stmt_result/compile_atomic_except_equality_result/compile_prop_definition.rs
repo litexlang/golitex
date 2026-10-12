@@ -345,11 +345,10 @@ impl LitexToLeanCompiler {
                         "The captured derived store differs from its exact source fact ID.",
                     ));
                 }
-                self.compile_fact_wd(&derived.well_defined, &fact, &prior)?;
                 self.validate_store(&derived.store, &fact)?;
                 let formed = SourcePosition {
                     parent: Some(&prior),
-                    owner: SourceOwner::FactWD(&derived.well_defined),
+                    owner: SourceOwner::InferredStore(&derived.store),
                     before: usize::MAX,
                 };
                 let names = witness_ids

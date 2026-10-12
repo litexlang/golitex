@@ -4,7 +4,7 @@
 //! - `store_fact`: index by fact shape into known-* / ExecEnv fields
 //! - `infer_fact`: only generate extra facts and store them (never raw Env field pokes)
 //! - `store_fact_and_infer`: `{ store, infer }` (seed already verified by caller)
-//! - `store_inferred_fact`: WD check, then store_fact_and_infer (for infer children)
+//! - `store_inferred_fact`: direct store; the enclosing named rule certifies it
 //!
 //! Non-atomic infer is not uniformly "atomic packaging":
 //! - And / Chain-adjacent: delegate to atomic infer (+ Chain transitive closure)
@@ -18,5 +18,6 @@ pub mod infer_fact;
 pub mod store_fact;
 pub mod store_fact_and_infer;
 pub mod store_fact_and_infer_result;
+pub mod store_inferred_fact;
 
 pub use store_fact_and_infer_result::*;

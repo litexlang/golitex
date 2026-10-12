@@ -369,7 +369,7 @@ fn restriction_beta_consumes_exact_parent_wd_without_raising_premise_permissions
         let restricted = rt.normalize_function_body(&goal.left, &goal.right, child)?;
         eprintln!("restriction beta stages: app_top={app_top}, app_builtin={app_child}, residual_builtin={residual_child}, normalize_top={}, normalize_builtin={}", top.is_some(), restricted.is_some());
         assert!(app_top && residual_child && top.is_some());
-        assert!(!app_child && restricted.is_none(), "do not raise the ordinary normalizer ceiling");
+        assert!(app_child && restricted.is_some(), "known member/subset inputs suffice at the unchanged builtin ceiling");
         for level in [VerifyStateLevel::Direct, VerifyStateLevel::KnownSpecialProperty,
             VerifyStateLevel::BuiltinRule, VerifyStateLevel::Strategy] {
             assert!(rt.try_parent_checked_beta_with_parent_well_definedness(
@@ -399,11 +399,11 @@ fn restriction_beta_consumes_exact_parent_wd_without_raising_premise_permissions
     );
     let detailed =
         crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &root);
-    assert_eq!(
-        field_rec(&detailed, "parent_well_defined_side"),
-        Some(JsonValue::String("left".into()))
+    assert!(
+        field_rec(&detailed, "parent_well_defined_side").is_none(),
+        "ordinary bounded beta does not invent parent-WD fallback evidence"
     );
-    assert!(field_rec(&detailed, "residual_proof").is_some());
+    assert!(field_rec(&detailed, "residual_equal").is_some());
 }
 
 #[test]
@@ -413,18 +413,15 @@ fn restricted_literal_beta_right_side_and_cited_residual_keep_evidence() {
     assert!(run.success && run.session_error.is_none());
     let detailed =
         crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
-    assert_eq!(
-        field_rec(&detailed, "parent_well_defined_side"),
-        Some(JsonValue::String("right".into()))
-    );
+    assert!(field_rec(&detailed, "parent_well_defined_side").is_none());
 
     let mut rt = runtime();
     let run = rt.run_litex_code("claim:\n    ? forall X, Y set, K power_set(X), f fn(x X) Y, point K, other Y:\n        f(point) = other\n        =>:\n            fn(x K) Y {f(x)}(point) = other\n    point $in X\n    f(point) $in Y\n    fn(x K) Y {f(x)}(point) = other\n").unwrap();
     assert!(run.success && run.session_error.is_none());
     let detailed =
         crate::json_output::project_stmt_detailed(run.statement_results.last().unwrap(), &rt);
-    assert!(field_rec(&detailed, "parent_well_defined_side").is_some());
-    let residual = field_rec(&detailed, "residual_proof").unwrap();
+    assert!(field_rec(&detailed, "parent_well_defined_side").is_none());
+    let residual = field_rec(&detailed, "residual_equal").unwrap();
     assert!(
         field_rec(&residual, "cite_fact_id").is_some(),
         "residual must retain the actual equality citation ID after the local scope closes"

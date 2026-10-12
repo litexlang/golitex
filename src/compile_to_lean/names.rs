@@ -478,6 +478,13 @@ impl LitexToLeanCompiler {
         {
             return Ok(term);
         }
+        if let Some(term) = position.with_visible_inferred_subject(object, &mut |_, _| {
+            // The named rule creates this primitive; its Lean constructor proves WD.
+            // This is not a replacement Verify result or an arbitrary cache fallback.
+            self.compile_inferred_obj(object, position)
+        })? {
+            return Ok(term);
+        }
         if let Some(term) = self.compile_callee_constructor_reference(object, position)? {
             return Ok(term);
         }

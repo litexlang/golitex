@@ -126,15 +126,14 @@ fn every_literal_builtin_explanation_has_complete_nonempty_payloads() {
             let source = std::fs::read_to_string(&path).unwrap();
             for implementation in source.split("\nimpl ").skip(1) {
                 let owner = implementation.split('{').next().unwrap().trim();
-                let english_messages: Vec<_> = implementation
+                let english_body = implementation
                     .split("pub fn rule_name_and_message_en(")
                     .nth(1)
                     .unwrap_or("")
                     .split("pub fn ")
                     .next()
-                    .unwrap()
-                    .split("text(")
-                    .skip(1)
+                    .unwrap();
+                let english_messages: Vec<Vec<String>> = literal_text_calls(english_body)
                     .map(|call| first_string_literals(call, 2))
                     .collect();
                 for (language, (_, suffix)) in OutputLanguage::ALL.into_iter().zip(LANGUAGES) {
@@ -146,7 +145,7 @@ fn every_literal_builtin_explanation_has_complete_nonempty_payloads() {
                         .split("pub fn ")
                         .next()
                         .unwrap();
-                    let calls: Vec<_> = body.split("text(").skip(1).collect();
+                    let calls: Vec<_> = literal_text_calls(body).collect();
                     assert_eq!(
                         calls.len(),
                         english_messages.len(),
@@ -192,6 +191,16 @@ fn every_literal_builtin_explanation_has_complete_nonempty_payloads() {
         checked > 0,
         "payload audit must inspect actual rule implementations"
     );
+}
+
+// Audit literal text() calls, not helper identifiers whose names end in text.
+fn literal_text_calls(source: &str) -> impl Iterator<Item = &str> {
+    source.match_indices("text(").filter_map(move |(index, _)| {
+        let has_identifier_prefix = index > 0
+            && (source.as_bytes()[index - 1].is_ascii_alphanumeric()
+                || source.as_bytes()[index - 1] == b'_');
+        (!has_identifier_prefix).then_some(&source[index + "text(".len()..])
+    })
 }
 
 fn first_string_literals(source: &str, limit: usize) -> Vec<String> {

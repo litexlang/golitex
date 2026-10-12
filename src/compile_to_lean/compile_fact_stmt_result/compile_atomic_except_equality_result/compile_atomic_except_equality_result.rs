@@ -111,9 +111,8 @@ impl LitexToLeanCompiler {
                         }
                         AtomicExceptEqualityFactSearchedProof::ByDefinition(proof) =>
                             self.compile_prop_definition(&success.fact, proof, position)?,
-                        AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(_) => {
-                            return Err(LeanCompileError::unsupported("Atomic/KnownForallFact"))
-                        }
+                        AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(proof) =>
+                            self.compile_known_application(&success.fact.clone().into(), proof, position)?.1,
                         AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(proof) =>
                             self.compile_atomic_builtin_rewrite(&success.fact, proof, position)?,
                         AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(_) => {

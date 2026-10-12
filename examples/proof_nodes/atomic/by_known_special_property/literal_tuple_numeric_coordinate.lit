@@ -1,0 +1,14 @@
+# Tracer: numeric membership of a literal tuple coordinate at the special-property stage.
+# Before: (0,0)(1) $in C needed the finite-function membership strategy.
+# Consequently a tuple equality's generated scalar child could fail its numeric WD.
+# Now: read the selected literal coordinate and retain its closed membership calculation.
+# Boundary: the whole call must be WD; wrong indices and false numeric carriers reject.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_known_special_property/literal_tuple_numeric_coordinate.lit
+# Rust: tests/add_zero_builtin.rs. This new evidence has no Lean replay yet.
+
+(0, 0)(1) $in C
+(0, 3 / 2)(2) $in Q
+(i, 0)(1) $in C
+
+have pair R × R = (0, 3 / 2)
+pair(2) $in Q

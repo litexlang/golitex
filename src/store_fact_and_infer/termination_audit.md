@@ -1,5 +1,9 @@
 # Inference termination and necessity audit
 
+This report preserves the pre-change investigation. The later
+[one-step checkpoint](one_step_acceptance.md) records the implemented boundary,
+verified liveness and still-failing acceptance gates.
+
 Audited on 2026-10-12 against the current working tree, including its existing
 uncommitted changes. This was a read-only kernel investigation: no production
 Rust, runtime, environment, AST, search policy or test expectations were changed.

@@ -9343,6 +9343,22 @@ release thm set_builder_member(1, {x R: $marked(x)})
 
 ## 内置验证规则
 
+**预览：用已验证的零加数检查加法。** 数值加法 `a+b=c` 可以检查
+`b=c`、`a=0`，或 `a=c`、`b=0`；等式反向写法也受支持。两个 builtin
+保留各自的两个前提证明，沿用现有验证权限。字面 tuple 的数值坐标，在整次
+调用有定义以后，可以通过所选坐标的闭式计算取得数值类型。因此可直接写：
+
+```litex
+have x R × R
+((0, 0)(1) + x(1), x(2) + (0, 0)(2)) = (x(1), x(2))
+```
+
+[平面零向量验收例子](../examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit)
+还检查函数展开和坐标重建。未知或非零加数、另一项不相等以及越界索引仍失败。
+Detailed 输出记录 `AddZeroLeftFromEqualities` / `AddZeroRightFromEqualities`
+的 `remaining_equal`、`zero_equal`，以及 `LiteralTupleNumericCoordinate`
+的坐标与计算证据。这些新路线暂不支持 Lean 导出，编译会明确失败。
+
 内置验证规则是检查器实现的小型数学模式，用于关闭当前目标；它们不同于推导，后者在语句已接受后存储有用后果。
 
 自动规则有意为有界。 direct 规则检查其记录的前提；结构内置策略只能通过相同对象形状的较小部分进行递归。这两条路线都不是不受限制的定理搜索。 Rust 详细投影保留嵌套的证据。默认 CLI 正常输出可以总结为证据。
@@ -10754,7 +10770,9 @@ forall x R:
 
 在存储接受或信任的事实后，内置推导可以将例程后果添加到同一环境。这些后果成为后来的语句的普通已知信息。
 
-推导可能会链接到新的推导出的事实，但它会停止循环重新扩展。这支持例程载体、定义和结构后果，而不承诺任意逻辑闭包。
+推导对原始事实只运行一次。每种命名规则负责保证直接结论的合法性和成立性；这些结论只存储，不重复进行 WD 检查或启动推导。规则真正需要的条件仍会检查并保留证据，例如乘法消去所需的非零性。检查这些条件时引入的临时事实也只存储。后续显式验证这条结论的语句可以将它作为下一次推导的原始事实。
+
+例如，`outer` 的定义包含 `inner` 时，存储 `$outer(value)` 可以发布 `$inner(value)`，但不会继续发布 `inner` 的所有定义结论。显式写出 `$inner(value)` 才启动下一步。参见[严格模式的一步推导示例](../examples/infer/atomic/one_step_store_only.lit)。
 
 <a id="verification-versus-inference"></a>
 
@@ -10875,7 +10893,7 @@ forall a, b, k R:
 ```
 
 
-乘积相等触发推导；其源码和操作数 C-成员关系和非零证明被保留。前提检查继承调用者的向上取整并最多使用 KnownSpecialProperty，没有策略或 forall 搜索。还支持 `k*a=b*k`。匹配需要直接相同的公共操作数；规则不会扩展或重新关联表达式，或追踪别名。派生的相等使用普通的 WD/store/infer，并且可以触发另一个严格较小的消去。跳过已知的剩余相等。零或不可用所需的非零证明不包括消去；具体地，`0/a=0/b`不提供`a`和`b`的相等。具有未证明或零分母的商在存储其源码相等之前会出现 WD 故障。在乘积相等之后到达的非零事实不会重新触发它；一旦出现证书，就可以重述相等。这些推导后果尚未被 Lean 编译器重播；引用到 `FactId/Producer` 时失败。请参阅[加法示踪剂](../examples/infer/equal/additive_cancellation.lit)、[减法示踪剂](../examples/infer/equal/subtractive_cancellation.lit)、[非零-因子示踪剂](../examples/infer/equal/nonzero_factor_cancellation.lit)、[公分母示踪剂](../examples/infer/equal/common_denominator_cancellation.lit) 和 [非零-分子示踪剂](../examples/infer/equal/nonzero_numerator_cancellation.lit)。
+乘积相等触发推导；其源码和操作数 C-成员关系和非零证明被保留。前提检查继承调用者的向上取整并最多使用 KnownSpecialProperty，没有策略或 forall 搜索。还支持 `k*a=b*k`。匹配需要直接相同的公共操作数；规则不会扩展或重新关联表达式，或追踪别名。派生的相等由命名消去规则保证正确，并直接存储。显式验证中间相等后才启动下一次消去。跳过已知的剩余相等。零或不可用所需的非零证明不包括消去；具体地，`0/a=0/b`不提供`a`和`b`的相等。具有未证明或零分母的商在存储其源码相等之前会出现 WD 故障。在乘积相等之后到达的非零事实不会重新触发它；一旦出现证书，就可以重述相等。这些推导后果尚未被 Lean 编译器重播；引用到 `FactId/Producer` 时失败。请参阅[加法示踪剂](../examples/infer/equal/additive_cancellation.lit)、[减法示踪剂](../examples/infer/equal/subtractive_cancellation.lit)、[非零-因子示踪剂](../examples/infer/equal/nonzero_factor_cancellation.lit)、[公分母示踪剂](../examples/infer/equal/common_denominator_cancellation.lit) 和 [非零-分子示踪剂](../examples/infer/equal/nonzero_numerator_cancellation.lit)。
 
 推导是定向簿记，不是求解任何方程的许可证：
 

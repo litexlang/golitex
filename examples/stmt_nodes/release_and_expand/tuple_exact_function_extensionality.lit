@@ -10,12 +10,15 @@
 release thm tuple_equal_from_coordinates((),())
 
 have one cart({7})
+one(1) $in {7}
 
 release thm tuple_equal_from_coordinates(one,tuple(7))
 
 claim:
     ? forall a cart({1},{2}):
         a=(1,2)
+    a(1) $in {1}
+    a(2) $in {2}
     release thm tuple_equal_from_coordinates(a,(1,2))
 
 claim:
@@ -29,6 +32,8 @@ claim:
 by thm tuple_equal_from_coordinates(one,tuple(7)) => one=tuple(7)
 
 have set_pair cart({R},{Z})
+set_pair(1) $in {R}
+set_pair(2) $in {Z}
 
 release thm tuple_equal_from_coordinates(set_pair,(R,Z))
 

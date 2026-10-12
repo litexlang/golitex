@@ -155,8 +155,8 @@ fn equality_cancellation_keeps_source_and_all_premises() {
 #[test]
 fn equality_cancellation_nested_and_composite_common_operands() {
     for source in [
-        "forall a, b, x, y C:\n    (a+x)+y=(b+x)+y\n    =>:\n        a=b",
-        "forall a, b, x, y C:\n    x!=0\n    y!=0\n    (a*x)*y=(b*x)*y\n    =>:\n        a=b",
+        "forall a, b, x, y C:\n    (a+x)+y=(b+x)+y\n    =>:\n        a+x=b+x\n        a=b",
+        "forall a, b, x, y C:\n    x!=0\n    y!=0\n    (a*x)*y=(b*x)*y\n    =>:\n        a*x=b*x\n        a=b",
         "forall a, b, x, y C:\n    x+y!=0\n    a*(x+y)=b*(x+y)\n    =>:\n        a=b",
         "forall a, b, x, y C:\n    a+(x*y)=b+(x*y)\n    =>:\n        a=b",
         "forall a, b C:\n    a*2=b*2\n    =>:\n        a=b",
@@ -167,14 +167,7 @@ fn equality_cancellation_nested_and_composite_common_operands() {
         let proof = forall(&result);
         let seed = &proof.assumed_dom_facts.last().unwrap().store_and_infer;
         let derived_count = seed.stored_fact_ids().len() - seed.store.stored_fact_ids().len();
-        assert_eq!(
-            derived_count,
-            if source.contains("(a+") || source.contains("(a*") {
-                2
-            } else {
-                1
-            }
-        );
+        assert_eq!(derived_count, 1, "the seed has only its direct conclusion");
     }
 }
 
@@ -500,10 +493,10 @@ fn equality_cancellation_division_rejects_missing_or_zero_denominator_wd() {
 #[test]
 fn equality_cancellation_mixed_nested_operators_and_zero_numerator() {
     for source in [
-        "forall a, b, k, t C:\n    (k-a)-t=(k-b)-t\n    =>:\n        a=b",
-        "forall a, b, k, t C:\n    k!=0\n    (a-t)/k=(b-t)/k\n    =>:\n        a=b",
+        "forall a, b, k, t C:\n    (k-a)-t=(k-b)-t\n    =>:\n        k-a=k-b\n        a=b",
+        "forall a, b, k, t C:\n    k!=0\n    (a-t)/k=(b-t)/k\n    =>:\n        a-t=b-t\n        a=b",
         "forall a, b, x, y C:\n    x+y!=0\n    a/(x+y)=b/(x+y)\n    =>:\n        a=b",
-        "forall a, b, k, t C*:\n    (k/a)/t=(k/b)/t\n    =>:\n        a=b",
+        "forall a, b, k, t C*:\n    (k/a)/t=(k/b)/t\n    =>:\n        k/a=k/b\n        a=b",
         "forall b C, k C*:\n    0/k=b/k\n    =>:\n        b=0",
     ] {
         let mut rt = runtime();
