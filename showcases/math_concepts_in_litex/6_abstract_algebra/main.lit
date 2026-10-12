@@ -82,6 +82,8 @@ thm homomorphism_maps_identity:
         $GroupHomomorphismSetting(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
         =>:
             f(one_A) = one_B
+    $GroupSetting(A, mul_A, one_A, inv_A)
+    $GroupSetting(B, mul_B, one_B, inv_B)
     mul_A(one_A, one_A) = one_A
     mul_B(f(one_A), f(one_A)) = f(mul_A(one_A, one_A)) = f(one_A) = mul_B(f(one_A), one_B)
     release thm group_left_cancel(B, mul_B, one_B, inv_B, f(one_A), f(one_A), one_B)
@@ -94,6 +96,8 @@ thm homomorphism_maps_inverse:
         $GroupHomomorphismSetting(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
         =>:
             f(inv_A(a)) = inv_B(f(a))
+    $GroupSetting(A, mul_A, one_A, inv_A)
+    $GroupSetting(B, mul_B, one_B, inv_B)
     release thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
     f(one_A) = one_B
     mul_A(inv_A(a), a) = one_A
@@ -121,6 +125,8 @@ thm kernel_is_normal_subgroup:
         $GroupHomomorphismSetting(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
         =>:
             $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
+    $GroupSetting(A, mul_A, one_A, inv_A)
+    $GroupSetting(B, mul_B, one_B, inv_B)
     claim:
         ? $is_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
         release thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)

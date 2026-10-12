@@ -115,11 +115,10 @@ impl LitexToLeanCompiler {
                 ));
             }
             let current = SourcePosition::new(Some(&prior), SourceOwner::ChainClosure(closure), 0);
-            self.compile_fact_wd(&captured.well_defined, &fact, &current)?;
             self.validate_store(derived, &fact)?;
             let formed = SourcePosition::new(
                 Some(&current),
-                SourceOwner::FactWD(&captured.well_defined),
+                SourceOwner::InferredStore(&captured.store),
                 usize::MAX,
             );
             let edge_indexes: Vec<_> = if down && !equality {

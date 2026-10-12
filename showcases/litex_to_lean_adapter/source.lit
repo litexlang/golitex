@@ -1,0 +1,5 @@
+# For a nonzero real denominator, division distributes over addition.
+forall x,y,z R:
+    z != 0
+    =>:
+        (x+y)/z=x/z+y/z

@@ -4,13 +4,15 @@ use crate::store_fact_and_infer::InferFactResult;
 
 impl Runtime {
     // Derive extra facts from an already-stored fact; each derived fact goes through
-    // `store_inferred_fact` (WD then store+infer).
+    // `store_inferred_fact` (direct store under the named rule).
     // Example: after storing `a $in {x R: x > 0}`, infer also stores `a $in R` and `a > 0`.
     pub fn infer_fact(
         &mut self,
         fact: &Fact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<InferFactResult> {
+        // Genuine premise checks cannot start another inference chain.
+        let verify_state = verify_state.without_inference();
         match fact {
             Fact::AtomicFact(atomic) => Ok(InferFactResult::AtomicFact(
                 self.infer_atomic_fact(atomic, verify_state)?,

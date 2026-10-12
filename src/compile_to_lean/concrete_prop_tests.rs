@@ -51,7 +51,7 @@ fn concrete_prop_retains_domains_and_actual_explicit_definition_route() {
 }
 
 #[test]
-fn concrete_prop_inference_retains_actual_constructor_formation_before_store() {
+fn concrete_prop_inference_retains_named_domain_and_body_stores() {
     let (runtime, result) = checked(SQUARE);
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(seed)) = &result.statement_results[1]
     else {
@@ -74,14 +74,9 @@ fn concrete_prop_inference_retains_actual_constructor_formation_before_store() {
     let StoreFactResult::AtomicFact(stored) = &derived.store else {
         panic!("atomic defining clause");
     };
-    let AtomicFact::EqualFact(equality) = &stored.fact else {
+    let AtomicFact::EqualFact(_equality) = &stored.fact else {
         panic!("square defining equality");
     };
-    let FactWellDefinedProof::Equality(wd) = &derived.well_defined else {
-        panic!("captured equality formation");
-    };
-    assert_eq!(wd.left.obj().ir(), equality.left.ir());
-    assert_eq!(wd.right.obj().ir(), equality.right.ir());
     let actual_id = derived.store.primary_fact_id();
     assert!(seed
         .store_and_infer_result

@@ -32,6 +32,10 @@ a human reader or an AI agent.
 | [7. Finish your first lit file](#7-finish-your-first-lit-file) | A complete checked artifact and a next step | 15 min |
 | [Optional extensions](#optional-extensions) | Named results, existence, and an agent loop | 30 min |
 
+For further mathematical practice, see
+[Learn Math with Litex: worked examples](#learn-math-with-litex). Definitions,
+proofs, and exercises appear directly in this document.
+
 Read the main course in order. For each example, first predict what it means,
 then run it, and finally try the suggested change. If you are reading on GitHub
 or in a downloaded Markdown file, all the explanations and code are here;
@@ -863,10 +867,382 @@ For the age exercise with `my_age = 9`, the brother is `14` and the mother is
 nonnegative-output law. For the reciprocal at `5`, a suitable fact is
 `reciprocal(5) * 5 = 1`.
 
+<a id="learn-math-with-litex"></a>
+
+## Learn Math with Litex: worked examples
+
+These eight mathematical questions are developed directly here as worked examples. Each unit explains the mathematical idea, supplies complete Litex code, and offers an exercise. Required definitions appear in the unit itself. Run each code block in a fresh environment; it does not require an earlier example to have been run.
+
+Follow the table in order or choose a unit independently. The first three use arithmetic and school algebra. The limit and derivative units introduce their error definitions here. These topics take additional study time beyond the main course's earlier 90-minute estimate.
+
+| Example | Mathematical focus |
+| --- | --- |
+| [1. Why is an even number times a natural number still even?](#learn-math-even) | Proof from a definition |
+| [2. What must we know before dividing by $x$?](#learn-math-division) | Domains and nonzero conditions |
+| [3. Why is $2^n \ge n+1$?](#learn-math-induction) | Mathematical induction |
+| [4. How do we prove that two sets are equal?](#learn-math-sets) | Elements and two inclusions |
+| [5. Why does the order of “for every” and “there exists” matter?](#learn-math-quantifiers) | Quantifiers and dependencies |
+| [6. What does convergence of a sequence promise?](#learn-math-convergence) | Epsilon and tail control |
+| [7. Why can a sequence not have two different limits?](#learn-math-uniqueness) | Triangle inequality and contradiction |
+| [8. Why is the derivative of $x^2$ equal to $2x$?](#learn-math-derivative) | Difference quotients and error estimates |
+
+<a id="learn-math-even"></a>
+
+### 1. Why is an even number times a natural number still even?
+
+**Question:** If a natural number $n$ is even, why is $mn$ even for every natural number $m$?
+
+The definition supplies a witness: a natural number $k$ with $n=2k$. Then $mn=m(2k)=2(mk)$, so the new witness is $mk$. The decisive move is to construct this witness, rather than check a few products.
+
+```litex
+prop even(n N):
+    exist k N st {n = 2 * k}
+
+thm even_mul:
+    ? forall m, n N:
+        $even(n)
+        =>:
+            $even(m * n)
+    obtain k from $even(n)
+    witness $even(m * n) from m * k:
+        m * n = m * (2 * k) = 2 * (m * k)
+
+witness $even(6) from 3
+release thm even_mul(5, 6)
+```
+
+Read `prop even(n N)` as the definition of evenness. `obtain k` extracts a witness from the known evenness fact; `witness ... from m * k` supplies the product's witness. The equality chain checks that it satisfies the definition.
+
+The last two lines first establish that $6$ is even using $3$, then apply the theorem to $5$ and $6$, obtaining the evenness of $30$. `N` includes zero, so the conclusion also includes $m=0$.
+
+**Try:** Use the same definition to prove that the sum of two even numbers is even. If $a=2u$ and $b=2v$, what witness should you supply?
+
+[Next: What must we know before dividing by $x$?](#learn-math-division)
+
+<a id="learn-math-division"></a>
+
+### 2. What must we know before dividing by $x$?
+
+**Question:** Why can we not state “the reciprocal times the original number is one” for every real $x$ without a condition?
+
+The domain of $1/x$ excludes zero. Put $x\ne0$ in the function's input condition first, then prove $(1/x)x=1$ under that same condition.
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            reciprocal(x) * x = 1
+    reciprocal(x) * x = (1 / x) * x = 1
+
+reciprocal(2) = 1 / 2
+reciprocal(-4) = -1 / 4
+```
+
+The nonzero condition has two roles: the function definition restricts legal calls, and the universal proof states which real inputs its conclusion covers. The proof unfolds the function value to $1/x$ and checks the product.
+
+Here is a **complete expected-failure example**, labeled `text` so it is not a passing code block:
+
+```text
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(0) = 0
+```
+
+The input-condition check for `reciprocal(0)` fails because zero does not satisfy `x != 0`. There is no legal reciprocal expression for the subsequent equality proof.
+
+**Try:** Check `reciprocal(5) * 5 = 1` in the passing example. Explain why removing the function's nonzero condition would make the definition itself problematic.
+
+[Next: Why is $2^n \ge n+1$?](#learn-math-induction)
+
+<a id="learn-math-induction"></a>
+
+### 3. Why is $2^n \ge n+1$?
+
+**Question:** How can we prove $2^n\ge n+1$ for every natural number $n$?
+
+The base case $n=0$ is $1\ge1$. Assuming $2^n\ge n+1$, we obtain $2^{n+1}=2\cdot2^n\ge2(n+1)=(n+2)+n\ge n+2$. The last step uses $n\ge0$.
+
+```litex
+thm power_two_lower_bound:
+    ? forall n N:
+        2^n >= n + 1
+    by induc n from 0:
+        ? 2^n >= n + 1
+        ? from n = 0:
+            2^0 = 1 = 0 + 1
+        ? induc:
+            2^(n + 1) = 2^n * 2^1 = 2^n * 2 >= (n + 1) * 2 = (n + 1 + 1) + n >= n + 1 + 1
+
+release thm power_two_lower_bound(4)
+```
+
+`by induc n from 0` starts induction at zero. `? from n = 0` is the base case; `? induc` is the successor step, where the induction hypothesis is available. One equality and inequality chain joins the power law, the induction hypothesis, and $n\ge0$.
+
+The theorem covers all natural numbers; the last call applies it at $n=4$. A check of the concrete calculation $2^4\ge5$ alone would establish less.
+
+**Try:** Check the values $n=1,2,3$, then explain why finitely many checks cannot replace the induction step.
+
+[Next: How do we prove that two sets are equal?](#learn-math-sets)
+
+<a id="learn-math-sets"></a>
+
+### 4. How do we prove that two sets are equal?
+
+**Question:** Why does swapping the two sets preserve their intersection, so $S\cap T=T\cap S$?
+
+Equal sets have the same elements. If $x\in S\cap T$, then $x\in S$ and $x\in T$, hence $x\in T\cap S$. Swapping $S,T$ gives the reverse inclusion; the two inclusions establish equality.
+
+```litex
+claim:
+    ? forall S, T set:
+        intersect(S, T) = intersect(T, S)
+    claim:
+        ? forall x intersect(S, T):
+            x $in intersect(T, S)
+        x $in S
+        x $in T
+        x $in intersect(T, S)
+    by def intersect(S, T) $subset intersect(T, S)
+    claim:
+        ? forall x intersect(T, S):
+            x $in intersect(S, T)
+        x $in T
+        x $in S
+        x $in intersect(S, T)
+    by def intersect(T, S) $subset intersect(S, T)
+    by extension intersect(S, T) = intersect(T, S)
+```
+
+The two inner claims each follow an element and establish an inclusion. `by def` folds the universal membership fact into `$subset`. `by extension` uses both inclusions to prove set equality.
+
+The membership facts are retained to show how an element moves from one intersection into the other. Litex also has builtin support for simple set facts of this kind; this example displays the organization of the mathematical proof.
+
+**Try:** Replace intersection with union on paper. Explain why a union proof must handle two possibilities rather than assert that the element belongs to both sets.
+
+[Next: Why does the order of “for every” and “there exists” matter?](#learn-math-quantifiers)
+
+<a id="learn-math-quantifiers"></a>
+
+### 5. Why does the order of “for every” and “there exists” matter?
+
+**Question:** Is “for every real $x$, there is a $y=x+1$” the same as “there is one real $y$ such that $y=x+1$ for every $x$”?
+
+The first statement lets us choose $y$ after seeing $x$, so $x+1$ works. The second requires one fixed $y$ for all inputs: $x=0$ forces $y=1$, while $x=1$ forces $y=2$. These cannot both hold.
+
+```litex
+claim:
+    ? forall x R:
+        exist y R st {y = x + 1}
+    witness exist y R st {y = x + 1} from x + 1
+```
+
+The goal binds `x` first; the proof then constructs the witness `x + 1` for `y`. The witness may depend on the earlier input. The claim exports the whole universal existence statement; its local names `x,y` do not become global objects.
+
+The mathematical formulas make the order explicit:
+
+$$
+\forall x\in\mathbb R\;\exists y\in\mathbb R:\ y=x+1,
+\qquad
+\exists y\in\mathbb R\;\forall x\in\mathbb R:\ y=x+1.
+$$
+
+**Try:** Change the equation to $y=2x$ and evaluate both quantifier orders. Then consider $y=0$: can one fixed witness now work for every $x$?
+
+[Next: What does convergence of a sequence promise?](#learn-math-convergence)
+
+<a id="learn-math-convergence"></a>
+
+### 6. What does convergence of a sequence promise?
+
+**Question:** What does “$a_n$ approaches $L$” mean precisely? Why does the constant sequence $a_n=3$ converge to $3$?
+
+For every error bound $\epsilon>0$, we must find a starting index $n_0$ such that every $n\ge n_0$ satisfies $|a_n-L|<\epsilon$. The constant sequence has zero error, so $n_0=1$ works for every positive error bound. These sequences use positive natural indices starting at $1$.
+
+```litex
+prop is_tail_close_to(a fn(index N+) R, L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            |a(n) - L| < epsilon
+
+prop has_eventual_closeness_to(a fn(index N+) R, L R, epsilon R+):
+    exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
+
+prop has_limit(a fn(index N+) R, L R):
+    forall epsilon R+:
+        $has_eventual_closeness_to(a, L, epsilon)
+
+have fn constant_sequence(n N+) R = 3
+
+claim:
+    ? $has_limit(constant_sequence, 3)
+    claim:
+        ? forall epsilon R+:
+            $has_eventual_closeness_to(constant_sequence, 3, epsilon)
+        claim:
+            ? forall n N+:
+                n >= 1
+                =>:
+                    |constant_sequence(n) - 3| < epsilon
+            |constant_sequence(n) - 3| = |3 - 3| = 0 < epsilon
+        by def $is_tail_close_to(constant_sequence, 3, epsilon, 1)
+        witness $has_eventual_closeness_to(constant_sequence, 3, epsilon) from 1
+    by def $has_limit(constant_sequence, 3)
+```
+
+The three definitions express “this tail is close,” “a close tail exists,” and “a close tail exists for every positive error bound.” `has_limit(a, L)` states that $L$ is a limit of $a$; it does not define a function returning a limit value.
+
+For arbitrary `epsilon`, the proof checks the whole tail from $1$, then supplies $1$ as the starting-index witness. All three definitions are included in this block; running it does not depend on an earlier example.
+
+**Try:** Change both the constant value and the proposed limit from $3$ to $5$. How does the proof change? Explain why changing only the sequence value while retaining the candidate $3$ does not give the same proof.
+
+[Next: Why can a sequence not have two different limits?](#learn-math-uniqueness)
+
+<a id="learn-math-uniqueness"></a>
+
+### 7. Why can a sequence not have two different limits?
+
+**Question:** If one sequence converges to both $L_1$ and $L_2$, why must they be equal?
+
+Suppose they differ. Their distance $D=|L_1-L_2|$ is positive; choose $\epsilon=D/3$. Each convergence assumption supplies a tail. At an index in both tails, the triangle inequality gives $D<2\epsilon=2D/3<D$, a contradiction.
+
+The full limit definitions appear again so this example also runs independently.
+
+```litex
+prop is_tail_close_to(a fn(index N+) R, L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            |a(n) - L| < epsilon
+
+prop has_eventual_closeness_to(a fn(index N+) R, L R, epsilon R+):
+    exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
+
+prop has_limit(a fn(index N+) R, L R):
+    forall epsilon R+:
+        $has_eventual_closeness_to(a, L, epsilon)
+
+thm sequence_limit_unique:
+    ? forall a fn(index N+) R, L1, L2 R:
+        $has_limit(a, L1)
+        $has_limit(a, L2)
+        =>:
+            L1 = L2
+    by contra:
+        ? L1 = L2
+        L1 - L2 != 0
+        0 < |L1 - L2|
+        have epsilon R+ = |L1 - L2| / 3
+        obtain n1 from $has_eventual_closeness_to(a, L1, epsilon)
+        obtain n2 from $has_eventual_closeness_to(a, L2, epsilon)
+        have n0 N+ = n1 + n2
+        n0 >= n1
+        n0 >= n2
+        |a(n0) - L1| < epsilon
+        |a(n0) - L2| < epsilon
+        |L1 - a(n0)| = |a(n0) - L1|
+        |L1 - L2| <= |L1 - a(n0)| + |a(n0) - L2| < epsilon + epsilon
+        epsilon + epsilon = |L1 - L2| / 3 + |L1 - L2| / 3 = (2 / 3) * |L1 - L2| < 1 * |L1 - L2| = |L1 - L2|
+        |L1 - L2| <= |L1 - a(n0)| + |a(n0) - L2| < |L1 - L2|
+        impossible |L1 - L2| = |L1 - L2|
+```
+
+`by contra` seeks a contradiction under the assumption that the limits differ. The two `obtain` steps extract starting indices. Since both are positive naturals, $n_1+n_2$ is at least each of them, so one sequence term satisfies both error bounds.
+
+The final calculation joins the triangle inequality with $2D/3<D$, then explicitly states $D\le\text{sum of the two distances}<D$. In this contradictory context, `impossible` closes the argument against the identity $D=D$. This proves uniqueness of a limit, not existence of a limit for every sequence.
+
+**Try:** On paper, replace $\epsilon$ with $D/4$ and adjust the final estimate. Why would choosing only $n_1$ fail to ensure that the second tail bound applies?
+
+[Next: Why is the derivative of $x^2$ equal to $2x$?](#learn-math-derivative)
+
+<a id="learn-math-derivative"></a>
+
+### 8. Why is the derivative of $x^2$ equal to $2x$?
+
+**Question:** How does the difference-quotient definition give the derivative $2x_0$ of the square function at $x_0$?
+
+The slope of the secant joining $(x_0,x_0^2)$ and $(x,x^2)$ is
+$$
+\frac{x^2-x_0^2}{x-x_0}=x+x_0\qquad(x\ne x_0).
+$$
+Its difference from the proposed tangent slope $2x_0$ is exactly $x-x_0$. To keep the slope error below $\epsilon$, it therefore suffices to require $0<|x-x_0|<\delta$ with $\delta=\epsilon$.
+
+First examine values near $x_0=3$. Write $x=3+h$; the quotient is $6+h$:
+
+| $h$ | Secant slope | Distance from $6$ |
+| --- | --- | --- |
+| $-0.1$ | $5.9$ | $0.1$ |
+| $-0.01$ | $5.99$ | $0.01$ |
+| $0.01$ | $6.01$ | $0.01$ |
+| $0.1$ | $6.1$ | $0.1$ |
+
+These values build intuition; the proof below explains why every sufficiently small nonzero $h$ satisfies the error bound.
+
+```litex
+prop derivative_delta_controlled(f fn(u R) R, x0, L R, epsilon, delta R+):
+    forall x R:
+        x != x0
+        |x - x0| < delta
+        =>:
+            |(f(x) - f(x0)) / (x - x0) - L| < epsilon
+
+prop has_derivative_at_R(f fn(u R) R, x0, L R):
+    forall epsilon R+:
+        exist delta R+ st {$derivative_delta_controlled(f, x0, L, epsilon, delta)}
+
+have fn square_function(x R) R = x^2
+
+thm square_difference_quotient:
+    ? forall x0, x R:
+        x != x0
+        =>:
+            (square_function(x) - square_function(x0)) / (x - x0) = x + x0
+    x - x0 != 0
+    square_function(x) - square_function(x0) = x^2 - x0^2 = (x - x0) * (x + x0)
+    (square_function(x) - square_function(x0)) / (x - x0) = ((x - x0) * (x + x0)) / (x - x0) = x + x0
+
+thm square_function_has_derivative_at:
+    ? forall x0 R:
+        $has_derivative_at_R(square_function, x0, 2 * x0)
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {$derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)}
+        witness exist delta R+ st {$derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)} from epsilon:
+            claim:
+                ? forall x R:
+                    x != x0
+                    |x - x0| < epsilon
+                    =>:
+                        |(square_function(x) - square_function(x0)) / (x - x0) - 2 * x0| < epsilon
+                release thm square_difference_quotient(x0, x)
+                (square_function(x) - square_function(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
+                |(square_function(x) - square_function(x0)) / (x - x0) - 2 * x0| = |x - x0| < epsilon
+            by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, epsilon)
+    by def $has_derivative_at_R(square_function, x0, 2 * x0)
+
+release thm square_function_has_derivative_at(3)
+
+forall x R:
+    square_function(x) - (9 + 6 * (x - 3)) = (x - 3)^2
+```
+
+The first definition includes the legal quotient condition `x != x0` and the error bound. The second requires a positive neighborhood radius for every positive error bound. `has_derivative_at_R(f, x0, L)` is a derivative relation for the supplied candidate $L$; the example assumes no derivative operator for arbitrary functions.
+
+`square_difference_quotient` proves the quotient formula by factoring a difference of squares. The next proof chooses `delta = epsilon` for arbitrary `epsilon`; the exact error identity reduces the derivative condition to the known bound `|x - x0| < epsilon`.
+
+Applying the theorem at $3$ gives the candidate slope $6$. The final identity gives the exact gap $(x-3)^2$ between the parabola and its tangent $y=9+6(x-3)$, explaining their closeness near that point.
+
+**Try:** Apply the theorem at $2$. What slope do you expect? Write the corresponding tangent and squared error. Explain why substituting $x=x_0$ directly into the quotient does not prove the derivative statement.
+
+[Back to the worked-example route](#learn-math-with-litex)
+
 ## Continue from the thing you want to do
 
 | Your next task | Read next |
 | --- | --- |
+| Practice concrete mathematical questions | [Learn Math with Litex: worked examples](#learn-math-with-litex) |
 | Find the right declaration or proof action | [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) |
 | Look up precise syntax, semantics, or a proof pattern | [Manual](Manual.md) |
 | Install Litex or understand CLI feedback | [Setup](setup.md) and [CLI](cli.md) |
@@ -877,8 +1253,8 @@ For your next file, choose one small problem you can solve on paper. Write its
 objects and legal inputs first, state exactly what you want to prove, and grow
 the checked source one useful mathematical step at a time.
 
-The 20 independent Litex examples in this guide were checked on 2026-10-08
-with a current-source release build of Litex 1.0.0-beta, using English output
+The 28 independent Litex examples in this guide were checked on 2026-10-12
+with a current-source release build of Litex 1.0.6-beta, using English output
 and strict mode. Expected failures are labeled separately. Litex is evolving;
 when an example behaves differently, keep its complete source and checker
 version with the feedback.

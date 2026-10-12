@@ -136,6 +136,21 @@ impl LitexToLeanCompiler {
                 return Ok(observation);
             }
         }
+        if let Obj::Literal(Literal::Number(number)) = object {
+            if let Some(observation) =
+                position.with_visible_inferred_subject(object, &mut |_, _| {
+                    let value = number_literal(number, "ℂ")?;
+                    Ok((
+                        value.clone(),
+                        format!("(Litex.NativeBridge.denoteNumber (M := M) {value})"),
+                        format!("(Litex.numberInC (M := M) {value})"),
+                        EvalRational::from_obj(object),
+                    ))
+                })?
+            {
+                return Ok(observation);
+            }
+        }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
             if let Ok((_, Some(set), _, hypothesis)) =
                 position.visible_parameter(*id, &self.runtime)

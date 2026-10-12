@@ -1,0 +1,41 @@
+# A real fractional-linear map preserves its punctured domain and is an involution.
+# Before: strict source passed, compilation rejected statement 3 with Order/BuiltinFamilyOrRule.
+# forall x R:
+#     x != 0
+#     =>:
+#         2 / x != 0
+# Now: preserve the original map, punctured domain and involution proof.
+forall x R:
+    x!=1
+    =>:
+        x-1!=0
+
+have fn mobius(x R:x!=1) R=(x+1)/(x-1)
+
+forall x R:
+    x!=0
+    =>:
+        2/x!=0
+
+thm mobius_preserves_domain:
+    ? forall x R:
+        x!=1
+        =>:
+            mobius(x)!=1
+    mobius(x)=(x+1)/(x-1)
+    mobius(x)-1=2/(x-1)
+    2/(x-1)!=0
+
+thm mobius_involution:
+    ? forall x R:
+        x!=1
+        =>:
+            mobius(mobius(x))=x
+    mobius(x)!=1
+    mobius(x)-1!=0
+    mobius(x)=(x+1)/(x-1)
+    ((x+1)/(x-1))-1!=0
+    mobius(mobius(x))=(mobius(x)+1)/(mobius(x)-1)=((x+1)/(x-1)+1)/((x+1)/(x-1)-1)=x
+
+# Boundary: mobius(1) is outside the source domain.
+# Gate: python3 scripts/litex_to_lean/check_mobius.py

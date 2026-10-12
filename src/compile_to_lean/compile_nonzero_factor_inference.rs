@@ -74,10 +74,9 @@ impl LitexToLeanCompiler {
             .compile_verify(&rule.factor_nonzero_proof, &nonzero_stage)?
             .1;
         let formation = SourcePosition { before: 4, ..prior };
-        self.compile_fact_wd(&captured.well_defined, &fact, &formation)?;
         let formed = SourcePosition::new(
             Some(&formation),
-            SourceOwner::FactWD(&captured.well_defined),
+            SourceOwner::InferredStore(&captured.store),
             usize::MAX,
         );
         let proof = format!(
@@ -93,14 +92,6 @@ impl LitexToLeanCompiler {
         );
         let conclusion = (self.fact_proposition(&fact, &formed)?, proof);
         declarations.push(self.emit_internal_fact(&fact, &conclusion, position));
-        let after =
-            SourcePosition::new(Some(position), SourceOwner::NonzeroFactorInference(rule), 5);
-        let name = format!("h_{}", fact.fact_id().value());
-        let reference = if after.is_local() {
-            name
-        } else {
-            self.context_application(&name, &after)
-        };
         Ok(declarations)
     }
 }

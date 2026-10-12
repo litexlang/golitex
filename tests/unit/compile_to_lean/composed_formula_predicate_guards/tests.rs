@@ -365,6 +365,74 @@ fn composed_formula_predicate_guards_reject_wrong_predicate_signature_identity()
 }
 
 #[test]
+fn composed_formula_predicate_guards_reject_changed_function_binder_identity() {
+    // Only the binder identity changes. Original parameter stores, carrier WD,
+    // body WD, memberships and every captured FactId remain intact.
+    for align_wd_subject in [false, true] {
+        let (mut result, compiler) = super::execute(COMPOSED);
+        let proof = function(&mut result.statement_results[0]);
+        proof
+            .statement
+            .equal_to_anonymous_fn
+            .body
+            .set_bound_parameters
+            .groups[0]
+            .params[0]
+            .id = IdentifierId::new(u64::MAX);
+        if align_wd_subject {
+            // Keep the three captured signature copies equal to reach the
+            // original parameter-store subject check instead of WD/Subject.
+            let anonymous_source = proof.statement.equal_to_anonymous_fn.clone();
+            let signature_source = anonymous_source.body.clone();
+            let VerifyObjWellDefinedResult::Success(anonymous_wd) =
+                &mut proof.anonymous_fn_well_defined
+            else {
+                panic!("actual anonymous function formation")
+            };
+            super::replace_wd_subject(
+                anonymous_wd,
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(anonymous_source)),
+            );
+            let VerifyObjWellDefinedResult::Success(signature_wd) = &mut proof.fn_set_well_defined
+            else {
+                panic!("actual function signature formation")
+            };
+            super::replace_wd_subject(
+                signature_wd,
+                Obj::FunctionSpace(FunctionSpace::FnSet(signature_source)),
+            );
+        }
+        let error = super::compile_run(&result, &compiler, "wrong_function_binder")
+            .expect_err("changed declaration binder must reject unchanged original evidence");
+        assert_eq!(
+            error.route,
+            if align_wd_subject {
+                "Function/ParameterSubject"
+            } else {
+                "WD/Subject"
+            },
+        );
+    }
+}
+
+#[test]
+fn composed_formula_predicate_guards_reject_changed_concrete_prop_binder_identity() {
+    let (mut result, compiler) = super::execute(GUARDED);
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+        ExecDefPropStmtResult::Success(proof),
+    )) = &mut result.statement_results[0]
+    else {
+        panic!("actual concrete predicate declaration")
+    };
+    // Preserve original member stores and all body WD/evidence; only the
+    // source declaration binder differs from its recorded introduction.
+    proof.statement.typed_parameters.groups[0].params[0].id = IdentifierId::new(u64::MAX);
+    let error = super::compile_run(&result, &compiler, "wrong_concrete_prop_binder")
+        .expect_err("changed declaration binder must reject unchanged original evidence");
+    assert_eq!(error.route, "Prop/ParameterSubject");
+}
+
+#[test]
 fn composed_formula_predicate_guards_keep_false_guards_rejected_by_the_source() {
     for source in [
         "prop Pnonzero(x R):\n    x != 0\nhave fn reciprocal_guard(x R: $Pnonzero(x)) R = 1 / x\nreciprocal_guard(0) = 0\n",

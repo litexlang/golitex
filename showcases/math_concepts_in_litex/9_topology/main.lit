@@ -269,6 +269,8 @@ thm continuous_map_has_closed_preimages:
         $ContinuousMapSetting(X, open_sets_X, Y, open_sets_Y, f)
         =>:
             $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
+    $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
+    $TopologicalSpaceSetting(X, open_sets_X)
     claim:
         ? forall F power_set(Y):
             $is_closed(Y, open_sets_Y, F)

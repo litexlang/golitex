@@ -35,13 +35,13 @@ fn fact_count(rt: &Runtime) -> usize {
 #[test]
 fn exact_function_sequence_space_aliases_and_return_applications_keep_checked_sources() {
     for source in [
-        "have Carrier set=finite_seq(R,2)\nhave f Carrier\nf(1) $in R\nf(2) $in R",
-        "have Base set=finite_seq(Z,2)\nhave Carrier set=Base\nCarrier=finite_seq(Z,2)\nhave f Carrier\nhave g Carrier=f\ng(1) $in Z\ng(1) $in R\ng $in finite_seq(R,2)\ng(2) $in Z",
-        "have Carrier set=seq(Z)\nhave f Carrier\nf(1) $in Z\nf(100) $in R",
+        "have Carrier set=finite_seq(R,2)\nhave f Carrier\nf $in finite_seq(R,2)\nf(1) $in R\nf(2) $in R",
+        "have Base set=finite_seq(Z,2)\nhave Carrier set=Base\nCarrier=finite_seq(Z,2)\nhave f Carrier\nhave g Carrier=f\ng $in finite_seq(Z,2)\ng(1) $in Z\ng(1) $in R\ng $in finite_seq(R,2)\ng(2) $in Z",
+        "have Carrier set=seq(Z)\nhave f Carrier\nf $in seq(Z)\nf(1) $in Z\nf(100) $in R",
         "have Base set=fn(k N+: k<=2) Z\nhave Carrier set=Base\nCarrier=fn(k N+: k<=2) Z\nhave f Carrier\nf(1) $in Z\nf(2) $in Z",
-        "have length N+\nhave Carrier set=finite_seq(R,length)\nhave f Carrier\nf(length) $in R",
-        "have Carrier set=finite_seq(R,0)\nhave f Carrier\nf $in fn(k closed_range(1,0)) R",
-        "have Carrier set=finite_seq(R,2)\nhave f Carrier\n$is_set(fn_range(f))\nf(1) $in fn_range(f)",
+        "have length N+\nhave Carrier set=finite_seq(R,length)\nhave f Carrier\nf $in finite_seq(R,length)\nf(length) $in R",
+        "have Carrier set=finite_seq(R,0)\nhave f Carrier\nf $in finite_seq(R,0)\nf $in fn(k closed_range(1,0)) R",
+        "have Carrier set=finite_seq(R,2)\nhave f Carrier\nf $in finite_seq(R,2)\n$is_set(fn_range(f))\nf(1) $in fn_range(f)",
         "have fn mk(x R) finite_seq(R,2)=(x,x)\nmk(7)(1) $in R\nmk(7)(2) $in R",
         "have Carrier set=finite_seq(Z,2)\nhave fn mk(x R) Carrier=(2,2)\nmk(7)(1) $in Z\nmk(7)(2) $in R",
         "have Base set=seq(R)\nhave Carrier set=Base\nCarrier=seq(R)\nhave fn mk(x R) Carrier=fn(k N+) R {x}\nmk(7)(10) $in R",

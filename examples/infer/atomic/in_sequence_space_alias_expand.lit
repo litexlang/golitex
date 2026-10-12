@@ -17,6 +17,9 @@ have f Carrier
 
 have g Carrier=f
 
+# The explicit checked member starts the next inference pass.
+g $in finite_seq(Z,2)
+
 g(1) $in Z
 
 g $in finite_seq(R,2)
@@ -36,6 +39,9 @@ have SequenceCarrier set=seq(Z)
 
 have s SequenceCarrier
 
+# The explicit checked member starts the next inference pass.
+s $in seq(Z)
+
 s(100) $in Z
 
 s(100) $in R
@@ -46,11 +52,16 @@ have LengthCarrier set=finite_seq(R,length)
 
 have h LengthCarrier
 
+# The explicit checked member starts the next inference pass.
+h $in finite_seq(R,length)
+
 h(length) $in R
 
 have EmptyCarrier set=finite_seq(R,0)
 
 have empty EmptyCarrier
+
+empty $in finite_seq(R,0)
 
 empty $in fn(k closed_range(1,0)) R
 

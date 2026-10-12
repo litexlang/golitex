@@ -6,6 +6,7 @@
 #     =>:
 #         a = b
 # Now: the product equality publishes a = b with its nonzero certificate.
+# Nested cancellation: the checked intermediate equality starts the next inference.
 # Boundary: zero/missing nonzero never cancels; a later nonzero does not retrigger.
 # Executable negative/ceiling controls: tests/unit/execute/equality_cancellation/tests.rs
 # Evidence: target/release/litex -lang en -strict -f examples/infer/equal/nonzero_factor_cancellation.lit
@@ -33,4 +34,5 @@ forall a, b, x, y Z:
     y != 0
     (a * x) * y = (b * x) * y
     =>:
+        a * x = b * x
         a = b

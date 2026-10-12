@@ -64,10 +64,9 @@ impl LitexToLeanCompiler {
             &prior,
         )?;
         let formation = SourcePosition { before: 3, ..prior };
-        self.compile_fact_wd(&captured.well_defined, &fact, &formation)?;
         let formed = SourcePosition::new(
             Some(&formation),
-            SourceOwner::FactWD(&captured.well_defined),
+            SourceOwner::InferredStore(&captured.store),
             usize::MAX,
         );
         let proof = format!(

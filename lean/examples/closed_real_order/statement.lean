@@ -46,7 +46,4 @@ theorem h_26 : Litex.In (Litex.number (M := M) (2 : ℂ)) (Litex.N (M := M)) :=
       apply Complex.ofReal_injective
       exact M.number_injective ((Litex.NativeBridge.asReal_spec (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.inOfDenoteNumber (Litex.number (M := M) (1 : ℂ)) (1 : ℂ) (Litex.R (M := M)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInROfEq (1 : ℂ) (1 : ℝ) (by norm_num)))).symm.trans (((Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))).trans (congrArg M.number (by norm_num))))
     exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => _litex_r ≤ _litex_s) _litex_left_value _litex_right_value) (by norm_num))) (h_23 (M := M)))
-
-theorem h_31 : Litex.Le (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (2 : ℂ)) :=
-  (Litex.naturalNonnegative (Litex.number (M := M) (2 : ℂ)) (h_26 (M := M)))
 end LitexCompiled.file_lean_x2f_examples_x2f_closed_x5f_real_x5f_order_x2f_statement_x2e_lit

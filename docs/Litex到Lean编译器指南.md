@@ -95,9 +95,11 @@ nonnegative_rationals $subset nonnegative_reals
 `A $subset R` 或 `A $subset C` 的证明。原生消费者在证明体中固定已检查的模型，
 对外只给出普通 ZFSet、Set Complex 与 Set Real 陈述。
 
-当前切片支持平坦原子筛选条件及已支持的具体谓词，按实际记录的成员、subset 路线重放。
-复合 builder 条款、nonempty/finite 参数种类、无界理解与存在式集合选择仍在编译边界外，
-不会被变成公理。
+当前切片支持平坦原子筛选条件、平坦 And／数值比较链及已支持的具体谓词，
+按实际记录的成员、subset、binder 与有序 WD 子证明重放。有限集合保留完整的
+两两不等证据；成员可经实际 subset 证明用于实数序的 WD。
+一般析取筛选、nonempty/finite 参数种类、无界理解、幂集／像与存在式集合选择
+仍在编译边界外，不会被变成公理。
 
 ## 公式函数与具体谓词
 
@@ -112,7 +114,7 @@ reciprocal(2) = 1 / 2
 
 `FunctionSemantics M` 为数值接口增加图构造与求值。具体实例用 Mathlib 的 ZF 集合证明这些规律；源码函数仍是拥有自身身份的图对象。内部值函数体回调不会把源码对象替换为原生实数函数箭头。
 
-当前切片支持一个或两个固定 N/Z/Q/R/C 输入及输出、原子函数保护条件，以及定义体为平坦原子条款的顶层具体谓词。[非负性](../lean/examples/nonnegative_real_property/statement.lit)展示谓词定义与展开；[商的分配](../lean/examples/real_quotient_distributes/statement.lit)展示两个参数。递归或复合公式体，以及使用具体谓词的函数保护条件，仍是不支持的编译路线。
+当前切片支持一个或两个 N/Z/Q/R/C 输入及输出、数值域／值域别名、先前函数的公式复合，以及直接或具体谓词保护条件。顶层具体谓词可以使用已支持的平坦原子、And 和数值链条款。[非负性](../lean/examples/nonnegative_real_property/statement.lit)展示谓词定义与展开；[商的分配](../lean/examples/real_quotient_distributes/statement.lit)展示两个参数；[带保护条件的复合商](../lean/examples/two_argument_shifted_quotient/statement.lit)展示复合调用。编译消费每次调用实际捕获的 WD 和定义域证据。递归、归纳、高阶函数和量化谓词仍不在本期范围。
 
 <a id="definitions-and-named-theorem-citations"></a>
 
@@ -168,9 +170,13 @@ arbitrary_real + 0 = arbitrary_real
 arbitrary_real >= arbitrary_real
 ```
 
-编译器检查记录的非空性证明，输出一般的已认证对象和属于 R 的假设。后续定理头部保留这些参数；它不会把对象定义为零。此阶段的任意 have 支持范围是顶层数值上下文；局部见证/证明声明还需要后续支持。
+编译器检查记录的非空性证明，输出一般的已认证对象和属于 R 的假设。后续定理头部保留这些参数；它不会把对象定义为零。命名证明中的局部任意 have 则在证明内部消去实际记录的非空性见证，保留原来的成员 ID 和作用域，不给导出的定理增加见证参数。[局部见证例子](../lean/examples/local_witness_additive_identity/statement.lit)同时检查局部 typed-have／let、依赖声明和 set-kind 声明。局部 prop／fn 和嵌套命名定理仍是另一个作用域扩展。
 
 [实数平方](../lean/examples/real_squares_nonnegative/statement.lit)和[弱序传递性](../lean/examples/weak_order_transitivity/statement.lit)使用普通的 `Litex.Le`/`Litex.Lt` 事实；大于比较通过交换参数表达。其含义包含实数指称见证；任意复数对象上没有序。编译器先重放实际的 R 定义域条件，再应用选定的序定理，并保留源码前提、精确引用和偶指数限制。
+
+[差非零示例](../lean/examples/nonzero_real_difference/statement.lit)通过原来选定的 `DiffNonzeroFromInequality` 结果编译 `x != 1 => x - 1 != 0`。精确的操作数不等子证明及数值定义域证据传给已证明的 `Litex.subNonzeroOfNotSame` 引理；同一路线也支持保持泛型表示的复数成员、零在两侧的方向，以及已认证的封闭零表达式。缺失或篡改前提证据仍会拒绝；其他非零 builtin 分支需要各自的编译支持。
+
+[实数 Möbius 对合示例](../lean/examples/real_mobius_involution/statement.lit)接通了 `(x+1)/(x-1)` 的完整证明：在 `x != 1` 时，函数值仍不等于 1，再调用一次得到 x。编译器重放差非零、分子和分母的两个非零子证明、已知差非零的精确引用，以及原来选定的 forall 应用。非等式原子结论复用已有链式/合取消费者，保留参数匹配、类型和定义域证据；嵌套调用的定义域检查也走这条路线。等式 forall、高阶调用及其他未审查的结论分支仍有各自的支持边界。[普通 Lean 接口](../showcases/litex_to_lean_adapter/Final.lean)通过手写且已验证的 Adapter 使用生成证明。
 
 <a id="membership-preserves-the-objects-representation"></a>
 
@@ -245,7 +251,7 @@ Litex.div _value_i1 _value_i2 h_28 h_29 h_1
 
 重放通过记录的 ID 识别引用，并检查其主体。缓存的构造必须解析到该对象已经重放的证据。如果 ID 缺失，或必需的推导事实没有受支持的产生者，编译会拒绝该路线。在实时环境中寻找另一条真事实，会掩盖缺失的源码依赖。
 
-直接标量消去现在可以从已存储的 `a+k=b+k`、`a-k=b-k`、`k-a=k-b` 发布 `a=b`，也可以在有 `k!=0` 证书时从 `a*k=b*k` / `a/k=b/k` 发布该事实。`k/a=k/b` 还要求两个分母均非零。Litex 保留了其推导证据，但当前编译器尚不重放这些证据。引用该推导等式会在 `FactId/Producer` 处拒绝编译；绝不会把它输出为新假设。测试 `equality_cancellation_lean_citations_fail_closed_without_infer_replay` 检查了这个产生者/消费者边界。
+直接标量消去可以从已存储的 `a+k=b+k`、`a-k=b-k`、`k-a=k-b` 发布 `a=b`，也可以在有 `k!=0` 证书时从 `a*k=b*k` / `a/k=b/k` 发布该事实。`k/a=k/b` 还要求两个分母均非零。编译器重放当前单跳推导实际记录的消去规则、WD 和直接存储结果，再使用原始 FactId 引用。更长的消去证明须在源码里明确给出中间步骤；编译器不会自行补出第二轮 infer。原证据缺失、主体不符或引用越过已完成阶段时，仍拒绝整个产物。
 
 <a id="what-successful-output-establishes"></a>
 
@@ -266,6 +272,8 @@ Lean 定理以该接口为条件。`lean/Litex.lean` 包含一个明确的候选
 3. **生成文件与 Lean 检查：** 重新生成的结果与维护中的对应文件一致；生成证明与语义接口，在预期假设边界下通过固定版本的 Lean/Mathlib 内核检查。
 
 不得以证明空洞或新造的公理代替不受支持的路线。`-strict` 排除源码中的 trust 和用户公理；它并不证明每项 Litex 基础都已有完整的 Lean 解释。
+
+本期原定第 8–11 阶段的最低范围在 2026-10-12 的当前单跳 typed result 上通过重新验收：74 对源码／实际生成文件、45 个维护场景，以及另记的 6 个 whole-Chain／whole-And／WD 构造实例化场景。64 个每层原生接口和普通 Lake 客户端的 64 次直接调用、6 个组合调用通过检查。当前回执是本地 scripts/litex_to_lean 中的 acceptance_phase8_current 至 acceptance_phase11_current 和 acceptance_phases8_11_current；旧回执保留为其原构建的历史证据。这些检查确立的是已审查子集及其实际选中路线。
 
 <a id="maintaining-this-guide"></a>
 
@@ -320,8 +328,9 @@ python3 scripts/litex_to_lean/check.py --subset --work-area .draft/selected-subs
 
 任意集合有一个明确的接口差异：`$is_set(A)` 在生成端有证明，原生端的
 `A : ZFSet` 则通过类型表达集合身份，无需发明额外的原生 sethood 谓词。
-整个集合的数值视图仍需 subset 证据。模块、一般局部见证声明、无界理解、
-存在式集合选择、更广的函数体以及未支持的推理/证书路线仍在编译边界外。
+整个集合的数值视图仍需 subset 证据。模块、一般存在式见证证明、无界理解、
+存在式集合选择、递归／高阶函数体和局部 prop／fn／嵌套 thm，
+以及未审查的推理／证书路线仍在编译边界外。
 在结果中观察到未被消费的 inference 节点，不代表编译器已支持该推理。
 
 ## 维护本指南

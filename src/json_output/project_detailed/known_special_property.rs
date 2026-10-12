@@ -14,6 +14,58 @@ pub(super) fn project_known_special_property(
 ) -> JsonValue {
     let (rule, id, matches) = match proof {
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+            InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(p),
+        ) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("LiteralTupleNumericCoordinate")),
+                    ("index", string(p.index.to_string())),
+                    (
+                        "tuple_equal",
+                        super::searched::project_known_equality_path(&p.tuple.tuple_equal, runtime),
+                    ),
+                    (
+                        "value",
+                        string(
+                            crate::ast::obj::Obj::ProductShape(
+                                crate::ast::obj::ProductShape::Tuple(p.tuple.value.clone()),
+                            )
+                            .readable_string(),
+                        ),
+                    ),
+                    (
+                        "component_membership",
+                        super::closed_calculation::project_membership(
+                            "in",
+                            &p.component_membership,
+                            runtime,
+                        ),
+                    ),
+                ],
+            );
+        }
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+            InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(p),
+        ) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_known_special_property")),
+                    ("rule", string("KnownSubsetMembership")),
+                    (
+                        "member_proof",
+                        super::searched::project_known_premise(&p.member_proof, runtime),
+                    ),
+                    (
+                        "subset_proof",
+                        super::searched::project_known_premise(&p.subset_proof, runtime),
+                    ),
+                ],
+            )
+        }
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
             InFactSearchProofByKnownSpecialProperty::PositiveRealFromKnownStrictOrder(p),
         ) => {
             return object_for(

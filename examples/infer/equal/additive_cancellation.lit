@@ -5,6 +5,7 @@
 #     =>:
 #         a = b
 # Now: stores a = b while assuming the sum equality, then cites that equality.
+# Nested cancellation: the checked intermediate equality starts the next inference.
 # Boundary: exact shared addend only; no expansion, reassociation or aliases.
 # Executable negative/scope controls: tests/unit/execute/equality_cancellation/tests.rs
 # Evidence: target/release/litex -lang en -strict -f examples/infer/equal/additive_cancellation.lit
@@ -23,4 +24,5 @@ forall a, b, k C:
 forall a, b, x, y Q:
     (a + x) + y = (b + x) + y
     =>:
+        a + x = b + x
         a = b

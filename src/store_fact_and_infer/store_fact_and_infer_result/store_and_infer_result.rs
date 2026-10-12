@@ -3,7 +3,7 @@ use crate::runtime::FactId;
 
 use super::{InferFactResult, StoreFactResult};
 
-// Option A: always store then infer as two explicit stages.
+// Store first; inference is absent in inferred-fact formation scopes.
 pub struct StoreFactAndInferResult {
     pub store: StoreFactResult,
     pub infer: Option<InferFactResult>,

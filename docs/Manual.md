@@ -1332,6 +1332,25 @@ One layer can still create a large expression. The
 [verifier design agreement and cost observations](../src/execute/README.md#design-agreement)
 record the current boundaries and the evidence needed before widening them.
 
+**Preview: addition by a checked zero.** Numeric `a+b=c` can use checked
+premises `b=c`, `a=0`, or `a=c`, `b=0`; reversed equality is supported too.
+The builtin routes retain both proofs at their existing lower premise ceiling.
+After a tuple call passes WD, its literal numeric coordinate can obtain a
+carrier from the selected closed value. Thus this needs no projection facts:
+
+```litex
+have x R × R
+((0, 0)(1) + x(1), x(2) + (0, 0)(2)) = (x(1), x(2))
+```
+
+The [plane identity tracer](../examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit)
+also checks function unfolding and reconstruction. Unknown/nonzero summands,
+unequal remaining terms and invalid indices still fail. Detailed JSON records
+`AddZeroLeftFromEqualities` / `AddZeroRightFromEqualities` with
+`remaining_equal`, `zero_equal`, and `LiteralTupleNumericCoordinate` with its
+closed membership calculation. These new routes have no Lean replay yet;
+compilation fails closed.
+
 Closed calculation has no access to the environment or recursive proof search.
 It covers closed numeric equality, real comparisons and standard-set membership
 with exact decimal, rational or complex evidence. It does not substitute known
@@ -11108,7 +11127,7 @@ argument domain.
 
 | Family | Exact public laws, subject to well-definedness |
 |---|---|
-| Power identities | `a^0=1`, `a^1=a`, `1^x=1`, and `0^n=0` for `n in N+`; `a^(m+n)=a^m*a^n`; `(a^m)^n=a^(m*n)`; `(a*b)^x=a^x*b^x`; `a^(-n)=1/a^n` for nonzero `a` and positive-natural `n`. The automatic exponent-addition, iterated-power, and product-power leaves check natural or integer exponents; real-exponent WD alone does not supply these laws. |
+| Power identities | `a^0=1`, `a^1=a`, `1^x=1`, and `0^r=0` for `r in R+` (including positive natural exponents); `a^(m+n)=a^m*a^n`; `(a^m)^n=a^(m*n)`; `(a*b)^x=a^x*b^x`; `a^(-n)=1/a^n` for nonzero `a` and positive-natural `n`. The automatic exponent-addition, iterated-power, and product-power leaves check natural or integer exponents; real-exponent WD alone does not supply these laws. |
 | Roots and inverse powers | `(sqrt(x))^2=x` for `x>=0`; `sqrt(a^2)=a` for `a>=0`; product and quotient roots require nonnegative inputs and a positive denominator. `x^(1/n)=z` is recognized from `x=z^n`, `n in N+`, and `z>=0`; equal nonzero integer powers of positive bases can recover equality of the bases. |
 | Logarithms | With valid positive arguments and a positive base unequal to one: `log(a,1)=0`, `log(a,a)=1`, product, quotient, reciprocal, and power laws; `log(a,a^b)=b`; `a^c=b` and `log(a,b)=c` are inverse shapes; the direct `a^log(a,x)=x` leaf currently requires `a>1`; change of base accepts any two positive nonunit real bases, including `(0,1)`, and obtains the nonzero logarithm denominator from the nonunit argument. The powered-base formula retains the supported power domains and a nonzero real exponent; positive nonunit bases with nonzero integer exponents supply the powered-base nonunit guard directly. |
 | Integer-range `sum`/`product` | Singleton ranges, last-term recurrence, adjacent partition, constants and pointwise congruence; sums also support addition/subtraction and scalar laws. Both support integer shift-reindexing. Bounds are closed integer endpoints with start <= end; source and target legality must be proved. Pointwise facts are required on the consumed range. Empty finite-set aggregates use their separate interface. |
@@ -11523,9 +11542,11 @@ After an accepted or trusted fact is stored, builtin inference may add routine
 consequences to the same environment. These consequences become ordinary
 known information for later statements.
 
-Inference runs once for an accepted seed. Each direct consequence is checked
-for well-definedness and stored without another inference pass. Temporary
-binder facts used while checking an inferred consequence also store only.
+Inference runs once for an accepted seed. Each named rule guarantees the
+formation and truth of its direct consequences and stores them without another
+WD or inference pass. Genuine applicability conditions, such as a nonzero
+factor for multiplication cancellation, remain checked and recorded.
+Temporary binder facts used while checking these conditions also store only.
 An explicit later statement may reuse that consequence as a new inference seed.
 This separates routine publication from recursively expanding every new fact.
 
@@ -12224,3 +12245,5 @@ Project exports retain manifest order. Dependency configs provide module names,
 without executing imported source. See [CLI conversion](cli.md#latex-conversion-preview)
 and the [compiler guide](../src/compile_to_latex/README.md) for the complete
 input, typography and error contracts.
+
+The zero-base positive-real rule records the checked exponent membership as `ZeroToPositiveRealPower` evidence. `0^0=1` remains unchanged; nonpositive or untyped exponents do not use this rule. See [the strict tracer](../examples/proof_nodes/equal/by_builtin_rule/zero_to_positive_real_power.lit). This rule currently has no Lean replay; the compiler rejects its builtin evidence.

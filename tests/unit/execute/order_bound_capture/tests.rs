@@ -12,18 +12,6 @@ fn atomic(captured: &StoreInferredFactResult) -> &AtomicFact {
     &stored.fact
 }
 
-fn formation(captured: &StoreInferredFactResult) -> &[ObjWellDefinedProof] {
-    let FactWellDefinedProof::AtomicExceptEquality(proof) = &captured.well_defined else {
-        panic!("original inferred atomic formation")
-    };
-    let arguments = atomic_fact_args_ref(atomic(captured));
-    assert_eq!(arguments.len(), proof.well_defined_of_each_parameter.len());
-    for (argument, proof) in arguments.iter().zip(&proof.well_defined_of_each_parameter) {
-        assert_eq!(argument.ir(), proof.obj().ir());
-    }
-    &proof.well_defined_of_each_parameter
-}
-
 #[test]
 fn bounded_chain_filter_retains_weak_natural_sign_and_closure_formation() {
     let source = "have Interval set = {x R: 0 <= x <= 1}\n";
@@ -87,12 +75,6 @@ fn bounded_chain_filter_retains_weak_natural_sign_and_closure_formation() {
     };
     assert_eq!(natural.element.readable_string(), "1");
     assert_eq!(natural.set, Obj::StandardSet(StandardSet::N));
-    let natural_formation = formation(&weak.derived);
-    assert!(matches!(
-        natural_formation[0],
-        ObjWellDefinedProof::ByDef { .. }
-    ));
-
     assert_eq!(
         weak.derived.stored_fact_ids().len(),
         1,
@@ -104,15 +86,6 @@ fn bounded_chain_filter_retains_weak_natural_sign_and_closure_formation() {
     };
     assert_eq!(closure.premise_edge_indexes, [0, 1]);
     assert_eq!(atomic(&closure.derived).readable_string(), "0 <= 1");
-    let closure_formation = formation(&closure.derived);
-    for proof in closure_formation {
-        if let ObjWellDefinedProof::ByKnown { obj, wd_id } = proof {
-            assert_eq!(
-                builder.local_env.well_defined_objects.lookup(obj),
-                Some(*wd_id)
-            );
-        }
-    }
     let ids = assumed.store_and_infer.stored_fact_ids();
     for captured in [&weak.derived, &closure.derived] {
         assert!(ids.contains(&captured.store.primary_fact_id()));

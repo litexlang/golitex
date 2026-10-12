@@ -113,6 +113,16 @@ To choose a common positive radius, write `have delta R+ = min(a,b)` when
 [distance and extrema preview](Manual.md#r10-expose-absolute-value-bounds)
 for self-contained examples and the fixed premise boundary.
 
+Checked zero summands can also be removed inside tuple comparisons:
+
+```litex
+have x R × R
+((0, 0)(1) + x(1), x(2) + (0, 0)(2)) = (x(1), x(2))
+```
+
+The builtin checks the zero summand and the other summand's equality, with
+the existing domain and premise checks. See the [plane identity example](../examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit).
+
 ## Definition → theorem → use
 
 The reciprocal's nonzero condition belongs to its callable domain. The named

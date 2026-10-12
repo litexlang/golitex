@@ -15,18 +15,12 @@ impl Runtime {
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         let mut rules = Vec::new();
-        if self
-            .resolve_set_builder_for_membership_projection(&in_fact.set, verify_state)?
-            .is_some()
+        if let Some((builder, equality_path, template_expansion)) =
+            self.resolve_set_builder_for_membership_projection(&in_fact.set, verify_state)?
         {
             let mut steps = Vec::new();
             {
                 let member = in_fact.clone();
-                let Some((builder, equality_path, template_expansion)) =
-                    self.resolve_set_builder_for_membership_projection(&member.set, verify_state)?
-                else {
-                    return Ok(rules);
-                };
                 let mut derived = Vec::new();
                 let base_in = InFact {
                     fact_id: self.global_ids.allocate_fact_id(),
@@ -68,8 +62,7 @@ impl Runtime {
                 right: base,
                 line_file: in_fact.line_file.clone(),
             });
-            let derived =
-                Box::new(self.store_inferred_fact(&Fact::AtomicFact(subset), verify_state)?);
+            let derived = Box::new(self.store_inferred_fact(&Fact::AtomicFact(subset))?);
             rules.push(InferAtomicExceptEqualityResult::InFactPowerSet(
                 InferPowerSetMembershipProjectionResult { derived },
             ));
@@ -95,7 +88,7 @@ impl Runtime {
     pub(super) fn store_new_set_builder_projection(
         &mut self,
         projected: &Fact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
         derived: &mut Vec<crate::store_fact_and_infer::StoreInferredFactResult>,
     ) -> RuntimeResult<()> {
         let key = projected.ir();
@@ -106,14 +99,7 @@ impl Runtime {
             })
         });
         if !already_stored {
-            let captured = self
-                .try_store_inferred_fact(projected, verify_state)?
-                .ok_or_else(|| {
-                    crate::runtime::RuntimeError::InternalBug(format!(
-                        "inferred fact {} failed well-definedness check",
-                        projected.ir()
-                    ))
-                })?;
+            let captured = self.store_inferred_fact(projected)?;
             derived.push(captured);
         }
         Ok(())
@@ -122,7 +108,7 @@ impl Runtime {
     fn resolve_set_builder_for_membership_projection(
         &mut self,
         set: &Obj,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<
         Option<(
             crate::ast::obj::SetBuilder,
@@ -143,16 +129,10 @@ impl Runtime {
             if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &value {
                 return Ok(Some((builder.clone(), equality_path, false)));
             }
-            // A checked template instance is a definitional set alias. Preserve
-            // its argument/guard WD ceiling before substituting the existing
-            // HaveObjEqual RHS; no generic theorem search is needed here.
+            // The checked source membership already certifies the template's
+            // arguments and guards. Substitute its definition-owned RHS directly;
+            // no repeated WD or generic theorem search is needed here.
             if let Obj::InstantiatedTemplateObj(instance) = &value {
-                if self
-                    .verify_obj_well_definedness(&value, verify_state)?
-                    .is_failed()
-                {
-                    continue;
-                }
                 if let Some(Obj::SetFormer(SetFormer::SetBuilder(builder))) =
                     self.expanded_have_obj_equal_rhs_of_instantiated_template(instance)?
                 {

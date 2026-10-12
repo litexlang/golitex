@@ -91,8 +91,8 @@ fn builder_projection_retains_selected_alias_path_and_each_actual_wd() {
     assert!(!step.template_expansion);
     assert_eq!(step.derived.len(), 2);
     assert!(step.derived.iter().all(|p| matches!(
-        &p.well_defined,
-        FactWellDefinedProof::AtomicExceptEquality(_)
+        &p.store,
+        crate::store_fact_and_infer::StoreFactResult::AtomicFact(_)
     )));
 }
 

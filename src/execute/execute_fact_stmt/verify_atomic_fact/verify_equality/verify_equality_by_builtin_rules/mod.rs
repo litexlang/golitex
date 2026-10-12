@@ -76,4 +76,6 @@ pub mod by_integer_interval;
 
 pub mod by_scalar_extra;
 
+pub mod add_zero_from_equalities_builtin_rule_proof;
 pub mod by_finite_seq_reconstruction;
+mod search_add_zero_from_equalities;

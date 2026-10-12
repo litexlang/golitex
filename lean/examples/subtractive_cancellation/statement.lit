@@ -13,4 +13,5 @@ forall a,b,k C:
 forall a,b,x,y Q:
     (a-x)-y=(b-x)-y
     =>:
+        a-x=b-x
         a=b

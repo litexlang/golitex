@@ -318,6 +318,25 @@ there is no order on arbitrary complex objects. The compiler replays the actual
 R-domain conditions before the selected order theorem and retains its source
 premises, exact citations and even-exponent restriction.
 
+The [nonzero difference](../lean/examples/nonzero_real_difference/statement.lit)
+example compiles `x != 1 => x - 1 != 0` through the original selected
+`DiffNonzeroFromInequality` result. Its exact operand inequality and numeric
+domain evidence feed the proved `Litex.subNonzeroOfNotSame` law. This route
+also supports generic complex members, either zero orientation and certified
+closed zero expressions. Missing or changed premise evidence remains rejected;
+this does not add support for other nonzero builtin families.
+
+The [real Möbius involution](../lean/examples/real_mobius_involution/statement.lit)
+now combines difference and quotient nonzero proofs, a known nonzero-difference
+citation, and original forall applications. Its map `(x+1)/(x-1)` preserves
+`x != 1` and applying it twice returns `x`. The compiler consumes the recorded
+numerator/denominator proofs and exact argument/type/domain evidence, including
+the nested call's domain check. Supported non-equality atomic forall conclusions
+share the existing Chain/And consumer; this does not enable every equality,
+compound conclusion or higher-order application route.
+The [native consumer](../showcases/litex_to_lean_adapter/Final.lean) obtains the
+ordinary real theorem through a handwritten, proved representation adapter.
+
 ## Membership preserves the object's representation
 
 ### The explicit mathematical interpretation M
@@ -506,8 +525,23 @@ forall a,b,k R:
 Subtraction supports `a-k=b-k` and `k-a=k-b`. Multiplication supports all four
 direct common-factor positions. Common-denominator division requires `k!=0`;
 `k/a=k/b` requires the numerator and both denominators to be nonzero. Each rule
-retains its own evidence and calls a proved Core law. Nested cancellation
-replays the actual recursive stores before their later citations. Removing a
+retains its own evidence and calls a proved Core law. Each inference stores
+its direct conclusion without another inference pass. Nested cancellation
+records an explicit intermediate source step and then that step's own result:
+
+```litex
+thm cancel_nested:
+    ? forall a,b,x,y Q:
+        x!=0
+        y!=0
+        (a*x)*y=(b*x)*y
+        =>:
+            a=b
+    a*x=b*x
+    a=b
+```
+
+The compiler replays both actual producers in order. Removing a
 producer, guard or WD certificate rejects compilation; none becomes a premise.
 The [multiplication example](../lean/examples/multiplicative_cancellation/statement.lit)
 includes all positions and a nested rational product.
@@ -680,9 +714,11 @@ host types stay generic. The native consumer exposes ordinary reals:
 
 The [natural polynomial example](../lean/examples/natural_polynomial_formulas/statement.lit)
 also defines a concrete property of the natural-output square function.
-Natural membership's original nonnegative inference is emitted once, with its
-own FactId. Predicate and bounded-builder clauses can reuse literal WD from
-completed parameter inference. A pending inference still cannot cite its own
+An ordinary natural parameter's recorded nonnegative inference is emitted once,
+with its own FactId. A natural membership projected from a predicate or builder
+is stored without another inference pass. A later explicit membership statement
+can start its own single-hop inference. Predicate and bounded-builder clauses
+can reuse literal WD from completed parameter inference. A pending inference still cannot cite its own
 future fact, even if an ancestor contains the complete result.
 
 These examples use the same owning compiler, typed result branches and proved
@@ -691,9 +727,11 @@ handwritten local tooling. General disjunction/existential proofs, induction,
 recursive or higher-order functions, local prop/function definitions and
 nested theorem definitions are separate extensions.
 
-The selected slice passed its combined phases 8-12 checkpoint on 2026-10-11.
-The gate checks 74 actual source/generated pairs, including 19 new mathematical
-cross-cases, and 64 interfaces in each native layer. An ordinary pinned Lake
+The original phases 8-11 minimum passed fresh acceptance on current single-hop
+typed results on 2026-10-12. The checkpoint checks 74 actual source/generated
+pairs, including 19 mathematical cross-cases, 45 maintained profiles and six
+separate whole-known Chain/And and WD-factory profiles. It also checks 64
+interfaces in each native layer. An ordinary pinned Lake
 client imports only `native.Final` and checks 64 direct applications plus six
 combinations. Live dependency audits connect native proofs to their intended
 generated declarations after beta/zeta reduction; unused citations do not count.
@@ -702,8 +740,11 @@ stages and actual native statements. Among the 19 new interfaces, ten are closed
 six generic and three mixed. The natural-output property and additional local
 declaration statements are checked in their generated files without separate
 native exports. These checks establish the reviewed subset, not every proof
-route that Litex can verify. All tooling and acceptance evidence remain local
-under `scripts/litex_to_lean/`.
+route that Litex can verify. Current acceptance_phase8_current through
+acceptance_phase11_current and acceptance_phases8_11_current receipts bind the
+exact source/result/build evidence. The 2026-10-11 phases 8-12 receipts remain
+historical. All tooling and acceptance evidence remain local under
+`scripts/litex_to_lean/`.
 
 ## Maintaining this guide
 

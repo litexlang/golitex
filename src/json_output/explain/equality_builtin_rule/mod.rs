@@ -2,6 +2,7 @@
 //!
 //! Call site: `rule.rule_name_and_message(lang)` on `EqualitySearchProofByBuiltinRule`.
 
+mod add_zero_from_equalities;
 mod calculation;
 mod common_obj_relations;
 mod constructor_order;
@@ -24,6 +25,18 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::English,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::English,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -274,6 +287,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::Chinese,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::Chinese,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -524,6 +549,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::ChineseTraditional,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::ChineseTraditional,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -774,6 +811,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::French,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::French,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -1026,6 +1075,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::Russian,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::Russian,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -1277,6 +1338,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::Spanish,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::Spanish,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -1529,6 +1602,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::Arabic,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::Arabic,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -1779,6 +1864,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::Japanese,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::Japanese,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -2029,6 +2126,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::Korean,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::Korean,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"
@@ -2279,6 +2388,18 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::AddZeroLeftFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroLeftFromEqualities",
+                    OutputLanguage::Vietnamese,
+                )
+            }
+            Self::AddZeroRightFromEqualities(_) => {
+                add_zero_from_equalities::add_zero_from_equalities_text(
+                    "AddZeroRightFromEqualities",
+                    OutputLanguage::Vietnamese,
+                )
+            }
             Self::ScalarExtra(p) => BuiltinRuleText {
                 rule_name: p.rule_id().into(),
                 message: "Apply the fixed scalar identity with its checked premises and domains"

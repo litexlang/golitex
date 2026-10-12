@@ -66,9 +66,6 @@ fn assert_original_capture(
     for rule in rules(store) {
         let (source_id, capture) = captured(rule);
         assert_eq!(source_id, store.primary_fact_id());
-        let FactWellDefinedProof::Equality(formation) = &capture.well_defined else {
-            panic!("original derived equality formation")
-        };
         let StoreFactResult::AtomicFact(derived) = &capture.store else {
             panic!("derived atomic store")
         };
@@ -76,8 +73,6 @@ fn assert_original_capture(
             panic!("derived equality")
         };
         assert_eq!(derived.fact_id, equality.fact_id);
-        assert_eq!(formation.left.obj().ir(), equality.left.ir());
-        assert_eq!(formation.right.obj().ir(), equality.right.ir());
         assert_ne!(derived.fact_id, source_id);
         assert_eq!(
             proof.local_env.facts.facts_by_id.get(&derived.fact_id),
@@ -115,7 +110,7 @@ fn assert_json_captures(value: &JsonValue) -> usize {
             });
             if is_capture {
                 let derived = object.get("derived").unwrap().as_object().unwrap();
-                assert!(derived.get("well_defined").is_some());
+                assert!(derived.get("well_defined").is_none());
                 assert!(derived.get("store").is_some());
             }
             usize::from(is_capture)
@@ -211,24 +206,26 @@ fn nonadditive_cancellation_capture_keeps_all_original_guard_citations_in_order(
 }
 
 #[test]
-fn nonadditive_cancellation_capture_keeps_nested_inference_and_composite_formation() {
+fn nonadditive_cancellation_capture_keeps_explicit_steps_and_composite_formation() {
     for source in [
-        "forall a, b, k, t C:\n    (k-a)-t=(k-b)-t\n    =>:\n        a=b\n",
-        "forall a, b, x, y C:\n    x!=0\n    y!=0\n    (a*x)*y=(b*x)*y\n    =>:\n        a=b\n",
-        "forall a, b, k, t C:\n    k!=0\n    (a-t)/k=(b-t)/k\n    =>:\n        a=b\n",
-        "forall a, b, k, t C*:\n    (k/a)/t=(k/b)/t\n    =>:\n        a=b\n",
+        "forall a, b, k, t C:\n    (k-a)-t=(k-b)-t\n    =>:\n        k-a=k-b\n        a=b\n",
+        "forall a, b, x, y C:\n    x!=0\n    y!=0\n    (a*x)*y=(b*x)*y\n    =>:\n        a*x=b*x\n        a=b\n",
+        "forall a, b, k, t C:\n    k!=0\n    (a-t)/k=(b-t)/k\n    =>:\n        a-t=b-t\n        a=b\n",
+        "forall a, b, k, t C*:\n    (k/a)/t=(k/b)/t\n    =>:\n        k/a=k/b\n        a=b\n",
     ] {
         let (runtime, run) = execute(source);
         let proof = forall(&run);
         let seed = &proof.assumed_dom_facts.last().unwrap().store_and_infer;
         let ids = assert_original_capture(proof, seed);
-        assert_eq!(ids.len(), 2, "{source}");
+        assert_eq!(ids.len(), 1, "{source}");
+        let next = assert_original_capture(proof, &proof.proved_then_facts[0].store_and_infer);
+        assert_eq!(next.len(), 1, "the explicit intermediate owns the next inference");
         assert_eq!(
             assert_json_captures(&project_stmt_detailed(&run.statement_results[0], &runtime)),
             2,
             "{source}"
         );
-        assert_ne!(ids[0], ids[1]);
+        assert_ne!(ids[0], next[0]);
     }
 }
 

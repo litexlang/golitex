@@ -130,6 +130,12 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    AddZeroLeftFromEqualities(
+        super::add_zero_from_equalities_builtin_rule_proof::AddZeroLeftFromEqualitiesBuiltinRuleProof,
+    ),
+    AddZeroRightFromEqualities(
+        super::add_zero_from_equalities_builtin_rule_proof::AddZeroRightFromEqualitiesBuiltinRuleProof,
+    ),
     FiniteSeqReconstruction(
         super::by_finite_seq_reconstruction::FiniteSeqReconstructionBuiltinRuleProof,
     ),

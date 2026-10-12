@@ -34,8 +34,22 @@ impl Runtime {
                 continue;
             }
             let _scope = FunctionPreimageScope::new(&root);
-            let Ok(construction) = self.verify_function_preimage_construction(&root, state)? else {
+            let function = match &root {
+                Obj::FunctionSpace(FunctionSpace::Preimage(value)) => value.function.as_ref(),
+                Obj::FunctionSpace(FunctionSpace::PreimageSet(value)) => value.function.as_ref(),
+                _ => unreachable!("selected preimage constructor"),
+            };
+            let Some(source) = self
+                .complete_function_domains(function, state)?
+                .into_iter()
+                .next()
+            else {
                 continue;
+            };
+            let builder = self.build_function_preimage(&root, &source)?;
+            let construction = crate::store_fact_and_infer::InferPreimageConstructionResult {
+                source: Box::new(source),
+                builder,
             };
             let base = InFact {
                 fact_id: self.global_ids.allocate_fact_id(),

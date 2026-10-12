@@ -1,0 +1,18 @@
+name = "litex_to_lean_adapter"
+version = "0.1.0"
+defaultTargets = ["Showcase"]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f"
+
+[[lean_lib]]
+name = "Litex"
+srcDir = "../../lean"
+roots = ["Litex", "examples.real_mobius_involution.statement"]
+
+[[lean_lib]]
+name = "Showcase"
+roots = ["UseInYourProject"]
+globs = ["Generated", "Adapter", "Final", "UseInYourProject", "DirectLean"]

@@ -36,7 +36,19 @@ impl Runtime {
         let mut candidates: Vec<AtomicFact> = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
             let memory = &env.facts.known_atomic_except_equality_facts;
-            if let Some(knowns) = memory.by_prop.get(&lookup_key) {
+            // Keep the existing exact-name winner before declaration aliases.
+            let matched = memory.by_prop.get(&lookup_key).into_iter().chain(
+                memory
+                    .by_prop
+                    .iter()
+                    .filter_map(|((predicate, polarity), knowns)| {
+                        (*polarity == lookup_key.1
+                            && predicate != &lookup_key.0
+                            && self.predicates_share_visible_definition(predicate, &lookup_key.0))
+                        .then_some(knowns)
+                    }),
+            );
+            for knowns in matched {
                 for known in knowns {
                     if atomic_fact_args_ref(known).len() != goal_args.len() {
                         continue;

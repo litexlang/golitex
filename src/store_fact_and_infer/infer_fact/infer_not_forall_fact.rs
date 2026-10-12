@@ -8,16 +8,15 @@ impl Runtime {
     pub(crate) fn infer_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<InferNotForallFactResult> {
         let Some(derived_exist) = self.not_forall_to_counterexample_exist(not_forall)? else {
             return Err(crate::runtime::RuntimeError::InternalBug(
                 "infer not forall: cannot negate body into exist counterexample".to_string(),
             ));
         };
-        let derived_exist = Box::new(
-            self.store_inferred_fact(&exist_shaped_fact_to_fact(&derived_exist), verify_state)?,
-        );
+        let derived_exist =
+            Box::new(self.store_inferred_fact(&exist_shaped_fact_to_fact(&derived_exist))?);
         Ok(InferNotForallFactResult { derived_exist })
     }
 }

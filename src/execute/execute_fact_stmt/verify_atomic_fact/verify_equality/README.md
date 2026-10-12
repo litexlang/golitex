@@ -92,6 +92,18 @@ checked. The equality may be a local universal premise, independently of any
 [cost observations](../../../README.md#cost-observations-and-future-changes)
 own the permission, traversal and performance boundaries.
 
+`AddZeroLeftFromEqualities` checks `a+b=c` from `b=c`, then `a=0`;
+`AddZeroRightFromEqualities` checks it from `a=c`, then `b=0`, also in reverse.
+They follow the existing builtin rules and retain both complete premise results
+at the inherited KnownSpecialProperty ceiling. Parent WD checks numeric addition.
+`LiteralTupleNumericCoordinate` supplies a checked tuple call's numeric carrier
+from the selected coordinate's closed calculation and its cited tuple value;
+it performs no proof search. Together they support the
+[plane identity](../../../../../examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit)
+without projection or coordinate-carrier statements. Detailed JSON exposes
+`remaining_equal` and `zero_equal`. Both new evidence routes currently fail
+closed in Lean replay; search permissions and storage are unchanged.
+
 The literal-beta leaf in `by_fn_application/by_literal_beta.rs` references the
 parent equality's WD side for the exact submitted anonymous-function call.
 It requires one argument group, exact arity and capture-safe substitution.

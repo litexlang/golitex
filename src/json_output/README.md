@@ -79,6 +79,13 @@ Default CLI / test emit uses **Normal**. **Compact** and **Detailed** are
 implemented under `project_compact` / `project_detailed`
 (`project_stmt_*` / `project_run_*` / `emit_run_*`).
 
+Checked-zero addition names `AddZeroLeftFromEqualities` or
+`AddZeroRightFromEqualities` in Normal. Detailed retains `remaining_equal`,
+`zero_equal` and `reversed`. Its numeric tuple-coordinate carrier can use
+`LiteralTupleNumericCoordinate`, retaining the index, tuple value, source
+equality path and `component_membership` closed calculation. These project the
+actual verifier evidence, with no new stores or output-time proof search.
+
 Detailed atomic builtin rewrites retain their variant and checked payload:
 closed-numeric and known-equality substitution include `rewritten_fact`,
 `cited_equal_fact_ids`, and `proof_of_rewritten_fact`; function unfolding
@@ -148,15 +155,15 @@ before domain proofs. These fields only display existing typed evidence.
 Detailed chain stores additionally expose `chain_adjacent_infers`, retaining
 each original `edge_index`, inference seed `fact_id` and subject. These seed IDs
 can differ from adjacent verification and stored projection IDs. Numeric
-`chain_transitive_closures` retain the original start/end indexes, derived WD,
-and the derived store stage. Conditional order rules expose their actual
+`chain_transitive_closures` retain the original start/end indexes, the named rule,
+and the direct derived store stage. Conditional order rules expose their actual
 source, integer certificate when required, nonnegative-bound certificate,
-derived `well_defined`, and `store` in `conditional_order_rules`.
+direct `store` in `conditional_order_rules`.
 The owning Rust capture is:
 
 ```rust
 InferChainAdjacentResult { edge_index, fact, infer }
-StoreInferredFactResult { well_defined, store }
+StoreInferredFactResult { store }
 ```
 
 This preserves evidence already computed at the original producer. It does

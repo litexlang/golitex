@@ -4,6 +4,49 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_known_subset_member(
+        &self,
+        goal: &InFact,
+        known: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::KnownSubsetMembershipProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (AtomicFact::InFact(member), AtomicFact::SubsetFact(subset)) =
+            (&known.member_proof.fact, &known.subset_proof.fact)
+        else {
+            return Err(LeanCompileError::new(
+                "StructuralMembership/SubsetFamily",
+                "Subset membership requires member and subset premise subjects.",
+            ));
+        };
+        if member.element.ir() != goal.element.ir()
+            || member.set.ir() != subset.left.ir()
+            || subset.right.ir() != goal.set.ir()
+        {
+            return Err(LeanCompileError::new(
+                "StructuralMembership/SubsetSubject",
+                "The cited premises do not connect this element to its target carrier.",
+            ));
+        }
+        let (
+            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(member_cite),
+            AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(subset_cite),
+        ) = (
+            known.member_proof.searched_proof.as_ref(),
+            known.subset_proof.searched_proof.as_ref(),
+        )
+        else {
+            return Err(LeanCompileError::unsupported(
+                "StructuralMembership/SubsetCitation",
+            ));
+        };
+        let member = self.compile_known_atomic(member_cite, &known.member_proof.fact, position)?;
+        let subset = self.compile_known_atomic(subset_cite, &known.subset_proof.fact, position)?;
+        Ok(format!(
+            "({subset} (Litex.denote {}) {member})",
+            self.compile_object_reference(&goal.element, position)?
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_structural(
         &self,
         proof: &StructuralMembershipProof,
@@ -63,43 +106,13 @@ impl LitexToLeanCompiler {
                 ))
             }
             StructuralMembershipReason::KnownSubset(known) => {
-                let (AtomicFact::InFact(member), AtomicFact::SubsetFact(subset)) =
-                    (&known.member_proof.fact, &known.subset_proof.fact)
-                else {
-                    return Err(LeanCompileError::new(
-                        "StructuralMembership/SubsetFamily",
-                        "Subset membership requires its actual member and subset premise subjects.",
-                    ));
+                let goal = InFact {
+                    fact_id: known.member_proof.fact.fact_id(),
+                    element: proof.element.clone(),
+                    set: Obj::StandardSet(proof.set.clone()),
+                    line_file: None,
                 };
-                if member.element.ir() != proof.element.ir()
-                    || member.set.ir() != subset.left.ir()
-                    || subset.right.ir() != Obj::StandardSet(proof.set.clone()).ir()
-                {
-                    return Err(LeanCompileError::new(
-                        "StructuralMembership/SubsetSubject",
-                        "The recorded member and subset do not connect this element to its target carrier.",
-                    ));
-                }
-                let (
-                    AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(member_cite),
-                    AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(subset_cite),
-                ) = (
-                    known.member_proof.searched_proof.as_ref(),
-                    known.subset_proof.searched_proof.as_ref(),
-                )
-                else {
-                    return Err(LeanCompileError::unsupported(
-                        "StructuralMembership/SubsetCitation",
-                    ));
-                };
-                let member =
-                    self.compile_known_atomic(member_cite, &known.member_proof.fact, position)?;
-                let subset =
-                    self.compile_known_atomic(subset_cite, &known.subset_proof.fact, position)?;
-                Ok(format!(
-                    "({subset} (Litex.denote {}) {member})",
-                    self.compile_object_reference(&proof.element, position)?
-                ))
+                self.compile_known_subset_member(&goal, known, position)
             }
             StructuralMembershipReason::Add { left, right } => {
                 self.compile_structural_binary(proof, left, right, BinaryArithmetic::Add, position)

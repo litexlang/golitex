@@ -1,6 +1,6 @@
 # Gate: target/release/litex -strict -f examples/infer/atomic/set_builder_projection_replay.lit
 # Before: the repeated equality below overflowed the stack after extension.
-# After: identical stored builder consequences are skipped; new ones remain.
+# After: direct consequences store only; an explicit member rechecks late conditions.
 have s set
 by extension:
     ? s = {x s: 0 = 0}
@@ -25,4 +25,5 @@ claim:
         =>:
             value > 0
     release thm set_builder_member(value, {x Carrier: 0 = 0})
+    value $in Carrier
     value > 0

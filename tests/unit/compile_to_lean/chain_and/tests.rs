@@ -181,7 +181,7 @@ fn callee_constructor_factory_rejects_missing_and_wrong_original_formation() {
 #[test]
 fn callee_constructor_factory_requires_exact_caller_parameter_and_wd_evidence() {
     let source = "forall t R:\n    t=t+0=t\nhave x R=2\nx=x+0=x\n";
-    for mutation in ["parameter", "argument", "carrier", "wd"] {
+    for mutation in ["parameter", "argument", "carrier"] {
         let (mut result, compiler) = super::execute(source);
         let capture = whole_known_mut(&mut result.statement_results[2]);
         let requirement = &mut capture.instantiation_requirements.param_type_requirements[0];
@@ -259,7 +259,7 @@ fn callee_constructor_factory_rejects_a_constructor_moved_to_a_future_then() {
     };
     let capture = goal.known_forall.as_ref().expect("selected known forall");
     let error = compiler
-        .compile_compound_known_forall(&Fact::ChainFact(goal.fact.clone()), capture, &caller)
+        .compile_known_application(&Fact::ChainFact(goal.fact.clone()), capture, &caller)
         .unwrap_err();
     assert_eq!(error.route, "WD/CalleeProducer", "{error}");
 }
@@ -413,7 +413,7 @@ fn chain_and_replays_conditional_order_and_nested_natural_sign_on_atomic_seeds()
 #[test]
 fn chain_and_conditional_order_rejects_wrong_seed_certificate_subject_and_wd() {
     for strict in [false, true] {
-        for mutation in ["source_id", "bound", "derived", "wd"] {
+        for mutation in ["source_id", "bound", "derived"] {
             let (mut result, compiler) =
                 super::execute(if strict { STRICT_BOUND } else { WEAK_BOUND });
             let rule = order_rule_mut(&mut result.statement_results[0], strict);
@@ -454,13 +454,6 @@ fn chain_and_conditional_order_rejects_wrong_seed_certificate_subject_and_wd() {
                         AtomicFact::LessFact(fact) => fact.left = super::number_object("7"),
                         _ => panic!("actual conditional conclusion family"),
                     }
-                }
-                "wd" => {
-                    let FactWellDefinedProof::AtomicExceptEquality(wd) = &mut derived.well_defined
-                    else {
-                        panic!("conditional formation")
-                    };
-                    wd.well_defined_of_each_parameter.swap(0, 1);
                 }
                 _ => unreachable!(),
             }
@@ -558,11 +551,6 @@ fn chain_and_preserves_three_edge_id_domains_and_actual_closure_wd() {
     assert_ne!(verified_id, inference_id);
     let closure = &inferred.transitive_closures[0];
     assert!(matches!(closure.cite, ChainTransitiveCite::BuiltinEquality));
-    let FactWellDefinedProof::Equality(wd) = &closure.derived.well_defined else {
-        panic!("closure WD")
-    };
-    assert_eq!(wd.left.obj().ir(), stored.fact.objs[0].ir());
-    assert_eq!(wd.right.obj().ir(), stored.fact.objs[2].ir());
     let closure_id = closure.derived.store.primary_fact_id();
     let output = super::compile_run(&result, &compiler, "edge_identity").unwrap();
     for id in [stored_id, inference_id, closure_id] {
@@ -587,7 +575,7 @@ fn chain_and_replays_atomic_inference_from_the_actual_chain_seed() {
 
 #[test]
 fn chain_and_rejects_wrong_adjacent_order_wd_and_stored_projection_ids() {
-    for change in ["adjacent", "wd", "store_id", "store_index"] {
+    for change in ["adjacent", "store_id", "store_index"] {
         let (mut result, compiler) = super::execute(ENDPOINT);
         if change == "adjacent" {
             chain_adjacent_mut(&mut result.statement_results[2]).swap(0, 1);
@@ -657,7 +645,7 @@ fn chain_and_rejects_changed_inference_seed_subject_and_identity() {
 
 #[test]
 fn chain_and_rejects_wrong_closure_route_path_subject_and_formation() {
-    for change in ["indexes", "rule", "subject", "wd", "deleted"] {
+    for change in ["indexes", "rule", "subject", "deleted"] {
         let (mut result, compiler) = super::execute(ORDER);
         let forall = super::forall_proof_mut(&mut result.statement_results[0]);
         let Some(InferFactResult::ChainFact(inferred)) =
@@ -680,14 +668,6 @@ fn chain_and_rejects_wrong_closure_route_path_subject_and_formation() {
                         panic!("strict closure")
                     };
                     std::mem::swap(&mut fact.left, &mut fact.right);
-                }
-                "wd" => {
-                    let FactWellDefinedProof::AtomicExceptEquality(wd) =
-                        &mut closure.derived.well_defined
-                    else {
-                        panic!("order WD")
-                    };
-                    wd.well_defined_of_each_parameter.swap(0, 1);
                 }
                 _ => unreachable!(),
             }

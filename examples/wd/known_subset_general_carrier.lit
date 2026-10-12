@@ -1,0 +1,16 @@
+# General-carrier membership uses the two actual stored premises.
+# Before: one-step inference stored K subset X but did not infer its forall;
+# the bounded input-domain check rejected point in X for an arbitrary set X.
+# forall X set, K power_set(X), point K:
+#     point $in X
+# Now: the existing cite-only subset carrier rule handles arbitrary carriers.
+# Boundary: an unrelated point in Y supplies no point in K certificate.
+# Gate: target/release/litex -strict -lang en -f examples/wd/known_subset_general_carrier.lit
+
+forall X set, K power_set(X), point K:
+    point $in X
+
+forall X, Y set, K power_set(X), f fn(x X) Y, point K:
+    point $in X
+    f(point) $in Y
+    fn(x K) Y {f(x)}(point) = f(point)

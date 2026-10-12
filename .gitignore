@@ -2,6 +2,7 @@
 /target/
 /lean/.lake/
 /showcases/litex_to_lean_mathlib_pipeline/showcase1/.lake/
+/showcases/litex_to_lean_adapter/.lake/
 
 # Generated binaries, coverage inventories, and macOS metadata
 **/__debug_bin*

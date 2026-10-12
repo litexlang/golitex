@@ -28,7 +28,8 @@ pub(super) struct SourcePosition<'a> {
 // Run: completed statements. Headers: params, dom assumptions, then/body stages.
 // WD/AtomicWD: child WD, then requirements. Call: types, doms, conclusion WD,
 // then returned stores. HaveEqual: RHS WD, membership checks, alias definitions.
-// Cancellation: three memberships, optional nonzero checks, then derived WD/store and nested infer.
+// Inference: genuine condition proofs, then the direct conclusion store.
+// InferredStore: replay a named rule's constructed objects without a Verify WD stage.
 #[derive(Clone, Copy)]
 pub(super) enum SourceOwner<'a> {
     Run(&'a RunLitexCodeResult),
@@ -47,6 +48,7 @@ pub(super) enum SourceOwner<'a> {
     HaveEqualType(&'a ExecHaveObjEqualStmtSuccessResult),
     AtomicWD(&'a AtomicFactWellDefinedProof),
     FactWD(&'a FactWellDefinedProof),
+    InferredStore(&'a StoreFactResult),
     HaveGroup(&'a ParamTypeWellDefinedProof, &'a ParamTypeFactCheckResult),
     ParamTypeWD(&'a ParamTypeWellDefinedProof),
     PropDefinition(&'a ExecDefPropStmtSuccessResult),
@@ -68,6 +70,14 @@ pub(super) enum SourceOwner<'a> {
     FunctionNormalization(&'a FunctionBodyNormalizationProof),
     FunctionExpansion(&'a AnonymousFunctionBodyExpansionProof),
     FunctionDefinitionRewrite(&'a [AnonymousFunctionBodyExpansionProof]),
+}
+
+// Constructor evidence comes from a checked source expression or a named infer
+// rule's actual conclusion store. The latter does not invent a Verify WD result.
+#[derive(Clone, Copy)]
+enum SourceConstructor<'a> {
+    Checked(&'a ObjWellDefinedProof),
+    Inferred(&'a StoreFactResult),
 }
 
 impl<'a> SourcePosition<'a> {
@@ -585,7 +595,10 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<Option<T>, LeanCompileError> {
         visit_visible(
             self,
-            &mut |proof, position| {
+            &mut |evidence, position| {
+                let SourceConstructor::Checked(proof) = evidence else {
+                    return Ok(None);
+                };
                 if matches!(proof, ObjWellDefinedProof::ByDef { obj, .. } if obj.ir() == object.ir())
                 {
                     callback(proof, position).map(Some)
@@ -595,6 +608,67 @@ impl<'a> SourcePosition<'a> {
             },
             &mut |_, _| Ok(None),
         )
+    }
+
+    pub fn with_visible_inferred_subject<T>(
+        &self,
+        object: &Obj,
+        callback: &mut impl FnMut(&StoreFactResult, &SourcePosition<'_>) -> Result<T, LeanCompileError>,
+    ) -> Result<Option<T>, LeanCompileError> {
+        visit_visible(
+            self,
+            &mut |evidence, position| {
+                let SourceConstructor::Inferred(store) = evidence else {
+                    return Ok(None);
+                };
+                if store.atomic_components().iter().any(|(_, fact)| {
+                    atomic_fact_args_ref(fact)
+                        .iter()
+                        .any(|arg| arg.ir() == object.ir())
+                }) {
+                    callback(store, position).map(Some)
+                } else {
+                    Ok(None)
+                }
+            },
+            &mut |_, _| Ok(None),
+        )
+    }
+
+    pub fn with_visible_nonzero<T>(
+        &self,
+        object: &Obj,
+        callback: &mut impl FnMut(FactId, &SourcePosition<'_>) -> Result<T, LeanCompileError>,
+    ) -> Result<Option<T>, LeanCompileError> {
+        let inferred = visit_visible(
+            self,
+            &mut |evidence, producer| {
+                let SourceConstructor::Inferred(store) = evidence else {
+                    return Ok(None);
+                };
+                for (id, fact) in store.atomic_components() {
+                    if matches!(&fact, AtomicFact::NotEqualFact(f)
+                        if f.left.ir() == object.ir() && super::helper::is_exact_zero(&f.right))
+                    {
+                        return callback(id, producer).map(Some);
+                    }
+                }
+                Ok(None)
+            },
+            &mut |_, _| Ok(None),
+        )?;
+        if inferred.is_some() {
+            return Ok(inferred);
+        }
+        visit_visible(self, &mut |_, _| Ok(None), &mut |proof, producer| {
+            if let Some(Fact::AtomicFact(AtomicFact::NotEqualFact(fact))) = verified_subject(proof)
+            {
+                if fact.left.ir() == object.ir() && super::helper::is_exact_zero(&fact.right) {
+                    return callback(fact.fact_id, producer).map(Some);
+                }
+            }
+            Ok(None)
+        })
     }
 
     pub fn with_visible_membership<T>(
@@ -1560,6 +1634,7 @@ fn fact_reference_in_owner(
     actual: &Fact,
 ) -> Result<Option<String>, LeanCompileError> {
     match position.owner {
+        SourceOwner::InferredStore(_) => Ok(None),
         SourceOwner::Run(run) => {
             for (index, statement) in run
                 .statement_results
@@ -1996,10 +2071,21 @@ fn alias_in_statement<T>(
     }
 }
 
+fn constructor_has_closed_leaf(evidence: SourceConstructor<'_>) -> bool {
+    match evidence {
+        SourceConstructor::Checked(proof) => closed_leaf(proof.obj()),
+        SourceConstructor::Inferred(store) => store.atomic_components().iter().any(|(_, fact)| {
+            atomic_fact_args_ref(fact)
+                .iter()
+                .any(|obj| closed_leaf(obj))
+        }),
+    }
+}
+
 fn visit_visible<T>(
     start: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -2007,7 +2093,7 @@ fn visit_visible<T>(
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
-    let mut bounded_wd = |proof: &ObjWellDefinedProof, producer: &SourcePosition<'_>| {
+    let mut bounded_wd = |proof: SourceConstructor<'_>, producer: &SourcePosition<'_>| {
         if obeys_active_stage_ceilings(start, producer) {
             wd(proof, producer)
         } else {
@@ -2067,6 +2153,7 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         (SourceOwner::HaveEqualType(a), SourceOwner::HaveEqualType(b)) => std::ptr::eq(a, b),
         (SourceOwner::AtomicWD(a), SourceOwner::AtomicWD(b)) => std::ptr::eq(a, b),
         (SourceOwner::FactWD(a), SourceOwner::FactWD(b)) => std::ptr::eq(a, b),
+        (SourceOwner::InferredStore(a), SourceOwner::InferredStore(b)) => std::ptr::eq(a, b),
         (SourceOwner::HaveGroup(a, pa), SourceOwner::HaveGroup(b, pb)) => {
             std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
         }
@@ -2129,7 +2216,7 @@ fn visit_function_formation<T>(
     proof: &ObjWellDefinedProof,
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -2251,7 +2338,7 @@ fn visit_function_formation<T>(
 fn visit_owner<T>(
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -2260,6 +2347,10 @@ fn visit_owner<T>(
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
     match position.owner {
+        SourceOwner::InferredStore(store) => {
+            return wd(SourceConstructor::Inferred(store), position)
+        }
+
         SourceOwner::Run(run) => {
             for (index, statement) in run
                 .statement_results
@@ -2299,9 +2390,10 @@ fn visit_owner<T>(
                     SourceOwner::SetBuilder(set, captured),
                     position.before,
                 );
-                let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
-                    if closed_leaf(proof.obj()) {
-                        wd(proof, position)
+                let mut closed = |evidence: SourceConstructor<'_>,
+                                  position: &SourcePosition<'_>| {
+                    if constructor_has_closed_leaf(evidence) {
+                        wd(evidence, position)
                     } else {
                         Ok(None)
                     }
@@ -2809,18 +2901,7 @@ fn visit_owner<T>(
                     ..*position
                 };
 
-                let formation = SourcePosition::new(
-                    Some(&prior),
-                    SourceOwner::FactWD(&captured.well_defined),
-                    usize::MAX,
-                );
-                if let Some(value) = visit_fact_formation(
-                    &captured.well_defined,
-                    usize::MAX,
-                    &formation,
-                    wd,
-                    verify,
-                )? {
+                if let Some(value) = wd(SourceConstructor::Inferred(&captured.store), &prior)? {
                     return Ok(Some(value));
                 }
             }
@@ -2834,17 +2915,10 @@ fn visit_owner<T>(
 
             if position.before > head {
                 let prior = SourcePosition {
-                    before: head,
+                    before: head + 1,
                     ..*position
                 };
-                let formed = SourcePosition::new(
-                    Some(&prior),
-                    SourceOwner::FactWD(&captured.well_defined),
-                    usize::MAX,
-                );
-                if let Some(value) =
-                    visit_fact_formation(&captured.well_defined, usize::MAX, &formed, wd, verify)?
-                {
+                if let Some(value) = wd(SourceConstructor::Inferred(&captured.store), &prior)? {
                     return Ok(Some(value));
                 }
             }
@@ -2865,21 +2939,9 @@ fn visit_owner<T>(
         }
         SourceOwner::ChainClosure(closure) => {
             if position.before > 0 {
-                let prior = SourcePosition {
-                    before: 0,
-                    ..*position
-                };
-                let formed = SourcePosition::new(
-                    Some(&prior),
-                    SourceOwner::FactWD(&closure.derived.well_defined),
-                    usize::MAX,
-                );
-                if let Some(value) = visit_fact_formation(
-                    &closure.derived.well_defined,
-                    usize::MAX,
-                    &formed,
-                    wd,
-                    verify,
+                if let Some(value) = wd(
+                    SourceConstructor::Inferred(&closure.derived.store),
+                    position,
                 )? {
                     return Ok(Some(value));
                 }
@@ -2921,14 +2983,7 @@ fn visit_owner<T>(
                     ..*position
                 };
 
-                let formation = SourcePosition::new(
-                    Some(&prior),
-                    SourceOwner::FactWD(&derived.well_defined),
-                    usize::MAX,
-                );
-                if let Some(value) =
-                    visit_fact_formation(&derived.well_defined, usize::MAX, &formation, wd, verify)?
-                {
+                if let Some(value) = wd(SourceConstructor::Inferred(&derived.store), &prior)? {
                     return Ok(Some(value));
                 }
             }
@@ -2958,21 +3013,10 @@ fn visit_owner<T>(
 
             if position.before > head {
                 let prior = SourcePosition {
-                    before: head,
+                    before: head + 1,
                     ..*position
                 };
-                let formation = SourcePosition::new(
-                    Some(&prior),
-                    SourceOwner::FactWD(&captured.well_defined),
-                    usize::MAX,
-                );
-                if let Some(value) = visit_fact_formation(
-                    &captured.well_defined,
-                    usize::MAX,
-                    &formation,
-                    wd,
-                    verify,
-                )? {
+                if let Some(value) = wd(SourceConstructor::Inferred(&captured.store), &prior)? {
                     return Ok(Some(value));
                 }
             }
@@ -3134,7 +3178,7 @@ fn visit_header<T>(
     doms: &[AssumeDomFactResult],
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -3221,7 +3265,7 @@ fn visit_statement<T>(
     before: usize,
     parent: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -3268,9 +3312,9 @@ fn visit_statement<T>(
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
             ExecDefPropStmtResult::Success(proof),
         )) if before > 0 => {
-            let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
-                if closed_leaf(proof.obj()) {
-                    wd(proof, position)
+            let mut closed = |evidence: SourceConstructor<'_>, position: &SourcePosition<'_>| {
+                if constructor_has_closed_leaf(evidence) {
+                    wd(evidence, position)
                 } else {
                     Ok(None)
                 }
@@ -3305,9 +3349,9 @@ fn visit_statement<T>(
             if let Some(value) = visit_owner(&inference, wd, verify)? {
                 return Ok(Some(value));
             }
-            let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
-                if closed_leaf(proof.obj()) {
-                    wd(proof, position)
+            let mut closed = |evidence: SourceConstructor<'_>, position: &SourcePosition<'_>| {
+                if constructor_has_closed_leaf(evidence) {
+                    wd(evidence, position)
                 } else {
                     Ok(None)
                 }
@@ -3320,9 +3364,9 @@ fn visit_statement<T>(
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(proof),
         )) if before > 0 => {
-            let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
-                if closed_leaf(proof.obj()) {
-                    wd(proof, position)
+            let mut closed = |evidence: SourceConstructor<'_>, position: &SourcePosition<'_>| {
+                if constructor_has_closed_leaf(evidence) {
+                    wd(evidence, position)
                 } else {
                     Ok(None)
                 }
@@ -3363,9 +3407,9 @@ fn visit_statement<T>(
             {
                 return Ok(Some(value));
             }
-            let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
-                if closed_leaf(proof.obj()) {
-                    wd(proof, position)
+            let mut closed = |evidence: SourceConstructor<'_>, position: &SourcePosition<'_>| {
+                if constructor_has_closed_leaf(evidence) {
+                    wd(evidence, position)
                 } else {
                     Ok(None)
                 }
@@ -3483,7 +3527,7 @@ fn visit_complete_wd<T>(
     proof: &ObjWellDefinedProof,
     parent: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -3491,7 +3535,7 @@ fn visit_complete_wd<T>(
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
-    if let Some(value) = wd(proof, parent)? {
+    if let Some(value) = wd(SourceConstructor::Checked(proof), parent)? {
         return Ok(Some(value));
     }
     let position = SourcePosition::new(Some(parent), SourceOwner::WD(proof), usize::MAX);
@@ -3502,7 +3546,7 @@ fn visit_complete_verify<T>(
     proof: &VerifyFactResult,
     parent: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -3522,9 +3566,10 @@ fn visit_complete_verify<T>(
                 _ => None,
             };
             if let Some(owner) = owner {
-                let mut closed = |proof: &ObjWellDefinedProof, position: &SourcePosition<'_>| {
-                    if closed_leaf(proof.obj()) {
-                        wd(proof, position)
+                let mut closed = |evidence: SourceConstructor<'_>,
+                                  position: &SourcePosition<'_>| {
+                    if constructor_has_closed_leaf(evidence) {
+                        wd(evidence, position)
                     } else {
                         Ok(None)
                     }
@@ -3549,7 +3594,7 @@ fn visit_verify_formation<T>(
     before: usize,
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -3579,6 +3624,10 @@ fn visit_verify_formation<T>(
         VerifyFactResult::AtomicExceptEquality(proof) => {
             if let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_ref() {
                 if before == usize::MAX {
+                    if let AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(known) = &proof.searched_proof {
+                        let scope = SourcePosition::new(Some(position), SourceOwner::KnownApplication(known), known.arg_match_proofs.len() + known_application_requirements(known).len());
+                        if let Some(value) = visit_owner(&scope, wd, verify)? { return Ok(Some(value)); }
+                    }
                     if let AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(
                         crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(unfold),
                     ) = &proof.searched_proof {
@@ -3630,7 +3679,7 @@ fn visit_atomic_formation<T>(
     before: usize,
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -3672,7 +3721,7 @@ fn visit_fact_formation<T>(
     before: usize,
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -3954,7 +4003,7 @@ fn visit_compound_inference<T>(
     store: &StoreFactAndInferResult,
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
-        &ObjWellDefinedProof,
+        SourceConstructor<'_>,
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
     verify: &mut dyn FnMut(
@@ -4057,6 +4106,13 @@ fn statement_known_application(
         return None;
     };
     match &proof.verify_result {
+        VerifyFactResult::AtomicExceptEquality(proof) => match proof.as_ref() {
+            VerifyAtomicExceptEqualityFactResult::Success(proof) => match &proof.searched_proof {
+                AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(known) => Some(known),
+                _ => None,
+            },
+            _ => None,
+        },
         VerifyFactResult::ChainFact(proof)=>match proof.as_ref() {
             crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof)=>proof.known_forall.as_ref(),
             _=>None,
@@ -4144,7 +4200,10 @@ fn visit_forall_constructor<T>(
         owner,
         parameter_count(&fact.typed_parameters.groups) + assumed.len(),
     );
-    let mut checked = |wd: &ObjWellDefinedProof, site: &SourcePosition<'_>| {
+    let mut checked = |evidence: SourceConstructor<'_>, site: &SourcePosition<'_>| {
+        let SourceConstructor::Checked(wd) = evidence else {
+            return Ok(None);
+        };
         if wd.obj().ir() == pattern.ir() {
             callback(fact, introduced, assumed, wd, site, declaration).map(Some)
         } else {

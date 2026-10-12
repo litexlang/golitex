@@ -39,7 +39,7 @@ impl Runtime {
     fn infer_in_fact_list_set(
         &mut self,
         in_fact: &InFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetFormer(SetFormer::ListSet(list_set)) = &in_fact.set else {
             return Ok(None);
@@ -56,8 +56,7 @@ impl Runtime {
                 right: singleton.as_ref().clone(),
                 line_file: lf,
             });
-            let derived =
-                Box::new(self.store_inferred_fact(&Fact::AtomicFact(atomic), verify_state)?);
+            let derived = Box::new(self.store_inferred_fact(&Fact::AtomicFact(atomic))?);
             return Ok(Some(
                 InferAtomicExceptEqualityResult::InFactListSetSingletonEqual(
                     InferInFactListSetSingletonEqualResult { derived },
@@ -82,7 +81,7 @@ impl Runtime {
             facts: branches,
             line_file: lf,
         });
-        let derived = Box::new(self.store_inferred_fact(&or_fact, verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&or_fact)?);
         Ok(Some(
             InferAtomicExceptEqualityResult::InFactListSetOrEqualities(
                 InferInFactListSetOrEqualitiesResult { derived },
@@ -93,7 +92,7 @@ impl Runtime {
     fn infer_in_fact_union(
         &mut self,
         in_fact: &InFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetOperator(SetOperator::Union(union)) = &in_fact.set else {
             return Ok(None);
@@ -120,7 +119,7 @@ impl Runtime {
             ],
             line_file: lf,
         });
-        let derived = Box::new(self.store_inferred_fact(&or_fact, verify_state)?);
+        let derived = Box::new(self.store_inferred_fact(&or_fact)?);
         Ok(Some(InferAtomicExceptEqualityResult::InFactUnionOr(
             InferInFactUnionOrResult { derived },
         )))
@@ -129,7 +128,7 @@ impl Runtime {
     fn infer_in_fact_intersect(
         &mut self,
         in_fact: &InFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetOperator(SetOperator::Intersect(intersect)) = &in_fact.set else {
             return Ok(None);
@@ -137,25 +136,23 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         let mut derived: Vec<StoreInferredFactResult> = Vec::with_capacity(2);
         let left_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: left_id,
                 element: in_fact.element.clone(),
                 set: intersect.left.as_ref().clone(),
                 line_file: lf.clone(),
-            })),
-            verify_state,
-        )?);
+            })))?,
+        );
         let right_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: right_id,
                 element: in_fact.element.clone(),
                 set: intersect.right.as_ref().clone(),
                 line_file: lf,
-            })),
-            verify_state,
-        )?);
+            })))?,
+        );
         Ok(Some(InferAtomicExceptEqualityResult::InFactIntersectBoth(
             InferInFactIntersectBothResult { derived },
         )))
@@ -164,7 +161,7 @@ impl Runtime {
     fn infer_in_fact_set_minus(
         &mut self,
         in_fact: &InFact,
-        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
         let Obj::SetOperator(SetOperator::SetMinus(sm)) = &in_fact.set else {
             return Ok(None);
@@ -173,37 +170,34 @@ impl Runtime {
         let right_set = sm.right.as_ref().clone();
         let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         let in_left_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: in_left_id,
                 element: in_fact.element.clone(),
                 set: sm.left.as_ref().clone(),
                 line_file: lf.clone(),
-            })),
-            verify_state,
-        )?);
+            })))?,
+        );
         let not_in_id = self.global_ids.allocate_fact_id();
-        derived.push(self.store_inferred_fact(
-            &Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
+        derived.push(
+            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
                 fact_id: not_in_id,
                 element: in_fact.element.clone(),
                 set: right_set.clone(),
                 line_file: lf.clone(),
-            })),
-            verify_state,
-        )?);
+            })))?,
+        );
         if let Obj::SetFormer(SetFormer::ListSet(list_set)) = &right_set {
             if let [excluded] = list_set.list.as_slice() {
                 let ne_id = self.global_ids.allocate_fact_id();
-                derived.push(self.store_inferred_fact(
-                    &Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
+                derived.push(self.store_inferred_fact(&Fact::AtomicFact(
+                    AtomicFact::NotEqualFact(NotEqualFact {
                         fact_id: ne_id,
                         left: in_fact.element.clone(),
                         right: excluded.as_ref().clone(),
                         line_file: lf,
-                    })),
-                    verify_state,
-                )?);
+                    }),
+                ))?);
             }
         }
         Ok(Some(InferAtomicExceptEqualityResult::InFactSetMinusSplit(

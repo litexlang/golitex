@@ -266,6 +266,9 @@ impl Runtime {
         if let Some(proof) = super::by_native_fixed_base::native_fixed_base(fact) {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.search_add_zero_from_equalities(fact, verify_state)? {
+            return Ok(Some(proof));
+        }
         Ok(None)
     }
 }

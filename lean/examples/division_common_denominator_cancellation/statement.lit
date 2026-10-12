@@ -17,4 +17,5 @@ forall a,b,x,y Q:
     y!=0
     (a/x)/y=(b/x)/y
     =>:
+        a/x=b/x
         a=b

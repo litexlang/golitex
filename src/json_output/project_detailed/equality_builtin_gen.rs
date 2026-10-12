@@ -12,6 +12,38 @@ pub(super) fn project_equality_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::AddZeroLeftFromEqualities(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("AddZeroLeftFromEqualities")),
+                (
+                    "remaining_equal",
+                    project_verify_fact(&p.remaining_equal, runtime),
+                ),
+                ("zero_equal", project_verify_fact(&p.zero_equal, runtime)),
+                (
+                    "reversed",
+                    crate::knowledge_base::JsonValue::Bool(p.reversed),
+                ),
+            ],
+        ),
+        EqualitySearchProofByBuiltinRule::AddZeroRightFromEqualities(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("AddZeroRightFromEqualities")),
+                (
+                    "remaining_equal",
+                    project_verify_fact(&p.remaining_equal, runtime),
+                ),
+                ("zero_equal", project_verify_fact(&p.zero_equal, runtime)),
+                (
+                    "reversed",
+                    crate::knowledge_base::JsonValue::Bool(p.reversed),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::FiniteSeqReconstruction(p) => object_for(
             runtime,
             vec![
@@ -559,7 +591,9 @@ pub(super) fn project_equality_builtin_rule(
                     "nonpositive_argument",
                     project_verify_fact(&p.nonpositive_argument, runtime),
                 )),
-                P::ModNegation { requirements } | P::ModNaturalPower { requirements } => {
+                P::ZeroToPositiveRealPower { requirements }
+                | P::ModNegation { requirements }
+                | P::ModNaturalPower { requirements } => {
                     entries.push(("requirements", project_verify_facts(requirements, runtime)))
                 }
                 P::PositivePowerZero {

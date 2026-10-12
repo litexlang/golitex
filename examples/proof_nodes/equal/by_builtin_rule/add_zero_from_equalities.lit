@@ -1,0 +1,25 @@
+# Tracer: a checked zero summand inside a tuple-valued function result.
+# Before (release baseline: search_proof failure):
+# have fn plane_add(u, v R × R) R × R = (u(1) + v(1), u(2) + v(2))
+# have x R × R
+# plane_add((0, 0), x) = (x(1), x(2)) = x
+# Now: each coordinate uses a checked zero summand and remaining equality.
+# Boundary: unknown/nonzero summands, unequal remaining terms and invalid indices reject.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit
+# Rust: tests/add_zero_builtin.rs. New builtin evidence has no Lean replay yet.
+
+have fn plane_add(u, v R × R) R × R = (u(1) + v(1), u(2) + v(2))
+
+forall x R × R:
+    plane_add((0, 0), x) = (x(1), x(2)) = x
+    plane_add(x, (0, 0)) = (x(1), x(2)) = x
+
+forall x R × R:
+    ((0, 0)(1) + x(1), x(2) + (0, 0)(2)) = (x(1), x(2))
+
+forall x R × R:
+    (x(1), x(2)) = ((0, 0)(1) + x(1), x(2) + (0, 0)(2))
+
+forall x R × R:
+    x(1) = (0, 0)(1) + x(1)
+    x(2) = x(2) + (0, 0)(2)

@@ -122,7 +122,16 @@ a proof by target-shape matching.
 Selected adapters include reflexivity, exact closed calculations, recorded
 rational normalization, scalar division relations, arithmetic congruence,
 equality paths, membership transport, supported numeric hierarchy and real
-order routes. Fixed `ring`/guarded normalization checks the source-selected
+order routes. The selected `DiffNonzeroFromInequality` rule consumes its exact
+ordered operand-inequality child and the subtraction's numeric domain evidence.
+`Litex.subNonzeroOfNotSame` proves the common replay law; both zero orientations
+retain the source endpoint's certified denotation. The
+`nonzero_real_difference` pair exercises `x != 1 => x - 1 != 0`.
+`DivNonzeroFromFactors` consumes the two recorded nonzero proofs in numerator /
+denominator order, and known nonzero differences replay their exact citation
+to prove operand inequality. The `real_mobius_involution` pair combines these
+routes with nested guarded calls.
+Fixed `ring`/guarded normalization checks the source-selected
 certificate family; no independent target theorem search is performed. The
 source Rational tag does not contain a monomial trace, so Lean checks the
 normalization proof rather than replaying an unavailable low-level trace.
@@ -133,10 +142,10 @@ beta substitution, scalar congruence and actual residual. Steps are consumed
 once in original-tree order; inserted bodies and call arguments cannot acquire
 extra expansions. Unsupported constructors and residuals reject the complete
 artifact. Tests live under `tests/unit/compile_to_lean/fn_application_unfold_substitution/`.
-Natural-function declarations retain the signed-membership inference's original
-zero WD constructor. Parameter, forall and function formation replay this
-captured WD before the inferred nonnegative fact; a deleted, wrong or future
-constructor remains an error. The selected `ArithmeticCongruence` strategy
+Natural-function declarations retain the named signed-membership inference.
+Its zero object is constructed by `Litex.number`, and `naturalNonnegative`
+proves the conclusion from the original N-membership certificate. There is no
+repeated Rust WD stage for the derived fact. The selected `ArithmeticCongruence` strategy
 validates its exact ordered requirement facts and IDs, then compiles each child
 at its original sibling position.
 Structural membership includes N addition/multiplication and Z
@@ -166,7 +175,8 @@ and function domains share separation. The actual ZF model proves every law
 in `lean/Litex.lean`. Selected finite membership/subset, builder membership,
 subset-definition and empty-domain universal routes replay their recorded
 children. Builder inference retains its actual selected builder, exact equality
-path and each inferred fact's original WD before storage. Missing, changed or
+path and each direct conclusion store. Proved Lean constructors establish the
+objects used by the selected named rule. Missing, changed or
 future producers reject instead of being recovered from the final environment.
 
 Numeric `Set` views are pullbacks. A full real/complex-set interpretation also
@@ -198,8 +208,8 @@ the parent. The existing closed-leaf traversal permits numeric literals and
 standard sets; it does not export local binders, truth or general construction WD.
 
 Consumed additive, subtractive, nonzero-factor, common-denominator and nonzero-
-numerator cancellation retain their original membership/nonzero checks, derived
-fact WD and direct store. The compiler dispatches the original rule variant
+numerator cancellation retain their original membership/nonzero checks and the
+rule-certified direct store. The compiler dispatches the original rule variant
 to a proved cancellation lemma, emits its actual derived FactId without recursively
 replaying another infer stage. Pending stages cannot cite their future conclusions,
 even when an ancestor sees the completed store. Unreviewed inference families
@@ -217,10 +227,20 @@ goal, so local witnesses and membership proofs do not become outer parameters.
 
 Flat And/chains replay verification, actual storage projections, independent
 inference seed IDs and numeric transitive closures in order. Conditional
-integer-lower-bound and strict-positive rules retain their already computed
-WD and direct storage. A derived And/Chain still publishes its actual indexed
-components, without inventing a nested infer stage. Pending WD/store positions
+integer-lower-bound and strict-positive rules retain their actual input
+certificates and direct storage. A derived And/Chain still publishes its actual indexed
+components, without inventing a nested infer stage. Pending rule/store positions
 continue to reject their future producers.
+
+`compile_known_application.rs` consumes the shared selected forall-application
+certificate for Chain/And and supported non-equality atomic conclusions.
+It validates the exact direct conclusion, argument matches, parameter-type
+requirements and ordered domain proofs. Existing scoped formation and callee
+instances remain the only constructor sources. Identifier-headed one/two-input
+calls retain their captured argument slots and final function-prefix slot;
+semantic call/pair congruence transports that recorded equality. Curried,
+anonymous-head and unreviewed constructors remain rejected. This adds no
+Runtime search, result fields, persistent registry or replacement proof.
 
 Explicit by-thm calls also replay flat And/Chain returned packages. Original
 domain proofs are followed by their captured `dom_stores`; all conclusion WD
@@ -237,23 +257,33 @@ The declaration's raw predicate acts on semantic denotations. `congrArg` and
 `concrete_predicate_equality_transport` uses the transported fact as a real
 function-domain guard, rather than unfolding a replacement proof.
 
-Natural membership inference is published once per captured producer. Parameter
-introductions keep their builder/sign projections; paired projection consumers
-use builder-only replay plus the general stored-inference consumer. Completed
-parameter inference supplies original literal WD to subsequent predicate and
-builder clauses. Completion labels and exact Atomic/Prop owner aliases preserve
+Natural membership inference is published once per captured seed. Ordinary
+parameter introductions keep their direct sign results. Predicate and builder
+projections have named-rule evidence and direct stores; they do not contain
+another infer stage.
+A later explicit source membership can be a new seed with its own recorded
+inference. Paired projection consumers replay the actual stored components. Completed
+parameter inference supplies certified Lean primitive constructors to later
+predicate and builder clauses. Completion labels and exact Atomic/Prop owner aliases preserve
 nearest pending-stage limits; first-sign WD cannot cite its own future truth.
 The natural_polynomial_formulas pair includes a concrete natural-output prop.
 
-Phases 8-12 passed their final combined checkpoint on 2026-10-11: 74 actual
-source/generated pairs, the original S01-S18/I01 matrix and 19 new mathematical
-cross-cases, pinned real Lean, 64 exports per native layer and an ordinary Lake
-client. The local completion matrix separates whole-file checks, selected
+The original phases 8-11 minimum was accepted again on current single-hop
+typed results on 2026-10-12. The coherent checkpoint checks 74 actual
+source/generated pairs, 45 maintained profiles, six separate whole-known
+Chain/And and WD-factory profiles, the original S01-S18/I01 matrix and 19
+mathematical cross-cases. Current gates pass 311 compiler tests, pinned real
+Lean, 64 exports per native layer and an ordinary Lake client with 64 direct
+applications and six combinations. All 64 Final signatures remain unchanged;
+the original 45 elaborated native statements match their phase-7 baseline.
+The local completion matrix separates whole-file checks, selected
 original result stages and actual native signatures. Ten new native interfaces
 are closed evaluations, six are generic and three mix both scopes. Handwritten
 adapters choose the proved model explicitly; this is not automatic native
-interface generation or support for every Litex evidence variant. Receipts and
-reproduction commands remain in the local-only compiler workspace.
+interface generation or support for every Litex evidence variant. Current
+receipts are acceptance_phase8_current through acceptance_phase11_current and
+acceptance_phases8_11_current in the local-only compiler workspace. The
+2026-10-11 phases 8-12 receipts remain historical evidence of their own build.
 
 Any failed source, unsupported branch or unavailable evidence rejects the
 entire artifact. No partial Lean file, new axiom, proof hole or fabricated

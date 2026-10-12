@@ -161,10 +161,9 @@ impl LitexToLeanCompiler {
             }
         };
         self.validate_store(derived, &fact)?;
-        self.compile_fact_wd(&captured.well_defined, &fact, position)?;
         let formed = SourcePosition::new(
             Some(position),
-            SourceOwner::FactWD(&captured.well_defined),
+            SourceOwner::InferredStore(&captured.store),
             usize::MAX,
         );
         let _ = bound;

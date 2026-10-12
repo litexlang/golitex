@@ -23,6 +23,8 @@
 | [7. 完成你的第一份 lit 文件](#7-完成你的第一份-lit-文件) | 一份完整的已检查产物与下一步 | 15 分钟 |
 | [可选扩展](#可选扩展) | 命名结果、存在性与 agent 循环 | 30 分钟 |
 
+主课程后的数学练习，见 [Learn Math with Litex：数学例子](#learn-math-with-litex)。定义、证明和练习都直接放在本篇文档中。
+
 按顺序读主课程。对每个例子：先预测它的含义，再运行，最后尝试建议的改动。若你在 GitHub 或下载的 Markdown 中阅读，说明与代码都在这里；课程不依赖特定网页界面。
 
 每个 `litex` 代码块都是完整、独立的例子。每块都重新开一次 playground，或另存为单独的 `.lit` 文件。标为 `text` 的块表示有意失败、片段或会话记录；标题会说明是哪一种。不要在未修复的情况下把它们粘进一份本应通过的文件。
@@ -632,10 +634,382 @@ smallest repair. Finish with a clean whole-file check and its result.
 
 年龄练习若 `my_age = 9`，哥哥是 `14`，妈妈是 `40`。clamp 练习中，负分支返回 `-1` 无法证明非负输出律。在 `5` 处的倒数，合适事实是 `reciprocal(5) * 5 = 1`。
 
+<a id="learn-math-with-litex"></a>
+
+## Learn Math with Litex：数学例子
+
+下面把八个数学问题直接写成可学习、可运行的例子。每个单元先解释数学思路，再给出完整 Litex 代码与练习。需要的定义就在该单元内；每块代码都应在新环境中独立运行，不要求先运行其他例子。
+
+可以按表中的顺序学习，也可以单独选读。前三例使用算术与中学代数；极限与导数的例子会在这里介绍所需的误差定义。这些专题另计学习时间，不包含在前面主课程的 90 分钟估计中。
+
+| 例子 | 数学重点 |
+| --- | --- |
+| [1. 偶数乘一个自然数，为什么还是偶数？](#learn-math-even) | 从定义构造证明 |
+| [2. 除以 $x$ 之前，我们需要知道什么？](#learn-math-division) | 定义域与非零条件 |
+| [3. 为什么 $2^n \ge n+1$？](#learn-math-induction) | 数学归纳法 |
+| [4. 怎样证明两个集合相等？](#learn-math-sets) | 元素法、双向包含 |
+| [5. “任意”和“存在”的顺序有什么影响？](#learn-math-quantifiers) | 量词与依赖关系 |
+| [6. 数列收敛到底承诺了什么？](#learn-math-convergence) | epsilon 与尾部控制 |
+| [7. 为什么一个数列不能有两个极限？](#learn-math-uniqueness) | 三角不等式、反证法 |
+| [8. $x^2$ 的导数为什么是 $2x$？](#learn-math-derivative) | 差商与误差估计 |
+
+<a id="learn-math-even"></a>
+
+### 1. 偶数乘一个自然数，为什么还是偶数？
+
+**问题：** 已知自然数 $n$ 是偶数，为什么对任意自然数 $m$，$mn$ 仍是偶数？
+
+“偶数”的定义给出了一个见证：存在自然数 $k$ 使 $n=2k$。于是 $mn=m(2k)=2(mk)$，新的见证就是 $mk$。证明的关键是找出这个数，而不是只检查几个乘积。
+
+```litex
+prop even(n N):
+    exist k N st {n = 2 * k}
+
+thm even_mul:
+    ? forall m, n N:
+        $even(n)
+        =>:
+            $even(m * n)
+    obtain k from $even(n)
+    witness $even(m * n) from m * k:
+        m * n = m * (2 * k) = 2 * (m * k)
+
+witness $even(6) from 3
+release thm even_mul(5, 6)
+```
+
+把 `prop even(n N)` 读作偶数的定义。`obtain k` 从已知偶数事实中取出一个见证；`witness ... from m * k` 提供乘积的见证。等式链说明它确实满足定义。
+
+最后两行先用 $3$ 证明 $6$ 是偶数，再把定理用于 $5$ 和 $6$，得到 $30$ 是偶数。自然数集 `N` 包含零，结论也包括 $m=0$。
+
+**试一试：** 用同一定义证明两个偶数的和仍是偶数。若 $a=2u$、$b=2v$，你应该提供什么见证？
+
+[下一例：除以 $x$ 之前，我们需要知道什么？](#learn-math-division)
+
+<a id="learn-math-division"></a>
+
+### 2. 除以 $x$ 之前，我们需要知道什么？
+
+**问题：** 对实数 $x$，为什么不能不加条件地写“倒数乘以原数等于一”？
+
+倒数 $1/x$ 的定义域是非零实数。先把 $x\ne0$ 写进函数输入条件，再证明 $(1/x)x=1$；证明中的假设与函数的合法输入相同。
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            reciprocal(x) * x = 1
+    reciprocal(x) * x = (1 / x) * x = 1
+
+reciprocal(2) = 1 / 2
+reciprocal(-4) = -1 / 4
+```
+
+非零条件出现在两个不同的位置：函数定义限制哪些输入可以调用它；全称证明说明结论对哪些实数成立。证明体把函数值展开成 $1/x$，再计算乘积。
+
+下面是**完整的预期失败例子**，用 `text` 标出，不属于应当通过的代码块：
+
+```text
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(0) = 0
+```
+
+失败发生在 `reciprocal(0)` 的输入条件检查处，零不满足 `x != 0`。检查器还没有一个合法的倒数表达式可用于后面的等式证明。
+
+**试一试：** 在通过的代码中检查 `reciprocal(5) * 5 = 1`。再解释为什么把函数的非零条件删除，会使定义本身出问题。
+
+[下一例：为什么 $2^n \ge n+1$？](#learn-math-induction)
+
+<a id="learn-math-induction"></a>
+
+### 3. 为什么 $2^n \ge n+1$？
+
+**问题：** 如何证明每个自然数 $n$ 都满足 $2^n\ge n+1$？
+
+基础步 $n=0$ 是 $1\ge1$。归纳步假设 $2^n\ge n+1$，则 $2^{n+1}=2\cdot2^n\ge2(n+1)=(n+2)+n\ge n+2$，最后一步使用 $n\ge0$。
+
+```litex
+thm power_two_lower_bound:
+    ? forall n N:
+        2^n >= n + 1
+    by induc n from 0:
+        ? 2^n >= n + 1
+        ? from n = 0:
+            2^0 = 1 = 0 + 1
+        ? induc:
+            2^(n + 1) = 2^n * 2^1 = 2^n * 2 >= (n + 1) * 2 = (n + 1 + 1) + n >= n + 1 + 1
+
+release thm power_two_lower_bound(4)
+```
+
+`by induc n from 0` 从零开始归纳。`? from n = 0` 是基础步；`? induc` 是归纳步，其中当前的归纳假设可用。一条等式与不等式链把乘方规律、归纳假设和 $n\ge0$ 接起来。
+
+定理陈述覆盖所有自然数，最后的调用把它用于 $n=4$。这与只验证 $2^4\ge5$ 的具体计算不同。
+
+**试一试：** 写出 $n=1,2,3$ 的数值检查，再说明为什么有限个检查不能替代归纳步。
+
+[下一例：怎样证明两个集合相等？](#learn-math-sets)
+
+<a id="learn-math-sets"></a>
+
+### 4. 怎样证明两个集合相等？
+
+**问题：** 为什么交换两个集合的顺序不改变交集，即 $S\cap T=T\cap S$？
+
+集合相等意味着它们具有相同的元素。若 $x\in S\cap T$，则 $x\in S$ 且 $x\in T$，所以 $x\in T\cap S$。交换 $S,T$ 得到反向包含，两个包含关系给出相等。
+
+```litex
+claim:
+    ? forall S, T set:
+        intersect(S, T) = intersect(T, S)
+    claim:
+        ? forall x intersect(S, T):
+            x $in intersect(T, S)
+        x $in S
+        x $in T
+        x $in intersect(T, S)
+    by def intersect(S, T) $subset intersect(T, S)
+    claim:
+        ? forall x intersect(T, S):
+            x $in intersect(S, T)
+        x $in T
+        x $in S
+        x $in intersect(S, T)
+    by def intersect(T, S) $subset intersect(S, T)
+    by extension intersect(S, T) = intersect(T, S)
+```
+
+两个内部 `claim` 各追踪一个元素，分别建立包含关系。`by def` 把“每个元素都属于另一集合”的全称事实折叠成 `$subset`。`by extension` 使用这两个包含关系证明集合相等。
+
+这里的成员事实刻意保留，让读者看见元素怎样从一个交集进入另一个交集。Litex 对这类简单集合事实也有内置检查支持，例子展示的是数学证明的组织方式。
+
+**试一试：** 在纸上把“属于交集”换成“属于并集”，解释为什么并集的证明需要处理两种可能，而不能同时断言元素属于两个集合。
+
+[下一例：“任意”和“存在”的顺序有什么影响？](#learn-math-quantifiers)
+
+<a id="learn-math-quantifiers"></a>
+
+### 5. “任意”和“存在”的顺序有什么影响？
+
+**问题：** “对每个实数 $x$，都存在 $y=x+1$”与“存在一个实数 $y$，对每个 $x$ 都有 $y=x+1$”是否相同？
+
+第一句话允许看见 $x$ 后再选 $y$，所以选 $x+1$ 就行。第二句话要求一个固定的 $y$ 同时适用于所有 $x$：取 $x=0$ 得 $y=1$，取 $x=1$ 又得 $y=2$，不可能同时成立。
+
+```litex
+claim:
+    ? forall x R:
+        exist y R st {y = x + 1}
+    witness exist y R st {y = x + 1} from x + 1
+```
+
+目标先绑定 `x`，证明体随后用 `x + 1` 构造 `y` 的见证。这正是“见证可以依赖前面的输入”。目标证明后导出整个全称存在陈述，局部名字 `x,y` 不成为全局对象。
+
+把两句话写成数学公式，顺序差别就很清楚：
+
+$$
+\forall x\in\mathbb R\;\exists y\in\mathbb R:\ y=x+1,
+\qquad
+\exists y\in\mathbb R\;\forall x\in\mathbb R:\ y=x+1.
+$$
+
+**试一试：** 把等式改成 $y=2x$，分别判断两个量词顺序对应的命题。再考虑 $y=0$，这时固定见证能否适用于所有 $x$？
+
+[下一例：数列收敛到底承诺了什么？](#learn-math-convergence)
+
+<a id="learn-math-convergence"></a>
+
+### 6. 数列收敛到底承诺了什么？
+
+**问题：** “数列 $a_n$ 趋近于 $L$”的精确含义是什么？为什么常数列 $a_n=3$ 收敛于 $3$？
+
+给定任意误差 $\epsilon>0$，必须找到一个起始下标 $n_0$，使每个 $n\ge n_0$ 都满足 $|a_n-L|<\epsilon$。常数列的误差恒为零，所以对任意正误差都可以选 $n_0=1$。这里的数列从正自然数 $1$ 开始索引。
+
+```litex
+prop is_tail_close_to(a fn(index N+) R, L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            |a(n) - L| < epsilon
+
+prop has_eventual_closeness_to(a fn(index N+) R, L R, epsilon R+):
+    exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
+
+prop has_limit(a fn(index N+) R, L R):
+    forall epsilon R+:
+        $has_eventual_closeness_to(a, L, epsilon)
+
+have fn constant_sequence(n N+) R = 3
+
+claim:
+    ? $has_limit(constant_sequence, 3)
+    claim:
+        ? forall epsilon R+:
+            $has_eventual_closeness_to(constant_sequence, 3, epsilon)
+        claim:
+            ? forall n N+:
+                n >= 1
+                =>:
+                    |constant_sequence(n) - 3| < epsilon
+            |constant_sequence(n) - 3| = |3 - 3| = 0 < epsilon
+        by def $is_tail_close_to(constant_sequence, 3, epsilon, 1)
+        witness $has_eventual_closeness_to(constant_sequence, 3, epsilon) from 1
+    by def $has_limit(constant_sequence, 3)
+```
+
+三层定义分别说明“这个尾部够近”“存在够近的尾部”“每个正误差都有够近的尾部”。`has_limit(a, L)` 陈述 $L$ 是 $a$ 的极限，尚未定义一个返回极限值的函数。
+
+证明先处理任意 `epsilon`，验证从 $1$ 开始的整个尾部，再用 $1$ 作起始下标的见证。三个定义都在同一块中，运行不依赖前面的例子。
+
+**试一试：** 把常数值与极限候选从 $3$ 一起改成 $5$，证明怎样变化？再解释为什么只改变前者而保留候选 $3$ 不会得到同样的证明。
+
+[下一例：为什么一个数列不能有两个极限？](#learn-math-uniqueness)
+
+<a id="learn-math-uniqueness"></a>
+
+### 7. 为什么一个数列不能有两个极限？
+
+**问题：** 如果同一个数列收敛于 $L_1$ 与 $L_2$，为什么这两个数必须相等？
+
+假设它们不同，令距离 $D=|L_1-L_2|>0$，取 $\epsilon=D/3$。两个收敛条件各给出一个尾部。选同时位于两个尾部的下标，三角不等式就给出 $D<2\epsilon=2D/3<D$，矛盾。
+
+下面重新列出完整极限定义，使这个例子也能单独运行。
+
+```litex
+prop is_tail_close_to(a fn(index N+) R, L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            |a(n) - L| < epsilon
+
+prop has_eventual_closeness_to(a fn(index N+) R, L R, epsilon R+):
+    exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
+
+prop has_limit(a fn(index N+) R, L R):
+    forall epsilon R+:
+        $has_eventual_closeness_to(a, L, epsilon)
+
+thm sequence_limit_unique:
+    ? forall a fn(index N+) R, L1, L2 R:
+        $has_limit(a, L1)
+        $has_limit(a, L2)
+        =>:
+            L1 = L2
+    by contra:
+        ? L1 = L2
+        L1 - L2 != 0
+        0 < |L1 - L2|
+        have epsilon R+ = |L1 - L2| / 3
+        obtain n1 from $has_eventual_closeness_to(a, L1, epsilon)
+        obtain n2 from $has_eventual_closeness_to(a, L2, epsilon)
+        have n0 N+ = n1 + n2
+        n0 >= n1
+        n0 >= n2
+        |a(n0) - L1| < epsilon
+        |a(n0) - L2| < epsilon
+        |L1 - a(n0)| = |a(n0) - L1|
+        |L1 - L2| <= |L1 - a(n0)| + |a(n0) - L2| < epsilon + epsilon
+        epsilon + epsilon = |L1 - L2| / 3 + |L1 - L2| / 3 = (2 / 3) * |L1 - L2| < 1 * |L1 - L2| = |L1 - L2|
+        |L1 - L2| <= |L1 - a(n0)| + |a(n0) - L2| < |L1 - L2|
+        impossible |L1 - L2| = |L1 - L2|
+```
+
+`by contra` 在“两个极限不同”的假设下寻找矛盾。两个 `obtain` 分别取出尾部起始下标；因为它们是正自然数，$n_1+n_2$ 至少与两者一样大，因此同一个数列项同时满足两份误差约束。
+
+最后的计算把三角不等式与 $2D/3<D$ 接起来，再明确写出 $D\le\text{两段距离之和}<D$。在这个矛盾上下文中，`impossible` 用恒等事实 $D=D$ 收束反证。这里证明了极限的唯一性，并没有证明每个数列都有极限。
+
+**试一试：** 先在纸上将 $\epsilon$ 改成 $D/4$，看看最后的估计怎样变化。如果只选 $n_1$，为什么不能保证第二份尾部约束也适用？
+
+[下一例：$x^2$ 的导数为什么是 $2x$？](#learn-math-derivative)
+
+<a id="learn-math-derivative"></a>
+
+### 8. $x^2$ 的导数为什么是 $2x$？
+
+**问题：** 在点 $x_0$，怎样从差商定义得到平方函数的导数 $2x_0$？
+
+连接 $(x_0,x_0^2)$ 与 $(x,x^2)$ 的割线斜率是
+$$
+\frac{x^2-x_0^2}{x-x_0}=x+x_0\qquad(x\ne x_0).
+$$
+它与候选切线斜率 $2x_0$ 的差恰好是 $x-x_0$。因此要把斜率误差限制在 $\epsilon$ 内，只需令 $0<|x-x_0|<\delta$ 并选择 $\delta=\epsilon$。
+
+先在 $x_0=3$ 附近看几个值。写 $x=3+h$，差商是 $6+h$：
+
+| $h$ | 割线斜率 | 与 $6$ 的距离 |
+| --- | --- | --- |
+| $-0.1$ | $5.9$ | $0.1$ |
+| $-0.01$ | $5.99$ | $0.01$ |
+| $0.01$ | $6.01$ | $0.01$ |
+| $0.1$ | $6.1$ | $0.1$ |
+
+这些数值帮助建立直觉；下面的证明说明为什么任意足够小的非零 $h$ 都满足误差要求。
+
+```litex
+prop derivative_delta_controlled(f fn(u R) R, x0, L R, epsilon, delta R+):
+    forall x R:
+        x != x0
+        |x - x0| < delta
+        =>:
+            |(f(x) - f(x0)) / (x - x0) - L| < epsilon
+
+prop has_derivative_at_R(f fn(u R) R, x0, L R):
+    forall epsilon R+:
+        exist delta R+ st {$derivative_delta_controlled(f, x0, L, epsilon, delta)}
+
+have fn square_function(x R) R = x^2
+
+thm square_difference_quotient:
+    ? forall x0, x R:
+        x != x0
+        =>:
+            (square_function(x) - square_function(x0)) / (x - x0) = x + x0
+    x - x0 != 0
+    square_function(x) - square_function(x0) = x^2 - x0^2 = (x - x0) * (x + x0)
+    (square_function(x) - square_function(x0)) / (x - x0) = ((x - x0) * (x + x0)) / (x - x0) = x + x0
+
+thm square_function_has_derivative_at:
+    ? forall x0 R:
+        $has_derivative_at_R(square_function, x0, 2 * x0)
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {$derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)}
+        witness exist delta R+ st {$derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)} from epsilon:
+            claim:
+                ? forall x R:
+                    x != x0
+                    |x - x0| < epsilon
+                    =>:
+                        |(square_function(x) - square_function(x0)) / (x - x0) - 2 * x0| < epsilon
+                release thm square_difference_quotient(x0, x)
+                (square_function(x) - square_function(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
+                |(square_function(x) - square_function(x0)) / (x - x0) - 2 * x0| = |x - x0| < epsilon
+            by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, epsilon)
+    by def $has_derivative_at_R(square_function, x0, 2 * x0)
+
+release thm square_function_has_derivative_at(3)
+
+forall x R:
+    square_function(x) - (9 + 6 * (x - 3)) = (x - 3)^2
+```
+
+第一个定义把差商的合法条件 `x != x0` 与误差界放在一起。第二个定义要求：每个正误差都有一个正的邻域半径。`has_derivative_at_R(f, x0, L)` 是关于所给候选值 $L$ 的导数关系，例子没有假定一个适用于所有函数的导数算子。
+
+`square_difference_quotient` 用平方差因式分解证明差商公式。随后为任意 `epsilon` 选择 `delta = epsilon`；误差等式直接把导数条件化为已知的 `|x - x0| < epsilon`。
+
+在 $3$ 处调用定理得到候选斜率 $6$。最后的恒等式给出切线 $y=9+6(x-3)$ 与抛物线的精确差 $(x-3)^2$，这也解释了切线为何在该点附近贴近曲线。
+
+**试一试：** 把定理调用的点改成 $2$，预期斜率是多少？写出对应的切线与平方误差。再解释为什么把 $x=x_0$ 直接代入差商不能完成导数证明。
+
+[返回数学例子目录](#learn-math-with-litex)
+
 ## 从你接下来想做的事继续
 
 | 你的下一任务 | 接着读 |
 | --- | --- |
+| 继续练习具体数学问题 | [Learn Math with Litex：数学例子](#learn-math-with-litex) |
 | 找合适的声明或证明动作 | [Learner Cheatsheet](Litex学习速查表.md) |
 | 查阅精确语法、语义或证明模式 | [Manual](Litex手册.md) |
 | 安装 Litex 或理解 CLI 反馈 | [Setup](安装Litex.md) 与 [CLI](Litex命令行参考.md) |
@@ -644,4 +1018,4 @@ smallest repair. Finish with a clean whole-file check and its result.
 
 对你的下一份文件，选一个你能在纸上解出的小问题。先写对象与合法输入，精确陈述要证明什么，再一步步按有用的数学动作增长已检查源码。
 
-本指南中的 20 个独立 Litex 例子于 2026-10-08，用 Litex 1.0.0-beta 的当前源码发布构建、英文输出与严格模式检查通过。预期失败另有标注。Litex 仍在演进；若例子行为不同，请把完整源码与检查器版本连同反馈一起保留。
+本指南中的 28 个独立 Litex 例子于 2026-10-12，用 Litex 1.0.6-beta 的当前源码发布构建、英文输出与严格模式检查通过。预期失败另有标注。Litex 仍在演进；若例子行为不同，请把完整源码与检查器版本连同反馈一起保留。

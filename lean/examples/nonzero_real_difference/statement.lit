@@ -1,0 +1,15 @@
+# A real x different from 1 has nonzero difference x - 1.
+# Before (source verified, compilation rejected):
+# forall x R:
+#     x != 1
+#     =>:
+#         x - 1 != 0
+# Former compiler result: statement 1: Order/BuiltinFamilyOrRule.
+# Now: replay the selected DiffNonzeroFromInequality and its original child.
+forall x R:
+    x != 1
+    =>:
+        x - 1 != 0
+# Boundary: no inequality premise, or x - x != 0, remains rejected.
+# Evidence: target/release/litex -strict -lean -f lean/examples/nonzero_real_difference/statement.lit
+# Focused Lean/drift/negative gates: scripts/litex_to_lean/check_nonzero_difference.py

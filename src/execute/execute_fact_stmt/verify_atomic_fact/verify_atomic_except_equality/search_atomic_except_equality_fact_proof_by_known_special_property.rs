@@ -24,6 +24,9 @@ pub enum AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
 impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
     pub fn cite_property_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::InFact(InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(p)) => {
+                p.subset_proof.cite_fact_id()
+            }
             Self::InFact(
                 InFactSearchProofByKnownSpecialProperty::PositiveRealFromKnownStrictOrder(p),
             ) => p.positive_order.cite_fact_id(),
@@ -70,11 +73,15 @@ impl AtomicExceptEqualityFactSearchProofByKnownSpecialProperty {
             Self::InFact(InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(
                 p,
             )) => p.shape.cite_fact_id(),
+            Self::InFact(
+                InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(p),
+            ) => p.tuple.tuple_equal.path.first().map(|edge| edge.2),
         }
     }
 }
 
 pub enum InFactSearchProofByKnownSpecialProperty {
+    KnownSubsetMembership(crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::KnownSubsetMembershipProof),
     PositiveRealFromKnownStrictOrder(PositiveRealFromKnownStrictOrderProof),
     StandardNumericSuperset(StandardNumericSupersetKnownProof),
     FoldInCarrier(FoldInCarrierProof),
@@ -89,6 +96,7 @@ pub enum InFactSearchProofByKnownSpecialProperty {
     FnApplicationInFnRange(FnApplicationInFnRangeKnownSpecialPropertyProof),
     TupleCoordinate(TupleCoordinateKnownProof),
     HomogeneousTupleCoordinate(HomogeneousTupleCoordinateKnownProof),
+    LiteralTupleNumericCoordinate(super::known_literal_tuple_numeric_coordinate::LiteralTupleNumericCoordinateKnownProof),
 }
 
 // The enclosing atomic WD has checked every template argument and guard.
@@ -267,6 +275,19 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Option<InFactSearchProofByKnownSpecialProperty> {
+        if let Some(proof) = self.known_literal_tuple_numeric_coordinate(fact) {
+            return Some(
+                InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(proof),
+            );
+        }
+        // x in A and an already stored A subset B license x in B directly.
+        // Reuse the existing cite-only carrier rule for arbitrary B; no inferred
+        // forall or additional proof search is needed during input formation.
+        if let Some(proof) =
+            self.lookup_structural_known_subset_membership(&AtomicFact::InFact(fact.clone()))
+        {
+            return Some(InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(proof));
+        }
         // A stored strict real comparison already owns its endpoint domains.
         // This is a fixed refinement consumer, with no recursive proof search.
         if matches!(fact.set, Obj::StandardSet(StandardSet::RPos)) {
