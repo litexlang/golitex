@@ -16,7 +16,8 @@ such as `1 / 0 = 0` keeps that source text, with `why_failed.phase: well_defined
 and an explicit localized message that well-definedness could not be proved.
 Standalone statement projections without source context use
 `<well_defined_not_proven>` when the result tree lacks the original goal.
-Session errors use readable Runtime diagnostics rather than Rust Debug wrappers.
+Structured `termination` messages use readable Runtime diagnostics rather than
+Rust Debug wrappers.
 Extraction artifacts use the same command metadata on success and failure:
 `format`, `target`, `path`, `output_path`, and `language`. `content` is null on
 failure; `error` is null on success. Artifact field names follow `-lang` just
@@ -68,7 +69,7 @@ the published equality. Unrelated store nodes keep their previous shape.
 
 ```rust
 pub enum OutputDetail {
-    Compact,   // thin: success + statement (+ fail_reason)
+    Compact,   // thin: result verdict + statement (+ fail_reason)
     Normal,    // current default for all emit paths
     Detailed,  // field-isomorphic IR projection (omit local_env)
 }
@@ -251,7 +252,7 @@ Success — only disposition + source text:
 
 ```json
 {
-  "success": true,
+  "statement_result": "accepted",
   "statement": "1 + 2 = 3"
 }
 ```
@@ -260,7 +261,7 @@ Failure — add a thin `fail_reason` (`phase` + optional `goal`):
 
 ```json
 {
-  "success": false,
+  "statement_result": "rejected",
   "statement": "a > 10",
   "fail_reason": {
     "phase": "search_proof",
@@ -273,14 +274,14 @@ Chinese (`-lang zh`):
 
 ```json
 {
-  "成功": true,
+  "语句判定": "accepted",
   "语句": "1 + 2 = 3"
 }
 ```
 
 ```json
 {
-  "成功": false,
+  "语句判定": "rejected",
   "语句": "a > 10",
   "失败原因": {
     "阶段": "搜索证明",
@@ -290,7 +291,7 @@ Chinese (`-lang zh`):
 ```
 
 Compact deliberately omits `proof_method`, `stores`, `infers`, and cite details.
-Field order: `success` → `statement` → (`fail_reason` when failed).
+Field order: `statement_result` → `statement` → (`fail_reason` when failed).
 
 ## Normal statement shape (frozen)
 
@@ -298,7 +299,7 @@ Success:
 
 ```json
 {
-  "success": true,
+  "statement_result": "accepted",
   "statement": "1 + 2 = 3",
   "proof_method": {
     "type": "builtin_rule",
@@ -316,7 +317,7 @@ under Chinese keys). Example:
 
 ```json
 {
-  "成功": true,
+  "语句判定": "accepted",
   "语句": "1 + 2 = 3",
   "证明方法": {
     "类型": "内置规则",
@@ -337,7 +338,7 @@ Cited-membership example:
 
 ```json
 {
-  "success": true,
+  "statement_result": "accepted",
   "statement": "k >= 0",
   "proof_method": {
     "type": "builtin_rule",
@@ -355,7 +356,7 @@ Failure:
 
 ```json
 {
-  "success": false,
+  "statement_result": "rejected",
   "statement": "a > 10",
   "why_failed": { "phase": "search_proof", "goal": "a > 10" },
   "stores": [],
@@ -365,7 +366,7 @@ Failure:
 
 Rules:
 
-- `success` is a bool (not `outcome` string).
+- `statement_result` is the stable string `"accepted"` or `"rejected"`.
 - Builtin why: print `rule_name` + `message` only (no `rule` / `rule_id` /
   `variant` in Normal JSON). The owning proof type or enum identifies the rule.
 - Builtin why path: call `rule.rule_name_and_message(lang)` only.
@@ -395,7 +396,7 @@ Same envelope as Normal run JSON, but `"detail": "detailed"`.
 
 Each statement projects the **result IR fields** recursively:
 
-- `success`, `kind`, `statement`
+- `statement_result`, `kind`, `statement`
 - nested stage fields (`verify`, `store_and_infer`, WD, searched_proof, …)
 - `Fact` / `Obj` as `readable_string`; `FactId` with optional readable cite
 - **`local_env` is omitted** at every nesting level (no `ExecEnv` dump)
@@ -406,12 +407,12 @@ Fact success sketch:
 
 ```json
 {
-  "success": true,
+  "statement_result": "accepted",
   "kind": "fact",
   "statement": "0 <= k",
   "verify": {
     "type": "atomic_except_equality",
-    "success": true,
+    "verification_result": "accepted",
     "fact": "0 <= k",
     "well_defined": { "...": "..." },
     "searched_proof": {
@@ -435,21 +436,22 @@ variant tags such as `kind` values may stay English.
 ```json
 {
   "kind": "run",
-  "success": true,
+  "run_result": "success",
   "target": "eval",
   "path": null,
   "detail": "normal",
   "language": "en",
   "statement_results": [ /* Normal or Detailed stmt objects */ ],
-  "session_error": null
+  "session_terminated": false,
+  "termination": null
 }
 ```
 
-For a hard internal conflict, `session_error` contains
-`internal_bug: Litex internal bug: <specific reason>` and the run has
-`success: false`. Normal, Compact and Detailed retain the same reason. Other
-session-error strings keep their existing representation; ordinary proof
-failure remains a statement result rather than an internal-bug session error.
+For a hard internal conflict, `session_terminated` is true and `termination`
+contains `{ "phase": "internal", "message": "internal_bug: ..." }`; the run
+has `run_result: "failure"`. Normal, Compact and Detailed retain the same
+reason. Ordinary proof failure leaves `session_terminated` false and remains a
+rejected statement result.
 
 `language` is the canonical locale from `-lang`: `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, or `vi` (default `en`). Builtin `rule_name` /
 `message` follow this language via `json_output/explain/`.
@@ -459,12 +461,12 @@ failure remains a statement result rather than an internal-bug session error.
 Locked by `cargo test --lib json_output::` (`acceptance_tests` +
 `project_normal_tests` + `project_compact_tests` + `project_detailed_tests`):
 
-1. **Normal success shape / field order**: `success` → `statement` →
+1. **Normal success shape / field order**: `statement_result` → `statement` →
    `proof_method` → `stores` → `infers`
-2. **Normal failure shape**: `success: false` → `statement` → `why_failed` →
+2. **Normal failure shape**: `statement_result: "rejected"` → `statement` → `why_failed` →
    empty `stores`/`infers`
-3. **Compact success**: only `success` + `statement` (no proof_method/stores/infers)
-4. **Compact failure**: `success` → `statement` → `fail_reason` (`phase` +
+3. **Compact success**: only `statement_result` + `statement` (no proof_method/stores/infers)
+4. **Compact failure**: `statement_result` → `statement` → `fail_reason` (`phase` +
    optional `goal`)
 5. **Builtin why (Normal)**: `type` + `rule_name` + `message` only (no `rule` /
    `rule_id` / `variant`)
@@ -473,8 +475,9 @@ Locked by `cargo test --lib json_output::` (`acceptance_tests` +
 8. **Stmt kinds**: every catalog kind has localized `explain_stmt_kind`
 9. **Equality builtins**: all variants localized via `rule.rule_name_and_message(lang)`
 10. **Searched-proof routes / compound facts**: localized `rule_name` + `message`
-11. **Run envelope**: `kind` / `success` / `detail` (`normal`|`compact`|`detailed`) /
-    `language` / `statement_results`
+11. **Run envelope**: `kind` / `run_result` / `detail`
+    (`normal`|`compact`|`detailed`) / `language` / `statement_results` /
+    `session_terminated` / `termination`
 12. **Detailed**: fact success has `verify` + `store_and_infer`; no `local_env`;
     Chinese keys for top-level Detailed fields; run `detail=detailed`
 
@@ -761,7 +764,7 @@ includes its run envelope):
 
 ```json
 {
-  "成功": true,
+  "文の判定": "accepted",
   "文": "1 + 2 = 3",
   "証明方法": {
     "型": "閉じた式の計算",
@@ -959,7 +962,7 @@ emptiness proof.
 
 AnonymousFn WD projects its return-bound choice explicitly. A checked ordinary body membership retains its prior JSON route; an empty complete domain uses return_bound_vacuous_empty_domain with the independent domain_empty certificate. Header, guards, return carrier and body WD remain separate children. Ten-language Runtime tests preserve the guard-exclusion forall/FactId source and mandatory body WD rather than emitting a fake body membership.
 
-The predicate-signature failure reason retired_builtin identifies a legacy shape predicate payload rejected by WD. It preserves the already-checked argument children and predicate name in all localized profiles; no unsupported predicate is published as a current builtin. Parser retirement remains a separate session_error boundary.
+The predicate-signature failure reason retired_builtin identifies a legacy shape predicate payload rejected by WD. It preserves the already-checked argument children and predicate name in all localized profiles; no unsupported predicate is published as a current builtin. Parser retirement remains a separate `session_terminated` / `termination` boundary.
 
 
 LogProduct, LogQuotient, LogReciprocal and LogArgPower project their named mandatory argument proofs after `base_proof`. The selected LogAlgebraBaseProof is `greater_than_one` with `greater_than_one_proof`, `below_one` with `positive_proof` and `less_than_one_proof`, or `positive_nonunit` with `positive_proof` and `nonunit_proof`. Actual Runtime leaf fixtures retain ten localized Normal explanations and EN/ZH FactId citations; these four leaves no longer use a generic `proof_of_requirement_facts` array. Acceptance evidence (historical task record; retired) retains inherited permissions and remaining WD cases.

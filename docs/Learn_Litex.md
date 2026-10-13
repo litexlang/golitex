@@ -89,8 +89,9 @@ as `3^2 = 9`, and Litex checks it with its available rules and context.
 equality. It is not a command that assigns a new value to the left-hand side.
 Write multiplication explicitly: use `2 * x` rather than `2x`.
 
-A successful batch check has `"success": true` and `"session_error": null` in
-its JSON result. The website may present that result more simply. The
+A successful batch check has `"run_result": "success"`,
+`"session_terminated": false`, and `"termination": null` in its JSON result.
+The website may present that result more simply. The
 interactive command-line REPL prints `success` for a successful input block.
 We will read a failed result more carefully in Part 6.
 
@@ -508,9 +509,9 @@ changes the problem.
 ### Read the result at the right level
 
 Local batch commands such as `litex -lang en -strict -f first.lit` return JSON.
-Check the overall `success`, then inspect failed entries in
-`statement_results`. `session_error` reports a hard error; it is normally null
-for an ordinary verification failure. A failed batch exits with a nonzero
+Check the overall `run_result`, then inspect rejected entries in
+`statement_results`. `session_terminated` and `termination` report a hard
+error; they remain false/null for an ordinary verification failure. A failed batch exits with a nonzero
 status. For a successful batch, require both exit status zero and a successful
 JSON result.
 
@@ -520,9 +521,9 @@ other fields, including the statement results, are omitted:
 ```json
 {
   "kind": "run",
-  "success": true,
+  "run_result": "success",
   "target": "file",
-  "session_error": null
+  "session_terminated": false, "termination": null
 }
 ```
 
@@ -534,7 +535,7 @@ subsequent cancellation proof. A **selected-field excerpt of its failed
 
 ```json
 {
-  "success": false,
+  "statement_result": "rejected",
   "why_failed": {
     "phase": "claim",
     "failure": {

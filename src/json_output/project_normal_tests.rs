@@ -135,10 +135,12 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
             .as_array()
             .unwrap()
             .is_empty());
-        assert!(!object_field(&json, &key("session_error"))
-            .as_str()
-            .unwrap()
-            .contains("Runtime("));
+        assert!(
+            !object_field(object_field(&json, &key("termination")), &key("message"))
+                .as_str()
+                .unwrap()
+                .contains("Runtime(")
+        );
         let without_source = project_stmt_normal(&run.statement_results[0], &runtime);
         assert_eq!(
             object_field(&without_source, &key("statement"))
@@ -168,7 +170,10 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
     let mut runtime = runtime_with_file_env();
     let have = exec_one(&mut runtime, "have k N");
     let have_json = project_stmt_normal(&have, &runtime);
-    assert_eq!(object_field(&have_json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        object_field(&have_json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     let stores = object_field(&have_json, "stores")
         .as_array()
         .expect("stores array");
@@ -181,7 +186,10 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
 
     let goal = exec_one(&mut runtime, "k >= 0");
     let goal_json = project_stmt_normal(&goal, &runtime);
-    assert_eq!(object_field(&goal_json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        object_field(&goal_json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     let why = object_field(&goal_json, "proof_method")
         .as_object()
         .expect("proof_method");
@@ -215,7 +223,10 @@ fn normal_json_calculation_one_plus_two_english() {
     let mut runtime = runtime_with_file_env();
     let goal = exec_one(&mut runtime, "1 + 2 = 3");
     let goal_json = project_stmt_normal(&goal, &runtime);
-    assert_eq!(object_field(&goal_json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        object_field(&goal_json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     let why = object_field(&goal_json, "proof_method")
         .as_object()
         .expect("proof_method");
@@ -246,7 +257,10 @@ fn normal_json_calculation_one_plus_two_chinese() {
     let goal = exec_one(&mut runtime, "1 + 2 = 3");
     let goal_json = project_stmt_normal(&goal, &runtime);
     // Option 2: Chinese session localizes JSON keys as well as rule text.
-    assert_eq!(object_field(&goal_json, "成功"), &JsonValue::Bool(true));
+    assert_eq!(
+        object_field(&goal_json, "语句判定").as_str().ok(),
+        Some("accepted")
+    );
     let why = object_field(&goal_json, "证明方法")
         .as_object()
         .expect("证明方法");
@@ -269,7 +283,10 @@ fn normal_json_list_set_have_infers_or() {
     let mut runtime = runtime_with_file_env();
     let have = exec_one(&mut runtime, "have a {1, 2}");
     let json = project_stmt_normal(&have, &runtime);
-    assert_eq!(object_field(&json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        object_field(&json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     let infers = object_field(&json, "infers")
         .as_array()
         .expect("infers array");
@@ -287,7 +304,10 @@ fn normal_json_let_obj_define_why() {
     let mut runtime = runtime_with_file_env();
     let stmt = exec_one(&mut runtime, "let a = 1");
     let json = project_stmt_normal(&stmt, &runtime);
-    assert_eq!(object_field(&json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        object_field(&json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     let why = object_field(&json, "proof_method")
         .as_object()
         .expect("proof_method");
@@ -307,7 +327,10 @@ fn normal_json_search_proof_failure() {
     assert!(!exec_one(&mut runtime, "have a R").is_failed());
     let failed = exec_one(&mut runtime, "a > 10");
     let json = project_stmt_normal(&failed, &runtime);
-    assert_eq!(object_field(&json, "success"), &JsonValue::Bool(false));
+    assert_eq!(
+        object_field(&json, "statement_result").as_str().ok(),
+        Some("rejected")
+    );
     let why = object_field(&json, "why_failed")
         .as_object()
         .expect("why_failed");

@@ -27,8 +27,8 @@ symbol is `A::chap2::x`.
 
 ## Acceptance
 
-Run from the Git root. Every positive requires exit `0`, JSON `success: true`,
-and no session error. Use an absolute binary path for changed-directory runs.
+Run from the Git root. Every positive requires exit `0`, JSON `run_result: "success"`,
+with `session_terminated: false` and `termination: null`. Use an absolute binary path for changed-directory runs.
 
 ```bash
 BIN="$PWD/target/release/litex"
@@ -43,7 +43,7 @@ BIN="$PWD/target/release/litex"
 (cd examples/module_manager/cwd_eval && "$BIN" -strict -e '1 = 1')
 ```
 
-Negative checks require exit `1` and JSON `success: false`:
+Negative checks require exit `1` and JSON `run_result: "failure"`:
 
 ```bash
 "$BIN" -strict -f examples/module_manager/file_prefix/b.lit

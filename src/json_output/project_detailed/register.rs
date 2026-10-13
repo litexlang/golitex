@@ -7,7 +7,7 @@ use crate::execute::execute_register_stmt::{
     ExecRegisterSymmetricPropStmtResult as S, ExecRegisterTransitivePropStmtFailed as TF,
     ExecRegisterTransitivePropStmtResult as T,
 };
-use crate::json_output::helper::{bool_value, object_for, string};
+use crate::json_output::helper::{object_for, statement_result_value, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -135,7 +135,7 @@ pub(super) fn project_register(result: &ExecRegisterStmtResult, runtime: &Runtim
         },
     };
     let mut fields = vec![
-        ("success", bool_value(success)),
+        ("statement_result", statement_result_value(success)),
         ("kind", string("register")),
         ("property", string(property)),
     ];

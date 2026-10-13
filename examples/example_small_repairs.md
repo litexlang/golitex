@@ -27,8 +27,8 @@ target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/posi
 target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_rule/anonymous_function_beta_extension.lit
 ```
 
-每个正例文件要求 exit 0、JSON `kind: run` / `success: true`、所有语句成功且 `session_error: null`。
-[13 个负例](negative/example_small_repairs)要求 exit 1、`success: false`、无 session/parse error，
+每个正例文件要求 exit 0、JSON `kind: run` / `run_result: "success"`、所有语句成功且 `session_terminated: false`, `termination: null`。
+[13 个负例](negative/example_small_repairs)要求 exit 1、`run_result: "failure"`、无 session/parse error，
 并且存在具体失败语句；超时或 launch 错误不算正确拒绝。
 
 最终验收：78 个定向 CLI 输入，74 个符合目标，无崩溃/超时；六个正例整文件全部通过，

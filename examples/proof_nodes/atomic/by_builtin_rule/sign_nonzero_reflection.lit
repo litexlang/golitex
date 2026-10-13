@@ -4,7 +4,7 @@
 #     sign(x)!=0
 #     =>:
 #         x!=0
-# Former behavior: strict run success=false, phase search_proof.
+# Former verifier behavior: rejected in the search_proof phase.
 # Now (verified directly):
 forall x R:
     sign(x)!=0

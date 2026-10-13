@@ -626,16 +626,16 @@ def file_result_from_completed(
             returncode=completed.returncode, wall_seconds=wall_seconds,
             message=contract_error, output=diagnostic_tail(stdout, stderr),
         )
-    if envelope["success"] is True:
+    if envelope["run_result"] == "success":
         return FileResult(
             textbook_file=textbook_file, status="success",
             returncode=completed.returncode, wall_seconds=wall_seconds,
         )
 
     failed = next((row for row in envelope["statement_results"]
-                   if row["success"] is False), None)
-    session_error = envelope.get("session_error")
-    diagnostic = session_error or json.dumps(failed, ensure_ascii=False)
+                   if row["statement_result"] == "rejected"), None)
+    termination = envelope.get("termination")
+    diagnostic = (termination or {}).get("message") or json.dumps(failed, ensure_ascii=False)
     source_path, line, statement, message = trace_diagnostic(diagnostic)
     return FileResult(
         textbook_file=textbook_file, status="failed",
@@ -652,22 +652,35 @@ def run_file_contract_error(envelope: object, returncode: int) -> str | None:
         return "file output is not a run object"
     if envelope.get("target") != "file" or not isinstance(envelope.get("path"), str):
         return "run target/path is not a file"
-    success = envelope.get("success")
-    if not isinstance(success, bool):
-        return "run success is not boolean"
-    if returncode != (0 if success else 1):
-        return f"exit={returncode} disagrees with success={success!r}"
+    run_result = envelope.get("run_result")
+    if run_result not in {"success", "failure"}:
+        return "run_result is neither success nor failure"
+    if returncode != (0 if run_result == "success" else 1):
+        return f"exit={returncode} disagrees with run_result={run_result!r}"
     rows = envelope.get("statement_results")
     if not isinstance(rows, list) or any(
-        not isinstance(row, dict) or not isinstance(row.get("success"), bool)
+        not isinstance(row, dict)
+        or row.get("statement_result") not in {"accepted", "rejected"}
         for row in rows
     ):
-        return "run statement_results lack boolean outcomes"
-    error = envelope.get("session_error")
-    if error is not None and not isinstance(error, str):
-        return "run session_error is neither null nor a string"
-    if success != (error is None and all(row["success"] for row in rows)):
-        return "run success disagrees with statement outcomes/session_error"
+        return "run statement_results lack accepted/rejected outcomes"
+    terminated = envelope.get("session_terminated")
+    termination = envelope.get("termination")
+    if not isinstance(terminated, bool):
+        return "run session_terminated is not boolean"
+    if terminated != (termination is not None):
+        return "run session_terminated disagrees with termination"
+    if termination is not None and (
+        not isinstance(termination, dict)
+        or not isinstance(termination.get("phase"), str)
+        or not isinstance(termination.get("message"), str)
+    ):
+        return "run termination is not null or a phase/message object"
+    expected = not terminated and all(
+        row["statement_result"] == "accepted" for row in rows
+    )
+    if (run_result == "success") != expected:
+        return "run_result disagrees with statement outcomes/termination"
     return None
 
 

@@ -254,7 +254,7 @@ cover the newly discovered crashing/growing inputs.
 Seven focused existing examples passed the strict release CLI: builder replay,
 signed nonzero, weak integer lower bound, finite upper subset, additive
 cancellation, bounded power premises and function range. Each exited 0 with
-`kind: run`, `success: true`, `session_error: null`.
+`kind: run`, `run_result: "success"`, `session_terminated: false`, `termination: null`.
 
 Diagnostics and independent rule-deletion controls ran only in
 `tmp/2026-10-12/infer-termination-audit/diagnostic-copy/`. The copy adds a trace

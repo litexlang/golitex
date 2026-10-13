@@ -11,7 +11,8 @@ The maintained tracer is
 [`peer_alpha_membership.lit`](../../../../../examples/proof_nodes/equal/by_equivalence_class/peer_alpha_membership.lit):
 `let g = fn(x R) R`, `have fn f(t R) R = t`, then `f $in g`.
 The baseline exits 1 and reports a proof-search failure for the membership.
-The updated release exits 0 with `success: true`, no session error, and every
+The updated release exits 0 with `run_result: "success"`,
+`session_terminated: false`, `termination: null`, and every
 statement successful, under `-strict`. No trust was added.
 
 The four identity fixtures and the named-function-shape fixture were relocated
@@ -48,7 +49,7 @@ The Litex snippet in this directory's README was also run separately and passes.
 The example scan covers `proof_nodes`, `stmt_nodes`, `wd`, `infer`, `tokenize`,
 `knowledge_base`, `wd_negative`, and `equal_negative`, invoking `litex -f` with
 a 30-second timeout per file. Positive files require exit 0, a successful run
-envelope, no session error, and successful statements. Negative directories
+envelope, `session_terminated: false`, `termination: null`, and accepted statements. Negative directories
 require rejection; `wd_negative/identifier_undefined.lit` and
 `wd_negative/obj_at_index_applied.lit` intentionally reject at parsing. The ten
 additional successes include the new tracer, so they are not ten independently
@@ -114,7 +115,8 @@ the direct scan above supplies the measured coverage.
 
 The current CLI supports `-e`, `-f`, `-session`, and `-strict`; it rejects the
 policy examples' `-compact`, `-isolated`, `-runner`, and `-before` options.
-Its JSON gate is `success`, not `ok`. It also rejects literal `try:` blocks.
+Its JSON gate is `run_result: "success"`; the public envelope has neither a
+generic `success` field nor `ok`. It also rejects literal `try:` blocks.
 The acceptance session therefore used ordinary source-order statements in
 `-strict -e '# Equality acceptance session' -session`, with the existing
 per-statement transaction boundary. The rejected command/try attempts and

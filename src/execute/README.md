@@ -284,7 +284,7 @@ ParamType shells:
   `witness` membership, …)
 
 JSON presentation (not Rust names): Success → `"success"`, Failed → `"error"`,
-SessionError → `"session_error"`.
+SessionError → `"session_terminated": true` plus structured `termination`.
 
 ## Transactional `exec_stmt`
 

@@ -623,7 +623,7 @@ jobs:
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
-          if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["success"] is True and r["session_error"] is None'; then
+          if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["run_result"] == "success" and r["session_terminated"] is False and r["termination"] is None'; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -676,7 +676,7 @@ jobs:
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi
-            if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["success"] is True and r["session_error"] is None'; then
+            if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["run_result"] == "success" and r["session_terminated"] is False and r["termination"] is None'; then
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi

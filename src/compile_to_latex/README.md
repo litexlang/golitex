@@ -11,9 +11,9 @@ litex -latex -lang ja -r project
 litex -latex -document -lang zh -f examples/stmt_nodes/compile_to_latex/identity.lit
 ```
 
-The CLI emits one JSON artifact. Its stable keys include `success`, `format`,
-`target`, `path`, `language`, `verified`, `content`, and `error`. `success` means
-conversion succeeded; `verified` is always false. On failure, `content` is null,
+The CLI emits one JSON artifact. Its stable keys include `artifact_result`,
+`format`, `target`, `path`, `language`, `verified`, `content`, and `error`.
+`artifact_result` is `"success"` or `"failure"`; `verified` is always false. On failure, `content` is null,
 `error` describes the source/config/conversion error, and the process exits 1.
 `-session` and `-strict` do not apply to this conversion route.
 Invalid launch arguments use the common CLI diagnostic path: stderr and exit 2.
@@ -21,7 +21,7 @@ Invalid launch arguments use the common CLI diagnostic path: stderr and exit 2.
 Save a complete document without copying JSON escapes:
 
 ```sh
-litex -latex -document -lang zh -f example.lit | python3 -c 'import json,sys; a=json.load(sys.stdin); sys.exit(a["error"]) if not a["success"] else sys.stdout.write(a["content"])' > example.tex
+litex -latex -document -lang zh -f example.lit | python3 -c 'import json,sys; a=json.load(sys.stdin); sys.exit(a["error"]) if a["artifact_result"] != "success" else sys.stdout.write(a["content"])' > example.tex
 xelatex -halt-on-error example.tex
 ```
 

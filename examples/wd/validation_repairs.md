@@ -70,8 +70,8 @@ prop broken(x R):
     1 / 0 = x
 ```
 
-The runtime rejected this correctly, but Detailed output collapsed it to
-`{"success": false, "kind": "def_prop"}`. Both profiles now project the
+The runtime rejected this correctly, but the legacy Detailed output collapsed
+it to a generic boolean result with `kind: "def_prop"`. Both profiles now project the
 existing parameter, struct-opening or body-WD failure enum exhaustively.
 Normal puts the cause in `why_failed.failure`; Detailed puts it in `failure`.
 The nested cause retains the actual `0 != 0` obligation. English and Chinese

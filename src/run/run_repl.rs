@@ -20,12 +20,15 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
     }
 
     runtime.begin_source(CodeSource::Repl);
-    run_repl_loop(&mut runtime)
+    run_repl_loop(&mut runtime).map(|_| ())
 }
 
 /// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
-pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
+/// Returns whether every submitted interactive block was accepted. A rejected
+/// statement is continuable and therefore does not become a RuntimeError.
+pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<bool> {
     runtime.current_file = CodeSource::Repl;
+    let mut all_accepted = true;
     write_stdout(format_args!("{} REPL {}\n", LITEX, VERSION))?;
     write_stdout(format_args!(
         "type `exit` or Ctrl-D to quit; end a block with a blank line\n"
@@ -51,6 +54,7 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
         if code_result.success {
             write_stdout(format_args!("success\n"))?;
         } else {
+            all_accepted = false;
             write_stdout(format_args!(
                 "{}\n",
                 crate::json_output::emit_run_normal(&code_result, runtime, "repl", None)
@@ -59,7 +63,7 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
     }
 
     runtime.abort_source();
-    Ok(())
+    Ok(all_accepted)
 }
 
 fn mount_session_error_to_runtime_error(

@@ -153,22 +153,23 @@ class ReleasePreflightTest(unittest.TestCase):
         successful = json.dumps(
             {
                 "kind": "run",
-                "success": True,
+                "run_result": "success",
                 "detail": "normal",
                 "target": "file",
                 "path": "smoke.lit",
-                "statement_results": [{"success": True, "statement": "1 = 1"}],
-                "session_error": None,
+                "statement_results": [{"statement_result": "accepted", "statement": "1 = 1"}],
+                "session_terminated": False,
+                "termination": None,
             }
         )
         preflight.validate_run_output(successful, 0)
         with self.assertRaises(preflight.PreflightError):
             preflight.validate_run_output(successful, 1)
         for change in [
-            {"success": False},
-            {"session_error": {"type": "parse_error"}},
+            {"run_result": "failure"},
+            {"session_terminated": True, "termination": {"phase": "parse", "message": "bad"}},
             {"statement_results": []},
-            {"statement_results": [{"success": False}]},
+            {"statement_results": [{"statement_result": "rejected"}]},
             {"kind": "artifact"},
         ]:
             failed = json.loads(successful)
@@ -237,8 +238,9 @@ class ReleasePreflightTest(unittest.TestCase):
             preflight.create_archive(package, archive)
             run_json = json.dumps({
                 "kind": "run", "detail": "normal", "target": "file",
-                "path": "smoke.lit", "success": True, "session_error": None,
-                "statement_results": [{"success": True}],
+                "path": "smoke.lit", "run_result": "success",
+                "session_terminated": False, "termination": None,
+                "statement_results": [{"statement_result": "accepted"}],
             })
             responses = [
                 subprocess.CompletedProcess([], 0, "Litex 1.0.1-beta\n"),

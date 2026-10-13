@@ -97,13 +97,21 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
                     ));
                 }
                 if keep_env_open {
-                    if let Err(error) = run_repl_loop(&mut runtime) {
-                        return Ok(finish_repo(
-                            &runtime,
-                            root,
-                            file_results,
-                            Some(RunSessionError::Runtime(error)),
-                        ));
+                    match run_repl_loop(&mut runtime) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            if let Some(file) = file_results.last_mut() {
+                                file.run.attach_session_rejection(&runtime);
+                            }
+                        }
+                        Err(error) => {
+                            return Ok(finish_repo(
+                                &runtime,
+                                root,
+                                file_results,
+                                Some(RunSessionError::Runtime(error)),
+                            ));
+                        }
                     }
                 }
             }

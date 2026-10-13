@@ -47,7 +47,7 @@ $prime(5)
 
 Strict release accepts this source and directly stores `2 <= 5` plus its
 trial-divisor universal. `$prime(4)` rejects normally with no derived facts and
-`session_error: null`; it is a regression control, not an accepted assumption.
+`session_terminated: false`, `termination: null`; it is a regression control, not an accepted assumption.
 
 ```litex
 have f fn(t R) R

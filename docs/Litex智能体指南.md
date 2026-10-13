@@ -29,7 +29,7 @@ litex> axiom ready_at_seven:
 ...
 success
 litex> $ready(8)
-{"success": false, ..., "session_error": null}
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
 litex> $ready(7)
 success
 ```
@@ -40,7 +40,7 @@ success
 
 ```text
 litex> $ready(7)
-{"success": false, ..., "session_error": null}
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
 litex> axiom ready_at_seven:
 ...     ? forall n N:
 ...         n = 7
@@ -69,10 +69,10 @@ success
 
 1. 理解目标数学，查看已有内置、库和模块接口。一次加载所需上下文。
 2. 按源码顺序，每次提交一条顶层语句。`claim` 或定理及其完整嵌套证明构成一条语句。发送下一候选前读完响应；多行输入用空行结束。
-3. 收到 `success` 时，记录已接受源码并继续。普通失败若有 `session_error: null` 且重新出现 `litex>` 提示符，应保持进程并修复当前语句。失败表示缺少证明或良定义性证据，不是命题否定的证明。
+3. 收到 REPL 的纯文本 `success` 回复（它不是 JSON 字段）时，记录已接受源码并继续。普通失败若有 `session_terminated: false`, `termination: null` 且重新出现 `litex>` 提示符，应保持进程并修复当前语句。失败表示缺少证明或良定义性证据，不是命题否定的证明。
 4. 在连贯的检查点保存已接受代码，另行运行干净文件检查。交互上下文不能替代可复现文件。
 
-**事务边界是语句，而不是整段粘贴输入。** 失败语句丢弃自身暂存的解析绑定与执行状态。先前成功语句保留。如果一个输入帧包含多条顶层语句，即使整帧 `success` 为 false，成功语句也可以提交；软失败不会阻止后续语句。不要假定整个候选片段都已回滚，也不要盲目重新提交已经提交的名称。在活动进程之外记录已接受前缀，使其可在重启或中断后恢复。
+**事务边界是语句，而不是整段粘贴输入。** 失败语句丢弃自身暂存的解析绑定与执行状态。先前成功语句保留。如果一个输入帧包含多条顶层语句，即使整帧 `run_result` 为 `"failure"`，成功语句也可以提交；软失败不会阻止后续语句。不要假定整个候选片段都已回滚，也不要盲目重新提交已经提交的名称。在活动进程之外记录已接受前缀，使其可在重启或中断后恢复。
 
 <a id="start-in-the-intended-context"></a>
 
@@ -102,7 +102,7 @@ target/release/litex -lang en -f accepted-prefix.lit -session
 
 ## 验证保存的产物并找到参考
 
-使用干净的 `target/release/litex -lang en -f <file>` 检查。要求退出码为 0，解析 JSON 后有 `kind: run`、`success: true` 和 `session_error: null`。需要排除用户公理和 trust 时使用 `-strict`；上述教学公理在严格模式下会被有意拒绝。`-r` 留给显式要求的整模块检查。见 [CLI 输出](Litex命令行参考.md#json-output-contract)。
+使用干净的 `target/release/litex -lang en -f <file>` 检查。要求退出码为 0，解析 JSON 后有 `kind: run`、`run_result: "success"` 和 `session_terminated: false`, `termination: null`。需要排除用户公理和 trust 时使用 `-strict`；上述教学公理在严格模式下会被有意拒绝。`-r` 留给显式要求的整模块检查。见 [CLI 输出](Litex命令行参考.md#json-output-contract)。
 
 | 需要 | 阅读 |
 | --- | --- |

@@ -290,12 +290,12 @@ class PredeployGateTest(unittest.TestCase):
             1,
         )
         envelope = json.dumps({
-            "kind": "run", "success": False, "target": "file",
+            "kind": "run", "run_result": "failure", "target": "file",
             "path": "/repo/scripts/Book/textbook/chapter.lit",
             "statement_results": [{
-                "success": True, "statement": "1 = 1",
+                "statement_result": "accepted", "statement": "1 = 1",
             }, {
-                "success": False, "statement": "1 = 0",
+                "statement_result": "rejected", "statement": "1 = 0",
                 "why_failed": {
                     "line": 42,
                     "path": "/repo/scripts/Book/textbook/chapter.lit",
@@ -303,7 +303,8 @@ class PredeployGateTest(unittest.TestCase):
                     "failed_goal": "1 = 0",
                 },
             }],
-            "session_error": None,
+            "session_terminated": False,
+            "termination": None,
         })
 
         result = file_result_from_completed(
@@ -425,16 +426,17 @@ class PredeployGateTest(unittest.TestCase):
 
     def test_run_contract_rejects_inconsistent_or_old_payloads(self) -> None:
         valid = {"kind": "run", "target": "file", "path": "/repo/ch.lit",
-                 "success": True, "statement_results": [{"success": True}],
-                 "session_error": None}
+                 "run_result": "success",
+                 "statement_results": [{"statement_result": "accepted"}],
+                 "session_terminated": False, "termination": None}
         self.assertIsNone(PREDEPLOY_GATE.run_file_contract_error(valid, 0))
         for change, code in [
             ({"kind": "artifact"}, 0), ({"target": "eval"}, 0),
-            ({"path": None}, 0), ({"success": "true"}, 0), ({}, -9),
-            ({"statement_results": [{"success": False}]}, 0),
+            ({"path": None}, 0), ({"run_result": True}, 0), ({}, -9),
+            ({"statement_results": [{"statement_result": "rejected"}]}, 0),
             ({"statement_results": [{}]}, 0), ({"statement_results": None}, 0),
-            ({"session_error": "internal_bug: Litex internal bug"}, 0),
-            ({"session_error": {}}, 0), ({"success": False}, 1),
+            ({"session_terminated": True}, 0),
+            ({"termination": {}}, 0), ({"run_result": "failure"}, 1),
         ]:
             with self.subTest(change=change, code=code):
                 self.assertIsNotNone(PREDEPLOY_GATE.run_file_contract_error({**valid, **change}, code))
@@ -444,7 +446,9 @@ class PredeployGateTest(unittest.TestCase):
                             Path("/repo/ch.lit"), 1, 1)
         message = "internal_bug: Litex internal bug: inferred fact failed WD"
         envelope = {"kind": "run", "target": "file", "path": "/repo/ch.lit",
-                    "success": False, "statement_results": [], "session_error": message}
+                    "run_result": "failure", "statement_results": [],
+                    "session_terminated": True,
+                    "termination": {"phase": "internal", "message": message}}
         result = file_result_from_completed(Path("/repo"), file,
                   subprocess.CompletedProcess([], 1, stdout=json.dumps(envelope), stderr=""), 0.1)
         self.assertEqual(result.status, "failed")

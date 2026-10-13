@@ -2,7 +2,6 @@
 
 use super::{project_stmt_detailed, project_stmt_normal};
 use crate::execute::ExecStmtResult;
-use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
@@ -131,8 +130,12 @@ fn failed_template_is_unpublished_and_later_definition_succeeds() {
         project_stmt_detailed(&good, rt),
     ] {
         assert_eq!(
-            output.as_object().unwrap().get("success"),
-            Some(&JsonValue::Bool(true))
+            output
+                .as_object()
+                .unwrap()
+                .get("statement_result")
+                .and_then(|value| value.as_str().ok()),
+            Some("accepted")
         );
         assert!(output.as_object().unwrap().get("failure").is_none());
     }

@@ -35,8 +35,9 @@ impl LitexToLeanCompiler {
                 InferEqualFactResult::NonzeroNumeratorCancellation(rule) => {
                     self.compile_nonzero_numerator_inference(rule, source, compiled, &group)?
                 }
-                // Unsupported inference has no emitted producer and cannot be cited.
-                InferEqualFactResult::PositiveRealPower(_) => Vec::new(),
+                InferEqualFactResult::PositiveRealPower(rule) => {
+                    self.compile_positive_power_inference(rule, source, compiled, &group)?
+                }
             };
             declarations.extend(emitted);
         }

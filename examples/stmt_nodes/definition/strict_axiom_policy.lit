@@ -16,5 +16,5 @@ by thm wrong(0) => 0 = 1
 0 = 1
 # Boundary: abstract signatures, checked thm and named foundation releases stay legal.
 # Evidence: target/release/litex -f examples/stmt_nodes/definition/strict_axiom_policy.lit
-# Rejection: same command with -strict must exit 1 with success false and no statements.
+# Rejection: same command with -strict must exit 1 with run_result=failure and no statements.
 # Tests: execute::statement_boundary_tests and run_module::strict_cache_tests.

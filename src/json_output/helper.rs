@@ -5,6 +5,8 @@ use crate::ast::fact::{AtomicFact, ExistShapedFact, Fact};
 use crate::ast::line_file::SourceLine;
 use crate::knowledge_base::{JsonObject, JsonValue};
 use crate::launch_command::OutputLanguage;
+use crate::run::run_command_outcome::RunSessionError;
+use crate::runtime::RuntimeError;
 use crate::runtime::{FactId, Runtime};
 use crate::store_fact_and_infer::{StoreFactAndInferResult, StoreFactResult};
 
@@ -39,8 +41,65 @@ pub(super) fn string(s: impl Into<String>) -> JsonValue {
     JsonValue::String(s.into())
 }
 
-pub(super) fn bool_value(b: bool) -> JsonValue {
-    JsonValue::Bool(b)
+/// Stable machine values for the public JSON contract. Keys may be localized,
+/// but callers must never need translated prose to decide whether work passed.
+pub(super) fn run_result_value(success: bool) -> JsonValue {
+    string(if success { "success" } else { "failure" })
+}
+
+pub(super) fn statement_result_value(success: bool) -> JsonValue {
+    string(if success { "accepted" } else { "rejected" })
+}
+
+pub(super) fn verification_result_value(success: bool) -> JsonValue {
+    string(if success { "accepted" } else { "rejected" })
+}
+
+pub(super) fn well_defined_result_value(success: bool) -> JsonValue {
+    string(if success { "accepted" } else { "rejected" })
+}
+
+pub(crate) fn artifact_result_value(success: bool) -> JsonValue {
+    string(if success { "success" } else { "failure" })
+}
+
+fn runtime_error_phase(error: &RuntimeError) -> &'static str {
+    match error {
+        RuntimeError::InvalidArguments(_) => "launch",
+        RuntimeError::Io { .. } => "io",
+        RuntimeError::ParseError(_) => "parse",
+        RuntimeError::Unsupported(_) => "unsupported",
+        RuntimeError::InternalBug(_) => "internal",
+    }
+}
+
+pub(crate) fn runtime_termination_value(
+    error: &RuntimeError,
+    language: OutputLanguage,
+) -> JsonValue {
+    object(
+        language,
+        vec![
+            ("phase", string(runtime_error_phase(error))),
+            ("message", string(error.to_string())),
+        ],
+    )
+}
+
+pub(crate) fn session_termination_value(
+    error: &RunSessionError,
+    language: OutputLanguage,
+) -> JsonValue {
+    match error {
+        RunSessionError::Runtime(error) => runtime_termination_value(error, language),
+        RunSessionError::FailToImport => object(
+            language,
+            vec![
+                ("phase", string("import")),
+                ("message", string(error.to_string())),
+            ],
+        ),
+    }
 }
 
 pub(super) fn array_of_strings(items: Vec<String>) -> JsonValue {

@@ -145,6 +145,10 @@ Fixed `ring`/guarded normalization checks the source-selected
 certificate family; no independent target theorem search is performed. The
 source Rational tag does not contain a monomial trace, so Lean checks the
 normalization proof rather than replaying an unavailable low-level trace.
+An original one/two-argument function call can be an opaque scalar leaf in
+that normalization domain when its captured call WD and numeric return
+observation are supported. Its arguments and guards remain obligations of
+the original call WD; normalization does not search for their proofs.
 
 Real absolute value retains `Litex.AbsObj`: its constructor consumes the
 original argument WD and exact R-membership proof. Numeric observations use
@@ -232,10 +236,14 @@ closed case facts remain unavailable. Strong induction, other lower bounds,
 general recursion measures, nested cases and authored recursive domains retain
 explicit rejection branches.
 
-The full Newton source pair is
+The full Newton source is
 `lean/examples/newton_residual_bound/statement.lit`. Its all-index residual
-bound acceptance is still pending; implementation support and successful
-smaller-prefix checks do not establish that complete gate.
+proof passed strict verification and whole-file compilation. Complete generated
+Lean checking and native all-index bound acceptance remain pending; successful
+smaller-prefix checks do not establish those gates.
+The final 2026-10-13 regression gates passed 429 compiler tests and 78 separate
+JSON tests. Selected induction, theorem-result capture and by-thm selection
+filters also passed; their overlapping tests are not counted as another total.
 
 The phase-4 set slice preserves arbitrary `have A set` and set-kind universal
 binders as generic certified parameters. Empty and finite enumerations retain
@@ -294,6 +302,15 @@ to a proved cancellation lemma, emits its actual derived FactId without recursiv
 replaying another infer stage. Pending stages cannot cite their future conclusions,
 even when an ancestor sees the completed store. Unreviewed inference families
 retain explicit rejection branches.
+
+`PositiveRealPower` equality inference retains the exact seed FactId, one or
+two ordered equality-side transports, original selected base/power positivity,
+exponent R-membership and direct R+ store. Each child is replayed at its source
+stage and emitted as a checked local proof under its original FactId. Even when
+the original natural/integer constructor WD already implies the exponent's
+real membership, Lean checks that captured child. The power and opposite side
+use the original equality WD, and only completed transport stores become
+visible. The consumer never reconstructs a power WD from its inferred store.
 
 Named theorem bodies accept the original by-def result alongside existing fact,
 let, typed-have and by-thm steps. The source request must match its selected

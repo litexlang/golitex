@@ -46,7 +46,7 @@ An isolated source snapshot of HEAD plus the exact task files passed:
   `quotient_scalar_strict_upper_bound`, `exact_integer_quotient` and
   `abs_nonzero_denominator_consumer`. Each ran with the snapshot release binary,
   `-lang en -strict -f <repository-example-path>`, exit 0, `kind: run`,
-  `success: true`, and `session_error: null`.
+  `run_result: "success"`, and `session_terminated: false`, `termination: null`.
 - A live Session replay accepted the primary tracer, rejected its false strict
   counterpart, then accepted the strict-premise weak target in that same Session.
 

@@ -86,7 +86,7 @@ The following statement records show the current CLI output in English and Chine
 <tbody>
 <tr>
 <td><pre><code class="language-json">{
-  "success": true,
+  "statement_result": "accepted",
   "statement": "1 + 1 = 2",
   "proof_method": {
     "type": "by_closed_calculation",
@@ -97,7 +97,7 @@ The following statement records show the current CLI output in English and Chine
   "infers": []
 }</code></pre></td>
 <td><pre><code class="language-json">{
-  "成功": true,
+  "语句判定": "accepted",
   "语句": "1 + 1 = 2",
   "证明方法": {
     "类型": "封闭计算",
@@ -124,7 +124,7 @@ The JSON record for `$is_odd(3)` shows that the language checks the fact by unfo
 
 ```json
 {
-  "success": true,
+  "statement_result": "accepted",
   "statement": "$is_odd(3)",
   "proof_method": {
     "type": "by_definition",
@@ -688,21 +688,21 @@ Below is the execution result of this fragment.
 ```json
 {
   "kind": "run",
-  "success": true,
+  "run_result": "success",
   "target": "eval",
   "path": null,
   "detail": "normal",
-  "session_error": null,
+  "session_terminated": false, "termination": null,
   "statement_results": [
     {
-      "success": true,
+      "statement_result": "accepted",
       "statement": "let a = 1",
       "proof_method": { "type": "define_obj" },
       "stores": ["a = 1"],
       "infers": []
     },
     {
-      "success": true,
+      "statement_result": "accepted",
       "statement": "a + 1 = 2",
       "proof_method": {
         "type": "builtin_rule",
@@ -723,7 +723,7 @@ The second statement passes well-definedness, definition reduction, and numerica
 | What the reader wants to know | What to look at in the record |
 | --- | --- |
 | Which statement ran | `statement` |
-| Whether it succeeded | statement `success`, and run `success` / `session_error` |
+| Whether it succeeded | statement `statement_result`, and run `run_result` / `session_terminated` / `termination` |
 | Why it holds | `proof_method` (rule name, cite, definition route, …) |
 | Why it stopped | `why_failed.phase` and `why_failed.goal` |
 | What entered the later context | `stores` and `infers` |
@@ -740,14 +740,14 @@ When we enter `1 = 0`, Litex's Normal JSON output is
 ```json
 {
   "kind": "run",
-  "success": false,
+  "run_result": "failure",
   "target": "eval",
   "path": null,
   "detail": "normal",
-  "session_error": null,
+  "session_terminated": false, "termination": null,
   "statement_results": [
     {
-      "success": false,
+      "statement_result": "rejected",
       "statement": "1 = 0",
       "why_failed": {
         "phase": "search_proof",
@@ -1377,12 +1377,12 @@ If AI asks `by def` to establish convergence without first constructing the `for
 ```json
 {
   "kind": "run",
-  "success": false,
+  "run_result": "failure",
   "detail": "normal",
-  "session_error": null,
+  "session_terminated": false, "termination": null,
   "statement_results": [
     {
-      "success": false,
+      "statement_result": "rejected",
       "statement": "...",
       "why_failed": {
         "phase": "search_proof",

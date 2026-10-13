@@ -18,7 +18,7 @@ def run_module_checks(binary,work):
         start=time.monotonic(); p=subprocess.run(command,cwd=area,text=True,capture_output=True,timeout=20)
         try: data=json.loads(p.stdout)
         except ValueError: data={}
-        records.append(dict(name=name,contracts=contracts,expected=expected,command=command,returncode=p.returncode,stdout=p.stdout,stderr=p.stderr,output=data,seconds=time.monotonic()-start,matches=data.get('success') is expected and p.returncode==(0 if expected else 1) and not p.stderr,files={str(f.relative_to(root)):f.read_text() for f in root.rglob('*') if f.is_file() and '__litex_knowledge_base__' not in f.parts}))
+        records.append(dict(name=name,contracts=contracts,expected=expected,command=command,returncode=p.returncode,stdout=p.stdout,stderr=p.stderr,output=data,seconds=time.monotonic()-start,matches=data.get('run_result') == ('success' if expected else 'failure') and p.returncode==(0 if expected else 1) and not p.stderr,files={str(f.relative_to(root)):f.read_text() for f in root.rglob('*') if f.is_file() and '__litex_knowledge_base__' not in f.parts}))
 
     left='let value = 1\nhave fn same(x R) R = x + 1\n'
     right='let value = 2\nhave fn same(x R) R = x + 2\n'

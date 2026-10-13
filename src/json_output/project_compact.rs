@@ -1,9 +1,12 @@
 //! Project ExecStmtResult → Compact JSON (see README).
 //!
-//! Success: `success` + `statement` only.
+//! Accepted: `statement_result` + `statement` only.
 //! Failure: same + `fail_reason` with `phase` and optional `goal`.
 
-use super::helper::{bool_value, object, output_language, string};
+use super::helper::{
+    object, output_language, run_result_value, session_termination_value, statement_result_value,
+    string,
+};
 use super::json_keys::localize_key;
 use super::project_normal::{project_run_statements_normal, project_stmt_normal, OutputDetail};
 use crate::execute::ExecStmtResult;
@@ -35,15 +38,15 @@ pub fn project_run_compact(
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,
     };
-    let session_error = match &run.session_error {
+    let termination = match &run.session_error {
         None => JsonValue::Null,
-        Some(err) => string(err.to_string()),
+        Some(err) => session_termination_value(err, lang),
     };
     object(
         lang,
         vec![
             ("kind", string("run")),
-            ("success", bool_value(run.success)),
+            ("run_result", run_result_value(run.success)),
             ("target", string(target)),
             ("path", path_value),
             ("detail", string(OutputDetail::Compact.as_str())),
@@ -52,7 +55,11 @@ pub fn project_run_compact(
                 string(runtime.launch_command.output_language().as_str()),
             ),
             ("statement_results", JsonValue::Array(statement_results)),
-            ("session_error", session_error),
+            (
+                "session_terminated",
+                JsonValue::Bool(run.session_error.is_some()),
+            ),
+            ("termination", termination),
         ],
     )
 }
@@ -62,26 +69,32 @@ fn thin_to_compact(lang: OutputLanguage, normal_stmt: &JsonValue) -> JsonValue {
         return object(
             lang,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("statement", string("<invalid>")),
             ],
         );
     };
-    let success_key = localize_key("success", lang);
+    let statement_result_key = localize_key("statement_result", lang);
     let statement_key = localize_key("statement", lang);
     let why_failed_key = localize_key("why_failed", lang);
 
-    let success = map
-        .get(&success_key)
+    let statement_result = map
+        .get(&statement_result_key)
         .cloned()
-        .unwrap_or(JsonValue::Bool(false));
+        .unwrap_or_else(|| statement_result_value(false));
     let statement = map
         .get(&statement_key)
         .cloned()
         .unwrap_or_else(|| string(""));
 
-    if matches!(success, JsonValue::Bool(true)) {
-        return object(lang, vec![("success", success), ("statement", statement)]);
+    if matches!(&statement_result, JsonValue::String(value) if value == "accepted") {
+        return object(
+            lang,
+            vec![
+                ("statement_result", statement_result),
+                ("statement", statement),
+            ],
+        );
     }
 
     let fail_reason = match map.get(&why_failed_key) {
@@ -91,7 +104,7 @@ fn thin_to_compact(lang: OutputLanguage, normal_stmt: &JsonValue) -> JsonValue {
     object(
         lang,
         vec![
-            ("success", success),
+            ("statement_result", statement_result),
             ("statement", statement),
             ("fail_reason", fail_reason),
         ],

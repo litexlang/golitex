@@ -129,7 +129,9 @@ use crate::json_output::explain::{
     explain_compound_fact_why, explain_searched_proof_why, explain_stmt_kind,
 };
 use crate::json_output::json_keys::localize_key;
-use crate::json_output::{project_run_normal, project_stmt_normal};
+use crate::json_output::{
+    project_run_compact, project_run_detailed, project_run_normal, project_stmt_normal,
+};
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::{FactId, Runtime};
@@ -941,7 +943,11 @@ fn acceptance_compound_fact_why_bilingual() {
 #[test]
 fn acceptance_json_keys_chinese_map() {
     for (en, zh) in [
-        ("success", "成功"),
+        ("run_result", "运行结果"),
+        ("statement_result", "语句判定"),
+        ("verification_result", "验证结果"),
+        ("well_defined_result", "良定性结果"),
+        ("artifact_result", "产物结果"),
         ("statement", "语句"),
         ("proof_method", "证明方法"),
         ("why_failed", "失败原因"),
@@ -959,7 +965,8 @@ fn acceptance_json_keys_chinese_map() {
         ("detail", "详细度"),
         ("language", "语言"),
         ("statement_results", "语句结果"),
-        ("session_error", "会话错误"),
+        ("session_terminated", "会话已终止"),
+        ("termination", "终止信息"),
         ("verify", "验证"),
         ("store_and_infer", "存储与推理"),
         ("fact", "命题"),
@@ -970,22 +977,21 @@ fn acceptance_json_keys_chinese_map() {
     }
 }
 
-fn runtime_en() -> Runtime {
+fn runtime_for(language: OutputLanguage) -> Runtime {
     Runtime::new(LaunchCommand::Eval {
         code: String::new(),
         session: false,
         strict: false,
-        language: OutputLanguage::English,
+        language,
     })
 }
 
+fn runtime_en() -> Runtime {
+    runtime_for(OutputLanguage::English)
+}
+
 fn runtime_zh() -> Runtime {
-    Runtime::new(LaunchCommand::Eval {
-        code: String::new(),
-        session: false,
-        strict: false,
-        language: OutputLanguage::Chinese,
-    })
+    runtime_for(OutputLanguage::Chinese)
 }
 
 fn exec_one(runtime: &mut Runtime, code: &str) -> crate::execute::ExecStmtResult {
@@ -1004,14 +1010,70 @@ fn obj_field<'a>(v: &'a JsonValue, key: &str) -> &'a JsonValue {
         .unwrap_or_else(|| panic!("missing {key}"))
 }
 
+fn assert_no_generic_success_key(value: &JsonValue) {
+    match value {
+        JsonValue::Array(items) => {
+            for item in items {
+                assert_no_generic_success_key(item);
+            }
+        }
+        JsonValue::Object(object) => {
+            for (key, value) in object.iter() {
+                assert_ne!(key, "success", "generic result key leaked in {value:?}");
+                assert_no_generic_success_key(value);
+            }
+        }
+        _ => {}
+    }
+}
+
 #[test]
-fn acceptance_normal_success_field_order() {
+fn acceptance_public_run_json_never_emits_a_generic_success_key() {
+    for language in OutputLanguage::ALL {
+        let mut runtime = runtime_for(language);
+        let run = runtime
+            .run_litex_code("1 = 1\n1 = 2")
+            .expect("ordinary rejection must not terminate the run");
+        assert!(!run.success);
+        assert!(run.session_error.is_none());
+        for json in [
+            project_run_normal(&run, &runtime, "eval", None),
+            project_run_compact(&run, &runtime, "eval", None),
+            project_run_detailed(&run, &runtime, "eval", None),
+        ] {
+            assert_no_generic_success_key(&json);
+            assert_eq!(
+                obj_field(&json, &localize_key("run_result", language))
+                    .as_str()
+                    .ok(),
+                Some("failure")
+            );
+            assert_eq!(
+                obj_field(&json, &localize_key("session_terminated", language)),
+                &JsonValue::Bool(false)
+            );
+            assert_eq!(
+                obj_field(&json, &localize_key("termination", language)),
+                &JsonValue::Null
+            );
+        }
+    }
+}
+
+#[test]
+fn acceptance_normal_result_field_order() {
     let mut rt = runtime_en();
     let json = project_stmt_normal(&exec_one(&mut rt, "1 + 1 = 2"), &rt);
     let keys = json.as_object().expect("object").keys_in_order();
     assert_eq!(
         keys,
-        vec!["success", "statement", "proof_method", "stores", "infers"]
+        vec![
+            "statement_result",
+            "statement",
+            "proof_method",
+            "stores",
+            "infers"
+        ]
     );
     let why = obj_field(&json, "proof_method").as_object().unwrap();
     assert_eq!(why.keys_in_order(), vec!["type", "rule_name", "message"]);
@@ -1021,7 +1083,10 @@ fn acceptance_normal_success_field_order() {
 fn acceptance_normal_success_shape_and_no_rule_id() {
     let mut rt = runtime_en();
     let json = project_stmt_normal(&exec_one(&mut rt, "1 + 1 = 2"), &rt);
-    assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        obj_field(&json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     assert!(obj_field(&json, "statement")
         .as_str()
         .ok()
@@ -1046,7 +1111,10 @@ fn acceptance_normal_failure_empty_stores() {
     let mut rt = runtime_en();
     let _ = exec_one(&mut rt, "have a R");
     let json = project_stmt_normal(&exec_one(&mut rt, "a > 10"), &rt);
-    assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(false));
+    assert_eq!(
+        obj_field(&json, "statement_result").as_str().ok(),
+        Some("rejected")
+    );
     let why = obj_field(&json, "why_failed").as_object().unwrap();
     assert_eq!(
         why.get("phase").and_then(|x| x.as_str().ok()),
@@ -1061,7 +1129,7 @@ fn acceptance_normal_failure_empty_stores() {
 fn acceptance_chinese_keys_and_messages_end_to_end() {
     let mut rt = runtime_zh();
     let json = project_stmt_normal(&exec_one(&mut rt, "1 + 2 = 3"), &rt);
-    assert_eq!(obj_field(&json, "成功"), &JsonValue::Bool(true));
+    assert_eq!(obj_field(&json, "语句判定").as_str().ok(), Some("accepted"));
     let why = obj_field(&json, "证明方法").as_object().unwrap();
     assert_eq!(
         why.get("规则名").and_then(|x| x.as_str().ok()),
@@ -1123,7 +1191,9 @@ fn acceptance_run_envelope_language() {
     assert_eq!(obj_field(&json, "种类").as_str().ok(), Some("run"));
     assert_eq!(obj_field(&json, "详细度").as_str().ok(), Some("normal"));
     assert_eq!(obj_field(&json, "语言").as_str().ok(), Some("zh"));
-    assert_eq!(obj_field(&json, "成功"), &JsonValue::Bool(true));
+    assert_eq!(obj_field(&json, "运行结果").as_str().ok(), Some("success"));
+    assert_eq!(obj_field(&json, "会话已终止"), &JsonValue::Bool(false));
+    assert_eq!(obj_field(&json, "终止信息"), &JsonValue::Null);
     assert_eq!(obj_field(&json, "语句结果").as_array().unwrap().len(), 1);
 }
 

@@ -63,7 +63,8 @@ with its invalid original signature retained as N27.
 Persistent strict REPL evidence is in
 proof_journals/cleanup_2026-10-04.json (historical task record; retired).
 The current CLI lacks `try:`, `-runner`, `-compact` and `-before`; session probes
-use discarded `sketch:` frames and clean gates check `success`/`session_error`.
+use discarded `sketch:` frames and clean gates check `run_result`,
+`session_terminated`, and `termination`.
 Both raw field-premise orderings are recorded separately. A typed local `&Box`
 binding is still required for selected/returned struct field syntax.
 

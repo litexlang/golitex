@@ -92,9 +92,16 @@ fn assert_run(output: &Output, success: bool) {
     let value = JsonValue::parse(std::str::from_utf8(&output.stdout).unwrap()).unwrap();
     let fields = value.as_object().unwrap();
     assert_eq!(fields.get("kind").unwrap().as_str().unwrap(), "run");
-    assert_eq!(fields.get("success").unwrap(), &JsonValue::Bool(success));
+    assert_eq!(
+        fields.get("run_result").unwrap().as_str().ok(),
+        Some(if success { "success" } else { "failure" })
+    );
     if success {
-        assert_eq!(fields.get("session_error").unwrap(), &JsonValue::Null);
+        assert_eq!(
+            fields.get("session_terminated").unwrap(),
+            &JsonValue::Bool(false)
+        );
+        assert_eq!(fields.get("termination").unwrap(), &JsonValue::Null);
     }
 }
 

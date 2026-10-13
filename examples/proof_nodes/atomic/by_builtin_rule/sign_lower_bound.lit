@@ -2,7 +2,7 @@
 # Before (rejected):
 # forall x R:
 #     -1<=sign(x)
-# Former behavior: strict run success=false, phase search_proof.
+# Former verifier behavior: rejected in the search_proof phase.
 # Now (verified directly):
 forall x R:
     -1<=sign(x)

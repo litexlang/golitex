@@ -41,9 +41,10 @@ colon runs immediately; finish an indented block with a blank line. Use
 `exit`, `quit`, `:quit`, or end-of-input to exit. Successful blocks print
 `success`. A failed verification prints Normal JSON with the original
 statement and failure reason, then accepts the next block. Hard session
-errors stop the REPL and are reported once. In a continued `-session`, the
-final JSON retains the initial batch's statement results and adds the hard
-error. Interactive parse/tokenizer errors refer to `<repl>`.
+errors stop the REPL and are reported once. In a continued `-session`, any
+rejected interactive block makes the final `run_result` a failure without
+marking the session terminated; a hard error additionally sets structured
+termination information. Interactive parse/tokenizer errors refer to `<repl>`.
 
 Run a `.lit` file:
 
@@ -162,9 +163,9 @@ Batch JSON presents those outcomes as:
 
 | Internal | In Normal JSON |
 |----------|----------------|
-| Success | statement `"success": true`; run `"success": true` when every stmt succeeded and there is no session error |
-| Failed | statement `"success": false` **inside** `statement_results` (presentation may say “error”; Rust stays Failed) |
-| SessionError | top-level `"session_error"` set; session must stop |
+| Success | statement `"statement_result": "accepted"`; run `"run_result": "success"` when every submitted statement was accepted and the session did not terminate |
+| Failed | statement `"statement_result": "rejected"` **inside** `statement_results` (Rust stays Failed) |
+| SessionError | top-level `"session_terminated": true` with structured `termination`; session must stop |
 
 Soft Failed statements stay in `statement_results`. They are **not** lifted into
 a top-level `verify_error` that clears the array. Process exit is nonzero when
@@ -178,7 +179,7 @@ fix a domain obligation, or repair the statement.
 
 `-e`, `-f`, and `-r` batch outcomes emit one Normal `run` document on stdout.
 Tokenization, parsing and early I/O failures also produce a failed Normal
-document with `session_error`. Invalid command-line shapes still produce text
+document with `session_terminated: true` and structured `termination`. Invalid command-line shapes still produce text
 on stderr with exit code `2`, because no command was selected. Extraction
 failures produce a failed artifact document with `error`. Success and failure
 artifacts share `format`, `target`, `path`, `output_path`, and `language`, and
@@ -196,35 +197,39 @@ status without panicking. Other output I/O errors are reported normally.
 ```json
 {
   "kind": "run",
-  "success": true,
+  "run_result": "success",
   "target": "eval",
   "path": null,
   "detail": "normal",
   "language": "en",
   "statement_results": [],
-  "session_error": null
+  "session_terminated": false,
+  "termination": null
 }
 ```
 
 | Field | Meaning |
 |-------|---------|
 | `kind` | Always `"run"` for verifier batch commands |
-| `success` | `true` iff every statement succeeded and `session_error` is null |
+| `run_result` | `"success"` iff every submitted statement was accepted and the session did not terminate; otherwise `"failure"` |
 | `target` | `"eval"`, `"file"`, or `"repo"` |
 | `path` | `null` for `-e`; requested path for `-f` / `-r` |
 | `detail` | `"normal"` for the default CLI projection |
 | `language` | Selected locale from `-lang`: `"en"`, `"zh"`, `"zh-hant"`, `"fr"`, `"ru"`, `"es"`, `"ar"`, `"ja"`, `"ko"`, or `"vi"` (default `"en"`); non-English output localizes known keys too |
 | `statement_results` | `-e` / target `-f` statements in order; the current `-r` summary leaves this array empty |
-| `session_error` | Hard stop payload, or `null` |
+| `session_terminated` | Boolean hard-stop indicator; ordinary proof rejection leaves it false |
+| `termination` | `null`, or `{ "phase": ..., "message": ... }` for a hard stop |
 
-Programs should read `success`, `statement_results`, and `session_error`. Exit
+Programs should read `run_result`, `statement_results`, `session_terminated`,
+and `termination`. Exit
 status `0` means batch success; `1` means a failed run or a parse/I/O error;
 `2` means an invalid-argument error returned to the launcher. An invalid
-statement captured as a session error is a failed run and exits `1`.
+statement that causes a hard termination is a failed run and exits `1`.
 For machine consumers, use `-lang en`, require exit `0`, parse the JSON, and
-require `kind == "run"`, `success == true`, and `session_error == null`.
-The current envelope has no `ok` field. `-r` computes overall success from
-its files but does not serialize their statement arrays into this summary.
+require `kind == "run"`, `run_result == "success"`,
+`session_terminated == false`, and `termination == null`.
+The current envelope has neither `success` nor `ok`. `-r` computes its overall
+verdict from its files but does not serialize their statement arrays into this summary.
 Use `-f` on a target file when you need its statement explanations.
 
 `statement` preserves the complete parsed source in readable form, including
@@ -264,14 +269,14 @@ as proof explanations. Enum-like envelope values such as `run`, `eval`, and
 ```json
 {
   "种类": "run",
-  "成功": true,
+  "运行结果": "success",
   "目标": "eval",
   "路径": null,
   "详细度": "normal",
   "语言": "zh",
   "语句结果": [
     {
-      "成功": true,
+      "语句判定": "accepted",
       "语句": "1 = 1",
       "证明方法": {
         "类型": "内置规则",
@@ -284,7 +289,8 @@ as proof explanations. Enum-like envelope values such as `run`, `eval`, and
       "推断": []
     }
   ],
-  "会话错误": null
+  "会话已终止": false,
+  "终止信息": null
 }
 ```
 
@@ -294,7 +300,7 @@ Success:
 
 ```json
 {
-  "success": true,
+  "statement_result": "accepted",
   "statement": "0 <= k",
   "proof_method": {
     "type": "known_atomic_fact",
@@ -309,7 +315,7 @@ Soft failure (still inside `statement_results`):
 
 ```json
 {
-  "success": false,
+  "statement_result": "rejected",
   "statement": "a > 10",
   "why_failed": {
     "phase": "search_proof",
@@ -322,7 +328,7 @@ Soft failure (still inside `statement_results`):
 
 Rules:
 
-- `success` is a bool (not an `outcome` string).
+- `statement_result` is the explicit string `"accepted"` or `"rejected"`.
 - `stores`, `infers`, `cite`, `statement`, and `goal` use readable Litex text.
 - Builtin explanations use `rule_name` and `message`, not the old `rule` tag.
 - Normal skips well-definedness subtrees; look at `why_failed.phase` when a
@@ -337,15 +343,16 @@ Successful inline run:
   "detail": "normal",
   "kind": "run",
   "language": "en",
-  "success": true,
+  "run_result": "success",
   "path": null,
-  "session_error": null,
+  "session_terminated": false,
+  "termination": null,
   "statement_results": [
     {
       "infers": [],
       "statement": "1 = 1",
       "stores": ["1 = 1"],
-      "success": true,
+      "statement_result": "accepted",
       "proof_method": {
         "type": "builtin_rule",
         "rule_name": "Equal by IR",
@@ -364,22 +371,23 @@ Soft miss with a successful prefix retained:
   "detail": "normal",
   "kind": "run",
   "language": "en",
-  "success": false,
+  "run_result": "failure",
   "path": null,
-  "session_error": null,
+  "session_terminated": false,
+  "termination": null,
   "statement_results": [
     {
       "infers": [],
       "statement": "have a R",
       "stores": ["a $in R"],
-      "success": true,
+      "statement_result": "accepted",
       "proof_method": { "type": "define_obj" }
     },
     {
       "infers": [],
       "statement": "a > 10",
       "stores": [],
-      "success": false,
+      "statement_result": "rejected",
       "why_failed": {
         "goal": "a > 10",
         "phase": "search_proof"
@@ -513,8 +521,9 @@ Dependency manifests supply names; dependency source is not executed or emitted.
 
 Use `-latex -document` for a complete XeLaTeX article, or omit `-document` for
 a fragment. All ten `-lang` choices select complete mathematical prose templates.
-The JSON keys stay stable across locales; `content` contains LaTeX, `success`
-reports conversion, and `verified` is always false. On conversion failure `content` is null
+The JSON keys stay stable across locales; `content` contains LaTeX,
+`artifact_result` is `"success"` or `"failure"`, and `verified` is always
+false. On conversion failure `content` is null
 and the process exits 1. Invalid launch arguments produce stderr and exit 2,
 through the common argument parser. Conversion does not execute or verify source; `-strict`
 and `-session` are rejected. See the [compiler guide](../src/compile_to_latex/README.md)

@@ -59,8 +59,9 @@ k = 1
 
 The overall run above still reports failure for the first statement, while
 the successful correction is committed. Soft failures continue to the next
-block. A parse/execution error stops the run and is reported in `session_error`,
-alongside the already executed statement results. Earlier successful blocks
+block. A parse/execution error stops the run with `session_terminated: true`
+and structured `termination`, alongside the already executed statement
+results. Earlier successful blocks
 remain committed. For example, `let a = 1` followed by `let b =` commits a
 and restores the failed b binding. A tokenizer error anywhere still prevents
 all execution because tokenization happens before the block loop.
@@ -78,8 +79,10 @@ even when tokenization or I/O fails before a run result exists. Extraction
 errors use the artifact error envelope. Invalid launch arguments still use
 stderr and exit code 2. The REPL prints `success` for accepted blocks and
 Normal JSON for soft failures, preserving the live session.
-Hard REPL errors are reported once by the caller. In `-session`, the final
-batch JSON keeps the initial source's statement results and adds the REPL error;
+Hard REPL errors are reported once by the caller. In `-session`, any soft REPL
+rejection changes the final `run_result` to `"failure"` while leaving
+`session_terminated` false. A hard REPL error additionally adds structured
+termination information;
 the pre-REPL JSON snapshot keeps citations intact after the environment aborts.
 interactive parse/tokenizer diagnostics use `<repl>` rather than the initial
 file or `<eval>`. The REPL text is English; `-lang` selects JSON field names
@@ -149,7 +152,7 @@ if -session: keep target env → REPL
 ```text
 abort placeholder Eval env
 mount_cwd_config()                      # missing → Done / no-op
-# mount failure: return normal JSON success=false / session_error; do not eval
+# mount failure: return run_result=failure, session_terminated=true; do not eval
 begin Eval env
 run code
 if -session and success: REPL
@@ -174,12 +177,12 @@ No Runtime, no config.
 
 | Outcome | Soft Failed stmts | Mount FailToImport | Hard RuntimeError |
 |---------|-------------------|--------------------|-------------------|
-| `RunFile` / `RunEval` / `RunRepo` | in `statement_results`, `success: false` | `session_error: "failed to import project"` | readable error in batch JSON |
+| `RunFile` / `RunEval` / `RunRepo` | `statement_result: "rejected"`; run failure | `session_terminated: true`, `termination.phase: "import"` | structured termination in batch JSON |
 | `RunRepl` | printed per step | start fails as `Err` | `Err` |
 | `ExtractExecutableCode` | verification required before artifact | `Err` | extracted-code artifact error JSON |
 | `CompileToLatex` | not verified; parse-only artifact | manifest error → `Err` | LaTeX artifact error JSON |
 
-Process exit uses `outcome.process_failed()` (false success or session error).
+Process exit uses `outcome.process_failed()` (failed run/artifact).
 
 ## Examples
 

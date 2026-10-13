@@ -166,7 +166,10 @@ fn selected_command_errors_keep_latex_artifact_metadata() {
         };
         let value = JsonValue::parse(&json).unwrap();
         let map = value.as_object().unwrap();
-        assert_eq!(map.get("success"), Some(&JsonValue::Bool(success)));
+        assert_eq!(
+            map.get("artifact_result").unwrap().as_str().ok(),
+            Some(if success { "success" } else { "failure" })
+        );
         assert_eq!(map.get("verified"), Some(&JsonValue::Bool(false)));
         if !success {
             assert_eq!(map.get("content"), Some(&JsonValue::Null));

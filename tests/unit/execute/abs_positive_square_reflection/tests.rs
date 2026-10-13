@@ -71,7 +71,7 @@ fn direct_rules_retain_each_checked_premise() {
                 "{name}.{field}: {evidence}"
             );
             assert!(
-                evidence.contains("\"success\": true"),
+                evidence.contains("\"verification_result\": \"accepted\""),
                 "{name}.{field}: {evidence}"
             );
         }

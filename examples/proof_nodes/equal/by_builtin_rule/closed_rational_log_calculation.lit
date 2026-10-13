@@ -1,7 +1,7 @@
 # Node: direct closed calculation; exact rational log
 # Before (rejected by the baseline release):
 # log(4,2)=1/2
-# Former behavior: JSON success=false and process exit 1.
+# Former behavior: JSON run_result=failure and process exit 1.
 # Now: the same assertion and its exact eval are supported.
 # Boundary: false results and ill-defined inputs still reject; see
 # examples/negative/closed_exact_elementary_calculation/.

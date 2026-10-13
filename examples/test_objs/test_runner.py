@@ -60,19 +60,23 @@ class RunnerBoundaryTests(unittest.TestCase):
     def test_exit_status_and_json_must_agree(self):
         for success, code in [(True, 1), (False, 0)]:
             with self.subTest(success=success, code=code):
-                result = self.evaluate({"kind": "run", "success": success,
-                    "statement_results": [], "session_error": None}, code)
+                result = self.evaluate({"kind": "run",
+                    "run_result": "success" if success else "failure",
+                    "statement_results": [], "session_terminated": False,
+                    "termination": None}, code)
                 self.assertEqual(result["observed"], "infrastructure_failure")
 
     def test_real_verifier_rejection_is_distinct_from_launch_failure(self):
-        envelope = {"kind": "run", "success": False, "statement_results": [
-            {"success": False, "statement": "<wd_failed>", "why_failed": {"phase": "well_defined"}}], "session_error": None}
+        envelope = {"kind": "run", "run_result": "failure", "statement_results": [
+            {"statement_result": "rejected", "statement": "<wd_failed>", "why_failed": {"phase": "well_defined"}}],
+            "session_terminated": False, "termination": None}
         self.assertEqual(self.evaluate(envelope, 1)["observed"], "reject")
         self.assertEqual(self.evaluate(envelope, 2)["observed"], "infrastructure_failure")
 
     def test_current_parse_rejection_protocol(self):
-        envelope = {"kind": "run", "success": False, "statement_results": [],
-            "session_error": "parse_error: cart_dim is removed at line 2"}
+        envelope = {"kind": "run", "run_result": "failure", "statement_results": [],
+            "session_terminated": True,
+            "termination": {"phase": "parse", "message": "parse_error: cart_dim is removed at line 2"}}
         result = self.evaluate(envelope, 1)
         self.assertEqual((result["observed"], result["phase"]), ("reject", "parse"))
         self.assertEqual(self.evaluate(envelope, 2)["observed"], "infrastructure_failure")
@@ -89,9 +93,19 @@ class RunnerBoundaryTests(unittest.TestCase):
         self.assertEqual(result["observed"], "infrastructure_failure")
 
     def test_hidden_failed_statement_cannot_be_positive(self):
-        result = self.evaluate({"kind": "run", "success": True, "statement_results": [
-            {"success": False, "why_failed": {"phase": "search_proof"}}], "session_error": None}, 0)
+        result = self.evaluate({"kind": "run", "run_result": "success", "statement_results": [
+            {"statement_result": "rejected", "why_failed": {"phase": "search_proof"}}],
+            "session_terminated": False, "termination": None}, 0)
         self.assertEqual(result["observed"], "infrastructure_failure")
+
+    def test_missing_termination_state_and_legacy_boolean_are_rejected(self):
+        missing = self.evaluate({"kind": "run", "run_result": "success",
+            "statement_results": [{"statement_result": "accepted"}],
+            "termination": None}, 0)
+        legacy = self.evaluate({"kind": "run", "success": True,
+            "statement_results": [{"success": True}], "session_error": None}, 0)
+        self.assertEqual(missing["observed"], "infrastructure_failure")
+        self.assertEqual(legacy["observed"], "infrastructure_failure")
 
 
 if __name__ == "__main__":

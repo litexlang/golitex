@@ -3,8 +3,8 @@
 
 use super::explain::explain_stmt_kind;
 use super::helper::{
-    array_of_strings, bool_value, empty_string_array, infer_fact_texts_from_store_and_infer,
-    object, output_language, split_have_fact_id_texts, store_fact_texts, string,
+    array_of_strings, empty_string_array, infer_fact_texts_from_store_and_infer, object,
+    output_language, split_have_fact_id_texts, statement_result_value, store_fact_texts, string,
 };
 use crate::execute::execute_by_stmt::{
     ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult,
@@ -781,7 +781,7 @@ fn success_parts(
     object(
         lang,
         vec![
-            ("success", bool_value(true)),
+            ("statement_result", statement_result_value(true)),
             ("statement", string(statement)),
             (
                 "proof_method",
@@ -806,7 +806,7 @@ fn failed(runtime: &Runtime, statement: &str, kind: &str) -> JsonValue {
     object(
         lang,
         vec![
-            ("success", bool_value(false)),
+            ("statement_result", statement_result_value(false)),
             ("statement", string(statement)),
             (
                 "why_failed",

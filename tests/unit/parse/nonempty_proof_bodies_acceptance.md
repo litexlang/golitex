@@ -32,7 +32,7 @@ verification. A checked `impossible` closing statement is itself a process step.
 - `tests/unit/parse/nonempty_proof_bodies.rs`: all five new tests passed.
 - `tests/unit/tokenize/nonempty_blocks.rs`: all three new tests passed.
 - The registered Rust run passed all 32 parser and 19 tokenizer tests.
-- `target/release/litex -lang en -strict -f examples/stmt_nodes/proof_block/nonempty_proof_bodies.lit`: exit 0; `kind: run`, `success: true`, `session_error: null`.
+- `target/release/litex -lang en -strict -f examples/stmt_nodes/proof_block/nonempty_proof_bodies.lit`: exit 0; `kind: run`, `run_result: "success"`, `session_terminated: false`, `termination: null`.
 - 51 release-CLI syntax/proof boundary cases passed; 386 available Stmt checks passed using the existing collector's per-case functions.
 - Singleton indexed-intersection enumeration uses `idx = 1` as its process. Repeating `x $in A(idx)` failed; the corrected theorem succeeded in the same Session and its strict file gate passed.
 - No mathematical goals were weakened and no Litex trust statements were added. AST and Env/Runtime structures were not changed.

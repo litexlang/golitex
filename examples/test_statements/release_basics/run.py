@@ -47,10 +47,11 @@ def main():
         if name=='missing-file':
             try:
                 output=json.loads(proc.stdout)
-                diagnostic_matches=(output.get('kind')=='run' and output.get('success') is False
+                diagnostic_matches=(output.get('kind')=='run' and output.get('run_result') == 'failure'
                     and output.get('statement_results')==[] and not proc.stderr
-                    and isinstance(output.get('session_error'),str)
-                    and output['session_error'].startswith('io_error:'))
+                    and output.get('session_terminated') is True
+                    and isinstance(output.get('termination'),dict)
+                    and output['termination'].get('phase') == 'io')
             except ValueError:
                 diagnostic_matches=False
         records.append(dict(contracts=['C04'],name=name,command=[str(binary),*flags],returncode=proc.returncode,stdout=proc.stdout,stderr=proc.stderr,seconds=time.monotonic()-start,matches=proc.returncode==code and diagnostic_matches))
@@ -81,11 +82,12 @@ def run_case(args,binary,work,case,index):
         except ValueError: errors.append('invalid or missing JSON')
         if isinstance(data,dict):
             data=normalize(data)
-            if data.get('success') is not case['expected']: errors.append('wrong success')
-            if proc.returncode != (0 if data.get('success') is True else 1): errors.append('exit/JSON disagreement')
-            actual=[s.get('success') for s in data.get('statement_results',[])]
+            expected_result='success' if case['expected'] else 'failure'
+            if data.get('run_result') != expected_result: errors.append('wrong run result')
+            if proc.returncode != (0 if data.get('run_result') == 'success' else 1): errors.append('exit/JSON disagreement')
+            actual=[s.get('statement_result') == 'accepted' for s in data.get('statement_results',[])]
             if 'statements' in case and actual!=case['statements']: errors.append(f'statements {actual} != {case["statements"]}')
-            if bool(data.get('session_error'))!=case.get('session_error',False): errors.append('unexpected session-error state')
+            if bool(data.get('session_terminated'))!=case.get('session_error',False): errors.append('unexpected session-termination state')
             if 'values' in case:
                 values=[s['evaluated_object'].replace(' ','') for s in data.get('statement_results',[]) if 'evaluated_object' in s]
                 if values!=case['values']: errors.append(f'values {values} != {case["values"]}')
@@ -112,10 +114,10 @@ def run_session(args,binary,work,session):
             try:
                 output,_=json.JSONDecoder().raw_decode(stream,match.start())
                 if (output.get('kind')!='run' or output.get('target')!='repl'
-                        or type(output.get('success')) is not bool):
+                        or output.get('run_result') not in {'success','failure'}):
                     errors.append('invalid REPL envelope')
                     continue
-                responses.append(output['success'])
+                responses.append(output['run_result']=='success')
             except ValueError:
                 errors.append('invalid REPL JSON')
         if responses!=session['responses']: errors.append(f'frames {responses} != {session["responses"]}')
@@ -137,15 +139,15 @@ def run_entry(args,binary,work,kind,valid):
     start=time.monotonic()
     try:
         proc=subprocess.run(command,cwd=work,text=True,capture_output=True,timeout=args.timeout); data=json.loads(proc.stdout)
-        matches=data.get('success') is valid and proc.returncode==(0 if valid else 1) and not proc.stderr
-        if kind=='file': matches=matches and [s['success'] for s in data['statement_results']]==[True,valid]
+        matches=data.get('run_result') == ('success' if valid else 'failure') and proc.returncode==(0 if valid else 1) and not proc.stderr
+        if kind=='file': matches=matches and [s['statement_result'] == 'accepted' for s in data['statement_results']]==[True,valid]
         return dict(contracts=case['contracts'],name=case['name'],code=source,expected=valid,command=command,returncode=proc.returncode,stdout=proc.stdout,stderr=proc.stderr,output=data,seconds=time.monotonic()-start,matches=matches)
     except (subprocess.TimeoutExpired,ValueError) as exc:
         return dict(contracts=case['contracts'],name=case['name'],code=source,expected=valid,matches=False,errors=[type(exc).__name__],seconds=time.monotonic()-start)
 
 
 def normalize(value):
-    names={'成功':'success','语句结果':'statement_results','会话错误':'session_error','求值结果':'evaluated_object'}
+    names={'运行结果':'run_result','语句判定':'statement_result','语句结果':'statement_results','会话已终止':'session_terminated','终止信息':'termination','求值结果':'evaluated_object'}
     if isinstance(value,dict): return {names.get(k,k):normalize(v) for k,v in value.items()}
     if isinstance(value,list): return [normalize(v) for v in value]
     return value

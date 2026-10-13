@@ -12,7 +12,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, ObjWellDefinedProof, VerifyObjWellDefinedResult,
 };
 use crate::execute::ParamTypeWellDefinedProof;
-use crate::json_output::helper::{object_for, string};
+use crate::json_output::helper::{object_for, string, well_defined_result_value};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -38,14 +38,14 @@ pub(in crate::json_output) fn project_verify_obj_wd(
         VerifyObjWellDefinedResult::Success(proof) => object_for(
             runtime,
             vec![
-                ("success", JsonValue::Bool(true)),
+                ("well_defined_result", well_defined_result_value(true)),
                 ("proof", project_obj_wd_proof(proof, runtime)),
             ],
         ),
         VerifyObjWellDefinedResult::Failed { obj, reason: f } => object_for(
             runtime,
             vec![
-                ("success", JsonValue::Bool(false)),
+                ("well_defined_result", well_defined_result_value(false)),
                 ("obj", string(obj.readable_string())),
                 ("phase", string("well_defined")),
                 (
@@ -173,14 +173,14 @@ pub(in crate::json_output) fn project_verify_equal_wd(
         VerifyEqualFactWellDefinedResult::Success(proof) => object_for(
             runtime,
             vec![
-                ("success", JsonValue::Bool(true)),
+                ("well_defined_result", well_defined_result_value(true)),
                 ("proof", project_equal_wd_proof(proof, runtime)),
             ],
         ),
         VerifyEqualFactWellDefinedResult::Failed(failed) => object_for(
             runtime,
             vec![
-                ("success", JsonValue::Bool(false)),
+                ("well_defined_result", well_defined_result_value(false)),
                 ("phase", string("well_defined")),
                 (
                     "failure",
@@ -222,7 +222,7 @@ pub(super) fn project_verify_fact_wd_result(
             object_for(
                 runtime,
                 vec![
-                    ("success", JsonValue::Bool(true)),
+                    ("well_defined_result", well_defined_result_value(true)),
                     ("proof", project_fact_wd_proof(proof, runtime)),
                 ],
             )
@@ -230,7 +230,7 @@ pub(super) fn project_verify_fact_wd_result(
         crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Failed(f) => object_for(
             runtime,
             vec![
-                ("success", JsonValue::Bool(false)),
+                ("well_defined_result", well_defined_result_value(false)),
                 ("phase", string("well_defined")),
                 (
                     "failure",

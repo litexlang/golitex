@@ -12,7 +12,7 @@ use crate::execute::{
     ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult, InducCaseBodySuccess,
     InducCaseListSuccess,
 };
-use crate::json_output::helper::{bool_value, object_for, string};
+use crate::json_output::helper::{object_for, statement_result_value, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -25,7 +25,7 @@ pub(super) fn project_by_induc(
         ExecByInducStmtResult::Success(s) => object_for(
             rt,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string(kind)),
                 ("parameter", string(s.parameter.name.clone())),
                 ("induc_from", string(s.induc_from.readable_string())),
@@ -60,7 +60,7 @@ pub(super) fn project_by_induc(
         ExecByInducStmtResult::Failed(f) => object_for(
             rt,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string(kind)),
                 ("failure", project_induc_failure(f, rt)),
             ],
@@ -76,7 +76,7 @@ pub(super) fn project_by_strong_induc(
         ExecByStrongInducStmtResult::Success(s) => object_for(
             rt,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_strong_induc")),
                 ("parameter", string(s.parameter.name.clone())),
                 ("induc_from", string(s.induc_from.readable_string())),
@@ -111,7 +111,7 @@ pub(super) fn project_by_strong_induc(
         ExecByStrongInducStmtResult::Failed(f) => object_for(
             rt,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("by_strong_induc")),
                 ("failure", project_strong_induc_failure(f, rt)),
             ],
@@ -271,7 +271,7 @@ pub(super) fn project_induc_definition(
         ExecHaveFnByInducStmtResult::Failed(f) => object_for(
             rt,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("have_fn_by_induc")),
                 ("failure", project_induc_definition_failure(f, rt)),
             ],
@@ -286,7 +286,7 @@ fn project_induc_definition_success(
     object_for(
         rt,
         vec![
-            ("success", bool_value(true)),
+            ("statement_result", statement_result_value(true)),
             ("kind", string("have_fn_by_induc")),
             ("statement", string(s.statement.readable_string())),
             (
@@ -361,7 +361,7 @@ pub(super) fn project_induc_algo(result: &ExecDefAlgoByInducStmtResult, rt: &Run
         ExecDefAlgoByInducStmtResult::Success(s) => object_for(
             rt,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("def_algo_by_induc")),
                 ("statement", string(s.statement.readable_string())),
                 (
@@ -373,7 +373,7 @@ pub(super) fn project_induc_algo(result: &ExecDefAlgoByInducStmtResult, rt: &Run
         ExecDefAlgoByInducStmtResult::Failed(f) => object_for(
             rt,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("def_algo_by_induc")),
                 (
                     "failure",

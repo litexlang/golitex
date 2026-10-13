@@ -65,7 +65,10 @@ fn render_latex_artifact(
     // Stable keys let scripts extract content regardless of the prose locale.
     JsonValue::object_from(vec![
         ("kind".into(), JsonValue::String("artifact".into())),
-        ("success".into(), JsonValue::Bool(content.is_some())),
+        (
+            "artifact_result".into(),
+            crate::json_output::helper::artifact_result_value(content.is_some()),
+        ),
         ("artifact".into(), JsonValue::String("latex".into())),
         ("format".into(), JsonValue::String("latex".into())),
         ("target".into(), JsonValue::String(target.into())),

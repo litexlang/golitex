@@ -85,7 +85,7 @@ Litex 还包含[到 Lean 的编译器设计](#compatibility)，探索把受支�
 <tbody>
 <tr>
 <td><pre><code class="language-json">{
-  "success": true,
+  "statement_result": "accepted",
   "statement": "1 + 1 = 2",
   "proof_method": {
     "type": "by_closed_calculation",
@@ -96,7 +96,7 @@ Litex 还包含[到 Lean 的编译器设计](#compatibility)，探索把受支�
   "infers": []
 }</code></pre></td>
 <td><pre><code class="language-json">{
-  "成功": true,
+  "语句判定": "accepted",
   "语句": "1 + 1 = 2",
   "证明方法": {
     "类型": "封闭计算",
@@ -123,7 +123,7 @@ $is_odd(3)
 
 ```json
 {
-  "success": true,
+  "statement_result": "accepted",
   "statement": "$is_odd(3)",
   "proof_method": {
     "type": "by_definition",
@@ -664,21 +664,21 @@ a + 1 = 2
 ```json
 {
   "kind": "run",
-  "success": true,
+  "run_result": "success",
   "target": "eval",
   "path": null,
   "detail": "normal",
-  "session_error": null,
+  "session_terminated": false, "termination": null,
   "statement_results": [
     {
-      "success": true,
+      "statement_result": "accepted",
       "statement": "let a = 1",
       "proof_method": { "type": "define_obj" },
       "stores": ["a = 1"],
       "infers": []
     },
     {
-      "success": true,
+      "statement_result": "accepted",
       "statement": "a + 1 = 2",
       "proof_method": {
         "type": "builtin_rule",
@@ -699,7 +699,7 @@ a + 1 = 2
 | 读者想知道什么 | 在记录里看哪里 |
 | --- | --- |
 | 跑了哪一句 | `statement` |
-| 是否成功 | 语句的 `success`，以及整次运行的 `success` / `session_error` |
+| 是否成功 | 语句的 `statement_result`，以及整次运行的 `run_result` / `session_terminated` / `termination` |
 | 为什么成立 | `proof_method`（规则名、引用、定义路径等） |
 | 为什么停下 | `why_failed.phase` 与 `why_failed.goal` |
 | 什么进入了后续上下文 | `stores` 与 `infers` |
@@ -716,14 +716,14 @@ Normal JSON 是面向人与工具的摘要。完整的 verify/exec 证据树不�
 ```json
 {
   "kind": "run",
-  "success": false,
+  "run_result": "failure",
   "target": "eval",
   "path": null,
   "detail": "normal",
-  "session_error": null,
+  "session_terminated": false, "termination": null,
   "statement_results": [
     {
-      "success": false,
+      "statement_result": "rejected",
       "statement": "1 = 0",
       "why_failed": {
         "phase": "search_proof",
@@ -1335,12 +1335,12 @@ prop converges_to(s fn(n N) R, a R):
 ```json
 {
   "kind": "run",
-  "success": false,
+  "run_result": "failure",
   "detail": "normal",
-  "session_error": null,
+  "session_terminated": false, "termination": null,
   "statement_results": [
     {
-      "success": false,
+      "statement_result": "rejected",
       "statement": "...",
       "why_failed": {
         "phase": "search_proof",

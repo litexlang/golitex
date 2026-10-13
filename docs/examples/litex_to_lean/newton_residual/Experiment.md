@@ -4,8 +4,9 @@ This compiler experiment, selected on 2026-10-13, targets the residual estimate
 for every natural index. The single-step identity and the positive-real update
 have completed compilation and native consumption. The compiler now also
 consumes bounded absolute-value, natural-power, recursive-function and
-zero-based induction results. Acceptance of the complete bound and its native
-consumer is still pending.
+zero-based induction results. The complete source passed strict verification
+and whole-file compilation. Lean acceptance of the complete generated bound
+and its native consumer is still pending.
 
 ## The mathematical target
 
@@ -206,9 +207,10 @@ does not search for replacement evidence in the final environment.
 
 ## Current evidence and remaining gates
 
-The compiler regression suite passed 407 tests. Subsequent focused checks
-passed six known-forall equality tests and three function-expansion Abs tests,
-including evidence-corruption controls. Smaller generated recursive graphs,
+The final compiler regression suite passed 429 tests, and the separate JSON
+suite passed 78 tests. Selected induction, theorem-capture and invocation
+gates also passed; their overlapping filters are not added to a combined count.
+These checks include evidence-corruption controls. Smaller generated recursive graphs,
 recurrence steps, zero-based induction and arithmetic fixtures passed ordinary
 pinned Lean checks. The four quotient-versus-zero orientations and direct and
 symmetric known-forall equalities were checked from their actual generated
@@ -216,8 +218,8 @@ files. The generated prefix through the scaled residual identity also passed
 its recorded resource-bounded Lean check. These results establish the reviewed
 routes and that prefix, not the complete Newton estimate.
 
-The standalone full source has passed strict verification. Whole-file
-generation, ordinary Lean checking of the complete generated proof, and a
+The standalone full source has passed strict verification and whole-file
+generation. Ordinary Lean checking of the complete generated proof and a
 native all-index Adapter/Final with live dependence on the generated bound
 remain pending, together with final regeneration and standard-only axiom
 audits. A partial prefix or a resource-bounded check does not close those gates.
@@ -245,8 +247,8 @@ accepted artifact.
    and step scopes are replayed through the proved zero-based integer/natural
    bridge. Both complete Newton inductions and their final bound still require
    the whole-file and native gates.
-6. **Complete native consumption — pending.** Generate the whole Litex file and export
-   the residual estimate through Adapter to a theorem about an ordinary
+6. **Complete native consumption — pending.** Check the complete generated Lean
+   proof and export the residual estimate through Adapter to a theorem about an ordinary
    `ℕ → ℝ` sequence. Require a live dependency on the generated bound, not an
    independent Mathlib induction in Adapter.
 
@@ -287,6 +289,6 @@ target/release/litex -strict -lean -f lean/examples/newton_positive_update/state
 ```
 
 The strict commands verify the showcase and standalone full proof source.
-The full-proof generation command is a pending acceptance gate, not a receipt
-of a checked all-index Lean theorem. The final two commands generate the
+The full-proof generation command completed successfully. Its output still
+requires the complete Lean and native gates above. The final two commands generate the
 maintained supporting pairs.

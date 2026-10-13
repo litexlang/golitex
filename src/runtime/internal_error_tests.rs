@@ -43,12 +43,24 @@ fn internal_error_merge_collision_returns_explicit_litex_bug() {
     ] {
         let fields = json.as_object().unwrap();
         assert_eq!(
-            fields.get("success").unwrap(),
-            &crate::knowledge_base::JsonValue::Bool(false)
+            fields.get("run_result").unwrap().as_str().unwrap(),
+            "failure"
         );
         assert_eq!(
-            fields.get("session_error").unwrap().as_str().unwrap(),
+            fields
+                .get("termination")
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .get("message")
+                .unwrap()
+                .as_str()
+                .unwrap(),
             error.to_string()
+        );
+        assert_eq!(
+            fields.get("session_terminated"),
+            Some(&crate::knowledge_base::JsonValue::Bool(true))
         );
     }
     let extracted = crate::run::run_extract_executable_code::extract_launch_error_json(&error);

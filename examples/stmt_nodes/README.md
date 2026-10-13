@@ -19,7 +19,7 @@ negative controls in the focused instantiation regression.
 target/release/litex -f <this-file>
 ```
 
-Require exit 0 and parsed JSON with `kind: run`, `success: true`, and `session_error: null`. Stub / not-yet-wired stmt arms are **omitted**.
+Require exit 0 and parsed JSON with `kind: run`, `run_result: "success"`, and `session_terminated: false`, `termination: null`. Stub / not-yet-wired stmt arms are **omitted**.
 
 ## Layout
 

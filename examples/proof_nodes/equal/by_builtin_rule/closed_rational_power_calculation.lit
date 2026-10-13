@@ -2,7 +2,7 @@
 # Before (fresh baseline release rejected both lines at Pow well-definedness):
 # 8^(1/3)=2
 # eval 8^(1/3)
-# Former requirement: 1/3 $in Z; exit 1 and JSON success=false.
+# Former requirement: 1/3 $in Z; exit 1 and JSON run_result=failure.
 # Now: closed positive-rational bases admit rational exponents; exact roots
 # followed by checked integer powers supply calculate and eval values.
 # Boundary: irrational results are not approximated, checked overflow declines,

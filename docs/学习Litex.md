@@ -62,7 +62,7 @@ litex -lang en -strict -f first.lit
 
 `*` 表示乘法，`^` 表示乘方。`=` 陈述数学相等，不是给左边赋新值的命令。乘法要显式写出：用 `2 * x`，不要写 `2x`。
 
-成功的批量检查在 JSON 结果里有 `"success": true` 且 `"session_error": null`。网站可能把结果呈现得更简单。交互式命令行 REPL 对成功输入块打印 `success`。第 6 部分会更仔细地读失败结果。
+成功的批量检查在 JSON 结果里有 `"run_result": "success"`、`"session_terminated": false` 且 `"termination": null`。网站可能把结果呈现得更简单。交互式命令行 REPL 对成功输入块打印 `success`。第 6 部分会更仔细地读失败结果。
 
 想直观看到 Litex 如何检查一条事实，可以看 [Litex 验证流程图](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)。
 
@@ -383,16 +383,16 @@ x != 0
 
 ### 在正确层级阅读结果
 
-本地批量命令如 `litex -lang en -strict -f first.lit` 返回 JSON。先看整体 `success`，再检查 `statement_results` 中的失败项。`session_error` 报告硬错误；普通验证失败时它通常为 null。失败批处理以非零状态退出。成功批处理要求退出状态为零且 JSON 结果成功。
+本地批量命令如 `litex -lang en -strict -f first.lit` 返回 JSON。先看整体 `run_result`，再检查 `statement_results` 中的拒绝项。`session_terminated` 和 `termination` 报告硬错误；普通验证失败时它们分别为 false 和 null。失败批处理以非零状态退出。成功批处理要求退出状态为零且 `run_result == "success"`。
 
 下面是成功文件结果的**选字段摘录**；其他字段（含语句结果）已省略：
 
 ```json
 {
   "kind": "run",
-  "success": true,
+  "run_result": "success",
   "target": "file",
-  "session_error": null
+  "session_terminated": false, "termination": null
 }
 ```
 
@@ -400,7 +400,7 @@ x != 0
 
 ```json
 {
-  "success": false,
+  "statement_result": "rejected",
   "why_failed": {
     "phase": "claim",
     "failure": {

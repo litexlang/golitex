@@ -119,7 +119,7 @@ fn scalar_rules_retain_checked_premise_citations() {
                 "{name}.{field}: {evidence}"
             );
             assert!(
-                evidence.contains("\"success\": true"),
+                evidence.contains("\"verification_result\": \"accepted\""),
                 "{name}.{field}: {evidence}"
             );
         }

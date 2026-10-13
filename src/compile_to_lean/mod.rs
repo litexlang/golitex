@@ -22,6 +22,7 @@ mod compile_known_application;
 mod compile_let_stmt_result;
 mod compile_nonzero_factor_inference;
 mod compile_order_bound_inferences;
+mod compile_positive_power_inference;
 mod compile_recursive_unfold_result;
 mod compile_release_and_expand_result;
 mod compile_run;
@@ -67,6 +68,10 @@ mod positive_function_target_tests;
 mod positive_membership_tests;
 #[cfg(test)]
 mod positive_order_strategy_tests;
+#[cfg(test)]
+mod positive_power_cursor_tests;
+#[cfg(test)]
+mod positive_power_inference_tests;
 #[cfg(test)]
 mod prop_domain_tests;
 #[cfg(test)]

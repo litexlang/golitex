@@ -7,7 +7,7 @@ use crate::execute::execute_by_stmt::{
     BuiltinThmApplication, ExecByThmStmtFailed, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult,
     ResolvedTheoremCallee,
 };
-use crate::json_output::helper::{bool_value, object_for, string};
+use crate::json_output::helper::{object_for, statement_result_value, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -250,7 +250,7 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
         ExecReleaseThmStmtResult::Success(s) => object_for(
             rt,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("release_thm")),
                 ("thm_name", string(s.call.name.local_name().to_string())),
                 ("call", project_theorem_call(&s.call, rt)),
@@ -308,7 +308,7 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
         ExecReleaseThmStmtResult::Failed(f) => object_for(
             rt,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("release_thm")),
                 ("failure", project_release_thm_failure(f, rt)),
             ],

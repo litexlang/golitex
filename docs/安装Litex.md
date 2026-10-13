@@ -60,7 +60,7 @@ litex -e '1 = 1'
 
 这两条命令只检查可执行文件，不会使用标准库。下面描述的是当前源码版本的输出；旧安装版的选项和 JSON 字段可能不同。
 
-`-version` 打印一行简短文本。默认英文模式下，`-e` 返回一份 Normal JSON `run` 文档；成功的批量检查以 `0` 退出，且包含 `"success": true` 和 `"session_error": null`。程序若需要英文 JSON 键，请使用 `-lang en`；`-lang zh` 会将这些键本地化。
+`-version` 打印一行简短文本。默认英文模式下，`-e` 返回一份 Normal JSON `run` 文档；成功的批量检查以 `0` 退出，且包含 `"run_result": "success"`、`"session_terminated": false` 和 `"termination": null`。程序若需要英文 JSON 键，请使用 `-lang en`；`-lang zh` 会将这些键本地化。
 
 若要检查安装包中的兼容模块，可在 Litex 源码目录之外新建项目目录，并创建以下两个文件。导入检查的是模块加载；下面两条陈述检查的是内核原生词汇，并不引用 std 中的声明：
 
@@ -86,7 +86,7 @@ $dvd(12, 3)
 litex -lang en -f smoke.lit
 ```
 
-应以 `0` 退出，并包含 `"kind": "run"`、`"success": true` 和 `"session_error": null`。若返回 `"session_error": "failed to import project"`，请先检查随包的 std 中是否有 `basics/litex.config`，以及二进制和 std 是否来自同一版本；若设置过 `LITEX_STD_PATH`，也请检查或取消该覆盖路径。该消息本身不能区分路径错误和其他导入失败。
+应以 `0` 退出，并包含 `"kind": "run"`、`"run_result": "success"`、`"session_terminated": false` 和 `"termination": null`。若返回 `"session_terminated": true` 且 `termination.phase == "import"`，请先检查随包的 std 中是否有 `basics/litex.config`，以及二进制和 std 是否来自同一版本；若设置过 `LITEX_STD_PATH`，也请检查或取消该覆盖路径。
 
 如果要检查当前检出的源码，而不是另行安装的发行版，先安装 [Rust/Cargo](https://www.rust-lang.org/tools/install)，再从仓库根目录运行：
 
