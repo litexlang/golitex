@@ -85,7 +85,7 @@ below records the completed gate scope and counts.
   all 916 executable README/docs fences pass the repository fence runner.
 - Complete Normal JSON for `one_step_store_only.lit` and
   `additive_cancellation.lit` equals the captured pre-migration output.
-  `$prime(4)` still fails ordinarily with `session_error: null`.
+  `$prime(4)` still fails ordinarily with `session_terminated: false`, `termination: null`.
 - Thirteen existing pairs pass strict source execution, actual compiler
   generation and Lean 4.31.0 with warnings as errors: additive, subtractive,
   multiplicative, common-denominator and nonzero-numerator cancellation;

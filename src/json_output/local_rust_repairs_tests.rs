@@ -32,7 +32,10 @@ fn field<'a>(value: &'a JsonValue, key: &str) -> &'a JsonValue {
 }
 
 fn failure(value: &JsonValue) -> &JsonValue {
-    assert_eq!(field(value, "success"), &JsonValue::Bool(false));
+    assert_eq!(
+        field(value, "statement_result").as_str().ok(),
+        Some("rejected")
+    );
     field(field(value, "why_failed"), "failure")
 }
 
@@ -70,7 +73,10 @@ fn sketch_failure_identifies_the_actual_nested_step() {
     let failed = failure(&normal);
     assert_eq!(field(failed, "step_index"), &JsonValue::Number(1.0));
     let nested = field(failed, "result");
-    assert_eq!(field(nested, "success"), &JsonValue::Bool(false));
+    assert_eq!(
+        field(nested, "statement_result").as_str().ok(),
+        Some("rejected")
+    );
     assert_eq!(field(nested, "statement").as_str().unwrap(), "0 = 1");
     let (_, result) = run("sketch:\n    1 = 1\n    0 = 0\n");
     assert!(!result.is_failed());
@@ -119,15 +125,26 @@ fn detailed_nonempty_witness_preserves_checked_membership_and_body() {
     let (rt, result) = run("witness $is_nonempty_set({1, 2}) from 1:\n    1 $in {1, 2}\n");
     assert!(!result.is_failed());
     let detailed = project_stmt_detailed(&result, &rt);
-    for key in ["obj_well_defined", "set_well_defined", "membership_check"] {
+    for key in ["obj_well_defined", "set_well_defined"] {
         assert_eq!(
-            field(field(&detailed, key), "success"),
-            &JsonValue::Bool(true)
+            field(field(&detailed, key), "well_defined_result")
+                .as_str()
+                .ok(),
+            Some("accepted")
         );
     }
+    assert_eq!(
+        field(field(&detailed, "membership_check"), "verification_result")
+            .as_str()
+            .ok(),
+        Some("accepted")
+    );
     let body = field(&detailed, "proof_steps").as_array().unwrap();
     assert_eq!(body.len(), 1);
-    assert_eq!(field(&body[0], "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        field(&body[0], "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     assert!(field(&detailed, "membership_check")
         .stringify()
         .contains("$in"));
@@ -141,20 +158,30 @@ fn detailed_existential_witness_preserves_ambient_and_body_evidence() {
     assert!(!result.is_failed());
     let detailed = project_stmt_detailed(&result, &rt);
     field(&detailed, "exist_fact_well_defined");
-    for key in [
-        "witness_obj_well_defined",
-        "witness_type_checks",
-        "proof_steps",
-        "body_checks",
-    ] {
+    for key in ["witness_obj_well_defined"] {
         let checks = field(&detailed, key).as_array().unwrap();
         assert_eq!(checks.len(), 1, "{key}");
         assert_eq!(
-            field(&checks[0], "success"),
-            &JsonValue::Bool(true),
+            field(&checks[0], "well_defined_result").as_str().ok(),
+            Some("accepted"),
             "{key}"
         );
     }
+    for key in ["witness_type_checks", "body_checks"] {
+        let checks = field(&detailed, key).as_array().unwrap();
+        assert_eq!(checks.len(), 1, "{key}");
+        assert_eq!(
+            field(&checks[0], "verification_result").as_str().ok(),
+            Some("accepted"),
+            "{key}"
+        );
+    }
+    let proof_steps = field(&detailed, "proof_steps").as_array().unwrap();
+    assert_eq!(proof_steps.len(), 1);
+    assert_eq!(
+        field(&proof_steps[0], "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     assert_eq!(field(&detailed, "uniqueness_check"), &JsonValue::Null);
     assert!(field(&detailed, "witness_type_checks")
         .stringify()
@@ -166,8 +193,10 @@ fn detailed_existential_witness_preserves_ambient_and_body_evidence() {
     assert!(!result.is_failed());
     let unique = project_stmt_detailed(&result, &rt);
     assert_eq!(
-        field(field(&unique, "uniqueness_check"), "success"),
-        &JsonValue::Bool(true)
+        field(field(&unique, "uniqueness_check"), "verification_result")
+            .as_str()
+            .ok(),
+        Some("accepted")
     );
     for code in [
         "witness exist x N st {x = 1} from (-1):\n    1 = 1\n",

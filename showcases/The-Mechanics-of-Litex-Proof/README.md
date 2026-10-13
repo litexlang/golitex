@@ -14,7 +14,7 @@ target/release/litex -r scripts/The-Mechanics-of-Litex-Proof/textbook
 ```
 
 For a configured chapter checkpoint, use `-strict -f` with its path. Current
-CLI output must report `success: true`, `session_error: null` and exit code 0.
+CLI output must report `run_result: "success"`, `session_terminated: false`, `termination: null` and exit code 0.
 The repo JSON summarizes success; it does not expose per-export statement
 counts. The complete configuration contains 14 exports; no active trust, axiom or
 abstract proposition remains.

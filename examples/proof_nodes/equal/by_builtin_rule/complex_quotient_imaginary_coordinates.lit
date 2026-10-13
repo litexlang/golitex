@@ -4,7 +4,7 @@
 #     C_abs(v)!=0
 #     C_abs(v)^2!=0
 #     img(u/v)=(img(u)*re(v)-re(u)*img(v))/C_abs(v)^2
-# Former behavior: strict run success=false, phase search_proof.
+# Former verifier behavior: rejected in the search_proof phase.
 # Now (verified directly):
 forall u C,v C*:
     C_abs(v)!=0

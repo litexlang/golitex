@@ -2,9 +2,17 @@ use super::helper::validate_namespace;
 use super::helper::verified_subject;
 use super::source_position::{SourceOwner, SourcePosition};
 use super::LeanCompileError;
+use crate::execute::execute_by_stmt::{
+    ByInducBodySuccess, ExecByDefStmtResult, ExecByInducStmtResult, ExecByStmtResult,
+    ExecByThmStmtResult, ExecReleaseThmStmtResult,
+};
+use crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult;
+use crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult;
 use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::execute::ExecDefPropStmtResult;
+use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualFactResult, InferResult};
 
 /// Compile one complete execution result by dispatching its original result enums.
 /// Runtime supplies read-only exact citation subjects; source positions enforce
@@ -255,6 +263,9 @@ fn fact_uses_sets(fact: &Fact) -> bool {
 }
 
 fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
+    if statement_has_set_inference(statement) {
+        return true;
+    }
     match statement {
         ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
             ExecClaimStmtResult::Success(proof),
@@ -282,6 +293,152 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
                     }
                 }
         }
+        _ => false,
+    }
+}
+
+// Inference may introduce R+ even when the authored statement mentions only
+// natural numbers. Derive that semantic dependency from the reviewed original
+// rule/store tree; no generated text or compiler-owned dependency registry.
+fn store_has_set_inference(store: &StoreFactAndInferResult) -> bool {
+    let atomic_has_set_inference = |infer: &InferAtomicFactResult| {
+        let InferAtomicFactResult::EqualFact(rules) = infer else {
+            return false;
+        };
+        rules.iter().any(|rule| {
+            let InferEqualFactResult::PositiveRealPower(power) = rule else { return false; };
+            power.transports.iter().any(|transport| {
+                transport.derived.store.atomic_components().iter().any(|(_, fact)| {
+                    matches!(fact, AtomicFact::InFact(member) if member.set == Obj::StandardSet(StandardSet::RPos))
+                })
+            })
+        })
+    };
+    match &store.infer {
+        Some(InferResult::AtomicFact(infer)) => atomic_has_set_inference(infer),
+        Some(InferResult::AndFact(infer)) => infer.components.iter().any(atomic_has_set_inference),
+        Some(InferResult::ChainFact(infer)) => infer
+            .adjacent_infers
+            .iter()
+            .any(|edge| atomic_has_set_inference(&edge.infer)),
+        _ => false,
+    }
+}
+
+fn domains_have_set_inference(domains: &[AssumeDomFactResult]) -> bool {
+    domains
+        .iter()
+        .any(|domain| store_has_set_inference(&domain.store_and_infer))
+}
+
+fn verify_has_set_inference(proof: &VerifyFactResult) -> bool {
+    match proof {
+        VerifyFactResult::ForallFact(proof) => match proof.as_ref() {
+            VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(proof)) => {
+                domains_have_set_inference(&proof.assumed_dom_facts)
+                    || proof.proved_then_facts.iter().any(|proved| {
+                        store_has_set_inference(&proved.store_and_infer)
+                            || verify_has_set_inference(&proved.verify_result)
+                    })
+            }
+            VerifyForallFactResult::Success(VerifyForallFactProof::ByKnownForallFact(proof)) => {
+                domains_have_set_inference(&proof.well_defined.assumed_dom_facts)
+            }
+            VerifyForallFactResult::Success(VerifyForallFactProof::ByEmptyParameterDomain(
+                proof,
+            )) => domains_have_set_inference(&proof.well_defined.assumed_dom_facts),
+            _ => false,
+        },
+        VerifyFactResult::AndFact(proof) => {
+            matches!(proof.as_ref(), VerifyAndFactResult::Success(proof) if proof.components.iter().any(verify_has_set_inference))
+        }
+        VerifyFactResult::ChainFact(proof) => {
+            matches!(proof.as_ref(), VerifyChainFactResult::Success(proof) if proof.adjacent.iter().any(verify_has_set_inference))
+        }
+        _ => false,
+    }
+}
+
+fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
+    match statement {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => {
+            store_has_set_inference(&proof.store_and_infer_result)
+                || verify_has_set_inference(&proof.verify_result)
+        }
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(proof)),
+        )) => proof
+            .store_and_infer_result
+            .store_and_infer_results
+            .iter()
+            .any(|store| store_has_set_inference(store)),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+            ExecDefPropStmtResult::Success(proof),
+        )) => {
+            proof
+                .defined_params
+                .store_and_infer_results
+                .iter()
+                .any(|store| store_has_set_inference(store))
+                || domains_have_set_inference(&proof.assumed_iff_facts)
+        }
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(proof),
+        )) => {
+            store_has_set_inference(&proof.stored)
+                || match &proof.body {
+                    ExecDefThmBodyProof::Forall(body) => {
+                        domains_have_set_inference(&body.assumed_dom_facts)
+                            || body.conclusion_proofs.iter().any(verify_has_set_inference)
+                    }
+                    ExecDefThmBodyProof::NonForall(body) => {
+                        verify_has_set_inference(&body.conclusion_proof)
+                    }
+                }
+        }
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
+            ExecClaimStmtResult::Success(proof),
+        )) => {
+            store_has_set_inference(&proof.stored)
+                || proof
+                    .body
+                    .conclusion_proofs()
+                    .iter()
+                    .any(verify_has_set_inference)
+                || matches!(&proof.body, crate::execute::execute_proof_block_stmt::ExecClaimBodyProof::Forall(body) if domains_have_set_inference(&body.assumed_dom_facts))
+        }
+        ExecStmtResult::By(ExecByStmtResult::Induc(ExecByInducStmtResult::Success(proof))) => {
+            let (base, step) = match &proof.body {
+                ByInducBodySuccess::Unstructured { base, step }
+                | ByInducBodySuccess::Structured { base, step } => (base, step),
+            };
+            proof.goals.iter().any(fact_uses_sets)
+                || store_has_set_inference(&proof.goal_domain.store_and_infer)
+                || [base, step].iter().any(|case| {
+                    domains_have_set_inference(&case.assumptions)
+                        || case.proof_steps.iter().any(statement_uses_sets)
+                        || case.goals_verified.iter().any(verify_has_set_inference)
+                })
+                || store_has_set_inference(&proof.stored)
+        }
+        ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(proof))) => {
+            store_has_set_inference(&proof.stored) || verify_has_set_inference(&proof.proof)
+        }
+        ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => proof
+            .type_stores
+            .iter()
+            .chain(&proof.dom_stores)
+            .chain(&proof.returned_conclusions)
+            .chain(std::iter::once(&proof.stored))
+            .any(store_has_set_inference),
+        ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+            ExecReleaseThmStmtResult::Success(proof),
+        )) => proof
+            .type_stores
+            .iter()
+            .chain(&proof.dom_stores)
+            .chain(&proof.stored)
+            .any(store_has_set_inference),
         _ => false,
     }
 }

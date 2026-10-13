@@ -4,7 +4,7 @@
 #     a<=b
 #     =>:
 #         sign(a)<=sign(b)
-# Former behavior: strict run success=false, phase search_proof.
+# Former verifier behavior: rejected in the search_proof phase.
 # Now (verified directly):
 forall a,b R:
     a<=b

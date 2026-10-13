@@ -31,5 +31,5 @@ forall a R:
 # Boundary: fn(S power_set(R), x S) R and dependent return sets reject at parse.
 # WD independently rejects such objects when constructed without the parser.
 # Evidence: target/release/litex -strict -f examples/wd/fixed_function_signature_scopes.lit
-# Require exit 0, JSON success:true, and session_error:null (current CLI has no -runner).
+# Require exit 0, run_result=success, session_terminated=false, termination=null (current CLI has no -runner).
 # Tests: cargo test --release function_signature_scope_tests -- --nocapture

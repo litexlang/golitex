@@ -464,8 +464,8 @@ target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statem
 `x_0 = 1`、`x_(n+1) = (x_n + 2/x_n)/2`，证明所有自然数上的
 `|x_n^2 - 2| <= 4*(1/4)^(2^n)`。证明串起除法合法性、残差恒等式、迭代下界、
 二次收缩以及两个归纳。
-[独立的完整证明源码](../lean/examples/newton_residual_bound/statement.lit)已通过严格验证，
-手写 Lean 对照也通过其独立检查；完整编译与原生 all-n 接口的验收仍待完成。
+[独立的完整证明源码](../lean/examples/newton_residual_bound/statement.lit)已通过严格验证和整文件编译，
+手写 Lean 对照也通过其独立检查；完整生成 Lean 与原生 all-n 接口的验收仍待完成。
 
 已接通的是其中的[单步恒等式源码](../lean/examples/newton_residual_identity/statement.lit)
 和[实际生成的 Lean](../lean/examples/newton_residual_identity/statement.lean)。
@@ -493,10 +493,10 @@ Core 的函数签名按已确认的设计存放实际语义集合及其 sethood 
 仍在范围外。参数、保护条件、调用 WD、分支和存储结果保留原始身份；
 已知 forall 等式引用与定理 release 消费实际捕获的参数匹配和有序要求。
 
-编译器回归套件通过 407 项测试，其后六项已知 forall 等式测试和三项 Abs 展开测试
-也通过。较小的实际生成递归图、递推式和算术夹具通过了普通 pinned Lean 检查；
+最终编译器回归套件通过 429 项测试，独立 JSON 套件通过 78 项测试；
+相关结果捕获和定理调用的专项检查也通过。较小的实际生成递归图、递推式和算术夹具通过了普通 pinned Lean 检查；
 推进到缩放残差恒等式的生成前缀也通过了所记录的有资源上限的检查。
-这些记录验证的是所审查的路线和该前缀。整文件生成、完整生成 Lean 检查、最终再生成，
+这些记录验证的是所审查的路线和该前缀。整文件生成已通过，完整生成 Lean 检查、最终再生成，
 以及依赖生成界证明的原生 all-n 接口和标准公理审计仍待完成。
 [实验说明](examples/litex_to_lean/newton_residual/Experiment.md)保留这一验收边界。
 这里的目标是方程残差；不据此声称根距离估计、源码更短或运行更快。

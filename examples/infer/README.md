@@ -65,7 +65,7 @@ not recursively inferred again; new consequences are retained.
 target/release/litex -strict -f examples/infer/atomic/set_builder_projection_replay.lit
 ```
 
-Require exit 0, root `success: true`, and `session_error: null`.
+Require exit 0, root `run_result: "success"`, and `session_terminated: false`, `termination: null`.
 
 `atomic/template_set_builder_carrier.lit` checks membership projection through
 a checked `have ... = ...` template whose RHS is a set-builder. The original
@@ -81,7 +81,7 @@ membership through the ordinary known-forall path.
 target/release/litex -f <this-file>
 ```
 
-Require exit code 0 and top-level JSON `success: true`.
+Require exit code 0 and top-level JSON `run_result: "success"`.
 
 ## Layout
 

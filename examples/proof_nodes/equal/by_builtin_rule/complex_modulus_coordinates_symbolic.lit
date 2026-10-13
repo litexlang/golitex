@@ -2,7 +2,7 @@
 # Before (rejected):
 # forall z C:
 #     sqrt(re(z)^2+img(z)^2)=C_abs(z)
-# Former behavior: strict run success=false, phase search_proof.
+# Former verifier behavior: rejected in the search_proof phase.
 # Now (verified directly):
 forall z C:
     sqrt(re(z)^2+img(z)^2)=C_abs(z)

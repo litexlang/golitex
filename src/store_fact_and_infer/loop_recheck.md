@@ -138,7 +138,7 @@ contract unchanged.
 - All 44 infer examples pass strict CLI execution with a 20-second per-file
   watchdog. Their slowest observed run was under 0.08 seconds.
 - The combined additional control file passes strict CLI execution with
-  `success: true`, `session_error: null` and all 42 statements successful.
+  `run_result: "success"`, `session_terminated: false`, `termination: null` and all 42 statements successful.
 - Proof sources, Session transcript/journal, full CLI envelopes and test logs
   remain under `tmp/2026-10-13/infer-loop-recheck/`.
 

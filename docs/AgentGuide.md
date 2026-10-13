@@ -34,7 +34,7 @@ litex> axiom ready_at_seven:
 ...
 success
 litex> $ready(8)
-{"success": false, ..., "session_error": null}
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
 litex> $ready(7)
 success
 ```
@@ -51,7 +51,7 @@ again, then enter each statement separately:
 
 ```text
 litex> $ready(7)
-{"success": false, ..., "session_error": null}
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
 litex> axiom ready_at_seven:
 ...     ? forall n N:
 ...         n = 7
@@ -86,8 +86,9 @@ establish automatic proof discovery.
 2. Submit one top-level statement at a time, in source order. A `claim` or
    theorem and its entire nested proof form one statement. Consume its response
    before sending the next candidate; terminate multiline input with a blank line.
-3. On `success`, journal the accepted source and continue. On an ordinary
-   failure with `session_error: null` followed by another `litex>` prompt,
+3. On the REPL's plain-text `success` response (not a JSON field), journal the
+   accepted source and continue. On an ordinary
+   failure with `session_terminated: false`, `termination: null` followed by another `litex>` prompt,
    keep the process and repair the current statement. Failure is missing proof
    or well-definedness evidence, not proof of the proposition's negation.
 4. At a coherent checkpoint, save the accepted code and run a separate clean
@@ -97,7 +98,7 @@ establish automatic proof discovery.
 A failed statement discards its own tentative parse bindings and execution
 state. Successful earlier statements remain. If a frame contains several
 top-level statements, its successful statements can commit even when the
-frame's overall `success` is false; soft failures do not stop later statements.
+frame's overall `run_result` is `"failure"`; soft failures do not stop later statements.
 Do not assume a whole candidate fragment rolled back, or blindly resubmit names
 that already committed. Keep the accepted prefix in a journal outside the live
 process so it can be recovered after a restart or interruption.
@@ -144,7 +145,7 @@ internal error is recoverable in place.
 ## Verify the saved artifact and find the right reference
 
 Use a clean `target/release/litex -lang en -f <file>` gate. Require exit 0 and
-parsed JSON with `kind: run`, `success: true`, and `session_error: null`.
+parsed JSON with `kind: run`, `run_result: "success"`, and `session_terminated: false`, `termination: null`.
 Use `-strict` when the intended artifact must exclude user axioms and trust;
 the artificial axiom above is deliberately rejected in strict mode. Reserve
 `-r` for an explicitly requested whole-module gate. See [CLI output](cli.md#json-output-contract).

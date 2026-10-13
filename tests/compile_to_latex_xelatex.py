@@ -27,7 +27,7 @@ def main():
             command.append('-document')
         result = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
         artifact = json.loads(result.stdout)
-        if result.returncode != 0 or not artifact['success']:
+        if result.returncode != 0 or artifact.get('artifact_result') != 'success':
             raise RuntimeError(f'{language}: {artifact}')
         return artifact['content']
 

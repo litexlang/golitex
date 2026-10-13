@@ -10,7 +10,7 @@ axiom eq_refl:
 
 **Note:** `AxiomStmt` is parsed and this codec round-trips the AST, but
 `exec_stmt` does not yet handle `DefinitionStmt::AxiomStmt` (falls through to
-Unsupported → silent CLI exit 1 with `session_error`). The `.lit` documents the
+Unsupported → CLI exit 1 with structured `termination`). The `.lit` documents the
 intended surface; run acceptance for now is the Rust golden / round-trip tests.
 Wire `exec_axiom` separately when definitions need to land in
 `axiom_definitions`.

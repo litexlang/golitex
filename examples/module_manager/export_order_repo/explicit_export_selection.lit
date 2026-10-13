@@ -6,7 +6,7 @@
 have explicit_export_selection_witness R = 1
 
 # Boundary: unlisted_sidecar.lit and notes/ remain unexported.
-# Negative gate from this directory (expect exit 1 / success false):
+# Negative gate from this directory (expect exit 1 / run_result=failure):
 # target/release/litex -strict -e 'unlisted_sidecar::unlisted_sidecar_value = 2'
 # Use an absolute path to the binary when running from this directory.
 # Positive gate: target/release/litex -strict -r examples/module_manager/export_order_repo

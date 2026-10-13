@@ -77,9 +77,10 @@ For a factual statement, the user-facing outcomes are:
 | Failed (soft miss) | The statement did not succeed (search miss, well-definedness, …); the temporary env is discarded. | Add a smaller equality, membership, domain fact, or lemma; or fix the WD obligation. |
 | SessionError | Hard failure; the session must stop. | Fix the invariant / bug / unrecoverable condition before continuing. |
 
-Batch JSON presents Success as `"success": true`, Failed as `"success": false`
-inside `statement_results` (not a lifted top-level `verify_error`), and
-SessionError as top-level `"session_error"`. See [cli.md](cli.md).
+Batch JSON presents Success as statement `"statement_result": "accepted"`,
+Failed as `"statement_result": "rejected"` inside `statement_results` (not a
+lifted top-level `verify_error`), and SessionError as
+`"session_terminated": true` plus structured `termination`. See [cli.md](cli.md).
 AI-generated explanations and Litex drafts are untrusted until the displayed
 formal code has been checked.
 
@@ -12049,7 +12050,8 @@ by the positive Markdown collector. The contextual two-line reciprocal fragment
 is verified inside the full R01 example, not executed without its binders.
 
 Acceptance uses current-source release CLI Normal JSON: exit 0, `kind: run`,
-`success: true`, and no session error. Old `-compact`, `-runner`, `-before`,
+`run_result: "success"`, `session_terminated: false`, and `termination: null`.
+Old `-compact`, `-runner`, `-before`,
 `-isolated` and literal `try:` recipes do not apply to this build. Prototype
 boundaries and expected rejections are labelled in the entries; a failed
 search is never counted as a proof of the opposite fact.

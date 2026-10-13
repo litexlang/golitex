@@ -260,7 +260,11 @@ fn detailed_output_retains_both_closing_proofs_after_scope_is_taken() {
         let JsonValue::Object(proof) = closing.get(key).unwrap() else {
             panic!("proof")
         };
-        assert_eq!(proof.get("success"), Some(&JsonValue::Bool(true)), "{key}");
+        assert_eq!(
+            proof.get("verification_result").unwrap().as_str().ok(),
+            Some("accepted"),
+            "{key}"
+        );
     }
 }
 

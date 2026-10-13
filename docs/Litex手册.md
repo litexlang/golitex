@@ -69,7 +69,7 @@ x^2 = 4
 |Failed (软失败)|语句未成功（搜索失败、良定义性、…）；临时环境被丢弃。|添加较小的相等、成员关系、定义域事实或引理；或修复 WD 义务。|
 |SessionError|硬故障；会话必须停止。|在继续之前修复不变/错误/不可恢复的条件。|
 
-Batch JSON 将 Success 显示为 `"success": true`，将 Failed 显示为 `statement_results` 内的 `"success": false`（不是提升的顶级 `verify_error`），将 SessionError 显示为顶级 `"session_error"`。请参阅 [cli.md](Litex命令行参考.md)。在检查显示的正式代码之前，AI 生成的解释和 Litex 草稿是不可信的。
+Batch JSON 将 Success 显示为语句 `"statement_result": "accepted"`，将 Failed 显示为 `statement_results` 内的 `"statement_result": "rejected"`（不是提升的顶级 `verify_error`），将 SessionError 显示为 `"session_terminated": true` 和结构化 `termination`。请参阅 [cli.md](Litex命令行参考.md)。在检查显示的正式代码之前，AI 生成的解释和 Litex 草稿是不可信的。
 
 一个常见的错误是将软失败读为假：
 
@@ -213,7 +213,7 @@ n + 0 = n
 ```
 
 
-聚合运行报告失败，因为其中一个语句 failed；没有会话错误，并且成功记录了语句。 failed 相等不是 `n != 0` 的证明。 failed 声明同样恢复其推测解析绑定，因此它不能占用下一个块的名称。全局标识符计数器不会回滚或重复使用。
+聚合运行报告失败，因为其中一个语句 failed；此时 `session_terminated: false` 且 `termination: null`，并且已接受的语句仍会记录。 failed 相等不是 `n != 0` 的证明。 failed 声明同样恢复其推测解析绑定，因此它不能占用下一个块的名称。全局标识符计数器不会回滚或重复使用。
 
 <a id="project-loading-proof-checking-and-executable-output"></a>
 
@@ -11170,7 +11170,7 @@ eval sum(1, 3, fn(k Z) Z {k})
 
 正可运行围栏是独立的。大多数运行在严格模式中；假设演示在普通模式下运行，并且在严格模式下明确为被拒绝。预期的负示例单独测试并被正 Markdown 收集器跳过。上下文两行倒数片段在完整的 R01 示例中进行了验证，如果没有绑定变量，则不会执行。
 
-接受使用当前源码释放 CLI 正常 JSON：退出 0、`kind: run`、`success: true`，并且没有会话错误。旧的 `-compact`、`-runner`、`-before`、`-isolated` 和字面量 `try:` 配方不适用于此版本。条目中明确标注原型边界和预期拒绝；搜索失败不能当作相反事实的证明。
+接受使用当前源码释放 CLI 正常 JSON：退出 0、`kind: run`、`run_result: "success"`、`session_terminated: false` 且 `termination: null`。旧的 `-compact`、`-runner`、`-before`、`-isolated` 和字面量 `try:` 配方不适用于此版本。条目中明确标注原型边界和预期拒绝；搜索失败不能当作相反事实的证明。
 
 条目与示例说明已覆盖的规则形状，不是对每个实例化相等、每条内核规则或每个导入定理的穷尽列表。历史验证结果不代表当前版本重新运行了全部示例。
 

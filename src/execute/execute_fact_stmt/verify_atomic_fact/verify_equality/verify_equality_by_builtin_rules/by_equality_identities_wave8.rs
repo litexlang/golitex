@@ -474,7 +474,14 @@ mod square_sum_real_guard_tests {
                 .zip(["a $in R", "b $in R", "a ^ 2 + b ^ 2 = 0"])
         {
             let requirement = requirement.as_object().unwrap();
-            assert_eq!(requirement.get("success"), Some(&JsonValue::Bool(true)));
+            assert_eq!(
+                requirement
+                    .get("verification_result")
+                    .unwrap()
+                    .as_str()
+                    .ok(),
+                Some("accepted")
+            );
             assert_eq!(requirement.get("fact").unwrap().as_str().unwrap(), fact);
             assert!(requirement.get("searched_proof").is_some());
         }
@@ -648,8 +655,14 @@ mod square_sum_real_guard_tests {
         let component = rule.get("component_nonzero_proof").unwrap();
         for (proof, assumption) in requirements.iter().chain([component]).zip(assumptions) {
             assert_eq!(
-                proof.as_object().unwrap().get("success"),
-                Some(&JsonValue::Bool(true))
+                proof
+                    .as_object()
+                    .unwrap()
+                    .get("verification_result")
+                    .unwrap()
+                    .as_str()
+                    .ok(),
+                Some("accepted")
             );
             let store = &assumption
                 .as_object()

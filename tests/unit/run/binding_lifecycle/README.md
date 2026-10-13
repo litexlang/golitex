@@ -65,12 +65,12 @@ definitions, soft-failure continuation, hard-error ordering, nested proof
 atomicity, monotonic IDs, root/import qualification, and tokenizer boundaries.
 The same-source and REPL correction were also checked with the release CLI.
 Eight related statement fixtures and both `identifier_resolution` and
-`obtain_bindings` registered modules pass with exit 0 and JSON `success: true`.
+`obtain_bindings` registered modules pass with exit 0 and JSON `run_result: "success"`.
 
 The 2026-10-09 helper extraction preserves these behaviors: the 12 binding
 lifecycle regressions and 6 function-signature scope regressions pass in the
 release test executable. The strict release CLI tracer exits 0 with
-`kind: run`, `success: true`, and `session_error: null`. The refactor moves
+`kind: run`, `run_result: "success"`, and `session_terminated: false`, `termination: null`. The refactor moves
 restoration into the shared helper while leaving explicit commit decisions
 at the two entrypoints; it adds no public syntax or verification capability.
 

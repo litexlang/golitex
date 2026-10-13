@@ -19,8 +19,9 @@ pub enum RunCommandOutcome {
 
 /// Session-stopping failure.
 /// Soft stmt Failed stays in `statement_results` / `failed_statement_results`.
-/// JSON exposes a failed statement with `success: false` and failure details.
-/// Top-level / hard stop is SessionError → `"session_error"`.
+/// JSON exposes a failed statement with `statement_result: "rejected"` and
+/// failure details. Top-level / hard stop is SessionError →
+/// `session_terminated: true` plus structured `termination`.
 /// `FailToImport`: mount / import / export soft-fail while loading a project (`-r` / `-f` / `-e` / REPL).
 #[derive(Clone, Debug)]
 pub enum RunSessionError {
@@ -152,6 +153,28 @@ impl RunLitexCodeResult {
         ));
     }
 
+    /// A continuable interactive statement was rejected after the initial
+    /// file/eval run. The session stayed alive, but the whole submitted run no
+    /// longer qualifies as successful. Preserve already-rendered citations and
+    /// update only the envelope verdict.
+    pub fn attach_session_rejection(&mut self, runtime: &crate::runtime::Runtime) {
+        self.success = false;
+        if let Some(crate::knowledge_base::JsonValue::Object(mut fields)) = self
+            .normal_json
+            .as_deref()
+            .and_then(|json| crate::knowledge_base::JsonValue::parse(json).ok())
+        {
+            let language = runtime.launch_command.output_language();
+            let key = |name| crate::json_output::json_keys::localize_key(name, language);
+            fields.insert(
+                key("run_result"),
+                crate::knowledge_base::JsonValue::String("failure".into()),
+            );
+            self.normal_json =
+                Some(crate::knowledge_base::JsonValue::Object(fields).stringify_pretty());
+        }
+    }
+
     /// Preserve the batch's already-rendered citations after a REPL abort has
     /// discarded the live environment. Only the run envelope changes.
     pub fn attach_session_error(
@@ -161,7 +184,6 @@ impl RunLitexCodeResult {
         path: Option<&std::path::Path>,
         error: RunSessionError,
     ) {
-        let message = error.to_string();
         self.success = false;
         self.session_error = Some(error);
         if let Some(crate::knowledge_base::JsonValue::Object(mut fields)) = self
@@ -172,12 +194,21 @@ impl RunLitexCodeResult {
             let language = runtime.launch_command.output_language();
             let key = |name| crate::json_output::json_keys::localize_key(name, language);
             fields.insert(
-                key("success"),
-                crate::knowledge_base::JsonValue::Bool(false),
+                key("run_result"),
+                crate::knowledge_base::JsonValue::String("failure".into()),
             );
             fields.insert(
-                key("session_error"),
-                crate::knowledge_base::JsonValue::String(message),
+                key("session_terminated"),
+                crate::knowledge_base::JsonValue::Bool(true),
+            );
+            fields.insert(
+                key("termination"),
+                crate::json_output::helper::session_termination_value(
+                    self.session_error
+                        .as_ref()
+                        .expect("session error was just set"),
+                    language,
+                ),
             );
             self.normal_json =
                 Some(crate::knowledge_base::JsonValue::Object(fields).stringify_pretty());

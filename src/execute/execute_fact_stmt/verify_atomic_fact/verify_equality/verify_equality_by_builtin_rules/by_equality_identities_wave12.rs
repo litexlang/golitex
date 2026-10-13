@@ -780,8 +780,14 @@ mod nested_mod_integer_multiple_tests {
         };
         assert_eq!(requirements.len(), 1);
         assert_eq!(
-            requirements[0].as_object().unwrap().get("success"),
-            Some(&JsonValue::Bool(true))
+            requirements[0]
+                .as_object()
+                .unwrap()
+                .get("verification_result")
+                .unwrap()
+                .as_str()
+                .ok(),
+            Some("accepted")
         );
         assert!(requirements[0].stringify().contains("k $in Z"));
         check(

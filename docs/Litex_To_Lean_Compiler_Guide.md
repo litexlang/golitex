@@ -896,8 +896,9 @@ universal bound `|x_n^2 - 2| <= 4*(1/4)^(2^n)`. It connects legal division,
 an exact residual identity, a lower-bound invariant, quadratic contraction
 and two inductive proofs. The standalone
 [full proof source](../lean/examples/newton_residual_bound/statement.lit) passed
-strict verification; the independent handwritten Lean baseline also passed
-its own check. Complete compiler and native all-index acceptance remain pending.
+strict verification and whole-file compilation; the independent handwritten
+Lean baseline also passed its own check. Complete generated Lean and native
+all-index acceptance remain pending.
 
 The first maintained pair is the supporting
 [single-step identity](../lean/examples/newton_residual_identity/statement.lit),
@@ -932,13 +933,13 @@ cases remain outside this scope. Original binder, guard, call WD, case and
 store results retain their exact identities; known-forall equalities and
 theorem releases replay their captured matches and ordered requirements.
 
-The compiler suite passed 407 tests, followed by six focused known-forall
-equality checks and three Abs expansion checks. Smaller actual generated graph,
+The final compiler suite passed 429 tests and the separate JSON suite passed
+78 tests; selected producer and invocation gates also passed. Smaller actual generated graph,
 recurrence and arithmetic fixtures passed ordinary pinned Lean, as did the
 generated prefix through the scaled residual identity in its recorded
 resource-bounded check. These checks establish the reviewed routes and prefix.
-Whole-file generation, complete generated Lean
-checking, final regeneration and native all-index consumption with live bound
+Whole-file generation passed. Complete generated Lean checking, final
+regeneration and native all-index consumption with live bound
 dependency and standard-only axiom audits remain pending. The
 [experiment](examples/litex_to_lean/newton_residual/Experiment.md) records that
 acceptance boundary. The target is the equation residual; no distance-to-root,

@@ -17,11 +17,13 @@ for cwd, source, expected in [
     )
     output = json.loads(result.stdout)
     assert result.returncode == (0 if expected else 1), result
-    assert output["success"] == expected, output
+    assert output["run_result"] == ("success" if expected else "failure"), output
     if expected:
-        assert output["session_error"] is None, output
+        assert output["session_terminated"] is False, output
+        assert output["termination"] is None, output
         assert output["statement_results"], output
     else:
-        assert output["session_error"] == "FailToImport", output
+        assert output["session_terminated"] is True, output
+        assert output["termination"]["phase"] == "import", output
         assert output["statement_results"] == [], output
 print("3 configured eval envelope checks passed")

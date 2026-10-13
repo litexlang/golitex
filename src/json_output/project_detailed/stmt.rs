@@ -34,7 +34,7 @@ use crate::execute::{
     ExecObtainObjFromExistFactStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult,
     ExecTrustBoundaryStmtResult, ParamTypeFactCheckResult,
 };
-use crate::json_output::helper::{bool_value, object_for, string};
+use crate::json_output::helper::{object_for, statement_result_value, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -59,7 +59,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ExecHaveFnEqualStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("have_fn_equal")),
                     (
                         "statement",
@@ -101,7 +101,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(false)),
+                        ("statement_result", statement_result_value(false)),
                         ("kind", string("have_fn_equal")),
                         (phase, project_verify_obj_wd(wd, runtime)),
                     ],
@@ -122,7 +122,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ExecHaveFnEqualCaseByCaseStmtResult::Failed(failure) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("have_fn_equal_case_by_case")),
                     (
                         "failure",
@@ -137,7 +137,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 ExecHaveFnByForallExistUniqueStmtResult::Success(s) => object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(true)),
+                        ("statement_result", statement_result_value(true)),
                         ("kind", string("have_fn_by_forall_exist_unique")),
                         ("statement", string(s.statement.readable_string())),
                         (
@@ -171,7 +171,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                     object_for(
                         runtime,
                         vec![
-                            ("success", bool_value(false)),
+                            ("statement_result", statement_result_value(false)),
                             ("kind", string("have_fn_by_forall_exist_unique")),
                             ("phase", string(phase)),
                             ("failure", failure),
@@ -188,7 +188,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ExecDefTemplateStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("def_template")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -222,7 +222,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ExecDefTemplateStmtResult::Failed(failure) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("def_template")),
                     (
                         "failure",
@@ -253,7 +253,7 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
         ExecDefThmStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("def_thm")),
                 ("statement", string(s.statement.readable_string())),
                 (
@@ -270,7 +270,7 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
         ExecDefThmStmtResult::Failed(f) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("def_thm")),
                 (
                     "failure",
@@ -334,7 +334,7 @@ fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> Js
         ExecDefStructStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("def_struct")),
                 ("statement", string(s.statement.readable_string())),
                 (
@@ -447,7 +447,7 @@ fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> Js
         ExecDefStructStmtResult::Failed(_) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("def_struct")),
             ],
         ),
@@ -459,7 +459,7 @@ fn project_axiom(result: &ExecAxiomStmtResult, runtime: &Runtime) -> JsonValue {
         ExecAxiomStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("axiom")),
                 (
                     "goal_well_defined",
@@ -473,7 +473,10 @@ fn project_axiom(result: &ExecAxiomStmtResult, runtime: &Runtime) -> JsonValue {
         ),
         ExecAxiomStmtResult::Failed(_) => object_for(
             runtime,
-            vec![("success", bool_value(false)), ("kind", string("axiom"))],
+            vec![
+                ("statement_result", statement_result_value(false)),
+                ("kind", string("axiom")),
+            ],
         ),
     }
 }
@@ -483,7 +486,7 @@ fn project_def_strategy(result: &ExecDefStrategyStmtResult, runtime: &Runtime) -
         ExecDefStrategyStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("def_strategy")),
                 (
                     "goal_well_defined",
@@ -499,7 +502,7 @@ fn project_def_strategy(result: &ExecDefStrategyStmtResult, runtime: &Runtime) -
         ExecDefStrategyStmtResult::Failed(_) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("def_strategy")),
             ],
         ),
@@ -519,7 +522,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecHaveObjByExistFactsStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("have_obj_by_exist_facts")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -531,7 +534,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecHaveObjByExistFactsStmtResult::Failed(_) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("have_obj_by_exist_facts")),
                 ],
             ),
@@ -540,7 +543,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecObtainObjFromExistFactStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("obtain_obj_from_exist_fact")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -552,7 +555,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecObtainObjFromExistFactStmtResult::Failed(_) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("obtain_obj_from_exist_fact")),
                 ],
             ),
@@ -561,7 +564,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecObtainObjFromAtomicFactStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("obtain_obj_from_atomic_fact")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -573,7 +576,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecObtainObjFromAtomicFactStmtResult::Failed(_) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("obtain_obj_from_atomic_fact")),
                 ],
             ),
@@ -582,7 +585,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecHaveByFnPreimageStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("have_by_fn_preimage")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -594,7 +597,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecHaveByFnPreimageStmtResult::Failed(_) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("have_by_fn_preimage")),
                 ],
             ),
@@ -603,7 +606,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecHaveByReplacementAxiomStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("have_by_replacement_axiom")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -615,7 +618,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             ExecHaveByReplacementAxiomStmtResult::Failed(_) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("have_by_replacement_axiom")),
                 ],
             ),
@@ -628,7 +631,7 @@ fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValu
         ExecLetObjStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("let_obj")),
                 ("statement", string(s.statement.readable_string())),
                 (
@@ -644,7 +647,7 @@ fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValu
         ExecLetObjStmtResult::Failed(wd) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("let_obj")),
                 ("value_well_defined", project_verify_obj_wd(wd, runtime)),
             ],
@@ -657,7 +660,7 @@ fn project_def_prop(result: &ExecDefPropStmtResult, runtime: &Runtime) -> JsonVa
         ExecDefPropStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("def_prop")),
                 ("statement", string(s.statement.readable_string())),
                 (
@@ -696,7 +699,7 @@ fn project_def_prop(result: &ExecDefPropStmtResult, runtime: &Runtime) -> JsonVa
         ExecDefPropStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("def_prop")),
                 ("failure", project_def_prop_failure(failed, runtime)),
             ],
@@ -742,7 +745,7 @@ fn project_def_abstract_prop(
     object_for(
         runtime,
         vec![
-            ("success", bool_value(true)),
+            ("statement_result", statement_result_value(true)),
             ("kind", string("def_abstract_prop")),
             ("statement", string(result.statement.readable_string())),
         ],
@@ -756,7 +759,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(true)),
+                        ("statement_result", statement_result_value(true)),
                         ("kind", string("witness_exist_fact")),
                         ("statement", string(s.statement.readable_string())),
                         (
@@ -801,7 +804,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(false)),
+                        ("statement_result", statement_result_value(false)),
                         ("kind", string("witness_exist_fact")),
                         (
                             "failure",
@@ -816,7 +819,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(true)),
+                        ("statement_result", statement_result_value(true)),
                         ("kind", string("witness_atomic_fact")),
                         ("statement", string(s.statement.readable_string())),
                         (
@@ -872,7 +875,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(false)),
+                        ("statement_result", statement_result_value(false)),
                         ("kind", string("witness_atomic_fact")),
                         (
                             "failure",
@@ -887,7 +890,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(true)),
+                        ("statement_result", statement_result_value(true)),
                         ("kind", string("witness_nonempty_set")),
                         ("statement", string(s.statement.readable_string())),
                         (
@@ -914,7 +917,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(false)),
+                        ("statement_result", statement_result_value(false)),
                         ("kind", string("witness_nonempty_set")),
                         (
                             "failure",
@@ -933,7 +936,7 @@ fn project_trust(result: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> Jso
             crate::execute::execute_unsafe_stmt::ExecTrustStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("trust")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -958,14 +961,17 @@ fn project_trust(result: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> Jso
             ),
             crate::execute::execute_unsafe_stmt::ExecTrustStmtResult::Failed(_) => object_for(
                 runtime,
-                vec![("success", bool_value(false)), ("kind", string("trust"))],
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("trust")),
+                ],
             ),
         },
         ExecTrustBoundaryStmtResult::TrustHaveStmt(r) => match r {
             crate::execute::execute_unsafe_stmt::ExecTrustHaveStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("trust_have")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -995,7 +1001,7 @@ fn project_trust(result: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> Jso
             crate::execute::execute_unsafe_stmt::ExecTrustHaveStmtResult::Failed(_) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("trust_have")),
                 ],
             ),
@@ -1032,7 +1038,7 @@ fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -
         ExecByExtensionStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_extension")),
                 (
                     "goal_wd",
@@ -1053,7 +1059,7 @@ fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -
         ExecByExtensionStmtResult::Failed(failure) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("by_extension")),
                 (
                     "failure",
@@ -1069,7 +1075,7 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
         ExecByFnExtensionStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_fn_extension")),
                 (
                     "goal_wd",
@@ -1094,7 +1100,7 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
         ExecByFnExtensionStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("by_fn_extension")),
                 ("failure", match failed {
                     crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::GoalWd(result) => object_for(runtime, vec![
@@ -1129,7 +1135,7 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
         ExecByContraStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_contra")),
                 (
                     "goal_wd",
@@ -1171,7 +1177,7 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
         ),
         ExecByContraStmtResult::Failed(failed) => {
             let mut entries = vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("by_contra")),
                 (
                     "failure",
@@ -1216,7 +1222,7 @@ fn project_by_cases(result: &ExecByCasesStmtResult, runtime: &Runtime) -> JsonVa
         ExecByCasesStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_cases")),
                 (
                     "then_facts_wd",
@@ -1242,7 +1248,7 @@ fn project_by_cases(result: &ExecByCasesStmtResult, runtime: &Runtime) -> JsonVa
         ExecByCasesStmtResult::Failed(failure) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("by_cases")),
                 (
                     "failure",
@@ -1258,7 +1264,7 @@ fn project_by_def(result: &ExecByDefStmtResult, runtime: &Runtime) -> JsonValue 
         ExecByDefStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_def")),
                 (
                     "goal_wd",
@@ -1270,7 +1276,10 @@ fn project_by_def(result: &ExecByDefStmtResult, runtime: &Runtime) -> JsonValue 
         ),
         ExecByDefStmtResult::Failed(_) => object_for(
             runtime,
-            vec![("success", bool_value(false)), ("kind", string("by_def"))],
+            vec![
+                ("statement_result", statement_result_value(false)),
+                ("kind", string("by_def")),
+            ],
         ),
     }
 }
@@ -1280,7 +1289,7 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
         ExecByThmStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_thm")),
                 ("thm_name", string(s.call.name.local_name().to_string())),
                 (
@@ -1349,7 +1358,7 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
         ExecByThmStmtResult::Failed(f) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("by_thm")),
                 (
                     "failure",
@@ -1368,7 +1377,7 @@ fn project_by_enumerate(
         ExecByEnumerateFiniteSetStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_enumerate_finite_set")),
                 (
                     "goal_wd",
@@ -1384,7 +1393,7 @@ fn project_by_enumerate(
         ExecByEnumerateFiniteSetStmtResult::Failed(_) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("by_enumerate_finite_set")),
             ],
         ),
@@ -1396,7 +1405,7 @@ fn project_by_for(result: &ExecByForStmtResult, runtime: &Runtime) -> JsonValue 
         ExecByForStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("by_for")),
                 (
                     "goal_wd",
@@ -1411,7 +1420,10 @@ fn project_by_for(result: &ExecByForStmtResult, runtime: &Runtime) -> JsonValue 
         ),
         ExecByForStmtResult::Failed(_) => object_for(
             runtime,
-            vec![("success", bool_value(false)), ("kind", string("by_for"))],
+            vec![
+                ("statement_result", statement_result_value(false)),
+                ("kind", string("by_for")),
+            ],
         ),
     }
 }
@@ -1568,7 +1580,10 @@ fn project_release_and_expand(
     object_for(
         runtime,
         vec![
-            ("success", bool_value(!result.is_failed())),
+            (
+                "statement_result",
+                statement_result_value(!result.is_failed()),
+            ),
             ("kind", string(kind)),
         ],
     )
@@ -1580,7 +1595,7 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
             ExecClaimStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("claim")),
                     (
                         "goal_wd",
@@ -1606,7 +1621,7 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
             ExecClaimStmtResult::Failed(failure) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("claim")),
                     (
                         "failure",
@@ -1619,7 +1634,7 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
             ExecSketchStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("sketch")),
                     (
                         "proof_steps",
@@ -1635,7 +1650,7 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
             ExecSketchStmtResult::Failed(failure) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("sketch")),
                     (
                         "failure",
@@ -1653,7 +1668,7 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
             ExecEvalStmtResult::Success(s) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("kind", string("eval")),
                     ("statement", string(s.statement.readable_string())),
                     (
@@ -1737,7 +1752,7 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                 object_for(
                     runtime,
                     vec![
-                        ("success", bool_value(false)),
+                        ("statement_result", statement_result_value(false)),
                         ("kind", string("eval")),
                         (
                             "source_well_defined",
@@ -1751,7 +1766,7 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
             )) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("eval")),
                     ("verify", super::verify::project_verify_fact(proof, runtime)),
                 ],
@@ -1761,7 +1776,7 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
             ) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("eval")),
                     (
                         "well_defined",
@@ -1774,7 +1789,7 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
             ) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("eval")),
                     ("cause", string("aggregate_budget_exceeded")),
                 ],
@@ -1784,14 +1799,17 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
             ) => object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("eval")),
                     ("cause", string("aggregate_range_overflow")),
                 ],
             ),
             ExecEvalStmtResult::Failed(_) => object_for(
                 runtime,
-                vec![("success", bool_value(false)), ("kind", string("eval"))],
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("eval")),
+                ],
             ),
         },
     }
@@ -1804,7 +1822,10 @@ fn project_success_failed_shell(
     store: Option<JsonValue>,
     runtime: &Runtime,
 ) -> JsonValue {
-    let mut entries = vec![("success", bool_value(success)), ("kind", string(kind))];
+    let mut entries = vec![
+        ("statement_result", statement_result_value(success)),
+        ("kind", string(kind)),
+    ];
     if let Some(stmt) = statement {
         entries.push(("statement", string(stmt)));
     }
@@ -1887,7 +1908,7 @@ pub(in crate::json_output) fn project_release_cart_def(
         ExecReleaseCartDefStmtResult::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("release_cart_def")),
                 ("statement", string(s.statement.readable_string())),
                 (
@@ -1945,7 +1966,7 @@ pub(in crate::json_output) fn project_release_cart_def(
             object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("release_cart_def")),
                     ("phase", string(phase)),
                     ("failure", details),
@@ -1966,7 +1987,7 @@ pub(in crate::json_output) fn project_release_tuple_def(
         R::Success(s) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("release_tuple_def")),
                 ("statement", string(s.statement.readable_string())),
                 (
@@ -2046,7 +2067,7 @@ pub(in crate::json_output) fn project_release_tuple_def(
             object_for(
                 runtime,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("kind", string("release_tuple_def")),
                     ("phase", string(phase)),
                     ("failure", details),

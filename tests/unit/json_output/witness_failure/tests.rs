@@ -261,7 +261,10 @@ fn nonempty_local_proof_failure_retains_exact_step_and_goal() {
         field(child, "statement", language).as_str().unwrap(),
         "0 = 1"
     );
-    assert_eq!(field(child, "success", language), &JsonValue::Bool(false));
+    assert_eq!(
+        field(child, "statement_result", language).as_str().ok(),
+        Some("rejected")
+    );
 }
 
 #[test]

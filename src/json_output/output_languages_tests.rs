@@ -21,8 +21,8 @@ fn every_language_preserves_success_failure_and_source() {
                 project_stmt_detailed(&result, &runtime),
             ] {
                 assert_eq!(
-                    field(&json, "success", language),
-                    &JsonValue::Bool(success),
+                    field(&json, "statement_result", language).as_str().ok(),
+                    Some(if success { "accepted" } else { "rejected" }),
                     "{language:?}: {code}"
                 );
                 assert_eq!(field(&json, "statement", language).as_str().unwrap(), code);
@@ -47,8 +47,8 @@ fn every_language_preserves_exact_function_domain_evidence_and_rejection() {
                 project_stmt_detailed(&result, &rt),
             ] {
                 assert_eq!(
-                    field(&json, "success", language),
-                    &JsonValue::Bool(success),
+                    field(&json, "statement_result", language).as_str().ok(),
+                    Some(if success { "accepted" } else { "rejected" }),
                     "{language:?}: {code}"
                 );
             }
@@ -153,8 +153,14 @@ fn normal_output_keeps_field_order_and_localizes_explanations() {
         let mut runtime = runtime(language);
         let result = execute(&mut runtime, "1 + 2 = 3");
         let json = project_stmt_normal(&result, &runtime);
-        let expected_keys = ["success", "statement", "proof_method", "stores", "infers"]
-            .map(|key| localize_key(key, language));
+        let expected_keys = [
+            "statement_result",
+            "statement",
+            "proof_method",
+            "stores",
+            "infers",
+        ]
+        .map(|key| localize_key(key, language));
         assert_eq!(
             json.as_object().unwrap().keys_in_order(),
             expected_keys.iter().map(String::as_str).collect::<Vec<_>>()
@@ -204,8 +210,7 @@ fn locale_keys_do_not_collide_beyond_existing_aliases() {
             if let Some(previous) = seen.insert(localized.clone(), *key) {
                 let same_existing_alias = matches!(
                     (previous, *key),
-                    ("success", "ok")
-                        | ("why_failed", "fail_reason")
+                    ("why_failed", "fail_reason")
                         | ("assumptions_stored", "assumption_stored")
                         | ("theorem", "thm_name")
                 );
@@ -290,14 +295,19 @@ const LOCALIZED_KEYS: &[&str] = &[
     "bridge",
     "right_path",
     "why_parameters_of_known_fact_are_equal_to_givens",
-    "success",
+    "run_result",
+    "statement_result",
+    "verification_result",
+    "well_defined_result",
+    "artifact_result",
     "ok",
     "target",
     "path",
     "detail",
     "language",
     "statement_results",
-    "session_error",
+    "session_terminated",
+    "termination",
     "statement",
     "proof_method",
     "why_failed",

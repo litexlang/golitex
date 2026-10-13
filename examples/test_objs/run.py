@@ -244,26 +244,43 @@ def evaluate(binary, root, path, timeout):
         envelope = json.loads(process.stdout)
     except json.JSONDecodeError:
         return {"observed": "infrastructure_failure", "exit_code": process.returncode, "phase": "invalid_json", "diagnostic": (process.stderr + process.stdout)[-2000:], "statements": 0}
-    if not isinstance(envelope, dict) or envelope.get("kind") != "run" or type(envelope.get("success")) is not bool:
+    if (not isinstance(envelope, dict) or envelope.get("kind") != "run"
+            or envelope.get("run_result") not in {"success", "failure"}):
         return {"observed": "infrastructure_failure", "exit_code": process.returncode, "phase": "invalid_envelope", "diagnostic": repr(envelope)[-2000:], "statements": 0}
-    statements = envelope.get("statement_results", [])
-    failed = [result for result in statements if result.get("success") is False]
-    error = envelope.get("session_error")
+    statements = envelope.get("statement_results")
+    if (not isinstance(statements, list)
+            or any(not isinstance(result, dict)
+                   or result.get("statement_result") not in {"accepted", "rejected"}
+                   for result in statements)):
+        return {"observed": "infrastructure_failure", "exit_code": process.returncode, "phase": "invalid_statements", "diagnostic": repr(envelope)[-2000:], "statements": 0}
+    terminated = envelope.get("session_terminated")
+    termination = envelope.get("termination")
+    if (type(terminated) is not bool or terminated != (termination is not None)
+            or (termination is not None and (
+                not isinstance(termination, dict)
+                or not isinstance(termination.get("phase"), str)
+                or not isinstance(termination.get("message"), str)))):
+        return {"observed": "infrastructure_failure", "exit_code": process.returncode, "phase": "invalid_termination", "diagnostic": repr(envelope)[-2000:], "statements": len(statements)}
+    failed = [result for result in statements if result.get("statement_result") == "rejected"]
+    contract_success = not terminated and not failed
+    if ((envelope["run_result"] == "success") != contract_success
+            or process.returncode != (0 if contract_success else 1)):
+        return {"observed": "infrastructure_failure", "exit_code": process.returncode, "phase": "inconsistent_result", "diagnostic": repr(envelope)[-2000:], "statements": len(statements)}
     observed = "infrastructure_failure"
     phase = "protocol"
     diagnostic = process.stderr
-    if envelope["success"] is True and process.returncode == 0 and not failed and error is None:
+    if contract_success:
         observed, phase = "accept", "success"
-    elif envelope["success"] is False and process.returncode == 1:
-        parse_error = isinstance(error, str) and error.startswith(("parse_error:", "Runtime(ParseError("))
-        if failed and (error is None or parse_error):
+    else:
+        parse_error = isinstance(termination, dict) and termination.get("phase") == "parse"
+        if failed and (termination is None or parse_error):
             observed = "reject"
             phase = failed[0].get("why_failed", {}).get("phase", "verification")
             diagnostic = json.dumps(failed[0], ensure_ascii=False)
-            if error:
-                diagnostic += "; subsequent error: " + error
+            if termination:
+                diagnostic += "; subsequent error: " + json.dumps(termination, ensure_ascii=False)
         elif parse_error:
-            observed, phase, diagnostic = "reject", "parse", error
+            observed, phase, diagnostic = "reject", "parse", json.dumps(termination, ensure_ascii=False)
     return {"observed": observed, "exit_code": process.returncode, "phase": phase,
         "diagnostic": diagnostic, "statements": len(statements)}
 

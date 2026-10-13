@@ -30,6 +30,11 @@ fn every_locale_runs_through_the_real_binary() {
         ]);
         assert!(ok, "{json:?}");
         let map = json.as_object().unwrap();
+        assert_eq!(
+            map.get("artifact_result")
+                .and_then(|value| value.as_str().ok()),
+            Some("success")
+        );
         assert_eq!(map.get("language"), Some(&JsonValue::String(lang.into())));
         assert_eq!(map.get("verified"), Some(&JsonValue::Bool(false)));
         assert!(map
@@ -75,6 +80,11 @@ fn false_facts_convert_but_invalid_syntax_fails() {
     let (ok, json) = convert(&["-latex", "-lang", "zh", "-e", "1 = 1\nhave"]);
     assert!(!ok);
     let map = json.as_object().unwrap();
+    assert_eq!(
+        map.get("artifact_result")
+            .and_then(|value| value.as_str().ok()),
+        Some("failure")
+    );
     assert_eq!(map.get("content"), Some(&JsonValue::Null));
     assert_eq!(map.get("language"), Some(&JsonValue::String("zh".into())));
 }

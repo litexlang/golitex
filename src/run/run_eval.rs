@@ -45,14 +45,18 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
     }
 
     if session {
-        if let Err(error) = run_repl_loop(&mut runtime) {
-            code_result.attach_session_error(
-                &runtime,
-                "eval",
-                None,
-                RunSessionError::Runtime(error),
-            );
-            return Ok(RunEvalResult::new(code_result));
+        match run_repl_loop(&mut runtime) {
+            Ok(true) => {}
+            Ok(false) => code_result.attach_session_rejection(&runtime),
+            Err(error) => {
+                code_result.attach_session_error(
+                    &runtime,
+                    "eval",
+                    None,
+                    RunSessionError::Runtime(error),
+                );
+                return Ok(RunEvalResult::new(code_result));
+            }
         }
         return Ok(RunEvalResult::new(code_result));
     }

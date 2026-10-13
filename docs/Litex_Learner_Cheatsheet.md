@@ -36,7 +36,7 @@ and, on success, becomes available to the next statement.
 | Object | `x`, `R`, `{1, 2}`, `x + 1` | A mathematical value or expression. |
 | Fact | `x = 2`, `x $in R`, `$P(x)` | A proposition about objects. |
 | Statement | `have`, `prop`, a bare fact, `claim` | Introduce, define, or check information. |
-| Feedback | `success`, `proof_method`, `stores`, `why_failed` | Explain the outcome and usable context. |
+| Feedback | `statement_result`, `proof_method`, `stores`, `why_failed` | Explain the outcome and usable context. |
 
 Before writing a line, identify its objects, their domains, and the exact fact
 needed next. Inspect existing builtin and module interfaces before declaring a
@@ -425,16 +425,16 @@ batch envelope (other fields omitted here):
 ```json
 {
   "kind": "run",
-  "success": true,
-  "session_error": null
+  "run_result": "success",
+  "session_terminated": false, "termination": null
 }
 ```
 
 | Outcome | Next action |
 | --- | --- |
 | Success | Inspect `proof_method`, `stores`, and `infers` when deciding what to reuse. |
-| Statement `success: false` | Read `why_failed.phase` and `why_failed.goal`; the failed statement adds no successful facts. Earlier accepted statements remain usable. |
-| Non-null `session_error` | Read the hard error; the current run/session stops. |
+| Statement `statement_result: "rejected"` | Read `why_failed.phase` and `why_failed.goal`; the failed statement adds no successful facts. Earlier accepted statements remain usable. |
+| `session_terminated: true` | Read structured `termination`; the current run/session stopped. |
 
 A soft-failed statement makes the overall batch fail even if later statements
 succeed. Do not infer success from nested evidence text or treat a failed

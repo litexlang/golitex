@@ -96,7 +96,8 @@ have different flags and JSON fields.
 
 `-version` prints a short text line. `-e` returns one Normal JSON `run`
 document in the default English mode; a successful batch check exits `0`
-and has `"success": true` with `"session_error": null`. Use `-lang en` for
+and has `"run_result": "success"`, `"session_terminated": false`, and
+`"termination": null`. Use `-lang en` for
 programs expecting English JSON keys; `-lang zh` localizes them.
 
 To check the packaged compatibility module, create a new project directory
@@ -125,9 +126,9 @@ From that directory, run:
 litex -lang en -f smoke.lit
 ```
 
-Require exit `0`, `"kind": "run"`, `"success": true`, and
-`"session_error": null`. If the result says
-`"session_error": "failed to import project"`, first check that
+Require exit `0`, `"kind": "run"`, `"run_result": "success"`, and
+`"session_terminated": false` with `"termination": null`. If the result says
+`"session_terminated": true` with `termination.phase == "import"`, first check that
 the bundled std contains `basics/litex.config` and that the binary and std
 come from the same release. If `LITEX_STD_PATH` is set, check or unset that override. That message alone does not distinguish a path
 error from other import failures.

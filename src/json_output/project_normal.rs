@@ -2,9 +2,10 @@
 
 use super::explain::{explain_compound_fact_why, explain_searched_proof_why};
 use super::helper::{
-    array_of_strings, bool_value, builtin_rule_with_optional_cite, cite_forall_from_fact_id,
-    cite_from_fact_id, empty_string_array, infer_fact_texts_from_store_and_infer, object,
-    output_language, phase_value_search_proof, phase_value_well_defined, store_fact_texts, string,
+    array_of_strings, builtin_rule_with_optional_cite, cite_forall_from_fact_id, cite_from_fact_id,
+    empty_string_array, infer_fact_texts_from_store_and_infer, object, output_language,
+    phase_value_search_proof, phase_value_well_defined, run_result_value,
+    session_termination_value, statement_result_value, store_fact_texts, string,
     with_source_statement,
 };
 use super::project_stmt_catalog::project_non_fact_stmt;
@@ -101,15 +102,15 @@ pub fn project_run_normal(
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,
     };
-    let session_error = match &run.session_error {
+    let termination = match &run.session_error {
         None => JsonValue::Null,
-        Some(err) => string(err.to_string()),
+        Some(err) => session_termination_value(err, lang),
     };
     object(
         lang,
         vec![
             ("kind", string("run")),
-            ("success", bool_value(run.success)),
+            ("run_result", run_result_value(run.success)),
             ("target", string(target)),
             ("path", path_value),
             ("detail", string(OutputDetail::Normal.as_str())),
@@ -118,7 +119,11 @@ pub fn project_run_normal(
                 string(runtime.launch_command.output_language().as_str()),
             ),
             ("statement_results", JsonValue::Array(statement_results)),
-            ("session_error", session_error),
+            (
+                "session_terminated",
+                JsonValue::Bool(run.session_error.is_some()),
+            ),
+            ("termination", termination),
         ],
     )
 }
@@ -135,7 +140,7 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
             object(
                 lang,
                 vec![
-                    ("success", bool_value(true)),
+                    ("statement_result", statement_result_value(true)),
                     ("statement", string(statement)),
                     ("proof_method", why),
                     ("stores", array_of_strings(stores)),
@@ -149,7 +154,7 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
             object(
                 lang,
                 vec![
-                    ("success", bool_value(false)),
+                    ("statement_result", statement_result_value(false)),
                     ("statement", string(statement)),
                     ("why_failed", why),
                     ("stores", empty_string_array()),

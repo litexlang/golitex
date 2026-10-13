@@ -85,7 +85,7 @@ fn exact_rules_keep_both_checked_premises() {
                 "{name}.{field}: {premise}"
             );
             assert!(
-                premise.contains("\"success\": true"),
+                premise.contains("\"verification_result\": \"accepted\""),
                 "{name}.{field}: {premise}"
             );
         }

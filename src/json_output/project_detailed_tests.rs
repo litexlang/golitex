@@ -72,7 +72,10 @@ fn detailed_fact_success_has_verify_and_store_english() {
     assert!(!exec_one(&mut runtime, "have k N").is_failed());
     let goal = exec_one(&mut runtime, "k >= 0");
     let json = project_stmt_detailed(&goal, &runtime);
-    assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        obj_field(&json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     assert_eq!(obj_field(&json, "kind").as_str().ok(), Some("fact"));
     assert!(obj_field(&json, "verify").as_object().is_ok());
     assert!(obj_field(&json, "store_and_infer").as_object().is_ok());
@@ -85,7 +88,7 @@ fn detailed_fact_success_chinese_keys() {
     let mut runtime = runtime_zh();
     assert!(!exec_one(&mut runtime, "have k N").is_failed());
     let json = project_stmt_detailed(&exec_one(&mut runtime, "k >= 0"), &runtime);
-    assert_eq!(obj_field(&json, "成功"), &JsonValue::Bool(true));
+    assert_eq!(obj_field(&json, "语句判定").as_str().ok(), Some("accepted"));
     assert!(obj_field(&json, "验证").as_object().is_ok());
     assert!(obj_field(&json, "存储与推理").as_object().is_ok());
     assert!(json_has_no_local_env(&json));
@@ -156,7 +159,10 @@ fn detailed_run_envelope_detail_and_language() {
 fn detailed_let_has_kind_no_local_env() {
     let mut runtime = runtime_en();
     let json = project_stmt_detailed(&exec_one(&mut runtime, "let a = 1"), &runtime);
-    assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        obj_field(&json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     assert_eq!(obj_field(&json, "kind").as_str().ok(), Some("let_obj"));
     assert!(json_has_no_local_env(&json));
 }
@@ -168,7 +174,10 @@ fn detailed_by_def_preserves_definition_route() {
     assert!(!exec_one(&mut rt, "$above_zero(1)").is_failed());
     let result = exec_one(&mut rt, "by def $above_zero(1)");
     let detailed = project_stmt_detailed(&result, &rt);
-    assert_eq!(obj_field(&detailed, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        obj_field(&detailed, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     let proof = obj_field(&detailed, "proof");
     let searched = obj_field(proof, "searched_proof");
     assert_eq!(
@@ -193,7 +202,10 @@ fn detailed_by_def_preserves_definition_route() {
 
     let result = exec_one(&mut rt, "by def 1 $in {x R: x > 0}");
     let normal = super::project_stmt_normal(&result, &rt);
-    assert_eq!(obj_field(&normal, "success"), &JsonValue::Bool(false));
+    assert_eq!(
+        obj_field(&normal, "statement_result").as_str().ok(),
+        Some("rejected")
+    );
     assert!(obj_field(&normal, "stores").as_array().unwrap().is_empty());
     assert!(obj_field(&normal, "infers").as_array().unwrap().is_empty());
 }
@@ -269,8 +281,17 @@ fn detailed_atomic_builtin_rewrite_preserves_citation_and_residual() {
         assert_eq!(obj_field(&cites[0], id_key), obj_field(&stored[0], id_key));
         let residual = obj_field(rewrite, "proof_of_rewritten_fact");
         assert_eq!(
-            obj_field(residual, if english { "success" } else { "成功" }),
-            &JsonValue::Bool(true)
+            obj_field(
+                residual,
+                if english {
+                    "verification_result"
+                } else {
+                    "验证结果"
+                }
+            )
+            .as_str()
+            .ok(),
+            Some("accepted")
         );
         let child = obj_field(
             residual,
@@ -312,8 +333,12 @@ fn detailed_register_preserves_checked_law_in_both_languages() {
             assert_eq!(obj_field(&json, "property").as_str().ok(), Some(property));
             assert_eq!(obj_field(&json, "prop").as_str().ok(), Some("same"));
             let proof = obj_field(&json, "forall_proof");
-            let success = if language == OutputLanguage::English { "success" } else { "成功" };
-            assert_eq!(obj_field(proof, success), &JsonValue::Bool(true));
+            let result_key = if language == OutputLanguage::English {
+                "verification_result"
+            } else {
+                "验证结果"
+            };
+            assert_eq!(obj_field(proof, result_key).as_str().ok(), Some("accepted"));
             assert!(!obj_field(proof, "proved_then_facts").as_array().unwrap().is_empty());
             assert!(json_has_no_local_env(&json));
         }
@@ -358,7 +383,15 @@ fn detailed_register_preserves_actual_failure_stage_in_both_languages() {
                 assert_eq!(obj_field(failure, if english { "phase" } else { "阶段" }).as_str().ok(), Some(phase));
                 if phase == "forall" {
                     let proof = obj_field(failure, "forall_proof");
-                    assert_eq!(obj_field(proof, if english { "success" } else { "成功" }), &JsonValue::Bool(false));
+                    assert_eq!(
+                        obj_field(
+                            proof,
+                            if english { "verification_result" } else { "验证结果" }
+                        )
+                        .as_str()
+                        .ok(),
+                        Some("rejected")
+                    );
                 }
                 assert!(json_has_no_local_env(&json));
             }

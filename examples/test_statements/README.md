@@ -41,7 +41,8 @@ cargo test --release --test test_statements
 ```
 
 The Python runner checks process status and the single current CLI JSON
-envelope (`success`, `statement_results`, and `session_error`). Rejections
+envelope (`run_result`, `statement_results`, `session_terminated`, and
+`termination`). Rejections
 must have the expected failure phase or parser/strict diagnostic, and setup
 statements must succeed. The rollback scenario requires exactly
 `[false, true, true]` for rejection, correction, and subsequent use.

@@ -13,7 +13,7 @@ pub fn emit_command_error(
     command: &crate::launch_command::LaunchCommand,
     error: &crate::runtime::RuntimeError,
 ) -> Option<String> {
-    use super::helper::{bool_value, object, string};
+    use super::helper::{object, run_result_value, runtime_termination_value, string};
     use crate::launch_command::LaunchCommand;
 
     let (target, path) = match command {
@@ -46,7 +46,7 @@ pub fn emit_command_error(
             language,
             vec![
                 ("kind", string("run")),
-                ("success", bool_value(false)),
+                ("run_result", run_result_value(false)),
                 ("target", string(target)),
                 (
                     "path",
@@ -59,7 +59,11 @@ pub fn emit_command_error(
                     "statement_results",
                     crate::knowledge_base::JsonValue::Array(Vec::new()),
                 ),
-                ("session_error", string(error.to_string())),
+                (
+                    "session_terminated",
+                    crate::knowledge_base::JsonValue::Bool(true),
+                ),
+                ("termination", runtime_termination_value(error, language)),
             ],
         )
         .stringify_pretty(),

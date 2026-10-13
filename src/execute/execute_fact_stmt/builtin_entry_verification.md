@@ -53,11 +53,11 @@ Validation:
   membership, forall argument matching, JSON evidence and compiler consumers.
 - `cargo build --release`: passed.
 - `target/release/litex -lang en -strict -f examples/proof_nodes/equal/direct_closed_calculation.lit`:
-  exit 0, Normal `kind: run`, `success: true`, `session_error: null`.
+  exit 0, Normal `kind: run`, `run_result: "success"`, `session_terminated: false`, `termination: null`.
 - The same CLI gate passed for `examples/proof_nodes/equal/shared_search_levels.lit`
   and `examples/proof_nodes/atomic/direct_structural_membership.lit`.
 - `target/release/litex -lang en -strict -e '1/0=1/0'` and `-e '1+1=3'`:
-  exit 1, Normal `kind: run`, `success: false`, `session_error: null`.
+  exit 1, Normal `kind: run`, `run_result: "failure"`, `session_terminated: false`, `termination: null`.
 - Static comparison retained the exact numeric evaluation/comparison algorithms,
   stage sequence and existing proof payload types; `git diff --check` passed.
 
@@ -219,7 +219,8 @@ a raw difference from that baseline is not exclusively attributable to this task
 - `cargo build --release`: pass.
 - `cargo test --release --all-targets --no-fail-fast`: **609 pass / 53 fail** in the library; statement integration fails.
 - Permission tests: 8 pass. Equality-search tests: 29 pass. `git diff --check`: pass.
-- New shared-level tracer and maintained tuple/function projection tracers: exit 0, success:true, session_error:null.
+- New shared-level tracer and maintained tuple/function projection tracers:
+  exit 0, `run_result: "success"`, `session_terminated: false`, `termination: null`.
 - Geo without the extra vec equality passes; with that equality it still fails at dot expansion (2.164s).
 - The longer theorem release/read probe passes in 17.807s. Full `scripts/geo.lit` still times out at 45s.
 

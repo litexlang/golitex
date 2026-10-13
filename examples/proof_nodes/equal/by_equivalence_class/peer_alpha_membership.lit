@@ -14,5 +14,5 @@ have fn f(t R) R = t
 f $in g
 # Boundary: f $in fn(t R) N must still fail; free identifiers cannot be renamed.
 # Evidence: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/peer_alpha_membership.lit
-# Require exit 0, JSON success=true, session_error=null, and successful statements.
+# Require exit 0, run_result=success, session_terminated=false, termination=null, and accepted statements.
 # Rust: cargo test --release equality_search_tests -- --nocapture

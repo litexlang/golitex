@@ -182,7 +182,9 @@ fn detailed_output_keeps_one_equality_or_all_disequality_certificates() {
         }
         for child in children {
             assert!(
-                child.stringify().contains("\"success\""),
+                child
+                    .stringify()
+                    .contains("\"verification_result\":\"accepted\""),
                 "{}",
                 child.stringify()
             );

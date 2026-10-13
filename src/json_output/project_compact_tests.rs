@@ -49,14 +49,17 @@ fn output_detail_compact_label() {
 }
 
 #[test]
-fn compact_success_only_success_and_statement_english() {
+fn compact_success_only_result_and_statement_english() {
     let mut rt = runtime_en();
     let json = project_stmt_compact(&exec_one(&mut rt, "1 + 1 = 2"), &rt);
     assert_eq!(
         json.as_object().unwrap().keys_in_order(),
-        vec!["success", "statement"]
+        vec!["statement_result", "statement"]
     );
-    assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(true));
+    assert_eq!(
+        obj_field(&json, "statement_result").as_str().ok(),
+        Some("accepted")
+    );
     assert!(obj_field(&json, "statement")
         .as_str()
         .unwrap()
@@ -72,9 +75,9 @@ fn compact_success_chinese_keys() {
     let json = project_stmt_compact(&exec_one(&mut rt, "let a = 1"), &rt);
     assert_eq!(
         json.as_object().unwrap().keys_in_order(),
-        vec!["成功", "语句"]
+        vec!["语句判定", "语句"]
     );
-    assert_eq!(obj_field(&json, "成功"), &JsonValue::Bool(true));
+    assert_eq!(obj_field(&json, "语句判定").as_str().ok(), Some("accepted"));
     assert_eq!(obj_field(&json, "语句").as_str().ok(), Some("let a = 1"));
 }
 
@@ -85,9 +88,12 @@ fn compact_failure_has_fail_reason_english() {
     let json = project_stmt_compact(&exec_one(&mut rt, "a > 10"), &rt);
     assert_eq!(
         json.as_object().unwrap().keys_in_order(),
-        vec!["success", "statement", "fail_reason"]
+        vec!["statement_result", "statement", "fail_reason"]
     );
-    assert_eq!(obj_field(&json, "success"), &JsonValue::Bool(false));
+    assert_eq!(
+        obj_field(&json, "statement_result").as_str().ok(),
+        Some("rejected")
+    );
     let fail = obj_field(&json, "fail_reason").as_object().unwrap();
     assert_eq!(fail.keys_in_order(), vec!["phase", "goal"]);
     assert_eq!(
@@ -109,7 +115,7 @@ fn compact_failure_chinese_keys_and_phase() {
     let json = project_stmt_compact(&exec_one(&mut rt, "a > 10"), &rt);
     assert_eq!(
         json.as_object().unwrap().keys_in_order(),
-        vec!["成功", "语句", "失败原因"]
+        vec!["语句判定", "语句", "失败原因"]
     );
     let fail = obj_field(&json, "失败原因").as_object().unwrap();
     assert_eq!(
@@ -152,6 +158,6 @@ fn compact_run_envelope_detail() {
     assert_eq!(stmts.len(), 1);
     assert_eq!(
         stmts[0].as_object().unwrap().keys_in_order(),
-        vec!["成功", "语句"]
+        vec!["语句判定", "语句"]
     );
 }

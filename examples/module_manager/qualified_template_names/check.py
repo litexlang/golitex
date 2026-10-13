@@ -19,7 +19,8 @@ for args, expected in cases:
                             text=True, capture_output=True, timeout=20)
     output = json.loads(result.stdout)
     assert result.returncode == (0 if expected else 1), result
-    assert output["success"] == expected, output
+    assert output["run_result"] == ("success" if expected else "failure"), output
     if expected:
-        assert output["session_error"] is None, output
+        assert output["session_terminated"] is False, output
+        assert output["termination"] is None, output
 print("6 qualified-template CLI checks passed")

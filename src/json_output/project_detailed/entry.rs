@@ -14,7 +14,10 @@ use crate::execute::{
     ExecHaveObjEqualStmtResult, ExecHaveObjInNonemptySetStmtFailed,
     ExecHaveObjInNonemptySetStmtResult, ParamTypeFactCheckResult,
 };
-use crate::json_output::helper::{bool_value, object_for, string, with_source_statement};
+use crate::json_output::helper::{
+    object_for, run_result_value, session_termination_value, statement_result_value, string,
+    with_source_statement,
+};
 use crate::json_output::project_normal::OutputDetail;
 use crate::knowledge_base::JsonValue;
 use crate::run::run_command_outcome::RunLitexCodeResult;
@@ -43,15 +46,15 @@ pub fn project_run_detailed(
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,
     };
-    let session_error = match &run.session_error {
+    let termination = match &run.session_error {
         None => JsonValue::Null,
-        Some(err) => string(err.to_string()),
+        Some(err) => session_termination_value(err, runtime.launch_command.output_language()),
     };
     object_for(
         runtime,
         vec![
             ("kind", string("run")),
-            ("success", bool_value(run.success)),
+            ("run_result", run_result_value(run.success)),
             ("target", string(target)),
             ("path", path_value),
             ("detail", string(OutputDetail::Detailed.as_str())),
@@ -60,7 +63,11 @@ pub fn project_run_detailed(
                 string(runtime.launch_command.output_language().as_str()),
             ),
             ("statement_results", JsonValue::Array(statement_results)),
-            ("session_error", session_error),
+            (
+                "session_terminated",
+                JsonValue::Bool(run.session_error.is_some()),
+            ),
+            ("termination", termination),
         ],
     )
 }
@@ -70,7 +77,7 @@ pub(super) fn project_fact_only(fact: &ExecFactStmtResult, runtime: &Runtime) ->
         ExecFactStmtResult::Success(success) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("fact")),
                 (
                     "statement",
@@ -89,7 +96,7 @@ pub(super) fn project_fact_only(fact: &ExecFactStmtResult, runtime: &Runtime) ->
         ExecFactStmtResult::Failed(verify) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("fact")),
                 ("statement", string(verify_goal_display(verify))),
                 ("verify", project_verify_fact(verify, runtime)),
@@ -116,7 +123,7 @@ pub(super) fn project_have_in_nonempty_only(
         ExecHaveObjInNonemptySetStmtResult::Success(success) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("have_obj_in_nonempty_set")),
                 ("statement", string(success.statement.readable_string())),
                 (
@@ -185,7 +192,7 @@ pub(super) fn project_have_in_nonempty_only(
         ExecHaveObjInNonemptySetStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("have_obj_in_nonempty_set")),
                 ("why_failed", project_have_in_failed(failed, runtime)),
                 (
@@ -211,7 +218,7 @@ pub(super) fn project_have_equal_only(
         ExecHaveObjEqualStmtResult::Success(success) => object_for(
             runtime,
             vec![
-                ("success", bool_value(true)),
+                ("statement_result", statement_result_value(true)),
                 ("kind", string("have_obj_equal")),
                 ("statement", string(success.statement.readable_string())),
                 (
@@ -254,7 +261,7 @@ pub(super) fn project_have_equal_only(
         ExecHaveObjEqualStmtResult::Failed(_) => object_for(
             runtime,
             vec![
-                ("success", bool_value(false)),
+                ("statement_result", statement_result_value(false)),
                 ("kind", string("have_obj_equal")),
                 (
                     "why_failed",

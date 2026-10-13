@@ -36,7 +36,7 @@ use crate::execute::execute_fact_stmt::verify_not_forall_fact::{
 use crate::execute::execute_fact_stmt::verify_or_fact::{VerifyOrFactFailed, VerifyOrFactResult};
 use crate::execute::execute_fact_stmt::VerifyFactResult;
 use crate::execute::IntroduceTypedParametersResult;
-use crate::json_output::helper::{bool_value, object_for, string};
+use crate::json_output::helper::{object_for, string, verification_result_value};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -65,7 +65,7 @@ pub(super) fn project_atomic_except_success(
         runtime,
         vec![
             ("type", string("atomic_except_equality")),
-            ("success", bool_value(true)),
+            ("verification_result", verification_result_value(true)),
             ("fact", string(s.fact.readable_string())),
             (
                 "well_defined",
@@ -93,7 +93,7 @@ fn project_atomic_except(
             runtime,
             vec![
                 ("type", string("atomic_except_equality")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("well_defined")),
                 (
                     "failure",
@@ -110,7 +110,7 @@ fn project_atomic_except(
             runtime,
             vec![
                 ("type", string("atomic_except_equality")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("search_proof")),
                 ("fact", string(fact.readable_string())),
                 (
@@ -128,7 +128,7 @@ fn project_equality(result: &VerifyEqualityResult, runtime: &Runtime) -> JsonVal
             runtime,
             vec![
                 ("type", string("equality")),
-                ("success", bool_value(true)),
+                ("verification_result", verification_result_value(true)),
                 (
                     "fact",
                     string(AtomicFact::EqualFact(s.fact.clone()).readable_string()),
@@ -148,7 +148,7 @@ fn project_equality(result: &VerifyEqualityResult, runtime: &Runtime) -> JsonVal
                 runtime,
                 vec![
                     ("type", string("equality")),
-                    ("success", bool_value(false)),
+                    ("verification_result", verification_result_value(false)),
                     ("phase", string("well_defined")),
                     (
                         "failure",
@@ -164,7 +164,7 @@ fn project_equality(result: &VerifyEqualityResult, runtime: &Runtime) -> JsonVal
             runtime,
             vec![
                 ("type", string("equality")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("search_proof")),
                 (
                     "fact",
@@ -185,7 +185,7 @@ fn project_and(result: &VerifyAndFactResult, runtime: &Runtime) -> JsonValue {
             runtime,
             vec![
                 ("type", string("and")),
-                ("success", bool_value(true)),
+                ("verification_result", verification_result_value(true)),
                 (
                     "fact",
                     string(Fact::AndFact(s.fact.clone()).readable_string()),
@@ -224,7 +224,7 @@ fn project_and(result: &VerifyAndFactResult, runtime: &Runtime) -> JsonValue {
                 runtime,
                 vec![
                     ("type", string("and")),
-                    ("success", bool_value(false)),
+                    ("verification_result", verification_result_value(false)),
                     ("phase", string(phase)),
                     (
                         "fact",
@@ -251,7 +251,7 @@ fn project_chain(result: &VerifyChainFactResult, runtime: &Runtime) -> JsonValue
             runtime,
             vec![
                 ("type", string("chain")),
-                ("success", bool_value(true)),
+                ("verification_result", verification_result_value(true)),
                 (
                     "fact",
                     string(Fact::ChainFact(s.fact.clone()).readable_string()),
@@ -292,7 +292,7 @@ fn project_chain(result: &VerifyChainFactResult, runtime: &Runtime) -> JsonValue
                 runtime,
                 vec![
                     ("type", string("chain")),
-                    ("success", bool_value(false)),
+                    ("verification_result", verification_result_value(false)),
                     ("phase", string(phase)),
                     (
                         "fact",
@@ -319,7 +319,7 @@ fn project_or(result: &VerifyOrFactResult, runtime: &Runtime) -> JsonValue {
             runtime,
             vec![
                 ("type", string("or")),
-                ("success", bool_value(true)),
+                ("verification_result", verification_result_value(true)),
                 (
                     "fact",
                     string(Fact::OrFact(s.fact.clone()).readable_string()),
@@ -338,7 +338,7 @@ fn project_or(result: &VerifyOrFactResult, runtime: &Runtime) -> JsonValue {
             runtime,
             vec![
                 ("type", string("or")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("well_defined")),
             ],
         ),
@@ -349,7 +349,7 @@ fn project_or(result: &VerifyOrFactResult, runtime: &Runtime) -> JsonValue {
             runtime,
             vec![
                 ("type", string("or")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("search_proof")),
                 ("fact", string(Fact::OrFact(fact.clone()).readable_string())),
                 (
@@ -417,7 +417,7 @@ fn project_exist_success(
         runtime,
         vec![
             ("type", string(kind)),
-            ("success", bool_value(true)),
+            ("verification_result", verification_result_value(true)),
             ("fact", string(exist_fact_display(&fact))),
             (
                 "well_defined",
@@ -438,7 +438,7 @@ pub(super) fn project_exist_failed(
             runtime,
             vec![
                 ("type", string(kind)),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("well_defined")),
                 (
                     "failure",
@@ -453,7 +453,7 @@ pub(super) fn project_exist_failed(
             runtime,
             vec![
                 ("type", string(kind)),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("search_proof")),
                 ("fact", string(exist_fact_display(fact))),
                 (
@@ -472,7 +472,7 @@ fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonVal
                 runtime,
                 vec![
                     ("type", string("forall")),
-                    ("success", bool_value(true)),
+                    ("verification_result", verification_result_value(true)),
                     (
                         "fact",
                         string(Fact::ForallFact(s.fact.clone()).readable_string()),
@@ -514,7 +514,7 @@ fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonVal
                 runtime,
                 vec![
                     ("type", string("forall")),
-                    ("success", bool_value(true)),
+                    ("verification_result", verification_result_value(true)),
                     (
                         "fact",
                         string(Fact::ForallFact(s.fact.clone()).readable_string()),
@@ -548,7 +548,7 @@ fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonVal
             runtime,
             vec![
                 ("type", string("forall")),
-                ("success", bool_value(true)),
+                ("verification_result", verification_result_value(true)),
                 (
                     "fact",
                     string(Fact::ForallFact(s.fact.clone()).readable_string()),
@@ -591,7 +591,7 @@ fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonVal
                 runtime,
                 vec![
                     ("type", string("forall")),
-                    ("success", bool_value(false)),
+                    ("verification_result", verification_result_value(false)),
                     ("phase", string("well_defined")),
                     (
                         "failure",
@@ -612,7 +612,7 @@ fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonVal
             runtime,
             vec![
                 ("type", string("forall")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("search_proof")),
                 (
                     "fact",
@@ -744,7 +744,7 @@ fn project_forall_iff(result: &VerifyForallFactWithIffResult, runtime: &Runtime)
             runtime,
             vec![
                 ("type", string("forall_iff")),
-                ("success", bool_value(true)),
+                ("verification_result", verification_result_value(true)),
                 (
                     "fact",
                     string(Fact::ForallFactWithIff(s.fact.clone()).readable_string()),
@@ -768,7 +768,7 @@ fn project_forall_iff(result: &VerifyForallFactWithIffResult, runtime: &Runtime)
             runtime,
             vec![
                 ("type", string("forall_iff")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("then_implies_iff")),
                 (
                     "fact",
@@ -790,7 +790,7 @@ fn project_forall_iff(result: &VerifyForallFactWithIffResult, runtime: &Runtime)
             runtime,
             vec![
                 ("type", string("forall_iff")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("iff_implies_then")),
                 (
                     "fact",
@@ -815,7 +815,7 @@ fn project_not_forall(result: &VerifyNotForallFactResult, runtime: &Runtime) -> 
             runtime,
             vec![
                 ("type", string("not_forall")),
-                ("success", bool_value(true)),
+                ("verification_result", verification_result_value(true)),
                 (
                     "fact",
                     string(Fact::NotForall(s.fact.clone()).readable_string()),
@@ -836,7 +836,7 @@ fn project_not_forall(result: &VerifyNotForallFactResult, runtime: &Runtime) -> 
             runtime,
             vec![
                 ("type", string("not_forall")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("unsupported_negation")),
                 (
                     "fact",
@@ -852,7 +852,7 @@ fn project_not_forall(result: &VerifyNotForallFactResult, runtime: &Runtime) -> 
             runtime,
             vec![
                 ("type", string("not_forall")),
-                ("success", bool_value(false)),
+                ("verification_result", verification_result_value(false)),
                 ("phase", string("prove_derived_exist")),
                 (
                     "fact",

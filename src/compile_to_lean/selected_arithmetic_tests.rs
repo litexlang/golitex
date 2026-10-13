@@ -190,6 +190,7 @@ fn symbolic_natural_power_laws_replay_ordered_requirements_and_original_denotati
         assert!(lean.contains("Litex.NativeBridge.denotePowStructuralNat"));
         assert!(lean.contains("Litex.NativeBridge.asNat_spec"));
         assert!(lean.contains("_litex_combined_exponent"));
+        assert!(lean.contains("(Eq.symm (by"));
     }
 }
 

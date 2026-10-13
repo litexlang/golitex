@@ -1290,7 +1290,10 @@ mod principal_root_nonnegative_algebra_tests {
             .iter()
             .map(|v| {
                 let proof = v.as_object().unwrap();
-                assert_eq!(proof.get("success"), Some(&JsonValue::Bool(true)));
+                assert_eq!(
+                    proof.get("verification_result").unwrap().as_str().ok(),
+                    Some("accepted")
+                );
                 assert!(proof.get("searched_proof").is_some());
                 proof.get("fact").unwrap().as_str().unwrap().to_owned()
             })

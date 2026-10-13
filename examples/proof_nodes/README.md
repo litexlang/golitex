@@ -173,7 +173,8 @@ false conclusions, source evidence and scope boundaries.
 Displayed finite-set strategies have separate tracers for
 [membership](atomic/by_builtin_strategy/list_set_membership.lit) and
 [nonmembership](atomic/by_builtin_strategy/list_set_nonmembership.lit).
-Their strict gates require exit 0, JSON `success: true` and no `session_error`.
+Their strict gates require exit 0, JSON `run_result: "success"`,
+`session_terminated: false`, and `termination: null`.
 `finite_list_membership_strategy` tests retain false and ill-defined controls,
 the inherited search ceiling, stored citations and all requirement certificates.
 
@@ -208,7 +209,8 @@ Scalar soundness has maintained tracers for
 [exact scalar carriers](atomic/by_builtin_rule/closed_exact_scalar_membership.lit),
 [complex inequality](atomic/by_builtin_rule/closed_complex_not_equal.lit) and
 [real-valued complex order](atomic/by_builtin_rule/closed_complex_real_order.lit).
-Their strict CLI gates require exit 0, success true and no session_error.
+Their strict CLI gates require exit 0, `run_result: "success"`,
+`session_terminated: false`, and `termination: null`.
 `field_arithmetic_carrier_strategy` tests check the real-base evidence,
 coordinate evidence, domain/false controls and inherited child ceilings.
 
@@ -584,7 +586,7 @@ from the goal, retaining the original equality citation.
 
 ## Showcase local rules (2026-10-02)
 
-These tracers require strict verification: exit 0 and top-level JSON `success: true`.
+These tracers require strict verification: exit 0 and top-level JSON `run_result: "success"`.
 
 | Capability | Tracer |
 | --- | --- |
@@ -693,7 +695,8 @@ results. `exact_rational_powers` tests include the collector
 `run_examples_closed_rational_power_calculation`, Direct calculation, checked
 Q+/Q domain evidence, independent eval results/no stores, irrational/overflow
 controls and unchanged integer-power domains. Its strict CLI gate requires
-exit 0, JSON success true and no session_error.
+exit 0, JSON `run_result: "success"`, `session_terminated: false`, and
+`termination: null`.
 
 Four dedicated tracers cover [fraction rounding and integer operands](equal/by_builtin_rule/closed_fraction_rounding_calculation.lit),
 [numeric radicals](equal/by_builtin_rule/closed_radical_calculation.lit),
@@ -796,7 +799,8 @@ matches. Disjoint finite partitioning certifies each callback restriction,
 with scoped pointwise evidence when needed. Finite indexed union retains both
 index finiteness and the exact stored universal fibre certificate with source
 IDs and alpha renamings. No wider premise search or new runtime state is used.
-The targeted collector requires exit0, root success true and no session error.
+The targeted collector requires exit 0, root `run_result: "success"`,
+`session_terminated: false`, and `termination: null`.
 
 [Complete Cartesian definitions](equal/by_object_definition/cart_function_set_definition.lit)
 uses the ordinary object-definition owner for exact finite domains and every

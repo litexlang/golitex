@@ -186,27 +186,29 @@ def run(binary, name, inputs, strict, expect):
     if output is not None:
         if output.get('kind') != 'run' or output.get('detail') != 'normal':
             errors.append('unexpected JSON envelope')
-        if output.get('success') is not expect['success']:
+        expected_run_result = 'success' if expect['success'] else 'failure'
+        if output.get('run_result') != expected_run_result:
             errors.append('success differs from expectation')
         if proc.returncode != (0 if expect['success'] else 1):
             errors.append('exit code differs from expectation')
         results = output.get('statement_results')
-        session_error = output.get('session_error')
+        session_terminated = output.get('session_terminated')
+        termination = output.get('termination')
         if not isinstance(results, list):
             errors.append('statement_results is not a list')
             results = []
-        if expect['success'] and (session_error is not None or not results
-                                  or any(result.get('success') is not True for result in results)):
+        if expect['success'] and (session_terminated or termination is not None or not results
+                                  or any(result.get('statement_result') != 'accepted' for result in results)):
             errors.append('positive contains an error or no executed statements')
         if 'statement_success' in expect:
-            if [result.get('success') for result in results] != expect['statement_success']:
+            if [result.get('statement_result') == 'accepted' for result in results] != expect['statement_success']:
                 errors.append('statement success sequence differs')
         if expect.get('session_error_contains'):
-            if expect['session_error_contains'] not in str(session_error):
+            if expect['session_error_contains'] not in str(termination):
                 errors.append('wrong session error')
         elif 'failed_phase' in expect:
-            failed = [result for result in results if result.get('success') is False]
-            if session_error is not None or not failed:
+            failed = [result for result in results if result.get('statement_result') == 'rejected']
+            if session_terminated or termination is not None or not failed:
                 errors.append('expected a soft statement failure')
             elif [result.get('why_failed', {}).get('phase') for result in failed] != expect['failed_phase']:
                 errors.append('wrong failure phase')

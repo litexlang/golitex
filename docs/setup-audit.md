@@ -33,10 +33,11 @@ $dvd(12, 3)
 ```
 
 Before configuring the standard-library path, `litex -f smoke.lit` exited 1
-with `success: false` and `session_error: "failed to import project"`.
+with `run_result: "failure"`, `session_terminated: true`, and
+`termination.phase: "import"`.
 Setting `LITEX_STD_PATH` to the absolute copied `bin/std` path made
-`litex -lang en -f smoke.lit` exit 0 with `kind: "run"`, `success: true`, and
-`session_error: null`. The strict-mode run passed too.
+`litex -lang en -f smoke.lit` exit 0 with `kind: "run"`, `run_result: "success"`, and
+`session_terminated: false`, `termination: null`. The strict-mode run passed too.
 
 The former setup guide tested only `litex -e '1 = 1'`, which does not import
 std. Both setup languages now configure std for Homebrew, Debian, Scoop,

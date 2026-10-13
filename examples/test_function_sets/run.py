@@ -106,24 +106,39 @@ def evaluate(path):
         envelope = json.loads(process.stdout)
     except json.JSONDecodeError:
         return dict(result, phase='invalid_json', diagnostic=process.stdout[-4000:])
-    if not isinstance(envelope, dict) or envelope.get('kind') != 'run' or type(envelope.get('success')) is not bool:
+    if (not isinstance(envelope, dict) or envelope.get('kind') != 'run'
+            or envelope.get('run_result') not in {'success', 'failure'}):
         return dict(result, phase='invalid_envelope', diagnostic=repr(envelope)[-4000:])
     statements = envelope.get('statement_results')
-    if not isinstance(statements, list) or any(type(s.get('success')) is not bool for s in statements):
+    if (not isinstance(statements, list)
+            or any(not isinstance(s, dict)
+                   or s.get('statement_result') not in {'accepted', 'rejected'}
+                   for s in statements)):
         return dict(result, phase='invalid_statements', diagnostic=repr(envelope)[-4000:])
-    statuses = [s['success'] for s in statements]
+    statuses = [s['statement_result'] == 'accepted' for s in statements]
     result['statement_statuses'] = statuses
-    result['session_error'] = envelope.get('session_error')
-    failed = [s for s in statements if not s['success']]
-    if envelope['success'] and process.returncode == 0 and all(statuses) and result['session_error'] is None:
+    terminated = envelope.get('session_terminated')
+    termination = envelope.get('termination')
+    result['termination'] = termination
+    if (type(terminated) is not bool or terminated != (termination is not None)
+            or (termination is not None and (
+                not isinstance(termination, dict)
+                or not isinstance(termination.get('phase'), str)
+                or not isinstance(termination.get('message'), str)))):
+        return dict(result, phase='invalid_termination', diagnostic=repr(envelope)[-4000:])
+    failed = [s for s in statements if s['statement_result'] == 'rejected']
+    contract_success = not terminated and all(statuses)
+    if ((envelope['run_result'] == 'success') != contract_success
+            or process.returncode != (0 if contract_success else 1)):
+        return dict(result, phase='inconsistent_result', diagnostic=repr(envelope)[-4000:])
+    if contract_success:
         return dict(result, observed='accept', phase='success')
-    if not envelope['success'] and process.returncode == 1:
-        error = result['session_error']
-        parse_error = isinstance(error, str) and error.startswith(('parse_error:', 'Runtime(ParseError('))
-        if failed and (error is None or parse_error):
+    else:
+        parse_error = isinstance(termination, dict) and termination.get('phase') == 'parse'
+        if failed and (termination is None or parse_error):
             return dict(result, observed='reject', phase=failed[0].get('why_failed', {}).get('phase', 'verification'), failures=failed)
         if parse_error:
-            return dict(result, observed='reject', phase='parse', diagnostic=error, failures=failed)
+            return dict(result, observed='reject', phase='parse', diagnostic=termination, failures=failed)
     return dict(result, diagnostic=repr(envelope)[-4000:])
 
 

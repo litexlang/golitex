@@ -115,8 +115,8 @@ python3 examples/test_objs/test_runner.py
 target/release/litex -f examples/test_objs/div.lit
 ```
 
-Every process is checked using the current CLI's top-level `success` field and
-its exit status. Source and executable hashes are recorded in structured
+Every process is checked using exit status plus the current CLI's top-level
+`run_result`, `session_terminated`, and `termination` fields. Source and executable hashes are recorded in structured
 reports; a source/executable change during a gate invalidates it. Build before
 running after source changes. This checkout does not support the older workflow
 flags `-compact`, `-runner`, `-before` or the `try:` statement. The implementation

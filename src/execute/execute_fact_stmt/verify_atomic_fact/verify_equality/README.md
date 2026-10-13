@@ -306,7 +306,8 @@ cargo test --release equality_search_tests -- --nocapture
 target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/peer_alpha_membership.lit
 ```
 
-The CLI gate requires exit 0, top-level `success: true`, no `session_error`,
+The CLI gate requires exit 0, top-level `run_result: "success"`,
+`session_terminated: false`, and `termination: null`,
 and successful statement results. Focused Rust tests check identity with builtin entry disabled,
 free-variable and domain boundaries, WD rejection, oriented multi-edge paths,
 both peer sides, inherited builtin permission, no nested peer expansion from matching,

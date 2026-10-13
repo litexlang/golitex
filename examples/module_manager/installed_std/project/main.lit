@@ -1,7 +1,7 @@
 # Tracer: consume a declaration from std bundled with an installed executable.
 # Before: from an unrelated directory, with no LITEX_STD_PATH or local std,
 # basics:::version = 1
-# failed with session_error: "failed to import project".
+# failed with session_terminated=true and termination.phase=import.
 # Now: the executable's installation layout supplies the std module.
 basics:::version = 1
 basics::main::version = 1

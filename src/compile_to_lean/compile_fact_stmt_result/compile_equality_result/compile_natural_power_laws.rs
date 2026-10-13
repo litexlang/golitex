@@ -53,7 +53,12 @@ impl LitexToLeanCompiler {
         }
         let combined_term = self.compile_object_reference(combined_object, position)?;
         let product_term = self.compile_object_reference(product_object, position)?;
-        let proof = format!("(by\n{header}\n  let _litex_product := {product_term}\n  let _litex_combined := {combined_term}\n  have _litex_combined_exponent : Litex.Same _litex_combined.val.exponent (Litex.number (M := M) (((_litex_n1 + _litex_n2 : ℕ) : ℂ))) := {combined_value}\n  have _litex_factor_left : Litex.denote _litex_product.val.left = M.number (_litex_base_value ^ {}) := {}\n  have _litex_factor_right : Litex.denote _litex_product.val.right = M.number (_litex_base_value ^ {}) := {}\n  exact Litex.NativeBridge.sameOfDenoteNumber _litex_product _litex_combined ((_litex_base_value ^ {}) * (_litex_base_value ^ {})) (_litex_base_value ^ (_litex_n1 + _litex_n2)) (Litex.NativeBridge.denoteMul _litex_product.val.left _litex_product.val.right _litex_product.wd.1 _litex_product.wd.2 _ _ _litex_factor_left _litex_factor_right) (Litex.NativeBridge.denotePowStructuralNat _litex_combined (_litex_n1 + _litex_n2) _litex_combined_exponent _litex_base_value _litex_base_denote) (by rw [pow_add]; ring)\n)", left.0, left.1, right.0, right.1, left.0, right.0);
+        let native_product = if left.0 == "_litex_n2" && right.0 == "_litex_n1" {
+            "((mul_comm _ _).trans (pow_add _litex_base_value _litex_n1 _litex_n2).symm)"
+        } else {
+            "(pow_add _litex_base_value _litex_n1 _litex_n2).symm"
+        };
+        let proof = format!("(by\n{header}\n  let _litex_product := {product_term}\n  let _litex_combined := {combined_term}\n  have _litex_combined_exponent : Litex.Same _litex_combined.val.exponent (Litex.number (M := M) (((_litex_n1 + _litex_n2 : ℕ) : ℂ))) := {combined_value}\n  have _litex_factor_left : Litex.denote _litex_product.val.left = M.number (_litex_base_value ^ {}) := {}\n  have _litex_factor_right : Litex.denote _litex_product.val.right = M.number (_litex_base_value ^ {}) := {}\n  exact Litex.NativeBridge.sameOfDenoteNumber _litex_product _litex_combined ((_litex_base_value ^ {}) * (_litex_base_value ^ {})) (_litex_base_value ^ (_litex_n1 + _litex_n2)) (Litex.NativeBridge.denoteMul _litex_product.val.left _litex_product.val.right _litex_product.wd.1 _litex_product.wd.2 _ _ _litex_factor_left _litex_factor_right) (Litex.NativeBridge.denotePowStructuralNat _litex_combined (_litex_n1 + _litex_n2) _litex_combined_exponent _litex_base_value _litex_base_denote) {native_product}\n)", left.0, left.1, right.0, right.1, left.0, right.0);
         Ok(if reversed {
             format!("(Eq.symm {proof})")
         } else {
@@ -176,7 +181,14 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let term = self.compile_object_reference(object, position)?;
-        Ok(format!("(by\n    let _litex_exponent := {term}\n    change M.{operation}Value (Litex.denote _litex_exponent.val.left) (Litex.denote _litex_exponent.val.right) = _\n    have _litex_first_value := _litex_exp{}\n    have _litex_second_value := _litex_exp{}\n    change Litex.denote _litex_exponent.val.left = M.number (_litex_n{} : ℂ) at _litex_first_value\n    change Litex.denote _litex_exponent.val.right = M.number (_litex_n{} : ℂ) at _litex_second_value\n    rw [_litex_first_value, _litex_second_value, M.{operation}_numbers]\n    congr 1\n    push_cast\n    ring)", indices.0, indices.1, indices.0, indices.1))
+        let symbol = if operation == "add" { "+" } else { "*" };
+        let cast = format!("(Nat.cast_{operation} _litex_n1 _litex_n2).symm");
+        let cast = if indices == (2, 1) {
+            format!("(({operation}_comm (_litex_n2 : ℂ) (_litex_n1 : ℂ)).trans {cast})")
+        } else {
+            cast
+        };
+        Ok(format!("(by\n    let _litex_exponent := {term}\n    change M.{operation}Value (Litex.denote _litex_exponent.val.left) (Litex.denote _litex_exponent.val.right) = M.number (((_litex_n1 {symbol} _litex_n2 : ℕ) : ℂ))\n    have _litex_first_value := _litex_exp{}\n    have _litex_second_value := _litex_exp{}\n    change Litex.denote _litex_exponent.val.left = M.number (_litex_n{} : ℂ) at _litex_first_value\n    change Litex.denote _litex_exponent.val.right = M.number (_litex_n{} : ℂ) at _litex_second_value\n    rw [_litex_first_value, _litex_second_value, M.{operation}_numbers]\n    exact congrArg M.number {cast})", indices.0, indices.1, indices.0, indices.1))
     }
 
     fn natural_factor_value(
@@ -228,7 +240,8 @@ impl LitexToLeanCompiler {
         };
         let exponent = if index == 1 { first } else { second };
         let one = self.compile_literal_natural_identity(exponent, 1, position)?;
-        Ok((format!("_litex_n{index}"), format!("(by\n    have _litex_one : _litex_n{index} = 1 := Litex.NativeBridge.asNat_ofDenote {} _litex_{}_natural 1 {one}\n    simpa only [_litex_one, pow_one] using _litex_base_denote)", self.compile_object_reference(exponent, position)?, if index == 1 { "first" } else { "second" })))
+        let factor = self.compile_object_reference(object, position)?;
+        Ok((format!("_litex_n{index}"), format!("(by\n    change Litex.denote {factor} = M.number (_litex_base_value ^ _litex_n{index})\n    have _litex_one : _litex_n{index} = 1 := Litex.NativeBridge.asNat_ofDenote {} _litex_{}_natural 1 {one}\n    simpa only [_litex_one, pow_one] using _litex_base_denote)", self.compile_object_reference(exponent, position)?, if index == 1 { "first" } else { "second" })))
     }
 }
 

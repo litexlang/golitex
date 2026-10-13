@@ -38,7 +38,7 @@ x^2 = 4
 | 对象 | `x`、`R`、`{1, 2}`、`x + 1` | 数学值或表达式。 |
 | 事实 | `x = 2`、`x $in R`、`$P(x)` | 关于对象的命题。 |
 | 语句 | `have`、`prop`、裸事实、`claim` | 引入、定义或检查信息。 |
-| 反馈 | `success`、`proof_method`、`stores`、`why_failed` | 解释结果与可用上下文。 |
+| 反馈 | `statement_result`、`proof_method`、`stores`、`why_failed` | 解释结果与可用上下文。 |
 
 写一行之前，识别它的对象、定义域以及接下来需要的精确事实。声明新数学概念之前，先查看已有内置和模块接口。
 
@@ -361,16 +361,16 @@ litex -lang en -strict -r path/to/project
 ```json
 {
   "kind": "run",
-  "success": true,
-  "session_error": null
+  "run_result": "success",
+  "session_terminated": false, "termination": null
 }
 ```
 
 | 结果 | 下一步 |
 | --- | --- |
 | 成功 | 判断可复用内容时，查看 `proof_method`、`stores` 和 `infers`。 |
-| 语句 `success: false` | 阅读 `why_failed.phase` 和 `why_failed.goal`；失败语句不新增成功事实。先前已接受语句仍可使用。 |
-| `session_error` 非 null | 阅读硬错误；当前运行/会话停止。 |
+| 语句 `statement_result: "rejected"` | 阅读 `why_failed.phase` 和 `why_failed.goal`；失败语句不新增成功事实。先前已接受语句仍可使用。 |
+| `session_terminated: true` | 阅读结构化 `termination`；当前运行/会话已停止。 |
 
 软失败语句会让整体批量运行失败，即使后续语句成功。不要从嵌套证据文本推断成功，也不要把失败断言当成其否定。见 [CLI 结果](Litex命令行参考.md#statement-outcomes)。
 

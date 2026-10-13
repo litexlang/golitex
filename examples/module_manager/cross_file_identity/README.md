@@ -11,7 +11,8 @@ target/release/litex -strict -f examples/module_manager/cross_file_identity/targ
 cargo test --release cross_file_identity_tests -- --test-threads=1
 ```
 
-The CLI gate requires exit 0, JSON success true and no session_error. Rust
+The CLI gate requires exit 0, `run_result: "success"`,
+`session_terminated: false`, and `termination: null`. Rust
 regressions also reject the wrong value after successful imports, verify real
 cache hits and reordered module IDs, preserve same-path merging, reject alias
 duplicates within one manifest, and check that unsupported qualified algo eval

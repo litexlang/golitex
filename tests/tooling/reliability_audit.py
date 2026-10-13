@@ -277,22 +277,27 @@ def main():
                                   timeout=args.timeout)
             record["exit_code"] = proc.returncode
             data = json.loads(proc.stdout)
-            actual = [item["success"] for item in data["statement_results"]]
+            actual = [
+                item["statement_result"] == "accepted"
+                for item in data["statement_results"]
+            ]
             record["actual"] = actual
-            record["session_error"] = data["session_error"]
-            envelope_success = all(actual) and data["session_error"] is None
-            consistent = (data["success"] == (proc.returncode == 0)
-                          and data["success"] == envelope_success)
+            record["termination"] = data["termination"]
+            envelope_success = all(actual) and not data["session_terminated"]
+            run_success = data["run_result"] == "success"
+            consistent = (run_success == (proc.returncode == 0)
+                          and run_success == envelope_success
+                          and data["session_terminated"] == (data["termination"] is not None))
             if data["kind"] != "run" or not consistent:
                 record["status"] = "output_contract_failure"
             elif case["reject"]:
-                if data["success"]:
+                if run_success:
                     record["status"] = "false_acceptance"
-                elif case["error_contains"] not in str(data["session_error"]):
+                elif case["error_contains"] not in str(data["termination"]):
                     record["status"] = "wrong_rejection_reason"
                 else:
                     record["status"] = "pass"
-            elif data["session_error"] is not None or len(actual) != len(case["expected"]):
+            elif data["session_terminated"] or len(actual) != len(case["expected"]):
                 record["status"] = "expression_or_session_observation"
             elif actual == case["expected"]:
                 record["status"] = "pass"

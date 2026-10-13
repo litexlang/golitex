@@ -109,14 +109,18 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                 if is_target {
                     if keep_env_open {
                         attach_file_json(&runtime, &path, &mut file_result.run);
-                        if let Err(error) = run_repl_loop(&mut runtime) {
-                            file_result.run.attach_session_error(
-                                &runtime,
-                                "file",
-                                Some(path.as_path()),
-                                RunSessionError::Runtime(error),
-                            );
-                            return Ok(RunFileResult::new(path, file_result.run));
+                        match run_repl_loop(&mut runtime) {
+                            Ok(true) => {}
+                            Ok(false) => file_result.run.attach_session_rejection(&runtime),
+                            Err(error) => {
+                                file_result.run.attach_session_error(
+                                    &runtime,
+                                    "file",
+                                    Some(path.as_path()),
+                                    RunSessionError::Runtime(error),
+                                );
+                                return Ok(RunFileResult::new(path, file_result.run));
+                            }
                         }
                         return Ok(RunFileResult::new(path, file_result.run));
                     }
@@ -147,14 +151,18 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             }
             if session {
                 attach_file_json(&runtime, &path, &mut file_result.run);
-                if let Err(error) = run_repl_loop(&mut runtime) {
-                    file_result.run.attach_session_error(
-                        &runtime,
-                        "file",
-                        Some(path.as_path()),
-                        RunSessionError::Runtime(error),
-                    );
-                    return Ok(RunFileResult::new(path, file_result.run));
+                match run_repl_loop(&mut runtime) {
+                    Ok(true) => {}
+                    Ok(false) => file_result.run.attach_session_rejection(&runtime),
+                    Err(error) => {
+                        file_result.run.attach_session_error(
+                            &runtime,
+                            "file",
+                            Some(path.as_path()),
+                            RunSessionError::Runtime(error),
+                        );
+                        return Ok(RunFileResult::new(path, file_result.run));
+                    }
                 }
                 return Ok(RunFileResult::new(path, file_result.run));
             }
@@ -190,14 +198,18 @@ fn run_file_isolated(
     }
 
     if session {
-        if let Err(error) = run_repl_loop(&mut runtime) {
-            code_result.attach_session_error(
-                &runtime,
-                "file",
-                Some(path.as_path()),
-                RunSessionError::Runtime(error),
-            );
-            return Ok(RunFileResult::new(path, code_result));
+        match run_repl_loop(&mut runtime) {
+            Ok(true) => {}
+            Ok(false) => code_result.attach_session_rejection(&runtime),
+            Err(error) => {
+                code_result.attach_session_error(
+                    &runtime,
+                    "file",
+                    Some(path.as_path()),
+                    RunSessionError::Runtime(error),
+                );
+                return Ok(RunFileResult::new(path, code_result));
+            }
         }
         return Ok(RunFileResult::new(path, code_result));
     }

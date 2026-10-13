@@ -105,7 +105,7 @@ target/release/litex -strict -lang en -f <example>
 ```
 
 Result: **42/42 files, 166 top-level statement results**; each process exited
-0 with a Normal `kind: run`, `success: true`, `session_error: null` envelope.
+0 with a Normal `kind: run`, `run_result: "success"`, `session_terminated: false`, `termination: null` envelope.
 No new trust or assumption was added.
 
 CLI binary SHA256:

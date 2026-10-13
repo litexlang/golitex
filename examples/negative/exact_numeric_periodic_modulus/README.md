@@ -1,6 +1,6 @@
 # Exact numeric, periodic trig and modulus rejection controls
 
-Every `.lit` here must return exit 1 and JSON `success: false` under
+Every `.lit` here must return exit 1 and JSON `run_result: "failure"` under
 `target/release/litex -strict -f <file>`. The companion accepted artifacts are
 in `examples/proof_nodes/equal/by_builtin_rule/` and
 `examples/proof_nodes/atomic/by_builtin_rule/exact_fraction_order.lit`.

@@ -59,12 +59,67 @@ fn field<'a>(value: &'a JsonValue, name: &str) -> &'a JsonValue {
     value.as_object().unwrap().get(name).unwrap()
 }
 
-fn batch(output: &Output, exit: i32, success: bool) -> JsonValue {
+fn batch(output: &Output, exit: i32, succeeded: bool) -> JsonValue {
     assert_eq!(output.status.code(), Some(exit), "{:?}", output);
     assert!(output.stderr.is_empty(), "{:?}", output);
     let json = JsonValue::parse(std::str::from_utf8(&output.stdout).unwrap()).unwrap();
-    assert_eq!(field(&json, "success"), &JsonValue::Bool(success));
+    match field(&json, "kind").as_str().unwrap() {
+        "run" => assert_eq!(
+            field(&json, "run_result").as_str().ok(),
+            Some(if succeeded { "success" } else { "failure" })
+        ),
+        "artifact" => assert_eq!(
+            field(&json, "artifact_result").as_str().ok(),
+            Some(if succeeded { "success" } else { "failure" })
+        ),
+        kind => panic!("unexpected batch kind {kind}"),
+    }
     json
+}
+
+fn assert_session_state(json: &JsonValue, terminated: bool) {
+    assert_eq!(
+        field(json, "session_terminated"),
+        &JsonValue::Bool(terminated)
+    );
+    assert_eq!(field(json, "termination") == &JsonValue::Null, !terminated);
+}
+
+fn assert_no_generic_success_key(value: &JsonValue) {
+    match value {
+        JsonValue::Array(items) => items.iter().for_each(assert_no_generic_success_key),
+        JsonValue::Object(object) => {
+            for (key, value) in object.iter() {
+                assert_ne!(key, "success", "generic result key leaked in {value:?}");
+                assert_no_generic_success_key(value);
+            }
+        }
+        _ => {}
+    }
+}
+
+#[test]
+fn run_result_and_session_termination_are_orthogonal() {
+    let dir = FixtureDir::new();
+
+    let accepted = batch(&dir.run(&["-lang", "en", "-e", "1 = 1"], None), 0, true);
+    assert_session_state(&accepted, false);
+
+    let rejected = batch(&dir.run(&["-lang", "en", "-e", "1 = 2"], None), 1, false);
+    assert_session_state(&rejected, false);
+
+    let terminated = batch(&dir.run(&["-lang", "en", "-e", "have"], None), 1, false);
+    assert_session_state(&terminated, true);
+    assert_eq!(
+        field(field(&terminated, "termination"), "phase")
+            .as_str()
+            .ok(),
+        Some("parse")
+    );
+
+    for value in [&accepted, &rejected, &terminated] {
+        assert_no_generic_success_key(value);
+    }
 }
 
 #[test]
@@ -76,7 +131,7 @@ fn positive_integer_alias_normalizes_output_and_preserves_domain() {
         0,
         true,
     );
-    assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+    assert_session_state(&json, false);
     let statements = field(&json, "statement_results").as_array().unwrap();
     for index in [0, 1] {
         assert_eq!(
@@ -101,7 +156,7 @@ fn positive_integer_alias_normalizes_output_and_preserves_domain() {
                 1,
                 false,
             );
-            assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+            assert_session_state(&json, false);
         }
     }
 }
@@ -116,7 +171,7 @@ fn normal_json_retains_mathematical_content_for_custom_views() {
         true,
     );
     assert_eq!(field(&json, "kind").as_str().unwrap(), "run");
-    assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+    assert_session_state(&json, false);
     let statements = field(&json, "statement_results").as_array().unwrap();
     assert_eq!(statements.len(), 2);
     assert_eq!(
@@ -172,11 +227,11 @@ fn negative_source_and_option_spellings_reach_the_source_parser() {
     for command in ["-e", "-extractpython", "-extractc"] {
         let json = batch(&dir.run(&[command, "-2 < 0", "-lang", "en"], None), 0, true);
         if command == "-e" {
-            assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+            assert_session_state(&json, false);
         }
         let json = batch(&dir.run(&[command, "-strict"], None), 1, false);
         let error = if command == "-e" {
-            field(&json, "session_error")
+            field(&json, "termination")
         } else {
             field(&json, "error")
         };
@@ -214,7 +269,10 @@ fn batch_tokenizer_parser_and_io_errors_all_emit_json() {
     let dir = FixtureDir::new();
     for code in ["\"", "have"] {
         let json = batch(&dir.run(&["-strict", "-e", code], None), 1, false);
-        let error = field(&json, "session_error").as_str().unwrap();
+        assert_session_state(&json, true);
+        let error = field(field(&json, "termination"), "message")
+            .as_str()
+            .unwrap();
         assert!(error.contains("parse_error"), "{json:?}");
         assert!(!error.contains("Runtime(ParseError"));
         assert!(field(&json, "statement_results")
@@ -225,13 +283,14 @@ fn batch_tokenizer_parser_and_io_errors_all_emit_json() {
     let json = batch(&dir.run(&["-f", "missing.lit"], None), 1, false);
     assert_eq!(field(&json, "target").as_str().unwrap(), "file");
     assert_eq!(field(&json, "path").as_str().unwrap(), "missing.lit");
-    assert_ne!(field(&json, "session_error"), &JsonValue::Null);
+    assert_session_state(&json, true);
     let output = dir.run(&["-lang", "zh", "-e", "\""], None);
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stderr.is_empty());
     let json = JsonValue::parse(std::str::from_utf8(&output.stdout).unwrap()).unwrap();
     // This locale intentionally translates keys, as on successful runs.
-    assert_eq!(field(&json, "成功"), &JsonValue::Bool(false));
+    assert_eq!(field(&json, "运行结果").as_str().ok(), Some("failure"));
+    assert_eq!(field(&json, "会话已终止"), &JsonValue::Bool(true));
 }
 
 #[test]
@@ -334,8 +393,9 @@ fn file_session_errors_retain_the_original_declaration() {
             .rfind("{\n  \"kind\": \"run\"")
             .expect("final batch JSON");
         let json = JsonValue::parse(&stdout[start..]).unwrap();
-        assert_eq!(field(&json, "success"), &JsonValue::Bool(false));
-        assert!(field(&json, "session_error")
+        assert_eq!(field(&json, "run_result").as_str().ok(), Some("failure"));
+        assert_session_state(&json, true);
+        assert!(field(field(&json, "termination"), "message")
             .as_str()
             .unwrap()
             .contains("<repl>"));
@@ -354,7 +414,8 @@ fn file_session_errors_retain_the_original_declaration() {
         let stdout = std::str::from_utf8(&output.stdout).unwrap();
         let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
         let json = JsonValue::parse(&stdout[start..]).unwrap();
-        assert_eq!(field(&json, "success"), &JsonValue::Bool(true));
+        assert_eq!(field(&json, "run_result").as_str().ok(), Some("success"));
+        assert_session_state(&json, false);
         assert_eq!(
             field(&json, "statement_results"),
             field(&initial, "statement_results")
@@ -363,23 +424,23 @@ fn file_session_errors_retain_the_original_declaration() {
 }
 
 #[test]
-fn file_session_preserves_context_across_a_soft_failure() {
+fn file_session_preserves_context_and_reports_a_soft_failure() {
     let dir = FixtureDir::new();
     fs::write(dir.0.join("main.lit"), "have k N\nk >= 0\n").unwrap();
     let output = dir.run(
         &["-strict", "-f", "main.lit", "-session"],
         Some("k >= 0\n1 = 2\nk >= 0\nexit\n"),
     );
-    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
     assert!(output.stderr.is_empty(), "{output:?}");
     let stdout = std::str::from_utf8(&output.stdout).unwrap();
     assert_eq!(stdout.matches("litex> success").count(), 2, "{stdout}");
-    assert!(stdout.contains("\"success\": false"), "{stdout}");
+    assert!(stdout.contains("\"run_result\": \"failure\""), "{stdout}");
     let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
     let json = JsonValue::parse(&stdout[start..]).unwrap();
     assert_eq!(field(&json, "path").as_str().unwrap(), "main.lit");
-    assert_eq!(field(&json, "success"), &JsonValue::Bool(true));
-    assert_eq!(field(&json, "session_error"), &JsonValue::Null);
+    assert_eq!(field(&json, "run_result").as_str().ok(), Some("failure"));
+    assert_session_state(&json, false);
 }
 
 #[test]
@@ -400,8 +461,11 @@ fn eval_session_hard_errors_retain_the_initial_proof_and_report_once() {
         let stdout = std::str::from_utf8(&output.stdout).unwrap();
         let start = stdout.rfind("{\n  \"kind\": \"run\"").unwrap();
         let json = JsonValue::parse(&stdout[start..]).unwrap();
-        assert_eq!(field(&json, "success"), &JsonValue::Bool(false));
-        let error = field(&json, "session_error").as_str().unwrap();
+        assert_eq!(field(&json, "run_result").as_str().ok(), Some("failure"));
+        assert_session_state(&json, true);
+        let error = field(field(&json, "termination"), "message")
+            .as_str()
+            .unwrap();
         if input != "trust 1 = 2\n" {
             assert!(error.contains("<repl>"), "{error}");
         }
@@ -464,12 +528,15 @@ fn extraction_success_and_errors_share_localized_command_metadata() {
         let key = |name| litex::json_output::json_keys::localize_key(name, language);
         for (command, format) in [("-extractpython", "python"), ("-extractc", "c")] {
             let mut schemas = Vec::new();
-            for (code, exit, success) in [("have a R = 1", 0, true), ("have", 1, false)] {
+            for (code, exit, succeeded) in [("have a R = 1", 0, true), ("have", 1, false)] {
                 let output = dir.run(&["-lang", language.as_str(), command, code], None);
                 assert_eq!(output.status.code(), Some(exit), "{output:?}");
                 assert!(output.stderr.is_empty(), "{output:?}");
                 let json = JsonValue::parse(std::str::from_utf8(&output.stdout).unwrap()).unwrap();
-                assert_eq!(field(&json, &key("success")), &JsonValue::Bool(success));
+                assert_eq!(
+                    field(&json, &key("artifact_result")).as_str().ok(),
+                    Some(if succeeded { "success" } else { "failure" })
+                );
                 assert_eq!(field(&json, &key("format")).as_str().unwrap(), format);
                 assert_eq!(field(&json, &key("target")).as_str().unwrap(), "eval");
                 assert_eq!(
@@ -478,7 +545,7 @@ fn extraction_success_and_errors_share_localized_command_metadata() {
                 );
                 assert_eq!(field(&json, &key("path")), &JsonValue::Null);
                 assert_eq!(field(&json, &key("output_path")), &JsonValue::Null);
-                if success {
+                if succeeded {
                     assert_eq!(field(&json, &key("error")), &JsonValue::Null);
                     assert!(!field(&json, &key("content")).as_str().unwrap().is_empty());
                 } else {
@@ -515,7 +582,10 @@ fn extraction_success_and_errors_share_localized_command_metadata() {
                     field(&json, &key("language")).as_str().unwrap(),
                     language.as_str()
                 );
-                assert_eq!(field(&json, &key("success")), &JsonValue::Bool(false));
+                assert_eq!(
+                    field(&json, &key("artifact_result")).as_str().ok(),
+                    Some("failure")
+                );
             }
         }
     }

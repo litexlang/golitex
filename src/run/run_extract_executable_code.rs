@@ -79,7 +79,10 @@ fn render_extracted_artifact(
         .unwrap_or(JsonValue::Null);
     JsonValue::object_from(vec![
         (key("kind"), JsonValue::String("artifact".into())),
-        (key("success"), JsonValue::Bool(error.is_none())),
+        (
+            key("artifact_result"),
+            crate::json_output::helper::artifact_result_value(error.is_none()),
+        ),
         (key("artifact"), JsonValue::String("extracted_code".into())),
         (key("format"), optional_string(format)),
         (key("target"), optional_string(target)),

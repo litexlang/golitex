@@ -359,11 +359,16 @@ def validate_run_output(output: str, returncode: int) -> None:
         raise PreflightError("smoke test output is not a Normal run")
     if envelope.get("target") != "file" or not isinstance(envelope.get("path"), str):
         raise PreflightError("smoke test run target is not a file")
-    if envelope.get("success") is not True or envelope.get("session_error") is not None:
+    if (
+        envelope.get("run_result") != "success"
+        or envelope.get("session_terminated") is not False
+        or envelope.get("termination") is not None
+    ):
         raise PreflightError(f"smoke test did not verify successfully:\n{output}")
     statements = envelope.get("statement_results")
     if not isinstance(statements, list) or not statements or any(
-        not isinstance(statement, dict) or statement.get("success") is not True
+        not isinstance(statement, dict)
+        or statement.get("statement_result") != "accepted"
         for statement in statements
     ):
         raise PreflightError("smoke test did not retain successful statement results")
