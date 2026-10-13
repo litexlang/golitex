@@ -1580,7 +1580,8 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
                     (
                         "proof_steps",
                         JsonValue::Array(
-                            s.proof_steps
+                            s.body
+                                .proof_steps()
                                 .iter()
                                 .map(|step| project_stmt_detailed(step, runtime))
                                 .collect(),
@@ -1588,7 +1589,7 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
                     ),
                     (
                         "conclusion_proofs",
-                        project_verify_facts(&s.conclusion_proofs, runtime),
+                        project_verify_facts(s.body.conclusion_proofs(), runtime),
                     ),
                     ("stored", project_store_and_infer(&s.stored, runtime)),
                 ],

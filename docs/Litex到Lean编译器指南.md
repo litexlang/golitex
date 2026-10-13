@@ -333,6 +333,147 @@ python3 scripts/litex_to_lean/check.py --subset --work-area .draft/selected-subs
 以及未审查的推理／证书路线仍在编译边界外。
 在结果中观察到未被消费的 inference 节点，不代表编译器已支持该推理。
 
+<a id="two-rational-maps-from-definitions-to-a-native-equivalence"></a>
+
+## 两个有理函数：从定义到原生等价
+
+[有理互逆函数源码](../lean/examples/rational_inverse_maps/statement.lit)展示一段连续的数学论证：
+\(f(x)=(2x+1)/(x-1)\) 将 \(\mathbb{Q}\setminus\{1\}\) 映到
+\(\mathbb{Q}\setminus\{2\}\)，其逆函数是 \(g(y)=(y+1)/(y-2)\)。
+源码依次定义两个函数、证明函数值满足后续调用的定义域条件、证明两个复合恒等式，
+最后通过逆函数证明单射。[生成的 Lean 文件](../lean/examples/rational_inverse_maps/statement.lean)
+保留这整段论证的实际证据。
+
+函数定义将排除值直接放进定义域：
+
+```litex
+have fn forward(x Q:x!=1) Q=(2*x+1)/(x-1)
+have fn backward(y Q:y!=2) Q=(y+1)/(y-2)
+```
+
+完整源码先证明这些除法需要的基本非零事实。下面第一个定义域定理说明，
+为什么随后可以合法地调用 `backward(forward(x))`：
+
+<!-- litex:skip-test -->
+```litex
+thm forward_preserves_domain:
+    ? forall x Q:
+        x!=1
+        =>:
+            forward(x)!=2
+    forward(x)=(2*x+1)/(x-1)
+    forward(x)-2=3/(x-1)
+    3/(x-1)!=0
+```
+
+`backward` 对应的定理证明其函数值不等于 1。有了两个定义域结论，源码继续证明
+`backward(forward(x))=x` 和 `forward(backward(y))=y`。它们成为已证明的命名定理，
+供最后的单射证明复用。在 `a!=1`、`b!=1`、`forward(a)=forward(b)` 的前提下，
+证明选取这两个结果：
+
+<!-- litex:skip-test -->
+```litex
+by thm backward_forward(a) => backward(forward(a))=a
+by thm backward_forward(b) => backward(forward(b))=b
+```
+
+每次调用都返回选中等式、参数成员关系和定义域条件的带类型证据。编译器沿这些结果
+及其原始 FactId 重放，将源码证明声明和引用命名为 `h_<FactId>`。例如，嵌套的
+`Litex.call` 必须接收“内层函数值满足外层定义域”的证明；编译器解析已记录的证据，
+不会将这个条件变成新的未证明假设。有理恒等式的证明同样保留原来选定的规范化路线
+及其分母非零证据。
+
+链接的生成文件中，五个导出证明使用以下源码 ID；它们均属于该文件的源码路径命名空间：
+
+| 源码定理 | 生成声明 |
+|---|---|
+| `forward_preserves_domain` | `h_1042` |
+| `backward_preserves_domain` | `h_5990` |
+| `backward_forward` | `h_10318` |
+| `forward_backward` | `h_21048` |
+| `forward_injective` | `h_37256` |
+
+公开的配套文件展示如何把结果交给 Mathlib 用户。
+[RationalMaps.lean](examples/litex_to_lean/rational_inverse_maps/RationalMaps.lean)
+定义普通 `ℚ` 上的两个函数。
+[Adapter.lean](examples/litex_to_lean/rational_inverse_maps/Adapter.lean)
+选定 `Litex.NumericModel.model`，编码有理数输入和前提，调用生成定理，再通过已证明的
+函数求值与数值表示规律取得普通函数值。这个手写层证明表示之间的转换；定义域、
+互逆和单射的数学结论使用生成证明。
+[Final.lean](examples/litex_to_lean/rational_inverse_maps/Final.lean)
+提供普通有理数定理，并把两条逆律组装成 `Equiv`：
+
+```lean
+namespace RationalMaps
+def equivalence : {x : ℚ // x ≠ 1} ≃ {y : ℚ // y ≠ 2} where
+  toFun x := ⟨forward x, forwardPreservesDomain x x.property⟩
+  invFun y := ⟨backward y, backwardPreservesDomain y y.property⟩
+  left_inv x := Subtype.ext (leftInverse x x.property)
+  right_inv y := Subtype.ext (rightInverse y y.property)
+end RationalMaps
+```
+
+每个 subtype 装着一个普通有理数及其不等于排除值的证明。定义域定理负责构造输出
+subtype，两条逆律负责 `Equiv` 的互逆字段。用户导入 `rational_inverse_maps.Final`；
+[普通 Lean 调用示例](examples/litex_to_lean/rational_inverse_maps/UseInYourProject.lean)
+直接使用这个原生接口，其定理陈述无需出现 Litex 对象或语义参数。
+
+在保留仓库目录布局的 Mathlib 项目中，可在 `lakefile.toml` 加入以下库配置。
+本例检查使用 Lean 4.31.0 和 Mathlib commit
+`fabf563a7c95a166b8d7b6efca11c8b4dc9d911f`。
+
+```toml
+[[lean_lib]]
+name = "Litex"
+srcDir = "lean"
+roots = ["Litex", "examples.rational_inverse_maps.statement"]
+
+[[lean_lib]]
+name = "CompilerDocExamples"
+srcDir = "docs/examples/litex_to_lean"
+roots = ["rational_inverse_maps.UseInYourProject", "rational_inverse_maps.DirectLean"]
+```
+
+运行 `lake build CompilerDocExamples`，后续文件即可导入
+`rational_inverse_maps.Final`。在仓库根目录用实际编译器重新生成对应文件：
+
+```sh
+target/release/litex -strict -lang en -f lean/examples/rational_inverse_maps/statement.lit
+target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statement.lit > lean/examples/rational_inverse_maps/statement.lean
+```
+
+这个例子也保留当前实现的实际成本：维护中的源码在最终单射证明里显式列出非零事实
+并展开公式。更短的函数同余等式链可以通过 Litex 验证，却可能选中当前编译器尚未
+支持的路线，因此源码验证成功还不够。
+[直接 Mathlib 版本](examples/litex_to_lean/rational_inverse_maps/DirectLean.lean)
+提供独立的作者写法对照。比较时应分别考察数学步骤、显式定义域证明和手写 Adapter
+的工作量；生成证明的长度不能代表源码作者的工作量。这个例子展示连续、可复用的
+编译成果，不据此宣称编写或运行速度更快。
+
+## Newton 迭代：下一个完整实验
+
+[Newton 残差实验](examples/litex_to_lean/newton_residual/Experiment.md)的目标是从
+`x_0 = 1`、`x_(n+1) = (x_n + 2/x_n)/2`，证明所有自然数上的
+`|x_n^2 - 2| <= 4*(1/4)^(2^n)`。证明串起除法合法性、残差恒等式、迭代下界、
+二次收缩以及两个归纳。现有完整 Litex 源码通过当前严格验证，独立的手写 Lean
+对照也通过检查；完整证明尚未接通编译器。
+
+已接通的是其中的[单步恒等式源码](../lean/examples/newton_residual_identity/statement.lit)
+和[实际生成的 Lean](../lean/examples/newton_residual_identity/statement.lean)。
+[Adapter](examples/litex_to_lean/newton_residual/Adapter.lean) 消费生成证明，
+[Final](examples/litex_to_lean/newton_residual/Final.lean) 提供已检查的普通 Lean 接口：
+
+```lean
+theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
+    ((x + 2 / x) / 2)^2 - 2 = ((x - 2 / x) / 2)^2 := by
+  exact Adapter.newtonResidualIdentity x hx
+```
+
+这部分通过 pinned Lake 检查，证明依赖确实经过 Adapter 到达生成的定理，且只依赖
+标准 Lean 公理。完整实验仍需接入正实数函数值域、证明块、绝对值、自然数符号幂、
+递归定义和归纳；实验说明逐项记录了实际拒绝边界与验收顺序。这里的界是方程残差，
+并非到 `sqrt(2)` 的距离，也不提前声称 Litex 比手写 Lean 更短。
+
 ## 维护本指南
 
 新增设计说明应连接到 [lean/examples/](../lean/examples/)下真实的源码/生成文件对。每个讲解都应说明数学事实、选定的源码证明路线、生成证明保留什么，以及最近的不支持边界。明确标注拟议设计与未验证示例。

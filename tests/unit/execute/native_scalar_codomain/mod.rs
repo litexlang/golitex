@@ -4,6 +4,7 @@ use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
+use crate::store_fact_and_infer::{InferLessEqualFactResult, InferLessFactResult};
 use crate::tokenize::Tokenizer;
 
 fn runtime(language: OutputLanguage) -> Runtime {
@@ -330,16 +331,14 @@ fn strict_lower_bound_positive_infer_preserves_domains_and_scope() {
 #[test]
 fn strict_lower_bound_positive_infer_keeps_source_and_bound_proof() {
     use crate::execute::ExecFactStmtResult;
-    use crate::store_fact_and_infer::{
-        InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-    };
+    use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
     let mut rt = runtime(OutputLanguage::English);
     assert!(!exec(&mut rt, "have x R = 3").is_failed());
     let result = exec(&mut rt, "2 < x");
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
         panic!("fact success")
     };
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::LessFact(rules))) =
         &success.store_and_infer_result.infer
     else {
         panic!("infer")
@@ -347,8 +346,7 @@ fn strict_lower_bound_positive_infer_keeps_source_and_bound_proof() {
     let proof = rules
         .iter()
         .find_map(|r| match r {
-            InferAtomicExceptEqualityResult::StrictLowerBoundPositive(p) => Some(p),
-            _ => None,
+            InferLessFactResult::StrictLowerBoundPositive(p) => Some(p),
         })
         .expect("positive bound certificate");
     assert_eq!(
@@ -375,9 +373,7 @@ fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
     };
     use crate::execute::execute_fact_stmt::VerifyFactResult;
     use crate::execute::ExecFactStmtResult;
-    use crate::store_fact_and_infer::{
-        InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-    };
+    use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
     for bound in ["0 <= n", "n >= 0", "1 / 2 <= n", "n >= 2"] {
         let mut rt = runtime(OutputLanguage::English);
         assert!(!exec(&mut rt, "have n Z = 3").is_failed());
@@ -385,18 +381,27 @@ fn weak_integer_lower_bound_in_n_keeps_both_certificates() {
         let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
             panic!("bound success")
         };
-        let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-            &success.store_and_infer_result.infer
-        else {
+        let Some(InferResult::AtomicFact(atomic)) = &success.store_and_infer_result.infer else {
             panic!("infer")
         };
-        let proof = rules
-            .iter()
-            .find_map(|r| match r {
-                InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(p) => Some(p),
-                _ => None,
-            })
-            .expect("integer and nonnegative-bound certificates");
+        let proof = match atomic {
+            InferAtomicFactResult::LessEqualFact(rules) => {
+                let [InferLessEqualFactResult::WeakIntegerLowerBoundInN(p)] = rules.as_slice()
+                else {
+                    panic!("weak lower bound")
+                };
+                p
+            }
+            InferAtomicFactResult::GreaterEqualFact(rules) => {
+                let [crate::store_fact_and_infer::InferGreaterEqualFactResult::WeakIntegerLowerBoundInN(p)] =
+                    rules.as_slice()
+                else {
+                    panic!("reversed weak lower bound")
+                };
+                p
+            }
+            _ => panic!("matching order family"),
+        };
         assert_eq!(
             proof.source_fact_id,
             success.store_and_infer_result.primary_fact_id()

@@ -5,8 +5,9 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::resu
 };
 use crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult;
 use crate::prelude::*;
+use crate::store_fact_and_infer::{ChainTransitiveCite, InferAtomicFactResult, InferResult};
 use crate::store_fact_and_infer::{
-    ChainTransitiveCite, InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
+    InferInFactResult, InferLessEqualFactResult, InferLessFactResult,
 };
 
 const ENDPOINT: &str = "have x R=2\nhave y R=x+1\ny=x+1=3\ny^2=9\n";
@@ -335,19 +336,17 @@ fn projected_chain_publication_preserves_nested_future_inference_ceiling() {
         .introduced_params
         .defined_params
         .store_and_infer_results[0];
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &member.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &member.infer else {
         panic!("original member inference")
     };
     let projections = rules
         .iter()
         .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::InFactSetBuilder(proof) => Some(proof),
+            InferInFactResult::SetBuilder(proof) => Some(proof),
             _ => None,
         })
         .expect("actual set-builder projection");
-    let projected = &projections.steps[0].derived[1].store;
+    let projected = &projections.steps[0].projections[1].stored().store;
     let StoreFactResult::ChainFact(stored) = projected else {
         panic!("projected chain store")
     };
@@ -379,20 +378,35 @@ fn projected_chain_publication_preserves_nested_future_inference_ceiling() {
     }
 }
 
-fn order_rule_mut(
-    statement: &mut ExecStmtResult,
-    strict: bool,
-) -> &mut InferAtomicExceptEqualityResult {
+enum OrderRuleMut<'a> {
+    Strict(&'a mut crate::store_fact_and_infer::InferStrictLowerBoundPositiveResult),
+    Weak(&'a mut crate::store_fact_and_infer::InferWeakIntegerLowerBoundInNResult),
+}
+
+fn order_rule_mut(statement: &mut ExecStmtResult, strict: bool) -> OrderRuleMut<'_> {
     let proof = super::forall_proof_mut(statement);
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &mut proof.assumed_dom_facts[usize::from(strict)]
-            .store_and_infer
-            .infer
+    let Some(InferResult::AtomicFact(atomic)) = &mut proof.assumed_dom_facts[usize::from(strict)]
+        .store_and_infer
+        .infer
     else {
         panic!("actual atomic order inference")
     };
-    rules.iter_mut().find(|rule| matches!(rule, InferAtomicExceptEqualityResult::StrictLowerBoundPositive(_) if strict)
-        || matches!(rule, InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(_) if !strict)).expect("actual selected conditional rule")
+    match atomic {
+        InferAtomicFactResult::LessFact(rules) if strict => {
+            let [InferLessFactResult::StrictLowerBoundPositive(p)] = rules.as_mut_slice() else {
+                panic!("strict rule")
+            };
+            OrderRuleMut::Strict(p)
+        }
+        InferAtomicFactResult::LessEqualFact(rules) if !strict => {
+            let [InferLessEqualFactResult::WeakIntegerLowerBoundInN(p)] = rules.as_mut_slice()
+            else {
+                panic!("weak rule")
+            };
+            OrderRuleMut::Weak(p)
+        }
+        _ => panic!("matching order family"),
+    }
 }
 
 #[test]
@@ -418,17 +432,16 @@ fn chain_and_conditional_order_rejects_wrong_seed_certificate_subject_and_wd() {
                 super::execute(if strict { STRICT_BOUND } else { WEAK_BOUND });
             let rule = order_rule_mut(&mut result.statement_results[0], strict);
             let (source_id, bound, derived) = match rule {
-                InferAtomicExceptEqualityResult::StrictLowerBoundPositive(rule) => (
+                OrderRuleMut::Strict(rule) => (
                     &mut rule.source_fact_id,
                     &mut rule.bound_nonnegative_proof,
                     &mut rule.derived,
                 ),
-                InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(rule) => (
+                OrderRuleMut::Weak(rule) => (
                     &mut rule.source_fact_id,
                     &mut rule.bound_nonnegative_proof,
                     &mut rule.derived,
                 ),
-                _ => unreachable!(),
             };
             match mutation {
                 "source_id" => *source_id = derived.store.primary_fact_id(),
@@ -541,7 +554,7 @@ fn chain_and_preserves_three_edge_id_domains_and_actual_closure_wd() {
     let StoreFactResult::ChainFact(stored) = &store.store else {
         panic!("chain store")
     };
-    let Some(InferFactResult::ChainFact(inferred)) = &store.infer else {
+    let Some(InferResult::ChainFact(inferred)) = &store.infer else {
         panic!("chain inference")
     };
     let stored_id = stored.adjacent[0].fact_id;
@@ -564,7 +577,7 @@ fn chain_and_replays_atomic_inference_from_the_actual_chain_seed() {
     let (mut result, compiler) = super::execute(INFER_SEED);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let store = &forall.assumed_dom_facts[1].store_and_infer;
-    let Some(InferFactResult::ChainFact(inferred)) = &store.infer else {
+    let Some(InferResult::ChainFact(inferred)) = &store.infer else {
         panic!("chain inference")
     };
     let source_id = inferred.adjacent_infers[0].fact.fact_id();
@@ -623,7 +636,7 @@ fn chain_and_rejects_changed_inference_seed_subject_and_identity() {
             .defined_params
             .store_and_infer_results[0]
             .primary_fact_id();
-        let Some(InferFactResult::ChainFact(inferred)) =
+        let Some(InferResult::ChainFact(inferred)) =
             &mut forall.assumed_dom_facts[1].store_and_infer.infer
         else {
             panic!("chain inference")
@@ -648,7 +661,7 @@ fn chain_and_rejects_wrong_closure_route_path_subject_and_formation() {
     for change in ["indexes", "rule", "subject", "deleted"] {
         let (mut result, compiler) = super::execute(ORDER);
         let forall = super::forall_proof_mut(&mut result.statement_results[0]);
-        let Some(InferFactResult::ChainFact(inferred)) =
+        let Some(InferResult::ChainFact(inferred)) =
             &mut forall.assumed_dom_facts[0].store_and_infer.infer
         else {
             panic!("chain inference")
@@ -682,7 +695,7 @@ fn chain_and_scope_cursor_rejects_future_closures_despite_completed_ancestors() 
     let (mut result, compiler) = super::execute(ORDER);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let store = &forall.assumed_dom_facts[0].store_and_infer;
-    let Some(InferFactResult::ChainFact(inferred)) = &store.infer else {
+    let Some(InferResult::ChainFact(inferred)) = &store.infer else {
         panic!("chain inference")
     };
     let id = inferred.transitive_closures[0]
@@ -722,7 +735,7 @@ fn chain_and_rejects_a_closure_citation_from_a_closed_prior_scope() {
     let (mut result, compiler) = super::execute(&format!("{prefix}\n{ORDER}"));
     let forbidden = {
         let first = super::forall_proof_mut(&mut result.statement_results[0]);
-        let Some(InferFactResult::ChainFact(inferred)) =
+        let Some(InferResult::ChainFact(inferred)) =
             &first.assumed_dom_facts[0].store_and_infer.infer
         else {
             panic!("first actual chain inference")

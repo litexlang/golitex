@@ -189,10 +189,7 @@ fn builtin_family_union_identities_keep_wd_false_and_stage_boundaries() {
 #[test]
 fn checked_mapping_definitions_retain_source_and_derived_fact_ids() {
     use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByStmtResult};
-    use crate::store_fact_and_infer::{
-        InferAtomicExceptEqualityResult, InferAtomicFactResult, InferBuiltinDefinitionResult,
-        InferFactResult,
-    };
+    use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
     for property in ["injective", "surjective"] {
         let mut rt = runtime();
         let setup = "have fn identity(x R) R = x\nclaim:\n    ? forall y R:\n        exist x R st {y = identity(x)}\n    witness exist x R st {y = identity(x)} from y\n";
@@ -214,21 +211,22 @@ fn checked_mapping_definitions_retain_source_and_derived_fact_ids() {
         else {
             panic!("checked definition");
         };
-        let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-            &result.stored.infer
-        else {
-            panic!("atomic inference");
-        };
-        let [InferAtomicExceptEqualityResult::BuiltinDefinition(definition)] = rules.as_slice()
-        else {
-            panic!("mapping inference");
-        };
-        let (source_id, derived) = match definition {
-            InferBuiltinDefinitionResult::Injective(result) => {
-                (result.source_fact_id, &result.derived)
+        let (source_id, derived) = match &result.stored.infer {
+            Some(InferResult::AtomicFact(InferAtomicFactResult::InjectiveFact(rules))) => {
+                let [crate::store_fact_and_infer::InferInjectiveFactResult::Definition(p)] =
+                    rules.as_slice()
+                else {
+                    panic!("injective definition")
+                };
+                (p.source_fact_id, &p.derived)
             }
-            InferBuiltinDefinitionResult::Surjective(result) => {
-                (result.source_fact_id, &result.derived)
+            Some(InferResult::AtomicFact(InferAtomicFactResult::SurjectiveFact(rules))) => {
+                let [crate::store_fact_and_infer::InferSurjectiveFactResult::Definition(p)] =
+                    rules.as_slice()
+                else {
+                    panic!("surjective definition")
+                };
+                (p.source_fact_id, &p.derived)
             }
             _ => panic!("matching mapping branch"),
         };

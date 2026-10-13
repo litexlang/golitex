@@ -1,0 +1,77 @@
+{
+  "checked_on": "2026-10-11",
+  "timezone": "Asia/Shanghai",
+  "scope": "Earlier four-export small-example module; does not verify the current chapter exports.",
+  "binary": {
+    "version": "Litex 1.0.6-beta",
+    "sha256": "6dd96443ae283a98f9958e54fe54a940d41aaa6a465d71b2485d7d0522a2ff26"
+  },
+  "command": "litex -lang en -strict -r showcases/analysis",
+  "result": {
+    "exit_code": 0,
+    "kind": "run",
+    "success": true,
+    "session_error": null
+  },
+  "config_sha256": "c4c7ab5ac461b0c8651bf2205953bd820727290db4a30920258d4aca3028923f",
+  "checked_sources": [
+    {
+      "path": "naturals.lit",
+      "sha256": "13f8aaa3d7c5f526129ddbcf702cbb3c1a5e07e41fe74b89052dd33d3b23b157"
+    },
+    {
+      "path": "maps.lit",
+      "sha256": "d23b761522fa1e06c7807b5068f60809a829893bd7718b30a433985bd633047e"
+    },
+    {
+      "path": "finite_products.lit",
+      "sha256": "77f57d397af87e265d8757766982c6bdf5a2b0e604a8ad74c0a335e0e6f44b89"
+    },
+    {
+      "path": "../math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+      "sha256": "2bcca5119939bd6dfdb6d7e444b487057a3e536c788cf76325cc79be53713f9c"
+    }
+  ],
+  "readme_snippets": [
+    {
+      "block": 1,
+      "source_sha256": "5d0eeaa746075352ea64f168260ea167187a2f0c74bdccf9af2a18a01392c536",
+      "strict": true,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    },
+    {
+      "block": 2,
+      "source_sha256": "b7d6123f5decb664ce259d51213474e41393efd4071d40fa80b07ede2a4178f4",
+      "strict": true,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    },
+    {
+      "block": 3,
+      "source_sha256": "b7de190c67cf817fcf4f46347e92e4c0d04bd23d63001f9d5422583882c35ea5",
+      "strict": true,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    }
+  ],
+  "source_assumption_declarations": {
+    "trust": 0,
+    "axiom": 0,
+    "abstract_prop": 0
+  },
+  "limitations": [
+    "Builtin mathematics and verifier are relied upon.",
+    "Normal module output is an overall summary, not a complete proof dependency trace.",
+    "No Lean check or kernel soundness proof is claimed.",
+    "Broader chapter status in STATUS.md is a separate local-development snapshot, not included public source verification."
+  ],
+  "historical": true,
+  "historical_manifest": "[export]\nnaturals = \"./naturals.lit\"\nmaps = \"./maps.lit\"\nfinite_products = \"./finite_products.lit\"\nlimits = \"../math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit\"\n"
+}

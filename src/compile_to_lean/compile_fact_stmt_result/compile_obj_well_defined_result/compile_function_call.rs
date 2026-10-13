@@ -262,24 +262,26 @@ impl LitexToLeanCompiler {
             }
             _ => return Err(LeanCompileError::unsupported("WD/FnObj/DomainEvidence")),
         };
-        let guard_proofs = &requirement_terms[arguments.len()..];
-        let guard_proof = guard_proofs
-            .iter()
-            .rev()
-            .cloned()
-            .reduce(|tail, head| format!("(And.intro {head} {tail})"))
-            .unwrap_or_else(|| "True.intro".into());
-        let constructor = if arguments.len() == 1 {
-            "call"
-        } else {
-            "call2"
+        let (members, guard_proof) = self.compile_function_domain_certificates(
+            signature,
+            &argument_terms,
+            &requirement_terms,
+            &formed,
+        )?;
+        let (constructor_arguments, target) =
+            self.compile_function_constructor_arguments(signature, &formed)?;
+        let constructor = match (arguments.len() == 1, target) {
+            (true, false) => "call",
+            (false, false) => "call2",
+            (true, true) => "callTarget",
+            (false, true) => "call2Target",
         };
         Ok((
             format!(
                 "(Litex.{constructor} {} {guard} {head_term} {} {membership} {} {guard_proof})",
-                domains.join(" "),
+                constructor_arguments,
                 argument_terms.join(" "),
-                requirement_terms[..arguments.len()].join(" ")
+                members.join(" ")
             ),
             output,
         ))
@@ -594,7 +596,6 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let domains = self.compile_function_domains(signature, position)?;
         let arguments = &application.body[0];
         let offset = usize::from(matches!(
             evidence.domain_fn_set,
@@ -658,27 +659,29 @@ impl LitexToLeanCompiler {
             );
         }
         let guard = self.compile_function_guard_template(signature, position)?;
-        let guard_proof = proofs[parameters.len()..]
-            .iter()
-            .rev()
-            .cloned()
-            .reduce(|tail, head| format!("(And.intro {head} {tail})"))
-            .unwrap_or_else(|| "True.intro".into());
+        let (members, guard_proof) =
+            self.compile_function_domain_certificates(signature, &terms, &proofs, position)?;
+        let (constructor_arguments, target) =
+            self.compile_function_constructor_arguments(signature, position)?;
         let (packed, inputs, conjunction, law) = if terms.len() == 1 {
             (
                 format!("(Litex.denote {})", terms[0]),
                 format!("(Litex.denote {})", terms[0]),
-                format!("⟨{}, {guard_proof}⟩", proofs[0]),
-                "one_domain",
+                format!("⟨{}, {guard_proof}⟩", members[0]),
+                if target {
+                    "oneTarget_domain"
+                } else {
+                    "one_domain"
+                },
             )
         } else {
-            (format!("(Litex.FunctionSemantics.pairValue (M := M) (Litex.denote {}) (Litex.denote {}))", terms[0], terms[1]), format!("(Litex.denote {}) (Litex.denote {})", terms[0], terms[1]), format!("⟨{}, {}, {guard_proof}⟩", proofs[0], proofs[1]), "two_domain")
+            (format!("(Litex.FunctionSemantics.pairValue (M := M) (Litex.denote {}) (Litex.denote {}))", terms[0], terms[1]), format!("(Litex.denote {}) (Litex.denote {})", terms[0], terms[1]), format!("⟨{}, {}, {guard_proof}⟩", members[0], members[1]), if target { "twoTarget_domain" } else { "two_domain" })
         };
         Ok((
             packed,
             format!(
                 "((Litex.FunctionSignature.{law} {} {guard} {inputs}).mpr {conjunction})",
-                domains.join(" ")
+                constructor_arguments
             ),
         ))
     }
@@ -702,6 +705,8 @@ fn fn_return_bridge(
         (StandardSet::Q, StandardSet::R) => "rationalToReal",
         (StandardSet::Q, StandardSet::C) => "rationalToComplex",
         (StandardSet::R, StandardSet::C) => "realToComplex",
+        (StandardSet::RPos, StandardSet::R) => "inRPos_real",
+        (StandardSet::RPos, StandardSet::C) => "positiveRealToComplex",
         _ => {
             return Err(LeanCompileError::unsupported(
                 "FunctionReturn/StandardInclusion",

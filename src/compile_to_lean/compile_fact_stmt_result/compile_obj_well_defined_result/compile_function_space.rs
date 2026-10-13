@@ -53,7 +53,11 @@ impl LitexToLeanCompiler {
         ensure_object(&signature.ret_set, &wd.ret_set_well_defined)?;
         self.compile_wd(&wd.ret_set_well_defined, &return_position)?;
         let checked_header = self.compile_function_raw_header(signature, position)?;
-        let signature = self.compile_fn_signature(signature, position)?;
+        let completed_return = SourcePosition {
+            before: return_position.before + 1,
+            ..*position
+        };
+        let signature = self.compile_fn_signature(signature, &completed_return)?;
         Ok(format!(
             "(by\n  have _checked_header : {checked_header} := by\n    {}\n    exact True.intro\n  exact Litex.fnSet {signature})",
             head.replace('\n', "\n    ")
@@ -117,14 +121,16 @@ impl LitexToLeanCompiler {
         let domains = self.compile_function_domains(signature, position)?;
         let guard = self.compile_function_guard_template(signature, position)?;
         let body = self.compile_function_body_template(function, position)?;
-        let constructor = if domains.len() == 2 {
-            "formulaFn"
-        } else {
-            "formulaFn2"
+        let (arguments, target) =
+            self.compile_function_constructor_arguments(signature, &body_position)?;
+        let constructor = match (domains.len() == 2, target) {
+            (true, false) => "formulaFn",
+            (false, false) => "formulaFn2",
+            (true, true) => "formulaFnTarget",
+            (false, true) => "formulaFn2Target",
         };
         Ok(format!(
-            "(Litex.{constructor} (M := M) {} {guard} {body} {h_return})",
-            domains.join(" ")
+            "(Litex.{constructor} (M := M) {arguments} {guard} {body} {h_return})"
         ))
     }
 
@@ -177,10 +183,15 @@ impl LitexToLeanCompiler {
             .map(|store| format!("h_{}", store.primary_fact_id().value()))
             .collect::<Vec<_>>();
         let introductions = format!("intro {} {}", raw.join(" "), inputs.join(" "));
-        let guards = assumed
-            .iter()
-            .map(|paired| format!("h_{}", paired.store_and_infer.primary_fact_id().value()))
-            .collect::<Vec<_>>();
+        let positive_inputs = self.compile_function_positive_inputs(signature, position)?;
+        let guards =
+            positive_inputs
+                .iter()
+                .map(|id| format!("_positive_i{}", id.value()))
+                .chain(assumed.iter().map(|paired| {
+                    format!("h_{}", paired.store_and_infer.primary_fact_id().value())
+                }))
+                .collect::<Vec<_>>();
         let mut lines = match guards.len() {
             0 => vec![format!("{introductions} _")],
             1 => vec![format!("{introductions} {}", guards[0])],
@@ -218,8 +229,13 @@ impl LitexToLeanCompiler {
             lines.push(format!(
                 "let _value_i{id} := Litex.semanticObject (M := M) _raw_i{id} (M.member_isSet {hypothesis})"
             ));
+            let certificate = if positive_inputs.contains(&parameter.id) {
+                format!("((Litex.positiveReal_members (M := M) _raw_i{id}).mpr ⟨{hypothesis}, _positive_i{id}⟩)")
+            } else {
+                hypothesis.clone()
+            };
             let member = (self.fact_proposition(&fact, &introduced)?, hypothesis);
-            lines.push(format!("have {} : {} := {}", member.1, member.0, member.1));
+            lines.push(format!("have {} : {} := {certificate}", member.1, member.0));
             lines.extend(self.compile_parameter_inferences(store, &fact, &member, &introduced)?);
         }
         for (index, (source, paired)) in signature.dom_facts.iter().zip(assumed).enumerate() {
@@ -238,7 +254,10 @@ impl LitexToLeanCompiler {
             let raw = self.compile_function_raw_clause(&fact, signature, position)?;
             let compiled = (
                 self.fact_proposition(&fact, &formed)?,
-                format!("(by\n  change {raw}\n  exact {})", guards[index]),
+                format!(
+                    "(by\n  change {raw}\n  exact {})",
+                    guards[positive_inputs.len() + index]
+                ),
             );
             let completed = SourcePosition {
                 before: prior.before + 1,

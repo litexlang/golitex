@@ -305,16 +305,19 @@ fn subset_finite_upper_bound_infer_publishes_direct_evidence() {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = &result else {
         panic!("fact success")
     };
-    let Some(crate::store_fact_and_infer::InferFactResult::AtomicFact(
-        crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
+    let Some(crate::store_fact_and_infer::InferResult::AtomicFact(
+        crate::store_fact_and_infer::InferAtomicFactResult::SubsetFact(rules),
     )) = &success.store_and_infer_result.infer
     else {
         panic!("infer rules")
     };
-    let proof = rules.iter().find_map(|r| match r {
-        crate::store_fact_and_infer::InferAtomicExceptEqualityResult::SubsetFiniteUpperBound(p) => Some(p),
-        _ => None,
-    }).expect("finite upper bound certificate");
+    let proof = rules
+        .iter()
+        .find_map(|r| match r {
+            crate::store_fact_and_infer::InferSubsetFactResult::FiniteUpperBound(p) => Some(p),
+            _ => None,
+        })
+        .expect("finite upper bound certificate");
     assert_eq!(
         proof.source_fact_id,
         success.store_and_infer_result.primary_fact_id()

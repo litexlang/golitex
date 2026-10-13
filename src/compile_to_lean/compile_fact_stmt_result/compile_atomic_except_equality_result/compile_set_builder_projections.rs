@@ -71,7 +71,8 @@ impl LitexToLeanCompiler {
                 step.source_membership.element.clone(),
             )]);
             let mut next = 0;
-            for derived in &step.derived {
+            for projection in &step.projections {
+                let derived = projection.stored();
                 let fact = match &derived.store {
                     StoreFactResult::AtomicFact(s) => Fact::AtomicFact(s.fact.clone()),
                     StoreFactResult::AndFact(s) => Fact::AndFact(s.fact.clone()),
@@ -82,10 +83,30 @@ impl LitexToLeanCompiler {
                         ))
                     }
                 };
-                let selected = (next..=step.builder.facts.len()).find(|i| {
-                    if *i == 0 { matches!(&fact, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == step.source_membership.element.ir() && f.set.ir() == step.builder.param_set.ir()) }
-                    else { instantiated_fact_matches(&crate::instantiate::quantifier_free_fact_to_fact(step.builder.facts[i - 1].clone()), &fact, &substitution) }
-                }).ok_or_else(|| LeanCompileError::new("SetBuilder/ProjectionSubject", "Derived facts are not the ordered source bound/filter projections."))?;
+                let selected = match projection {
+                    crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(_) => 0,
+                    crate::store_fact_and_infer::InferSetBuilderProjectionResult::Condition { condition_index, .. } => condition_index.checked_add(1).ok_or_else(|| LeanCompileError::new("SetBuilder/ProjectionIndex", "Source condition index overflowed."))?,
+                };
+                if selected < next || selected > step.builder.facts.len() {
+                    return Err(LeanCompileError::new("SetBuilder/ProjectionIndex", "Captured projections do not retain their original source order or condition range."));
+                }
+                let matches = if selected == 0 {
+                    matches!(&fact, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == step.source_membership.element.ir() && f.set.ir() == step.builder.param_set.ir())
+                } else {
+                    instantiated_fact_matches(
+                        &crate::instantiate::quantifier_free_fact_to_fact(
+                            step.builder.facts[selected - 1].clone(),
+                        ),
+                        &fact,
+                        &substitution,
+                    )
+                };
+                if !matches {
+                    return Err(LeanCompileError::new(
+                        "SetBuilder/ProjectionSubject",
+                        "Captured store differs from its selected source bound or condition.",
+                    ));
+                }
                 next = selected + 1;
                 let term = if selected == 0 {
                     format!("({projected}).choose")

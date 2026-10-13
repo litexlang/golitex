@@ -15,9 +15,11 @@
 
 pub mod helper;
 pub mod infer_fact;
+pub mod infer_result;
 pub mod store_fact;
 pub mod store_fact_and_infer;
 pub mod store_fact_and_infer_result;
 pub mod store_inferred_fact;
 
+pub use infer_result::*;
 pub use store_fact_and_infer_result::*;

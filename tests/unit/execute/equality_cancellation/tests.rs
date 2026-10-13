@@ -1,6 +1,6 @@
 use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualityResult, InferFactResult};
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualFactResult, InferResult};
 
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
@@ -35,8 +35,8 @@ fn forall(result: &ExecStmtResult) -> &VerifyForallFactSuccess {
     proof
 }
 
-fn equality_rules(store: &StoreFactAndInferResult) -> &[InferEqualityResult] {
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
+fn equality_rules(store: &StoreFactAndInferResult) -> &[InferEqualFactResult] {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
     else {
         panic!("equality inference")
     };
@@ -95,7 +95,7 @@ fn equality_cancellation_keeps_source_and_all_premises() {
     );
     let proof = forall(&result);
     let seed = &proof.assumed_dom_facts[1].store_and_infer;
-    let [InferEqualityResult::NonzeroFactorCancellation(cancel)] = equality_rules(seed) else {
+    let [InferEqualFactResult::NonzeroFactorCancellation(cancel)] = equality_rules(seed) else {
         panic!("factor certificate")
     };
     assert_eq!(cancel.source_fact_id, seed.primary_fact_id());
@@ -276,7 +276,7 @@ fn equality_cancellation_scope_and_failed_statement_rollback() {
     };
     assert!(matches!(
         equality_rules(&seed.store_and_infer_result),
-        [InferEqualityResult::AdditiveCancellation(_)]
+        [InferEqualFactResult::AdditiveCancellation(_)]
     ));
 }
 
@@ -404,7 +404,7 @@ fn equality_cancellation_division_retains_all_nonzero_certificates() {
     );
     let proof = forall(&result);
     let store = &proof.assumed_dom_facts[0].store_and_infer;
-    let [InferEqualityResult::NonzeroNumeratorCancellation(r)] = equality_rules(store) else {
+    let [InferEqualFactResult::NonzeroNumeratorCancellation(r)] = equality_rules(store) else {
         panic!("reciprocal certificate")
     };
     assert_eq!(r.source_fact_id, store.primary_fact_id());
@@ -442,7 +442,7 @@ fn equality_cancellation_division_retains_all_nonzero_certificates() {
     );
     let proof = forall(&result);
     let store = &proof.assumed_dom_facts[0].store_and_infer;
-    let [InferEqualityResult::CommonDenominatorCancellation(r)] = equality_rules(store) else {
+    let [InferEqualFactResult::CommonDenominatorCancellation(r)] = equality_rules(store) else {
         panic!("denominator certificate")
     };
     assert_eq!(r.source_fact_id, store.primary_fact_id());

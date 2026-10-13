@@ -2,8 +2,7 @@ use crate::ast::fact::{AtomicFact, Fact, InFact, LessEqualFact, LessFact, NotEqu
 use crate::ast::obj::{Literal, Number, Obj, StandardSet};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactSignedStandardSetSignResult,
-    StoreInferredFactResult,
+    InferInFactResult, InferInFactSignedStandardSetSignResult, StoreInferredFactResult,
 };
 
 impl Runtime {
@@ -14,18 +13,16 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Vec<InferInFactResult>> {
         let Obj::StandardSet(set) = &in_fact.set else {
             return Ok(Vec::new());
         };
         let Some(derived) = self.infer_signed_standard_set_sign(in_fact, set, verify_state)? else {
             return Ok(Vec::new());
         };
-        Ok(vec![
-            InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(
-                InferInFactSignedStandardSetSignResult { derived },
-            ),
-        ])
+        Ok(vec![InferInFactResult::SignedStandardSetSign(
+            InferInFactSignedStandardSetSignResult { derived },
+        )])
     }
 }
 

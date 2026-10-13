@@ -92,7 +92,7 @@ The [module configuration](litex.config) selects the preface and Chapters 1–8 
 | Chapter | Mathematical thread | Entry |
 | --- | --- | --- |
 | 1 | Callable functions, arithmetic and parity witnesses | [Introduction](chapter01-introduction.lit) |
-| 2 | Algebraic laws, orders, metrics and record interfaces | [Basics](chapter02-basics.lit) |
+| 2 | Real calculations, generic algebra, real inequalities, order/divisibility and general structures | [Basics](chapter02-basics.lit) |
 | 3 | Quantifiers, function symmetry, bounds and sequence limits | [Logic](chapter03-logic.lit) |
 | 4 | Images, preimages, inverses and Schröder–Bernstein | [Sets and functions](chapter04-sets-and-functions.lit) |
 | 5 | Integer division, prime arithmetic, induction and recursion | [Elementary number theory](chapter05-elementary-number-theory.lit) |
@@ -100,11 +100,15 @@ The [module configuration](litex.config) selects the preface and Chapters 1–8 
 | 7 | Records, simplices, algebraic structures and Gaussian integers | [Structures](chapter07-structures.lit) |
 | 8 | Monoids and groups, scalar actions, morphisms and subobjects | [Hierarchies](chapter08-hierarchies.lit) |
 
+Chapter 2 now follows the original 2.1–2.5 sequence: it starts on `R`, and
+introduces general algebraic structures in 2.2. Its [source map](CHAPTER2_SOURCE_MAP.md)
+identifies the examples and explains the compatibility appendix.
+
 The [concept guide](math_collections.md) connects these objects and their proof interfaces. [Experiment conclusions](EXPERIMENT_NOTES.md) distinguish observed capabilities, implementation limits and questions that still need measurement. [Source and license notices](NOTICE.md) identify the original book and pinned source.
 
 ## Verification scope
 
-This selected module passed one complete ordered strict project check on Litex 1.0.6-beta (2026-10-11); the three examples above also passed independent strict checks. [Verification evidence](verification.json) records the executable and export hashes, command scope and successful outcome. There is no imported standard-library or cite module, and no active user `trust`, `axiom` or `abstract_prop` in the exports.
+The previous selected module passed a complete ordered strict project check on Litex 1.0.6-beta on 2026-10-11; the three examples above passed independently. Chapter 2 was rewritten to follow the original book on 2026-10-13. Its current configured strict Chapter 2 check and Chapter 3 consumer check are recorded separately in [verification evidence](verification.json). The earlier whole-module receipt covers the earlier Chapter 2 bytes; Chapters 4–8 have not been rerun as part of this alignment. There is no imported standard-library or cite module, and no active user `trust`, `axiom` or `abstract_prop` in the exports.
 
 Strict verification is acceptance by Litex's current verifier. Its builtin and inference rules and named foundation releases remain part of the verification boundary. These chapters have not been certified by the Lean kernel. No comparative soundness, speed or AI success-rate result is claimed.
 

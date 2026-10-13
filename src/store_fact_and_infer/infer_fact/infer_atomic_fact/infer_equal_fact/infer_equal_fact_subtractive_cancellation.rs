@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         source: &EqualFact,
         state: VerifyState,
-    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferEqualityResult>> {
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferEqualFactResult>> {
         let (
             Obj::ArithmeticOperator(ArithmeticOperator::Sub(left)),
             Obj::ArithmeticOperator(ArithmeticOperator::Sub(right)),
@@ -46,7 +46,7 @@ impl Runtime {
             .into();
             let derived = self.store_inferred_fact(&equality)?;
             rules.push(
-                crate::store_fact_and_infer::InferEqualityResult::SubtractiveCancellation(
+                crate::store_fact_and_infer::InferEqualFactResult::SubtractiveCancellation(
                     crate::store_fact_and_infer::InferEqualFactSubtractiveCancellationResult::new(
                         source.fact_id,
                         common.clone(),

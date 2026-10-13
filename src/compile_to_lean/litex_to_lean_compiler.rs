@@ -2,6 +2,7 @@ use super::helper::validate_namespace;
 use super::helper::verified_subject;
 use super::source_position::{SourceOwner, SourcePosition};
 use super::LeanCompileError;
+use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::execute::ExecDefPropStmtResult;
 use crate::prelude::*;
 
@@ -140,6 +141,16 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
+            ExecClaimStmtResult::Success(proof),
+        )) => {
+            fact_uses_functions(&proof.statement.fact)
+                || proof
+                    .body
+                    .proof_steps()
+                    .iter()
+                    .any(statement_uses_functions)
+        }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(_)) => true,
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => {
             verified_subject(&proof.verify_result)
@@ -178,6 +189,7 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
 
 fn object_uses_sets(object: &Obj) -> bool {
     match object {
+        Obj::StandardSet(StandardSet::RPos) => true,
         Obj::SetFormer(SetFormer::ListSet(_) | SetFormer::SetBuilder(_)) => true,
         Obj::ArithmeticOperator(operator) => match operator {
             ArithmeticOperator::Add(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
@@ -226,6 +238,12 @@ fn fact_uses_sets(fact: &Fact) -> bool {
 
 fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
+            ExecClaimStmtResult::Success(proof),
+        )) => {
+            fact_uses_sets(&proof.statement.fact)
+                || proof.body.proof_steps().iter().any(statement_uses_sets)
+        }
         ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) => verified_subject(&p.verify_result)
             .as_ref()
             .is_some_and(fact_uses_sets),

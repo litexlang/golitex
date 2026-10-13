@@ -1,0 +1,99 @@
+# Analysis: Sequences, Limits and Infinite Sums
+#
+# A sequence lists real numbers in order. Analysis asks what remains true
+# when the index becomes arbitrarily large. We begin with familiar examples,
+# then use limits to give meaning to an infinite sum.
+# These lectures use the definitions and proofs in the companion Tao chapters.
+
+# 1. Approaching zero
+# The terms 1, 1/2, 1/3, ... become small. A limit assertion says more than
+# this picture suggests: every positive error must eventually bound every term.
+release obj def Tao::chap6::reciprocal_nat_seq
+
+Tao::chap6::reciprocal_nat_seq(1) = 1
+
+Tao::chap6::reciprocal_nat_seq(2) = 1 / 2
+
+Tao::chap6::reciprocal_nat_seq(10) = 1 / 10
+
+# For error 1/10, starting at index 11 works. The strict inequality matters:
+# the tenth term equals the error, while every term after it is smaller.
+claim:
+    ? $Tao::chap6::is_tail_close_to(Tao::chap6::reciprocal_nat_seq, 0, 1 / 10, 11)
+    claim:
+        ? forall n N+:
+            n >= 11
+            =>:
+                abs(Tao::chap6::reciprocal_nat_seq(n) - 0) < 1 / 10
+        release thm Tao::chap6::reciprocal_nat_order_reversing(11, n)
+        Tao::chap6::reciprocal_nat_seq(n) - 0 = 1 / n
+        0 < 1 / n
+        abs(Tao::chap6::reciprocal_nat_seq(n) - 0) = abs(1 / n) = 1 / n <= 1 / 11 < 1 / 10
+    by def $Tao::chap6::is_tail_close_to(Tao::chap6::reciprocal_nat_seq, 0, 1 / 10, 11)
+
+# A single error does not prove convergence. We now let epsilon be arbitrary.
+# The chapter's Archimedean theorem chooses a cutoff; its reciprocal-order
+# theorem controls every later term. The same estimate now works for any error.
+claim:
+    ? $Tao::chap6::has_limit(Tao::chap6::reciprocal_nat_seq, 0)
+    claim:
+        ? forall epsilon R+:
+            $Tao::chap6::has_eventual_closeness_to(Tao::chap6::reciprocal_nat_seq, 0, epsilon)
+        release thm Tao::chap5::archimedean_property(epsilon)
+        obtain n0 from exist n0 N+ st {1 / n0 < epsilon}
+        witness $Tao::chap6::has_eventual_closeness_to(Tao::chap6::reciprocal_nat_seq, 0, epsilon) from n0:
+            claim:
+                ? forall n N+:
+                    n >= n0
+                    =>:
+                        abs(Tao::chap6::reciprocal_nat_seq(n) - 0) < epsilon
+                release thm Tao::chap6::reciprocal_nat_order_reversing(n0, n)
+                Tao::chap6::reciprocal_nat_seq(n) - 0 = 1 / n
+                0 < 1 / n
+                abs(Tao::chap6::reciprocal_nat_seq(n) - 0) = abs(1 / n) = 1 / n <= 1 / n0 < epsilon
+            by def $Tao::chap6::is_tail_close_to(Tao::chap6::reciprocal_nat_seq, 0, epsilon, n0)
+    by def $Tao::chap6::has_limit(Tao::chap6::reciprocal_nat_seq, 0)
+
+# 2. A limit is a value, not a choice of tail
+# Different cutoffs may work for the same epsilon. The limiting value,
+# however, is unique: two purported values can be compared on one common tail.
+claim:
+    ? forall L R:
+        $Tao::chap6::has_limit(Tao::chap6::reciprocal_nat_seq, L)
+        =>:
+            L = 0
+    by thm Tao::chap6::sequence_limit_unique(Tao::chap6::reciprocal_nat_seq, L, 0) => L = 0
+
+# 3. Adding a constant
+# The sequence 3, 3, 3, ... has limit 3. Its distance from 3 is already zero
+# at every index; the first index works for every positive error.
+release thm Tao::chap6::constant_sequence_has_limit(3)
+
+# Adding this constant sequence to 1/n gives 3 + 1/n, with limit 3.
+# The limit law combines two established convergence facts.
+release thm Tao::chap6::seq_add_converges_to(Tao::chap6::reciprocal_nat_seq, fn(n N+) R {3}, 0, 3)
+
+# 4. Geometric sequences
+# Repeated multiplication by 1/2 gives 1/2, 1/4, 1/8, ... .
+# Repeated multiplication by -1/2 changes the signs but still tends to zero.
+release thm Tao::chap6::geometric_positive_lt_one_converges_to_zero(1 / 2)
+
+release obj def Tao::chap6::geom_seq
+
+release thm Tao::chap6::geometric_abs_lt_one_converges_to_zero(-1 / 2)
+
+# At the boundary, multiplication by -1 gives -1, 1, -1, 1, ... .
+# These terms stay bounded but cannot settle near one limiting value.
+release thm Tao::chap6::geometric_minus_one_diverges(-1)
+
+# 5. From a sequence to a series
+# An infinite sum is defined through the limits of its finite partial sums.
+# The terms 1, 1/2, 1/4, ... tend to zero; their partial sums tend to 2.
+# These are different sequences and different limits.
+release obj def Tao::chap7::geometric_series_terms
+
+release thm Tao::chap7::geometric_series_formula(1 / 2)
+
+# Thus the chapter's series-sum relation gives meaning to
+# 1 + 1/2 + 1/4 + ... = 2. The proof uses the finite geometric-sum identity
+# and the vanishing remainder, rather than treating infinity as a final index.

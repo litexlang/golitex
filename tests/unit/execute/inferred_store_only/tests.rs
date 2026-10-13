@@ -1,8 +1,7 @@
 use crate::execute::execute_by_stmt::ExecByDefStmtResult;
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-};
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
+use crate::store_fact_and_infer::{InferNormalAtomicFactResult, InferSubsetFactResult};
 
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
@@ -64,7 +63,7 @@ fn inferred_store_only_predicate_requires_an_explicit_next_seed() {
         !has_fact(&rt, "value = value"),
         "outer does not infer inner's consequences"
     );
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::NormalAtomicFact(rules))) =
         &stored(&result.statement_results[0]).infer
     else {
         panic!("outer inference")
@@ -72,7 +71,7 @@ fn inferred_store_only_predicate_requires_an_explicit_next_seed() {
     let expanded = rules
         .iter()
         .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(proof) => Some(proof),
+            InferNormalAtomicFactResult::ExpandDefinition(proof) => Some(proof),
             _ => None,
         })
         .unwrap();
@@ -118,7 +117,7 @@ fn inferred_store_only_builder_stores_one_growth_step() {
 fn inferred_store_only_subset_rule_stores_its_quantified_conclusion() {
     let mut rt = runtime();
     let result = run(&mut rt, "N $subset R\n");
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::SubsetFact(rules))) =
         &stored(&result.statement_results[0]).infer
     else {
         panic!("subset inference")
@@ -126,9 +125,7 @@ fn inferred_store_only_subset_rule_stores_its_quantified_conclusion() {
     let projected = rules
         .iter()
         .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::SubsetElementwiseMembership(proof) => {
-                Some(&proof.derived)
-            }
+            InferSubsetFactResult::ElementwiseMembership(proof) => Some(&proof.derived),
             _ => None,
         })
         .unwrap();
@@ -189,27 +186,19 @@ fn inferred_store_only_invalid_formation_never_stores() {
 
 #[test]
 fn inferred_store_only_prime_rule_stores_its_named_conclusions_without_wd() {
-    use crate::store_fact_and_infer::InferBuiltinDefinitionResult;
     let mut rt = runtime();
     let result = run(&mut rt, "$prime(5)\n");
     let seed = stored(&result.statement_results[0]);
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &seed.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::PrimeFact(rules))) = &seed.infer else {
         panic!("prime seed inference")
     };
-    let prime = rules
-        .iter()
-        .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::BuiltinDefinition(
-                InferBuiltinDefinitionResult::Prime(proof),
-            ) => Some(proof),
-            _ => None,
-        })
-        .expect("the named prime rule");
+    let [crate::store_fact_and_infer::InferPrimeFactResult::Definition(prime)] = rules.as_slice()
+    else {
+        panic!("the named prime definition rule")
+    };
     assert_eq!(prime.source_fact_id, seed.primary_fact_id());
-    assert_eq!(prime.derived.len(), 2);
-    let StoreFactResult::ForallFact(trial) = &prime.derived[1].store else {
+    assert_eq!(rules[0].stored_fact_ids().len(), 2);
+    let StoreFactResult::ForallFact(trial) = &prime.trial_divisors.store else {
         panic!("trial-divisor conclusion")
     };
     assert!(Fact::ForallFact(trial.fact.clone())
@@ -238,4 +227,111 @@ fn inferred_store_only_general_subset_carrier_uses_known_inputs_and_rolls_back_a
         .unwrap();
     assert!(!rejected.success && rejected.session_error.is_none());
     assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), count);
+}
+
+#[test]
+fn inference_result_families_preserve_multiple_direct_subset_rules() {
+    let mut rt = runtime();
+    let result = run(
+        &mut rt,
+        "forall A set, B finite_set:\n    A $subset B\n    =>:\n        A=A\n",
+    );
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(stmt)) = &result.statement_results[0]
+    else {
+        panic!("forall statement")
+    };
+    let VerifyFactResult::ForallFact(verified) = &stmt.verify_result else {
+        panic!("forall verify")
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(local)) =
+        verified.as_ref()
+    else {
+        panic!("local introduction")
+    };
+    let seed = &local.assumed_dom_facts[0].store_and_infer;
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::SubsetFact(rules))) = &seed.infer
+    else {
+        panic!("subset family")
+    };
+    assert!(matches!(
+        rules.as_slice(),
+        [
+            crate::store_fact_and_infer::InferSubsetFactResult::FiniteUpperBound(_),
+            crate::store_fact_and_infer::InferSubsetFactResult::ElementwiseMembership(_)
+        ]
+    ));
+    assert_eq!(rules.len(), 2);
+    assert_eq!(rules.iter().flat_map(|r| r.stored_fact_ids()).count(), 2);
+    assert!(matches!(
+        rules[1].stored_conclusions()[0].store,
+        StoreFactResult::ForallFact(_)
+    ));
+}
+
+#[test]
+fn inference_result_no_rule_family_is_distinct_from_disabled_inference() {
+    let mut rt = runtime();
+    let result = run(&mut rt, "not $prime(4)\n");
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::NotPrimeFact(rules))) =
+        &stored(&result.statement_results[0]).infer
+    else {
+        panic!("negative prime retains its input family")
+    };
+    assert!(rules.is_empty());
+    let fact = match &stored(&result.statement_results[0]).store {
+        StoreFactResult::AtomicFact(s) => Fact::AtomicFact(s.fact.clone()),
+        _ => panic!("atomic source"),
+    };
+    let disabled = rt
+        .store_fact_and_infer(&fact, VerifyState::top_level().without_inference())
+        .unwrap();
+    assert!(disabled.infer.is_none());
+}
+
+#[test]
+fn inference_result_cart_coordinates_retain_original_coordinate_indices() {
+    let mut rt = runtime();
+    let result = run(&mut rt, "forall pair cart({1}, {2}):\n    pair=pair\n");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(stmt)) = &result.statement_results[0]
+    else {
+        panic!("forall statement")
+    };
+    let VerifyFactResult::ForallFact(verified) = &stmt.verify_result else {
+        panic!("forall verify")
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(local)) =
+        verified.as_ref()
+    else {
+        panic!("local introduction")
+    };
+    let store = &local
+        .introduced_params
+        .defined_params
+        .store_and_infer_results[0];
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &store.infer else {
+        panic!("membership family")
+    };
+    let coordinates = rules
+        .iter()
+        .find_map(|r| match r {
+            crate::store_fact_and_infer::InferInFactResult::CartCoordinates(p) => {
+                Some(&p.coordinates)
+            }
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(
+        coordinates
+            .iter()
+            .map(|c| c.coordinate_index)
+            .collect::<Vec<_>>(),
+        vec![0, 1]
+    );
+    assert_eq!(
+        coordinates
+            .iter()
+            .map(|c| c.membership.stored_fact_ids().len())
+            .sum::<usize>(),
+        2
+    );
 }

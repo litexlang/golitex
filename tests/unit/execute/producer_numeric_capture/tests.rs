@@ -5,9 +5,8 @@ use super::{
 use crate::launch_command::OutputLanguage;
 use crate::prelude::*;
 use crate::rational_expression::NumberCompareResult;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-};
+use crate::store_fact_and_infer::InferInFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
 use std::rc::Rc;
 
 fn runtime() -> Runtime {
@@ -58,13 +57,11 @@ fn seed(stored: &StoreFactResult) -> &AtomicFact {
 }
 
 fn natural_nonnegative(stored: &StoreFactAndInferResult) -> &StoreFactResult {
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &stored.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &stored.infer else {
         panic!("atomic membership inference")
     };
     let mut signed = rules.iter().filter_map(|rule| match rule {
-        InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(p) => Some(p),
+        InferInFactResult::SignedStandardSetSign(p) => Some(p),
         _ => None,
     });
     let signed = signed.next().unwrap();
@@ -177,17 +174,14 @@ fn producer_numeric_capture_signed_inferences_keep_their_original_formation() {
     let proof = have(&run.statement_results[0]);
     for group in &proof.groups {
         for store in &group.defined_params.store_and_infer_results {
-            let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-                &store.infer
+            let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &store.infer
             else {
                 panic!("signed membership inference")
             };
             let sign = rules
                 .iter()
                 .find_map(|rule| match rule {
-                    InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) => {
-                        Some(proof)
-                    }
+                    InferInFactResult::SignedStandardSetSign(proof) => Some(proof),
                     _ => None,
                 })
                 .expect("signed carrier generates its sign consequences");

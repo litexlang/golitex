@@ -12,10 +12,16 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         let domains = self.compile_function_domains(signature, position)?;
         let guard = self.compile_function_guard_template(signature, position)?;
-        let constructor = if domains.len() == 2 { "one" } else { "two" };
+        let (arguments, target) =
+            self.compile_function_constructor_arguments(signature, position)?;
+        let constructor = match (domains.len() == 2, target) {
+            (true, false) => "one",
+            (false, false) => "two",
+            (true, true) => "oneTarget",
+            (false, true) => "twoTarget",
+        };
         Ok(format!(
-            "(Litex.FunctionSignature.{constructor} (M := M) {} {guard})",
-            domains.join(" ")
+            "(Litex.FunctionSignature.{constructor} (M := M) {arguments} {guard})"
         ))
     }
 
@@ -50,17 +56,99 @@ impl LitexToLeanCompiler {
                 ));
             }
             let set = self.compile_numeric_carrier(carrier, position)?;
+            let set = if set == StandardSet::RPos {
+                StandardSet::R
+            } else {
+                set
+            };
             domains.push(format!(
                 "Litex.StandardSetValue.{}",
                 standard_value_constructor(&set)?
             ));
         }
         let set = self.compile_numeric_carrier(&signature.ret_set, position)?;
+        let set = if set == StandardSet::RPos {
+            StandardSet::R
+        } else {
+            set
+        };
         domains.push(format!(
             "Litex.StandardSetValue.{}",
             standard_value_constructor(&set)?
         ));
         Ok(domains)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_constructor_arguments(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, bool), LeanCompileError> {
+        let mut domains = self.compile_function_domains(signature, position)?;
+        let target =
+            self.compile_numeric_carrier(&signature.ret_set, position)? == StandardSet::RPos;
+        if target {
+            domains.pop();
+            let object = self.compile_object_reference(&signature.ret_set, position)?;
+            domains.push(format!("(Litex.denote {object})"));
+            domains.push(format!("(Litex.isSet {object})"));
+        }
+        Ok((domains.join(" "), target))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_positive_inputs(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<IdentifierId>, LeanCompileError> {
+        let mut positive = Vec::new();
+        for group in &signature.set_bound_parameters.groups {
+            if self.compile_numeric_carrier(&group.param_type, position)? == StandardSet::RPos {
+                positive.extend(group.params.iter().map(|parameter| parameter.id));
+            }
+        }
+        Ok(positive)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_domain_certificates(
+        &self,
+        signature: &FnSet,
+        arguments: &[String],
+        requirements: &[String],
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, String), LeanCompileError> {
+        let parameters = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|group| &group.params)
+            .collect::<Vec<_>>();
+        if arguments.len() != parameters.len()
+            || requirements.len() != parameters.len() + signature.dom_facts.len()
+        {
+            return Err(LeanCompileError::new(
+                "Function/DomainCertificates",
+                "The exact call must retain each ordered input and explicit guard certificate.",
+            ));
+        }
+        let positive = self.compile_function_positive_inputs(signature, position)?;
+        let mut members = requirements[..parameters.len()].to_vec();
+        let mut guards = Vec::new();
+        for (index, parameter) in parameters.iter().enumerate() {
+            if positive.contains(&parameter.id) {
+                let original = &requirements[index];
+                let argument = &arguments[index];
+                members[index] = format!("(Litex.inRPos_real {argument} {original})");
+                guards.push(format!("((Litex.positiveReal_members (M := M) (Litex.denote {argument})).mp {original}).2"));
+            }
+        }
+        guards.extend_from_slice(&requirements[parameters.len()..]);
+        let guard = guards
+            .into_iter()
+            .rev()
+            .reduce(|tail, head| format!("(And.intro {head} {tail})"))
+            .unwrap_or_else(|| "True.intro".into());
+        Ok((members, guard))
     }
 
     pub(in crate::compile_to_lean) fn compile_numeric_carrier(
@@ -103,7 +191,16 @@ impl LitexToLeanCompiler {
             .flat_map(|group| &group.params)
             .map(|parameter| format!("(_raw_i{} : M.Value)", parameter.id.value()))
             .collect::<Vec<_>>();
-        let mut guards = Vec::new();
+        let mut guards = self
+            .compile_function_positive_inputs(signature, position)?
+            .iter()
+            .map(|id| {
+                format!(
+                    "(Litex.positiveRealPredicate (M := M) _raw_i{})",
+                    id.value()
+                )
+            })
+            .collect::<Vec<_>>();
         for fact in &signature.dom_facts {
             guards.push(self.compile_function_raw_clause(
                 &function_guard_fact(fact)?,
@@ -172,6 +269,7 @@ impl LitexToLeanCompiler {
             Obj::Literal(Literal::Number(number)) => {
                 Ok(format!("(M.number {})", number_literal(number, "ℂ")?))
             }
+            Obj::StandardSet(StandardSet::RPos) => Ok("(Litex.positiveReal (M := M))".into()),
             Obj::StandardSet(set) => Ok(format!(
                 "(M.standard Litex.StandardSetValue.{})",
                 standard_value_constructor(set)?

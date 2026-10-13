@@ -16,6 +16,12 @@ impl LitexToLeanCompiler {
                 if set == &Obj::StandardSet(StandardSet::R) {
                     return Ok(hypothesis);
                 }
+                if set == &Obj::StandardSet(StandardSet::RPos) {
+                    return Ok(format!(
+                        "(Litex.inRPos_real {} {hypothesis})",
+                        self.compile_object_reference(object, position)?
+                    ));
+                }
             }
         }
         if let Some(proof) = position.with_visible_membership(
@@ -24,6 +30,19 @@ impl LitexToLeanCompiler {
             &mut |result, producer| {
                 self.compile_verify(result, producer)
                     .map(|compiled| compiled.1)
+            },
+        )? {
+            return Ok(proof);
+        }
+        if let Some(proof) = position.with_visible_membership(
+            object,
+            &Obj::StandardSet(StandardSet::RPos),
+            &mut |result, producer| {
+                let (_, positive) = self.compile_verify(result, producer)?;
+                Ok(format!(
+                    "(Litex.inRPos_real {} {positive})",
+                    self.compile_object_reference(object, producer)?
+                ))
             },
         )? {
             return Ok(proof);
@@ -166,6 +185,14 @@ impl LitexToLeanCompiler {
                         position,
                     );
                 }
+                if set == &Obj::StandardSet(StandardSet::RPos) {
+                    let term = self.compile_object_reference(object, position)?;
+                    return self.numeric_member(
+                        object,
+                        &format!("(Litex.positiveRealToComplex {term} {hypothesis})"),
+                        position,
+                    );
+                }
             }
         }
         if let Some(observation) = position.with_visible_membership(
@@ -174,6 +201,21 @@ impl LitexToLeanCompiler {
             &mut |result, producer| {
                 let (_, member) = self.compile_verify(result, producer)?;
                 self.numeric_member(object, &member, producer)
+            },
+        )? {
+            return Ok(observation);
+        }
+        if let Some(observation) = position.with_visible_membership(
+            object,
+            &Obj::StandardSet(StandardSet::RPos),
+            &mut |result, producer| {
+                let (_, positive) = self.compile_verify(result, producer)?;
+                let term = self.compile_object_reference(object, producer)?;
+                self.numeric_member(
+                    object,
+                    &format!("(Litex.positiveRealToComplex {term} {positive})"),
+                    producer,
+                )
             },
         )? {
             return Ok(observation);
@@ -322,6 +364,7 @@ impl LitexToLeanCompiler {
                     StandardSet::Z => format!("(Litex.integerToComplex {call} {member})"),
                     StandardSet::Q => format!("(Litex.rationalToComplex {call} {member})"),
                     StandardSet::R => format!("(Litex.realToComplex {call} {member})"),
+                    StandardSet::RPos => format!("(Litex.positiveRealToComplex {call} {member})"),
                     StandardSet::C => member,
                     _ => {
                         return Err(LeanCompileError::unsupported(
@@ -351,6 +394,22 @@ impl LitexToLeanCompiler {
                         if set == &Obj::StandardSet(StandardSet::C) {
                             return self.numeric_member(obj, &member, position);
                         }
+                        if set == &Obj::StandardSet(StandardSet::R) {
+                            let term = self.compile_object_reference(obj, position)?;
+                            return self.numeric_member(
+                                obj,
+                                &format!("(Litex.realToComplex {term} {member})"),
+                                position,
+                            );
+                        }
+                        if set == &Obj::StandardSet(StandardSet::RPos) {
+                            let term = self.compile_object_reference(obj, position)?;
+                            return self.numeric_member(
+                                obj,
+                                &format!("(Litex.positiveRealToComplex {term} {member})"),
+                                position,
+                            );
+                        }
                     }
                 }
                 if let Some(observation) = position.with_visible_membership(
@@ -359,6 +418,21 @@ impl LitexToLeanCompiler {
                     &mut |result, producer| {
                         let (_, member) = self.compile_verify(result, producer)?;
                         self.numeric_member(obj, &member, producer)
+                    },
+                )? {
+                    return Ok(observation);
+                }
+                if let Some(observation) = position.with_visible_membership(
+                    obj,
+                    &Obj::StandardSet(StandardSet::RPos),
+                    &mut |result, producer| {
+                        let (_, positive) = self.compile_verify(result, producer)?;
+                        let term = self.compile_object_reference(obj, producer)?;
+                        self.numeric_member(
+                            obj,
+                            &format!("(Litex.positiveRealToComplex {term} {positive})"),
+                            producer,
+                        )
                     },
                 )? {
                     return Ok(observation);
@@ -451,6 +525,7 @@ impl LitexToLeanCompiler {
                     StandardSet::Z => Some(format!("(Litex.integerToReal {call} {member})")),
                     StandardSet::Q => Some(format!("(Litex.rationalToReal {call} {member})")),
                     StandardSet::R => Some(member),
+                    StandardSet::RPos => Some(format!("(Litex.inRPos_real {call} {member})")),
                     // A checked C return certifies a complex value only. Any
                     // later R assertion still needs its own source certificate.
                     _ => None,

@@ -3,6 +3,12 @@
 Projects `ExecStmtResult` trees into user-facing JSON. Does **not** change the
 verify/exec IR (Lean replay and detail still read the full tree).
 
+The internal inference tree uses `InferResult`, exhaustive atomic-family
+variants and per-family named rule enums. Projection retains the existing
+Normal `infers` order and Detailed rule/field names. Fixed conclusion fields
+and indexed builder/Cartesian children are read from the owning typed results;
+the result-type migration does not introduce a second serialized proof tree.
+
 Normal, Compact and Detailed run projections preserve the complete parsed statement
 text retained by the runner. Names, arguments and selected theorem conclusions
 stay in `statement`; published facts remain in `stores`. A failed expression

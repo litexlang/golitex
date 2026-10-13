@@ -66,6 +66,12 @@ It is neither another ExecEnv nor an object/fact/proof cache.
 Its internal borrow lifetime remains explicit where Rust requires it; this
 does not impose a lifetime parameter on the owning compiler API.
 
+Inference replay reads the canonical `InferResult` tree and its atomic-family
+rule enums. `OrderBoundInference<'a>` is a borrowed view of a strict-bound or
+weak-integer leaf, used only by the source cursor; it owns no copied result or
+new registry. The cursor exposes completed producers only for reviewed Lean
+adapters, rather than treating every inferred store as a Lean hypothesis.
+
 Each source proof is named `h_<original FactId>`, including exported facts,
 named theorems, local hypotheses, stored alias equalities, supported inference
 and theorem-return projections. Declarations and citations use the same actual
@@ -175,7 +181,10 @@ and function domains share separation. The actual ZF model proves every law
 in `lean/Litex.lean`. Selected finite membership/subset, builder membership,
 subset-definition and empty-domain universal routes replay their recorded
 children. Builder inference retains its actual selected builder, exact equality
-path and each direct conclusion store. Proved Lean constructors establish the
+path and each direct conclusion store. Builder projections also retain whether
+they came from the base carrier or the exact zero-based source condition index.
+Replay validates that selected source against the stored subject; it does not
+rediscover an index by searching for a matching conclusion. Proved Lean constructors establish the
 objects used by the selected named rule. Missing, changed or
 future producers reject instead of being recovered from the final environment.
 

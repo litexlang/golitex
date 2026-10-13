@@ -1,3 +1,4 @@
+use crate::store_fact_and_infer::{InferInFactResult};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
     AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
     AtomicExceptEqualityFactSearchProofByBuiltinRule,
@@ -9,7 +10,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::*;
 use crate::prelude::*;
 use crate::prelude::verify_chain_fact::VerifyChainFactResult;
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
+    InferAtomicFactResult, InferResult,
     SetBuilderMembershipProjectionStep,
 };
 use std::rc::Rc;
@@ -79,15 +80,14 @@ fn projection_mut(statement: &mut ExecStmtResult) -> &mut SetBuilderMembershipPr
             .store_and_infer_results[0],
     )
     .expect("sole actual parameter store");
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &mut store.infer
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &mut store.infer
     else {
         panic!("membership inference")
     };
     rules
         .iter_mut()
         .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::InFactSetBuilder(proof) => Some(&mut proof.steps[0]),
+            InferInFactResult::SetBuilder(proof) => Some(&mut proof.steps[0]),
             _ => None,
         })
         .expect("original bounded-set projection")
@@ -140,15 +140,13 @@ fn bounded_chain_filter_replays_actual_compound_stores_and_projection_dependenci
         .introduced_params
         .defined_params
         .store_and_infer_results[0];
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &store.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &store.infer else {
         panic!("original membership inference")
     };
     let projection = rules
         .iter()
         .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::InFactSetBuilder(proof) => Some(&proof.steps[0]),
+            InferInFactResult::SetBuilder(proof) => Some(&proof.steps[0]),
             _ => None,
         })
         .expect("bounded-set projection");
@@ -162,8 +160,8 @@ fn bounded_chain_filter_replays_actual_compound_stores_and_projection_dependenci
         .primary_fact_id();
     assert_eq!(projection.equality_path.len(), 1);
     assert_eq!(projection.equality_path[0].2, equality_id);
-    assert_eq!(projection.derived.len(), 2);
-    let chain = &projection.derived[1];
+    assert_eq!(projection.projections.len(), 2);
+    let chain = projection.projections[1].stored();
     let StoreFactResult::ChainFact(stored) = &chain.store else {
         panic!("actual projected chain store")
     };
@@ -257,9 +255,11 @@ fn bounded_chain_projection_cannot_drop_or_change_selected_filter() {
         let (mut result, compiler) = super::execute(INTERVAL);
         let projection = projection_mut(&mut result.statement_results[2]);
         if missing {
-            projection.derived.pop();
+            projection.projections.pop();
         } else {
-            let StoreFactResult::ChainFact(stored) = &mut projection.derived[1].store else {
+            let StoreFactResult::ChainFact(stored) =
+                &mut projection.projections[1].stored_mut().store
+            else {
                 panic!("selected chain store")
             };
             stored.fact.objs[1] = Obj::Literal(Literal::Number(Number {
@@ -329,4 +329,21 @@ fn bounded_concrete_predicate_and_set_alias_replay_selected_source_definitions()
         output.matches(&format!("h_{}", alias_id.value())).count() >= 2,
         "alias equality must be emitted and used by membership replay"
     );
+}
+
+#[test]
+fn bounded_builder_projection_rejects_a_changed_source_condition_index() {
+    let (mut result, compiler) = super::execute(INTERVAL);
+    let projection = projection_mut(&mut result.statement_results[2]);
+    let crate::store_fact_and_infer::InferSetBuilderProjectionResult::Condition {
+        condition_index,
+        ..
+    } = &mut projection.projections[1]
+    else {
+        panic!("recorded defining condition")
+    };
+    *condition_index += 1;
+    let error = super::compile_run(&result, &compiler, "wrong_condition_index")
+        .expect_err("only the recorded existing source condition can be projected");
+    assert!(error.to_string().contains("SetBuilder/ProjectionIndex"));
 }

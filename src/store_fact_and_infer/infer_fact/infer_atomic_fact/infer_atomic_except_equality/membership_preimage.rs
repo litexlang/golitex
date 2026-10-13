@@ -9,7 +9,7 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactPreimageResult, InferInFactPreimageSetResult,
+    InferInFactPreimageResult, InferInFactPreimageSetResult, InferInFactResult,
 };
 
 impl Runtime {
@@ -19,7 +19,7 @@ impl Runtime {
         &mut self,
         member: &InFact,
         state: VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         for (root, path) in self.exact_property_object_values_of_shapes(
             &member.set,
             &[EqualToObjShape::Preimage, EqualToObjShape::PreimageSet],
@@ -58,7 +58,9 @@ impl Runtime {
                 line_file: member.line_file.clone(),
             };
             let mut derived = Vec::new();
-            self.store_new_set_builder_projection(&base.into(), state, &mut derived)?;
+            if let Some(stored) = self.store_new_set_builder_projection(&base.into())? {
+                derived.push(stored);
+            }
             let mut substitution = std::collections::HashMap::new();
             substitution.insert(
                 construction.builder.param_binding.id,
@@ -73,12 +75,14 @@ impl Runtime {
                         ))
                     })?;
                 let fact = crate::instantiate::quantifier_free_fact_to_fact(condition);
-                self.store_new_set_builder_projection(&fact, state, &mut derived)?;
+                if let Some(stored) = self.store_new_set_builder_projection(&fact)? {
+                    derived.push(stored);
+                }
             }
             let source_equal = KnownEqualityPathProof::new(path);
             return Ok(Some(match root {
                 Obj::FunctionSpace(FunctionSpace::Preimage(_)) => {
-                    InferAtomicExceptEqualityResult::InFactPreimage(InferInFactPreimageResult {
+                    InferInFactResult::Preimage(InferInFactPreimageResult {
                         source_fact_id: member.fact_id,
                         source_equal,
                         construction,
@@ -86,14 +90,12 @@ impl Runtime {
                     })
                 }
                 Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => {
-                    InferAtomicExceptEqualityResult::InFactPreimageSet(
-                        InferInFactPreimageSetResult {
-                            source_fact_id: member.fact_id,
-                            source_equal,
-                            construction,
-                            derived,
-                        },
-                    )
+                    InferInFactResult::PreimageSet(InferInFactPreimageSetResult {
+                        source_fact_id: member.fact_id,
+                        source_equal,
+                        construction,
+                        derived,
+                    })
                 }
                 _ => unreachable!("only point/set preimage roots selected"),
             }));

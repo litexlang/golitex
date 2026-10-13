@@ -2,7 +2,9 @@
 
 Status: implemented and verified, 2026-10-12. The earlier [termination audit](termination_audit.md) preserves the
 pre-change evidence. The former skip-versus-fail question is superseded by the
-user's named-rule direct-store contract.
+user's named-rule direct-store contract. The subsequent
+[inference result family checkpoint](infer_result/README.md) records the
+exhaustive per-fact/per-rule result migration and its current verification.
 
 ## Contract
 

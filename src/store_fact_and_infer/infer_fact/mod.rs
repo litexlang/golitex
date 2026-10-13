@@ -24,9 +24,11 @@
 pub mod infer_and_fact;
 pub mod infer_atomic_fact;
 pub mod infer_chain_fact;
-pub mod infer_exist_shaped_fact;
+pub mod infer_exist_unique_fact;
 pub mod infer_fact;
 pub mod infer_forall_fact;
 pub mod infer_forall_fact_with_iff;
+pub mod infer_not_exist_fact;
 pub mod infer_not_forall_fact;
 pub mod infer_or_fact;
+pub mod infer_plain_exist_fact;

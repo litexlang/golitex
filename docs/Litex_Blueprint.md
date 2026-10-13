@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 12, 2026.
+Last updated: October 13, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -49,6 +49,10 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 Formal languages let machines rigorously check reasoning and let results be [cited again under explicit conditions](#workflow-reuse). AI makes formal code easier to generate. Even after that code passes checking, people still need to see what it actually expresses, which assumptions it relies on, and whether it faithfully captures their intent. **People need to understand and control the language that carries their own ideas.**
 
 **Litex explores a formal language in which human understanding and machine checking meet in the same text.** It organizes reasoning through [familiar mathematical objects, conditions, and facts](#set-theory): people choose definitions, constructions, and key steps; [AI assists with writing and repair](#interaction-loop); the language [checks supported connections and records the grounds for each step](#execution-model). It asks whether this form of expression can lower the cost for people and AI to construct, review, repair, and reuse checkable knowledge.
+
+**Research and release boundary.** Litex is currently an evolving formal-language research project and experimental system. It cannot replace natural language in carrying all of mathematics' intuition, motivation, and explanation, nor does it have the mature trusted foundation, domain coverage, or ecosystem scale that Lean and Mathlib have accumulated. Litex investigates a different, narrower, and independent question: can a language design organized around facts, statement-by-statement checking, and retained knowledge records lower the cost for people and AI to construct, understand, review, repair, and reuse checkable knowledge?
+
+This project is released in its current state. Public source code, examples, and experimental results do not guarantee completeness, fitness for any particular purpose, or superiority to other systems. Judge its capabilities by dated verification results, trust boundaries, known limitations, and concrete use cases; do not extrapolate results within an experimental scope into untested guarantees.
 
 The concision of Litex source comes from the coordination among objects, facts, statements, and verification procedures developed through sustained iteration. It makes the mechanical work connecting common proof steps part of the language's default checking, letting authors state mathematical steps directly and build on existing knowledge. The [systems engineering perspective](#systems-engineering) follows a small reciprocal function through this design work.
 

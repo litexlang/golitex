@@ -1,0 +1,178 @@
+# appendix a logic and proof language
+# Selected Analysis I development; scope and assumptions: STATUS.md.
+
+sketch:
+    2 + 3 = 5
+    forall x R:
+        x = 2
+        =>:
+            x + 1 = 3
+sketch:
+    2 + 2 = 4
+    not 2 + 2 = 5
+prop larger_than(x, y R):
+    x > y
+by def $larger_than(3, 2)
+2 + 2 = 4 and 3 + 3 = 6
+2 + 2 = 4 or 2 + 3 = 6
+not 2 + 2 = 12
+forall:
+    2 + 2 = 4
+    =>:
+        3 + 3 = 6
+forall x R:
+    x > 0
+    =>:
+        x + 1 > 1
+forall:
+    =>:
+        2 + 2 = 4
+    <=>:
+        3 + 3 = 6
+sketch:
+    forall x Z:
+        x = 2
+        =>:
+            x^2 = 4
+sketch:
+    forall:
+        2 + 2 = 5
+        =>:
+            4 = 2 + 2 = 5
+            4 + 4 = (2 + 2) + (2 + 2) = 5 + 5 = 10
+            4 = 10 - 4
+sketch:
+    forall x R:
+        2 * x + 3 = 7
+        =>:
+            x = (2 * x) / 2 = (7 - 3) / 2 = 2
+prop is_even(x Z):
+    exist k Z st {x = 2 * k}
+release obj def chap4::integer_quotient
+thm integer_product_successor_even:
+    ? forall n Z:
+        $is_even(n * (n + 1))
+    claim:
+        ? exist k Z st {n * (n + 1) = 2 * k}
+        by cases:
+            ? exist k Z st {n * (n + 1) = 2 * k}
+            case n % 2 = 0:
+                have m Z = chap4::integer_quotient(n, 2)
+                n = 2 * chap4::integer_quotient(n, 2) + n % 2 = 2 * m + n % 2 = 2 * m
+                witness exist k Z st {n * (n + 1) = 2 * k} from m * (n + 1):
+                    n * (n + 1) = (2 * m) * (n + 1)
+                    (2 * m) * (n + 1) = 2 * (m * (n + 1))
+                    n * (n + 1) = 2 * (m * (n + 1))
+            case n % 2 = 1:
+                (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
+                have m Z = chap4::integer_quotient(n + 1, 2)
+                n + 1 = 2 * chap4::integer_quotient(n + 1, 2) + (n + 1) % 2 = 2 * m + (n + 1) % 2 = 2 * m
+                witness exist k Z st {n * (n + 1) = 2 * k} from n * m:
+                    n * (n + 1) = n * (2 * m)
+                    n * (2 * m) = 2 * (n * m)
+                    n * (n + 1) = 2 * (n * m)
+    by def $is_even(n * (n + 1))
+have some_number Z = (253 + 142) * 123 - (423 + 198) * 342 + 538 - 213
+release thm integer_product_successor_even(some_number)
+by def $is_even(some_number * (some_number + 1))
+prop is_largest_integer(M Z):
+    forall n Z:
+        n <= M
+thm no_largest_integer:
+    ? forall :
+        not exist M Z st {$is_largest_integer(M)}
+    by contra:
+        ? not exist M Z st {$is_largest_integer(M)}
+        obtain M from exist M Z st {$is_largest_integer(M)}
+        M + 1 $in Z
+        M + 1 <= M
+        M < M + 1
+        impossible M + 1 <= M
+thm every_integer_has_larger_integer:
+    ? forall n Z:
+        exist m Z st {m > n}
+    witness exist m Z st {m > n} from n + 1:
+        n + 1 $in Z
+        n < n + 1
+prop is_larger_than_every_integer(m Z):
+    forall n Z:
+        m > n
+thm no_integer_larger_than_every_integer:
+    ? forall :
+        not exist m Z st {$is_larger_than_every_integer(m)}
+    by contra:
+        ? not exist m Z st {$is_larger_than_every_integer(m)}
+        obtain m from exist m Z st {$is_larger_than_every_integer(m)}
+        m + 1 $in Z
+        m > m + 1
+        m < m + 1
+        impossible m > m + 1
+thm positive_epsilon_has_smaller_delta:
+    ? forall epsilon R+:
+        exist delta R+ st {2 * delta < epsilon}
+    witness exist delta R+ st {2 * delta < epsilon} from epsilon / 3:
+        epsilon / 3 > 0
+        2 * epsilon / 3 < 3 * epsilon / 3
+        3 * epsilon / 3 = epsilon
+        2 * epsilon / 3 < epsilon
+thm equality_reflexive_demo:
+    ? forall x R:
+        x = x
+thm equality_symmetric_demo:
+    ? forall x, y R:
+        x = y
+        =>:
+            y = x
+thm equality_transitive_demo:
+    ? forall x, y, z R:
+        x = y
+        y = z
+        =>:
+            x = z
+thm equality_substitution_for_real_operations:
+    ? forall x, y, z R:
+        x = y
+        =>:
+            2 * x = 2 * y
+            x + z = y + z
+thm equality_substitution_for_real_function:
+    ? forall f fn(t R) R, x, y R:
+        x = y
+        =>:
+            f(x) = f(y)
+prop is_odd_integer(n Z):
+    n % 2 = 1
+thm equality_substitution_for_oddness_and_order:
+    ? forall n, m, k Z:
+        $is_odd_integer(n)
+        n = m
+        n > k
+        =>:
+            $is_odd_integer(m)
+            m > k
+    m % 2 = n % 2
+    n % 2 = 1
+    m % 2 = 1
+    $is_odd_integer(m)
+    m > k
+thm equality_substitution_chain_for_function:
+    ? forall f fn(t R) R, x, y, z R:
+        x = f(y)
+        y = z^2
+        =>:
+            f(y) = f(z^2)
+            x = f(z^2)
+prop has_same_remainder_mod_10(a, b Z):
+    a % 10 = b % 10
+thm modular_remainder_equality_example:
+    ? forall :
+        $has_same_remainder_mod_10(12, 2)
+        $has_same_remainder_mod_10(12 + 5, 2 + 5)
+    12 % 10 = 2
+    2 % 10 = 2
+    12 % 10 = 2 % 10
+    by def $has_same_remainder_mod_10(12, 2)
+    (12 + 5) % 10 = 17 % 10 = 7
+    (2 + 5) % 10 = 7 % 10 = 7
+    (12 + 5) % 10 = (2 + 5) % 10
+    by def $has_same_remainder_mod_10(12 + 5, 2 + 5)

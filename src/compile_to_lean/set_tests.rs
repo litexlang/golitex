@@ -209,8 +209,8 @@ fn builder_projection_cannot_omit_its_recorded_alias_resolution() {
     let store =
         std::rc::Rc::get_mut(&mut p.introduced_params.defined_params.store_and_infer_results[0])
             .expect("owned source introduction");
-    let Some(crate::store_fact_and_infer::InferFactResult::AtomicFact(
-        crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
+    let Some(crate::store_fact_and_infer::InferResult::AtomicFact(
+        crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
     )) = &mut store.infer
     else {
         panic!("inference")
@@ -218,9 +218,7 @@ fn builder_projection_cannot_omit_its_recorded_alias_resolution() {
     let captured = rules
         .iter_mut()
         .find_map(|rule| match rule {
-            crate::store_fact_and_infer::InferAtomicExceptEqualityResult::InFactSetBuilder(p) => {
-                Some(p)
-            }
+            crate::store_fact_and_infer::InferInFactResult::SetBuilder(p) => Some(p),
             _ => None,
         })
         .expect("builder inference");
@@ -251,8 +249,8 @@ fn builder_projection_cannot_replace_its_selected_builder() {
     let store =
         std::rc::Rc::get_mut(&mut p.introduced_params.defined_params.store_and_infer_results[0])
             .expect("owned source introduction");
-    let Some(crate::store_fact_and_infer::InferFactResult::AtomicFact(
-        crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
+    let Some(crate::store_fact_and_infer::InferResult::AtomicFact(
+        crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
     )) = &mut store.infer
     else {
         panic!("inference")
@@ -260,9 +258,7 @@ fn builder_projection_cannot_replace_its_selected_builder() {
     let captured = rules
         .iter_mut()
         .find_map(|rule| match rule {
-            crate::store_fact_and_infer::InferAtomicExceptEqualityResult::InFactSetBuilder(p) => {
-                Some(p)
-            }
+            crate::store_fact_and_infer::InferInFactResult::SetBuilder(p) => Some(p),
             _ => None,
         })
         .expect("builder inference");

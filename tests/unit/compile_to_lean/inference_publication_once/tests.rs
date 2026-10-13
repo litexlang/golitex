@@ -5,9 +5,8 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 };
 use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-};
+use crate::store_fact_and_infer::InferInFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
 
 const NATURAL_SAME: &str = "prop natural_same(x N):\n    x=x\n";
 const NATURAL_CLAUSE: &str =
@@ -28,26 +27,18 @@ fn statement_store(statement: &ExecStmtResult) -> &StoreFactAndInferResult {
 }
 
 fn natural_sign_ids(store: &StoreFactAndInferResult) -> Vec<FactId> {
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &store.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &store.infer else {
         return Vec::new();
     };
-    let mut ids = Vec::new();
-    for rule in rules {
-        match rule {
-            InferAtomicExceptEqualityResult::NormalAtomicParamTypes(_) => {}
-            InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(_) => {}
-            InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) => {
-                for derived in &proof.derived {
-                    ids.push(derived.store.primary_fact_id());
-                }
-            }
-            InferAtomicExceptEqualityResult::InFactSetBuilder(_) => {}
-            _ => {}
-        }
-    }
-    ids
+    rules
+        .iter()
+        .filter_map(|rule| match rule {
+            InferInFactResult::SignedStandardSetSign(p) => Some(&p.derived),
+            _ => None,
+        })
+        .flatten()
+        .map(|d| d.store.primary_fact_id())
+        .collect()
 }
 
 fn introduction(statement: &ExecStmtResult) -> &VerifyForallFactSuccess {
@@ -161,29 +152,25 @@ fn actual_direct_equality_builder_and_natural_rules_retain_original_publication_
     let (result, compiler) = super::execute(DIRECT_STANDARD_N);
     let forall = introduction(&result.statement_results[0]);
     let store = &forall.assumed_dom_facts[1].store_and_infer;
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &store.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &store.infer else {
         panic!("the original domain membership infer dispatcher")
     };
     let builder_index = rules
         .iter()
-        .position(|rule| matches!(rule, InferAtomicExceptEqualityResult::InFactSetBuilder(_)))
+        .position(|rule| matches!(rule, InferInFactResult::SetBuilder(_)))
         .expect("the direct N=builder premise gives this actual projection rule");
     let sign_index = rules
         .iter()
-        .position(|rule| {
-            matches!(
-                rule,
-                InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(_)
-            )
-        })
+        .position(|rule| matches!(rule, InferInFactResult::SignedStandardSetSign(_)))
         .expect("the same source N membership has its actual sign rule");
     assert!(builder_index < sign_index);
-    let InferAtomicExceptEqualityResult::InFactSetBuilder(builder) = &rules[builder_index] else {
+    let InferInFactResult::SetBuilder(builder) = &rules[builder_index] else {
         unreachable!()
     };
-    let builder_id = builder.steps[0].derived[0].store.primary_fact_id();
+    let builder_id = builder.steps[0].projections[0]
+        .stored()
+        .store
+        .primary_fact_id();
     let sign_id = natural_sign_ids(store)[0];
     let run = SourcePosition::new(None, SourceOwner::Run(&result), 0);
     let formed = SourcePosition::new(Some(&run), SourceOwner::Forall(forall), 3);

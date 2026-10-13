@@ -10,7 +10,8 @@
 #         x = x
 # Now: these strict statements finish after storing direct consequences.
 # Boundary: an inferred predicate is stored; its own consequences require an
-# explicit new statement. Inferred facts still require ordinary WD evidence.
+# explicit new statement. That explicit statement uses ordinary verification;
+# storing the generated conclusion does not repeat its WD check.
 # Run: target/release/litex -strict -lang en -f examples/infer/atomic/one_step_store_only.lit
 
 have f, g fn(t R) R

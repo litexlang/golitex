@@ -4,8 +4,11 @@ use crate::execute::StoreHaveObjAndInferResult;
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::prelude::*;
+use crate::store_fact_and_infer::StoreInferredFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualFactResult, InferResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferEqualityResult, InferFactResult,
+    InferGreaterEqualFactResult, InferGreaterFactResult, InferInFactResult,
+    InferLessEqualFactResult, InferLessFactResult, InferNormalAtomicFactResult,
 };
 
 pub(super) fn project_verify_facts(facts: &[VerifyFactResult], runtime: &Runtime) -> JsonValue {
@@ -65,7 +68,7 @@ pub(super) fn project_store_and_infer(
     if !order_rules.is_empty() {
         entries.push(("conditional_order_rules", JsonValue::Array(order_rules)));
     }
-    if let InferFactResult::ChainFact(chain) = infer {
+    if let InferResult::ChainFact(chain) = infer {
         entries.push((
             "chain_adjacent_infers",
             JsonValue::Array(
@@ -114,11 +117,11 @@ pub(super) fn project_store_and_infer(
     object_for(runtime, entries)
 }
 
-fn project_conditional_order_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+fn project_conditional_order_infer(infer: &InferResult, runtime: &Runtime) -> Vec<JsonValue> {
     let atomic = match infer {
-        InferFactResult::AtomicFact(atomic) => vec![atomic],
-        InferFactResult::AndFact(and) => and.components.iter().collect(),
-        InferFactResult::ChainFact(chain) => chain
+        InferResult::AtomicFact(atomic) => vec![atomic],
+        InferResult::AndFact(and) => and.components.iter().collect(),
+        InferResult::ChainFact(chain) => chain
             .adjacent_infers
             .iter()
             .map(|edge| &edge.infer)
@@ -126,80 +129,116 @@ fn project_conditional_order_infer(infer: &InferFactResult, runtime: &Runtime) -
         _ => return Vec::new(),
     };
     let mut result = Vec::new();
+    let mut append = |name: &str,
+                      source: FactId,
+                      integer: Option<&VerifyFactResult>,
+                      bound: &VerifyFactResult,
+                      derived: &StoreInferredFactResult| {
+        let mut fields = vec![
+            ("rule", string(name)),
+            ("source", fact_id_entry(runtime, source)),
+        ];
+        if let Some(integer) = integer {
+            fields.push((
+                "integer_proof",
+                super::verify::project_verify_fact(integer, runtime),
+            ));
+        }
+        fields.extend([
+            (
+                "bound_nonnegative_proof",
+                super::verify::project_verify_fact(bound, runtime),
+            ),
+            ("store", project_store(&derived.store, runtime)),
+        ]);
+        result.push(object_for(runtime, fields));
+    };
     for atomic in atomic {
-        let InferAtomicFactResult::ExceptEquality(rules) = atomic else {
-            continue;
-        };
-        for rule in rules {
-            let (name, source, integer, bound, derived) = match rule {
-                InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(proof) => (
-                    "WeakIntegerLowerBoundInN",
-                    proof.source_fact_id,
-                    Some(&proof.integer_proof),
-                    &proof.bound_nonnegative_proof,
-                    &proof.derived,
-                ),
-                InferAtomicExceptEqualityResult::StrictLowerBoundPositive(proof) => (
-                    "StrictLowerBoundPositive",
-                    proof.source_fact_id,
-                    None,
-                    &proof.bound_nonnegative_proof,
-                    &proof.derived,
-                ),
-                _ => continue,
-            };
-            let mut fields = vec![
-                ("rule", string(name)),
-                ("source", fact_id_entry(runtime, source)),
-            ];
-            if let Some(integer) = integer {
-                fields.push((
-                    "integer_proof",
-                    super::verify::project_verify_fact(integer, runtime),
-                ));
+        match atomic {
+            InferAtomicFactResult::LessFact(rules) => {
+                for rule in rules {
+                    let InferLessFactResult::StrictLowerBoundPositive(p) = rule;
+                    append(
+                        "StrictLowerBoundPositive",
+                        p.source_fact_id,
+                        None,
+                        &p.bound_nonnegative_proof,
+                        &p.derived,
+                    );
+                }
             }
-            fields.extend([
-                (
-                    "bound_nonnegative_proof",
-                    super::verify::project_verify_fact(bound, runtime),
-                ),
-                ("store", project_store(&derived.store, runtime)),
-            ]);
-            result.push(object_for(runtime, fields));
+            InferAtomicFactResult::GreaterFact(rules) => {
+                for rule in rules {
+                    let InferGreaterFactResult::StrictLowerBoundPositive(p) = rule;
+                    append(
+                        "StrictLowerBoundPositive",
+                        p.source_fact_id,
+                        None,
+                        &p.bound_nonnegative_proof,
+                        &p.derived,
+                    );
+                }
+            }
+            InferAtomicFactResult::LessEqualFact(rules) => {
+                for rule in rules {
+                    let InferLessEqualFactResult::WeakIntegerLowerBoundInN(p) = rule;
+                    append(
+                        "WeakIntegerLowerBoundInN",
+                        p.source_fact_id,
+                        Some(&p.integer_proof),
+                        &p.bound_nonnegative_proof,
+                        &p.derived,
+                    );
+                }
+            }
+            InferAtomicFactResult::GreaterEqualFact(rules) => {
+                for rule in rules {
+                    let InferGreaterEqualFactResult::WeakIntegerLowerBoundInN(p) = rule;
+                    append(
+                        "WeakIntegerLowerBoundInN",
+                        p.source_fact_id,
+                        Some(&p.integer_proof),
+                        &p.bound_nonnegative_proof,
+                        &p.derived,
+                    );
+                }
+            }
+            _ => {}
         }
     }
     result
 }
 
-fn project_prop_definition_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+fn project_prop_definition_infer(infer: &InferResult, runtime: &Runtime) -> Vec<JsonValue> {
     let atomic = match infer {
-        InferFactResult::AtomicFact(atomic) => vec![atomic],
-        InferFactResult::AndFact(and) => and.components.iter().collect(),
-        InferFactResult::ChainFact(chain) => chain
+        InferResult::AtomicFact(atomic) => vec![atomic],
+        InferResult::AndFact(and) => and.components.iter().collect(),
+        InferResult::ChainFact(chain) => chain
             .adjacent_infers
             .iter()
             .map(|edge| &edge.infer)
             .collect(),
-        InferFactResult::OrFact(_)
-        | InferFactResult::ExistShapedFact(_)
-        | InferFactResult::NotForallFact(_)
-        | InferFactResult::ForallFact(_)
-        | InferFactResult::ForallFactWithIff(_) => return Vec::new(),
+        InferResult::OrFact(_)
+        | InferResult::ExistFact(_)
+        | InferResult::ExistUniqueFact(_)
+        | InferResult::NotExistFact(_)
+        | InferResult::NotForall(_)
+        | InferResult::ForallFact(_)
+        | InferResult::ForallFactWithIff(_) => return Vec::new(),
     };
     let mut rules = Vec::new();
     for atomic in atomic {
-        let InferAtomicFactResult::ExceptEquality(infer) = atomic else {
+        let InferAtomicFactResult::NormalAtomicFact(infer) = atomic else {
             continue;
         };
         for rule in infer {
             let (name, derived) = match rule {
-                InferAtomicExceptEqualityResult::NormalAtomicParamTypes(result) => {
+                InferNormalAtomicFactResult::ParamTypes(result) => {
                     ("NormalAtomicParamTypes", &result.derived)
                 }
-                InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(result) => {
+                InferNormalAtomicFactResult::ExpandDefinition(result) => {
                     ("NormalAtomicExpandDefinition", &result.derived)
                 }
-                _ => continue,
             };
             rules.push(object_for(
                 runtime,
@@ -226,28 +265,30 @@ fn project_prop_definition_infer(infer: &InferFactResult, runtime: &Runtime) -> 
     rules
 }
 
-fn project_signed_standard_set_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+fn project_signed_standard_set_infer(infer: &InferResult, runtime: &Runtime) -> Vec<JsonValue> {
     let atomic = match infer {
-        InferFactResult::AtomicFact(atomic) => vec![atomic],
-        InferFactResult::AndFact(and) => and.components.iter().collect(),
-        InferFactResult::ChainFact(chain) => chain
+        InferResult::AtomicFact(atomic) => vec![atomic],
+        InferResult::AndFact(and) => and.components.iter().collect(),
+        InferResult::ChainFact(chain) => chain
             .adjacent_infers
             .iter()
             .map(|edge| &edge.infer)
             .collect(),
-        InferFactResult::OrFact(_)
-        | InferFactResult::ExistShapedFact(_)
-        | InferFactResult::NotForallFact(_)
-        | InferFactResult::ForallFact(_)
-        | InferFactResult::ForallFactWithIff(_) => return Vec::new(),
+        InferResult::OrFact(_)
+        | InferResult::ExistFact(_)
+        | InferResult::ExistUniqueFact(_)
+        | InferResult::NotExistFact(_)
+        | InferResult::NotForall(_)
+        | InferResult::ForallFact(_)
+        | InferResult::ForallFactWithIff(_) => return Vec::new(),
     };
     let mut rules = Vec::new();
     for atomic in atomic {
-        let InferAtomicFactResult::ExceptEquality(infer) = atomic else {
+        let InferAtomicFactResult::InFact(infer) = atomic else {
             continue;
         };
         for rule in infer {
-            let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) = rule else {
+            let InferInFactResult::SignedStandardSetSign(proof) = rule else {
                 continue;
             };
             rules.push(object_for(
@@ -276,27 +317,29 @@ fn project_signed_standard_set_infer(infer: &InferFactResult, runtime: &Runtime)
     rules
 }
 
-fn project_cancellation_infer(infer: &InferFactResult, runtime: &Runtime) -> Vec<JsonValue> {
+fn project_cancellation_infer(infer: &InferResult, runtime: &Runtime) -> Vec<JsonValue> {
     let mut rules = Vec::new();
     match infer {
-        InferFactResult::AtomicFact(atomic) => {
+        InferResult::AtomicFact(atomic) => {
             rules.extend(project_cancellation_atomic(atomic, runtime))
         }
-        InferFactResult::AndFact(and) => {
+        InferResult::AndFact(and) => {
             for atomic in &and.components {
                 rules.extend(project_cancellation_atomic(atomic, runtime));
             }
         }
-        InferFactResult::ChainFact(chain) => {
+        InferResult::ChainFact(chain) => {
             for atomic in &chain.adjacent_infers {
                 rules.extend(project_cancellation_atomic(&atomic.infer, runtime));
             }
         }
-        InferFactResult::OrFact(_)
-        | InferFactResult::ExistShapedFact(_)
-        | InferFactResult::NotForallFact(_)
-        | InferFactResult::ForallFact(_)
-        | InferFactResult::ForallFactWithIff(_) => {}
+        InferResult::OrFact(_)
+        | InferResult::ExistFact(_)
+        | InferResult::ExistUniqueFact(_)
+        | InferResult::NotExistFact(_)
+        | InferResult::NotForall(_)
+        | InferResult::ForallFact(_)
+        | InferResult::ForallFactWithIff(_) => {}
     }
     rules
 }
@@ -308,7 +351,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
     let mut rules = Vec::new();
     for rule in infer {
         match rule {
-            InferEqualityResult::AdditiveCancellation(r) => rules.push(object_for(
+            InferEqualFactResult::AdditiveCancellation(r) => rules.push(object_for(
                 runtime,
                 vec![
                     ("rule", string("AdditiveCancellation")),
@@ -335,7 +378,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                     ),
                 ],
             )),
-            InferEqualityResult::NonzeroFactorCancellation(r) => rules.push(object_for(
+            InferEqualFactResult::NonzeroFactorCancellation(r) => rules.push(object_for(
                 runtime,
                 vec![
                     ("rule", string("NonzeroFactorCancellation")),
@@ -360,7 +403,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                     ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
-            InferEqualityResult::SubtractiveCancellation(r) => rules.push(object_for(
+            InferEqualFactResult::SubtractiveCancellation(r) => rules.push(object_for(
                 runtime,
                 vec![
                     ("rule", string("SubtractiveCancellation")),
@@ -381,7 +424,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                     ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
-            InferEqualityResult::CommonDenominatorCancellation(r) => rules.push(object_for(
+            InferEqualFactResult::CommonDenominatorCancellation(r) => rules.push(object_for(
                 runtime,
                 vec![
                     ("rule", string("CommonDenominatorCancellation")),
@@ -406,7 +449,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                     ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
-            InferEqualityResult::NonzeroNumeratorCancellation(r) => rules.push(object_for(
+            InferEqualFactResult::NonzeroNumeratorCancellation(r) => rules.push(object_for(
                 runtime,
                 vec![
                     ("rule", string("NonzeroNumeratorCancellation")),
@@ -445,7 +488,7 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                     ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
-            InferEqualityResult::PositiveRealPower(_) => {}
+            InferEqualFactResult::PositiveRealPower(_) => {}
         }
     }
     rules

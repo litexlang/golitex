@@ -1,8 +1,8 @@
 use crate::json_output::project_stmt_detailed;
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferEqualFactAdditiveCancellationResult, InferEqualityResult,
-    InferFactResult,
+    InferAtomicFactResult, InferEqualFactAdditiveCancellationResult, InferEqualFactResult,
+    InferResult,
 };
 
 const SOURCE: &str = "forall a, b, k C:\n    a+k=b+k\n    =>:\n        a=b\n";
@@ -10,15 +10,14 @@ const SOURCE: &str = "forall a, b, k C:\n    a+k=b+k\n    =>:\n        a=b\n";
 fn additive_rule_mut(
     store: &mut StoreFactAndInferResult,
 ) -> &mut InferEqualFactAdditiveCancellationResult {
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
-        &mut store.infer
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &mut store.infer
     else {
         panic!("stored equality inference")
     };
     rules
         .iter_mut()
         .find_map(|rule| match rule {
-            InferEqualityResult::AdditiveCancellation(rule) => Some(rule),
+            InferEqualFactResult::AdditiveCancellation(rule) => Some(rule),
             _ => None,
         })
         .expect("actual additive cancellation")
@@ -104,7 +103,7 @@ fn additive_inference_rejects_wrong_derived_wd_and_deleted_inferences() {
         let (mut result, compiler) = super::execute(SOURCE);
         let forall = super::forall_proof_mut(&mut result.statement_results[0]);
         let store = &mut forall.assumed_dom_facts[0].store_and_infer;
-        let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+        let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
             &mut store.infer
         else {
             panic!("equality inference")
@@ -136,7 +135,7 @@ fn additive_inference_rejects_changed_derived_subject_and_missing_nested_step() 
         "forall a, b, x, y Q:\n    (a+x)+y=(b+x)+y\n    =>:\n        a+x=b+x\n        a=b\n";
     let (mut result, compiler) = super::execute(nested);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
         &mut forall.proved_then_facts[0].store_and_infer.infer
     else {
         panic!("explicit second cancellation seed")

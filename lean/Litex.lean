@@ -1280,6 +1280,47 @@ theorem ltNotSame {M : Semantics.{u}} {α : Type v} {β : Type w}
   exact (ne_of_lt h)
     (Complex.ofReal_injective (M.number_injective (hr.symm.trans (equal.trans hs))))
 
+/-- Replay positivity of an owned sum using its original constructor evidence. -/
+theorem addPositive {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haC : In a C) (hbC : In b C)
+    (ha : Lt (number 0) a) (hb : Lt (number 0) b) :
+    Lt (number 0) (add a b haC hbC) := by
+  obtain ⟨r₀, r, hzeroR, hr, hposR⟩ := ha
+  obtain ⟨s₀, s, hzeroS, hs, hposS⟩ := hb
+  change M.number 0 = M.number (r₀ : ℂ) at hzeroR
+  change M.number 0 = M.number (s₀ : ℂ) at hzeroS
+  have hr₀ : r₀ = 0 := Complex.ofReal_injective (M.number_injective hzeroR).symm
+  have hs₀ : s₀ = 0 := Complex.ofReal_injective (M.number_injective hzeroS).symm
+  subst r₀
+  subst s₀
+  refine NativeBridge.ltOfDenoteReal (number 0) (add a b haC hbC) 0 (r + s)
+    rfl ?_ (add_pos hposR hposS)
+  change M.addValue (denote a) (denote b) = M.number ((r + s : ℝ) : ℂ)
+  rw [hr, hs, M.add_numbers, Complex.ofReal_add]
+
+/-- Replay the selected positive/positive quotient rule. The semantic
+denominator proof still comes from the original division constructor. -/
+theorem divPositive {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haC : In a C) (hbC : In b C)
+    (hNonzero : ¬ Same b (number 0))
+    (ha : Lt (number 0) a) (hb : Lt (number 0) b) :
+    Lt (number 0) (div a b haC hbC hNonzero) := by
+  obtain ⟨r₀, r, hzeroR, hr, hposR⟩ := ha
+  obtain ⟨s₀, s, hzeroS, hs, hposS⟩ := hb
+  change M.number 0 = M.number (r₀ : ℂ) at hzeroR
+  change M.number 0 = M.number (s₀ : ℂ) at hzeroS
+  have hr₀ : r₀ = 0 := Complex.ofReal_injective (M.number_injective hzeroR).symm
+  have hs₀ : s₀ = 0 := Complex.ofReal_injective (M.number_injective hzeroS).symm
+  subst r₀
+  subst s₀
+  have hsNonzero : (s : ℂ) ≠ 0 := fun h => hNonzero (hs.trans (congrArg M.number h))
+  refine NativeBridge.ltOfDenoteReal (number 0) (div a b haC hbC hNonzero) 0 (r / s)
+    rfl ?_ (div_pos hposR hposS)
+  change M.divValue (denote a) (denote b) = M.number ((r / s : ℝ) : ℂ)
+  rw [hr, hs, M.div_numbers _ _ hsNonzero, Complex.ofReal_div]
+
 theorem leTrans {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
     [Representation M α] [Representation M β] [Representation M γ]
     (a : Obj (M := M) α) (b : Obj (M := M) β) (c : Obj (M := M) γ)
@@ -1657,6 +1698,75 @@ noncomputable instance numericSetSemantics : SetSemantics NumericModel.model whe
   sep_isSet _ _ _ := True.intro
   ext _ _ _ _ := ZFSet.ext
 
+/-- Positivity is a faithful real denotation witness, including its carrier. -/
+def positiveRealPredicate {M : Semantics.{u}} (x : M.Value) : Prop :=
+  ∃ r : ℝ, x = M.number (r : ℂ) ∧ 0 < r
+
+/-- Positive reals are a bounded separation of the existing real set. -/
+def positiveReal {M : Semantics.{u}} [S : SetSemantics M] : M.Value :=
+  S.sepValue (M.standard .real) positiveRealPredicate
+
+theorem positiveReal_isSet {M : Semantics.{u}} [S : SetSemantics M] :
+    M.isSet (positiveReal (M := M)) :=
+  S.sep_isSet _ _ (M.standard_isSet .real)
+
+def RPos {M : Semantics.{u}} [SetSemantics M] : Obj (M := M) M.Value :=
+  semanticObject positiveReal positiveReal_isSet
+
+theorem positiveReal_members {M : Semantics.{u}} [S : SetSemantics M] (x : M.Value) :
+    M.mem x positiveReal ↔ M.mem x (M.standard .real) ∧ positiveRealPredicate x :=
+  S.sep_members _ _ _
+
+theorem inRPos_iff {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) :
+    In a RPos ↔ In a R ∧ Lt (number 0) a := by
+  rw [show In a RPos = M.mem (denote a) positiveReal from rfl, positiveReal_members]
+  constructor
+  · rintro ⟨ha, r, hr, hpos⟩
+    exact ⟨ha, NativeBridge.ltOfDenoteReal (number 0) a 0 r rfl hr hpos⟩
+  · rintro ⟨ha, hpos⟩
+    obtain ⟨r, hr⟩ := (M.real_members (denote a)).mp ha
+    exact ⟨ha, r, hr,
+      (NativeBridge.lt_iff_ofDenoteReal (number 0) a 0 r rfl hr).mp hpos⟩
+
+theorem inRPos_real {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a RPos) :
+    In a R := ((inRPos_iff a).mp ha).1
+
+theorem positiveRealToComplex {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a RPos) :
+    In a C := realToComplex a (inRPos_real a ha)
+
+theorem inRPos_positive {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α) (ha : In a RPos) :
+    Lt (number 0) a := ((inRPos_iff a).mp ha).2
+
+theorem inRPos_intro {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : In a R) (hpos : Lt (number 0) a) : In a RPos :=
+  (inRPos_iff a).mpr ⟨ha, hpos⟩
+
+theorem numberInRPos_iff {M : Semantics.{u}} [SetSemantics M] (r : ℝ) :
+    In (number (r : ℂ)) (RPos (M := M)) ↔ 0 < r := by
+  rw [inRPos_iff]
+  have hr : In (number (r : ℂ)) (R (M := M)) :=
+    (M.real_members _).mpr ⟨r, rfl⟩
+  exact ⟨fun h => (NativeBridge.lt_iff_ofDenoteReal (number 0)
+    (number (r : ℂ)) 0 r rfl rfl).mp h.2,
+    fun h => ⟨hr, NativeBridge.ltOfDenoteReal (number 0) (number (r : ℂ))
+      0 r rfl rfl h⟩⟩
+
+theorem numberInRPos {M : Semantics.{u}} [SetSemantics M] (r : ℝ) (hr : 0 < r) :
+    In (number (r : ℂ)) (RPos (M := M)) :=
+  (numberInRPos_iff r).mpr hr
+
+theorem rPosNonempty {M : Semantics.{u}} [SetSemantics M] :
+    IsNonempty (RPos (M := M)) := by
+  refine ⟨M.number (1 : ℂ), ?_⟩
+  have h := numberInRPos (M := M) (1 : ℝ) zero_lt_one
+  change M.mem (M.number ((1 : ℝ) : ℂ)) (denote (RPos (M := M))) at h
+  simpa only [Complex.ofReal_one] using h
+
 inductive EmptySetObj where
   | empty
 
@@ -2017,23 +2127,33 @@ inductive NumericInputDomain where
   | one (input : StandardSetValue)
   | two (first second : StandardSetValue)
 
-/-- Numeric domains and guards remain ordinary semantic predicates. -/
+/-- Inputs retain the supported numeric domains. A codomain is a certified
+semantic set, so derived sets keep their exact membership contract. -/
 structure FunctionSignature (M : Semantics.{u}) where
   inputs : NumericInputDomain
-  output : StandardSetValue
+  output : M.Value
+  output_isSet : M.isSet output
   guard : M.Value → Prop
 
 namespace FunctionSignature
 
 variable {M : Semantics.{u}} [F : FunctionSemantics M]
 
+def oneTarget (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → Prop) : FunctionSignature M :=
+  ⟨.one A, B, hB, guard⟩
+
+noncomputable def twoTarget (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → M.Value → Prop) : FunctionSignature M :=
+  ⟨.two A E, B, hB, fun p => guard (FunctionSemantics.unpairValue p).1
+    (FunctionSemantics.unpairValue p).2⟩
+
 def one (A B : StandardSetValue) (guard : M.Value → Prop) : FunctionSignature M :=
-  ⟨.one A, B, guard⟩
+  oneTarget A (M.standard B) (M.standard_isSet B) guard
 
 noncomputable def two (A E B : StandardSetValue) (guard : M.Value → M.Value → Prop) :
     FunctionSignature M :=
-  ⟨.two A E, B, fun p => guard (FunctionSemantics.unpairValue p).1
-    (FunctionSemantics.unpairValue p).2⟩
+  twoTarget A E (M.standard B) (M.standard_isSet B) guard
 
 def baseDomain (s : FunctionSignature M) : M.Value :=
   match s.inputs with
@@ -2042,28 +2162,30 @@ def baseDomain (s : FunctionSignature M) : M.Value :=
 
 def domain (s : FunctionSignature M) : M.Value := F.sepValue s.baseDomain s.guard
 
-def target (s : FunctionSignature M) : M.Value := M.standard s.output
+def target (s : FunctionSignature M) : M.Value := s.output
 
 theorem domain_isSet (s : FunctionSignature M) : M.isSet s.domain := by
   apply F.sep_isSet
   cases s with
-  | mk inputs output guard =>
+  | mk inputs output output_isSet guard =>
     cases inputs with
     | one A => exact M.standard_isSet A
     | two A E => exact F.product_isSet _ _ (M.standard_isSet A) (M.standard_isSet E)
 
-theorem one_domain (A B : StandardSetValue) (guard : M.Value → Prop) (x : M.Value) :
-    M.mem x (one A B guard).domain ↔ M.mem x (M.standard A) ∧ guard x :=
+theorem oneTarget_domain (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → Prop) (x : M.Value) :
+    M.mem x (oneTarget A B hB guard).domain ↔ M.mem x (M.standard A) ∧ guard x :=
   F.sep_members _ _ _
 
-theorem two_domain (A E B : StandardSetValue) (guard : M.Value → M.Value → Prop)
+theorem twoTarget_domain (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → M.Value → Prop)
     (a b : M.Value) :
-    M.mem (F.pairValue a b) (two A E B guard).domain ↔
+    M.mem (F.pairValue a b) (twoTarget A E B hB guard).domain ↔
       M.mem a (M.standard A) ∧ M.mem b (M.standard E) ∧ guard a b := by
   change M.mem (F.pairValue a b)
     (F.sepValue (F.productValue (M.standard A) (M.standard E)) _) ↔ _
   rw [F.sep_members]
-  simp only [two, FunctionSemantics.unpair_pair]
+  simp only [twoTarget, FunctionSemantics.unpair_pair]
   constructor
   · rintro ⟨h, hg⟩
     obtain ⟨x, hx, y, hy, hp⟩ := (F.product_members _ _ _).mp h
@@ -2072,13 +2194,23 @@ theorem two_domain (A E B : StandardSetValue) (guard : M.Value → M.Value → P
   · rintro ⟨ha, hb, hg⟩
     exact ⟨(F.product_members _ _ _).mpr ⟨a, ha, b, hb, rfl⟩, hg⟩
 
+theorem one_domain (A B : StandardSetValue) (guard : M.Value → Prop) (x : M.Value) :
+    M.mem x (one A B guard).domain ↔ M.mem x (M.standard A) ∧ guard x :=
+  oneTarget_domain A (M.standard B) (M.standard_isSet B) guard x
+
+theorem two_domain (A E B : StandardSetValue) (guard : M.Value → M.Value → Prop)
+    (a b : M.Value) :
+    M.mem (F.pairValue a b) (two A E B guard).domain ↔
+      M.mem a (M.standard A) ∧ M.mem b (M.standard E) ∧ guard a b :=
+  twoTarget_domain A E (M.standard B) (M.standard_isSet B) guard a b
+
 end FunctionSignature
 
 instance functionSignatureRepresentation {M : Semantics.{u}} [F : FunctionSemantics M] :
     Representation M (FunctionSignature M) where
   wd _ := True
   denote s := F.fnSetValue s.domain s.target
-  wd_isSet {s} _ := F.fnSet_isSet _ _ s.domain_isSet (M.standard_isSet s.output)
+  wd_isSet {s} _ := F.fnSet_isSet _ _ s.domain_isSet s.output_isSet
 
 def fnSet {M : Semantics.{u}} [FunctionSemantics M] (s : FunctionSignature M) :
     Obj (M := M) (FunctionSignature M) := ⟨s, True.intro⟩
@@ -2096,29 +2228,44 @@ instance formulaFnRepresentation {M : Semantics.{u}} [F : FunctionSemantics M] :
   wd_isSet h := M.member_isSet
     (FunctionSemantics.graph_inFnSet _ _ _ h)
 
-def formulaFn {M : Semantics.{u}} [FunctionSemantics M]
-    (A B : StandardSetValue) (guard : M.Value → Prop) (body : M.Value → M.Value)
-    (hReturn : ∀ x, M.mem x (M.standard A) → guard x → M.mem (body x) (M.standard B)) :
+def formulaFnTarget {M : Semantics.{u}} [FunctionSemantics M]
+    (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → Prop) (body : M.Value → M.Value)
+    (hReturn : ∀ x, M.mem x (M.standard A) → guard x → M.mem (body x) B) :
     Obj (M := M) (FormulaFn M) :=
-  ⟨⟨FunctionSignature.one A B guard, body⟩, fun x hx =>
-    hReturn x ((FunctionSignature.one_domain A B guard x).mp hx).1
-      ((FunctionSignature.one_domain A B guard x).mp hx).2⟩
+  ⟨⟨FunctionSignature.oneTarget A B hB guard, body⟩, fun x hx =>
+    hReturn x ((FunctionSignature.oneTarget_domain A B hB guard x).mp hx).1
+      ((FunctionSignature.oneTarget_domain A B hB guard x).mp hx).2⟩
 
-noncomputable def formulaFn2 {M : Semantics.{u}} [F : FunctionSemantics M]
-    (A E B : StandardSetValue) (guard : M.Value → M.Value → Prop)
+noncomputable def formulaFn2Target {M : Semantics.{u}} [F : FunctionSemantics M]
+    (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → M.Value → Prop)
     (body : M.Value → M.Value → M.Value)
     (hReturn : ∀ x y, M.mem x (M.standard A) → M.mem y (M.standard E) →
-      guard x y → M.mem (body x y) (M.standard B)) : Obj (M := M) (FormulaFn M) := by
-  let s := FunctionSignature.two A E B guard
+      guard x y → M.mem (body x y) B) : Obj (M := M) (FormulaFn M) := by
+  let s := FunctionSignature.twoTarget A E B hB guard
   let interpretation := fun p => body (FunctionSemantics.unpairValue p).1
     (FunctionSemantics.unpairValue p).2
   refine ⟨⟨s, interpretation⟩, ?_⟩
   intro p hp
   obtain ⟨hproduct, hg⟩ := (F.sep_members s.baseDomain s.guard p).mp hp
   obtain ⟨x, hx, y, hy, rfl⟩ := (F.product_members _ _ _).mp hproduct
-  change M.mem (body _ _) (M.standard B)
+  change M.mem (body _ _) B
   simpa only [FunctionSemantics.unpair_pair] using hReturn x y hx hy
-    (by simpa only [s, FunctionSignature.two, FunctionSemantics.unpair_pair] using hg)
+    (by simpa only [s, FunctionSignature.twoTarget, FunctionSemantics.unpair_pair] using hg)
+
+def formulaFn {M : Semantics.{u}} [FunctionSemantics M]
+    (A B : StandardSetValue) (guard : M.Value → Prop) (body : M.Value → M.Value)
+    (hReturn : ∀ x, M.mem x (M.standard A) → guard x → M.mem (body x) (M.standard B)) :
+    Obj (M := M) (FormulaFn M) :=
+  formulaFnTarget A (M.standard B) (M.standard_isSet B) guard body hReturn
+
+noncomputable def formulaFn2 {M : Semantics.{u}} [FunctionSemantics M]
+    (A E B : StandardSetValue) (guard : M.Value → M.Value → Prop)
+    (body : M.Value → M.Value → M.Value)
+    (hReturn : ∀ x y, M.mem x (M.standard A) → M.mem y (M.standard E) →
+      guard x y → M.mem (body x y) (M.standard B)) : Obj (M := M) (FormulaFn M) :=
+  formulaFn2Target A E (M.standard B) (M.standard_isSet B) guard body hReturn
 
 theorem formulaFnInFnSet {M : Semantics.{u}} [FunctionSemantics M]
     (f : Obj (M := M) (FormulaFn M)) : In f (fnSet f.val.signature) :=
@@ -2127,7 +2274,8 @@ theorem formulaFnInFnSet {M : Semantics.{u}} [FunctionSemantics M]
 structure CallObj {M : Semantics.{u}} (α : Type v) (β : Type w)
     [Representation M α] [Representation M β] where
   input : StandardSetValue
-  output : StandardSetValue
+  output : M.Value
+  output_isSet : M.isSet output
   guard : M.Value → Prop
   function : Obj (M := M) α
   argument : Obj (M := M) β
@@ -2135,11 +2283,20 @@ structure CallObj {M : Semantics.{u}} (α : Type v) (β : Type w)
 instance callRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
     {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
     Representation M (CallObj (M := M) α β) where
-  wd c := In c.function (fnSet (FunctionSignature.one c.input c.output c.guard)) ∧
+  wd c := In c.function
+    (fnSet (FunctionSignature.oneTarget c.input c.output c.output_isSet c.guard)) ∧
     M.mem (denote c.argument) (M.standard c.input) ∧ c.guard (denote c.argument)
   denote c := F.callValue (denote c.function) (denote c.argument)
   wd_isSet {c} h := M.member_isSet (FunctionSemantics.call_mem _ _ _ _ h.1
-    ((FunctionSignature.one_domain c.input c.output c.guard _).mpr h.2))
+    ((FunctionSignature.oneTarget_domain c.input c.output c.output_isSet c.guard _).mpr h.2))
+
+def callTarget {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : StandardSetValue) (B : M.Value) (hB : M.isSet B) (guard : M.Value → Prop)
+    (f : Obj (M := M) α) (a : Obj (M := M) β)
+    (hf : In f (fnSet (FunctionSignature.oneTarget A B hB guard)))
+    (ha : In a (standardSet A)) (hg : guard (denote a)) :
+    Obj (M := M) (CallObj (M := M) α β) := ⟨⟨A, B, hB, guard, f, a⟩, hf, ha, hg⟩
 
 def call {M : Semantics.{u}} [FunctionSemantics M]
     {α : Type v} {β : Type w} [Representation M α] [Representation M β]
@@ -2147,13 +2304,15 @@ def call {M : Semantics.{u}} [FunctionSemantics M]
     (f : Obj (M := M) α) (a : Obj (M := M) β)
     (hf : In f (fnSet (FunctionSignature.one A B guard)))
     (ha : In a (standardSet A)) (hg : guard (denote a)) :
-    Obj (M := M) (CallObj (M := M) α β) := ⟨⟨A, B, guard, f, a⟩, hf, ha, hg⟩
+    Obj (M := M) (CallObj (M := M) α β) :=
+  callTarget A (M.standard B) (M.standard_isSet B) guard f a hf ha hg
 
 structure CallObj2 {M : Semantics.{u}} (α : Type v) (β : Type w) (γ : Type t)
     [Representation M α] [Representation M β] [Representation M γ] where
   firstInput : StandardSetValue
   secondInput : StandardSetValue
-  output : StandardSetValue
+  output : M.Value
+  output_isSet : M.isSet output
   guard : M.Value → M.Value → Prop
   function : Obj (M := M) α
   first : Obj (M := M) β
@@ -2163,12 +2322,24 @@ noncomputable instance call2Representation {M : Semantics.{u}} [F : FunctionSema
     {α : Type v} {β : Type w} {γ : Type t}
     [Representation M α] [Representation M β] [Representation M γ] :
     Representation M (CallObj2 (M := M) α β γ) where
-  wd c := In c.function (fnSet (FunctionSignature.two c.firstInput c.secondInput
-    c.output c.guard)) ∧ M.mem (denote c.first) (M.standard c.firstInput) ∧
+  wd c := In c.function (fnSet (FunctionSignature.twoTarget c.firstInput c.secondInput
+    c.output c.output_isSet c.guard)) ∧ M.mem (denote c.first) (M.standard c.firstInput) ∧
     M.mem (denote c.second) (M.standard c.secondInput) ∧ c.guard (denote c.first) (denote c.second)
   denote c := F.callValue (denote c.function) (F.pairValue (denote c.first) (denote c.second))
   wd_isSet {c} h := M.member_isSet (FunctionSemantics.call_mem _ _ _ _ h.1
-    ((FunctionSignature.two_domain c.firstInput c.secondInput c.output c.guard _ _).mpr h.2))
+    ((FunctionSignature.twoTarget_domain c.firstInput c.secondInput c.output
+      c.output_isSet c.guard _ _).mpr h.2))
+
+noncomputable def call2Target {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type t}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → M.Value → Prop)
+    (f : Obj (M := M) α) (a : Obj (M := M) β) (b : Obj (M := M) γ)
+    (hf : In f (fnSet (FunctionSignature.twoTarget A E B hB guard)))
+    (ha : In a (standardSet A)) (hb : In b (standardSet E)) (hg : guard (denote a) (denote b)) :
+    Obj (M := M) (CallObj2 (M := M) α β γ) :=
+  ⟨⟨A, E, B, hB, guard, f, a, b⟩, hf, ha, hb, hg⟩
 
 noncomputable def call2 {M : Semantics.{u}} [FunctionSemantics M]
     {α : Type v} {β : Type w} {γ : Type t}
@@ -2177,7 +2348,8 @@ noncomputable def call2 {M : Semantics.{u}} [FunctionSemantics M]
     (f : Obj (M := M) α) (a : Obj (M := M) β) (b : Obj (M := M) γ)
     (hf : In f (fnSet (FunctionSignature.two A E B guard)))
     (ha : In a (standardSet A)) (hb : In b (standardSet E)) (hg : guard (denote a) (denote b)) :
-    Obj (M := M) (CallObj2 (M := M) α β γ) := ⟨⟨A, E, B, guard, f, a, b⟩, hf, ha, hb, hg⟩
+    Obj (M := M) (CallObj2 (M := M) α β γ) :=
+  call2Target A E (M.standard B) (M.standard_isSet B) guard f a b hf ha hb hg
 
 
 section FunctionObjects
@@ -2187,16 +2359,19 @@ variable {M : Semantics.{u}} [F : FunctionSemantics M]
 /-- These laws consume the WD proofs stored in the call object. -/
 theorem callInOutput {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
-    (c : Obj (M := M) (CallObj (M := M) α β)) : In c (standardSet c.val.output) :=
+    (c : Obj (M := M) (CallObj (M := M) α β)) :
+    In c (semanticObject c.val.output c.val.output_isSet) :=
   FunctionSemantics.call_mem _ _ _ _ c.wd.1
-    ((FunctionSignature.one_domain c.val.input c.val.output c.val.guard _).mpr c.wd.2)
+    ((FunctionSignature.oneTarget_domain c.val.input c.val.output
+      c.val.output_isSet c.val.guard _).mpr c.wd.2)
 
 theorem call2InOutput {α : Type v} {β : Type w} {γ : Type t}
     [Representation M α] [Representation M β] [Representation M γ]
-    (c : Obj (M := M) (CallObj2 (M := M) α β γ)) : In c (standardSet c.val.output) :=
+    (c : Obj (M := M) (CallObj2 (M := M) α β γ)) :
+    In c (semanticObject c.val.output c.val.output_isSet) :=
   FunctionSemantics.call_mem _ _ _ _ c.wd.1
-    ((FunctionSignature.two_domain c.val.firstInput c.val.secondInput c.val.output
-      c.val.guard _ _).mpr c.wd.2)
+    ((FunctionSignature.twoTarget_domain c.val.firstInput c.val.secondInput c.val.output
+      c.val.output_isSet c.val.guard _ _).mpr c.wd.2)
 
 omit F in
 theorem functionObject_proofIndependent {α : Type v} [Representation M α]
@@ -2219,6 +2394,60 @@ theorem call2Congr {α : Type v} {β : Type w} {γ : Type t}
     (hf : Same c.val.function d.val.function)
     (ha : Same c.val.first d.val.first) (hb : Same c.val.second d.val.second) :
     Same c d := congrArg₂ F.callValue hf (congrArg₂ F.pairValue ha hb)
+
+theorem callFormulaTarget_denote {α : Type v} [Representation M α]
+    (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → Prop) (body : M.Value → M.Value)
+    (hReturn : ∀ x, M.mem x (M.standard A) → guard x → M.mem (body x) B)
+    (a : Obj (M := M) α) (ha : In a (standardSet A)) (hg : guard (denote a)) :
+    denote (callTarget A B hB guard (formulaFnTarget A B hB guard body hReturn) a
+      (formulaFnInFnSet _) ha hg) = body (denote a) :=
+  FunctionSemantics.call_graphValue _ _ _ (formulaFnTarget A B hB guard body hReturn).wd _
+    ((FunctionSignature.oneTarget_domain A B hB guard _).mpr ⟨ha, hg⟩)
+
+theorem callFormulaTarget_same {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → Prop) (body : M.Value → M.Value)
+    (hReturn : ∀ x, M.mem x (M.standard A) → guard x → M.mem (body x) B)
+    (a : Obj (M := M) α) (ha : In a (standardSet A)) (hg : guard (denote a))
+    (b : Obj (M := M) β) (hBody : body (denote a) = denote b) :
+    Same (callTarget A B hB guard (formulaFnTarget A B hB guard body hReturn) a
+      (formulaFnInFnSet _) ha hg) b :=
+  (callFormulaTarget_denote A B hB guard body hReturn a ha hg).trans hBody
+
+theorem callFormula2Target_denote {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → M.Value → Prop) (body : M.Value → M.Value → M.Value)
+    (hReturn : ∀ x y, M.mem x (M.standard A) → M.mem y (M.standard E) →
+      guard x y → M.mem (body x y) B)
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a (standardSet A)) (hb : In b (standardSet E)) (hg : guard (denote a) (denote b)) :
+    denote (call2Target A E B hB guard (formulaFn2Target A E B hB guard body hReturn) a b
+      (formulaFnInFnSet _) ha hb hg) = body (denote a) (denote b) := by
+  have h := FunctionSemantics.call_graphValue _ _ _
+    (formulaFn2Target A E B hB guard body hReturn).wd
+    (F.pairValue (denote a) (denote b))
+    ((FunctionSignature.twoTarget_domain A E B hB guard _ _).mpr ⟨ha, hb, hg⟩)
+  change F.callValue (F.graphValue (FunctionSignature.twoTarget A E B hB guard).domain
+    (FunctionSignature.twoTarget A E B hB guard).target (fun p => body
+      (FunctionSemantics.unpairValue p).1 (FunctionSemantics.unpairValue p).2))
+    (F.pairValue (denote a) (denote b)) = body (denote a) (denote b)
+  simpa only [formulaFn2Target, FunctionSemantics.unpair_pair] using h
+
+theorem callFormula2Target_same {α : Type v} {β : Type w} {γ : Type t}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
+    (guard : M.Value → M.Value → Prop) (body : M.Value → M.Value → M.Value)
+    (hReturn : ∀ x y, M.mem x (M.standard A) → M.mem y (M.standard E) →
+      guard x y → M.mem (body x y) B)
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (ha : In a (standardSet A)) (hb : In b (standardSet E)) (hg : guard (denote a) (denote b))
+    (c : Obj (M := M) γ) (hBody : body (denote a) (denote b) = denote c) :
+    Same (call2Target A E B hB guard (formulaFn2Target A E B hB guard body hReturn) a b
+      (formulaFnInFnSet _) ha hb hg) c :=
+  (callFormula2Target_denote A E B hB guard body hReturn a b ha hb hg).trans hBody
 
 theorem callFormula_denote {α : Type v} [Representation M α]
     (A B : StandardSetValue) (guard : M.Value → Prop) (body : M.Value → M.Value)
@@ -2257,7 +2486,8 @@ theorem callFormula2_denote {α : Type v} {β : Type w}
     (FunctionSignature.two A E B guard).target (fun p => body (FunctionSemantics.unpairValue p).1
       (FunctionSemantics.unpairValue p).2))
     (F.pairValue (denote a) (denote b)) = body (denote a) (denote b)
-  simpa only [formulaFn2, FunctionSemantics.unpair_pair] using h
+  simpa only [formulaFn2, formulaFn2Target, FunctionSignature.two,
+    FunctionSemantics.unpair_pair] using h
 
 theorem callFormula2_same {α : Type v} {β : Type w} {γ : Type t}
     [Representation M α] [Representation M β] [Representation M γ]

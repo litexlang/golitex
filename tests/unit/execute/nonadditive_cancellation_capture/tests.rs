@@ -2,7 +2,7 @@ use crate::json_output::{project_stmt_detailed, project_stmt_normal};
 use crate::knowledge_base::JsonValue;
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferEqualityResult, InferFactResult, StoreInferredFactResult,
+    InferAtomicFactResult, InferEqualFactResult, InferResult, StoreInferredFactResult,
 };
 
 fn execute(source: &str) -> (Runtime, RunLitexCodeResult) {
@@ -34,24 +34,24 @@ fn forall(run: &RunLitexCodeResult) -> &VerifyForallFactSuccess {
     proof
 }
 
-fn rules(store: &StoreFactAndInferResult) -> &[InferEqualityResult] {
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
+fn rules(store: &StoreFactAndInferResult) -> &[InferEqualFactResult] {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
     else {
         panic!("stored equality inference")
     };
     rules
 }
 
-fn captured(rule: &InferEqualityResult) -> (FactId, &StoreInferredFactResult) {
+fn captured(rule: &InferEqualFactResult) -> (FactId, &StoreInferredFactResult) {
     match rule {
-        InferEqualityResult::SubtractiveCancellation(rule) => (rule.source_fact_id, &rule.derived),
-        InferEqualityResult::NonzeroFactorCancellation(rule) => {
+        InferEqualFactResult::SubtractiveCancellation(rule) => (rule.source_fact_id, &rule.derived),
+        InferEqualFactResult::NonzeroFactorCancellation(rule) => {
             (rule.source_fact_id, &rule.derived)
         }
-        InferEqualityResult::CommonDenominatorCancellation(rule) => {
+        InferEqualFactResult::CommonDenominatorCancellation(rule) => {
             (rule.source_fact_id, &rule.derived)
         }
-        InferEqualityResult::NonzeroNumeratorCancellation(rule) => {
+        InferEqualFactResult::NonzeroNumeratorCancellation(rule) => {
             (rule.source_fact_id, &rule.derived)
         }
         _ => panic!("one of the four nonadditive cancellation captures"),
@@ -183,13 +183,13 @@ fn nonadditive_cancellation_capture_keeps_all_original_guard_citations_in_order(
             panic!("one cancellation")
         };
         let guards: Vec<&VerifyFactResult> = match rule {
-            InferEqualityResult::NonzeroFactorCancellation(rule) => {
+            InferEqualFactResult::NonzeroFactorCancellation(rule) => {
                 vec![&rule.factor_nonzero_proof]
             }
-            InferEqualityResult::CommonDenominatorCancellation(rule) => {
+            InferEqualFactResult::CommonDenominatorCancellation(rule) => {
                 vec![&rule.denominator_nonzero_proof]
             }
-            InferEqualityResult::NonzeroNumeratorCancellation(rule) => vec![
+            InferEqualFactResult::NonzeroNumeratorCancellation(rule) => vec![
                 &rule.numerator_nonzero_proof,
                 &rule.left_denominator_nonzero_proof,
                 &rule.right_denominator_nonzero_proof,
@@ -239,7 +239,7 @@ fn nonadditive_cancellation_capture_does_not_retrigger_with_a_future_guard() {
     assert!(rules(first).is_empty());
     assert_eq!(first.stored_fact_ids(), vec![first.primary_fact_id()]);
     assert_eq!(assert_original_capture(proof, repeated).len(), 1);
-    let [InferEqualityResult::NonzeroFactorCancellation(rule)] = rules(repeated) else {
+    let [InferEqualFactResult::NonzeroFactorCancellation(rule)] = rules(repeated) else {
         panic!("the later explicit seed triggers cancellation")
     };
     assert_eq!(

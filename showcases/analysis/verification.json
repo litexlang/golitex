@@ -1,75 +1,297 @@
 {
-  "checked_on": "2026-10-11",
-  "timezone": "Asia/Shanghai",
-  "scope": "Selected public showcase module and its reused public sequence-limit source; not the full local chapter manuscripts.",
-  "binary": {
-    "version": "Litex 1.0.6-beta",
-    "sha256": "6dd96443ae283a98f9958e54fe54a940d41aaa6a465d71b2485d7d0522a2ff26"
+  "published_on": "2026-10-13",
+  "scope": "Selected Chapters 1\u20138, Introduction and ordered Appendix A; not complete source-book coverage.",
+  "verification_basis": "Original full registered Chapter 8 run and publication executable-content equality, supplemented by a current-release public dependency check in the independently verified Analysis lecture.",
+  "original_gate": {
+    "checked_on": "2026-10-13",
+    "binary_sha256": "a1fff585a6e7227d039f309ed74fc45d97198b4becc10b1ef587c4aca682bb94",
+    "strict": false,
+    "exit_code": 0,
+    "kind": "run",
+    "success": true,
+    "session_error": null,
+    "statement_count": 190,
+    "seconds": 1611.946084041847
   },
-  "command": "litex -lang en -strict -r showcases/analysis",
-  "result": {
+  "publication_transform": "Remove inactive triple-quoted prose, line comments and blank lines; add scope headers. All remaining code lines and indentation are identical and retain their order.",
+  "checked_sources": [
+    {
+      "path": "Introduction.lit",
+      "verified_source_sha256": "5981542e323c6b54e38a4bb8911f062aaee7a699053692578d7addeab7ff08a2",
+      "public_sha256": "ce3acae3aaab5a4485893d7ad842def947e8a1a45554ddad62e737d82ee2e896",
+      "executable_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter01-introduction.lit",
+      "verified_source_sha256": "9f7a2e09b40ce9e171c1296920fdf1937c19ef2f4d1e27110dc1f5e9035f76d6",
+      "public_sha256": "f27cac3795191669845c5290a7b9ae74c2332f8752a347a2bff6f0a0be2e94a8",
+      "executable_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter02-natural-numbers.lit",
+      "verified_source_sha256": "94d71e059e4ede8875781516fc807ccc8b35bc984ee7759f2a883d3335183279",
+      "public_sha256": "a0dfa05d10213f96b0a2209ca1d2a6a3c5008ae3cb70235fb02256983fc931df",
+      "executable_sha256": "5029f34dce2fa71f34ceb2b43be0d3a8a6ae08812d75916ca21a412acef343f2",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter03-set-theory.lit",
+      "verified_source_sha256": "28bee067d5b84a74d722d4658e438e8ec6933b24d8875c35ca4abb987bec046e",
+      "public_sha256": "889d69feffc03170de36740b9491e8ad4c4b0d201693182e42c44401566f810b",
+      "executable_sha256": "81269410150a34745f786c55ee519018af1247da1259e37fffd7ad335fbb9565",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter04-integers-and-rationals.lit",
+      "verified_source_sha256": "077dd20d4305658856d46e1780ba1a11ced96a48228e6a885eba9c32ad7ab07c",
+      "public_sha256": "d07eb8b54803e9e7fed88e6c0d160b6fb3687583e66c2dcd178679c7473b4a46",
+      "executable_sha256": "361d87733973351b77e0ea1768aec8a1cbb022b8160a0369301eee244996a645",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter05-real-numbers.lit",
+      "verified_source_sha256": "500dfdfb700875365a30cde198397b045885f16efe88bec68cd0ce54e4da2f53",
+      "public_sha256": "5c6aa04ada01280226cf6e4a55a9003376d7a118e56ea4a2d1eb56647d7897fb",
+      "executable_sha256": "599494a9244d30b361edd07caa6f9ca18dbd5a755b5eb3d4206fcf54e21a2bfc",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter06-sequential-limits.lit",
+      "verified_source_sha256": "0421863c483f806d8e474b35d569e44f611e36186d62097ee2d3b70b3543604e",
+      "public_sha256": "11b408b5fab7e70842e3b2cc98fb41f522b255e24a2d998211b059a5dd2e342e",
+      "executable_sha256": "a923bdb1a4c45c9c2d41f1c8b1325dcbb4cf4d8c3bccc98eb4fe3cd3c3e4a59b",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter07-series.lit",
+      "verified_source_sha256": "d632a43276ac66418a87b31553e9467dc6f7570876747c8a15a5431c9c1f4718",
+      "public_sha256": "b5f3949a0054930d159a526949377ce6d3688a633fc0cfd8cc4c5c2e2d3abeb4",
+      "executable_sha256": "4a713fa41d2720b855ef2e39e64044676f0c86837651916ad0a2ef0eff928d67",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "appendix-a-logic-and-proof-language.lit",
+      "verified_source_sha256": "97d961c4969483f09f7f59d711b29749e7e7592bc1f0c943cc4a31774b2b4fc5",
+      "public_sha256": "c1608f20a6dafa6d9fc3818b888805c1cd20fd524e2f7b11e052492fb0d31900",
+      "executable_sha256": "b4e7d38229cce31b40aa57158888b4c293c475bc5bec03e55ee97acf29614cfe",
+      "executable_content_matches_verified_source": true
+    },
+    {
+      "path": "chapter08-infinite-sets.lit",
+      "verified_source_sha256": "97040ac16a3b38e76c8e22be7560b5dc8efd72f7047220977523e0e40dd39645",
+      "public_sha256": "a63aa685eda3d74dd51fc93b2224fd6d6e45faa14047bb15bffa9be417dda313",
+      "executable_sha256": "d9a7908bf1a077b7d81f050b779000eb509914ffd18d7f90b50ea40871cdd031",
+      "executable_content_matches_verified_source": true
+    }
+  ],
+  "config_sha256": "eb54826677fe241c788adf61c5f01bc4fd0b271799fa6851279fe0dd5561b657",
+  "export_order": [
+    "Introduction",
+    "chap1",
+    "chap2",
+    "chap3",
+    "chap4",
+    "chap5",
+    "chap6",
+    "chap7",
+    "appendix_a",
+    "chap8"
+  ],
+  "assumptions": [
+    {
+      "file": "Introduction.lit",
+      "declarations": []
+    },
+    {
+      "file": "chapter01-introduction.lit",
+      "declarations": []
+    },
+    {
+      "file": "chapter02-natural-numbers.lit",
+      "declarations": []
+    },
+    {
+      "file": "chapter03-set-theory.lit",
+      "declarations": []
+    },
+    {
+      "file": "chapter04-integers-and-rationals.lit",
+      "declarations": []
+    },
+    {
+      "file": "chapter05-real-numbers.lit",
+      "declarations": [
+        "axiom cauchy_sequence_representative_in_Q_exists:",
+        "axiom real_cauchy_sequence_has_limit_in_R:"
+      ]
+    },
+    {
+      "file": "chapter06-sequential-limits.lit",
+      "declarations": []
+    },
+    {
+      "file": "chapter07-series.lit",
+      "declarations": []
+    },
+    {
+      "file": "appendix-a-logic-and-proof-language.lit",
+      "declarations": []
+    },
+    {
+      "file": "chapter08-infinite-sets.lit",
+      "declarations": [
+        "axiom axiom_of_choice_for_index_cart:",
+        "axiom axiom_of_choice_for_subsets:",
+        "abstract_prop choice_property(x, y)"
+      ]
+    }
+  ],
+  "direct_trust_accounting": {
+    "original_sites": 65,
+    "proof_replacements": 47,
+    "scope_omissions": 18,
+    "remaining_active_direct_trusts": 0
+  },
+  "limitations": [
+    "Original explicit axioms and abstract predicate remain; non-strict verification.",
+    "Litex builtin mathematics, inference rules, verifier and module behavior are relied upon; no independent kernel soundness audit is claimed.",
+    "No Lean replay or Chapters 9\u201311 coverage.",
+    "Historical small examples have their own dated receipt and are not exported by the current manifest."
+  ],
+  "publication_parse_checks": [
+    {
+      "path": "Introduction.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/Introduction.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.004
+    },
+    {
+      "path": "chapter01-introduction.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter01-introduction.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.003
+    },
+    {
+      "path": "chapter02-natural-numbers.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter02-natural-numbers.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.006
+    },
+    {
+      "path": "chapter03-set-theory.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter03-set-theory.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.03
+    },
+    {
+      "path": "chapter04-integers-and-rationals.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter04-integers-and-rationals.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.048
+    },
+    {
+      "path": "chapter05-real-numbers.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter05-real-numbers.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.107
+    },
+    {
+      "path": "chapter06-sequential-limits.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter06-sequential-limits.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.171
+    },
+    {
+      "path": "chapter07-series.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter07-series.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.294
+    },
+    {
+      "path": "appendix-a-logic-and-proof-language.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/appendix-a-logic-and-proof-language.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.303
+    },
+    {
+      "path": "chapter08-infinite-sets.lit",
+      "command": "litex -lang en -latex -f showcases/analysis/chapter08-infinite-sets.lit",
+      "exit_code": 0,
+      "kind": "artifact",
+      "success": true,
+      "verified": false,
+      "seconds": 0.355
+    }
+  ],
+  "readme_example_check": {
+    "block": 1,
+    "sha256": "f13d63192ff57b18fa34f7577b14a8bcbbf285d9fd08d948fda397a57c586b3a",
+    "command": "litex -lang en -strict -f <standalone README block 1>",
+    "binary_sha256": "a1fff585a6e7227d039f309ed74fc45d97198b4becc10b1ef587c4aca682bb94",
     "exit_code": 0,
     "kind": "run",
     "success": true,
     "session_error": null
   },
-  "config_sha256": "c4c7ab5ac461b0c8651bf2205953bd820727290db4a30920258d4aca3028923f",
-  "checked_sources": [
-    {
-      "path": "naturals.lit",
-      "sha256": "13f8aaa3d7c5f526129ddbcf702cbb3c1a5e07e41fe74b89052dd33d3b23b157"
-    },
-    {
-      "path": "maps.lit",
-      "sha256": "d23b761522fa1e06c7807b5068f60809a829893bd7718b30a433985bd633047e"
-    },
-    {
-      "path": "finite_products.lit",
-      "sha256": "77f57d397af87e265d8757766982c6bdf5a2b0e604a8ad74c0a335e0e6f44b89"
-    },
-    {
-      "path": "../math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
-      "sha256": "2bcca5119939bd6dfdb6d7e444b487057a3e536c788cf76325cc79be53713f9c"
-    }
-  ],
-  "readme_snippets": [
-    {
-      "block": 1,
-      "source_sha256": "5d0eeaa746075352ea64f168260ea167187a2f0c74bdccf9af2a18a01392c536",
-      "strict": true,
-      "exit_code": 0,
-      "kind": "run",
-      "success": true,
-      "session_error": null
-    },
-    {
-      "block": 2,
-      "source_sha256": "b7d6123f5decb664ce259d51213474e41393efd4071d40fa80b07ede2a4178f4",
-      "strict": true,
-      "exit_code": 0,
-      "kind": "run",
-      "success": true,
-      "session_error": null
-    },
-    {
-      "block": 3,
-      "source_sha256": "b7de190c67cf817fcf4f46347e92e4c0d04bd23d63001f9d5422583882c35ea5",
-      "strict": true,
-      "exit_code": 0,
-      "kind": "run",
-      "success": true,
-      "session_error": null
-    }
-  ],
-  "source_assumption_declarations": {
-    "trust": 0,
-    "axiom": 0,
-    "abstract_prop": 0
+  "publication_audit": {
+    "checked_on": "2026-10-13",
+    "all_original_source_hashes_match": true,
+    "all_executable_content_matches": true,
+    "export_order_matches_verified_inputs": true,
+    "active_direct_trusts": 0,
+    "user_axioms": 4,
+    "abstract_predicate_signatures": 1,
+    "local_markdown_links_checked": 59,
+    "missing_local_targets": [],
+    "scripts_paths_in_public_sources": false,
+    "new_git_repository_created": false,
+    "chapters_9_11_exported": false
   },
-  "limitations": [
-    "Builtin mathematics and verifier are relied upon.",
-    "Normal module output is an overall summary, not a complete proof dependency trace.",
-    "No Lean check or kernel soundness proof is claimed.",
-    "Broader chapter status in STATUS.md is a separate local-development snapshot, not included public source verification."
-  ]
+  "public_dependency_gate": {
+    "checked_on": "2026-10-13",
+    "command": "litex -lang en -f showcases/analysis_notes/analysis.lit",
+    "binary_sha256": "ce0e84f4fefe60d3acf0ed64a74c7dd9fda7a01fc947da1f4208e71c52b3dee0",
+    "strict": false,
+    "result": {
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null,
+      "statement_count": 15,
+      "all_statement_results_success": true,
+      "seconds": 1788.086
+    },
+    "scope": "All ten selected chapter exports loaded as the Tao dependency; the 15 statement results are the lecture main file, not a new Chapter 8 main-file count.",
+    "record": "../analysis_notes/verification.json",
+    "dependency_config_sha256": "eb54826677fe241c788adf61c5f01bc4fd0b271799fa6851279fe0dd5561b657"
+  }
 }

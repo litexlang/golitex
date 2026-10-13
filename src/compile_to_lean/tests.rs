@@ -2747,19 +2747,17 @@ fn simplification_theorem_citation_keeps_its_declaration_time_context() {
 
 #[test]
 fn simplification_natural_inference_is_emitted_before_its_exact_citation() {
-    use crate::store_fact_and_infer::{
-        InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-    };
+    use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
 
     let (result, compiler) = execute("have n N\nn >= 0\n");
     let store = &ordinary_have(&result.statement_results[0]).groups[0]
         .defined_params
         .store_and_infer_results[0];
     let inferred = match &store.infer {
-        Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) => rules
+        Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) => rules
             .iter()
             .find_map(|rule| match rule {
-                InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) => {
+                InferInFactResult::SignedStandardSetSign(proof) => {
                     assert_eq!(proof.derived.len(), 1);
                     Some(&proof.derived[0])
                 }
