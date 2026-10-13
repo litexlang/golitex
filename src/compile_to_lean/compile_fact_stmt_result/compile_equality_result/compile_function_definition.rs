@@ -104,9 +104,9 @@ impl LitexToLeanCompiler {
                     EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(
                         _,
                     ) => Err(LeanCompileError::unsupported("FunctionDefinition/Cases")),
-                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(_) => Err(
-                        LeanCompileError::unsupported("FunctionDefinition/Induction"),
-                    ),
+                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(proof) => {
+                        self.compile_recursive_unfold_result(fact, proof, parent_wd, position)
+                    }
                     EqualitySearchProofByFnApplicationObjectDefinition::ParentCheckedBeta(
                         proof,
                     ) => {
@@ -531,11 +531,18 @@ impl LitexToLeanCompiler {
             } else {
                 "callFormula2_denote"
             };
-            let output = self.compile_function_raw_expression(
-                &function.body.ret_set,
-                &function.body,
-                &completed,
-            )?;
+            let output = if target {
+                format!(
+                    "(Litex.denote {})",
+                    self.compile_object_reference(&function.body.ret_set, &completed)?
+                )
+            } else {
+                let output = self.compile_numeric_carrier(&function.body.ret_set, &completed)?;
+                format!(
+                    "(M.standard Litex.StandardSetValue.{})",
+                    standard_value_constructor(&output)?
+                )
+            };
             let return_proof = format!("(by intro _x _y _hx _hy _hg; have _h := _litex_literal.val.function.wd (Litex.FunctionSemantics.pairValue (M := M) _x _y) ((Litex.FunctionSignature.{domain_law} {constructor_arguments} {guard} _x _y).mpr ⟨_hx, _hy, _hg⟩); change M.mem ({body} (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).1 (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).2) {output} at _h; simpa only [Litex.FunctionSemantics.unpair_pair] using _h)");
             Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.call2Congr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.first) (Litex.sameRefl _litex_original.val.second)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.first _litex_literal.val.second _litex_literal.wd.2.1 _litex_literal.wd.2.2.1 _litex_literal.wd.2.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.first) (Litex.denote _litex_literal.val.second) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
         }
@@ -556,7 +563,8 @@ impl LitexToLeanCompiler {
                     .into_iter()
                     .map(|child| self.compile_normalization_value(child, position))
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(format!("(M.{operation} {})", values.join(" ")))
+                let operation = arithmetic_operation_term(operation);
+                Ok(format!("({operation} {})", values.join(" ")))
             }
             Obj::FnObj(application)
                 if application.body.len() == 1 && (1..=2).contains(&application.body[0].len()) =>
@@ -600,6 +608,7 @@ impl LitexToLeanCompiler {
         match current {
             Obj::ArithmeticOperator(operator) => {
                 let (operation, _) = normalization_arithmetic_children(operator)?;
+                let operation = arithmetic_operation_term(operation);
                 let mut rebuilt = operator.clone();
                 let children = normalization_arithmetic_children_mut(&mut rebuilt)?;
                 let count = children.len();
@@ -613,11 +622,11 @@ impl LitexToLeanCompiler {
                     )? {
                         **child = next;
                         let proof = if count == 1 {
-                            format!("(congrArg M.{operation} {equality})")
+                            format!("(congrArg {operation} {equality})")
                         } else if index == 0 {
-                            format!("(congrArg₂ M.{operation} {equality} rfl)")
+                            format!("(congrArg₂ {operation} {equality} rfl)")
                         } else {
-                            format!("(congrArg₂ M.{operation} rfl {equality})")
+                            format!("(congrArg₂ {operation} rfl {equality})")
                         };
                         return Ok(Some((Obj::ArithmeticOperator(rebuilt), proof)));
                     }
@@ -683,6 +692,7 @@ fn normalization_arithmetic_children(
         ArithmeticOperator::Div(value) => Ok(("divValue", vec![&value.left, &value.right])),
         ArithmeticOperator::Pow(value) => Ok(("powValue", vec![&value.base, &value.exponent])),
         ArithmeticOperator::Neg(value) => Ok(("negValue", vec![&value.arg])),
+        ArithmeticOperator::Abs(value) => Ok(("absValue", vec![&value.arg])),
         _ => Err(LeanCompileError::unsupported(
             "FunctionDefinition/ArithmeticContext",
         )),
@@ -699,6 +709,7 @@ fn normalization_arithmetic_children_mut(
         ArithmeticOperator::Div(value) => Ok(vec![&mut value.left, &mut value.right]),
         ArithmeticOperator::Pow(value) => Ok(vec![&mut value.base, &mut value.exponent]),
         ArithmeticOperator::Neg(value) => Ok(vec![&mut value.arg]),
+        ArithmeticOperator::Abs(value) => Ok(vec![&mut value.arg]),
         _ => Err(LeanCompileError::unsupported(
             "FunctionDefinition/ArithmeticContext",
         )),

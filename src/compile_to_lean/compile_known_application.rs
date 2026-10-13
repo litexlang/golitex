@@ -53,6 +53,13 @@ impl LitexToLeanCompiler {
             (Fact::ChainFact(a), Fact::ChainFact(b)) => {
                 a.prop_names == b.prop_names && a.objs.len() == b.objs.len()
             }
+            (Fact::OrFact(a), Fact::OrFact(b)) => {
+                a.facts.len() == b.facts.len()
+                    && a.facts
+                        .iter()
+                        .zip(&b.facts)
+                        .all(|(a, b)| same_or_branch_shape(a, b))
+            }
             _ => false,
         };
         let parameters: Vec<_> = source
@@ -167,8 +174,70 @@ impl LitexToLeanCompiler {
             source.then_facts.len(),
         );
         let instantiated = replace_compound_arguments(&selected, &instantiated_args)?;
-        let old_atomics = compound_atomics(&instantiated)?;
+        let checked = self.compile_known_compound_transport(
+            &instantiated,
+            goal,
+            &equalities,
+            &application,
+            formed,
+        )?;
+        let proposition = self.fact_proposition(goal, &formed)?;
+        Ok((
+            self.scope_proposition(proposition, &definitions),
+            format!(
+                "(by\n  {}\n  exact {checked}\n)",
+                definitions.join("\n").replace('\n', "\n  ")
+            ),
+        ))
+    }
+
+    fn compile_known_compound_transport(
+        &self,
+        old: &Fact,
+        goal: &Fact,
+        equalities: &[String],
+        application: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if let (Fact::OrFact(a), Fact::OrFact(b)) = (old, goal) {
+            if a.facts.len() != b.facts.len() || a.facts.len() < 2 {
+                return Err(LeanCompileError::unsupported("CompoundKnown/OrArity"));
+            }
+            let mut transported = Vec::new();
+            let mut offset = 0;
+            for (index, (left, right)) in a.facts.iter().zip(&b.facts).enumerate() {
+                let left = crate::ast::fact::and_chain_as_fact(left);
+                let right = crate::ast::fact::and_chain_as_fact(right);
+                let arity = compound_arguments(&right)?.len();
+                let slice = equalities
+                    .get(offset..offset + arity)
+                    .ok_or_else(|| LeanCompileError::unsupported("CompoundKnown/OrArguments"))?;
+                let name = format!("_known_or_{index}");
+                transported.push((
+                    name.clone(),
+                    self.compile_known_compound_transport(&left, &right, slice, &name, position)?,
+                ));
+                offset += arity;
+            }
+            if offset != equalities.len() {
+                return Err(LeanCompileError::unsupported("CompoundKnown/OrArguments"));
+            }
+            let (last_name, last) = transported.pop().expect("nonempty Or");
+            let mut result = format!("(fun {last_name} => {last})");
+            while let Some((name, left)) = transported.pop() {
+                result = format!("(fun _known_tail => Or.elim _known_tail (fun {name} => Or.inl {left}) (fun _known_rest => Or.inr ({result} _known_rest)))");
+            }
+            return Ok(format!("({result} {application})"));
+        }
+        let old_atomics = compound_atomics(old)?;
         let new_atomics = compound_atomics(goal)?;
+        if old_atomics.len() != new_atomics.len()
+            || compound_arguments(goal)?.len() != equalities.len()
+        {
+            return Err(LeanCompileError::unsupported(
+                "CompoundKnown/TransportArity",
+            ));
+        }
         let mut pieces = Vec::new();
         let mut offset = 0;
         for (index, (old, new)) in old_atomics.iter().zip(&new_atomics).enumerate() {
@@ -180,19 +249,11 @@ impl LitexToLeanCompiler {
                 &equalities[offset..offset + arity]
             };
             pieces.push(
-                self.compile_compound_atomic_transport(old, new, equalities, &component, &formed)?,
+                self.compile_compound_atomic_transport(old, new, equalities, &component, position)?,
             );
             offset += arity;
         }
-        let proposition = self.fact_proposition(goal, &formed)?;
-        let checked = compound_proof(pieces)?;
-        Ok((
-            self.scope_proposition(proposition, &definitions),
-            format!(
-                "(by\n  {}\n  exact {checked}\n)",
-                definitions.join("\n").replace('\n', "\n  ")
-            ),
-        ))
+        compound_proof(pieces)
     }
 
     pub(in crate::compile_to_lean) fn compile_known_application_requirements(
@@ -424,10 +485,11 @@ impl LitexToLeanCompiler {
                 };
                 self.compile_object_reference(&old, position)?;
                 self.compile_object_reference(goal, position)?;
+                let operation_term = arithmetic_operation_term(operation);
                 let equality = if proofs.len() == 1 {
-                    format!("(congrArg M.{operation} {})", proofs[0])
+                    format!("(congrArg {operation_term} {})", proofs[0])
                 } else {
-                    format!("(congrArg₂ M.{operation} {} {})", proofs[0], proofs[1])
+                    format!("(congrArg₂ {operation_term} {} {})", proofs[0], proofs[1])
                 };
                 Ok((old, equality))
             }
@@ -580,7 +642,7 @@ impl LitexToLeanCompiler {
                 position,
             ),
             StrictEqualArgProof::ByMatchingOneArgByOne(proof) => self
-                .compile_arithmetic_congruence(
+                .compile_matching_one_arg_by_one(
                     fact,
                     &proof.corresponding_arg_equal_proofs,
                     position,
@@ -668,6 +730,7 @@ fn compound_arguments(fact: &Fact) -> Result<Vec<&Obj>, LeanCompileError> {
         Fact::AtomicFact(fact) => Ok(atomic_fact_args_ref(fact)),
         Fact::AndFact(fact) => Ok(fact.facts.iter().flat_map(atomic_fact_args_ref).collect()),
         Fact::ChainFact(fact) => Ok(fact.objs.iter().collect()),
+        Fact::OrFact(fact) => Ok(fact.facts.iter().flat_map(or_branch_arguments).collect()),
         _ => Err(LeanCompileError::unsupported("CompoundKnown/FactFamily")),
     }
 }
@@ -705,6 +768,31 @@ fn replace_compound_arguments(fact: &Fact, args: &[Obj]) -> Result<Fact, LeanCom
                 ));
             }
         }
+        Fact::OrFact(or) => {
+            let mut offset = 0;
+            for branch in &mut or.facts {
+                let arity = or_branch_arguments(branch).len();
+                let branch_fact = crate::ast::fact::and_chain_as_fact(branch);
+                let changed = replace_compound_arguments(
+                    &branch_fact,
+                    args.get(offset..offset + arity).ok_or_else(|| {
+                        LeanCompileError::unsupported("CompoundKnown/InstantiatedArity")
+                    })?,
+                )?;
+                *branch = match changed {
+                    Fact::AtomicFact(f) => AndChainAtomicFact::AtomicFact(f),
+                    Fact::AndFact(f) => AndChainAtomicFact::AndFact(f),
+                    Fact::ChainFact(f) => AndChainAtomicFact::ChainFact(f),
+                    _ => unreachable!(),
+                };
+                offset += arity;
+            }
+            if offset != args.len() {
+                return Err(LeanCompileError::unsupported(
+                    "CompoundKnown/InstantiatedArity",
+                ));
+            }
+        }
         _ => {
             return Err(LeanCompileError::unsupported(
                 "CompoundKnown/InstantiatedArity",
@@ -712,6 +800,33 @@ fn replace_compound_arguments(fact: &Fact, args: &[Obj]) -> Result<Fact, LeanCom
         }
     }
     Ok(fact)
+}
+
+fn or_branch_arguments(fact: &AndChainAtomicFact) -> Vec<&Obj> {
+    match fact {
+        AndChainAtomicFact::AtomicFact(f) => atomic_fact_args_ref(f),
+        AndChainAtomicFact::AndFact(f) => f.facts.iter().flat_map(atomic_fact_args_ref).collect(),
+        AndChainAtomicFact::ChainFact(f) => f.objs.iter().collect(),
+    }
+}
+
+fn same_or_branch_shape(a: &AndChainAtomicFact, b: &AndChainAtomicFact) -> bool {
+    match (a, b) {
+        (AndChainAtomicFact::AtomicFact(a), AndChainAtomicFact::AtomicFact(b)) => {
+            same_atomic_family(a, b)
+        }
+        (AndChainAtomicFact::AndFact(a), AndChainAtomicFact::AndFact(b)) => {
+            a.facts.len() == b.facts.len()
+                && a.facts
+                    .iter()
+                    .zip(&b.facts)
+                    .all(|(a, b)| same_atomic_family(a, b))
+        }
+        (AndChainAtomicFact::ChainFact(a), AndChainAtomicFact::ChainFact(b)) => {
+            a.prop_names == b.prop_names && a.objs.len() == b.objs.len()
+        }
+        _ => false,
+    }
 }
 
 fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), LeanCompileError> {

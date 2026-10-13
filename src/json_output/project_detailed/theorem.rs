@@ -261,6 +261,15 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
                     super::store::project_verify_facts(&s.type_proofs, rt),
                 ),
                 (
+                    "type_stores",
+                    JsonValue::Array(
+                        s.type_stores
+                            .iter()
+                            .map(|stored| project_store_and_infer(stored, rt))
+                            .collect(),
+                    ),
+                ),
+                (
                     "function_domain",
                     s.function_domain
                         .as_ref()
@@ -272,9 +281,19 @@ pub(super) fn project_release_thm(result: &ExecReleaseThmStmtResult, rt: &Runtim
                     super::store::project_verify_facts(&s.dom_proofs, rt),
                 ),
                 (
+                    "dom_stores",
+                    JsonValue::Array(
+                        s.dom_stores
+                            .iter()
+                            .map(|stored| project_store_and_infer(stored, rt))
+                            .collect(),
+                    ),
+                ),
+                (
                     "conclusions_wd",
                     project_conclusions_wd(&s.conclusions_wd, rt),
                 ),
+                ("stored_wd", project_conclusions_wd(&s.stored_wd, rt)),
                 (
                     "stored",
                     JsonValue::Array(

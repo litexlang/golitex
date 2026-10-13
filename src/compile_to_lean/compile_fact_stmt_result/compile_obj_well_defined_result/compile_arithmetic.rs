@@ -194,7 +194,7 @@ impl LitexToLeanCompiler {
         children: &[Box<ObjWellDefinedProof>],
         requirements: &[VerifyFactResult],
         position: &SourcePosition<'_>,
-    ) -> Result<(&'static str, &'static str, String, String, i128), LeanCompileError> {
+    ) -> Result<(&'static str, &'static str, String, String, Option<i128>), LeanCompileError> {
         if children.len() != 2 || !(requirements.len() == 2 || requirements.len() == 3) {
             return Err(LeanCompileError::new(
                 "WD/Pow",
@@ -217,8 +217,7 @@ impl LitexToLeanCompiler {
                 ..*position
             },
         )?;
-        let integer = closed_integer(exponent)
-            .ok_or_else(|| LeanCompileError::unsupported("WD/Pow/NonClosedIntegerExponent"))?;
+        let integer = closed_integer(exponent);
         let mut proved = Vec::new();
         for (index, requirement) in requirements.iter().enumerate() {
             proved.push(
@@ -238,22 +237,33 @@ impl LitexToLeanCompiler {
         };
         let base_set = membership_subject(&source_subject(&requirements[0])?, base)?;
         let exponent_set = membership_subject(&source_subject(&requirements[1])?, exponent)?;
+        let natural_value = || match integer {
+            Some(n) if n >= 0 => Ok(format!("({n} : ℕ)")),
+            Some(_) => Err(LeanCompileError::new(
+                "WD/Pow/NaturalValue",
+                "A recorded natural exponent cannot be a negative literal.",
+            )),
+            None => Ok(format!("(Litex.NativeBridge.asNat {e} {})", proved[1])),
+        };
         let (name, bridge, exponent_value) = match (base_set, exponent_set, requirements.len()) {
-            (StandardSet::R, StandardSet::N, 2) if integer >= 0 => {
-                ("powNatReal", "PowNatReal", format!("({integer} : ℕ)"))
-            }
-            (StandardSet::C, StandardSet::N, 2) if integer >= 0 => {
-                ("powNat", "PowNat", format!("({integer} : ℕ)"))
-            }
+            (StandardSet::R, StandardSet::N, 2) => ("powNatReal", "PowNatReal", natural_value()?),
+            (StandardSet::C, StandardSet::N, 2) => ("powNat", "PowNat", natural_value()?),
             (StandardSet::C, StandardSet::Z, 3) => {
                 ensure_nonzero_subject(&source_subject(&requirements[2])?, base)?;
-                ("powInt", "PowInt", format!("({integer} : ℤ)"))
+                let n = integer.ok_or_else(|| {
+                    LeanCompileError::unsupported("WD/Pow/NonClosedIntegerExponent")
+                })?;
+                ("powInt", "PowInt", format!("({n} : ℤ)"))
             }
             _ => return Err(LeanCompileError::unsupported("WD/Pow/Domain")),
         };
-        let exp_native = self.compile_numeric_observation(exponent, &formed)?;
-        let integer_complex = format!("({exponent_value} : ℂ)");
-        let he_value = format!("(Litex.NativeBridge.sameOfDenoteNumber {e} (Litex.number (M := M) {integer_complex}) {} {integer_complex} {} (Litex.NativeBridge.denoteNumber (M := M) {integer_complex}) (by norm_num))", exp_native.0, exp_native.1);
+        let he_value = if integer.is_none() {
+            format!("(Litex.NativeBridge.asNat_spec {e} {})", proved[1])
+        } else {
+            let exp_native = self.compile_numeric_observation(exponent, &formed)?;
+            let integer_complex = format!("({exponent_value} : ℂ)");
+            format!("(Litex.NativeBridge.sameOfDenoteNumber {e} (Litex.number (M := M) {integer_complex}) {} {integer_complex} {} (Litex.NativeBridge.denoteNumber (M := M) {integer_complex}) (by norm_num))", exp_native.0, exp_native.1)
+        };
         let guard = if requirements.len() == 3 {
             format!(" {}", proved[2])
         } else {
@@ -301,7 +311,9 @@ impl LitexToLeanCompiler {
                 x.0, x.1
             ),
             format!("(Litex.{name}InC {arguments})"),
-            x.3.as_ref().and_then(|value| value.pow_integer(integer)),
+            x.3.as_ref()
+                .zip(integer)
+                .and_then(|(value, integer)| value.pow_integer(integer)),
         ))
     }
 }

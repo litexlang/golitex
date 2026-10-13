@@ -13,6 +13,7 @@ mod compile_division_inference;
 mod compile_equality_inferences;
 mod compile_fact_stmt_result;
 mod compile_function_template;
+mod compile_have_fn_by_induc_result;
 mod compile_have_fn_equal_stmt_result;
 mod compile_have_obj_equal_stmt_result;
 mod compile_have_obj_in_nonempty_set_stmt_result;
@@ -21,6 +22,8 @@ mod compile_known_application;
 mod compile_let_stmt_result;
 mod compile_nonzero_factor_inference;
 mod compile_order_bound_inferences;
+mod compile_recursive_unfold_result;
+mod compile_release_and_expand_result;
 mod compile_run;
 mod compile_stmt_result;
 mod compile_store_result;
@@ -37,21 +40,43 @@ pub use lean_compile_error::LeanCompileError;
 pub use litex_to_lean_compiler::LitexToLeanCompiler;
 
 #[cfg(test)]
+mod abs_function_normalization_tests;
+#[cfg(test)]
+mod abs_natural_power_tests;
+#[cfg(test)]
+mod add_zero_from_equalities_tests;
+#[cfg(test)]
 mod claim_tests;
 #[cfg(test)]
 mod concrete_prop_tests;
+#[cfg(test)]
+mod equality_known_forall_tests;
 #[cfg(test)]
 mod function_call_tests;
 #[cfg(test)]
 mod function_return_tests;
 #[cfg(test)]
+mod induction_tests;
+#[cfg(test)]
 mod numeric_function_call_tests;
+#[cfg(test)]
+mod or_fact_tests;
+#[cfg(test)]
+mod positive_function_target_tests;
 #[cfg(test)]
 mod positive_membership_tests;
 #[cfg(test)]
 mod positive_order_strategy_tests;
 #[cfg(test)]
 mod prop_domain_tests;
+#[cfg(test)]
+mod rational_call_leaf_tests;
+#[cfg(test)]
+mod recursive_function_tests;
+#[cfg(test)]
+mod release_theorem_tests;
+#[cfg(test)]
+mod selected_arithmetic_tests;
 #[cfg(test)]
 mod set_tests;
 #[cfg(test)]

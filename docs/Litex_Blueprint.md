@@ -50,10 +50,6 @@ Formal languages let machines rigorously check reasoning and let results be [cit
 
 **Litex explores a formal language in which human understanding and machine checking meet in the same text.** It organizes reasoning through [familiar mathematical objects, conditions, and facts](#set-theory): people choose definitions, constructions, and key steps; [AI assists with writing and repair](#interaction-loop); the language [checks supported connections and records the grounds for each step](#execution-model). It asks whether this form of expression can lower the cost for people and AI to construct, review, repair, and reuse checkable knowledge.
 
-**Research and release boundary.** Litex is currently an evolving formal-language research project and experimental system. It cannot replace natural language in carrying all of mathematics' intuition, motivation, and explanation, nor does it have the mature trusted foundation, domain coverage, or ecosystem scale that Lean and Mathlib have accumulated. Litex investigates a different, narrower, and independent question: can a language design organized around facts, statement-by-statement checking, and retained knowledge records lower the cost for people and AI to construct, understand, review, repair, and reuse checkable knowledge?
-
-This project is released in its current state. Public source code, examples, and experimental results do not guarantee completeness, fitness for any particular purpose, or superiority to other systems. Judge its capabilities by dated verification results, trust boundaries, known limitations, and concrete use cases; do not extrapolate results within an experimental scope into untested guarantees.
-
 The concision of Litex source comes from the coordination among objects, facts, statements, and verification procedures developed through sustained iteration. It makes the mechanical work connecting common proof steps part of the language's default checking, letting authors state mathematical steps directly and build on existing knowledge. The [systems engineering perspective](#systems-engineering) follows a small reciprocal function through this design work.
 
 Litex also includes a [compiler design for translation to Lean](#compatibility), exploring how supported verification grounds can become Lean proofs for independent rechecking and connection to the existing formalization ecosystem. See the [Litex-to-Lean compiler design guide](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md) for the design and current supported scope. The Litex-to-Lean compiler is expected to be completed by the end of 2026.
@@ -1609,6 +1605,10 @@ Given my personal time and resources, I could not have brought this language des
 Litex began with sustained personal work and now also benefits from others' support. Through the open-source [golitex](https://github.com/litexlang/golitex) project, I hope to meet people interested in discussing language design, mathematical formalization, and Math for AI. Criticism and alternative approaches deserve serious consideration.
 
 </details>
+
+**Research and release boundary.** Litex is currently an evolving formal-language research project and experimental system. It cannot replace natural language in carrying all of mathematics' intuition, motivation, and explanation, nor does it have the mature trusted foundation, domain coverage, or ecosystem scale that Lean and Mathlib have accumulated. Litex investigates a different, narrower, and independent question: can a language design organized around facts, statement-by-statement checking, and retained knowledge records lower the cost for people and AI to construct, understand, review, repair, and reuse checkable knowledge?
+
+This project is released in its current state. Public source code, examples, and experimental results do not guarantee completeness, fitness for any particular purpose, or superiority to other systems. Judge its capabilities by dated verification results, trust boundaries, known limitations, and concrete use cases; do not extrapolate results within an experimental scope into untested guarantees.
 
 <a id="special-thanks"></a>
 

@@ -1,4 +1,4 @@
-use super::helper::{store_goal_fact, verify_goal_fact};
+use super::helper::{store_goal_fact_with_wd, verify_goal_fact};
 use super::result::{
     ExecByStmtResult, ExecByThmStmtFailed, ExecByThmStmtResult, ExecByThmStmtSuccess,
     ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess,
@@ -25,16 +25,18 @@ pub fn exec_release_thm_stmt(
     };
 
     let (dom_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let type_proofs = match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
-            Ok(proofs) => proofs,
-            Err(failed) => return Ok(Err(failed)),
-        };
+        let (type_proofs, type_stores) =
+            match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
+                Ok(proofs) => proofs,
+                Err(failed) => return Ok(Err(failed)),
+            };
         let function_domain =
             match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
                 Ok(proof) => proof,
                 Err(failed) => return Ok(Err(failed)),
             };
         let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
+        let mut dom_stores = Vec::with_capacity(prepared.dom_facts.len());
         for (index, dom) in prepared.dom_facts.iter().enumerate() {
             let proof = verify_goal_fact(rt, dom)?;
             if proof.is_failed() {
@@ -45,11 +47,12 @@ pub fn exec_release_thm_stmt(
                     result: proof,
                 }));
             }
-            let _ = rt.store_fact_and_infer(
+            let stored = rt.store_fact_and_infer(
                 dom,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
             dom_proofs.push(proof);
+            dom_stores.push(stored);
         }
         let conclusions_wd =
             match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
@@ -58,21 +61,28 @@ pub fn exec_release_thm_stmt(
             };
         Ok(Ok((
             type_proofs,
+            type_stores,
             function_domain,
             dom_proofs,
+            dom_stores,
             conclusions_wd,
         )))
     })?;
 
-    let (type_proofs, function_domain, dom_proofs, conclusions_wd) = match dom_outcome {
-        Ok(p) => p,
-        Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
-    };
+    let (type_proofs, type_stores, function_domain, dom_proofs, dom_stores, conclusions_wd) =
+        match dom_outcome {
+            Ok(p) => p,
+            Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
+        };
 
     let mut stored = Vec::with_capacity(prepared.conclusions.len());
+    let mut stored_wd = Vec::with_capacity(prepared.conclusions.len());
     for (index, conclusion) in prepared.conclusions.iter().enumerate() {
-        match store_goal_fact(runtime, conclusion)? {
-            Ok(s) => stored.push(s),
+        match store_goal_fact_with_wd(runtime, conclusion)? {
+            Ok((wd, s)) => {
+                stored_wd.push(wd);
+                stored.push(s);
+            }
             Err(message) => {
                 return Ok(ExecReleaseThmStmtResult::Failed(
                     ExecReleaseThmStmtFailed::Store {
@@ -91,10 +101,13 @@ pub fn exec_release_thm_stmt(
             callee,
             builtin: prepared.builtin,
             type_proofs,
+            type_stores,
             function_domain,
             dom_proofs,
+            dom_stores,
             conclusions_wd,
             local_env,
+            stored_wd,
             stored,
         },
     ))
@@ -116,10 +129,11 @@ pub fn exec_by_thm_stmt(
 
     let selected: Fact = stmt.selected_fact.clone().into();
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let type_proofs = match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
-            Ok(proofs) => proofs,
-            Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
-        };
+        let (type_proofs, type_stores) =
+            match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
+                Ok(proofs) => proofs,
+                Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+            };
         let function_domain =
             match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
                 Ok(proof) => proof,
@@ -183,6 +197,7 @@ pub fn exec_by_thm_stmt(
         }
         Ok(Ok((
             type_proofs,
+            type_stores,
             function_domain,
             dom_proofs,
             dom_stores,
@@ -194,6 +209,7 @@ pub fn exec_by_thm_stmt(
 
     let (
         type_proofs,
+        type_stores,
         function_domain,
         dom_proofs,
         dom_stores,
@@ -233,6 +249,7 @@ pub fn exec_by_thm_stmt(
             callee,
             builtin: prepared.builtin,
             type_proofs,
+            type_stores,
             function_domain,
             dom_proofs,
             dom_stores,
@@ -446,9 +463,16 @@ fn verify_prepared_type_facts(
     thm_name: &str,
     type_facts: &[Fact],
 ) -> RuntimeResult<
-    Result<Vec<crate::execute::execute_fact_stmt::VerifyFactResult>, ExecReleaseThmStmtFailed>,
+    Result<
+        (
+            Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
+            Vec<crate::store_fact_and_infer::StoreFactAndInferResult>,
+        ),
+        ExecReleaseThmStmtFailed,
+    >,
 > {
     let mut proofs = Vec::with_capacity(type_facts.len());
+    let mut stores = Vec::with_capacity(type_facts.len());
     for (index, fact) in type_facts.iter().enumerate() {
         let proof = verify_goal_fact(runtime, fact)?;
         if proof.is_failed() {
@@ -459,13 +483,14 @@ fn verify_prepared_type_facts(
                 result: proof,
             }));
         }
-        let _ = runtime.store_fact_and_infer(
+        let stored = runtime.store_fact_and_infer(
             fact,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )?;
         proofs.push(proof);
+        stores.push(stored);
     }
-    Ok(Ok(proofs))
+    Ok(Ok((proofs, stores)))
 }
 
 fn verify_prepared_conclusions_wd(

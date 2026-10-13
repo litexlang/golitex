@@ -148,6 +148,47 @@ impl LitexToLeanCompiler {
                 LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(p) => {
                     self.compile_order_reflexivity(goal, &p.repeated_object, position)
                 }
+                LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe(
+                    p,
+                ) => self.compile_integer_successor_lower_bound(
+                    goal,
+                    p.cite_fact_id,
+                    &p.in_z_proof,
+                    position,
+                ),
+                LessEqualFactSearchProofByBuiltinRule::MulLeftNonnegativeMonotone(p) => self
+                    .compile_selected_mul_monotone(
+                        goal,
+                        &p.nonnegative_factor_proof,
+                        &p.order_premise_proof,
+                        true,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::MulRightNonnegativeMonotone(p) => self
+                    .compile_selected_mul_monotone(
+                        goal,
+                        &p.nonnegative_factor_proof,
+                        &p.order_premise_proof,
+                        false,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::DivMonotoneWeakSamePosDivisor(p) => self
+                    .compile_selected_div_monotone(
+                        goal,
+                        &p.divisor_pos_proof,
+                        &p.numerators_order_proof,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(p) => {
+                    self.compile_order_from_difference(goal, &p.premise_proof, false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::LessEqualFromPosDivProductBound(p) => self
+                    .compile_positive_div_product_bound(
+                        goal,
+                        &p.divisor_pos_proof,
+                        &p.product_bound_proof,
+                        position,
+                    ),
                 LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqual(p) => self
                     .compile_order_known_conversion(
                         goal,
@@ -166,6 +207,17 @@ impl LitexToLeanCompiler {
                     ),
                 LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(p) => {
                     self.compile_even_power_nonnegative(goal, &p.base_in_real_proof, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(_) => {
+                    let (zero, value, strict) = source_order_oriented(goal)?;
+                    if strict
+                        || !is_exact_zero(zero)
+                        || !matches!(value, Obj::ArithmeticOperator(ArithmeticOperator::Abs(_)))
+                    {
+                        return Err(LeanCompileError::new("AbsNonnegative/OrderSubject", "The selected builtin must conclude the owned absolute value is nonnegative."));
+                    }
+                    let term = self.compile_object_reference(value, position)?;
+                    Ok(format!("(by\n  let _litex_abs := {term}\n  exact Litex.absNonnegative _litex_abs.val.arg _litex_abs.wd\n)"))
                 }
                 LessEqualFactSearchProofByBuiltinRule::AddRightCongruence(p) => {
                     self.compile_weak_add_congruence(goal, &p.premise_proof, false, position)
@@ -205,8 +257,50 @@ impl LitexToLeanCompiler {
                         true,
                         position,
                     ),
+                GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(p) => {
+                    self.compile_predecessor_nonnegative_known(
+                        goal,
+                        &p.at_least_one_proof,
+                        position,
+                    )
+                }
                 _ => Err(LeanCompileError::unsupported("Order/GreaterEqualBuiltin")),
             },
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::LessFromPosDifference(p),
+                ),
+            ) => self.compile_order_from_difference(goal, &p.premise_proof, true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::SubtractOneLess(p),
+                ),
+            ) => self.compile_subtract_one_less(goal, &p.minuend, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::PowPositiveFromPositiveBase(p),
+                ),
+            ) => self.compile_power_positive(goal, &p.base_positive_proof, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::EvenPowPositiveFromNonzero(p),
+                ),
+            ) => self.compile_even_power_positive(
+                goal,
+                &p.base_in_real_proof,
+                &p.base_nonzero_proof,
+                position,
+            ),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::SumBothPositive(proof),
+                ),
+            ) => self.compile_positive_sum_builtin(goal, proof, position),
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
@@ -219,6 +313,26 @@ impl LitexToLeanCompiler {
                 false,
                 position,
             ),
+            (
+                AtomicFact::GreaterFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(
+                    GreaterFactSearchProofByBuiltinRule::FromPositiveRealMembership(p),
+                ),
+            ) => {
+                let (zero, value, strict) = source_order_oriented(goal)?;
+                if !strict
+                    || !is_exact_zero(zero)
+                    || membership_subject(&source_subject(&p.membership_proof)?, value)?
+                        != StandardSet::RPos
+                {
+                    return Err(LeanCompileError::new("PositiveMembershipOrder/Subject", "The selected original R+ membership must describe the exact strictly positive goal object."));
+                }
+                Ok(format!(
+                    "(Litex.inRPos_positive {} {})",
+                    self.compile_object_reference(value, position)?,
+                    self.compile_verify(&p.membership_proof, position)?.1
+                ))
+            }
             (
                 AtomicFact::GreaterFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(

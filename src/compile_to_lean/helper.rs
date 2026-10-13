@@ -1,4 +1,5 @@
 use super::LeanCompileError;
+use crate::ast::stmt::ReleaseAndExpandStmt;
 use crate::execute::execute_by_stmt::ExecByDefStmtResult;
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -55,6 +56,14 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
     match object {
         Obj::Identifier(IdentifierObj::Plain { .. }) => Ok(()),
         Obj::Literal(Literal::Number(n)) => number_literal(n, "ℂ").map(|_| ()),
+        Obj::FnObj(call)
+            if call.body.len() == 1 && (1..=2).contains(&call.body[0].len()) =>
+        {
+            // This original call is an opaque scalar leaf. Its constructor
+            // WD and numeric return evidence are consumed by the observer;
+            // argument domains are not polynomial normalization obligations.
+            Ok(())
+        }
         Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
             validate_arithmetic_expression(&x.left)?;
             validate_arithmetic_expression(&x.right)
@@ -81,7 +90,13 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
                 .ok_or_else(|| LeanCompileError::unsupported("Rational/NonClosedIntegerPower"))?;
             Ok(())
         }
-        _ => Err(LeanCompileError::unsupported("Rational/ExpressionDomain")),
+        _ => Err(LeanCompileError::new(
+            "Rational/ExpressionDomain",
+            &format!(
+                "The selected rational normalization does not support the original source expression `{}`.",
+                object.ir()
+            ),
+        )),
     }
 }
 
@@ -289,7 +304,18 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
         (Obj::ArithmeticOperator(Neg(a)), Obj::ArithmeticOperator(Neg(b))) => {
             Some(("negValue", vec![(&a.arg, &b.arg)]))
         }
+        (Obj::ArithmeticOperator(Abs(a)), Obj::ArithmeticOperator(Abs(b))) => {
+            Some(("absValue", vec![(&a.arg, &b.arg)]))
+        }
         _ => None,
+    }
+}
+
+pub(super) fn arithmetic_operation_term(operation: &str) -> String {
+    if operation == "absValue" {
+        "(Litex.absValue (M := M))".to_string()
+    } else {
+        format!("M.{operation}")
     }
 }
 
@@ -509,6 +535,10 @@ pub(super) fn verified_subject(result: &VerifyFactResult) -> Option<Fact> {
             }
             _ => None,
         },
+        VerifyFactResult::OrFact(result) => match result.as_ref() {
+            crate::execute::execute_fact_stmt::verify_or_fact::VerifyOrFactResult::Success(proof) => Some(Fact::OrFact(proof.fact.clone())),
+            _ => None,
+        },
         _ => None,
     }
 }
@@ -554,6 +584,66 @@ pub(super) fn validate_statement_capture(
             stmt.call == proof.call
                 && verified_subject(&proof.selected_proof).as_ref()
                     == Some(&Fact::AtomicFact(stmt.selected_fact.clone()))
+        }
+        (
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseThmStmt(stmt)),
+            ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::Thm(
+                crate::execute::execute_by_stmt::ExecReleaseThmStmtResult::Success(proof),
+            )),
+        ) => stmt.call == proof.call,
+        (
+            Stmt::By(ByStmt::ByInducStmt(stmt)),
+            ExecStmtResult::By(ExecByStmtResult::Induc(
+                crate::execute::execute_by_stmt::ExecByInducStmtResult::Success(proof),
+            )),
+        ) => {
+            let expected: Vec<Fact> = stmt.to_prove.iter().cloned().map(Fact::from).collect();
+            if stmt.param_binding != proof.parameter.name
+                || stmt.induc_from != proof.induc_from
+                || expected != proof.goals
+            {
+                false
+            } else {
+                let (base, step) = match &proof.body {
+                    crate::execute::execute_by_stmt::ByInducBodySuccess::Structured {
+                        base,
+                        step,
+                    } => {
+                        if stmt.base_proof.is_none()
+                            || stmt.step_proof.is_none()
+                            || !stmt.proof.is_empty()
+                        {
+                            return Err(LeanCompileError::unsupported("Induction/BodyShape"));
+                        }
+                        (base, step)
+                    }
+                    crate::execute::execute_by_stmt::ByInducBodySuccess::Unstructured {
+                        base,
+                        step,
+                    } => {
+                        if stmt.base_proof.is_some() || stmt.step_proof.is_some() {
+                            return Err(LeanCompileError::unsupported("Induction/BodyShape"));
+                        }
+                        (base, step)
+                    }
+                };
+                let base_source = stmt.base_proof.as_deref().unwrap_or(&stmt.proof);
+                let step_source = stmt.step_proof.as_deref().unwrap_or(&stmt.proof);
+                if base_source.len() != base.proof_steps.len()
+                    || step_source.len() != step.proof_steps.len()
+                {
+                    false
+                } else {
+                    for (source, result) in base_source
+                        .iter()
+                        .zip(&base.proof_steps)
+                        .chain(step_source.iter().zip(&step.proof_steps))
+                    {
+                        validate_statement_capture(source, result)?;
+                    }
+                    true
+                }
+            }
         }
         _ => return Err(LeanCompileError::unsupported("Theorem/ProofStepCapture")),
     };
@@ -632,6 +722,10 @@ pub(super) fn instantiated_object_matches(
         (
             Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)),
             Obj::ArithmeticOperator(ArithmeticOperator::Neg(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)),
+            Obj::ArithmeticOperator(ArithmeticOperator::Abs(b)),
         ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
         _ => expected.ir() == actual.ir(),
     }

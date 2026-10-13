@@ -17,13 +17,15 @@ impl LitexToLeanCompiler {
             ExecByStmtResult::Def(result) => {
                 self.compile_by_def_result(result, position, index, local)
             }
+            ExecByStmtResult::Induc(result) => {
+                self.compile_by_induc_result(result, position, index, local)
+            }
             ExecByStmtResult::Cases(_)
             | ExecByStmtResult::Contra(_)
             | ExecByStmtResult::Extension(_)
             | ExecByStmtResult::FnExtension(_)
             | ExecByStmtResult::EnumerateFiniteSet(_)
             | ExecByStmtResult::For(_)
-            | ExecByStmtResult::Induc(_)
             | ExecByStmtResult::StrongInduc(_) => Err(LeanCompileError::unsupported("By")),
         }
     }

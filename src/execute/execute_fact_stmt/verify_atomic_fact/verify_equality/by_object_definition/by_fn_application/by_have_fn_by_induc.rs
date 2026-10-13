@@ -27,8 +27,19 @@ use super::super::helper::{
 };
 
 pub struct ByUnfoldHaveFnByInducApplicationObjectDefinitionProof {
+    pub selected_case_path: Vec<InducCaseSelectionProof>,
     pub expanded_body: Obj,
     pub residual_equal: VerifyFactResult,
+}
+
+pub struct InducCaseSelectionProof {
+    pub case_index: usize,
+    pub guard: VerifyFactResult,
+}
+
+pub struct MatchedInducCaseBodyProof {
+    pub selected_case_path: Vec<InducCaseSelectionProof>,
+    pub expanded_body: Obj,
 }
 
 impl Runtime {
@@ -56,11 +67,15 @@ impl Runtime {
             return Ok(None);
         }
         let subst = set_bound_params_to_arg_map(&stmt.fn_set_clause.set_bound_parameters, &args);
-        let Some(expanded_body) =
+        let Some(matched) =
             self.match_induc_case_body(&stmt.cases, &subst, verify_state.clone())?
         else {
             return Ok(None);
         };
+        let MatchedInducCaseBodyProof {
+            selected_case_path,
+            expanded_body,
+        } = matched;
 
         let residual = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -75,6 +90,7 @@ impl Runtime {
         }
         Ok(Some(
             ByUnfoldHaveFnByInducApplicationObjectDefinitionProof {
+                selected_case_path,
                 expanded_body,
                 residual_equal,
             },
@@ -88,11 +104,11 @@ impl Runtime {
         cases: &[HaveFnByInducCase],
         subst: &HashMap<IdentifierId, Obj>,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<Obj>> {
+    ) -> RuntimeResult<Option<MatchedInducCaseBodyProof>> {
         // Case guards often need arithmetic rewrite (e.g. `1 - 1 = 0`).
         // Guards inherit the definition stage premise ceiling; never restore rewrite.
         let case_guard_state = verify_state.without_rewrite();
-        for case in cases {
+        for (case_index, case) in cases.iter().enumerate() {
             let Ok(inst_case) = self.inst_and_chain_atomic(&case.case_fact, subst) else {
                 continue;
             };
@@ -106,12 +122,25 @@ impl Runtime {
                     let Ok(expanded_body) = self.inst_obj(equal_to, subst) else {
                         continue;
                     };
-                    return Ok(Some(expanded_body));
+                    return Ok(Some(MatchedInducCaseBodyProof {
+                        selected_case_path: vec![InducCaseSelectionProof {
+                            case_index,
+                            guard: case_check,
+                        }],
+                        expanded_body,
+                    }));
                 }
                 HaveFnByInducCaseBody::NestedCases(nested) => {
-                    if let Some(body) =
+                    if let Some(mut body) =
                         self.match_induc_case_body(nested, subst, verify_state.clone())?
                     {
+                        body.selected_case_path.insert(
+                            0,
+                            InducCaseSelectionProof {
+                                case_index,
+                                guard: case_check,
+                            },
+                        );
                         return Ok(Some(body));
                     }
                 }

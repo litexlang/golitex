@@ -1430,7 +1430,7 @@ fn phase1_second_theorem_call_needs_its_own_argument_type_proof_identity() {
         .clear();
     let error = compile_run(&result, &compiler, "phase1_deleted_second_type_proof")
         .expect_err("the alias call cannot skip its argument membership stage");
-    assert_eq!(error.route, "ByThm/Arguments");
+    assert_eq!(error.route, "ByThm/TypeStoreStages");
 
     let (mut result, compiler) = execute(PHASE1_NAMED_ALIAS);
     let proof = &mut by_theorem_mut(&mut result.statement_results[6]).type_proofs[0];
@@ -1440,7 +1440,8 @@ fn phase1_second_theorem_call_needs_its_own_argument_type_proof_identity() {
     }
     let error = compile_run(&result, &compiler, "phase1_changed_second_type_proof_id")
         .expect_err("returned WD cites this exact checked type producer's original identity");
-    assert_eq!(error.route, "FactId/Producer");
+    // The retained original type store detects the changed identity before WD replay.
+    assert_eq!(error.route, "Store/Subject");
 }
 
 #[test]

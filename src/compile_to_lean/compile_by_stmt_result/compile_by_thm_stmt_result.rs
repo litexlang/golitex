@@ -1,3 +1,4 @@
+use crate::ast::stmt::TheoremCall;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -83,175 +84,19 @@ impl LitexToLeanCompiler {
         _declaration_index: usize,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let mut substitution = HashMap::new();
-        let mut application_arguments = Vec::new();
-        let mut definitions = Vec::new();
-        let (domains, conclusions) = match (&registered.fact, &proof.call.arguments) {
-            (Fact::ForallFact(fact), TheoremCallArguments::Parenthesized(args)) => {
-                let parameters: Vec<_> = fact
-                    .typed_parameters
-                    .groups
-                    .iter()
-                    .flat_map(|group| &group.params)
-                    .collect();
-                if args.len() != parameters.len() || proof.type_proofs.len() != parameters.len() {
-                    return Err(LeanCompileError::new(
-                        "ByThm/Arguments",
-                        "The invocation has different arguments or type-proof arity.",
-                    ));
-                }
-                for (parameter, arg) in parameters.iter().zip(args) {
-                    substitution.insert(parameter.id, arg.clone());
-                }
-                let mut offset = 0;
-                for group in &fact.typed_parameters.groups {
-                    let set = match &group.param_type {
-                        ParamType::Obj(set) => set,
-                        _ => return Err(LeanCompileError::unsupported("ByThm/ParameterKind")),
-                    };
-                    for _ in &group.params {
-                        let arg = &args[offset];
-                        let type_position = SourcePosition {
-                            before: offset,
-                            ..*position
-                        };
-                        let member =
-                            self.compile_verify(&proof.type_proofs[offset], &type_position)?;
-                        match &source_subject(&proof.type_proofs[offset])? {
-                            Fact::AtomicFact(AtomicFact::InFact(f))
-                                if f.element.ir() == arg.ir()
-                                    && instantiated_object_matches(set, &f.set, &substitution) => {}
-                            _ => {
-                                return Err(LeanCompileError::new(
-                                    "ByThm/TypeProof",
-                                    "The membership proves another parameter or carrier.",
-                                ));
-                            }
-                        }
-                        application_arguments.push(self.compile_object_reference(
-                            arg,
-                            &SourcePosition {
-                                before: offset + 1,
-                                ..*position
-                            },
-                        )?);
-                        let subject = source_subject(&proof.type_proofs[offset])?;
-                        definitions.push(self.emit_internal_fact(
-                            &subject,
-                            &member,
-                            &type_position,
-                        ));
-                        application_arguments.push(format!("h_{}", subject.fact_id().value()));
-
-                        offset += 1;
-                    }
-                }
-                let conclusions = fact
-                    .then_facts
-                    .iter()
-                    .map(|fact| match fact {
-                        ExistOrAndChainAtomicFact::AtomicFact(atomic) => {
-                            Ok(Fact::AtomicFact(atomic.clone()))
-                        }
-                        ExistOrAndChainAtomicFact::AndFact(fact) => Ok(Fact::AndFact(fact.clone())),
-                        ExistOrAndChainAtomicFact::ChainFact(fact) => {
-                            Ok(Fact::ChainFact(fact.clone()))
-                        }
-                        _ => Err(LeanCompileError::unsupported("ByThm/CompoundConclusion")),
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-                (fact.dom_facts.iter().collect::<Vec<_>>(), conclusions)
-            }
-            (
-                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_),
-                TheoremCallArguments::Bare,
-            ) if proof.type_proofs.is_empty() => (Vec::new(), vec![registered.fact.clone()]),
-            _ => return Err(LeanCompileError::unsupported("ByThm/CallShape")),
-        };
-        if domains.len() != proof.dom_proofs.len()
-            || domains.len() != proof.dom_stores.len()
-            || conclusions.len() != proof.returned_conclusions.len()
-            || conclusions.len() != proof.conclusions_wd.len()
-            || conclusions.is_empty()
-        {
-            return Err(LeanCompileError::new(
-                "ByThm/Stages",
-                "The invocation has different premise, returned-store or WD stages.",
-            ));
-        }
-        for (index, ((domain, result), stored)) in domains
-            .iter()
-            .zip(&proof.dom_proofs)
-            .zip(&proof.dom_stores)
-            .enumerate()
-        {
-            let domain_position = SourcePosition {
-                before: proof.type_proofs.len() + index,
-                ..*position
-            };
-            let compiled = self.compile_verify(result, &domain_position)?;
-            if !instantiated_fact_matches(domain, &source_subject(result)?, &substitution) {
-                return Err(LeanCompileError::new(
-                    "ByThm/Domain",
-                    "A premise proves another instantiated source requirement.",
-                ));
-            }
-            let subject = source_subject(result)?;
-            self.validate_store(&stored.store, &subject)?;
-            definitions.push(self.emit_internal_fact(&subject, &compiled, &domain_position));
-            application_arguments.push(format!("h_{}", subject.fact_id().value()));
-            let published = SourcePosition {
-                before: proof.type_proofs.len() + index + 1,
-                ..*position
-            };
-            let reference = (compiled.0, format!("h_{}", subject.fact_id().value()));
-            definitions
-                .extend(self.compile_stored_inferences(stored, &subject, &reference, &published)?);
-        }
-        let application = if application_arguments.is_empty() {
-            self.context_application(
-                &format!("h_{}", registered.fact.fact_id().value()),
-                declaration_position,
-            )
-        } else {
-            format!(
-                "({} {})",
-                self.context_application(
-                    &format!("h_{}", registered.fact.fact_id().value()),
-                    declaration_position
-                ),
-                application_arguments.join(" ")
-            )
-        };
-        let mut returned_facts = Vec::new();
-        // The runtime forms every conclusion before publishing any returned
-        // package. Later formation cannot cite an earlier returned truth.
-        for (index, ((expected, stored), wd)) in conclusions
-            .iter()
-            .zip(&proof.returned_conclusions)
-            .zip(&proof.conclusions_wd)
-            .enumerate()
-        {
-            let fact = match &stored.store {
-                StoreFactResult::AtomicFact(stored) => Fact::AtomicFact(stored.fact.clone()),
-                StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
-                StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
-                _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
-            };
-            self.validate_store(&stored.store, &fact)?;
-            if !instantiated_fact_matches(expected, &fact, &substitution) {
-                return Err(LeanCompileError::new(
-                    "ByThm/ReturnedSubject",
-                    "The returned producer differs from this theorem instance.",
-                ));
-            }
-            let formation = SourcePosition {
-                before: proof.type_proofs.len() + proof.dom_proofs.len() + index,
-                ..*position
-            };
-            self.compile_fact_wd(wd, &fact, &formation)?;
-            returned_facts.push(fact);
-        }
+        let (mut definitions, application, returned_facts) = self.compile_user_theorem_instance(
+            &proof.call,
+            &proof.type_proofs,
+            &proof.type_stores,
+            &proof.dom_proofs,
+            &proof.dom_stores,
+            &proof.conclusions_wd,
+            &proof.returned_conclusions,
+            registered,
+            declaration_position,
+            position,
+        )?;
+        let conclusions_count = returned_facts.len();
         let return_head =
             proof.type_proofs.len() + proof.dom_proofs.len() + proof.conclusions_wd.len();
         for (index, (fact, stored)) in returned_facts
@@ -265,7 +110,7 @@ impl LitexToLeanCompiler {
             };
             let compiled = (
                 self.fact_proposition(fact, &prior)?,
-                conjunction_projection(&application, index, conclusions.len()),
+                conjunction_projection(&application, index, conclusions_count),
             );
             definitions.push(self.emit_internal_fact(fact, &compiled, &prior));
             let published = SourcePosition {
@@ -339,5 +184,202 @@ impl LitexToLeanCompiler {
                 selected.1
             ),
         ))
+    }
+    pub(in crate::compile_to_lean) fn compile_user_theorem_instance(
+        &self,
+        call: &TheoremCall,
+        type_proofs: &[VerifyFactResult],
+        type_stores: &[StoreFactAndInferResult],
+        dom_proofs: &[VerifyFactResult],
+        dom_stores: &[StoreFactAndInferResult],
+        conclusions_wd: &[FactWellDefinedProof],
+        returned_conclusions: &[StoreFactAndInferResult],
+        registered: &DefThmStmt,
+        declaration_position: &SourcePosition<'_>,
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, String, Vec<Fact>), LeanCompileError> {
+        let mut substitution = HashMap::new();
+        if type_proofs.len() != type_stores.len() {
+            return Err(LeanCompileError::new(
+                "ByThm/TypeStoreStages",
+                "The actual ordered type proofs and stores have different stage counts.",
+            ));
+        }
+        let mut application_arguments = Vec::new();
+        let mut definitions = Vec::new();
+        let (domains, conclusions) = match (&registered.fact, &call.arguments) {
+            (Fact::ForallFact(fact), TheoremCallArguments::Parenthesized(args)) => {
+                let parameters: Vec<_> = fact
+                    .typed_parameters
+                    .groups
+                    .iter()
+                    .flat_map(|group| &group.params)
+                    .collect();
+                if args.len() != parameters.len() || type_proofs.len() != parameters.len() {
+                    return Err(LeanCompileError::new(
+                        "ByThm/Arguments",
+                        "The invocation has different arguments or type-proof arity.",
+                    ));
+                }
+                for (parameter, arg) in parameters.iter().zip(args) {
+                    substitution.insert(parameter.id, arg.clone());
+                }
+                let mut offset = 0;
+                for group in &fact.typed_parameters.groups {
+                    let set = match &group.param_type {
+                        ParamType::Obj(set) => set,
+                        _ => return Err(LeanCompileError::unsupported("ByThm/ParameterKind")),
+                    };
+                    for _ in &group.params {
+                        let arg = &args[offset];
+                        let type_position = SourcePosition {
+                            before: offset,
+                            ..*position
+                        };
+                        let member = self.compile_verify(&type_proofs[offset], &type_position)?;
+                        match &source_subject(&type_proofs[offset])? {
+                            Fact::AtomicFact(AtomicFact::InFact(f))
+                                if f.element.ir() == arg.ir()
+                                    && instantiated_object_matches(set, &f.set, &substitution) => {}
+                            _ => {
+                                return Err(LeanCompileError::new(
+                                    "ByThm/TypeProof",
+                                    "The membership proves another parameter or carrier.",
+                                ));
+                            }
+                        }
+                        application_arguments.push(self.compile_object_reference(
+                            arg,
+                            &SourcePosition {
+                                before: offset + 1,
+                                ..*position
+                            },
+                        )?);
+                        let subject = source_subject(&type_proofs[offset])?;
+                        definitions.push(self.emit_internal_fact(
+                            &subject,
+                            &member,
+                            &type_position,
+                        ));
+                        application_arguments.push(format!("h_{}", subject.fact_id().value()));
+                        self.validate_store(&type_stores[offset].store, &subject)?;
+                        let published = SourcePosition {
+                            before: offset + 1,
+                            ..*position
+                        };
+                        definitions.extend(self.compile_stored_inferences(
+                            &type_stores[offset],
+                            &subject,
+                            &(member.0, format!("h_{}", subject.fact_id().value())),
+                            &published,
+                        )?);
+
+                        offset += 1;
+                    }
+                }
+                let conclusions = fact
+                    .then_facts
+                    .iter()
+                    .map(|fact| match fact {
+                        ExistOrAndChainAtomicFact::AtomicFact(atomic) => {
+                            Ok(Fact::AtomicFact(atomic.clone()))
+                        }
+                        ExistOrAndChainAtomicFact::AndFact(fact) => Ok(Fact::AndFact(fact.clone())),
+                        ExistOrAndChainAtomicFact::ChainFact(fact) => {
+                            Ok(Fact::ChainFact(fact.clone()))
+                        }
+                        _ => Err(LeanCompileError::unsupported("ByThm/CompoundConclusion")),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                (fact.dom_facts.iter().collect::<Vec<_>>(), conclusions)
+            }
+            (
+                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_),
+                TheoremCallArguments::Bare,
+            ) if type_proofs.is_empty() => (Vec::new(), vec![registered.fact.clone()]),
+            _ => return Err(LeanCompileError::unsupported("ByThm/CallShape")),
+        };
+        if domains.len() != dom_proofs.len()
+            || domains.len() != dom_stores.len()
+            || conclusions.len() != returned_conclusions.len()
+            || conclusions.len() != conclusions_wd.len()
+            || conclusions.is_empty()
+        {
+            return Err(LeanCompileError::new(
+                "ByThm/Stages",
+                "The invocation has different premise, returned-store or WD stages.",
+            ));
+        }
+        for (index, ((domain, result), stored)) in
+            domains.iter().zip(dom_proofs).zip(dom_stores).enumerate()
+        {
+            let domain_position = SourcePosition {
+                before: type_proofs.len() + index,
+                ..*position
+            };
+            let compiled = self.compile_verify(result, &domain_position)?;
+            if !instantiated_fact_matches(domain, &source_subject(result)?, &substitution) {
+                return Err(LeanCompileError::new(
+                    "ByThm/Domain",
+                    "A premise proves another instantiated source requirement.",
+                ));
+            }
+            let subject = source_subject(result)?;
+            self.validate_store(&stored.store, &subject)?;
+            definitions.push(self.emit_internal_fact(&subject, &compiled, &domain_position));
+            application_arguments.push(format!("h_{}", subject.fact_id().value()));
+            let published = SourcePosition {
+                before: type_proofs.len() + index + 1,
+                ..*position
+            };
+            let reference = (compiled.0, format!("h_{}", subject.fact_id().value()));
+            definitions
+                .extend(self.compile_stored_inferences(stored, &subject, &reference, &published)?);
+        }
+        let application = if application_arguments.is_empty() {
+            self.context_application(
+                &format!("h_{}", registered.fact.fact_id().value()),
+                declaration_position,
+            )
+        } else {
+            format!(
+                "({} {})",
+                self.context_application(
+                    &format!("h_{}", registered.fact.fact_id().value()),
+                    declaration_position
+                ),
+                application_arguments.join(" ")
+            )
+        };
+        let mut returned_facts = Vec::new();
+        // The runtime forms every conclusion before publishing any returned
+        // package. Later formation cannot cite an earlier returned truth.
+        for (index, ((expected, stored), wd)) in conclusions
+            .iter()
+            .zip(returned_conclusions)
+            .zip(conclusions_wd)
+            .enumerate()
+        {
+            let fact = match &stored.store {
+                StoreFactResult::AtomicFact(stored) => Fact::AtomicFact(stored.fact.clone()),
+                StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
+                StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
+                _ => return Err(LeanCompileError::unsupported("ByThm/ReturnedPackage")),
+            };
+            self.validate_store(&stored.store, &fact)?;
+            if !instantiated_fact_matches(expected, &fact, &substitution) {
+                return Err(LeanCompileError::new(
+                    "ByThm/ReturnedSubject",
+                    "The returned producer differs from this theorem instance.",
+                ));
+            }
+            let formation = SourcePosition {
+                before: type_proofs.len() + dom_proofs.len() + index,
+                ..*position
+            };
+            self.compile_fact_wd(wd, &fact, &formation)?;
+            returned_facts.push(fact);
+        }
+        Ok((definitions, application, returned_facts))
     }
 }

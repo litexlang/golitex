@@ -4,6 +4,7 @@ use crate::execute::StoreHaveObjAndInferResult;
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::prelude::*;
+use crate::store_fact_and_infer::InferPositiveRealPowerPositivityResult;
 use crate::store_fact_and_infer::StoreInferredFactResult;
 use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualFactResult, InferResult};
 use crate::store_fact_and_infer::{
@@ -63,6 +64,13 @@ pub(super) fn project_store_and_infer(
     let cancellation_rules = project_cancellation_infer(infer, runtime);
     if !cancellation_rules.is_empty() {
         entries.push(("cancellation_rules", JsonValue::Array(cancellation_rules)));
+    }
+    let positive_power_rules = project_positive_power_infer(infer, runtime);
+    if !positive_power_rules.is_empty() {
+        entries.push((
+            "positive_real_power_rules",
+            JsonValue::Array(positive_power_rules),
+        ));
     }
     let order_rules = project_conditional_order_infer(infer, runtime);
     if !order_rules.is_empty() {
@@ -492,6 +500,44 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
         }
     }
     rules
+}
+
+fn project_positive_power_infer(infer: &InferResult, runtime: &Runtime) -> Vec<JsonValue> {
+    let atomic: Vec<&InferAtomicFactResult> = match infer {
+        InferResult::AtomicFact(atomic) => vec![atomic],
+        InferResult::AndFact(and) => and.components.iter().collect(),
+        InferResult::ChainFact(chain) => chain
+            .adjacent_infers
+            .iter()
+            .map(|edge| &edge.infer)
+            .collect(),
+        _ => Vec::new(),
+    };
+    atomic.into_iter().flat_map(|atomic| {
+        let InferAtomicFactResult::EqualFact(rules) = atomic else { return Vec::new(); };
+        rules.iter().filter_map(|rule| {
+            let InferEqualFactResult::PositiveRealPower(rule) = rule else { return None; };
+            Some(object_for(runtime, vec![
+                ("rule", string("PositiveRealPower")),
+                ("transports", JsonValue::Array(rule.transports.iter().map(|transport| {
+                    let (variant, proof) = match &transport.positivity {
+                        InferPositiveRealPowerPositivityResult::PowerPositive(proof) => ("PowerPositive", proof),
+                        InferPositiveRealPowerPositivityResult::BasePositive(proof) => ("BasePositive", proof),
+                    };
+                    object_for(runtime, vec![
+                        ("source", fact_id_entry(runtime, transport.source_fact_id)),
+                        ("power", string(transport.power.readable_string())),
+                        ("positivity", object_for(runtime, vec![
+                            ("type", string(variant)),
+                            ("proof", super::verify::project_verify_fact(proof, runtime)),
+                        ])),
+                        ("exponent_real", super::verify::project_verify_fact(&transport.exponent_real, runtime)),
+                        ("derived", project_inferred_store(&transport.derived, runtime)),
+                    ])
+                }).collect())),
+            ]))
+        }).collect::<Vec<_>>()
+    }).collect()
 }
 
 pub(super) fn project_have_store_ids(fact_ids: &[FactId], runtime: &Runtime) -> JsonValue {

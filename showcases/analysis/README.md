@@ -12,9 +12,9 @@ countability. Definitions and proofs remain in chapter order, so a reader can
 follow the mathematical dependencies as well as individual results.
 
 For a shorter introduction, start with [Analysis with Litex](../analysis_notes/README.md).
-Its single lecture file develops reciprocal and geometric sequences and a
-geometric series by citing the chapter results here. Return to these chapters
-for the definitions, supporting lemmas and longer proofs.
+Its self-contained lecture file develops reciprocal and geometric sequences
+and a geometric series with local definitions and proofs. These chapters
+provide a separate, broader mathematical development.
 
 The collection contains selected Chapters 1–8 and Appendix A. Familiar number
 systems and operations use Litex builtins; construction and completeness
@@ -117,11 +117,12 @@ statements. All ten published source files retain the exact executable lines,
 indentation and order from those verified inputs; only inactive prose,
 comments and blank lines were removed. [verification.json](verification.json)
 records the original binary hash, source hashes and publication checks.
-The public chapter module also passed loading as the `Tao` dependency of the
-short lecture on a current release build. The independent lecture file check
-passed all 15 main-file statements; its [receipt](../analysis_notes/verification.json)
-records the exact public dependency hashes and executable. These checks do
-not establish compatibility with every Litex release.
+A prior import-based lecture also verified this public chapter module as its
+dependency on a current release build. That lecture has since been replaced
+by an independent one. The [historical receipt](lecture-import-verification_2026_10_13.json)
+retains the old input hashes and 15 main-file results; it does not describe
+the current short lecture. These checks do not establish compatibility with
+every Litex release.
 
 The retained scope has **zero active direct `trust` statements**, while its
 original foundation axioms remain. Scope omissions are not proofs. For space, set-indexed sums, the optional

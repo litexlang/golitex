@@ -2,7 +2,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
-use crate::execute::ExecDefPropStmtResult;
+use crate::execute::{ExecDefPropStmtResult, ExecHaveFnByInducStmtResult};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -30,6 +30,37 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+                    ExecHaveFnByInducStmtResult::Success(proof),
+                )) => {
+                    for group in &proof.statement.fn_set_clause.set_bound_parameters.groups {
+                        for parameter in &group.params {
+                            if !out.contains(&parameter.id) {
+                                out.push(parameter.id);
+                            }
+                        }
+                    }
+                }
+                ExecStmtResult::By(crate::execute::execute_by_stmt::ExecByStmtResult::Induc(
+                    crate::execute::execute_by_stmt::ExecByInducStmtResult::Success(proof),
+                )) => {
+                    if !out.contains(&proof.parameter.id) {
+                        out.push(proof.parameter.id);
+                    }
+                    let (base, step) = match &proof.body {
+                        crate::execute::execute_by_stmt::ByInducBodySuccess::Unstructured {
+                            base,
+                            step,
+                        }
+                        | crate::execute::execute_by_stmt::ByInducBodySuccess::Structured {
+                            base,
+                            step,
+                        } => (base, step),
+                    };
+                    for result in base.proof_steps.iter().chain(&step.proof_steps) {
+                        statement(result, out);
+                    }
+                }
                 ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
                     ExecClaimStmtResult::Success(proof),
                 )) => {
@@ -359,6 +390,25 @@ impl LitexToLeanCompiler {
                     .collect::<Result<Vec<_>, _>>()?;
                 conjunction_proposition(propositions)
             }
+            Fact::OrFact(fact) => {
+                let mut branches = fact
+                    .facts
+                    .iter()
+                    .map(|branch| {
+                        self.fact_proposition(
+                            &crate::ast::fact::and_chain_as_fact(branch),
+                            position,
+                        )
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let Some(mut proposition) = branches.pop() else {
+                    return Err(LeanCompileError::unsupported("Or/Empty"));
+                };
+                while let Some(branch) = branches.pop() {
+                    proposition = format!("({branch} ∨ {proposition})");
+                }
+                Ok(proposition)
+            }
             _ => Err(LeanCompileError::unsupported("Declaration/CompoundFact")),
         }
     }
@@ -474,6 +524,17 @@ impl LitexToLeanCompiler {
             return Ok(term);
         }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
+            if let Ok((proof, _)) = position.visible_recursive_self(id) {
+                return Ok(format!("_object_i{}", proof.statement.name.id.value()));
+            }
+            if let Ok((proof, producer, _)) = position.visible_recursive_function(id) {
+                let name = format!("_object_i{}", proof.statement.name.id.value());
+                return Ok(if producer.is_local() {
+                    name
+                } else {
+                    self.context_application(&name, &producer)
+                });
+            }
             if let Ok((proof, producer, _)) = position.visible_function(id) {
                 return Ok(self.context_application(
                     &format!("_object_i{}", proof.statement.name.id.value()),
@@ -481,6 +542,9 @@ impl LitexToLeanCompiler {
                 ));
             }
             return self.compile_parameter_reference(*id, position);
+        }
+        if let Some(term) = self.compile_recursive_signature_reference(object, position)? {
+            return Ok(term);
         }
         if let Some(term) =
             position.with_visible_wd(object, &mut |wd, producer| self.compile_wd(wd, producer))?

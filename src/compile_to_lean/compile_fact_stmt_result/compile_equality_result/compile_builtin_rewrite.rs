@@ -146,10 +146,14 @@ impl LitexToLeanCompiler {
             children
                 .push(self.compile_cited_equality_substitution(a, b, equalities, used, position)?);
         }
+        let operation_term = arithmetic_operation_term(operation);
         Ok(if children.len() == 1 {
-            format!("(congrArg M.{operation} {})", children[0])
+            format!("(congrArg {operation_term} {})", children[0])
         } else {
-            format!("(congrArg₂ M.{operation} {} {})", children[0], children[1])
+            format!(
+                "(congrArg₂ {operation_term} {} {})",
+                children[0], children[1]
+            )
         })
     }
     fn compile_fn_equal_to_anonymous_function_rewrite(
@@ -258,10 +262,14 @@ impl LitexToLeanCompiler {
                 a, b, expansions, next, parent, completed,
             )?);
         }
+        let operation_term = arithmetic_operation_term(operation);
         Ok(if children.len() == 1 {
-            format!("(congrArg M.{operation} {})", children[0])
+            format!("(congrArg {operation_term} {})", children[0])
         } else {
-            format!("(congrArg₂ M.{operation} {} {})", children[0], children[1])
+            format!(
+                "(congrArg₂ {operation_term} {} {})",
+                children[0], children[1]
+            )
         })
     }
 }

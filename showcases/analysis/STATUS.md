@@ -67,9 +67,10 @@ registered Chapter 8 run, the pinned executable hash and the ten original
 source hashes. Publication removes inactive prose and comments, preserving
 all executable lines and their order. The record separately identifies
 executable-content equality, public parse checks and the small README example
-check. Parsing alone is not proof verification. The public exports also passed loading as the dependency of the independently
-verified [short lecture](../analysis_notes/verification.json) on the recorded
-current release build. Its 15 main-file results belong to the lecture. No
+check. Parsing alone is not proof verification. The public exports also passed loading as the dependency of an earlier
+import-based lecture on the recorded current release build. Its
+[historical receipt](lecture-import-verification_2026_10_13.json) retains
+the old 15 main-file results. The current short lecture is independent. No
 Lean replay or whole-book acceptance is claimed.
 
 The earlier small-example receipt is retained as

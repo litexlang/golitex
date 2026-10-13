@@ -212,17 +212,18 @@ fn positive_sign_consumer_rejects_missing_original_store_and_changed_subject() {
 
 #[test]
 fn positive_literal_and_rational_memberships_replay_checked_closed_values() {
-    let (result, compiler) = checked("1 $in R+\n(1 + 1) / 3 $in R+\n$is_nonempty_set(R+)\n");
+    let (result, compiler) =
+        checked("1 $in R+\n(1 + 1) / 3 $in R+\n3 / 2 $in R+\n$is_nonempty_set(R+)\n");
     let lean = compiler
         .compile_run(&result, "positive_closed_values")
         .expect("closed certificates");
-    assert!(lean.contains("Litex.numberInRPos"));
+    assert!(lean.contains("Litex.NativeBridge.numberInRPosOfEq"));
     assert!(lean.contains("Litex.rPosNonempty"));
 }
 
 #[test]
 fn positive_function_return_observation_preserves_the_actual_call_object() {
-    let source = "have fn positive_identity(x R+) R+ = x\nforall x R+:\n    positive_identity(x) + 0 = x\nfn(x R+) R+ {x}(1) + 0 = 1\n";
+    let source = "have fn positive_identity(x R+) R+ = x\nforall x R+:\n    positive_identity(x) + 0 = x\nlet positive_anonymous = fn(x R+) R+ {x}\npositive_anonymous(1) = 1\npositive_anonymous(1) + 0 = 1\n";
     let (result, compiler) = checked(source);
     let lean = compiler
         .compile_run(&result, "positive_function_observation")

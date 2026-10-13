@@ -968,6 +968,50 @@ theorem asReal_proofIndependent {α : Type v} [Representation M α]
   Complex.ofReal_injective
     (M.number_injective ((asReal_spec a h₁).symm.trans (asReal_spec a h₂)))
 
+/-- Natural observation reads the fixed denotation. A source membership proof
+justifies the observation; it does not choose a new host representation. -/
+noncomputable def naturalValue (x : M.Value) : ℕ := by
+  classical
+  exact if h : ∃ n : ℕ, x = M.number (n : ℂ) then Classical.choose h else 0
+
+theorem naturalValue_spec (x : M.Value) (hx : M.mem x (M.standard .natural)) :
+    x = M.number (naturalValue x : ℂ) := by
+  classical
+  have h := (M.natural_members x).mp hx
+  unfold naturalValue
+  rw [dif_pos h]
+  exact Classical.choose_spec h
+
+theorem naturalValue_number (n : ℕ) : naturalValue (M.number (n : ℂ)) = n := by
+  have h := M.number_injective
+    (naturalValue_spec (M.number (n : ℂ)) (numberInN n))
+  exact_mod_cast h.symm
+
+noncomputable def asNat {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (_haN : In a N) : ℕ := naturalValue (denote a)
+
+theorem asNat_spec {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haN : In a N) :
+    Same a (number (asNat a haN : ℂ)) := naturalValue_spec (denote a) haN
+
+theorem asNat_proofIndependent {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h₁ h₂ : In a N) : asNat a h₁ = asNat a h₂ := rfl
+
+theorem asNat_ofDenote {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haN : In a N) (n : ℕ)
+    (ha : denote a = M.number (n : ℂ)) : asNat a haN = n := by
+  have hs : denote a = M.number (asNat a haN : ℂ) := asNat_spec a haN
+  exact_mod_cast M.number_injective (hs.symm.trans ha)
+
+theorem denotePowStructuralNat {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β)) (n : ℕ)
+    (heValue : Same p.val.exponent (number (n : ℂ))) (x : ℂ)
+    (hBase : denote p.val.base = M.number x) : denote p = M.number (x ^ n) := by
+  change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+  change denote p.val.exponent = M.number (n : ℂ) at heValue
+  rw [hBase, heValue, M.pow_numbers_nat]
+
 theorem asComplex_eq_asReal {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haC : In a C) (haR : In a R) :
     asComplex a haC = (asReal a haR : ℂ) :=
@@ -1035,6 +1079,72 @@ theorem lt_iff_asReal {α : Type v} {β : Type w}
 end Litex.NativeBridge
 
 namespace Litex
+
+/-- A total raw interpretation is used only through an owned absolute-value
+object whose original argument is certified real. -/
+noncomputable def absValue {M : Semantics.{u}} (x : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ r : ℝ, x = M.number (r : ℂ) then
+    M.number ((|Classical.choose h| : ℝ) : ℂ) else M.number 0
+
+theorem absValue_number {M : Semantics.{u}} (r : ℝ) :
+    absValue (M.number (r : ℂ)) = M.number ((|r| : ℝ) : ℂ) := by
+  classical
+  have h : ∃ s : ℝ, M.number (r : ℂ) = M.number (s : ℂ) := ⟨r, rfl⟩
+  have hr : Classical.choose h = r :=
+    (Complex.ofReal_injective (M.number_injective (Classical.choose_spec h))).symm
+  unfold absValue
+  rw [dif_pos h, hr]
+
+structure AbsObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance absRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (AbsObj (M := M) α) where
+  wd a := In a.arg R
+  denote a := absValue (denote a.arg)
+  wd_isSet {a} ha := by
+    obtain ⟨r, hr⟩ := (M.real_members (denote a.arg)).mp ha
+    exact M.member_isSet ((M.real_members _).mpr ⟨|r|, by
+      rw [hr, absValue_number]⟩)
+
+noncomputable def abs {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) : Obj (M := M) (AbsObj (M := M) α) :=
+  ⟨⟨a⟩, haR⟩
+
+namespace NativeBridge
+
+theorem denoteAbs {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (r : ℝ)
+    (hr : denote a = M.number (r : ℂ)) :
+    denote (abs a haR) = M.number ((|r| : ℝ) : ℂ) := by
+  change absValue (denote a) = _
+  rw [hr, absValue_number]
+
+end NativeBridge
+
+theorem absInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) : In (abs a haR) R :=
+  (M.real_members _).mpr ⟨|NativeBridge.asReal a haR|,
+    NativeBridge.denoteAbs a haR _ (NativeBridge.asReal_spec a haR)⟩
+
+theorem absInC {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) : In (abs a haR) C :=
+  realToComplex _ (absInR a haR)
+
+theorem absNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) : Le (number 0) (abs a haR) :=
+  NativeBridge.leOfDenoteReal _ _ 0 |NativeBridge.asReal a haR| rfl
+    (NativeBridge.denoteAbs a haR _ (NativeBridge.asReal_spec a haR)) (abs_nonneg _)
+
+theorem absOfNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) :
+    Same (abs a haR) a := by
+  have h := (NativeBridge.le_iff_ofDenoteReal (number 0) a 0
+    (NativeBridge.asReal a haR) rfl (NativeBridge.asReal_spec a haR)).mp ha0
+  exact (NativeBridge.denoteAbs a haR _ (NativeBridge.asReal_spec a haR)).trans
+    ((congrArg (fun r : ℝ => M.number (r : ℂ)) (abs_of_nonneg h)).trans
+      (NativeBridge.asReal_spec a haR).symm)
 
 theorem addCancelRightRight {M : Semantics.{u}}
     {α : Type v} {β : Type w} {γ : Type x}
@@ -1272,6 +1382,25 @@ theorem ltToLe {M : Semantics.{u}} {α : Type v} {β : Type w}
   obtain ⟨r, s, hr, hs, h⟩ := hab
   exact ⟨r, s, hr, hs, le_of_lt h⟩
 
+theorem leEqOrLt {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (h : Le a b) : Same a b ∨ Lt a b := by
+  obtain ⟨r, s, hr, hs, hrs⟩ := h
+  rcases eq_or_lt_of_le hrs with equal | strict
+  · exact Or.inl (hr.trans ((congrArg (fun x : ℝ => M.number (x : ℂ)) equal).trans hs.symm))
+  · exact Or.inr ⟨r, s, hr, hs, strict⟩
+
+/-- The selected integer-tail certificate retains both original integer
+memberships even though the checked order alternative also holds for reals. -/
+theorem integerSuccessorTail {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (subject : Obj (M := M) α) (base : Obj (M := M) β)
+    (_hSubjectZ : In subject Z) (_hBaseZ : In base Z) (hLower : Le base subject) :
+    Same subject base ∨ Lt base subject := by
+  rcases leEqOrLt base subject hLower with equal | strict
+  · exact Or.inl equal.symm
+  · exact Or.inr strict
+
 theorem ltNotSame {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
     (a : Obj (M := M) α) (b : Obj (M := M) β) (hab : Lt a b) : ¬ Same a b := by
@@ -1320,6 +1449,81 @@ theorem divPositive {M : Semantics.{u}} {α : Type v} {β : Type w}
     rfl ?_ (div_pos hposR hposS)
   change M.divValue (denote a) (denote b) = M.number ((r / s : ℝ) : ℂ)
   rw [hr, hs, M.div_numbers _ _ hsNonzero, Complex.ofReal_div]
+
+theorem mulPositive {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haC : In a C) (hbC : In b C)
+    (ha : Lt (number 0) a) (hb : Lt (number 0) b) :
+    Lt (number 0) (mul a b haC hbC) := by
+  obtain ⟨r₀, r, hzeroR, hr, hposR⟩ := ha
+  obtain ⟨s₀, s, hzeroS, hs, hposS⟩ := hb
+  change M.number 0 = M.number (r₀ : ℂ) at hzeroR
+  change M.number 0 = M.number (s₀ : ℂ) at hzeroS
+  have hr₀ : r₀ = 0 := Complex.ofReal_injective (M.number_injective hzeroR).symm
+  have hs₀ : s₀ = 0 := Complex.ofReal_injective (M.number_injective hzeroS).symm
+  subst r₀
+  subst s₀
+  refine NativeBridge.ltOfDenoteReal (number 0) (mul a b haC hbC) 0 (r * s)
+    rfl ?_ (mul_pos hposR hposS)
+  change M.mulValue (denote a) (denote b) = M.number ((r * s : ℝ) : ℂ)
+  rw [hr, hs, M.mul_numbers, Complex.ofReal_mul]
+
+theorem powStructuralPositiveOfPositive {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β))
+    (hbase : Lt (number 0) p.val.base) : Lt (number 0) p := by
+  obtain ⟨r₀, r, hzero, hr, hpos⟩ := hbase
+  change M.number 0 = M.number (r₀ : ℂ) at hzero
+  have hr₀ : r₀ = 0 := Complex.ofReal_injective (M.number_injective hzero).symm
+  subst r₀
+  rcases p.wd with ⟨_haR, n, _heN, he⟩ | ⟨_haC, n, _heN, he⟩ |
+    ⟨_haC, z, _heZ, ha0, he⟩
+  · refine NativeBridge.ltOfDenoteReal (number 0) p 0 (r ^ n) rfl ?_ (pow_pos hpos n)
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    change denote p.val.exponent = M.number (n : ℂ) at he
+    rw [hr, he, M.pow_numbers_nat, Complex.ofReal_pow]
+  · refine NativeBridge.ltOfDenoteReal (number 0) p 0 (r ^ n) rfl ?_ (pow_pos hpos n)
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    change denote p.val.exponent = M.number (n : ℂ) at he
+    rw [hr, he, M.pow_numbers_nat, Complex.ofReal_pow]
+  · have hr0 : (r : ℂ) ≠ 0 := fun h => ha0 (hr.trans (congrArg M.number h))
+    refine NativeBridge.ltOfDenoteReal (number 0) p 0 (r ^ z) rfl ?_ (zpow_pos hpos z)
+    change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+    change denote p.val.exponent = M.number (z : ℂ) at he
+    rw [hr, he, M.pow_numbers_int _ _ hr0, Complex.ofReal_zpow]
+
+theorem powStructuralPositiveOfEven {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (PowObj (M := M) α β)) (haR : In p.val.base R)
+    (n : ℕ) (heValue : Same p.val.exponent (number (n : ℂ)))
+    (hEven : Even n) (_hPositive : 0 < n)
+    (hBaseNonzero : ¬ Same p.val.base (number 0)) : Lt (number 0) p := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote p.val.base)).mp haR
+  have hr0 : r ≠ 0 := by
+    intro h
+    apply hBaseNonzero
+    change denote p.val.base = M.number 0
+    rw [hr, h, Complex.ofReal_zero]
+  refine NativeBridge.ltOfDenoteReal (number 0) p 0 (r ^ n) rfl ?_ (hEven.pow_pos hr0)
+  change M.powValue (denote p.val.base) (denote p.val.exponent) = _
+  change denote p.val.exponent = M.number (n : ℂ) at heValue
+  rw [hr, heValue, M.pow_numbers_nat, Complex.ofReal_pow]
+
+theorem absPowStructuralSame {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (left : Obj (M := M) (PowObj (M := M) (AbsObj (M := M) α) β))
+    (right : Obj (M := M) (PowObj (M := M) α γ)) (n : ℕ)
+    (hBase : Same left.val.base.val.arg right.val.base)
+    (heL : Same left.val.exponent (number (n : ℂ)))
+    (heR : Same right.val.exponent (number (n : ℂ))) (hEven : Even n) : Same left right := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote left.val.base.val.arg)).mp left.val.base.wd
+  have hrRight : denote right.val.base = M.number (r : ℂ) := hBase.symm.trans hr
+  change M.powValue (absValue (denote left.val.base.val.arg)) (denote left.val.exponent) =
+    M.powValue (denote right.val.base) (denote right.val.exponent)
+  change denote left.val.exponent = M.number (n : ℂ) at heL
+  change denote right.val.exponent = M.number (n : ℂ) at heR
+  rw [hr, hrRight, heL, heR, absValue_number, M.pow_numbers_nat, M.pow_numbers_nat,
+    ← Complex.ofReal_pow, ← Complex.ofReal_pow, hEven.pow_abs]
 
 theorem leTrans {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
     [Representation M α] [Representation M β] [Representation M γ]
@@ -1371,6 +1575,57 @@ theorem integerToNaturalOfNonnegative {M : Semantics.{u}} {α : Type v}
   have hz0 : 0 ≤ z := by exact_mod_cast nonnegative
   have castEq : (z.toNat : ℂ) = (z : ℂ) := by exact_mod_cast Int.toNat_of_nonneg hz0
   exact (M.natural_members _).mpr ⟨z.toNat, hz.trans (congrArg M.number castEq.symm)⟩
+
+theorem integerSuccessorLowerBound {M : Semantics.{u}} {α : Type v}
+    [Representation M α] (a : Obj (M := M) α) (haZ : In a Z)
+    (h0a : Lt (number 0) a) : Le (number 1) a := by
+  obtain ⟨z, hz⟩ := (M.integer_members (denote a)).mp haZ
+  have hzReal : denote a = M.number ((z : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_intCast] using hz
+  have hpos : (0 : ℝ) < (z : ℝ) :=
+    (NativeBridge.lt_iff_ofDenoteReal (number 0) a 0 (z : ℝ) rfl hzReal).mp h0a
+  have hzpos : (0 : ℤ) < z := by exact_mod_cast hpos
+  have hzOne : (1 : ℤ) ≤ z := Int.add_one_le_iff.mpr hzpos
+  exact NativeBridge.leOfDenoteReal (number 1) a 1 (z : ℝ) rfl hzReal
+    (by exact_mod_cast hzOne)
+
+theorem subNonnegative {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SubObj (M := M) α β))
+    (hba : Le p.val.right p.val.left) : Le (number 0) p := by
+  obtain ⟨s, r, hs, hr, hsr⟩ := hba
+  refine NativeBridge.leOfDenoteReal (number 0) p 0 (r - s) rfl ?_ (sub_nonneg.mpr hsr)
+  change M.subValue (denote p.val.left) (denote p.val.right) = _
+  rw [hr, hs, M.sub_numbers, Complex.ofReal_sub]
+
+theorem subtractOneLess {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SubObj (M := M) α β)) (haR : In p.val.left R)
+    (hOne : Same p.val.right (number 1)) : Lt p p.val.left := by
+  obtain ⟨r, hr⟩ := (M.real_members (denote p.val.left)).mp haR
+  refine NativeBridge.ltOfDenoteReal p p.val.left (r - 1) r ?_ hr
+    (sub_lt_self r zero_lt_one)
+  change M.subValue (denote p.val.left) (denote p.val.right) = _
+  change denote p.val.right = M.number 1 at hOne
+  rw [hr, hOne, M.sub_numbers, Complex.ofReal_sub, Complex.ofReal_one]
+
+theorem predecessorInN {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SubObj (M := M) α β)) (hn : In p.val.left N)
+    (hPositive : Lt (number 0) p.val.left)
+    (hOne : Same p.val.right (number 1)) : In p N := by
+  let n := NativeBridge.asNat p.val.left hn
+  have hs : denote p.val.left = M.number (n : ℂ) := NativeBridge.asNat_spec p.val.left hn
+  have hr : denote p.val.left = M.number ((n : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_natCast] using hs
+  have hpos : (0 : ℝ) < (n : ℝ) :=
+    (NativeBridge.lt_iff_ofDenoteReal (number 0) p.val.left 0 (n : ℝ) rfl hr).mp hPositive
+  have hnpos : 0 < n := by exact_mod_cast hpos
+  exact (M.natural_members _).mpr ⟨n - 1, by
+    change M.subValue (denote p.val.left) (denote p.val.right) = _
+    change denote p.val.right = M.number 1 at hOne
+    rw [hs, hOne, M.sub_numbers,
+      Nat.cast_sub (Nat.succ_le_of_lt hnpos), Nat.cast_one]⟩
 
 theorem weakIntegerLowerBoundInN {M : Semantics.{u}} {α : Type v} {β : Type w}
     [Representation M α] [Representation M β]
@@ -1672,6 +1927,53 @@ def semanticObject {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
 theorem semanticObject_denote {M : Semantics.{u}} (x : M.Value) (hx : M.isSet x) :
     denote (semanticObject x hx) = x := rfl
 
+namespace NativeBridge
+
+theorem naturalValue_lt_number {M : Semantics.{u}} (n : ℕ) (x : M.Value)
+    (hx : M.mem x (M.standard .natural))
+    (hLt : Lt (semanticObject x (M.member_isSet hx)) (number (n : ℂ))) :
+    naturalValue x < n := by
+  have h := (lt_iff_ofDenoteReal (semanticObject x (M.member_isSet hx))
+    (number (n : ℂ)) (naturalValue x : ℝ) (n : ℝ)
+    (by simpa only [semanticObject_denote, Complex.ofReal_natCast] using naturalValue_spec x hx)
+    (by simp only [denoteNumber, Complex.ofReal_natCast])).mp hLt
+  exact_mod_cast h
+
+theorem naturalValue_pos {M : Semantics.{u}} (x : M.Value)
+    (hx : M.mem x (M.standard .natural))
+    (hLt : Lt (number 0) (semanticObject x (M.member_isSet hx))) :
+    0 < naturalValue x := by
+  have h := (lt_iff_ofDenoteReal (number 0) (semanticObject x (M.member_isSet hx))
+    0 (naturalValue x : ℝ) rfl
+    (by simpa only [semanticObject_denote, Complex.ofReal_natCast] using naturalValue_spec x hx)).mp hLt
+  exact_mod_cast h
+
+end NativeBridge
+
+/-- The exported index keeps its original representation. Only the proof
+interpretation observes a nonnegative integer as a natural number. -/
+theorem integerInductionFromZero {M : Semantics.{u}}
+    (P : M.Value → Prop) (h0 : P (M.number 0))
+    (hstep : ∀ (k : M.Value) (hkZ : M.mem k (M.standard .integer)),
+      Le (number 0) (semanticObject k (M.member_isSet hkZ)) →
+      P k → P (M.addValue k (M.number 1)))
+    {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haZ : In a Z) (ha0 : Le (number 0) a) : P (denote a) := by
+  have hn := integerToNaturalOfNonnegative a haZ ha0
+  have hall : ∀ n : ℕ, P (M.number (n : ℂ)) := by
+    intro n
+    induction n with
+    | zero => simpa only [Nat.cast_zero] using h0
+    | succ n ih =>
+      have hz : M.mem (M.number (n : ℂ)) (M.standard .integer) :=
+        (M.integer_members _).mpr ⟨(n : ℤ), by simp only [Int.cast_natCast]⟩
+      have hnonnegative := naturalNonnegative
+        (semanticObject (M.number (n : ℂ)) (M.member_isSet hz))
+        (NativeBridge.numberInN n)
+      simpa only [M.add_numbers, Nat.cast_add, Nat.cast_one] using
+        hstep (M.number (n : ℂ)) hz hnonnegative ih
+  exact (NativeBridge.asNat_spec a hn).symm ▸ hall (NativeBridge.asNat a hn)
+
 /-- The bounded set primitives are shared by set builders and function domains.
 The laws are explicit model obligations, proved by the ZF model below. -/
 class SetSemantics (M : Semantics.{u}) where
@@ -1759,6 +2061,17 @@ theorem numberInRPos_iff {M : Semantics.{u}} [SetSemantics M] (r : ℝ) :
 theorem numberInRPos {M : Semantics.{u}} [SetSemantics M] (r : ℝ) (hr : 0 < r) :
     In (number (r : ℂ)) (RPos (M := M)) :=
   (numberInRPos_iff r).mpr hr
+
+namespace NativeBridge
+
+/-- A numeric observer may use a complex expression rather than the real
+embedding itself. The explicit equality preserves the original endpoint. -/
+theorem numberInRPosOfEq {M : Semantics.{u}} [SetSemantics M]
+    (z : ℂ) (r : ℝ) (hz : z = (r : ℂ)) (hr : 0 < r) :
+    In (number (M := M) z) RPos :=
+  inOfDenoteNumber (number z) (r : ℂ) RPos (congrArg M.number hz) (numberInRPos r hr)
+
+end NativeBridge
 
 theorem rPosNonempty {M : Semantics.{u}} [SetSemantics M] :
     IsNonempty (RPos (M := M)) := by
@@ -2503,5 +2816,371 @@ theorem callFormula2_same {α : Type v} {β : Type w} {γ : Type t}
   (callFormula2_denote A E B guard body hReturn a b ha hb hg).trans hBody
 
 end FunctionObjects
+
+end Litex
+
+namespace Litex
+
+/-- An owned recursive declaration keeps both its source step interpretation
+and the exact restricted guard used for recursive self calls. Its denotation
+is a function graph; natural recursion is internal to that interpretation. -/
+structure RecursiveNatFn (M : Semantics.{u}) where
+  output : M.Value
+  output_isSet : M.isSet output
+  restrictedGuard : ℕ → M.Value → Prop
+  baseValue : M.Value
+  stepValue : ℕ → M.Value → M.Value
+
+namespace RecursiveNatFn
+
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+def signature (r : RecursiveNatFn M) : FunctionSignature M :=
+  FunctionSignature.oneTarget .natural r.output r.output_isSet (fun _ => True)
+
+def prefixSignature (r : RecursiveNatFn M) (n : ℕ) : FunctionSignature M :=
+  FunctionSignature.oneTarget .natural r.output r.output_isSet (r.restrictedGuard n)
+
+noncomputable def prefixGraph (r : RecursiveNatFn M) (n : ℕ) (values : ℕ → M.Value) :
+    M.Value := F.graphValue (r.prefixSignature n).domain r.output
+      (fun x => values (NativeBridge.naturalValue x))
+
+/-- Every stage preserves its completed values. Values outside that stage are
+extended with the certified base value, without exposing a native function as
+an exported source object. -/
+noncomputable def history (r : RecursiveNatFn M) : ℕ → ℕ → M.Value
+  | 0 => fun _ => r.baseValue
+  | n + 1 => fun k => if k = n + 1 then
+      r.stepValue (n + 1) (r.prefixGraph (n + 1) (r.history n)) else r.history n k
+
+noncomputable def value (r : RecursiveNatFn M) (n : ℕ) : M.Value := r.history n n
+
+noncomputable def graph (r : RecursiveNatFn M) : M.Value :=
+  F.graphValue r.signature.domain r.output (fun x => r.value (NativeBridge.naturalValue x))
+
+/-- Each obligation is supplied by replaying the source declaration's retained
+case guards, body WD, return proof, and recursive-call requirements. -/
+structure Certified (r : RecursiveNatFn M) : Prop where
+  guardSound : ∀ n x, M.mem x (M.standard .natural) → r.restrictedGuard n x →
+    NativeBridge.naturalValue x < n
+  baseReturn : M.mem r.baseValue r.output
+  stepReturn : ∀ n prefixFn,
+    M.mem prefixFn (F.fnSetValue (r.prefixSignature (n + 1)).domain r.output) →
+      M.mem (r.stepValue (n + 1) prefixFn) r.output
+  stepCongr : ∀ n f g,
+    (∀ x, M.mem x (M.standard .natural) → r.restrictedGuard (n + 1) x →
+      F.callValue f x = F.callValue g x) →
+        r.stepValue (n + 1) f = r.stepValue (n + 1) g
+
+theorem prefixGraph_mem (r : RecursiveNatFn M) (n : ℕ) (values : ℕ → M.Value)
+    (hvalues : ∀ k, M.mem (values k) r.output) :
+    M.mem (r.prefixGraph n values) (F.fnSetValue (r.prefixSignature n).domain r.output) :=
+  FunctionSemantics.graph_inFnSet _ _ _ (fun x _ => hvalues (NativeBridge.naturalValue x))
+
+theorem history_mem (r : RecursiveNatFn M) (h : r.Certified) (n k : ℕ) :
+    M.mem (r.history n k) r.output := by
+  induction n generalizing k with
+  | zero => exact h.baseReturn
+  | succ n ih =>
+    change M.mem (if k = n + 1 then
+      r.stepValue (n + 1) (r.prefixGraph (n + 1) (r.history n)) else r.history n k) r.output
+    split
+    · exact h.stepReturn n _ (r.prefixGraph_mem _ _ ih)
+    · exact ih k
+
+theorem history_completed (r : RecursiveNatFn M) (n k : ℕ) (hk : k ≤ n) :
+    r.history n k = r.value k := by
+  induction n with
+  | zero =>
+    have hk0 : k = 0 := Nat.eq_zero_of_le_zero hk
+    subst k
+    rfl
+  | succ n ih =>
+    by_cases he : k = n + 1
+    · subst k
+      rfl
+    · have hkn : k ≤ n := Nat.le_of_lt_succ (lt_of_le_of_ne hk he)
+      change (if k = n + 1 then _ else r.history n k) = _
+      rw [if_neg he]
+      exact ih hkn
+
+theorem graph_return (r : RecursiveNatFn M) (h : r.Certified) :
+    ∀ x, M.mem x r.signature.domain →
+      M.mem (r.value (NativeBridge.naturalValue x)) r.output :=
+  fun _ _ => r.history_mem h _ _
+
+theorem graph_mem (r : RecursiveNatFn M) (h : r.Certified) :
+    M.mem r.graph (F.fnSetValue r.signature.domain r.output) :=
+  FunctionSemantics.graph_inFnSet _ _ _ (r.graph_return h)
+
+theorem call_graph (r : RecursiveNatFn M) (h : r.Certified)
+    (x : M.Value) (hx : M.mem x (M.standard .natural)) :
+    F.callValue r.graph x = r.value (NativeBridge.naturalValue x) :=
+  FunctionSemantics.call_graphValue _ _ _ (r.graph_return h) x
+    ((FunctionSignature.oneTarget_domain .natural r.output r.output_isSet
+      (fun _ => True) x).mpr ⟨hx, True.intro⟩)
+
+theorem prefix_call_agrees (r : RecursiveNatFn M) (h : r.Certified) (n : ℕ)
+    (x : M.Value) (hx : M.mem x (M.standard .natural))
+    (hg : r.restrictedGuard (n + 1) x) :
+    F.callValue (r.prefixGraph (n + 1) (r.history n)) x = F.callValue r.graph x := by
+  have hp := FunctionSemantics.call_graphValue (r.prefixSignature (n + 1)).domain
+    r.output (fun x => r.history n (NativeBridge.naturalValue x))
+    (fun x _ => r.history_mem h n (NativeBridge.naturalValue x)) x
+    ((FunctionSignature.oneTarget_domain .natural r.output r.output_isSet
+      (r.restrictedGuard (n + 1)) x).mpr ⟨hx, hg⟩)
+  exact hp.trans ((r.history_completed n _ (Nat.le_of_lt_succ (h.guardSound _ _ hx hg))).trans
+    (r.call_graph h x hx).symm)
+
+theorem value_zero (r : RecursiveNatFn M) : r.value 0 = r.baseValue := rfl
+
+theorem value_succ (r : RecursiveNatFn M) (h : r.Certified) (n : ℕ) :
+    r.value (n + 1) = r.stepValue (n + 1) r.graph := by
+  change (if n + 1 = n + 1 then _ else _) = _
+  rw [if_pos rfl]
+  exact h.stepCongr n _ _ (fun x hx hg => r.prefix_call_agrees h n x hx hg)
+
+end RecursiveNatFn
+
+noncomputable instance recursiveNatFnRepresentation {M : Semantics.{u}}
+    [F : FunctionSemantics M] : Representation M (RecursiveNatFn M) where
+  wd r := r.Certified
+  denote r := r.graph
+  wd_isSet {r} h := M.member_isSet (r.graph_mem h)
+
+noncomputable def recursiveNatFnTarget {M : Semantics.{u}} [F : FunctionSemantics M]
+    (B : M.Value) (hB : M.isSet B) (guard : ℕ → M.Value → Prop)
+    (base : M.Value) (step : ℕ → M.Value → M.Value)
+    (hGuard : ∀ n x, M.mem x (M.standard .natural) → guard n x →
+      NativeBridge.naturalValue x < n)
+    (hBase : M.mem base B)
+    (hStep : ∀ n prefixFn,
+      M.mem prefixFn (F.fnSetValue (FunctionSignature.oneTarget .natural B hB
+        (guard (n + 1))).domain B) → M.mem (step (n + 1) prefixFn) B)
+    (hCongr : ∀ n f g,
+      (∀ x, M.mem x (M.standard .natural) → guard (n + 1) x →
+        F.callValue f x = F.callValue g x) → step (n + 1) f = step (n + 1) g) :
+    Obj (M := M) (RecursiveNatFn M) :=
+  ⟨⟨B, hB, guard, base, step⟩, ⟨hGuard, hBase, hStep, hCongr⟩⟩
+
+theorem recursiveNatFnInFnSet {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : Obj (M := M) (RecursiveNatFn M)) : In f (fnSet f.val.signature) :=
+  f.val.graph_mem f.wd
+
+theorem recursiveNatFn_zero {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : Obj (M := M) (RecursiveNatFn M)) :
+    F.callValue (denote f) (M.number 0) = f.val.baseValue := by
+  have hx : M.mem (M.number 0) (M.standard .natural) :=
+    (M.natural_members _).mpr ⟨0, by simp only [Nat.cast_zero]⟩
+  have h := f.val.call_graph f.wd (M.number 0) hx
+  have hn : NativeBridge.naturalValue (M.number 0) = 0 := by
+    simpa only [Nat.cast_zero] using NativeBridge.naturalValue_number (M := M) 0
+  change F.callValue (denote f) (M.number 0) = f.val.value _ at h
+  simpa only [hn, RecursiveNatFn.value_zero] using h
+
+theorem recursiveNatFn_succ {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f : Obj (M := M) (RecursiveNatFn M)) (n : ℕ) :
+    F.callValue (denote f) (M.number ((n + 1 : ℕ) : ℂ)) =
+      f.val.stepValue (n + 1) (denote f) := by
+  have hx : M.mem (M.number ((n + 1 : ℕ) : ℂ)) (M.standard .natural) :=
+    (M.natural_members _).mpr ⟨n + 1, rfl⟩
+  exact (f.val.call_graph f.wd _ hx).trans
+    (by rw [NativeBridge.naturalValue_number]; exact f.val.value_succ f.wd n)
+
+theorem callRecursiveNat_denote {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (f : Obj (M := M) (RecursiveNatFn M)) (a : Obj (M := M) α) (ha : In a N) :
+    denote (callTarget .natural f.val.output f.val.output_isSet (fun _ => True)
+      f a (recursiveNatFnInFnSet f) ha True.intro) =
+      f.val.value (NativeBridge.asNat a ha) :=
+  f.val.call_graph f.wd (denote a) ha
+
+end Litex
+
+namespace Litex.NativeBridge
+
+variable {M : Semantics.{u}}
+
+theorem realWitnessOfNonnegative {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h : Le (number 0) a) :
+    ∃ r : ℝ, denote a = M.number (r : ℂ) ∧ 0 ≤ r := by
+  obtain ⟨r₀, r, hz, hr, hle⟩ := h
+  change M.number 0 = M.number (r₀ : ℂ) at hz
+  have h0 : r₀ = 0 := Complex.ofReal_injective (M.number_injective hz).symm
+  exact ⟨r, hr, h0 ▸ hle⟩
+
+theorem realWitnessOfPositive {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (h : Lt (number 0) a) :
+    ∃ r : ℝ, denote a = M.number (r : ℂ) ∧ 0 < r := by
+  obtain ⟨r₀, r, hz, hr, hlt⟩ := h
+  change M.number 0 = M.number (r₀ : ℂ) at hz
+  have h0 : r₀ = 0 := Complex.ofReal_injective (M.number_injective hz).symm
+  exact ⟨r, hr, h0 ▸ hlt⟩
+
+end Litex.NativeBridge
+
+namespace Litex
+
+theorem addNonnegative {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haC : In a C) (hbC : In b C)
+    (ha : Le (number 0) a) (hb : Le (number 0) b) : Le (number 0) (add a b haC hbC) := by
+  obtain ⟨r, hr, hposR⟩ := NativeBridge.realWitnessOfNonnegative a ha
+  obtain ⟨s, hs, hposS⟩ := NativeBridge.realWitnessOfNonnegative b hb
+  refine NativeBridge.leOfDenoteReal (number 0) (add a b haC hbC) 0 (r + s)
+    rfl ?_ (add_nonneg hposR hposS)
+  change M.addValue (denote a) (denote b) = _
+  rw [hr, hs, M.add_numbers, Complex.ofReal_add]
+
+theorem addPositiveRight {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haC : In a C) (hbC : In b C)
+    (ha : Le (number 0) a) (hb : Lt (number 0) b) : Lt (number 0) (add a b haC hbC) := by
+  obtain ⟨r, hr, hposR⟩ := NativeBridge.realWitnessOfNonnegative a ha
+  obtain ⟨s, hs, hposS⟩ := NativeBridge.realWitnessOfPositive b hb
+  refine NativeBridge.ltOfDenoteReal (number 0) (add a b haC hbC) 0 (r + s)
+    rfl ?_ (add_pos_of_nonneg_of_pos hposR hposS)
+  change M.addValue (denote a) (denote b) = _
+  rw [hr, hs, M.add_numbers, Complex.ofReal_add]
+
+theorem mulNonnegative {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (haC : In a C) (hbC : In b C)
+    (ha : Le (number 0) a) (hb : Le (number 0) b) : Le (number 0) (mul a b haC hbC) := by
+  obtain ⟨r, hr, hposR⟩ := NativeBridge.realWitnessOfNonnegative a ha
+  obtain ⟨s, hs, hposS⟩ := NativeBridge.realWitnessOfNonnegative b hb
+  refine NativeBridge.leOfDenoteReal (number 0) (mul a b haC hbC) 0 (r * s)
+    rfl ?_ (mul_nonneg hposR hposS)
+  change M.mulValue (denote a) (denote b) = _
+  rw [hr, hs, M.mul_numbers, Complex.ofReal_mul]
+
+theorem mulStructuralLeLeft {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (MulObj (M := M) α β))
+    (rhs : Obj (M := M) (MulObj (M := M) γ δ))
+    (hFactorNonnegative : Le (number 0) lhs.val.left)
+    (hOperandsLe : Le lhs.val.right rhs.val.right)
+    (hFactorSame : Same lhs.val.left rhs.val.left) : Le lhs rhs := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfNonnegative lhs.val.left hFactorNonnegative
+  obtain ⟨a, b, ha, hb, hab⟩ := hOperandsLe
+  refine NativeBridge.leOfDenoteReal lhs rhs (c * a) (c * b) ?_ ?_ (mul_le_mul_of_nonneg_left hab hc0)
+  · change M.mulValue (denote lhs.val.left) (denote lhs.val.right) = _
+    rw [hc, ha, M.mul_numbers, Complex.ofReal_mul]
+  · change M.mulValue (denote rhs.val.left) (denote rhs.val.right) = _
+    rw [hFactorSame.symm.trans hc, hb, M.mul_numbers, Complex.ofReal_mul]
+
+theorem mulStructuralLeRight {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (MulObj (M := M) α β))
+    (rhs : Obj (M := M) (MulObj (M := M) γ δ))
+    (hFactorNonnegative : Le (number 0) lhs.val.right)
+    (hOperandsLe : Le lhs.val.left rhs.val.left)
+    (hFactorSame : Same lhs.val.right rhs.val.right) : Le lhs rhs := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfNonnegative lhs.val.right hFactorNonnegative
+  obtain ⟨a, b, ha, hb, hab⟩ := hOperandsLe
+  refine NativeBridge.leOfDenoteReal lhs rhs (a * c) (b * c) ?_ ?_ (mul_le_mul_of_nonneg_right hab hc0)
+  · change M.mulValue (denote lhs.val.left) (denote lhs.val.right) = _
+    rw [ha, hc, M.mul_numbers, Complex.ofReal_mul]
+  · change M.mulValue (denote rhs.val.left) (denote rhs.val.right) = _
+    rw [hb, hFactorSame.symm.trans hc, M.mul_numbers, Complex.ofReal_mul]
+
+theorem divStructuralLe {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (DivObj (M := M) α β))
+    (rhs : Obj (M := M) (DivObj (M := M) γ δ))
+    (hDivisorPos : Lt (number 0) lhs.val.right)
+    (hNumeratorsLe : Le lhs.val.left rhs.val.left)
+    (hDivisorSame : Same lhs.val.right rhs.val.right) : Le lhs rhs := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfPositive lhs.val.right hDivisorPos
+  obtain ⟨a, b, ha, hb, hab⟩ := hNumeratorsLe
+  have hc0C : (c : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt hc0)
+  refine NativeBridge.leOfDenoteReal lhs rhs (a / c) (b / c) ?_ ?_ (div_le_div_of_nonneg_right hab (le_of_lt hc0))
+  · change M.divValue (denote lhs.val.left) (denote lhs.val.right) = _
+    rw [ha, hc, M.div_numbers _ _ hc0C, Complex.ofReal_div]
+  · change M.divValue (denote rhs.val.left) (denote rhs.val.right) = _
+    rw [hb, hDivisorSame.symm.trans hc, M.div_numbers _ _ hc0C, Complex.ofReal_div]
+
+theorem subNonnegativeToLe {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SubObj (M := M) α β))
+    (haR : In p.val.left R) (hbR : In p.val.right R)
+    (h : Le (number 0) p) : Le p.val.right p.val.left := by
+  obtain ⟨a, ha⟩ := (M.real_members _).mp haR
+  obtain ⟨b, hb⟩ := (M.real_members _).mp hbR
+  have hp : denote p = M.number ((a - b : ℝ) : ℂ) := by
+    change M.subValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hb, M.sub_numbers, Complex.ofReal_sub]
+  exact NativeBridge.leOfDenoteReal _ _ b a hb ha
+    (sub_nonneg.mp ((NativeBridge.le_iff_ofDenoteReal (number 0) p 0 (a - b) rfl hp).mp h))
+
+theorem subPositiveToLt {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SubObj (M := M) α β))
+    (haR : In p.val.left R) (hbR : In p.val.right R)
+    (h : Lt (number 0) p) : Lt p.val.right p.val.left := by
+  obtain ⟨a, ha⟩ := (M.real_members _).mp haR
+  obtain ⟨b, hb⟩ := (M.real_members _).mp hbR
+  have hp : denote p = M.number ((a - b : ℝ) : ℂ) := by
+    change M.subValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hb, M.sub_numbers, Complex.ofReal_sub]
+  exact NativeBridge.ltOfDenoteReal _ _ b a hb ha
+    (sub_pos.mp ((NativeBridge.lt_iff_ofDenoteReal (number 0) p 0 (a - b) rfl hp).mp h))
+
+theorem leDivOfProductBound {M : Semantics.{u}} {α β γ δ ε : Type*}
+    [Representation M α] [Representation M β] [Representation M γ]
+    [Representation M δ] [Representation M ε]
+    (a : Obj (M := M) α) (q : Obj (M := M) (DivObj (M := M) β γ))
+    (p : Obj (M := M) (MulObj (M := M) δ ε)) (haR : In a R)
+    (hDivisorPos : Lt (number 0) q.val.right) (hBound : Le p q.val.left)
+    (hFactor : Same p.val.left q.val.right) (hArgument : Same p.val.right a) : Le a q := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfPositive q.val.right hDivisorPos
+  obtain ⟨r, hr⟩ := (M.real_members _).mp haR
+  obtain ⟨s, b, hs, hb, hsb⟩ := hBound
+  have hproduct : denote p = M.number ((c * r : ℝ) : ℂ) := by
+    change M.mulValue (denote p.val.left) (denote p.val.right) = _
+    rw [hFactor.trans hc, hArgument.trans hr, M.mul_numbers, Complex.ofReal_mul]
+  have hsProduct : s = c * r :=
+    Complex.ofReal_injective (M.number_injective (hs.symm.trans hproduct))
+  have hc0C : (c : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt hc0)
+  refine NativeBridge.leOfDenoteReal a q r (b / c) hr ?_ ?_
+  · change M.divValue (denote q.val.left) (denote q.val.right) = _
+    rw [hb, hc, M.div_numbers _ _ hc0C, Complex.ofReal_div]
+  · apply (le_div_iff₀ hc0).mpr
+    simpa only [hsProduct, mul_comm] using hsb
+
+end Litex
+
+namespace Litex
+
+/-- Literal-zero specialization of the selected shared positive divisor rule.
+The original quotient and its constructor WD remain the subject. -/
+theorem divStructuralNonnegative {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (q : Obj (M := M) (DivObj (M := M) α β))
+    (hDivisorPos : Lt (number 0) q.val.right)
+    (hNumeratorNonnegative : Le (number 0) q.val.left) : Le (number 0) q := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfPositive q.val.right hDivisorPos
+  obtain ⟨a, ha, ha0⟩ := NativeBridge.realWitnessOfNonnegative q.val.left hNumeratorNonnegative
+  have hc0C : (c : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt hc0)
+  refine NativeBridge.leOfDenoteReal (number 0) q 0 (a / c) rfl ?_
+    (div_nonneg ha0 (le_of_lt hc0))
+  change M.divValue (denote q.val.left) (denote q.val.right) = _
+  rw [ha, hc, M.div_numbers _ _ hc0C, Complex.ofReal_div]
+
+theorem divStructuralNonpositive {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (q : Obj (M := M) (DivObj (M := M) α β))
+    (hDivisorPos : Lt (number 0) q.val.right)
+    (hNumeratorNonpositive : Le q.val.left (number 0)) : Le q (number 0) := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfPositive q.val.right hDivisorPos
+  obtain ⟨a, r₀, ha, hz, ha0⟩ := hNumeratorNonpositive
+  change M.number 0 = M.number (r₀ : ℂ) at hz
+  have hr0 : r₀ = 0 := Complex.ofReal_injective (M.number_injective hz).symm
+  subst r₀
+  have hc0C : (c : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt hc0)
+  refine NativeBridge.leOfDenoteReal q (number 0) (a / c) 0 ?_ rfl
+    (div_nonpos_of_nonpos_of_nonneg ha0 (le_of_lt hc0))
+  change M.divValue (denote q.val.left) (denote q.val.right) = _
+  rw [ha, hc, M.div_numbers _ _ hc0C, Complex.ofReal_div]
 
 end Litex
