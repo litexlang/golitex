@@ -27,7 +27,9 @@ use crate::exec_env::{ExecEnv, StoredIdentifierDefinition};
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
-use crate::execute::execute_have_fn_equal_case_by_case_stmt::StoreHaveFnCaseByCaseAndInferResult;
+use crate::execute::execute_have_fn_equal_case_by_case_stmt::{
+    IntroduceFnSetClauseBindersResult, StoreHaveFnCaseByCaseAndInferResult,
+};
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
@@ -58,9 +60,13 @@ pub enum ExecHaveFnByInducStmtFailed {
 pub struct ExecHaveFnByInducStmtSuccessResult {
     pub statement: HaveFnByInducStmt,
     pub fn_set_well_defined: VerifyObjWellDefinedResult,
+    pub binder_introduction: IntroduceFnSetClauseBindersResult,
+    pub measure_well_defined: VerifyObjWellDefinedResult,
+    pub lower_bound_well_defined: VerifyObjWellDefinedResult,
     pub measure_in_z: VerifyFactResult,
     pub lower_in_z: VerifyFactResult,
     pub measure_ge_lower: VerifyFactResult,
+    pub restricted_self_membership: StoreFactAndInferResult,
     pub case_checks: InducCaseListSuccess,
     pub store_and_infer_result: StoreHaveFnCaseByCaseAndInferResult,
     pub local_env: Box<ExecEnv>,
@@ -130,7 +136,7 @@ impl Runtime {
         }
 
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(
+            let binder_introduction = rt.introduce_fn_set_clause_binders(
                 &stmt.fn_set_clause,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
@@ -177,12 +183,13 @@ impl Runtime {
                 )));
             }
 
-            if let Err(msg) = rt.register_restricted_recursive_fn(
+            let restricted_self_membership = match rt.register_restricted_recursive_fn(
                 stmt,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             ) {
-                return Ok(Err(ExecHaveFnByInducStmtFailed::Shape(msg)));
-            }
+                Ok(stored) => stored,
+                Err(msg) => return Ok(Err(ExecHaveFnByInducStmtFailed::Shape(msg))),
+            };
 
             let case_checks =
                 match rt.verify_induc_case_list(stmt, &stmt.cases, verify_state.clone())? {
@@ -191,14 +198,27 @@ impl Runtime {
                 };
 
             Ok(Ok((
+                binder_introduction,
+                measure_wd,
+                lower_wd,
                 measure_in_z,
                 lower_in_z,
                 measure_ge_lower,
+                restricted_self_membership,
                 case_checks,
             )))
         })?;
 
-        let (measure_in_z, lower_in_z, measure_ge_lower, case_checks) = match inner {
+        let (
+            binder_introduction,
+            measure_well_defined,
+            lower_bound_well_defined,
+            measure_in_z,
+            lower_in_z,
+            measure_ge_lower,
+            restricted_self_membership,
+            case_checks,
+        ) = match inner {
             Ok(v) => v,
             Err(failed) => return Ok(ExecHaveFnByInducStmtResult::Failed(failed)),
         };
@@ -225,9 +245,13 @@ impl Runtime {
             ExecHaveFnByInducStmtSuccessResult {
                 statement: stmt.clone(),
                 fn_set_well_defined,
+                binder_introduction,
+                measure_well_defined,
+                lower_bound_well_defined,
                 measure_in_z,
                 lower_in_z,
                 measure_ge_lower,
+                restricted_self_membership,
                 case_checks,
                 store_and_infer_result,
                 local_env,
@@ -282,7 +306,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> Result<(), String> {
+    ) -> Result<StoreFactAndInferResult, String> {
         if self.identifier_defined_in_stack(&stmt.name.name) {
             // Already occupied at parse; ensure ExecEnv definition row exists.
         } else {
@@ -343,10 +367,8 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(restricted)),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let _ = self
-            .store_fact_and_infer(&membership, verify_state)
-            .map_err(|e| format!("recursive membership store: {e:?}"))?;
-        Ok(())
+        self.store_fact_and_infer(&membership, verify_state)
+            .map_err(|e| format!("recursive membership store: {e:?}"))
     }
 
     // Every sibling list must be total and disjoint in its enclosing guard.

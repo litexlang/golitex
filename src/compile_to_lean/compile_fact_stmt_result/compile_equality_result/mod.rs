@@ -1,6 +1,9 @@
+mod compile_abs_identities;
+mod compile_add_zero_from_equalities;
 mod compile_builtin_rewrite;
 mod compile_calculation;
 mod compile_congruence;
 mod compile_equality_result;
 mod compile_equivalence_class;
 mod compile_function_definition;
+mod compile_natural_power_laws;

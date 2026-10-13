@@ -144,7 +144,7 @@ pub use execute_have_fn_by_forall_exist_unique_stmt::{
 };
 pub use execute_have_fn_by_induc_stmt::{
     ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult,
-    InducCaseBodySuccess, InducCaseListSuccess,
+    InducCaseBodySuccess, InducCaseListSuccess, InducCaseSuccess, InducCasesDisjointSuccess,
 };
 pub use execute_have_fn_equal_case_by_case_stmt::{
     ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,

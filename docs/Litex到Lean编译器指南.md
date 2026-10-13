@@ -114,7 +114,15 @@ reciprocal(2) = 1 / 2
 
 `FunctionSemantics M` 为数值接口增加图构造与求值。具体实例用 Mathlib 的 ZF 集合证明这些规律；源码函数仍是拥有自身身份的图对象。内部值函数体回调不会把源码对象替换为原生实数函数箭头。
 
-当前切片支持一个或两个 N/Z/Q/R/C 输入及输出、数值域／值域别名、先前函数的公式复合，以及直接或具体谓词保护条件。顶层具体谓词可以使用已支持的平坦原子、And 和数值链条款。[非负性](../lean/examples/nonnegative_real_property/statement.lit)展示谓词定义与展开；[商的分配](../lean/examples/real_quotient_distributes/statement.lit)展示两个参数；[带保护条件的复合商](../lean/examples/two_argument_shifted_quotient/statement.lit)展示复合调用。编译消费每次调用实际捕获的 WD 和定义域证据。递归、归纳、高阶函数和量化谓词仍不在本期范围。
+当前公式切片支持一个或两个 N/Z/Q/R/C 输入及输出，以及已审查的 `R+` 输入和值域扩展，
+还支持数值域／值域别名、先前函数的公式复合，以及直接或具体谓词保护条件。
+顶层具体谓词可以使用已支持的平坦原子、And 和数值链条款。
+[非负性](../lean/examples/nonnegative_real_property/statement.lit)展示谓词定义与展开；
+[商的分配](../lean/examples/real_quotient_distributes/statement.lit)展示两个参数；
+[带保护条件的复合商](../lean/examples/two_argument_shifted_quotient/statement.lit)展示复合调用。
+编译消费每次调用实际捕获的 WD 和定义域证据。
+有界的一元自然数递归图和普通零起点归纳见下文 Newton 实验；
+高阶函数体、量化谓词及该切片之外的递归仍不受支持。
 
 <a id="definitions-and-named-theorem-citations"></a>
 
@@ -329,7 +337,7 @@ python3 scripts/litex_to_lean/check.py --subset --work-area .draft/selected-subs
 任意集合有一个明确的接口差异：`$is_set(A)` 在生成端有证明，原生端的
 `A : ZFSet` 则通过类型表达集合身份，无需发明额外的原生 sethood 谓词。
 整个集合的数值视图仍需 subset 证据。模块、一般存在式见证证明、无界理解、
-存在式集合选择、递归／高阶函数体和局部 prop／fn／嵌套 thm，
+存在式集合选择、高阶函数体、有界一元自然数切片之外的递归和局部 prop／fn／嵌套 thm，
 以及未审查的推理／证书路线仍在编译边界外。
 在结果中观察到未被消费的 inference 节点，不代表编译器已支持该推理。
 
@@ -455,8 +463,9 @@ target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statem
 [Newton 残差实验](examples/litex_to_lean/newton_residual/Experiment.md)的目标是从
 `x_0 = 1`、`x_(n+1) = (x_n + 2/x_n)/2`，证明所有自然数上的
 `|x_n^2 - 2| <= 4*(1/4)^(2^n)`。证明串起除法合法性、残差恒等式、迭代下界、
-二次收缩以及两个归纳。现有完整 Litex 源码通过当前严格验证，独立的手写 Lean
-对照也通过检查；完整证明尚未接通编译器。
+二次收缩以及两个归纳。
+[独立的完整证明源码](../lean/examples/newton_residual_bound/statement.lit)已通过严格验证，
+手写 Lean 对照也通过其独立检查；完整编译与原生 all-n 接口的验收仍待完成。
 
 已接通的是其中的[单步恒等式源码](../lean/examples/newton_residual_identity/statement.lit)
 和[实际生成的 Lean](../lean/examples/newton_residual_identity/statement.lean)。
@@ -469,10 +478,28 @@ theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
   exact Adapter.newtonResidualIdentity x hx
 ```
 
-这部分通过 pinned Lake 检查，证明依赖确实经过 Adapter 到达生成的定理，且只依赖
-标准 Lean 公理。完整实验仍需接入正实数函数值域、证明块、绝对值、自然数符号幂、
-递归定义和归纳；实验说明逐项记录了实际拒绝边界与验收顺序。这里的界是方程残差，
-并非到 `sqrt(2)` 的距离，也不提前声称 Litex 比手写 Lean 更短。
+第一阶段还接通了[正实数更新源码](../lean/examples/newton_positive_update/statement.lit)
+和[生成的 Lean](../lean/examples/newton_positive_update/statement.lean)。编译器消费实际
+`claim` 结果，`have fn newton_sqrt_two(x R+) R+` 的正数输入和值域约束都保留下来。
+Core 的函数签名按已确认的设计存放实际语义集合及其 sethood 证明；原有数字函数接口
+继续传入标准数集。[PositiveAdapter](examples/litex_to_lean/newton_residual/PositiveAdapter.lean)
+和 [PositiveFinal](examples/litex_to_lean/newton_residual/PositiveFinal.lean) 导出普通 Lean 定理
+`newtonPositive (x : ℝ) (hx : 0 < x) : 0 < (x + 2 / x) / 2`。
+
+这两个配套例子都通过 pinned Lake、生成证明活依赖和标准 Lean 公理检查。
+当前编译器还消费拥有原始 WD 的绝对值、自然数符号幂及其所选定律、自然数覆盖析取、
+有界递归图和普通 `by induc k from 0`。递归切片限于一个 N 度量、零下界、
+有序的 `n = 0`／`n > 0` 叶分支和前驱自调用；强归纳、其他度量和嵌套递归分支
+仍在范围外。参数、保护条件、调用 WD、分支和存储结果保留原始身份；
+已知 forall 等式引用与定理 release 消费实际捕获的参数匹配和有序要求。
+
+编译器回归套件通过 407 项测试，其后六项已知 forall 等式测试和三项 Abs 展开测试
+也通过。较小的实际生成递归图、递推式和算术夹具通过了普通 pinned Lean 检查；
+推进到缩放残差恒等式的生成前缀也通过了所记录的有资源上限的检查。
+这些记录验证的是所审查的路线和该前缀。整文件生成、完整生成 Lean 检查、最终再生成，
+以及依赖生成界证明的原生 all-n 接口和标准公理审计仍待完成。
+[实验说明](examples/litex_to_lean/newton_residual/Experiment.md)保留这一验收边界。
+这里的目标是方程残差；不据此声称根距离估计、源码更短或运行更快。
 
 ## 维护本指南
 

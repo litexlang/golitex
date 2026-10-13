@@ -98,6 +98,7 @@ fn object_uses_functions(object: &Obj) -> bool {
                 object_uses_functions(&x.left) || object_uses_functions(&x.right)
             }
             ArithmeticOperator::Neg(x) => object_uses_functions(&x.arg),
+            ArithmeticOperator::Abs(x) => object_uses_functions(&x.arg),
             ArithmeticOperator::Pow(x) => {
                 object_uses_functions(&x.base) || object_uses_functions(&x.exponent)
             }
@@ -118,6 +119,10 @@ fn fact_uses_functions(fact: &Fact) -> bool {
                 .any(object_uses_functions)
         }),
         Fact::ChainFact(fact) => fact.objs.iter().any(object_uses_functions),
+        Fact::OrFact(fact) => fact
+            .facts
+            .iter()
+            .any(|branch| fact_uses_functions(&crate::ast::fact::and_chain_as_fact(branch))),
         Fact::ForallFact(fact) => {
             fact.dom_facts.iter().any(fact_uses_functions)
                 || fact.then_facts.iter().any(|fact| match fact {
@@ -131,6 +136,9 @@ fn fact_uses_functions(fact: &Fact) -> bool {
                     }),
                     ExistOrAndChainAtomicFact::ChainFact(fact) => {
                         fact.objs.iter().any(object_uses_functions)
+                    }
+                    ExistOrAndChainAtomicFact::OrFact(fact) => {
+                        fact_uses_functions(&Fact::OrFact(fact.clone()))
                     }
                     _ => false,
                 })
@@ -151,7 +159,9 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
                     .iter()
                     .any(statement_uses_functions)
         }
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(_)) => true,
+        ExecStmtResult::Definition(
+            ExecDefinitionStmtResult::HaveFnEqual(_) | ExecDefinitionStmtResult::HaveFnByInduc(_),
+        ) => true,
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => {
             verified_subject(&proof.verify_result)
                 .as_ref()
@@ -197,6 +207,7 @@ fn object_uses_sets(object: &Obj) -> bool {
             ArithmeticOperator::Mul(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Div(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Neg(x) => object_uses_sets(&x.arg),
+            ArithmeticOperator::Abs(x) => object_uses_sets(&x.arg),
             ArithmeticOperator::Pow(x) => {
                 object_uses_sets(&x.base) || object_uses_sets(&x.exponent)
             }
@@ -214,6 +225,10 @@ fn fact_uses_sets(fact: &Fact) -> bool {
             .iter()
             .any(|f| atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a))),
         Fact::ChainFact(f) => f.objs.iter().any(object_uses_sets),
+        Fact::OrFact(f) => f
+            .facts
+            .iter()
+            .any(|branch| fact_uses_sets(&crate::ast::fact::and_chain_as_fact(branch))),
         Fact::ForallFact(f) => {
             f.typed_parameters
                 .groups
@@ -229,6 +244,9 @@ fn fact_uses_sets(fact: &Fact) -> bool {
                         .iter()
                         .any(|f| atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a))),
                     ExistOrAndChainAtomicFact::ChainFact(f) => f.objs.iter().any(object_uses_sets),
+                    ExistOrAndChainAtomicFact::OrFact(f) => {
+                        fact_uses_sets(&Fact::OrFact(f.clone()))
+                    }
                     _ => false,
                 })
         }

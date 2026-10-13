@@ -336,8 +336,8 @@ fn named_goal_component(fact: &ExistOrAndChainAtomicFact) -> Result<Fact, LeanCo
         ExistOrAndChainAtomicFact::AtomicFact(fact) => Ok(Fact::AtomicFact(fact.clone())),
         ExistOrAndChainAtomicFact::AndFact(fact) => Ok(Fact::AndFact(fact.clone())),
         ExistOrAndChainAtomicFact::ChainFact(fact) => Ok(Fact::ChainFact(fact.clone())),
-        ExistOrAndChainAtomicFact::OrFact(_)
-        | ExistOrAndChainAtomicFact::ExistFact(_)
+        ExistOrAndChainAtomicFact::OrFact(fact) => Ok(Fact::OrFact(fact.clone())),
+        ExistOrAndChainAtomicFact::ExistFact(_)
         | ExistOrAndChainAtomicFact::ExistUniqueFact(_)
         | ExistOrAndChainAtomicFact::NotExistFact(_) => {
             Err(LeanCompileError::unsupported("Theorem/CompoundThen"))

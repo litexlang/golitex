@@ -1,6 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -167,8 +168,31 @@ impl LitexToLeanCompiler {
                     )),
                 }
             }
-            StructuralMembershipReason::Abs { .. } => {
-                Err(LeanCompileError::unsupported("StructuralMembership/Abs"))
+            StructuralMembershipReason::Abs { argument } => {
+                let Obj::ArithmeticOperator(ArithmeticOperator::Abs(abs)) = &proof.element else {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/AbsSubject",
+                        "The absolute-value certificate has another source constructor.",
+                    ));
+                };
+                if abs.arg.ir() != argument.element.ir() || argument.set != proof.set {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/AbsChild",
+                        "The recorded absolute-value child changes its exact argument or carrier.",
+                    ));
+                }
+                let bridge = match proof.set {
+                    StandardSet::R => "absInR",
+                    StandardSet::C => "absInC",
+                    _ => {
+                        return Err(LeanCompileError::unsupported(
+                            "StructuralMembership/AbsCarrier",
+                        ))
+                    }
+                };
+                let child = self.compile_structural(argument, position)?;
+                let term = self.compile_object_reference(&proof.element, position)?;
+                Ok(format!("(by\n  let _litex_abs := {term}\n  have _recorded_abs_argument : Litex.In _litex_abs.val.arg {} := {child}\n  exact Litex.{bridge} _litex_abs.val.arg _litex_abs.wd\n)", standard_term(&proof.set)?))
             }
             StructuralMembershipReason::Pow { base, exponent } => {
                 let power = match &proof.element {
@@ -227,6 +251,18 @@ impl LitexToLeanCompiler {
                         "StructuralMembership/PowCarrier",
                     )),
                 }
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Abs) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
+                    )
+                {
+                    return Err(LeanCompileError::new("StructuralMembership/IntrinsicAbsSubject", "The selected intrinsic absolute-value codomain must retain its exact owned Abs constructor and R target."));
+                }
+                let term = self.compile_object_reference(&proof.element, position)?;
+                Ok(format!("(by\n  let _litex_abs := {term}\n  exact Litex.absInR _litex_abs.val.arg _litex_abs.wd\n)"))
             }
             StructuralMembershipReason::Intrinsic(_) => Err(LeanCompileError::unsupported(
                 "StructuralMembership/Intrinsic",

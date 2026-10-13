@@ -166,7 +166,8 @@ interface. The concrete instance proves these laws with Mathlib ZF sets;
 the source function remains an owned graph object. Its internal value-body
 callback does not replace the source object with a native real arrow.
 
-The current slice supports one or two fixed N/Z/Q/R/C inputs and output,
+The current formula slice supports one or two fixed N/Z/Q/R/C inputs and output,
+with the reviewed `R+` input and target extension,
 numeric RHS/let carrier aliases, direct and concrete-predicate function guards,
 and top-level concrete predicates with atomic or flat And/chain
 defining clauses. [Nonnegativity](../lean/examples/nonnegative_real_property/statement.lit)
@@ -176,7 +177,9 @@ demonstrates two arguments. The
 earlier one/two-input functions in its body, while the
 [chain guard](../lean/examples/chain_guard_reciprocal/statement.lit) retains a
 concrete predicate's two inequalities before constructing the reciprocal.
-Recursive and higher-order formula bodies remain outside this slice.
+The bounded unary-natural recursive graph slice and ordinary zero-based
+induction are described in the [Newton experiment](#newton-iteration-the-next-complete-experiment).
+Higher-order bodies and recursion outside that slice remain unsupported.
 
 The [natural successor](../lean/examples/natural_successor_affine_identity/statement.lit)
 also preserves the natural return condition:
@@ -655,7 +658,8 @@ difference: `$is_set(A)` has a generated proof, while native `A : ZFSet`
 already expresses sethood through its type. No artificial native sethood
 predicate is needed. Numeric views of a whole set still need subset evidence.
 The selected slice leaves modules, general existential witness declarations,
-unbounded comprehension, existence-based set choice, recursive/higher-order formula bodies
+unbounded comprehension, existence-based set choice, higher-order bodies and
+recursion outside the reviewed unary-natural slice
 and unsupported inference/certificate routes outside the compiler boundary.
 An observed unused inference node in a result trace does not establish
 compiler support for that inference.
@@ -858,9 +862,12 @@ future fact, even if an ancestor contains the complete result.
 
 These examples use the same owning compiler, typed result branches and proved
 semantic interface. The native adapters select a model explicitly and remain
-handwritten local tooling. General disjunction/existential proofs, induction,
-recursive or higher-order functions, local prop/function definitions and
-nested theorem definitions are separate extensions.
+handwritten local tooling. The compiler now also consumes the reviewed
+natural-index coverage disjunction, unary-natural recursive graphs and
+ordinary zero-based induction. General existential proofs, disjunction and
+induction outside those reviewed routes, higher-order functions, local
+prop/function definitions and nested theorem definitions remain separate
+extensions.
 
 The original phases 8-11 minimum passed fresh acceptance on current single-hop
 typed results on 2026-10-12. The checkpoint checks 74 actual source/generated
@@ -887,9 +894,10 @@ The [Newton residual experiment](examples/litex_to_lean/newton_residual/Experime
 targets the recursive sequence `x_0 = 1`, `x_(n+1) = (x_n + 2/x_n)/2` and the
 universal bound `|x_n^2 - 2| <= 4*(1/4)^(2^n)`. It connects legal division,
 an exact residual identity, a lower-bound invariant, quadratic contraction
-and two inductive proofs. The existing full Litex source and the independent
-handwritten Lean baseline both passed their current checks. The full proof is
-not yet supported by the compiler.
+and two inductive proofs. The standalone
+[full proof source](../lean/examples/newton_residual_bound/statement.lit) passed
+strict verification; the independent handwritten Lean baseline also passed
+its own check. Complete compiler and native all-index acceptance remain pending.
 
 The first maintained pair is the supporting
 [single-step identity](../lean/examples/newton_residual_identity/statement.lit),
@@ -904,12 +912,37 @@ theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
   exact Adapter.newtonResidualIdentity x hx
 ```
 
-Pinned Lake, the live generated-proof dependency and standard-only axioms
-were checked. This does not establish the complete recursive estimate.
-The experiment records exact rejected boundaries and stages for positive-real
-function targets, proof blocks, absolute values, symbolic natural powers,
-recursive definitions and induction. Its target is the equation residual,
-not the distance to `sqrt(2)`. No comparative brevity claim is made.
+Stage 1 also compiles the [positive-real update](../lean/examples/newton_positive_update/statement.lit)
+and its [generated Lean](../lean/examples/newton_positive_update/statement.lean).
+The actual `claim` result is replayed, and `have fn newton_sqrt_two(x R+) R+`
+keeps both positive input and return constraints. The approved Core function
+signature now stores an actual semantic set with its sethood proof; the
+existing numeric APIs still supply the standard sets. Its
+[PositiveAdapter](examples/litex_to_lean/newton_residual/PositiveAdapter.lean)
+and [PositiveFinal](examples/litex_to_lean/newton_residual/PositiveFinal.lean)
+export `newtonPositive (x : ℝ) (hx : 0 < x) : 0 < (x + 2 / x) / 2`.
+
+Both supporting pairs passed pinned Lake, live generated-proof dependency and
+standard-only axiom checks. The current compiler consumes owned absolute value,
+symbolic natural powers and their selected laws, natural-index coverage,
+bounded recursive graphs and ordinary `by induc k from 0`. The recursive slice
+has one N measure, lower bound zero, ordered `n = 0`/`n > 0` leaf cases and
+predecessor self calls. Strong induction, other measures and nested recursive
+cases remain outside this scope. Original binder, guard, call WD, case and
+store results retain their exact identities; known-forall equalities and
+theorem releases replay their captured matches and ordered requirements.
+
+The compiler suite passed 407 tests, followed by six focused known-forall
+equality checks and three Abs expansion checks. Smaller actual generated graph,
+recurrence and arithmetic fixtures passed ordinary pinned Lean, as did the
+generated prefix through the scaled residual identity in its recorded
+resource-bounded check. These checks establish the reviewed routes and prefix.
+Whole-file generation, complete generated Lean
+checking, final regeneration and native all-index consumption with live bound
+dependency and standard-only axiom audits remain pending. The
+[experiment](examples/litex_to_lean/newton_residual/Experiment.md) records that
+acceptance boundary. The target is the equation residual; no distance-to-root,
+comparative brevity or runtime claim is made.
 
 ## Maintaining this guide
 

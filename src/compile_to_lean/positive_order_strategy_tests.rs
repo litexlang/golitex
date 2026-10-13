@@ -5,6 +5,8 @@ use crate::prelude::*;
 
 const SUM: &str = "claim:\n    ? forall a R, b R:\n        a > 0\n        b > 0\n        =>:\n            a + b > 0\n    a + b > 0\n";
 const QUOTIENT: &str = "claim:\n    ? forall a R, b R:\n        a > 0\n        b > 0\n        =>:\n            a / b > 0\n    a / b > 0\n";
+const PRODUCT: &str = "claim:\n    ? forall a R, b R:\n        a > 0\n        b > 0\n        =>:\n            a * b > 0\n    a * b > 0\n";
+const LESS_SUM: &str = "claim:\n    ? forall a R, b R:\n        0 < a\n        0 < b\n        =>:\n            0 < a + b\n    0 < a + b\n";
 
 fn run(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {
@@ -57,6 +59,7 @@ fn positive_sum_and_quotient_replay_selected_strategy_and_original_constructor_w
     for (source, namespace, bridge) in [
         (SUM, "positive_sum_strategy", "Litex.addPositive"),
         (QUOTIENT, "positive_quotient_strategy", "Litex.divPositive"),
+        (PRODUCT, "positive_product_strategy", "Litex.mulPositive"),
     ] {
         let (mut result, compiler) = checked(source);
         assert!(matches!(
@@ -65,6 +68,7 @@ fn positive_sum_and_quotient_replay_selected_strategy_and_original_constructor_w
                 | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(
                     _
                 )
+                | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(_)
         ));
         let lean = compiler
             .compile_run(&result, namespace)
@@ -78,16 +82,88 @@ fn positive_sum_and_quotient_replay_selected_strategy_and_original_constructor_w
 }
 
 #[test]
-fn positive_sum_strategy_accepts_the_original_less_goal_orientation() {
-    let (result, compiler) = checked("claim:\n    ? forall a R, b R:\n        0 < a\n        0 < b\n        =>:\n            0 < a + b\n    0 < a + b\n");
+fn positive_sum_builtin_accepts_the_original_less_goal_orientation() {
+    let (mut result, compiler) = checked(LESS_SUM);
+    let children = selected_sum_builtin_mut(&mut result);
+    assert_ne!(
+        super::helper::source_subject(&children.left_positive_proof)
+            .unwrap()
+            .fact_id(),
+        super::helper::source_subject(&children.right_positive_proof)
+            .unwrap()
+            .fact_id(),
+    );
     compiler
         .compile_run(&result, "positive_sum_less_orientation")
         .expect("source strict-zero orientation");
 }
 
+fn selected_sum_builtin_mut(result: &mut RunLitexCodeResult) -> &mut crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::SumBothPositiveBuiltinRuleProof{
+    let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
+        proof,
+    ))) = &mut result.statement_results[0]
+    else {
+        panic!("actual claim")
+    };
+    let ExecClaimBodyProof::Forall(body) = &mut proof.body else {
+        panic!("actual forall body")
+    };
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(step)) = &mut body.proof_steps[0] else {
+        panic!("actual body step")
+    };
+    let VerifyFactResult::AtomicExceptEquality(proof) = &mut step.verify_result else {
+        panic!("actual atomic result")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
+        panic!("actual success")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SumBothPositive(proof))) = &mut proof.searched_proof else { panic!("actual SumBothPositive builtin") };
+    proof
+}
+
+#[test]
+fn positive_sum_builtin_rejects_wrong_child_order_and_deleted_child_citation() {
+    let (mut result, compiler) = checked(LESS_SUM);
+    let selected = selected_sum_builtin_mut(&mut result);
+    std::mem::swap(
+        &mut selected.left_positive_proof,
+        &mut selected.right_positive_proof,
+    );
+    assert_eq!(
+        compiler
+            .compile_run(&result, "sum_wrong_child")
+            .unwrap_err()
+            .route,
+        "PositiveSum/ChildSubject"
+    );
+    let (mut result, compiler) = checked(LESS_SUM);
+    let selected = selected_sum_builtin_mut(&mut result);
+    let VerifyFactResult::AtomicExceptEquality(child) = &mut selected.left_positive_proof else {
+        panic!("actual atomic child")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(child) = child.as_mut() else {
+        panic!("actual successful child")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
+        &mut child.searched_proof
+    else {
+        panic!("actual original child citation")
+    };
+    citation
+        .why_parameters_of_known_fact_are_equal_to_givens
+        .clear();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "sum_deleted_child_evidence")
+            .unwrap_err()
+            .route,
+        "KnownAtomic"
+    );
+}
+
 #[test]
 fn positive_strategy_rejects_wrong_ordered_operand_capture() {
-    for source in [SUM, QUOTIENT] {
+    for source in [SUM, QUOTIENT, PRODUCT] {
         let (mut result, compiler) = checked(source);
         match selected_mut(&mut result) {
             AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(proof) => {
@@ -96,6 +172,9 @@ fn positive_strategy_rejects_wrong_ordered_operand_capture() {
             AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(
                 proof,
             ) => proof.requirement_facts.swap(0, 1),
+            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(proof) => {
+                proof.requirement_facts.swap(0, 1)
+            }
             _ => panic!("selected supported source strategy"),
         }
         assert_eq!(
@@ -110,7 +189,7 @@ fn positive_strategy_rejects_wrong_ordered_operand_capture() {
 
 #[test]
 fn positive_strategy_rejects_missing_requirement_proof() {
-    for source in [SUM, QUOTIENT] {
+    for source in [SUM, QUOTIENT, PRODUCT] {
         let (mut result, compiler) = checked(source);
         match selected_mut(&mut result) {
             AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(proof) => {
@@ -119,6 +198,9 @@ fn positive_strategy_rejects_missing_requirement_proof() {
             AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(
                 proof,
             ) => {
+                proof.proof_of_requirement_facts.pop();
+            }
+            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(proof) => {
                 proof.proof_of_requirement_facts.pop();
             }
             _ => panic!("selected supported source strategy"),
@@ -153,14 +235,14 @@ fn switching_selected_positive_sum_to_nonnegative_strategy_stays_rejected() {
             .compile_run(&result, "changed_positive_strategy")
             .unwrap_err()
             .route,
-        "Atomic/BuiltinStrategy"
+        "ZeroBound/Requirements"
     );
 }
 
 #[test]
-fn product_strategy_remains_a_nearest_unsupported_boundary() {
-    let source = SUM.replace("a + b", "a * b");
-    let (result, compiler) = checked(&source);
+fn negative_factor_product_strategy_remains_a_nearest_unsupported_boundary() {
+    let source = "claim:\n    ? forall a R, b R:\n        a < 0\n        b < 0\n        =>:\n            a * b > 0\n    a * b > 0\n";
+    let (result, compiler) = checked(source);
     assert_eq!(
         compiler
             .compile_run(&result, "positive_product_boundary")

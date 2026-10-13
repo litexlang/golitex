@@ -1,0 +1,84 @@
+# Litex Showcases
+
+These collections offer several ways into Litex: follow a mathematical argument,
+read a chapter development, study a problem's proof, or see how checked
+mathematics connects to other tools. Choose a collection by what you want to
+learn; analysis, algebra and geometry are subjects within these categories.
+
+For a short mathematical introduction, begin with [Analysis with Litex](analysis_notes/README.md)
+or [Linear Algebra in Litex](linear_algebra/README.md). For a systematic introduction
+to writing proofs, follow [The Mechanics of Litex Proof](The-Mechanics-of-Litex-Proof/README.md).
+
+## Mathematical lecture notes
+
+A lecture develops a small mathematical world: definitions lead to examples,
+lemmas and a few central theorems. Inspiration from a book does not make a
+lecture a chapter-by-chapter adaptation.
+
+| Collection | Mathematical progression | Scope |
+| --- | --- | --- |
+| [Analysis with Litex](analysis_notes/README.md) | Reciprocal sequences → limits and their uniqueness → sums of limits → geometric sequences and partial sums | Independent lecture file with local definitions and proofs; no textbook module imports. |
+| [Linear Algebra in Litex](linear_algebra/README.md) | Coordinate operations → vector spaces and subspaces → span, bases and unique coordinates | Selected lectures inspired by Axler's *Linear Algebra Done Right*, using the real plane. |
+| [Mathematical Concepts in Litex](math_concepts_in_litex/README.md) | Subject-specific slices from school mathematics to undergraduate structures | A collection of separate subject modules, rather than a complete curriculum. The probability-theory entry remains a draft. |
+
+## Textbook adaptations
+
+These developments follow a source's chapter structure. Their coverage maps
+identify the mathematics included, selected examples and omitted material.
+
+| Collection | Source and direction | Scope |
+| --- | --- | --- |
+| [Tao's Analysis I in Litex](analysis/README.md) | Terence Tao's *Analysis I*: induction, sets and maps, real numbers, limits, series and countability | Selected Chapters 1–8 and Appendix A; not the complete book. Construction and completeness assumptions remain explicit. |
+| [Mathematics in Litex](Mathematics-in-Litex/README.md) | Jeremy Avigad and Patrick Massot's *Mathematics in Lean*: witnesses, functions, sets, recursion and algebraic structures | Selected material from Chapters 1–8; not a reproduction of every source example or Lean technique. |
+
+## Litex proof tutorials
+
+Here the learning path concerns proof writing itself: how to introduce objects,
+use definitions, supply witnesses and carry established facts into later arguments.
+
+| Collection | Learning path | Scope |
+| --- | --- | --- |
+| [The Mechanics of Litex Proof](The-Mechanics-of-Litex-Proof/README.md) | Calculations and definitions → constructions → functions, sets and relations → induction and arithmetic | A teaching module with a preface and Chapters 0–10. See its README for the lesson map and checking boundary. |
+
+## Problems and solutions
+
+Each problem provides a concrete destination for the mathematics. Read its
+hypotheses and proof idea alongside the formal statement, including any chosen
+coordinate or scalar model.
+
+| Collection | Problems | Scope |
+| --- | --- | --- |
+| [IMO inequalities](imo_inequalities/README.md) | Ordered sequences, polynomial and radical inequalities, equality cases and optimal constants | Six problem pages, five standalone proofs. IMO 1975 P1 is statement-only and has not been attempted. |
+| [IMO geometry](2D_Geometry/README.md#imo-examples) | Triangle and circle configurations, constructions, inequalities and incidence counting | Twelve problems with fifteen solution packages. The README distinguishes full configurations from scalar and normalized variants. |
+
+## Mathematical theory libraries
+
+A theory library supplies reusable vocabulary and theorems. Its reader may
+need a definition or lemma for another proof rather than a prescribed lesson sequence.
+
+| Collection | Mathematical interface | Scope |
+| --- | --- | --- |
+| [Plane geometry library](2D_Geometry/README.md#library-entrypoints) | Coordinate pairs, vectors, dot products and determinants → lines, circles and triangle lemmas | Definitions-only and complete-library entrypoints. The same collection also contains the separately listed IMO solutions. |
+
+## Features and applications
+
+These examples use mathematics to explain a particular Litex capability and
+show how its output can be used elsewhere.
+
+| Collection | Demonstrated capability | Scope |
+| --- | --- | --- |
+| [Litex proofs in ordinary Lean](litex_to_lean_adapter/README.md) | Litex source → generated Lean proof → handwritten adapter → ordinary Lean/Mathlib theorem | Worked interoperability examples, including a nonzero-denominator identity and a fractional linear involution; not a general proof-length comparison. |
+| [Write Mathematically Correct Code with Litex](Write_Mathematically_Correct_Code_With_Litex/README.md) | One mathematical definition used in proofs and exported as Python or C | A concrete Newton-step calculation with an exact-real residual bound. Target floating-point rounding, overflow and surrounding application correctness are outside the demonstrated guarantee. |
+
+## Reading scope and verification
+
+The categories describe each collection's purpose, not its completion or
+verification status. Each collection's own README and available verification
+records specify its assumptions, supported scope and dated checks. A selected
+chapter development is not a completed book; a statement-only problem is not
+a proof. Litex checks still rely on its verifier and builtin mathematical rules.
+
+New showcases should join the category matching their main reading purpose.
+Describe their mathematical subject, reading scale and implemented scope in
+the entry. A collection serving two purposes can have two entrances, as the
+geometry collection does here.

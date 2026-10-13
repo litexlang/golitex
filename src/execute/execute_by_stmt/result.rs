@@ -317,16 +317,20 @@ pub enum ResolvedTheoremCallee {
 }
 
 // Subject: preserve the resolved callee/arguments beyond the invocation.
-// Stage order: type_proofs → complete domain → dom_proofs → WD → store.
+// Stage order: each type proof/store → complete function domain → each dom
+// proof/store → all local conclusion WD → close local scope → each caller WD/store.
 pub struct ExecReleaseThmStmtSuccess {
     pub call: crate::ast::stmt::TheoremCall,
     pub callee: ResolvedTheoremCallee,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
+    pub type_stores: Vec<StoreFactAndInferResult>,
     pub function_domain: Option<BuiltinFunctionDomainProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
+    pub dom_stores: Vec<StoreFactAndInferResult>,
     pub conclusions_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
+    pub stored_wd: Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>,
     pub stored: Vec<StoreFactAndInferResult>,
 }
 
@@ -388,12 +392,13 @@ pub enum ExecByThmStmtResult {
 }
 
 // Subject: preserve the resolved callee/arguments beyond the invocation.
-// Stage order: type_proofs → complete domain → each dom proof/store → WD → returned stores → selected → caller WD → store.
+// Stage order: each type proof/store → complete domain → each dom proof/store → WD → returned stores → selected → caller WD → store.
 pub struct ExecByThmStmtSuccess {
     pub call: crate::ast::stmt::TheoremCall,
     pub callee: ResolvedTheoremCallee,
     pub builtin: Option<BuiltinThmApplication>,
     pub type_proofs: Vec<VerifyFactResult>,
+    pub type_stores: Vec<StoreFactAndInferResult>,
     pub function_domain: Option<BuiltinFunctionDomainProof>,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub dom_stores: Vec<StoreFactAndInferResult>,
@@ -439,8 +444,12 @@ pub enum ExecByInducStmtResult {
 }
 
 pub struct ExecByInducStmtSuccess {
+    pub parameter: crate::ast::names::BoundName,
+    pub induc_from: crate::ast::obj::Obj,
+    pub goals: Vec<crate::ast::fact::Fact>,
     pub from_in_z: VerifyFactResult,
-    pub goal_domain_stored: StoreFactAndInferResult,
+    pub introduced_parameter: crate::execute::IntroduceTypedParametersResult,
+    pub goal_domain: AssumeDomFactResult,
     pub goals_wd: Vec<VerifyFactWellDefinedResult>,
     pub goal_wd_env: Box<ExecEnv>,
     pub body: ByInducBodySuccess,
@@ -459,7 +468,8 @@ pub enum ByInducBodySuccess {
 }
 
 pub struct ByInducCaseSuccess {
-    pub assumptions_stored: Vec<StoreFactAndInferResult>,
+    pub introduced_parameter: crate::execute::IntroduceTypedParametersResult,
+    pub assumptions: Vec<AssumeDomFactResult>,
     pub proof_steps: Vec<crate::execute::ExecStmtResult>,
     pub goals_verified: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
@@ -500,8 +510,12 @@ pub enum ExecByStrongInducStmtResult {
 }
 
 pub struct ExecByStrongInducStmtSuccess {
+    pub parameter: crate::ast::names::BoundName,
+    pub induc_from: crate::ast::obj::Obj,
+    pub goals: Vec<crate::ast::fact::Fact>,
     pub from_in_z: VerifyFactResult,
-    pub goal_domain_stored: StoreFactAndInferResult,
+    pub introduced_parameter: crate::execute::IntroduceTypedParametersResult,
+    pub goal_domain: AssumeDomFactResult,
     pub goals_wd: Vec<VerifyFactWellDefinedResult>,
     pub goal_wd_env: Box<ExecEnv>,
     pub body: ByInducBodySuccess,

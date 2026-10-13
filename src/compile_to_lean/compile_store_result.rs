@@ -260,8 +260,8 @@ impl LitexToLeanCompiler {
             StoreFactResult::ForallFact(stored) => Fact::ForallFact(stored.fact.clone()),
             StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
             StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
-            StoreFactResult::OrFact(_)
-            | StoreFactResult::ExistShapedFact(_)
+            StoreFactResult::OrFact(stored) => Fact::OrFact(stored.fact.clone()),
+            StoreFactResult::ExistShapedFact(_)
             | StoreFactResult::NotForallFact(_)
             | StoreFactResult::ForallFactWithIff(_) => {
                 return Err(LeanCompileError::unsupported("Store/Compound"))

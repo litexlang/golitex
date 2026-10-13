@@ -4,6 +4,76 @@ use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_matching_one_arg_by_one(
+        &self,
+        fact: &EqualFact,
+        children: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (Obj::FnObj(left), Obj::FnObj(right)) = (&fact.left, &fact.right) else {
+            return self.compile_arithmetic_congruence(fact, children, position);
+        };
+        // The verifier peels outer argument groups first and then the remaining
+        // function prefix. The current call constructor owns one group only.
+        if left.body.len() != 1
+            || right.body.len() != 1
+            || left.body[0].len() != right.body[0].len()
+            || !matches!(left.body[0].len(), 1 | 2)
+        {
+            return Err(LeanCompileError::unsupported(
+                "Equality/MatchingOneArgByOne/FunctionArity",
+            ));
+        }
+        let pairs = crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs(
+            &fact.left,
+            &fact.right,
+        )
+        .ok_or_else(|| {
+            LeanCompileError::new(
+                "FunctionCongruence/Constructor",
+                "The selected certificate does not peel these original function calls.",
+            )
+        })?;
+        if children.len() != pairs.len() {
+            return Err(LeanCompileError::new(
+                "FunctionCongruence/Children",
+                "Function congruence has the wrong ordered argument and head arity.",
+            ));
+        }
+        let mut compiled = Vec::with_capacity(children.len());
+        for (index, (result, (a, b))) in children.iter().zip(pairs).enumerate() {
+            match source_subject(result)? {
+                Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                    if eq.left.ir() == a.ir() && eq.right.ir() == b.ir() => {}
+                _ => {
+                    return Err(LeanCompileError::new(
+                        "FunctionCongruence/ChildSubject",
+                        "The child is not this exact ordered argument or function-head equality.",
+                    ))
+                }
+            }
+            let child_position = SourcePosition::new(
+                Some(position),
+                SourceOwner::EqualityRequirements(children),
+                index,
+            );
+            compiled.push(self.compile_verify(result, &child_position)?.1);
+        }
+        let left = self.compile_object_reference(&fact.left, position)?;
+        let right = self.compile_object_reference(&fact.right, position)?;
+        if compiled.len() == 2 {
+            Ok(format!(
+                "(Litex.callCongr {left} {right} {} {})",
+                compiled[1], compiled[0]
+            ))
+        } else {
+            Ok(format!(
+                "(Litex.call2Congr {left} {right} {} {} {})",
+                compiled[2], compiled[0], compiled[1]
+            ))
+        }
+    }
+
     pub(in crate::compile_to_lean) fn compile_arithmetic_congruence_strategy(
         &self,
         fact: &EqualFact,
@@ -77,11 +147,12 @@ impl LitexToLeanCompiler {
             }
             compiled.push(child.1);
         }
+        let operation_term = arithmetic_operation_term(operation);
         if compiled.len() == 1 {
-            Ok(format!("(congrArg M.{operation} {})", compiled[0]))
+            Ok(format!("(congrArg {operation_term} {})", compiled[0]))
         } else {
             Ok(format!(
-                "(congrArg₂ M.{operation} {} {})",
+                "(congrArg₂ {operation_term} {} {})",
                 compiled[0], compiled[1]
             ))
         }

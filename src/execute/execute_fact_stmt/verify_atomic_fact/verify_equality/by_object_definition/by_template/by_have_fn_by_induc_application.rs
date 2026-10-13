@@ -27,9 +27,11 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
+use super::super::by_fn_application::by_have_fn_by_induc::InducCaseSelectionProof;
 use super::super::helper::{fn_app_args, set_bound_parameter_count, set_bound_params_to_arg_map};
 
 pub struct ByUnfoldInstantiatedTemplateHaveFnByInducApplicationObjectDefinitionProof {
+    pub selected_case_path: Vec<InducCaseSelectionProof>,
     pub expanded_body: Obj,
     pub residual_equal: VerifyFactResult,
 }
@@ -81,7 +83,7 @@ impl Runtime {
             (stmt.clone(), subst)
         };
 
-        let Some(raw_body) =
+        let Some(matched) =
             self.match_induc_case_body(&stmt.cases, &subst, verify_state.clone())?
         else {
             return Ok(None);
@@ -90,7 +92,7 @@ impl Runtime {
         // A recursive call under `+`, a tuple, or a lambda keeps this template instance.
         let mut recursive_subst = HashMap::new();
         recursive_subst.insert(stmt.name.id, Obj::InstantiatedTemplateObj(inst.clone()));
-        let Ok(expanded_body) = self.inst_obj(&raw_body, &recursive_subst) else {
+        let Ok(expanded_body) = self.inst_obj(&matched.expanded_body, &recursive_subst) else {
             return Ok(None);
         };
 
@@ -107,6 +109,7 @@ impl Runtime {
         }
         Ok(Some(
             ByUnfoldInstantiatedTemplateHaveFnByInducApplicationObjectDefinitionProof {
+                selected_case_path: matched.selected_case_path,
                 expanded_body,
                 residual_equal,
             },

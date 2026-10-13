@@ -1,7 +1,7 @@
 //! Induction result projection preserves stages, recursive cases, and proof bodies.
 
-use super::store::{project_have_store_ids, project_store_and_infer};
-use super::verify::project_verify_fact;
+use super::store::{project_have_store_and_infer, project_have_store_ids, project_store_and_infer};
+use super::verify::{project_assume_dom, project_introduced_params, project_verify_fact};
 use super::wd::{project_verify_fact_wd_result, project_verify_obj_wd};
 use crate::execute::execute_by_stmt::{
     ByInducBodySuccess, ByInducCaseFailed, ByInducCaseSuccess, ExecByInducStmtFailed,
@@ -27,11 +27,23 @@ pub(super) fn project_by_induc(
             vec![
                 ("success", bool_value(true)),
                 ("kind", string(kind)),
+                ("parameter", string(s.parameter.name.clone())),
+                ("induc_from", string(s.induc_from.readable_string())),
+                (
+                    "goals",
+                    JsonValue::Array(
+                        s.goals
+                            .iter()
+                            .map(|f| string(f.readable_string()))
+                            .collect(),
+                    ),
+                ),
                 ("from_in_z", project_verify_fact(&s.from_in_z, rt)),
                 (
-                    "goal_domain_stored",
-                    project_store_and_infer(&s.goal_domain_stored, rt),
+                    "introduced_parameter",
+                    project_introduced_params(&s.introduced_parameter, rt),
                 ),
+                ("goal_domain", project_assume_dom(&s.goal_domain, rt)),
                 (
                     "goals_wd",
                     JsonValue::Array(
@@ -66,11 +78,23 @@ pub(super) fn project_by_strong_induc(
             vec![
                 ("success", bool_value(true)),
                 ("kind", string("by_strong_induc")),
+                ("parameter", string(s.parameter.name.clone())),
+                ("induc_from", string(s.induc_from.readable_string())),
+                (
+                    "goals",
+                    JsonValue::Array(
+                        s.goals
+                            .iter()
+                            .map(|f| string(f.readable_string()))
+                            .collect(),
+                    ),
+                ),
                 ("from_in_z", project_verify_fact(&s.from_in_z, rt)),
                 (
-                    "goal_domain_stored",
-                    project_store_and_infer(&s.goal_domain_stored, rt),
+                    "introduced_parameter",
+                    project_introduced_params(&s.introduced_parameter, rt),
                 ),
+                ("goal_domain", project_assume_dom(&s.goal_domain, rt)),
                 (
                     "goals_wd",
                     JsonValue::Array(
@@ -175,11 +199,15 @@ fn project_induc_case(case: &ByInducCaseSuccess, rt: &Runtime) -> JsonValue {
         rt,
         vec![
             (
-                "assumptions_stored",
+                "introduced_parameter",
+                project_introduced_params(&case.introduced_parameter, rt),
+            ),
+            (
+                "assumptions",
                 JsonValue::Array(
-                    case.assumptions_stored
+                    case.assumptions
                         .iter()
-                        .map(|s| project_store_and_infer(s, rt))
+                        .map(|s| project_assume_dom(s, rt))
                         .collect(),
                 ),
             ),
@@ -265,16 +293,64 @@ fn project_induc_definition_success(
                 "fn_set_well_defined",
                 project_verify_obj_wd(&s.fn_set_well_defined, rt),
             ),
+            (
+                "binder_introduction",
+                object_for(
+                    rt,
+                    vec![
+                        (
+                            "defined_params",
+                            project_have_store_and_infer(&s.binder_introduction.defined_params, rt),
+                        ),
+                        (
+                            "assumed_dom_facts",
+                            JsonValue::Array(
+                                s.binder_introduction
+                                    .assumed_dom_facts
+                                    .iter()
+                                    .map(|r| project_store_and_infer(r, rt))
+                                    .collect(),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "measure_well_defined",
+                project_verify_obj_wd(&s.measure_well_defined, rt),
+            ),
+            (
+                "lower_bound_well_defined",
+                project_verify_obj_wd(&s.lower_bound_well_defined, rt),
+            ),
             ("measure_in_z", project_verify_fact(&s.measure_in_z, rt)),
             ("lower_in_z", project_verify_fact(&s.lower_in_z, rt)),
             (
                 "measure_ge_lower",
                 project_verify_fact(&s.measure_ge_lower, rt),
             ),
+            (
+                "restricted_self_membership",
+                project_store_and_infer(&s.restricted_self_membership, rt),
+            ),
             ("case_checks", project_case_list(&s.case_checks, rt)),
             (
                 "stored",
                 project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, rt),
+            ),
+            (
+                "membership_store",
+                project_store_and_infer(&s.store_and_infer_result.membership, rt),
+            ),
+            (
+                "case_defining_stores",
+                JsonValue::Array(
+                    s.store_and_infer_result
+                        .case_defining
+                        .iter()
+                        .map(|r| project_store_and_infer(r, rt))
+                        .collect(),
+                ),
             ),
         ],
     )

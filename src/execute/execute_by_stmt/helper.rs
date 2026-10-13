@@ -19,14 +19,25 @@ pub(super) fn assume_fact(
     runtime: &mut Runtime,
     fact: &Fact,
 ) -> RuntimeResult<Result<StoreFactAndInferResult, String>> {
+    Ok(assume_fact_with_wd(runtime, fact)?.map(|result| result.store_and_infer))
+}
+
+pub(super) fn assume_fact_with_wd(
+    runtime: &mut Runtime,
+    fact: &Fact,
+) -> RuntimeResult<Result<crate::execute::execute_fact_stmt::AssumeDomFactResult, String>> {
     let wd = runtime.verify_fact_well_definedness(fact, proof_verify_state())?;
-    if wd.is_failed() {
+    let VerifyFactWellDefinedResult::Success(well_defined) = wd else {
         return Ok(Err("assumption well-definedness failed".to_string()));
-    }
-    Ok(Ok(runtime.store_fact_and_infer(
+    };
+    let store_and_infer = runtime.store_fact_and_infer(
         fact,
         crate::execute::execute_fact_stmt::VerifyState::top_level(),
-    )?))
+    )?;
+    Ok(Ok(crate::execute::execute_fact_stmt::AssumeDomFactResult {
+        well_defined,
+        store_and_infer,
+    }))
 }
 
 pub(crate) fn verify_goal_fact(
@@ -40,14 +51,30 @@ pub(crate) fn store_goal_fact(
     runtime: &mut Runtime,
     fact: &Fact,
 ) -> RuntimeResult<Result<StoreFactAndInferResult, String>> {
+    Ok(store_goal_fact_with_wd(runtime, fact)?.map(|(_, stored)| stored))
+}
+
+pub(crate) fn store_goal_fact_with_wd(
+    runtime: &mut Runtime,
+    fact: &Fact,
+) -> RuntimeResult<
+    Result<
+        (
+            crate::execute::execute_fact_stmt::FactWellDefinedProof,
+            StoreFactAndInferResult,
+        ),
+        String,
+    >,
+> {
     let wd = runtime.verify_fact_well_definedness(fact, proof_verify_state())?;
-    if let VerifyFactWellDefinedResult::Failed(_) = &wd {
+    let VerifyFactWellDefinedResult::Success(wd) = wd else {
         return Ok(Err("goal well-definedness failed at store".to_string()));
-    }
-    Ok(Ok(runtime.store_fact_and_infer(
+    };
+    let stored = runtime.store_fact_and_infer(
         fact,
         crate::execute::execute_fact_stmt::VerifyState::top_level(),
-    )?))
+    )?;
+    Ok(Ok((wd, stored)))
 }
 
 pub(super) fn close_by_contradiction(

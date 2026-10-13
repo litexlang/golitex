@@ -362,6 +362,8 @@ const LOCALIZED_KEYS: &[&str] = &[
     "conclusions",
     "provenance",
     "type_proofs",
+    "type_stores",
+    "stored_wd",
     "dom_proofs",
     "conclusions_wd",
     "expected",

@@ -34,9 +34,11 @@ impl LitexToLeanCompiler {
             ExecDefinitionStmtResult::HaveFnEqual(result) => {
                 self.compile_have_fn_equal_statement(result, position, index, local)
             }
+            ExecDefinitionStmtResult::HaveFnByInduc(result) => {
+                self.compile_have_fn_by_induc_statement(result, position, index, local)
+            }
             ExecDefinitionStmtResult::HaveFnEqualCaseByCase(_)
             | ExecDefinitionStmtResult::HaveFnByForallExistUnique(_)
-            | ExecDefinitionStmtResult::HaveFnByInduc(_)
             | ExecDefinitionStmtResult::DefAbstractProp(_)
             | ExecDefinitionStmtResult::DefStruct(_)
             | ExecDefinitionStmtResult::DefTemplate(_)

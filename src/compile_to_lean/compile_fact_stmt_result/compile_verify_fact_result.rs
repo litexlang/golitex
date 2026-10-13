@@ -28,7 +28,7 @@ impl LitexToLeanCompiler {
             VerifyFactResult::ChainFact(result) => {
                 self.compile_verify_chain_result(result, position)
             }
-            VerifyFactResult::OrFact(_) => Err(LeanCompileError::unsupported("OrFact")),
+            VerifyFactResult::OrFact(result) => self.compile_verify_or_result(result, position),
             VerifyFactResult::ExistShapedFact(_) => {
                 Err(LeanCompileError::unsupported("ExistShapedFact"))
             }

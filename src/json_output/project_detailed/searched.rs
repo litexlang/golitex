@@ -359,6 +359,26 @@ fn project_object_definition(
                 vec![
                     ("type", string("by_object_definition")),
                     ("kind", string("fn_application_have_fn_by_induc")),
+                    (
+                        "selected_case_path",
+                        JsonValue::Array(
+                            p.selected_case_path
+                                .iter()
+                                .map(|step| {
+                                    object_for(
+                                        runtime,
+                                        vec![
+                                            (
+                                                "case_index",
+                                                JsonValue::Number(step.case_index as f64),
+                                            ),
+                                            ("guard", project_verify_fact(&step.guard, runtime)),
+                                        ],
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
                     ("expanded_body", string(p.expanded_body.readable_string())),
                     (
                         "residual_equal",
@@ -429,6 +449,29 @@ fn project_object_definition(
                     vec![
                         ("type", string("by_object_definition")),
                         ("kind", string("template_have_fn_by_induc_application")),
+                        (
+                            "selected_case_path",
+                            JsonValue::Array(
+                                p.selected_case_path
+                                    .iter()
+                                    .map(|step| {
+                                        object_for(
+                                            runtime,
+                                            vec![
+                                                (
+                                                    "case_index",
+                                                    JsonValue::Number(step.case_index as f64),
+                                                ),
+                                                (
+                                                    "guard",
+                                                    project_verify_fact(&step.guard, runtime),
+                                                ),
+                                            ],
+                                        )
+                                    })
+                                    .collect(),
+                            ),
+                        ),
                         ("expanded_body", string(p.expanded_body.readable_string())),
                         (
                             "residual_equal",

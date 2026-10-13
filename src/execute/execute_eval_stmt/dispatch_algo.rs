@@ -159,7 +159,7 @@ fn dispatch_stored_algo(
                 return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
             };
             match runtime.match_induc_case_body(&stmt.cases, &subst, verify_state)? {
-                Some(obj) => Ok(Ok(obj)),
+                Some(obj) => Ok(Ok(obj.expanded_body)),
                 None => Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed)),
             }
         }

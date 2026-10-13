@@ -37,8 +37,8 @@ impl LitexToLeanCompiler {
             ExecStmtResult::Trust(_) => Err(LeanCompileError::unsupported("Trust")),
             ExecStmtResult::By(result) => self.compile_by_statement(result, position, index, local),
             ExecStmtResult::Register(_) => Err(LeanCompileError::unsupported("Register")),
-            ExecStmtResult::ReleaseAndExpand(_) => {
-                Err(LeanCompileError::unsupported("ReleaseAndExpand"))
+            ExecStmtResult::ReleaseAndExpand(result) => {
+                self.compile_release_and_expand_statement(result, position, index, local)
             }
             ExecStmtResult::ProofBlock(result) => match result {
                 ExecProofBlockStmtResult::Claim(claim) => {

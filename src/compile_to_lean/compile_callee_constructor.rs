@@ -35,6 +35,7 @@ impl LitexToLeanCompiler {
             let substitution: HashMap<_,_> = parameters.into_iter()
                 .zip(application.forall_parameters_match_what_args.iter().cloned()).collect();
             let roots: Vec<&Obj> = match selected {
+                ExistOrAndChainAtomicFact::AtomicFact(atomic) => atomic_fact_args_ref(atomic),
                 ExistOrAndChainAtomicFact::ChainFact(chain) => chain.objs.iter().collect(),
                 ExistOrAndChainAtomicFact::AndFact(and) => and.facts.iter().flat_map(atomic_fact_args_ref).collect(),
                 _=>return Err(LeanCompileError::unsupported("WD/CalleeConclusionFamily")),
@@ -73,8 +74,16 @@ impl LitexToLeanCompiler {
                 .callee_header()
                 .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeHeader"))?
         };
-        let (mut binders, _, definitions) =
-            self.compile_forall_head(source, introduced, assumed, &header)?;
+        let (mut binders, definitions) = match header.owner {
+            SourceOwner::Induction(proof) => {
+                self.compile_induction_constructor_header(source, proof, &header)?
+            }
+            _ => {
+                let (binders, _, definitions) =
+                    self.compile_forall_head(source, introduced, assumed, &header)?;
+                (binders, definitions)
+            }
+        };
         for parameter in source
             .typed_parameters
             .groups
@@ -119,6 +128,97 @@ impl LitexToLeanCompiler {
                 definitions.join("\n").replace('\n', "\n  ")
             ))
         }
+    }
+
+    fn compile_induction_constructor_header(
+        &self,
+        source: &ForallFact,
+        proof: &crate::execute::execute_by_stmt::ExecByInducStmtSuccess,
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        let introduced = &proof.introduced_parameter;
+        self.validate_parameter_store_capture(&introduced.defined_params)?;
+        if source.typed_parameters.groups.len() != 1
+            || source.typed_parameters.groups[0].params != vec![proof.parameter.clone()]
+            || source.typed_parameters.groups[0].param_type
+                != ParamType::Obj(Obj::StandardSet(StandardSet::Z))
+            || source.dom_facts.len() != 1
+            || introduced.param_type_well_defined.len() != 1
+            || introduced.defined_params.store_and_infer_results.len() != 1
+            || introduced.auto_opened_struct_layers.is_some()
+        {
+            return Err(LeanCompileError::new("WD/InductionHeaderCapture", "The final integer induction header differs from its retained original introduction."));
+        }
+        let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(carrier)) =
+            &introduced.param_type_well_defined[0]
+        else {
+            return Err(LeanCompileError::unsupported(
+                "WD/InductionCarrierFormation",
+            ));
+        };
+        if carrier.obj() != &Obj::StandardSet(StandardSet::Z) {
+            return Err(LeanCompileError::unsupported("WD/InductionCarrierSubject"));
+        }
+        self.compile_wd(carrier, position)?;
+        let parameter_store = &introduced.defined_params.store_and_infer_results[0];
+        let parameter_position = SourcePosition {
+            before: 1,
+            ..*position
+        };
+        let (mut binders, _) = self.introduce_numeric_parameter(
+            &proof.parameter,
+            carrier.obj(),
+            parameter_store,
+            &parameter_position,
+        )?;
+        let parameter_fact =
+            self.resolve_fact(parameter_store.primary_fact_id(), &parameter_position)?;
+        let parameter_member = (
+            self.fact_proposition(&parameter_fact, &parameter_position)?,
+            format!("h_{}", parameter_store.primary_fact_id().value()),
+        );
+        let mut definitions = self.compile_parameter_inferences(
+            parameter_store,
+            &parameter_fact,
+            &parameter_member,
+            &parameter_position,
+        )?;
+        let domain = &proof.goal_domain;
+        let completed = SourcePosition {
+            before: 2,
+            ..*position
+        };
+        let domain_fact =
+            self.resolve_fact(domain.store_and_infer.primary_fact_id(), &completed)?;
+        // The final forall allocates a fresh domain FactId after the checked
+        // header. Retain the checked producer's ID and validate the exact
+        // regenerated predicate, rather than treating it as another proof.
+        if !instantiated_fact_matches(&source.dom_facts[0], &domain_fact, &HashMap::new()) {
+            return Err(LeanCompileError::new(
+                "WD/InductionDomainSubject",
+                "The final forall domain is not the retained original induction guard.",
+            ));
+        }
+        self.validate_store(&domain.store_and_infer.store, &domain_fact)?;
+        self.compile_fact_wd(&domain.well_defined, &domain_fact, &parameter_position)?;
+        let formation = SourcePosition::new(
+            Some(&parameter_position),
+            SourceOwner::FactWD(&domain.well_defined),
+            usize::MAX,
+        );
+        let proposition = self.fact_proposition(&domain_fact, &formation)?;
+        let hypothesis = format!("h_{}", domain_fact.fact_id().value());
+        binders.push(format!(
+            "({hypothesis} : {})",
+            self.scope_proposition(proposition.clone(), &definitions)
+        ));
+        definitions.extend(self.compile_stored_inferences(
+            &domain.store_and_infer,
+            &domain_fact,
+            &(proposition, hypothesis),
+            &completed,
+        )?);
+        Ok((binders, definitions))
     }
 }
 

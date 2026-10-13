@@ -115,6 +115,15 @@ impl LitexToLeanCompiler {
                                 position,
                             )?,
                             (
+                                ArithmeticOperator::Abs(x),
+                                ArithmeticOperatorObjWellDefinedProofByDef::Abs(p),
+                            ) => self.compile_abs_wd(
+                                &x.arg,
+                                &p.child_obj_well_defined,
+                                &p.requirement_fact_verified,
+                                position,
+                            )?,
+                            (
                                 ArithmeticOperator::Pow(x),
                                 ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
                             ) => self.compile_pow_wd(
@@ -360,12 +369,17 @@ impl LitexToLeanCompiler {
             (
                 FactWellDefinedProof::AndFact { .. }
                 | FactWellDefinedProof::ChainFact { .. }
-                | FactWellDefinedProof::OrFact(_)
                 | FactWellDefinedProof::ExistFact(_)
                 | FactWellDefinedProof::ForallFactWithIff(_)
                 | FactWellDefinedProof::NotForall(_),
                 _,
             ) => Err(LeanCompileError::unsupported("WD/CompoundFact")),
+            (FactWellDefinedProof::OrFact(proof), Fact::OrFact(fact)) => {
+                self.compile_or_wd(fact, proof, position)
+            }
+            (FactWellDefinedProof::OrFact(_), _) => {
+                Err(LeanCompileError::unsupported("WD/OrSubject"))
+            }
         }
     }
 

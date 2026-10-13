@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::helper::{assume_fact, proof_verify_state, store_goal_fact, verify_goal_fact};
+use super::helper::{assume_fact_with_wd, proof_verify_state, store_goal_fact, verify_goal_fact};
 use super::recover_induction_param::recover_induction_param;
 use super::result::{
     ByInducBodySuccess, ByInducCaseFailed, ByInducCaseSuccess, ExecByInducStmtFailed,
@@ -17,7 +17,6 @@ use crate::ast::stmt::{ByInducStmt, ByStrongInducStmt, Stmt};
 use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 // Integer `by induc` / `by strong_induc`.
 // Stores a forall over `n Z` with premise `n >= from` and the inducted conclusion.
@@ -62,8 +61,12 @@ pub fn exec_by_strong_induc_stmt(
     Ok(ExecByStmtResult::StrongInduc(match result {
         ExecByInducStmtResult::Success(s) => {
             ExecByStrongInducStmtResult::Success(ExecByStrongInducStmtSuccess {
+                parameter: s.parameter,
+                induc_from: s.induc_from,
+                goals: s.goals,
                 from_in_z: s.from_in_z,
-                goal_domain_stored: s.goal_domain_stored,
+                introduced_parameter: s.introduced_parameter,
+                goal_domain: s.goal_domain,
                 goals_wd: s.goals_wd,
                 goal_wd_env: s.goal_wd_env,
                 body: s.body,
@@ -128,13 +131,14 @@ fn run_induc(
     let goal_facts: Vec<Fact> = stmt.to_prove.iter().cloned().map(Into::into).collect();
 
     let (wd_res, goal_wd_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        if let Err(msg) = intro_param_z(rt, &param)? {
-            return Ok(Err(ExecByInducStmtFailed::BodyShape(msg)));
-        }
+        let introduced_parameter = match intro_param_z(rt, &param)? {
+            Ok(result) => result,
+            Err(msg) => return Ok(Err(ExecByInducStmtFailed::BodyShape(msg))),
+        };
         // The theorem is over integers n >= from. WD uses this domain, never IH.
         // Example: f : N -> N is callable in a proof inducted from zero.
         let domain = mk_greater_equal(rt, param_obj(&param), stmt.induc_from.clone());
-        let goal_domain_stored = match assume_fact(rt, &domain)? {
+        let goal_domain = match assume_fact_with_wd(rt, &domain)? {
             Ok(stored) => stored,
             Err(msg) => return Ok(Err(ExecByInducStmtFailed::GoalDomain(msg))),
         };
@@ -146,9 +150,9 @@ fn run_induc(
             }
             wds.push(wd);
         }
-        Ok(Ok((goal_domain_stored, wds)))
+        Ok(Ok((introduced_parameter, goal_domain, wds)))
     })?;
-    let (goal_domain_stored, goals_wd) = match wd_res {
+    let (introduced_parameter, goal_domain, goals_wd) = match wd_res {
         Ok(w) => w,
         Err(e) => return Ok(ExecByInducStmtResult::Failed(e)),
     };
@@ -186,8 +190,12 @@ fn run_induc(
     };
 
     Ok(ExecByInducStmtResult::Success(ExecByInducStmtSuccess {
+        parameter: param,
+        induc_from: stmt.induc_from.clone(),
+        goals: goal_facts,
         from_in_z: from_ok,
-        goal_domain_stored,
+        introduced_parameter,
+        goal_domain,
         goals_wd,
         goal_wd_env,
         body,
@@ -205,13 +213,14 @@ fn run_induction_cases(
     step_proof: &[Stmt],
 ) -> RuntimeResult<Result<(ByInducCaseSuccess, ByInducCaseSuccess), ExecByInducStmtFailed>> {
     let (base_inner, base_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let mut assumptions_stored = Vec::new();
-        if let Err(msg) = intro_param_z(rt, param)? {
-            return Ok(Err(ByInducCaseFailed::Assume(msg)));
-        }
+        let mut assumptions = Vec::new();
+        let introduced_parameter = match intro_param_z(rt, param)? {
+            Ok(result) => result,
+            Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
+        };
         let n_eq_from = mk_equal(rt, param_obj(param), stmt.induc_from.clone());
-        match assume_fact(rt, &n_eq_from)? {
-            Ok(s) => assumptions_stored.push(s),
+        match assume_fact_with_wd(rt, &n_eq_from)? {
+            Ok(s) => assumptions.push(s),
             Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
         }
         let proof_steps = match run_proof_body_stmts(rt, base_proof)? {
@@ -233,30 +242,39 @@ fn run_induction_cases(
             }
             goals_verified.push(proof);
         }
-        Ok(Ok((assumptions_stored, proof_steps, goals_verified)))
-    })?;
-    let base = match base_inner {
-        Ok((assumptions_stored, proof_steps, goals_verified)) => ByInducCaseSuccess {
-            assumptions_stored,
+        Ok(Ok((
+            introduced_parameter,
+            assumptions,
             proof_steps,
             goals_verified,
-            local_env: base_env,
-        },
+        )))
+    })?;
+    let base = match base_inner {
+        Ok((introduced_parameter, assumptions, proof_steps, goals_verified)) => {
+            ByInducCaseSuccess {
+                introduced_parameter,
+                assumptions,
+                proof_steps,
+                goals_verified,
+                local_env: base_env,
+            }
+        }
         Err(e) => return Ok(Err(ExecByInducStmtFailed::BaseCase(e))),
     };
 
     let (step_inner, step_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let mut assumptions_stored = Vec::new();
-        if let Err(msg) = intro_param_z(rt, param)? {
-            return Ok(Err(ByInducCaseFailed::Assume(msg)));
-        }
+        let mut assumptions = Vec::new();
+        let introduced_parameter = match intro_param_z(rt, param)? {
+            Ok(result) => result,
+            Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
+        };
         let n_ge_from = mk_greater_equal(rt, param_obj(param), stmt.induc_from.clone());
-        match assume_fact(rt, &n_ge_from)? {
-            Ok(s) => assumptions_stored.push(s),
+        match assume_fact_with_wd(rt, &n_ge_from)? {
+            Ok(s) => assumptions.push(s),
             Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
         }
         match store_ihs(rt, param, stmt.induc_from, goal_facts, strong)? {
-            Ok(mut xs) => assumptions_stored.append(&mut xs),
+            Ok(mut xs) => assumptions.append(&mut xs),
             Err(e) => return Ok(Err(e)),
         }
         let proof_steps = match run_proof_body_stmts(rt, step_proof)? {
@@ -279,22 +297,33 @@ fn run_induction_cases(
             }
             goals_verified.push(proof);
         }
-        Ok(Ok((assumptions_stored, proof_steps, goals_verified)))
-    })?;
-    let step = match step_inner {
-        Ok((assumptions_stored, proof_steps, goals_verified)) => ByInducCaseSuccess {
-            assumptions_stored,
+        Ok(Ok((
+            introduced_parameter,
+            assumptions,
             proof_steps,
             goals_verified,
-            local_env: step_env,
-        },
+        )))
+    })?;
+    let step = match step_inner {
+        Ok((introduced_parameter, assumptions, proof_steps, goals_verified)) => {
+            ByInducCaseSuccess {
+                introduced_parameter,
+                assumptions,
+                proof_steps,
+                goals_verified,
+                local_env: step_env,
+            }
+        }
         Err(e) => return Ok(Err(ExecByInducStmtFailed::StepCase(e))),
     };
 
     Ok(Ok((base, step)))
 }
 
-fn intro_param_z(runtime: &mut Runtime, param: &BoundName) -> RuntimeResult<Result<(), String>> {
+fn intro_param_z(
+    runtime: &mut Runtime,
+    param: &BoundName,
+) -> RuntimeResult<Result<crate::execute::IntroduceTypedParametersResult, String>> {
     let typed = TypedParameterList {
         groups: vec![TypedParameterGroup {
             params: vec![param.clone()],
@@ -302,7 +331,7 @@ fn intro_param_z(runtime: &mut Runtime, param: &BoundName) -> RuntimeResult<Resu
         }],
     };
     match runtime.introduce_typed_parameters(&typed, proof_verify_state())? {
-        Ok(_) => Ok(Ok(())),
+        Ok(result) => Ok(Ok(result)),
         Err(_) => Ok(Err(format!(
             "by induc: failed to introduce `{}` in Z",
             param.name
@@ -316,7 +345,9 @@ fn store_ihs(
     induc_from: &Obj,
     goals: &[Fact],
     strong: bool,
-) -> RuntimeResult<Result<Vec<StoreFactAndInferResult>, ByInducCaseFailed>> {
+) -> RuntimeResult<
+    Result<Vec<crate::execute::execute_fact_stmt::AssumeDomFactResult>, ByInducCaseFailed>,
+> {
     let mut out = Vec::new();
     if strong {
         for (index, goal) in goals.iter().enumerate() {
@@ -324,7 +355,7 @@ fn store_ihs(
                 Ok(f) => f,
                 Err(msg) => return Ok(Err(ByInducCaseFailed::Assume(msg))),
             };
-            match assume_fact(runtime, &ih)? {
+            match assume_fact_with_wd(runtime, &ih)? {
                 Ok(s) => out.push(s),
                 Err(msg) => {
                     return Ok(Err(ByInducCaseFailed::Assume(format!(
@@ -335,7 +366,7 @@ fn store_ihs(
         }
     } else {
         for (index, goal) in goals.iter().enumerate() {
-            match assume_fact(runtime, goal)? {
+            match assume_fact_with_wd(runtime, goal)? {
                 Ok(s) => out.push(s),
                 Err(msg) => {
                     return Ok(Err(ByInducCaseFailed::Assume(format!("IH {index}: {msg}"))));

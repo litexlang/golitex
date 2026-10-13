@@ -5,6 +5,55 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_refined_positive_real_strategy(
+        &self,
+        fact: &InFact,
+        requirements: &[Fact],
+        results: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if fact.set != Obj::StandardSet(StandardSet::RPos) {
+            return Err(LeanCompileError::unsupported(
+                "RefinedNumericCarrier/OtherTarget",
+            ));
+        }
+        if requirements.len() != 2 || results.len() != 2 {
+            return Err(LeanCompileError::new("RefinedPositiveReal/Requirements", "The selected refinement must retain its ordered real and strictly positive source results."));
+        }
+        if membership_subject(&requirements[0], &fact.element)? != StandardSet::R {
+            return Err(LeanCompileError::new(
+                "RefinedPositiveReal/RealSubject",
+                "The original real-membership child must describe this exact element.",
+            ));
+        }
+        let Fact::AtomicFact(positive) = &requirements[1] else {
+            return Err(LeanCompileError::new(
+                "RefinedPositiveReal/OrderFamily",
+                "The original positivity child must be atomic.",
+            ));
+        };
+        let (zero, element, strict) = source_order_oriented(positive)?;
+        if !strict || !is_exact_zero(zero) || element.ir() != fact.element.ir() {
+            return Err(LeanCompileError::new(
+                "RefinedPositiveReal/OrderSubject",
+                "The original positivity child changes its exact element or strict zero bound.",
+            ));
+        }
+        let mut proofs = Vec::new();
+        for (requirement, result) in requirements.iter().zip(results) {
+            if source_subject(result)? != *requirement {
+                return Err(LeanCompileError::new("RefinedPositiveReal/RequirementCapture", "An original ordered refinement result differs from its actual requirement identity."));
+            }
+            proofs.push(self.compile_verify(result, position)?.1);
+        }
+        Ok(format!(
+            "(Litex.inRPos_intro {} {} {})",
+            self.compile_object_reference(&fact.element, position)?,
+            proofs[0],
+            proofs[1]
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_positive_real_from_known_strict_order(
         &self,
         fact: &InFact,
@@ -80,12 +129,9 @@ impl LitexToLeanCompiler {
                 exact_rational_literal(&scalar, "ℝ")?
             };
         let object = self.compile_object_reference(element, position)?;
-        let denotation = format!(
-            "({}).trans (congrArg M.number (by norm_num : {} = ({representative} : ℂ)))",
-            native.1, native.0
-        );
         Ok(format!(
-            "(Litex.NativeBridge.inOfDenoteNumber {object} ({representative} : ℂ) (Litex.RPos (M := M)) ({denotation}) (Litex.numberInRPos (M := M) {representative} (by norm_num)))"
+            "(Litex.NativeBridge.inOfDenoteNumber {object} {} (Litex.RPos (M := M)) {} (Litex.NativeBridge.numberInRPosOfEq (M := M) {} {representative} (by norm_num) (by norm_num)))",
+            native.0, native.1, native.0
         ))
     }
 }

@@ -4,3 +4,4 @@ mod compile_fact_stmt_result;
 mod compile_forall_fact_result;
 mod compile_obj_well_defined_result;
 mod compile_verify_fact_result;
+mod compile_verify_or_fact_result;

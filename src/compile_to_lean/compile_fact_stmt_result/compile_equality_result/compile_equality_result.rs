@@ -3,6 +3,7 @@ use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
 use crate::prelude::*;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof;
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_verify_equality_result(
@@ -82,6 +83,31 @@ impl LitexToLeanCompiler {
                 ))
             }
             EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(proof),
+            ) => self.compile_abs_nonnegative_identity(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::ElementaryArithmetic(
+                    ElementaryArithmeticProof::AbsEvenPower,
+                ),
+            ) => self.compile_abs_even_power_identity(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::PowerProductSameBase(proof),
+            ) => self.compile_natural_power_product(
+                fact,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::PowerOfPower(proof),
+            ) => self.compile_natural_power_of_power(
+                fact,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::AddZeroRightFromEqualities(proof),
+            ) => self.compile_add_zero_from_equalities(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::Calculation(
                     EqualitySearchProofByCalculation::Rational {},
                 ),
@@ -119,18 +145,32 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::unsupported("Equality/BuiltinStrategy"))
             }
             EqualFactSearchedProof::ByMatchingOneArgByOne(proof) => self
-                .compile_arithmetic_congruence(
+                .compile_matching_one_arg_by_one(
                     fact,
                     &proof.corresponding_arg_equal_proofs,
                     position,
                 )?,
-            EqualFactSearchedProof::ByKnownForallFact(_) => {
-                return Err(LeanCompileError::unsupported("Equality/KnownForallFact"))
+            EqualFactSearchedProof::ByKnownForallFact(proof) => {
+                self.compile_known_application(&fact.clone().into(), proof, position)?
+                    .1
             }
-            EqualFactSearchedProof::ByKnownForallFactViaSymmetry(_) => {
-                return Err(LeanCompileError::unsupported(
-                    "Equality/KnownForallFactViaSymmetry",
-                ))
+            EqualFactSearchedProof::ByKnownForallFactViaSymmetry(proof) => {
+                if proof.reversed_equal.left.ir() != fact.right.ir()
+                    || proof.reversed_equal.right.ir() != fact.left.ir()
+                {
+                    return Err(LeanCompileError::new(
+                        "Equality/KnownForallSymmetryEndpoints",
+                        "The original symmetry capture must reverse both exact goal endpoints.",
+                    ));
+                }
+                let reversed = self
+                    .compile_known_application(
+                        &proof.reversed_equal.clone().into(),
+                        &proof.known_forall,
+                        position,
+                    )?
+                    .1;
+                format!("(Eq.symm {reversed})")
             }
             EqualFactSearchedProof::ByBuiltinRewrite(proof) => {
                 self.compile_equality_builtin_rewrite(fact, proof, position)?

@@ -19,8 +19,10 @@ use crate::exec_env::{ExecEnv, StoredIdentifierDefinition};
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
+use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::rc::Rc;
 
 pub enum ExecHaveFnEqualCaseByCaseStmtFailed {
@@ -45,7 +47,16 @@ pub struct HaveFnCaseReturnCheckSuccess {
     pub local_env: Box<ExecEnv>,
 }
 
+/// Existing clause introductions in their execution order. No new facts or
+/// separate replay store are introduced by retaining these return values.
+pub struct IntroduceFnSetClauseBindersResult {
+    pub defined_params: StoreHaveObjAndInferResult,
+    pub assumed_dom_facts: Vec<StoreFactAndInferResult>,
+}
+
 pub struct StoreHaveFnCaseByCaseAndInferResult {
+    pub membership: StoreFactAndInferResult,
+    pub case_defining: Vec<StoreFactAndInferResult>,
     pub membership_fact_id: FactId,
     pub case_defining_fact_ids: Vec<FactId>,
     pub stored_fact_ids: Vec<FactId>,
@@ -307,14 +318,23 @@ impl Runtime {
         &mut self,
         clause: &FnSetClause,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<()> {
+    ) -> RuntimeResult<IntroduceFnSetClauseBindersResult> {
         let typed = set_bound_to_typed(&clause.set_bound_parameters);
-        let _ = self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let defined_params =
+            self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let mut assumed_dom_facts = Vec::new();
         for dom in &clause.dom_facts {
-            let _ = self
-                .store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()), verify_state)?;
+            assumed_dom_facts.push(
+                self.store_fact_and_infer(
+                    &quantifier_free_fact_to_fact(dom.clone()),
+                    verify_state,
+                )?,
+            );
         }
-        Ok(())
+        Ok(IntroduceFnSetClauseBindersResult {
+            defined_params,
+            assumed_dom_facts,
+        })
     }
 
     pub(crate) fn store_have_fn_case_by_case_facts(
@@ -357,9 +377,8 @@ impl Runtime {
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let mut stored_fact_ids = self
-            .store_fact_and_infer(&membership, verify_state)?
-            .stored_fact_ids();
+        let membership = self.store_fact_and_infer(&membership, verify_state)?;
+        let mut stored_fact_ids = membership.stored_fact_ids();
 
         let typed = set_bound_to_typed(&stmt.fn_set_clause.set_bound_parameters);
         let mut args = Vec::new();
@@ -383,6 +402,7 @@ impl Runtime {
             .collect();
 
         let mut case_defining_fact_ids = Vec::with_capacity(stmt.cases.len());
+        let mut case_defining = Vec::with_capacity(stmt.cases.len());
         for (case_fact, equal_to) in stmt.cases.iter().zip(stmt.equal_tos.iter()) {
             let mut dom_facts = base_dom.clone();
             dom_facts.push(and_chain_as_fact(case_fact));
@@ -406,9 +426,12 @@ impl Runtime {
             let stored = self.store_fact_and_infer(&forall, verify_state)?;
             case_defining_fact_ids.push(forall_id);
             stored_fact_ids.extend(stored.stored_fact_ids());
+            case_defining.push(stored);
         }
 
         Ok(StoreHaveFnCaseByCaseAndInferResult {
+            membership,
+            case_defining,
             membership_fact_id,
             case_defining_fact_ids,
             stored_fact_ids,

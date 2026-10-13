@@ -35,18 +35,22 @@ compiler result types.
 ```text
 RunLitexCodeResult.statement_results
   -> ExecStmtResult
-     -> ExecDefinitionStmtResult -> ExecDefineObjStmtResult / DefThm
-     -> ExecByStmtResult -> ByThm
+     -> ExecDefinitionStmtResult
+        -> DefineObj / DefProp / HaveFnEqual / HaveFnByInduc / DefThm
+     -> ExecByStmtResult -> ByThm / Induc
+     -> ExecReleaseAndExpandStmtResult -> ReleaseThm
+     -> ExecProofBlockStmtResult -> Claim -> forall / non-forall body
      -> ExecFactStmtResult -> VerifyFactResult
-        -> equality / atomic-except-equality / forall
+        -> equality / atomic-except-equality / forall / And / chain / Or
         -> selected searched_proof and its original children
         -> object WD and its original constructor/domain evidence
 ```
 
 The entrypoint owns run validation, namespace/header output and ordered traversal.
 Statement dispatch belongs to `compile_stmt_result`; leaf owners mirror let,
-have, theorem, by-theorem and fact-result branches. `source_position` reads the
-original result prefix/ancestors; `source_queries` resolves exact subjects.
+have, function, theorem, invocation, induction and fact-result branches.
+`source_position` reads the original result prefix/ancestors;
+`source_queries` resolves exact subjects.
 `compile_store_result` validates actual stores. Naming helpers spell existing source IDs;
 `lean_compile_error` reports source statement position and rejected route.
 
@@ -142,6 +146,16 @@ certificate family; no independent target theorem search is performed. The
 source Rational tag does not contain a monomial trace, so Lean checks the
 normalization proof rather than replaying an unavailable low-level trace.
 
+Real absolute value retains `Litex.AbsObj`: its constructor consumes the
+original argument WD and exact R-membership proof. Numeric observations use
+the proved real denotation bridge; selected nonnegativity, nonnegative-argument
+equality and even-power identities replay their own certificates. Absolute
+value in a formula body uses the same semantic operation. Natural exponents
+use the original N-membership to obtain a proof-independent native `ℕ`
+observation without changing the source object. This supports composed powers
+such as `(1 / 4)^(2^n)` and the selected product-of-powers and power-of-power
+rules with their exact ordered base/exponent evidence.
+
 `FnApplicationUnfoldSubstitution` equality evidence replays the exact
 head-to-anonymous-function citation, original and selected call WD, binder-ID
 beta substitution, scalar congruence and actual residual. Steps are consumed
@@ -166,6 +180,62 @@ calls consume the recorded function membership, input memberships and atomic
 guards. The additional `FunctionSemantics M` interface has a proved ZF model
 in the same `lean/Litex.lean`. Its body callbacks interpret source objects,
 without replacing their representations with native real arrows.
+
+The Newton stage-1 extension adds `R+` inputs and targets to this one/two-input
+formula slice. `RPos` is the derived separation of `R` by positivity. Input
+memberships supply the base-real and positive-guard certificates; target APIs
+use the actual semantic set with its sethood proof. Existing numeric APIs keep
+their standard-set arguments. Signature and formula construction consume the
+original completed return-set WD stage, including when the function is the
+first source statement. Other signed targets remain unsupported.
+
+`compile_claim_stmt_result` consumes successful claim results directly. The
+owning producer retains its original statement, goal WD, introduced parameters,
+assumed domains, proof steps, conclusion proofs, local environment and stored
+goal. Its JSON projections retain their existing presentation fields. Helper
+facts stay inside the claim; only the actually stored conclusion is exported.
+Positive sum/quotient adapters consume the selected rules and their ordered
+requirements, with original operation WD. The maintained tracer is
+`lean/examples/newton_positive_update/statement.lit`.
+
+Recursive declarations currently accept one N parameter, that parameter as the
+measure, literal lower bound zero, no authored domain clauses, and the two
+ordered leaf cases `n = 0` and `n > 0`. The base body cannot call itself;
+successor self calls must use the exact source argument `n - 1`. Returns use
+the supported N/Z/Q/R/C/R+ carriers and bodies use reviewed constructors.
+The producer
+retains its existing binder introduction, measure/lower WD, restricted self
+membership store, case checks and final stores. The compiler emits an owned
+`Litex.RecursiveNatFn` graph. `Nat.rec` interprets its histories internally;
+each checked body uses the exact restricted prefix graph and its recorded
+N-membership, smaller-index and lower-bound proofs. The declaration rule's
+generated self signature is consumed from its actual store and earlier
+signature formation, without inventing another verifier WD stage. Final case
+equations preserve their stored FactIds. Unfolding replays the captured
+selected guard path, original call WD and residual equality. Ordinary
+single-group one/two-argument call congruence likewise consumes the original
+ordered argument proofs followed by the function-head proof.
+
+Ordinary `by induc k from 0` supports nonempty atomic or flat And/chain goals
+whose constructors and proof routes are supported. Its checked integer
+parameter, lower-domain WD/store, goal WD and separate base/step scopes remain
+in the original result. The consumer replays each case's own introduction,
+ordered assumptions, steps and goal proofs, then applies the proved integer
+induction bridge to the source semantic predicate. Only the final stored
+forall is exported. A local result quantifies over `M.Value` with the original
+integer-membership and lower-bound premises. Its exact FactId citation adds
+an anonymous Representation bridge from the caller's certified generic Obj
+to its denotation; the caller universe is inferred at each use. Global exports
+keep generic Obj binders, and no universe registry is introduced.
+Its constructor factory uses the original goal header;
+closed case facts remain unavailable. Strong induction, other lower bounds,
+general recursion measures, nested cases and authored recursive domains retain
+explicit rejection branches.
+
+The full Newton source pair is
+`lean/examples/newton_residual_bound/statement.lit`. Its all-index residual
+bound acceptance is still pending; implementation support and successful
+smaller-prefix checks do not establish that complete gate.
 
 The phase-4 set slice preserves arbitrary `have A set` and set-kind universal
 binders as generic certified parameters. Empty and finite enumerations retain
@@ -200,8 +270,9 @@ projections. KnownSubset consumes both its recorded member and subset citation.
 The generated pairs include composed_real_formula, chain_guard_reciprocal,
 closed_unit_interval and subset_real_membership_order.
 
-Recursive/higher-order bodies, nonempty/finite binder kinds, local prop/function
-or nested theorem definitions, general compound logic, unreviewed consumed
+Higher-order bodies, recursion outside the bounded slice above, nonempty/finite
+binder kinds, local prop/function or nested theorem definitions, compound logic
+outside the reviewed flat routes, unreviewed consumed
 inference and module compilation retain explicit unsupported branches.
 Exact certificates, orientations, argument
 match evidence and residual children must be preserved. Generated files keep
@@ -242,7 +313,9 @@ components, without inventing a nested infer stage. Pending rule/store positions
 continue to reject their future producers.
 
 `compile_known_application.rs` consumes the shared selected forall-application
-certificate for Chain/And and supported non-equality atomic conclusions.
+certificate for supported atomic equality/non-equality, flat Chain/And and Or
+conclusions. Equality through symmetry validates the captured reversed subject
+before applying the same certificate and equality symmetry.
 It validates the exact direct conclusion, argument matches, parameter-type
 requirements and ordered domain proofs. Existing scoped formation and callee
 instances remain the only constructor sources. Identifier-headed one/two-input
@@ -251,6 +324,11 @@ semantic call/pair congruence transports that recorded equality. Curried,
 anonymous-head and unreviewed constructors remain rejected. This adds no
 Runtime search, result fields, persistent registry or replacement proof.
 
+Or replay supports a proved selected branch without assumed negated branches,
+the captured integer successor-tail rule, and exact known-forall applications.
+Branch formation, selection index, ordered integer/bound proofs and source
+subjects are checked. Other disjunction strategies remain rejected.
+
 Explicit by-thm calls also replay flat And/Chain returned packages. Original
 domain proofs are followed by their captured `dom_stores`; all conclusion WD
 finishes before any return package is published. Direct component selection
@@ -258,6 +336,13 @@ uses the package's actual stored FactIds, preserving the invocation's strict
 selection contract. Caller `selected_wd` remains separate from the closed
 invocation. `named_compound_theorem_returns` includes two scalar wrappers whose
 final proofs genuinely cite the selected invocation stores.
+
+`release thm` consumes the same user-theorem invocation stages and publishes
+each supported scalar/flat And/chain return through its original caller
+WD/store pair. All invocation-local conclusion WD finishes before export;
+later returns can use only completed caller stages. Released stores and their
+supported inference keep their actual FactIds. Qualified/builtin theorem
+callees and other release families remain unsupported.
 
 Concrete predicate equality transport uses the exact previous declaration,
 predicate identity, polarity and arity, with ordered source equality proofs.
@@ -281,7 +366,7 @@ The original phases 8-11 minimum was accepted again on current single-hop
 typed results on 2026-10-12. The coherent checkpoint checks 74 actual
 source/generated pairs, 45 maintained profiles, six separate whole-known
 Chain/And and WD-factory profiles, the original S01-S18/I01 matrix and 19
-mathematical cross-cases. Current gates pass 311 compiler tests, pinned real
+mathematical cross-cases. That checkpoint passed 311 compiler tests, pinned real
 Lean, 64 exports per native layer and an ordinary Lake client with 64 direct
 applications and six combinations. All 64 Final signatures remain unchanged;
 the original 45 elaborated native statements match their phase-7 baseline.
@@ -289,8 +374,8 @@ The local completion matrix separates whole-file checks, selected
 original result stages and actual native signatures. Ten new native interfaces
 are closed evaluations, six are generic and three mix both scopes. Handwritten
 adapters choose the proved model explicitly; this is not automatic native
-interface generation or support for every Litex evidence variant. Current
-receipts are acceptance_phase8_current through acceptance_phase11_current and
+interface generation or support for every Litex evidence variant. Receipts for
+that checkpoint are acceptance_phase8_current through acceptance_phase11_current and
 acceptance_phases8_11_current in the local-only compiler workspace. The
 2026-10-11 phases 8-12 receipts remain historical evidence of their own build.
 

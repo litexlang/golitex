@@ -68,7 +68,7 @@ impl LitexToLeanCompiler {
                     )
                 }
                 (
-                    Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_),
+                    Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_),
                     ExecClaimBodyProof::NonForall(body),
                 ) => (
                     Vec::new(),
@@ -211,7 +211,7 @@ impl LitexToLeanCompiler {
                     definitions,
                 ))
             }
-            (Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_), _) => {
+            (Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_), _) => {
                 let formed =
                     SourcePosition::new(Some(position), SourceOwner::FactWD(goal_wd), usize::MAX);
                 Ok((
@@ -337,8 +337,8 @@ fn claim_goal_component(fact: &ExistOrAndChainAtomicFact) -> Result<Fact, LeanCo
         ExistOrAndChainAtomicFact::AtomicFact(fact) => Ok(Fact::AtomicFact(fact.clone())),
         ExistOrAndChainAtomicFact::AndFact(fact) => Ok(Fact::AndFact(fact.clone())),
         ExistOrAndChainAtomicFact::ChainFact(fact) => Ok(Fact::ChainFact(fact.clone())),
-        ExistOrAndChainAtomicFact::OrFact(_)
-        | ExistOrAndChainAtomicFact::ExistFact(_)
+        ExistOrAndChainAtomicFact::OrFact(fact) => Ok(Fact::OrFact(fact.clone())),
+        ExistOrAndChainAtomicFact::ExistFact(_)
         | ExistOrAndChainAtomicFact::ExistUniqueFact(_)
         | ExistOrAndChainAtomicFact::NotExistFact(_) => {
             Err(LeanCompileError::unsupported("Claim/CompoundThen"))

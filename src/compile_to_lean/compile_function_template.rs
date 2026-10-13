@@ -248,7 +248,7 @@ impl LitexToLeanCompiler {
         )
     }
 
-    fn compile_function_raw_expression_bound(
+    pub(in crate::compile_to_lean) fn compile_function_raw_expression_bound(
         &self,
         object: &Obj,
         position: &SourcePosition<'_>,
@@ -275,6 +275,12 @@ impl LitexToLeanCompiler {
                 standard_value_constructor(set)?
             )),
             Obj::ArithmeticOperator(operator) => {
+                if let ArithmeticOperator::Abs(value) = operator {
+                    return Ok(format!(
+                        "(Litex.absValue (M := M) {})",
+                        expression(&value.arg)?
+                    ));
+                }
                 let (name, left, right) = match operator {
                     ArithmeticOperator::Add(value) => ("addValue", &value.left, Some(&value.right)),
                     ArithmeticOperator::Sub(value) => ("subValue", &value.left, Some(&value.right)),
@@ -303,8 +309,20 @@ impl LitexToLeanCompiler {
                     return Err(LeanCompileError::unsupported("Function/BodyCallHead"));
                 };
                 let object = Obj::Identifier(identifier.clone());
-                self.validate_formula_head_producer(&object, position)?;
-                let head = self.compile_object_reference(&object, position)?;
+                let head = if let Some(value) = match identifier {
+                    IdentifierObj::Plain { id, .. } => bindings.get(id),
+                    _ => None,
+                } {
+                    // A recursive interpretation is supplied by this exact
+                    // source binder, not by a compiler-owned function registry.
+                    value.clone()
+                } else {
+                    self.validate_formula_head_producer(&object, position)?;
+                    format!(
+                        "(Litex.denote {})",
+                        self.compile_object_reference(&object, position)?
+                    )
+                };
                 let arguments = application.body[0]
                     .iter()
                     .map(|argument| expression(argument))
@@ -318,7 +336,7 @@ impl LitexToLeanCompiler {
                     )
                 };
                 Ok(format!(
-                    "(Litex.FunctionSemantics.callValue (M := M) (Litex.denote {head}) {argument})"
+                    "(Litex.FunctionSemantics.callValue (M := M) {head} {argument})"
                 ))
             }
             _ => Err(LeanCompileError::unsupported("Function/BodyObject")),
@@ -331,7 +349,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if position.visible_function(id).is_ok() {
+            if position.visible_function(id).is_ok()
+                || position.visible_recursive_function(id).is_ok()
+            {
                 return Ok(());
             }
         }
@@ -353,7 +373,7 @@ impl LitexToLeanCompiler {
         self.compile_function_raw_predicate(fact, position, &function_raw_bindings(signature))
     }
 
-    fn compile_function_raw_predicate(
+    pub(in crate::compile_to_lean) fn compile_function_raw_predicate(
         &self,
         fact: &Fact,
         position: &SourcePosition<'_>,

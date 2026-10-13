@@ -90,6 +90,8 @@ impl LitexToLeanCompiler {
                             AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
                                 AtomicFact::InFact(fact) => match rule {
                                     crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(_) => self.compile_complex_arithmetic_closure(fact, position)?,
+                                    InFactSearchProofByBuiltinRule::RealPower(_) | InFactSearchProofByBuiltinRule::RealOperandArithmeticClosure(_) | InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(_) => self.compile_real_arithmetic_membership(fact, rule, position)?,
+                                    InFactSearchProofByBuiltinRule::PredecessorFromPositiveNatural(p) => self.compile_natural_predecessor(fact, &p.in_natural_proof, &p.positive_proof, position)?,
                                     InFactSearchProofByBuiltinRule::ListSetElementMembership(_) | InFactSearchProofByBuiltinRule::SetBuilderMembership(_) => self.compile_set_membership_rule(fact, rule, position)?,
                                     _ => self.compile_fn_return_builtin(fact, rule, position)?,
                                 },
@@ -99,6 +101,7 @@ impl LitexToLeanCompiler {
                                 AtomicFact::SubsetFact(fact) => self.compile_set_subset_rule(fact, rule, position)?,
                                 _ => return Err(LeanCompileError::new("Set/SubsetFamily", "Subset evidence belongs to another atomic family.")),
                             },
+                            rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessEqualFact(_)) => self.compile_negative_order_builtin(&success.fact, rule, position)?,
                             other => return Err(unsupported_atomic_builtin(other)),
                         },
                         AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(rule)) => match &success.fact {
@@ -110,7 +113,17 @@ impl LitexToLeanCompiler {
                         },
                         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)) =>
                             self.compile_nonzero_product(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
-                        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(_))) =>
+                        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonnegativeFromZero(proof)) =>
+                            self.compile_sub_nonnegative_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
+                        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonnegativeSumIsNonnegative(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveRightStrict(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductNonnegativeBothNonneg(_))) =>
+                            self.compile_selected_zero_bound_strategy(&success.fact, strategy, position)?,
+                        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedPositiveDenomLessEqual(proof)) =>
+                            self.compile_div_monotone_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
+                        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RefinedNumericCarrier(proof)) => match &success.fact {
+                            AtomicFact::InFact(fact) => self.compile_refined_positive_real_strategy(fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
+                            _ => return Err(LeanCompileError::new("RefinedNumericCarrier/Family", "The selected numeric refinement has another atomic source family.")),
+                        },
+                        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(_) | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(_))) =>
                             self.compile_positive_order_strategy(&success.fact, strategy, position)?,
                         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
                             return Err(LeanCompileError::unsupported("Atomic/BuiltinStrategy"))

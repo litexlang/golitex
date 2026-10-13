@@ -1,156 +1,76 @@
 {
-  "status": "verified",
+  "status": "verified_standalone",
   "checked_on": "2026-10-13",
-  "scope": "One short lecture importing the public selected Tao Chapters 1\u20138 and Appendix A. Not a whole-book formalization.",
-  "binary_sha256": "ce0e84f4fefe60d3acf0ed64a74c7dd9fda7a01fc947da1f4208e71c52b3dee0",
-  "command": "litex -lang en -f showcases/analysis_notes/analysis.lit",
-  "strict": false,
-  "persistent_session": {
-    "accepted_source_order_statements": 15,
-    "normal_failures_repaired_without_restart": true,
-    "dependency_mount_passed": true,
-    "exact_materialized_source_matches_accepted_statements": true
-  },
-  "source_sha256": "26daccb80e0ac31f94a547d3e48fe866ee9295dfbcc37367a967d6c714fee546",
-  "config_sha256": "5d03809baa20143685e079dd5c738f6dc051ec2fbb00a17f8fe11292e39ac05c",
-  "dependency_config_sha256": "eb54826677fe241c788adf61c5f01bc4fd0b271799fa6851279fe0dd5561b657",
-  "dependency_sources": [
-    {
-      "path": "../analysis/Introduction.lit",
-      "sha256": "ce3acae3aaab5a4485893d7ad842def947e8a1a45554ddad62e737d82ee2e896"
-    },
-    {
-      "path": "../analysis/chapter01-introduction.lit",
-      "sha256": "f27cac3795191669845c5290a7b9ae74c2332f8752a347a2bff6f0a0be2e94a8"
-    },
-    {
-      "path": "../analysis/chapter02-natural-numbers.lit",
-      "sha256": "a0dfa05d10213f96b0a2209ca1d2a6a3c5008ae3cb70235fb02256983fc931df"
-    },
-    {
-      "path": "../analysis/chapter03-set-theory.lit",
-      "sha256": "889d69feffc03170de36740b9491e8ad4c4b0d201693182e42c44401566f810b"
-    },
-    {
-      "path": "../analysis/chapter04-integers-and-rationals.lit",
-      "sha256": "d07eb8b54803e9e7fed88e6c0d160b6fb3687583e66c2dcd178679c7473b4a46"
-    },
-    {
-      "path": "../analysis/chapter05-real-numbers.lit",
-      "sha256": "5c6aa04ada01280226cf6e4a55a9003376d7a118e56ea4a2d1eb56647d7897fb"
-    },
-    {
-      "path": "../analysis/chapter06-sequential-limits.lit",
-      "sha256": "11b408b5fab7e70842e3b2cc98fb41f522b255e24a2d998211b059a5dd2e342e"
-    },
-    {
-      "path": "../analysis/chapter07-series.lit",
-      "sha256": "b5f3949a0054930d159a526949377ce6d3688a633fc0cfd8cc4c5c2e2d3abeb4"
-    },
-    {
-      "path": "../analysis/appendix-a-logic-and-proof-language.lit",
-      "sha256": "c1608f20a6dafa6d9fc3818b888805c1cd20fd524e2f7b11e052492fb0d31900"
-    },
-    {
-      "path": "../analysis/chapter08-infinite-sets.lit",
-      "sha256": "a63aa685eda3d74dd51fc93b2224fd6d6e45faa14047bb15bffa9be417dda313"
-    }
-  ],
-  "lecture_assumption_declarations": {
-    "trust": 0,
-    "axiom": 0,
-    "abstract_prop": 0
-  },
-  "dependency_assumptions": [
-    {
-      "file": "Introduction.lit",
-      "declarations": []
-    },
-    {
-      "file": "chapter01-introduction.lit",
-      "declarations": []
-    },
-    {
-      "file": "chapter02-natural-numbers.lit",
-      "declarations": []
-    },
-    {
-      "file": "chapter03-set-theory.lit",
-      "declarations": []
-    },
-    {
-      "file": "chapter04-integers-and-rationals.lit",
-      "declarations": []
-    },
-    {
-      "file": "chapter05-real-numbers.lit",
-      "declarations": [
-        "axiom cauchy_sequence_representative_in_Q_exists:",
-        "axiom real_cauchy_sequence_has_limit_in_R:"
-      ]
-    },
-    {
-      "file": "chapter06-sequential-limits.lit",
-      "declarations": []
-    },
-    {
-      "file": "chapter07-series.lit",
-      "declarations": []
-    },
-    {
-      "file": "appendix-a-logic-and-proof-language.lit",
-      "declarations": []
-    },
-    {
-      "file": "chapter08-infinite-sets.lit",
-      "declarations": [
-        "axiom axiom_of_choice_for_index_cart:",
-        "axiom axiom_of_choice_for_subsets:",
-        "abstract_prop choice_property(x, y)"
-      ]
-    }
-  ],
-  "boundary_control": {
-    "cutoff_10_for_strict_error_one_tenth_rejected": true,
-    "cutoff_11_still_succeeds_in_same_session": true
-  },
-  "import_cache_written_after_initial_mount": false,
-  "limitations": [
-    "The whole imported selected module retains four user axioms and one abstract predicate signature.",
-    "Builtin mathematics and verifier are relied upon.",
-    "No Lean replay or independent kernel soundness audit.",
-    "No complete source-book or Chapters 9\u201311 coverage."
-  ],
-  "result": {
+  "scope": "Self-contained sequence limits and concrete geometric-series lectures; all definitions and proofs are local.",
+  "binary_sha256": "ab42556117c29a9e3f37fdb907a7eedd09d50c9e6e0aef3ceebe356e317a55d5",
+  "strict": true,
+  "command": "litex -lang en -strict -f showcases/analysis_notes/analysis.lit",
+  "registered_gate": {
     "exit_code": 0,
     "kind": "run",
     "success": true,
     "session_error": null,
-    "statement_count": 15,
-    "all_statement_results_success": true,
-    "seconds": 1788.086
+    "statement_count": 36,
+    "all_statements_success": true,
+    "seconds": 7.227
   },
-  "verification_basis": "Current release build; successful cold public Tao import into one persistent Session; all 15 lecture statements accepted there; independent registered -f run passed with all imports and 15 successful main-file statements.",
+  "config_free_gate": {
+    "command": "litex -lang en -strict -f <identical file in a directory without litex.config>",
+    "exit_code": 0,
+    "kind": "run",
+    "success": true,
+    "session_error": null,
+    "statement_count": 36,
+    "all_statements_success": true,
+    "seconds": 6.954
+  },
+  "source_sha256": "bf4877a748dc99b0c227e295fcbf603099c8eb1de03f8ba995d55903c74a45c8",
+  "config_sha256": "6c3e1f10a97521d6ff1d4f095e3d610153d4e254f3be54f760c2bd13e9d0f214",
+  "imports": [],
+  "external_mathematical_dependencies": [],
+  "user_assumption_declarations": {
+    "trust": 0,
+    "axiom": 0,
+    "abstract_prop": 0
+  },
+  "readme_snippets": [
+    {
+      "block": 1,
+      "sha256": "b5a6525c3d23b22531c08f2595f0085838032c57f2796c4abeef66968b41f7a6",
+      "strict": true,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    },
+    {
+      "block": 2,
+      "sha256": "9b72304179e583a018c0068c97c7c05c3ebac5a6fc67d31890eca6768f59d603",
+      "strict": true,
+      "exit_code": 0,
+      "kind": "run",
+      "success": true,
+      "session_error": null
+    }
+  ],
+  "persistent_session": {
+    "all_36_source_order_statements_accepted": true,
+    "normal_failures_repaired_without_restart": true,
+    "binary_sha256": "1bae4d731c28066fb005dda6d2fc4aabfe4e32e5d72f728d7f545363d68aea67"
+  },
+  "limitations": [
+    "Builtin number systems, arithmetic, Archimedean mathematics and verifier are relied upon.",
+    "Only ratios 1/2 and -1/2 and the -1 counterexample are developed here; not a general arbitrary-ratio theory.",
+    "The infinite sum is a limit of explicitly constructed partial sums; no general summation operator is introduced.",
+    "No complete textbook coverage, Lean replay or independent kernel soundness audit."
+  ],
   "publication_audit": {
-    "accepted_source_order_statements": 15,
-    "source_and_dependency_hashes_unchanged_through_final_gate": true,
-    "relative_links_checked": 71,
-    "missing_relative_links": [],
-    "intended_module_files": [
-      "analysis.lit",
-      "litex.config",
-      "README.md",
-      "math_collections.md",
-      "verification.json"
-    ],
-    "new_repository_created": false,
-    "staged_committed_or_pushed": false,
-    "checked_documents": [
-      "README.md",
-      "math_collections.md",
-      "../analysis/README.md",
-      "../analysis/STATUS.md",
-      "../../README.md"
-    ]
+    "imports": 0,
+    "external_qualified_names": 0,
+    "current_binary_matches_checked_binary": true,
+    "relative_links_checked": 65,
+    "missing_local_targets": [],
+    "no_new_repository_or_git_mutations": true,
+    "source_lines": 383
   }
 }

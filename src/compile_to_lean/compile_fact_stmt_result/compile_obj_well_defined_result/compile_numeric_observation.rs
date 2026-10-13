@@ -22,6 +22,18 @@ impl LitexToLeanCompiler {
                         self.compile_object_reference(object, position)?
                     ));
                 }
+                let bridge = match set {
+                    Obj::StandardSet(StandardSet::N) => Some("naturalToReal"),
+                    Obj::StandardSet(StandardSet::Z) => Some("integerToReal"),
+                    Obj::StandardSet(StandardSet::Q) => Some("rationalToReal"),
+                    _ => None,
+                };
+                if let Some(bridge) = bridge {
+                    return Ok(format!(
+                        "(Litex.{bridge} {} {hypothesis})",
+                        self.compile_object_reference(object, position)?
+                    ));
+                }
             }
         }
         if let Some(proof) = position.with_visible_membership(
@@ -174,24 +186,10 @@ impl LitexToLeanCompiler {
             if let Ok((_, Some(set), _, hypothesis)) =
                 position.visible_parameter(*id, &self.runtime)
             {
-                if set == &Obj::StandardSet(StandardSet::C) {
-                    return self.numeric_member(object, &hypothesis, position);
-                }
-                if set == &Obj::StandardSet(StandardSet::R) {
-                    let term = self.compile_object_reference(object, position)?;
-                    return self.numeric_member(
-                        object,
-                        &format!("(Litex.realToComplex {term} {hypothesis})"),
-                        position,
-                    );
-                }
-                if set == &Obj::StandardSet(StandardSet::RPos) {
-                    let term = self.compile_object_reference(object, position)?;
-                    return self.numeric_member(
-                        object,
-                        &format!("(Litex.positiveRealToComplex {term} {hypothesis})"),
-                        position,
-                    );
+                if let Some(member) =
+                    self.parameter_complex_membership(object, set, &hypothesis, position)?
+                {
+                    return self.numeric_member(object, &member, position);
                 }
             }
         }
@@ -341,6 +339,15 @@ impl LitexToLeanCompiler {
                         &position,
                     ),
                     (
+                        ArithmeticOperator::Abs(x),
+                        ArithmeticOperatorObjWellDefinedProofByDef::Abs(p),
+                    ) => self.numeric_abs_wd(
+                        &x.arg,
+                        &p.child_obj_well_defined,
+                        &p.requirement_fact_verified,
+                        &position,
+                    ),
+                    (
                         ArithmeticOperator::Pow(x),
                         ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
                     ) => self.numeric_pow_wd(
@@ -391,24 +398,10 @@ impl LitexToLeanCompiler {
                     if let Ok((_, Some(set), _, member)) =
                         position.visible_parameter(*id, &self.runtime)
                     {
-                        if set == &Obj::StandardSet(StandardSet::C) {
+                        if let Some(member) =
+                            self.parameter_complex_membership(obj, set, &member, position)?
+                        {
                             return self.numeric_member(obj, &member, position);
-                        }
-                        if set == &Obj::StandardSet(StandardSet::R) {
-                            let term = self.compile_object_reference(obj, position)?;
-                            return self.numeric_member(
-                                obj,
-                                &format!("(Litex.realToComplex {term} {member})"),
-                                position,
-                            );
-                        }
-                        if set == &Obj::StandardSet(StandardSet::RPos) {
-                            let term = self.compile_object_reference(obj, position)?;
-                            return self.numeric_member(
-                                obj,
-                                &format!("(Litex.positiveRealToComplex {term} {member})"),
-                                position,
-                            );
                         }
                     }
                 }
@@ -533,5 +526,26 @@ impl LitexToLeanCompiler {
             }
             _ => Ok(None),
         }
+    }
+    fn parameter_complex_membership(
+        &self,
+        object: &Obj,
+        carrier: &Obj,
+        member: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        let bridge = match carrier {
+            Obj::StandardSet(StandardSet::C) => return Ok(Some(member.to_string())),
+            Obj::StandardSet(StandardSet::N) => "naturalToComplex",
+            Obj::StandardSet(StandardSet::Z) => "integerToComplex",
+            Obj::StandardSet(StandardSet::Q) => "rationalToComplex",
+            Obj::StandardSet(StandardSet::R) => "realToComplex",
+            Obj::StandardSet(StandardSet::RPos) => "positiveRealToComplex",
+            _ => return Ok(None),
+        };
+        Ok(Some(format!(
+            "(Litex.{bridge} {} {member})",
+            self.compile_object_reference(object, position)?
+        )))
     }
 }
