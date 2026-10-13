@@ -1,71 +1,66 @@
-# Mathematical interfaces
+# Mathematical interfaces and dependencies
 
-This module presents selected pieces of a growing Analysis I development.
-The exports in [litex.config](litex.config) are `naturals`, `maps`,
-`finite_products` and `limits`. The first three are local source files;
-`limits` reuses the existing public real-analysis file. There is one README
-and one concept manual for this showcase as a whole.
+The [manifest](litex.config) exposes the selected chapter development in
+source order: `Introduction`, `chap1` through `chap7`, `appendix_a`, then
+`chap8`. [README.md](README.md) supplies the reading path and [STATUS.md](STATUS.md)
+the omissions and foundation assumptions. The original number carriers are
+Litex builtins; chapter constructions explain and connect their interfaces.
 
-## Induction
+## Induction, sets and arithmetic
 
-`naturals::power_two_lower_bound(n)` states `2^n >= n + 1` for `n N`.
-The source shows the base and successor branches. Its domain includes zero.
-The number system and exponentiation are builtin; no axiomatization or
-construction of natural numbers is provided by this example.
+Chapter 2 uses `by induc` with a base and successor step. Chapter 3 develops
+map predicates such as `chap3::is_injective_fn(S, T, f)` and equal cardinality
+through bijections. The function type `fn(x S) T` fixes source and target;
+an injectivity predicate supplies a property of that function, not its
+existence. Later countability proofs reuse this distinction.
 
-## Maps and equal cardinality
+Chapter 4 introduces formal differences and rational distance. Chapter 5
+uses rational Cauchy representatives to connect its construction vocabulary
+to builtin `R`. Representative existence and real completeness remain
+explicit axioms. They must not be read as consequences of merely declaring
+a predicate or naming a real value.
 
-`maps::is_injective_fn(S, T, f)` means equal function values imply equal inputs;
-`maps::is_surjective_fn(S, T, f)` means every target has a preimage.
-`maps::is_bijective_fn` combines these properties.
-`maps::has_equal_cardinality(S, T)` asks for a bijective function from S to T.
-Here S and T may be empty. These are mathematical predicates, not an assertion
-that a bijection exists for all sets. They introduce no user axioms.
+## Roots and powers
 
-## Finite products
+`chap5::zero_positive_fractional_power(n)` applies for `n N+` with the
+positive-exponent premise `1/n $in R+`. Its conclusion is `0^(1/n)=0`.
+The builtin zero-power rule supplies this case; exponent zero or a negative
+exponent is outside the theorem. Nonnegative roots and positive-base power
+continuity are separate results with separate domains.
 
-`finite_products::has_coordinate_values_in_family(n, U, X, f)` expresses
-membership in the chosen factor at each index of `closed_range(1, n)`.
-`n N+`, `U set`, `X fn(i closed_range(1,n)) power_set(U)` and
-`f fn(i closed_range(1,n)) U` specify the domain and ambient carrier.
+## Limits and series
 
-`finite_cartesian_product_choice_function_representation` compares the
-explicit finite-sequence and function-space set builders; its premises give
-those two represented sets. It proves set equality and constructs an
-identity bijection using the map predicates above. The theorem does not
-start with an arbitrary set carrying legacy product metadata.
+`chap6::is_tail_close_to(a, L, epsilon, n0)` bounds every later term's distance
+from `L`; `has_eventual_closeness_to` introduces the tail witness, and
+`has_limit` quantifies over positive epsilon. The sequence carrier is
+`seq(R)`, indexed by `N+`. A convergence predicate does not choose a limit
+for arbitrary sequences. Existence and uniqueness support later limit
+interfaces under their declared convergence conditions.
 
-`is_finite_cartesian_product_for_family` names the finite-sequence set-builder
-representation. `is_in_infinite_cartesian_product` is coordinate membership
-for a supplied function over an arbitrary index set; it does not prove that
-such a function exists. `finite_index_product_agrees_with_chapter3_cartesian_product`
-uses both predicates to establish equal cardinality for positive finite
-indices. Its historical name refers to the source-book motivation; this
-public module imports only the selected map predicates, not a Chapter3
-manuscript or legacy tuple metadata interface.
+Chapter 7 depends on these predicates. Its partial-sum sequences turn series
+questions into limit questions. Harmonic divergence uses dyadic lower bounds;
+alternating convergence uses paired tail estimates; condensation compares
+partial sums; absolute-convergence rearrangement bounds use a bounded prefix.
+These proofs are distinct from the omitted Riemann rearrangement construction
+for conditionally convergent series. Set-indexed summation is also omitted.
 
-These concepts progress from membership to set equality to a bijection.
-Finite length zero, arbitrary infinite-product existence and choice are
-outside the theorems supplied here.
+## Countability, products and choice
 
-## Sequence limits
+`chap8::embeds_into(S, T)` asks for an injective function using Chapter 3's
+predicate. `chap8::is_at_most_countable(X)` specializes the target to `N`.
+It does not assert that every set embeds into `N`; a caller must establish the
+witness and injectivity. The countable-union proof encodes an element through
+an owner index and a fiber code, using the retained choice background.
 
-The `limits` source uses `fn(index N+) R` as its sequence carrier.
-`is_tail_close_to` gives the strict epsilon inequality after a positive index;
-`has_eventual_closeness_to` asks for that index; `has_limit` quantifies over
-positive epsilon. `is_convergent_sequence` asks for a limit.
+The independent Cantor power-set argument is included; the decimal proof of
+real uncountability is omitted. Product representations distinguish supplied
+coordinate functions from their existence. The two explicit choice axioms
+and abstract `choice_property` remain visible in Chapter 8. Appendix A is an
+ordered prerequisite, not an additional claim of book-wide coverage.
 
-`\constant_sequence<c>` is the named template with value c at every index.
-`constant_sequence_has_limit` proves its limit is c. `sequence_limit_unique`
-proves uniqueness, and `lim` is defined by that existence-and-uniqueness
-result on convergent sequences. It is not a total selector for arbitrary
-sequences. Read the [actual limit source](../math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit)
-for the complete declarations and proofs.
+## Historical small examples
 
-## Acceptance boundary
-
-All selected source files and the reused limit dependency are included in the
-strict module gate recorded in [verification.json](verification.json).
-[STATUS.md](STATUS.md) separately records the remaining assumptions and
-unfinished chapters in the broader local development. No abstract predicates,
-user trust or axioms in that private development are imported into this module.
+`naturals.lit`, `maps.lit` and `finite_products.lit` remain as earlier short
+examples. They are not exports of the current chapter manifest. Their separate
+strict receipt records their previous context and public limit dependency;
+do not combine that receipt with the non-strict chapter gate.

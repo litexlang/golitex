@@ -2,6 +2,7 @@ mod compile_additive_inference;
 mod compile_by_stmt_result;
 mod compile_callee_constructor;
 mod compile_chain_closures;
+mod compile_claim_stmt_result;
 mod compile_compound_fact;
 mod compile_compound_stores;
 mod compile_def_prop_stmt_result;
@@ -36,6 +37,8 @@ pub use lean_compile_error::LeanCompileError;
 pub use litex_to_lean_compiler::LitexToLeanCompiler;
 
 #[cfg(test)]
+mod claim_tests;
+#[cfg(test)]
 mod concrete_prop_tests;
 #[cfg(test)]
 mod function_call_tests;
@@ -43,6 +46,10 @@ mod function_call_tests;
 mod function_return_tests;
 #[cfg(test)]
 mod numeric_function_call_tests;
+#[cfg(test)]
+mod positive_membership_tests;
+#[cfg(test)]
+mod positive_order_strategy_tests;
 #[cfg(test)]
 mod prop_domain_tests;
 #[cfg(test)]

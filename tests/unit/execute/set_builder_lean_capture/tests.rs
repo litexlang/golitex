@@ -1,8 +1,7 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::*;
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-};
+use crate::store_fact_and_infer::InferInFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
 
 fn execute(source: &str) -> RunLitexCodeResult {
     let command = parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
@@ -69,15 +68,13 @@ fn builder_projection_retains_selected_alias_path_and_each_actual_wd() {
         panic!("actual introduction")
     };
     let store = &p.introduced_params.defined_params.store_and_infer_results[0];
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &store.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &store.infer else {
         panic!("membership inference")
     };
     let captured = rules
         .iter()
         .find_map(|r| {
-            if let InferAtomicExceptEqualityResult::InFactSetBuilder(p) = r {
+            if let InferInFactResult::SetBuilder(p) = r {
                 Some(p)
             } else {
                 None
@@ -89,8 +86,8 @@ fn builder_projection_retains_selected_alias_path_and_each_actual_wd() {
     assert_eq!(step.source_membership.fact_id, store.primary_fact_id());
     assert_eq!(step.equality_path.len(), 1);
     assert!(!step.template_expansion);
-    assert_eq!(step.derived.len(), 2);
-    assert!(step.derived.iter().all(|p| matches!(
+    assert_eq!(step.projections.len(), 2);
+    assert!(step.stored_conclusions().all(|p| matches!(
         &p.store,
         crate::store_fact_and_infer::StoreFactResult::AtomicFact(_)
     )));

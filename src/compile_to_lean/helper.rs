@@ -317,9 +317,9 @@ pub(super) fn standard_term(set: &StandardSet) -> Result<String, LeanCompileErro
         StandardSet::Q => "Q",
         StandardSet::R => "R",
         StandardSet::C => "C",
+        StandardSet::RPos => "RPos",
         StandardSet::NPos
         | StandardSet::QPos
-        | StandardSet::RPos
         | StandardSet::QNeg
         | StandardSet::ZNeg
         | StandardSet::RNeg

@@ -1,22 +1,60 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+use crate::compile_to_lean::source_position::{OrderBoundInference, SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::InferAtomicExceptEqualityResult;
+use crate::store_fact_and_infer::{
+    InferAtomicFactResult, InferGreaterEqualFactResult, InferGreaterFactResult,
+    InferLessEqualFactResult, InferLessFactResult,
+};
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_order_bound_inferences(
         &self,
-        rules: &[InferAtomicExceptEqualityResult],
+        infer: &InferAtomicFactResult,
         seed: &Fact,
         compiled: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
         let mut declarations = Vec::new();
-        for (index, rule) in rules.iter().enumerate() {
+        let rules = match infer {
+            InferAtomicFactResult::LessFact(rules) => rules
+                .iter()
+                .map(|r| match r {
+                    InferLessFactResult::StrictLowerBoundPositive(p) => {
+                        OrderBoundInference::Strict(p)
+                    }
+                })
+                .collect::<Vec<_>>(),
+            InferAtomicFactResult::GreaterFact(rules) => rules
+                .iter()
+                .map(|r| match r {
+                    InferGreaterFactResult::StrictLowerBoundPositive(p) => {
+                        OrderBoundInference::Strict(p)
+                    }
+                })
+                .collect(),
+            InferAtomicFactResult::LessEqualFact(rules) => rules
+                .iter()
+                .map(|r| match r {
+                    InferLessEqualFactResult::WeakIntegerLowerBoundInN(p) => {
+                        OrderBoundInference::WeakInteger(p)
+                    }
+                })
+                .collect(),
+            InferAtomicFactResult::GreaterEqualFact(rules) => rules
+                .iter()
+                .map(|r| match r {
+                    InferGreaterEqualFactResult::WeakIntegerLowerBoundInN(p) => {
+                        OrderBoundInference::WeakInteger(p)
+                    }
+                })
+                .collect(),
+            _ => return Ok(declarations),
+        };
+        for (index, rule) in rules.into_iter().enumerate() {
             let (source_id, bound, value, checks, captured, weak) = match (rule, seed) {
                 (
-                    InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(rule),
+                    OrderBoundInference::WeakInteger(rule),
                     Fact::AtomicFact(AtomicFact::LessEqualFact(source)),
                 ) => (
                     rule.source_fact_id,
@@ -27,7 +65,7 @@ impl LitexToLeanCompiler {
                     true,
                 ),
                 (
-                    InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(rule),
+                    OrderBoundInference::WeakInteger(rule),
                     Fact::AtomicFact(AtomicFact::GreaterEqualFact(source)),
                 ) => (
                     rule.source_fact_id,
@@ -38,7 +76,7 @@ impl LitexToLeanCompiler {
                     true,
                 ),
                 (
-                    InferAtomicExceptEqualityResult::StrictLowerBoundPositive(rule),
+                    OrderBoundInference::Strict(rule),
                     Fact::AtomicFact(AtomicFact::LessFact(source)),
                 ) => (
                     rule.source_fact_id,
@@ -49,7 +87,7 @@ impl LitexToLeanCompiler {
                     false,
                 ),
                 (
-                    InferAtomicExceptEqualityResult::StrictLowerBoundPositive(rule),
+                    OrderBoundInference::Strict(rule),
                     Fact::AtomicFact(AtomicFact::GreaterFact(source)),
                 ) => (
                     rule.source_fact_id,
@@ -59,13 +97,11 @@ impl LitexToLeanCompiler {
                     &rule.derived,
                     false,
                 ),
-                (InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(_), _)
-                | (InferAtomicExceptEqualityResult::StrictLowerBoundPositive(_), _) => {
+                _ => {
                     return Err(LeanCompileError::unsupported(
                         "Inference/OrderBoundSeedFamily",
                     ))
                 }
-                _ => continue,
             };
             if source_id != seed.fact_id() {
                 return Err(LeanCompileError::new(

@@ -2,7 +2,10 @@ use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessFact};
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, StandardSet};
 use crate::execute::execute_fact_stmt::VerifyStateLevel;
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::store_fact_and_infer::{InferEqualFactPositiveRealPowerResult, StoreInferredFactResult};
+use crate::store_fact_and_infer::{
+    InferEqualFactPositiveRealPowerResult, InferPositiveRealPowerPositivityResult,
+    InferPositiveRealPowerTransportResult,
+};
 
 impl Runtime {
     // When: stored `a^x = y` (or swapped) with checked positive real power.
@@ -14,14 +17,14 @@ impl Runtime {
         equal_fact: &EqualFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferEqualFactPositiveRealPowerResult>> {
-        let mut derived: Vec<StoreInferredFactResult> = Vec::new();
+        let mut transports: Vec<InferPositiveRealPowerTransportResult> = Vec::new();
         if let Some(r) = self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.left,
             &equal_fact.right,
             equal_fact,
             verify_state,
         )? {
-            derived.push(r);
+            transports.push(r);
         }
         if let Some(r) = self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.right,
@@ -29,12 +32,12 @@ impl Runtime {
             equal_fact,
             verify_state,
         )? {
-            derived.push(r);
+            transports.push(r);
         }
-        if derived.is_empty() {
+        if transports.is_empty() {
             return Ok(None);
         }
-        Ok(Some(InferEqualFactPositiveRealPowerResult { derived }))
+        Ok(Some(InferEqualFactPositiveRealPowerResult { transports }))
     }
 }
 
@@ -45,7 +48,7 @@ impl Runtime {
         target: &Obj,
         equal_fact: &EqualFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<StoreInferredFactResult>> {
+    ) -> RuntimeResult<Option<InferPositiveRealPowerTransportResult>> {
         if maybe_power.ir() == target.ir() {
             return Ok(None);
         }
@@ -64,33 +67,30 @@ impl Runtime {
         });
         // A real nonzero square is positive even when its base has unknown sign.
         // Reuse that existing builtin proof before searching for `0 < base`.
-        if self
-            .verify_atomic_fact(&power_positive, premise_state)?
-            .is_failed()
-        {
+        let power_positive_proof = self.verify_atomic_fact(&power_positive, premise_state)?;
+        let positivity = if power_positive_proof.is_failed() {
             let base_positive = AtomicFact::LessFact(LessFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 left: zero,
                 right: pow.base.as_ref().clone(),
                 line_file: equal_fact.line_file.clone(),
             });
-            if self
-                .verify_atomic_fact(&base_positive, premise_state)?
-                .is_failed()
-            {
+            let base_positive_proof = self.verify_atomic_fact(&base_positive, premise_state)?;
+            if base_positive_proof.is_failed() {
                 return Ok(None);
             }
-        }
+            InferPositiveRealPowerPositivityResult::BasePositive(base_positive_proof)
+        } else {
+            InferPositiveRealPowerPositivityResult::PowerPositive(power_positive_proof)
+        };
         let exponent_in_r = AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
             element: pow.exponent.as_ref().clone(),
             set: Obj::StandardSet(StandardSet::R),
             line_file: equal_fact.line_file.clone(),
         });
-        if self
-            .verify_atomic_fact(&exponent_in_r, premise_state)?
-            .is_failed()
-        {
+        let exponent_real = self.verify_atomic_fact(&exponent_in_r, premise_state)?;
+        if exponent_real.is_failed() {
             return Ok(None);
         }
         let target_in_r_pos = AtomicFact::InFact(InFact {
@@ -100,7 +100,13 @@ impl Runtime {
             line_file: equal_fact.line_file.clone(),
         });
         let stored = self.store_inferred_fact(&Fact::AtomicFact(target_in_r_pos))?;
-        Ok(Some(stored))
+        Ok(Some(InferPositiveRealPowerTransportResult {
+            source_fact_id: equal_fact.fact_id,
+            power: maybe_power.clone(),
+            positivity,
+            exponent_real,
+            derived: stored,
+        }))
     }
 }
 

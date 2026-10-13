@@ -1,5 +1,6 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -39,7 +40,14 @@ impl LitexToLeanCompiler {
             ExecStmtResult::ReleaseAndExpand(_) => {
                 Err(LeanCompileError::unsupported("ReleaseAndExpand"))
             }
-            ExecStmtResult::ProofBlock(_) => Err(LeanCompileError::unsupported("ProofBlock")),
+            ExecStmtResult::ProofBlock(result) => match result {
+                ExecProofBlockStmtResult::Claim(claim) => {
+                    self.compile_claim_statement(claim, position, index, local)
+                }
+                ExecProofBlockStmtResult::Sketch(_) => {
+                    Err(LeanCompileError::unsupported("ProofBlock/Sketch"))
+                }
+            },
             ExecStmtResult::Command(_) => Err(LeanCompileError::unsupported("Command")),
         }
     }

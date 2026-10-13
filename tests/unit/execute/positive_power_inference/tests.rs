@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualityResult, InferFactResult};
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualFactResult, InferResult};
 
 fn runtime() -> Runtime {
     Runtime::new(LaunchCommand::Eval {
@@ -19,7 +19,7 @@ fn exec(rt: &mut Runtime, code: &str) -> ExecStmtResult {
     rt.exec_stmt(&statements[0]).unwrap()
 }
 
-fn seed_rules(result: &ExecStmtResult) -> &[InferEqualityResult] {
+fn seed_rules(result: &ExecStmtResult) -> &[InferEqualFactResult] {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = result else {
         panic!("successful forall statement expected")
     };
@@ -32,8 +32,7 @@ fn seed_rules(result: &ExecStmtResult) -> &[InferEqualityResult] {
         panic!("local introduction expected")
     };
     let seed = &proof.assumed_dom_facts.last().unwrap().store_and_infer;
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &seed.infer
-    else {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &seed.infer else {
         panic!("equality inference expected")
     };
     rules
@@ -53,12 +52,27 @@ fn positive_power_inference_retains_positive_bases_and_nonzero_real_squares() {
         let power = seed_rules(&result)
             .iter()
             .find_map(|r| match r {
-                InferEqualityResult::PositiveRealPower(power) => Some(power),
+                InferEqualFactResult::PositiveRealPower(power) => Some(power),
                 _ => None,
             })
             .expect("positive membership must actually be inferred");
-        assert!(!power.derived.is_empty());
-        assert!(power.derived.iter().all(|d| d.store.atomic_components().iter().any(|(_, fact)| {
+        assert!(!power.transports.is_empty());
+        for transport in &power.transports {
+            assert!(!transport.exponent_real.is_failed());
+            let positivity = match &transport.positivity {
+                crate::store_fact_and_infer::InferPositiveRealPowerPositivityResult::PowerPositive(p)
+                | crate::store_fact_and_infer::InferPositiveRealPowerPositivityResult::BasePositive(p) => p,
+            };
+            assert!(
+                !positivity.is_failed(),
+                "retain the actual selected bounded positivity proof"
+            );
+            assert_ne!(
+                transport.source_fact_id,
+                transport.derived.primary_fact_id()
+            );
+        }
+        assert!(power.transports.iter().all(|d| d.derived.store.atomic_components().iter().any(|(_, fact)| {
             matches!(fact, AtomicFact::InFact(member) if matches!(member.set, Obj::StandardSet(StandardSet::RPos)) && member.element.readable_string() == "y")
         })), "retain the actual transported positive membership");
     }
@@ -116,7 +130,7 @@ fn positive_power_inference_does_not_publish_unsupported_positive_membership() {
         assert!(
             !seed_rules(&result)
                 .iter()
-                .any(|r| matches!(r, InferEqualityResult::PositiveRealPower(_))),
+                .any(|r| matches!(r, InferEqualFactResult::PositiveRealPower(_))),
             "no unsupported inference: {source}"
         );
     }

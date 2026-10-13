@@ -12,8 +12,8 @@ use crate::ast::param::{
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactFamilyUnionResult, InferInFactIndexCartResult,
-    InferInFactIndexIntersectResult, InferInFactIndexUnionResult, StoreInferredFactResult,
+    InferInFactFamilyUnionResult, InferInFactIndexCartResult, InferInFactIndexIntersectResult,
+    InferInFactIndexUnionResult, InferInFactResult, StoreInferredFactResult,
 };
 
 impl Runtime {
@@ -25,7 +25,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Vec<InferInFactResult>> {
         let mut rules = Vec::new();
         if let Some(r) = self.infer_in_fact_family_union(in_fact, verify_state)? {
             rules.push(r);
@@ -48,7 +48,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::FamilyUnion(family_union)) = &in_fact.set else {
             return Ok(None);
         };
@@ -72,7 +72,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         let stored = self.store_inferred_fact(&exist)?;
-        Ok(Some(InferAtomicExceptEqualityResult::InFactFamilyUnion(
+        Ok(Some(InferInFactResult::FamilyUnion(
             InferInFactFamilyUnionResult {
                 derived: Box::new(stored),
             },
@@ -83,7 +83,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::IndexUnion(index_union)) = &in_fact.set else {
             return Ok(None);
         };
@@ -108,8 +108,11 @@ impl Runtime {
             if derived.is_empty() {
                 return Ok(None);
             }
-            return Ok(Some(InferAtomicExceptEqualityResult::InFactIndexUnion(
-                InferInFactIndexUnionResult { derived },
+            return Ok(Some(InferInFactResult::IndexUnion(
+                InferInFactIndexUnionResult {
+                    ambient_membership: derived.remove(0),
+                    fiber_witness: derived.pop(),
+                },
             )));
         };
         let element_in_fiber = AtomicFact::InFact(InFact {
@@ -136,8 +139,11 @@ impl Runtime {
         if derived.is_empty() {
             return Ok(None);
         }
-        Ok(Some(InferAtomicExceptEqualityResult::InFactIndexUnion(
-            InferInFactIndexUnionResult { derived },
+        Ok(Some(InferInFactResult::IndexUnion(
+            InferInFactIndexUnionResult {
+                ambient_membership: derived.remove(0),
+                fiber_witness: derived.pop(),
+            },
         )))
     }
 
@@ -145,7 +151,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::IndexIntersect(index_intersect)) = &in_fact.set else {
             return Ok(None);
         };
@@ -170,8 +176,11 @@ impl Runtime {
             if derived.is_empty() {
                 return Ok(None);
             }
-            return Ok(Some(InferAtomicExceptEqualityResult::InFactIndexIntersect(
-                InferInFactIndexIntersectResult { derived },
+            return Ok(Some(InferInFactResult::IndexIntersect(
+                InferInFactIndexIntersectResult {
+                    ambient_membership: derived.remove(0),
+                    fiber_membership: derived.pop(),
+                },
             )));
         };
         let element_in_fiber = AtomicFact::InFact(InFact {
@@ -199,8 +208,11 @@ impl Runtime {
         if derived.is_empty() {
             return Ok(None);
         }
-        Ok(Some(InferAtomicExceptEqualityResult::InFactIndexIntersect(
-            InferInFactIndexIntersectResult { derived },
+        Ok(Some(InferInFactResult::IndexIntersect(
+            InferInFactIndexIntersectResult {
+                ambient_membership: derived.remove(0),
+                fiber_membership: derived.pop(),
+            },
         )))
     }
 
@@ -211,7 +223,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::IndexCart(index_cart)) = &in_fact.set else {
             return Ok(None);
         };
@@ -257,8 +269,11 @@ impl Runtime {
         if derived.is_empty() {
             return Ok(None);
         }
-        Ok(Some(InferAtomicExceptEqualityResult::InFactIndexCart(
-            InferInFactIndexCartResult { derived },
+        Ok(Some(InferInFactResult::IndexCart(
+            InferInFactIndexCartResult {
+                function_membership: derived.remove(0),
+                choice_certificate: derived.pop().expect("recorded index-cart certificate"),
+            },
         )))
     }
 }

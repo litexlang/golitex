@@ -7,6 +7,18 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::InferSupersetElementwiseMembershipResult;
 
 impl Runtime {
+    pub(crate) fn infer_superset_fact(
+        &mut self,
+        fact: &crate::ast::fact::SupersetFact,
+        state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferSupersetFactResult>> {
+        Ok(vec![
+            crate::store_fact_and_infer::InferSupersetFactResult::ElementwiseMembership(
+                self.infer_superset_elementwise_membership(fact, state)?,
+            ),
+        ])
+    }
+
     // When: stored `A $superset B`.
     // Infers: `forall x B: x $in A`.
     pub(super) fn infer_superset_elementwise_membership(

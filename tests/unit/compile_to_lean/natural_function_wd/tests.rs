@@ -1,10 +1,8 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof;
 use crate::execute::{ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-    StoreInferredFactResult,
-};
+use crate::store_fact_and_infer::InferInFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult, StoreInferredFactResult};
 use std::rc::Rc;
 
 const DECLARATION: &str = "have fn f(x N) N = x + 1\n";
@@ -35,15 +33,14 @@ fn anonymous(result: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedProof
 
 fn nonnegative(proof: &mut AnonymousFnObjWellDefinedProof) -> &mut StoreInferredFactResult {
     let store = Rc::get_mut(&mut proof.defined_params.store_and_infer_results[0]).unwrap();
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
-        &mut store.infer
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &mut store.infer
     else {
         panic!("original parameter membership inference")
     };
     rules
         .iter_mut()
         .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(proof) => {
+            InferInFactResult::SignedStandardSetSign(proof) => {
                 assert_eq!(proof.derived.len(), 1);
                 Some(&mut proof.derived[0])
             }

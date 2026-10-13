@@ -1,6 +1,6 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::prelude::*;
-use crate::store_fact_and_infer::InferFactResult;
+use crate::store_fact_and_infer::InferResult;
 
 const REPEATED_CHAIN: &str = "# Select one direct equality edge from a named theorem's returned chain.\nthm repeated_chain:\n    ? forall x R:\n        x=x=x\n    x=x=x\nhave a_chain R=2\nby thm repeated_chain(a_chain) => a_chain=a_chain\n";
 const REPEATED_AND: &str = "# Select one direct equality component from a named theorem's returned conjunction.\nthm repeated_and:\n    ? forall x R:\n        x=x and x=x\n    x=x and x=x\nhave a_and R=2\nby thm repeated_and(a_and) => a_and=a_and\n";
@@ -363,7 +363,7 @@ fn compound_theorem_returns_reject_ambient_inferred_future_and_reversed_selectio
             .store_and_infer_result
             .primary_fact_id();
         let call = super::by_theorem_mut(&mut result.statement_results[3]);
-        let Some(InferFactResult::ChainFact(infer)) = &call.returned_conclusions[0].infer else {
+        let Some(InferResult::ChainFact(infer)) = &call.returned_conclusions[0].infer else {
             panic!("original chain inference")
         };
         let inferred = infer.transitive_closures[0].derived.store.primary_fact_id();
@@ -411,7 +411,7 @@ fn compound_theorem_returns_preserve_store_publication_and_nearest_inference_cei
         format!("h_{}", direct.value())
     );
     let store = &call.returned_conclusions[0];
-    let Some(InferFactResult::ChainFact(infer)) = &store.infer else {
+    let Some(InferResult::ChainFact(infer)) = &store.infer else {
         panic!("original chain infer")
     };
     let derived = infer.transitive_closures[0].derived.store.primary_fact_id();
@@ -571,7 +571,7 @@ fn compound_theorem_domain_capture_keeps_pending_projections_and_inference_close
         published.visible_fact(edge, &compiler.runtime).unwrap().1,
         format!("h_{}", edge.value())
     );
-    let Some(InferFactResult::ChainFact(infer)) = &store.infer else {
+    let Some(InferResult::ChainFact(infer)) = &store.infer else {
         panic!("actual domain chain inference")
     };
     let closure = infer.transitive_closures[0].derived.store.primary_fact_id();

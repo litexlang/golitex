@@ -3,7 +3,7 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 use crate::store_fact_and_infer::helper::{chain_order_edges, OrderEdge};
-use crate::store_fact_and_infer::{ChainTransitiveCite, InferFactResult};
+use crate::store_fact_and_infer::{ChainTransitiveCite, InferResult};
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_chain_closures(
@@ -11,7 +11,7 @@ impl LitexToLeanCompiler {
         store: &StoreFactAndInferResult,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let (StoreFactResult::ChainFact(stored), Some(InferFactResult::ChainFact(inferred))) =
+        let (StoreFactResult::ChainFact(stored), Some(InferResult::ChainFact(inferred))) =
             (&store.store, &store.infer)
         else {
             return Err(LeanCompileError::unsupported("Chain/ClosureFamily"));

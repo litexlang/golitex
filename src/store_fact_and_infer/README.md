@@ -31,6 +31,14 @@ explicit next-seed boundary.
 The [acceptance checkpoint](one_step_acceptance.md) records the passing gates
 and any remaining verification work. The former derived-WD failure-policy
 question is superseded by named-rule direct storage.
+The [post-migration loop recheck](loop_recheck.md) records the current call-path
+audit, additional cycle/growth controls and the remaining finite chain cost.
+
+[`infer_result/`](infer_result/README.md) owns the typed result tree:
+`InferResult` mirrors `Fact`, `InferAtomicFactResult` mirrors every atomic
+constructor, and each atomic family contains all matching named rules in
+execution order. Fixed conclusions have named fields; Cartesian factors and
+builder conditions retain their original indices.
 
 Callers verify the seed first. Nested WD/proof inside a statement uses
 `verify_*` / `store_*` — not a second `exec_stmt`.
@@ -47,17 +55,26 @@ store_fact_and_infer/
     infer_and_fact.rs
     infer_or_fact.rs         # NoInfer (intentional)
     infer_chain_fact/        # adjacent atomics + transitive closure
-    infer_exist_shaped_fact.rs   # exist! / not exist rewrites
+    infer_plain_exist_fact.rs    # no inference
+    infer_exist_unique_fact.rs   # uniqueness forall
+    infer_not_exist_fact.rs      # De Morgan forall
     infer_not_forall_fact.rs
     infer_forall_fact*.rs    # NoInfer (intentional)
     infer_atomic_fact/
       infer_equal_fact/      # scalar cancellation and positive-real power transport
       infer_atomic_except_equality/
-        expand_definition.rs     # NormalAtomic param types + iff
+        infer_normal_atomic_fact.rs # param types + iff
+        infer_in_fact.rs          # membership rule dispatcher
+        infer_*_fact.rs           # builtin definition families
         membership_*.rs          # InFact by set former / ops
         subset.rs / superset.rs
   store_fact_and_infer_result/
-    # one result type family per dispatcher / rule group
+    # seed {store, infer}, stores and direct inferred stores
+  infer_result/
+    infer_result.rs              # exhaustive Fact result
+    infer_atomic_fact_result.rs  # exhaustive AtomicFact result
+    infer_*_fact_result.rs       # per-family named rule enums
+    # dedicated rule results and captured child stages
 ```
 
 ## What is inferred (migrated)
@@ -87,8 +104,9 @@ store_fact_and_infer/
   already-known endpoints. Each cancellation removes one outer
   arithmetic constructor; a derived equality does not cancel again automatically. Later nonzero facts do not retrigger older seeds.
   Tracers: `examples/infer/equal/{additive,subtractive,nonzero_factor,common_denominator,nonzero_numerator}_cancellation.lit`; focused tests:
-  `equality_cancellation`. Lean replay of a citation to these uncompiled
-  consequences remains fail-closed at `FactId/Producer`.
+  `equality_cancellation`. The five named cancellation families have reviewed
+  Lean adapters; other consumed inference families still require their own
+  adapter and visible original producer.
 - Cartesian and tuple equalities remain ordinary checked equalities; they do
   not publish shape predicates or construction dimensions.
 - Literal `u − v = 0` → `u = v` is **verify-time**
@@ -103,7 +121,8 @@ searching for the unnecessary stronger premise `0 < a`. If that bounded check
 fails, the positive-base fallback and real-exponent membership use the same
 inherited BuiltinRule ceiling. Missing optional evidence skips this inference;
 rule premise checking retains the original caller ceiling. No global
-permission, state, result shape or user-goal search changes. Tracers:
+permission, state or user-goal search changes. The result retains the selected
+positivity proof and real-exponent proof for each successful transport. Tracers:
 `examples/infer/equal/nonzero_real_square.lit` and
 `examples/infer/equal/positive_real_power_bounded_premises.lit`.
 

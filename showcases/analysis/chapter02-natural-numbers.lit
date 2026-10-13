@@ -1,0 +1,300 @@
+# Chapter 02 natural numbers
+# Selected Analysis I development; scope and assumptions: STATUS.md.
+
+0 $in N
+forall n N:
+    n + 1 $in N
+1 = 0 + 1
+2 = 1 + 1
+3 = 2 + 1
+3 $in N
+forall n N:
+    n + 1 $in N+
+    n + 1 != 0
+4 != 0
+forall n, m N:
+    n + 1 = m + 1
+    =>:
+        n = (n + 1) - 1 = (m + 1) - 1 = m
+6 != 2
+sketch:
+    abstract_prop induction_demo(n)
+    claim:
+        ? forall n N:
+            $induction_demo(0)
+            forall m N:
+                $induction_demo(m)
+                =>:
+                    $induction_demo(m + 1)
+            =>:
+                $induction_demo(n)
+        by induc n from 0:
+            ? $induction_demo(n)
+            ? from n = 0:
+                $induction_demo(0)
+            ? induc:
+                $induction_demo(n + 1)
+sketch:
+    claim:
+        ? forall n N:
+            2^n >= n + 1
+        by induc n from 0:
+            ? 2^n >= n + 1
+            ? from n = 0:
+                2^0 = 1 = 0 + 1
+            ? induc:
+                2^(n + 1) = 2^n * 2^1 = 2^n * 2 >= (n + 1) * 2 = (n + 1 + 1) + n >= n + 1 + 1
+by contra:
+    ? not $is_finite_set(N)
+    have k N = finite_set_size(N)
+    $is_finite_set(0...k)
+    by def 0...k $subset N
+    finite_set_size(0...k) = k - 0 + 1 = k + 1
+    finite_set_size(0...k) <= finite_set_size(N)
+    k + 1 = finite_set_size(0...k) <= finite_set_size(N) = k < k + 1
+    impossible k + 1 = k + 1
+sketch:
+    have c N = 3
+    have fn step_fn(n N, x N) N = x + n + 1
+    have fn a(n N) N by induc n from 0:
+        case n = 0: c
+        case n >= 1: step_fn(n - 1, a(n - 1))
+    a(0) = c = 3
+    a(1) = step_fn(1 - 1, a(1 - 1)) = step_fn(0, a(0)) = step_fn(0, 3) = 4
+    a(2) = step_fn(2 - 1, a(2 - 1)) = step_fn(1, a(1)) = step_fn(1, 4) = 6
+forall m N:
+    0 + m = m
+forall n, m N:
+    (n + 1) + m = (n + m) + 1
+forall n N:
+    n + 0 = n
+forall n, m N:
+    n + (m + 1) = (n + m) + 1
+forall n, m N:
+    n + m = m + n
+forall a, b, c N:
+    (a + b) + c = a + (b + c)
+forall a, b, c N:
+    a + b = a + c
+    =>:
+        b = (a + b) - a = (a + c) - a = c
+claim:
+    ? forall n N:
+        n != 0
+        =>:
+            n $in N+
+    by cases:
+        ? n $in N+
+        case n > 0:
+            n $in N+
+        case n <= 0:
+            n = 0
+            impossible n = 0
+forall n N:
+    n $in N+
+    =>:
+        n != 0
+forall a N+, b N:
+    a + b $in N+
+    b + a $in N+
+forall a, b N:
+    a + b = 0
+    =>:
+        0 <= a <= a + b = 0
+        a = 0
+        0 <= b <= a + b = 0
+        b = 0
+claim:
+    ? forall a N+:
+        exist! b N st {b + 1 = a}
+    claim:
+        ? forall b1 N, b2 N:
+            b1 + 1 = a
+            b2 + 1 = a
+            =>:
+                b1 = b2
+        b1 = (b1 + 1) - 1 = a - 1 = (b2 + 1) - 1 = b2
+    witness exist! b N st {b + 1 = a} from a - 1
+sketch:
+    claim:
+        ? forall n, m N:
+            n >= m
+            =>:
+                exist a N st {n = m + a}
+        witness exist a N st {n = m + a} from n - m
+    claim:
+        ? forall n, m N:
+            n > m
+            =>:
+                exist a N+ st {n = m + a}
+        n - m > 0
+        n - m $in N+
+        witness exist a N+ st {n = m + a} from n - m
+    forall n, m, a N:
+        n = m + a
+        =>:
+            n = m + a >= m
+    forall n, m N, a N+:
+        n = m + a
+        =>:
+            n = m + a > m
+forall a N:
+    a <= a
+forall a, b, c N:
+    a <= b <= c
+    =>:
+        a <= c
+forall a, b N:
+    a <= b <= a
+    =>:
+        a = b
+forall a, b, c N:
+    a <= b
+    =>:
+        a + c <= b + c
+forall a, b, c N:
+    a + c <= b + c
+    =>:
+        a = (a + c) - c <= (b + c) - c = b
+forall a, b N:
+    a < b
+    =>:
+        a + 1 <= b
+forall a, b N:
+    a + 1 <= b
+    =>:
+        a < a + 1 <= b
+        a < b
+forall a, b N:
+    a < b or a = b or a > b
+claim:
+    ? forall a, b N:
+        a < b
+        =>:
+            not a = b
+            not a > b
+    by contra:
+        ? not a > b
+        a < b < a
+        impossible a = a
+claim:
+    ? forall a, b N:
+        a = b
+        =>:
+            not a < b
+            not a > b
+    by contra:
+        ? not a < b
+        b = a < b
+        impossible b = b
+    by contra:
+        ? not a > b
+        a = b < a
+        impossible a = a
+claim:
+    ? forall a, b N:
+        a > b
+        =>:
+            not a < b
+            not a = b
+    by contra:
+        ? not a < b
+        a < b < a
+        impossible a = a
+sketch:
+    abstract_prop strong_induction_demo(n)
+    claim:
+        ? forall n N:
+            $strong_induction_demo(0)
+            forall m N:
+                forall y N:
+                    y <= m
+                    =>:
+                        $strong_induction_demo(y)
+                =>:
+                    $strong_induction_demo(m + 1)
+            =>:
+                $strong_induction_demo(n)
+        by strong_induc n from 0:
+            ? $strong_induction_demo(n)
+            ? from n = 0:
+                $strong_induction_demo(0)
+            ? strong_induc:
+                forall y N:
+                    y <= n
+                    =>:
+                        $strong_induction_demo(y)
+                $strong_induction_demo(n + 1)
+forall m N:
+    0 * m = 0
+forall n, m N:
+    (n + 1) * m = n * m + m
+forall n, m N:
+    n * m = m * n
+forall n, m N:
+    n * m = 0
+    =>:
+        n = 0 or m = 0
+forall n, m N:
+    n = 0
+    =>:
+        n * m = 0
+forall n, m N:
+    m = 0
+    =>:
+        n * m = 0
+forall n, m N+:
+    n * m $in N+
+forall a, b, c N:
+    a * (b + c) = a * b + a * c
+    (b + c) * a = b * a + c * a
+forall a, b, c N:
+    (a * b) * c = a * (b * c)
+forall a, b N, c N+:
+    a < b
+    =>:
+        a * c < b * c
+forall a, b N, c N+:
+    a * c = b * c
+    =>:
+        a = (a * c) / c = (b * c) / c = b
+prop is_euclidean_division(n N, q N+, m N, r N):
+    r < q
+    n = m * q + r
+claim:
+    ? forall q N+, n N:
+        exist m, r N st {$is_euclidean_division(n, q, m, r)}
+    by induc n from 0:
+        ? exist m, r N st {$is_euclidean_division(n, q, m, r)}
+        ? from n = 0:
+            witness exist m, r N st {$is_euclidean_division(0, q, m, r)} from 0, 0:
+                0 = 0 * q + 0
+                by def $is_euclidean_division(0, q, 0, 0)
+        ? induc:
+            obtain m, r from exist m, r N st {$is_euclidean_division(n, q, m, r)}
+            by cases:
+                ? exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)}
+                case r + 1 < q:
+                    witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m, r + 1:
+                        n + 1 = (m * q + r) + 1 = m * q + (r + 1)
+                        by def $is_euclidean_division(n + 1, q, m, r + 1)
+                case r + 1 >= q:
+                    r + 1 <= q
+                    q <= r + 1
+                    r + 1 = q
+                    witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m + 1, 0:
+                        n + 1 = (m * q + r) + 1 = m * q + (r + 1) = m * q + q = (m + 1) * q + 0
+                        by def $is_euclidean_division(n + 1, q, m + 1, 0)
+claim:
+    ? forall a N, b N+:
+        a % b < b
+        (a - a % b) % b = 0
+    a $in Z
+    a % b < b
+    (a - a % b) % b = 0
+forall m N:
+    m^0 = 1
+claim:
+    ? forall m, n N:
+        m^(n + 1) = m^n * m
+    m^(n + 1) = m^n * m^1 = m^n * m

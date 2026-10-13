@@ -1,7 +1,7 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicFactResult, InferEqualityResult, InferFactResult, StoreInferredFactResult,
+    InferAtomicFactResult, InferEqualFactResult, InferResult, StoreInferredFactResult,
 };
 
 const CASES: [(&str, &str, &str); 4] = [
@@ -19,9 +19,8 @@ fn source(seed: &str, guards: &str, carrier: &str) -> String {
     format!("forall a, b, k {carrier}:\n{guards}    {seed}\n    =>:\n        a=b\n")
 }
 
-fn rules_mut(store: &mut StoreFactAndInferResult) -> &mut Vec<InferEqualityResult> {
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
-        &mut store.infer
+fn rules_mut(store: &mut StoreFactAndInferResult) -> &mut Vec<InferEqualFactResult> {
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &mut store.infer
     else {
         panic!("recorded equality inference group")
     };
@@ -29,7 +28,7 @@ fn rules_mut(store: &mut StoreFactAndInferResult) -> &mut Vec<InferEqualityResul
 }
 
 fn parts_mut(
-    rule: &mut InferEqualityResult,
+    rule: &mut InferEqualFactResult,
 ) -> (
     &mut FactId,
     &mut Obj,
@@ -40,7 +39,7 @@ fn parts_mut(
     &mut StoreInferredFactResult,
 ) {
     match rule {
-        InferEqualityResult::SubtractiveCancellation(p) => (
+        InferEqualFactResult::SubtractiveCancellation(p) => (
             &mut p.source_fact_id,
             &mut p.common_operand,
             &mut p.left_in_c_proof,
@@ -49,7 +48,7 @@ fn parts_mut(
             Vec::new(),
             &mut p.derived,
         ),
-        InferEqualityResult::NonzeroFactorCancellation(p) => (
+        InferEqualFactResult::NonzeroFactorCancellation(p) => (
             &mut p.source_fact_id,
             &mut p.common_operand,
             &mut p.left_in_c_proof,
@@ -58,7 +57,7 @@ fn parts_mut(
             vec![&mut p.factor_nonzero_proof],
             &mut p.derived,
         ),
-        InferEqualityResult::CommonDenominatorCancellation(p) => (
+        InferEqualFactResult::CommonDenominatorCancellation(p) => (
             &mut p.source_fact_id,
             &mut p.common_operand,
             &mut p.left_in_c_proof,
@@ -67,7 +66,7 @@ fn parts_mut(
             vec![&mut p.denominator_nonzero_proof],
             &mut p.derived,
         ),
-        InferEqualityResult::NonzeroNumeratorCancellation(p) => (
+        InferEqualFactResult::NonzeroNumeratorCancellation(p) => (
             &mut p.source_fact_id,
             &mut p.common_operand,
             &mut p.left_in_c_proof,
@@ -308,11 +307,11 @@ fn nonzero_numerator_cursor_keeps_all_guard_and_nested_stages_ordered() {
     let (mut result, compiler) = super::execute(&input);
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let store = &forall.assumed_dom_facts.last().unwrap().store_and_infer;
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
     else {
         panic!("equality inference")
     };
-    let InferEqualityResult::NonzeroNumeratorCancellation(rule) = &rules[0] else {
+    let InferEqualFactResult::NonzeroNumeratorCancellation(rule) = &rules[0] else {
         panic!("nonzero numerator cancellation")
     };
     let primary = rule.derived.store.primary_fact_id();
@@ -346,8 +345,7 @@ fn cancellation_inference_seed_cursor_blocks_all_future_family_stores() {
         let (mut result, compiler) = super::execute(&source(seed, guards, "C"));
         let forall = super::forall_proof_mut(&mut result.statement_results[0]);
         let store = &forall.assumed_dom_facts.last().unwrap().store_and_infer;
-        let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
-            &store.infer
+        let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) = &store.infer
         else {
             panic!("equality inference group")
         };

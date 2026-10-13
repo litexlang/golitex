@@ -1,0 +1,1161 @@
+# Chapter 04 integers and rationals
+# Selected Analysis I development; scope and assumptions: STATUS.md.
+
+have formal_difference set = cart(N, N)
+prop represent_same_integer(p, q cart(N, N)):
+    p(1) + q(2) = q(1) + p(2)
+sketch:
+    have first_rep cart(N, N) = (3, 1)
+    have second_rep cart(N, N) = (4, 2)
+    first_rep(1) + second_rep(2) = 3 + 2 = 4 + 1 = second_rep(1) + first_rep(2)
+    by def $represent_same_integer(first_rep, second_rep)
+have fn add_formal_differences(p, q cart(N, N)) cart(N, N) = (p(1) + q(1), p(2) + q(2))
+have fn multiply_formal_differences(p, q cart(N, N)) cart(N, N) = (p(1) * q(1) + p(2) * q(2), p(1) * q(2) + p(2) * q(1))
+thm addition_respects_formal_difference_equivalence:
+    ? forall p, q, r cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
+    p(1) + q(2) = q(1) + p(2)
+    add_formal_differences(p, r) = (p(1) + r(1), p(2) + r(2))
+    add_formal_differences(q, r) = (q(1) + r(1), q(2) + r(2))
+    add_formal_differences(p, r)(1) = p(1) + r(1)
+    add_formal_differences(p, r)(2) = p(2) + r(2)
+    add_formal_differences(q, r)(1) = q(1) + r(1)
+    add_formal_differences(q, r)(2) = q(2) + r(2)
+    add_formal_differences(p, r)(1) + add_formal_differences(q, r)(2) = (p(1) + r(1)) + (q(2) + r(2)) = (p(1) + q(2)) + (r(1) + r(2)) = (q(1) + p(2)) + (r(1) + r(2)) = (q(1) + r(1)) + (p(2) + r(2)) = add_formal_differences(q, r)(1) + add_formal_differences(p, r)(2)
+    by def $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
+thm multiplication_respects_formal_difference_equivalence:
+    ? forall p, q, r cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
+    p(1) + q(2) = q(1) + p(2)
+    multiply_formal_differences(p, r) = (p(1) * r(1) + p(2) * r(2), p(1) * r(2) + p(2) * r(1))
+    multiply_formal_differences(q, r) = (q(1) * r(1) + q(2) * r(2), q(1) * r(2) + q(2) * r(1))
+    multiply_formal_differences(p, r)(1) = p(1) * r(1) + p(2) * r(2)
+    multiply_formal_differences(p, r)(2) = p(1) * r(2) + p(2) * r(1)
+    multiply_formal_differences(q, r)(1) = q(1) * r(1) + q(2) * r(2)
+    multiply_formal_differences(q, r)(2) = q(1) * r(2) + q(2) * r(1)
+    p(2) + q(1) = q(1) + p(2) = p(1) + q(2) = q(2) + p(1)
+    multiply_formal_differences(p, r)(1) + multiply_formal_differences(q, r)(2) = (p(1) * r(1) + p(2) * r(2)) + (q(1) * r(2) + q(2) * r(1)) = (p(1) + q(2)) * r(1) + (p(2) + q(1)) * r(2) = (q(1) + p(2)) * r(1) + (p(2) + q(1)) * r(2) = (q(1) + p(2)) * r(1) + (q(2) + p(1)) * r(2) = (q(1) * r(1) + q(2) * r(2)) + (p(1) * r(2) + p(2) * r(1)) = multiply_formal_differences(q, r)(1) + multiply_formal_differences(p, r)(2)
+    by def $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
+claim:
+    ? forall n, m N:
+        add_formal_differences((n, 0), (m, 0)) = (n + m, 0)
+        multiply_formal_differences((n, 0), (m, 0)) = (n * m, 0)
+    have p cart(N, N) = (n, 0)
+    have q cart(N, N) = (m, 0)
+    p(1) = n
+    p(2) = 0
+    q(1) = m
+    q(2) = 0
+    p(1) + q(1) = n + m
+    p(2) + q(2) = 0 + 0 = 0
+    p(1) * q(1) + p(2) * q(2) = n * m + 0 * 0 = n * m
+    p(1) * q(2) + p(2) * q(1) = n * 0 + 0 * m = 0
+    add_formal_differences((n, 0), (m, 0)) = add_formal_differences(p, q) = (p(1) + q(1), p(2) + q(2)) = (n + m, 0 + 0) = (n + m, 0)
+    multiply_formal_differences((n, 0), (m, 0)) = multiply_formal_differences(p, q) = (p(1) * q(1) + p(2) * q(2), p(1) * q(2) + p(2) * q(1)) = (n * m + 0 * 0, n * 0 + 0 * m) = (n * m, 0)
+have fn negate_formal_difference(p cart(N, N)) cart(N, N) = (p(2), p(1))
+thm negation_respects_formal_difference_equivalence:
+    ? forall p, q cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
+    p(1) + q(2) = q(1) + p(2)
+    negate_formal_difference(p) = (p(2), p(1))
+    negate_formal_difference(q) = (q(2), q(1))
+    negate_formal_difference(p)(1) = p(2)
+    negate_formal_difference(p)(2) = p(1)
+    negate_formal_difference(q)(1) = q(2)
+    negate_formal_difference(q)(2) = q(1)
+    negate_formal_difference(p)(1) + negate_formal_difference(q)(2) = p(2) + q(1) = q(1) + p(2) = p(1) + q(2) = q(2) + p(1) = negate_formal_difference(q)(1) + negate_formal_difference(p)(2)
+    by def $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
+forall x Z:
+    x + (-x) = 0
+    (-x) + x = 0
+claim:
+    ? forall n N+:
+        (-n) $in Z
+        (-n) < 0
+    0 < n
+    -n = 0 - n < 0 - 0 = 0
+forall x Z:
+    x > 0 or x = 0 or x < 0
+forall x Z:
+    x > 0
+    =>:
+        x != 0
+        not x < 0
+forall x Z:
+    x = 0
+    =>:
+        not x > 0
+        not x < 0
+forall x Z:
+    x < 0
+    =>:
+        x != 0
+        not x > 0
+forall x, y, z Z:
+    x + y = y + x
+    (x + y) + z = x + (y + z)
+    x + 0 = x
+    0 + x = x
+    x + (-x) = 0
+    (-x) + x = 0
+    x * y = y * x
+    (x * y) * z = x * (y * z)
+    x * 1 = x
+    1 * x = x
+    x * (y + z) = x * y + x * z
+    (y + z) * x = y * x + z * x
+forall a, b Z:
+    a * b = 0
+    =>:
+        a = 0 or b = 0
+thm integer_multiplication_cancellation:
+    ? forall a, b, c Z:
+        a * c = b * c
+        c != 0
+        =>:
+            a = b
+    (a - b) * c = a * c - b * c = 0
+    (a - b) * c = 0
+    a - b = 0 or c = 0
+    by cases:
+        ? a = b
+        case a - b = 0:
+            a = a - b + b = b
+        case c = 0:
+            c != 0
+            impossible c != 0
+thm strict_integer_order_positive_difference:
+    ? forall a, b Z:
+        a < b
+        =>:
+            b - a > 0
+            b - a $in Z
+            b - a >= 0
+            b - a $in N
+            b - a $in N+
+            b = a + (b - a)
+    b - a > 0
+    b - a $in Z
+    b - a >= 0
+    b - a $in N
+    b - a != 0
+    have positive_difference Z = b - a
+    positive_difference = b - a
+    positive_difference $in N+
+    b - a $in N+
+    b = a + (b - a)
+claim:
+    ? forall a, b Z:
+        a < b
+        =>:
+            exist x N st {b = a + x}
+    witness exist x N st {b = a + x} from b - a
+claim:
+    ? forall a, b Z:
+        a <= b
+        =>:
+            exist x N st {b = a + x}
+    witness exist x N st {b = a + x} from b - a
+forall a, b Z:
+    a > b
+    =>:
+        a - b > 0
+forall a, b Z:
+    a - b $in N+
+    =>:
+        a > b
+forall a, b Z:
+    =>:
+        a > b
+    <=>:
+        a - b $in N+
+forall a, b, c Z:
+    a > b
+    =>:
+        a + c > b + c
+forall a, b, c Z:
+    a > b
+    c > 0
+    =>:
+        a * c > b * c
+claim:
+    ? forall a, b Z:
+        a > b
+        =>:
+            (-a) < (-b)
+    -a = 0 - a < 0 - b = -b
+claim:
+    ? forall a, b, c Z:
+        a > b
+        b > c
+        =>:
+            a > c
+    a > b > c
+forall a, b Z:
+    a > b or a = b or a < b
+forall a, b Z:
+    a > b
+    =>:
+        a != b
+forall a, b Z:
+    a > b
+    =>:
+        a >= b
+        not a < b
+thm equal_integers_are_not_strictly_ordered:
+    ? forall a, b Z:
+        a = b
+        =>:
+            not a > b
+            not a < b
+    claim:
+        ? not a > b
+        by contra:
+            ? not a > b
+            a - b > 0
+            a - b = 0
+            impossible a - b = 0
+    claim:
+        ? not a < b
+        by contra:
+            ? not a < b
+            b - a > 0
+            b - a = 0
+            impossible b - a = 0
+forall a, b Z:
+    a < b
+    =>:
+        a != b
+forall a, b Z:
+    a < b
+    =>:
+        a <= b
+        not a > b
+thm rational_equality_gives_cross_products:
+    ? forall a Z, b Z*, c Z, d Z*:
+        a / b = c / d
+        =>:
+            a * d = c * b
+    b != 0
+    d != 0
+    a * d = (a / b) * (b * d) = (c / d) * (b * d) = c * b
+thm cross_products_give_rational_equality:
+    ? forall a Z, b Z*, c Z, d Z*:
+        a * d = c * b
+        =>:
+            a / b = c / d
+    b != 0
+    d != 0
+    b * d != 0
+    a / b = (a * d) / (b * d) = (c * b) / (b * d) = c / d
+forall a Z, b Z*, c Z, d Z*:
+    =>:
+        a / b = c / d
+    <=>:
+        a * d = c * b
+forall q Q:
+    exist a Z, b Z* st {q = a / b}
+forall b, d Z*:
+    b * d != 0
+claim:
+    ? forall a Z, b Z*, c Z, d Z*:
+        (a / b) + (c / d) = (a * d + b * c) / (b * d)
+        (a / b) * (c / d) = (a * c) / (b * d)
+        -(a / b) = (-a) / b
+    b != 0
+    d != 0
+    b * d != 0
+thm rational_operations_respect_left_representative:
+    ? forall a Z, b Z*, a1 Z, b1 Z*, c Z, d Z*:
+        a * b1 = a1 * b
+        =>:
+            (a / b) + (c / d) = (a1 / b1) + (c / d)
+            (a / b) * (c / d) = (a1 / b1) * (c / d)
+            -(a / b) = -(a1 / b1)
+    release thm cross_products_give_rational_equality(a, b, a1, b1)
+    a / b = a1 / b1
+    (a / b) + (c / d) = (a1 / b1) + (c / d)
+    (a / b) * (c / d) = (a1 / b1) * (c / d)
+    -(a / b) = -(a1 / b1)
+thm rational_operations_respect_right_representative:
+    ? forall a Z, b Z*, c Z, d Z*, c1 Z, d1 Z*:
+        c * d1 = c1 * d
+        =>:
+            (a / b) + (c / d) = (a / b) + (c1 / d1)
+            (a / b) * (c / d) = (a / b) * (c1 / d1)
+    release thm cross_products_give_rational_equality(c, d, c1, d1)
+    c / d = c1 / d1
+    (a / b) + (c / d) = (a / b) + (c1 / d1)
+    (a / b) * (c / d) = (a / b) * (c1 / d1)
+forall a, b Z:
+    (a / 1) + (b / 1) = (a + b) / 1
+    (a / 1) * (b / 1) = (a * b) / 1
+    -(a / 1) = (-a) / 1
+thm integer_embedding_into_rationals_is_injective:
+    ? forall a, b Z:
+        a / 1 = b / 1
+        =>:
+            a = b
+    release thm rational_equality_gives_cross_products(a, 1, b, 1)
+    a * 1 = b * 1
+    a = a * 1 = b * 1 = b
+forall a, b Z:
+    a = b
+    =>:
+        a / 1 = b / 1
+forall a, b Z:
+    =>:
+        a / 1 = b / 1
+    <=>:
+        a = b
+thm rational_quotient_zero_has_zero_numerator:
+    ? forall a Z, b Z*:
+        a / b = 0
+        =>:
+            a = 0
+    0 = 0 / 1
+    a / b = 0 / 1
+    release thm rational_equality_gives_cross_products(a, b, 0, 1)
+    a * 1 = 0 * b
+    a = a * 1 = 0 * b = 0
+forall a Z, b Z*:
+    a = 0
+    =>:
+        a / b = 0
+forall a Z, b Z*:
+    =>:
+        a / b = 0
+    <=>:
+        a = 0
+forall a Z*, b Z*:
+    a / b != 0
+forall a Z*, b Z*:
+    1 / (a / b) = b / a
+forall x, y, z Q:
+    x + y = y + x
+    (x + y) + z = x + (y + z)
+    x + 0 = x
+    0 + x = x
+    x + (-x) = 0
+    (-x) + x = 0
+    x * y = y * x
+    (x * y) * z = x * (y * z)
+    x * 1 = x
+    1 * x = x
+    x * (y + z) = x * y + x * z
+    (y + z) * x = y * x + z * x
+forall x Q*:
+    x * (1 / x) = 1
+    (1 / x) * x = 1
+forall a, b N+:
+    a / b > 0
+claim:
+    ? forall x Q:
+        x > 0
+        =>:
+            exist a0 N+, b0 N+ st {x = a0 / b0}
+    obtain a, b from exist a Z, b Z* st {x = a / b}
+    b > 0 or b = 0 or b < 0
+    by cases:
+        ? exist a0 N+, b0 N+ st {x = a0 / b0}
+        case b > 0:
+            a / b > 0
+            a = a / b * b > 0 * b = 0
+            a $in N
+            a $in N+
+            b $in Z
+            b $in N
+            b $in N+
+            witness exist a0 N+, b0 N+ st {x = a0 / b0} from a,b
+        case b = 0:
+            impossible b != 0
+        case b < 0:
+            have b0 Z = (-b)
+            b0 = (-b) = 0 - b > 0
+            b0 $in N
+            b0 $in N+
+            have a0 Z = (-a)
+            a / b = (-a) / (-b) = a0 / b0
+            a0 / b0 > 0
+            a0 = a0 / b0 * b0 > 0 * b0 = 0
+            a0 $in N
+            a0 $in N+
+            witness exist a1 N+, b1 N+ st {x = a1 / b1} from a0,b0
+claim:
+    ? forall q Q:
+        q < 0
+        =>:
+            exist y Q st {y > 0, q = (-y)}
+    -q = 0 - q > 0 - 0 = 0
+    witness exist y Q st {y > 0, q = (-y)} from (-q)
+claim:
+    ? forall y Q:
+        y > 0
+        =>:
+            (-y) < 0
+    -y = 0 - y < 0 - 0 = 0
+forall a, b N+:
+    a / b > 0
+    -(a / b) < 0
+    (-a) / b = -(a / b)
+    (-a) / b < 0
+forall x Q:
+    x > 0 or x = 0 or x < 0
+forall x Q:
+    x > 0
+    =>:
+        x != 0
+        not x < 0
+forall x Q:
+    x = 0
+    =>:
+        not x > 0
+        not x < 0
+forall x Q:
+    x < 0
+    =>:
+        x != 0
+        not x > 0
+forall x, y Q:
+    =>:
+        x > y
+    <=>:
+        x - y > 0
+claim:
+    ? forall x, y Q:
+        x < y
+        =>:
+            x - y < 0
+    x - y < y - y = 0
+claim:
+    ? forall x, y Q:
+        x - y < 0
+        =>:
+            x < y
+    x = (x - y) + y < 0 + y = y
+forall x, y Q:
+    =>:
+        x < y
+    <=>:
+        x - y < 0
+forall x, y Q:
+    x > y or x = y or x < y
+thm rational_less_excludes_equal_and_greater:
+    ? forall x, y Q:
+        x < y
+        =>:
+            x != y
+            not x > y
+    x != y
+    x - y < 0
+    claim:
+        ? not x > y
+        by contra:
+            ? not x > y
+            x - y > 0
+            impossible x - y < 0
+thm equal_rationals_are_not_strictly_ordered:
+    ? forall x, y Q:
+        x = y
+        =>:
+            not x < y
+            not x > y
+    x - y = 0
+    claim:
+        ? not x < y
+        by contra:
+            ? not x < y
+            x - y < 0
+            impossible x - y = 0
+    claim:
+        ? not x > y
+        by contra:
+            ? not x > y
+            x - y > 0
+            impossible x - y = 0
+thm rational_greater_excludes_equal_and_less:
+    ? forall x, y Q:
+        x > y
+        =>:
+            x != y
+            not x < y
+    x != y
+    x - y > 0
+    claim:
+        ? not x < y
+        by contra:
+            ? not x < y
+            x - y < 0
+            impossible x - y > 0
+forall x, y Q:
+    x < y
+    =>:
+        y > x
+forall x, y, z Q:
+    x < y
+    y < z
+    =>:
+        x < z
+forall x, y, z Q:
+    x < y
+    =>:
+        x + z < y + z
+forall x, y, z Q:
+    x < y
+    z > 0
+    =>:
+        x * z < y * z
+claim:
+    ? forall x Q:
+        x > 0
+        =>:
+            abs(x) = x
+    0 <= x
+claim:
+    ? forall x Q:
+        x < 0
+        =>:
+            abs(x) = (-x)
+    x <= 0
+forall x Q:
+    x = 0
+    =>:
+        abs(x) = 0
+have fn dist_Q(x, y Q) Q = abs(x - y)
+thm rational_distance_formula:
+    ? forall x, y Q:
+        dist_Q(x, y) = abs(x - y)
+forall x Q:
+    abs(x) >= 0
+forall x Q:
+    abs(x) = 0
+    =>:
+        x = 0
+claim:
+    ? forall x Q:
+        x != 0
+        =>:
+            abs(x) > 0
+    by contra:
+        ? abs(x) > 0
+        abs(x) >= 0
+        abs(x) <= 0
+        abs(x) = 0
+        x = 0
+        impossible x = 0
+claim:
+    ? forall x, y Q:
+        (-y) <= x
+        x <= y
+        =>:
+            y >= abs(x)
+    by cases:
+        ? y >= abs(x)
+        case 0 <= x:
+            abs(x) = x <= y
+        case x < 0:
+            x <= 0
+            abs(x) = -x = 0 - x <= 0 - (-y) = y
+thm rational_abs_upper_bound_gives_two_sided_bound:
+    ? forall x, y Q:
+        y >= abs(x)
+        =>:
+            (-y) <= x
+            x <= y
+    -y = 0 - y <= 0 - abs(x) <= x
+    x <= abs(x) <= y
+forall x, y Q:
+    =>:
+        (-y) <= x
+        x <= y
+    <=>:
+        y >= abs(x)
+claim:
+    ? forall x Q:
+        x <= abs(x)
+        (-x) <= abs(x)
+    -x <= abs(-x) = abs(x)
+forall x, y Q:
+    abs(x * y) = abs(x) * abs(y)
+forall x Q:
+    abs(-x) = abs(x)
+forall x, y Q:
+    abs(x + y) <= abs(x) + abs(y)
+thm rational_distance_nonnegative:
+    ? forall x, y Q:
+        dist_Q(x, y) >= 0
+    dist_Q(x, y) = abs(x - y)
+    abs(x - y) >= 0
+thm equal_rationals_have_zero_distance:
+    ? forall x, y Q:
+        x = y
+        =>:
+            dist_Q(x, y) = 0
+    dist_Q(x, y) = abs(x - y) = abs(0) = 0
+thm zero_rational_distance_gives_equality:
+    ? forall x, y Q:
+        dist_Q(x, y) = 0
+        =>:
+            x = y
+    dist_Q(x, y) = abs(x - y)
+    abs(x - y) = 0
+    x - y = 0
+    x = x - y + y = y
+thm rational_distance_is_symmetric:
+    ? forall x, y Q:
+        dist_Q(x, y) = dist_Q(y, x)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(y, x) = abs(y - x)
+    x - y = -(y - x)
+    abs(x - y) = abs(-(y - x)) = abs(y - x)
+    dist_Q(x, y) = abs(x - y) = abs(y - x) = dist_Q(y, x)
+thm rational_distance_triangle_inequality:
+    ? forall x, y, z Q:
+        dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z)
+    dist_Q(x, z) = abs(x - z)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(y, z) = abs(y - z)
+    x - z = (x - y) + (y - z)
+    abs(x - z) = abs((x - y) + (y - z))
+    abs((x - y) + (y - z)) <= abs(x - y) + abs(y - z)
+    dist_Q(x, z) = abs(x - z) <= abs(x - y) + abs(y - z) = dist_Q(x, y) + dist_Q(y, z)
+prop is_close_in_Q(epsilon Q+, x, y Q):
+    dist_Q(x, y) <= epsilon
+sketch:
+    dist_Q(0.99, 1.01) = abs(0.99 - 1.01) = abs(-0.02) = 0.02
+    0.02 <= 0.1
+    by def $is_close_in_Q(0.1, 0.99, 1.01)
+    0.02 > 0.01
+    claim:
+        ? not $is_close_in_Q(0.01, 0.99, 1.01)
+        by contra:
+            ? not $is_close_in_Q(0.01, 0.99, 1.01)
+            impossible 0.02 <= 0.01
+    claim:
+        ? forall epsilon Q+:
+            $is_close_in_Q(epsilon, 2, 2)
+        dist_Q(2, 2) = abs(2 - 2) = 0
+        0 <= epsilon
+        by def $is_close_in_Q(epsilon, 2, 2)
+thm rational_closeness_is_reflexive:
+    ? forall epsilon Q+, x Q:
+        $is_close_in_Q(epsilon, x, x)
+    dist_Q(x, x) = abs(x - x) = 0
+    0 <= epsilon
+    by def $is_close_in_Q(epsilon, x, x)
+claim:
+    ? forall epsilon, epsilon_prime Q+, x, y Q:
+        $is_close_in_Q(epsilon, x, y)
+        epsilon_prime > epsilon
+        =>:
+            $is_close_in_Q(epsilon_prime, x, y)
+    dist_Q(x, y) <= epsilon < epsilon_prime
+    by def $is_close_in_Q(epsilon_prime, x, y)
+claim:
+    ? forall x, y Q:
+        forall epsilon Q+:
+            $is_close_in_Q(epsilon, x, y)
+        =>:
+            x = y
+    by contra:
+        ? x = y
+        x - y != 0
+        abs(x - y) > 0
+        abs(x - y) $in Q
+        abs(x - y) / 2 $in Q
+        abs(x - y) / 2 > 0
+        abs(x - y) / 2 $in Q+
+        $is_close_in_Q(abs(x - y) / 2, x, y)
+        dist_Q(x, y) <= abs(x - y) / 2
+        abs(x - y) / 2 < abs(x - y) / 2 + abs(x - y) / 2 = abs(x - y) = dist_Q(x, y) <= abs(x - y) / 2
+        impossible abs(x - y) / 2 = abs(x - y) / 2
+thm rational_closeness_is_symmetric:
+    ? forall epsilon Q+, x, y Q:
+        $is_close_in_Q(epsilon, x, y)
+        =>:
+            $is_close_in_Q(epsilon, y, x)
+    dist_Q(y, x) = dist_Q(x, y) <= epsilon
+    by def $is_close_in_Q(epsilon, y, x)
+thm rational_closeness_is_transitive:
+    ? forall epsilon, delta Q+, x, y, z Q:
+        $is_close_in_Q(epsilon, x, y)
+        $is_close_in_Q(delta, y, z)
+        =>:
+            $is_close_in_Q(epsilon + delta, x, z)
+    release thm rational_distance_triangle_inequality(x, y, z)
+    dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z) <= epsilon + delta
+    by def $is_close_in_Q(epsilon + delta, x, z)
+thm rational_closeness_preserved_by_addition_and_subtraction:
+    ? forall epsilon, delta Q+, x, y, z, w Q:
+        $is_close_in_Q(epsilon, x, y)
+        $is_close_in_Q(delta, z, w)
+        =>:
+            $is_close_in_Q(epsilon + delta, x + z, y + w)
+            $is_close_in_Q(epsilon + delta, x - z, y - w)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(z, w) = abs(z - w)
+    abs(w - z) = abs(-(z - w)) = abs(z - w)
+    dist_Q(x + z, y + w) = abs((x + z) - (y + w)) = abs((x - y) + (z - w)) <= abs(x - y) + abs(z - w) = dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
+    dist_Q(x - z, y - w) = abs((x - z) - (y - w)) = abs((x - y) + (w - z)) <= abs(x - y) + abs(w - z) = dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
+    by def $is_close_in_Q(epsilon + delta, x + z, y + w)
+    by def $is_close_in_Q(epsilon + delta, x - z, y - w)
+thm rational_closeness_of_between_points:
+    ? forall epsilon Q+, x, y, z, w Q:
+        $is_close_in_Q(epsilon, y, x)
+        $is_close_in_Q(epsilon, z, x)
+        y <= w
+        w <= z
+        =>:
+            $is_close_in_Q(epsilon, w, x)
+    dist_Q(y, x) <= epsilon
+    abs(y - x) = dist_Q(y, x) <= epsilon
+    release thm rational_abs_upper_bound_gives_two_sided_bound(y - x, epsilon)
+    (-epsilon) <= y - x
+    dist_Q(z, x) <= epsilon
+    abs(z - x) = dist_Q(z, x) <= epsilon
+    release thm rational_abs_upper_bound_gives_two_sided_bound(z - x, epsilon)
+    z - x <= epsilon
+    (-epsilon) <= y - x <= w - x
+    w - x <= z - x <= epsilon
+    dist_Q(w, x) = abs(w - x) <= epsilon
+    by def $is_close_in_Q(epsilon, w, x)
+thm rational_closeness_of_reverse_between_points:
+    ? forall epsilon Q+, x, y, z, w Q:
+        $is_close_in_Q(epsilon, y, x)
+        $is_close_in_Q(epsilon, z, x)
+        z <= w
+        w <= y
+        =>:
+            $is_close_in_Q(epsilon, w, x)
+    release thm rational_closeness_of_between_points(epsilon, x, z, y, w)
+thm rational_closeness_scaled_by_nonzero_factor:
+    ? forall epsilon Q+, x, y, z Q:
+        $is_close_in_Q(epsilon, x, y)
+        z != 0
+        =>:
+            $is_close_in_Q(epsilon * abs(z), x * z, y * z)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(x * z, y * z) = abs(x * z - y * z) = abs((x - y) * z) = abs(x - y) * abs(z) = dist_Q(x, y) * abs(z) <= epsilon * abs(z)
+    abs(z) > 0
+    epsilon * abs(z) > 0
+    epsilon * abs(z) $in Q+
+    by def $is_close_in_Q(epsilon * abs(z), x * z, y * z)
+thm rational_closeness_of_products:
+    ? forall epsilon, delta Q+, x, y, z, w Q:
+        $is_close_in_Q(epsilon, x, y)
+        $is_close_in_Q(delta, z, w)
+        =>:
+            $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
+    dist_Q(x, y) <= epsilon
+    dist_Q(z, w) <= delta
+    dist_Q(z, w) = abs(z - w) >= 0
+    abs((x - y) * z) = abs(x - y) * abs(z)
+    abs(x - y) = dist_Q(x, y)
+    abs(x - y) * abs(z) = dist_Q(x, y) * abs(z)
+    abs((x - y) * z) = abs(x - y) * abs(z) = dist_Q(x, y) * abs(z) <= epsilon * abs(z)
+    abs(x * (z - w)) = abs(x) * abs(z - w)
+    abs(z - w) = dist_Q(z, w)
+    abs(x) * abs(z - w) = abs(x) * dist_Q(z, w)
+    abs(x * (z - w)) = abs(x) * abs(z - w) = abs(x) * dist_Q(z, w) <= abs(x) * delta = delta * abs(x)
+    dist_Q(x, y) * dist_Q(z, w) <= epsilon * dist_Q(z, w) <= epsilon * delta
+    abs((x - y) * (z - w)) = abs(x - y) * abs(z - w)
+    abs(x - y) * abs(z - w) = dist_Q(x, y) * dist_Q(z, w)
+    abs((x - y) * (z - w)) = abs(x - y) * abs(z - w) = dist_Q(x, y) * dist_Q(z, w) <= epsilon * delta
+    x * z - y * w = (x - y) * z + x * (z - w) - (x - y) * (z - w)
+    abs((x - y) * z + x * (z - w)) <= abs((x - y) * z) + abs(x * (z - w))
+    abs(-((x - y) * (z - w))) = abs((x - y) * (z - w))
+    abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) = abs((x - y) * z + x * (z - w) + (-((x - y) * (z - w)))) <= abs((x - y) * z + x * (z - w)) + abs(-((x - y) * (z - w))) = abs((x - y) * z + x * (z - w)) + abs((x - y) * (z - w))
+    abs((x - y) * z + x * (z - w)) + abs((x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w))
+    abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) <= abs((x - y) * z + x * (z - w)) + abs((x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w))
+    abs((x - y) * z) + abs(x * (z - w)) <= epsilon * abs(z) + abs(x * (z - w)) <= epsilon * abs(z) + delta * abs(x)
+    abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w)) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
+    dist_Q(x * z, y * w) = abs(x * z - y * w) = abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w)) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
+    0 <= epsilon
+    0 <= delta
+    0 <= abs(z)
+    0 <= abs(x)
+    0 <= epsilon * abs(z)
+    0 <= delta * abs(x)
+    0 <= epsilon * abs(z) + delta * abs(x)
+    0 < epsilon * delta <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
+    epsilon * abs(z) + delta * abs(x) + epsilon * delta $in Q+
+    by def $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
+forall x Q:
+    x^0 = 1
+claim:
+    ? forall x Q, n N:
+        x^(n + 1) = x^n * x
+    x^(n + 1) = x^n * x^1 = x^n * x
+sketch:
+    2^3 = 8
+    2^3 * 2^2 = 2^(3 + 2)
+    (2 * 3)^2 = 2^2 * 3^2
+forall x Q, n, m N:
+    x^n * x^m = x^(n + m)
+forall x Q, n, m N:
+    (x^n)^m = x^(n * m)
+forall x, y Q, n N:
+    (x * y)^n = x^n * y^n
+forall x Q, n N+:
+    x^n = 0
+    =>:
+        x = 0
+forall x Q, n N+:
+    x = 0
+    =>:
+        x^n = 0^n = 0
+forall x Q, n N+:
+    =>:
+        x^n = 0
+    <=>:
+        x = 0
+claim:
+    ? forall x, y Q, n N+:
+        x >= y
+        y >= 0
+        =>:
+            x^n >= y^n
+            y^n >= 0
+    0 <= y
+    y <= x
+    0 <= x
+claim:
+    ? forall x, y Q, n N+:
+        x > y
+        y >= 0
+        =>:
+            x^n > y^n
+            y^n >= 0
+    0 <= y
+    y < x
+    0 <= x
+claim:
+    ? forall x Q, n N:
+        abs(x^n) = abs(x)^n
+    by induc n from 0:
+        ? abs(x^n) = abs(x)^n
+        ? from n = 0:
+            abs(x^0) = abs(1) = 1 = abs(x)^0
+        ? induc:
+            x^(n + 1) = x^n * x^1 = x^n * x
+            abs(x^(n + 1)) = abs(x^n * x) = abs(x^n) * abs(x) = abs(x)^n * abs(x) = abs(x)^n * abs(x)^1 = abs(x)^(n + 1)
+forall x Q*, n N+:
+    x^n != 0
+claim:
+    ? forall x Q*, n N+:
+        x^(-n) = 1 / x^n
+    x != 0
+    x^n != 0
+    -n = n * (-1)
+    x^(-n) = x^(n * (-1)) = (x^n)^(-1) = 1 / x^n
+forall x Q*, n, m Z:
+    x^n * x^m = x^(n + m)
+forall x Q*, n Z:
+    x^n != 0
+forall x Q*, n, m Z:
+    (x^n)^m = x^(n * m)
+forall x, y Q*, n Z:
+    (x * y)^n = x^n * y^n
+forall x, y Q+, n Z:
+    x >= y
+    n > 0
+    =>:
+        x^n >= y^n
+        y^n > 0
+claim:
+    ? forall x, y Q+, n Z:
+        x >= y
+        n < 0
+        =>:
+            x^n > 0
+            x^n <= y^n
+    0 < x
+    0 < y
+    y <= x
+    -n = 0 - n > 0 - 0 = 0
+    have k N+ = -n
+    n = -(-n) = -k
+    0 < x^k
+    0 < y^k
+    y^k <= x^k
+    0 < x^k * y^k
+    x^k != 0
+    y^k != 0
+    x^k * y^k != 0
+    x^n = x^(-k) = 1 / x^k = y^k / (x^k * y^k) <= x^k / (x^k * y^k) = 1 / y^k = y^(-k) = y^n
+forall x, y Q+, n Z:
+    n != 0
+    x^n = y^n
+    =>:
+        x = y
+claim:
+    ? forall x Q*, n Z:
+        abs(x^n) = abs(x)^n
+    by cases:
+        ? abs(x^n) = abs(x)^n
+        case n >= 0:
+            n $in N
+            abs(x^n) = abs(x)^n
+        case n < 0:
+            -n = 0 - n > 0 - 0 = 0
+            have k N+ = -n
+            n = -(-n) = -k
+            n + k = 0
+            x != 0
+            x^n * x^k = x^(n + k) = x^0 = 1
+            abs(x^n) * abs(x^k) = abs(x^n * x^k) = abs(1) = 1
+            abs(x^k) = abs(x)^k
+            abs(x^k) != 0
+            abs(x)^k != 0
+            abs(x) != 0
+            abs(x) $in Q*
+            abs(x)^(-k) = abs(x)^(k * (-1)) = (abs(x)^k)^(-1) = 1 / abs(x)^k
+            abs(x^n) = (abs(x^n) * abs(x^k)) / abs(x^k) = 1 / abs(x^k) = 1 / abs(x)^k = abs(x)^(-k) = abs(x)^n
+thm rational_has_positive_denominator_representation:
+    ? forall x Q:
+        exist a0 Z, b0 N+ st {x = a0 / b0}
+    obtain a, b from exist a Z, b Z* st {x = a / b}
+    b > 0 or b = 0 or b < 0
+    by cases:
+        ? exist a0 Z, b0 N+ st {x = a0 / b0}
+        case b > 0:
+            b $in Z
+            b >= 0
+            b $in N
+            b $in N+
+            witness exist a0 Z, b0 N+ st {x = a0 / b0} from a,b
+        case b = 0:
+            impossible b != 0
+        case b < 0:
+            0 - b > 0
+            0 - b $in Z
+            0 - b >= 0
+            0 - b $in N
+            0 - b $in N+
+            (-b) = 0 - b
+            (-b) $in N+
+            a / b = (-a) / (-b)
+            witness exist a0 Z, b0 N+ st {x = a0 / b0} from (-a),(-b)
+claim:
+    ? forall a Z, d N+:
+        exist! q Z st {a = d * q + a % d}
+    claim:
+        ? forall q1 Z, q2 Z:
+            a = d * q1 + a % d
+            a = d * q2 + a % d
+            =>:
+                q1 = q2
+        d * q1 = (d * q1 + a % d) - a % d = a - a % d = (d * q2 + a % d) - a % d = d * q2
+        d != 0
+        q1 = (d * q1) / d = (d * q2) / d = q2
+    witness exist! q Z st {a = d * q + a % d} from quot(a, d)
+have fn integer_quotient by exist!:
+    ? forall a Z, d N+:
+        exist! q Z st {a = d * q + a % d}
+thm rational_quotient_integer_interval_exists:
+    ? forall a Z, b N+:
+        exist m Z st {m <= a / b, a / b < m + 1}
+    have n Z = integer_quotient(a, b)
+    a = b * integer_quotient(a, b) + a % b = b * n + a % b
+    0 <= a % b
+    a % b < b
+    b * n <= b * n + a % b = a
+    n <= a / b
+    a = b * n + a % b < b * n + b = b * (n + 1)
+    a / b < (b * (n + 1)) / b = n + 1
+    witness exist m Z st {m <= a / b, a / b < m + 1} from n
+thm rational_integer_interval_exists:
+    ? forall x Q:
+        exist n Z st {n <= x, x < n + 1}
+    release thm rational_has_positive_denominator_representation(x)
+    obtain a, b from exist a Z, b N+ st {x = a / b}
+    release thm rational_quotient_integer_interval_exists(a, b)
+    obtain m from exist m Z st {m <= a / b, a / b < m + 1}
+    witness exist n Z st {n <= x, x < n + 1} from m
+thm rational_integer_interval_is_unique:
+    ? forall x Q, n, m Z:
+        n <= x
+        x < n + 1
+        m <= x
+        x < m + 1
+        =>:
+            n = m
+    claim:
+        ? m <= n
+        m <= n or m > n
+        by cases:
+            ? m <= n
+            case m <= n:
+                m <= n
+            case m > n:
+                n < m
+                n + 1 <= m
+                x < n + 1 <= m
+                x < m
+                impossible m <= x
+    claim:
+        ? n <= m
+        n <= m or n > m
+        by cases:
+            ? n <= m
+            case n <= m:
+                n <= m
+            case n > m:
+                m < n
+                m + 1 <= n
+                x < m + 1 <= n
+                x < n
+                impossible n <= x
+thm natural_upper_bound_for_rational:
+    ? forall x Q:
+        exist n N st {n > x}
+    release thm rational_integer_interval_exists(x)
+    obtain m from exist m Z st {m <= x, x < m + 1}
+    m >= 0 or m < 0
+    by cases:
+        ? exist n N st {n > x}
+        case m >= 0:
+            have n N = m + 1
+            witness exist k N st {k > x} from n
+        case m < 0:
+            m + 1 <= 0
+            x < m + 1 <= 0 < 1
+            witness exist n N st {n > x} from 1
+thm rationals_are_dense:
+    ? forall x, y Q:
+        x < y
+        =>:
+            exist z Q st {x < z < y}
+    2 * x = x + x < x + y
+    x + y < y + y = 2 * y
+    x = (2 * x) / 2 < (x + y) / 2
+    (x + y) / 2 < (2 * y) / 2 = y
+    witness exist z Q st {x < z < y} from (x + y) / 2
+thm integer_square_multiple_of_two_has_even_base:
+    ? forall p, r Z:
+        p^2 = 2 * r
+        =>:
+            p % 2 = 0
+    0 < 2
+    p^2 $in Z
+    2 * r = 2 * r + 0
+    p^2 = 2 * r = 2 * r + 0
+    p^2 % 2 = 0
+    p % 2 = 0 or p % 2 = 1
+    by cases:
+        ? p % 2 = 0
+        case p % 2 = 0:
+            p % 2 = 0
+        case p % 2 = 1:
+            p^2 % 2 = ((p % 2)^2) % 2 = (1^2) % 2 = 1
+            impossible p^2 % 2 = 0
+thm rational_reduced_fraction_parity_witness:
+    ? forall x Q:
+        exist p Z, q N+ st {x = p / q, p % 2 != 0 or q % 2 != 0}
+    release thm rational_has_unique_reduced_fraction(x)
+    obtain p, q from exist! p Z, q N+ st {x = p / q, gcd(p, q) = 1}
+    claim:
+        ? p % 2 != 0 or q % 2 != 0
+        p % 2 = 0 or p % 2 = 1
+        by cases:
+            ? p % 2 != 0 or q % 2 != 0
+            case p % 2 = 0:
+                q % 2 = 0 or q % 2 = 1
+                by cases:
+                    ? p % 2 != 0 or q % 2 != 0
+                    case q % 2 = 0:
+                        2 <= gcd(p, q) = 1
+                        impossible 2 <= 1
+                    case q % 2 = 1:
+                        q % 2 != 0
+            case p % 2 = 1:
+                p % 2 != 0
+    witness exist p0 Z, q0 N+ st {x = p0 / q0, p0 % 2 != 0 or q0 % 2 != 0} from p, q
+thm rational_square_not_two:
+    ? forall x Q:
+        x^2 != 2
+    by contra:
+        ? x^2 != 2
+        release thm rational_reduced_fraction_parity_witness(x)
+        obtain p, q from exist p Z, q N+ st {x = p / q, p % 2 != 0 or q % 2 != 0}
+        (p / q)^2 = x^2 = 2
+        p^2 / q^2 = (p / q)^2 = 2
+        p^2 = (p^2 / q^2) * q^2 = 2 * q^2
+        release thm integer_square_multiple_of_two_has_even_base(p, q^2)
+        have s Z = integer_quotient(p, 2)
+        p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + p % 2 = 2 * s
+        2 * q^2 = p^2 = (2 * s)^2 = 4 * s^2
+        q^2 = (2 * q^2) / 2 = (4 * s^2) / 2 = 2 * s^2
+        release thm integer_square_multiple_of_two_has_even_base(q, s^2)
+        by cases:
+            ? q % 2 != 0
+            case p % 2 != 0:
+                impossible p % 2 = 0
+            case q % 2 != 0:
+                q % 2 != 0
+        impossible q % 2 = 0
+prop is_rational_sqrt_two_gap_witness(epsilon Q+, x Q):
+    x >= 0
+    x^2 < 2
+    2 < (x + epsilon)^2
+thm rational_sqrt_two_no_gap_step:
+    ? forall epsilon Q+, y Q:
+        not exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
+        y >= 0
+        y^2 < 2
+        =>:
+            (y + epsilon)^2 < 2
+    claim:
+        ? not 2 < (y + epsilon)^2
+        by contra:
+            ? not 2 < (y + epsilon)^2
+            by def $is_rational_sqrt_two_gap_witness(epsilon, y)
+            impossible not $is_rational_sqrt_two_gap_witness(epsilon, y)
+    release thm rational_square_not_two(y + epsilon)
+    (y + epsilon)^2 != 2
+    (y + epsilon)^2 < 2 or (y + epsilon)^2 = 2 or (y + epsilon)^2 > 2
+    by cases:
+        ? (y + epsilon)^2 < 2
+        case (y + epsilon)^2 < 2:
+            (y + epsilon)^2 < 2
+        case (y + epsilon)^2 = 2:
+            impossible (y + epsilon)^2 != 2
+        case (y + epsilon)^2 > 2:
+            impossible not 2 < (y + epsilon)^2
+thm rational_sqrt_two_no_gap_forces_each_multiple_below_two:
+    ? forall epsilon Q+, n N:
+        not exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
+        =>:
+            (n * epsilon)^2 < 2
+    by induc n from 0:
+        ? (n * epsilon)^2 < 2
+        ? from n = 0:
+            (0 * epsilon)^2 = 0 < 2
+        ? induc:
+            n * epsilon >= 0
+            release thm rational_sqrt_two_no_gap_step(epsilon, n * epsilon)
+            (n * epsilon + epsilon)^2 < 2
+            (n + 1) * epsilon = n * epsilon + epsilon
+            ((n + 1) * epsilon)^2 = (n * epsilon + epsilon)^2 < 2
+thm rational_sqrt_two_gap:
+    ? forall epsilon Q+:
+        exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
+    by contra:
+        ? exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
+        release thm natural_upper_bound_for_rational(2 / epsilon)
+        obtain n from exist n N st {n > 2 / epsilon}
+        release thm rational_sqrt_two_no_gap_forces_each_multiple_below_two(epsilon, n)
+        n * epsilon > (2 / epsilon) * epsilon = 2
+        (n * epsilon)^2 > 2^2 = 4 > 2
+        impossible (n * epsilon)^2 < 2
+sketch:
+    1.414^2 = 1.999396
+    1.999396 < 2
+    (1.414 + 0.001)^2 = 2.002225
+    2 < 2.002225

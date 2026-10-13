@@ -1,6 +1,7 @@
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
+use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::execute::ExecDefPropStmtResult;
 use crate::prelude::*;
 
@@ -29,6 +30,14 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
+                    ExecClaimStmtResult::Success(proof),
+                )) => {
+                    parameters(&proof.statement.fact, out);
+                    for step in proof.body.proof_steps() {
+                        statement(step, out);
+                    }
+                }
                 ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => {
                     verify(&proof.verify_result, out)
                 }

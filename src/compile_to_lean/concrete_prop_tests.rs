@@ -1,8 +1,7 @@
 use super::LitexToLeanCompiler;
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-};
+use crate::store_fact_and_infer::InferNormalAtomicFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
 
 const NONZERO: &str = "prop nonzero(x R):\n    x != 0\n$nonzero(1)\nby def $nonzero(1)\n1 != 0";
 const SQUARE: &str = "prop square_is_one(x R):\n    x * x = 1\n$square_is_one(1)\n1 * 1 = 1";
@@ -57,15 +56,15 @@ fn concrete_prop_inference_retains_named_domain_and_body_stores() {
     else {
         panic!("predicate seed");
     };
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::NormalAtomicFact(rules))) =
         &seed.store_and_infer_result.infer
     else {
         panic!("predicate infer dispatcher");
     };
-    let InferAtomicExceptEqualityResult::NormalAtomicParamTypes(members) = &rules[0] else {
+    let InferNormalAtomicFactResult::ParamTypes(members) = &rules[0] else {
         panic!("ordered parameter projections");
     };
-    let InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(body) = &rules[1] else {
+    let InferNormalAtomicFactResult::ExpandDefinition(body) = &rules[1] else {
         panic!("ordered definition expansion");
     };
     assert_eq!(members.derived.len(), 1);
@@ -150,7 +149,7 @@ fn concrete_prop_rejects_reordered_domain_and_body_inferences() {
     else {
         panic!("predicate seed");
     };
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::NormalAtomicFact(rules))) =
         &mut seed.store_and_infer_result.infer
     else {
         panic!("predicate infer dispatcher");

@@ -4,9 +4,9 @@ use crate::ast::fact::{
 use crate::ast::obj::{Obj, SetFormer, SetOperator};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactIntersectBothResult,
-    InferInFactListSetOrEqualitiesResult, InferInFactListSetSingletonEqualResult,
-    InferInFactSetMinusSplitResult, InferInFactUnionOrResult, StoreInferredFactResult,
+    InferInFactIntersectBothResult, InferInFactListSetOrEqualitiesResult,
+    InferInFactListSetSingletonEqualResult, InferInFactResult, InferInFactSetMinusSplitResult,
+    InferInFactUnionOrResult, StoreInferredFactResult,
 };
 
 impl Runtime {
@@ -17,7 +17,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Vec<InferInFactResult>> {
         let mut rules = Vec::new();
         if let Some(r) = self.infer_in_fact_list_set(in_fact, verify_state)? {
             rules.push(r);
@@ -40,7 +40,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetFormer(SetFormer::ListSet(list_set)) = &in_fact.set else {
             return Ok(None);
         };
@@ -57,11 +57,9 @@ impl Runtime {
                 line_file: lf,
             });
             let derived = Box::new(self.store_inferred_fact(&Fact::AtomicFact(atomic))?);
-            return Ok(Some(
-                InferAtomicExceptEqualityResult::InFactListSetSingletonEqual(
-                    InferInFactListSetSingletonEqualResult { derived },
-                ),
-            ));
+            return Ok(Some(InferInFactResult::ListSetSingletonEqual(
+                InferInFactListSetSingletonEqualResult { derived },
+            )));
         }
         let mut branches = Vec::with_capacity(list_set.list.len());
         for item in &list_set.list {
@@ -82,18 +80,16 @@ impl Runtime {
             line_file: lf,
         });
         let derived = Box::new(self.store_inferred_fact(&or_fact)?);
-        Ok(Some(
-            InferAtomicExceptEqualityResult::InFactListSetOrEqualities(
-                InferInFactListSetOrEqualitiesResult { derived },
-            ),
-        ))
+        Ok(Some(InferInFactResult::ListSetOrEqualities(
+            InferInFactListSetOrEqualitiesResult { derived },
+        )))
     }
 
     fn infer_in_fact_union(
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::Union(union)) = &in_fact.set else {
             return Ok(None);
         };
@@ -120,16 +116,16 @@ impl Runtime {
             line_file: lf,
         });
         let derived = Box::new(self.store_inferred_fact(&or_fact)?);
-        Ok(Some(InferAtomicExceptEqualityResult::InFactUnionOr(
-            InferInFactUnionOrResult { derived },
-        )))
+        Ok(Some(InferInFactResult::UnionOr(InferInFactUnionOrResult {
+            derived,
+        })))
     }
 
     fn infer_in_fact_intersect(
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::Intersect(intersect)) = &in_fact.set else {
             return Ok(None);
         };
@@ -153,8 +149,11 @@ impl Runtime {
                 line_file: lf,
             })))?,
         );
-        Ok(Some(InferAtomicExceptEqualityResult::InFactIntersectBoth(
-            InferInFactIntersectBothResult { derived },
+        Ok(Some(InferInFactResult::IntersectBoth(
+            InferInFactIntersectBothResult {
+                left_membership: derived.remove(0),
+                right_membership: derived.remove(0),
+            },
         )))
     }
 
@@ -162,7 +161,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::SetMinus(sm)) = &in_fact.set else {
             return Ok(None);
         };
@@ -200,8 +199,12 @@ impl Runtime {
                 ))?);
             }
         }
-        Ok(Some(InferAtomicExceptEqualityResult::InFactSetMinusSplit(
-            InferInFactSetMinusSplitResult { derived },
+        Ok(Some(InferInFactResult::SetMinusSplit(
+            InferInFactSetMinusSplitResult {
+                base_membership: derived.remove(0),
+                excluded_membership: derived.remove(0),
+                singleton_inequality: derived.pop(),
+            },
         )))
     }
 }

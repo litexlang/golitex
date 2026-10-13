@@ -83,6 +83,8 @@ impl LitexToLeanCompiler {
                     ));
                 }
                 let bridge = match (&child.set, &proof.set) {
+                    (StandardSet::RPos, StandardSet::R) => "inRPos_real",
+                    (StandardSet::RPos, StandardSet::C) => "positiveRealToComplex",
                     (StandardSet::R, StandardSet::C) => "realToComplex",
                     (StandardSet::Z, StandardSet::C) => "integerToComplex",
                     (StandardSet::N, StandardSet::C) => "naturalToComplex",

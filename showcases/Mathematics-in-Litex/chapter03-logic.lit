@@ -355,6 +355,8 @@ thm sum_of_two_squares_mul:
         $is_sum_of_two_squares(A, add, mul, w)
         =>:
             $is_sum_of_two_squares(A, add, mul, mul(z, w))
+    $chap2::additive_commutative_group_laws(A, add, zero, neg)
+    by def $chap2::additive_commutative_group_laws(A, add, zero, neg)
     obtain a, b from $is_sum_of_two_squares(A, add, mul, z)
     obtain c, d from $is_sum_of_two_squares(A, add, mul, w)
     have ac A = mul(a, c)
@@ -431,7 +433,6 @@ thm sum_of_two_squares_mul:
     add(add(mul(ac, ac), mul(ad, ad)), add(mul(bc, bc), mul(bd, bd))) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bd, bd), mul(bc, bc)))
     mul(z, w) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bc, bc), mul(bd, bd))) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bd, bd), mul(bc, bc))) = add(mul(p, p), mul(q, q))
     witness $is_sum_of_two_squares(A, add, mul, mul(z, w)) from p, q
-
 # 3.4 Conjunction and Iff
 
 # Source definition Monotone, made explicit for real functions.

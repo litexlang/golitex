@@ -1,0 +1,73 @@
+# Two rational fractional-linear maps preserve their punctured domains, are mutual inverses, and yield injectivity.
+forall x Q:
+    x!=1
+    =>:
+        x-1!=0
+forall x Q:
+    x!=2
+    =>:
+        x-2!=0
+forall x Q:
+    x!=0
+    =>:
+        3/x!=0
+
+have fn forward(x Q:x!=1) Q=(2*x+1)/(x-1)
+have fn backward(y Q:y!=2) Q=(y+1)/(y-2)
+
+thm forward_preserves_domain:
+    ? forall x Q:
+        x!=1
+        =>:
+            forward(x)!=2
+    forward(x)=(2*x+1)/(x-1)
+    forward(x)-2=3/(x-1)
+    3/(x-1)!=0
+
+thm backward_preserves_domain:
+    ? forall y Q:
+        y!=2
+        =>:
+            backward(y)!=1
+    backward(y)=(y+1)/(y-2)
+    backward(y)-1=3/(y-2)
+    3/(y-2)!=0
+
+thm backward_forward:
+    ? forall x Q:
+        x!=1
+        =>:
+            backward(forward(x))=x
+    forward(x)!=2
+    forward(x)-2!=0
+    forward(x)=(2*x+1)/(x-1)
+    (2*x+1)/(x-1)-2!=0
+    backward(forward(x))=(forward(x)+1)/(forward(x)-2)=((2*x+1)/(x-1)+1)/((2*x+1)/(x-1)-2)=x
+
+thm forward_backward:
+    ? forall y Q:
+        y!=2
+        =>:
+            forward(backward(y))=y
+    backward(y)!=1
+    backward(y)-1!=0
+    backward(y)=(y+1)/(y-2)
+    (y+1)/(y-2)-1!=0
+    forward(backward(y))=(2*backward(y)+1)/(backward(y)-1)=(2*((y+1)/(y-2))+1)/((y+1)/(y-2)-1)=y
+
+thm forward_injective:
+    ? forall a,b Q:
+        a!=1
+        b!=1
+        forward(a)=forward(b)
+        =>:
+            a=b
+    by thm backward_forward(a) => backward(forward(a))=a
+    by thm backward_forward(b) => backward(forward(b))=b
+    forward(a)!=2
+    forward(a)-2!=0
+    forward(b)!=2
+    forward(b)-2!=0
+    backward(forward(a))=(forward(a)+1)/(forward(a)-2)
+    backward(forward(b))=(forward(b)+1)/(forward(b)-2)
+    a=backward(forward(a))=(forward(a)+1)/(forward(a)-2)=(forward(b)+1)/(forward(b)-2)=backward(forward(b))=b

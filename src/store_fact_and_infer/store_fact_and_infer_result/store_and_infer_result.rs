@@ -1,12 +1,13 @@
 use crate::ast::fact::AtomicFact;
 use crate::runtime::FactId;
 
-use super::{InferFactResult, StoreFactResult};
+use super::StoreFactResult;
+use crate::store_fact_and_infer::InferResult;
 
 // Store first; inference is absent in inferred-fact formation scopes.
 pub struct StoreFactAndInferResult {
     pub store: StoreFactResult,
-    pub infer: Option<InferFactResult>,
+    pub infer: Option<InferResult>,
 }
 
 impl StoreFactAndInferResult {

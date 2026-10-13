@@ -10,6 +10,22 @@ use crate::store_fact_and_infer::{
 };
 
 impl Runtime {
+    pub(crate) fn infer_subset_fact(
+        &mut self,
+        fact: &SubsetFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferSubsetFactResult>> {
+        use crate::store_fact_and_infer::InferSubsetFactResult;
+        let mut rules = Vec::new();
+        if let Some(p) = self.infer_subset_finite_upper_bound(fact, state)? {
+            rules.push(InferSubsetFactResult::FiniteUpperBound(p));
+        }
+        if let Some(p) = self.infer_subset_elementwise_membership(fact, state)? {
+            rules.push(InferSubsetFactResult::ElementwiseMembership(p));
+        }
+        Ok(rules)
+    }
+
     // A stored inclusion with an already available finite upper bound publishes
     // the lower set's finiteness before a later cardinality WD check.
     // Example: A subset B, B finite_set => is_finite_set(A).

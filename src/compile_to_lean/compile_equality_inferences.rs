@@ -2,12 +2,12 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferEqualityResult, StoreInferredFactResult};
+use crate::store_fact_and_infer::{InferEqualFactResult, StoreInferredFactResult};
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_equality_inference_rules(
         &self,
-        rules: &[InferEqualityResult],
+        rules: &[InferEqualFactResult],
         source: &EqualFact,
         compiled: &(String, String),
         position: &SourcePosition<'_>,
@@ -20,23 +20,23 @@ impl LitexToLeanCompiler {
                 index,
             );
             let emitted = match rule {
-                InferEqualityResult::AdditiveCancellation(rule) => {
+                InferEqualFactResult::AdditiveCancellation(rule) => {
                     self.compile_additive_inference(rule, source, compiled, &group)?
                 }
-                InferEqualityResult::NonzeroFactorCancellation(rule) => {
+                InferEqualFactResult::NonzeroFactorCancellation(rule) => {
                     self.compile_nonzero_factor_inference(rule, source, compiled, &group)?
                 }
-                InferEqualityResult::SubtractiveCancellation(rule) => {
+                InferEqualFactResult::SubtractiveCancellation(rule) => {
                     self.compile_subtractive_inference(rule, source, compiled, &group)?
                 }
-                InferEqualityResult::CommonDenominatorCancellation(rule) => {
+                InferEqualFactResult::CommonDenominatorCancellation(rule) => {
                     self.compile_common_denominator_inference(rule, source, compiled, &group)?
                 }
-                InferEqualityResult::NonzeroNumeratorCancellation(rule) => {
+                InferEqualFactResult::NonzeroNumeratorCancellation(rule) => {
                     self.compile_nonzero_numerator_inference(rule, source, compiled, &group)?
                 }
                 // Unsupported inference has no emitted producer and cannot be cited.
-                InferEqualityResult::PositiveRealPower(_) => Vec::new(),
+                InferEqualFactResult::PositiveRealPower(_) => Vec::new(),
             };
             declarations.extend(emitted);
         }

@@ -336,7 +336,8 @@ impl LitexToLeanCompiler {
                 "rfl".to_string(),
             )
         };
-        let domains = self.compile_function_domains(&function.body, position)?;
+        let (constructor_arguments, target) =
+            self.compile_function_constructor_arguments(&function.body, position)?;
         let guard = self.compile_function_guard_template(&function.body, position)?;
         let body = self.compile_function_body_template(function, position)?;
         let endpoint = self.compile_normalization_value(expanded, position)?;
@@ -344,13 +345,13 @@ impl LitexToLeanCompiler {
         let (argument, domain_proof, body_equality) = if parameters.len() == 1 {
             (
                 "(Litex.denote _litex_original.val.argument)".to_string(),
-                format!("((Litex.FunctionSignature.one_domain {} {guard} _).mpr _litex_original.wd.2)", domains.join(" ")),
+                format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _).mpr _litex_original.wd.2)", if target { "oneTarget_domain" } else { "one_domain" }),
                 format!("(show _litex_formula.val.bodyValue (Litex.denote _litex_original.val.argument) = {endpoint} from rfl)"),
             )
         } else {
             (
                 "(Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
-                format!("((Litex.FunctionSignature.two_domain {} {guard} _ _).mpr _litex_original.wd.2)", domains.join(" ")),
+                format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _ _).mpr _litex_original.wd.2)", if target { "twoTarget_domain" } else { "two_domain" }),
                 format!("(by change {body} (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).1 (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).2 = {endpoint}; simp only [Litex.FunctionSemantics.unpair_pair])"),
             )
         };
@@ -500,17 +501,43 @@ impl LitexToLeanCompiler {
         let literal_position = SourcePosition { before: 2, ..step };
         let selected = self.compile_wd(&proof.body_application_well_defined, &literal_position)?;
         let completed = SourcePosition { before: 3, ..step };
-        let domains = self.compile_function_domains(&function.body, &completed)?;
+        let (constructor_arguments, target) =
+            self.compile_function_constructor_arguments(&function.body, &completed)?;
         let guard = self.compile_function_guard_template(&function.body, &completed)?;
         let body = self.compile_function_body_template(function, &completed)?;
         let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;
         let names = format!("let _litex_original := {actual}\nlet _litex_literal := {selected}");
         if arguments.len() == 1 {
-            let return_proof = format!("(by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain {} {guard} _x).mpr ⟨_hx, _hg⟩))", domains.join(" "));
-            Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.callCongr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.argument)\n  have _litex_beta := Litex.callFormula_denote {} {guard} {body} {return_proof} _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.argument) = {expanded} from rfl))\n)", names.replace('\n', "\n  "), domains.join(" ")))
+            let domain_law = if target {
+                "oneTarget_domain"
+            } else {
+                "one_domain"
+            };
+            let beta_law = if target {
+                "callFormulaTarget_denote"
+            } else {
+                "callFormula_denote"
+            };
+            let return_proof = format!("(by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.{domain_law} {constructor_arguments} {guard} _x).mpr ⟨_hx, _hg⟩))");
+            Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.callCongr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.argument)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.argument) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
         } else {
-            let return_proof = format!("(by intro _x _y _hx _hy _hg; have _h := _litex_literal.val.function.wd (Litex.FunctionSemantics.pairValue (M := M) _x _y) ((Litex.FunctionSignature.two_domain {} {guard} _x _y).mpr ⟨_hx, _hy, _hg⟩); change M.mem ({body} (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).1 (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).2) (M.standard {}) at _h; simpa only [Litex.FunctionSemantics.unpair_pair] using _h)", domains.join(" "), domains.last().expect("checked numeric return"));
-            Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.call2Congr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.first) (Litex.sameRefl _litex_original.val.second)\n  have _litex_beta := Litex.callFormula2_denote {} {guard} {body} {return_proof} _litex_literal.val.first _litex_literal.val.second _litex_literal.wd.2.1 _litex_literal.wd.2.2.1 _litex_literal.wd.2.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.first) (Litex.denote _litex_literal.val.second) = {expanded} from rfl))\n)", names.replace('\n', "\n  "), domains.join(" ")))
+            let domain_law = if target {
+                "twoTarget_domain"
+            } else {
+                "two_domain"
+            };
+            let beta_law = if target {
+                "callFormula2Target_denote"
+            } else {
+                "callFormula2_denote"
+            };
+            let output = self.compile_function_raw_expression(
+                &function.body.ret_set,
+                &function.body,
+                &completed,
+            )?;
+            let return_proof = format!("(by intro _x _y _hx _hy _hg; have _h := _litex_literal.val.function.wd (Litex.FunctionSemantics.pairValue (M := M) _x _y) ((Litex.FunctionSignature.{domain_law} {constructor_arguments} {guard} _x _y).mpr ⟨_hx, _hy, _hg⟩); change M.mem ({body} (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).1 (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).2) {output} at _h; simpa only [Litex.FunctionSemantics.unpair_pair] using _h)");
+            Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.call2Congr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.first) (Litex.sameRefl _litex_original.val.second)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.first _litex_literal.val.second _litex_literal.wd.2.1 _litex_literal.wd.2.2.1 _litex_literal.wd.2.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.first) (Litex.denote _litex_literal.val.second) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
         }
     }
 

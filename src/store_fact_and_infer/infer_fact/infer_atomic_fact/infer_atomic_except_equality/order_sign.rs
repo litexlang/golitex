@@ -7,6 +7,57 @@ use crate::store_fact_and_infer::{
 };
 
 impl Runtime {
+    pub(crate) fn infer_less_fact(
+        &mut self,
+        fact: &crate::ast::fact::LessFact,
+        state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferLessFactResult>> {
+        Ok(self
+            .infer_strict_lower_bound_positive(&AtomicFact::LessFact(fact.clone()), state)?
+            .into_iter()
+            .map(crate::store_fact_and_infer::InferLessFactResult::StrictLowerBoundPositive)
+            .collect())
+    }
+
+    pub(crate) fn infer_greater_fact(
+        &mut self,
+        fact: &crate::ast::fact::GreaterFact,
+        state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferGreaterFactResult>> {
+        Ok(self
+            .infer_strict_lower_bound_positive(&AtomicFact::GreaterFact(fact.clone()), state)?
+            .into_iter()
+            .map(crate::store_fact_and_infer::InferGreaterFactResult::StrictLowerBoundPositive)
+            .collect())
+    }
+
+    pub(crate) fn infer_less_equal_fact(
+        &mut self,
+        fact: &crate::ast::fact::LessEqualFact,
+        state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferLessEqualFactResult>> {
+        Ok(self
+            .infer_weak_integer_lower_bound_in_n(&AtomicFact::LessEqualFact(fact.clone()), state)?
+            .into_iter()
+            .map(crate::store_fact_and_infer::InferLessEqualFactResult::WeakIntegerLowerBoundInN)
+            .collect())
+    }
+
+    pub(crate) fn infer_greater_equal_fact(
+        &mut self,
+        fact: &crate::ast::fact::GreaterEqualFact,
+        state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferGreaterEqualFactResult>> {
+        Ok(self
+            .infer_weak_integer_lower_bound_in_n(
+                &AtomicFact::GreaterEqualFact(fact.clone()),
+                state,
+            )?
+            .into_iter()
+            .map(crate::store_fact_and_infer::InferGreaterEqualFactResult::WeakIntegerLowerBoundInN)
+            .collect())
+    }
+
     // Stored b < x (or x > b), with an available 0 <= b certificate, gives 0 < x.
     // Example: 1 < x publishes positivity before log(x) WD needs it.
     // No strategy/forall search for the bound and no permission reset.

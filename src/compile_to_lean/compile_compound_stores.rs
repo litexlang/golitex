@@ -3,7 +3,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferFactResult};
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_compound_stores(
@@ -18,7 +18,7 @@ impl LitexToLeanCompiler {
         let components = match (&store.store, &store.infer, source) {
             (
                 StoreFactResult::AndFact(stored),
-                Some(InferFactResult::AndFact(inferred)),
+                Some(InferResult::AndFact(inferred)),
                 Fact::AndFact(source),
             ) => {
                 if stored.components.len() != source.facts.len()
@@ -44,7 +44,7 @@ impl LitexToLeanCompiler {
             }
             (
                 StoreFactResult::ChainFact(stored),
-                Some(InferFactResult::ChainFact(inferred)),
+                Some(InferResult::ChainFact(inferred)),
                 Fact::ChainFact(source),
             ) => {
                 if stored.adjacent.len() != source.prop_names.len()
@@ -83,7 +83,7 @@ impl LitexToLeanCompiler {
         }
         let group = SourcePosition::new(Some(position), SourceOwner::CompoundInference(store), 0);
         match &store.infer {
-            Some(InferFactResult::AndFact(inferred)) => {
+            Some(InferResult::AndFact(inferred)) => {
                 for (index, infer) in inferred.components.iter().enumerate() {
                     let fact = Fact::AtomicFact(components[index].1.clone());
                     let prior = SourcePosition {
@@ -106,7 +106,7 @@ impl LitexToLeanCompiler {
                         .extend(self.compile_atomic_inferences(infer, &fact, &seed, &current)?);
                 }
             }
-            Some(InferFactResult::ChainFact(inferred)) => {
+            Some(InferResult::ChainFact(inferred)) => {
                 for (index, captured) in inferred.adjacent_infers.iter().enumerate() {
                     let Fact::AtomicFact(atomic) = &captured.fact else {
                         return Err(LeanCompileError::unsupported("Chain/InferenceSeedFamily"));
@@ -208,31 +208,175 @@ impl LitexToLeanCompiler {
         compiled: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        match (infer, seed) {
-            (
-                InferAtomicFactResult::EqualFact(rules),
-                Fact::AtomicFact(AtomicFact::EqualFact(source)),
-            ) => self.compile_equality_inference_rules(rules, source, compiled, position),
-            (InferAtomicFactResult::ExceptEquality(rules), Fact::AtomicFact(atomic))
-                if !matches!(atomic, AtomicFact::EqualFact(_)) =>
-            {
-                let mut declarations =
-                    self.compile_prop_inference_rules(rules, seed, compiled, position)?;
-                declarations
-                    .extend(self.compile_order_bound_inferences(rules, seed, compiled, position)?);
-                if matches!(seed, Fact::AtomicFact(AtomicFact::InFact(member)) if member.set == Obj::StandardSet(StandardSet::N))
+        let Fact::AtomicFact(atomic) = seed else {
+            return Err(LeanCompileError::unsupported(
+                "Compound/AtomicInferenceFamily",
+            ));
+        };
+        let family_matches = match infer {
+            InferAtomicFactResult::NormalAtomicFact(_) => {
+                matches!(atomic, AtomicFact::NormalAtomicFact(_))
+            }
+            InferAtomicFactResult::EqualFact(_) => matches!(atomic, AtomicFact::EqualFact(_)),
+            InferAtomicFactResult::LessFact(_) => matches!(atomic, AtomicFact::LessFact(_)),
+            InferAtomicFactResult::GreaterFact(_) => matches!(atomic, AtomicFact::GreaterFact(_)),
+            InferAtomicFactResult::LessEqualFact(_) => {
+                matches!(atomic, AtomicFact::LessEqualFact(_))
+            }
+            InferAtomicFactResult::GreaterEqualFact(_) => {
+                matches!(atomic, AtomicFact::GreaterEqualFact(_))
+            }
+            InferAtomicFactResult::IsSetFact(_) => matches!(atomic, AtomicFact::IsSetFact(_)),
+            InferAtomicFactResult::IsNonemptySetFact(_) => {
+                matches!(atomic, AtomicFact::IsNonemptySetFact(_))
+            }
+            InferAtomicFactResult::IsFiniteSetFact(_) => {
+                matches!(atomic, AtomicFact::IsFiniteSetFact(_))
+            }
+            InferAtomicFactResult::InFact(_) => matches!(atomic, AtomicFact::InFact(_)),
+            InferAtomicFactResult::SubsetFact(_) => matches!(atomic, AtomicFact::SubsetFact(_)),
+            InferAtomicFactResult::SupersetFact(_) => matches!(atomic, AtomicFact::SupersetFact(_)),
+            InferAtomicFactResult::ProperSubsetFact(_) => {
+                matches!(atomic, AtomicFact::ProperSubsetFact(_))
+            }
+            InferAtomicFactResult::ProperSupersetFact(_) => {
+                matches!(atomic, AtomicFact::ProperSupersetFact(_))
+            }
+            InferAtomicFactResult::PrimeFact(_) => matches!(atomic, AtomicFact::PrimeFact(_)),
+            InferAtomicFactResult::CoprimeFact(_) => matches!(atomic, AtomicFact::CoprimeFact(_)),
+            InferAtomicFactResult::DvdFact(_) => matches!(atomic, AtomicFact::DvdFact(_)),
+            InferAtomicFactResult::InjectiveFact(_) => {
+                matches!(atomic, AtomicFact::InjectiveFact(_))
+            }
+            InferAtomicFactResult::SurjectiveFact(_) => {
+                matches!(atomic, AtomicFact::SurjectiveFact(_))
+            }
+            InferAtomicFactResult::BijectiveFact(_) => {
+                matches!(atomic, AtomicFact::BijectiveFact(_))
+            }
+            InferAtomicFactResult::IsChoiceFunctionForFact(_) => {
+                matches!(atomic, AtomicFact::IsChoiceFunctionForFact(_))
+            }
+            InferAtomicFactResult::NotNormalAtomicFact(_) => {
+                matches!(atomic, AtomicFact::NotNormalAtomicFact(_))
+            }
+            InferAtomicFactResult::NotEqualFact(_) => matches!(atomic, AtomicFact::NotEqualFact(_)),
+            InferAtomicFactResult::NotLessFact(_) => matches!(atomic, AtomicFact::NotLessFact(_)),
+            InferAtomicFactResult::NotGreaterFact(_) => {
+                matches!(atomic, AtomicFact::NotGreaterFact(_))
+            }
+            InferAtomicFactResult::NotLessEqualFact(_) => {
+                matches!(atomic, AtomicFact::NotLessEqualFact(_))
+            }
+            InferAtomicFactResult::NotGreaterEqualFact(_) => {
+                matches!(atomic, AtomicFact::NotGreaterEqualFact(_))
+            }
+            InferAtomicFactResult::NotIsSetFact(_) => matches!(atomic, AtomicFact::NotIsSetFact(_)),
+            InferAtomicFactResult::NotIsNonemptySetFact(_) => {
+                matches!(atomic, AtomicFact::NotIsNonemptySetFact(_))
+            }
+            InferAtomicFactResult::NotIsFiniteSetFact(_) => {
+                matches!(atomic, AtomicFact::NotIsFiniteSetFact(_))
+            }
+            InferAtomicFactResult::NotInFact(_) => matches!(atomic, AtomicFact::NotInFact(_)),
+            InferAtomicFactResult::NotSubsetFact(_) => {
+                matches!(atomic, AtomicFact::NotSubsetFact(_))
+            }
+            InferAtomicFactResult::NotSupersetFact(_) => {
+                matches!(atomic, AtomicFact::NotSupersetFact(_))
+            }
+            InferAtomicFactResult::NotProperSubsetFact(_) => {
+                matches!(atomic, AtomicFact::NotProperSubsetFact(_))
+            }
+            InferAtomicFactResult::NotProperSupersetFact(_) => {
+                matches!(atomic, AtomicFact::NotProperSupersetFact(_))
+            }
+            InferAtomicFactResult::NotPrimeFact(_) => matches!(atomic, AtomicFact::NotPrimeFact(_)),
+            InferAtomicFactResult::NotCoprimeFact(_) => {
+                matches!(atomic, AtomicFact::NotCoprimeFact(_))
+            }
+            InferAtomicFactResult::NotDvdFact(_) => matches!(atomic, AtomicFact::NotDvdFact(_)),
+            InferAtomicFactResult::NotInjectiveFact(_) => {
+                matches!(atomic, AtomicFact::NotInjectiveFact(_))
+            }
+            InferAtomicFactResult::NotSurjectiveFact(_) => {
+                matches!(atomic, AtomicFact::NotSurjectiveFact(_))
+            }
+            InferAtomicFactResult::NotBijectiveFact(_) => {
+                matches!(atomic, AtomicFact::NotBijectiveFact(_))
+            }
+            InferAtomicFactResult::NotIsChoiceFunctionForFact(_) => {
+                matches!(atomic, AtomicFact::NotIsChoiceFunctionForFact(_))
+            }
+        };
+        if !family_matches {
+            return Err(LeanCompileError::unsupported(
+                "Compound/AtomicInferenceFamily",
+            ));
+        }
+        match infer {
+            InferAtomicFactResult::EqualFact(rules) => {
+                let AtomicFact::EqualFact(source) = atomic else {
+                    unreachable!()
+                };
+                self.compile_equality_inference_rules(rules, source, compiled, position)
+            }
+            InferAtomicFactResult::NormalAtomicFact(rules) => {
+                self.compile_prop_inference_rules(rules, seed, compiled, position)
+            }
+            InferAtomicFactResult::InFact(rules) => {
+                let mut declarations = Vec::new();
+                if matches!(atomic, AtomicFact::InFact(member) if matches!(member.set, Obj::StandardSet(StandardSet::N | StandardSet::RPos)))
                 {
                     for rule in rules {
-                        if let crate::store_fact_and_infer::InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(sign) = rule {
+                        if let crate::store_fact_and_infer::InferInFactResult::SignedStandardSetSign(sign) = rule {
                             declarations.extend(self.compile_natural_sign_inference(sign, seed, compiled, position)?);
                         }
                     }
                 }
                 Ok(declarations)
             }
-            _ => Err(LeanCompileError::unsupported(
-                "Compound/AtomicInferenceFamily",
-            )),
+            InferAtomicFactResult::LessFact(_)
+            | InferAtomicFactResult::GreaterFact(_)
+            | InferAtomicFactResult::LessEqualFact(_)
+            | InferAtomicFactResult::GreaterEqualFact(_) => {
+                self.compile_order_bound_inferences(infer, seed, compiled, position)
+            }
+            InferAtomicFactResult::IsSetFact(_)
+            | InferAtomicFactResult::IsNonemptySetFact(_)
+            | InferAtomicFactResult::IsFiniteSetFact(_)
+            | InferAtomicFactResult::SubsetFact(_)
+            | InferAtomicFactResult::SupersetFact(_)
+            | InferAtomicFactResult::ProperSubsetFact(_)
+            | InferAtomicFactResult::ProperSupersetFact(_)
+            | InferAtomicFactResult::PrimeFact(_)
+            | InferAtomicFactResult::CoprimeFact(_)
+            | InferAtomicFactResult::DvdFact(_)
+            | InferAtomicFactResult::InjectiveFact(_)
+            | InferAtomicFactResult::SurjectiveFact(_)
+            | InferAtomicFactResult::BijectiveFact(_)
+            | InferAtomicFactResult::IsChoiceFunctionForFact(_)
+            | InferAtomicFactResult::NotNormalAtomicFact(_)
+            | InferAtomicFactResult::NotEqualFact(_)
+            | InferAtomicFactResult::NotLessFact(_)
+            | InferAtomicFactResult::NotGreaterFact(_)
+            | InferAtomicFactResult::NotLessEqualFact(_)
+            | InferAtomicFactResult::NotGreaterEqualFact(_)
+            | InferAtomicFactResult::NotIsSetFact(_)
+            | InferAtomicFactResult::NotIsNonemptySetFact(_)
+            | InferAtomicFactResult::NotIsFiniteSetFact(_)
+            | InferAtomicFactResult::NotInFact(_)
+            | InferAtomicFactResult::NotSubsetFact(_)
+            | InferAtomicFactResult::NotSupersetFact(_)
+            | InferAtomicFactResult::NotProperSubsetFact(_)
+            | InferAtomicFactResult::NotProperSupersetFact(_)
+            | InferAtomicFactResult::NotPrimeFact(_)
+            | InferAtomicFactResult::NotCoprimeFact(_)
+            | InferAtomicFactResult::NotDvdFact(_)
+            | InferAtomicFactResult::NotInjectiveFact(_)
+            | InferAtomicFactResult::NotSurjectiveFact(_)
+            | InferAtomicFactResult::NotBijectiveFact(_)
+            | InferAtomicFactResult::NotIsChoiceFunctionForFact(_) => Ok(Vec::new()),
         }
     }
 }

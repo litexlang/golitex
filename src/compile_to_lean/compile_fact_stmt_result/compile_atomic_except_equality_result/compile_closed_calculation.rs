@@ -82,6 +82,9 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
+        if *target == StandardSet::RPos {
+            return self.compile_closed_positive_real_membership(element, value, position);
+        }
         // Existing literal membership is unbounded integer syntax. It must not
         // inherit the i128 bound of the new closed-arithmetic evaluator.
         if let (Obj::Literal(Literal::Number(number)), ClosedScalarValue::Decimal(recorded)) =

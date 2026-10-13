@@ -1,0 +1,29 @@
+# Named inference result families, with unchanged mathematical statements.
+# Before: InFact, SubsetFact and builtin definition rule hits shared one flat enum.
+# Now: InferResult -> InferAtomicFactResult -> the source family's rule enum.
+# Prime/coprime/proper-subset outputs have named roles; builder/Cart outputs
+# retain their original condition/factor index. Generated stores do not infer.
+# Boundary: false prime, absent optional premises and future/closed citations reject.
+# Rust controls: inferred_store_only_tests; bounded_set_combinations.
+# Run: target/release/litex -strict -lang en -f examples/infer/atomic/infer_result_rule_families.lit
+
+$prime(5)
+
+$coprime(14,25)
+
+by def {1,2} $proper_subset {1,2,3}
+
+forall A set, B finite_set:
+    A $subset B
+    =>:
+        A=A
+
+forall pair cart({1},{2}):
+    pair(1) $in {1}
+    pair(1)=1
+    pair(2) $in {2}
+    pair(2)=2
+
+forall x {value R: value>0}:
+    x>0
+

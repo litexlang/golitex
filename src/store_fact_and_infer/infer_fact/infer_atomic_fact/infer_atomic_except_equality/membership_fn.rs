@@ -10,8 +10,8 @@ use crate::prelude::*;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactEqualFnSetExpandResult,
-    InferInFactEqualFnSetTransport, InferInFactFiniteSeqExpandResult, InferInFactFnRangeResult,
+    InferInFactEqualFnSetExpandResult, InferInFactEqualFnSetTransport,
+    InferInFactFiniteSeqExpandResult, InferInFactFnRangeResult, InferInFactResult,
     InferInFactSeqExpandResult, StoreInferredFactResult,
 };
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Vec<InferInFactResult>> {
         let mut rules = Vec::new();
         if let Some(r) = self.infer_in_fact_equal_fn_set_expand(in_fact, verify_state)? {
             rules.push(r);
@@ -51,7 +51,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         if matches!(
             &in_fact.set,
             Obj::FunctionSpace(FunctionSpace::FnSet(_))
@@ -95,11 +95,9 @@ impl Runtime {
         if transports.is_empty() {
             return Ok(None);
         }
-        Ok(Some(
-            InferAtomicExceptEqualityResult::InFactEqualFnSetExpand(
-                InferInFactEqualFnSetExpandResult { transports },
-            ),
-        ))
+        Ok(Some(InferInFactResult::EqualFnSetExpand(
+            InferInFactEqualFnSetExpandResult { transports },
+        )))
     }
 
     // When: `z $in fn_range(f)` and f has a visible FnSet body.
@@ -109,7 +107,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::FunctionSpace(FunctionSpace::FnRange(fn_range)) = &in_fact.set else {
             return Ok(None);
         };
@@ -137,9 +135,10 @@ impl Runtime {
                 }
             }
         }
-        Ok(Some(InferAtomicExceptEqualityResult::InFactFnRange(
-            InferInFactFnRangeResult { derived },
-        )))
+        Ok(Some(InferInFactResult::FnRange(InferInFactFnRangeResult {
+            codomain_membership: derived.remove(0),
+            preimage_witness: derived.pop(),
+        })))
     }
 
     // When: `x $in finite_seq(S, n)`.
@@ -149,7 +148,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetFormer(SetFormer::FiniteSeqSet(_)) = &in_fact.set else {
             return Ok(None);
         };
@@ -164,13 +163,11 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         let stored = self.store_inferred_fact(&Fact::AtomicFact(expanded))?;
-        Ok(Some(
-            InferAtomicExceptEqualityResult::InFactFiniteSeqExpand(
-                InferInFactFiniteSeqExpandResult {
-                    derived: Box::new(stored),
-                },
-            ),
-        ))
+        Ok(Some(InferInFactResult::FiniteSeqExpand(
+            InferInFactFiniteSeqExpandResult {
+                derived: Box::new(stored),
+            },
+        )))
     }
 
     // When: `x $in seq(S)`.
@@ -180,7 +177,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetFormer(SetFormer::SeqSet(_)) = &in_fact.set else {
             return Ok(None);
         };
@@ -195,7 +192,7 @@ impl Runtime {
             line_file: in_fact.line_file.clone(),
         });
         let stored = self.store_inferred_fact(&Fact::AtomicFact(expanded))?;
-        Ok(Some(InferAtomicExceptEqualityResult::InFactSeqExpand(
+        Ok(Some(InferInFactResult::SeqExpand(
             InferInFactSeqExpandResult {
                 derived: Box::new(stored),
             },

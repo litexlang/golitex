@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         source: &EqualFact,
         state: VerifyState,
-    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferEqualityResult>> {
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::InferEqualFactResult>> {
         let (
             Obj::ArithmeticOperator(ArithmeticOperator::Div(left)),
             Obj::ArithmeticOperator(ArithmeticOperator::Div(right)),
@@ -52,7 +52,7 @@ impl Runtime {
         common: &Obj,
         premise_state: VerifyState,
         _state: VerifyState,
-    ) -> RuntimeResult<Option<crate::store_fact_and_infer::InferEqualityResult>> {
+    ) -> RuntimeResult<Option<crate::store_fact_and_infer::InferEqualFactResult>> {
         if self.cancellation_equality_already_known(left, right) {
             return Ok(None);
         }
@@ -75,7 +75,7 @@ impl Runtime {
         .into();
         let derived = self.store_inferred_fact(&equality)?;
         Ok(Some(
-            crate::store_fact_and_infer::InferEqualityResult::CommonDenominatorCancellation(
+            crate::store_fact_and_infer::InferEqualFactResult::CommonDenominatorCancellation(
                 crate::store_fact_and_infer::InferEqualFactCommonDenominatorCancellationResult::new(
                     source.fact_id,
                     common.clone(),
@@ -97,7 +97,7 @@ impl Runtime {
         common: &Obj,
         premise_state: VerifyState,
         _state: VerifyState,
-    ) -> RuntimeResult<Option<crate::store_fact_and_infer::InferEqualityResult>> {
+    ) -> RuntimeResult<Option<crate::store_fact_and_infer::InferEqualFactResult>> {
         if self.cancellation_equality_already_known(left, right) {
             return Ok(None);
         }
@@ -130,7 +130,7 @@ impl Runtime {
         .into();
         let derived = self.store_inferred_fact(&equality)?;
         Ok(Some(
-            crate::store_fact_and_infer::InferEqualityResult::NonzeroNumeratorCancellation(
+            crate::store_fact_and_infer::InferEqualFactResult::NonzeroNumeratorCancellation(
                 crate::store_fact_and_infer::InferEqualFactNonzeroNumeratorCancellationResult::new(
                     source.fact_id,
                     common.clone(),

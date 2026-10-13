@@ -549,16 +549,21 @@ fn composed_formula_predicate_guards_keep_the_original_compound_clause_ids() {
         panic!("actual explicit predicate invocation")
     };
     let ids = caller.stored.stored_fact_ids();
-    let Some(crate::store_fact_and_infer::InferFactResult::AtomicFact(
-        crate::store_fact_and_infer::InferAtomicFactResult::ExceptEquality(rules),
+    let Some(crate::store_fact_and_infer::InferResult::AtomicFact(
+        crate::store_fact_and_infer::InferAtomicFactResult::NormalAtomicFact(rules),
     )) = &caller.stored.infer
     else {
         panic!("actual caller predicate inference")
     };
-    let derived = rules.iter().find_map(|rule| match rule {
-        crate::store_fact_and_infer::InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(proof) => Some(&proof.derived),
-        _ => None,
-    }).expect("actual defining-clause projection at the caller");
+    let derived = rules
+        .iter()
+        .find_map(|rule| match rule {
+            crate::store_fact_and_infer::InferNormalAtomicFactResult::ExpandDefinition(proof) => {
+                Some(&proof.derived)
+            }
+            _ => None,
+        })
+        .expect("actual defining-clause projection at the caller");
     assert_eq!(derived.len(), proof.statement.iff_facts.len());
     let StoreFactResult::ChainFact(published) = &derived[0].store else {
         panic!("actual caller chain projection")

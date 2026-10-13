@@ -2,9 +2,8 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-};
+use crate::store_fact_and_infer::InferInFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_stored_inferences(
@@ -16,7 +15,7 @@ impl LitexToLeanCompiler {
     ) -> Result<Vec<String>, LeanCompileError> {
         match &store.infer {
             None => self.compile_stored_projections(&store.store, seed, compiled, position),
-            Some(InferFactResult::AtomicFact(infer)) => {
+            Some(InferResult::AtomicFact(infer)) => {
                 self.validate_store(&store.store, seed)?;
                 let current = SourcePosition::new(
                     Some(position),
@@ -25,7 +24,7 @@ impl LitexToLeanCompiler {
                 );
                 self.compile_atomic_inferences(infer, seed, compiled, &current)
             }
-            Some(InferFactResult::AndFact(_)) | Some(InferFactResult::ChainFact(_)) => {
+            Some(InferResult::AndFact(_)) | Some(InferResult::ChainFact(_)) => {
                 self.compile_compound_stores(store, seed, compiled, position)
             }
             _ => self.compile_prop_inferences(store, seed, compiled, position),
@@ -60,23 +59,23 @@ impl LitexToLeanCompiler {
         let mut declarations =
             self.compile_set_builder_parameter_inferences(store, member_fact, member, position)?;
         let (infer, rules) = match &store.infer {
-            Some(InferFactResult::AtomicFact(
-                infer @ InferAtomicFactResult::ExceptEquality(rules),
-            )) => (infer, rules),
+            Some(InferResult::AtomicFact(infer @ InferAtomicFactResult::InFact(rules))) => {
+                (infer, rules)
+            }
             _ => return Ok(declarations),
         };
         for (index, rule) in rules.iter().enumerate() {
-            if let InferAtomicExceptEqualityResult::InFactSignedStandardSetSign(sign) = rule {
+            if let InferInFactResult::SignedStandardSetSign(sign) = rule {
                 // Builder projections precede the sign rule in this original
                 // membership dispatcher. Keep the sign's own WD/store pending.
                 let completed = rules[..index]
                     .iter()
                     .filter_map(|rule| match rule {
-                        InferAtomicExceptEqualityResult::InFactSetBuilder(proof) => Some(proof),
+                        InferInFactResult::SetBuilder(proof) => Some(proof),
                         _ => None,
                     })
                     .flat_map(|proof| &proof.steps)
-                    .map(|step| step.derived.len())
+                    .map(|step| step.projections.len())
                     .sum();
                 let pending = SourcePosition::new(
                     Some(position),
@@ -102,14 +101,12 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
         let rules = match &store.infer {
-            Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) => {
-                rules
-            }
+            Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) => rules,
             _ => return Ok(Vec::new()),
         };
         let mut declarations = Vec::new();
         for rule in rules {
-            if let InferAtomicExceptEqualityResult::InFactSetBuilder(proof) = rule {
+            if let InferInFactResult::SetBuilder(proof) = rule {
                 declarations.extend(self.compile_set_builder_projections(
                     store,
                     proof,
@@ -129,6 +126,10 @@ impl LitexToLeanCompiler {
         member: &(String, String),
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
+        if matches!(member_fact, Fact::AtomicFact(AtomicFact::InFact(f)) if f.set == Obj::StandardSet(StandardSet::RPos))
+        {
+            return self.compile_positive_real_sign_inference(sign, member_fact, member, position);
+        }
         let mut declarations = Vec::new();
         let source = match member_fact {
             Fact::AtomicFact(AtomicFact::InFact(f))
@@ -176,6 +177,76 @@ impl LitexToLeanCompiler {
             ),
         );
         declarations.push(self.emit_internal_fact(&fact, &compiled, &formed));
+        Ok(declarations)
+    }
+
+    fn compile_positive_real_sign_inference(
+        &self,
+        sign: &crate::store_fact_and_infer::InferInFactSignedStandardSetSignResult,
+        member_fact: &Fact,
+        member: &(String, String),
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let Fact::AtomicFact(AtomicFact::InFact(source)) = member_fact else {
+            return Err(LeanCompileError::unsupported(
+                "Inference/PositiveRealFamily",
+            ));
+        };
+        if source.set != Obj::StandardSet(StandardSet::RPos) || sign.derived.len() != 3 {
+            return Err(LeanCompileError::new(
+                "Inference/PositiveRealArity",
+                "Positive-real membership needs its three actual ordered sign stores.",
+            ));
+        }
+        let mut declarations = Vec::new();
+        let mut ids = std::collections::HashSet::new();
+        for (index, captured) in sign.derived.iter().enumerate() {
+            let prior = SourcePosition {
+                before: position.before + index,
+                ..*position
+            };
+            let fact = self.resolve_fact(captured.primary_fact_id(), &prior)?;
+            if !ids.insert(captured.primary_fact_id()) {
+                return Err(LeanCompileError::new(
+                    "Inference/PositiveRealIdentity",
+                    "Positive-real projections require distinct stored identities.",
+                ));
+            }
+            let subject_matches = match (index, &fact) {
+                (0, Fact::AtomicFact(AtomicFact::LessFact(f))) => {
+                    is_exact_zero(&f.left) && f.right.ir() == source.element.ir()
+                }
+                (1, Fact::AtomicFact(AtomicFact::LessEqualFact(f))) => {
+                    is_exact_zero(&f.left) && f.right.ir() == source.element.ir()
+                }
+                (2, Fact::AtomicFact(AtomicFact::NotEqualFact(f))) => {
+                    f.left.ir() == source.element.ir() && is_exact_zero(&f.right)
+                }
+                _ => false,
+            };
+            if !subject_matches {
+                return Err(LeanCompileError::new(
+                    "Inference/PositiveRealSubject",
+                    "The ordered positive-real store has another predicate or endpoint.",
+                ));
+            }
+            self.validate_store(&captured.store, &fact)?;
+            let formed = SourcePosition::new(
+                Some(&prior),
+                SourceOwner::InferredStore(&captured.store),
+                usize::MAX,
+            );
+            let object = self.compile_object_reference(&source.element, &formed)?;
+            let strict = format!("h_{}", sign.derived[0].primary_fact_id().value());
+            let proof = match index {
+                0 => format!("(Litex.inRPos_positive {object} {})", member.1),
+                1 => format!("(Litex.ltToLe (Litex.number (M := M) 0) {object} {strict})"),
+                2 => format!("(fun _litex_zero => (Litex.ltNotSame (Litex.number (M := M) 0) {object} {strict}) _litex_zero.symm)"),
+                _ => unreachable!(),
+            };
+            let compiled = (self.fact_proposition(&fact, &formed)?, proof);
+            declarations.push(self.emit_internal_fact(&fact, &compiled, &formed));
+        }
         Ok(declarations)
     }
 

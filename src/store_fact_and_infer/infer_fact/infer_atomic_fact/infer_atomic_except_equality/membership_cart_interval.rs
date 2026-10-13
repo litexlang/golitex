@@ -5,9 +5,9 @@ use crate::ast::obj::{
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactCartCoordinatesResult,
-    InferInFactClosedRangeResult, InferInFactOneSideRealIntervalResult, InferInFactRangeResult,
-    InferInFactRealIntervalResult, StoreInferredFactResult,
+    InferInFactCartCoordinatesResult, InferInFactClosedRangeResult,
+    InferInFactOneSideRealIntervalResult, InferInFactRangeResult, InferInFactRealIntervalResult,
+    InferInFactResult,
 };
 
 impl Runtime {
@@ -19,7 +19,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Vec<InferInFactResult>> {
         let mut rules = Vec::new();
         if let Some(r) = self.infer_in_fact_cart(in_fact, verify_state)? {
             rules.push(r);
@@ -45,11 +45,11 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::ProductShape(ProductShape::Cart(cart)) = &in_fact.set else {
             return Ok(None);
         };
-        let mut derived = Vec::new();
+        let mut coordinates = Vec::new();
         for (index, factor) in cart.args.iter().enumerate() {
             let Ok(coordinate) =
                 crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(
@@ -67,23 +67,24 @@ impl Runtime {
             }));
             {
                 let stored = self.store_inferred_fact(&membership)?;
-                derived.push(stored);
+                coordinates.push(crate::store_fact_and_infer::InferCartCoordinateResult {
+                    coordinate_index: index,
+                    membership: stored,
+                });
             }
         }
         // The zero-coordinate case has no consequences, but remains a valid
         // exact-domain membership. No shape, dimension or old index is added.
-        Ok(Some(
-            InferAtomicExceptEqualityResult::InFactCartCoordinates(
-                InferInFactCartCoordinatesResult { derived },
-            ),
-        ))
+        Ok(Some(InferInFactResult::CartCoordinates(
+            InferInFactCartCoordinatesResult { coordinates },
+        )))
     }
 
     fn infer_in_fact_range(
         &mut self,
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetFormer(SetFormer::Range(r)) = &in_fact.set else {
             return Ok(None);
         };
@@ -94,16 +95,16 @@ impl Runtime {
             false,
             verify_state,
         )?;
-        Ok(Some(InferAtomicExceptEqualityResult::InFactRange(
-            InferInFactRangeResult { derived },
-        )))
+        Ok(Some(InferInFactResult::Range(InferInFactRangeResult {
+            bounds: derived,
+        })))
     }
 
     fn infer_in_fact_closed_range(
         &mut self,
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetFormer(SetFormer::ClosedRange(c)) = &in_fact.set else {
             return Ok(None);
         };
@@ -114,8 +115,8 @@ impl Runtime {
             true,
             verify_state,
         )?;
-        Ok(Some(InferAtomicExceptEqualityResult::InFactClosedRange(
-            InferInFactClosedRangeResult { derived },
+        Ok(Some(InferInFactResult::ClosedRange(
+            InferInFactClosedRangeResult { bounds: derived },
         )))
     }
 
@@ -126,7 +127,7 @@ impl Runtime {
         end: Obj,
         end_inclusive: bool,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Vec<StoreInferredFactResult>> {
+    ) -> RuntimeResult<crate::store_fact_and_infer::InferIntegerIntervalBoundsResult> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
         let mut derived = Vec::new();
@@ -208,7 +209,35 @@ impl Runtime {
             );
         }
 
-        Ok(derived)
+        let mut captured = derived.into_iter();
+        let integer_membership = captured.next().ok_or_else(|| {
+            crate::runtime::RuntimeError::InternalBug("missing integer interval membership".into())
+        })?;
+        let lower_bound = captured.next().ok_or_else(|| {
+            crate::runtime::RuntimeError::InternalBug("missing integer interval lower bound".into())
+        })?;
+        let upper_bound = captured.next().ok_or_else(|| {
+            crate::runtime::RuntimeError::InternalBug("missing integer interval upper bound".into())
+        })?;
+        let positive_membership = if positive_start {
+            Some(captured.next().ok_or_else(|| {
+                crate::runtime::RuntimeError::InternalBug(
+                    "missing positive interval membership".into(),
+                )
+            })?)
+        } else {
+            None
+        };
+        let singleton_equality = captured.next();
+        Ok(
+            crate::store_fact_and_infer::InferIntegerIntervalBoundsResult {
+                integer_membership,
+                lower_bound,
+                upper_bound,
+                positive_membership,
+                singleton_equality,
+            },
+        )
     }
 
     fn singleton_value_for_integer_interval(
@@ -239,7 +268,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetFormer(SetFormer::IntervalObj(interval)) = &in_fact.set else {
             return Ok(None);
         };
@@ -324,8 +353,25 @@ impl Runtime {
             );
         }
 
-        Ok(Some(InferAtomicExceptEqualityResult::InFactRealInterval(
-            InferInFactRealIntervalResult { derived },
+        let mut captured = derived.into_iter();
+        Ok(Some(InferInFactResult::RealInterval(
+            InferInFactRealIntervalResult {
+                real_membership: captured.next().ok_or_else(|| {
+                    crate::runtime::RuntimeError::InternalBug(
+                        "missing recorded interval projection".into(),
+                    )
+                })?,
+                lower_bound: captured.next().ok_or_else(|| {
+                    crate::runtime::RuntimeError::InternalBug(
+                        "missing recorded interval projection".into(),
+                    )
+                })?,
+                upper_bound: captured.next().ok_or_else(|| {
+                    crate::runtime::RuntimeError::InternalBug(
+                        "missing recorded interval projection".into(),
+                    )
+                })?,
+            },
         )))
     }
 
@@ -333,7 +379,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+    ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(interval)) = &in_fact.set else {
             return Ok(None);
         };
@@ -385,10 +431,20 @@ impl Runtime {
         };
         derived.push(self.store_inferred_fact(&Fact::AtomicFact(bound))?);
 
-        Ok(Some(
-            InferAtomicExceptEqualityResult::InFactOneSideRealInterval(
-                InferInFactOneSideRealIntervalResult { derived },
-            ),
-        ))
+        let mut captured = derived.into_iter();
+        Ok(Some(InferInFactResult::OneSideRealInterval(
+            InferInFactOneSideRealIntervalResult {
+                real_membership: captured.next().ok_or_else(|| {
+                    crate::runtime::RuntimeError::InternalBug(
+                        "missing recorded interval projection".into(),
+                    )
+                })?,
+                bound: captured.next().ok_or_else(|| {
+                    crate::runtime::RuntimeError::InternalBug(
+                        "missing recorded interval projection".into(),
+                    )
+                })?,
+            },
+        )))
     }
 }

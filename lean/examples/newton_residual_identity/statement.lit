@@ -1,0 +1,6 @@
+# Newton's exact algebraic error identity for a nonzero real input.
+have fn newton(x R:x!=0) R=(x+2/x)/2
+forall x R:
+    x!=0
+    =>:
+        newton(x)^2-2=((x-2/x)/2)^2

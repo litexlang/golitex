@@ -1,6 +1,6 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualityResult, InferFactResult};
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferEqualFactResult, InferResult};
 use std::rc::Rc;
 
 const CANCELLATION: &str =
@@ -73,12 +73,12 @@ fn local_arbitrary_have_uses_recorded_witness_member_and_cancellation_inside_ori
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(seed)) = &steps(proof)[1] else {
         panic!("the local member supplies the original cancellation seed")
     };
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
         &seed.store_and_infer_result.infer
     else {
         panic!("recorded equality inference")
     };
-    let [InferEqualityResult::AdditiveCancellation(rule)] = rules.as_slice() else {
+    let [InferEqualFactResult::AdditiveCancellation(rule)] = rules.as_slice() else {
         panic!("the original residual equality is actually inferred")
     };
     let derived_id = rule.derived.store.primary_fact_id();
@@ -400,12 +400,12 @@ fn local_arbitrary_have_same_surface_names_keep_distinct_closed_scope_ids() {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(seed)) = &mut steps_mut(proof)[1] else {
         panic!("second cancellation seed")
     };
-    let Some(InferFactResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::EqualFact(rules))) =
         &mut seed.store_and_infer_result.infer
     else {
         panic!("equality inference")
     };
-    let InferEqualityResult::AdditiveCancellation(rule) = &mut rules[0] else {
+    let InferEqualFactResult::AdditiveCancellation(rule) = &mut rules[0] else {
         panic!("cancellation")
     };
     super::atomic_proof_mut(&mut rule.common_in_c_proof).searched_proof =

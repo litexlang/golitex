@@ -660,6 +660,141 @@ and unsupported inference/certificate routes outside the compiler boundary.
 An observed unused inference node in a result trace does not establish
 compiler support for that inference.
 
+## Two rational maps, from definitions to a native equivalence
+
+The [rational inverse maps source](../lean/examples/rational_inverse_maps/statement.lit)
+develops one connected argument. The map
+\(f(x)=(2x+1)/(x-1)\) sends \(\mathbb{Q}\setminus\{1\}\) into
+\(\mathbb{Q}\setminus\{2\}\); its inverse is
+\(g(y)=(y+1)/(y-2)\). The source defines both functions, proves that their
+values lie in the required domains, proves both inverse laws, and uses an
+inverse law to establish injectivity. Its
+[generated Lean file](../lean/examples/rational_inverse_maps/statement.lean)
+preserves the evidence for that whole argument.
+
+The source definitions put each excluded value in the function's domain:
+
+```litex
+have fn forward(x Q:x!=1) Q=(2*x+1)/(x-1)
+have fn backward(y Q:y!=2) Q=(y+1)/(y-2)
+```
+
+The full source first establishes the elementary nonzero facts needed by
+these quotients. The first domain theorem then gives the mathematical reason
+why a later call to `backward(forward(x))` is legal:
+
+<!-- litex:skip-test -->
+```litex
+thm forward_preserves_domain:
+    ? forall x Q:
+        x!=1
+        =>:
+            forward(x)!=2
+    forward(x)=(2*x+1)/(x-1)
+    forward(x)-2=3/(x-1)
+    3/(x-1)!=0
+```
+
+The corresponding theorem for `backward` excludes 1. With both domain facts
+available, the source checks the rational identities
+`backward(forward(x))=x` and `forward(backward(y))=y`. These are proved named
+theorems, so the final injectivity argument can reuse them. Under
+`a!=1`, `b!=1` and `forward(a)=forward(b)`, it selects these two results:
+
+<!-- litex:skip-test -->
+```litex
+by thm backward_forward(a) => backward(forward(a))=a
+by thm backward_forward(b) => backward(forward(b))=b
+```
+
+Each invocation returns typed evidence for the selected equality, its
+argument membership and its domain conditions. Compilation follows those
+results and their original FactIds, naming source proof declarations and
+references `h_<FactId>`. In particular, a nested `Litex.call` must receive the
+proof that the inner function value satisfies the outer function's domain.
+The compiler resolves the recorded proof; the generated call does not acquire
+an extra unproved hypothesis. The rational-identity proof similarly retains
+the selected normalization route and its nonzero denominator evidence.
+
+The five exported proofs in the linked generated file have these source IDs;
+all belong to its source-path namespace:
+
+| Source theorem | Generated declaration |
+|---|---|
+| `forward_preserves_domain` | `h_1042` |
+| `backward_preserves_domain` | `h_5990` |
+| `backward_forward` | `h_10318` |
+| `forward_backward` | `h_21048` |
+| `forward_injective` | `h_37256` |
+
+The public companion files show how this result reaches a Mathlib user.
+[RationalMaps.lean](examples/litex_to_lean/rational_inverse_maps/RationalMaps.lean)
+defines the ordinary functions on `ℚ`.
+[Adapter.lean](examples/litex_to_lean/rational_inverse_maps/Adapter.lean)
+chooses `Litex.NumericModel.model`, encodes rational inputs and premises,
+consumes the generated theorems, and observes their function values through
+the proved function and numeric representation laws. This handwritten layer
+proves the representation conversion; it uses the generated proofs for the
+domain, inverse and injectivity conclusions.
+[Final.lean](examples/litex_to_lean/rational_inverse_maps/Final.lean) exposes
+ordinary rational statements and packages the two inverse laws as an `Equiv`:
+
+```lean
+namespace RationalMaps
+def equivalence : {x : ℚ // x ≠ 1} ≃ {y : ℚ // y ≠ 2} where
+  toFun x := ⟨forward x, forwardPreservesDomain x x.property⟩
+  invFun y := ⟨backward y, backwardPreservesDomain y y.property⟩
+  left_inv x := Subtype.ext (leftInverse x x.property)
+  right_inv y := Subtype.ext (rightInverse y y.property)
+end RationalMaps
+```
+
+Here each subtype contains an ordinary rational and the proof that it avoids
+the excluded value. Domain preservation constructs the output subtype, and
+the two inverse laws supply the `Equiv` fields. A client imports
+`rational_inverse_maps.Final`; the
+[ordinary client](examples/litex_to_lean/rational_inverse_maps/UseInYourProject.lean)
+uses this native interface. Its theorem statements need no Litex objects or
+semantic parameters.
+
+To use these files in a Mathlib project preserving the repository's directory
+layout, add the following library entries to its `lakefile.toml`. The checked
+example uses Lean 4.31.0 and Mathlib commit
+`fabf563a7c95a166b8d7b6efca11c8b4dc9d911f`.
+
+```toml
+[[lean_lib]]
+name = "Litex"
+srcDir = "lean"
+roots = ["Litex", "examples.rational_inverse_maps.statement"]
+
+[[lean_lib]]
+name = "CompilerDocExamples"
+srcDir = "docs/examples/litex_to_lean"
+roots = ["rational_inverse_maps.UseInYourProject", "rational_inverse_maps.DirectLean"]
+```
+
+Run `lake build CompilerDocExamples`; subsequent files can import
+`rational_inverse_maps.Final`. Regenerate the source pair from the repository
+root with the actual compiler:
+
+```sh
+target/release/litex -strict -lang en -f lean/examples/rational_inverse_maps/statement.lit
+target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statement.lit > lean/examples/rational_inverse_maps/statement.lean
+```
+
+This example also makes the current cost visible. The maintained source
+contains explicit nonzero facts and formula expansions in the final
+injectivity proof. A shorter equality chain using function congruence can
+verify in Litex while selecting a route outside the current Lean compiler;
+source verification alone is therefore insufficient. The
+[direct Mathlib version](examples/litex_to_lean/rational_inverse_maps/DirectLean.lean)
+provides a separate authoring comparison. Compare the mathematical steps,
+explicit domain bookkeeping and handwritten adapter work as separate costs;
+generated proof length does not measure source authoring effort. This example
+demonstrates a connected, reusable compilation result and makes no claim of
+an authoring or execution speed advantage.
+
 ## Composing the mathematical slice
 
 The [compound-return example](../lean/examples/named_compound_theorem_returns/statement.lit)
@@ -745,6 +880,36 @@ acceptance_phase11_current and acceptance_phases8_11_current receipts bind the
 exact source/result/build evidence. The 2026-10-11 phases 8-12 receipts remain
 historical. All tooling and acceptance evidence remain local under
 `scripts/litex_to_lean/`.
+
+## Newton iteration: the next complete experiment
+
+The [Newton residual experiment](examples/litex_to_lean/newton_residual/Experiment.md)
+targets the recursive sequence `x_0 = 1`, `x_(n+1) = (x_n + 2/x_n)/2` and the
+universal bound `|x_n^2 - 2| <= 4*(1/4)^(2^n)`. It connects legal division,
+an exact residual identity, a lower-bound invariant, quadratic contraction
+and two inductive proofs. The existing full Litex source and the independent
+handwritten Lean baseline both passed their current checks. The full proof is
+not yet supported by the compiler.
+
+The first maintained pair is the supporting
+[single-step identity](../lean/examples/newton_residual_identity/statement.lit),
+with its [actual generated Lean](../lean/examples/newton_residual_identity/statement.lean).
+Its [Adapter](examples/litex_to_lean/newton_residual/Adapter.lean) consumes the
+generated theorem, and its [native Final](examples/litex_to_lean/newton_residual/Final.lean)
+exposes the following checked interface:
+
+```lean
+theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
+    ((x + 2 / x) / 2)^2 - 2 = ((x - 2 / x) / 2)^2 := by
+  exact Adapter.newtonResidualIdentity x hx
+```
+
+Pinned Lake, the live generated-proof dependency and standard-only axioms
+were checked. This does not establish the complete recursive estimate.
+The experiment records exact rejected boundaries and stages for positive-real
+function targets, proof blocks, absolute values, symbolic natural powers,
+recursive definitions and induction. Its target is the equation residual,
+not the distance to `sqrt(2)`. No comparative brevity claim is made.
 
 ## Maintaining this guide
 

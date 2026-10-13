@@ -7,7 +7,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::ExecDefPropStmtSuccessResult;
 use crate::prelude::*;
 use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
+    InferNormalAtomicFactResult, InferAtomicFactResult, InferResult,
 };
 use std::collections::HashMap;
 
@@ -228,9 +228,7 @@ impl LitexToLeanCompiler {
         }
         self.validate_store(&store.store, seed)?;
         let rules = match &store.infer {
-            Some(InferFactResult::AtomicFact(InferAtomicFactResult::ExceptEquality(rules))) => {
-                rules
-            }
+            Some(InferResult::AtomicFact(InferAtomicFactResult::NormalAtomicFact(rules))) => rules,
             _ => {
                 return Err(LeanCompileError::new(
                     "Prop/InferFamily",
@@ -248,7 +246,7 @@ impl LitexToLeanCompiler {
 
     pub(in crate::compile_to_lean) fn compile_prop_inference_rules(
         &self,
-        rules: &[InferAtomicExceptEqualityResult],
+        rules: &[InferNormalAtomicFactResult],
         seed: &Fact,
         compiled: &(String, String),
         position: &SourcePosition<'_>,
@@ -284,14 +282,14 @@ impl LitexToLeanCompiler {
         let mut completed = 0;
         for rule in rules {
             let (derived, body) = match rule {
-                InferAtomicExceptEqualityResult::NormalAtomicParamTypes(proof) => {
+                InferNormalAtomicFactResult::ParamTypes(proof) => {
                     if seen_members || seen_body || proof.derived.len() != parameters.len() {
                         return Err(LeanCompileError::new("Prop/InferDomainOrder", "Predicate domain projections have another original arity or stage order."));
                     }
                     seen_members = true;
                     (&proof.derived, false)
                 }
-                InferAtomicExceptEqualityResult::NormalAtomicExpandDefinition(proof) => {
+                InferNormalAtomicFactResult::ExpandDefinition(proof) => {
                     if seen_body
                         || (!parameters.is_empty() && !seen_members)
                         || proof.derived.len() != declaration.statement.iff_facts.len()
@@ -301,7 +299,6 @@ impl LitexToLeanCompiler {
                     seen_body = true;
                     (&proof.derived, true)
                 }
-                _ => continue,
             };
             for (index, derived) in derived.iter().enumerate() {
                 let fact = match &derived.store {

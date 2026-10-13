@@ -1,9 +1,7 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::*;
 use crate::prelude::*;
-use crate::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferAtomicFactResult, InferFactResult,
-    StoreInferredFactResult,
-};
+use crate::store_fact_and_infer::InferLessEqualFactResult;
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult, StoreInferredFactResult};
 
 fn atomic(captured: &StoreInferredFactResult) -> &AtomicFact {
     let StoreFactResult::AtomicFact(stored) = &captured.store else {
@@ -38,19 +36,18 @@ fn bounded_chain_filter_retains_weak_natural_sign_and_closure_formation() {
     let StoreFactResult::ChainFact(stored) = &assumed.store_and_infer.store else {
         panic!("original adjacent stores")
     };
-    let Some(InferFactResult::ChainFact(inferred)) = &assumed.store_and_infer.infer else {
+    let Some(InferResult::ChainFact(inferred)) = &assumed.store_and_infer.infer else {
         panic!("original chain inference")
     };
     assert_eq!(stored.adjacent.len(), 2);
     assert_eq!(inferred.adjacent_infers.len(), 2);
-    let InferAtomicFactResult::ExceptEquality(rules) = &inferred.adjacent_infers[1].infer else {
+    let InferAtomicFactResult::LessEqualFact(rules) = &inferred.adjacent_infers[1].infer else {
         panic!("upper edge inference")
     };
     let weak = rules
         .iter()
         .find_map(|rule| match rule {
-            InferAtomicExceptEqualityResult::WeakIntegerLowerBoundInN(proof) => Some(proof),
-            _ => None,
+            InferLessEqualFactResult::WeakIntegerLowerBoundInN(proof) => Some(proof),
         })
         .expect("x <= 1 derives 1 in N from the earlier 0 <= x certificate");
     // Chain storage and its subsequent atomic inference have distinct source IDs.

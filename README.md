@@ -21,6 +21,23 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 Litex is designed as an everyday formal language for everyone who wants to
 write and understand checkable mathematics.
 
+**Research and release boundary.** Litex is currently an evolving
+formal-language research project and experimental system. It cannot replace
+natural language in carrying all of mathematics' intuition, motivation, and
+explanation, nor does it have the mature trusted foundation, domain coverage,
+or ecosystem scale that Lean and Mathlib have accumulated. Litex investigates
+a different, narrower, and independent question: can a language design
+organized around facts, statement-by-statement checking, and retained
+knowledge records lower the cost for people and AI to construct, understand,
+review, repair, and reuse checkable knowledge?
+
+This project is released in its current state. Public source code, examples,
+and experimental results do not guarantee completeness, fitness for any
+particular purpose, or superiority to other systems. Judge its capabilities by
+dated verification results, trust boundaries, known limitations, and concrete
+use cases; do not extrapolate results within an experimental scope into
+untested guarantees.
+
 Write the next mathematical fact directly; Litex checks it and shows the
 grounds it found or where checking stopped.
 
@@ -225,9 +242,11 @@ litex -e '∅ ∩ ℕ ⊆ ℕ'
 For other platforms and checkout builds, use the [setup guide](docs/setup.md).
 The [CLI reference](docs/cli.md) explains commands and verification output;
 the [Manual](docs/Manual.md) and [examples](examples/README.md) are starting
-points for writing more Litex. [Building Analysis in Litex](showcases/analysis/README.md)
-shows selected definitions and proofs growing into mathematical context, with
-the incomplete textbook scope stated explicitly.
+points for writing more Litex. [Analysis with Litex](showcases/analysis_notes/README.md) introduces limits and
+infinite sums through a short mathematical lecture, citing the longer
+[Tao Analysis chapter development](showcases/analysis/README.md). The latter
+contains selected Chapters 1–8, with retained axioms and omitted branches
+stated explicitly.
 [Mathematics in Litex](showcases/Mathematics-in-Litex/README.md) adapts selected
 material from *Mathematics in Lean*, following witnesses, sets and functions
 through recursive constructions and algebraic structures. The full argument and further
