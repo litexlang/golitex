@@ -207,6 +207,14 @@ separate clean file check at a coherent checkpoint or at the end. Restart and
 replay only when the process stops or the loaded context must change; see the
 [Agent Guide](docs/AgentGuide.md) for the exact boundaries.
 
+**Session reuse is essential for dependent reasoning.** With `N` dependent
+steps each taking approximately `t` to verify, one Session costs approximately
+`Nt`. Rechecking the full prefix at each new step costs
+`t(1 + 2 + … + N) = tN(N + 1) / 2`. The cumulative time ratio is approximately
+`(N + 1) / 2`: quadratic versus linear growth under equal per-step costs.
+This models one submission per step with unchanged prerequisites, excluding
+initial loading, separate checkpoint/final checks and required restart/replay.
+
 ## Independent Lean rechecking is a goal
 
 Litex checks supported source with its own verifier. The preview

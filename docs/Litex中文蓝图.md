@@ -641,9 +641,9 @@ let a = 1
 a + 1 = 2
 ```
 
-第一句是定义（`define`）：它引入对象，并把定义事实 `a = 1` 存入上下文。第二句是验证（`verify`）：它读取当前上下文，检查 `a + 1 = 2` 的良定义性，沿着 `a = 1` 做透明定义化简，再使用数值规范化规则。通过后，第二条事实进入当前上下文，成为后续语句可以继续使用的基础。
+第一句是定义（`define`）：它引入对象，并把定义事实 `a = 1` 存入上下文。第二句是验证（`verify`）：它读取当前上下文，检查 `a + 1 = 2` 的良定义性，再利用 `a` 的已知值通过内置改写验证等式。通过后，第二条事实进入当前上下文，成为后续语句可以继续使用的基础。
 
-下面是这片代码的执行结果。
+下面的 Normal JSON 摘录记录了这两条语句及其实际采用的证明路径。
 
 <details>
 <summary><strong>展开查看：Litex执行结果</strong></summary>
@@ -668,9 +668,9 @@ a + 1 = 2
       "statement_result": "accepted",
       "statement": "a + 1 = 2",
       "proof_method": {
-        "type": "builtin_rule",
-        "rule_name": "Calculation",
-        "message": "Both sides evaluate to the same number"
+        "type": "builtin_rewrite",
+        "rule_name": "Builtin rewrite",
+        "message": "Verified by a builtin equality rewrite"
       },
       "stores": ["a + 1 = 2"],
       "infers": []
@@ -681,7 +681,7 @@ a + 1 = 2
 
 </details>
 
-第二句经过良定义性、定义化简与数值检查；上面的 Normal JSON 只显示顶层的 `Calculation`，并未展开每个内部子步骤。读者可从这份日常记录直接回答几个问题：
+第二句通过良定义性检查，并采用内置等式改写。上面的 Normal JSON 摘录把这条实际路径记录为 `builtin_rewrite`，并未展开每个内部子步骤。读者可从这份日常记录直接回答几个问题：
 
 | 读者想知道什么 | 在记录里看哪里 |
 | --- | --- |
@@ -1255,6 +1255,21 @@ _— Douglas Engelbart，《增强人类智力：概念框架》（1962），引
 <a id="session-authoring"></a>
 
 **边写边检查，保留已经正确的知识。** 编写或修复 Litex 代码时，**开启 `-session`，始终保持同一个进程**。普通语句失败不会清除之前已接受的定义和事实。绝不要每加几条新代码，就把整个文件从头重新跑一遍。
+
+**对于有前后依赖的推理，保留 Session 避免了反复重建前缀带来的二次累积。** 设有 $N$ 个依赖步骤，每步验证耗时近似为 $t$，已接受前缀保持不变。在书写循环中，同一个 Session 只验证每个新步骤一次；每次重启则要重新验证不断增长的完整前缀：
+
+$$
+T_{\mathrm{Session}} \approx Nt, \qquad
+T_{\mathrm{restart}} \approx t\sum_{n=1}^{N} n = t\frac{N(N+1)}{2}.
+$$
+
+因此，在这个成本模型下，累计耗时之比为
+
+$$
+\frac{T_{\mathrm{restart}}}{T_{\mathrm{Session}}} \approx \frac{N+1}{2}.
+$$
+
+**在这个模型中，每次从头验证，时间随依赖链长度二次增长；在同一个 Session 中增量验证，则是线性增长。** 这里计算的是每步提交一次的书写循环，不包含初始上下文加载、单独的阶段/最终文件检查，以及必要的重启重放。实际耗时取决于每步验证成本与运行开销。
 
 先接受一个实数值：
 
@@ -1975,9 +1990,6 @@ claim:
 
 反证法——否定「每个实数都满足 `x^2 >= x`」：
 
-> **迁移示例：** 当前 `src/` 检查停在 `by_contra` (`by contradiction`)；以下保留写法不算已验证结果。
-
-<!-- litex:skip-test -->
 ```litex
 by contra:
     ? not forall x R:
@@ -2004,9 +2016,6 @@ by cases:
 
 归纳法——前 `n` 个正奇数之和等于 `n^2`：
 
-> **迁移示例：** 当前 `src/` 检查停在 `internal_bug: name n is already bound in an enclosing parse scope`；以下保留写法不算已验证结果。
-
-<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -2052,9 +2061,6 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 模板——按参数族实例化定义，再用 `\name<args>` 取出：
 
-> **迁移示例：** 当前 `src/` 检查停在 `search_proof` (`p.first = 1`)；以下保留写法不算已验证结果。
-
-<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X

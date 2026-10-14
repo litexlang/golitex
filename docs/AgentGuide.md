@@ -68,6 +68,15 @@ user `trust` or `axiom`; it demonstrates context retention, not a measured
 speedup or automatic proof discovery. Save the accepted source outside the
 process so an unavoidable restart can recover it.
 
+**For dependent reasoning, rerunning a growing prefix accumulates quadratic
+work.** With `N` dependent steps taking approximately `t` each, the inner-loop
+time is `Nt` in one live Session, versus
+`t(1 + 2 + … + N) = tN(N + 1) / 2` when every new step reruns the complete
+prefix. The cumulative time ratio is approximately `(N + 1) / 2` under equal
+per-step costs. This assumes one submission per step and an unchanged prefix,
+excluding initial loading, separate checkpoint/final gates and necessary
+restart/replay.
+
 ## Use the Session as the proof-writing loop
 
 1. Understand the intended mathematics and inspect the existing builtin,

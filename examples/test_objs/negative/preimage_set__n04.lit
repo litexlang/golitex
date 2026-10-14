@@ -1,0 +1,3 @@
+# Must reject: invalid input or false preimage membership.
+have fn identity(x R) R = x
+1 $in preimage_set(identity, 1)

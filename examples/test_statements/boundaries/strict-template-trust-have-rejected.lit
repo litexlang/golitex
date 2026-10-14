@@ -1,0 +1,6 @@
+# Strict must reject the template's trust-have declaration before publication.
+# Run: target/release/litex -strict -f this file; expect exit 1.
+
+template<S set>:
+    trust have forbidden_template_value R:
+        forbidden_template_value = 0

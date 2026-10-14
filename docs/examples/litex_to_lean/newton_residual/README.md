@@ -1,9 +1,12 @@
 # Newton single-step identity: a checked compiler example
 
-This small example is the maintained demonstration. It defines a function on
-nonzero real inputs and proves one exact algebraic identity. The complete
-recursive residual-bound experiment was paused at the user's request on
-2026-10-13; it is not an accepted end-to-end example.
+This example defines a function on nonzero real inputs and proves one exact
+algebraic identity. It shows how the source domain condition survives generated
+function calls and the handwritten adapter. For the smaller representation
+conversion alone, start with [adding zero](../add_zero/README.md).
+
+The complete recursive residual-bound experiment was paused at the user's
+request on 2026-10-13; it is not an accepted end-to-end example.
 
 ## Litex input
 
@@ -58,7 +61,9 @@ target/release/litex -strict -lean -f lean/examples/newton_residual_identity/sta
 
 This command writes Lean to stdout. The generated file and handwritten adapter
 are separate artifacts; the short native theorem above is not the raw output
-of `-lean`.
+of `-lean`. The [compiler README](../../../../src/compile_to_lean/README.md)
+explains the architecture, while the [compiler guide](../../../Litex_To_Lean_Compiler_Guide.md)
+explains its user-facing workflow.
 
 ## Another checked example
 

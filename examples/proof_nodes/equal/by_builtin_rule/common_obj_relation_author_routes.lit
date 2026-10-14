@@ -696,8 +696,8 @@ sketch:
             claim:
                 ? forall S intersect(power_set(A),power_set(B)):
                     S $in power_set(intersect(A,B))
-                by def S $subset A
-                by def S $subset B
+                S $in power_set(A)
+                S $in power_set(B)
                 forall t S:
                     t $in A
                     t $in B
@@ -721,7 +721,14 @@ sketch:
 
 # S06-extension
 sketch:
-    by extension intersect(Z,R+)=Z+
+    by extension:
+        ? intersect(Z, R+) = Z+
+        claim:
+            ? forall x intersect(Z, R+):
+                x $in Z+
+            x > 0
+        forall x Z+:
+            x $in intersect(Z, R+)
 
 
 # S08-explicit-extension

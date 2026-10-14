@@ -7,10 +7,10 @@ the compiler works this way and what its output means.
 To see the implemented work directly, follow the [example reading path](#explore-the-example-collection)
 and browse the [complete source/generated collection](../lean/examples/).
 
-The [compiler README](../src/compile_to_lean/README.md) describes implementation
-details, internal design rationale, result types, and extension points. Keep
-reader-facing explanations and example walkthroughs here; keep Rust control
-flow and replay bookkeeping there. [CLI documentation](cli.md#lean-compiler-boundary)
+The [compiler README](../src/compile_to_lean/README.md) explains the Runtime-to-native
+architecture, typed-result ownership, Core semantics and the native interface
+boundary. This guide covers user-facing design principles and detailed use;
+complete worked examples live in their own READMEs. [CLI documentation](cli.md#lean-compiler-boundary)
 owns the command-line contract.
 
 ## From a checked fact to a Lean proof
@@ -45,6 +45,11 @@ The second command writes Lean source to stdout. Generating that source and
 checking it with the Lean kernel are separate steps.
 
 ## Explore the example collection
+
+For the shortest complete source/generated/Adapter/Final walkthrough, start
+with the [adding-zero README](examples/litex_to_lean/add_zero/README.md).
+The [Newton README](examples/litex_to_lean/newton_residual/README.md) then adds a
+function whose nonzero domain condition survives compilation and native use.
 
 The [complete collection](../lean/examples/) contains dozens of Litex `.lit`
 files paired with the `.lean` files produced by the compiler. The 2026-10-12
@@ -934,8 +939,10 @@ can reuse literal WD from completed parameter inference. A pending inference sti
 future fact, even if an ancestor contains the complete result.
 
 These examples use the same owning compiler, typed result branches and proved
-semantic interface. The native adapters select a model explicitly and remain
-handwritten local tooling. The compiler now also consumes the reviewed
+semantic interface. The native adapters select a model explicitly and are
+handwritten. Public worked examples keep Adapter/Final under
+`docs/examples/litex_to_lean/`; verification tooling and receipts stay local.
+The compiler now also consumes the reviewed
 natural-index coverage disjunction, unary-natural recursive graphs and
 ordinary zero-based induction. General existential proofs, disjunction and
 induction outside those reviewed routes, higher-order functions, local
@@ -963,45 +970,15 @@ historical. All tooling and acceptance evidence remain local under
 
 ## Verified single-step Newton example
 
-The [single-step source](../lean/examples/newton_residual_identity/statement.lit)
-proves an exact residual identity for a nonzero real input. Its complete source
-is six lines:
+The [Newton README](examples/litex_to_lean/newton_residual/README.md) contains the
+complete source, generated-proof explanation and ordinary Lean consumer for
+`((x + 2/x)/2)^2 - 2 = ((x - 2/x)/2)^2` with `x ≠ 0`. The single-step identity
+and positive-update variant have checked Adapter/Final layers that consume
+the actual generated proofs.
 
-```litex
-# Newton's exact algebraic error identity for a nonzero real input.
-have fn newton(x R:x!=0) R=(x+2/x)/2
-forall x R:
-    x!=0
-    =>:
-        newton(x)^2-2=((x-2/x)/2)^2
-```
-
-The [actual generated Lean](../lean/examples/newton_residual_identity/statement.lean),
-[Adapter](examples/litex_to_lean/newton_residual/Adapter.lean) and
-[Final](examples/litex_to_lean/newton_residual/Final.lean) completed acceptance:
-strict source verification, exact regeneration, pinned Lean, live generated-proof
-dependency and standard-only axiom checks. Adapter consumes the actual generated
-proof through proved representation bridges; it does not independently reprove
-the identity. Final exposes this ordinary Lean theorem:
-
-```lean
-theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
-    ((x + 2 / x) / 2)^2 - 2 = ((x - 2 / x) / 2)^2 := by
-  exact Adapter.newtonResidualIdentity x hx
-```
-
-The [positive-update source](../lean/examples/newton_positive_update/statement.lit)
-and [generated Lean](../lean/examples/newton_positive_update/statement.lean), with
-[PositiveAdapter](examples/litex_to_lean/newton_residual/PositiveAdapter.lean) and
-[PositiveFinal](examples/litex_to_lean/newton_residual/PositiveFinal.lean), are also
-accepted. They preserve positive input and return constraints and export
-`newtonPositive (x : ℝ) (hx : 0 < x) : 0 < (x + 2 / x) / 2`.
-
-The larger [all-index source](../lean/examples/newton_residual_bound/statement.lit)
-completed compilation and exact regeneration. Its complete Lean and native
-consumer were not accepted; the user requested stopping on 2026-10-13.
-The [experiment record](examples/litex_to_lean/newton_residual/Experiment.md)
-retains that status.
+The same README records the separate recursive all-index experiment: source
+compilation and exact regeneration completed, but full Lean/native acceptance
+did not. Work stopped at the user's request on 2026-10-13.
 
 ## Maintaining this guide
 
@@ -1017,3 +994,33 @@ owning artifacts change. Keep implementation mappings in the
 [compiler README](../src/compile_to_lean/README.md), and keep development
 fixtures, receipts, and build tooling in the local-only compiler workspace
 `scripts/litex_to_lean/`.
+
+## Current mathematical coverage and examples
+
+**Litex has established the source-proof → generated-Lean → Lean-checking path
+for a concrete mathematical subset: elementary algebra and inequalities over
+the standard number systems, together with basic sets, functions with explicit
+domains and reusable theorems.** These capabilities combine in proofs with
+arbitrary parameters, hypotheses and intermediate steps. Selected complete
+examples also expose ordinary Lean/Mathlib theorems through handwritten adapters.
+
+| Mathematical layer | Current coverage | Corresponding examples |
+| --- | --- | --- |
+| Numbers | ℕ, ℤ, ℚ, ℝ, ℂ and their inclusions, plus positive reals; parameters can be arbitrary members of their domains. | [Numeric hierarchy](../lean/examples/numeric_hierarchy/), [positive-real functions](../lean/examples/newton_positive_update/) |
+| Operations and relations | Exact fractions and finite decimals, four arithmetic operations, polynomial and rational identities, cancellation; selected fixed integer powers and real inequalities. | [Fractions and decimals](../lean/examples/exact_fractions_and_decimals/), [difference of squares](../lean/examples/real_difference_of_squares/), [cancellation](../lean/examples/multiplicative_cancellation/), [nonnegative squares](../lean/examples/real_squares_nonnegative/) |
+| Sets | Arbitrary set parameters, empty sets, finite enumerations, bounded set builders, membership, subsets and associated reasoning. | [Arbitrary sets](../lean/examples/arbitrary_set_laws/), [finite sets](../lean/examples/finite_natural_set/), [closed unit interval](../lean/examples/closed_unit_interval/) |
+| Functions | Formula functions with one or two numeric parameters, explicit domain conditions, evaluation and composition; complete inverse and injectivity examples. | [Guarded two-argument function](../lean/examples/two_argument_shifted_quotient/), [composition](../lean/examples/composed_real_formula/), [rational inverse maps](../lean/examples/rational_inverse_maps/) |
+| Definitions and proofs | Concrete predicates, universal and conditional facts, equality chains, selected conjunctions, named theorems and calls, local objects, `let` and `claim`. | [Predicate equality transport](../lean/examples/concrete_predicate_equality_transport/), [theorem returns and calls](../lean/examples/named_compound_theorem_returns/), [local objects](../lean/examples/local_witness_additive_identity/), [claim and positive return domain](../lean/examples/newton_positive_update/) |
+
+Coverage refers to implemented and checked constructions and proof routes;
+it does not mean every Litex proof in this mathematical area can be compiled.
+Absolute value, symbolic natural powers and selected disjunctions also have
+bounded replay and local Lean checks. Whole-file and native acceptance of the
+complete recursive Newton estimate remains unfinished; see the
+[Newton example status](examples/litex_to_lean/newton_residual/README.md#paused-recursive-experiment).
+
+Start with the [complete add-zero and Adapter example](examples/litex_to_lean/add_zero/README.md),
+then follow the [rational inverse-map walkthrough](#two-rational-maps-from-definitions-to-a-native-equivalence).
+Each example directory in the table contains its `.lit` source beside the
+actual generated `.lean`. Browse the [full source/generated collection](../lean/examples/)
+to see how these capabilities combine into proofs that Lean can consume.

@@ -1,0 +1,3 @@
+# Must reject: invalid input or false preimage membership.
+have fn square(x R) R = x^2
+2 $in preimage(square, 9)

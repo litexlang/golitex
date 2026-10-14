@@ -1,0 +1,19 @@
+# Tracer: Cartesian singleton coordinates need explicit inference seeds.
+# Before (rejected):
+# claim:
+#     ? forall a cart({1}, {2}):
+#         a = (1, 2)
+#     a(1) = 1
+#     a(2) = 2
+#     release thm tuple_equal_from_coordinates(a, (1, 2))
+# Former result: search_proof rejected a(1) = 1.
+#
+# Now: coordinate membership is verified as a new seed; singleton equality follows.
+claim:
+    ? forall a cart({1}, {2}):
+        a = (1, 2)
+    a(1) $in {1}
+    a(2) $in {2}
+    release thm tuple_equal_from_coordinates(a, (1, 2))
+# Boundary: equal_negative/cart_singleton_wrong_coordinate.lit must reject.
+# Gate: target/release/litex -strict -f this file.

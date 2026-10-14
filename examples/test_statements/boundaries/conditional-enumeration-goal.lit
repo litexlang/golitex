@@ -1,0 +1,8 @@
+# Run: target/release/litex -strict -f examples/test_statements/boundaries/conditional-enumeration-goal.lit
+
+by enumerate finite_set:
+    ? forall n {0, 1, 2}:
+        n > 0
+        =>:
+            n != 0
+    n != 0

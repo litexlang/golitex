@@ -2051,6 +2051,92 @@
       "gaps": []
     },
     {
+      "name": "preimage",
+      "ast_paths": [
+        "Obj::FunctionSpace::Preimage"
+      ],
+      "positive_file": "preimage.lit",
+      "helper_paths": [],
+      "positive_cases": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/preimage__n01.lit"
+        },
+        {
+          "id": "N02",
+          "file": "negative/preimage__n02.lit"
+        },
+        {
+          "id": "N03",
+          "file": "negative/preimage__n03.lit"
+        },
+        {
+          "id": "N04",
+          "file": "negative/preimage__n04.lit"
+        },
+        {
+          "id": "N05",
+          "file": "negative/preimage__n05.lit"
+        },
+        {
+          "id": "N06",
+          "file": "negative/preimage__n06.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "preimage_set",
+      "ast_paths": [
+        "Obj::FunctionSpace::PreimageSet"
+      ],
+      "positive_file": "preimage_set.lit",
+      "helper_paths": [],
+      "positive_cases": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/preimage_set__n01.lit"
+        },
+        {
+          "id": "N02",
+          "file": "negative/preimage_set__n02.lit"
+        },
+        {
+          "id": "N03",
+          "file": "negative/preimage_set__n03.lit"
+        },
+        {
+          "id": "N04",
+          "file": "negative/preimage_set__n04.lit"
+        },
+        {
+          "id": "N05",
+          "file": "negative/preimage_set__n05.lit"
+        },
+        {
+          "id": "N06",
+          "file": "negative/preimage_set__n06.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
       "name": "sum",
       "ast_paths": [
         "Obj::IteratedOperator::Sum"
