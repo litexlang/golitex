@@ -6,6 +6,8 @@
 
 先写 `1 + 1 = 2`，把它检查通过，再把同样的习惯扩展成定义和证明。本课程带你走过在 Litex 中做一小段数学发展所需的决定：对象是什么、在哪里定义、已知什么、还需要证明什么。
 
+> **Litex 适合与 AI 交互：提出数学步骤、检查、读取反馈，再修正或继续。开启 `-session` 并保持同一个进程，普通失败保留此前已接受的定义和事实。不要每加几条新代码就从头重跑。** 见[简单代码对照](#交互修复时保留已接受工作)。
+
 你只需要基础算术与中学代数。不假定有编程或证明助手经验。主课程大约 **90 分钟**，可选扩展大约 **30 分钟**，已包含运行与改例子的时间。这些是学习估计，不是实测完成时间。
 
 学完后，你应能：为函数写明合法输入、陈述一般性质、给出短证明、理解失败检查，并保存一份自洽的 `.lit` 文件。你也会看到这份已检查源码如何服务人类读者或 AI agent。
@@ -27,7 +29,7 @@
 
 按顺序读主课程。对每个例子：先预测它的含义，再运行，最后尝试建议的改动。若你在 GitHub 或下载的 Markdown 中阅读，说明与代码都在这里；课程不依赖特定网页界面。
 
-每个 `litex` 代码块都是完整、独立的例子。每块都重新开一次 playground，或另存为单独的 `.lit` 文件。标为 `text` 的块表示有意失败、片段或会话记录；标题会说明是哪一种。不要在未修复的情况下把它们粘进一份本应通过的文件。
+每个 `litex` 代码块都是完整、独立的例子。切换到另一个独立例子时使用独立上下文，或另存为单独的 `.lit` 文件；在本地扩展或修复同一个例子时，保持同一个 `-session`。标为 `text` 的块表示有意失败、片段或会话记录；标题会说明是哪一种。不要在未修复的情况下把它们粘进一份本应通过的文件。
 
 ## 选择在哪里运行例子
 
@@ -40,7 +42,7 @@ litex -version
 litex -strict -e '1 + 1 = 2'
 ```
 
-用英文输出检查已保存的文件：
+用英文输出对已保存文件做基线或最终检查：
 
 ```bash
 litex -lang en -strict -f first.lit
@@ -424,16 +426,29 @@ Litex 对许多例行事实有内置检查与推断，但不是每个真陈述�
 
 ### 交互修复时保留已接受工作
 
-本地实验可在练习目录启动 `litex`。一次提交一条顶层语句；缩进块以空行结束。下面这份**示意会话**省略了失败输出：
+本地书写时，在练习目录开启 `-session`，先接受一条声明：
+
+```bash
+litex -lang en -session -e 'have a R = 2'
+```
+
+向同一个进程一次提交一条顶层语句；缩进块以空行结束。下面这份已检查的会话记录缩略了失败 JSON：
 
 ```text
-litex> have x R = 2
-success
-litex> x = 3
-[failed verification JSON]
-litex> x + 1 = 3
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
 success
 ```
+
+`a = 3` 失败，但已接受的 `a = 2` 仍能支持下一句计算。对照独立进程：
+
+```bash
+litex -lang en -e 'have a R = 2'
+litex -lang en -e 'a + 1 = 3'
+```
+
+第一条命令成功；第二条失败，因为它没有 `a` 的声明，需要重新加载已接受源码。对于已通过的保存文件，用 `litex -session -f first.lit` 启动一次，随后继续提交新语句。不要每做一个小改动就重启或从头重新运行整个文件。
 
 普通失败回到提示符后，已接受的声明仍在。在同一会话里修复失败语句。复合 `claim` 是一条语句；粘贴的多条独立语句即使后面失败，前面成功仍可保留。
 
@@ -606,18 +621,20 @@ witness exist! w R st {w = 2} from 2
 
 ### C. 用同一课程与 AI agent 协作 — 5 分钟
 
-给 agent 一个数学问题、相关定义，以及当前已检查源码。先要求自然语言证明思路，再要代码。对本课程，有用的请求是：
+给 agent 一个数学问题、相关定义，以及当前已检查源码。先要求自然语言证明思路，再要代码。Litex 的直接数学陈述、明确的验证反馈和保留上下文的 Session，为 agent 提供了具体的交互循环。对本课程，有用的请求是：
 
 ```text
 Define reciprocal on nonzero real inputs in Litex.
 Prove reciprocal(x) * x = 1 under that input condition.
 Explain the proof idea, then return a complete standalone .lit file.
 Use no trust or axiom. Keep the domain and conclusion unchanged.
+Write and repair statements in one live -session; retain accepted context
+after ordinary failures. Do not rerun the whole file after each small edit.
 Run the checker; if it fails, show the first failed obligation and the
 smallest repair. Finish with a clean whole-file check and its result.
 ```
 
-循环就是你已练习过的：提出陈述或证明步骤，检查，读反馈，修复，保留已接受工作。普通交互失败不必抹掉先前成功。保存源码，让新进程能复现完整结果。
+循环就是你已练习过的：提出陈述或证明步骤，检查，读反馈，修复，在同一个 `-session` 中保留已接受工作。普通交互失败会保留先前成功。保存源码，让新进程能复现完整结果。
 
 [Litex Agent 协作流程图](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png) 展示了人、AI 与验证器之间的这一协作循环。
 

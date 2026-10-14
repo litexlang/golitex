@@ -3,9 +3,11 @@
 ## Start with the Agent Guide
 
 Read [docs/AgentGuide.md](docs/AgentGuide.md) before iterative Litex proof work.
-Its first rule is to keep one live Session after a normal statement failure;
-it includes a checked example and the exact restart/replay boundary. Apply the
-`golitex-repository-policy` skill for the full repository working policy.
+Its first rule is to open `-session` for iterative Litex authoring and keep the
+same live process after a normal statement failure, retaining earlier accepted
+definitions and facts. Never rerun from the beginning after adding a few new
+lines. It includes a checked comparison and the exact restart/replay boundary.
+Apply the `golitex-repository-policy` skill for the full repository working policy.
 
 ## Local-only scripts workspace
 

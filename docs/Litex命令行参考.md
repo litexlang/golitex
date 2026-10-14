@@ -345,11 +345,24 @@ Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证
 
 `-session` 不是独立的分帧协议。它表示：`-e`、`-f` 或 `-r` **成功**运行后，保留最后的 Runtime 环境，继续进入普通 REPL。失败的批量运行不会进入该 REPL。
 
-示例：
+**书写 Litex 的迭代过程使用 `-session`。只加载一次已接受前缀，再向同一个进程每次提交一条顶层语句。普通拒绝会保留先前已接受的定义和事实，在这个进程中修复被拒绝语句即可。不要每加几条代码就重新运行整个文件。**
+
+对于已经通过的文件：
 
 ```bash
 litex -session -f chapter.lit
 ```
+
+简单对照：先启动 `litex -lang en -session -e 'have a R = 2'`，再分别输入每条语句。失败 JSON 在这里被缩略：
+
+```text
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
+```
+
+普通拒绝后，`a = 2` 仍在。两个独立的 `-e` 命令不能共享上下文：`litex -e 'have a R = 2'` 成功，但随后单独运行 `litex -e 'a + 1 = 3'` 会失败，因为新进程没有 `a` 的声明。干净的批量文件运行用于基线、连贯的阶段检查点和最终验收。硬错误可能停止 REPL；必要时重启并重放已接受源码。重启边界见 [Agent Guide](Litex智能体指南.md)。
 
 <a id="project-modules"></a>
 

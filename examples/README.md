@@ -2,6 +2,12 @@
 
 Phase-oriented acceptance tree for the current Litex pipeline (`src/`).
 
+> **When extending or repairing an example, use one `-session` and keep its
+> accepted context after an ordinary failure. Do not rerun the whole file after
+> every few new lines.** The [Agent Guide](../docs/AgentGuide.md) shows a short
+> comparison and the restart/replay boundaries. Clean file commands below are
+> baseline, checkpoint, and final acceptance gates.
+
 ## Layout
 
 ```text

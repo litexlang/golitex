@@ -4,6 +4,9 @@ This guide explains the design principles of Litex-to-Lean compilation through
 concrete source/generated examples. It is the maintained entry point for why
 the compiler works this way and what its output means.
 
+To see the implemented work directly, follow the [example reading path](#explore-the-example-collection)
+and browse the [complete source/generated collection](../lean/examples/).
+
 The [compiler README](../src/compile_to_lean/README.md) describes implementation
 details, internal design rationale, result types, and extension points. Keep
 reader-facing explanations and example walkthroughs here; keep Rust control
@@ -40,6 +43,31 @@ target/release/litex -strict -lean -f lean/examples/one_equals_itself/statement.
 
 The second command writes Lean source to stdout. Generating that source and
 checking it with the Lean kernel are separate steps.
+
+## Explore the example collection
+
+The [complete collection](../lean/examples/) contains dozens of Litex `.lit`
+files paired with the `.lean` files produced by the compiler. The 2026-10-12
+acceptance checkpoint checked 74 pairs through strict source verification,
+actual compilation, byte-for-byte regeneration and pinned Lean/Mathlib
+checking. The collection continues to grow beyond that dated checkpoint;
+explore the maintained examples through this progression, opening both files
+in each row:
+
+| Mathematical step | Litex source | Generated Lean | What to inspect |
+|---|---|---|---|
+| Exact fractions and decimals | [Source](../lean/examples/exact_fractions_and_decimals/statement.lit) | [Lean](../lean/examples/exact_fractions_and_decimals/statement.lean) | Exact arithmetic and the distinction between `1 / 3` and `0.333`. |
+| A reciprocal with a domain condition | [Source](../lean/examples/guarded_real_reciprocal/statement.lit) | [Lean](../lean/examples/guarded_real_reciprocal/statement.lean) | The function definition, evaluation at two and preserved nonzero premise. |
+| The closed unit interval | [Source](../lean/examples/closed_unit_interval/statement.lit) | [Lean](../lean/examples/closed_unit_interval/statement.lean) | A bounded set builder, membership and the bounds known for each member. |
+| Reusing a theorem's conclusions | [Source](../lean/examples/named_compound_theorem_returns/statement.lit) | [Lean](../lean/examples/named_compound_theorem_returns/statement.lean) | Multiple returned facts and explicit selection in subsequent proofs. |
+| Two rational inverse maps | [Source](../lean/examples/rational_inverse_maps/statement.lit) | [Lean](../lean/examples/rational_inverse_maps/statement.lean) | Definitions, domain preservation, both inverse laws and injectivity in one development. |
+
+Compare each source's mathematical statements and intermediate facts with the
+generated theorem's premises and proof references. The collection records the
+compiler's development in inspectable form, across arithmetic, object
+construction, definitions and proof reuse. The [acceptance discussion](#what-successful-output-establishes)
+explains how to read the dated checks and their scope; the later rational-map
+walkthrough follows the last example through a native Mathlib interface.
 
 ## Compile the evidence behind the fact
 
@@ -178,7 +206,9 @@ earlier one/two-input functions in its body, while the
 [chain guard](../lean/examples/chain_guard_reciprocal/statement.lit) retains a
 concrete predicate's two inequalities before constructing the reciprocal.
 The bounded unary-natural recursive graph slice and ordinary zero-based
-induction are described in the [Newton experiment](#newton-iteration-the-next-complete-experiment).
+induction are described in the [compiler README](../src/compile_to_lean/README.md).
+A [verified single-step Newton example](#verified-single-step-newton-example)
+appears below.
 Higher-order bodies and recursion outside that slice remain unsupported.
 
 The [natural successor](../lean/examples/natural_successor_affine_identity/statement.lit)
@@ -595,6 +625,22 @@ No proof hole or newly invented axiom may stand in for an unsupported route.
 `-strict` excludes source trust and user axioms; it does not establish that
 every Litex foundation already has a complete Lean interpretation.
 
+For a Litex-only check, the Rust verifier, builtin rules and inference rules
+remain in the trusted computing base (TCB). When a generated proof passes
+independent Lean checking with the intended axiom boundary, Lean establishes
+the generated theorem under its explicit hypotheses. Its proof validity does
+not depend on accepting the Rust verifier's success report. The separate
+question is whether that theorem faithfully expresses the intended Litex
+statement: object meanings, premises, construction conditions and scope still
+need review. [Lean's proof-validation guide](https://lean-lang.org/doc/reference/latest/ValidatingProofs/)
+explains the distinction between a valid proof and its statement's meaning.
+
+The compiled examples provide evidence for reviewed mappings; they do not
+prove every Rust verifier branch sound. Readers can inspect the design through
+[How Litex works](https://litexlang.com/how-litex-works), the source/generated
+examples in this guide and the proved bridges in [the Lean semantic interface](../lean/Litex.lean).
+These make the current contracts and assumptions available for review.
+
 ## Using a generated result in ordinary Mathlib
 
 The supported mathematical subset has 18 selected roles: numeric hierarchy,
@@ -636,6 +682,15 @@ the native interface you need. Keep the relative generated-module import path
 and the source file's actual namespace. Membership proofs permit native
 observations without changing the original object's host representation.
 
+The present workflow deliberately keeps the handwritten Adapter. The aim is
+to author the mathematical development in Litex and keep the additional Lean
+work in a small, reusable interface layer. Model selection and representation
+bridges can be shared across a development; clients then use ordinary theorems
+through calls such as `Adapter.realQuotientDistributes` above. New domains may
+require more bridge work, so this example does not establish that every Adapter
+will be short. Automatic generation of ordinary Mathlib interfaces is a future
+consideration, rather than a requirement for this workflow.
+
 The local selected-subset check is:
 
 ```sh
@@ -653,6 +708,15 @@ dead local lets and lambda arguments do not count as a generated-proof use.
 This checks structural proof dependencies, not mathematical necessity or a
 formal proof of the whole Rust translation.
 
+The acceptance counts in this guide refer to dated local checks, with a fixed
+Lean/Mathlib environment. The semantic interface and source/generated pairs
+are public; the check driver and receipts remain in the local-only workspace.
+Those records do not claim that release/tag CI ran the Lean checks. Public
+Lean CI could make reproduction easier, but it is not a prerequisite for
+independently checking a generated theorem. Current development prioritizes
+compilation coverage and reusable semantic bridges; adding public Lean CI is
+not a current requirement.
+
 The interpretation of an arbitrary set illustrates a deliberate interface
 difference: `$is_set(A)` has a generated proof, while native `A : ZFSet`
 already expresses sethood through its type. No artificial native sethood
@@ -663,6 +727,15 @@ recursion outside the reviewed unary-natural slice
 and unsupported inference/certificate routes outside the compiler boundary.
 An observed unused inference node in a result trace does not establish
 compiler support for that inference.
+
+The intended object semantics and replay contract set the direction for
+extending this coverage. The long-term goal is to compile all Litex proof
+routes, including the remaining existential/disjunctive, induction, recursive,
+higher-order and local-definition routes. This is ongoing implementation and
+validation work, with no claim of present completeness or completion date.
+Each extension must preserve the source meaning, consume the actual evidence
+and pass Lean checking; the current unsupported-route list remains the
+boundary for users today.
 
 ## Two rational maps, from definitions to a native equivalence
 
@@ -888,24 +961,28 @@ exact source/result/build evidence. The 2026-10-11 phases 8-12 receipts remain
 historical. All tooling and acceptance evidence remain local under
 `scripts/litex_to_lean/`.
 
-## Newton iteration: the next complete experiment
+## Verified single-step Newton example
 
-The [Newton residual experiment](examples/litex_to_lean/newton_residual/Experiment.md)
-targets the recursive sequence `x_0 = 1`, `x_(n+1) = (x_n + 2/x_n)/2` and the
-universal bound `|x_n^2 - 2| <= 4*(1/4)^(2^n)`. It connects legal division,
-an exact residual identity, a lower-bound invariant, quadratic contraction
-and two inductive proofs. The standalone
-[full proof source](../lean/examples/newton_residual_bound/statement.lit) passed
-strict verification and whole-file compilation; the independent handwritten
-Lean baseline also passed its own check. Complete generated Lean and native
-all-index acceptance remain pending.
+The [single-step source](../lean/examples/newton_residual_identity/statement.lit)
+proves an exact residual identity for a nonzero real input. Its complete source
+is six lines:
 
-The first maintained pair is the supporting
-[single-step identity](../lean/examples/newton_residual_identity/statement.lit),
-with its [actual generated Lean](../lean/examples/newton_residual_identity/statement.lean).
-Its [Adapter](examples/litex_to_lean/newton_residual/Adapter.lean) consumes the
-generated theorem, and its [native Final](examples/litex_to_lean/newton_residual/Final.lean)
-exposes the following checked interface:
+```litex
+# Newton's exact algebraic error identity for a nonzero real input.
+have fn newton(x R:x!=0) R=(x+2/x)/2
+forall x R:
+    x!=0
+    =>:
+        newton(x)^2-2=((x-2/x)/2)^2
+```
+
+The [actual generated Lean](../lean/examples/newton_residual_identity/statement.lean),
+[Adapter](examples/litex_to_lean/newton_residual/Adapter.lean) and
+[Final](examples/litex_to_lean/newton_residual/Final.lean) completed acceptance:
+strict source verification, exact regeneration, pinned Lean, live generated-proof
+dependency and standard-only axiom checks. Adapter consumes the actual generated
+proof through proved representation bridges; it does not independently reprove
+the identity. Final exposes this ordinary Lean theorem:
 
 ```lean
 theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
@@ -913,37 +990,18 @@ theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
   exact Adapter.newtonResidualIdentity x hx
 ```
 
-Stage 1 also compiles the [positive-real update](../lean/examples/newton_positive_update/statement.lit)
-and its [generated Lean](../lean/examples/newton_positive_update/statement.lean).
-The actual `claim` result is replayed, and `have fn newton_sqrt_two(x R+) R+`
-keeps both positive input and return constraints. The approved Core function
-signature now stores an actual semantic set with its sethood proof; the
-existing numeric APIs still supply the standard sets. Its
-[PositiveAdapter](examples/litex_to_lean/newton_residual/PositiveAdapter.lean)
-and [PositiveFinal](examples/litex_to_lean/newton_residual/PositiveFinal.lean)
-export `newtonPositive (x : ℝ) (hx : 0 < x) : 0 < (x + 2 / x) / 2`.
+The [positive-update source](../lean/examples/newton_positive_update/statement.lit)
+and [generated Lean](../lean/examples/newton_positive_update/statement.lean), with
+[PositiveAdapter](examples/litex_to_lean/newton_residual/PositiveAdapter.lean) and
+[PositiveFinal](examples/litex_to_lean/newton_residual/PositiveFinal.lean), are also
+accepted. They preserve positive input and return constraints and export
+`newtonPositive (x : ℝ) (hx : 0 < x) : 0 < (x + 2 / x) / 2`.
 
-Both supporting pairs passed pinned Lake, live generated-proof dependency and
-standard-only axiom checks. The current compiler consumes owned absolute value,
-symbolic natural powers and their selected laws, natural-index coverage,
-bounded recursive graphs and ordinary `by induc k from 0`. The recursive slice
-has one N measure, lower bound zero, ordered `n = 0`/`n > 0` leaf cases and
-predecessor self calls. Strong induction, other measures and nested recursive
-cases remain outside this scope. Original binder, guard, call WD, case and
-store results retain their exact identities; known-forall equalities and
-theorem releases replay their captured matches and ordered requirements.
-
-The final compiler suite passed 429 tests and the separate JSON suite passed
-78 tests; selected producer and invocation gates also passed. Smaller actual generated graph,
-recurrence and arithmetic fixtures passed ordinary pinned Lean, as did the
-generated prefix through the scaled residual identity in its recorded
-resource-bounded check. These checks establish the reviewed routes and prefix.
-Whole-file generation passed. Complete generated Lean checking, final
-regeneration and native all-index consumption with live bound
-dependency and standard-only axiom audits remain pending. The
-[experiment](examples/litex_to_lean/newton_residual/Experiment.md) records that
-acceptance boundary. The target is the equation residual; no distance-to-root,
-comparative brevity or runtime claim is made.
+The larger [all-index source](../lean/examples/newton_residual_bound/statement.lit)
+completed compilation and exact regeneration. Its complete Lean and native
+consumer were not accepted; the user requested stopping on 2026-10-13.
+The [experiment record](examples/litex_to_lean/newton_residual/Experiment.md)
+retains that status.
 
 ## Maintaining this guide
 

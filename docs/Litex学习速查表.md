@@ -6,6 +6,8 @@
 
 安装见[安装指南](安装Litex.md)。[手册](Litex手册.md)负责精确的语言契约；[CLI](Litex命令行参考.md)负责命令与输出。
 
+> **Litex 适合与 AI 交互：提出事实、检查、读取反馈，在同一个活动 `-session` 中修正或继续。普通失败保留此前已接受的定义和事实。绝不要每加几条新代码就从头重跑。** 见[简单对照](#run-and-read-feedback)。
+
 <a id="find-your-next-move"></a>
 
 ## 找到下一步
@@ -354,7 +356,22 @@ litex -lang en -strict -r path/to/project
 
 源码检出版本中，用 `cargo build --release` 构建并使用 `target/release/litex`。`-f` 挂载直接父目录中存在的 `litex.config`，运行配置中直到该文件的前缀；否则独立运行文件。`-r` 检查完整的已配置项目。
 
-用 `litex` 进入 REPL，或用 `litex -session -f path/to/file.lit` 续接成功的文件运行。缩进的 REPL 块用空行结束。会话输出包含交互文本；最终 JSON 检查应使用单独的批量命令。
+书写迭代时，用 `litex -session -f path/to/file.lit` 一次加载已通过前缀，并在同一个 REPL 中继续；也可以先接受一个值：
+
+```bash
+litex -lang en -session -e 'have a R = 2'
+```
+
+每次分别提交一条语句；失败 JSON 在这里被缩略：
+
+```text
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
+```
+
+失败语句之后，`a = 2` 仍然可用。作为对照，分别运行 `litex -e 'have a R = 2'` 和 `litex -e 'a + 1 = 3'` 不能共享声明，第二条会失败。不要每做一个小改动就重新加载此前所有已接受语句。缩进的 REPL 块用空行结束。在连贯的阶段检查点和最终 JSON 检查时，另行运行批量命令。进程停止或上下文必须改变时，重启并重放已接受源码；见 [Agent Guide](Litex智能体指南.md)。
 
 机器读取时使用 `-lang en`。要求退出码为 0，且批量封装具有以下字段（省略其他字段）：
 

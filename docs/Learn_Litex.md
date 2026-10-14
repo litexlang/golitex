@@ -9,6 +9,12 @@ proof. This course takes you through the decisions needed to make a small
 mathematical development in Litex: what the objects are, where they are defined,
 what is already known, and what still needs to be proved.
 
+> **Litex is well suited to interactive work with AI: propose a mathematical
+> step, check it, read feedback, and revise or continue. Open `-session` and
+> keep the same process; ordinary failures preserve earlier accepted definitions
+> and facts. Do not rerun everything from the beginning after adding a few
+> lines.** See the [short code comparison](#keep-accepted-work-during-interactive-repair).
+
 You need basic arithmetic and school algebra. No programming or proof-assistant
 experience is assumed. Plan for about **90 minutes for the main course** and
 **30 minutes for the optional extensions**, including time to run and change
@@ -41,10 +47,12 @@ then run it, and finally try the suggested change. If you are reading on GitHub
 or in a downloaded Markdown file, all the explanations and code are here;
 the course does not depend on a particular page interface.
 
-Each `litex` code block is a complete independent example. Start a fresh
-playground run for each block, or save it in its own `.lit` file. Blocks marked
-`text` show an intentional failure, a fragment, or a transcript; their captions
-explain which. Do not paste them into a passing file without making the repair.
+Each `litex` code block is a complete independent example. Use an independent
+context when moving to a different example, or save it in its own `.lit` file.
+While extending or repairing one example locally, keep the same `-session`.
+Blocks marked `text` show an intentional failure, a fragment, or a transcript;
+their captions explain which. Do not paste them into a passing file without
+making the repair.
 
 ## Choose where to run examples
 
@@ -60,7 +68,7 @@ litex -version
 litex -strict -e '1 + 1 = 2'
 ```
 
-To check a saved file in English:
+For a baseline or final check of a saved file in English:
 
 ```bash
 litex -lang en -strict -f first.lit
@@ -566,18 +574,35 @@ infer the negation of any proposition merely because Litex failed to prove it.
 
 ### Keep accepted work during interactive repair
 
-For local experiments, start `litex` in your exercise directory. Submit one
-top-level statement at a time; end an indented block with a blank line.
-This **illustrative transcript** abbreviates the failure output:
+For local authoring, open `-session` in your exercise directory with an
+accepted declaration:
+
+```bash
+litex -lang en -session -e 'have a R = 2'
+```
+
+Submit one top-level statement at a time to that same process; end an indented
+block with a blank line. This checked transcript abbreviates the failure JSON:
 
 ```text
-litex> have x R = 2
-success
-litex> x = 3
-[failed verification JSON]
-litex> x + 1 = 3
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
 success
 ```
+
+`a = 3` fails, but the accepted `a = 2` still supports the next calculation.
+Compare with independent processes:
+
+```bash
+litex -lang en -e 'have a R = 2'
+litex -lang en -e 'a + 1 = 3'
+```
+
+The first command succeeds; the second fails because it has no declaration of
+`a`. It would need the accepted source loaded again. For a passing saved file,
+start `litex -session -f first.lit` once, then keep submitting new statements.
+Do not restart or rerun the whole file after each small edit.
 
 After a normal failure that returns to the prompt, the accepted declaration
 still exists. Repair the failed statement in that same session. A compound
@@ -824,21 +849,25 @@ claiming a unique square-four root would fail.
 
 Give the agent a mathematical problem, the relevant definitions, and the
 current checked source. Ask for the natural-language proof idea before code.
-A useful request for this course is:
+Litex's direct mathematical statements, explicit verification feedback, and
+retained Session context give that agent a concrete interaction loop. A useful
+request for this course is:
 
 ```text
 Define reciprocal on nonzero real inputs in Litex.
 Prove reciprocal(x) * x = 1 under that input condition.
 Explain the proof idea, then return a complete standalone .lit file.
 Use no trust or axiom. Keep the domain and conclusion unchanged.
+Write and repair statements in one live -session; retain accepted context
+after ordinary failures. Do not rerun the whole file after each small edit.
 Run the checker; if it fails, show the first failed obligation and the
 smallest repair. Finish with a clean whole-file check and its result.
 ```
 
 The loop is the one you have practiced: propose a statement or proof step,
-check it, read the feedback, repair it, and retain accepted work. Normal
-interactive failures need not erase earlier successes. Save the source so a
-fresh process can reproduce the complete result.
+check it, read the feedback, repair it, and retain accepted work in the same
+`-session`. Normal interactive failures preserve earlier successes. Save the
+source so a fresh process can reproduce the complete result.
 
 The [Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
 shows this collaboration loop between people, AI, and the verifier.

@@ -2,75 +2,61 @@
 
 # Litex 智能体指南
 
-> **修复证明时，保持同一个活动 Session。普通语句失败不会清除该会话中已经接受的定义和事实。修正失败语句，再提交给同一个进程。**
+> **必须遵守：编写或修复 Litex 代码时，开启 `-session`，在整个迭代过程中保持同一个活动进程。绝不要每加几条新代码，就把整个文件从头重新跑一遍。**
+>
+> **普通语句失败不会清除该 Session 中已经接受的定义和事实。只修正失败的语句，再提交给同一个进程，然后利用已有上下文继续写。**
+
+**Litex 适合与 AI 交互。** Agent 可以每次提出一条数学语句，查看验证反馈，再修正下一次输入；Session 保留已接受的定义和事实。这让 agent 能持续进行“提出、检查、修正、继续”的循环。
 
 Litex 逐条语句构建数学上下文。复用上下文既保留先前证明工作，也保留加载章节或模块依赖所付出的成本。重启会创建新上下文；仅编辑源文件不会更新正在运行的进程。
+
+只加载一次已接受前缀，随后把新语句提交给这个活动 Session。完整文件运行用于基线检查、连贯的阶段检查点和最终验证，不能代替 Session 成为每次尝试的书写循环。
 
 <a id="see-why-keeping-the-session-matters"></a>
 
 ## 为什么保留 Session 很重要
 
-这个有意构造的教学例子使用不透明谓词，让算术不能自动证明结果。`ready_at_seven` 是显式教学假设，不是数学定理的证明。绝不能只为让真实失败证明通过而添加公理。
-
-在没有 `litex.config` 的目录中启动：
+在没有 `litex.config` 的目录中，先接受一条声明：
 
 ```bash
-litex -lang en -session -e 'abstract_prop ready(n)'
+litex -lang en -session -e 'have a R = 2'
 ```
 
-在**同一个进程中，每次输入一条**以下语句。记录中的失败 JSON 被缩略；验收记录保留完整输出。
+随后在**同一个进程中，每次输入一条**语句。失败 JSON 在这里被缩略：
 
 ```text
-litex> axiom ready_at_seven:
-...     ? forall n N:
-...         n = 7
-...         =>:
-...             $ready(n)
-...
-success
-litex> $ready(8)
+litex> a = 3
 {"run_result": "failure", ..., "session_terminated": false, "termination": null}
-litex> $ready(7)
+litex> a + 1 = 3
 success
 ```
 
-最后一次成功使用第一条语句存储的事实。失败的 `$ready(8)` 不会清除 `$ready(7)`，也不会成为存储事实。再次尝试 `$ready(8)` 仍失败。如果重启时只加载相同的 `abstract_prop ready(n)` 声明，`$ready(7)` 也失败：新进程有谓词签名，却没有旧进程的公理。重放已接受语句才能恢复缺失上下文。
+失败的 `a = 3` 不会移除已接受的声明及其事实 `a = 2`。下一句立即使用这个事实。不需要重写声明，也不需要重启进程再尝试。
 
-明确展示新进程对照：再次启动同一命令，再逐条分别输入：
+对照两个独立命令：
 
-```text
-litex> $ready(7)
-{"run_result": "failure", ..., "session_terminated": false, "termination": null}
-litex> axiom ready_at_seven:
-...     ? forall n N:
-...         n = 7
-...         =>:
-...             $ready(n)
-...
-success
-litex> $ready(7)
-success
+```bash
+litex -lang en -e 'have a R = 2'
+litex -lang en -e 'a + 1 = 3'
 ```
 
-额外重放就是重启带来的工作。普通候选失败后保留活动 Session；保存日志，以便不可避免的重启能恢复已接受前缀。失败候选本身不属于该前缀。
-
-实际比较如下：
+第一条成功；第二条失败，因为新进程没有 `a` 的声明。重启后必须加载或重放已接受代码。重新运行整个文件也能补回上下文，但会重复此前的每一条语句；书写迭代应直接继续使用活动 Session。
 
 | 候选失败之后 | 下一次尝试 |
 | --- | --- |
-| 保留同一 Session | 先前已接受的定义和事实立即可用。 |
-| 启动新 Session | 继续前须重新加载模块上下文，并重放已接受前缀。 |
+| 保留同一个 `-session` | 先前已接受的定义和事实立即可用。 |
+| 启动新进程 | 继续前须重新加载模块上下文，并重放已接受前缀。 |
 
-长篇教材前缀与这一条已存储事实具有相同的行为。示例展示上下文保留；不测量速度提升，也不确立自动证明发现能力。
+长篇教材前缀与 `a = 2` 遵循同一条规则。示例不使用用户 `trust` 或 `axiom`，展示的是上下文保留，不是实测速度提升或自动证明发现能力。将已接受源码保存在进程之外，以便不可避免的重启能恢复它。
 
 <a id="use-the-session-as-the-proof-writing-loop"></a>
 
 ## 用 Session 进行证明书写循环
 
-1. 理解目标数学，查看已有内置、库和模块接口。一次加载所需上下文。
-2. 按源码顺序，每次提交一条顶层语句。`claim` 或定理及其完整嵌套证明构成一条语句。发送下一候选前读完响应；多行输入用空行结束。
+1. 理解目标数学，查看已有内置、库和模块接口。开启 `-session`，一次加载所需的已接受上下文。
+2. 按源码顺序，向同一个活动 Session 每次提交一条顶层语句。`claim` 或定理及其完整嵌套证明构成一条语句。发送下一候选前读完响应；多行输入用空行结束。
 3. 收到 REPL 的纯文本 `success` 回复（它不是 JSON 字段）时，记录已接受源码并继续。普通失败若有 `session_terminated: false`, `termination: null` 且重新出现 `litex>` 提示符，应保持进程并修复当前语句。失败表示缺少证明或良定义性证据，不是命题否定的证明。
-4. 在连贯的检查点保存已接受代码，另行运行干净文件检查。交互上下文不能替代可复现文件。
+4. 在连贯的阶段检查点或最终验证时保存已接受代码，另行运行干净文件检查，并保持书写用的 Session 开启。不要每加一条语句或几条新代码就重新运行整个文件。交互上下文不能替代可复现文件。
 
 **事务边界是语句，而不是整段粘贴输入。** 失败语句丢弃自身暂存的解析绑定与执行状态。先前成功语句保留。如果一个输入帧包含多条顶层语句，即使整帧 `run_result` 为 `"failure"`，成功语句也可以提交；软失败不会阻止后续语句。不要假定整个候选片段都已回滚，也不要盲目重新提交已经提交的名称。在活动进程之外记录已接受前缀，使其可在重启或中断后恢复。
 
@@ -102,7 +88,7 @@ target/release/litex -lang en -f accepted-prefix.lit -session
 
 ## 验证保存的产物并找到参考
 
-使用干净的 `target/release/litex -lang en -f <file>` 检查。要求退出码为 0，解析 JSON 后有 `kind: run`、`run_result: "success"` 和 `session_terminated: false`, `termination: null`。需要排除用户公理和 trust 时使用 `-strict`；上述教学公理在严格模式下会被有意拒绝。`-r` 留给显式要求的整模块检查。见 [CLI 输出](Litex命令行参考.md#json-output-contract)。
+使用干净的 `target/release/litex -lang en -f <file>` 检查。要求退出码为 0，解析 JSON 后有 `kind: run`、`run_result: "success"` 和 `session_terminated: false`, `termination: null`。需要排除用户公理和 trust 时使用 `-strict`；上述已接受声明和成功的后续语句也能通过干净的严格文件检查，保存时应排除被拒绝的候选。`-r` 留给显式要求的整模块检查。见 [CLI 输出](Litex命令行参考.md#json-output-contract)。
 
 | 需要 | 阅读 |
 | --- | --- |
@@ -112,4 +98,4 @@ target/release/litex -lang en -f accepted-prefix.lit -session
 | 模块接口与章节依赖 | 所属模块的 `README.md`、`math_collections.md` 和 `litex.config` |
 | 仓库授权与仅限本地的边界 | [AGENTS.md](../AGENTS.md) 和适用的仓库策略技能 |
 
-会话边界包括：同进程保留已接受语句、新进程需要重放、失败复合语句回滚、混合帧逐语句提交、硬错误终止，以及严格模式拒绝公理。上面的示例用于理解这些边界，不构成 agent 性能结论。
+会话边界包括：同进程保留已接受语句、新进程需要重放、失败复合语句回滚、混合帧逐语句提交、硬错误终止，以及严格模式拒绝公理。这些规则区分普通修复与有意重启；示例不构成 agent 性能结论。
