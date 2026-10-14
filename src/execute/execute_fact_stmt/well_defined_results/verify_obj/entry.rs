@@ -61,9 +61,7 @@ impl VerifyObjWellDefinedResult {
 
 impl Runtime {
     // Known-memory lookup across the env stack, then prove by definition.
-    // Successful WD is memoized in the current temp env so nested arithmetic
-    // (child WD, then `$in C` re-checking the same child) stays linear.
-    // Soft-fail discards the temp env; commit still merges as before.
+    // Search returns evidence only; checked atomic subjects are cached at commit.
     pub fn verify_obj_well_definedness(
         &mut self,
         obj: &Obj,
@@ -78,35 +76,14 @@ impl Runtime {
             ));
         }
 
-        let result = self.verify_obj_well_definedness_uncached(obj, verify_state)?;
-        Ok(self.memoize_successful_obj_wd(result))
-    }
-
-    fn memoize_successful_obj_wd(
-        &mut self,
-        result: VerifyObjWellDefinedResult,
-    ) -> VerifyObjWellDefinedResult {
-        let VerifyObjWellDefinedResult::Success(proof) = &result else {
-            return result;
-        };
-        // Named objects keep definition evidence; skip a second WD cache entry.
-        if matches!(proof.obj(), Obj::Identifier(_)) {
-            return result;
+        // Eval closed-numeric mode: children + domain checks only (no per-node
+        // `$in C`). See closed_numeric_eval_wd.rs.
+        if self.eval_closed_numeric_source_wd
+            && crate::rational_expression::ClosedNumericExpr::try_from_obj(obj).is_some()
+        {
+            return self.verify_closed_numeric_source_node_without_carrier(obj, verify_state);
         }
-        if self.well_defined_visible_in_stack(proof.obj()).is_none() {
-            let id = self.global_ids.allocate_well_definedness_id();
-            self.top_exec_env_mut()
-                .well_defined_objects
-                .record(proof.obj().clone(), id);
-        }
-        result
-    }
 
-    fn verify_obj_well_definedness_uncached(
-        &mut self,
-        obj: &Obj,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         // Identifier: must be defined in the current env stack.
         if let Obj::Identifier(value) = obj {
             return self.verify_identifier_obj_well_definedness(value, verify_state);
@@ -208,37 +185,7 @@ impl Runtime {
             }),
         }
     }
-}
 
-#[cfg(test)]
-mod nested_arithmetic_wd_memo_tests {
-    use crate::launch_command::{LaunchCommand, OutputLanguage};
-    use crate::runtime::Runtime;
-
-    fn runtime() -> Runtime {
-        Runtime::new(LaunchCommand::Eval {
-            code: String::new(),
-            session: false,
-            strict: true,
-            language: OutputLanguage::English,
-        })
-    }
-
-    #[test]
-    fn deep_left_associated_mul_chain_stays_linear() {
-        // Without temp-env WD memoization this is exponential in the chain length.
-        let mut rt = runtime();
-        let expr = std::iter::repeat("2")
-            .take(80)
-            .collect::<Vec<_>>()
-            .join(" * ");
-        let run = rt.run_litex_code(&format!("eval {expr}")).unwrap();
-        assert!(run.success, "eval {expr}");
-        assert!(run.session_error.is_none());
-    }
-}
-
-impl Runtime {
     // Big match: every Obj variant has its own by-def branch function.
     // Branches return CommonStages; entry packs into Obj-mirrored Success/Failed.
     fn verify_obj_well_definedness_by_def(

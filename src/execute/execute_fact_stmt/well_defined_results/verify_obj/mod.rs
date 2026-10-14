@@ -4,6 +4,7 @@
 //! ByDef success proofs mirror Obj. Scalar (P0) fills requirement facts.
 
 mod binder;
+mod closed_numeric_eval_wd;
 mod core;
 mod entry;
 pub(crate) mod fail_to_verify_obj_well_defined;

@@ -11,6 +11,7 @@ _“Language is an instrument of human reason, and not merely a medium for the e
 
 _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
+[中文 README](docs/中文README.md) ·
 [Official Website (官网)](https://litexlang.com) ·
 [Read the Blueprint](docs/Litex_Blueprint.md) ·
 [阅读中文蓝图](docs/Litex中文蓝图.md)

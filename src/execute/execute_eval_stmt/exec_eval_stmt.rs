@@ -32,13 +32,29 @@ pub fn exec_eval_stmt(
     runtime: &mut Runtime,
     stmt: &EvalStmt,
 ) -> RuntimeResult<ExecCommandStmtResult> {
+    // Closed-numeric sources use eval-local linear WD (no per-node `$in C`
+    // re-entry). Other sources keep ordinary object WD.
     let source_well_defined =
-        match runtime.verify_obj_well_definedness(&stmt.obj_to_eval, proof_verify_state())? {
-            VerifyObjWellDefinedResult::Success(proof) => proof,
-            failed => {
-                return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
-                    ExecEvalStmtFailed::WellDefined(Box::new(failed)),
-                )));
+        if crate::rational_expression::ClosedNumericExpr::try_from_obj(&stmt.obj_to_eval).is_some()
+        {
+            match runtime
+                .verify_closed_numeric_source_for_eval(&stmt.obj_to_eval, proof_verify_state())?
+            {
+                VerifyObjWellDefinedResult::Success(proof) => proof,
+                failed => {
+                    return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                        ExecEvalStmtFailed::WellDefined(Box::new(failed)),
+                    )));
+                }
+            }
+        } else {
+            match runtime.verify_obj_well_definedness(&stmt.obj_to_eval, proof_verify_state())? {
+                VerifyObjWellDefinedResult::Success(proof) => proof,
+                failed => {
+                    return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                        ExecEvalStmtFailed::WellDefined(Box::new(failed)),
+                    )));
+                }
             }
         };
     let (rewritten_object, mut cited_equal_fact_ids) =
@@ -92,14 +108,26 @@ pub fn exec_eval_stmt(
         right: evaluated_object.clone(),
         line_file: Some(stmt.line_file.clone()),
     };
-    let evaluated_equal_well_defined = match runtime
-        .verify_equal_fact_well_definedness(&evaluated_equal_fact, proof_verify_state())?
-    {
-        VerifyEqualFactWellDefinedResult::Success(proof) => proof,
-        failed => {
-            return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
-                ExecEvalStmtFailed::EvaluatedEqualityWellDefined(Box::new(failed)),
-            )))
+    // Reuse eval closed-numeric WD mode for `expr = value` so the left side is
+    // not re-expanded with ordinary per-node `$in C` WD.
+    let evaluated_equal_well_defined = {
+        let previous = runtime.eval_closed_numeric_source_wd;
+        let closed_left =
+            crate::rational_expression::ClosedNumericExpr::try_from_obj(&evaluated_equal_fact.left)
+                .is_some();
+        if closed_left {
+            runtime.eval_closed_numeric_source_wd = true;
+        }
+        let result =
+            runtime.verify_equal_fact_well_definedness(&evaluated_equal_fact, proof_verify_state());
+        runtime.eval_closed_numeric_source_wd = previous;
+        match result? {
+            VerifyEqualFactWellDefinedResult::Success(proof) => proof,
+            failed => {
+                return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                    ExecEvalStmtFailed::EvaluatedEqualityWellDefined(Box::new(failed)),
+                )))
+            }
         }
     };
     // The exact computation and checked defining equations above establish the

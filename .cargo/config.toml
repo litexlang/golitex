@@ -1,0 +1,5 @@
+# Deep-recursion fixtures in the test suite overflow libtest's default thread
+# stack. Give spawned test threads a larger minimum stack instead of wrapping
+# individual tests in big-stack threads.
+[env]
+RUST_MIN_STACK = "67108864"
