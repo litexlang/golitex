@@ -1,7 +1,10 @@
 use super::fact::{
     and_chain, atomic, conclusions, exist_shaped, fact, facts, forall, parameters, quantifier_frees,
 };
-use super::helper::{display, escape_text, ident, identifier, inline, name, parens};
+use super::helper::{
+    call_parens, display, escape_text, group_if_compound, ident, identifier, inline, name,
+    predicate_or_fn_call,
+};
 use super::language::{phrase, sentence, Phrase};
 use super::obj::{fn_set, function_space, obj};
 use crate::ast::fact::{Fact, ForallFact};
@@ -76,7 +79,7 @@ fn statement(
                 say(Phrase::ContradictionMethod, "", "", ""),
                 say(
                     Phrase::Suppose,
-                    &inline(&format!(r"\neg {}", parens(&f(&x.to_prove)?))),
+                    &inline(&format!(r"\neg {}", group_if_compound(&f(&x.to_prove)?))),
                     "",
                     ""
                 ),
@@ -292,10 +295,9 @@ fn statement(
                 for y in &x.atomic_fact.body {
                     args.push(o(y)?);
                 }
-                let goal = format!(
-                    "{}{}",
-                    name(&x.atomic_fact.predicate, modules)?,
-                    parens(&args.join(", "))
+                let goal = predicate_or_fn_call(
+                    &name(&x.atomic_fact.predicate, modules)?,
+                    &args.join(", "),
                 );
                 format!(
                     "{}{}",
@@ -355,9 +357,8 @@ fn definition(
                 }
             }
             let equation = format!(
-                "{}{} = {}",
-                ident(&x.name.name),
-                parens(&names.join(", ")),
+                "{} = {}",
+                predicate_or_fn_call(&ident(&x.name.name), &names.join(", ")),
                 obj(&fun.equal_to, modules, lang)?
             );
             format!(
@@ -432,21 +433,25 @@ fn definition(
                 }
             }
             let body = format!(
-                r"{}{}\Longleftrightarrow{}",
-                ident(&x.name),
-                parens(&args.join(", ")),
-                parens(&facts(&x.iff_facts, modules, lang)?)
+                r"{} \Longleftrightarrow {}",
+                predicate_or_fn_call(&ident(&x.name), &args.join(", ")),
+                group_if_compound(&facts(&x.iff_facts, modules, lang)?)
             );
-            format!(
-                "{}{}",
-                heading(Phrase::Definition, &x.name, lang),
-                say(
-                    Phrase::ForEvery,
-                    &inline(&parameters(&x.typed_parameters, modules, lang)?),
-                    &inline(&body),
-                    ""
+            let heading_text = heading(Phrase::Definition, &x.name, lang);
+            if x.typed_parameters.groups.is_empty() {
+                format!("{}{}", heading_text, display(&body))
+            } else {
+                format!(
+                    "{}{}",
+                    heading_text,
+                    say(
+                        Phrase::ForEvery,
+                        &inline(&parameters(&x.typed_parameters, modules, lang)?),
+                        &inline(&body),
+                        ""
+                    )
                 )
-            )
+            }
         }
         DefinitionStmt::DefAbstractPropStmt(x) => {
             let args = x
@@ -460,7 +465,7 @@ fn definition(
                 heading(Phrase::AbstractPredicate, &x.name, lang),
                 say(
                     Phrase::Let,
-                    &inline(&format!("{}{}", ident(&x.name), parens(&args))),
+                    &inline(&predicate_or_fn_call(&ident(&x.name), &args)),
                     "",
                     ""
                 )
@@ -642,11 +647,7 @@ fn define_obj(
             for a in &x.fact.body {
                 args.push(obj(a, modules, lang)?);
             }
-            let source = format!(
-                "{}{}",
-                name(&x.fact.predicate, modules)?,
-                parens(&args.join(", "))
-            );
+            let source = predicate_or_fn_call(&name(&x.fact.predicate, modules)?, &args.join(", "));
             say(
                 Phrase::Choose,
                 &inline(&bound_names(&x.equal_tos)),
@@ -728,7 +729,7 @@ fn theorem_call(
         for arg in args {
             items.push(obj(arg, modules, lang)?);
         }
-        text.push_str(&parens(&items.join(", ")));
+        text.push_str(&call_parens(&items.join(", ")));
     }
     Ok(text)
 }
@@ -765,9 +766,8 @@ fn function_cases(
         heading(label, &value.name, lang),
         function_signature(value, clause, modules, lang)?,
         display(&format!(
-            "{}{} = \\begin{{cases}}\n{}\n\\end{{cases}}",
-            ident(&value.name),
-            parens(&names.join(", ")),
+            "{} = \\begin{{cases}}\n{}\n\\end{{cases}}",
+            predicate_or_fn_call(&ident(&value.name), &names.join(", ")),
             rows.join(" \\\\\n")
         ))
     ))
@@ -822,7 +822,7 @@ fn function_induction(
             names.push(ident(&p.name));
         }
     }
-    let head = format!("{}{}", ident(&value.name), parens(&names.join(", ")));
+    let head = predicate_or_fn_call(&ident(&value.name), &names.join(", "));
     out.push_str(&inductive_cases(cases, &head, modules, lang)?);
     Ok(out)
 }

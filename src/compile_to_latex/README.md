@@ -96,7 +96,7 @@ Missing configs and import cycles fail before successful artifact output.
 | Source family | LaTeX representation |
 | --- | --- |
 | Numeric, set, function, tuple, template, struct/field objects | Mathematical notation, grouped operators, bounded domains and canonical names |
-| Atomic/chain/and/or facts | Relations and explicitly scoped logical formulae |
+| Atomic/chain/and/or facts | Relations and logical formulae; parentheses only when a compound connective needs grouping |
 | forall, forall-iff, exists, unique exists, negated quantifiers | Bound variables/carriers with preserved quantifier and connective scope |
 | let/have/obtain/preimage/replacement | Localized introduction, choice and definition sentences |
 | Functions by expression/cases/induction/unique existence | Function signature, equations, case arrays, measure and lower bound |

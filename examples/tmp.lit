@@ -1,12 +1,52 @@
-# Range/list equality expansion budget (1024).
-have anchor R = 2
+have fn distance_from_zero(x R) R = |x|
 
-# Over-budget / hostile: soft-fail, no billion-Obj materialization.
-closed_range(0, 1000000000) = {0}
-range(0, 1000000000) = {}
+prop is_nonnegative(t R):
+    t >= 0
 
-# Positive under budget.
-closed_range(1, 3) = {1, 2, 3}
-range(1, 4) = {1, 2, 3}
+claim:
+    ? forall x R:
+        $is_nonnegative(distance_from_zero(x))
+    distance_from_zero(x) = |x| >= 0
+    by def $is_nonnegative(distance_from_zero(x))
 
-anchor + 1 = 3
+forall x R:
+    distance_from_zero(x) = |x| >= 0
+
+forall z R:
+    =>:
+        z = 0
+    <=>:
+        z^2 = 0
+
+exist! k N st {k = 0}
+
+not forall t R:
+    t > 0
+
+1 = 2 = 3
+
+prop a():
+    0 = 0
+
+prop b():
+    1 = 1
+
+prop c():
+    2 = 2
+
+$a() and $b() and $c()
+$a() or $b()
+not $a()
+
+forall x R:
+    x > 0
+    x != 0
+    =>:
+        x^2 > 0
+
+have x R
+sin(x) = sin(x)
+log(2, 8) = log(2, 8)
+(1 + 2) * 3 = 9
+distance_from_zero(x + 1) = distance_from_zero(x + 1)
+cart(R, R) = cart(R, R)

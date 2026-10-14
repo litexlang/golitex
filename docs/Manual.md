@@ -4722,7 +4722,7 @@ forall a C:
 
 **Common native properties and proof routes.** Commutativity, associativity, one/zero identities and carrier closure.
 
-**Nearest boundary.** Cancelling a factor requires a justified nonzero condition; zero factors cannot be divided away.
+**Nearest boundary.** Cancelling a factor requires a justified nonzero condition; zero factors cannot be divided away. Exact evaluation also declines products whose normalized decimal length would exceed the shared exact-decimal digit budget used by integer powers and factorial — including when each factor alone is within budget (for example `10^99 * 10^99`).
 
 **Checked example.**
 
@@ -4747,7 +4747,7 @@ forall a, b C:
 
 **Common native properties and proof routes.** Closed powers and supported exponent identities. Natural exponent zero uses the native a^0 = 1 convention.
 
-**Nearest boundary.** Negative bases with noninteger exponents and general complex exponents remain unsupported. Zero to a negative power is rejected. WD does not imply that every symbolic identity or exact calculation is available.
+**Nearest boundary.** Negative bases with noninteger exponents and general complex exponents remain unsupported. Zero to a negative power is rejected. WD does not imply that every symbolic identity or exact calculation is available. Exact integer-power evaluation declines results above the shared exact-decimal digit budget; multiplication chains cannot bypass that budget by combining in-budget powers.
 
 **Checked example.**
 
@@ -5022,7 +5022,7 @@ lcm(0, 3) = 0
 
 **Common native properties and proof routes.** Positive natural result; 0! = 1 and the successor recurrence.
 
-**Nearest boundary.** Negative or noninteger arguments do not satisfy the native factorial domain.
+**Nearest boundary.** Negative or noninteger arguments do not satisfy the native factorial domain. Exact evaluation of `factorial(n)` / `n!` shares the integer-power exact-decimal digit budget: results whose normalized decimal length would exceed that budget decline calculation instead of expanding unbounded intermediates.
 
 **Checked example.**
 
@@ -5619,7 +5619,7 @@ product_set = product_set
 
 **Common native properties and proof routes.** Finiteness and displayed cardinality; singleton membership implies equality, and longer-list membership exposes equality alternatives. Displayed membership can use a matching element equality.
 
-**Nearest boundary.** Unlike informal set notation, duplicate entries or unknown pairwise inequality can fail WD. Distinctness is part of this constructor contract.
+**Nearest boundary.** Unlike informal set notation, duplicate entries or unknown pairwise inequality can fail WD. Distinctness is part of this constructor contract. Displayed lists also share the finite-term element budget used by aggregates: lists longer than that budget fail WD without expanding the full pairwise check.
 
 **Checked example.**
 
@@ -9641,7 +9641,10 @@ Symbolic real powers use the separate WD branches below; this exact-calculation
 branch does not calculate nonpositive bases with noninteger exponents. The domain does not depend on whether the result is rational:
 `let u = 2^(1/3)` is allowed, while `eval 2^(1/3)` declines. Nonperfect roots
 and checked `i128` overflow decline calculation; existing integer-power
-domains, including `0^0=1`, remain unchanged.
+domains, including `0^0=1`, remain unchanged. Closed exact evaluation also
+shares one exact-decimal digit budget across powers, factorial, and ordinary
+arithmetic results: a product of in-budget factors can still decline when the
+normalized product would exceed that budget.
 
 Exact numeric calls normalize inside ordinary facts or `eval` statements:
 

@@ -1,5 +1,5 @@
 use super::fact::quantifier_free;
-use super::helper::{ident, identifier, name, operator, parens};
+use super::helper::{call_parens, ident, identifier, join_land, name, operator, parens};
 use crate::ast::obj::*;
 use crate::launch_command::OutputLanguage;
 use crate::module_manager::GlobalModuleManager;
@@ -94,7 +94,7 @@ fn expression(
                 ExpLogOperator::Exp(x) => format!(r"\mathrm{{e}}^{{{}}}", o(&x.arg)?),
                 ExpLogOperator::Ln(x) => operator("ln", &[o(&x.arg)?]),
                 ExpLogOperator::Log(x) => {
-                    format!(r"\log_{{{}}}{}", o(&x.base)?, parens(&o(&x.arg)?))
+                    format!(r"\log_{{{}}}{}", o(&x.base)?, call_parens(&o(&x.arg)?))
                 }
                 ExpLogOperator::Sqrt(x) => format!(r"\sqrt{{{}}}", o(&x.arg)?),
             },
@@ -163,13 +163,13 @@ fn expression(
                 SetFormer::SetBuilder(x) => {
                     let mut facts = Vec::new();
                     for f in &x.facts {
-                        facts.push(parens(&quantifier_free(f, modules, lang)?));
+                        facts.push(quantifier_free(f, modules, lang)?);
                     }
                     format!(
                         r"\left\{{{}\in {}\;\middle|\;{}\right\}}",
                         ident(&x.param_binding.name),
                         o(&x.param_set)?,
-                        facts.join(r" \land ")
+                        join_land(facts)
                     )
                 }
                 SetFormer::Range(x) => integer_range(&o(&x.start)?, &o(&x.end)?, false),
@@ -233,7 +233,7 @@ fn expression(
                 for y in &x.args {
                     items.push(o(y)?);
                 }
-                (parens(&items.join(", ")), 50)
+                (call_parens(&items.join(", ")), 50)
             }
         },
         Obj::FunctionSpace(x) => (
@@ -252,9 +252,9 @@ fn expression(
         ),
         Obj::FnObj(x) => {
             let mut head = match x.head.as_ref() {
-                FnObjHead::Object(value) => parens(&obj(value, modules, lang)?),
+                FnObjHead::Object(value) => call_parens(&obj(value, modules, lang)?),
                 FnObjHead::Identifier(x) => identifier(x, modules)?,
-                FnObjHead::AnonymousFnLiteral(x) => parens(&anonymous(x, modules, lang)?),
+                FnObjHead::AnonymousFnLiteral(x) => call_parens(&anonymous(x, modules, lang)?),
                 FnObjHead::FieldAccess(x) => field_access(x, modules, lang)?,
                 FnObjHead::InstantiatedTemplateObj(x) => template(x, modules, lang)?,
             };
@@ -263,7 +263,7 @@ fn expression(
                 for arg in group {
                     args.push(o(arg)?);
                 }
-                head.push_str(&parens(&args.join(", ")));
+                head.push_str(&call_parens(&args.join(", ")));
             }
             (head, 50)
         }
@@ -380,22 +380,22 @@ pub(super) fn function_space(
     if !dom.is_empty() {
         let mut conditions = Vec::new();
         for f in dom {
-            conditions.push(parens(&quantifier_free(f, modules, lang)?));
+            conditions.push(quantifier_free(f, modules, lang)?);
         }
         let binding = if names.len() == 1 {
             names[0].clone()
         } else {
-            parens(&names.join(", "))
+            call_parens(&names.join(", "))
         };
         domain = format!(
             r"\left\{{{}\in {}\;\middle|\;{}\right\}}",
             binding,
             domain,
-            conditions.join(r" \land ")
+            join_land(conditions)
         );
     }
     if carriers.len() > 1 && dom.is_empty() {
-        domain = parens(&domain);
+        domain = call_parens(&domain);
     }
     Ok(format!(r"{}\to {}", domain, obj(ret, modules, lang)?))
 }
@@ -414,7 +414,7 @@ pub(super) fn anonymous(
     Ok(format!(
         r"\left[\begin{{array}}{{c}}{}\\{}\mapsto {}\end{{array}}\right]",
         fn_set(&value.body, modules, lang)?,
-        parens(&params.join(", ")),
+        call_parens(&params.join(", ")),
         obj(&value.equal_to, modules, lang)?
     ))
 }

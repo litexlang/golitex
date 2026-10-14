@@ -30,7 +30,7 @@ fn identity_has_ten_localized_latex_renderings() {
             "{lang:?}: {text}"
         );
         assert!(text.contains(r"x\in \mathbb{R}"), "{text}");
-        assert!(text.contains(r"\mathit{identity}\left(2\right)"), "{text}");
+        assert!(text.contains(r"\mathit{identity}(2)"), "{text}");
         assert!(text.contains(r"\(2 = 2\)"), "{text}");
         assert!(!text.contains("@a@") && !text.contains("#1#"));
         if lang != OutputLanguage::English {
@@ -73,9 +73,7 @@ fn math_grouping_quantifier_scope_and_kinds_are_preserved() {
     assert!(text.contains(r"S:\text{set};\ x\in S"), "{text}");
     assert!(!text.contains(r"S\in \text{set}"));
     assert!(
-        text.contains(
-            r"\forall z\in \mathbb{R}:\ \left(\left(z = 0\right)\right)\Longleftrightarrow"
-        ),
+        text.contains(r"\forall z\in \mathbb{R}:\ z = 0 \Longleftrightarrow"),
         "{text}"
     );
     assert!(text.contains(r"\exists!"));
@@ -224,4 +222,23 @@ fn empty_forall_binders_do_not_create_empty_quantification() {
     let text = to_latex_from_source("forall:\n    1 = 1", OutputLanguage::Chinese).unwrap();
     assert!(text.contains("1 = 1"));
     assert!(!text.contains("对任意") && !text.contains(r"\forall"));
+}
+
+#[test]
+fn single_conclusions_and_calls_omit_redundant_parentheses() {
+    let text = to_latex_from_source(
+        "have fn distance_from_zero(x R) R = |x|\nforall x R:\n    distance_from_zero(x) = |x| >= 0\nprop a():\n    0 = 0\nexist! k N st {k = 0}\nnot $a()",
+        OutputLanguage::English,
+    )
+    .unwrap();
+    assert!(
+        text.contains(r"we have \(\mathit{distance\_from\_zero}(x) = \left|x\right| \geq 0\)"),
+        "{text}"
+    );
+    assert!(!text.contains(r"we have \(\left("), "{text}");
+    assert!(text.contains(r"a \Longleftrightarrow"), "{text}");
+    assert!(!text.contains(r"For every \(\)"), "{text}");
+    assert!(text.contains(r"\exists! k\in \mathbb{N}:\ k = 0"), "{text}");
+    assert!(text.contains(r"\neg a"), "{text}");
+    assert!(!text.contains(r"a\left("), "{text}");
 }

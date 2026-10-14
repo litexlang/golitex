@@ -22,11 +22,20 @@ use crate::rational_expression::helper::{
 //   examples/.../calculation_closed_decimal_complex_nested.lit
 //   e.g. `sqrt(4) * log(2, 8) + floor(2.5)!`, `((-7) % 3)^log(2, 4) + sqrt(0.36)`.
 pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
-    evaluate_decimal_tree(obj).or_else(|| {
+    // Shared exact-decimal digit budget with integer powers / factorial: any
+    // closed calculation result (including mul chains of in-budget powers) that
+    // would exceed it declines instead of storing unbounded digit strings.
+    // Example: `10^99` is allowed; `10^99 * 10^99` soft-fails.
+    let number = evaluate_decimal_tree(obj).or_else(|| {
         let exact = super::exact_rational::EvalRational::from_obj(obj)?;
         let (numerator, denominator) = exact.parts();
         safe_div(&numerator.to_string(), &denominator.to_string()).map(Number::new)
-    })
+    })?;
+    if normalized_decimal_string_exceeds_exact_digit_budget(&number.normalized_value) {
+        None
+    } else {
+        Some(number)
+    }
 }
 
 fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
@@ -215,6 +224,9 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
                             })),
                         )?;
                         acc = mul_signed_decimal_str(acc.trim(), factor.normalized_value.trim());
+                        if normalized_decimal_string_exceeds_exact_digit_budget(&acc) {
+                            return None;
+                        }
                     }
                     Some(Number::new(acc))
                 }
@@ -505,7 +517,11 @@ pub fn lcm_decimal_str_and_normalize(left: &str, right: &str) -> Option<String> 
     let gcd = gcd_decimal_str_and_normalize(&normalized_left, &normalized_right)?;
     let quotient = safe_div(&normalized_left, &gcd)?;
     let product = mul_signed_decimal_str(&quotient, &normalized_right);
-    Some(product.strip_prefix('-').unwrap_or(&product).to_string())
+    let magnitude = product.strip_prefix('-').unwrap_or(&product).to_string();
+    if normalized_decimal_string_exceeds_exact_digit_budget(&magnitude) {
+        return None;
+    }
+    Some(magnitude)
 }
 
 pub fn factorial_decimal_str_and_normalize(value: &str) -> Option<String> {
@@ -514,9 +530,17 @@ pub fn factorial_decimal_str_and_normalize(value: &str) -> Option<String> {
         return None;
     }
     let n = normalized.parse::<usize>().ok()?;
+    // Same exact-decimal digit budget as integer powers: refuse before the
+    // multiply loop when Stirling already exceeds it (e.g. factorial(100000)).
+    if estimated_factorial_digit_count(n) > POW_DECIMAL_MAX_NORMALIZED_LENGTH {
+        return None;
+    }
     let mut result = "1".to_string();
     for factor in 2..=n {
         result = mul_signed_decimal_str(&result, &factor.to_string());
+        if normalized_decimal_string_exceeds_pow_budget(&result) {
+            return None;
+        }
     }
     Some(result)
 }
@@ -875,7 +899,11 @@ fn mod_nonnegative_decimal_str_and_normalize(a: &str, b: &str) -> String {
     normalize_decimal_number_string(&digits_to_string(&current))
 }
 
-const POW_DECIMAL_MAX_NORMALIZED_LENGTH: usize = 100;
+// Shared ceiling for every closed exact-decimal calculation result: integer
+// powers, factorial, and ordinary +/* chains that would otherwise grow past it.
+const EXACT_DECIMAL_MAX_NORMALIZED_LENGTH: usize = 100;
+// Historical name kept as an alias for local call sites that still say "pow".
+const POW_DECIMAL_MAX_NORMALIZED_LENGTH: usize = EXACT_DECIMAL_MAX_NORMALIZED_LENGTH;
 
 // Signed integer powers; reciprocals fold only when their decimals terminate.
 pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> Option<String> {
@@ -978,10 +1006,32 @@ fn estimated_integer_power_digit_count(base: &str, exponent: usize) -> Option<us
     Some(estimated as usize)
 }
 
-fn normalized_decimal_string_exceeds_pow_budget(value: &str) -> bool {
+fn normalized_decimal_string_exceeds_exact_digit_budget(value: &str) -> bool {
     let magnitude = value.trim().strip_prefix('-').unwrap_or(value.trim());
     let normalized_len = magnitude.chars().filter(|c| *c != '.').count();
-    normalized_len > POW_DECIMAL_MAX_NORMALIZED_LENGTH
+    normalized_len > EXACT_DECIMAL_MAX_NORMALIZED_LENGTH
+}
+
+fn normalized_decimal_string_exceeds_pow_budget(value: &str) -> bool {
+    normalized_decimal_string_exceeds_exact_digit_budget(value)
+}
+
+// Stirling log10(n!) ≈ n log10 n - n log10 e + 0.5 log10(2 π n).
+fn estimated_factorial_digit_count(n: usize) -> usize {
+    if n <= 1 {
+        return 1;
+    }
+    let nf = n as f64;
+    let log10_n_fact = nf * nf.log10() - nf * std::f64::consts::E.log10()
+        + 0.5 * (2.0 * std::f64::consts::PI * nf).log10();
+    if !log10_n_fact.is_finite() || log10_n_fact < 0.0 {
+        return usize::MAX;
+    }
+    let estimated = log10_n_fact.floor() + 1.0;
+    if estimated > usize::MAX as f64 {
+        return usize::MAX;
+    }
+    estimated as usize
 }
 
 fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {
