@@ -38,8 +38,10 @@ jobs:
           case "${{ inputs.suite }}" in
             smoke_cli)
               cargo build --release --locked
-              ./target/release/litex -e '1 = 1'
-              ./target/release/litex -f examples/knowledge_base/def_prop/is_pos.lit
+              OUTPUT=$(./target/release/litex -lang en -e '1 = 1')
+              printf '%s\n' "${OUTPUT}" | python3 .github/scripts/release/preflight.py --assert-run-json
+              OUTPUT=$(./target/release/litex -lang en -f examples/knowledge_base/def_prop/is_pos.lit)
+              printf '%s\n' "${OUTPUT}" | python3 .github/scripts/release/preflight.py --assert-run-json
               ;;
             lib_core)
               cargo test --release --lib knowledge_base:: --locked

@@ -11,6 +11,7 @@ import tempfile
 import shutil
 import unittest
 import xml.etree.ElementTree as ET
+from io import StringIO
 from unittest.mock import Mock, patch
 from pathlib import Path
 
@@ -163,6 +164,13 @@ class ReleasePreflightTest(unittest.TestCase):
             }
         )
         preflight.validate_run_output(successful, 0)
+        preflight.validate_success_run_json(successful, 0)
+        eval_success = json.loads(successful)
+        eval_success["target"] = "eval"
+        eval_success["path"] = None
+        preflight.validate_success_run_json(json.dumps(eval_success), 0)
+        with self.assertRaises(preflight.PreflightError):
+            preflight.validate_run_output(json.dumps(eval_success), 0)
         with self.assertRaises(preflight.PreflightError):
             preflight.validate_run_output(successful, 1)
         for change in [
@@ -176,6 +184,30 @@ class ReleasePreflightTest(unittest.TestCase):
             failed.update(change)
             with self.subTest(change=change), self.assertRaises(preflight.PreflightError):
                 preflight.validate_run_output(json.dumps(failed), 0)
+            with self.subTest(change=("envelope", change)), self.assertRaises(
+                preflight.PreflightError
+            ):
+                preflight.validate_success_run_json(json.dumps(failed), 0)
+
+    def test_assert_run_json_cli_accepts_current_contract(self) -> None:
+        successful = json.dumps(
+            {
+                "kind": "run",
+                "run_result": "success",
+                "detail": "normal",
+                "target": "eval",
+                "path": None,
+                "statement_results": [{"statement_result": "accepted"}],
+                "session_terminated": False,
+                "termination": None,
+            }
+        )
+        with patch("sys.stdin", StringIO(successful)):
+            self.assertEqual(preflight.main(["--assert-run-json"]), 0)
+        with patch("sys.stdin", StringIO('{"kind":"run","success":true}')), patch(
+            "builtins.print"
+        ):
+            self.assertEqual(preflight.main(["--assert-run-json"]), 1)
 
     def test_version_contract_requires_matching_plain_text_and_exit_zero(self) -> None:
         version = "1.0.1-beta"
@@ -305,6 +337,10 @@ class ReleasePreflightTest(unittest.TestCase):
         self.assertNotIn("cross build", workflow)
         self.assertIn("--test installed_std_cli", workflow)
         self.assertIn("Smoke test .deb (native)", workflow)
+        build = workflow.split("  build:\n", 1)[1].split("\n  #", 1)[0]
+        package_deb = workflow.split("  package-deb:\n", 1)[1].split("\n  #", 1)[0]
+        self.assertIn("fail-fast: false", build)
+        self.assertIn("fail-fast: false", package_deb)
 
     def test_workflow_archive_smokes_use_shared_preflight(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text(
@@ -327,10 +363,47 @@ class ReleasePreflightTest(unittest.TestCase):
             "-isolated",
             "grep -F '\"success\": true'",
             "assert_match '\"success\": true', version_output",
+            'output.fetch("success")',
+            'output.fetch("session_error")',
+            'r["success"]',
+            'r["session_error"]',
         ):
             with self.subTest(obsolete=obsolete):
                 self.assertNotIn(obsolete, workflow)
         self.assertIn('assert_equal "Litex #{version}\\n", version_output', workflow)
+        self.assertIn('assert_equal "normal", output.fetch("detail")', workflow)
+        self.assertIn('assert_equal "success", output.fetch("run_result")', workflow)
+        self.assertIn(
+            'assert_equal false, output.fetch("session_terminated")', workflow
+        )
+        self.assertIn('assert_nil output.fetch("termination")', workflow)
+        self.assertIn(
+            'assert results.all? { |row| row.fetch("statement_result") == "accepted" }',
+            workflow,
+        )
+        self.assertIn(
+            "python3 .github/scripts/release/preflight.py --assert-run-json",
+            workflow,
+        )
+        self.assertEqual(
+            workflow.count('r["run_result"] == "success"'),
+            1,
+        )
+        self.assertEqual(
+            workflow.count('r["detail"] == "normal"'),
+            1,
+        )
+        self.assertEqual(
+            workflow.count(
+                'all(row.get("statement_result") == "accepted" for row in rows)'
+            ),
+            1,
+        )
+        self.assertIn("-lang en -strict -f smoke.lit", workflow)
+        self.assertIn(
+            "LITEX_STD_PATH=/usr/share/litex/std litex -lang en -strict -f smoke.lit",
+            workflow,
+        )
         self.assertIn("--installed-binary /usr/local/bin/litex --std /usr/share/litex/std", workflow)
         self.assertIn("generate_wix_std.py", workflow)
         self.assertIn('Source="std\\basics\\litex.config"', workflow)
