@@ -518,6 +518,17 @@ fn eval_tuple_calls_compute_and_publish_without_prior_coordinate_equalities() {
 }
 
 #[test]
+fn eval_closed_numeric_left_associated_mul_chain_stays_linear() {
+    // Ordinary object WD is exponential on this shape; eval closed-numeric mode is not.
+    let mut rt = runtime_with_file_env();
+    let expr = std::iter::repeat("2")
+        .take(80)
+        .collect::<Vec<_>>()
+        .join(" * ");
+    assert_eval_number(&mut rt, &format!("eval {expr}"), &(1u128 << 80).to_string());
+}
+
+#[test]
 fn eval_tuple_coordinate_evidence_and_unknown_values_stay_checked() {
     for language in OutputLanguage::ALL {
         let mut rt = Runtime::new(LaunchCommand::Eval {

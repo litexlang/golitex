@@ -27,6 +27,10 @@ pub struct Runtime {
     pub global_ids: GlobalIds,
     /// How this Runtime session was launched (`-strict` / `-session` live here).
     pub launch_command: LaunchCommand,
+    // Set only while `eval` runs closed-numeric source WD / its root `$in C`
+    // gate. Skips per-node carrier checks so left-associated `2*2*…` stays linear.
+    // Does not write ExecEnv WD memory.
+    pub(crate) eval_closed_numeric_source_wd: bool,
 }
 
 /// One parse layer's plain names → [`IdentifierId`].
@@ -84,6 +88,7 @@ impl Runtime {
             current_file: file.clone(),
             global_ids: GlobalIds::new(),
             launch_command: command,
+            eval_closed_numeric_source_wd: false,
         };
         runtime.begin_source(file);
         runtime

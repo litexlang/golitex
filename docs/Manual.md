@@ -3886,6 +3886,8 @@ register transitive:
 
 **Public form:** `eval expression`.
 
+**Closed-numeric source WD.** When the source is a closed numeric tree (number literals under arithmetic / integer / supported `sqrt`/`log` ops, no free identifiers), `eval` uses a dedicated linear well-definedness mode: child formation and non-carrier domain checks only, then one root `$in C` gate. This avoids the ordinary per-node `$in C` re-entry that is exponential on long left-associated products such as `2*2*…*2`. It does not change ordinary object WD for `let` / facts, and it does not write exploratory WD into ExecEnv memory.
+
 **Mathematical function.** Compute a supported closed expression or algorithm call and record its result equality.
 
 **Before execution.** Source/result expressions are WD; the exact computation and every executed algorithm defining equation must check.
