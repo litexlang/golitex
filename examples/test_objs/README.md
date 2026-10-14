@@ -5,8 +5,8 @@ heads: `(1,2)(1)=1`, `((1,2),3)(1)(2)=2`, and direct coordinate `eval`.
 The four retired AST shapes and four shape predicates have been deleted.
 Their negative fixtures remain as four explicit tombstone interface families.
 The six original index-positive goals now belong to FnObj P10–P15; P16–P21
-cover the Object head. Current inventory: 95 terminal Obj declarations and
-95 dedicated positive files. Inventory counts are separate from behavior gates;
+cover the Object head. Current inventory: 97 terminal Obj paths, 97 dedicated positive files,
+and four retired interface families. Inventory counts are separate from behavior gates;
 actual receipts are in the [migration journal](../../plan/迁移的plan/proof_journals/tuple-cart-local-sprint-2026-10-06.json).
 
 The [2026-10-05 cross-Obj relation audit](obj_relations_audit_2026-10-05.md)
@@ -72,6 +72,10 @@ The explicit set-proof follow-up (historical task record; retired) closes 17 mor
 The five-set follow-up (historical task record; retired) closes the last five recorded gaps. That dated inventory had **665 positive cases, 309 negatives and 0 recorded gaps**; the current source inventory is listed in coverage.md. Concurrent unrelated additions contribute to these totals; this round closes five cases and adds five negatives. Its focused gates do not certify the full corpus.
 
 ## Run
+
+The point and set preimage families have dedicated six-case positives and six
+rejection fixtures each. Their manifest entries cover `Preimage` and `PreimageSet`
+without changing the constructors or the one-pass inference policy.
 
 The exact rational-power addition (historical task record; retired)
 adds 16 positive and nine negative Pow cases. Its 23 selected Rust tests and

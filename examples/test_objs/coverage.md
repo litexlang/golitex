@@ -2,7 +2,7 @@
 
 Task: add detailed regression files for every current Litex Obj variant.
 
-The current manifest inventories 95 terminal Obj declarations, 95 dedicated positive files and four explicitly retired interface families. It lists 665 positive cases, 309 rejection fixtures and 0 recorded gaps. These are written-case counts, not a full-corpus pass.
+The current manifest inventories 97 terminal Obj paths, 97 dedicated positive files and four explicitly retired interface families. It lists 677 positive cases, 321 rejection fixtures and 0 recorded gaps. These are written-case counts, not a full-corpus pass.
 
 The earlier 2026-10-03 [audit](audit_2026-10-03.md) observed 67 direct
 rejections. The subsequent F authoring repairs (historical task record; retired)
@@ -30,7 +30,7 @@ expectation failures are retained separately.
 | AST path | Positive file | Positive cases | Rejection fixtures | Recorded gaps |
 | --- | --- | ---: | ---: | ---: |
 | `Obj::Identifier::Plain` | [identifier_plain](identifier_plain.lit) | 6 | 3 | 0 |
-| `Obj::FnObj` | [fn_obj](fn_obj.lit) | 9 | 5 | 0 |
+| `Obj::FnObj` | [fn_obj](fn_obj.lit) | 21 | 5 | 0 |
 | `Obj::Literal::Number` | [number](number.lit) | 9 | 3 | 0 |
 | `Obj::Literal::ImaginaryUnit` | [imaginary_unit](imaginary_unit.lit) | 9 | 3 | 0 |
 | `Obj::Literal::EulerNumber` | [euler_number](euler_number.lit) | 5 | 2 | 0 |
@@ -84,13 +84,15 @@ expectation failures are retained separately.
 | `Obj::SetFormer::SeqSet` | [seq_set](seq_set.lit) | 5 | 2 | 0 |
 | `Obj::ProductShape::Cart` | [cart](cart.lit) | 5 | 5 | 0 |
 | `Obj::ProductShape::Tuple` | [tuple](tuple.lit) | 5 | 2 | 0 |
-| `Obj::ProductShape::CartDim` | Retired interface; rejection fixtures retained | 0 | 2 | 0 |
-| `Obj::ProductShape::TupleDim` | Retired interface; rejection fixtures retained | 0 | 2 | 0 |
-| `Obj::ProductShape::Proj` | Retired interface; rejection fixtures retained | 0 | 4 | 0 |
-| `Obj::ProductShape::ObjAtIndex` | [obj_at_index](obj_at_index.lit) | 6 | 5 | 0 |
+| Removed: `Obj::ProductShape::CartDim` | Retired interface; rejection fixtures retained | 0 | 2 | 0 |
+| Removed: `Obj::ProductShape::TupleDim` | Retired interface; rejection fixtures retained | 0 | 2 | 0 |
+| Removed: `Obj::ProductShape::Proj` | Retired interface; rejection fixtures retained | 0 | 4 | 0 |
+| Removed: `Obj::ProductShape::ObjAtIndex` | Retired interface; rejection fixtures retained | 0 | 5 | 0 |
 | `Obj::FunctionSpace::FnSet` | [fn_set](fn_set.lit) | 6 | 3 | 0 |
 | `Obj::FunctionSpace::AnonymousFn` | [anonymous_fn](anonymous_fn.lit) | 7 | 4 | 0 |
 | `Obj::FunctionSpace::FnRange` | [fn_range](fn_range.lit) | 4 | 2 | 0 |
+| `Obj::FunctionSpace::Preimage` | [preimage](preimage.lit) | 6 | 6 | 0 |
+| `Obj::FunctionSpace::PreimageSet` | [preimage_set](preimage_set.lit) | 6 | 6 | 0 |
 | `Obj::IteratedOperator::Sum` | [sum](sum.lit) | 16 | 12 | 0 |
 | `Obj::IteratedOperator::Product` | [product](product.lit) | 11 | 6 | 0 |
 | `Obj::IteratedOperator::SumOfFiniteSet` | [sum_of_finite_set](sum_of_finite_set.lit) | 13 | 8 | 0 |
@@ -135,6 +137,7 @@ expectation failures are retained separately.
 - `FnObjHead::AnonymousFnLiteral` is exercised in [fn_obj.lit](fn_obj.lit).
 - `FnObjHead::FieldAccess` is exercised in [fn_obj.lit](fn_obj.lit).
 - `FnObjHead::InstantiatedTemplateObj` is exercised in [fn_obj.lit](fn_obj.lit).
+- `FnObjHead::Object` is exercised in [fn_obj.lit](fn_obj.lit).
 - `FnSetSpace::Set` is exercised in [fn_set.lit](fn_set.lit).
 - `FnSetSpace::Anon` is exercised in [anonymous_fn.lit](anonymous_fn.lit).
 

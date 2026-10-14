@@ -1,0 +1,6 @@
+# Run: target/release/litex -strict -f examples/test_statements/boundaries/callable-alias-published-body.lit
+
+have fn alias_source(x R) R = x + 1
+let callable_alias = alias_source
+callable_alias = fn(x R) R {x + 1}
+callable_alias(4) = 5

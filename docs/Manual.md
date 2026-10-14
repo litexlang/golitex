@@ -7639,9 +7639,8 @@ questions. This example must not be diagnosed as another missing WD guard.
 ### P04. Connect division and multiplication explicitly
 
 **Intention:** from `a / b = c` and `b != 0`, deduce `a = c * b`.
-**Expected rejection — phase `search_proof` in this cold context:**
+**Direct form — verified:**
 
-<!-- litex:skip-test -->
 ```litex
 forall a, b, c R:
     b != 0
@@ -7650,8 +7649,8 @@ forall a, b, c R:
         a = c * b
 ```
 
-The mathematics is valid. In the current checker, this bare goal does not
-find the route by itself. A checked proof keeps the same hypothesis and target:
+The current checker verifies this implication directly. An explicit equality
+chain makes the same mathematical route visible:
 
 ```litex
 claim:
@@ -7669,10 +7668,8 @@ expression connects an implemented identity to a known equality.
 The proof uses the active goal parameters `a`, `b`, `c`; it does not introduce
 a second universal with renamed parameters inside the proof body.
 
-The reverse direction has the corresponding boundary.
-**Expected rejection — phase `search_proof`:**
+The reverse direction also verifies directly:
 
-<!-- litex:skip-test -->
 ```litex
 forall a, b, c R:
     b != 0
@@ -7681,7 +7678,7 @@ forall a, b, c R:
         a / b = c
 ```
 
-Checked counterpart:
+The same implication with an explicit equality chain:
 
 ```litex
 claim:
@@ -7693,9 +7690,10 @@ claim:
     a / b = (b * c) / b = c
 ```
 
-Removing the equality-chain body from either `claim` was independently tested
-and rejected. These are current proof-search boundaries, not additional
-mathematical hypotheses or claims that every algebraic proof needs a `claim`.
+Both direct universal statements and the explicit equality-chain proofs verify
+with the stated premises. The chains explain the derivation; they do not imply
+that these two facts require a `claim` block. The nonzero-divisor condition
+remains part of both statements.
 
 ### P05. A function equation may need to be exposed before substitution
 

@@ -3986,7 +3986,7 @@
     {
       "leaf": "LetObjStmt",
       "name": "resolved-K001-callable-alias-published-body",
-      "file": "bugs/let_obj_stmt/K001-callable-alias-direct/repro.lit",
+      "file": "boundaries/callable-alias-published-body.lit",
       "strict": true,
       "expect": {
         "success": true,
@@ -4020,7 +4020,7 @@
     {
       "name": "resolved-K006",
       "leaf": "DefTemplateStmt",
-      "file": "bugs/def_template_stmt/K006-strict-template-trust-have/repro.lit",
+      "file": "boundaries/strict-template-trust-have-rejected.lit",
       "strict": true,
       "expect": {
         "success": false,
@@ -4031,7 +4031,7 @@
     {
       "name": "resolved-K007-for",
       "leaf": "ByForStmt",
-      "file": "bugs/by_for_stmt/K007-for-binder-proof-body/repro.lit",
+      "file": "boundaries/for-binder-proof-body.lit",
       "strict": true,
       "expect": {
         "success": true,
@@ -4043,7 +4043,7 @@
     {
       "name": "resolved-K007-enumerate",
       "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "bugs/by_enumerate_finite_set_stmt/K007-enumeration-binder-proof-body/repro.lit",
+      "file": "boundaries/enumeration-binder-proof-body.lit",
       "strict": true,
       "expect": {
         "success": true,
@@ -4070,7 +4070,7 @@
     {
       "name": "resolved-K009-for",
       "leaf": "ByForStmt",
-      "file": "bugs/by_for_stmt/K009-conditional-for-goal/repro.lit",
+      "file": "boundaries/conditional-for-goal.lit",
       "strict": true,
       "expect": {
         "success": true,
@@ -4082,7 +4082,7 @@
     {
       "name": "resolved-K009-enumerate",
       "leaf": "ByEnumerateFiniteSetStmt",
-      "file": "bugs/by_enumerate_finite_set_stmt/K009-conditional-enumeration-goal/repro.lit",
+      "file": "boundaries/conditional-enumeration-goal.lit",
       "strict": true,
       "expect": {
         "success": true,
@@ -4094,7 +4094,7 @@
     {
       "leaf": "DefTemplateStmt",
       "name": "resolved-K002-template-member-carrier",
-      "file": "bugs/def_template_stmt/K002-template-member-carrier/repro.lit",
+      "file": "boundaries/template-member-carrier.lit",
       "strict": true,
       "expect": {
         "success": true,

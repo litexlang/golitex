@@ -1,0 +1,6 @@
+# Run: target/release/litex -strict -f examples/test_statements/boundaries/enumeration-binder-proof-body.lit
+
+by enumerate finite_set:
+    ? forall n {1, 2}:
+        n > 0
+    n > 0

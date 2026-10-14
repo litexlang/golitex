@@ -1,0 +1,53 @@
+# AST: Obj::FunctionSpace::PreimageSet
+# Run: target/release/litex -strict -f examples/test_objs/preimage_set.lit
+# Cases use independent sketch scopes.
+
+# P01: Two output values in the target set
+sketch:
+    have fn square(x R) R = x^2
+    square(2) = 4
+    square(3) = 9
+    2 $in preimage_set(square, {4, 9})
+    3 $in preimage_set(square, {4, 9})
+
+# P02: Guarded reciprocal and member consequences
+sketch:
+    have fn reciprocal(x R: x != 0) R = 1 / x
+    reciprocal(2) = 1 / 2
+    2 $in preimage_set(reciprocal, {1 / 2})
+    forall u preimage_set(reciprocal, {1 / 2}):
+        u $in R
+        u != 0
+        reciprocal(u) $in {1 / 2}
+
+# P03: An ordered input tuple for two parameters
+sketch:
+    have fn divide(a, b R: b != 0) R = a / b
+    divide(6, 2) = 3
+    (6, 2) $in preimage_set(divide, {3, 4})
+
+# P04: Aliases for both the selected set and target set
+sketch:
+    have fn square(x R) R = x^2
+    let targets = {4, 9}
+    let selected = preimage_set(square, targets)
+    square(2) = 4
+    square(2) $in targets
+    2 $in preimage_set(square, targets)
+    2 $in selected
+
+# P05: Singleton target membership implies the point fiber
+sketch:
+    have fn square(x R) R = x^2
+    claim:
+        ? forall u preimage_set(square, {4}):
+            u $in preimage(square, 4)
+        square(u) $in {4}
+        square(u) = 4
+        u $in preimage(square, 4)
+
+# P06: One tuple parameter receives the whole tuple
+sketch:
+    have fn first(p cart(R, R)) R = p(1)
+    first((6, 2)) = 6
+    (6, 2) $in preimage_set(first, {6})

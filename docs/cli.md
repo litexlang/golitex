@@ -279,9 +279,9 @@ as proof explanations. Enum-like envelope values such as `run`, `eval`, and
       "语句判定": "accepted",
       "语句": "1 = 1",
       "证明方法": {
-        "类型": "内置规则",
-        "规则名": "由内部表示相等",
-        "说明": "两边具有相同的内部表示"
+        "类型": "同一对象",
+        "规则名": "同一对象",
+        "说明": "两边内部表示相同，或绑定参数改名后结构相同"
       },
       "存储": [
         "1 = 1"
@@ -296,14 +296,14 @@ as proof explanations. Enum-like envelope values such as `run`, `eval`, and
 
 ### Normal statement shape
 
-Success:
+Success, for `0 <= k` after `have k N` has already inferred it:
 
 ```json
 {
   "statement_result": "accepted",
   "statement": "0 <= k",
   "proof_method": {
-    "type": "known_atomic_fact",
+    "type": "cite_known",
     "cite": "0 <= k"
   },
   "stores": ["0 <= k"],
@@ -331,8 +331,13 @@ Rules:
 - `statement_result` is the explicit string `"accepted"` or `"rejected"`.
 - `stores`, `infers`, `cite`, `statement`, and `goal` use readable Litex text.
 - Builtin explanations use `rule_name` and `message`, not the old `rule` tag.
-- Normal skips well-definedness subtrees; look at `why_failed.phase` when a
-  statement did not succeed.
+- Successful Normal entries summarize their proof route. Failed entries may
+  include nested well-definedness or proof-block evidence under `why_failed`;
+  start with `why_failed.phase` and follow its nested failure to the stopping point.
+
+`proof_method.type` identifies the selected verification route for that
+statement. Read `statement_result` and `run_result` to determine acceptance;
+different successful inputs need not use the same proof-method type.
 
 ### Examples
 
@@ -354,9 +359,9 @@ Successful inline run:
       "stores": ["1 = 1"],
       "statement_result": "accepted",
       "proof_method": {
-        "type": "builtin_rule",
-        "rule_name": "Equal by IR",
-        "message": "Both sides share the same internal representation"
+        "type": "they_are_the_same",
+        "rule_name": "Same object",
+        "message": "Both sides have identical IR or alpha-equivalent binder structure"
       }
     }
   ],
@@ -364,7 +369,7 @@ Successful inline run:
 }
 ```
 
-Soft miss with a successful prefix retained:
+Selected-field excerpt of a soft miss with a successful prefix retained:
 
 ```json
 {

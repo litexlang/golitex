@@ -25,8 +25,8 @@ sketch:
     claim:
         ? forall a cart({1}, {2}):
             a = (1, 2)
-        a(1) = 1
-        a(2) = 2
+        a(1) $in {1}
+        a(2) $in {2}
         release thm tuple_equal_from_coordinates(a, (1, 2))
     by extension:
         ? cart({1}, {2}) = {(1, 2)}

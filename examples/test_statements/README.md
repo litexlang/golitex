@@ -4,7 +4,7 @@ Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 52 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
 multiple runnable scenarios. There are 174 positive scenarios,
-141 negative scenarios, 24 additional boundary/regression checks, and no open
+143 negative scenarios, 24 additional boundary/regression checks, and no open
 K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
@@ -31,6 +31,11 @@ relevant Rust tests. Its new tracers live with their Stmt/infer owners; this
 is not a full release or independent-replay claim.
 
 ## Run
+
+All maintained boundary fixtures are in the tracked `boundaries/` directory.
+The manifest does not depend on ignored local `bugs/` material. Reconstructed
+alias, binder, conditional and template cases retain their original success
+counts; the strict template trust-have boundary retains its rejection.
 
 From the repository root:
 

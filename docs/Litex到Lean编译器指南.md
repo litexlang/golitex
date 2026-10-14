@@ -7,7 +7,9 @@
 想直接查看已经完成的工作，可以沿着下面的[例子阅读路径](#explore-the-example-collection)，
 再浏览[完整的源码／生成结果集合](../lean/examples/)。
 
-[编译器 README](../src/compile_to_lean/README.md)描述实现细节、内部设计理由、结果类型和扩展点。面向读者的解释和示例讲解放在这里；Rust 控制流与重放记录放在那里。[CLI 文档](Litex命令行参考.md#lean-compiler-boundary)负责命令行契约。
+[编译器 README](../src/compile_to_lean/README.md)解释从 Runtime 到原生接口的架构、
+带类型结果的所有权、Core 语义及原生接口边界。本指南讲面向用户的设计原则和详细用法；
+完整示例分别放在自己的 README。[CLI 文档](Litex命令行参考.md#lean-compiler-boundary)负责命令行契约。
 
 <a id="from-a-checked-fact-to-a-lean-proof"></a>
 
@@ -40,6 +42,11 @@ target/release/litex -strict -lean -f lean/examples/one_equals_itself/statement.
 <a id="explore-the-example-collection"></a>
 
 ## 从几十组实际例子开始
+
+最短的源码／生成证明／Adapter／Final 完整讲解见
+[加零示例 README](examples/litex_to_lean/add_zero/README.md)。
+[Newton README](examples/litex_to_lean/newton_residual/README.md)进一步展示
+函数的非零定义域条件如何保留到编译结果和原生接口中。
 
 [完整例子集合](../lean/examples/)中，每组 Litex `.lit` 源码都配有编译器生成的 `.lean` 文件。
 2026-10-12 的验收检查了 74 对，包含严格源码验证、实际编译、重新生成的一致性，
@@ -513,45 +520,40 @@ target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statem
 
 ## 已验证的单步 Newton 示例
 
-[单步恒等式源码](../lean/examples/newton_residual_identity/statement.lit)
-证明非零实数输入的一次 Newton 更新满足精确残差恒等式。完整源码只有六行：
+[Newton README](examples/litex_to_lean/newton_residual/README.md)集中展示完整源码、
+生成证明说明和普通 Lean 消费者：在 `x ≠ 0` 时，
+`((x + 2/x)/2)^2 - 2 = ((x - 2/x)/2)^2`。
+单步恒等式和正数更新变体的 Adapter／Final 均已检查，并消费实际生成证明。
 
-```litex
-# Newton's exact algebraic error identity for a nonzero real input.
-have fn newton(x R:x!=0) R=(x+2/x)/2
-forall x R:
-    x!=0
-    =>:
-        newton(x)^2-2=((x-2/x)/2)^2
-```
-
-[实际生成的 Lean](../lean/examples/newton_residual_identity/statement.lean)、
-[Adapter](examples/litex_to_lean/newton_residual/Adapter.lean) 和
-[Final](examples/litex_to_lean/newton_residual/Final.lean) 已完成验收：
-严格源码验证、字节一致的再生成、pinned Lean、生成证明活依赖和标准公理检查均通过。
-Adapter 通过已证明的表示桥接消费实际生成证明，不独立重证恒等式。
-Final 提供这个普通 Lean 定理：
-
-```lean
-theorem newtonResidualIdentity (x : ℝ) (hx : x ≠ 0) :
-    ((x + 2 / x) / 2)^2 - 2 = ((x - 2 / x) / 2)^2 := by
-  exact Adapter.newtonResidualIdentity x hx
-```
-
-[正数更新源码](../lean/examples/newton_positive_update/statement.lit)及其
-[生成 Lean](../lean/examples/newton_positive_update/statement.lean)、
-[PositiveAdapter](examples/litex_to_lean/newton_residual/PositiveAdapter.lean) 和
-[PositiveFinal](examples/litex_to_lean/newton_residual/PositiveFinal.lean) 也已验收。
-它保留正数输入和值域约束，导出
-`newtonPositive (x : ℝ) (hx : 0 < x) : 0 < (x + 2 / x) / 2`。
-
-较大的[全部自然数残差界源码](../lean/examples/newton_residual_bound/statement.lit)
-已完成编译和字节一致的再生成，完整 Lean 与原生接口尚未验收；
-2026-10-13 用户要求停止。[实验记录](examples/litex_to_lean/newton_residual/Experiment.md)
-保留这一状态。
+同一 README 单独记录递归全索引实验：源码编译和字节一致的再生成完成，
+完整 Lean／原生验收未完成，2026-10-13 按用户要求停止。
 
 ## 维护本指南
 
 新增设计说明应连接到 [lean/examples/](../lean/examples/)下真实的源码/生成文件对。每个讲解都应说明数学事实、选定的源码证明路线、生成证明保留什么，以及最近的不支持边界。明确标注拟议设计与未验证示例。
 
 以上代码片段来自维护中的示例与语义接口，不是完整的能力清单。其所属产物改变时，应同步更新。实现映射保留在[编译器 README](../src/compile_to_lean/README.md)中；开发夹具、验收记录与构建工具保留在仅限本地的编译器工作区 `scripts/litex_to_lean/`。
+
+## 当前覆盖的数学范围与示例
+
+**Litex 已经在一个明确的数学子集上打通了从源码证明、编译生成 Lean 到 Lean 复核的流程：
+标准数域上的初等代数与不等式，配上基础集合、带定义域的函数和可复用定理。**
+这些能力可以组合使用，处理带任意参数、前提和中间步骤的证明；已有案例还通过手写
+Adapter 导出普通 Lean／Mathlib 定理。
+
+| 数学层面 | 当前覆盖的主要内容 | 对应示例 |
+| --- | --- | --- |
+| 数 | ℕ、ℤ、ℚ、ℝ、ℂ 及其包含关系，正实数；参数可以是域内任意对象。 | [数域包含链](../lean/examples/numeric_hierarchy/)、[正实数函数](../lean/examples/newton_positive_update/) |
+| 运算与关系 | 精确分数与有限小数、四则、多项式与有理式恒等式、消去律；部分固定整数幂和实数不等式规则。 | [精确分数与小数](../lean/examples/exact_fractions_and_decimals/)、[平方差](../lean/examples/real_difference_of_squares/)、[消去律](../lean/examples/multiplicative_cancellation/)、[平方非负](../lean/examples/real_squares_nonnegative/) |
+| 集合 | 任意集合参数、空集、有限枚举、有界集合构造，以及成员、子集和相关推理。 | [任意集合](../lean/examples/arbitrary_set_laws/)、[有限集合](../lean/examples/finite_natural_set/)、[闭单位区间](../lean/examples/closed_unit_interval/) |
+| 函数 | 一个或两个数值参数的公式函数，显式定义域条件、求值与组合；已有互逆和单射的完整案例。 | [带条件的双参数函数](../lean/examples/two_argument_shifted_quotient/)、[函数组合](../lean/examples/composed_real_formula/)、[有理函数的互逆与单射](../lean/examples/rational_inverse_maps/) |
+| 定义与证明 | 具体谓词、全称与条件命题、等式链、部分合取、命名定理及调用、局部对象、`let` 和 `claim`。 | [谓词与等式替换](../lean/examples/concrete_predicate_equality_transport/)、[定理返回与调用](../lean/examples/named_compound_theorem_returns/)、[局部对象](../lean/examples/local_witness_additive_identity/)、[claim 与正数值域](../lean/examples/newton_positive_update/) |
+
+这里的覆盖指已实现并检查过的构造和证明路线，并不意味着该领域内任意 Litex 证明都能编译。
+绝对值、符号自然幂和部分析取也已有受限规则的编译及局部 Lean 检查；完整递归 Newton
+估计的整文件与原生接口验收仍未完成，状态见 [Newton 示例说明](examples/litex_to_lean/newton_residual/README.md#paused-recursive-experiment)。
+
+可以先读[加零的完整编译与 Adapter 示例](examples/litex_to_lean/add_zero/README.md)，
+再看[有理函数互逆的完整流程](#两个有理函数从定义到原生等价)。
+上表每个示例目录都把 `.lit` 源码和实际生成的 `.lean` 放在一起；继续浏览
+[全部源码／生成文件对](../lean/examples/)，就能看到这些数学能力如何组合成可供 Lean 使用的证明。

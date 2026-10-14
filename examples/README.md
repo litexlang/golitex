@@ -19,6 +19,7 @@ examples/
   infer/                store → Infer*Result consequences
   tokenize/             tokenizer / Unicode input surface
   module_manager/       -r / -f / litex.config mount
+  agent_session_demo/    Python driver for persistent-Session authoring
   knowledge_base/       persist / restore goldens
   _internal/            fixtures / drafts / non-public regressions
   *.lit                focused standalone regressions
@@ -46,6 +47,9 @@ Finite-set inclusion tracers:
 
 ## Other
 
+- [Python Session agent loop](agent_session_demo/README.md) drives the real CLI,
+  checks recovery after a rejected statement, and compares dependent-prefix
+  verification counts.
 - `_internal/` is developer material (including larger case-study regressions),
   not the public reading path.
 - Earlier Litex-to-Lean pairs are archived locally under

@@ -665,9 +665,9 @@ let a = 1
 a + 1 = 2
 ```
 
-The first sentence is a definition (`define`): it introduces an object and stores the defining fact `a = 1` in the context. The second sentence is verification (`verify`): it reads the current context, checks well-definedness of `a + 1 = 2`, performs transparent definition reduction along `a = 1`, then uses a numerical normalization rule. After it succeeds, the second fact enters the current context and becomes a basis later statements can continue to use.
+The first sentence is a definition (`define`): it introduces an object and stores the defining fact `a = 1` in the context. The second sentence is verification (`verify`): it reads the current context, checks well-definedness of `a + 1 = 2`, and verifies the equality through a builtin rewrite using the known value of `a`. After it succeeds, the second fact enters the current context and becomes a basis later statements can continue to use.
 
-Below is the execution result of this fragment.
+The following Normal JSON excerpt records the statements and selected proof routes.
 
 <details>
 <summary><strong>Expand: Litex execution result</strong></summary>
@@ -692,9 +692,9 @@ Below is the execution result of this fragment.
       "statement_result": "accepted",
       "statement": "a + 1 = 2",
       "proof_method": {
-        "type": "builtin_rule",
-        "rule_name": "Calculation",
-        "message": "Both sides evaluate to the same number"
+        "type": "builtin_rewrite",
+        "rule_name": "Builtin rewrite",
+        "message": "Verified by a builtin equality rewrite"
       },
       "stores": ["a + 1 = 2"],
       "infers": []
@@ -705,7 +705,7 @@ Below is the execution result of this fragment.
 
 </details>
 
-The second statement passes well-definedness, definition reduction, and numerical checking. The Normal JSON above displays only the top-level `Calculation`; it does not expand every internal substep. Readers can answer several immediate questions from this everyday record:
+The second statement passes well-definedness and uses a builtin equality rewrite. The Normal JSON excerpt records that selected route as `builtin_rewrite`; it does not expand every internal substep. Readers can answer several immediate questions from this everyday record:
 
 | What the reader wants to know | What to look at in the record |
 | --- | --- |
@@ -1297,6 +1297,21 @@ Humans own the mathematical problem, key constructions, and final judgment. Peop
 <a id="session-authoring"></a>
 
 **Check as I write, keeping accepted work.** When writing or repairing Litex code, **open `-session` once and keep the same process**. An ordinary failed statement does not erase earlier accepted definitions and facts. Never rerun the whole file from the beginning whenever a few new lines are added.
+
+**For dependent reasoning, retaining the Session avoids a quadratic accumulation of prefix work.** Suppose there are $N$ dependent verification steps, each taking approximately $t$, and the accepted prefix stays unchanged. In the inner authoring loop, keeping one Session verifies each new step once; restarting for every new step verifies every growing prefix again:
+
+$$
+T_{\mathrm{Session}} \approx Nt, \qquad
+T_{\mathrm{restart}} \approx t\sum_{n=1}^{N} n = t\frac{N(N+1)}{2}.
+$$
+
+The cumulative time ratio in this cost model is therefore
+
+$$
+\frac{T_{\mathrm{restart}}}{T_{\mathrm{Session}}} \approx \frac{N+1}{2}.
+$$
+
+**Repeated full-prefix verification grows quadratically with the dependency chain; incremental verification in one Session grows linearly in this model.** This calculation covers the authoring loop with one submission per step, excluding initial context loading, separate checkpoint/final file checks, and required restart/replay. Actual times depend on per-step verification costs and overhead.
 
 Start with an accepted real value:
 

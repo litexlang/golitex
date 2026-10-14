@@ -115,6 +115,8 @@ thm gcd_from_finite_divisors_eq_native:
     by def common_divisors(a, b) $subset R
     gcd_from_finite_divisors(a, b) = finite_set_max(common_divisors(a, b))
     finite_set_max(common_divisors(a, b)) $in common_divisors(a, b)
+    $dvd(a, finite_set_max(common_divisors(a, b)))
+    $dvd(b, finite_set_max(common_divisors(a, b)))
     gcd_from_finite_divisors(a, b) <= gcd(a, b)
     gcd(a, b) $in N+
     a % gcd(a, b) = 0

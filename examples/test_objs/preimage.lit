@@ -1,0 +1,47 @@
+# AST: Obj::FunctionSpace::Preimage
+# Run: target/release/litex -strict -f examples/test_objs/preimage.lit
+# Cases use independent sketch scopes.
+
+# P01: Two roots of a square
+sketch:
+    have fn square(x R) R = x^2
+    square(2) = 4
+    square(-2) = 4
+    2 $in preimage(square, 4)
+    -2 $in preimage(square, 4)
+
+# P02: Guarded reciprocal and member consequences
+sketch:
+    have fn reciprocal(x R: x != 0) R = 1 / x
+    reciprocal(2) = 1 / 2
+    2 $in preimage(reciprocal, 1 / 2)
+    forall u preimage(reciprocal, 1 / 2):
+        u $in R
+        u != 0
+        reciprocal(u) = 1 / 2
+
+# P03: An ordered input tuple for two parameters
+sketch:
+    have fn divide(a, b R: b != 0) R = a / b
+    divide(6, 2) = 3
+    (6, 2) $in preimage(divide, 3)
+
+# P04: A fiber alias reuses checked canonical membership
+sketch:
+    have fn square(x R) R = x^2
+    square(2) = 4
+    2 $in preimage(square, 4)
+    let fiber = preimage(square, 4)
+    2 $in fiber
+
+# P05: A point fiber implies membership in the singleton-target preimage
+sketch:
+    have fn square(x R) R = x^2
+    forall u preimage(square, 4):
+        u $in preimage_set(square, {4})
+
+# P06: The selected output value may itself be a set
+sketch:
+    have fn singleton(x R) power_set(R) = {x}
+    singleton(2) = {2}
+    2 $in preimage(singleton, {2})

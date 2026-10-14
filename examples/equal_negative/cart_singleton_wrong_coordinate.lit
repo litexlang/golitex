@@ -1,0 +1,5 @@
+# Must reject a false first coordinate after singleton inference is explicit.
+claim:
+    ? forall a cart({1}, {2}):
+        a(1) = 2
+    a(1) $in {1}

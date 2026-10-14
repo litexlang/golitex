@@ -211,9 +211,9 @@ Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证
       "语句判定": "accepted",
       "语句": "1 = 1",
       "证明方法": {
-        "类型": "内置规则",
-        "规则名": "由内部表示相等",
-        "说明": "两边具有相同的内部表示"
+        "类型": "同一对象",
+        "规则名": "同一对象",
+        "说明": "两边内部表示相同，或绑定参数改名后结构相同"
       },
       "存储": [
         "1 = 1"
@@ -230,14 +230,14 @@ Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证
 
 ### Normal 语句结构
 
-成功：
+成功条目：先执行 `have k N`，已推导出 `0 <= k`，再检查这条事实：
 
 ```json
 {
   "statement_result": "accepted",
   "statement": "0 <= k",
   "proof_method": {
-    "type": "known_atomic_fact",
+    "type": "cite_known",
     "cite": "0 <= k"
   },
   "stores": ["0 <= k"],
@@ -265,7 +265,11 @@ Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证
 - `statement_result` 是明确的 `"accepted"` 或 `"rejected"` 字符串。
 - `stores`、`infers`、`cite`、`statement` 和 `goal` 使用可读 Litex 文本。
 - 内置解释使用 `rule_name` 和 `message`，不用旧的 `rule` 标签。
-- Normal 省略良定义性子树；语句不成功时查看 `why_failed.phase`。
+- 成功的 Normal 条目概括证明路径。失败条目的 `why_failed` 可以包含嵌套的
+  良定义性或证明块证据；先读 `why_failed.phase`，再沿嵌套失败找到实际停止点。
+
+`proof_method.type` 记录这条语句实际采用的验证路径。是否通过应读取
+`statement_result` 和 `run_result`；不同的成功输入不必使用同一种证明类型。
 
 <a id="examples"></a>
 
@@ -289,9 +293,9 @@ Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证
       "stores": ["1 = 1"],
       "statement_result": "accepted",
       "proof_method": {
-        "type": "builtin_rule",
-        "rule_name": "Equal by IR",
-        "message": "Both sides share the same internal representation"
+        "type": "they_are_the_same",
+        "rule_name": "Same object",
+        "message": "Both sides have identical IR or alpha-equivalent binder structure"
       }
     }
   ],
@@ -299,7 +303,7 @@ Normal JSON 不包含每个验证子节点或 FactId 引用，因此不能保证
 }
 ```
 
-保留成功前缀的软失败：
+保留成功前缀的软失败（选字段摘录）：
 
 ```json
 {

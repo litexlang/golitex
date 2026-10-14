@@ -1,0 +1,5 @@
+# Run: target/release/litex -strict -f examples/test_statements/boundaries/template-member-carrier.lit
+
+template<S nonempty_set>:
+    have template_carrier_member S
+\template_carrier_member<R> $in R
