@@ -2248,7 +2248,7 @@ absolute(3) = 3
 
 **Mathematical function.** Define a recursive function whose recursive calls decrease an integer measure.
 
-**Before execution.** The measure, lower bound, cases and return carrier are valid; every recursive call is in-domain and strictly smaller in the selected measure.
+**Before execution.** The measure, lower bound, cases and return carrier are valid; every recursive call is in-domain and strictly smaller in the selected measure, and its substituted lower bound is no smaller than the current lower bound.
 
 **Execution and result.** Check base and recursive cases with the controlled recursive signature, then store the callable interface and guarded defining equations.
 
@@ -3930,6 +3930,11 @@ t(2)=2
 
 ## Object dictionary
 
+Well-definedness (WD) checks child expressions before the current operation’s
+domain conditions. Result membership and other properties are established by
+the corresponding fact rules. Each entry lists its conditions, supported
+properties, and examples.
+
 | ID | Public form | Mathematical role | Example status |
 |---|---|---|---|
 | [O01](#o01-division) | `a / b` | Division | checked |
@@ -4144,8 +4149,6 @@ Membership and nonmembership of this closed quotient are checked in F01.
 
 **Common native properties and proof routes.** Stored equality and carrier information can be reused. Equal aliases may support congruence; a name does not imply any arbitrary numerical value.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Undefined names and not-yet-loaded exports are rejected. Manifest dependencies are not source import statements. A two-step alias can require a direct value equality before arithmetic; the example deliberately exposes b = a = 2.
 
 **Checked example.**
@@ -4177,8 +4180,6 @@ a function-space object does not make that space a callable function value.
 
 **Common native properties and proof routes.** Legal applications satisfy the declared return carrier. Expression-defined functions expose defining equalities; opaque functions give no arbitrary evaluation formula.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A real input does not meet a nonzero guard by itself. Field, template and returned-function calls retain their own signature owner.
 
 **Checked example.**
@@ -4206,8 +4207,6 @@ forall x R:
 
 **Common native properties and proof routes.** Closed arithmetic and numeric carrier membership use exact calculation. Natural numbers include zero.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A decimal’s appearance does not make it an integer. Use an explicit nonmembership check when needed.
 
 **Checked example.**
@@ -4231,8 +4230,6 @@ not 1 / 2 $in Z
 **Well-definedness and domain.** Native named constant; no input-domain parameter.
 
 **Common native properties and proof routes.** i $in C; re(i) = 0 and img(i) = 1; i^2 = -1.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** A constant is an object; an equation or membership about it is a fact. Exact symbolic support does not imply arbitrary transcendental evaluation.
 
@@ -4259,8 +4256,6 @@ img(i) = 1
 **Well-definedness and domain.** Native named constant; no input-domain parameter.
 
 **Common native properties and proof routes.** e $in R+; exp(1) = e and ln(e) = 1.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** A constant is an object; an equation or membership about it is a fact. Exact symbolic support does not imply arbitrary transcendental evaluation.
 
@@ -4300,8 +4295,6 @@ values.
 
 **Common native properties and proof routes.** pi $in R+; sin(pi) = 0 and cos(pi) = -1.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A constant is an object; an equation or membership about it is a fact. Exact symbolic support does not imply arbitrary transcendental evaluation.
 
 **Checked example.**
@@ -4318,6 +4311,11 @@ cos(pi) = -1
 
 ### O08. Natural numbers including zero: N
 
+O08–O22 list the number sets and their signed or nonzero subsets. Membership
+provides the conditions defining that set, without choosing a specific value.
+For example, `x $in R` does not imply `x != 0`, whereas `x $in R+` implies
+`x > 0`. `Z+` is an alias for `N+`; use the spellings listed in each entry.
+
 **Public form:** `N`.
 
 **Mathematical function.** Natural numbers including zero. These are mathematical set objects, not different runtime host types.
@@ -4325,10 +4323,6 @@ cos(pi) = -1
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
 
 **Common native properties and proof routes.** 0 <= x. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
 
 **Checked example.**
 
@@ -4353,10 +4347,6 @@ cos(pi) = -1
 
 **Common native properties and proof routes.** 0 < x; 0 <= x; x != 0. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4377,10 +4367,6 @@ cos(pi) = -1
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
 
 **Common native properties and proof routes.** Z is included in Q, R and C; integers are closed under +, -, *. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
 
 **Checked example.**
 
@@ -4403,10 +4389,6 @@ cos(pi) = -1
 
 **Common native properties and proof routes.** Q is included in R and C; division needs a nonzero divisor. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4427,10 +4409,6 @@ cos(pi) = -1
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
 
 **Common native properties and proof routes.** R is included in C; real arithmetic and order retain their domain guards. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
 
 **Checked example.**
 
@@ -4453,10 +4431,6 @@ sqrt(2) $in R
 
 **Common native properties and proof routes.** Complex arithmetic is available; ordered comparisons still require real operands. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4477,10 +4451,6 @@ i $in C
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
 
 **Common native properties and proof routes.** 0 < x; 0 <= x; x != 0; x $in Q. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
 
 **Checked example.**
 
@@ -4503,10 +4473,6 @@ i $in C
 
 **Common native properties and proof routes.** 0 < x; 0 <= x; x != 0; x $in R. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4527,10 +4493,6 @@ i $in C
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
 
 **Common native properties and proof routes.** x < 0; x <= 0; x != 0; x $in Q. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
 
 **Checked example.**
 
@@ -4553,10 +4515,6 @@ i $in C
 
 **Common native properties and proof routes.** x < 0; x <= 0; x != 0; x $in Z. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4577,10 +4535,6 @@ i $in C
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
 
 **Common native properties and proof routes.** x < 0; x <= 0; x != 0; x $in R. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
 
 **Checked example.**
 
@@ -4603,10 +4557,6 @@ i $in C
 
 **Common native properties and proof routes.** x != 0; x $in Q, without choosing its sign. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4627,10 +4577,6 @@ i $in C
 **Well-definedness and domain.** Native set object. Membership and a typed declaration establish facts about its elements; the set object itself requires no input guard.
 
 **Common native properties and proof routes.** x != 0; x $in Z, without choosing its sign. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
 
 **Checked example.**
 
@@ -4653,10 +4599,6 @@ i $in C
 
 **Common native properties and proof routes.** x != 0; x $in R, without choosing its sign. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4678,10 +4620,6 @@ i $in C
 
 **Common native properties and proof routes.** x != 0; x $in C; real sign is not available for general complex values. Signed/nonzero consequences are stored by inference; widening to larger standard carriers is available to structural membership checking.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
-**Nearest boundary.** Base-carrier membership does not imply a sign, nonzeroness, or a concrete value. Z+ is the supported alias for N+; do not infer undocumented underscore aliases.
-
 **Checked example.**
 
 ```litex
@@ -4702,8 +4640,6 @@ i $in C*
 **Well-definedness and domain.** a, b $in C. Every child expression must first be WD.
 
 **Common native properties and proof routes.** Commutativity, associativity, zero identity, and appropriate numeric carrier closure.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Integers/reals widen to C; a general complex result is not automatically ordered.
 
@@ -4730,8 +4666,6 @@ forall a, b C:
 
 **Common native properties and proof routes.** a - a = 0; a - 0 = a; integer/real/complex closure.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Natural-number subtraction can be negative; N is not closed under arbitrary subtraction.
 
 **Checked example.**
@@ -4757,8 +4691,6 @@ forall a C:
 
 **Common native properties and proof routes.** -(-a) = a; a + (-a) = 0; appropriate carrier closure.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Unary minus is distinct from binary subtraction and does not supply order on general C.
 
 **Checked example.**
@@ -4782,8 +4714,6 @@ forall a C:
 **Well-definedness and domain.** a, b $in C. Every child expression must first be WD.
 
 **Common native properties and proof routes.** Commutativity, associativity, one/zero identities and carrier closure.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Cancelling a factor requires a justified nonzero condition; zero factors cannot be divided away.
 
@@ -4809,8 +4739,6 @@ forall a, b C:
 **Well-definedness and domain.** R or C base with exponent in N; nonzero C base with exponent in Z; positive real base with any real exponent; nonnegative real base with a positive real exponent; also closed positive rational base with a rational noninteger exponent. Every child expression must first be WD. Natural powers retain `0^0=1`.
 
 **Common native properties and proof routes.** Closed powers and supported exponent identities. Natural exponent zero uses the native a^0 = 1 convention.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Negative bases with noninteger exponents and general complex exponents remain unsupported. Zero to a negative power is rejected. WD does not imply that every symbolic identity or exact calculation is available.
 
@@ -4843,8 +4771,6 @@ For checked signs, parity and order recipes, see
 
 **Common native properties and proof routes.** |-x| = |x|; |x| >= 0; square/magnitude and signed-value rules.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Use C_abs for a general complex value rather than silently treating i as real.
 
 **Checked example.**
@@ -4870,8 +4796,6 @@ forall x R:
 
 **Common native properties and proof routes.** Commutativity, idempotence and lower-bound laws.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Arguments are real, not arbitrary sets or unordered complex scalars.
 
 **Checked example.**
@@ -4895,8 +4819,6 @@ forall x R:
 **Well-definedness and domain.** a, b $in R. Every child expression must first be WD.
 
 **Common native properties and proof routes.** Commutativity, idempotence and upper-bound laws.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** The binary operator differs from finite_set_max, whose input is one finite nonempty set.
 
@@ -4922,8 +4844,6 @@ forall x R:
 
 **Common native properties and proof routes.** Integer result; floor(x) <= x < floor(x) + 1; exact values for closed inputs.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** For a negative input, floor rounds toward negative infinity, not toward zero.
 
 **Checked example.**
@@ -4947,8 +4867,6 @@ floor(-1.2) = -2
 
 **Common native properties and proof routes.** Integer result; ceil(x) - 1 < x <= ceil(x); exact values for closed inputs.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Ceiling and floor differ at noninteger arguments, including negative ones.
 
 **Checked example.**
@@ -4971,8 +4889,6 @@ ceil(-1.2) = -1
 **Well-definedness and domain.** x $in R. Every child expression must first be WD.
 
 **Common native properties and proof routes.** Integer codomain and branches determined by positive, zero or negative x.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** This is real sign, not the phase of a complex number.
 
@@ -4998,8 +4914,6 @@ sign(2) = 1
 
 **Common native properties and proof routes.** For a positive divisor, the remainder is in [0,d). Closed signed dividends use the Euclidean remainder convention.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** The divisor cannot be zero; this differs from real division.
 
 **Checked example.**
@@ -5023,8 +4937,6 @@ sign(2) = 1
 
 **Common native properties and proof routes.** Integer result and the quotient/remainder decomposition for a positive divisor.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** The quotient interface requires a positive divisor, stricter than modulo’s nonzero integer divisor.
 
 **Checked example.**
@@ -5047,8 +4959,6 @@ quot(7, 3) = 2
 **Well-definedness and domain.** a, b $in Z; a != 0 or b != 0. Child WD is also required.
 
 **Common native properties and proof routes.** Positive natural result; sign-insensitivity, common divisibility and familiar closed values.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** The disjunction excludes only the all-zero pair; proving one particular operand nonzero is not always necessary.
 
@@ -5082,8 +4992,6 @@ existing gcd and remainder WD requirements.
 
 **Common native properties and proof routes.** Natural result; zero-input and sign-insensitivity laws.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Unlike gcd, lcm permits the all-zero pair. Distinguish the two domain contracts.
 
 **Checked example.**
@@ -5107,8 +5015,6 @@ lcm(0, 3) = 0
 
 **Common native properties and proof routes.** Positive natural result; 0! = 1 and the successor recurrence.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Negative or noninteger arguments do not satisfy the native factorial domain.
 
 **Checked example.**
@@ -5131,8 +5037,6 @@ lcm(0, 3) = 0
 **Well-definedness and domain.** x $in R. Establish guards before using the object.
 
 **Common native properties and proof routes.** Real result, bounded by -1 and 1; oddness, periodicity and the Pythagorean identity.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators.
 
@@ -5166,8 +5070,6 @@ under [Trigonometric rules](#trigonometric-rules).
 
 **Common native properties and proof routes.** Real result, bounded by -1 and 1; evenness, periodicity and the Pythagorean identity.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators.
 
 **Checked example.**
@@ -5190,8 +5092,6 @@ cos(pi) = -1
 **Well-definedness and domain.** x $in R; cos(x) != 0. Establish guards before using the object.
 
 **Common native properties and proof routes.** Real result; tan(x) = sin(x) / cos(x) in its domain.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators.
 
@@ -5216,8 +5116,6 @@ tan(pi / 4) = 1
 
 **Common native properties and proof routes.** Real result; cot(x) = cos(x) / sin(x) in its domain.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators.
 
 **Checked example.**
@@ -5240,8 +5138,6 @@ cot(pi / 2) = 0
 **Well-definedness and domain.** x $in R; -1 <= x <= 1. Establish guards before using the object.
 
 **Common native properties and proof routes.** Principal real result; sin(arcsin(x)) = x on [-1,1].
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators.
 
@@ -5266,8 +5162,6 @@ arcsin(1) = pi / 2
 
 **Common native properties and proof routes.** Principal real result; cos(arccos(x)) = x on [-1,1].
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators.
 
 **Checked example.**
@@ -5290,8 +5184,6 @@ arccos(0) = pi / 2
 **Well-definedness and domain.** x $in R. Establish guards before using the object.
 
 **Common native properties and proof routes.** Principal real result; tan(arctan(x)) = x, with its principal-range domain facts.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators. The initial bare arctan(1) = pi / 4 goal missed current search; this entry demonstrates valid real output without claiming that exact evaluation route.
 
@@ -5316,8 +5208,6 @@ arctan(1) $in R
 
 **Common native properties and proof routes.** Principal real result; cot(arccot(x)) = x; the zero value is pi/2 in the native convention.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Inverse composition in the opposite direction needs a principal-range restriction. Realness alone does not supply tangent/cotangent nonzero denominators. The initial bare arccot(1) = pi / 4 goal missed current search; the exact zero value and real-output membership are checked separately.
 
 **Checked example.**
@@ -5340,8 +5230,6 @@ arccot(1) $in R
 **Well-definedness and domain.** x $in R. Child WD also applies.
 
 **Common native properties and proof routes.** Positive real codomain; exp(0) = 1; exp(1) = e; exponential/logarithm identities.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** `exp(x)=e^x` is checked for real x through the positive-base power domain. General complex exponential arguments and complex exponents remain unsupported.
 
@@ -5366,8 +5254,6 @@ exp(1) = e
 
 **Common native properties and proof routes.** Real codomain; ln(1) = 0; ln(e) = 1; inverse relations with exp.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Nonzero alone permits negative reals and is insufficient for ln.
 
 **Checked example.**
@@ -5390,8 +5276,6 @@ ln(e) = 1
 **Well-definedness and domain.** b, x $in R; b > 0; b != 1; x > 0. Child WD also applies.
 
 **Common native properties and proof routes.** log(b,1) = 0; log(b,b) = 1 under the exact base/argument conditions.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Argument order is base then value. A positive base equal to one remains invalid.
 
@@ -5416,8 +5300,6 @@ log(2, 1) = 0
 
 **Common native properties and proof routes.** Nonnegative real codomain; sqrt(x)^2 = x and sqrt(x^2) = |x| for real x.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A complex square-root interpretation is not supplied by this real primitive; sqrt(x^2) is not x for arbitrary real x.
 
 **Checked example.**
@@ -5440,8 +5322,6 @@ sqrt((-3)^2) = |-3| = 3
 **Well-definedness and domain.** z $in C.
 
 **Common native properties and proof routes.** Real result and the scalar reconstruction z = re(z) + img(z) * i.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** img(z) is a real coefficient, not img(z) * i. Use abs only for a real argument.
 
@@ -5466,8 +5346,6 @@ re(i) = 0
 
 **Common native properties and proof routes.** Real result; img(i) = 1 and img(real) = 0.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** img(z) is a real coefficient, not img(z) * i. Use abs only for a real argument.
 
 **Checked example.**
@@ -5490,8 +5368,6 @@ img(2) = 0
 **Well-definedness and domain.** z $in C.
 
 **Common native properties and proof routes.** Nonnegative real result; squared modulus is re(z)^2 + img(z)^2; agrees with abs for real z.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** img(z) is a real coefficient, not img(z) * i. Use abs only for a real argument.
 
@@ -5518,8 +5394,6 @@ C_abs(-3) = 3
 
 **Common native properties and proof routes.** Membership gives a disjunction; commutativity, associativity, idempotence and empty-set identity.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Membership introduction and elimination can have different proof routes. A conjunction does not select a disjunct or an existential witness automatically.
 
 **Checked example.**
@@ -5542,8 +5416,6 @@ union({1}, {}) = {1}
 **Well-definedness and domain.** Child set objects must be WD. In Litex’s pure-set foundation, these constructors do not introduce a new universal host carrier.
 
 **Common native properties and proof routes.** Membership exposes both memberships; commutativity, associativity, idempotence and empty-set laws.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Membership introduction and elimination can have different proof routes. A conjunction does not select a disjunct or an existential witness automatically.
 
@@ -5568,8 +5440,6 @@ intersect({1}, {}) = {}
 
 **Common native properties and proof routes.** Membership exposes x in A and not x in B; difference by the empty set and by itself.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Membership introduction and elimination can have different proof routes. A conjunction does not select a disjunct or an existential witness automatically.
 
 **Checked example.**
@@ -5593,8 +5463,6 @@ set_minus(R, {}) = R
 
 **Common native properties and proof routes.** Membership has an intermediate member-set witness; singleton-family and power-set union identities.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Membership introduction and elimination can have different proof routes. A conjunction does not select a disjunct or an existential witness automatically.
 
 **Checked example.**
@@ -5617,8 +5485,6 @@ family_union(power_set({1, 2})) = {1, 2}
 **Well-definedness and domain.** Child set objects must be WD. In Litex’s pure-set foundation, these constructors do not introduce a new universal host carrier.
 
 **Common native properties and proof routes.** A member belongs to every member set; quantified membership introduction uses a reserved theorem. The current checked example explicitly supplies the family-member universal rather than relying on literal intersection evaluation.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Membership introduction and elimination can have different proof routes. The membership release takes the family_intersect object as its second argument, not the raw family. Absolute empty-family intersection has no writable universal-set interpretation here; the explicit set-valued membership/projection interfaces require a nonempty family and the factor obligations. Constructor WD alone does not supply those facts.
 
@@ -5647,8 +5513,6 @@ release thm family_intersect_member(1, family_intersect({{1}}))
 
 **Common native properties and proof routes.** B in power_set(A) corresponds to B subset A; {} and A are members; membership supplies a subset interface.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Membership introduction and elimination can have different proof routes. A conjunction does not select a disjunct or an existential witness automatically.
 
 **Checked example.**
@@ -5672,8 +5536,6 @@ by def {1} $subset {1, 2}
 **Well-definedness and domain.** I is nonempty; I and X are sets; A belongs to fn(k I) power_set(X). All three objects are WD.
 
 **Common native properties and proof routes.** A singleton index identifies the family member. Intersection membership introduction requires pointwise membership and index_intersect_member; union membership exposes an index witness.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** The current WD contract excludes an empty index even if a different mathematical convention could assign it a value. The family’s return carrier must be the required power set.
 
@@ -5700,8 +5562,6 @@ result = result
 
 **Common native properties and proof routes.** A singleton index identifies the family member. Intersection membership introduction requires pointwise membership and index_intersect_member; union membership exposes an index witness.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** The current WD contract excludes an empty index even if a different mathematical convention could assign it a value. The family’s return carrier must be the required power set.
 
 **Checked example.**
@@ -5727,8 +5587,6 @@ result = result
 
 **Common native properties and proof routes.** A candidate’s pointwise selections can be introduced through index_cart_member. Nonemptiness from nonempty factors uses the explicit Choice-based native interfaces; product WD alone does not prove that factors are nonempty.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Knowing g is a function does not establish every factor is nonempty. Do not infer construction projections or a Cartesian dimension.
 
 **Checked example.**
@@ -5753,8 +5611,6 @@ product_set = product_set
 **Well-definedness and domain.** Each element is WD; every pair of displayed elements must verify unequal. The empty list requires no element or distinctness proof.
 
 **Common native properties and proof routes.** Finiteness and displayed cardinality; singleton membership implies equality, and longer-list membership exposes equality alternatives. Displayed membership can use a matching element equality.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Unlike informal set notation, duplicate entries or unknown pairwise inequality can fail WD. Distinctness is part of this constructor contract.
 
@@ -5787,8 +5643,6 @@ A negative membership or an `or` containing a satisfiable branch does not use
 this case. The rule never bypasses a failed partial-expression guard.
 See [empty-membership builders](../examples/proof_nodes/equal/by_builtin_rule/set_builder_empty_membership.lit).
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** This is bounded separation, not unrestricted comprehension over a universal set. A direct forall filter must be packaged in real concrete predicate vocabulary.
 
 **Checked example.**
@@ -5814,8 +5668,6 @@ forall x {t R: t > 0}:
 
 **Common native properties and proof routes.** Finite membership bounds and finite expansion; reversed or equal endpoints give an empty range.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Check which upper endpoint convention the proof or iteration statement expects.
 
 **Checked example.**
@@ -5839,8 +5691,6 @@ not 3 $in range(1, 3)
 
 **Common native properties and proof routes.** Finite membership bounds and expansion including the upper endpoint; reversed endpoints give an empty range.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Check which upper endpoint convention the proof or iteration statement expects.
 
 **Checked example.**
@@ -5863,8 +5713,6 @@ not 3 $in range(1, 3)
 **Well-definedness and domain.** S is WD as a set and n belongs to N. A member’s calls require an index in its complete input domain.
 
 **Common native properties and proof routes.** Equals fn(k closed_range(1,n)) S, with the zero-length domain {}. Coordinate membership is ordinary callable membership, not an attached tuple_dim.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Automatic reconstruction (preview).** For a stored membership in `finite_seq(S,n)` with literal length n, equality builtin search accepts `x=(x(1),...,x(n))` and its reverse, with every coordinate in order and on the same exact subject. Zero length reconstructs `()` and length one uses `tuple(x(1))`. The rule cites the original membership FactId; it performs no additional premise search. Arbitrary symbolic lengths or aliased carrier sets are not resolved by this leaf. Litex-to-Lean compilation of this new builtin evidence remains unsupported and fails closed.
 
@@ -5891,8 +5739,6 @@ finite_seq(R, 2) = fn(k closed_range(1, 2)) R
 
 **Common native properties and proof routes.** seq(S) equals fn(k N+) S. Legal calls inherit the return-carrier membership; function-space membership introduction has a native theorem interface.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** The sequence convention is one-based; do not assume that index zero is admitted.
 
 **Checked example.**
@@ -5915,8 +5761,6 @@ seq(N) = fn(k N+) N
 **Well-definedness and domain.** The finite endpoint is WD and belongs to R.
 
 **Common native properties and proof routes.** Membership gives realness and the indicated strict or weak bound; the ray is a subset of R.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** The apostrophe is the interval prefix. Missing infinite endpoints are notation, not an infinity object usable in arithmetic.
 
@@ -5941,8 +5785,6 @@ not 0 $in '(0,)
 
 **Common native properties and proof routes.** Membership gives realness and the indicated strict or weak bound; the ray is a subset of R.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** The apostrophe is the interval prefix. Missing infinite endpoints are notation, not an infinity object usable in arithmetic.
 
 **Checked example.**
@@ -5965,8 +5807,6 @@ not 0 $in '(0,)
 **Well-definedness and domain.** The finite endpoint is WD and belongs to R.
 
 **Common native properties and proof routes.** Membership gives realness and the indicated strict or weak bound; the ray is a subset of R.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** The apostrophe is the interval prefix. Missing infinite endpoints are notation, not an infinity object usable in arithmetic.
 
@@ -5991,8 +5831,6 @@ not 0 $in '(,0)
 
 **Common native properties and proof routes.** Membership gives realness and the indicated strict or weak bound; the ray is a subset of R.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** The apostrophe is the interval prefix. Missing infinite endpoints are notation, not an infinity object usable in arithmetic.
 
 **Checked example.**
@@ -6015,8 +5853,6 @@ not 0 $in '(,0)
 **Well-definedness and domain.** Both endpoints are WD and belong to R. Reversed endpoints still form a WD empty interval.
 
 **Common native properties and proof routes.** Membership exposes the precise endpoint inequalities; changing a bracket changes boundary membership.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** These are real intervals. range and closed_range are integer sets and have different finiteness consequences.
 
@@ -6041,8 +5877,6 @@ not 0 $in '(0,2)
 
 **Common native properties and proof routes.** Membership exposes the precise endpoint inequalities; changing a bracket changes boundary membership.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** These are real intervals. range and closed_range are integer sets and have different finiteness consequences.
 
 **Checked example.**
@@ -6065,8 +5899,6 @@ not 0 $in '(0,2]
 **Well-definedness and domain.** Both endpoints are WD and belong to R. Reversed endpoints still form a WD empty interval.
 
 **Common native properties and proof routes.** Membership exposes the precise endpoint inequalities; changing a bracket changes boundary membership.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** These are real intervals. range and closed_range are integer sets and have different finiteness consequences.
 
@@ -6091,8 +5923,6 @@ not 2 $in '[0,2)
 
 **Common native properties and proof routes.** Membership exposes the precise endpoint inequalities; changing a bracket changes boundary membership.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** These are real intervals. range and closed_range are integer sets and have different finiteness consequences.
 
 **Checked example.**
@@ -6115,8 +5945,6 @@ not 2 $in '[0,2)
 **Well-definedness and domain.** All factor objects are WD. Membership checks the candidate’s complete finite input domain and all coordinate conditions.
 
 **Common native properties and proof routes.** Coordinate membership; zero factors give a singleton containing the empty function; finite cardinality is the product of factor cardinalities; an empty factor makes a nonzero-factor product empty.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** A Cartesian set has no retained construction dimension or projection operator. Equal Cartesian sets are not distinguished by the expression used to construct them.
 
@@ -6143,8 +5971,6 @@ finite_set_size(cart()) = 1
 **Well-definedness and domain.** Each component is WD. Calls to a named tuple require an in-domain index and its checked finite-function interface.
 
 **Common native properties and proof routes.** Coordinate values and exact finite-sequence membership. Equality from coordinates requires both complete domains and every coordinate, through tuple_equal_from_coordinates.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Ordinary calls also accept literal tuple heads: `(1,2)(1)=1` and `((1,2),3)(1)(2)=2`. Every call checks its receiver's complete domain; `(1,2)(3)` and `((1,2),3)(2)(1)` fail WD. Old `[index]`, dimension and constructor-projection syntax is removed. A singleton uses `tuple(value)`, since `(value)` is grouping.
 
@@ -6185,8 +6011,6 @@ p(2) = 2
 
 **Common native properties and proof routes.** Membership supplies callable domain and return contracts. Alpha-renamed parameters give an equivalent signature; explicit fn_set_member checks the full pointwise obligation.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A function-space object is not itself a function to call. A return bound is not automatically the actual image.
 
 **Checked example.**
@@ -6213,8 +6037,6 @@ fn(x R) R = fn(t R) R
 
 **Common native properties and proof routes.** A matching function-space membership and checked beta/evaluation equalities. Named or direct applications use the same domain conditions. A template `have fn ... = body` application can also unfold using the parent equality's checked template arguments and complete application domain. The selected declared body must have the same input carriers and guards; its substituted residual keeps the existing definition-premise truth permissions. This supports set-valued bodies without rechecking a synthetic anonymous application. When cached WD supplies only an ID, the rule rechecks the declared template's argument memberships and guards with the existing definition-premise ceiling. Detailed evidence distinguishes the parent domain from this rechecked domain and retains `template_instance`, the instantiated `function`, `checked_domain`, each argument/guard proof, and the residual proof. See the [set-valued template tracer](../examples/proof_nodes/equal/by_object_definition/by_template/set_valued_application.lit).
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Writing the desired T cannot make an incompatible body return-typed. Use a real guard for a partial expression.
 
 **Checked example.**
@@ -6237,8 +6059,6 @@ fn(x R: x != 0) R {1 / x}(2) = 1 / 2
 **Well-definedness and domain.** f is WD and has a known callable function-space interface.
 
 **Common native properties and proof routes.** A legal application lies in its image; image membership supports preimage extraction. A constant function on a proved nonempty domain has a singleton image.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** The image need not equal the codomain. Empty input domains give an empty image, even for a written constant body.
 
@@ -6297,8 +6117,6 @@ For a checked complete unary domain `fn(x S) T`, both inverse-image forms are su
 
 **Common native properties and proof routes.** Scalar carrier closure, singleton and splitting identities, and pointwise comparison through explicit native theorem interfaces.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Unlike range(a,b), this operator includes b; its current WD contract does not admit a reversed empty range.
 
 **Checked example.**
@@ -6341,8 +6159,6 @@ aggregate rules still require a real-valued iterand.
 
 **Common native properties and proof routes.** Scalar carrier closure, singleton and splitting identities, and nonzero-factor properties.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A usable callable signature must cover every index, not merely the two endpoints.
 
 **Checked example.**
@@ -6366,8 +6182,6 @@ product(2, 2, fn(k Z) Z {k}) = 2
 
 **Common native properties and proof routes.** Empty sum zero, singleton evaluation, set partition/reindex identities, and pointwise comparison through native interfaces.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Finiteness and domain coverage are separate obligations.
 
 **Checked example.**
@@ -6390,8 +6204,6 @@ finite_set_sum({1, 2}, fn(k Z) Z {k}) = 3
 **Well-definedness and domain.** S finite; f unary with a domain covering S and return carrier a subset of C. All child objects are WD.
 
 **Common native properties and proof routes.** Empty product one, singleton evaluation, partition/reindex identities and nonzero-factor laws.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** The empty product is one; it is not an empty sum convention.
 
@@ -6417,8 +6229,6 @@ finite_set_product({2, 3}, fn(k Z) Z {k}) = 6
 **Well-definedness and domain.** Integer endpoints; f unary into T over the indices; op belongs to fn(x,y T) T; seed in T. All child objects are WD.
 
 **Common native properties and proof routes.** A reversed empty range returns the seed; scalar addition folds can connect to sums.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** T is the actual homogeneous carrier; arbitrary seed/operation types cannot be mixed.
 
@@ -6474,8 +6284,6 @@ associative-commutative `finite_set_reduce` interface instead.
 
 **Common native properties and proof routes.** Empty-set fold returns seed; singleton step uses finite_set_reduce_singleton; additive folds connect to finite_set_sum.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Typing alone does not certify a chosen operation is commutative. Claims about changing enumeration need separately justified laws.
 
 **Checked example.**
@@ -6499,8 +6307,6 @@ finite_set_reduce({1,2}, fn(k Z) Z {k}, fn(a,b Z) Z {a+b}, 0) = finite_set_sum({
 
 **Common native properties and proof routes.** Natural result; empty/singleton/list size and inclusion/finite-product cardinality laws.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A set object is not automatically finite; displayed lists also require pairwise distinctness.
 
 **Checked example.**
@@ -6523,8 +6329,6 @@ finite_set_size({1,2}) = 2
 **Well-definedness and domain.** S finite, nonempty, and a subset of R.
 
 **Common native properties and proof routes.** Real result, membership in S and upper-bound laws.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** Neither an empty set nor an arbitrary finite complex-valued set supplies this maximum.
 
@@ -6569,8 +6373,6 @@ follow the whole-object WD checks, including pairwise distinctness. Successful
 
 **Common native properties and proof routes.** Real result, membership in S and lower-bound laws.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** The binary min takes two real arguments; this operator takes a single set.
 
 **Checked example.**
@@ -6595,8 +6397,6 @@ finite_set_min({1,3,2}) $in {1,3,2}
 **Well-definedness and domain.** The declaration owner exists, arguments match its parameter contracts, and its instantiated field/condition schema is WD.
 
 **Common native properties and proof routes.** Membership means the exact finite coordinate structure and declared laws. Direct typed bindings open one layer; explicit struct_member introduces membership when a supported structural proof needs it.
-
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
 
 **Nearest boundary.** A field name does not choose a struct owner. Qualified and template-instantiated views retain their actual definition owner.
 
@@ -6641,8 +6441,6 @@ interchange receivers. See the
 
 **Common native properties and proof routes.** Field WD makes the path legal; release struct def exposes the selected layer’s carriers, coordinate bridges and laws when needed in proof.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** A WD path does not automatically open every nested struct definition or assert every surrounding property.
 
 **Checked example.**
@@ -6681,8 +6479,6 @@ forall p &Point:
 
 **Common native properties and proof routes.** The instance obtains the ordinary definition’s value or callable interface; release obj def and equality/application routes use that stored definition.
 
-**Checking and use.** Check child objects before the operation-specific requirements. Result membership is a separate usable fact; WD alone is not a proof of every property of the result.
-
 **Nearest boundary.** Angle-bracket arguments specialize the family. Parenthesized arguments apply a fully specialized function.
 
 **Checked example.**
@@ -6705,6 +6501,11 @@ template<S set>:
 <a id="builtin-predicates"></a>
 
 ## Builtin atomic fact dictionary and relationships
+
+Atomic fact verification first checks argument WD and predicate domains, then
+looks for a proof through known facts, calculation, builtin rules, or definitions.
+A successful fact and its applicable consequences are stored. Negative facts
+do not inherit the positive form’s definition expansion.
 
 | ID | Public form | Mathematical role | Example status |
 |---|---|---|---|
@@ -6869,7 +6670,7 @@ its negation.
 **Source:** [atomic WD](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs),
 [structural membership](../src/execute/execute_fact_stmt/verify_atomic_fact/search_structural_membership.rs),
 [signed-carrier inference](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/membership_signed_standard_set.rs),
-[builder projection](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/membership_projection.rs),
+[builder projection](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/infer_in_fact.rs),
 [subset inference](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/subset.rs).
 
 #### Alpha matching and restricted equality transport
@@ -6899,8 +6700,6 @@ its negation.
 **Well-definedness and domain.** Both objects must be WD. Equality is not limited to real scalars; ordered comparisons have their own stricter carrier requirements.
 
 **Relationships and inference.** Equality supports symmetry, transitivity and justified congruence. Set equality is extensional; function equality can be proved by complete-domain extensionality. An inequality is not inferred merely from a failed equality search.
-
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
 
 **Nearest boundary.** A known value equality can require an explicit intermediate line before rewriting inside a larger expression; see P05.
 
@@ -6934,8 +6733,6 @@ by extension {1, 2} = {2, 1}
 
 **Relationships and inference.** On real operands, not a < b means a >= b. Strict order implies inequality and supports the corresponding weak order.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** General complex values are not ordered here. Multiplying or dividing an inequality needs the appropriate sign and nonzero facts; do not silently preserve its direction for negative factors.
 
 **Checked example.**
@@ -6959,8 +6756,6 @@ not 2 < 1
 
 **Relationships and inference.** a > b is the converse of b < a; not a > b means a <= b. The converse may be verified rather than eagerly stored in both spellings.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** General complex values are not ordered here. Multiplying or dividing an inequality needs the appropriate sign and nonzero facts; do not silently preserve its direction for negative factors.
 
 **Checked example.**
@@ -6983,8 +6778,6 @@ not 1 > 2
 **Well-definedness and domain.** Both operands belong to R and are WD. A negated comparison has the same carrier requirements.
 
 **Relationships and inference.** Equality and strict less-than each imply weak less-than. On reals, not a <= b means a > b; a weak nonnegative bound alone does not imply nonzero.
-
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
 
 **Nearest boundary.** General complex values are not ordered here. Multiplying or dividing an inequality needs the appropriate sign and nonzero facts; do not silently preserve its direction for negative factors.
 
@@ -7010,8 +6803,6 @@ not 2 <= 1
 
 **Relationships and inference.** a >= b is the converse of b <= a; not a >= b means a < b. Positive/negative signed carriers provide their corresponding bounds.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** General complex values are not ordered here. Multiplying or dividing an inequality needs the appropriate sign and nonzero facts; do not silently preserve its direction for negative factors.
 
 **Checked example.**
@@ -7035,8 +6826,6 @@ not 1 >= 2
 **Well-definedness and domain.** The argument object must be WD. This predicate is not a host-language runtime-type test.
 
 **Relationships and inference.** Numerals, scalar expressions, functions, standard number sets and user-defined sets all have sethood. Membership in N or R remains a separate mathematical fact.
-
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
 
 **Nearest boundary.** not $is_set is syntactically available but no positive non-set primitive is introduced by the current pure-set model. A failed WD expression is not thereby a non-set.
 
@@ -7062,8 +6851,6 @@ $is_set(fn(x R) R {x})
 
 **Relationships and inference.** A positive certificate licenses arbitrary have x S. Membership implies nonemptiness mathematically; nonemptiness does not give a specified numerical witness name without a selection statement. Empty displayed sets have the negative property.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** A builder may be nonempty mathematically while cold automatic search has not established it; see P06 for an explicit witness.
 
 **Checked example.**
@@ -7088,8 +6875,6 @@ witness $is_nonempty_set({x R: x > 0}) from 1
 
 **Relationships and inference.** Finiteness licenses finite_set_size, with additional conditions for extrema. A subset of a finite set is finite; the native theorem interface is useful for explicit quantified premises. Finiteness does not imply nonemptiness.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** A set object, subset of R, or a written iteration is not a finiteness certificate by itself.
 
 **Checked example.**
@@ -7113,8 +6898,6 @@ not $is_finite_set(N)
 **Well-definedness and domain.** Both set objects are WD. The positive definition uses the corresponding universal membership condition.
 
 **Relationships and inference.** Positive inclusion exposes forall x A: x in B, except a builder route can use its already projected base/filter facts. Both subset directions establish equality by extension.
-
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
 
 **Nearest boundary.** Negative inclusion means there is a counterexample; it does not make an arbitrarily selected member of A a counterexample.
 
@@ -7142,8 +6925,6 @@ by contra:
 
 **Relationships and inference.** A superset B is the reversed subset relationship. It transports membership from B to A, not from A to B.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** The direction is easy to reverse when writing a forall or calling a theorem.
 
 **Checked example.**
@@ -7170,8 +6951,6 @@ by contra:
 
 **Relationships and inference.** Its concrete definition exposes ordinary inclusion and set inequality. Ordinary subset permits equality; proper subset excludes it.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** Negating proper inclusion does not imply proper inclusion in the opposite direction: the sets may be equal or incomparable.
 
 **Checked example.**
@@ -7197,8 +6976,6 @@ by contra:
 
 **Relationships and inference.** Its definition exposes superset and set inequality; it is the reversal of proper subset.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** A larger-looking expression does not prove proper containment; both inclusion and inequality must be justified.
 
 **Checked example.**
@@ -7223,8 +7000,6 @@ by contra:
 **Well-definedness and domain.** n belongs to N and is WD. The positive definition includes n >= 2 and the trial-divisor universal over the native range.
 
 **Relationships and inference.** Closed primality can be decided by native calculation. A verified positive instance exposes its bound and trial-divisor definition. Explicit by def checks the actual definitional clauses rather than replacing them with a calculation request.
-
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
 
 **Nearest boundary.** One is not prime. An out-of-domain argument is a WD/domain issue, not a proof of negated primality.
 
@@ -7259,8 +7034,6 @@ arbitrary integer or real argument is still rejected unless its membership in
 
 **Relationships and inference.** A positive instance exposes a != 0 or b != 0 and gcd(a,b) = 1. Natural coprimality and the integer-domain gcd object have different public argument contracts.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** Do not assume this predicate accepts all signed integer pairs merely because many mathematical texts define that extension.
 
 **Checked example.**
@@ -7294,8 +7067,6 @@ this predicate's domain.
 
 **Relationships and inference.** The positive definition checks a % d = 0 and an integer multiplier witness a = k * d. A positive fact exposes those clauses for later use.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** This ordering differs from the conventional written relation d | a. A zero divisor is outside the native predicate domain.
 
 **Checked example.**
@@ -7325,8 +7096,6 @@ by contra:
 
 **Relationships and inference.** The definition is forall x,y A: f(x)=f(y) implies x=y. A positive fact exposes this universal; negative injectivity does not automatically select a collision pair.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** A callable signature or equality at one point does not prove injectivity. The carriers are part of the requested mapping interface.
 
 **Checked example.**
@@ -7349,8 +7118,6 @@ by def $injective({1}, {1}, id1)
 **Well-definedness and domain.** A and B are sets; f satisfies the requested unary callable signature. Equivalent carrier spellings require checked interface evidence, and all calls must be WD.
 
 **Relationships and inference.** The definition is forall y B: exist x A st {y=f(x)}. Prove that universal with witnesses, then fold by def; positive inference exposes the same interface.
-
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
 
 **Nearest boundary.** One existential preimage does not prove surjectivity over the whole codomain. A return bound need not equal the actual image.
 
@@ -7394,8 +7161,6 @@ they support the [choice definition tracer](../examples/proof_nodes/atomic/by_de
 
 **Relationships and inference.** Its definition is the conjunction of injective and surjective on that triple. Positive definition inference exposes the two mapping facts.
 
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
-
 **Nearest boundary.** Changing the codomain can change bijectivity even when the pointwise expression is unchanged.
 
 **Checked example.**
@@ -7424,8 +7189,6 @@ by def $bijective({1}, {1}, id1)
 **Well-definedness and domain.** I and S are sets; g satisfies fn(alpha I) S and f satisfies fn(alpha I) family_union(S). Both callable contracts are independent WD requirements.
 
 **Relationships and inference.** The pointwise membership universal is the defining clause. Choice releases produce existential facts with this atomic specification; obtain is needed to name the chosen function.
-
-**Checking and use.** Check argument-object WD and predicate-domain requirements, then the supported known/calculation/verification/definition route. Store a successful fact and only its applicable inference; negative forms do not inherit positive definition expansion.
 
 **Nearest boundary.** An arbitrary function returning into family_union(S) is not necessarily a choice from each particular g(alpha). Carrier equivalence must be checked for both signatures.
 
@@ -9342,7 +9105,13 @@ applies to `algo ... by cases`; coverage and return checks are still required.
 
 `have fn ... by induc measure from lower` defines a recursive function. Litex
 checks that the measure and lower bound are integers, recursive calls stay in
-the domain, and each recursive measure is smaller but not below the bound.
+the domain, and each recursive measure is smaller but not below the current bound.
+The lower bound is also substituted at the recursive arguments and must be at
+least the current lower bound. Consequently the nonnegative integer
+`measure - lower` strictly decreases. Parameter-dependent bounds are permitted
+when this obligation is proved; for example, `from b` permits calls from
+`(n, b)` to `(n - 1, b)`, but not `(n - 1, b - 1)`.
+See the [lower-bound acceptance example](../examples/stmt_nodes/definition/induction_lower_bound.lit).
 Every sibling case list, including nested lists, must cover its enclosing
 domain and be pairwise disjoint. A nested list is checked under its parent
 guard; it need not cover integers excluded by that guard. An invalid list

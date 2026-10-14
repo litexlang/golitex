@@ -20,7 +20,7 @@ The set-proof follow-up (historical task record; retired) closes 17 of the remai
 
 The five-set follow-up (historical task record; retired) closes those last five gaps with explicit member contracts and extension proofs. Zero recorded gaps is an inventory status, not a whole-corpus acceptance.
 
-These counts describe coverage of written cases, not proof that the implementation is bug-free. The runner audits the enum tree and all `.lit` fixtures on every run.
+The runner audits the enum tree and all `.lit` fixtures on every run.
 
 The rational-power addition (historical task record; retired)
 adds P141–P156 and N141–N149 to Pow. Its exact calculation/eval and domain

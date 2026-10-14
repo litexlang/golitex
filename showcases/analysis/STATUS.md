@@ -44,8 +44,8 @@ with unclear intended statements or conditions are outside this showcase.
 
 ## Explicit assumptions that remain
 
-The registered chapter sources contain four user axioms and one abstract
-predicate signature:
+The registered chapter sources retain four user axioms and one exported
+abstract predicate signature:
 
 | Source | Declaration | Role |
 | --- | --- | --- |
@@ -54,6 +54,10 @@ predicate signature:
 | [Chapter 8](chapter08-infinite-sets.lit) | `axiom_of_choice_for_index_cart` | Choice for indexed products |
 | [Chapter 8](chapter08-infinite-sets.lit) | `axiom_of_choice_for_subsets` | Choice for families of subsets |
 | [Chapter 8](chapter08-infinite-sets.lit) | `choice_property` (`abstract_prop`) | An abstract choice predicate; a signature is not itself a theorem |
+
+Chapter 2 also declares `induction_demo` and `strong_induction_demo` inside
+discarded `sketch` scopes. They are local predicate signatures for conditional
+induction demonstrations, not exported facts.
 
 These are retained background interfaces, not proved foundations. The full
 chapter gate was **non-strict**. Zero active direct `trust` does not mean
@@ -76,3 +80,9 @@ The earlier small-example receipt is retained as
 Its strict result applies to that dated four-export selection, which includes
 a separate public sequence-limit dependency; it does not certify the current
 chapter exports.
+
+The [2026-10-14 repair receipt](../verification_runs/2026-10-14-showcase-repair.md)
+records fresh ordinary acceptance of all eleven current exports, plus a strict
+check of the three small examples with their explicit map dependency. The
+finite-product proof now supplies explicit carrier and predicate projections;
+its two original theorem goal blocks remain unchanged.

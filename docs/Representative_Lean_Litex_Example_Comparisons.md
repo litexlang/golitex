@@ -702,12 +702,9 @@ example (N : ℕ) : ∃ p ≥ N, Nat.Prime p := by
   · exact hp
 ```
 
-Litex makes the assumed background mathematics visible at the front of the
-claim, then shows `obtain`, a case split, the modular calculation, and the
-witness. Lean draws on a mature theorem library and constructs the result
-through named divisibility facts. The two examples do not have identical
-library boundaries, so line count is not a meaningful score; the comparison
-is about the shape of the remaining proof text.
+The Litex example states its background assumptions in the claim, then uses
+`obtain`, a case split, modular arithmetic, and a witness. The Lean example
+uses Mathlib's divisibility theorems. Their library assumptions differ.
 
 ---
 
@@ -770,24 +767,18 @@ have h = (x = 2)
 some_statement(h)
 ```
 
-This is a real expressiveness trade-off. Lean offers a highly general term
-language for propositions and proofs. Litex keeps a narrower object/fact split
-and asks users to name compound subclaims when they cross the directly parsed
-fact shapes. The benefit sought is a smaller, more canonical mathematical
-surface; the cost should be stated plainly rather than treated as an
-implementation detail.
+Lean supports general proposition and proof terms. Litex separates objects
+from facts; compound subclaims outside the directly parsed fact shapes must
+be named as predicates.
 
 ---
 
 ## 8. A Design Perspective: What the Author States, What the Checker Reconstructs
 
-The scientific question behind these examples is how checkable mathematical
-knowledge should be represented, constructed, reviewed, and reused. Litex
-proposes a different starting point for formal-language design: organize the
-source around mathematical objects and the facts that hold about them, then
-ask the verifier to reconstruct routine local grounds. Its significance can
-therefore lie in the interaction of its design choices, even when each choice
-has precedents in Lean, Mizar, Isabelle, Rocq, or other systems.
+In these examples, the author states mathematical objects and facts, and
+Litex searches for their justification using local rules. The following
+sections describe which steps remain in the source and which the checker
+handles.
 
 ### The central inversion: state the next fact, reconstruct its grounds
 
@@ -810,10 +801,6 @@ witnesses, estimates, cases, and induction arguments.
 
 ### Six related changes of starting point
 
-These are separate design axes, rather than six names for shorter proofs.
-The comparison column describes an available or common organization, not a
-requirement imposed on every user of another system.
-
 | Design question | A different starting point | Litex's choice and concrete evidence | Consequence and boundary |
 |---|---|---|---|
 | What determines an object's mathematical classification? | Start with a host type and express movement between representations through coercions or explicit bridges. | Start with the mathematical object; accumulate membership facts such as `x $in N`, `x $in Z`, and `x $in R`. The opening `Eq`/`Same` discussion explains the representation distinction. | Knowledge about an object can grow without changing its source identity. Generated Lean remains typed, and cross-representation identity needs certified semantic bridges. |
@@ -835,23 +822,15 @@ does not establish a completed model of all Litex objects and rules.
 
 ### Why the combination matters
 
-The choices reinforce one another. Membership facts let domain knowledge about
-an object accumulate in the same context as ordinary mathematical conclusions.
-The object/fact split gives the checker specialized shapes to index and match.
-Local verification makes a bare mathematical statement a useful input; the
-statement commit boundary makes its acceptance a useful unit of progress.
-Retained evidence can then explain that acceptance and supply supported
-compilation routes without asking a second prover to rediscover the argument.
+A membership fact can justify the domain of a later expression. An accepted
+equality can support later substitution. The same Session retains these
+facts, and typed results record how they were checked for explanation and
+supported Lean replay.
 
-This changes the language-design question from choosing convenient proof
-commands to deciding which mathematical decisions must remain visible in
-source, which mechanical steps can be reconstructed, and what evidence must
-survive reconstruction. For the `x = 2` example, the two consequences remain
-visible to the reader while the substitution work belongs to the checker.
-For the convergence example, the author must still supply the substantive
-choice `epsilon / (|c| + 1)` and the estimate. The intended boundary is thus
-between meaningful mathematical choices and routine local verification, and
-its usefulness has to be tested on real proofs.
+In the `x = 2` example, the author states the two consequences and the checker
+performs the substitution. In the convergence example, the author supplies
+`epsilon / (|c| + 1)` and the estimate. These examples show the mathematical
+choices that remain in the source.
 
 The individual ideas have substantial precedents. [Mizar's manual](https://mizar.uwb.edu.pl/project/mizman.pdf)
 describes statements with empty justification, reference-based `by`
@@ -860,51 +839,27 @@ offers readable structured proofs combined with proof methods.
 [Rocq's `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html)
 uses bounded proof search and hint databases. Lean also supports forward
 `have` proofs, automation, incremental elaboration, and rich inspection
-metadata. These systems cannot fairly be grouped into one opposing design.
-The examples justify studying Litex's coherent combination; establishing how
-rare or historically novel that combination is would require a broader
-comparison, including controlled mathematical languages such as Naproche.
+metadata.
 
 ### A research hypothesis that can be tested
 
-The hypothesis is that this division of labor can lower the cost of producing,
-understanding, repairing, and reusing checkable mathematical knowledge for
-humans and AI. It is stronger and more useful than counting omitted tactics,
-but it is not an established performance or usability result.
-
-A comparison should use equivalent mathematical statements, explicit library
-and assumption boundaries, and idiomatic implementations in each language.
-It should measure authoring and review time, repair attempts, the ability to
-detect a mismatch with the intended statement, verification cost, and whether
-intermediate results remain reusable. Rejected invalid steps, remaining proof
-debt, and unsupported compiler routes belong in the results as well.
-
-Because mathematics supplies methods and models throughout the natural
-sciences, a successful design could matter beyond one proof assistant:
-more people might be able to construct and inspect verifiable reasoning,
-including AI-generated candidate arguments. That is a potential consequence
-of the hypothesis, contingent on measured improvements and trustworthy
-verification. The language design itself remains the scientific object to
-investigate.
+Whether this division of labor reduces authoring, review, and repair time
+remains an open question. Testing it would require equivalent mathematical
+tasks, matched assumptions and library support, and measurements of time,
+repair attempts, and errors missed during review. This page contains worked
+examples, not those measurements.
 
 ---
 
-## Reading the Comparison Fairly
+<a id="reading-the-comparison-fairly"></a>
 
-The examples support a limited conclusion: Litex can keep many elementary
-proofs close to a sequence of mathematical facts while moving routine
-matching, substitution, and small builtin steps into the checker. They do not
-show that Litex has Lean's generality, library coverage, kernel architecture,
-or production experience.
+## Further reading
 
-Litex also does not remove a trusted computing base. Its checker, builtin and
-inference rules, imported assumptions, and every explicit `trust` or `axiom`
-matter to the result. A short source file is useful only when the checker
-reports enough provenance for accepted steps and the implementation remains
-open to tests and audit.
+The [manual's trust section](Manual.md#trust-and-strict-mode) explains the
+checker, builtin rules, imported assumptions, and explicit `trust` or `axiom`
+statements on which a Litex result depends.
 
-Use the following documents for questions intentionally kept out of this
-example collection:
+For syntax, implementation, and more examples:
 
 - [Litex Blueprint](https://litexlang.com/doc/Litex_Blueprint): design goals
   and the complete `Group` comparison;

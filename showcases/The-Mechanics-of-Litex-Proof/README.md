@@ -1,7 +1,7 @@
 # The Mechanics of Litex Proof
 
 This is the registered Litex teaching module, with
-citation theorems, Chapters 0–10 and the final lesson-status export. The ordered
+citation theorems and Chapters 0–10. The ordered
 public module entry is [`litex.config`](litex.config).
 
 Build and run the whole book from the repository root:
@@ -15,7 +15,7 @@ target/release/litex -r showcases/The-Mechanics-of-Litex-Proof
 For a configured chapter checkpoint, use `-strict -f` with its path. Current
 CLI output must report `run_result: "success"`, `session_terminated: false`, `termination: null` and exit code 0.
 The repo JSON summarizes success; it does not expose per-export statement
-counts. The complete configuration contains 14 exports; no active trust, axiom or
+counts. The public configuration contains 12 exports; no active trust, axiom or
 abstract proposition remains.
 The public source and manifest are the maintained release artifact.
 
@@ -105,3 +105,6 @@ mathematics while letting later statements cite the same mathematical values.
 The relation lesson defines `\equivalence_class<X, a>` as
 `{b X: $rel(a, b)}`. The template retains the representative's carrier and
 lets the symmetry/transitivity proof reuse one class value on each side.
+
+The [2026-10-14 source repair and fresh CLI acceptance](../verification_runs/2026-10-14-showcase-repair.md)
+records the current module check and per-file repair evidence.

@@ -13,7 +13,7 @@ follow the mathematical dependencies as well as individual results.
 
 The collection contains selected Chapters 2–8 and Appendix A. Familiar number
 systems and operations use Litex builtins; construction and completeness
-assumptions remain explicit. Four user axioms and one abstract predicate remain,
+assumptions remain explicit. Four user axioms and one exported abstract predicate remain,
 so this is not a strict proof development, a complete formalization or an
 official edition of the book.
 
@@ -103,14 +103,18 @@ and the [assumption boundary](STATUS.md).
 The [manifest](litex.config) preserves their verified export order.
 This README supplies the reading path; comment-only introduction exports have
 been removed from the executable module.
+The small `maps`, `finite_products` and `naturals` examples follow the chapter
+exports. Their registration makes the existing `maps::` references in the
+finite-product example available without changing the chapter dependency order.
 
 ## What the evidence establishes
 
 The original selected Chapter 8 entry and preceding exports passed a full
 non-strict Litex run on 2026-10-13. It reported 190 successful main-file
-statements. All ten published source files retain the exact executable lines,
-indentation and order from those verified inputs; only inactive prose,
-comments and blank lines were removed. [verification.json](verification.json)
+statements. The eight surviving mainline sources retain the executable lines,
+indentation and order from those verified inputs; two comment-only introduction
+files have been removed. The finite-product sample has since received explicit
+proof projection steps. [verification.json](verification.json)
 records the original binary hash, source hashes and publication checks. These
 checks do not establish compatibility with every Litex release.
 
@@ -126,3 +130,6 @@ The earlier small [induction](naturals.lit), [map](maps.lit) and
 Their [dated strict receipt](selected-examples-verification.json) covers the
 previous small-example selection, not the current chapter manifest.
 For Litex usage, see the [CLI documentation](../../docs/cli.md).
+
+The [2026-10-14 source repair and fresh CLI acceptance](../verification_runs/2026-10-14-showcase-repair.md)
+records the current module check and per-file repair evidence.

@@ -1,0 +1,19 @@
+# Tracer: recursive lower bounds cannot descend with the arguments.
+# Before (incorrectly accepted in strict mode):
+# have fn empty_value(n Z) {} by induc n from n - 1:
+#     case n = n: empty_value(n - 1)
+# empty_value(0) $in {}
+# Now the declaration fails: (n - 1) - 1 >= n - 1 is not provable.
+# Executable negative regression: induction_lower_bound_cannot_descend_with_recursive_arguments.
+#
+# Now: a parameter-dependent lower bound preserved by recursion is accepted.
+have fn bounded(n, b Z: n >= b) Z by induc n from b:
+    case n - 1 < b: 0
+    case n - 1 >= b: bounded(n - 1, b)
+
+bounded(1, 0) = bounded(0, 0) = 0
+
+# Boundary: recursive calls must decrease the integer measure, stay in-domain,
+# and preserve or increase the lower bound. Arbitrary descending bounds fail.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/definition/induction_lower_bound.lit
+# Tests: cargo test --release --lib induction_lower_bound

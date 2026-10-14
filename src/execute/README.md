@@ -344,6 +344,15 @@ runtime allocation/storage contracts are unchanged by this traversal.
 disjointness, and return WD/type before publication. Nested lists use the
 parent's guard and preserve their own local evidence. Chain guards are
 expanded to adjacent atomic facts, including when leaf equations are stored.
+The restricted recursive signature substitutes both measure and lower bound
+with the fresh parameters. It requires the new measure to be smaller and at
+least the current bound, and the new bound to be at least the current bound.
+Since each input also has integer measure >= integer lower, the nonnegative
+integer measure - lower strictly decreases. This permits parameter-dependent
+bounds that stay fixed or increase, while rejecting a sliding bound such as
+`n - 1` on a recursive call at `n - 1`. An unchanged lower bound is invariant by substitution and needs no extra
+premise; fixed-bound signatures therefore stay unchanged. Otherwise this is
+an ordinary function domain obligation with existing verification evidence.
 Template replay uses ordinary ID-based object instantiation for self calls,
 so calls beneath arithmetic or other constructors retain the exact instance.
 The existing equality budget is unchanged; a smaller-call equality can still

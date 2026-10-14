@@ -250,6 +250,7 @@ by enumerate finite_set:
     ? forall x {1, 2}:
         x > 0
     x > 0
+    x > 0
 ```
 
 An induction supplies a base and successor step. The induction hypothesis is

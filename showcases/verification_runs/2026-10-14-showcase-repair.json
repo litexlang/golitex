@@ -1,0 +1,2255 @@
+{
+  "metadata": {
+    "date": "2026-10-14",
+    "status": "complete",
+    "current_files": 76,
+    "accepted_files": 76,
+    "strict_accepted": 65,
+    "ordinary_accepted": 11,
+    "changed_litex_files": 23,
+    "deleted_comment_only_files": [
+      "showcases/analysis/Introduction.lit",
+      "showcases/analysis/chapter01-introduction.lit",
+      "showcases/The-Mechanics-of-Litex-Proof/introduction.lit"
+    ],
+    "baseline_git_head": "c6d4560771be0cc7703c349bc3102ef9bec84178",
+    "current_git_head": "5532bcac6703a18a0cc3fe3b120c4e31e0710bcf",
+    "final_executable": {
+      "binary_sha256": "f0ef676f91282bc0ff5c23a41aa01d62f6e0b5e7e918d39d9e6f586ba2d3ce21",
+      "captured_epoch": 1791950803.729712,
+      "note": "Task-owned stable executable snapshot for final module gates; the shared release executable was externally rebuilt during the repair."
+    },
+    "initial_executable_sha256": "f98a3454895f291d8b75f39bced13a4c2b727c8d46e756399af8d102c8031a84",
+    "source_hashes": {
+      "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit": "2747901eacd8c68919576ce9ed4667430d43db349411203471abb8c66552e597",
+      "showcases/analysis/chapter03-set-theory.lit": "889d69feffc03170de36740b9491e8ad4c4b0d201693182e42c44401566f810b",
+      "showcases/analysis/chapter05-real-numbers.lit": "5c6aa04ada01280226cf6e4a55a9003376d7a118e56ea4a2d1eb56647d7897fb",
+      "showcases/analysis/finite_products.lit": "cc0be9043c97898c1be7c797fe4a450d1733a509f00cce6b88e5edf30b88cfd1",
+      "showcases/analysis/chapter02-natural-numbers.lit": "a0dfa05d10213f96b0a2209ca1d2a6a3c5008ae3cb70235fb02256983fc931df",
+      "showcases/analysis/naturals.lit": "13f8aaa3d7c5f526129ddbcf702cbb3c1a5e07e41fe74b89052dd33d3b23b157",
+      "showcases/analysis/chapter06-sequential-limits.lit": "11b408b5fab7e70842e3b2cc98fb41f522b255e24a2d998211b059a5dd2e342e",
+      "showcases/analysis/appendix-a-logic-and-proof-language.lit": "c1608f20a6dafa6d9fc3818b888805c1cd20fd524e2f7b11e052492fb0d31900",
+      "showcases/analysis/maps.lit": "d23b761522fa1e06c7807b5068f60809a829893bd7718b30a433985bd633047e",
+      "showcases/analysis/chapter07-series.lit": "b5f3949a0054930d159a526949377ce6d3688a633fc0cfd8cc4c5c2e2d3abeb4",
+      "showcases/analysis/chapter08-infinite-sets.lit": "a63aa685eda3d74dd51fc93b2224fd6d6e45faa14047bb15bffa9be417dda313",
+      "showcases/analysis/chapter04-integers-and-rationals.lit": "d07eb8b54803e9e7fed88e6c0d160b6fb3687583e66c2dcd178679c7473b4a46",
+      "showcases/The-Mechanics-of-Litex-Proof/citation.lit": "5a925e4bd58428ce006dc1a1ee0a372bc3b5ba8016f3fa4478acdd3276742431",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter05-logic.lit": "06737351c759d6aafd280531b43e26fd48297cdd340d260df478a0f86af0f5b5",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter08-functions.lit": "1ec952db3147d8f818e8731ac8675465ebd35c6185966390fa60f7c63a6619fb",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter02-proofs-with-structure.lit": "71d6e9b5142caf3773cb851b5e9a0c25b33ddbbda179ab112f58d66c928c79a6",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter06-induction.lit": "c77dbe3952de873c57eec74a0f31e94f0bd0918c9b6bc1ff39becd6d9e372556",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter10-relations.lit": "4c8416afefa2a2d2c032f55efebac9a92bd0c34a7650c4c2fa90586cd07d7007",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter03-parity-and-divisibility.lit": "6610f9830fa722c990f4e1c106f1faf5e772cd6486e822b42573d24b37c70775",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter04-proofs-with-structure-ii.lit": "406c40d9e6023711bf6da0d8f2edc06eed892139b18f534ae78278c0120af89c",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter01-proofs-by-calculation.lit": "034e5ec1a3e36344f0361177def477c86817b309bf7deaae5ef84439933a782e",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter00-introduction.lit": "f5c0c6eb8e065900b8cdfc62c5d18de379dce213270234ce09c741099328ff55",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter07-number-theory.lit": "fe5925abb1e0fe98a5d0d26f963eac7e35261de2b8e99fc8ad7a1bcf5982abcd",
+      "showcases/The-Mechanics-of-Litex-Proof/chapter09-sets.lit": "9ecd69ae28d457a7051675a2decbf073d295b130e5859bb1fc52912e87fe05b6",
+      "showcases/litex_to_lean_adapter/source.lit": "e7999cc0382488d3f022b9413aeb505e7215fff7ef8514d0310562b7ba40683d",
+      "showcases/2D_Geometry/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a",
+      "showcases/2D_Geometry/geo.lit": "bb2c20b5a1114e26d1abb3e97b24dc063846984909d07746c61e12be9bd692d4",
+      "showcases/linear_algebra/linear_algebra.lit": "2f226471384224c14d346b4d2857fc5fb550afa57a1f384ef9376f1582d7c2ee",
+      "showcases/imo_inequalities/imo_2006_p3.lit": "15b4ca5f265cce1f0430a3245c240909e97c1100913dfae3ac7580cd9146d9cc",
+      "showcases/imo_inequalities/imo_2005_p3.lit": "ef1a997fc6351211ebd97d15673d703f7bae5b33a56748736bf51fae8c40d0e4",
+      "showcases/imo_inequalities/imo_1983_p6.lit": "8466d930f10af1cf3cb0ae07838ec7d24bea73b513d499939785867413443551",
+      "showcases/imo_inequalities/imo_1995_p2.lit": "cdb75693e7a8eef6270b5299fbffa6aa9aa37c863e1cb071f52c1403fdaf71ef",
+      "showcases/imo_inequalities/imo_2001_p2.lit": "ac21d7379d1feefdc1e612c36e330b4de08e05f5815158f848d79b478b36cf41",
+      "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit": "d3ec40fa7d1940903c5815fbcbbf8b2b16109ac14dae22ce430f5fa9dda8e56a",
+      "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit": "d54c4ec38a0f4f2ea9e007e789a5def2faf0b3feacb4321d65f9148405ce0564",
+      "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit": "2191b2ac85b12713a322d19947a1f7d9bf614a4a470a0c1e61516e985c9a8545",
+      "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit": "6d99700c8540b4bef6e7f075351e1ddbc136a50457f4a1a7cbd68946e68562c2",
+      "showcases/math_concepts_in_litex/5_linear_algebra/main.lit": "9cfe8d730f564d9a8c567d86eeef0af6e16ef8b788469e60551e7daaa3c7d89b",
+      "showcases/math_concepts_in_litex/3_number_theory/main.lit": "8bc3acbd59b3a43804c82442e6b5ae12af1c5e6ba8316fb297a23bfc6af02fc4",
+      "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit": "01d967f0dc895294e3b8611eecaeaf751391f1b395125826cd51d5c9cafe4d2c",
+      "showcases/math_concepts_in_litex/7_calculus/main.lit": "24c104c79b76747e2f02dd9e0dc20a3184b43d11167862b71af769998efc8659",
+      "showcases/math_concepts_in_litex/9_topology/main.lit": "0e8fe66afd322d78668912b75cf48f07eccc39932c3eff023711266b124084d5",
+      "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit": "1f06c019e94014ff2712350c91ea0f95c49e754bae59f22ef5e7aff3daa90ae4",
+      "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/main.lit": "612d7d4b78563b781945c07b9d118df107ddbd5d49e49e6fc16c3a0b56ee0d5c",
+      "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit": "2bcca5119939bd6dfdb6d7e444b487057a3e536c788cf76325cc79be53713f9c",
+      "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit": "abd26bafea5fbde10d30ebb6b91fe7bab852bc12f172a89126c3fa861e072b56",
+      "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit": "f0a4a02737e62c64235163e0b2979db8c30421d9c65c2527fca14ddc55367274",
+      "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit": "626224b2357f6a657aecdf8005ce120d69bb68ab9c8e0452de72198f014131f2",
+      "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit": "79bc9a1bbd6da696e11b6a80663ba2e4da4061d9df52f35571b490b7b5c57182",
+      "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit": "949ab17b4737dafc1e442b8320e068dede75797cfa76045c9a8859d11ba4fe9c",
+      "showcases/2D_Geometry/IMO/problem_3/solution.lit": "297378c61a750f52b89b18a7bf7b2a190f191be59d059b9040fec0e87b542c91",
+      "showcases/2D_Geometry/IMO/problem_4/solution.lit": "64f73cfe74fc75bbfdb543ddf1824b0b0991328e237932e446a7dd431f8f2c6d",
+      "showcases/2D_Geometry/IMO/problem_17/solution.lit": "6582031711a6f73b60e7548e43207ca78b25d316a45930fcb9b3fedba42bbdc5",
+      "showcases/2D_Geometry/IMO/problem_20/solution.lit": "75be2e2c84c3cf7418e355f1616779b132f680376df107f5ad4f26e9640f18f3",
+      "showcases/2D_Geometry/IMO/problem_18/solution.lit": "d28e013260eabc474e0e4582f884ca46052cff6e1488c41f8c97fe1debd28af9",
+      "showcases/2D_Geometry/IMO/problem_7/solution.lit": "30eb64d4da13b8073af4922ee5bae64d5572578f142b2f3652e37b8b054d2520",
+      "showcases/2D_Geometry/IMO/problem_13/solution.lit": "bd5052cac1782f7d6a59b321a18b0e5900167850973aae49ba35ad1ad5f4f2dd",
+      "showcases/2D_Geometry/IMO/problem_15/solution.lit": "037953d95d3095fdf61d9f4d20b153568d2527f316bd77da81d9bc4c6e72fdc1",
+      "showcases/2D_Geometry/IMO/problem_12/solution.lit": "6baad86c017ba4f6fac7154b81806acfcde0b37fe54d651cb8dc512b04cb382e",
+      "showcases/2D_Geometry/IMO/problem_5/Solution-2/solution.lit": "ad66f843d5caf53fef55142b6f8a355dcf4405881d45047d421183621ed8041b",
+      "showcases/2D_Geometry/IMO/problem_5/Solution-1/solution.lit": "abeae52d0e44b8584dfc53f3d81f5c09b9d78cdca99c8d3b0c710308174a67d5",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-2/predicate.lit": "87505122922c509fde4faff0c5a6e828613567e08c371d1b64dc962faa87c5ef",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-2/solution_part_a.lit": "bfce7eda459402aef1c9cc2b6fbc9c20ef5bfe0844e7f14f2c74795f93a00f68",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-2/theorem.lit": "6c67575458c46ba03256563381e336c1a21703fb07fcbee9840fd98233fc9961",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-1/predicate.lit": "7d4c6154b3a60f5dc3a092ffcfc1c6eabb8d6ddd864442eca493d9ba5aeb994b",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_a.lit": "0b61e6ba92663fe73656916cd3d9b143b592ebe9640434a2532d345db6fb1981",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_b.lit": "601894ce71de38cd3ef6aa49657124ae725fd3bb117c5c3d2a109cd4ae3a4389",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-1/theorem.lit": "3d10eb0a01d057d86c1d9cbe186eda297eb84a93d33a92c98610518b967d3a1e",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-2/predicate.lit": "ca9372ca73e50ab39857ce860b040c86a5fd39900c8d9559e2cdce33338071e8",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-2/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-2/theorem.lit": "4d9212b5c20904107d35b8d69d94c0aa05337e57a29b99c95ae8a3b98041aaa3",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-2/solution.lit": "9b25820e15e8da20a0600a6bd75cb6a6dc55b5e7832af0bb6ef93cd7b0f189c3",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-1/predicate.lit": "d74632be8f50079c2a803b955dd7b4a373ede29d08aaa806577b5edfa973f66e",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-1/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-1/theorem.lit": "a36e9dfdd323e02fd32ae5141e7630b9b85683f57d40045d3506ba8ef714d212",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-1/solution.lit": "a71d9c37fd736428db057f88e425c1416f4fadb59ed5f878d6cea9833fdc7573",
+      "showcases/Write_Mathematically_Correct_Code_With_Litex/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/analysis/litex.config": "807e722ff73a73c510c3d1cca57edbefea9d91cec2cb31fa21bef19b84953f52",
+      "showcases/The-Mechanics-of-Litex-Proof/litex.config": "686634840c18c46e8f8367b988c01c70d0b1bd5b71c9e999ceab7e901cfd7b3b",
+      "showcases/linear_algebra/litex.config": "cdba5cb777ec1e9c9ce598454d337e5a108fe49ac875d43bc719a540d7dddc7d",
+      "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/5_linear_algebra/litex.config": "61fb87d021908687f2fc64a3bf67372f9094d30b3f2fe20f0d8054d0b6631880",
+      "showcases/math_concepts_in_litex/3_number_theory/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/7_calculus/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/9_topology/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/6_abstract_algebra/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/math_concepts_in_litex/2_euclidean_geometry/litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+      "showcases/2D_Geometry/IMO/problem_3/litex.config": "8079085630fc31203913aff020235e35d41600f199a42f67bdf20f9b1aa8cd2d",
+      "showcases/2D_Geometry/IMO/problem_4/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_17/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_20/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_18/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_7/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_13/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_15/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_12/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_5/Solution-2/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_5/Solution-1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-2/litex.config": "af950d2f4aaec298fc37e59949079f80fa0bee8b02f11f182fcc217ae0126a9e",
+      "showcases/2D_Geometry/IMO/problem_2/Solution-1/litex.config": "6454662734f05f7f1d405435178d3f49f0c87e1221fc1334d740b52611772b35",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-2/litex.config": "94378a1e561836d0bcc65ca868f4fed8c5f691f42242e892472d2ed6d7c6edad",
+      "showcases/2D_Geometry/IMO/problem_1/Solution-1/litex.config": "94378a1e561836d0bcc65ca868f4fed8c5f691f42242e892472d2ed6d7c6edad"
+    },
+    "execution": "Two independent sweep workers; each configured final target validates its ordered prefix. Two book module gates validate all exports. No artificial 300-second cutoff.",
+    "mathematical_contract_audit": [
+      {
+        "path": "showcases/2D_Geometry/IMO/problem_4/solution.lit",
+        "baseline_sha256": "6c2f3c294e502d8f2092092a20b36c795dc68e25855609cabfc6a70bd35e756e",
+        "named_top_level_theorems": 25,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/2D_Geometry/IMO/problem_7/solution.lit",
+        "baseline_sha256": "eba8c512a41a2feeb3f0b18277a3a9cba9c4bf6279522bca212b97cd8d9659e4",
+        "named_top_level_theorems": 22,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/2D_Geometry/IMO/problem_17/solution.lit",
+        "baseline_sha256": "df63f720a9b7f4b1ad17e3feae79d5084036186ee5e4228a89e2f16ba380d2a4",
+        "named_top_level_theorems": 89,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/2D_Geometry/IMO/problem_13/solution.lit",
+        "baseline_sha256": "920867f5c86f3fa877f7e862864ea86ba60dba17fcfb3656a34ded045ab7950a",
+        "named_top_level_theorems": 48,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit",
+        "baseline_sha256": "7852ec523321ad82bee651a5d1b343933379e71fa2850e302266bbe54f7c8a7c",
+        "named_top_level_theorems": 186,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/citation.lit",
+        "baseline_sha256": "825942955fc74af882bcea8a4deecebeed852c1ba6988a3f8ac36bde621903ff",
+        "named_top_level_theorems": 14,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter02-proofs-with-structure.lit",
+        "baseline_sha256": "d94f0651bcacec0204d00eca8ebc4b9cbf73ce67b558bf28ff9623895323ac8f",
+        "named_top_level_theorems": 0,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter04-proofs-with-structure-ii.lit",
+        "baseline_sha256": "10bb2328e2c472be1ebd1cbeca03115b3ade0327a80c2d3f1cb800ed06fda017",
+        "named_top_level_theorems": 1,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter05-logic.lit",
+        "baseline_sha256": "4c6ce26eda8f2187a1fb107ef70ae41abd59a3169a7bc42b980325f16ed2d769",
+        "named_top_level_theorems": 0,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter06-induction.lit",
+        "baseline_sha256": "3c4a266361116a73960a6cff4fbd6b37693d53a5ffd01c5ad11004475c53d0ea",
+        "named_top_level_theorems": 0,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter07-number-theory.lit",
+        "baseline_sha256": "695b005a22b8770204d7bb2effef5e63e0df0b6388187bed98189a07d300d77d",
+        "named_top_level_theorems": 1,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter08-functions.lit",
+        "baseline_sha256": "5d816953d295f5c37a60b62468afd38723a6ebe1d2491932a63bfad15f92f63a",
+        "named_top_level_theorems": 3,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter09-sets.lit",
+        "baseline_sha256": "c7141f0ec89366020d4e738d84a49c35b9bc0b7fe37a111b00e7d8e4e3acda49",
+        "named_top_level_theorems": 0,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/The-Mechanics-of-Litex-Proof/chapter10-relations.lit",
+        "baseline_sha256": "9aeab8bb12ecee4b6734f5176d7ab21624db02e5b432a353b448c27ce038cf7e",
+        "named_top_level_theorems": 0,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/linear_algebra/linear_algebra.lit",
+        "baseline_sha256": "f2fad9c436ab81511fb3b64d395619c3efeb2b8635c29f2047e739fd81524a69",
+        "named_top_level_theorems": 7,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit",
+        "baseline_sha256": "2fe74f947ec3c7fd5c1f1b38be13d6d7d9968ef3271274cfe36bb4677417d193",
+        "named_top_level_theorems": 4,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit",
+        "baseline_sha256": "9ce0e3654c4cfc1b624d1419ec635bfe03291c9715aa342230f7c90dddb197de",
+        "named_top_level_theorems": 1,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit",
+        "baseline_sha256": "15aee6cdb99a2e6ecb6cc94d7ec8cdef51f0d60985d292575f95d9a2bb5ed070",
+        "named_top_level_theorems": 12,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit",
+        "baseline_sha256": "44a1673d2ebf9b356012ba24a363e6777f0fea99ce7b1069d799b6099d3d0e0b",
+        "named_top_level_theorems": 20,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/9_topology/main.lit",
+        "baseline_sha256": "4011c1f1c31e5e5d778fec2fef36cfdece49bd86e21cec47731b30e24bc58ea0",
+        "named_top_level_theorems": 14,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit",
+        "baseline_sha256": "f52d40352200f37e10b885809286fbd7dc963db6930163b909c5624d06a62ac4",
+        "named_top_level_theorems": 58,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit",
+        "baseline_sha256": "1ee674439d22180163dbe599910c89914a826995ecc9a260dec3afc9215f1265",
+        "named_top_level_theorems": 21,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      },
+      {
+        "path": "showcases/analysis/finite_products.lit",
+        "baseline_sha256": "77f57d397af87e265d8757766982c6bdf5a2b0e604a8ad74c0a335e0e6f44b89",
+        "named_top_level_theorems": 2,
+        "unchanged_named_goal_blocks": true,
+        "changed_named_goal_blocks": []
+      }
+    ]
+  },
+  "repairs": [
+    {
+      "path": "showcases/2D_Geometry/IMO/problem_4/solution.lit",
+      "issue": "Known midpoint was refolded with `by def`.",
+      "code": "$is_midpoint(m,b,c)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__2D_Geometry__IMO__problem_4__solution.json",
+      "source_sha256": "64f73cfe74fc75bbfdb543ddf1824b0b0991328e237932e446a7dd431f8f2c6d",
+      "accepted": true
+    },
+    {
+      "path": "showcases/2D_Geometry/IMO/problem_7/solution.lit",
+      "issue": "The predecessor used by induction needed an explicit natural carrier.",
+      "code": "release thm natural_predecessor_nonnegative_7(target)\ntarget - 1 $in N",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__2D_Geometry__IMO__problem_7__solution.json",
+      "source_sha256": "30eb64d4da13b8073af4922ee5bae64d5572578f142b2f3652e37b8b054d2520",
+      "accepted": true
+    },
+    {
+      "path": "showcases/2D_Geometry/IMO/problem_17/solution.lit",
+      "issue": "Known internal tangency was unnecessarily refolded.",
+      "code": "$circles_internally_tangent(center_2, radius_2, center_gamma, radius_gamma)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__2D_Geometry__IMO__problem_17__solution.json",
+      "source_sha256": "6582031711a6f73b60e7548e43207ca78b25d316a45930fcb9b3fedba42bbdc5",
+      "accepted": true
+    },
+    {
+      "path": "showcases/2D_Geometry/IMO/problem_13/solution.lit",
+      "issue": "Known parallelism was refolded in the library bridge.",
+      "code": "$is_parallel(a, b, d, c)\n$is_parallel(a, d, b, c)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__2D_Geometry__IMO__problem_13__solution.json",
+      "source_sha256": "bd5052cac1782f7d6a59b321a18b0e5900167850973aae49ba35ad1ad5f4f2dd",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit",
+      "issue": "Nested rectangle/parallel facts needed explicit use; line membership projected the wrong set builder.",
+      "code": "$is_rectangle(a, b, c, d)\nrelease thm set_builder_member(p, {r cart(R,R): det(vec(a,r),vec(a,b))=0})",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__15_coordinate_geometry_case_study__main.json",
+      "source_sha256": "d54c4ec38a0f4f2ea9e007e789a5def2faf0b3feacb4321d65f9148405ce0564",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/citation.lit",
+      "issue": "Bodyless case headers blocked all eleven chapters.",
+      "code": "case b != 0:\n    b != 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__citation.json",
+      "source_sha256": "5a925e4bd58428ce006dc1a1ee0a372bc3b5ba8016f3fa4478acdd3276742431",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter02-proofs-with-structure.lit",
+      "issue": "A bounded enumeration had no proof body.",
+      "code": "k^2 < 2",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter02-proofs-with-structure.json",
+      "source_sha256": "71d6e9b5142caf3773cb851b5e9a0c25b33ddbbda179ab112f58d66c928c79a6",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter04-proofs-with-structure-ii.lit",
+      "issue": "Bodyless case arms and an empty bounded proof needed explicit branch calculations.",
+      "code": "case c >= 1:\n    c > 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter04-proofs-with-structure-ii.json",
+      "source_sha256": "406c40d9e6023711bf6da0d8f2edc06eed892139b18f534ae78278c0120af89c",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter05-logic.lit",
+      "issue": "Bodyless parity cases and finite checks needed concrete proof bodies.",
+      "code": "case $is_even(n):\n    n % 2 = 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter05-logic.json",
+      "source_sha256": "06737351c759d6aafd280531b43e26fd48297cdd340d260df478a0f86af0f5b5",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter06-induction.lit",
+      "issue": "Empty claim, explicit recurrence domain, and missing nonnegative product premise.",
+      "code": "n >= 0\npascal(a, b) * factorial(a) >= 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter06-induction.json",
+      "source_sha256": "c77dbe3952de873c57eec74a0f31e94f0bd0918c9b6bc1ff39becd6d9e372556",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter07-number-theory.lit",
+      "issue": "Bodyless cases/enumeration and missing real/nonzero carrier before the square-log argument.",
+      "code": "2^(1/2) $in R\n2^(1/2) != 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter07-number-theory.json",
+      "source_sha256": "fe5925abb1e0fe98a5d0d26f963eac7e35261de2b8e99fc8ad7a1bcf5982abcd",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter08-functions.lit",
+      "issue": "Empty enumeration/claims and implicit natural coordinate facts.",
+      "code": "u(2) $in N\nu(2) >= 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter08-functions.json",
+      "source_sha256": "1ec952db3147d8f818e8731ac8675465ebd35c6185966390fa60f7c63a6619fb",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter09-sets.lit",
+      "issue": "Bodyless cases/enumerations and missing set-builder carrier/condition projections.",
+      "code": "release thm set_builder_member(x, {n N: (n + 1) $in {0}})\nx $in N\nx >= 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter09-sets.json",
+      "source_sha256": "9ecd69ae28d457a7051675a2decbf073d295b130e5859bb1fc52912e87fe05b6",
+      "accepted": true
+    },
+    {
+      "path": "showcases/The-Mechanics-of-Litex-Proof/chapter10-relations.lit",
+      "issue": "Bodyless finite cases/claims and missing natural carrier before cancellation.",
+      "code": "q(2) $in N\nq(2) >= 0",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__The-Mechanics-of-Litex-Proof__chapter10-relations.json",
+      "source_sha256": "4c8416afefa2a2d2c032f55efebac9a92bd0c34a7650c4c2fa90586cd07d7007",
+      "accepted": true
+    },
+    {
+      "path": "showcases/linear_algebra/linear_algebra.lit",
+      "issue": "A three-valued partial sum used unsupported induction coverage; exhaustive cases preserve its values.",
+      "code": "case k = 0: (0, 0)\ncase k = 1: plane_smul(coefficients(1), vectors(1))\ncase k = 2: plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__linear_algebra__linear_algebra.json",
+      "source_sha256": "2f226471384224c14d346b4d2857fc5fb550afa57a1f384ef9376f1582d7c2ee",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit",
+      "issue": "Goal-only extension and empty finite proof blocks.",
+      "code": "by extension union(first_set, second_set) = {1, 2, 3, 4}",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__2_sets_functions_and_relations_in_nutshell__main.json",
+      "source_sha256": "1f06c019e94014ff2712350c91ea0f95c49e754bae59f22ef5e7aff3daa90ae4",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit",
+      "issue": "Empty case claims and index arithmetic needed before factorial unfolding.",
+      "code": "(n - 1) - r = n - r - 1\n(n - 1) - (r - 1) = n - r",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__4_discrete_mathematics_in_nutshell__main.json",
+      "source_sha256": "f0a4a02737e62c64235163e0b2979db8c30421d9c65c2527fca14ddc55367274",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit",
+      "issue": "Nested vector-space laws needed explicit use before guarded operations.",
+      "code": "$has_vector_space_laws(K, V, scalar_one, scalar_add, scalar_mul, zero_V, add_V, smul_V)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__5_linear_algebra__main2.json",
+      "source_sha256": "6d99700c8540b4bef6e7f075351e1ddbc136a50457f4a1a7cbd68946e68562c2",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit",
+      "issue": "Nested ring and homomorphism assumptions needed explicit use.",
+      "code": "$is_ring_homomorphism(A, add_A, zero_A, neg_A, mul_A, one_A, B, add_B, zero_B, neg_B, mul_B, one_B, map)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__6_abstract_algebra__main.json",
+      "source_sha256": "626224b2357f6a657aecdf8005ce120d69bb68ab9c8e0452de72198f014131f2",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/9_topology/main.lit",
+      "issue": "Pullback construction needed nested space laws and cover-member carrier facts.",
+      "code": "open_sets_Y $subset power_set(Y)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__9_topology__main.json",
+      "source_sha256": "0e8fe66afd322d78668912b75cf48f07eccc39932c3eff023711266b124084d5",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit",
+      "issue": "Nested neutral-geometry laws and betweenness/congruence facts needed explicit use.",
+      "code": "$TarskiNeutralDimensionlessSetting(Point, Bet, Cong, lower_a, lower_b, lower_c)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__14_tarski_geometry_from_axioms__main.json",
+      "source_sha256": "79bc9a1bbd6da696e11b6a80663ba2e4da4061d9df52f35571b490b7b5c57182",
+      "accepted": true
+    },
+    {
+      "path": "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit",
+      "issue": "Naturality guards needed functor arrow closure visible before proof-body execution.",
+      "code": "F_arrow(typed_source, typed_target, typed_arrow) $in target_category.Hom(F_object(typed_source), F_object(typed_target))",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__math_concepts_in_litex__16_category_theory_in_set_theory__main.json",
+      "source_sha256": "01d967f0dc895294e3b8611eecaeaf751391f1b395125826cd51d5c9cafe4d2c",
+      "accepted": true
+    },
+    {
+      "path": "showcases/analysis/finite_products.lit",
+      "issue": "Finite-sequence/function-space carriers and nested coordinate predicates needed explicit projections.",
+      "code": "chosen_left $in finite_seq(U, n)\n$is_in_infinite_cartesian_product(closed_range(1, n), U, X, chosen_infinite)",
+      "journal": "showcases/verification_runs/proof_journals/2026-10-14-repair-showcases__analysis__finite_products.json",
+      "source_sha256": "cc0be9043c97898c1be7c797fe4a450d1733a509f00cce6b88e5edf30b88cfd1",
+      "accepted": true
+    }
+  ],
+  "gates": [
+    {
+      "target": "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit",
+      "coverage": [
+        "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit": "2747901eacd8c68919576ce9ed4667430d43db349411203471abb8c66552e597"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.071,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__Write_Mathematically_Correct_Code_With_Litex__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__Write_Mathematically_Correct_Code_With_Litex__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit": "2747901eacd8c68919576ce9ed4667430d43db349411203471abb8c66552e597"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit": "d3ec40fa7d1940903c5815fbcbbf8b2b16109ac14dae22ce430f5fa9dda8e56a"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 3.761,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__13_numerical_analysis_in_nutshell__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__13_numerical_analysis_in_nutshell__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit": "d3ec40fa7d1940903c5815fbcbbf8b2b16109ac14dae22ce430f5fa9dda8e56a"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/linear_algebra/linear_algebra.lit",
+      "coverage": [
+        "showcases/linear_algebra/linear_algebra.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/linear_algebra/linear_algebra.lit": "2f226471384224c14d346b4d2857fc5fb550afa57a1f384ef9376f1582d7c2ee"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/linear_algebra/linear_algebra.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 25.969,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__linear_algebra__linear_algebra-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__linear_algebra__linear_algebra-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/linear_algebra/linear_algebra.lit": "2f226471384224c14d346b4d2857fc5fb550afa57a1f384ef9376f1582d7c2ee"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit": "2191b2ac85b12713a322d19947a1f7d9bf614a4a470a0c1e61516e985c9a8545"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 25.735,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__8_probability_and_statistics_in_nutshell__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__8_probability_and_statistics_in_nutshell__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit": "2191b2ac85b12713a322d19947a1f7d9bf614a4a470a0c1e61516e985c9a8545"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/3_number_theory/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/3_number_theory/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/3_number_theory/main.lit": "8bc3acbd59b3a43804c82442e6b5ae12af1c5e6ba8316fb297a23bfc6af02fc4"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/3_number_theory/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.121,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__3_number_theory__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__3_number_theory__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/3_number_theory/main.lit": "8bc3acbd59b3a43804c82442e6b5ae12af1c5e6ba8316fb297a23bfc6af02fc4"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/5_linear_algebra/main.lit",
+        "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/5_linear_algebra/main.lit": "9cfe8d730f564d9a8c567d86eeef0af6e16ef8b788469e60551e7daaa3c7d89b",
+        "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit": "6d99700c8540b4bef6e7f075351e1ddbc136a50457f4a1a7cbd68946e68562c2"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 5.866,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__5_linear_algebra__main2-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__5_linear_algebra__main2-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/5_linear_algebra/main.lit": "9cfe8d730f564d9a8c567d86eeef0af6e16ef8b788469e60551e7daaa3c7d89b",
+        "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit": "6d99700c8540b4bef6e7f075351e1ddbc136a50457f4a1a7cbd68946e68562c2"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/7_calculus/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/7_calculus/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/7_calculus/main.lit": "24c104c79b76747e2f02dd9e0dc20a3184b43d11167862b71af769998efc8659"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/7_calculus/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.858,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__7_calculus__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__7_calculus__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/7_calculus/main.lit": "24c104c79b76747e2f02dd9e0dc20a3184b43d11167862b71af769998efc8659"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/9_topology/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/9_topology/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/9_topology/main.lit": "0e8fe66afd322d78668912b75cf48f07eccc39932c3eff023711266b124084d5"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/9_topology/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.21,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__9_topology__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__9_topology__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/9_topology/main.lit": "0e8fe66afd322d78668912b75cf48f07eccc39932c3eff023711266b124084d5"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit": "1f06c019e94014ff2712350c91ea0f95c49e754bae59f22ef5e7aff3daa90ae4"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.069,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__2_sets_functions_and_relations_in_nutshell__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__2_sets_functions_and_relations_in_nutshell__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit": "1f06c019e94014ff2712350c91ea0f95c49e754bae59f22ef5e7aff3daa90ae4"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit": "01d967f0dc895294e3b8611eecaeaf751391f1b395125826cd51d5c9cafe4d2c"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 5.277,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__16_category_theory_in_set_theory__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__16_category_theory_in_set_theory__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit": "01d967f0dc895294e3b8611eecaeaf751391f1b395125826cd51d5c9cafe4d2c"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/main.lit": "612d7d4b78563b781945c07b9d118df107ddbd5d49e49e6fc16c3a0b56ee0d5c"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 2.015,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__11_multivariable_calculus_in_nutshell__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__11_multivariable_calculus_in_nutshell__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/main.lit": "612d7d4b78563b781945c07b9d118df107ddbd5d49e49e6fc16c3a0b56ee0d5c"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit": "2bcca5119939bd6dfdb6d7e444b487057a3e536c788cf76325cc79be53713f9c"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.304,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__10_real_analysis_in_nutshell__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__10_real_analysis_in_nutshell__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit": "2bcca5119939bd6dfdb6d7e444b487057a3e536c788cf76325cc79be53713f9c"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit": "f0a4a02737e62c64235163e0b2979db8c30421d9c65c2527fca14ddc55367274"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.435,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__4_discrete_mathematics_in_nutshell__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__4_discrete_mathematics_in_nutshell__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit": "f0a4a02737e62c64235163e0b2979db8c30421d9c65c2527fca14ddc55367274"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit": "abd26bafea5fbde10d30ebb6b91fe7bab852bc12f172a89126c3fa861e072b56"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 1.56,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__12_ordinary_differential_equations_in_nutshell__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__12_ordinary_differential_equations_in_nutshell__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit": "abd26bafea5fbde10d30ebb6b91fe7bab852bc12f172a89126c3fa861e072b56"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit": "626224b2357f6a657aecdf8005ce120d69bb68ab9c8e0452de72198f014131f2"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 1.025,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__6_abstract_algebra__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__6_abstract_algebra__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit": "626224b2357f6a657aecdf8005ce120d69bb68ab9c8e0452de72198f014131f2"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit": "79bc9a1bbd6da696e11b6a80663ba2e4da4061d9df52f35571b490b7b5c57182"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.593,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__14_tarski_geometry_from_axioms__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__14_tarski_geometry_from_axioms__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit": "79bc9a1bbd6da696e11b6a80663ba2e4da4061d9df52f35571b490b7b5c57182"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_3/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_3/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_3/solution.lit": "297378c61a750f52b89b18a7bf7b2a190f191be59d059b9040fec0e87b542c91"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_3/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 6.567,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_3__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_3__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_3/solution.lit": "297378c61a750f52b89b18a7bf7b2a190f191be59d059b9040fec0e87b542c91"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit": "949ab17b4737dafc1e442b8320e068dede75797cfa76045c9a8859d11ba4fe9c"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 37.177,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__2_euclidean_geometry__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__2_euclidean_geometry__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit": "949ab17b4737dafc1e442b8320e068dede75797cfa76045c9a8859d11ba4fe9c"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_4/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_4/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_4/solution.lit": "64f73cfe74fc75bbfdb543ddf1824b0b0991328e237932e446a7dd431f8f2c6d"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_4/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 36.016,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_4__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_4__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_4/solution.lit": "64f73cfe74fc75bbfdb543ddf1824b0b0991328e237932e446a7dd431f8f2c6d"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_20/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_20/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_20/solution.lit": "75be2e2c84c3cf7418e355f1616779b132f680376df107f5ad4f26e9640f18f3"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_20/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 95.819,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_20__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_20__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_20/solution.lit": "75be2e2c84c3cf7418e355f1616779b132f680376df107f5ad4f26e9640f18f3"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_18/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_18/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_18/solution.lit": "d28e013260eabc474e0e4582f884ca46052cff6e1488c41f8c97fe1debd28af9"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_18/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 69.736,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_18__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_18__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_18/solution.lit": "d28e013260eabc474e0e4582f884ca46052cff6e1488c41f8c97fe1debd28af9"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_7/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_7/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_7/solution.lit": "30eb64d4da13b8073af4922ee5bae64d5572578f142b2f3652e37b8b054d2520"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_7/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 10.165,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_7__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_7__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_7/solution.lit": "30eb64d4da13b8073af4922ee5bae64d5572578f142b2f3652e37b8b054d2520"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_15/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_15/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_15/solution.lit": "037953d95d3095fdf61d9f4d20b153568d2527f316bd77da81d9bc4c6e72fdc1"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_15/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 7.887,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_15__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_15__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_15/solution.lit": "037953d95d3095fdf61d9f4d20b153568d2527f316bd77da81d9bc4c6e72fdc1"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_12/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_12/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_12/solution.lit": "6baad86c017ba4f6fac7154b81806acfcde0b37fe54d651cb8dc512b04cb382e"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_12/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 34.618,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_12__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_12__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_12/solution.lit": "6baad86c017ba4f6fac7154b81806acfcde0b37fe54d651cb8dc512b04cb382e"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_5/Solution-2/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_5/Solution-2/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_5/Solution-2/solution.lit": "ad66f843d5caf53fef55142b6f8a355dcf4405881d45047d421183621ed8041b"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_5/Solution-2/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 30.001,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_5__Solution-2__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_5__Solution-2__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_5/Solution-2/solution.lit": "ad66f843d5caf53fef55142b6f8a355dcf4405881d45047d421183621ed8041b"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_5/Solution-1/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_5/Solution-1/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_5/Solution-1/solution.lit": "abeae52d0e44b8584dfc53f3d81f5c09b9d78cdca99c8d3b0c710308174a67d5"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_5/Solution-1/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 3.802,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_5__Solution-1__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_5__Solution-1__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_5/Solution-1/solution.lit": "abeae52d0e44b8584dfc53f3d81f5c09b9d78cdca99c8d3b0c710308174a67d5"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_2/Solution-2/solution_part_a.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/predicate.lit",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/theorem.lit",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/solution_part_a.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/predicate.lit": "87505122922c509fde4faff0c5a6e828613567e08c371d1b64dc962faa87c5ef",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/theorem.lit": "6c67575458c46ba03256563381e336c1a21703fb07fcbee9840fd98233fc9961",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/solution_part_a.lit": "bfce7eda459402aef1c9cc2b6fbc9c20ef5bfe0844e7f14f2c74795f93a00f68"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/solution_part_a.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 1.224,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-2__solution_part_a-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-2__solution_part_a-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/predicate.lit": "87505122922c509fde4faff0c5a6e828613567e08c371d1b64dc962faa87c5ef",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/theorem.lit": "6c67575458c46ba03256563381e336c1a21703fb07fcbee9840fd98233fc9961",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-2/solution_part_a.lit": "bfce7eda459402aef1c9cc2b6fbc9c20ef5bfe0844e7f14f2c74795f93a00f68"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_17/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_17/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_17/solution.lit": "6582031711a6f73b60e7548e43207ca78b25d316a45930fcb9b3fedba42bbdc5"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_17/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 259.337,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_17__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_17__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_17/solution.lit": "6582031711a6f73b60e7548e43207ca78b25d316a45930fcb9b3fedba42bbdc5"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_b.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/predicate.lit",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/theorem.lit",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_a.lit",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_b.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/predicate.lit": "7d4c6154b3a60f5dc3a092ffcfc1c6eabb8d6ddd864442eca493d9ba5aeb994b",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/theorem.lit": "3d10eb0a01d057d86c1d9cbe186eda297eb84a93d33a92c98610518b967d3a1e",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_a.lit": "0b61e6ba92663fe73656916cd3d9b143b592ebe9640434a2532d345db6fb1981",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_b.lit": "601894ce71de38cd3ef6aa49657124ae725fd3bb117c5c3d2a109cd4ae3a4389"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_b.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.891,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-1__solution_part_b-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-1__solution_part_b-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/predicate.lit": "7d4c6154b3a60f5dc3a092ffcfc1c6eabb8d6ddd864442eca493d9ba5aeb994b",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/theorem.lit": "3d10eb0a01d057d86c1d9cbe186eda297eb84a93d33a92c98610518b967d3a1e",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_a.lit": "0b61e6ba92663fe73656916cd3d9b143b592ebe9640434a2532d345db6fb1981",
+        "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_b.lit": "601894ce71de38cd3ef6aa49657124ae725fd3bb117c5c3d2a109cd4ae3a4389"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_1/Solution-1/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/geo_definitions.lit",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/predicate.lit",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/theorem.lit",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/predicate.lit": "d74632be8f50079c2a803b955dd7b4a373ede29d08aaa806577b5edfa973f66e",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/theorem.lit": "a36e9dfdd323e02fd32ae5141e7630b9b85683f57d40045d3506ba8ef714d212",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/solution.lit": "a71d9c37fd736428db057f88e425c1416f4fadb59ed5f878d6cea9833fdc7573"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 34.004,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-1__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-1__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/predicate.lit": "d74632be8f50079c2a803b955dd7b4a373ede29d08aaa806577b5edfa973f66e",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/theorem.lit": "a36e9dfdd323e02fd32ae5141e7630b9b85683f57d40045d3506ba8ef714d212",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-1/solution.lit": "a71d9c37fd736428db057f88e425c1416f4fadb59ed5f878d6cea9833fdc7573"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/litex_to_lean_adapter/source.lit",
+      "coverage": [
+        "showcases/litex_to_lean_adapter/source.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/litex_to_lean_adapter/source.lit": "e7999cc0382488d3f022b9413aeb505e7215fff7ef8514d0310562b7ba40683d"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/litex_to_lean_adapter/source.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.008,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__litex_to_lean_adapter__source-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__litex_to_lean_adapter__source-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/litex_to_lean_adapter/source.lit": "e7999cc0382488d3f022b9413aeb505e7215fff7ef8514d0310562b7ba40683d"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/geo_definitions.lit",
+      "coverage": [
+        "showcases/2D_Geometry/geo_definitions.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/geo_definitions.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 0.51,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__geo_definitions-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__geo_definitions-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/imo_inequalities/imo_2006_p3.lit",
+      "coverage": [
+        "showcases/imo_inequalities/imo_2006_p3.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/imo_inequalities/imo_2006_p3.lit": "15b4ca5f265cce1f0430a3245c240909e97c1100913dfae3ac7580cd9146d9cc"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_2006_p3.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 6.453,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2006_p3-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2006_p3-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/imo_inequalities/imo_2006_p3.lit": "15b4ca5f265cce1f0430a3245c240909e97c1100913dfae3ac7580cd9146d9cc"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/imo_inequalities/imo_2005_p3.lit",
+      "coverage": [
+        "showcases/imo_inequalities/imo_2005_p3.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/imo_inequalities/imo_2005_p3.lit": "ef1a997fc6351211ebd97d15673d703f7bae5b33a56748736bf51fae8c40d0e4"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_2005_p3.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 2.685,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2005_p3-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2005_p3-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/imo_inequalities/imo_2005_p3.lit": "ef1a997fc6351211ebd97d15673d703f7bae5b33a56748736bf51fae8c40d0e4"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/imo_inequalities/imo_1983_p6.lit",
+      "coverage": [
+        "showcases/imo_inequalities/imo_1983_p6.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/imo_inequalities/imo_1983_p6.lit": "8466d930f10af1cf3cb0ae07838ec7d24bea73b513d499939785867413443551"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_1983_p6.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 3.544,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_1983_p6-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_1983_p6-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/imo_inequalities/imo_1983_p6.lit": "8466d930f10af1cf3cb0ae07838ec7d24bea73b513d499939785867413443551"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/imo_inequalities/imo_1995_p2.lit",
+      "coverage": [
+        "showcases/imo_inequalities/imo_1995_p2.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/imo_inequalities/imo_1995_p2.lit": "cdb75693e7a8eef6270b5299fbffa6aa9aa37c863e1cb071f52c1403fdaf71ef"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_1995_p2.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 3.536,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_1995_p2-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_1995_p2-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/imo_inequalities/imo_1995_p2.lit": "cdb75693e7a8eef6270b5299fbffa6aa9aa37c863e1cb071f52c1403fdaf71ef"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/imo_inequalities/imo_2001_p2.lit",
+      "coverage": [
+        "showcases/imo_inequalities/imo_2001_p2.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/imo_inequalities/imo_2001_p2.lit": "ac21d7379d1feefdc1e612c36e330b4de08e05f5815158f848d79b478b36cf41"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/imo_inequalities/imo_2001_p2.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 7.432,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2001_p2-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2001_p2-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/imo_inequalities/imo_2001_p2.lit": "ac21d7379d1feefdc1e612c36e330b4de08e05f5815158f848d79b478b36cf41"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_1/Solution-2/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/geo_definitions.lit",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/predicate.lit",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/theorem.lit",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/predicate.lit": "ca9372ca73e50ab39857ce860b040c86a5fd39900c8d9559e2cdce33338071e8",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/theorem.lit": "4d9212b5c20904107d35b8d69d94c0aa05337e57a29b99c95ae8a3b98041aaa3",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/solution.lit": "9b25820e15e8da20a0600a6bd75cb6a6dc55b5e7832af0bb6ef93cd7b0f189c3"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 66.045,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-2__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-2__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/geo_definitions.lit": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/predicate.lit": "ca9372ca73e50ab39857ce860b040c86a5fd39900c8d9559e2cdce33338071e8",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/theorem.lit": "4d9212b5c20904107d35b8d69d94c0aa05337e57a29b99c95ae8a3b98041aaa3",
+        "showcases/2D_Geometry/IMO/problem_1/Solution-2/solution.lit": "9b25820e15e8da20a0600a6bd75cb6a6dc55b5e7832af0bb6ef93cd7b0f189c3"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/geo.lit",
+      "coverage": [
+        "showcases/2D_Geometry/geo.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/geo.lit": "bb2c20b5a1114e26d1abb3e97b24dc063846984909d07746c61e12be9bd692d4"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/geo.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 356.971,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__geo-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__geo-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/geo.lit": "bb2c20b5a1114e26d1abb3e97b24dc063846984909d07746c61e12be9bd692d4"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/2D_Geometry/IMO/problem_13/solution.lit",
+      "coverage": [
+        "showcases/2D_Geometry/IMO/problem_13/solution.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/2D_Geometry/IMO/problem_13/solution.lit": "bd5052cac1782f7d6a59b321a18b0e5900167850973aae49ba35ad1ad5f4f2dd"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/2D_Geometry/IMO/problem_13/solution.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 673.453,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_13__solution-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_13__solution-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/2D_Geometry/IMO/problem_13/solution.lit": "bd5052cac1782f7d6a59b321a18b0e5900167850973aae49ba35ad1ad5f4f2dd"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit",
+      "coverage": [
+        "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit"
+      ],
+      "strict": true,
+      "source_sha256": {
+        "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit": "d54c4ec38a0f4f2ea9e007e789a5def2faf0b3feacb4321d65f9148405ce0564"
+      },
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-f",
+        "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit"
+      ],
+      "exit_code": 0,
+      "seconds": 346.787,
+      "stdout": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__15_coordinate_geometry_case_study__main-pinned-final.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__15_coordinate_geometry_case_study__main-pinned-final.stderr.txt",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "accepted": true,
+      "source_hashes_after": {
+        "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit": "d54c4ec38a0f4f2ea9e007e789a5def2faf0b3feacb4321d65f9148405ce0564"
+      },
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/The-Mechanics-of-Litex-Proof",
+      "strict": true,
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-strict",
+        "-r",
+        "showcases/The-Mechanics-of-Litex-Proof"
+      ],
+      "stdout": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stderr.txt",
+      "source_sha256": {
+        "showcases/The-Mechanics-of-Litex-Proof/citation.lit": "5a925e4bd58428ce006dc1a1ee0a372bc3b5ba8016f3fa4478acdd3276742431",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter05-logic.lit": "06737351c759d6aafd280531b43e26fd48297cdd340d260df478a0f86af0f5b5",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter08-functions.lit": "1ec952db3147d8f818e8731ac8675465ebd35c6185966390fa60f7c63a6619fb",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter02-proofs-with-structure.lit": "71d6e9b5142caf3773cb851b5e9a0c25b33ddbbda179ab112f58d66c928c79a6",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter06-induction.lit": "c77dbe3952de873c57eec74a0f31e94f0bd0918c9b6bc1ff39becd6d9e372556",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter10-relations.lit": "4c8416afefa2a2d2c032f55efebac9a92bd0c34a7650c4c2fa90586cd07d7007",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter03-parity-and-divisibility.lit": "6610f9830fa722c990f4e1c106f1faf5e772cd6486e822b42573d24b37c70775",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter04-proofs-with-structure-ii.lit": "406c40d9e6023711bf6da0d8f2edc06eed892139b18f534ae78278c0120af89c",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter01-proofs-by-calculation.lit": "034e5ec1a3e36344f0361177def477c86817b309bf7deaae5ef84439933a782e",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter00-introduction.lit": "f5c0c6eb8e065900b8cdfc62c5d18de379dce213270234ce09c741099328ff55",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter07-number-theory.lit": "fe5925abb1e0fe98a5d0d26f963eac7e35261de2b8e99fc8ad7a1bcf5982abcd",
+        "showcases/The-Mechanics-of-Litex-Proof/chapter09-sets.lit": "9ecd69ae28d457a7051675a2decbf073d295b130e5859bb1fc52912e87fe05b6",
+        "showcases/The-Mechanics-of-Litex-Proof/litex.config": "686634840c18c46e8f8367b988c01c70d0b1bd5b71c9e999ceab7e901cfd7b3b"
+      },
+      "accepted": true,
+      "status": "accepted",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "exit_code": 0,
+      "seconds": 33.604,
+      "timing": "output timestamp estimate, not isolated benchmark",
+      "source_unchanged": true
+    },
+    {
+      "target": "showcases/analysis",
+      "strict": false,
+      "command": [
+        "/Users/shenjiachen/\u4e3b\u8981\u6587\u4ef6\u5939/GeekGems/litex/golitex/tmp/2026-10-14/showcase-repair/verified-litex",
+        "-lang",
+        "en",
+        "-r",
+        "showcases/analysis"
+      ],
+      "stdout": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "stderr": "tmp/2026-10-14/showcase-repair/analysis-final-module.stderr.txt",
+      "source_sha256": {
+        "showcases/analysis/chapter03-set-theory.lit": "889d69feffc03170de36740b9491e8ad4c4b0d201693182e42c44401566f810b",
+        "showcases/analysis/chapter05-real-numbers.lit": "5c6aa04ada01280226cf6e4a55a9003376d7a118e56ea4a2d1eb56647d7897fb",
+        "showcases/analysis/finite_products.lit": "cc0be9043c97898c1be7c797fe4a450d1733a509f00cce6b88e5edf30b88cfd1",
+        "showcases/analysis/chapter02-natural-numbers.lit": "a0dfa05d10213f96b0a2209ca1d2a6a3c5008ae3cb70235fb02256983fc931df",
+        "showcases/analysis/naturals.lit": "13f8aaa3d7c5f526129ddbcf702cbb3c1a5e07e41fe74b89052dd33d3b23b157",
+        "showcases/analysis/chapter06-sequential-limits.lit": "11b408b5fab7e70842e3b2cc98fb41f522b255e24a2d998211b059a5dd2e342e",
+        "showcases/analysis/appendix-a-logic-and-proof-language.lit": "c1608f20a6dafa6d9fc3818b888805c1cd20fd524e2f7b11e052492fb0d31900",
+        "showcases/analysis/maps.lit": "d23b761522fa1e06c7807b5068f60809a829893bd7718b30a433985bd633047e",
+        "showcases/analysis/chapter07-series.lit": "b5f3949a0054930d159a526949377ce6d3688a633fc0cfd8cc4c5c2e2d3abeb4",
+        "showcases/analysis/chapter08-infinite-sets.lit": "a63aa685eda3d74dd51fc93b2224fd6d6e45faa14047bb15bffa9be417dda313",
+        "showcases/analysis/chapter04-integers-and-rationals.lit": "d07eb8b54803e9e7fed88e6c0d160b6fb3687583e66c2dcd178679c7473b4a46",
+        "showcases/analysis/litex.config": "807e722ff73a73c510c3d1cca57edbefea9d91cec2cb31fa21bef19b84953f52"
+      },
+      "accepted": true,
+      "status": "accepted",
+      "kind": "run",
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null,
+      "exit_code": 0,
+      "seconds": 1621.868,
+      "timing": "output timestamp estimate, not isolated benchmark",
+      "source_unchanged": true
+    }
+  ],
+  "coverage": {
+    "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__Write_Mathematically_Correct_Code_With_Litex__main-pinned-final.stdout.json",
+      "sha256": "2747901eacd8c68919576ce9ed4667430d43db349411203471abb8c66552e597"
+    },
+    "showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__13_numerical_analysis_in_nutshell__main-pinned-final.stdout.json",
+      "sha256": "d3ec40fa7d1940903c5815fbcbbf8b2b16109ac14dae22ce430f5fa9dda8e56a"
+    },
+    "showcases/linear_algebra/linear_algebra.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__linear_algebra__linear_algebra-pinned-final.stdout.json",
+      "sha256": "2f226471384224c14d346b4d2857fc5fb550afa57a1f384ef9376f1582d7c2ee"
+    },
+    "showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__8_probability_and_statistics_in_nutshell__main-pinned-final.stdout.json",
+      "sha256": "2191b2ac85b12713a322d19947a1f7d9bf614a4a470a0c1e61516e985c9a8545"
+    },
+    "showcases/math_concepts_in_litex/3_number_theory/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__3_number_theory__main-pinned-final.stdout.json",
+      "sha256": "8bc3acbd59b3a43804c82442e6b5ae12af1c5e6ba8316fb297a23bfc6af02fc4"
+    },
+    "showcases/math_concepts_in_litex/5_linear_algebra/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__5_linear_algebra__main2-pinned-final.stdout.json",
+      "sha256": "9cfe8d730f564d9a8c567d86eeef0af6e16ef8b788469e60551e7daaa3c7d89b"
+    },
+    "showcases/math_concepts_in_litex/5_linear_algebra/main2.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__5_linear_algebra__main2-pinned-final.stdout.json",
+      "sha256": "6d99700c8540b4bef6e7f075351e1ddbc136a50457f4a1a7cbd68946e68562c2"
+    },
+    "showcases/math_concepts_in_litex/7_calculus/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__7_calculus__main-pinned-final.stdout.json",
+      "sha256": "24c104c79b76747e2f02dd9e0dc20a3184b43d11167862b71af769998efc8659"
+    },
+    "showcases/math_concepts_in_litex/9_topology/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__9_topology__main-pinned-final.stdout.json",
+      "sha256": "0e8fe66afd322d78668912b75cf48f07eccc39932c3eff023711266b124084d5"
+    },
+    "showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__2_sets_functions_and_relations_in_nutshell__main-pinned-final.stdout.json",
+      "sha256": "1f06c019e94014ff2712350c91ea0f95c49e754bae59f22ef5e7aff3daa90ae4"
+    },
+    "showcases/math_concepts_in_litex/16_category_theory_in_set_theory/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__16_category_theory_in_set_theory__main-pinned-final.stdout.json",
+      "sha256": "01d967f0dc895294e3b8611eecaeaf751391f1b395125826cd51d5c9cafe4d2c"
+    },
+    "showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__11_multivariable_calculus_in_nutshell__main-pinned-final.stdout.json",
+      "sha256": "612d7d4b78563b781945c07b9d118df107ddbd5d49e49e6fc16c3a0b56ee0d5c"
+    },
+    "showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__10_real_analysis_in_nutshell__main-pinned-final.stdout.json",
+      "sha256": "2bcca5119939bd6dfdb6d7e444b487057a3e536c788cf76325cc79be53713f9c"
+    },
+    "showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__4_discrete_mathematics_in_nutshell__main-pinned-final.stdout.json",
+      "sha256": "f0a4a02737e62c64235163e0b2979db8c30421d9c65c2527fca14ddc55367274"
+    },
+    "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__12_ordinary_differential_equations_in_nutshell__main-pinned-final.stdout.json",
+      "sha256": "abd26bafea5fbde10d30ebb6b91fe7bab852bc12f172a89126c3fa861e072b56"
+    },
+    "showcases/math_concepts_in_litex/6_abstract_algebra/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__6_abstract_algebra__main-pinned-final.stdout.json",
+      "sha256": "626224b2357f6a657aecdf8005ce120d69bb68ab9c8e0452de72198f014131f2"
+    },
+    "showcases/math_concepts_in_litex/14_tarski_geometry_from_axioms/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__14_tarski_geometry_from_axioms__main-pinned-final.stdout.json",
+      "sha256": "79bc9a1bbd6da696e11b6a80663ba2e4da4061d9df52f35571b490b7b5c57182"
+    },
+    "showcases/2D_Geometry/IMO/problem_3/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_3__solution-pinned-final.stdout.json",
+      "sha256": "297378c61a750f52b89b18a7bf7b2a190f191be59d059b9040fec0e87b542c91"
+    },
+    "showcases/math_concepts_in_litex/2_euclidean_geometry/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__2_euclidean_geometry__main-pinned-final.stdout.json",
+      "sha256": "949ab17b4737dafc1e442b8320e068dede75797cfa76045c9a8859d11ba4fe9c"
+    },
+    "showcases/2D_Geometry/IMO/problem_4/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_4__solution-pinned-final.stdout.json",
+      "sha256": "64f73cfe74fc75bbfdb543ddf1824b0b0991328e237932e446a7dd431f8f2c6d"
+    },
+    "showcases/2D_Geometry/IMO/problem_20/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_20__solution-pinned-final.stdout.json",
+      "sha256": "75be2e2c84c3cf7418e355f1616779b132f680376df107f5ad4f26e9640f18f3"
+    },
+    "showcases/2D_Geometry/IMO/problem_18/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_18__solution-pinned-final.stdout.json",
+      "sha256": "d28e013260eabc474e0e4582f884ca46052cff6e1488c41f8c97fe1debd28af9"
+    },
+    "showcases/2D_Geometry/IMO/problem_7/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_7__solution-pinned-final.stdout.json",
+      "sha256": "30eb64d4da13b8073af4922ee5bae64d5572578f142b2f3652e37b8b054d2520"
+    },
+    "showcases/2D_Geometry/IMO/problem_15/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_15__solution-pinned-final.stdout.json",
+      "sha256": "037953d95d3095fdf61d9f4d20b153568d2527f316bd77da81d9bc4c6e72fdc1"
+    },
+    "showcases/2D_Geometry/IMO/problem_12/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_12__solution-pinned-final.stdout.json",
+      "sha256": "6baad86c017ba4f6fac7154b81806acfcde0b37fe54d651cb8dc512b04cb382e"
+    },
+    "showcases/2D_Geometry/IMO/problem_5/Solution-2/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_5__Solution-2__solution-pinned-final.stdout.json",
+      "sha256": "ad66f843d5caf53fef55142b6f8a355dcf4405881d45047d421183621ed8041b"
+    },
+    "showcases/2D_Geometry/IMO/problem_5/Solution-1/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_5__Solution-1__solution-pinned-final.stdout.json",
+      "sha256": "abeae52d0e44b8584dfc53f3d81f5c09b9d78cdca99c8d3b0c710308174a67d5"
+    },
+    "showcases/2D_Geometry/IMO/problem_2/Solution-2/predicate.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-2__solution_part_a-pinned-final.stdout.json",
+      "sha256": "87505122922c509fde4faff0c5a6e828613567e08c371d1b64dc962faa87c5ef"
+    },
+    "showcases/2D_Geometry/IMO/problem_2/Solution-2/theorem.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-2__solution_part_a-pinned-final.stdout.json",
+      "sha256": "6c67575458c46ba03256563381e336c1a21703fb07fcbee9840fd98233fc9961"
+    },
+    "showcases/2D_Geometry/IMO/problem_2/Solution-2/solution_part_a.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-2__solution_part_a-pinned-final.stdout.json",
+      "sha256": "bfce7eda459402aef1c9cc2b6fbc9c20ef5bfe0844e7f14f2c74795f93a00f68"
+    },
+    "showcases/2D_Geometry/IMO/problem_17/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_17__solution-pinned-final.stdout.json",
+      "sha256": "6582031711a6f73b60e7548e43207ca78b25d316a45930fcb9b3fedba42bbdc5"
+    },
+    "showcases/2D_Geometry/IMO/problem_2/Solution-1/predicate.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-1__solution_part_b-pinned-final.stdout.json",
+      "sha256": "7d4c6154b3a60f5dc3a092ffcfc1c6eabb8d6ddd864442eca493d9ba5aeb994b"
+    },
+    "showcases/2D_Geometry/IMO/problem_2/Solution-1/theorem.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-1__solution_part_b-pinned-final.stdout.json",
+      "sha256": "3d10eb0a01d057d86c1d9cbe186eda297eb84a93d33a92c98610518b967d3a1e"
+    },
+    "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_a.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-1__solution_part_b-pinned-final.stdout.json",
+      "sha256": "0b61e6ba92663fe73656916cd3d9b143b592ebe9640434a2532d345db6fb1981"
+    },
+    "showcases/2D_Geometry/IMO/problem_2/Solution-1/solution_part_b.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_2__Solution-1__solution_part_b-pinned-final.stdout.json",
+      "sha256": "601894ce71de38cd3ef6aa49657124ae725fd3bb117c5c3d2a109cd4ae3a4389"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-1/geo_definitions.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-1__solution-pinned-final.stdout.json",
+      "sha256": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-1/predicate.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-1__solution-pinned-final.stdout.json",
+      "sha256": "d74632be8f50079c2a803b955dd7b4a373ede29d08aaa806577b5edfa973f66e"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-1/theorem.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-1__solution-pinned-final.stdout.json",
+      "sha256": "a36e9dfdd323e02fd32ae5141e7630b9b85683f57d40045d3506ba8ef714d212"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-1/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-1__solution-pinned-final.stdout.json",
+      "sha256": "a71d9c37fd736428db057f88e425c1416f4fadb59ed5f878d6cea9833fdc7573"
+    },
+    "showcases/litex_to_lean_adapter/source.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__litex_to_lean_adapter__source-pinned-final.stdout.json",
+      "sha256": "e7999cc0382488d3f022b9413aeb505e7215fff7ef8514d0310562b7ba40683d"
+    },
+    "showcases/2D_Geometry/geo_definitions.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__geo_definitions-pinned-final.stdout.json",
+      "sha256": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a"
+    },
+    "showcases/imo_inequalities/imo_2006_p3.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2006_p3-pinned-final.stdout.json",
+      "sha256": "15b4ca5f265cce1f0430a3245c240909e97c1100913dfae3ac7580cd9146d9cc"
+    },
+    "showcases/imo_inequalities/imo_2005_p3.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2005_p3-pinned-final.stdout.json",
+      "sha256": "ef1a997fc6351211ebd97d15673d703f7bae5b33a56748736bf51fae8c40d0e4"
+    },
+    "showcases/imo_inequalities/imo_1983_p6.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_1983_p6-pinned-final.stdout.json",
+      "sha256": "8466d930f10af1cf3cb0ae07838ec7d24bea73b513d499939785867413443551"
+    },
+    "showcases/imo_inequalities/imo_1995_p2.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_1995_p2-pinned-final.stdout.json",
+      "sha256": "cdb75693e7a8eef6270b5299fbffa6aa9aa37c863e1cb071f52c1403fdaf71ef"
+    },
+    "showcases/imo_inequalities/imo_2001_p2.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__imo_inequalities__imo_2001_p2-pinned-final.stdout.json",
+      "sha256": "ac21d7379d1feefdc1e612c36e330b4de08e05f5815158f848d79b478b36cf41"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-2/geo_definitions.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-2__solution-pinned-final.stdout.json",
+      "sha256": "44a7a608556687279e695f7bdfcf7f94513cf453c18b3b3eb32b1973918afd8a"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-2/predicate.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-2__solution-pinned-final.stdout.json",
+      "sha256": "ca9372ca73e50ab39857ce860b040c86a5fd39900c8d9559e2cdce33338071e8"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-2/theorem.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-2__solution-pinned-final.stdout.json",
+      "sha256": "4d9212b5c20904107d35b8d69d94c0aa05337e57a29b99c95ae8a3b98041aaa3"
+    },
+    "showcases/2D_Geometry/IMO/problem_1/Solution-2/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_1__Solution-2__solution-pinned-final.stdout.json",
+      "sha256": "9b25820e15e8da20a0600a6bd75cb6a6dc55b5e7832af0bb6ef93cd7b0f189c3"
+    },
+    "showcases/2D_Geometry/geo.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__geo-pinned-final.stdout.json",
+      "sha256": "bb2c20b5a1114e26d1abb3e97b24dc063846984909d07746c61e12be9bd692d4"
+    },
+    "showcases/2D_Geometry/IMO/problem_13/solution.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__2D_Geometry__IMO__problem_13__solution-pinned-final.stdout.json",
+      "sha256": "bd5052cac1782f7d6a59b321a18b0e5900167850973aae49ba35ad1ad5f4f2dd"
+    },
+    "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/main.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/showcases__math_concepts_in_litex__15_coordinate_geometry_case_study__main-pinned-final.stdout.json",
+      "sha256": "d54c4ec38a0f4f2ea9e007e789a5def2faf0b3feacb4321d65f9148405ce0564"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/citation.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "5a925e4bd58428ce006dc1a1ee0a372bc3b5ba8016f3fa4478acdd3276742431"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter05-logic.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "06737351c759d6aafd280531b43e26fd48297cdd340d260df478a0f86af0f5b5"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter08-functions.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "1ec952db3147d8f818e8731ac8675465ebd35c6185966390fa60f7c63a6619fb"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter02-proofs-with-structure.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "71d6e9b5142caf3773cb851b5e9a0c25b33ddbbda179ab112f58d66c928c79a6"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter06-induction.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "c77dbe3952de873c57eec74a0f31e94f0bd0918c9b6bc1ff39becd6d9e372556"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter10-relations.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "4c8416afefa2a2d2c032f55efebac9a92bd0c34a7650c4c2fa90586cd07d7007"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter03-parity-and-divisibility.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "6610f9830fa722c990f4e1c106f1faf5e772cd6486e822b42573d24b37c70775"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter04-proofs-with-structure-ii.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "406c40d9e6023711bf6da0d8f2edc06eed892139b18f534ae78278c0120af89c"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter01-proofs-by-calculation.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "034e5ec1a3e36344f0361177def477c86817b309bf7deaae5ef84439933a782e"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter00-introduction.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "f5c0c6eb8e065900b8cdfc62c5d18de379dce213270234ce09c741099328ff55"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter07-number-theory.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "fe5925abb1e0fe98a5d0d26f963eac7e35261de2b8e99fc8ad7a1bcf5982abcd"
+    },
+    "showcases/The-Mechanics-of-Litex-Proof/chapter09-sets.lit": {
+      "strict": true,
+      "gate": "tmp/2026-10-14/showcase-repair/mechanics-final-module.stdout.json",
+      "sha256": "9ecd69ae28d457a7051675a2decbf073d295b130e5859bb1fc52912e87fe05b6"
+    },
+    "showcases/analysis/chapter03-set-theory.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "889d69feffc03170de36740b9491e8ad4c4b0d201693182e42c44401566f810b"
+    },
+    "showcases/analysis/chapter05-real-numbers.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "5c6aa04ada01280226cf6e4a55a9003376d7a118e56ea4a2d1eb56647d7897fb"
+    },
+    "showcases/analysis/finite_products.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "cc0be9043c97898c1be7c797fe4a450d1733a509f00cce6b88e5edf30b88cfd1"
+    },
+    "showcases/analysis/chapter02-natural-numbers.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "a0dfa05d10213f96b0a2209ca1d2a6a3c5008ae3cb70235fb02256983fc931df"
+    },
+    "showcases/analysis/naturals.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "13f8aaa3d7c5f526129ddbcf702cbb3c1a5e07e41fe74b89052dd33d3b23b157"
+    },
+    "showcases/analysis/chapter06-sequential-limits.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "11b408b5fab7e70842e3b2cc98fb41f522b255e24a2d998211b059a5dd2e342e"
+    },
+    "showcases/analysis/appendix-a-logic-and-proof-language.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "c1608f20a6dafa6d9fc3818b888805c1cd20fd524e2f7b11e052492fb0d31900"
+    },
+    "showcases/analysis/maps.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "d23b761522fa1e06c7807b5068f60809a829893bd7718b30a433985bd633047e"
+    },
+    "showcases/analysis/chapter07-series.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "b5f3949a0054930d159a526949377ce6d3688a633fc0cfd8cc4c5c2e2d3abeb4"
+    },
+    "showcases/analysis/chapter08-infinite-sets.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "a63aa685eda3d74dd51fc93b2224fd6d6e45faa14047bb15bffa9be417dda313"
+    },
+    "showcases/analysis/chapter04-integers-and-rationals.lit": {
+      "strict": false,
+      "gate": "tmp/2026-10-14/showcase-repair/analysis-final-module.stdout.json",
+      "sha256": "d07eb8b54803e9e7fed88e6c0d160b6fb3687583e66c2dcd178679c7473b4a46"
+    }
+  },
+  "remaining_paths": []
+}

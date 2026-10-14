@@ -35,6 +35,10 @@ retained as category closure laws, not encoded as a dependent return type.
 Functor and natural-transformation assumptions must be present in their
 composition theorems. Callable signatures alone do not imply preservation
 or naturality. No trust or additional axioms are allowed for these proofs.
+The natural-transformation definition also lists the two functors' arrow Hom
+closures explicitly so composition goals can check their domains before the
+proof body runs. These clauses follow from the existing functor assumptions;
+`natural_transformation_from_naturality` verifies the same construction premise.
 
 ## Dependency order and verification boundary
 
@@ -47,8 +51,11 @@ Migration proceeds in this order in a persistent release session. On
 2026-10-04 the complete Litex chapter
 passed strict release (49/49 statements and the registered chapter gate).
 Four derived closure lemmas expose exact Hom results before nested guarded
-calls without changing the category, functor, or natural-transformation
-definitions. All 17 original named theorems and both finite constructions
+calls without changing the mathematical category, functor, or natural-transformation
+requirements. The 2026-10-14 source repair repeats the functor arrow-closure
+clauses inside the natural-transformation predicate so nested calls can check
+their domains; the existing constructor proves these clauses from its original
+functor premises. All 17 original named theorems and both finite constructions
 remain present; no trust or axioms were added. The handwritten Lean analogy
 was not revalidated in this proof-completion round.
 

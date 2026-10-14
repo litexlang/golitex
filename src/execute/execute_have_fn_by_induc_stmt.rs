@@ -330,6 +330,9 @@ impl Runtime {
         let generated_measure = self
             .inst_obj(&stmt.measure, &subst)
             .map_err(|e| format!("recursive measure instantiate: {e}"))?;
+        let generated_lower = self
+            .inst_obj(&stmt.lower_bound, &subst)
+            .map_err(|e| format!("recursive lower bound instantiate: {e}"))?;
         let generated_ret = self
             .inst_obj(&stmt.fn_set_clause.ret_set, &subst)
             .map_err(|e| format!("recursive ret instantiate: {e}"))?;
@@ -350,6 +353,20 @@ impl Runtime {
                 line_file: Some(stmt.line_file.clone()),
             }),
         ));
+
+        // The nonnegative integer measure - lower must decrease on every call.
+        // A bound such as n - 1 must not follow n downward indefinitely.
+        // An unchanged bound is invariant by substitution, without a new premise.
+        if generated_lower != stmt.lower_bound {
+            dom_facts.push(QuantifierFreeFact::AtomicFact(
+                AtomicFact::GreaterEqualFact(GreaterEqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: generated_lower,
+                    right: stmt.lower_bound.clone(),
+                    line_file: Some(stmt.line_file.clone()),
+                }),
+            ));
+        }
 
         let restricted = FnSet {
             set_bound_parameters: crate::ast::param::SetBoundParameterList {

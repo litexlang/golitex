@@ -2650,12 +2650,12 @@ thm square_diagonal_length:
         =>:
             distance_sq(a, c) = 2 * side_sq
     by def $is_square(a, b, c, d)
-    by def $is_rectangle(a, b, c, d)
-    by def $is_parallelogram(a, b, c, d)
-    by def $is_parallel(a, b, d, c)
-    by def $is_parallel(a, d, b, c)
-    by def $is_right_angle(d, a, b)
-    by def $are_segments_congruent(a, b, b, c)
+    $is_rectangle(a, b, c, d)
+    $is_parallelogram(a, b, c, d)
+    $is_parallel(a, b, d, c)
+    $is_parallel(a, d, b, c)
+    $is_right_angle(d, a, b)
+    $are_segments_congruent(a, b, b, c)
     release thm square_orthogonal_parallel_quadrilateral_coordinates(a, b, c, d)
     release thm parallelogram_sides(a, b, c, d)
     distance_sq(a, d) = distance_sq(b, c)
@@ -3032,7 +3032,9 @@ thm on_line_implies_affine_parameter:
             exist t R st {p(1) = (1 - t) * a(1) + t * b(1), p(2) = (1 - t) * a(2) + t * b(2)}
     by def $is_on_line(p,a,b)
     line_through_points(a,b) = {r cart(R,R): det(vec(a,r),vec(a,b))=0}
-    release thm set_builder_member(p, {r line_through_points(a,b): 0=0})
+    p $in line_through_points(a,b)
+    p $in {r cart(R,R): det(vec(a,r),vec(a,b))=0}
+    release thm set_builder_member(p, {r cart(R,R): det(vec(a,r),vec(a,b))=0})
     release thm collinear_det_expand(a,p,b)
     release thm collinear_coordinates_imply_affine_parameter(a,b,p)
 
@@ -3055,7 +3057,9 @@ thm right_angle_vertex_distinct_from_foot_on_opposite_line:
         $is_on_line(foot, a, b)
         foot $in line_through_points(a, b)
         line_through_points(a,b) = {r cart(R,R): det(vec(a,r),vec(a,b))=0}
-        release thm set_builder_member(foot, {r line_through_points(a,b): 0=0})
+        foot $in line_through_points(a,b)
+        foot $in {r cart(R,R): det(vec(a,r),vec(a,b))=0}
+        release thm set_builder_member(foot, {r cart(R,R): det(vec(a,r),vec(a,b))=0})
         det(vec(a, c), vec(a, b)) = det(vec(a, foot), vec(a, b)) = 0
         release thm collinear_symmetric(a,c,b)
         dot(vec(c, a), vec(c, b)) = 0

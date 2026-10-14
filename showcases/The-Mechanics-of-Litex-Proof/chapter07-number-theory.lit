@@ -241,7 +241,8 @@ claim:
                     c <= x or c >= x + 1
                     by cases:
                         ? c <= x
-                        case c <= x
+                        case c <= x:
+                            c <= x
                         case c >= x + 1:
                             impossible c < x + 1
                     obtain d from exist k N+ st {$prime(k), c % k = 0}
@@ -297,7 +298,8 @@ claim:
             (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1
             0 = (product(1, a, factorial_factor) + 1) % k = (product(1, a, factorial_factor) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible 0 = 1
-        case k > a
+        case k > a:
+            k > a
     witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
 
 # For comparison, here is the same proof body next to the Lean version from the
@@ -661,6 +663,7 @@ sketch:
         by for:
             ? forall d range(2, 2):
                 2 % d != 0
+            2 % d != 0
         by def $prime(2)
     by contra:
         ? not 2^(1/2) $in Q
@@ -670,6 +673,8 @@ sketch:
         q^2 != 0
         p^2 $in Z
         q^2 $in Z
+        2^(1/2) $in R
+        2^(1/2) != 0
         log(2, 2^(1/2)) = 1/2
         (2^(1/2))^2 > 0
         0 < (2^(1/2))^2
