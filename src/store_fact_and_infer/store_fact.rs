@@ -95,35 +95,22 @@ impl Runtime {
         }
     }
 
-    fn index_forall_chain_components(&mut self, forall: &ForallFact) -> RuntimeResult<()> {
-        let mut projections = Vec::new();
-        for (then_index, then) in forall.then_facts.iter().enumerate() {
-            if let crate::ast::fact::ExistOrAndChainAtomicFact::ChainFact(chain) = then {
-                projections.push((then_index, self.chain_adjacent_atomics(chain)?));
-            }
-        }
-        let memory = &mut self.top_exec_env_mut().facts.known_forall_conclusions;
-        for (then_index, adjacent) in projections {
-            memory.index_chain_components(forall, then_index, &adjacent);
-        }
-        Ok(())
-    }
-
-    // Forall: record whole into facts_by_id / known_forall; index chain then-edges.
-    // Example: `forall x, y, z R: x < y < z` → known_forall + adjacent cites for x<y, y<z.
+    // Forall: record whole into facts_by_id / known_forall (structural index only).
+    // Example: `forall x, y, z R: x < y < z` → whole by_chain cite; not x<y or y<z alone.
+    // Example: `forall x R: x = x = x` → whole by_chain; not adjacent `x = x` cites.
     fn store_forall_fact(&mut self, forall: &ForallFact) -> RuntimeResult<StoreForallFactResult> {
         let fact_id = forall.fact_id;
         self.top_exec_env_mut()
             .facts
             .record_fact(fact_id, Fact::ForallFact(forall.clone()));
-        self.index_forall_chain_components(forall)?;
         Ok(StoreForallFactResult {
             fact_id,
             fact: forall.clone(),
         })
     }
 
-    // Forall-iff: split into two foralls, store each direction.
+    // Forall-iff sugar: the surface ForallFactWithIff.fact_id is intentional and
+    // stays on the sugar node; forward/reverse get fresh FactIds when stored.
     // Example:
     //   forall x, y R:
     //       =>:

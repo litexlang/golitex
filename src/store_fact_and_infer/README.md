@@ -10,7 +10,7 @@ env and may **store routine consequences**. It is not open-ended proof search.
 | `store_fact` | Index by shape into known-\* / ExecEnv (no math consequences) |
 | `infer_fact` | Generate direct facts only via `store_inferred_fact` |
 | `store_fact_and_infer` | `{ store, infer }` for a verified seed |
-| `store_inferred_fact` | Direct store; correctness belongs to the named infer rule |
+| `store_inferred_fact` | Direct store only; no WD-cache write (`remember_formed` stays on the user `store_fact_and_infer` path). Correctness belongs to the named infer rule. |
 
 Forward inference runs once per seed. Each named rule guarantees formation and
 truth of its direct conclusions from the checked source and its own applicable

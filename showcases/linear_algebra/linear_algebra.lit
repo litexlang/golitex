@@ -36,7 +36,7 @@ have repeated_directions finite_seq(R × R, 2) = (e1, e1)
 
 repeated_directions(1) = repeated_directions(2)
 
-have empty_directions finite_seq(R × R, 0) = ()
+have empty_directions finite_seq(R × R, 0) = tuple()
 
 # 1.2 The scalar field
 # The laws of vector arithmetic depend on the laws of the scalars.

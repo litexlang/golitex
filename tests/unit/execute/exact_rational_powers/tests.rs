@@ -290,9 +290,9 @@ fn eval_shares_exact_values_and_publishes_the_checked_equality() {
         ("eval 8^(1/3)", "2"),
         ("eval 16^(3/4)", "8"),
         ("eval (1/27)^(-1/3)", "3"),
-        ("eval (4/9)^(1/2)", "2 / 3"),
-        ("eval 8^(-2/3)", "1 / 4"),
-        ("eval 0.125^(1/3)", "1 / 2"),
+        ("eval (4/9)^(1/2)", "(2 / 3)"),
+        ("eval 8^(-2/3)", "(1 / 4)"),
+        ("eval 0.125^(1/3)", "(1 / 2)"),
     ] {
         let mut rt = runtime(OutputLanguage::English);
         let result = rt.run_litex_code(source).unwrap();
@@ -356,7 +356,7 @@ fn direct_calculation_preserves_domain_evidence_and_declines_symbols() {
         let detailed = emit_run_detailed(&result, &rt, "eval", None);
         assert!(detailed.contains("by_closed_calculation"), "{detailed}");
         assert!(detailed.contains("8 $in Q+"), "{detailed}");
-        assert!(detailed.contains("1 / 3 $in Q"), "{detailed}");
+        assert!(detailed.contains("(1 / 3) $in Q"), "{detailed}");
     }
 }
 

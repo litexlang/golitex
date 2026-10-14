@@ -7,7 +7,7 @@
 # Boundary: wrong length, last value or incomplete pointwise equality rejects.
 # Evidence: current release -strict -f this file; builtin_thm::tests.
 
-release thm tuple_equal_from_coordinates((),())
+release thm tuple_equal_from_coordinates(tuple(),tuple())
 
 have one cart({7})
 one(1) $in {7}

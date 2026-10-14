@@ -70,7 +70,7 @@ fn nondecreasing_and_noninteger_recursive_measures_are_rejected() {
 #[test]
 fn subtraction_evidence_records_the_actual_positive_offset() {
     let mut rt = runtime();
-    let run = rt.run_litex_code("have x R\nx - (1 + 1) < x\n").unwrap();
+    let run = rt.run_litex_code("have x R\n(x - (1 + 1)) < x\n").unwrap();
     assert!(run.success);
     let detail =
         crate::json_output::project_stmt_detailed(&run.statement_results[1], &rt).stringify();
@@ -79,7 +79,7 @@ fn subtraction_evidence_records_the_actual_positive_offset() {
         detail.contains("\"normalized_subtrahend\":\"2\""),
         "{detail}"
     );
-    assert!(detail.contains("\"subtrahend\":\"1 + 1\""), "{detail}");
+    assert!(detail.contains("\"subtrahend\":\"(1 + 1)\""), "{detail}");
     let old = rt.run_litex_code("x - 1 < x\n").unwrap();
     assert!(old.success);
     let detail =

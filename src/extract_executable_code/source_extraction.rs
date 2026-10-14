@@ -169,14 +169,15 @@ fn verify_and_extract_into(
 ) -> RuntimeResult<()> {
     let token_blocks = Tokenizer::new().tokenize(source_code, runtime.current_file.clone())?;
     let stmts = runtime.parse(&token_blocks)?;
-    for stmt in &stmts {
+    for (index, stmt) in stmts.iter().enumerate() {
         match runtime.exec_stmt(stmt) {
             Ok(outcome) => {
                 if outcome.is_failed() {
-                    return Err(RuntimeError::Unsupported(
-                        "code extraction requires every statement to succeed; soft-failed statement"
-                            .to_string(),
-                    ));
+                    // Soft Failed stays a soft miss for extract: not SessionError.
+                    return Err(RuntimeError::Unsupported(format!(
+                        "soft_fail: statement {} failed Litex verification; extraction requires every statement to succeed",
+                        index + 1
+                    )));
                 }
             }
             Err(error) => return Err(error),

@@ -184,7 +184,7 @@ fn detailed_even_power_and_complex_inequality_record_checked_evidence() {
     let run = rt.run_litex_code("1+i != 0").unwrap();
     assert!(run.success);
     let detail = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt);
-    let target = find(&detail, "fact", "1 + i != 0").unwrap();
+    let target = find(&detail, "fact", "(1 + i) != 0").unwrap();
     let proof = find(
         target.get("searched_proof").unwrap(),
         "type",
@@ -296,7 +296,7 @@ fn detailed_field_tree_and_exact_coordinates_are_real_proof_evidence() {
     let run = rt.run_litex_code("i^2 $in Z").unwrap();
     assert!(run.success);
     let detail = crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt);
-    let target = find(&detail, "fact", "i ^ 2 $in Z").unwrap();
+    let target = find(&detail, "fact", "(i ^ 2) $in Z").unwrap();
     let proof = find(
         target.get("searched_proof").unwrap(),
         "type",
@@ -306,6 +306,6 @@ fn detailed_field_tree_and_exact_coordinates_are_real_proof_evidence() {
     let Some(JsonValue::Object(value)) = proof.get("value") else {
         panic!("exact value")
     };
-    assert_eq!(value.get("real"), Some(&JsonValue::String("-1".into())));
+    assert_eq!(value.get("real"), Some(&JsonValue::String("(-1)".into())));
     assert_eq!(value.get("imaginary"), Some(&JsonValue::String("0".into())));
 }

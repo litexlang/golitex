@@ -62,15 +62,18 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 "have_fn_equal",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveFnEqualStmtResult::Failed(
+            ExecHaveFnEqualStmtResult::Failed(failed) => match failed {
+                ExecHaveFnEqualStmtFailed::NameClash(msg) => {
+                    failed_with_details(runtime, "have fn …", "have_fn_equal", string(msg))
+                }
                 ExecHaveFnEqualStmtFailed::AnonymousFnWellDefined(wd)
-                | ExecHaveFnEqualStmtFailed::FnSetWellDefined(wd),
-            ) => failed_with_details(
-                runtime,
-                "have fn …",
-                "have_fn_equal",
-                super::project_detailed::project_verify_obj_wd(wd, runtime),
-            ),
+                | ExecHaveFnEqualStmtFailed::FnSetWellDefined(wd) => failed_with_details(
+                    runtime,
+                    "have fn …",
+                    "have_fn_equal",
+                    super::project_detailed::project_verify_obj_wd(wd, runtime),
+                ),
+            },
         },
         ExecDefinitionStmtResult::HaveFnEqualCaseByCase(r) => match r {
             ExecHaveFnEqualCaseByCaseStmtResult::Success(s) => success_with_ids(
@@ -124,9 +127,14 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 super::project_detailed::project_def_prop_failure(f, runtime),
             ),
         },
-        ExecDefinitionStmtResult::DefAbstractProp(s) => {
-            success_plain(runtime, s.statement.readable_string(), "def_abstract_prop")
-        }
+        ExecDefinitionStmtResult::DefAbstractProp(r) => match r {
+            crate::execute::ExecDefAbstractPropStmtResult::Success(s) => {
+                success_plain(runtime, s.statement.readable_string(), "def_abstract_prop")
+            }
+            crate::execute::ExecDefAbstractPropStmtResult::Failed(
+                crate::execute::ExecDefAbstractPropStmtFailed::NameClash(msg),
+            ) => failed_with_details(runtime, "abstract_prop …", "def_abstract_prop", string(msg)),
+        },
         ExecDefinitionStmtResult::DefStruct(r) => match r {
             ExecDefStructStmtResult::Success(s) => {
                 let mut stores = Vec::new();
@@ -247,12 +255,17 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "let",
                 &s.stored_fact_ids,
             ),
-            ExecLetObjStmtResult::Failed(wd) => failed_with_details(
-                runtime,
-                "let …",
-                "let",
-                super::project_detailed::project_verify_obj_wd(wd, runtime),
-            ),
+            ExecLetObjStmtResult::Failed(failed) => match failed {
+                crate::execute::ExecLetObjStmtFailed::ValueWellDefined(wd) => failed_with_details(
+                    runtime,
+                    "let …",
+                    "let",
+                    super::project_detailed::project_verify_obj_wd(wd, runtime),
+                ),
+                crate::execute::ExecLetObjStmtFailed::NameClash(msg) => {
+                    failed_with_details(runtime, "let …", "let", string(msg))
+                }
+            },
         },
         ExecDefineObjStmtResult::HaveObjInNonemptySet(r) => match r {
             ExecHaveObjInNonemptySetStmtResult::Success(s) => success_with_ids(

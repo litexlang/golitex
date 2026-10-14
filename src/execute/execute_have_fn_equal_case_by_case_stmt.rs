@@ -26,6 +26,7 @@ use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::rc::Rc;
 
 pub enum ExecHaveFnEqualCaseByCaseStmtFailed {
+    NameClash(String),
     CaseCountMismatch,
     EmptyCases,
     FnSetWellDefined(VerifyObjWellDefinedResult),
@@ -98,6 +99,15 @@ impl Runtime {
         if stmt.cases.len() != stmt.equal_tos.len() {
             return Ok(ExecHaveFnEqualCaseByCaseStmtResult::Failed(
                 ExecHaveFnEqualCaseByCaseStmtFailed::CaseCountMismatch,
+            ));
+        }
+
+        if self.identifier_defined_in_stack(&stmt.name.name) {
+            return Ok(ExecHaveFnEqualCaseByCaseStmtResult::Failed(
+                ExecHaveFnEqualCaseByCaseStmtFailed::NameClash(format!(
+                    "identifier `{}` is already defined in this ExecEnv",
+                    stmt.name
+                )),
             ));
         }
 

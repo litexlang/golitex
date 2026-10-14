@@ -23,7 +23,16 @@ pub fn write_stdout(text: Arguments<'_>) -> RuntimeResult<()> {
 pub fn write_command_outcome(outcome: &crate::run::RunCommandOutcome) -> RuntimeResult<()> {
     match outcome {
         crate::run::RunCommandOutcome::CompileToLean(result) => {
-            write_stdout(format_args!("{}", result.source))
+            if result.success {
+                write_stdout(format_args!("{}", result.source))
+            } else {
+                writeln!(io::stderr().lock(), "{}", result.source).map_err(|error| {
+                    RuntimeError::Io {
+                        path: PathBuf::from("<stderr>"),
+                        message: error.to_string(),
+                    }
+                })
+            }
         }
         _ => {
             if let Some(json) = outcome.normal_json() {

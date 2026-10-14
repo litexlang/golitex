@@ -361,21 +361,26 @@ fn integer_literal_i128(obj: &Obj) -> Option<i128> {
     number_normalized_value(obj)?.parse::<i128>().ok()
 }
 
-fn integer_successor_value(base: &Obj, offset: usize) -> Obj {
+// Build base+offset for successor-tail matching. Literal overflow is a
+// non-match (None), not a panic/wrap — same boundary as split-last-term.
+// Example: base = i128::MAX and offset = 1 yields None.
+fn integer_successor_value(base: &Obj, offset: usize) -> Option<Obj> {
     if offset == 0 {
-        return base.clone();
+        return Some(base.clone());
     }
     if let Some(base_value) = integer_literal_i128(base) {
-        return Obj::Literal(Literal::Number(Number {
-            normalized_value: (base_value + offset as i128).to_string(),
-        }));
+        let offset = i128::try_from(offset).ok()?;
+        let next = base_value.checked_add(offset)?;
+        return Some(Obj::Literal(Literal::Number(Number {
+            normalized_value: next.to_string(),
+        })));
     }
-    Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
+    Some(Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
         left: Box::new(base.clone()),
         right: Box::new(Obj::Literal(Literal::Number(Number {
             normalized_value: offset.to_string(),
         }))),
-    }))
+    })))
 }
 
 fn equality_branch_matches_subject_value(atomic: &AtomicFact, subject: &Obj, value: &Obj) -> bool {
@@ -406,12 +411,16 @@ fn integer_successor_tail_with_subject_base(
         let AndChainAtomicFact::AtomicFact(atomic) = fact else {
             return false;
         };
-        let value = integer_successor_value(base, offset);
+        let Some(value) = integer_successor_value(base, offset) else {
+            return false;
+        };
         if !equality_branch_matches_subject_value(atomic, subject, &value) {
             return false;
         }
     }
-    let tail_value = integer_successor_value(base, equality_count - 1);
+    let Some(tail_value) = integer_successor_value(base, equality_count - 1) else {
+        return false;
+    };
     let AndChainAtomicFact::AtomicFact(last_atomic) = &or_branches[equality_count] else {
         return false;
     };
@@ -689,5 +698,74 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod successor_overflow_tests {
+    use super::{integer_successor_value, match_integer_successor_tail};
+    use crate::ast::fact::{AndChainAtomicFact, AtomicFact, EqualFact, GreaterFact};
+    use crate::ast::obj::{IdentifierObj, Literal, Number, Obj};
+    use crate::launch_command::{LaunchCommand, OutputLanguage};
+    use crate::runtime::runtime_ids::{FactId, IdentifierId};
+    use crate::runtime::Runtime;
+
+    fn number(n: i128) -> Obj {
+        Obj::Literal(Literal::Number(Number {
+            normalized_value: n.to_string(),
+        }))
+    }
+
+    fn equal_branch(left: Obj, right: Obj) -> AndChainAtomicFact {
+        AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+            fact_id: FactId::new(0),
+            left,
+            right,
+            line_file: None,
+        }))
+    }
+
+    #[test]
+    fn successor_literal_overflow_is_non_match_not_panic() {
+        assert!(integer_successor_value(&number(i128::MAX), 1).is_none());
+        assert_eq!(
+            integer_successor_value(&number(i128::MAX - 1), 1).and_then(|obj| match obj {
+                Obj::Literal(Literal::Number(Number { normalized_value })) =>
+                    normalized_value.parse::<i128>().ok(),
+                _ => None,
+            }),
+            Some(i128::MAX)
+        );
+        let subject = Obj::Identifier(IdentifierObj::Plain {
+            id: IdentifierId::new(1),
+            name: "n".to_string(),
+        });
+        let branches = vec![
+            equal_branch(subject.clone(), number(i128::MAX)),
+            equal_branch(subject.clone(), number(0)),
+            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterFact(GreaterFact {
+                fact_id: FactId::new(0),
+                left: subject,
+                right: number(0),
+                line_file: None,
+            })),
+        ];
+        assert!(match_integer_successor_tail(&branches).is_none());
+    }
+
+    #[test]
+    fn public_or_with_max_base_rejects_without_session_stop() {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        assert!(rt.run_litex_code("have anchor R = 2").unwrap().success);
+        let code = format!("have n Z\nn = {} or n = 0 or n > 0", i128::MAX);
+        let run = rt.run_litex_code(&code).unwrap();
+        assert!(run.session_error.is_none());
+        assert!(!run.success);
+        assert!(rt.run_litex_code("anchor + 1 = 3").unwrap().success);
     }
 }

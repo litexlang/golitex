@@ -54,7 +54,7 @@ fn finite_function_coordinates_stored_members_and_literal_aliases_need_no_shape_
         "have p cart(R,Z)\np(1) $in R\np(2) $in Z\nlet alias=p\nalias $in cart(R,Z)\nalias(2) $in Z",
         "let p=(1,2)\np(1)=1\np(2)=2\np $in finite_seq(Z,2)",
         "let p=tuple(7)\np(1)=7\np $in cart(Z)",
-        "let p=()\np $in cart()\np={}",
+        "let p=tuple()\np $in cart()\np={}",
         "have Carrier set=cart(R,Z)\nhave p Carrier=(1,2)\nhave alias Carrier=p\nalias(2) $in Z",
         "have fn f(k closed_range(1,2)) Z=0\nf $in cart(R,Z)\nf(2) $in Z",
         "have fn maker(x R) cart(R,Z)=(x,2)\nmaker(3)(2) $in Z",
@@ -132,7 +132,7 @@ fn finite_function_coordinates_reject_wrong_fields_domains_and_guards_without_pu
         ("struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)", "guarded(3)(0)=0"),
         ("struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)", "guarded(1)(0)=0"),
         ("struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)", "guarded(2)(1)=0"),
-        ("struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)", "guarded(2)(())=0"),
+        ("struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)", "guarded(2)(tuple())=0"),
         ("struct Guarded:\n    point R\n    call fn(x R:x=point) R\nhave fn at_zero(x R:x=0) R=0\nhave guarded &Guarded=(0,at_zero)", "guarded(2)(guarded.point)=1"),
         ("cart({},R)={}\ncart({},R,Z)={}", "2=3"),
     ] {

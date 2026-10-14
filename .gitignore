@@ -90,3 +90,5 @@ pending_showcase
 /docs/order
 /tests/tooling/acceptance/
 **/__litex_knowledge_base__/
+
+docs/soundness-audit.md

@@ -66,7 +66,7 @@ fn exact_signed_integer_powers_and_eval() {
     assert!(result.success);
     let normal = emit_run_normal(&result, &runtime, "eval", None);
     assert!(
-        normal.contains("3 ^ -1 = 1 / 3") && normal.contains("C_abs(3 - 4 * i) = 5"),
+        normal.contains("(3 ^ (-1)) = (1 / 3)") && normal.contains("C_abs((3 - (4 * i))) = 5"),
         "{normal}"
     );
 }

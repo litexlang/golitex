@@ -242,7 +242,17 @@ pub fn write_import_cache_after_cold(
     }
 }
 
-// Guard: refuse a hit whose export count does not match litex.config [export].
+// Guard: refuse a hit whose export set does not match litex.config [export].
+// Fingerprint already pins the config bytes, so this is a second, order-and-
+// identity check that keeps the `export_files_and_their_env[i]` ↔ `exports[i]`
+// file_id contract intact even if a manifest is edited or reordered by hand.
 pub fn mounted_matches_config(mounted: &MountedModule, config: &LitexConfig) -> bool {
     mounted.exports.len() == config.exports.len()
+        && mounted.exports.iter().all(|export| {
+            config
+                .exports
+                .get(export.export_file_id)
+                .map(|row| row.name == export.name)
+                .unwrap_or(false)
+        })
 }

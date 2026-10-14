@@ -12,44 +12,76 @@ pub fn run_extract_executable_code(
     command: LaunchCommand,
 ) -> RuntimeResult<ExtractExecutableCodeResult> {
     let LaunchCommand::ExtractExecutableCode { target, input, .. } = &command else {
-        panic!("run_extract_executable_code expects LaunchCommand::ExtractExecutableCode");
+        return Err(RuntimeError::InvalidArguments(
+            "run_extract_executable_code expects LaunchCommand::ExtractExecutableCode".to_string(),
+        ));
     };
 
-    let (content, path, exec_target) = match input {
-        ExtractInput::Code(code) => {
-            let content = match target {
-                CodeExtractionTarget::Python => to_python_from_source(code)?,
-                CodeExtractionTarget::C => to_c_from_source(code)?,
-            };
-            (content, None, "eval")
-        }
-        ExtractInput::File(path) => {
-            let path_str = path.to_string_lossy().to_string();
-            let content = match target {
-                CodeExtractionTarget::Python => to_python_from_file(&path_str)?,
-                CodeExtractionTarget::C => to_c_from_file(&path_str)?,
-            };
-            (content, Some(path_str), "file")
-        }
-        ExtractInput::Repository(path) => {
-            let path_str = path.to_string_lossy().to_string();
-            let content = match target {
-                CodeExtractionTarget::Python => to_python_from_repository(&path_str)?,
-                CodeExtractionTarget::C => to_c_from_repository(&path_str)?,
-            };
-            (content, Some(path_str), "repository")
+    let language = command.output_language();
+    let extract_once = || -> RuntimeResult<(String, Option<String>, &'static str)> {
+        match input {
+            ExtractInput::Code(code) => {
+                let content = match target {
+                    CodeExtractionTarget::Python => to_python_from_source(code)?,
+                    CodeExtractionTarget::C => to_c_from_source(code)?,
+                };
+                Ok((content, None, "eval"))
+            }
+            ExtractInput::File(path) => {
+                let path_str = path.to_string_lossy().to_string();
+                let content = match target {
+                    CodeExtractionTarget::Python => to_python_from_file(&path_str)?,
+                    CodeExtractionTarget::C => to_c_from_file(&path_str)?,
+                };
+                Ok((content, Some(path_str), "file"))
+            }
+            ExtractInput::Repository(path) => {
+                let path_str = path.to_string_lossy().to_string();
+                let content = match target {
+                    CodeExtractionTarget::Python => to_python_from_repository(&path_str)?,
+                    CodeExtractionTarget::C => to_c_from_repository(&path_str)?,
+                };
+                Ok((content, Some(path_str), "repository"))
+            }
         }
     };
 
-    let json = render_extracted_artifact(
-        Some(target.format_name()),
-        Some(exec_target),
-        path.as_deref(),
-        command.output_language(),
-        Some(&content),
-        None,
-    );
-    Ok(ExtractExecutableCodeResult::new(json, true))
+    match extract_once() {
+        Ok((content, path, exec_target)) => {
+            let json = render_extracted_artifact(
+                Some(target.format_name()),
+                Some(exec_target),
+                path.as_deref(),
+                language,
+                Some(&content),
+                None,
+            );
+            Ok(ExtractExecutableCodeResult::new(json, true))
+        }
+        Err(error) if is_extract_soft_fail(&error) => {
+            let (exec_target, path) = match input {
+                ExtractInput::Code(_) => ("eval", None),
+                ExtractInput::File(path) => ("file", Some(path.to_string_lossy().into_owned())),
+                ExtractInput::Repository(path) => {
+                    ("repository", Some(path.to_string_lossy().into_owned()))
+                }
+            };
+            let json = render_extracted_artifact(
+                Some(target.format_name()),
+                Some(exec_target),
+                path.as_deref(),
+                language,
+                None,
+                Some(&error),
+            );
+            Ok(ExtractExecutableCodeResult::new(json, false))
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn is_extract_soft_fail(error: &RuntimeError) -> bool {
+    matches!(error, RuntimeError::Unsupported(message) if message.starts_with("soft_fail:"))
 }
 
 fn render_extracted_artifact(

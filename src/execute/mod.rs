@@ -101,7 +101,10 @@ pub use exec_stmt_result::{
     ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
 };
 pub use execute_axiom_stmt::{ExecAxiomStmtFailed, ExecAxiomStmtResult, ExecAxiomStmtSuccess};
-pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
+pub use execute_def_abstract_prop_stmt::{
+    ExecDefAbstractPropStmtFailed, ExecDefAbstractPropStmtResult,
+    ExecDefAbstractPropStmtSuccessResult,
+};
 pub use execute_def_algo_by_cases_stmt::{
     ExecDefAlgoByCasesStmtFailed, ExecDefAlgoByCasesStmtResult, ExecDefAlgoByCasesStmtSuccessResult,
 };
@@ -165,7 +168,9 @@ pub use execute_have_obj_in_nonempty_set_stmt::{
     ExecHaveObjInNonemptySetStmtFailed, ExecHaveObjInNonemptySetStmtResult,
     ExecHaveObjInNonemptySetStmtSuccessResult, StoreHaveObjAndInferResult,
 };
-pub use execute_let_stmt::{ExecLetObjStmtResult, ExecLetObjStmtSuccessResult};
+pub use execute_let_stmt::{
+    ExecLetObjStmtFailed, ExecLetObjStmtResult, ExecLetObjStmtSuccessResult,
+};
 pub use execute_obtain_obj_from_atomic_fact_stmt::{
     ExecObtainObjFromAtomicFactStmtFailed, ExecObtainObjFromAtomicFactStmtResult,
     ExecObtainObjFromAtomicFactStmtSuccessResult,

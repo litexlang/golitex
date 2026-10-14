@@ -246,58 +246,60 @@ fn primary_tracer_keeps_real_forall_and_rigid_path_evidence() {
 
 #[test]
 fn index_lifetime_follows_commit_failed_claim_and_sketch() {
-    let mut rt = runtime();
-    assert!(
-        rt.run_litex_code("sketch:\n    forall x R:\n        x = x")
-            .unwrap()
-            .success
-    );
-    assert!(rt
-        .top_exec_env()
-        .facts
-        .known_forall_conclusions
-        .by_equal
-        .is_empty());
-    let failed = rt
-        .run_litex_code("claim:\n    ? 0=1\n    forall x R:\n        x=x")
-        .unwrap();
-    assert!(!failed.success && failed.session_error.is_none());
-    assert!(rt
-        .top_exec_env()
-        .facts
-        .known_forall_conclusions
-        .by_equal
-        .is_empty());
-    assert!(rt.run_litex_code("forall x R:\n    x=x=x").unwrap().success);
-    let index = &rt.top_exec_env().facts.known_forall_conclusions.by_equal;
-    assert_eq!(
-        index.len(),
-        2,
-        "both committed chain edges must survive merge"
-    );
-    for i in 0..index.len() {
-        let cite = index.cite(i);
-        assert!(matches!(
-            cite.location,
-            ForallConclusionLocation::ChainFactComponent(_)
-        ));
-        assert!(matches!(
-            rt.fact_by_id_in_stack(cite.fact_id),
-            Some(Fact::ForallFact(_))
-        ));
-    }
-    let mut child = index.clone();
-    child.merge_from(index);
-    assert_eq!(
-        child.len(),
-        2,
-        "derived entries deduplicate by exact source cite"
-    );
-    assert_eq!(rt.execution_environments_stack.len(), 1);
+    // Keep the body off the default test-thread stack: this sequence walks a
+    // deep verify path under `-strict` that can overflow the 2MiB default.
+    std::thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            let mut rt = runtime();
+            assert!(
+                rt.run_litex_code("sketch:\n    forall x R:\n        x = x")
+                    .unwrap()
+                    .success
+            );
+            assert!(rt
+                .top_exec_env()
+                .facts
+                .known_forall_conclusions
+                .by_equal
+                .is_empty());
+            let failed = rt
+                .run_litex_code("claim:\n    ? 0=1\n    forall x R:\n        x=x")
+                .unwrap();
+            assert!(!failed.success && failed.session_error.is_none());
+            assert!(rt
+                .top_exec_env()
+                .facts
+                .known_forall_conclusions
+                .by_equal
+                .is_empty());
+            assert!(rt.run_litex_code("forall x R:\n    x=x=x").unwrap().success);
+            // Intentionally no adjacent equality cites from a chain then-clause.
+            assert!(
+                rt.top_exec_env()
+                    .facts
+                    .known_forall_conclusions
+                    .by_equal
+                    .is_empty(),
+                "equality chain adjacent edges must not become by_equal cites"
+            );
+            assert!(
+                !rt.top_exec_env()
+                    .facts
+                    .known_forall_conclusions
+                    .by_chain
+                    .is_empty(),
+                "whole equality chain then must still be indexed"
+            );
+            assert_eq!(rt.execution_environments_stack.len(), 1);
+        })
+        .expect("spawn index_lifetime test thread")
+        .join()
+        .expect("index_lifetime test thread");
 }
 
 #[test]
-fn order_chain_adjacent_cites_survive_merge_and_prove_atomic_goal() {
+fn order_chain_adjacent_cites_do_not_prove_atomic_goal_after_merge() {
     // Trust is forbidden under `-strict`; this case needs an ordinary session.
     let mut rt = Runtime::new(LaunchCommand::Eval {
         code: String::new(),
@@ -311,9 +313,12 @@ fn order_chain_adjacent_cites_survive_merge_and_prove_atomic_goal() {
         )
         .unwrap();
     assert!(
-        run.success,
-        "order-chain adjacent cite after merge: {:?}",
-        run.failed_statement_results
+        !run.success && run.session_error.is_none(),
+        "order-chain adjacent atomic goal must not prove: {:?}",
+        run.statement_results
+            .iter()
+            .map(|s| s.is_failed())
+            .collect::<Vec<_>>()
     );
     let less_key = (
         crate::ast::names::AtomicName::Plain {
@@ -330,13 +335,13 @@ fn order_chain_adjacent_cites_survive_merge_and_prove_atomic_goal() {
         .cloned()
         .unwrap_or_default();
     assert!(
-        cites.iter().any(|cite| {
-            matches!(
+        cites.iter().all(|cite| {
+            !matches!(
                 cite.location,
                 ForallConclusionLocation::ChainFactComponent(_)
             )
         }),
-        "order-chain adjacent cites must survive exec_stmt merge"
+        "order-chain adjacent cites must not be indexed"
     );
 }
 

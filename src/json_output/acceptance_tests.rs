@@ -646,8 +646,8 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         ),
         actual_function_domain_fixture("fn_range(fn(k R) R {0})={0}"),
         actual_function_domain_fixture("fn_range(fn(k {}) R {0})={}"),
-        actual_function_domain_fixture("()={}"),
-        actual_function_domain_fixture("cart()={()}"),
+        actual_function_domain_fixture("tuple()={}"),
+        actual_function_domain_fixture("cart()={tuple()}"),
         EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(SeqEqualsFnOnNPosBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(
             FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof {},

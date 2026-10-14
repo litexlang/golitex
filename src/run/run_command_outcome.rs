@@ -88,14 +88,29 @@ pub struct CompileToLatexResult {
     pub success: bool,
 }
 
-/// Complete Lean artifact; failures return through RuntimeResult.
+/// Complete Lean artifact. Soft verification failure is `success: false`, not SessionError.
 pub struct CompileToLeanResult {
     pub source: String,
+    pub success: bool,
 }
 
 impl CompileToLeanResult {
     pub fn new(source: String) -> Self {
-        Self { source }
+        Self {
+            source,
+            success: true,
+        }
+    }
+
+    pub fn soft_fail(message: String) -> Self {
+        Self {
+            source: message,
+            success: false,
+        }
+    }
+
+    pub fn process_failed(&self) -> bool {
+        !self.success
     }
 }
 
@@ -303,7 +318,7 @@ impl RunCommandOutcome {
             Self::RunRepo(r) => r.process_failed(),
             Self::ExtractExecutableCode(r) => r.process_failed(),
             Self::CompileToLatex(r) => r.process_failed(),
-            Self::CompileToLean(_) => false,
+            Self::CompileToLean(r) => r.process_failed(),
             Self::RunRepl | Self::Help(_) | Self::Version(_) => false,
         }
     }

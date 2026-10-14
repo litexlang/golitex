@@ -46,8 +46,8 @@ fn release_tuple_def_checks_exact_contracts_without_image_cardinality() {
         "t(2)=2",
         "release tuple def (1,1)",
         "(1,1) $in finite_seq(union({1},{1}),2)",
-        "release tuple def ()",
-        "() $in finite_seq({},0)",
+        "release tuple def tuple()",
+        "tuple() $in finite_seq({},0)",
         "release tuple def tuple(7)",
         "tuple(7) $in finite_seq({7},1)",
         "tuple(7)(1)=7",
@@ -68,7 +68,7 @@ fn release_tuple_def_checks_exact_contracts_without_image_cardinality() {
     for source in [
         "t $in finite_seq(R,3)",
         "t(3)=1",
-        "() $in finite_seq(R,1)",
+        "tuple() $in finite_seq(R,1)",
         "tuple(7) $in finite_seq(R,2)",
         "(1,1) $in finite_seq(R,1)",
         "tuple(7)=7",
@@ -170,9 +170,9 @@ fn release_tuple_def_readable_syntax_preserves_singleton_and_nested_values() {
     let mut rt = runtime(OutputLanguage::English);
     for source in [
         "release tuple def tuple(7)",
-        "release tuple def ()",
+        "release tuple def tuple()",
         "release tuple def (1,2)",
-        "release tuple def (tuple(7),())",
+        "release tuple def (tuple(7),tuple())",
     ] {
         let tokens = Tokenizer::new()
             .tokenize(source, rt.current_file.clone())

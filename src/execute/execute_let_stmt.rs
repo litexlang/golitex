@@ -3,8 +3,13 @@ use crate::ast::obj::Obj;
 use crate::ast::stmt::LetObjStmt;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
-use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{FactId, Runtime, RuntimeResult};
 use std::rc::Rc;
+
+pub enum ExecLetObjStmtFailed {
+    ValueWellDefined(VerifyObjWellDefinedResult),
+    NameClash(String),
+}
 
 // Pipeline: WD the RHS value → affect global env. No local env.
 pub struct ExecLetObjStmtSuccessResult {
@@ -15,7 +20,7 @@ pub struct ExecLetObjStmtSuccessResult {
 
 pub enum ExecLetObjStmtResult {
     Success(ExecLetObjStmtSuccessResult),
-    Failed(VerifyObjWellDefinedResult),
+    Failed(ExecLetObjStmtFailed),
 }
 
 impl ExecLetObjStmtResult {
@@ -36,14 +41,18 @@ impl Runtime {
         let verify_state = VerifyState::top_level();
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
         if value_well_defined.is_failed() {
-            return Ok(ExecLetObjStmtResult::Failed(value_well_defined));
+            return Ok(ExecLetObjStmtResult::Failed(
+                ExecLetObjStmtFailed::ValueWellDefined(value_well_defined),
+            ));
         }
 
         if self.identifier_defined_in_stack(&let_stmt.name.name) {
-            return Err(RuntimeError::InternalBug(format!(
-                "identifier `{}` is already defined in this ExecEnv",
-                let_stmt.name.name
-            )));
+            return Ok(ExecLetObjStmtResult::Failed(
+                ExecLetObjStmtFailed::NameClash(format!(
+                    "identifier `{}` is already defined in this ExecEnv",
+                    let_stmt.name.name
+                )),
+            ));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
             let_stmt.name.name.clone(),

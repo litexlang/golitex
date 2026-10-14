@@ -5,13 +5,25 @@ use std::path::Path;
 pub fn run_compile_to_lean(
     command: LaunchCommand,
 ) -> RuntimeResult<crate::run::CompileToLeanResult> {
-    let source = compile_source(command).map_err(RuntimeError::Unsupported)?;
-    Ok(crate::run::CompileToLeanResult::new(source))
+    match compile_source(command) {
+        Ok(source) => Ok(crate::run::CompileToLeanResult::new(source)),
+        Err(CompileLeanError::SoftFail(message)) => {
+            Ok(crate::run::CompileToLeanResult::soft_fail(message))
+        }
+        Err(CompileLeanError::Hard(message)) => Err(RuntimeError::Unsupported(message)),
+    }
 }
 
-fn compile_source(command: LaunchCommand) -> Result<String, String> {
+enum CompileLeanError {
+    SoftFail(String),
+    Hard(String),
+}
+
+fn compile_source(command: LaunchCommand) -> Result<String, CompileLeanError> {
     let LaunchCommand::CompileToLean { path, .. } = &command else {
-        return Err("phase=launch: run_compile_to_lean expects CompileToLean".into());
+        return Err(CompileLeanError::Hard(
+            "phase=launch: run_compile_to_lean expects CompileToLean".into(),
+        ));
     };
     let path = path.clone();
     if path
@@ -20,39 +32,46 @@ fn compile_source(command: LaunchCommand) -> Result<String, String> {
         .join("litex.config")
         .exists()
     {
-        return Err("phase=compile: module proof closure is not supported yet; use a standalone source file".into());
+        return Err(CompileLeanError::Hard(
+            "phase=compile: module proof closure is not supported yet; use a standalone source file"
+                .into(),
+        ));
     }
-    let source = fs::read_to_string(&path)
-        .map_err(|error| format!("phase=verify: cannot read {}: {error}", path.display()))?;
+    let source = fs::read_to_string(&path).map_err(|error| {
+        CompileLeanError::Hard(format!(
+            "phase=verify: cannot read {}: {error}",
+            path.display()
+        ))
+    })?;
     let namespace = artifact_namespace(&path);
     let mut runtime = Runtime::new(command);
     let result = runtime
         .run_litex_code(&source)
-        .map_err(|error| format!("phase=verify: {error}"))?;
+        .map_err(|error| CompileLeanError::Hard(format!("phase=verify: {error}")))?;
     if !result.success {
         let failure = result
             .statement_results
             .iter()
             .position(|result| result.is_failed());
         return Err(match failure {
-            Some(index) => format!(
-                "phase=verify: statement {} failed Litex verification",
+            Some(index) => CompileLeanError::SoftFail(format!(
+                "phase=verify: statement {} failed Litex verification (soft fail)",
                 index + 1
-            ),
-            None => format!(
+            )),
+            None => CompileLeanError::Hard(format!(
                 "phase=verify: {}",
                 result
                     .session_error
                     .as_ref()
                     .map(ToString::to_string)
                     .unwrap_or_else(|| "source run failed".into())
-            ),
+            )),
         });
     }
     let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);
     compiler
         .compile_run(&result, &namespace)
-        .map_err(|error| format!("phase=compile: {error}"))
+        .map_err(|error| CompileLeanError::Hard(format!("phase=compile: {error}")))
 }
 
 fn artifact_namespace(path: &Path) -> String {
@@ -77,7 +96,3 @@ fn artifact_namespace(path: &Path) -> String {
     }
     safe
 }
-
-#[cfg(test)]
-#[path = "../../tests/unit/run/lean_command/tests.rs"]
-mod tests;

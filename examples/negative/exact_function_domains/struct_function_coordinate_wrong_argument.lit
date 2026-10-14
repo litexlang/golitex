@@ -7,4 +7,4 @@ struct Guarded:
 have fn at_zero(x R:x=0) R=0
 have guarded &Guarded=(0,at_zero)
 guarded.point=guarded(1)=0
-guarded(2)(())=0
+guarded(2)(tuple())=0

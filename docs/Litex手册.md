@@ -3086,7 +3086,7 @@ by enumerate finite_set:
 
 #### 条件赋值与枚举作用域
 
-`by enumerate finite_set` 和 `by for` 通过检查显示的有限列表集合、`range(start, end)` 或 `closed_range(start, end)` 中的每个分配来证明 forall。支持多个独立可枚举参数。没有显示定义域的命名有限集不会被扩展； `cart(...)` 定义域不受支持，即使它们的因子是有限。笛卡尔积按赋值惰性生成（一次一个）。在构建任何赋值之前，会用检查溢出的乘积基数对照固定赋值预算 1024；超过预算时以定义域诊断失败，而不是分配完整乘积。另外，`expand:` 将已知的数值范围成员关系转换为相等情况，以用于以后的 `by cases`。
+`by enumerate finite_set` 和 `by for` 通过检查显示的有限列表集合、`range(start, end)` 或 `closed_range(start, end)` 中的每个分配来证明 forall。支持多个独立可枚举参数。没有显示定义域的命名有限集不会被扩展； `cart(...)` 定义域不受支持，即使它们的因子是有限。笛卡尔积按赋值惰性生成（一次一个）。在构建任何赋值之前，会用检查溢出的乘积基数对照固定赋值预算 1024；超过预算时以定义域诊断失败，而不是分配完整乘积。每个数值范围也限制为至多 1024 个值，并在物化前做溢出检查的基数计算；该单范围限制同样适用于 `expand:`（将已知数值范围成员关系转为相等情况以供后续 `by cases`）。空范围仍为空；过大的范围即使另一枚举定义域为空，也会以定义域诊断失败。
 
 检查条件目标作为每个分配的含义。原子前提的经过验证的否定会跳过该分配。否则，仅在分配的局部证明作用域中假定前提，并且每个结论都必须在那里进行验证。未能证明前提的否定永远不会被视为跳过的情况。前提是在源码顺序中引入的，因此较早的保护条件可以许可较晚的对象。
 
@@ -3518,7 +3518,7 @@ eval 2 + 3
 
 **执行之前。** 检查的元组值或笛卡尔成员关系提供形状。完整的定义域必须等于 `closed_range(1,n)`。每次返回前提、生成的成员关系和坐标都必须在发布前进行检查。
 
-**执行和结果。** 通过普通事实存储，使用源码位置和 FactId 存储成员关系和每个坐标。 `()` 释放 `finite_seq({},0)` 无坐标； `tuple(a)` 释放 `finite_seq({a},1)` 并保持打印为 `tuple(a)`，因此它不会被误认为是标量分组。 Failed 语句和局部草图发布无部分封装。
+**执行和结果。** 通过普通事实存储，使用源码位置和 FactId 存储成员关系和每个坐标。 `tuple()` 释放 `finite_seq({},0)` 无坐标； `tuple(a)` 释放 `finite_seq({a},1)` 并打印为 `(a,)`，因此它不会被误认为是标量分组。 Failed 语句和局部草图发布无部分封装。
 
 **最近边界。** 标量、不良定义值和无限-定义域函数拒绝。该命令不会发现任意函数主体，不会遍历传递别名链，并且不会查找发布大小、像或维度事实。具有完整定义域 `N+` 的函数无法通过此命令或 `fn_set_member` 变成长度为 2 的函数。
 
@@ -3628,7 +3628,7 @@ t(2)=2
 |[O75](#o75-closed-open-real-intervals)|`'[a,b)`|闭合-开实数区间|已检查|
 |[O76](#o76-closed-real-intervals)|`'[a,b]`|闭合实数区间|已检查|
 |[O77](#o77-finite-cartesian-products)|`cart(S1, ..., Sn); S1 × S2`|有限笛卡尔乘积|已检查|
-|[O78](#o78-finite-tuples)|`(a, b, ...); tuple(a, ...); ()`|有限元组|已检查|
+|[O78](#o78-finite-tuples)|`(a, b, ...); tuple(a, ...); tuple()`|有限元组|已检查|
 |[O79](#o79-function-spaces)|`fn(parameters: guards) T`|函数个空格|已检查|
 |[O80](#o80-anonymous-functions)|`fn(parameters: guards) T {body}`|匿名函数|已检查|
 |[O81](#o81-function-images)|`fn_range(f)`|函数像|已检查|
@@ -5476,9 +5476,9 @@ not 3 $in range(1, 3)
 
 **良定义性和定义域.** a, b $in Z;儿童WD。范围对象不需要 a <= b。
 
-**通用原生性质和证明路线。** 有限成员关系界和扩展，包括上端点；反转的端点给出一个空范围。
+**通用原生性质和证明路线。** 有限成员关系界和扩展，包括上端点；反转的端点给出一个空范围。相等搜索可在具体整数端点下证明 `closed_range(a, b) = {a,...,b}`（以及半开的 `range` 对偶），且不会物化过大的区间。
 
-**最近边界。** 检查证明或迭代语句期望的上端点约定。
+**最近边界。** 检查证明或迭代语句期望的上端点约定。字面量「区间展开为 list」内置规则只接受长度至多 1024 的区间（与有限枚举 / `expand:` 同一上限）；更大区间在该路径上软失败，而不是分配完整 list。
 
 **检查示例。**
 
@@ -5486,9 +5486,10 @@ not 3 $in range(1, 3)
 ```litex
 2 $in closed_range(1, 2)
 2 $in 1...2
+closed_range(1, 3) = {1, 2, 3}
 ```
 
-**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)。
+**源码：** [实现](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs)；相等展开 [wave13](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave13.rs)。
 
 **相关条目：** [F01 成员关系和非成员关系](#f01-membership-and-nonmembership)，[S05 带类型的由相等给出的值](#s05-typed-values-given-by-equality)。
 
@@ -5771,7 +5772,7 @@ not 2 $in '[0,2)
 
 ```litex
 (1, 2) $in cart(R, Z)
-() $in cart()
+tuple() $in cart()
 finite_set_size(cart()) = 1
 ```
 
@@ -5785,7 +5786,7 @@ finite_set_size(cart()) = 1
 
 ### O78. 有限元组
 
-**公共形式：** `(a, b, ...); tuple(a, ...); ()`。
+**公共形式：** `(a,); (a, b, ...); tuple(a, ...); tuple()`。
 
 **数学作用。** 索引 1 上的精确有限函数通过其显示长度以及显示值。
 
@@ -5793,7 +5794,7 @@ finite_set_size(cart()) = 1
 
 **常见原生性质和证明路线。** 坐标值和精确有限-序列成员关系。坐标中的相等需要完整的定义域和每个坐标（通过 tuple_equal_from_coordinates）。
 
-**最近边界。** 普通调用也接受字面量元组头：`(1,2)(1)=1` 和 `((1,2),3)(1)(2)=2`。每次调用都会检查其接收者的完整定义域； `(1,2)(3)` 和 `((1,2),3)(2)(1)` WD 失败。旧的 `[index]`、维度和构造器-投影语法已删除。单例使用 `tuple(value)`，因为 `(value)` 正在分组。
+**最近边界。** 普通调用也接受字面量元组头：`(1,2)(1)=1` 和 `((1,2),3)(1)(2)=2`。每次调用都会检查其接收者的完整定义域； `(1,2)(3)` 和 `((1,2),3)(2)(1)` WD 失败。旧的 `[index]`、维度和构造器-投影语法已删除。一元元组使用 `(value,)` 或 `tuple(value)`；`(value)` 仅表示分组。裸 `()` 会报错，空元组写作 `tuple()`。圆括号简写必须在本层包含逗号，允许末尾逗号。
 
 请参阅 [S52](#s52-release-a-tuple-definition) 了解 `release tuple def object`，其中发布是有限-序列成员关系和已知坐标的确切值。
 
@@ -7471,7 +7472,7 @@ let U = index_union({}, N, family)
 
 
 ```litex
-() $in cart()
+tuple() $in cart()
 finite_set_size(cart()) = 1
 let family = fn(k {1}) power_set(N) {{1}}
 let U = index_union({1}, N, family)
@@ -8749,20 +8750,20 @@ forall k R:
         not k>0
 have fn empty_body(k R:k>0,k<0) {}=0
 empty_body={}
-()={}
-empty_body=()
+tuple()={}
+empty_body=tuple()
 empty_body $in finite_seq({},0)
 ```
 
 
 `0 $in {}` 和 `empty_body(1)=0` 仍然失败。即使完整的输入定义域为空，未定义的主体（例如 `1/0`）也会使 WD 失败。
 
-> **预览：** 零和一笛卡尔因子使用与较大的乘积相同的精确定义域成员关系契约。 `()` 是空的函数图，> `cart()` 包含该图，`cart(S)` 包含一个坐标函数。 `(a)` 保持分组；将 `tuple(a)` 用于 1 个坐标。
+> **预览：** 零和一笛卡尔因子使用与较大的乘积相同的精确定义域成员关系契约。 `tuple()` 是空的函数图，> `cart()` 包含该图，`cart(S)` 包含一个坐标函数。 `(a)` 保持分组；将 `tuple(a)` 用于 1 个坐标。
 
 
 ```litex
-() = {}
-cart() = {()}
+tuple() = {}
+cart() = {tuple()}
 tuple(7) $in cart(Z)
 have p cart(Z) = tuple(7)
 p(1) = 7

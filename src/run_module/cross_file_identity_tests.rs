@@ -41,7 +41,7 @@ fn guarded_empty_domains_and_exact_lengths_survive_real_cached_imports() {
         "forall k R:\n    k<0\n    =>:\n        not k>0\nhave fn outside(i1 N+) R=0\nhave fn guarded_zero(k R:k>0,k<0) R=0\nguarded_zero={}\n");
     // Imported definitions use the existing explicit publication route.
     // An unnamed local proof is not silently exported as a caller premise.
-    let valid="release obj def Lib::facts::guarded_zero\nrelease obj def Lib::facts::outside\nforall k R:\n    k<0\n    =>:\n        not k>0\nLib::facts::guarded_zero={}\nfn_range(Lib::facts::guarded_zero)={}\n()={}\nLib::facts::guarded_zero=()\nLib::facts::guarded_zero $in finite_seq(R,0)\n";
+    let valid="release obj def Lib::facts::guarded_zero\nrelease obj def Lib::facts::outside\nforall k R:\n    k<0\n    =>:\n        not k>0\nLib::facts::guarded_zero={}\nfn_range(Lib::facts::guarded_zero)={}\ntuple()={}\nLib::facts::guarded_zero=tuple()\nLib::facts::guarded_zero $in finite_seq(R,0)\n";
     write(&root.join("main.lit"), valid);
     let cold = project_with_cache(&root);
     assert!(cold.run.success && cold.run.session_error.is_none());

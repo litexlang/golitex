@@ -472,12 +472,6 @@ fn number_obj(v: i128) -> Obj {
     }))
 }
 
-fn list_set_of(objs: Vec<Obj>) -> Obj {
-    Obj::SetFormer(SetFormer::ListSet(ListSet {
-        list: objs.into_iter().map(Box::new).collect(),
-    }))
-}
-
 fn euler_equals_exp_one_shape(left: &Obj, right: &Obj) -> bool {
     is_euler(left)
         && matches!(
@@ -606,8 +600,17 @@ fn complex_abs_of_imag_scaled_shape(left: &Obj, right: &Obj) -> bool {
         )
 }
 
+// Same numeric ceiling as finite-enumeration / expand range budgets.
+const MAX_RANGE_LITERAL_EXPANSION: usize = 1024;
+
+// Match closed_range(s, e) = {s,...,e} without materializing the interval.
+// Count is checked first: over-budget or length mismatch returns false
+// without allocating count many Obj values.
 fn closed_range_literal_expansion_shape(range_side: &Obj, list_side: &Obj) -> bool {
     let Obj::SetFormer(SetFormer::ClosedRange(ClosedRange { start, end })) = range_side else {
+        return false;
+    };
+    let Obj::SetFormer(SetFormer::ListSet(ListSet { list })) = list_side else {
         return false;
     };
     let Some(s) = literal_i128(start.as_ref()) else {
@@ -618,15 +621,26 @@ fn closed_range_literal_expansion_shape(range_side: &Obj, list_side: &Obj) -> bo
     };
     if s > e {
         // No integer satisfies s <= x <= e when s > e.
-        // In particular, closed_range(1, 0) is the zero-length domain.
-        return is_empty_list_set(list_side);
+        return list.is_empty();
     }
-    let expected: Vec<Obj> = (s..=e).map(number_obj).collect();
-    list_side.ir() == list_set_of(expected).ir()
+    let Some(count) = e.checked_sub(s).and_then(|width| width.checked_add(1)) else {
+        return false;
+    };
+    let Ok(count) = usize::try_from(count) else {
+        return false;
+    };
+    if count > MAX_RANGE_LITERAL_EXPANSION || count != list.len() {
+        return false;
+    }
+    list_matches_consecutive_integers(list, s)
 }
 
+// Match range(s, e) = {s,...,e-1} without materializing the interval.
 fn range_literal_expansion_shape(range_side: &Obj, list_side: &Obj) -> bool {
     let Obj::SetFormer(SetFormer::Range(Range { start, end })) = range_side else {
+        return false;
+    };
+    let Obj::SetFormer(SetFormer::ListSet(ListSet { list })) = list_side else {
         return false;
     };
     let Some(s) = literal_i128(start.as_ref()) else {
@@ -637,10 +651,33 @@ fn range_literal_expansion_shape(range_side: &Obj, list_side: &Obj) -> bool {
     };
     if s >= e {
         // Half-open integer ranges are empty when s >= e.
-        return is_empty_list_set(list_side);
+        return list.is_empty();
     }
-    let expected: Vec<Obj> = (s..e).map(number_obj).collect();
-    list_side.ir() == list_set_of(expected).ir()
+    let Some(count) = e.checked_sub(s) else {
+        return false;
+    };
+    let Ok(count) = usize::try_from(count) else {
+        return false;
+    };
+    if count > MAX_RANGE_LITERAL_EXPANSION || count != list.len() {
+        return false;
+    }
+    list_matches_consecutive_integers(list, s)
+}
+
+fn list_matches_consecutive_integers(list: &[Box<Obj>], start: i128) -> bool {
+    for (index, elem) in list.iter().enumerate() {
+        let Ok(offset) = i128::try_from(index) else {
+            return false;
+        };
+        let Some(expected) = start.checked_add(offset) else {
+            return false;
+        };
+        if literal_i128(elem.as_ref()) != Some(expected) {
+            return false;
+        }
+    }
+    true
 }
 
 fn power_set_of_empty_shape(left: &Obj, right: &Obj) -> bool {
@@ -903,5 +940,104 @@ fn finite_seq_equals_fn_on_one_based_domain_shape(left: &Obj, right: &Obj) -> bo
             }
         }
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod range_literal_expansion_budget_tests {
+    use super::{closed_range_literal_expansion_shape, range_literal_expansion_shape};
+    use crate::ast::obj::{ClosedRange, ListSet, Literal, Number, Obj, Range, SetFormer};
+    use crate::launch_command::{LaunchCommand, OutputLanguage};
+    use crate::runtime::Runtime;
+
+    fn number(n: i128) -> Obj {
+        Obj::Literal(Literal::Number(Number {
+            normalized_value: n.to_string(),
+        }))
+    }
+
+    fn closed_range(start: i128, end: i128) -> Obj {
+        Obj::SetFormer(SetFormer::ClosedRange(ClosedRange {
+            start: Box::new(number(start)),
+            end: Box::new(number(end)),
+        }))
+    }
+
+    fn half_open_range(start: i128, end: i128) -> Obj {
+        Obj::SetFormer(SetFormer::Range(Range {
+            start: Box::new(number(start)),
+            end: Box::new(number(end)),
+        }))
+    }
+
+    fn list_set(values: &[i128]) -> Obj {
+        Obj::SetFormer(SetFormer::ListSet(ListSet {
+            list: values
+                .iter()
+                .copied()
+                .map(|v| Box::new(number(v)))
+                .collect(),
+        }))
+    }
+
+    #[test]
+    fn huge_or_over_budget_ranges_reject_without_materializing() {
+        // Length mismatch / over-budget must fail before allocating many Objs.
+        assert!(!closed_range_literal_expansion_shape(
+            &closed_range(0, 1_000_000_000),
+            &list_set(&[0]),
+        ));
+        assert!(!range_literal_expansion_shape(
+            &half_open_range(0, 1_000_000_000),
+            &list_set(&[]),
+        ));
+        // 1025 values exceed MAX_RANGE_LITERAL_EXPANSION even if lengths match.
+        let over: Vec<i128> = (0..1025).collect();
+        assert!(!closed_range_literal_expansion_shape(
+            &closed_range(0, 1024),
+            &list_set(&over),
+        ));
+        assert!(!range_literal_expansion_shape(
+            &half_open_range(0, 1025),
+            &list_set(&over),
+        ));
+    }
+
+    #[test]
+    fn small_literal_expansions_still_match() {
+        assert!(closed_range_literal_expansion_shape(
+            &closed_range(1, 3),
+            &list_set(&[1, 2, 3]),
+        ));
+        assert!(range_literal_expansion_shape(
+            &half_open_range(1, 4),
+            &list_set(&[1, 2, 3]),
+        ));
+        assert!(closed_range_literal_expansion_shape(
+            &closed_range(1, 0),
+            &list_set(&[]),
+        ));
+        let at_budget: Vec<i128> = (0..1024).collect();
+        assert!(closed_range_literal_expansion_shape(
+            &closed_range(0, 1023),
+            &list_set(&at_budget),
+        ));
+    }
+
+    #[test]
+    fn public_huge_range_equality_rejects_quickly_and_keeps_context() {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        assert!(rt.run_litex_code("have anchor R = 2").unwrap().success);
+        let run = rt
+            .run_litex_code("closed_range(0, 1000000000) = {0}")
+            .unwrap();
+        assert!(run.session_error.is_none());
+        assert!(!run.success);
+        assert!(rt.run_litex_code("anchor + 1 = 3").unwrap().success);
     }
 }

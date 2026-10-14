@@ -1,0 +1,12 @@
+# Tracer: sum/product split-last-term successor arithmetic.
+# Before:
+# sum(0, 0, fn(x Z) Z {x}) = sum(0, 170141183460469231731687303715884105727, fn(x Z) Z {x}) + 0
+# Former behavior: the literal predecessor increment panicked with overflow checks.
+# Now: that false equality fails normally; Rust tests cover both sum and product.
+# Ordinary representable successors retain their existing behavior below.
+# Boundary: i128::MAX must not wrap to i128::MIN in the matcher.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/split_last_term_checked_successor.lit
+# Regression: split_successor_tests.
+
+sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3
+product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3

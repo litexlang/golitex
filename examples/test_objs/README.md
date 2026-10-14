@@ -180,3 +180,8 @@ recursion and member bounds. Each case keeps its discarded sketch scope.
 The definition-rule acceptance record (historical task record; retired)
 contains the former failures and nearest rejected domains; the corresponding
 `coverage.json` entries include P200.
+
+The [tuple punctuation tracer](tuple_comma_syntax.lit) distinguishes `(x)`
+(grouping), `(x,)` (one coordinate), and `tuple()` (empty tuple). Bare `()`
+is rejected. The executable malformed-input controls and IR roundtrip checks
+are in `tests/structural_ir_tuple.rs`.

@@ -16,10 +16,11 @@ pub fn parse_litex_config(
     let mut exports = Vec::new();
     let mut import_aliases = HashSet::new();
     let mut export_names = HashSet::new();
+    let mut export_paths = HashSet::new();
 
     for (index, raw_line) in source.lines().enumerate() {
         let line = index + 1;
-        let text = raw_line.split('#').next().unwrap_or("").trim();
+        let text = strip_comment(raw_line).trim();
         if text.is_empty() {
             continue;
         }
@@ -78,10 +79,14 @@ pub fn parse_litex_config(
                 if !rel.ends_with(".lit") {
                     return Err(err(line, "[export] path must end with `.lit`"));
                 }
-                exports.push(LitexConfigExport::new(
-                    name,
-                    normalize_join(config_dir, &rel),
-                ));
+                let path = normalize_join(config_dir, &rel);
+                if !export_paths.insert(path.clone()) {
+                    return Err(err(
+                        line,
+                        &format!("duplicate export path `{}`", path.display()),
+                    ));
+                }
+                exports.push(LitexConfigExport::new(name, path));
             }
             None => {
                 return Err(err(
@@ -182,6 +187,19 @@ fn normalize_join(base: &Path, rel: &str) -> PathBuf {
         }
     }
     out
+}
+
+// Cut a trailing `#` comment, ignoring `#` inside double-quoted paths.
+fn strip_comment(line: &str) -> &str {
+    let mut in_quotes = false;
+    for (index, byte) in line.bytes().enumerate() {
+        match byte {
+            b'"' => in_quotes = !in_quotes,
+            b'#' if !in_quotes => return &line[..index],
+            _ => {}
+        }
+    }
+    line
 }
 
 fn err(line: usize, message: &str) -> String {

@@ -41,7 +41,7 @@ one(1) = 7
 
 one $in finite_seq(Z,1)
 
-let empty = ()
+let empty = tuple()
 
 release thm fn_set_member(empty,finite_seq(R,0))
 

@@ -1,6 +1,9 @@
 # Node: or.ByBuiltinRule.IntegerSuccessorTail
 # Rule struct: OrBuiltinIntegerSuccessorTail
 # Run: litex -f examples/proof_nodes/or/by_builtin_rule/integer_successor_tail.lit
+# Boundary: matching against base = i128::MAX with a longer successor chain must
+# soft-fail (non-match), not panic on unchecked MAX+offset. See helper
+# successor_overflow_tests.
 
 forall x Z:
     x >= 1

@@ -273,7 +273,7 @@ fn eval_publishes_original_equality_and_preserves_failed_transaction_boundaries(
         panic!("eval must succeed");
     };
     let fact: crate::ast::fact::Fact = s.evaluated_equal_fact.clone().into();
-    assert_eq!(fact.readable_string(), "a + 1 = 11");
+    assert_eq!(fact.readable_string(), "(a + 1) = 11");
     let id = s.evaluated_equal_fact.fact_id;
     assert!(rt.top_exec_env().facts.facts_by_id.contains_key(&id));
     assert_eq!(s.store_and_infer_result.primary_fact_id(), id);
@@ -284,7 +284,7 @@ fn eval_publishes_original_equality_and_preserves_failed_transaction_boundaries(
         .get("stores")
         .unwrap()
         .stringify_pretty()
-        .contains("a + 1 = 11"));
+        .contains("(a + 1) = 11"));
     let detailed = crate::json_output::project_stmt_detailed(&outcome, &rt).stringify_pretty();
     assert!(detailed.contains(&id.to_string()));
     assert!(detailed.contains("store_and_infer"));
@@ -354,7 +354,7 @@ fn eval_publication_and_failure_are_visible_in_every_output_language() {
             .get(&localize_key("stores", language))
             .unwrap();
         assert!(
-            stores.stringify_pretty().contains("1 + 2 = 3"),
+            stores.stringify_pretty().contains("(1 + 2) = 3"),
             "{language:?}"
         );
         let detail = crate::json_output::project_stmt_detailed(&result, &rt);
@@ -450,7 +450,7 @@ fn eval_factorial_sqrt_log_closed_numeric_succeed() {
     else {
         panic!("exact rational sqrt must succeed");
     };
-    assert_eq!(s.evaluated_object.readable_string(), "3 / 5");
+    assert_eq!(s.evaluated_object.readable_string(), "(3 / 5)");
     assert!(!exec_one(&mut runtime, "sqrt(0.36)=3/5").is_failed());
     assert_eval_number(&mut runtime, "eval log(2, 8)", "3");
 }

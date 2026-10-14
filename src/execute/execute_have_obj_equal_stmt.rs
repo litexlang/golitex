@@ -143,40 +143,54 @@ impl Runtime {
             }
         }
 
-        let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
-            &stmt.param_def,
-            Some(SharedHaveDefinition::HaveObjEqual(Rc::new(stmt.clone()))),
-            crate::execute::execute_fact_stmt::VerifyState::top_level(),
-        )?;
+        // Define + auto-open + equality stores in a nested env so AutoOpen Failed
+        // never leaves half-written definitions in the statement temp.
+        let (commit, nested_env) = self.run_in_local_env_and_take_env(|rt| {
+            let mut store_and_infer_result = rt.define_typed_parameters_in_current_env(
+                &stmt.param_def,
+                Some(SharedHaveDefinition::HaveObjEqual(Rc::new(stmt.clone()))),
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )?;
 
-        let auto_opened_struct_layers = match self.auto_open_struct_layers_for_typed_parameters(
-            &stmt.param_def,
-            crate::execute::execute_fact_stmt::VerifyState::top_level(),
-        )? {
-            Ok(layers) => layers,
-            Err((_, failed)) => {
+            let auto_opened_struct_layers = match rt.auto_open_struct_layers_for_typed_parameters(
+                &stmt.param_def,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )? {
+                Ok(layers) => layers,
+                Err((_, failed)) => {
+                    return Ok(Err(failed));
+                }
+            };
+
+            for (binding, obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
+                let (name, _) = binding;
+                let equality_fact_id = rt.global_ids.allocate_fact_id();
+                let left = Obj::Identifier(rt.identifier_obj_for_stored_mention(name));
+                let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+                    fact_id: equality_fact_id,
+                    left,
+                    right: obj.clone(),
+                    line_file: Some(stmt.line_file.clone()),
+                }));
+                let stored = rt.store_fact_and_infer(
+                    &equal_fact,
+                    crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                )?;
+                store_and_infer_result.push(stored);
+            }
+
+            Ok(Ok((store_and_infer_result, auto_opened_struct_layers)))
+        })?;
+
+        let (store_and_infer_result, auto_opened_struct_layers) = match commit {
+            Ok(parts) => parts,
+            Err(failed) => {
                 return Ok(ExecHaveObjEqualStmtResult::Failed(
                     ExecHaveObjEqualStmtFailed::AutoOpenStructLayer(failed),
                 ));
             }
         };
-
-        for (binding, obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
-            let (name, _) = binding;
-            let equality_fact_id = self.global_ids.allocate_fact_id();
-            let left = Obj::Identifier(self.identifier_obj_for_stored_mention(name));
-            let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                fact_id: equality_fact_id,
-                left,
-                right: obj.clone(),
-                line_file: Some(stmt.line_file.clone()),
-            }));
-            let stored = self.store_fact_and_infer(
-                &equal_fact,
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?;
-            store_and_infer_result.push(stored);
-        }
+        self.top_exec_env_mut().merge_from(&nested_env)?;
 
         Ok(ExecHaveObjEqualStmtResult::Success(
             ExecHaveObjEqualStmtSuccessResult {

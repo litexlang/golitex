@@ -1678,6 +1678,9 @@ fn have_fn_by_cases_slice2() {
             ExecHaveFnEqualCaseByCaseStmtResult::Failed(f),
         )) => {
             let msg = match f {
+                ExecHaveFnEqualCaseByCaseStmtFailed::NameClash(s) => {
+                    panic!("NameClash({s})")
+                }
                 ExecHaveFnEqualCaseByCaseStmtFailed::CaseCountMismatch => "CaseCountMismatch",
                 ExecHaveFnEqualCaseByCaseStmtFailed::EmptyCases => "EmptyCases",
                 ExecHaveFnEqualCaseByCaseStmtFailed::FnSetWellDefined(_) => "FnSetWellDefined",
@@ -1915,6 +1918,7 @@ fn have_fn_by_induc_countdown_slice() {
             ExecHaveFnByInducStmtResult::Failed(f),
         )) => {
             let msg = match f {
+                ExecHaveFnByInducStmtFailed::NameClash(s) => format!("NameClash({s})"),
                 ExecHaveFnByInducStmtFailed::EmptyCases => "EmptyCases".to_string(),
                 ExecHaveFnByInducStmtFailed::FnSetWellDefined(_) => "FnSetWellDefined".to_string(),
                 ExecHaveFnByInducStmtFailed::MeasureWellDefined(_) => {

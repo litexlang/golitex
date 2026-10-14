@@ -194,7 +194,7 @@ fn guarded_empty_complete_domains_share_graph_image_and_space_evidence() {
     for code in [
         "fn(k R:k>0,k<0) R {0}={}",
         "fn_range(fn(k R:k>0,k<0) R {0})={}",
-        "fn(k R:k>0,k<0) {} = {()}",
+        "fn(k R:k>0,k<0) {} = {tuple()}",
         "$is_nonempty_set(fn(k R:k>0,k<0) {})",
         "have fn empty_guard(k R:k>0,k<0) R=0\nempty_guard={}\nfn_range(empty_guard)={}",
         "have f fn(k R:k>0,k<0) {}\nf={}\nfn_range(f)={}",
@@ -219,7 +219,7 @@ fn guarded_domain_exclusion_preserves_permissions_scope_and_rejection_boundaries
     let mut rt = runtime(OutputLanguage::English);
     assert!(rt.run_litex_code(GUARD_EXCLUSION).unwrap().success);
     let tokens = Tokenizer::new()
-        .tokenize("fn(k R:k>0,k<0) {} = {()}", rt.current_file.clone())
+        .tokenize("fn(k R:k>0,k<0) {} = {tuple()}", rt.current_file.clone())
         .unwrap();
     let statement = rt.parse(&tokens).unwrap().remove(0);
     let crate::ast::stmt::Stmt::Fact(crate::ast::fact::Fact::AtomicFact(
@@ -253,7 +253,7 @@ fn guarded_domain_exclusion_preserves_permissions_scope_and_rejection_boundaries
     for target in [
         "fn(k R:k>0) R {0}={}",
         "fn_range(fn(k R:k<0) R {0})={}",
-        "fn(k R:k>0) {} = {()}",
+        "fn(k R:k>0) {} = {tuple()}",
         "fn(k R:k>0,k>1) R {0}={}",
         "fn(k R:k>0,k<0) R {0}={0}",
         "2=3",
@@ -280,7 +280,7 @@ fn guarded_domain_exclusion_retains_checked_forall_sources_in_ten_languages() {
         for target in [
             "fn(k R:k>0,k<0) R {0}={}",
             "fn_range(fn(k R:k>0,k<0) R {0})={}",
-            "fn(k R:k>0,k<0) {} = {()}",
+            "fn(k R:k>0,k<0) {} = {tuple()}",
             "have fn empty_bound(k R:k>0,k<0) {}=0",
         ] {
             let result = execute(&mut rt, target);

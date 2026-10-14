@@ -89,7 +89,7 @@ fn check_fixtures() {
     assert!(all.contains("Induction.NestedCases"));
     assert_eq!(
         evaluated,
-        ["9", "1/2", "3", "6", "2", "11", "0", "2", "0", "0", "3"]
+        ["9", "(1/2)", "3", "6", "2", "11", "0", "2", "0", "0", "3"]
     );
 }
 

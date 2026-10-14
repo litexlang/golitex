@@ -33,12 +33,12 @@ fn facts(rt: &Runtime) -> usize {
 #[test]
 fn cart_empty_function_boundaries_preserve_zero_one_and_many_members() {
     for code in [
-        "cart()={()}\ncart()={{}}\n()={}",
-        "finite_seq({},0)={()}\nfinite_seq(R,0)={{}}\nfn(k {}) R={()}",
+        "cart()={tuple()}\ncart()={{}}\ntuple()={}",
+        "finite_seq({},0)={tuple()}\nfinite_seq(R,0)={{}}\nfn(k {}) R={tuple()}",
         "have fn empty_fn(k {}) R=0\nempty_fn={}\nlet alias=empty_fn\nalias={}",
         "fn(x R,y {}) R {0}={}\nfn(k {}) R {0}={}",
         "tuple(7) $in cart(Z)\nhave p cart(Z)=tuple(7)\np(1)=7\np(1) $in Z\np $in finite_seq(R,1)",
-        "() $in cart()\nrelease thm cart_member_from_coordinates((),cart())",
+        "tuple() $in cart()\nrelease thm cart_member_from_coordinates(tuple(),cart())",
         "release thm cart_member_from_coordinates(tuple(7),cart(Z))",
         "have empty_member cart()\nfn_range(empty_member)={}\nempty_member={}",
         "cart({})={}\n$is_finite_set(cart())\n$is_nonempty_set(cart())\nfinite_set_size(cart())=1",
@@ -59,7 +59,7 @@ fn cart_empty_function_boundaries_reject_wrong_domains_and_false_empty_graphs() 
     for (setup, target) in [
         ("1=1", "cart()={}"),
         ("1=1", "tuple(7) $in cart()"),
-        ("1=1", "() $in cart(Z)"),
+        ("1=1", "tuple() $in cart(Z)"),
         ("1=1", "(7,8) $in cart(Z)"),
         ("1=1", "tuple(1/2) $in cart(Z)"),
         ("have p cart(Z)=tuple(7)", "p(2)=7"),
@@ -67,8 +67,8 @@ fn cart_empty_function_boundaries_reject_wrong_domains_and_false_empty_graphs() 
         ("1=1", "fn(k N+) R {0}={}"),
         ("1=1", "fn(k R) R {0}={}"),
         ("have outer fn(x R) fn(k {}) R", "outer={}"),
-        ("1=1", "fn(k R) R={()}"),
-        ("1=1", "cart(Z)={()}"),
+        ("1=1", "fn(k R) R={tuple()}"),
+        ("1=1", "cart(Z)={tuple()}"),
         (
             "1=1",
             "release thm cart_member_from_coordinates(tuple(7),cart())",
@@ -92,9 +92,13 @@ fn cart_empty_function_boundaries_project_real_domain_sources_in_all_languages()
     for language in OutputLanguage::ALL {
         let mut rt = runtime(language);
         for (code, label, source) in [
-            ("()={}", "EmptyFunctionGraph", "empty_integer_range_carrier"),
             (
-                "cart()={()}",
+                "tuple()={}",
+                "EmptyFunctionGraph",
+                "empty_integer_range_carrier",
+            ),
+            (
+                "cart()={tuple()}",
                 "EmptyDomainFunctionSpaceSingleton",
                 "empty_integer_range_carrier",
             ),

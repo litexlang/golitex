@@ -9,10 +9,11 @@ use crate::ast::stmt::HaveFnEqualStmt;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
 use crate::prelude::*;
-use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{FactId, Runtime, RuntimeResult};
 use std::rc::Rc;
 
 pub enum ExecHaveFnEqualStmtFailed {
+    NameClash(String),
     AnonymousFnWellDefined(VerifyObjWellDefinedResult),
     FnSetWellDefined(VerifyObjWellDefinedResult),
 }
@@ -73,6 +74,15 @@ impl Runtime {
             ));
         }
 
+        if self.identifier_defined_in_stack(&stmt.name.name) {
+            return Ok(ExecHaveFnEqualStmtResult::Failed(
+                ExecHaveFnEqualStmtFailed::NameClash(format!(
+                    "identifier `{}` is already defined in this ExecEnv",
+                    stmt.name.name
+                )),
+            ));
+        }
+
         let store_and_infer_result = self.store_have_fn_equal_facts(
             stmt,
             &fn_set,
@@ -95,12 +105,6 @@ impl Runtime {
         fn_set: &FnSet,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<StoreHaveFnEqualAndInferResult> {
-        if self.identifier_defined_in_stack(&stmt.name.name) {
-            return Err(RuntimeError::InternalBug(format!(
-                "identifier `{}` is already defined in this ExecEnv",
-                stmt.name.name
-            )));
-        }
         self.top_exec_env_mut().definitions.identifiers.insert(
             stmt.name.name.clone(),
             StoredIdentifierDefinition::HaveFnEqual((

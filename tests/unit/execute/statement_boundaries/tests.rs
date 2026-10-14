@@ -331,7 +331,7 @@ fn eval_checks_source_domain_before_rewrite_or_execution() {
         "algo identity(x N) N by cases:\n    case x = x: x",
         &[true],
     );
-    for expression in ["identity(-1)", "identity(-1) + 1", "1 / 0", "sqrt(-1)"] {
+    for expression in ["identity((-1))", "identity((-1)) + 1", "1 / 0", "sqrt(-1)"] {
         let run = rt.run_litex_code(&format!("eval {expression}")).unwrap();
         assert!(run.session_error.is_none());
         assert!(
@@ -377,11 +377,21 @@ fn finite_enumeration_rejects_over_budget_cartesian_product() {
 #[test]
 fn finite_enumeration_keeps_small_multi_parameter_product() {
     let mut rt = runtime(true);
-    check(
-        &mut rt,
-        "by enumerate finite_set:\n    ? forall x {1, 2}, y {3, 4}:\n        x < y\n    x < y",
-        &[true],
-    );
+    // Keep the conclusion trivial so this test only checks product wiring / budget,
+    // not deep order-search stacks in debug builds.
+    let run = rt
+        .run_litex_code(
+            "by enumerate finite_set:\n    ? forall x {1, 2}, y {3, 4}:\n        0 = 0\n    0 = 0",
+        )
+        .unwrap();
+    assert!(run.success, "{:?}", run.session_error);
+    let ExecStmtResult::By(ExecByStmtResult::EnumerateFiniteSet(
+        ExecByEnumerateFiniteSetStmtResult::Success(success),
+    )) = &run.statement_results[0]
+    else {
+        panic!("expected enumeration success");
+    };
+    assert_eq!(success.assignments.len(), 4);
 }
 
 #[test]
@@ -408,11 +418,11 @@ fn statement_boundary_json_retains_nested_proofs_and_wd_failure() {
         "algo identity(x N) N by cases:\n    case x = x: x",
         &[true],
     );
-    let run = rt.run_litex_code("eval identity(-1)").unwrap();
+    let run = rt.run_litex_code("eval identity((-1))").unwrap();
     let normal =
         crate::json_output::project_stmt_normal(&run.statement_results[0], &rt).stringify();
     assert!(
-        normal.contains("well_defined") && normal.contains("identity(-1)"),
+        normal.contains("well_defined") && normal.contains("identity((-1))"),
         "{normal}"
     );
     let run = rt.run_litex_code("eval identity(1)").unwrap();

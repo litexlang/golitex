@@ -4,4 +4,4 @@ forall k R:
     =>:
         not k>0
 
-fn(k R:k>0) {} = {()}
+fn(k R:k>0) {} = {tuple()}

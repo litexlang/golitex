@@ -98,7 +98,7 @@ fn reversed_sources_and_compound_arguments_keep_actual_evidence() {
                 .unwrap()
                 .stringify_pretty();
             assert!(
-                premise.contains("y ^ 2 >= x ^ 2"),
+                premise.contains("(y ^ 2) >= (x ^ 2)"),
                 "actual reverse-written source: {premise}"
             );
         }

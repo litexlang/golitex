@@ -23,7 +23,7 @@ use crate::execute::execute_by_stmt::{
     ExecExpandRangeStmtResult, ExecReleaseAxiomOfChoiceStmtResult,
     ExecReleaseRegularityAxiomStmtResult, ExecReleaseZornLemmaStmtResult,
 };
-use crate::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
+use crate::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtResult;
 use crate::execute::execute_def_algo_by_cases_stmt::ExecDefAlgoByCasesStmtResult;
 use crate::execute::execute_def_algo_by_induc_stmt::ExecDefAlgoByInducStmtResult;
 use crate::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
@@ -121,7 +121,7 @@ pub enum ExecDefinitionStmtResult {
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtResult),
     HaveFnByInduc(ExecHaveFnByInducStmtResult),
     DefProp(ExecDefPropStmtResult),
-    DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
+    DefAbstractProp(ExecDefAbstractPropStmtResult),
     DefStruct(ExecDefStructStmtResult),
     DefTemplate(ExecDefTemplateStmtResult),
     DefAlgoByCases(ExecDefAlgoByCasesStmtResult),
@@ -183,7 +183,7 @@ impl ExecDefinitionStmtResult {
             Self::HaveFnByForallExistUnique(r) => r.is_failed(),
             Self::HaveFnByInduc(r) => r.is_failed(),
             Self::DefProp(r) => r.is_failed(),
-            Self::DefAbstractProp(_) => false,
+            Self::DefAbstractProp(r) => r.is_failed(),
             Self::DefStruct(r) => r.is_failed(),
             Self::DefTemplate(r) => r.is_failed(),
             Self::DefAlgoByCases(r) => r.is_failed(),

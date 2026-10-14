@@ -113,14 +113,14 @@ fn invalid_function_returns_fail_before_their_signature_can_prove_false_membersh
     for definition in ["have fn f(x Z) N = x", "let f = fn(x Z) N {x}"] {
         let mut rt = runtime();
         check(&mut rt, definition, &[false]);
-        check(&mut rt, "-1 $in N\n-1 >= 0", &[false, false]);
+        check(&mut rt, "(-1) $in N\n-1 >= 0", &[false, false]);
         let run = rt.run_litex_code("f(-1) = -1").unwrap();
         assert!(!run.success);
         assert!(format!("{:?}", run.session_error).contains("undefined name `f`"));
     }
     check(
         &mut runtime(),
-        "have fn f(x N, y Z) N = y\n-1 $in N",
+        "have fn f(x N, y Z) N = y\n(-1) $in N",
         &[false, false],
     );
     check(&mut runtime(), "fn(x Z) N {x}(-1) = -1", &[false]);
@@ -154,16 +154,16 @@ fn valid_projection_returns_use_parameter_types_and_checked_domain_conditions() 
 fn struct_instances_require_concrete_argument_types_including_kind_and_dependent_domains() {
     let box_def = "struct Box<n N>:\n    value R\n    tag R\n";
     for bad_use in [
-        "let bad = &Box<-1>",
-        "&Box<-1> = &Box<-1>",
-        "have fn f(x &Box<-1>) R = 0",
-        "forall p &Box<-1>:\n    p = p",
+        "let bad = &Box<(-1)>",
+        "&Box<(-1)> = &Box<(-1)>",
+        "have fn f(x &Box<(-1)>) R = 0",
+        "forall p &Box<(-1)>:\n    p = p",
         "let bad = &Box<1 / 0>",
         "let bad = &Box<0, 1>",
     ] {
         check(
             &mut runtime(),
-            &format!("{box_def}{bad_use}\n-1 $in N"),
+            &format!("{box_def}{bad_use}\n(-1) $in N"),
             &[true, false, false],
         );
     }
@@ -215,15 +215,15 @@ fn failed_domain_checks_leave_no_function_binding_struct_binding_or_wd_cache() {
     check(&mut rt, "have fn f(x Z) N = x", &[false]);
     check(
         &mut rt,
-        "have fn f(x Z) Z = x\nf(-1) = -1\n-1 $in N",
+        "have fn f(x Z) Z = x\nf(-1) = -1\n(-1) $in N",
         &[true, true, false],
     );
     check(&mut rt, "struct Box<n N>:\n    value R\n    tag R", &[true]);
-    check(&mut rt, "let item = &Box<-1>", &[false]);
+    check(&mut rt, "let item = &Box<(-1)>", &[false]);
     check(&mut rt, "let item = &Box<0>", &[true]);
     check(
         &mut rt,
-        "&Box<-1> = &Box<-1>\n-1 $in N\n-1 >= 0",
+        "&Box<(-1)> = &Box<(-1)>\n(-1) $in N\n-1 >= 0",
         &[false, false, false],
     );
 }
@@ -264,12 +264,12 @@ fn wd_evidence_and_detailed_json_keep_mandatory_return_and_argument_type_proofs(
         json.contains("requirement_fact_verified") && json.contains("0 $in N"),
         "{json}"
     );
-    let run = rt.run_litex_code("let bad = &Box<-1>").unwrap();
+    let run = rt.run_litex_code("let bad = &Box<(-1)>").unwrap();
     assert!(!run.success && run.session_error.is_none());
     let json =
         crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
     assert!(
-        json.contains("requirement") && json.contains("-1 $in N"),
+        json.contains("requirement") && json.contains("(-1) $in N"),
         "{json}"
     );
 }

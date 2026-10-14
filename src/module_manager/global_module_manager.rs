@@ -87,6 +87,10 @@ impl GlobalModuleManager {
         path: PathBuf,
         litex_config: LitexConfig,
     ) -> Result<usize, String> {
+        // Match the lookup side (`mod_id_for_local_alias` / `ensure_imports_ready`),
+        // which canonicalizes before consulting `path_to_mod_id`. Normalize here so
+        // dedup and insert agree regardless of the caller's path spelling.
+        let path = path.canonicalize().unwrap_or_else(|_| path);
         if let Some(&mod_id) = self.path_to_mod_id.get(&path) {
             return Ok(mod_id);
         }

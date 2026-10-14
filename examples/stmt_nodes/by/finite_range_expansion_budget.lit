@@ -1,0 +1,24 @@
+# Tracer: bounded numeric-range expansion.
+# Before:
+# by enumerate finite_set:
+#     ? forall n range(0, 1000000000):
+#         n = n
+#     n = n
+# Former behavior: allocated the range before checking the assignment budget.
+# Now: that input fails normally before allocation (covered by Rust regression).
+# Small domains still verify through all three expansion entry points.
+# Boundary: at most 1024 values per range; at most 1024 total assignments.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/by/finite_range_expansion_budget.lit
+# Negative/liveness: finite_range_budget_rejects_all_expansion_entries_without_losing_context.
+
+by enumerate finite_set:
+    ? forall x closed_range(-1, 1):
+        x * x >= 0
+    x * x >= 0
+
+by for:
+    ? forall x range(-1, 2):
+        x * x >= 0
+    x * x >= 0
+
+expand: 0 $in range(0, 2)

@@ -6,9 +6,9 @@
 # Boundary: wrong length/carrier and coordinate 2 of a singleton are real negatives.
 # Gate: tmp/2026-10-05/tuple-cart-exact-functions/target/release/litex -strict -f examples/proof_nodes/atomic/by_builtin_rule/cart_zero_one_membership.lit
 
-() $in cart()
+tuple() $in cart()
 
-release thm cart_member_from_coordinates((),cart())
+release thm cart_member_from_coordinates(tuple(),cart())
 
 tuple(7) $in cart(Z)
 

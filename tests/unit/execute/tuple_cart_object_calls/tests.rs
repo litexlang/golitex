@@ -47,7 +47,7 @@ fn object_head_calls_and_eval_preserve_layers_types_and_rollback() {
         "(1,2)(3)=3",
         "((1,2),3)(2)(1)=1",
         "(1)(1)=1",
-        "()(1)=1",
+        "tuple()(1)=1",
         "tuple(7)(2)=7",
         "(1,2)(1,2)=1",
         "cart(R,Z)(1)=1",

@@ -48,7 +48,7 @@ pub fn try_finish_import_from_kb(
         Ok(fingerprint) => fingerprint,
         Err(_) => return Ok(ImportKbHit::Miss),
     };
-    let mounted = match try_hit_import_cache(
+    let mut mounted = match try_hit_import_cache(
         module_dir,
         &fingerprint,
         &runtime.global_ids,
@@ -60,6 +60,10 @@ pub fn try_finish_import_from_kb(
     if !mounted_matches_config(&mounted, config) {
         return Ok(ImportKbHit::Miss);
     }
+
+    // `export_files_and_their_env[i]` must be `config.exports[i]` (file_id contract).
+    // Defensively reorder in case the on-disk manifest order drifted.
+    mounted.exports.sort_by_key(|export| export.export_file_id);
 
     let mut recorded = Vec::new();
     for export in &mounted.exports {

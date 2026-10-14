@@ -1,0 +1,9 @@
+# Before: () was the empty tuple; (1,) was rejected.
+# () = {}
+# Now: explicit empty constructor, comma distinguishes tuples from grouping.
+tuple() = {}
+(1) = 1
+(1,)(1) = 1
+((1,),)(1)(1) = 1
+# Boundary: bare (), (,), (1,,) are rejected (tests/structural_ir_tuple.rs).
+# Evidence: target/release/litex -strict -lang en -f examples/test_objs/tuple_comma_syntax.lit

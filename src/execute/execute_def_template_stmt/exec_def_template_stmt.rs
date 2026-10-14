@@ -63,9 +63,10 @@ use crate::execute::execute_unsafe_stmt::{
 use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::parse::keywords::TEMPLATE;
-use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecDefTemplateStmtFailed {
+    NameClash(String),
     ParamType(VerifyObjWellDefinedResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     DomainFact(FailToVerifyFactWellDefinedResult),
@@ -139,7 +140,11 @@ impl Runtime {
         &mut self,
         def_template: &DefTemplateStmt,
     ) -> RuntimeResult<ExecDefTemplateStmtResult> {
-        self.ensure_def_template_name_free(&def_template.template_name)?;
+        if let Some(msg) = self.def_template_name_clash(&def_template.template_name) {
+            return Ok(ExecDefTemplateStmtResult::Failed(
+                ExecDefTemplateStmtFailed::NameClash(msg),
+            ));
+        }
 
         let (local_outcome, local_env) = self
             .run_in_local_env_and_take_env(|rt| rt.exec_def_template_stmt_in_local(def_template))?;
@@ -171,13 +176,13 @@ impl Runtime {
         ))
     }
 
-    fn ensure_def_template_name_free(&self, name: &str) -> RuntimeResult<()> {
+    fn def_template_name_clash(&self, name: &str) -> Option<String> {
         if self.def_template_visible_in_stack(name).is_some() {
-            return Err(RuntimeError::InternalBug(format!(
+            return Some(format!(
                 "name `{name}` is already used in this scope as {TEMPLATE}"
-            )));
+            ));
         }
-        Ok(())
+        None
     }
 
     fn exec_def_template_stmt_in_local(
