@@ -324,3 +324,13 @@ records for each.
 For the design behind these features, read the
 [Blueprint](docs/Litex_Blueprint.md#claims-deliverables-evidence)
 ([中文](docs/Litex中文蓝图.md#claims-deliverables-evidence)).
+
+## A note to readers
+
+We warmly welcome stress testing Litex—hard proofs, edge cases, and real
+mathematical work are the best way to see what holds and what still needs
+care. The project is small, and both people and resources are limited, so
+some surfaces remain unfinished or rough. We hope readers will meet those
+places with patience, share constructive feedback, and support one another
+as the work matures—rather than treating every immature detail as a flaw to
+score against the rest.

@@ -239,10 +239,32 @@ fn eval_returns_exact_values_and_publishes_the_checked_equality() {
         "eval floor(1/0)",
         "eval log(2,3)",
         "eval 2^100000",
+        "eval factorial(100000)",
+        "eval factorial(70)",
+        "eval 10^99 * 10^99",
+        "eval 10^50 * 10^50",
         "eval re(1/(i-i))",
     ] {
         check(source, false);
     }
+}
+
+#[test]
+fn factorial_eval_stays_inside_exact_decimal_digit_budget() {
+    check("eval factorial(10)", true);
+    check("factorial(10) = 3628800", true);
+    // 70! has more than the shared 100-digit exact-decimal budget used by powers.
+    check("factorial(70) = 1", false);
+}
+
+#[test]
+fn mul_chains_cannot_bypass_exact_decimal_digit_budget() {
+    // Each factor is within budget, but the product is not.
+    check("eval 10^99", true);
+    check("eval 10^49 * 10^50", true);
+    check("eval 10^99 * 10^99", false);
+    check("eval 10^50 * 10^50", false);
+    check("10^99 * 10^99 = 1", false);
 }
 
 #[test]

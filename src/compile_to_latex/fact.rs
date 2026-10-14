@@ -1,4 +1,7 @@
-use super::helper::{ident, name, operator, parens};
+use super::helper::{
+    call_parens, group_if_compound, ident, join_land, join_lor, name, operator,
+    predicate_or_fn_call,
+};
 use super::language::{phrase, Phrase};
 use super::obj::obj;
 use crate::ast::fact::*;
@@ -24,7 +27,11 @@ pub(super) fn fact(
         Fact::ForallFactWithIff(x) => {
             let left = conclusions(&x.forall_fact.then_facts, modules, lang)?;
             let right = conclusions(&x.iff_facts, modules, lang)?;
-            let body = format!(r"{}\Longleftrightarrow{}", parens(&left), parens(&right));
+            let body = format!(
+                r"{} \Longleftrightarrow {}",
+                group_if_compound(&left),
+                group_if_compound(&right)
+            );
             let dom = facts(&x.forall_fact.dom_facts, modules, lang)?;
             quantify(
                 &parameters(&x.forall_fact.typed_parameters, modules, lang)?,
@@ -78,7 +85,7 @@ pub(super) fn atomic(
     let pred = value.prop_name();
     let body = match value {
         AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_) => {
-            format!("{}{}", name(&pred, modules)?, parens(&args.join(", ")))
+            predicate_or_fn_call(&name(&pred, modules)?, &args.join(", "))
         }
         AtomicFact::NotLessFact(_) => format!("{} < {}", args[0], args[1]),
         AtomicFact::NotGreaterFact(_) => format!("{} > {}", args[0], args[1]),
@@ -93,7 +100,7 @@ pub(super) fn atomic(
     Ok(if positive {
         body
     } else {
-        format!(r"\neg {}", parens(&body))
+        format!(r"\neg {}", group_if_compound(&body))
     })
 }
 
@@ -130,9 +137,9 @@ pub(super) fn facts(
 ) -> RuntimeResult<String> {
     let mut items = Vec::new();
     for f in value {
-        items.push(parens(&fact(f, modules, lang)?));
+        items.push(fact(f, modules, lang)?);
     }
-    Ok(items.join(r" \land "))
+    Ok(join_land(items))
 }
 pub(super) fn forall(
     value: &ForallFact,
@@ -152,9 +159,9 @@ pub(super) fn conclusions(
 ) -> RuntimeResult<String> {
     let mut items = Vec::new();
     for f in value {
-        items.push(parens(&conclusion(f, modules, lang)?));
+        items.push(conclusion(f, modules, lang)?);
     }
-    Ok(items.join(r" \land "))
+    Ok(join_land(items))
 }
 fn conclusion(
     value: &ExistOrAndChainAtomicFact,
@@ -192,7 +199,7 @@ fn existential(
     Ok(format!(
         r"{quantifier} {}:\ {}",
         parameters(&value.typed_parameters, modules, lang)?,
-        parens(&quantifier_frees(&value.facts, modules, lang)?)
+        group_if_compound(&quantifier_frees(&value.facts, modules, lang)?)
     ))
 }
 pub(super) fn quantifier_frees(
@@ -202,9 +209,9 @@ pub(super) fn quantifier_frees(
 ) -> RuntimeResult<String> {
     let mut items = Vec::new();
     for f in value {
-        items.push(parens(&quantifier_free(f, modules, lang)?));
+        items.push(quantifier_free(f, modules, lang)?);
     }
-    Ok(items.join(r" \land "))
+    Ok(join_land(items))
 }
 pub(super) fn quantifier_free(
     value: &QuantifierFreeFact,
@@ -236,9 +243,9 @@ fn conjunction(
 ) -> RuntimeResult<String> {
     let mut items = Vec::new();
     for f in value {
-        items.push(parens(&atomic(f, modules, lang)?));
+        items.push(atomic(f, modules, lang)?);
     }
-    Ok(items.join(r" \land "))
+    Ok(join_land(items))
 }
 fn disjunction(
     value: &OrFact,
@@ -247,9 +254,9 @@ fn disjunction(
 ) -> RuntimeResult<String> {
     let mut items = Vec::new();
     for f in &value.facts {
-        items.push(parens(&and_chain(f, modules, lang)?));
+        items.push(and_chain(f, modules, lang)?);
     }
-    Ok(items.join(r" \lor "))
+    Ok(join_lor(items))
 }
 fn chain(
     value: &ChainFact,
@@ -295,24 +302,24 @@ fn chain(
             format!(
                 "{}{}",
                 name(prop, modules)?,
-                parens(&format!("{left}, {right}"))
+                call_parens(&format!("{left}, {right}"))
             )
         });
     }
     if can_chain {
         return Ok(joined);
     }
-    Ok(items
-        .into_iter()
-        .map(|x| parens(&x))
-        .collect::<Vec<_>>()
-        .join(r" \land "))
+    Ok(join_land(items))
 }
 fn implication(dom: &str, then: &str) -> String {
     if dom.is_empty() {
         then.into()
     } else {
-        format!(r"{}\Rightarrow{}", parens(dom), parens(then))
+        format!(
+            r"{} \Rightarrow {}",
+            group_if_compound(dom),
+            group_if_compound(then)
+        )
     }
 }
 

@@ -2216,3 +2216,13 @@ Follow the links for source examples, checking records and support details.
 | People and agents can repair a step while keeping earlier accepted context. | A persistent Session, structured failure feedback and JSON results. | [The Session interaction example](#interaction-loop) and [verification records](#execution-model). | The demonstrated interaction and retention of accepted context. Changes in authoring time or proof quality require separate measurement. |
 | A defined mathematical subset can be compiled to Lean and connected to ordinary Mathlib mathematics. | Typed-result replay, a Lean semantic core, generated source pairs and representation bridges; complete native examples also use handwritten adapters. | [Independent Lean rechecking](#compatibility), its dated verification checkpoint and linked compiler guide. | Reviewed source-to-Lean routes and checked examples. Native use additionally requires the model and adapter for the particular interface. |
 | Mathematical source and results can feed other tools. | JSON output, LaTeX export and experimental Python/C extraction. | [Structured knowledge records](#execution-model), [export examples](#overview-spine) and [computation and communication](#workflow-use). | Each tool's supported input and output contract. LaTeX export renders parsed source without verifying it; executable extraction handles supported computational fragments. |
+
+## A note to readers
+
+We warmly welcome stress testing Litex—hard proofs, edge cases, and real
+mathematical work are the best way to see what holds and what still needs
+care. The project is small, and both people and resources are limited, so
+some surfaces remain unfinished or rough. We hope readers will meet those
+places with patience, share constructive feedback, and support one another
+as the work matures—rather than treating every immature detail as a flaw to
+score against the rest.

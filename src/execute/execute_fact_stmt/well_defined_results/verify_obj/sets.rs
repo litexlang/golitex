@@ -11,10 +11,11 @@ use crate::ast::fact::{AtomicFact, InFact, NotEqualFact};
 use crate::ast::obj::{
     Cart, FamilyIntersect, FamilyUnion, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
     FunctionSpace, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj,
-    IntervalObjStruct, ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, SetMinus, SetOperator,
-    StandardSet, Tuple, Union,
+    IntervalObjStruct, ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, SetFormer, SetMinus,
+    SetOperator, StandardSet, Tuple, Union,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
+use crate::execute::execute_eval_stmt::helper::MAX_AGGREGATE_TERMS;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -380,15 +381,63 @@ impl Runtime {
         }
     }
 
-    // list set: children, then pairwise != among elements.
-    // Example: `{1, 2}` needs `1 != 2`.
-    pub(super) fn verify_list_set_obj_well_definedness_by_def(
+    // list set: children, length budget, then pairwise != among elements.
+    // Example: `{1, 2}` needs `1 != 2`. Duplicates soft-fail on the first
+    // unequal check; lists longer than the shared finite-term budget soft-fail
+    // without running the quadratic pairwise loop.
+    pub(super) fn verify_list_set_obj_well_definedness(
+        &mut self,
+        value: &ListSet,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let root = Obj::SetFormer(SetFormer::ListSet(value.clone()));
+        if value.list.len() > MAX_AGGREGATE_TERMS {
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::SetFormer(
+                    FailToVerifySetFormerObjWellDefinedResult::ListSet(
+                        FailToVerifyListSetObjWellDefined(
+                            FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+                                "finite displayed set has {} elements, which exceeds the element budget of {MAX_AGGREGATE_TERMS}",
+                                value.list.len()
+                            )),
+                        ),
+                    ),
+                ),
+            });
+        }
+        let stages = self.verify_list_set_obj_well_definedness_by_def(value, verify_state)?;
+        if !stages.is_fully_known() {
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root.clone(),
+                reason: FailToVerifyObjWellDefinedResult::SetFormer(
+                    FailToVerifySetFormerObjWellDefinedResult::ListSet(
+                        FailToVerifyListSetObjWellDefined(stages.into_common_fail(&root)),
+                    ),
+                ),
+            });
+        }
+        Ok(VerifyObjWellDefinedResult::Success(
+            ObjWellDefinedProof::ByDef {
+                obj: root,
+                proof: ObjWellDefinedProofByDef::SetFormer(
+                    SetFormerObjWellDefinedProofByDef::ListSet(
+                        ListSetObjWellDefinedProof::from_stages(stages),
+                    ),
+                ),
+            },
+        ))
+    }
+
+    fn verify_list_set_obj_well_definedness_by_def(
         &mut self,
         value: &ListSet,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let proof = self.verify_boxed_objs_as_children(&value.list, verify_state.clone())?;
-        let mut reqs = Vec::new();
+        let mut stages = self.verify_boxed_objs_as_children(&value.list, verify_state.clone())?;
+        if !stages.is_fully_known() {
+            return Ok(stages);
+        }
         for left_index in 0..value.list.len() {
             for right_index in (left_index + 1)..value.list.len() {
                 let not_eq = AtomicFact::NotEqualFact(NotEqualFact {
@@ -397,14 +446,19 @@ impl Runtime {
                     right: value.list[right_index].as_ref().clone(),
                     line_file: None,
                 });
-                reqs.push(self.verify_required_atomic_fact(
+                let req = self.verify_required_atomic_fact(
                     not_eq,
                     verify_state.clone(),
                     "list set elements must be pairwise not equal".to_string(),
-                )?);
+                )?;
+                let failed = req.is_failed();
+                stages.requirement_fact_verified.push(req);
+                if failed {
+                    return Ok(stages);
+                }
             }
         }
-        Ok(self.with_requirements(proof, reqs))
+        Ok(stages)
     }
     // SetBuilder: dedicated binder pipeline in binder.rs.
     pub(super) fn verify_cart_obj_well_definedness_by_def(
@@ -565,5 +619,61 @@ impl Runtime {
             format!("interval end {} is not in R", bounds.end.ir()),
         )?);
         Ok(self.with_requirements(proof, reqs))
+    }
+}
+
+#[cfg(test)]
+mod list_set_wd_budget_tests {
+    use crate::launch_command::{LaunchCommand, OutputLanguage};
+    use crate::runtime::Runtime;
+
+    fn runtime() -> Runtime {
+        Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        })
+    }
+
+    #[test]
+    fn duplicate_list_set_soft_fails_quickly_without_full_pairwise_work() {
+        let mut rt = runtime();
+        // Under the element budget, but O(n^2) without early exit would still be expensive.
+        let duplicates = format!(
+            "let S = {{{}}}",
+            std::iter::repeat("1")
+                .take(400)
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        let run = rt.run_litex_code(&duplicates).unwrap();
+        assert!(!run.success, "{duplicates}");
+        assert!(run.session_error.is_none());
+    }
+
+    #[test]
+    fn over_budget_list_set_soft_fails_with_element_budget_message() {
+        let mut rt = runtime();
+        let over = format!(
+            "let S = {{{}}}",
+            (0..1025)
+                .map(|i| i.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        let run = rt.run_litex_code(&over).unwrap();
+        assert!(!run.success, "{over}");
+        assert!(run.session_error.is_none());
+        let detailed = crate::json_output::emit_run_detailed(&run, &rt, "eval", None);
+        assert!(detailed.contains("element budget of 1024"), "{detailed}");
+    }
+
+    #[test]
+    fn small_distinct_list_set_still_succeeds() {
+        let mut rt = runtime();
+        let run = rt.run_litex_code("let S = {1, 2, 3}\n1 $in S").unwrap();
+        assert!(run.success);
+        assert!(run.session_error.is_none());
     }
 }
