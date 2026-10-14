@@ -296,6 +296,50 @@ fn index_lifetime_follows_commit_failed_claim_and_sketch() {
     assert_eq!(rt.execution_environments_stack.len(), 1);
 }
 
+#[test]
+fn order_chain_adjacent_cites_survive_merge_and_prove_atomic_goal() {
+    // Trust is forbidden under `-strict`; this case needs an ordinary session.
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: false,
+        language: OutputLanguage::English,
+    });
+    let run = rt
+        .run_litex_code(
+            "trust:\n    forall a, b R:\n        a < b < a + 1\n\nhave x R\nhave y R\nx < y",
+        )
+        .unwrap();
+    assert!(
+        run.success,
+        "order-chain adjacent cite after merge: {:?}",
+        run.failed_statement_results
+    );
+    let less_key = (
+        crate::ast::names::AtomicName::Plain {
+            name: crate::parse::keywords::LESS.into(),
+        },
+        true,
+    );
+    let cites = rt
+        .top_exec_env()
+        .facts
+        .known_forall_conclusions
+        .by_atomic_prop
+        .get(&less_key)
+        .cloned()
+        .unwrap_or_default();
+    assert!(
+        cites.iter().any(|cite| {
+            matches!(
+                cite.location,
+                ForallConclusionLocation::ChainFactComponent(_)
+            )
+        }),
+        "order-chain adjacent cites must survive exec_stmt merge"
+    );
+}
+
 // Metadata-only scaling controls: no unproved source is used as a runtime proof.
 #[test]
 fn nested_constructor_and_both_endpoint_index_prune_10000_patterns() {

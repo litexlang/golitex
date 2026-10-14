@@ -1133,16 +1133,17 @@ impl Runtime {
         if divisible_proof.is_failed() {
             return Ok(None);
         }
-        let nonzero_small = self.verify_order_nonzero(d_left, verify_state.clone())?;
-        if nonzero_small.is_failed() {
+        // Manual: only for positive integer moduli m, d with m % d = 0.
+        let small_pos = self.verify_order_in_pos_nat(d_left, verify_state.clone())?;
+        if small_pos.is_failed() {
             return Ok(None);
         }
-        let nonzero_large = self.verify_order_nonzero(m, verify_state)?;
-        if nonzero_large.is_failed() {
+        let large_pos = self.verify_order_in_pos_nat(m, verify_state)?;
+        if large_pos.is_failed() {
             return Ok(None);
         }
         Ok(Some(ModCompatibleSmallerModulusBuiltinRuleProof {
-            proof_of_requirement_facts: vec![divisible_proof, nonzero_small, nonzero_large],
+            proof_of_requirement_facts: vec![divisible_proof, small_pos, large_pos],
         }))
     }
 

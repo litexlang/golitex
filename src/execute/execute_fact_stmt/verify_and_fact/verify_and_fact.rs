@@ -4,6 +4,7 @@ use crate::exec_env::known_forall_conclusion_memory::and_at_forall_location;
 use crate::execute::execute_fact_stmt::verify_and_fact::result::{
     and_fact_result_from_component_fail, and_fact_result_from_success,
 };
+use crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -18,11 +19,18 @@ impl Runtime {
         fact: &AndFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
-        // `and/components.lit` uses the structural whole-and key before the
-        // fallback path verifies individual conjuncts.
-        let known_forall = self.search_and_fact_by_known_forall(fact, verify_state.clone())?;
-        if let Some(proof) = known_forall {
-            return Ok(and_fact_result_from_success(fact, Vec::new(), Some(proof)));
+        // Whole-and forall cite still requires each conjunct to be WD first.
+        // Example: after `trust forall x R: abs(x)=x and x=x`, `abs(a)=a and a=a`
+        // needs `abs(a)` WD even when the structural and key matches.
+        let mut known_forall = self.search_and_fact_by_known_forall(fact, verify_state.clone())?;
+        if let Some(proof) = known_forall.take() {
+            if matches!(
+                self.verify_and_fact_well_definedness(fact, verify_state.clone())?,
+                VerifyAndFactWellDefinedResult::Success(_)
+            ) {
+                return Ok(and_fact_result_from_success(fact, Vec::new(), Some(proof)));
+            }
+            // WD failed: fall through so the Failed shape matches conjunct WD misses.
         }
         let mut components = Vec::with_capacity(fact.facts.len());
         for (failed_index, atomic) in fact.facts.iter().enumerate() {

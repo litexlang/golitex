@@ -52,8 +52,8 @@ impl KnownForallConclusionMemory {
         Self::default()
     }
 
-    // Project atomic leaves, whole or thens, and whole exist thens.
-    // Chain thens are not projected into these buckets yet.
+    // Project atomic leaves, whole or/and/chain/exist thens.
+    // Chain adjacent atoms are elaborated later by Runtime::index_forall_chain_components.
     pub fn index_forall(&mut self, forall: &ForallFact) {
         let fact_id = forall.fact_id;
         for (then_fact_index, then) in forall.then_facts.iter().enumerate() {

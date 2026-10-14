@@ -3439,8 +3439,12 @@ assignment from displayed finite list sets, `range(start, end)`, or
 `closed_range(start, end)`. Multiple independently enumerable parameters are
 supported. A named finite set without a displayed domain is not expanded;
 `cart(...)` domains are not supported, even when their factors are finite.
-Separately, `expand:` turns known numeric-range membership into equality cases
-for later `by cases`.
+The Cartesian product of the enumerated domains is generated lazily, one
+assignment at a time. Before any assignment is built, the product cardinality
+is checked with overflow-aware arithmetic against a fixed assignment budget of
+1024; products above that budget fail with a domain diagnostic instead of
+allocating the full product. Separately, `expand:` turns known
+numeric-range membership into equality cases for later `by cases`.
 
 Conditional targets are checked as implications for each assignment. A proved
 negation of an atomic premise skips that assignment. Otherwise premises are

@@ -25,12 +25,12 @@ use std::collections::HashMap;
 pub fn merge_exec_env_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> {
     merge_definitions_from(parent, child)?;
     merge_facts_from(parent, child)?;
-    // Keep equality chain projections elaborated by Runtime in the child.
+    // record_fact rebuilds structural forall indexes; also keep Runtime elaborations
+    // from the child (equality and order chain adjacent cites, etc.).
     parent
         .facts
         .known_forall_conclusions
-        .by_equal
-        .merge_from(&child.facts.known_forall_conclusions.by_equal);
+        .merge_from(&child.facts.known_forall_conclusions);
     merge_well_defined_objects_from(parent, child)?;
     merge_special_object_properties_from(parent, child);
     merge_prop_rewrite_properties_from(parent, child);
@@ -164,8 +164,8 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
             }
         }
     }
-    // Forall indexes are rebuilt inside record_fact; also merge any orphan
-    // index entries is unnecessary when every forall goes through record_fact.
+    // Forall structural indexes rebuild inside record_fact; Runtime elaborations
+    // (chain adjacent cites, equality projections) merge above via merge_from.
     Ok(())
 }
 
