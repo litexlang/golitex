@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import stat
 import subprocess
 import sys
 import tarfile
@@ -291,25 +292,96 @@ class ReleasePreflightTest(unittest.TestCase):
             self.assertIn("basics::main::litex_distribution_probe = 1", (smoke_project / "smoke.lit").read_text())
             self.assertEqual((root / "extracted/std/basics/main.lit").read_bytes(), b"")
 
-    def test_installed_probe_restores_std_on_verification_failure(self) -> None:
-        with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
-            root = Path(temporary_directory)
-            install = root / "install"
-            basics = install / "std/basics"
-            basics.mkdir(parents=True)
-            binary = install / "litex"
-            binary.write_text("binary")
-            (basics / "litex.config").write_text('[export]\nmain = "./main.lit"\n')
-            original = b"# intentionally empty\r\n"
-            (basics / "main.lit").write_bytes(original)
-            responses = [
-                subprocess.CompletedProcess([], 0, "Litex 1.0.6-beta\n"),
-                subprocess.CompletedProcess([], 1, '{"kind":"run","success":false}'),
-            ]
-            with patch.object(preflight.subprocess, "run", side_effect=responses):
-                with self.assertRaises(preflight.PreflightError):
-                    preflight.check_installed_binary(root, binary, install / "std", "1.0.6-beta")
-            self.assertEqual((basics / "main.lit").read_bytes(), original)
+    def test_installed_probe_restores_std_contents_and_permissions(self) -> None:
+        for mode in (0o444, 0o644):
+            for outcome in ("success", "rejected", "spawn-error"):
+                with self.subTest(mode=oct(mode), outcome=outcome), \
+                        tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+                    root = Path(temporary_directory)
+                    install = root / "install/bin"
+                    basics = install / "std/basics"
+                    basics.mkdir(parents=True)
+                    binary = install / "litex"
+                    binary.write_text("binary")
+                    (basics / "litex.config").write_text('[export]\nmain = "./main.lit"\n')
+                    main = basics / "main.lit"
+                    original = b"# intentionally empty\r\n"
+                    main.write_bytes(original)
+                    main.chmod(mode)
+                    original_mode = stat.S_IMODE(main.stat().st_mode)
+
+                    def command(arguments, **kwargs):
+                        if "-version" in arguments:
+                            return subprocess.CompletedProcess(arguments, 0, "Litex 1.0.6-beta\n")
+                        self.assertEqual(main.read_bytes(), original + b"\nlet litex_distribution_probe = 1\n")
+                        self.assertNotIn("LITEX_STD_PATH", kwargs["env"])
+                        self.assertIn("-strict", arguments)
+                        if outcome == "spawn-error":
+                            raise OSError("cannot launch installed binary")
+                        run_json = json.dumps({
+                            "kind": "run", "detail": "normal", "target": "file",
+                            "path": "smoke.lit", "run_result": outcome,
+                            "session_terminated": False, "termination": None,
+                            "statement_results": [{"statement_result": "accepted"}],
+                        })
+                        return subprocess.CompletedProcess(arguments, 0 if outcome == "success" else 1, run_json)
+
+                    try:
+                        with patch.object(preflight.subprocess, "run", side_effect=command), patch("builtins.print"):
+                            if outcome == "success":
+                                preflight.check_installed_binary(root, binary, install / "std", "1.0.6-beta")
+                            else:
+                                error = OSError if outcome == "spawn-error" else preflight.PreflightError
+                                message = "cannot launch installed binary" if outcome == "spawn-error" else "smoke test exited"
+                                with self.assertRaisesRegex(error, message):
+                                    preflight.check_installed_binary(root, binary, install / "std", "1.0.6-beta")
+                        self.assertEqual(main.read_bytes(), original)
+                        self.assertEqual(stat.S_IMODE(main.stat().st_mode), original_mode)
+                    finally:
+                        main.chmod(0o644)
+
+    def test_installed_probe_leaves_std_unchanged_when_setup_fails(self) -> None:
+        for failure in ("chmod", "open"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+                root = Path(temporary_directory)
+                install = root / "install"
+                basics = install / "std/basics"
+                basics.mkdir(parents=True)
+                binary = install / "litex"
+                binary.write_text("binary")
+                (basics / "litex.config").write_text('[export]\nmain = "./main.lit"\n')
+                main = basics / "main.lit"
+                original = b"# intentionally empty\r\n"
+                main.write_bytes(original)
+                main.chmod(0o444)
+                original_mode = stat.S_IMODE(main.stat().st_mode)
+                denied = PermissionError("probe setup denied")
+                real_open = Path.open
+                real_chmod = Path.chmod
+
+                def open_file(path, *args, **kwargs):
+                    if path == main and args == ("r+b",):
+                        raise denied
+                    return real_open(path, *args, **kwargs)
+
+                def chmod_file(path, mode):
+                    if path == main:
+                        raise denied
+                    return real_chmod(path, mode)
+
+                operation = open_file if failure == "open" else chmod_file
+                try:
+                    with patch.object(Path, failure, operation), \
+                            patch.object(preflight.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "Litex 1.0.6-beta\n")) as run:
+                        with self.assertRaises(PermissionError) as caught:
+                            preflight.check_installed_binary(root, binary, install / "std", "1.0.6-beta")
+                        self.assertIs(caught.exception, denied)
+                        self.assertIsNone(caught.exception.__context__)
+                        run.assert_called_once()
+                    self.assertEqual(main.read_bytes(), original)
+                    self.assertEqual(stat.S_IMODE(main.stat().st_mode), original_mode)
+                finally:
+                    main.chmod(0o644)
 
     def test_msi_is_a_required_release_asset(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text()

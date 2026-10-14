@@ -10,7 +10,9 @@ It builds with `--locked`, packages the binary and clean std source, extracts
 the archive, checks `Litex <version>`, and imports a real std declaration from
 an external project with `LITEX_STD_PATH` unset. The temporary declaration
 `let litex_distribution_probe = 1` is appended to the extracted basics module
-and restored byte-for-byte in a `finally` block. The consumer verifies
+and restored byte-for-byte in a `finally` block. Read-only probe files (including
+Homebrew's installed source) temporarily gain owner write permission; the
+original permissions are restored as well. The consumer verifies
 `basics::main::litex_distribution_probe = 1` in strict mode, so empty-module
 loading or native arithmetic alone cannot satisfy the package check.
 Tool-managed `private/release-preflight.*` directories are removed on success
@@ -26,9 +28,12 @@ sudo python3 .github/scripts/release/preflight.py \
 ```
 
 The installed check temporarily writes the probe into its supplied std path;
-use the permissions needed by that installation. The probe is restored even
-when verification fails. `--std` locates the file for inventory/probing, not a
-runtime environment override: the child process must discover std itself.
+run as the installation owner (or with the privileges needed to update that file).
+The probe contents and permissions are restored even when verification or binary
+launch fails. If the file cannot be opened for probing, its contents are left
+untouched and any temporary permission change is reverted. `--std` locates the
+file for inventory/probing, not a runtime environment override: the child process
+must discover std itself.
 
 ## Runtime discovery and distribution
 

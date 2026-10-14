@@ -8,6 +8,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -320,23 +321,35 @@ def check_installed_binary(
         SMOKE_SOURCE + "basics::main::litex_distribution_probe = 1\n", encoding="utf-8"
     )
     (project / "litex.config").write_text(SMOKE_CONFIG, encoding="utf-8")
-    # Probe the installed module's actual contents, then restore shipped source.
+    # Homebrew makes installed source read-only. Restore both bytes and mode.
     main = basics / "main.lit"
-    original = main.read_bytes()
+    original_mode = stat.S_IMODE(main.stat().st_mode)
+    writable_mode = original_mode | stat.S_IWUSR
+    if writable_mode != original_mode:
+        main.chmod(writable_mode)
     try:
-        main.write_bytes(original + b"\nlet litex_distribution_probe = 1\n")
-        smoke_result = subprocess.run(
-            [str(binary), "-lang", "en", "-strict", "-f", smoke_file.name],
-            cwd=project,
-            env=environment,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-        validate_run_output(smoke_result.stdout, smoke_result.returncode)
+        with main.open("r+b") as source:
+            original = source.read()
+            try:
+                source.write(b"\nlet litex_distribution_probe = 1\n")
+                source.flush()
+                smoke_result = subprocess.run(
+                    [str(binary), "-lang", "en", "-strict", "-f", smoke_file.name],
+                    cwd=project,
+                    env=environment,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    check=False,
+                )
+                validate_run_output(smoke_result.stdout, smoke_result.returncode)
+            finally:
+                source.seek(0)
+                source.write(original)
+                source.truncate()
     finally:
-        main.write_bytes(original)
+        if writable_mode != original_mode:
+            main.chmod(original_mode)
     print(
         "PREFLIGHT smoke: external project imports bundled std declaration "
         "without LITEX_STD_PATH -> ok",
