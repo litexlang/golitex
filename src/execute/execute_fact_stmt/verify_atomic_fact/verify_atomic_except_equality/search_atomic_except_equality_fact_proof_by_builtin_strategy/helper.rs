@@ -23,7 +23,7 @@ pub(super) fn strategy_goal_key(fact: &AtomicFact) -> String {
     format!("{}:{}", fact.prop_name(), args.join(","))
 }
 
-pub(super) fn enter_strategy_goal(key: &str) -> bool {
+fn enter_strategy_goal(key: &str) -> bool {
     BUILTIN_STRATEGY_GOAL_STACK.with(|stack| {
         let mut stack = stack.borrow_mut();
         if stack.iter().any(|seen| seen == key) {
@@ -34,7 +34,7 @@ pub(super) fn enter_strategy_goal(key: &str) -> bool {
     })
 }
 
-pub(super) fn leave_strategy_goal(key: &str) {
+fn leave_strategy_goal(key: &str) {
     BUILTIN_STRATEGY_GOAL_STACK.with(|stack| {
         let mut stack = stack.borrow_mut();
         if stack.last().map(|s| s.as_str()) == Some(key) {
@@ -43,6 +43,29 @@ pub(super) fn leave_strategy_goal(key: &str) {
             stack.retain(|seen| seen != key);
         }
     });
+}
+
+// RAII guard: leaves the goal even when the strategy search returns Err.
+pub(super) struct StrategyGoalGuard {
+    key: String,
+}
+
+impl StrategyGoalGuard {
+    pub(super) fn enter(key: &str) -> Option<Self> {
+        if enter_strategy_goal(key) {
+            Some(Self {
+                key: key.to_string(),
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl Drop for StrategyGoalGuard {
+    fn drop(&mut self) {
+        leave_strategy_goal(&self.key);
+    }
 }
 
 pub(super) fn zero_obj() -> Obj {

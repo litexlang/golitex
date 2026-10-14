@@ -2,7 +2,7 @@
 # Before: these TRUE goals missed at search_proof despite the actual exclusion lemma.
 # fn(k R:k>0,k<0) R {0}={}
 # fn_range(fn(k R:k>0,k<0) R {0})={}
-# fn(k R:k>0,k<0) {} = {()}
+# fn(k R:k>0,k<0) {} = {tuple()}
 # Now: the shared domain owner checks the typed exclusion forall under inherited
 # permissions. Empty graph, image and space consumers retain the same certificate.
 # Domain assumptions remain local; return bounds do not create input assignments.
@@ -17,7 +17,7 @@ fn(k R:k>0,k<0) R {0}={}
 
 fn_range(fn(k R:k>0,k<0) R {0})={}
 
-fn(k R:k>0,k<0) {} = {()}
+fn(k R:k>0,k<0) {} = {tuple()}
 
 $is_nonempty_set(fn(k R:k>0,k<0) {})
 
@@ -27,9 +27,9 @@ f={}
 
 fn_range(f)={}
 
-()={}
+tuple()={}
 
-f=()
+f=tuple()
 
 f $in finite_seq(R,0)
 
@@ -43,13 +43,13 @@ empty_body={}
 
 fn_range(empty_body)={}
 
-empty_body=()
+empty_body=tuple()
 
 empty_body $in finite_seq({},0)
 
 have fn literal_empty(k closed_range(1,0)) {}=0
 
-literal_empty=()
+literal_empty=tuple()
 
 literal_empty $in finite_seq(R,0)
 

@@ -1,12 +1,12 @@
-# Positive: small multi-parameter enumeration still succeeds.
-by enumerate finite_set:
-    ? forall x {1, 2}, y {3, 4}:
-        x < y
-    x < y
+# Range/list equality expansion budget (1024).
+have anchor R = 2
 
-# Over-budget: 11 binary binders => 2048 > assignment budget 1024.
-# Expect a controlled domain failure, not full-product allocation.
-by enumerate finite_set:
-    ? forall b1 {0, 1}, b2 {0, 1}, b3 {0, 1}, b4 {0, 1}, b5 {0, 1}, b6 {0, 1}, b7 {0, 1}, b8 {0, 1}, b9 {0, 1}, b10 {0, 1}, b11 {0, 1}:
-        0 = 0
-    0 = 0
+# Over-budget / hostile: soft-fail, no billion-Obj materialization.
+closed_range(0, 1000000000) = {0}
+range(0, 1000000000) = {}
+
+# Positive under budget.
+closed_range(1, 3) = {1, 2, 3}
+range(1, 4) = {1, 2, 3}
+
+anchor + 1 = 3

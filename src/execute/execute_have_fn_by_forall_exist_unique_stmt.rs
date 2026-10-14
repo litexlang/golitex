@@ -45,6 +45,7 @@ use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
 pub enum ExecHaveFnByForallExistUniqueStmtFailed {
+    NameClash(String),
     SourceForall(VerifyFactResult),
     FnSetWellDefined(VerifyObjWellDefinedResult),
     PropertyWellDefined(FailToVerifyFactWellDefinedResult),
@@ -90,10 +91,12 @@ impl Runtime {
         let verify_state = VerifyState::top_level();
 
         if self.identifier_defined_in_stack(&stmt.name.name) {
-            return Err(RuntimeError::InternalBug(format!(
-                "identifier `{}` is already defined in this ExecEnv",
-                stmt.name
-            )));
+            return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
+                ExecHaveFnByForallExistUniqueStmtFailed::NameClash(format!(
+                    "identifier `{}` is already defined in this ExecEnv",
+                    stmt.name
+                )),
+            ));
         }
 
         let shape = match self.have_fn_by_exist_shape(stmt) {

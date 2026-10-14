@@ -88,8 +88,9 @@ impl Runtime {
     ) -> RuntimeResult<ExecHaveObjInNonemptySetStmtResult> {
         let verify_state = VerifyState::top_level();
 
-        let mut groups = Vec::with_capacity(stmt.param_def.groups.len());
-        let mut store_and_infer_result = StoreHaveObjAndInferResult::new(Vec::new());
+        // WD + nonempty checks first (no writes). Define + auto-open commit
+        // together so AutoOpen Failed does not leave half-defined names.
+        let mut groups_ready = Vec::with_capacity(stmt.param_def.groups.len());
         let shared = Rc::new(stmt.clone());
         for group in &stmt.param_def.groups {
             let one = TypedParameterList {
@@ -110,31 +111,52 @@ impl Runtime {
                     Ok(mut checks) => checks.remove(0),
                     Err(failed) => return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed)),
                 };
-            let defined_params = self.define_typed_parameters_in_current_env(
-                &one,
-                Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(
-                    Rc::clone(&shared),
-                )),
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?;
-            store_and_infer_result.extend_shared(&defined_params);
-            groups.push(HaveObjInNonemptySetGroupResult {
-                param_type_well_defined,
-                nonempty_check,
-                defined_params,
-            });
+            groups_ready.push((one, param_type_well_defined, nonempty_check));
         }
-        let auto_opened_struct_layers = match self.auto_open_struct_layers_for_typed_parameters(
-            &stmt.param_def,
-            crate::execute::execute_fact_stmt::VerifyState::top_level(),
-        )? {
-            Ok(layers) => layers,
-            Err((_, failed)) => {
+
+        let (commit, nested_env) = self.run_in_local_env_and_take_env(|rt| {
+            let mut groups = Vec::with_capacity(groups_ready.len());
+            let mut store_and_infer_result = StoreHaveObjAndInferResult::new(Vec::new());
+            for (one, param_type_well_defined, nonempty_check) in groups_ready {
+                let defined_params = rt.define_typed_parameters_in_current_env(
+                    &one,
+                    Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(
+                        Rc::clone(&shared),
+                    )),
+                    crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                )?;
+                store_and_infer_result.extend_shared(&defined_params);
+                groups.push(HaveObjInNonemptySetGroupResult {
+                    param_type_well_defined,
+                    nonempty_check,
+                    defined_params,
+                });
+            }
+            let auto_opened_struct_layers = match rt.auto_open_struct_layers_for_typed_parameters(
+                &stmt.param_def,
+                crate::execute::execute_fact_stmt::VerifyState::top_level(),
+            )? {
+                Ok(layers) => layers,
+                Err((_, failed)) => {
+                    return Ok(Err(failed));
+                }
+            };
+            Ok(Ok((
+                groups,
+                store_and_infer_result,
+                auto_opened_struct_layers,
+            )))
+        })?;
+
+        let (groups, store_and_infer_result, auto_opened_struct_layers) = match commit {
+            Ok(parts) => parts,
+            Err(failed) => {
                 return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
                     ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed),
                 ));
             }
         };
+        self.top_exec_env_mut().merge_from(&nested_env)?;
 
         Ok(ExecHaveObjInNonemptySetStmtResult::Success(
             ExecHaveObjInNonemptySetStmtSuccessResult {

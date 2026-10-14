@@ -19,85 +19,58 @@ macro_rules! impl_display_pair {
 
 impl Obj {
     pub fn ir(&self) -> ObjIR {
-        fn precedence(o: &Obj) -> u8 {
-            match o {
-                Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => 3,
-                Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
-                | Obj::IntegerOperator(IntegerOperator::Mod(_)) => 2,
-                Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Neg(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
-                | Obj::TrigOperator(TrigOperator::Sin(_))
-                | Obj::TrigOperator(TrigOperator::Arcsin(_))
-                | Obj::TrigOperator(TrigOperator::Arccos(_))
-                | Obj::TrigOperator(TrigOperator::Arctan(_))
-                | Obj::TrigOperator(TrigOperator::Arccot(_))
-                | Obj::TrigOperator(TrigOperator::Cos(_))
-                | Obj::TrigOperator(TrigOperator::Tan(_))
-                | Obj::TrigOperator(TrigOperator::Cot(_))
-                | Obj::ComplexOperator(ComplexOperator::RealPart(_))
-                | Obj::ComplexOperator(ComplexOperator::ImaginaryPart(_))
-                | Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
-                | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
-                | Obj::ExpLogOperator(ExpLogOperator::Log(_))
-                | Obj::IntegerOperator(IntegerOperator::Lcm(_))
-                | Obj::IntegerOperator(IntegerOperator::Quot(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Floor(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Ceil(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Min(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Max(_))
-                | Obj::ExpLogOperator(ExpLogOperator::Exp(_))
-                | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
-                | Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
-                | Obj::IntegerOperator(IntegerOperator::Factorial(_)) => 1,
-                _ => 0,
-            }
-        }
-
-        fn fmt_with_prec(o: &Obj, parent_precedent: u8) -> String {
-            let precedent = precedence(o);
-            let need_parens =
-                parent_precedent != 0 && precedent != 0 && precedent > parent_precedent;
+        fn fmt_obj(o: &Obj) -> String {
+            // IR is an identity/index key, not only presentation. Preserve every
+            // arithmetic constructor: (a^b)^c and a^(b^c) must never share a key.
+            let need_parens = matches!(
+                o,
+                Obj::ArithmeticOperator(
+                    ArithmeticOperator::Add(_)
+                        | ArithmeticOperator::Sub(_)
+                        | ArithmeticOperator::Mul(_)
+                        | ArithmeticOperator::Div(_)
+                        | ArithmeticOperator::Pow(_)
+                        | ArithmeticOperator::Neg(_)
+                ) | Obj::IntegerOperator(IntegerOperator::Mod(_))
+            );
             let mut s = String::new();
             if need_parens {
                 s.push_str(LEFT_PAREN);
             }
             match o {
                 Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => {
-                    s.push_str(&fmt_with_prec(a.left.as_ref(), 3));
+                    s.push_str(&fmt_obj(a.left.as_ref()));
                     s.push_str(&format!(" {} ", ADD));
-                    s.push_str(&fmt_with_prec(a.right.as_ref(), 2));
+                    s.push_str(&fmt_obj(a.right.as_ref()));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
-                    s.push_str(&fmt_with_prec(sub.left.as_ref(), 2));
+                    s.push_str(&fmt_obj(sub.left.as_ref()));
                     s.push_str(&format!(" {} ", SUB));
-                    s.push_str(&fmt_with_prec(sub.right.as_ref(), 2));
+                    s.push_str(&fmt_obj(sub.right.as_ref()));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Mul(m)) => {
-                    s.push_str(&fmt_with_prec(m.left.as_ref(), 2));
+                    s.push_str(&fmt_obj(m.left.as_ref()));
                     s.push_str(&format!(" {} ", MUL));
-                    s.push_str(&fmt_with_prec(m.right.as_ref(), 2));
+                    s.push_str(&fmt_obj(m.right.as_ref()));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Div(d)) => {
-                    s.push_str(&fmt_with_prec(d.left.as_ref(), 2));
+                    s.push_str(&fmt_obj(d.left.as_ref()));
                     s.push_str(&format!(" {} ", DIV));
-                    s.push_str(&fmt_with_prec(d.right.as_ref(), 1));
+                    s.push_str(&fmt_obj(d.right.as_ref()));
                 }
                 Obj::IntegerOperator(IntegerOperator::Mod(m)) => {
-                    s.push_str(&fmt_with_prec(m.left.as_ref(), 2));
+                    s.push_str(&fmt_obj(m.left.as_ref()));
                     s.push_str(&format!(" {} ", MOD_OP));
-                    s.push_str(&fmt_with_prec(m.right.as_ref(), 2));
+                    s.push_str(&fmt_obj(m.right.as_ref()));
                 }
                 Obj::IntegerOperator(IntegerOperator::Quot(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{} {}{}",
                         QUOT,
                         LEFT_PAREN,
-                        fmt_with_prec(x.left.as_ref(), 0),
+                        fmt_obj(x.left.as_ref()),
                         COMMA,
-                        fmt_with_prec(x.right.as_ref(), 0),
+                        fmt_obj(x.right.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -106,9 +79,9 @@ impl Obj {
                         "{}{}{}{} {}{}",
                         GCD,
                         LEFT_PAREN,
-                        fmt_with_prec(g.left.as_ref(), 0),
+                        fmt_obj(g.left.as_ref()),
                         COMMA,
-                        fmt_with_prec(g.right.as_ref(), 0),
+                        fmt_obj(g.right.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -117,9 +90,9 @@ impl Obj {
                         "{}{}{}{} {}{}",
                         LCM,
                         LEFT_PAREN,
-                        fmt_with_prec(x.left.as_ref(), 0),
+                        fmt_obj(x.left.as_ref()),
                         COMMA,
-                        fmt_with_prec(x.right.as_ref(), 0),
+                        fmt_obj(x.right.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -128,7 +101,7 @@ impl Obj {
                         "{}{}{}{}",
                         FLOOR,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -137,7 +110,7 @@ impl Obj {
                         "{}{}{}{}",
                         CEIL,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -146,9 +119,9 @@ impl Obj {
                         "{}{}{}{} {}{}",
                         MIN,
                         LEFT_PAREN,
-                        fmt_with_prec(x.left.as_ref(), 0),
+                        fmt_obj(x.left.as_ref()),
                         COMMA,
-                        fmt_with_prec(x.right.as_ref(), 0),
+                        fmt_obj(x.right.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -157,9 +130,9 @@ impl Obj {
                         "{}{}{}{} {}{}",
                         MAX,
                         LEFT_PAREN,
-                        fmt_with_prec(x.left.as_ref(), 0),
+                        fmt_obj(x.left.as_ref()),
                         COMMA,
-                        fmt_with_prec(x.right.as_ref(), 0),
+                        fmt_obj(x.right.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -168,7 +141,7 @@ impl Obj {
                         "{}{}{}{}",
                         EXP,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -177,7 +150,7 @@ impl Obj {
                         "{}{}{}{}",
                         LN,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -186,7 +159,7 @@ impl Obj {
                         "{}{}{}{}",
                         SIGN,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -195,25 +168,25 @@ impl Obj {
                         "{}{}{}{}",
                         FACTORIAL,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Pow(p)) => {
-                    s.push_str(&fmt_with_prec(p.base.as_ref(), 1));
+                    s.push_str(&fmt_obj(p.base.as_ref()));
                     s.push_str(&format!(" {} ", POW));
-                    s.push_str(&fmt_with_prec(p.exponent.as_ref(), 1));
+                    s.push_str(&fmt_obj(p.exponent.as_ref()));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Neg(n)) => {
                     s.push_str(SUB);
-                    s.push_str(&fmt_with_prec(n.arg.as_ref(), 1));
+                    s.push_str(&fmt_obj(n.arg.as_ref()));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => {
                     s.push_str(&format!(
                         "{} {}{}{}",
                         ABS,
                         LEFT_PAREN,
-                        fmt_with_prec(a.arg.as_ref(), 0),
+                        fmt_obj(a.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -222,7 +195,7 @@ impl Obj {
                         "{}{}{}{}",
                         SIN,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -231,7 +204,7 @@ impl Obj {
                         "{}{}{}{}",
                         ARCSIN,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -240,7 +213,7 @@ impl Obj {
                         "{}{}{}{}",
                         ARCCOS,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -249,7 +222,7 @@ impl Obj {
                         "{}{}{}{}",
                         ARCTAN,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -258,7 +231,7 @@ impl Obj {
                         "{}{}{}{}",
                         ARCCOT,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -267,7 +240,7 @@ impl Obj {
                         "{}{}{}{}",
                         COS,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -276,7 +249,7 @@ impl Obj {
                         "{}{}{}{}",
                         TAN,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -285,7 +258,7 @@ impl Obj {
                         "{}{}{}{}",
                         COT,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -294,7 +267,7 @@ impl Obj {
                         "{}{}{}{}",
                         RE,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -303,7 +276,7 @@ impl Obj {
                         "{}{}{}{}",
                         IMG,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -312,7 +285,7 @@ impl Obj {
                         "{}{}{}{}",
                         C_ABS,
                         LEFT_PAREN,
-                        fmt_with_prec(x.arg.as_ref(), 0),
+                        fmt_obj(x.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -321,7 +294,7 @@ impl Obj {
                         "{} {}{}{}",
                         SQRT,
                         LEFT_PAREN,
-                        fmt_with_prec(sq.arg.as_ref(), 0),
+                        fmt_obj(sq.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -330,9 +303,9 @@ impl Obj {
                         "{} {}{}{} {}{}",
                         LOG,
                         LEFT_PAREN,
-                        fmt_with_prec(l.base.as_ref(), 0),
+                        fmt_obj(l.base.as_ref()),
                         COMMA,
-                        fmt_with_prec(l.arg.as_ref(), 0),
+                        fmt_obj(l.arg.as_ref()),
                         RIGHT_PAREN
                     ));
                 }
@@ -392,7 +365,7 @@ impl Obj {
             s
         }
 
-        ObjIR(fmt_with_prec(self, 0))
+        ObjIR(fmt_obj(self))
     }
 
     pub fn display_string(&self) -> String {
@@ -451,7 +424,13 @@ impl FnObj {
 
 impl Number {
     pub fn ir(&self) -> ObjIR {
-        ObjIR(self.normalized_value.clone())
+        // Generated negative literals and parsed unary negatives denote the
+        // same number. Group the sign so a negative power base reparses intact.
+        if self.normalized_value.starts_with('-') {
+            ObjIR(format!("({})", self.normalized_value))
+        } else {
+            ObjIR(self.normalized_value.clone())
+        }
     }
     impl_display_pair!();
 }
@@ -717,8 +696,8 @@ impl Cart {
 impl Tuple {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        // `(a)` parses as grouping; preserve the singleton constructor.
-        if self.args.len() == 1 {
+        // Bare `()` is invalid; use the explicit empty constructor.
+        if self.args.is_empty() {
             out.push_str(TUPLE);
         }
         {
@@ -731,6 +710,9 @@ impl Tuple {
                     .collect::<Vec<_>>()
                     .join(", "),
             );
+            if self.args.len() == 1 {
+                out.push_str(COMMA);
+            }
             out.push_str(RIGHT_PAREN);
         };
 
@@ -876,13 +858,17 @@ impl OneSideInfinityIntervalObj {
     }
     impl_display_pair!();
 }
-// Binary/unary arithmetic leaf Display impls (surface via Obj precedence path primarily).
+// Binary/unary arithmetic leaf IR impls. Keep them identical to the `Obj::ir()`
+// arms above: wrap the same constructors in the same parentheses so a leaf
+// `ir()` never diverges from the identity key.
 impl Add {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        out.push_str(LEFT_PAREN);
         out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", ADD));
         out.push_str(&self.right.ir());
+        out.push_str(RIGHT_PAREN);
 
         ObjIR(out)
     }
@@ -891,9 +877,11 @@ impl Add {
 impl Sub {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        out.push_str(LEFT_PAREN);
         out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", SUB));
         out.push_str(&self.right.ir());
+        out.push_str(RIGHT_PAREN);
 
         ObjIR(out)
     }
@@ -902,8 +890,10 @@ impl Sub {
 impl Neg {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        out.push_str(LEFT_PAREN);
         out.push_str(SUB);
         out.push_str(&self.arg.ir());
+        out.push_str(RIGHT_PAREN);
         ObjIR(out)
     }
     impl_display_pair!();
@@ -911,9 +901,11 @@ impl Neg {
 impl Mul {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        out.push_str(LEFT_PAREN);
         out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", MUL));
         out.push_str(&self.right.ir());
+        out.push_str(RIGHT_PAREN);
 
         ObjIR(out)
     }
@@ -922,9 +914,11 @@ impl Mul {
 impl Div {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        out.push_str(LEFT_PAREN);
         out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", DIV));
         out.push_str(&self.right.ir());
+        out.push_str(RIGHT_PAREN);
 
         ObjIR(out)
     }
@@ -933,9 +927,11 @@ impl Div {
 impl Mod {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        out.push_str(LEFT_PAREN);
         out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", MOD_OP));
         out.push_str(&self.right.ir());
+        out.push_str(RIGHT_PAREN);
 
         ObjIR(out)
     }
@@ -950,9 +946,11 @@ impl_obj_kw_binary!(Lcm, LCM, left, right);
 impl Pow {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
+        out.push_str(LEFT_PAREN);
         out.push_str(&self.base.ir());
         out.push_str(&format!(" {} ", POW));
         out.push_str(&self.exponent.ir());
+        out.push_str(RIGHT_PAREN);
 
         ObjIR(out)
     }

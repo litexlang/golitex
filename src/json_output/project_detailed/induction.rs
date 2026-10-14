@@ -460,6 +460,7 @@ pub(in crate::json_output) fn project_induc_definition_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match f {
+        ExecHaveFnByInducStmtFailed::NameClash(msg) => phase_message("name_clash", msg, rt),
         ExecHaveFnByInducStmtFailed::EmptyCases => {
             phase_message("empty_cases", "at least one case is required", rt)
         }

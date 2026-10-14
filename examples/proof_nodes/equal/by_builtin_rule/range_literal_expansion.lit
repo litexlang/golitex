@@ -1,2 +1,5 @@
 # Node: equal.ByBuiltinRule.RangeLiteralExpansion
+# Boundary: this builtin only expands intervals of size <= 1024.
+# range(0, 10^9) = {} soft-fails without allocating. See
+# range_literal_expansion_budget_tests.
 range(1, 4) = {1, 2, 3}

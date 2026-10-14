@@ -321,11 +321,11 @@ fn repl_explains_well_definedness_failure_and_continues() {
             "未能证明该语句中的表达式有定义。",
         ),
     ] {
-        let output = dir.run(&args, Some("1 / 0 = 0\n1 = 1\nexit\n"));
+        let output = dir.run(&args, Some("(1 / 0) = 0\n1 = 1\nexit\n"));
         assert_eq!(output.status.code(), Some(0));
         assert!(output.stderr.is_empty());
         let stdout = String::from_utf8(output.stdout).unwrap();
-        assert!(stdout.contains("1 / 0 = 0"), "{stdout}");
+        assert!(stdout.contains("(1 / 0) = 0"), "{stdout}");
         assert!(stdout.contains(message), "{stdout}");
         assert!(!stdout.contains("<wd_failed>"));
         assert!(
@@ -346,7 +346,7 @@ fn eval_still_publishes_checked_equality() {
     let results = field(&json, "statement_results").as_array().unwrap();
     assert_eq!(
         field(&results[0], "stores"),
-        &JsonValue::Array(vec![JsonValue::String("1 + 1 = 2".into())])
+        &JsonValue::Array(vec![JsonValue::String("(1 + 1) = 2".into())])
     );
     assert_eq!(
         field(field(&results[1], "proof_method"), "type")

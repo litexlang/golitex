@@ -211,16 +211,18 @@ fn parse_obj_list_angle(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<
 fn parse_paren_or_tuple(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     tb.expect(LEFT_PAREN)?;
     if tb.peek() == Some(RIGHT_PAREN) {
-        tb.advance()?;
-        return Ok(Obj::ProductShape(ProductShape::Tuple(Tuple {
-            args: vec![],
-        })));
+        return Err(
+            tb.parse_error("empty grouping `()` is invalid; use `tuple()` for the empty tuple")
+        );
     }
     let first = parse_obj(rt, tb)?;
     if tb.peek() == Some(COMMA) {
         let mut args = vec![Box::new(first)];
         while tb.peek() == Some(COMMA) {
             tb.advance()?;
+            if tb.peek() == Some(RIGHT_PAREN) {
+                break;
+            }
             args.push(Box::new(parse_obj(rt, tb)?));
         }
         tb.expect(RIGHT_PAREN)?;

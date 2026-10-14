@@ -44,6 +44,8 @@ pub struct KnownForallConclusionMemory {
     pub by_and: HashMap<AndForallConclusionIndexKey, Vec<ForallConclusionCite>>,
     /// Whole chain then-clauses, keyed by ordered operator shape. This is what
     /// lets `chain/adjacent_order.lit` instantiate `x < y < z` as a whole.
+    /// Adjacent atoms of a chain then are intentionally not indexed into
+    /// `by_atomic_prop` / `by_equal`.
     pub by_chain: HashMap<ChainForallConclusionIndexKey, Vec<ForallConclusionCite>>,
 }
 
@@ -53,7 +55,8 @@ impl KnownForallConclusionMemory {
     }
 
     // Project atomic leaves, whole or/and/chain/exist thens.
-    // Chain adjacent atoms are elaborated later by Runtime::index_forall_chain_components.
+    // Deliberately does not project chain adjacent atoms into by_atomic_prop /
+    // by_equal: those edges are not citeable atomic goals from a chain then.
     pub fn index_forall(&mut self, forall: &ForallFact) {
         let fact_id = forall.fact_id;
         for (then_fact_index, then) in forall.then_facts.iter().enumerate() {
@@ -161,9 +164,8 @@ impl KnownForallConclusionMemory {
         }
     }
 
-    /// Project the already elaborated adjacent atoms of a chain conclusion.
-    /// Chain atoms are built by Runtime so builtin operators keep their exact
-    /// AtomicFact variant; this memory only records their source location.
+    // Kept for tests / tooling that build chain-component cites by hand.
+    // Store path does not call this: adjacent chain edges are not citeable.
     pub fn index_chain_components(
         &mut self,
         forall: &ForallFact,

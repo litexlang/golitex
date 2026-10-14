@@ -17,4 +17,4 @@ forall x finite_seq(R, 1):
     x = tuple(x(1))
 
 forall x finite_seq(R, 0):
-    x = ()
+    x = tuple()

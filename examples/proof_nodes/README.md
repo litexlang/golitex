@@ -1130,3 +1130,9 @@ uses an existing order bound with the same endpoint and a closed offset of the
 appropriate sign. Its guarded recursive function retains `n <= bound`; the
 certificate records the stored premise and symbolic translated bound. It
 does not infer unrelated endpoints or search for missing premises.
+
+The [structural arithmetic IR tracer](equal/by_they_are_the_same/structural_arithmetic_ir.lit)
+keeps `(2^3)^2` distinct from `2^(3^2)` in identity and equality-class keys.
+`tests/structural_ir_tuple.rs` rejects the direct false equality and the
+false `64=512` conclusion after storing both true power equalities; it also
+checks predicate, order and forall-equality consumers.

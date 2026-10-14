@@ -1,4 +1,4 @@
-use super::helper::{enter_strategy_goal, leave_strategy_goal, strategy_goal_key};
+use super::helper::{strategy_goal_key, StrategyGoalGuard};
 use super::result::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
 use crate::ast::fact::AtomicFact;
 use crate::execute::execute_fact_stmt::verify_state::VerifyState;
@@ -14,13 +14,10 @@ impl Runtime {
         // Prefer CartMembership for cartesian constructors.
 
         let goal_key = strategy_goal_key(fact);
-        if !enter_strategy_goal(&goal_key) {
+        let Some(_guard) = StrategyGoalGuard::enter(&goal_key) else {
             return Ok(None);
-        }
-        let result =
-            self.search_atomic_except_equality_fact_proof_by_builtin_strategy_inner(fact, ctx);
-        leave_strategy_goal(&goal_key);
-        result
+        };
+        self.search_atomic_except_equality_fact_proof_by_builtin_strategy_inner(fact, ctx)
     }
 
     fn search_atomic_except_equality_fact_proof_by_builtin_strategy_inner(

@@ -32,10 +32,11 @@ use crate::execute::execute_fact_stmt::{
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::parse::keywords::STRUCT;
-use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactResult;
 
 pub enum ExecDefStructStmtFailed {
+    NameClash(String),
     ParamType(VerifyObjWellDefinedResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     StructureDomain(FailToVerifyFactWellDefinedResult),
@@ -93,7 +94,11 @@ impl Runtime {
         &mut self,
         def_struct: &DefStructStmt,
     ) -> RuntimeResult<ExecDefStructStmtResult> {
-        self.ensure_def_struct_name_free(&def_struct.name)?;
+        if let Some(msg) = self.def_struct_name_clash(&def_struct.name) {
+            return Ok(ExecDefStructStmtResult::Failed(
+                ExecDefStructStmtFailed::NameClash(msg),
+            ));
+        }
 
         let (local_outcome, local_env) =
             self.run_in_local_env_and_take_env(|rt| rt.exec_def_struct_stmt_in_local(def_struct))?;
@@ -129,13 +134,13 @@ struct OuterLocalParts {
 }
 
 impl Runtime {
-    fn ensure_def_struct_name_free(&self, name: &str) -> RuntimeResult<()> {
+    fn def_struct_name_clash(&self, name: &str) -> Option<String> {
         if self.def_struct_visible_in_stack(name).is_some() {
-            return Err(RuntimeError::InternalBug(format!(
+            return Some(format!(
                 "name `{name}` is already used in this scope as {STRUCT}"
-            )));
+            ));
         }
-        Ok(())
+        None
     }
 
     fn exec_def_struct_stmt_in_local(

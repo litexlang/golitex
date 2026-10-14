@@ -501,7 +501,7 @@ mod square_sum_real_guard_tests {
         for (requirement, fact) in
             requirements
                 .iter()
-                .zip(["a $in R", "b $in R", "a ^ 2 + b ^ 2 = 0"])
+                .zip(["a $in R", "b $in R", "((a ^ 2) + (b ^ 2)) = 0"])
         {
             let requirement = requirement.as_object().unwrap();
             assert_eq!(

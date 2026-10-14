@@ -23,7 +23,7 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::execute::execute_witness_stmt::ExecWitnessStmtResult;
 use crate::execute::{
-    ExecAxiomStmtResult, ExecCommandStmtResult, ExecDefAbstractPropStmtSuccessResult,
+    ExecAxiomStmtResult, ExecCommandStmtResult, ExecDefAbstractPropStmtResult,
     ExecDefAlgoByCasesStmtResult, ExecDefPropStmtResult, ExecDefStrategyStmtResult,
     ExecDefStructStmtResult, ExecDefTemplateStmtResult, ExecDefThmBodyProof, ExecDefThmStmtResult,
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecEvalStmtResult,
@@ -93,6 +93,16 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             ),
             ExecHaveFnEqualStmtResult::Failed(failed) => {
                 let (phase, wd) = match failed {
+                    ExecHaveFnEqualStmtFailed::NameClash(msg) => {
+                        return object_for(
+                            runtime,
+                            vec![
+                                ("statement_result", statement_result_value(false)),
+                                ("kind", string("have_fn_equal")),
+                                ("failure", string(msg)),
+                            ],
+                        );
+                    }
                     ExecHaveFnEqualStmtFailed::AnonymousFnWellDefined(wd) => {
                         ("anonymous_fn_well_defined", wd)
                     }
@@ -156,6 +166,9 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 ),
                 ExecHaveFnByForallExistUniqueStmtResult::Failed(f) => {
                     let (phase, failure) = match f {
+                        ExecHaveFnByForallExistUniqueStmtFailed::NameClash(msg) => {
+                            ("name_clash", string(msg))
+                        }
                         ExecHaveFnByForallExistUniqueStmtFailed::SourceForall(v) => {
                             ("source_forall", project_verify_fact(v, runtime))
                         }
@@ -644,14 +657,27 @@ fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValu
                 ),
             ],
         ),
-        ExecLetObjStmtResult::Failed(wd) => object_for(
-            runtime,
-            vec![
-                ("statement_result", statement_result_value(false)),
-                ("kind", string("let_obj")),
-                ("value_well_defined", project_verify_obj_wd(wd, runtime)),
-            ],
-        ),
+        ExecLetObjStmtResult::Failed(failed) => {
+            use crate::execute::ExecLetObjStmtFailed;
+            match failed {
+                ExecLetObjStmtFailed::ValueWellDefined(wd) => object_for(
+                    runtime,
+                    vec![
+                        ("statement_result", statement_result_value(false)),
+                        ("kind", string("let_obj")),
+                        ("value_well_defined", project_verify_obj_wd(wd, runtime)),
+                    ],
+                ),
+                ExecLetObjStmtFailed::NameClash(msg) => object_for(
+                    runtime,
+                    vec![
+                        ("statement_result", statement_result_value(false)),
+                        ("kind", string("let_obj")),
+                        ("failure", string(msg)),
+                    ],
+                ),
+            }
+        }
     }
 }
 
@@ -713,6 +739,7 @@ pub(in crate::json_output) fn project_def_prop_failure(
 ) -> JsonValue {
     use crate::execute::execute_def_prop_stmt::ExecDefPropStmtFailed;
     let (phase, failure) = match failed {
+        ExecDefPropStmtFailed::NameClash(msg) => ("name_clash", string(msg)),
         ExecDefPropStmtFailed::ParamType(wd) => {
             ("parameter_type", project_verify_obj_wd(wd, runtime))
         }
@@ -739,17 +766,33 @@ pub(in crate::json_output) fn project_def_prop_failure(
 }
 
 fn project_def_abstract_prop(
-    result: &ExecDefAbstractPropStmtSuccessResult,
+    result: &ExecDefAbstractPropStmtResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    object_for(
-        runtime,
-        vec![
-            ("statement_result", statement_result_value(true)),
-            ("kind", string("def_abstract_prop")),
-            ("statement", string(result.statement.readable_string())),
-        ],
-    )
+    match result {
+        ExecDefAbstractPropStmtResult::Success(s) => object_for(
+            runtime,
+            vec![
+                ("statement_result", statement_result_value(true)),
+                ("kind", string("def_abstract_prop")),
+                ("statement", string(s.statement.readable_string())),
+            ],
+        ),
+        ExecDefAbstractPropStmtResult::Failed(failed) => {
+            use crate::execute::ExecDefAbstractPropStmtFailed;
+            let msg = match failed {
+                ExecDefAbstractPropStmtFailed::NameClash(msg) => msg.clone(),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("def_abstract_prop")),
+                    ("failure", string(msg)),
+                ],
+            )
+        }
+    }
 }
 
 fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonValue {
@@ -1862,6 +1905,7 @@ pub(in crate::json_output) fn project_cases_definition_failure(
 ) -> JsonValue {
     use crate::execute::ExecHaveFnEqualCaseByCaseStmtFailed as F;
     let (phase, mut details) = match failure {
+        F::NameClash(msg) => ("name_clash", vec![("message", string(msg))]),
         F::CaseCountMismatch => ("case_count", vec![]),
         F::EmptyCases => ("empty_cases", vec![]),
         F::FnSetWellDefined(wd) => (

@@ -47,3 +47,26 @@ chap1 = "./chapter01.lit"
 "#;
     parse_litex_config(source, Path::new("/proj"), Path::new("/std")).unwrap();
 }
+
+#[test]
+fn keeps_hash_inside_quoted_path() {
+    let source = r#"
+[export]
+chap1 = "./a#b.lit"
+"#;
+    let cfg = parse_litex_config(source, Path::new("/proj"), Path::new("/std")).unwrap();
+    assert_eq!(cfg.exports.len(), 1);
+    assert_eq!(cfg.exports[0].path, PathBuf::from("/proj/a#b.lit"));
+}
+
+#[test]
+fn rejects_duplicate_export_path() {
+    let source = r#"
+[export]
+a = "./same.lit"
+b = "./same.lit"
+"#;
+    let result = parse_litex_config(source, Path::new("/proj"), Path::new("/std"));
+    assert!(result.is_err());
+    assert!(result.err().unwrap().contains("duplicate export path"));
+}

@@ -135,8 +135,8 @@ fn example_small_finite_eval_keeps_exact_values_and_stores_the_equality() {
     for (code, value) in [
         ("eval finite_set_size({1, 2, 3})", "3"),
         ("eval (1, 2, 3)(2)", "2"),
-        ("eval finite_set_max({1 / 3, 2 / 3})", "2 / 3"),
-        ("eval finite_set_min({1 / 3, 2 / 3})", "1 / 3"),
+        ("eval finite_set_max({(1 / 3), (2 / 3)})", "(2 / 3)"),
+        ("eval finite_set_min({(1 / 3), (2 / 3)})", "(1 / 3)"),
         ("eval finite_set_size({})", "0"),
     ] {
         let (normal, _) = check(code, true);

@@ -61,7 +61,7 @@ extensionality claim is rejected.
 The `guard_empty_domain_*` controls first prove the real exclusion lemma
 `k<0 => not k>0`. Omitting the negative guard, reversing it, claiming a
 singleton image of an empty graph, or treating a nonempty input domain's
-empty-codomain space as `{()}` still fails at `search_proof`. All preceding
+empty-codomain space as `{tuple()}` still fails at `search_proof`. All preceding
 statements must succeed and the failed target must publish no facts. The
 corresponding true graph/image/space and zero-length membership tracer is
 [guarded_empty_function_domain.lit](../../proof_nodes/equal/by_builtin_rule/guarded_empty_function_domain.lit).

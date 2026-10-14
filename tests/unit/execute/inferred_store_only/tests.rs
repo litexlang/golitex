@@ -109,7 +109,7 @@ fn inferred_store_only_builder_stores_one_growth_step() {
         .values()
         .map(|fact| fact.readable_string())
         .collect();
-    assert!(facts.iter().any(|fact| fact == "x + 1 $in S"));
+    assert!(facts.iter().any(|fact| fact == "(x + 1) $in S"));
     assert!(!facts.iter().any(|fact| fact.contains("x + 1 + 1")));
 }
 

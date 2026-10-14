@@ -58,7 +58,7 @@ fn retired_product_surface_rejects_before_execution_and_keeps_existing_binding_s
 #[test]
 fn new_coordinate_calls_reconstruction_intervals_and_generic_indexed_families_remain_available() {
     let mut rt = runtime(OutputLanguage::English);
-    let run=rt.run_litex_code("have p cart(R,Z)\np=(p(1),p(2))\np(1) $in R\np(2) $in Z\n2 $in closed_range(1,2)\n0 $in '[0,1]\ncart()={()}\nlet family=fn(k {1}) power_set(R) {{0}}\nindex_cart({1},power_set(R),family)=index_cart({1},power_set(R),family)\n").unwrap();
+    let run=rt.run_litex_code("have p cart(R,Z)\np=(p(1),p(2))\np(1) $in R\np(2) $in Z\n2 $in closed_range(1,2)\n0 $in '[0,1]\ncart()={tuple()}\nlet family=fn(k {1}) power_set(R) {{0}}\nindex_cart({1},power_set(R),family)=index_cart({1},power_set(R),family)\n").unwrap();
     assert!(
         run.success && run.session_error.is_none(),
         "{:?}",

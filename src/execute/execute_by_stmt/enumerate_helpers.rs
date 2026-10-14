@@ -27,6 +27,7 @@ pub(super) fn expand_closed_range_values(range: &ClosedRange) -> Result<Vec<Obj>
     if end < start {
         return Ok(Vec::new());
     }
+    check_range_expansion_count(end.checked_sub(start).and_then(|n| n.checked_add(1)))?;
     Ok((start..=end).map(number_obj).collect())
 }
 
@@ -38,7 +39,17 @@ pub(super) fn expand_range_values(range: &Range) -> Result<Vec<Obj>, String> {
     if end <= start {
         return Ok(Vec::new());
     }
+    check_range_expansion_count(end.checked_sub(start))?;
     Ok((start..end).map(number_obj).collect())
+}
+
+fn check_range_expansion_count(count: Option<i128>) -> Result<(), String> {
+    match count {
+        Some(n) if n <= MAX_ENUMERATION_ASSIGNMENTS as i128 => Ok(()),
+        _ => Err(format!(
+            "finite range expansion exceeds the value budget of {MAX_ENUMERATION_ASSIGNMENTS}"
+        )),
+    }
 }
 
 pub(super) fn expand_closed_range_or_range(range: &ClosedRangeOrRange) -> Result<Vec<Obj>, String> {
@@ -79,8 +90,8 @@ pub(super) fn forall_param_domains(
     Ok(out)
 }
 
-// Soft work limit for `by enumerate finite_set` / `by for` assignment products.
-// Checked before any assignment map is built; overflow is treated as over-budget.
+// Bounds range materialization (also for `expand:`) and enumeration products.
+// Checked before allocation; cardinality overflow is treated as over-budget.
 pub(super) const MAX_ENUMERATION_ASSIGNMENTS: usize = 1024;
 
 pub(super) fn enumeration_assignment_count(
@@ -217,6 +228,66 @@ pub(super) fn membership_in_fact(
 mod tests {
     use super::*;
 
+    #[test]
+    fn finite_range_expansion_rejects_above_budget() {
+        let range = Range {
+            start: Box::new(number_obj(0)),
+            end: Box::new(number_obj(1025)),
+        };
+        assert!(expand_range_values(&range).is_err());
+        let closed = ClosedRange {
+            start: Box::new(number_obj(0)),
+            end: Box::new(number_obj(1024)),
+        };
+        assert!(expand_closed_range_values(&closed).is_err());
+    }
+
+    #[test]
+    fn finite_range_expansion_preserves_boundaries_and_rejects_extreme_widths() {
+        // Use literals that round-trip through Obj number evaluation.
+        for (start, end, open_len, closed_len) in [
+            (0, 1023, 1023, 1024),
+            (-512, 511, 1023, 1024),
+            (0, 0, 0, 1),
+            (1, 0, 0, 0),
+        ] {
+            let range = Range {
+                start: Box::new(number_obj(start)),
+                end: Box::new(number_obj(end)),
+            };
+            let closed = ClosedRange {
+                start: range.start.clone(),
+                end: range.end.clone(),
+            };
+            let open_values = expand_range_values(&range).unwrap();
+            let closed_values = expand_closed_range_values(&closed).unwrap();
+            assert_eq!(open_values.len(), open_len);
+            assert_eq!(closed_values.len(), closed_len);
+            if let Some(last) = closed_values.last() {
+                assert_eq!(obj_to_i128(last), Some(end));
+            }
+        }
+        let exact = Range {
+            start: Box::new(number_obj(0)),
+            end: Box::new(number_obj(1024)),
+        };
+        assert_eq!(expand_range_values(&exact).unwrap().len(), 1024);
+        for (start, end) in [(0_i128, 1_000_000_000_i128), (-1_000_000, 1_000_000)] {
+            let range = Range {
+                start: Box::new(number_obj(start)),
+                end: Box::new(number_obj(end)),
+            };
+            let closed = ClosedRange {
+                start: range.start.clone(),
+                end: range.end.clone(),
+            };
+            assert!(expand_range_values(&range).unwrap_err().contains("budget"));
+            assert!(expand_closed_range_values(&closed)
+                .unwrap_err()
+                .contains("budget"));
+        }
+    }
+
     fn binary_domains(binder_count: usize) -> Vec<(IdentifierId, String, Vec<Obj>)> {
         let values = vec![number_obj(0), number_obj(1)];
         (0..binder_count)
@@ -267,5 +338,55 @@ mod tests {
         ];
         assert_eq!(enumeration_assignment_count(&domains).unwrap(), 0);
         assert_eq!(CartesianAssignments::new(&domains).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn finite_range_budget_rejects_all_expansion_entries_without_losing_context() {
+        use super::super::result::*;
+        use crate::execute::ExecReleaseAndExpandStmtResult;
+        use crate::prelude::*;
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        assert!(
+            rt.run_litex_code("have range_anchor R = 2")
+                .unwrap()
+                .success
+        );
+        for domain in ["range(0, 1000000000)", "closed_range(0, 1000000000)"] {
+            for command in ["by enumerate finite_set", "by for", "expand"] {
+                let code = if command == "expand" {
+                    format!("expand: 0 $in {domain}")
+                } else {
+                    format!("{command}:\n    ? forall n {domain}:\n        n = n\n    n = n")
+                };
+                let run = rt.run_litex_code(&code).unwrap();
+                assert!(run.session_error.is_none(), "{code}");
+                assert!(!run.success, "{code}");
+                let msg = match &run.statement_results[0] {
+                    ExecStmtResult::By(ExecByStmtResult::EnumerateFiniteSet(
+                        ExecByEnumerateFiniteSetStmtResult::Failed(
+                            ExecByEnumerateFiniteSetStmtFailed::Domain(msg),
+                        ),
+                    )) => msg,
+                    ExecStmtResult::By(ExecByStmtResult::For(ExecByForStmtResult::Failed(
+                        ExecByForStmtFailed::Domain(msg),
+                    ))) => msg,
+                    ExecStmtResult::ReleaseAndExpand(
+                        ExecReleaseAndExpandStmtResult::ExpandRange(
+                            ExecExpandRangeStmtResult::Failed(ExecExpandRangeStmtFailed::Domain(
+                                msg,
+                            )),
+                        ),
+                    ) => msg,
+                    _ => panic!("expected range budget diagnostic: {code}"),
+                };
+                assert!(msg.contains("value budget of 1024"), "{msg}");
+                assert!(rt.run_litex_code("range_anchor + 1 = 3").unwrap().success);
+            }
+        }
     }
 }

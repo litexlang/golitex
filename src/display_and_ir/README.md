@@ -7,8 +7,12 @@ This module owns two views of the AST:
 | `ir` | Typed semantic key (`*IR` newtypes) for lookup / compare |
 | `display_string` | User-facing `String` |
 
-Surface spelling (operators, `$in`, precedence parentheses, keywords) follows the
-legacy Litex Display contract. FactId and line_file never appear in either view.
+Arithmetic IR preserves every infix and negation node with explicit parentheses.
+It must not identify `(a^b)^c` with `a^(b^c)`, including when used in equality
+classes, numeric caches or matching indexes. Tuple IR uses `tuple()` for zero
+coordinates, `(a,)` for one, and `(a, b)` for two. Generated negative numeric
+literals also carry parentheses: `Number(-2)` and parsed `Neg(Number(2))`
+share the numerical key `(-2)`, so a negative power base retains its meaning. FactId and line_file never appear in either view.
 
 For every AST type in this module, these are the **only** two methods.
 
@@ -58,7 +62,7 @@ pub fn display_string(&self) -> String {
 Exception: plain identifiers and binder-carrying objs override `display_string`
 to show surface names while `ir` keeps `#id#name`.
 
-Obj arithmetic precedence parentheses are handled inside `Obj::ir`
+Obj arithmetic structural parentheses are handled inside `Obj::ir`
 (via a local nested function when needed).
 
 ## Layout

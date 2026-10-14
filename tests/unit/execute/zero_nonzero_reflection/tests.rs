@@ -90,9 +90,9 @@ fn product_source_fact_and_citation_survive_in_both_languages() {
             assert!(contains_string(
                 child,
                 if source.starts_with('0') {
-                    "0 != a * b"
+                    "0 != (a * b)"
                 } else {
-                    "a * b != 0"
+                    "(a * b) != 0"
                 }
             ));
             assert!(contains_string(child, "by_known_atomic"));
@@ -149,7 +149,7 @@ fn product_components_both_orientations_and_scalar_carriers_pass() {
             let code = format!("forall a,b {domain}:\n    0!=b*a\n    =>:\n        {goal}\n");
             let json = check(&mut runtime(OutputLanguage::English), &code, true);
             let rule = find_rule(&json, "ProductComponentNonzero").expect("actual leaf");
-            assert!(contains_string(rule, "0 != b * a"));
+            assert!(contains_string(rule, "0 != (b * a)"));
         }
     }
 }

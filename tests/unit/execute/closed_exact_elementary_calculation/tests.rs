@@ -198,18 +198,18 @@ fn rational_logs_use_exact_prime_valuation_ratios() {
 #[test]
 fn eval_returns_exact_values_and_publishes_the_checked_equality() {
     for (source, expected) in [
-        ("eval floor(-7/3)", "-3"),
-        ("eval ceil(-7/3)", "-2"),
+        ("eval floor(-7/3)", "(-3)"),
+        ("eval ceil(-7/3)", "(-2)"),
         ("eval gcd((1/3)*6,8)", "2"),
-        ("eval sqrt(1/9)", "1 / 3"),
-        ("eval sqrt(12)+sqrt(27)", "5 * sqrt (3)"),
+        ("eval sqrt(1/9)", "(1 / 3)"),
+        ("eval sqrt(12)+sqrt(27)", "(5 * sqrt (3))"),
         ("eval re((1+2*i)*(3-i))", "5"),
-        ("eval img((1+2*i)/(3-i))", "7 / 10"),
-        ("eval (1+2*i)/(3-i)", "1 / 10 + 7 / 10 * i"),
-        ("eval (1+i)^2", "2 * i"),
+        ("eval img((1+2*i)/(3-i))", "(7 / 10)"),
+        ("eval (1+2*i)/(3-i)", "((1 / 10) + ((7 / 10) * i))"),
+        ("eval (1+i)^2", "(2 * i)"),
         ("eval i^(-3)", "i"),
-        ("eval log(8,4)", "2 / 3"),
-        ("eval log(1/3,27)", "-3"),
+        ("eval log(8,4)", "(2 / 3)"),
+        ("eval log(1/3,27)", "(-3)"),
     ] {
         let mut rt = runtime(OutputLanguage::English);
         let result = rt.run_litex_code(source).unwrap();
@@ -292,7 +292,10 @@ fn radical_provenance_projects_in_both_languages() {
             detailed.contains("\"representation\": \"radical\""),
             "{detailed}"
         );
-        assert!(detailed.matches("5 * sqrt (3)").count() >= 2, "{detailed}");
+        assert!(
+            detailed.matches("(5 * sqrt (3))").count() >= 2,
+            "{detailed}"
+        );
         let normal = emit_run_normal(&result, &rt, "eval", None);
         let explanation = match language {
             OutputLanguage::English => "by_closed_calculation",

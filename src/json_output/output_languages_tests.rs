@@ -12,7 +12,10 @@ use std::collections::HashMap;
 #[test]
 fn every_language_preserves_success_failure_and_source() {
     for language in OutputLanguage::ALL {
-        for (code, success) in [("1 + 2 = 3", true), ("1 + 2 = 4", false)] {
+        for (code, expected, success) in [
+            ("1 + 2 = 3", "(1 + 2) = 3", true),
+            ("1 + 2 = 4", "(1 + 2) = 4", false),
+        ] {
             let mut runtime = runtime(language);
             let result = execute(&mut runtime, code);
             for json in [
@@ -25,7 +28,10 @@ fn every_language_preserves_success_failure_and_source() {
                     Some(if success { "accepted" } else { "rejected" }),
                     "{language:?}: {code}"
                 );
-                assert_eq!(field(&json, "statement", language).as_str().unwrap(), code);
+                assert_eq!(
+                    field(&json, "statement", language).as_str().unwrap(),
+                    expected
+                );
             }
         }
     }
@@ -151,7 +157,7 @@ fn normal_output_keeps_field_order_and_localizes_explanations() {
     ];
     for (language, name) in OutputLanguage::ALL.into_iter().zip(expected_names) {
         let mut runtime = runtime(language);
-        let result = execute(&mut runtime, "1 + 2 = 3");
+        let result = execute(&mut runtime, "(1 + 2) = 3");
         let json = project_stmt_normal(&result, &runtime);
         let expected_keys = [
             "statement_result",
@@ -179,7 +185,7 @@ fn normal_output_keeps_field_order_and_localizes_explanations() {
             field(&json, "stores", language).as_array().unwrap()[0]
                 .as_str()
                 .unwrap(),
-            "1 + 2 = 3"
+            "(1 + 2) = 3"
         );
         assert!(why.as_object().unwrap().get("rule_id").is_none());
     }

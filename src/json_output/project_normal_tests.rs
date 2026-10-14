@@ -99,7 +99,7 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
             strict: true,
             language,
         });
-        let run = runtime.run_litex_code("1 / 0 = 0\n1 = 1\nhave").unwrap();
+        let run = runtime.run_litex_code("(1 / 0) = 0\n1 = 1\nhave").unwrap();
         assert!(!run.success);
         assert!(run.session_error.is_some());
         assert_eq!(run.statement_results.len(), 2);
@@ -114,7 +114,7 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
             object_field(&statements[0], &key("statement"))
                 .as_str()
                 .unwrap(),
-            "1 / 0 = 0"
+            "(1 / 0) = 0"
         );
         assert_eq!(
             object_field(&statements[1], &key("statement"))

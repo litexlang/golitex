@@ -37,8 +37,8 @@ fn maintained_additive_inverse_tracer_preserves_complex_domain_and_orientations(
 fn cancellation_requires_the_matching_zero_sum() {
     for code in [
         "forall a, b C:\n    a + b = 1\n    =>:\n        a = -b\n",
-        "forall a, b C:\n    a + b = 0\n    =>:\n        a = b\n",
-        "forall a, b, c C:\n    a + b = 0\n    =>:\n        a = -c\n",
+        "forall a, b C:\n    (a + b) = 0\n    =>:\n        a = b\n",
+        "forall a, b, c C:\n    (a + b) = 0\n    =>:\n        a = -c\n",
     ] {
         let run = runtime(true).run_litex_code(code).unwrap();
         assert!(!run.success && run.session_error.is_none(), "{code}");
@@ -47,7 +47,7 @@ fn cancellation_requires_the_matching_zero_sum() {
 
 #[test]
 fn original_sum_citation_is_read_only_and_obeys_the_search_ceiling() {
-    for (source, goal) in [("a + b = 0", "a = -b"), ("b + a = 0", "-b = a")] {
+    for (source, goal) in [("(a + b) = 0", "a = -b"), ("(b + a) = 0", "-b = a")] {
         // Unit assumptions only; the maintained tracer and textbook use no trust.
         let mut rt = runtime(false);
         assert!(

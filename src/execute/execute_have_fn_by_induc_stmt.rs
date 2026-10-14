@@ -36,6 +36,7 @@ use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::rc::Rc;
 
 pub enum ExecHaveFnByInducStmtFailed {
+    NameClash(String),
     EmptyCases,
     FnSetWellDefined(VerifyObjWellDefinedResult),
     MeasureWellDefined(VerifyObjWellDefinedResult),
@@ -121,6 +122,15 @@ impl Runtime {
         if stmt.cases.is_empty() {
             return Ok(ExecHaveFnByInducStmtResult::Failed(
                 ExecHaveFnByInducStmtFailed::EmptyCases,
+            ));
+        }
+
+        if self.identifier_defined_in_stack(&stmt.name.name) {
+            return Ok(ExecHaveFnByInducStmtResult::Failed(
+                ExecHaveFnByInducStmtFailed::NameClash(format!(
+                    "identifier `{}` is already defined in this ExecEnv",
+                    stmt.name
+                )),
             ));
         }
 

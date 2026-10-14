@@ -474,3 +474,9 @@ proof debt accurately. See the [trust contract](Manual.md#trust-and-strict-mode)
 For larger developments, follow the relevant module's `README.md` and
 `math_collections.md`, then consult [examples](../examples/README.md) and
 [math showcases](../showcases/math_concepts_in_litex/README.md).
+
+### Tuple punctuation
+
+`(x)` groups an expression; `(x,)` is a one-coordinate tuple. `(x,y)` and
+`(x,y,)` are two-coordinate tuples. Use `tuple()` for the empty tuple; bare
+`()` is invalid. The explicit forms `tuple(x)` and `tuple(x,y)` remain valid.

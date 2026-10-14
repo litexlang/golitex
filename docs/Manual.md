@@ -2876,7 +2876,7 @@ identity(2) = 2
 
 **Mathematical function.** Turn a known finite integer-range membership into equality alternatives.
 
-**Before execution.** The membership verifies and the range/closed-range has the supported concrete enumerable shape.
+**Before execution.** The range/closed-range has the supported concrete enumerable shape and at most 1024 values, checked with overflow-safe arithmetic before allocation. The membership must then verify.
 
 **Execution and result.** Enumerate the range values and store a disjunction value = first or ... . This exposes cases without choosing one of them.
 
@@ -3443,8 +3443,11 @@ The Cartesian product of the enumerated domains is generated lazily, one
 assignment at a time. Before any assignment is built, the product cardinality
 is checked with overflow-aware arithmetic against a fixed assignment budget of
 1024; products above that budget fail with a domain diagnostic instead of
-allocating the full product. Separately, `expand:` turns known
-numeric-range membership into equality cases for later `by cases`.
+allocating the full product. Each numeric range is also limited to 1024 values,
+with overflow-checked cardinality before materialization. This per-range limit
+also applies to `expand:`, which turns known numeric-range membership into
+equality cases for later `by cases`. Empty ranges remain empty; oversized ranges
+fail with a domain diagnostic, even if another enumerated domain is empty.
 
 Conditional targets are checked as implications for each assignment. A proved
 negation of an atomic premise skips that assignment. Otherwise premises are
@@ -3910,7 +3913,7 @@ eval 2 + 3
 
 **Before execution.** A checked tuple value or Cartesian membership supplies the shape. The complete domain must equal `closed_range(1,n)`. Every return premise, generated membership and coordinate must check before publication.
 
-**Execution and result.** Store the membership and each coordinate through the ordinary fact store, with source locations and FactIds. `()` releases `finite_seq({},0)` without coordinates; `tuple(a)` releases `finite_seq({a},1)` and remains printed as `tuple(a)` so it cannot be mistaken for scalar grouping. Failed statements and local sketches publish no partial package.
+**Execution and result.** Store the membership and each coordinate through the ordinary fact store, with source locations and FactIds. `tuple()` releases `finite_seq({},0)` without coordinates; `tuple(a)` releases `finite_seq({a},1)` and is printed as `(a,)` so it cannot be mistaken for scalar grouping. Failed statements and local sketches publish no partial package.
 
 **Nearest boundary.** Scalars, ill-defined values and infinite-domain functions reject. The command does not discover arbitrary function bodies, does not traverse transitive alias chains, and does not publish size, image or dimension facts. A function with complete domain `N+` cannot become a length-two function by this command or by `fn_set_member`.
 
@@ -4018,7 +4021,7 @@ properties, and examples.
 | [O75](#o75-closed-open-real-intervals) | `'[a,b)` | Closed-open real intervals | checked |
 | [O76](#o76-closed-real-intervals) | `'[a,b]` | Closed real intervals | checked |
 | [O77](#o77-finite-cartesian-products) | `cart(S1, ..., Sn); S1 × S2` | Finite Cartesian products | checked |
-| [O78](#o78-finite-tuples) | `(a, b, ...); tuple(a, ...); ()` | Finite tuples | checked |
+| [O78](#o78-finite-tuples) | `(a, b, ...); tuple(a, ...); tuple()` | Finite tuples | checked |
 | [O79](#o79-function-spaces) | `fn(parameters: guards) T` | Function spaces | checked |
 | [O80](#o80-anonymous-functions) | `fn(parameters: guards) T {body}` | Anonymous functions | checked |
 | [O81](#o81-function-images) | `fn_range(f)` | Function images | checked |
@@ -5693,18 +5696,19 @@ not 3 $in range(1, 3)
 
 **Well-definedness and domain.** a, b $in Z; child WD. The range object does not require a <= b.
 
-**Common native properties and proof routes.** Finite membership bounds and expansion including the upper endpoint; reversed endpoints give an empty range.
+**Common native properties and proof routes.** Finite membership bounds and expansion including the upper endpoint; reversed endpoints give an empty range. Equality search may prove `closed_range(a, b) = {a,...,b}` (and the half-open `range` dual) for concrete integer endpoints when the displayed list matches, without materializing oversized intervals.
 
-**Nearest boundary.** Check which upper endpoint convention the proof or iteration statement expects.
+**Nearest boundary.** Check which upper endpoint convention the proof or iteration statement expects. The literal range-to-list equality builtin only accepts intervals of size at most 1024 (same ceiling as finite enumeration / `expand:`); larger intervals soft-fail that route instead of allocating the full list.
 
 **Checked example.**
 
 ```litex
 2 $in closed_range(1, 2)
 2 $in 1...2
+closed_range(1, 3) = {1, 2, 3}
 ```
 
-**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs).
+**Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/iterated.rs); equality expansion [wave13](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_equality_identities_wave13.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
@@ -5718,7 +5722,7 @@ not 3 $in range(1, 3)
 
 **Common native properties and proof routes.** Equals fn(k closed_range(1,n)) S, with the zero-length domain {}. Coordinate membership is ordinary callable membership, not an attached tuple_dim.
 
-**Automatic reconstruction (preview).** For a stored membership in `finite_seq(S,n)` with literal length n, equality builtin search accepts `x=(x(1),...,x(n))` and its reverse, with every coordinate in order and on the same exact subject. Zero length reconstructs `()` and length one uses `tuple(x(1))`. The rule cites the original membership FactId; it performs no additional premise search. Arbitrary symbolic lengths or aliased carrier sets are not resolved by this leaf. Litex-to-Lean compilation of this new builtin evidence remains unsupported and fails closed.
+**Automatic reconstruction (preview).** For a stored membership in `finite_seq(S,n)` with literal length n, equality builtin search accepts `x=(x(1),...,x(n))` and its reverse, with every coordinate in order and on the same exact subject. Zero length reconstructs `tuple()` and length one uses `tuple(x(1))`. The rule cites the original membership FactId; it performs no additional premise search. Arbitrary symbolic lengths or aliased carrier sets are not resolved by this leaf. Litex-to-Lean compilation of this new builtin evidence remains unsupported and fails closed.
 
 **Nearest boundary.** A function merely defined at some coordinates need not have this complete domain. Index zero and n+1 are outside a positive length-n sequence.
 
@@ -5956,7 +5960,7 @@ not 2 $in '[0,2)
 
 ```litex
 (1, 2) $in cart(R, Z)
-() $in cart()
+tuple() $in cart()
 finite_set_size(cart()) = 1
 ```
 
@@ -5968,7 +5972,7 @@ finite_set_size(cart()) = 1
 
 ### O78. Finite tuples
 
-**Public form:** `(a, b, ...); tuple(a, ...); ()`.
+**Public form:** `(a,); (a, b, ...); tuple(a, ...); tuple()`.
 
 **Mathematical function.** An exact finite function on indices 1 through its displayed length, with the displayed values.
 
@@ -5976,7 +5980,7 @@ finite_set_size(cart()) = 1
 
 **Common native properties and proof routes.** Coordinate values and exact finite-sequence membership. Equality from coordinates requires both complete domains and every coordinate, through tuple_equal_from_coordinates.
 
-**Nearest boundary.** Ordinary calls also accept literal tuple heads: `(1,2)(1)=1` and `((1,2),3)(1)(2)=2`. Every call checks its receiver's complete domain; `(1,2)(3)` and `((1,2),3)(2)(1)` fail WD. Old `[index]`, dimension and constructor-projection syntax is removed. A singleton uses `tuple(value)`, since `(value)` is grouping.
+**Nearest boundary.** Ordinary calls also accept literal tuple heads: `(1,2)(1)=1` and `((1,2),3)(1)(2)=2`. Every call checks its receiver's complete domain; `(1,2)(3)` and `((1,2),3)(2)(1)` fail WD. Old `[index]`, dimension and constructor-projection syntax is removed. A singleton uses `(value,)` or `tuple(value)`, since `(value)` is grouping. Bare `()` is rejected; write `tuple()` for the empty tuple. Parenthesized tuple syntax requires a comma at its own nesting level; an optional trailing comma is accepted.
 
 See [S52](#s52-release-a-tuple-definition) for `release tuple def object`, which publishes the exact finite-sequence membership and known coordinates of a value.
 
@@ -7613,7 +7617,7 @@ let U = index_union({}, N, family)
 **Checked counterpart:**
 
 ```litex
-() $in cart()
+tuple() $in cart()
 finite_set_size(cart()) = 1
 let family = fn(k {1}) power_set(N) {{1}}
 let U = index_union({1}, N, family)
@@ -8996,8 +9000,8 @@ forall k R:
         not k>0
 have fn empty_body(k R:k>0,k<0) {}=0
 empty_body={}
-()={}
-empty_body=()
+tuple()={}
+empty_body=tuple()
 empty_body $in finite_seq({},0)
 ```
 
@@ -9005,13 +9009,13 @@ empty_body $in finite_seq({},0)
 also fails WD even when the complete input domain is empty.
 
 > **Preview:** zero and one Cartesian factors use the same exact-domain
-> membership contract as larger products. `()` is the empty function graph,
+> membership contract as larger products. `tuple()` is the empty function graph,
 > `cart()` contains that one graph, and `cart(S)` contains one-coordinate
 > functions. `(a)` remains grouping; use `tuple(a)` for one coordinate.
 
 ```litex
-() = {}
-cart() = {()}
+tuple() = {}
+cart() = {tuple()}
 tuple(7) $in cart(Z)
 have p cart(Z) = tuple(7)
 p(1) = 7

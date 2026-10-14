@@ -18,9 +18,10 @@ use crate::execute::IntroduceTypedParametersFailed;
 use crate::execute::IntroduceTypedParametersResult;
 use crate::parse::keywords::{ABSTRACT_PROP, PROP};
 use crate::prelude::*;
-use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecDefPropStmtFailed {
+    NameClash(String),
     ParamType(VerifyObjWellDefinedResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     IffFactWellDefined(FailToVerifyFactWellDefinedResult),
@@ -61,7 +62,11 @@ impl Runtime {
         &mut self,
         def_prop: &DefPropStmt,
     ) -> RuntimeResult<ExecDefPropStmtResult> {
-        self.ensure_def_prop_name_free(&def_prop.name)?;
+        if let Some(msg) = self.def_prop_name_clash(&def_prop.name) {
+            return Ok(ExecDefPropStmtResult::Failed(
+                ExecDefPropStmtFailed::NameClash(msg),
+            ));
+        }
 
         let (local_outcome, local_env) =
             self.run_in_local_env_and_take_env(|rt| rt.exec_def_prop_stmt_in_local(def_prop))?;
@@ -84,18 +89,18 @@ impl Runtime {
         ))
     }
 
-    fn ensure_def_prop_name_free(&self, name: &str) -> RuntimeResult<()> {
+    fn def_prop_name_clash(&self, name: &str) -> Option<String> {
         if self.def_prop_visible_in_stack(name).is_some() {
-            return Err(RuntimeError::InternalBug(format!(
+            return Some(format!(
                 "name `{name}` is already used in this scope as {PROP}"
-            )));
+            ));
         }
         if self.def_abstract_prop_visible_in_stack(name).is_some() {
-            return Err(RuntimeError::InternalBug(format!(
+            return Some(format!(
                 "name `{name}` is already used in this scope as {ABSTRACT_PROP}"
-            )));
+            ));
         }
-        Ok(())
+        None
     }
 
     fn exec_def_prop_stmt_in_local(

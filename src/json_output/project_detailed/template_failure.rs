@@ -19,6 +19,7 @@ pub(in crate::json_output) fn project_template_failure(
     runtime: &Runtime,
 ) -> JsonValue {
     let (phase, failure) = match failed {
+        ExecDefTemplateStmtFailed::NameClash(msg) => ("name_clash", string(msg)),
         ExecDefTemplateStmtFailed::ParamType(wd) => {
             ("parameter_type", project_verify_obj_wd(wd, runtime))
         }
@@ -54,18 +55,25 @@ pub(in crate::json_output) fn project_template_failure(
             "body_obtain_from_atomic",
             project_obtain_atomic_failure(f, runtime),
         ),
-        ExecDefTemplateStmtFailed::BodyHaveFnEqual(f) => {
-            let (phase, wd) = match f {
-                ExecHaveFnEqualStmtFailed::AnonymousFnWellDefined(wd) => {
-                    ("anonymous_fn_well_defined", wd)
-                }
-                ExecHaveFnEqualStmtFailed::FnSetWellDefined(wd) => ("fn_set_well_defined", wd),
-            };
-            (
+        ExecDefTemplateStmtFailed::BodyHaveFnEqual(f) => match f {
+            ExecHaveFnEqualStmtFailed::NameClash(msg) => ("body_have_fn_equal", string(msg)),
+            ExecHaveFnEqualStmtFailed::AnonymousFnWellDefined(wd) => (
                 "body_have_fn_equal",
-                node(runtime, phase, project_verify_obj_wd(wd, runtime)),
-            )
-        }
+                node(
+                    runtime,
+                    "anonymous_fn_well_defined",
+                    project_verify_obj_wd(wd, runtime),
+                ),
+            ),
+            ExecHaveFnEqualStmtFailed::FnSetWellDefined(wd) => (
+                "body_have_fn_equal",
+                node(
+                    runtime,
+                    "fn_set_well_defined",
+                    project_verify_obj_wd(wd, runtime),
+                ),
+            ),
+        },
         ExecDefTemplateStmtFailed::BodyHaveFnEqualCaseByCase(f) => (
             "body_have_fn_cases",
             super::stmt::project_cases_definition_failure(f, runtime),
@@ -230,6 +238,7 @@ fn project_unique_fn_failure(
     runtime: &Runtime,
 ) -> JsonValue {
     let (phase, failure) = match f {
+        ExecHaveFnByForallExistUniqueStmtFailed::NameClash(msg) => ("name_clash", string(msg)),
         ExecHaveFnByForallExistUniqueStmtFailed::SourceForall(v) => {
             ("source_forall", project_verify_fact(v, runtime))
         }

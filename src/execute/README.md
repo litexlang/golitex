@@ -283,8 +283,9 @@ ParamType shells:
 - `ParamTypeFactCheckResult` — fact obligation by ParamType (`have` nonempty,
   `witness` membership, …)
 
-JSON presentation (not Rust names): Success → `"success"`, Failed → `"error"`,
-SessionError → `"session_terminated": true` plus structured `termination`.
+JSON presentation (not Rust names): Success → `"statement_result": "accepted"`,
+Failed → `"statement_result": "rejected"`, SessionError → `"session_terminated": true`
+plus structured `termination`.
 
 ## Transactional `exec_stmt`
 

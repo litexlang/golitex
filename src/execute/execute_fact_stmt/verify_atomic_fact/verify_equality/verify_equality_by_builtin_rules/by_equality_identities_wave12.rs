@@ -518,7 +518,7 @@ fn end_is_predecessor_plus_one(full_end: &Obj, pre_end: &Obj) -> bool {
                 let Ok(pv) = p.parse::<i128>() else {
                     return false;
                 };
-                fv == pv + 1
+                pv.checked_add(1) == Some(fv)
             }
             _ => false,
         },
@@ -908,5 +908,61 @@ mod nested_mod_integer_multiple_tests {
         check(&mut rt, wrong, false);
         check(&mut rt, "(3%((1/2)*4))%4=1\n3%4=3\n", true);
         check(&mut rt, "1=3\n", false);
+    }
+}
+
+#[cfg(test)]
+mod split_successor_tests {
+    use super::end_is_predecessor_plus_one;
+    use crate::prelude::*;
+
+    fn number(n: i128) -> Obj {
+        Obj::Literal(Literal::Number(Number {
+            normalized_value: n.to_string(),
+        }))
+    }
+
+    #[test]
+    fn split_successor_never_wraps_and_keeps_representable_successors() {
+        assert!(!end_is_predecessor_plus_one(
+            &number(i128::MIN),
+            &number(i128::MAX)
+        ));
+        assert!(!end_is_predecessor_plus_one(&number(0), &number(i128::MAX)));
+        for predecessor in [i128::MIN, -1, 0, i128::MAX - 1] {
+            assert!(end_is_predecessor_plus_one(
+                &number(predecessor + 1),
+                &number(predecessor)
+            ));
+            assert!(!end_is_predecessor_plus_one(
+                &number(predecessor),
+                &number(predecessor)
+            ));
+        }
+    }
+
+    #[test]
+    fn split_successor_public_sum_product_reject_overflow_and_retain_context() {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        assert!(rt.run_litex_code("have anchor R = 2").unwrap().success);
+        for (operator, join) in [("sum", "+"), ("product", "*")] {
+            let code = format!(
+                "{operator}(0, 0, fn(x Z) Z {{x}}) = {operator}(0, {}, fn(x Z) Z {{x}}) {join} 0",
+                i128::MAX
+            );
+            let run = rt.run_litex_code(&code).unwrap();
+            assert!(run.session_error.is_none());
+            assert!(!run.success, "{code}");
+            assert!(rt.run_litex_code("anchor + 1 = 3").unwrap().success);
+            let positive = format!(
+                "{operator}(1, 3, fn(x Z) Z {{x}}) = {operator}(1, 2, fn(x Z) Z {{x}}) {join} 3"
+            );
+            assert!(rt.run_litex_code(&positive).unwrap().success);
+        }
     }
 }
