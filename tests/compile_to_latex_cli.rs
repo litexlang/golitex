@@ -60,8 +60,9 @@ fn function_preimages_render_distinct_operator_names_without_double_escaping() {
         let map = json.as_object().unwrap();
         assert_eq!(map.get("verified"), Some(&JsonValue::Bool(false)));
         let content = map.get("content").unwrap().as_str().unwrap();
-        assert!(content.contains(r"\operatorname{preimage}\left("));
-        assert!(content.contains(r"\operatorname{preimage\_set}\left("));
+        // `operator()` renders plain parentheses; underscores stay escaped once.
+        assert!(content.contains(r"\operatorname{preimage}("));
+        assert!(content.contains(r"\operatorname{preimage\_set}("));
         assert!(!content.contains(r"\textbackslash{}"));
     }
 }
