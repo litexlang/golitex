@@ -23,8 +23,10 @@ use super::verify_exist_shaped_fact::{
     VerifyNotExistFactResult, VerifyPlainExistFactResult,
 };
 use super::verify_forall_fact::{VerifyForallFactFailed, VerifyForallFactResult};
-use super::verify_forall_fact_with_iff::VerifyForallFactWithIffResult;
-use super::verify_not_forall_fact::VerifyNotForallFactResult;
+use super::verify_forall_fact_with_iff::{
+    VerifyForallFactWithIffFailed, VerifyForallFactWithIffResult,
+};
+use super::verify_not_forall_fact::{VerifyNotForallFactFailed, VerifyNotForallFactResult};
 use super::verify_or_fact::{VerifyOrFactFailed, VerifyOrFactResult};
 
 pub enum VerifyFactResult {
@@ -99,7 +101,25 @@ impl VerifyFactResult {
                 r.as_ref(),
                 VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_))
             ),
-            Self::ForallFactWithIff(_) | Self::NotForall(_) => false,
+            Self::ForallFactWithIff(r) => match r.as_ref() {
+                VerifyForallFactWithIffResult::Failed(
+                    VerifyForallFactWithIffFailed::FailThenImpliesIff { then_implies_iff, .. },
+                ) => then_implies_iff.is_wd_failed(),
+                VerifyForallFactWithIffResult::Failed(
+                    VerifyForallFactWithIffFailed::FailIffImpliesThen {
+                        iff_implies_then, ..
+                    },
+                ) => iff_implies_then.is_wd_failed(),
+                _ => false,
+            },
+            Self::NotForall(r) => match r.as_ref() {
+                VerifyNotForallFactResult::Failed(
+                    VerifyNotForallFactFailed::FailToProveDerivedExist {
+                        prove_derived_exist, ..
+                    },
+                ) => prove_derived_exist.is_wd_failed(),
+                _ => false,
+            },
         }
     }
 }

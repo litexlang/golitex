@@ -1,6 +1,6 @@
 use crate::execute::execute_by_stmt::{
-    EnumerateAssignmentOutcome, ExecByEnumerateFiniteSetStmtResult, ExecByForStmtResult,
-    ExecByStmtResult,
+    EnumerateAssignmentOutcome, ExecByEnumerateFiniteSetStmtFailed,
+    ExecByEnumerateFiniteSetStmtResult, ExecByForStmtResult, ExecByStmtResult,
 };
 use crate::execute::{
     ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecStmtResult,
@@ -350,6 +350,38 @@ fn eval_checks_source_domain_before_rewrite_or_execution() {
         &[true, true, true],
     );
     check(&mut rt, "0 = 1", &[false]);
+}
+
+#[test]
+fn finite_enumeration_rejects_over_budget_cartesian_product() {
+    let mut rt = runtime(true);
+    // 11 binary binders => 2048 assignments > budget 1024.
+    let params = (1..=11)
+        .map(|i| format!("b{i} {{0, 1}}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let code =
+        format!("by enumerate finite_set:\n    ? forall {params}:\n        0 = 0\n    0 = 0");
+    let run = rt.run_litex_code(&code).unwrap();
+    assert!(run.session_error.is_none(), "{:?}", run.session_error);
+    assert!(!run.success);
+    let ExecStmtResult::By(ExecByStmtResult::EnumerateFiniteSet(
+        ExecByEnumerateFiniteSetStmtResult::Failed(ExecByEnumerateFiniteSetStmtFailed::Domain(msg)),
+    )) = &run.statement_results[0]
+    else {
+        panic!("expected domain budget failure");
+    };
+    assert!(msg.contains("exceeds the assignment budget"), "{msg}");
+}
+
+#[test]
+fn finite_enumeration_keeps_small_multi_parameter_product() {
+    let mut rt = runtime(true);
+    check(
+        &mut rt,
+        "by enumerate finite_set:\n    ? forall x {1, 2}, y {3, 4}:\n        x < y\n    x < y",
+        &[true],
+    );
 }
 
 #[test]

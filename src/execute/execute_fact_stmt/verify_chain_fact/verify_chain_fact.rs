@@ -6,6 +6,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownFor
 use crate::execute::execute_fact_stmt::verify_chain_fact::result::{
     chain_fact_result_from_adjacent_fail, chain_fact_result_from_success,
 };
+use crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -18,15 +19,23 @@ impl Runtime {
         fact: &ChainFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
-        // `chain/adjacent_order.lit` uses the structural whole-chain key;
-        // atomic edge verification remains the fallback for ordinary chains.
-        let known_forall = self.search_chain_fact_by_known_forall(fact, verify_state.clone())?;
-        if let Some(proof) = known_forall {
-            return Ok(chain_fact_result_from_success(
-                fact,
-                Vec::new(),
-                Some(proof),
-            ));
+        // Whole-chain forall cite still requires each adjacent edge to be WD.
+        // Atomic edge verification remains the fallback when the cite misses
+        // or the goal is not well-defined.
+        let mut known_forall =
+            self.search_chain_fact_by_known_forall(fact, verify_state.clone())?;
+        if let Some(proof) = known_forall.take() {
+            if matches!(
+                self.verify_chain_fact_well_definedness(fact, verify_state.clone())?,
+                VerifyChainFactWellDefinedResult::Success(_)
+            ) {
+                return Ok(chain_fact_result_from_success(
+                    fact,
+                    Vec::new(),
+                    Some(proof),
+                ));
+            }
+            // WD failed: fall through so the Failed shape matches adjacent WD misses.
         }
         let adjacent_atomics = self.chain_adjacent_atomics(fact)?;
         let mut adjacent = Vec::with_capacity(adjacent_atomics.len());
@@ -42,7 +51,7 @@ impl Runtime {
             }
             adjacent.push(step);
         }
-        Ok(chain_fact_result_from_success(fact, adjacent, known_forall))
+        Ok(chain_fact_result_from_success(fact, adjacent, None))
     }
 
     fn search_chain_fact_by_known_forall(

@@ -182,33 +182,12 @@ fn is_param_ref(obj: &Obj, param: &BoundName) -> bool {
     )
 }
 
+// Inner index sets must not depend on the outer binder. Use the shared free-id
+// walk so Add / ListSet / SetBuilder / etc. are not silently treated as independent.
 fn obj_mentions_param_id(obj: &Obj, id: IdentifierId) -> bool {
-    match obj {
-        Obj::Identifier(IdentifierObj::Plain { id: oid, .. }) => *oid == id,
-        Obj::FnObj(fo) => {
-            fo.body
-                .iter()
-                .flat_map(|g| g.iter())
-                .any(|a| obj_mentions_param_id(a.as_ref(), id))
-                || match fo.head.as_ref() {
-                    FnObjHead::AnonymousFnLiteral(a) => {
-                        obj_mentions_param_id(a.equal_to.as_ref(), id)
-                    }
-                    _ => false,
-                }
-        }
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => {
-            obj_mentions_param_id(af.equal_to.as_ref(), id)
-        }
-        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(s)) => {
-            obj_mentions_param_id(s.set.as_ref(), id) || obj_mentions_param_id(s.func.as_ref(), id)
-        }
-        Obj::ProductShape(ProductShape::Cart(Cart { args }))
-        | Obj::ProductShape(ProductShape::Tuple(Tuple { args })) => {
-            args.iter().any(|a| obj_mentions_param_id(a.as_ref(), id))
-        }
-        _ => false,
-    }
+    let mut free = std::collections::HashSet::new();
+    crate::instantiate::collect_free_plain_ids(obj, &std::collections::HashSet::new(), &mut free);
+    free.contains(&id)
 }
 
 fn cart_of(left: &Obj, right: &Obj) -> Obj {

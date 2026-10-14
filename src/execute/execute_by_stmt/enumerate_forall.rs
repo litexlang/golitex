@@ -1,4 +1,4 @@
-use super::enumerate_helpers::{cartesian_assignments, forall_param_domains};
+use super::enumerate_helpers::{forall_param_domains, CartesianAssignments};
 use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
 use super::result::{EnumerateAssignmentOutcome, EnumerateAssignmentSuccess};
 use crate::ast::fact::{negate_atomic_fact, EqualFact, Fact, ForallFact};
@@ -45,10 +45,13 @@ pub(super) fn exec_enumerate_forall_goal(
         Ok(d) => d,
         Err(msg) => return Ok(Err(EnumerateForallFailed::Domain(msg))),
     };
-    let assignments_maps = cartesian_assignments(&domains);
+    let assignment_iter = match CartesianAssignments::new(&domains) {
+        Ok(iter) => iter,
+        Err(msg) => return Ok(Err(EnumerateForallFailed::Domain(msg))),
+    };
 
-    let mut assignments = Vec::with_capacity(assignments_maps.len());
-    for (index, subst) in assignments_maps.into_iter().enumerate() {
+    let mut assignments = Vec::with_capacity(assignment_iter.len());
+    for (index, subst) in assignment_iter.enumerate() {
         let (outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
             let introduced_params = match rt
                 .introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())?
