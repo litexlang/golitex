@@ -63,10 +63,8 @@ Keep the live Session for the inner loop instead.
 | Keep the same `-session` | Earlier accepted definitions and facts are available immediately. |
 | Start a fresh process | Reload the module context and replay the accepted prefix before continuing. |
 
-A long textbook prefix follows the same rule as `a = 2`. This example uses no
-user `trust` or `axiom`; it demonstrates context retention, not a measured
-speedup or automatic proof discovery. Save the accepted source outside the
-process so an unavoidable restart can recover it.
+A long textbook prefix follows the same rule as `a = 2`. Save the accepted
+source outside the process so it can be replayed after a restart.
 
 **For dependent reasoning, rerunning a growing prefix accumulates quadratic
 work.** With `N` dependent steps taking approximately `t` each, the inner-loop
@@ -164,5 +162,5 @@ strict file check. Omit the rejected candidate from that saved file. Reserve
 Session boundaries include retaining accepted statements in the same process,
 replaying them in a fresh process, rolling back a failed compound statement,
 committing each successful statement in a mixed frame, stopping on hard errors,
-and rejecting axioms in strict mode. These rules separate ordinary
-repair from deliberate restart; the example makes no agent-performance claim.
+and rejecting axioms in strict mode. Use these boundaries to decide whether
+to repair in place or restart.

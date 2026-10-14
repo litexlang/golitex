@@ -374,6 +374,7 @@ sketch:
     by enumerate finite_set:
         ? forall x {1, 2, 3}:
             f_const_not_surj(x) = 3
+        f_const_not_surj(x) = 3
 
     by contra:
         ? not $surjective_fn({1, 2, 3}, {1, 2, 3}, f_const_not_surj)
@@ -659,6 +660,7 @@ sketch:
     by enumerate finite_set:
         ? forall x {1, 2}:
             f_two_to_three(x) = 1
+        f_two_to_three(x) = 1
 
     by contra:
         ? not $surjective_fn({1, 2}, {1, 2, 3}, f_two_to_three)
@@ -740,12 +742,11 @@ claim:
 
         exist! x S st {f(x1) = f(x)}
 
-        claim:
-            ? forall a, b S:
-                f(x1) = f(a)
-                f(x1) = f(b)
-                =>:
-                    a = b
+        forall a, b S:
+            f(x1) = f(a)
+            f(x1) = f(b)
+            =>:
+                a = b
 
         f(x1) = f(x2)
 
@@ -1012,9 +1013,8 @@ thm bijective_implies_has_inverse:
         ? forall y T:
             exist! x S st {y = f(x)}
 
-    claim:
-        ? forall y T:
-            y = f(g(y))
+    forall y T:
+        y = f(g(y))
 
     claim:
         ? forall x S:
@@ -1107,9 +1107,8 @@ sketch:
 sketch:
     have fn q_Z_pair(m Z) cart(Z, Z) = (m + 1, 2 - m)
 
-    claim:
-        ? forall n Z:
-            q_Z_pair(n) = (n + 1, 2 - n)
+    forall n Z:
+        q_Z_pair(n) = (n + 1, 2 - n)
 
     claim:
         ? $injective_fn(Z, cart(Z, Z), q_Z_pair)
@@ -1487,9 +1486,8 @@ sketch:
     forall u cart(Z, Z):
         Z_lin510(u) = 5 * u(1) + 10 * u(2)
 
-    claim:
-        ? forall k Z:
-            (5 * k) % 5 = 0
+    forall k Z:
+        (5 * k) % 5 = 0
 
     claim:
         ? not $injective_fn(cart(Z, Z), Z, Z_lin510)
@@ -1655,6 +1653,9 @@ sketch:
             =>:
                 tri(u(1)) <= diagonal_index(u)
                 diagonal_index(u) < tri(u(1) + 1)
+        u(2) $in N
+        u(2) >= 0
+        tri(u(1)) $in N
         tri(u(1)) + u(1) $in N
         tri(u(1)) + u(1) + 1 $in N
         tri(u(1)) <= tri(u(1)) + u(2) = diagonal_index(u)
@@ -1722,6 +1723,12 @@ sketch:
                 t1 = t2
         have u cart(N, N) = (t1(1) + t1(2), t1(2))
         have v cart(N, N) = (t2(1) + t2(2), t2(2))
+        t1(1) $in N
+        t1(2) $in N
+        t2(1) $in N
+        t2(2) $in N
+        t1(1) >= 0
+        t2(1) >= 0
         u(2) = t1(2) <= t1(1) + t1(2) = u(1)
         v(2) = t2(2) <= t2(1) + t2(2) = v(1)
         diagonal_index(u) = tri(t1(1) + t1(2)) + t1(2) = cauchy_pair(t1)

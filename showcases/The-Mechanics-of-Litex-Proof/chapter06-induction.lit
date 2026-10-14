@@ -190,9 +190,8 @@ sketch:
                             4^(n + 1) - 1 = 4^n * 4 - 1 = 4 * (4^n - 4) + 15 = 4 * (15 * x) + 15 = 15 * (4 * x + 1)
                         by def $mod_eq(4^(n + 1), 1, 15)
                         $mod_eq(4^(n + 1), 1, 15) or $mod_eq(4^(n + 1), 4, 15)
-    claim:
-        ? forall n N:
-            $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
+    forall n N:
+        $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
     claim:
         ? forall n N:
             $residue_is_one_or_four(n)
@@ -646,6 +645,7 @@ sketch:
                     by def $seq_mod_pair(a, 1)
             ? strong_induc:
                 n >= 1
+                n >= 0
                 $seq_mod_pair(a, n)
                 $seq_mod_pair_15(a, n) or $seq_mod_pair_51(a, n)
                 by cases:
@@ -847,6 +847,7 @@ sketch:
 
 sketch:
     prop d_bound(d fn(n Z: n >= 0) Z, n Z):
+        n >= 0
         n >= 4
         d(n) >= 4^n
     prop d_bound_pair(d fn(n Z: n >= 0) Z, n Z):
@@ -886,6 +887,7 @@ sketch:
                     by def $d_bound_pair(d, 4)
             ? strong_induc:
                 n >= 4
+                n >= 0
                 $d_bound_pair(d, n)
                 $d_bound(d, n)
                 $d_bound(d, n + 1)
@@ -1063,7 +1065,8 @@ sketch:
                         c <= x or c >= x + 1
                         by cases:
                             ? c <= x
-                            case c <= x
+                            case c <= x:
+                                c <= x
                             case c >= x + 1:
                                 impossible c < x + 1
                         obtain d from exist p N+ st {$prime(p), c % p = 0}
@@ -1337,6 +1340,8 @@ sketch:
         pascal(a, b) $in N
         0 <= pascal(a, b)
         pascal(a, b) >= 0
+        factorial(a) >= 0
+        pascal(a, b) * factorial(a) >= 0
         pascal(a, b) = pascal(a, b) * 1 <= pascal(a, b) * factorial(a) = pascal(a, b) * factorial(a) * 1 <= pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
 
 

@@ -22,6 +22,7 @@ thm finite_cartesian_product_choice_function_representation:
                 chosen_left $in P
             chosen_left $in {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)}
             release thm set_builder_member(chosen_left, {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)})
+            chosen_left $in finite_seq(U, n)
             chosen_left $in fn(j_index closed_range(1, n)) U
             release thm set_builder_member(chosen_left, {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)})
             chosen_left $in P
@@ -30,6 +31,7 @@ thm finite_cartesian_product_choice_function_representation:
                 chosen_right $in set_C
             chosen_right $in {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}
             release thm set_builder_member(chosen_right, {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)})
+            chosen_right $in fn(j_index closed_range(1, n)) U
             chosen_right $in finite_seq(U, n)
             release thm set_builder_member(chosen_right, {finite_candidate finite_seq(U, n): $has_coordinate_values_in_family(n, U, X, finite_candidate)})
             chosen_right $in set_C
@@ -73,6 +75,7 @@ thm finite_index_product_agrees_with_chapter3_cartesian_product:
                 chosen_infinite $in {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}
             chosen_infinite $in {function_candidate fn(j_index closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, function_candidate)}
             release thm set_builder_member(chosen_infinite, {function_candidate fn(j_index closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, function_candidate)})
+            $is_in_infinite_cartesian_product(closed_range(1, n), U, X, chosen_infinite)
             claim:
                 ? forall selected_index closed_range(1, n):
                     chosen_infinite(selected_index) $in X(selected_index)
@@ -83,6 +86,7 @@ thm finite_index_product_agrees_with_chapter3_cartesian_product:
             ? forall chosen_finite {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)}:
                 chosen_finite $in P
             release thm set_builder_member(chosen_finite, {function_candidate fn(j_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, function_candidate)})
+            $has_coordinate_values_in_family(n, U, X, chosen_finite)
             claim:
                 ? forall selected_index closed_range(1, n):
                     chosen_finite(selected_index) $in X(selected_index)

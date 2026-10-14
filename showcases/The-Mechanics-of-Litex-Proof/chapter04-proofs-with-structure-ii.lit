@@ -83,7 +83,8 @@ sketch:
             ? c >= 1
             case c = 0:
                 impossible c = 0
-            case c >= 1
+            case c >= 1:
+                c > 0
         c > 0
         1 <= c
         a = a * 1 <= a * c = b
@@ -466,8 +467,10 @@ claim:
             x^2 + x - 6 = 0
     by cases:
         ? x^2 + x - 6 = 0
-        case x = -3
-        case x = 2
+        case x = -3:
+            x^2 + x - 6 = (-3)^2 + (-3) - 6 = 9 - 3 - 6 = 0
+        case x = 2:
+            x^2 + x - 6 = 2^2 + 2 - 6 = 4 + 2 - 6 = 0
 
 # The two bodyless case headers still run their ordinary branch-final goal
 # checks; an empty branch is not an admission.
@@ -791,7 +794,8 @@ claim:
     x > 0 or x <= 0
     by cases:
         ? x <= 0 or y <= 0
-        case x <= 0
+        case x <= 0:
+            x <= 0
         case x > 0:
             0 < x
             y = (x + y) - x = 0 - x < 0
@@ -816,6 +820,7 @@ claim:
             by for:
                 ? forall k 0...1:
                     k^2 != 2
+                k^2 < 2
         case n >= 1 + 1:
             0 <= n
             2 <= n

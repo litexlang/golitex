@@ -388,3 +388,51 @@ fn induction_template_recursion_under_arithmetic_replays_the_exact_instance() {
     check("template<S set>:\n    have fn succ_t(n N) N by induc n from 0:\n        case n = 0: 0\n        case n >= 1: succ_t(n - 1) + 1\n\\succ_t<{0}>(0) = 0\n\\succ_t<{0}>(1 - 1) = 0\n\\succ_t<{0}>(1) = \\succ_t<{0}>(1 - 1) + 1 = 1\n\\succ_t<{1}>(1 - 1) = 0\n\\succ_t<{1}>(1) = \\succ_t<{1}>(1 - 1) + 1 = 1\n\\succ_t<{0}>(1) = 0\n", &[true, true, true, true, true, true, false]);
     check("template<S set>:\n    have fn bad(n N) N by induc n from 0:\n        case n = 0: 0\n        case n >= 1: bad(n) + 1\n", &[false]);
 }
+
+#[test]
+fn induction_lower_bound_cannot_descend_with_recursive_arguments() {
+    for keyword in ["have fn", "algo"] {
+        for (params, args) in [
+            ("n Z", "n - 1"),
+            ("n, b Z", "n - 1, b - 1"),
+            ("n, b Z: n = b", "n - 1, b - 1"),
+        ] {
+            let mut rt = check(
+                &format!("{keyword} empty_value({params}) {{}} by induc n from n - 1:\n    case n = n: empty_value({args})\n0 $in {{}}\n"),
+                &[false, false],
+            );
+            assert!(!rt
+                .top_exec_env()
+                .definitions
+                .identifiers
+                .contains_key("empty_value"));
+            assert!(rt
+                .run_litex_code("empty_value(0) $in {}")
+                .unwrap()
+                .session_error
+                .is_some());
+            assert!(
+                rt.run_litex_code("have fn empty_value(n Z) Z = n")
+                    .unwrap()
+                    .success
+            );
+        }
+    }
+}
+
+#[test]
+fn induction_lower_bound_preserves_fixed_dependent_and_increasing_bounds() {
+    for keyword in ["have fn", "algo"] {
+        check(&format!("{keyword} fixed(n N) Z by induc n from 0:\n    case n = 0: 0\n    case n >= 1: fixed(n - 1)\n"), &[true]);
+        check(&format!("{keyword} bounded(n, b Z: n >= b) Z by induc n from b:\n    case n - 1 < b: 0\n    case n - 1 >= b: bounded(n - 1, b)\n"), &[true]);
+        check(&format!("{keyword} increasing(n, b Z: n >= b) Z by induc n from b:\n    case n - 1 < b: 0\n    case n - 1 >= b:\n        case n - 1 < b + 1: 0\n        case n - 1 >= b + 1: increasing(n - 1, b + 1)\n"), &[true]);
+    }
+}
+
+#[test]
+fn induction_lower_bound_acceptance_example() {
+    check(
+        include_str!("../../../../examples/stmt_nodes/definition/induction_lower_bound.lit"),
+        &[true, true],
+    );
+}

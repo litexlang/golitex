@@ -687,14 +687,11 @@ the native interface you need. Keep the relative generated-module import path
 and the source file's actual namespace. Membership proofs permit native
 observations without changing the original object's host representation.
 
-The present workflow deliberately keeps the handwritten Adapter. The aim is
-to author the mathematical development in Litex and keep the additional Lean
-work in a small, reusable interface layer. Model selection and representation
-bridges can be shared across a development; clients then use ordinary theorems
-through calls such as `Adapter.realQuotientDistributes` above. New domains may
-require more bridge work, so this example does not establish that every Adapter
-will be short. Automatic generation of ordinary Mathlib interfaces is a future
-consideration, rather than a requirement for this workflow.
+The handwritten Adapter selects a model and proves the representation
+conversions. These can be reused across a development; clients call ordinary
+theorems such as `Adapter.realQuotientDistributes`. A new mathematical domain
+may need additional conversions. Automatic generation of these Mathlib
+interfaces remains future work.
 
 The local selected-subset check is:
 
@@ -716,11 +713,7 @@ formal proof of the whole Rust translation.
 The acceptance counts in this guide refer to dated local checks, with a fixed
 Lean/Mathlib environment. The semantic interface and source/generated pairs
 are public; the check driver and receipts remain in the local-only workspace.
-Those records do not claim that release/tag CI ran the Lean checks. Public
-Lean CI could make reproduction easier, but it is not a prerequisite for
-independently checking a generated theorem. Current development prioritizes
-compilation coverage and reusable semantic bridges; adding public Lean CI is
-not a current requirement.
+These are local check records, not release/tag CI results.
 
 The interpretation of an arbitrary set illustrates a deliberate interface
 difference: `$is_set(A)` has a generated proof, while native `A : ZFSet`
@@ -733,14 +726,9 @@ and unsupported inference/certificate routes outside the compiler boundary.
 An observed unused inference node in a result trace does not establish
 compiler support for that inference.
 
-The intended object semantics and replay contract set the direction for
-extending this coverage. The long-term goal is to compile all Litex proof
-routes, including the remaining existential/disjunctive, induction, recursive,
-higher-order and local-definition routes. This is ongoing implementation and
-validation work, with no claim of present completeness or completion date.
-Each extension must preserve the source meaning, consume the actual evidence
-and pass Lean checking; the current unsupported-route list remains the
-boundary for users today.
+The long-term goal is to extend replay to the remaining Litex proof routes.
+Each extension must preserve the source meaning, consume its recorded
+evidence, and pass Lean checking.
 
 ## Two rational maps, from definitions to a native equivalence
 
@@ -865,17 +853,11 @@ target/release/litex -strict -lang en -f lean/examples/rational_inverse_maps/sta
 target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statement.lit > lean/examples/rational_inverse_maps/statement.lean
 ```
 
-This example also makes the current cost visible. The maintained source
-contains explicit nonzero facts and formula expansions in the final
-injectivity proof. A shorter equality chain using function congruence can
-verify in Litex while selecting a route outside the current Lean compiler;
-source verification alone is therefore insufficient. The
-[direct Mathlib version](examples/litex_to_lean/rational_inverse_maps/DirectLean.lean)
-provides a separate authoring comparison. Compare the mathematical steps,
-explicit domain bookkeeping and handwritten adapter work as separate costs;
-generated proof length does not measure source authoring effort. This example
-demonstrates a connected, reusable compilation result and makes no claim of
-an authoring or execution speed advantage.
+The final injectivity proof lists nonzero facts and expands the formulas
+explicitly. A shorter equality chain using function congruence can pass Litex
+verification but select a route the current Lean compiler does not support.
+The [direct Mathlib version](examples/litex_to_lean/rational_inverse_maps/DirectLean.lean)
+proves the same result without the compilation and Adapter steps.
 
 ## Composing the mathematical slice
 

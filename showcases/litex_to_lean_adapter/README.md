@@ -276,7 +276,5 @@ globs = ["Generated", "Adapter", "Final"]
 | [UseInYourProject.lean](UseInYourProject.lean) | Lean 使用者 | 在后续证明中复用普通定理 |
 | [DirectLean.lean](DirectLean.lean) | 对照作者 | 使用常见 Mathlib 接口直接证明，检验复杂度比较 |
 
-本例展示已审查数值模型上的手写桥接，不代表所有 Litex 对象和证明路线都有
-自动 Adapter。它保留源码的非零前提。源码、生成文件和四层证明的实际检查
-信息记录在 [verification.json](verification.json)；这些检查不等于形式化证明
-整个 Rust 编译器的正确性。
+本例使用数值模型上的手写 Adapter，保留源码的非零前提。
+源码、生成文件和四层证明的检查结果见 [verification.json](verification.json)。

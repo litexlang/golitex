@@ -389,6 +389,13 @@ f(1 - 1) = f(0) = 0
 f(1) = f(1 - 1) + 1 = 0 + 1 = 1
 ```
 
+Recursive definitions also check termination: the integer measure decreases,
+and the lower bound evaluated at the recursive arguments cannot decrease.
+Thus `measure - lower` decreases within the nonnegative integers. A definition
+using `from n - 1` cannot justify an endless call to `f(n - 1)` merely because
+the new argument meets the current bound. Parameter-dependent bounds remain
+usable when the recursive call proves this condition.
+
 Here the value of `f` comes from the author's definition. The final chain uses the recursive equation, the initial value and arithmetic in order. With the same definition and `f(0)=0`, the bare assertion `f(1)=1` did not close automatically in the current acceptance run. A checkable explicit route does not require default search to discover every combination of recursive unfoldings.
 
 Search can be made stronger, but more search branches also add runtime and maintenance costs. Litex aims to automate mechanical reasoning with clear structural, evidence and cost boundaries, while authors write meaningful mathematical steps. Repeated mechanical typing or repeated use of existing evidence should prompt an audit for missing shared support; every failure should not be assigned to the author. The effects of this tradeoff still need measurement on real tasks.
@@ -657,7 +664,7 @@ Local automation can sit on different logical foundations. Litex asks whether or
 
 ### 1.2 What Each Statement Leaves Behind: Checkable Knowledge Records
 
-Each accepted statement adds knowledge that later proof steps can use. Its execution result records the top-level grounds, stored facts, and inferences within their scope; a failure identifies where checking stopped. Reading source and result together shows why the step holds and what it leaves behind. More complete verification evidence remains in the internal result tree for detailed tools and future Lean rechecking.
+Each accepted statement adds knowledge that later proof steps can use. Its execution result records the top-level grounds, stored facts, and inferences within their scope; a failure identifies where checking stopped. Reading source and result together shows why the step holds and what it leaves behind. More complete verification evidence remains in the internal result tree for detailed tools and the Lean compiler.
 
 First consider a minimal contiguous fragment:
 
@@ -716,7 +723,7 @@ The second statement passes well-definedness and uses a builtin equality rewrite
 | Why it stopped | `why_failed.phase` and `why_failed.goal` |
 | What entered the later context | `stores` and `infers` |
 
-Normal JSON is a summary for people and tools. The full verify/exec evidence tree is not printed by ordinary `-e` / `-f` / `-r` output. Future Lean rechecking would require translating supported verification paths into Lean evidence without proof holes.
+Normal JSON is a summary for people and tools; ordinary `-e` / `-f` / `-r` output does not print the full verify/exec evidence tree. The [Lean compiler](#compatibility) reads the internal results directly and translates supported verification paths into Lean proofs.
 
 Well-definedness comes before acceptance: even though `1 / 0 = 1 / 0` has identical sides, division by zero prevents it from becoming an accepted equality.
 
@@ -752,9 +759,7 @@ A failed statement adds neither `stores` nor `infers` to the accepted context. A
 
 </details>
 
-**Seeing why a statement holds and how it connects to other statements is one way these records can support mathematical understanding.** In the fragment above, readers can follow the connection from the definition `a = 1`, through definition reduction and numerical calculation, to `a + 1 = 2`; the accepted equality then becomes available to later reasoning. Reading source alongside JSON feedback makes definitions, grounds, and consequences available for inspection, comparison, and reuse. Detailed JSON exposes finer verification evidence and fact citations; Normal JSON provides summaries and accepted facts, without recording every dependency.
-
-These records provide a basis for tools that help readers explore connections among definitions and facts, revisit a proof's premises, and identify intermediate results useful in another argument. This is a concrete route toward the [goal of helping mathematicians see connections](#reader-mathematicians); its effect on learning and understanding needs evaluation on real tasks. Section 4 discusses collaboration; Section 5 discusses handing supported internal evidence to Lean for independent rechecking. Both depend on clear boundaries between accepted statements and stopped attempts.
+In the example above, the record shows that `a + 1 = 2` uses the definition `a = 1`, definition reduction and numerical calculation. The equality then becomes available to later steps. Normal JSON summarizes the result; Detailed JSON expands the premises and fact citations. Readers can [trace these connections](#reader-mathematicians), and tools can display them as a graph. Section 4 shows how to [use the feedback interactively](#interaction-loop); Section 5 covers [independent Lean rechecking](#compatibility).
 
 ![Litex fact-relation graph example](https://litexlang.com/_next/image?url=%2Fassets%2Fknowledge_graph.png&w=640&q=75)
 
@@ -762,18 +767,9 @@ These records provide a basis for tools that help readers explore connections am
 I believe the functions of this output stream go beyond those listed above. We hope more scenarios will be discovered in the future AI era.
 
 <details>
-<summary><strong>Summary: which mathematical views Litex's design embodies</strong></summary>
-
-Definitions establish objects and vocabulary; verification confirms facts; accepted statements extend the background available later. Litex aims to cover common mathematics through a small number of composable objects, relations, logical forms, rules, and library interfaces, rather than an isolated interface for every phrasing. Coverage is still being expanded and audited.
-
-Whether this combination reduces the cost for people and AI to construct, understand, and repair checkable knowledge is a design hypothesis to test on real tasks. Exposing grounds lets readers ask for the mathematical reason behind each source statement.
-
-</details>
-
-<details>
 <summary><strong>Implementation summary: how the record is generated</strong></summary>
 
-The current implementation connects statement execution with result records; the Lean path remains a goal:
+Statement execution leaves structured results for output tools and the Lean compiler:
 
 ```text
 Litex source
@@ -786,10 +782,10 @@ Litex source
   → let humans and AI see accepted paths, context changes, and repair boundaries
   → retain a checkable knowledge record for tools and interactive views
   → provide machine-readable or structured views such as JSON and relation graphs when needed
-  → future integration: hand supported evidence to a Lean compiler and kernel
+  → optionally compile supported results to Lean, then run Lean checking separately
 ```
 
-JSON is generated directly from internal execution results and summarizes the check. Relation graphs offer another way to view those results; independent Lean rechecking remains a goal to be integrated.
+JSON and relation graphs present the internal execution results. The Lean compiler reads supported results and emits proofs; the generated files then need to be checked by Lean.
 
 Forward inference runs once for a checked seed. Each named rule certifies its
 direct conclusions and stores them without another WD or inference pass. Its
@@ -927,7 +923,7 @@ For example, `have a R = 2` looks like one sentence, yet the current CLI records
 
 The design challenge is making arithmetic, set construction, functions, relations, quantifiers, witnesses, contradiction, and induction work together. In the Cantor proof, `{x X: not x $in f(x)}` combines bounded set construction, function application, negation, and membership. Each combination raises questions: when is it well-defined, which premises may be cited, how is repeated search controlled, what facts and grounds are stored on success, and where should failure stop? The current verifier reduces lookup permissions when checking rule premises; statement execution checks in a temporary environment before committing accepted facts. These mechanisms support the concise writing.
 
-Litex still leaves key constructions, intermediate conclusions, and witnesses to authors, with explicit structures such as `claim`, `witness`, `by contra`, and induction. It aims to make rigorous checking, useful coverage of interacting mathematical features, and ease of use work together. A single example or list of symbols cannot establish that arbitrary proofs are supported. Coverage and future independent Lean rechecking require separate verification and compilation evidence.
+Authors supply key constructions, intermediate conclusions and witnesses through structures such as `claim`, `witness`, `by contra` and induction. The verifier checks the domains, premises and fact citations involved in these steps. After source verification, supported routes can also be [compiled to Lean](#compatibility) for independent checking.
 
 <a id="group-comparison"></a>
 
@@ -1578,7 +1574,7 @@ _“The best way to predict the future is to invent it.”_
 
 _— Alan Kay, “The Early History of Smalltalk” (1993)_
 
-Litex hopes to use the same verified source and results for human reading, AI-assisted repair, knowledge organization, and future Lean rechecking. The following table outlines these goals for the ecosystem:
+Litex aims to use the same verified source and results for human reading, AI-assisted repair, knowledge organization and Lean rechecking. The table below lists the work these tools can support:
 
 | Ecosystem role | Intended result |
 | --- | --- |
@@ -1587,7 +1583,7 @@ Litex hopes to use the same verified source and results for human reading, AI-as
 | Connection to existing ecosystems | Initial standalone Lean compilation and rechecking for supported verification results (Section 5, experimental); full-system coverage remains incomplete, and new Lean/Mathlib adapters remain separate, handwritten work |
 | Proof to executable code (experimental) | Convert checked computational fragments into runnable Python or C (Section 3.4) |
 
-The current verifier and tools are substantial, but usability, domain coverage, and adoption still require dated examples and real use results. For discussion, contact litexlang@outlook.com.
+Mathematical examples, experience reports and ideas for tools are welcome at litexlang@outlook.com.
 
 <details>
 <summary><strong>Litex's ecological niche</strong></summary>
@@ -1641,10 +1637,6 @@ Litex began with sustained personal work and now also benefits from others' supp
 
 </details>
 
-**Research and release boundary.** Litex is currently an evolving formal-language research project and experimental system. It cannot replace natural language in carrying all of mathematics' intuition, motivation, and explanation, nor does it have the mature trusted foundation, domain coverage, or ecosystem scale that Lean and Mathlib have accumulated. Litex investigates a different, narrower, and independent question: can a language design organized around facts, statement-by-statement checking, and retained knowledge records lower the cost for people and AI to construct, understand, review, repair, and reuse checkable knowledge?
-
-This project is released in its current state. Public source code, examples, and experimental results do not guarantee completeness, fitness for any particular purpose, or superiority to other systems. Judge its capabilities by dated verification results, trust boundaries, known limitations, and concrete use cases; do not extrapolate results within an experimental scope into untested guarantees.
-
 <a id="special-thanks"></a>
 
 ### Special Thanks
@@ -1657,8 +1649,6 @@ Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Keyao Zhu and Zhaoxuan Hong for thei
 1. To try examples directly and view Litex-generated output and knowledge graphs, visit [litexlang.com](https://litexlang.com).
 
 2. For kernel implementation, see the [golitex repository](https://github.com/litexlang/golitex).
-
-Note: the current repository retains checked results, experiments, and unfinished work at once. *Public visibility is not a claim of completion*; capabilities should be judged by tests, dated status, trust boundaries, and known limitations.
 
 ### Native theorem interfaces and diagnostics (2026-10-02)
 
@@ -1857,9 +1847,9 @@ Machine checking alone, however, does not ensure that mathematicians understand 
 
 **An important part of mathematical understanding is seeing connections.** In [*Philosophical Investigations*, §122](https://www.wittgensteinproject.org/w/index.php?title=Philosophische_Untersuchungen), Wittgenstein links understanding with “seeing connections.” He is discussing how a clear presentation of language use brings understanding; applied to mathematics, this suggests asking how a conclusion grows from definitions and assumptions, why intermediate steps connect, and where the same structure can be reused.
 
-This gives a concrete response to the concern that AI can solve problems without advancing human understanding. Litex’s design goal is for the same proof source to serve machine checking and mathematical reading: authors choose the mathematical steps, AI assists with writing and repair, and Litex checks supported connections. The [JSON knowledge records](#execution-model) expose verification grounds, accepted facts, and, in the Detailed projection, finer premise and citation evidence. Readers can trace why a statement holds, inspect its connections to earlier knowledge, and see what it contributes to later reasoning. Keeping these connections open to inspection gives AI-assisted proofs a basis for explanation, learning, and reuse. The [two participation-barrier examples](#overview-readers) illustrate how familiar expression helps people participate in this process.
+When reading a Litex proof, compare the source with its [JSON knowledge records](#execution-model): which premises does this line use, which fact does it cite, and what does it leave for the next step? Detailed output provides finer premise and citation records. The [earlier examples](#overview-readers) show how authors write mathematical steps and inspect their verification grounds.
 
-This also gives a criterion for evaluating Litex: can mathematicians read AI-written formal statements, detect departures from their intent, explain the connections among proof steps, identify reusable structures, and reuse others’ results under explicit conditions? The current language, standard library, trusted base, and Lean compilation coverage retain limitations; improvements in learning and review costs need measurement through real mathematical tasks and user studies. Litex aims to let mathematicians adopt Human–AI workflows while continuing to understand and control the medium of their proofs.
+I want mathematicians to be able to read and revise AI-written proofs, spot departures from their intent, and find ideas they can reuse. How much this saves in learning and review time needs to be measured on real tasks.
 
 <a id="reader-programmers"></a>
 
@@ -2216,40 +2206,13 @@ paths do not establish Lean export support.
 
 ## Project Claims, Deliverables and Evidence
 
-Litex investigates whether organizing mathematics around facts, incremental
-checking and retained knowledge can help people and AI construct, understand
-and reuse checkable reasoning in the same source text. The language,
-verification workflow, mathematical developments and supported Lean
-translation described here are implemented artifacts through which this
-research question can be examined.
+The table below collects the implemented features described in this Blueprint.
+Follow the links for source examples, checking records and support details.
 
-| Current claim | Delivered implementation | Evidence in this Blueprint | Scope of the conclusion |
+| Current claim | Implementation | Examples and checking records | Scope |
 | --- | --- | --- | --- |
 | Authors can state mathematical facts directly and have supported connections checked. | Mathematical objects, facts and definitions, well-definedness checks and local verification procedures. | [Fact-oriented source and checking routes](#fact-oriented-interface), [source gallery](#overview-gallery) and the [systems engineering example](#systems-engineering). | The implemented object and proof interfaces, under the verifier's stated foundations and assumptions. |
 | Accepted knowledge can support later mathematical work. | Retained facts, reusable definitions and theorems, citations and modules. | [What each statement leaves behind](#execution-model) and [reuse of earlier results](#workflow-reuse). | Reuse under the original premises, scopes and import rules; the checking status belongs to the particular development. |
 | People and agents can repair a step while keeping earlier accepted context. | A persistent Session, structured failure feedback and JSON results. | [The Session interaction example](#interaction-loop) and [verification records](#execution-model). | The demonstrated interaction and retention of accepted context. Changes in authoring time or proof quality require separate measurement. |
 | A defined mathematical subset can be compiled to Lean and connected to ordinary Mathlib mathematics. | Typed-result replay, a Lean semantic core, generated source pairs and representation bridges; complete native examples also use handwritten adapters. | [Independent Lean rechecking](#compatibility), its dated verification checkpoint and linked compiler guide. | Reviewed source-to-Lean routes and checked examples. Native use additionally requires the model and adapter for the particular interface. |
 | Mathematical source and results can feed other tools. | JSON output, LaTeX export and experimental Python/C extraction. | [Structured knowledge records](#execution-model), [export examples](#overview-spine) and [computation and communication](#workflow-use). | Each tool's supported input and output contract. LaTeX export renders parsed source without verifying it; executable extraction handles supported computational fragments. |
-
-These artifacts establish concrete language and workflow capabilities. The
-broader research question is how much this design reduces learning, writing,
-review, repair and reuse costs across users and tasks. Comparative tasks and
-user studies can test that question; the delivered mechanisms provide a
-system on which to perform those studies. The vision of making formalization
-useful throughout the sciences builds on this research question.
-
-Litex is an open-source project created and maintained by a mathematics PhD
-student with limited time and resources, with support and contributions from
-others. This context explains its development priorities and pace. The table
-provides a basis for assessing the work already delivered and choosing useful
-next contributions.
-
-When evaluating the project, distinguish whether an existing claim is supported,
-whether a particular use case needs additional capabilities, and whether a
-longer-term research goal has been demonstrated. Criticism can identify a
-specific claim, artifact or missing piece of evidence; proposed extensions can
-state the use case they would enable. An absent extension alone does not refute
-an established local result, and a local result does not establish broader
-performance or coverage. The relevance of the research question itself can
-also be discussed separately from whether the delivered system implements its
-stated mechanisms.

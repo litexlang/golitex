@@ -27,7 +27,7 @@ identify the mathematics included, selected examples and omitted material.
 
 | Collection | Source and direction | Scope |
 | --- | --- | --- |
-| [Tao's Analysis I in Litex](analysis/README.md) | Terence Tao's *Analysis I*: induction, sets and maps, real numbers, limits, series and countability | A non-strict adaptation of selected Chapters 1–8 and Appendix A. It retains four user axioms and one abstract predicate, and is not a complete formalization. |
+| [Tao's Analysis I in Litex](analysis/README.md) | Terence Tao's *Analysis I*: induction, sets and maps, real numbers, limits, series and countability | A non-strict adaptation of selected Chapters 2–8 and Appendix A. It retains four user axioms and one abstract predicate, and is not a complete formalization. |
 
 ## Litex proof tutorials
 
@@ -36,7 +36,7 @@ use definitions, supply witnesses and carry established facts into later argumen
 
 | Collection | Learning path | Scope |
 | --- | --- | --- |
-| [The Mechanics of Litex Proof](The-Mechanics-of-Litex-Proof/README.md) | Calculations and definitions → constructions → functions, sets and relations → induction and arithmetic | A teaching module with a preface and Chapters 0–10. See its README for the lesson map and checking boundary. |
+| [The Mechanics of Litex Proof](The-Mechanics-of-Litex-Proof/README.md) | Calculations and definitions → constructions → functions, sets and relations → induction and arithmetic | A teaching module with checked citations and Chapters 0–10. See its README for the lesson map and checking boundary. |
 
 ## Problems and solutions
 

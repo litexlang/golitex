@@ -621,10 +621,8 @@ The examples in this course use no user `trust` or `axiom` statements.
 It still relies on Litex's implementation, built-in rules, and permitted
 foundational interfaces. It is not an independent proof of the checker itself.
 
-You may encounter `trust` in other material. It explicitly accepts a fact
-without completing its proof. Using it to make an exercise green leaves a
-proof obligation; it does not teach you how to prove that exercise. Read the
-[trust boundary](Manual.md#trust-and-strict-mode) when you need this feature.
+`trust` explicitly accepts a fact without proving it, leaving a proof
+obligation. See the [trust boundary](Manual.md#trust-and-strict-mode).
 
 **Try:** Run Failure A, find the failed claim, and repair its domain. Then run
 Failure B and explain why its issue is different. Finish by checking the
@@ -688,53 +686,39 @@ Check the saved file:
 litex -lang en -strict -f first.lit
 ```
 
-Keep the source and the result together when sharing it. A useful result says
-which file and checker version you ran, whether the whole run succeeded, and
-whether any assumptions or proof debts were added. It does not merely show
-one successful line from a longer failing file.
+When sharing the file, include the checker version and the complete run
+result, with any added assumptions or remaining proof obligations.
 
 ### What makes this recognizably Litex?
 
-The checked file exposes the objects, their meanings, and facts that later
-statements consume. You can read `reciprocal(x) = 1 / x` as the same
-mathematical step you would put on paper. The checker handles supported routine
-consequences; you provide the domain and the useful derivation when needed.
-
-This is a fact-oriented proof interface. In this file, that means the first
-claim establishes a product law and a later calculation can use it. It does
-not mean every mathematical sentence can be checked without a proof or that
-Litex has the same coverage as another proof assistant.
+The first `claim` proves the reciprocal product law. Later calculations use
+that law by stating the required equality. The author supplies the domain
+condition and the intermediate fact `reciprocal(x) = 1 / x`; the checker
+handles substitution and arithmetic.
 
 ### Why this can be math for AI
 
-An AI model can propose the definition, goal, and proof steps you just wrote.
-Litex provides a mathematical interface for checking those proposals: an
-explicit input condition, statements that leave usable context, and feedback
-that can point to the next repair. The `.lit` file records the accepted
-development in a form that a subsequent agent can read and run again.
-
-The emphasis is on giving AI a way to construct and revise checked
-mathematical knowledge. The reciprocal example demonstrates the interface;
-it does not establish that an agent will always solve a problem or that this
-workflow outperforms other systems. The human still owns the intended
-definition, domain, assumptions, and final mathematical statement.
+An AI model can submit the same definitions and proof steps to Litex, inspect
+a failed statement's feedback, and revise it in the live Session. Accepted
+statements remain available for the next step. Saving them in a `.lit` file
+lets another agent read and rerun the proof. The author still needs to check
+that the definitions, assumptions, and final statement express the intended
+mathematics.
 
 ### What can come after a checked file?
 
 | Route | What it is for | Boundary to keep visible |
 | --- | --- | --- |
 | Python or C extraction | Executable numeric fragments | Experimental supported subset; an arbitrary `have fn` is not automatically an executable program. Source proofs do not establish floating-point accuracy. |
-| Graph views | Inspecting relationships between statements and their evidence | Depends on the graph tooling and the evidence it exposes; a drawn edge is not an additional proof. |
-| LaTeX rendering | Reading and presenting the mathematics | Rendering can work from parsed source; attractive output by itself does not mean the source verified. |
+| Graph views | Inspecting relationships between statements and their evidence | Displays the dependencies exposed by the graph tooling. |
+| LaTeX rendering | Reading and presenting the mathematics | Can render parsed source before verification; run the checker separately. |
 | Lean output | Replaying supported checked reasoning into another proof language | Preview subset; generated output must pass its own Lean check, and a native mathematical statement may need an adapter. |
 
 Keep verification and export as separate steps. Read the current
 [CLI reference](cli.md#commands),
 [Lean boundary](cli.md#lean-compiler-boundary), and
 [LaTeX guide](cli.md#latex-conversion-preview) before choosing an
-export route. These links describe current interfaces; this course's final
-file is a checked mathematical artifact, not a promise that every route
-accepts all its statements.
+export route. Each exporter supports its own subset of statements.
 
 ### Check your understanding
 

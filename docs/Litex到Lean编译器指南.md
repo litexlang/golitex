@@ -363,11 +363,9 @@ theorem useCompiledQuotient (x y z : ℝ) (hz : z ≠ 0) :
 普通数学接口提供已检查的 Adapter/Final。保留生成模块的相对导入路径及其实际
 命名空间。成员证明允许取得原生数值代表，同时原对象的 host 表示保持不变。
 
-当前工作流有意保留手写 Adapter：数学开发主要在 Litex 中完成，额外的 Lean 工作集中在
-一层尽量薄、可复用的接口。模型选择和表示桥接可以在同一数学开发中共享，后续调用者
-像上面的 `Adapter.realQuotientDistributes` 一样使用普通定理。新领域可能需要更多桥接工作，
-因此这个例子不保证每个 Adapter 都很短。自动生成普通 Mathlib 接口是未来会考虑的方向，
-目前使用这条工作流无需等待它实现。
+手写 Adapter 选择语义模型并证明表示转换。这些工作可在同一数学开发中复用，
+后续调用者直接使用 `Adapter.realQuotientDistributes` 这样的普通定理。
+新数学领域可能需要补充转换。自动生成这些 Mathlib 接口仍是后续工作。
 
 本地选定子集的统一检查命令是：
 
@@ -385,9 +383,7 @@ python3 scripts/litex_to_lean/check.py --subset --work-area .draft/selected-subs
 
 本指南的验收数量对应固定 Lean/Mathlib 环境下、注明日期的本地检查。
 语义接口、源码及其对应生成文件均公开；检查驱动和回执仍在本地工作区。
-这些记录不表示 release/tag CI 已执行 Lean 检查。公共 Lean CI 可以降低复现成本，
-但独立检查一个生成定理并不以它为前提。当前开发优先扩展编译覆盖和可复用的语义桥接，
-不把新增公共 Lean CI 列为当前必做项。
+这些是本地检查记录，不是 release/tag CI 的运行结果。
 
 任意集合有一个明确的接口差异：`$is_set(A)` 在生成端有证明，原生端的
 `A : ZFSet` 则通过类型表达集合身份，无需发明额外的原生 sethood 谓词。
@@ -396,10 +392,8 @@ python3 scripts/litex_to_lean/check.py --subset --work-area .draft/selected-subs
 以及未审查的推理／证书路线仍在编译边界外。
 在结果中观察到未被消费的 inference 节点，不代表编译器已支持该推理。
 
-预期的对象语义与证明重放契约已经为扩大覆盖确定方向。长期目标是覆盖全部 Litex
-证明路线，包括剩余的存在／析取、归纳、递归、高阶和局部定义路线。这仍需逐项实现
-与验证，不表示现在已经完整覆盖，也不承诺完成日期。每项扩展都须保持源码含义、
-消费实际证据并通过 Lean 检查；对今天的使用者，当前不支持清单仍是实际边界。
+长期目标是将证明重放扩展到其余 Litex 证明路线。每项扩展都须保持源码含义、
+使用结果中记录的证据，并通过 Lean 检查。
 
 <a id="two-rational-maps-from-definitions-to-a-native-equivalence"></a>
 
@@ -510,13 +504,10 @@ target/release/litex -strict -lang en -f lean/examples/rational_inverse_maps/sta
 target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statement.lit > lean/examples/rational_inverse_maps/statement.lean
 ```
 
-这个例子也保留当前实现的实际成本：维护中的源码在最终单射证明里显式列出非零事实
-并展开公式。更短的函数同余等式链可以通过 Litex 验证，却可能选中当前编译器尚未
-支持的路线，因此源码验证成功还不够。
+最终的单射证明显式列出非零事实并展开公式。更短的函数同余等式链可以通过 Litex
+验证，却可能选中当前编译器尚未支持的路线。
 [直接 Mathlib 版本](examples/litex_to_lean/rational_inverse_maps/DirectLean.lean)
-提供独立的作者写法对照。比较时应分别考察数学步骤、显式定义域证明和手写 Adapter
-的工作量；生成证明的长度不能代表源码作者的工作量。这个例子展示连续、可复用的
-编译成果，不据此宣称编写或运行速度更快。
+展示了不经过编译和 Adapter、直接证明同一结果的写法。
 
 ## 已验证的单步 Newton 示例
 

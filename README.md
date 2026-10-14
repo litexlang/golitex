@@ -260,23 +260,6 @@ explains how assumptions are handled. `-strict` rejects executed user `trust`,
 `trust have`, and `axiom`, including imported dependencies; abstract predicate
 signatures and named foundation releases remain allowed.
 
-**Research and release boundary.** Litex is currently an evolving
-formal-language research project and experimental system. It cannot replace
-natural language in carrying all of mathematics' intuition, motivation, and
-explanation, nor does it have the mature trusted foundation, domain coverage,
-or ecosystem scale that Lean and Mathlib have accumulated. Litex investigates
-a different, narrower, and independent question: can a language design
-organized around facts, statement-by-statement checking, and retained
-knowledge records lower the cost for people and AI to construct, understand,
-review, repair, and reuse checkable knowledge?
-
-This project is released in its current state. Public source code, examples,
-and experimental results do not guarantee completeness, fitness for any
-particular purpose, or superiority to other systems. Judge its capabilities by
-dated verification results, trust boundaries, known limitations, and concrete
-use cases; do not extrapolate results within an experimental scope into
-untested guarantees.
-
 ## Try Litex
 
 Run it in the [online playground](https://litexlang.com), or install it on
@@ -327,14 +310,10 @@ Litex is released under the [Apache License 2.0](LICENSE).
 
 ## Project claims, deliverables and evidence
 
-Litex investigates whether a language organized around mathematical facts can
-help people and AI construct, understand, check and reuse knowledge in the
-same source text. Its current deliverables include a working language and
-verifier, persistent interaction, mathematical developments and a Lean
-compilation path for a defined subset. The following map connects those
-claims to artifacts readers can inspect.
+The table below lists the implemented features, with examples and checking
+records for each.
 
-| Current claim | Delivered implementation | Evidence and reading entry | Scope of the conclusion |
+| Current claim | Implementation | Examples and checking records | Scope |
 | --- | --- | --- | --- |
 | Authors can state mathematical facts directly and have supported connections checked. | Objects, facts, definitions, well-definedness checks and local verification procedures. | [Source examples](examples/README.md), [language manual](docs/Manual.md) and [implementation guide](src/README.md). | The implemented mathematical interfaces and proof routes, under the [documented trust boundary](docs/Manual.md#trust-boundary). |
 | Accepted knowledge can support later mathematical work. | Retained facts, reusable definitions and theorems, citations and modules. | [Knowledge reuse](docs/Litex_Blueprint.md#workflow-reuse) and [mathematical developments](showcases/README.md). | Reuse under each declaration's premises, scope and import rules; individual developments identify their assumptions and checking status. |
@@ -342,24 +321,6 @@ claims to artifacts readers can inspect.
 | A defined mathematical subset can be compiled to Lean, independently rechecked and used through native Mathlib interfaces. | Typed-result replay, a Lean semantic core, generated source pairs and handwritten adapters. | [Coverage and example map](docs/Litex_To_Lean_Compiler_Guide.md#current-mathematical-coverage-and-examples), [source/generated pairs](lean/examples/) and [complete Adapter example](docs/examples/litex_to_lean/add_zero/README.md). | The reviewed routes and dated Lean checks. The 2026-10-12 checkpoint covers 74 pairs; native use additionally relies on the checked model and adapter for that interface. |
 | Mathematical source and results can feed other tools. | JSON output, LaTeX export and experimental Python/C extraction. | [JSON output](docs/cli.md#json-output-contract), [LaTeX exporter](src/compile_to_latex/README.md) and [computation examples](docs/Litex_Blueprint.md#workflow-use). | Each tool's supported input and output contract. LaTeX export renders parsed source without verifying it; executable extraction handles supported computational fragments. |
 
-These artifacts establish concrete language and workflow capabilities. The
-broader research question is how much this design reduces learning, writing,
-review, repair and reuse costs across users and tasks. That question can be
-tested through comparative tasks and user studies; the delivered mechanisms
-provide a system on which to perform those studies.
-
-Litex is an open-source project created and maintained by a mathematics PhD
-student with limited time and resources, with support and contributions from
-others. This context explains its development priorities and pace. The table
-provides a basis for assessing the work already delivered and choosing useful
-next contributions.
-
-When evaluating the project, distinguish whether an existing claim is supported,
-whether a particular use case needs additional capabilities, and whether a
-longer-term research goal has been demonstrated. Criticism can identify a
-specific claim, artifact or missing piece of evidence; proposed extensions can
-state the use case they would enable. An absent extension alone does not refute
-an established local result, and a local result does not establish broader
-performance or coverage. The [Blueprint](docs/Litex_Blueprint.md#claims-deliverables-evidence)
-([中文](docs/Litex中文蓝图.md#claims-deliverables-evidence)) places this map in the
-language's research context.
+For the design behind these features, read the
+[Blueprint](docs/Litex_Blueprint.md#claims-deliverables-evidence)
+([中文](docs/Litex中文蓝图.md#claims-deliverables-evidence)).

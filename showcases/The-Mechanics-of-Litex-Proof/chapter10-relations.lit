@@ -83,13 +83,11 @@ sketch:
             =>:
                 $rel(x, z)
     have a, b, c set
-    claim:
-        ? $rel(a, a)
-    claim:
-        ? forall u, v set:
-            $rel(u, v)
-            =>:
-                $rel(v, u)
+    $rel(a, a)
+    forall u, v set:
+        $rel(u, v)
+        =>:
+            $rel(v, u)
     claim:
         ? forall u, v, w set:
             $rel(u, v)
@@ -99,12 +97,11 @@ sketch:
         $rel(u, v)
         $rel(v, w)
         $rel(u, w)
-    claim:
-        ? forall u, v set:
-            $rel(u, v)
-            $rel(v, u)
-            =>:
-                u = v
+    forall u, v set:
+        $rel(u, v)
+        $rel(v, u)
+        =>:
+            u = v
 
 # After these registrations, later proofs can be shorter: you state the local
 # facts, and Litex uses the registered relation properties as background steps.
@@ -293,6 +290,8 @@ sketch:
         ? forall x {0, 1, 2}, y {0, 1, 2}:
             x = 0 and y = 0 or x = 0 and y = 1 or x = 0 and y = 2 or x = 1 and y = 0 or x = 1 and y = 1 or x = 1 and y = 2 or x = 2 and y = 0 or x = 2 and y = 1 or x = 2 and y = 2
 
+        x = 0 and y = 0 or x = 0 and y = 1 or x = 0 and y = 2 or x = 1 and y = 0 or x = 1 and y = 1 or x = 1 and y = 2 or x = 2 and y = 0 or x = 2 and y = 1 or x = 2 and y = 2
+
     # 1 means winning, 0 means losing or draw
     have fn rock_paper_scissors(x {0, 1, 2}, y {0, 1, 2}) {0, 1} by cases:
         case x = 0 and y = 0: 0
@@ -321,7 +320,8 @@ sketch:
 
         by cases:
             ? x = y
-            case x = 0 and y = 0
+            case x = 0 and y = 0:
+                x = 0 = y
             case x = 0 and y = 1:
                 1 = rock_paper_scissors(0, 1) = rock_paper_scissors(x, y) = rock_paper_scissors(y, x) = rock_paper_scissors(1, 0) = 0
                 impossible 0 = 1
@@ -331,7 +331,8 @@ sketch:
             case x = 1 and y = 0:
                 0 = rock_paper_scissors(1, 0) = rock_paper_scissors(x, y) = rock_paper_scissors(y, x) = rock_paper_scissors(0, 1) = 1
                 impossible 0 = 1
-            case x = 1 and y = 1
+            case x = 1 and y = 1:
+                x = 1 = y
             case x = 1 and y = 2:
                 1 = rock_paper_scissors(1, 2) = rock_paper_scissors(x, y) = rock_paper_scissors(y, x) = rock_paper_scissors(2, 1) = 0
                 impossible 0 = 1
@@ -341,7 +342,8 @@ sketch:
             case x = 2 and y = 1:
                 0 = rock_paper_scissors(2, 1) = rock_paper_scissors(x, y) = rock_paper_scissors(y, x) = rock_paper_scissors(1, 2) = 1
                 impossible 0 = 1
-            case x = 2 and y = 2
+            case x = 2 and y = 2:
+                x = 2 = y
 
     # Not Transitive
     rock_paper_scissors(0, 1) = 1
@@ -552,6 +554,8 @@ sketch:
             =>:
                 $rational_pair_eq(p, r)
         (q(2) + 1) * (p(1) * (r(2) + 1)) = (p(1) * (q(2) + 1)) * (r(2) + 1) = (q(1) * (p(2) + 1)) * (r(2) + 1) = (q(1) * (r(2) + 1)) * (p(2) + 1) = (r(1) * (q(2) + 1)) * (p(2) + 1) = (q(2) + 1) * (r(1) * (p(2) + 1))
+        q(2) $in N
+        q(2) >= 0
         q(2) + 1 > 0
         q(2) + 1 != 0
         p(1) * (r(2) + 1) = ((q(2) + 1) * (p(1) * (r(2) + 1))) / (q(2) + 1) = ((q(2) + 1) * (r(1) * (p(2) + 1))) / (q(2) + 1) = r(1) * (p(2) + 1)
@@ -625,9 +629,8 @@ sketch:
             ? forall y B:
                 exist! x A st {y = f(x)}
 
-        claim:
-            ? forall y B:
-                y = f(g(y))
+        forall y B:
+            y = f(g(y))
 
         claim:
             ? forall x A:
