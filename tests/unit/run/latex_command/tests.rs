@@ -26,14 +26,20 @@ fn latex_dispatch_is_parse_only_and_has_its_own_result() {
         .unwrap()
         .contains("1 = 2"));
 
-    // The identical false fact must still fail executable extraction's verification.
+    // Soft verification failure stays an ExtractExecutableCode outcome with
+    // process_failed; only hard launch/runtime errors return Err.
     for target in [CodeExtractionTarget::C, CodeExtractionTarget::Python] {
-        assert!(run_command(LaunchCommand::ExtractExecutableCode {
+        let rejected = run_command(LaunchCommand::ExtractExecutableCode {
             target,
             input: ExtractInput::Code("1 = 2".into()),
             language: OutputLanguage::English,
         })
-        .is_err());
+        .unwrap();
+        assert!(matches!(
+            &rejected,
+            RunCommandOutcome::ExtractExecutableCode(_)
+        ));
+        assert!(rejected.process_failed());
         let outcome = run_command(LaunchCommand::ExtractExecutableCode {
             target,
             input: ExtractInput::Code("have a R = 1".into()),

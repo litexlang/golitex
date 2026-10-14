@@ -9,7 +9,7 @@
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
 use super::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
-use crate::ast::fact::{AtomicFact, NotEqualFact};
+use crate::ast::fact::{AtomicFact, LessEqualFact, NotEqualFact};
 use crate::ast::obj::{
     ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, Number, Obj, StandardSet,
 };
@@ -185,7 +185,13 @@ impl Runtime {
                 self.verify_unary_obj_well_definedness_by_def(v.arg.as_ref(), verify_state)
             }
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(v)) => {
-                self.verify_unary_obj_well_definedness_by_def(v.arg.as_ref(), verify_state)
+                let proof = self.verify_unary_obj_well_definedness_by_def(
+                    v.arg.as_ref(),
+                    verify_state.clone(),
+                )?;
+                let req =
+                    self.closed_numeric_nonnegative_sqrt_requirement(v.arg.as_ref(), verify_state)?;
+                Ok(self.with_requirements(proof, vec![req]))
             }
             Obj::ExpLogOperator(ExpLogOperator::Log(v)) => self
                 .verify_binary_obj_well_definedness_by_def(
@@ -221,6 +227,27 @@ impl Runtime {
             nonzero,
             verify_state,
             "divisor must be non-zero".to_string(),
+        )
+    }
+
+    fn closed_numeric_nonnegative_sqrt_requirement(
+        &mut self,
+        argument: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<crate::execute::execute_fact_stmt::VerifyFactResult> {
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".to_string(),
+        }));
+        let nonnegative = AtomicFact::LessEqualFact(LessEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: zero,
+            right: argument.clone(),
+            line_file: None,
+        });
+        self.verify_required_atomic_fact(
+            nonnegative,
+            verify_state,
+            "sqrt: argument must be >= 0".to_string(),
         )
     }
 }

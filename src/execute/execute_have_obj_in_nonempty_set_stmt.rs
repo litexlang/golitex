@@ -87,37 +87,32 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> RuntimeResult<ExecHaveObjInNonemptySetStmtResult> {
         let verify_state = VerifyState::top_level();
-
-        // WD + nonempty checks first (no writes). Define + auto-open commit
-        // together so AutoOpen Failed does not leave half-defined names.
-        let mut groups_ready = Vec::with_capacity(stmt.param_def.groups.len());
         let shared = Rc::new(stmt.clone());
-        for group in &stmt.param_def.groups {
-            let one = TypedParameterList {
-                groups: vec![group.clone()],
-            };
-            let param_type_well_defined = match self
-                .verify_typed_parameters_well_definedness_or_fail(&one, verify_state.clone())?
-            {
-                Ok(mut proofs) => proofs.remove(0),
-                Err(failed) => {
-                    return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
-                        ExecHaveObjInNonemptySetStmtFailed::ParamType(failed),
-                    ))
-                }
-            };
-            let nonempty_check =
-                match self.verify_have_obj_nonempty_obligations(&one, verify_state.clone())? {
-                    Ok(mut checks) => checks.remove(0),
-                    Err(failed) => return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed)),
-                };
-            groups_ready.push((one, param_type_well_defined, nonempty_check));
-        }
 
+        // Telescoping `have A nonempty_set, x A` needs earlier groups defined
+        // before later type/nonempty checks can see those names. Keep the whole
+        // WD → nonempty → define → auto-open sequence in one nested env so a
+        // later failure still discards every tentative binding.
         let (commit, nested_env) = self.run_in_local_env_and_take_env(|rt| {
-            let mut groups = Vec::with_capacity(groups_ready.len());
+            let mut groups = Vec::with_capacity(stmt.param_def.groups.len());
             let mut store_and_infer_result = StoreHaveObjAndInferResult::new(Vec::new());
-            for (one, param_type_well_defined, nonempty_check) in groups_ready {
+            for group in &stmt.param_def.groups {
+                let one = TypedParameterList {
+                    groups: vec![group.clone()],
+                };
+                let param_type_well_defined = match rt
+                    .verify_typed_parameters_well_definedness_or_fail(&one, verify_state.clone())?
+                {
+                    Ok(mut proofs) => proofs.remove(0),
+                    Err(failed) => {
+                        return Ok(Err(ExecHaveObjInNonemptySetStmtFailed::ParamType(failed)));
+                    }
+                };
+                let nonempty_check =
+                    match rt.verify_have_obj_nonempty_obligations(&one, verify_state.clone())? {
+                        Ok(mut checks) => checks.remove(0),
+                        Err(failed) => return Ok(Err(failed)),
+                    };
                 let defined_params = rt.define_typed_parameters_in_current_env(
                     &one,
                     Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(
@@ -138,7 +133,9 @@ impl Runtime {
             )? {
                 Ok(layers) => layers,
                 Err((_, failed)) => {
-                    return Ok(Err(failed));
+                    return Ok(Err(
+                        ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed),
+                    ));
                 }
             };
             Ok(Ok((
@@ -151,9 +148,7 @@ impl Runtime {
         let (groups, store_and_infer_result, auto_opened_struct_layers) = match commit {
             Ok(parts) => parts,
             Err(failed) => {
-                return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
-                    ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed),
-                ));
+                return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed));
             }
         };
         self.top_exec_env_mut().merge_from(&nested_env)?;
