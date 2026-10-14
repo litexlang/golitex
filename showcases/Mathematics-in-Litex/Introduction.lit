@@ -1,9 +1,0 @@
-# Mathematics in Litex
-# Selected mathematics adapted from Mathematics in Lean. See NOTICE.md.
-# This distribution contains the preface and Chapters 1–8 in dependency order.
-# It translates mathematical definitions and proof ideas, not Lean tactic syntax.
-# Repeated Lean demonstrations of the same result may share one Litex proof.
-# Chapter presence does not mean every upstream item has been translated.
-# All exported source is checked with strict mode; builtin/inference rules and
-# named foundation releases remain part of the Litex verification boundary.
-# No Lean kernel certification is claimed. Later chapters are not exported.

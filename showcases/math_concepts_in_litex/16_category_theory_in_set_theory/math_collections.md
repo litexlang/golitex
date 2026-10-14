@@ -43,9 +43,8 @@ identity/composite functors -> naturality -> identity/vertical composition ->
 finite concrete consumers`.
 
 Preserve the original named declarations and mathematical constructions.
-Migration proceeds in this order in a persistent release session. The
-journal and `plan/迁移的plan/showcase_Category结构迁移_2026-10-03.md` record
-the stages and historical failures. On 2026-10-04 the complete Litex chapter
+Migration proceeds in this order in a persistent release session. On
+2026-10-04 the complete Litex chapter
 passed strict release (49/49 statements and the registered chapter gate).
 Four derived closure lemmas expose exact Hom results before nested guarded
 calls without changing the category, functor, or natural-transformation

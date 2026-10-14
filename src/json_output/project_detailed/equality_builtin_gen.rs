@@ -1158,8 +1158,8 @@ pub(super) fn project_equality_builtin_rule(
             let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("AbsSquare")),
+                ("base_real", project_verify_fact(&p.base_real, runtime)),
             ];
-            let _ = p;
             object_for(runtime, entries)
         }
         EqualitySearchProofByBuiltinRule::LogBaseSelf(p) => {
@@ -1633,14 +1633,17 @@ pub(super) fn project_equality_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         }
-        EqualitySearchProofByBuiltinRule::ProductModFactorZero(p) => {
-            let entries = vec![
+        EqualitySearchProofByBuiltinRule::ProductModFactorZero(p) => object_for(
+            runtime,
+            vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ProductModFactorZero")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        }
+                (
+                    "multiplier_integer",
+                    project_verify_fact(&p.multiplier_integer, runtime),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(p) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1759,14 +1762,17 @@ pub(super) fn project_equality_builtin_rule(
             ));
             object_for(runtime, entries)
         }
-        EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(p) => {
-            let entries = vec![
+        EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(p) => object_for(
+            runtime,
+            vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("MinusOneOddNaturalPower")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        }
+                (
+                    "parameter_integer",
+                    project_verify_fact(&p.parameter_integer, runtime),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(p) => {
             let entries = vec![
                 ("type", string("builtin_rule")),
@@ -2301,22 +2307,36 @@ pub(super) fn project_equality_builtin_rule(
             ));
             object_for(runtime, entries)
         }
-        EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(p) => {
-            let entries = vec![
+        EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(p) => object_for(
+            runtime,
+            vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ReOfRealPlusImagScaled")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        }
-        EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(p) => {
-            let entries = vec![
+                (
+                    "real_coefficient_real",
+                    project_verify_fact(&p.real_coefficient_real, runtime),
+                ),
+                (
+                    "imaginary_coefficient_real",
+                    project_verify_fact(&p.imaginary_coefficient_real, runtime),
+                ),
+            ],
+        ),
+        EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(p) => object_for(
+            runtime,
+            vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ImgOfRealPlusImagScaled")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        }
+                (
+                    "real_coefficient_real",
+                    project_verify_fact(&p.real_coefficient_real, runtime),
+                ),
+                (
+                    "imaginary_coefficient_real",
+                    project_verify_fact(&p.imaginary_coefficient_real, runtime),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(p) => {
             let entries = vec![
                 ("type", string("builtin_rule")),
@@ -2543,14 +2563,21 @@ pub(super) fn project_equality_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         }
-        EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(p) => {
-            let entries = vec![
+        EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(p) => object_for(
+            runtime,
+            vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("ComplexAbsSquaredOfRectForm")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        }
+                (
+                    "real_coefficient_real",
+                    project_verify_fact(&p.real_coefficient_real, runtime),
+                ),
+                (
+                    "imaginary_coefficient_real",
+                    project_verify_fact(&p.imaginary_coefficient_real, runtime),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::ExpOfSum(p) => {
             let entries = vec![
                 ("type", string("builtin_rule")),

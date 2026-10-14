@@ -13,7 +13,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     SinArcsinLeftInverseBuiltinRuleProof, TanArctanLeftInverseBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::{
-    AbsOfNegationBuiltinRuleProof, AbsProductBuiltinRuleProof, AbsSquareBuiltinRuleProof, LogBaseSelfBuiltinRuleProof,
+    AbsOfNegationBuiltinRuleProof, AbsProductBuiltinRuleProof, LogBaseSelfBuiltinRuleProof,
     LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, ModOneBuiltinRuleProof,
     NestedSameModAbsorptionBuiltinRuleProof, ModCompatibleSmallerModulusBuiltinRuleProof,
     OneModAtLeastTwoBuiltinRuleProof,
@@ -46,14 +46,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::{
     AbsEqualsSignTimesArgBuiltinRuleProof, DiffZeroFromEqualOperandsBuiltinRuleProof,
     EqualityFromTwoSidedWeakOrderBuiltinRuleProof, GcdDividesArgumentBuiltinRuleProof,
-    ProductModFactorZeroBuiltinRuleProof, SignOfNegationBuiltinRuleProof,
+    SignOfNegationBuiltinRuleProof,
     SignOfProductBuiltinRuleProof, SignTimesAbsEqualsArgBuiltinRuleProof,
     SubtractionFromKnownAdditionBuiltinRuleProof, ZeroProductCancelBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_from_known_difference_zero::EqualFromKnownDifferenceZeroBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave8::{
-    LcmGcdProductAbsBuiltinRuleProof, MinusOneOddNaturalPowerBuiltinRuleProof,
-    ModDividendMinusRemainderZeroBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
+    LcmGcdProductAbsBuiltinRuleProof, ModDividendMinusRemainderZeroBuiltinRuleProof,
+    QuotEuclideanDecompositionBuiltinRuleProof,
     SquareSumComponentZeroBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::{
@@ -95,15 +95,13 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     ComplexAbsOfImagScaledBuiltinRuleProof, ComplexAbsOfNonnegRealBuiltinRuleProof,
     EulerEqualsExpOneBuiltinRuleProof, FamilyUnionOfEmptyBuiltinRuleProof, FamilyUnionOfSingletonBuiltinRuleProof, FamilyUnionOfPowerSetBuiltinRuleProof,
     FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof,
-    ImgOfRealBuiltinRuleProof, ImgOfRealPlusImagScaledBuiltinRuleProof,
-    LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
+    ImgOfRealBuiltinRuleProof, LnOfEulerBuiltinRuleProof, PowerSetOfEmptyBuiltinRuleProof,
     PowerSetOfSingletonBuiltinRuleProof, RangeLiteralExpansionBuiltinRuleProof,
-    ReOfRealBuiltinRuleProof, ReOfRealPlusImagScaledBuiltinRuleProof,
-    SeqEqualsFnOnNPosBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
+    ReOfRealBuiltinRuleProof, SeqEqualsFnOnNPosBuiltinRuleProof, SetMinusChainToUnionBuiltinRuleProof,
     UnionOverIntersectDistributiveBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave14::{
-    ComplexAbsSquaredOfRectFormBuiltinRuleProof, CosOfSumBuiltinRuleProof,
+    CosOfSumBuiltinRuleProof,
     ExpOfSumBuiltinRuleProof, FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof,
     ImgOfProductBuiltinRuleProof, IndexCartEmptyIndexBuiltinRuleProof,
     IndexIntersectEmptyIndexBuiltinRuleProof, IndexUnionEmptyIndexBuiltinRuleProof,
@@ -292,7 +290,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         }),
         EqualitySearchProofByBuiltinRule::AbsOfNegation(AbsOfNegationBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::AbsProduct(AbsProductBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::AbsSquare(AbsSquareBuiltinRuleProof {}),
+        actual_equality_builtin_fixture("forall a R:\n    abs(a^2)=a^2\n"),
         EqualitySearchProofByBuiltinRule::LogBaseSelf(LogBaseSelfBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
@@ -302,19 +300,19 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::LogOfPowerSameBase(LogOfPowerSameBaseBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
-        actual_log_algebra_fixture(
+        actual_equality_builtin_fixture(
             "forall a,x R+,n Z:\n    a<1\n    =>:\n        log(a,x^n)=n*log(a,x)\n",
         ),
-        actual_log_algebra_fixture(
+        actual_equality_builtin_fixture(
             "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x*y)=log(a,x)+log(a,y)\n",
         ),
-        actual_log_algebra_fixture(
+        actual_equality_builtin_fixture(
             "forall a,x,y R+:\n    a<1\n    =>:\n        log(a,x/y)=log(a,x)-log(a,y)\n",
         ),
-        actual_log_algebra_fixture(
+        actual_equality_builtin_fixture(
             "forall a,x R+:\n    a<1\n    =>:\n        log(a,1/x)=-log(a,x)\n",
         ),
-        actual_log_algebra_fixture(
+        actual_equality_builtin_fixture(
             "forall a,b,x R+:\n    a!=1\n    b!=1\n    =>:\n        log(a,x)=log(b,x)/log(b,a)\n",
         ),
         EqualitySearchProofByBuiltinRule::ZeroMod(ZeroModBuiltinRuleProof {
@@ -419,9 +417,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
             },
         ),
         EqualitySearchProofByBuiltinRule::GcdDividesArgument(GcdDividesArgumentBuiltinRuleProof {}),
-        EqualitySearchProofByBuiltinRule::ProductModFactorZero(
-            ProductModFactorZeroBuiltinRuleProof {},
-        ),
+        actual_equality_builtin_fixture("forall n N+, k Z:\n    (n*k)%n=0\n"),
         EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(
             EqualityFromTwoSidedWeakOrderBuiltinRuleProof {
                 left_le_right_proof: sample_known_atomic_premise("0 <= 0"),
@@ -465,9 +461,7 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
                 proof_of_requirement_facts: Vec::new(),
             },
         ),
-        EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(
-            MinusOneOddNaturalPowerBuiltinRuleProof {},
-        ),
+        actual_equality_builtin_fixture("forall m Z:\n    (-1)^(2*m+1)=-1\n"),
         EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(LcmGcdProductAbsBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::UnionEmptyRight(UnionEmptyRightBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::UnionEmptyLeft(UnionEmptyLeftBuiltinRuleProof {}),
@@ -616,12 +610,8 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::ImgOfReal(ImgOfRealBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
-        EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(
-            ReOfRealPlusImagScaledBuiltinRuleProof {},
-        ),
-        EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(
-            ImgOfRealPlusImagScaledBuiltinRuleProof {},
-        ),
+        actual_equality_builtin_fixture("forall a,b R:\n    re(a+b*i)=a\n"),
+        actual_equality_builtin_fixture("forall a,b R:\n    img(a+b*i)=b\n"),
         EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(
             ComplexAbsOfNonnegRealBuiltinRuleProof {},
         ),
@@ -680,11 +670,9 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         EqualitySearchProofByBuiltinRule::SetBuilderObviouslyEmpty(
             SetBuilderObviouslyEmptyBuiltinRuleProof {},
         ),
-        EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(
-            ComplexAbsSquaredOfRectFormBuiltinRuleProof {},
-        ),
+        actual_equality_builtin_fixture("forall a,b R:\n    C_abs(a+b*i)^2=a^2+b^2\n"),
         EqualitySearchProofByBuiltinRule::ExpOfSum(ExpOfSumBuiltinRuleProof {}),
-        actual_log_algebra_fixture(
+        actual_equality_builtin_fixture(
             "forall a,x R+,n Z*:\n    a!=1\n    =>:\n        log(a^n,x)=log(a,x)/n\n",
         ),
         EqualitySearchProofByBuiltinRule::ReOfProduct(ReOfProductBuiltinRuleProof {}),
@@ -1505,7 +1493,7 @@ fn acceptance_all_locales_cover_statement_and_proof_routes() {
     }
 }
 
-fn actual_log_algebra_fixture(code: &str) -> EqualitySearchProofByBuiltinRule {
+fn actual_equality_builtin_fixture(code: &str) -> EqualitySearchProofByBuiltinRule {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
         EqualFactSearchedProof, VerifyEqualityResult,
     };

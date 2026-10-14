@@ -2,16 +2,7 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, QuantifierFreeFact};
-use crate::ast::obj::{
-    Abs, Add, AnonymousFn, ArithmeticOperator, Cart, ClosedRange, ComplexAbs, ComplexOperator, Exp,
-    ExpLogOperator, FamilyUnion, FiniteSeqSet, FnRange, FnSet, FunctionSpace, ImaginaryPart,
-    Intersect, ListSet, Literal, Mul, Number, Obj, PowerSet, ProductShape, Range, RealPart, SeqSet,
-    SetFormer, SetMinus, SetOperator, StandardSet, Union,
-};
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::prelude::*;
 
 // Builtin EulerEqualsExpOne: e = exp(1).
 pub struct EulerEqualsExpOneBuiltinRuleProof {}
@@ -31,13 +22,19 @@ pub struct ImgOfRealBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin ReOfRealPlusImagScaled: re(a + b * i) = a (a,b closed numerals or free with R).
+// Builtin ReOfRealPlusImagScaled: re(a + b * i) = a for real a and b.
 // Example: re(2 + 3 * i) = 2.
-pub struct ReOfRealPlusImagScaledBuiltinRuleProof {}
+pub struct ReOfRealPlusImagScaledBuiltinRuleProof {
+    pub real_coefficient_real: VerifyFactResult,
+    pub imaginary_coefficient_real: VerifyFactResult,
+}
 
-// Builtin ImgOfRealPlusImagScaled: img(a + b * i) = b.
+// Builtin ImgOfRealPlusImagScaled: img(a + b * i) = b for real a and b.
 // Example: img(2 + 3 * i) = 3.
-pub struct ImgOfRealPlusImagScaledBuiltinRuleProof {}
+pub struct ImgOfRealPlusImagScaledBuiltinRuleProof {
+    pub real_coefficient_real: VerifyFactResult,
+    pub imaginary_coefficient_real: VerifyFactResult,
+}
 
 // Builtin ComplexAbsOfReal: C_abs(a) = abs(a) for a real numeral (or equals a when a >= 0).
 // Example: C_abs(3) = 3.
@@ -144,18 +141,14 @@ impl Runtime {
                     LnOfEulerBuiltinRuleProof {},
                 )));
             }
-            if re_of_real_plus_imag_scaled_shape(left, right) {
+            if let Some(proof) = self.try_re_of_real_plus_imag_scaled(left, right, child)? {
                 return Ok(Some(
-                    EqualityIdentitiesWave13BuiltinRuleProof::ReOfRealPlusImagScaled(
-                        ReOfRealPlusImagScaledBuiltinRuleProof {},
-                    ),
+                    EqualityIdentitiesWave13BuiltinRuleProof::ReOfRealPlusImagScaled(proof),
                 ));
             }
-            if img_of_real_plus_imag_scaled_shape(left, right) {
+            if let Some(proof) = self.try_img_of_real_plus_imag_scaled(left, right, child)? {
                 return Ok(Some(
-                    EqualityIdentitiesWave13BuiltinRuleProof::ImgOfRealPlusImagScaled(
-                        ImgOfRealPlusImagScaledBuiltinRuleProof {},
-                    ),
+                    EqualityIdentitiesWave13BuiltinRuleProof::ImgOfRealPlusImagScaled(proof),
                 ));
             }
             if complex_abs_of_nonneg_real_shape(left, right) {
@@ -269,6 +262,82 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    fn try_re_of_real_plus_imag_scaled(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<ReOfRealPlusImagScaledBuiltinRuleProof>> {
+        let Some((real, imaginary)) = re_of_real_plus_imag_scaled_coefficients(left, right) else {
+            return Ok(None);
+        };
+        let real_premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: real,
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }
+        .into();
+        let real_coefficient_real = self.verify_builtin_rule_premise(&real_premise, state)?;
+        if real_coefficient_real.is_failed() {
+            return Ok(None);
+        }
+        let imaginary_premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: imaginary,
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }
+        .into();
+        let imaginary_coefficient_real =
+            self.verify_builtin_rule_premise(&imaginary_premise, state)?;
+        if imaginary_coefficient_real.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ReOfRealPlusImagScaledBuiltinRuleProof::new(
+            real_coefficient_real,
+            imaginary_coefficient_real,
+        )))
+    }
+
+    fn try_img_of_real_plus_imag_scaled(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<ImgOfRealPlusImagScaledBuiltinRuleProof>> {
+        let Some((real, imaginary)) = img_of_real_plus_imag_scaled_coefficients(left, right) else {
+            return Ok(None);
+        };
+        let real_premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: real,
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }
+        .into();
+        let real_coefficient_real = self.verify_builtin_rule_premise(&real_premise, state)?;
+        if real_coefficient_real.is_failed() {
+            return Ok(None);
+        }
+        let imaginary_premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: imaginary,
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }
+        .into();
+        let imaginary_coefficient_real =
+            self.verify_builtin_rule_premise(&imaginary_premise, state)?;
+        if imaginary_coefficient_real.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ImgOfRealPlusImagScaledBuiltinRuleProof::new(
+            real_coefficient_real,
+            imaginary_coefficient_real,
+        )))
     }
 
     fn try_re_of_real(
@@ -455,24 +524,44 @@ fn match_real_plus_imag_scaled_owned(obj: &Obj) -> Option<(Obj, Obj)> {
     None
 }
 
-fn re_of_real_plus_imag_scaled_shape(left: &Obj, right: &Obj) -> bool {
+fn re_of_real_plus_imag_scaled_coefficients(left: &Obj, right: &Obj) -> Option<(Obj, Obj)> {
     let Obj::ComplexOperator(ComplexOperator::RealPart(RealPart { arg })) = left else {
-        return false;
+        return None;
     };
-    let Some((real, _)) = match_real_plus_imag_scaled_owned(arg.as_ref()) else {
-        return false;
-    };
-    real.ir() == right.ir()
+    let (real, scale) = match_real_plus_imag_scaled_owned(arg.as_ref())?;
+    (real.ir() == right.ir()).then_some((real, scale))
 }
 
-fn img_of_real_plus_imag_scaled_shape(left: &Obj, right: &Obj) -> bool {
+fn img_of_real_plus_imag_scaled_coefficients(left: &Obj, right: &Obj) -> Option<(Obj, Obj)> {
     let Obj::ComplexOperator(ComplexOperator::ImaginaryPart(ImaginaryPart { arg })) = left else {
-        return false;
+        return None;
     };
-    let Some((_, scale)) = match_real_plus_imag_scaled_owned(arg.as_ref()) else {
-        return false;
-    };
-    scale.ir() == right.ir()
+    let (real, scale) = match_real_plus_imag_scaled_owned(arg.as_ref())?;
+    (scale.ir() == right.ir()).then_some((real, scale))
+}
+
+impl ReOfRealPlusImagScaledBuiltinRuleProof {
+    pub fn new(
+        real_coefficient_real: VerifyFactResult,
+        imaginary_coefficient_real: VerifyFactResult,
+    ) -> Self {
+        Self {
+            real_coefficient_real,
+            imaginary_coefficient_real,
+        }
+    }
+}
+
+impl ImgOfRealPlusImagScaledBuiltinRuleProof {
+    pub fn new(
+        real_coefficient_real: VerifyFactResult,
+        imaginary_coefficient_real: VerifyFactResult,
+    ) -> Self {
+        Self {
+            real_coefficient_real,
+            imaginary_coefficient_real,
+        }
+    }
 }
 
 fn complex_abs_of_nonneg_real_shape(left: &Obj, right: &Obj) -> bool {

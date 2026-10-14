@@ -443,11 +443,18 @@ prop is_linear_combination(K nonempty_set, field &Field<K>, V nonempty_set, spac
 
 # The partial sums for two terms are zero, the first scalar multiple,
 # and the sum of both scalar multiples.
-have fn two_term_partial_sum(coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2), k closed_range(0, 2)) R × R by induc k from 0:
+claim:
+    ? forall prefix_index closed_range(0, 2):
+        prefix_index = 0 or prefix_index = 1 or prefix_index = 2
+    by for:
+        ? forall enum_index closed_range(0, 2):
+            enum_index = 0 or enum_index = 1 or enum_index = 2
+        enum_index = 0 or enum_index = 1 or enum_index = 2
+
+have fn two_term_partial_sum(coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2), k closed_range(0, 2)) R × R by cases:
     case k = 0: (0, 0)
-    case k >= 1:
-        case k = 1: plane_smul(coefficients(1), vectors(1))
-        case k != 1: plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
+    case k = 1: plane_smul(coefficients(1), vectors(1))
+    case k = 2: plane_add(plane_smul(coefficients(1), vectors(1)), plane_smul(coefficients(2), vectors(2)))
 
 thm two_term_combination_exists:
     ? forall coefficients finite_seq(R, 2), vectors finite_seq(R × R, 2):

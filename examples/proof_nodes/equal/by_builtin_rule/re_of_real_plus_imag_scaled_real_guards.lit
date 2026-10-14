@@ -1,0 +1,13 @@
+# Tracer: ReOfRealPlusImagScaled checks both rectangular coefficients in R.
+# Before (incorrectly accepted):
+# re(i + i) = i
+# re(0 + i * i) = 0
+# Former behavior: either complex coefficient could invalidate the formula.
+# Now: both real-coefficient premises are checked and retained.
+forall a, b R:
+    re(a + b * i) = a
+    a = re(b * i + a)
+re(i + i) = 0
+# Boundary: checking only the first coefficient does not justify the second old line.
+# Executable negatives: hcx_arithmetic_guards::false_operand_orders_and_complex_second_coefficients_reject.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/re_of_real_plus_imag_scaled_real_guards.lit

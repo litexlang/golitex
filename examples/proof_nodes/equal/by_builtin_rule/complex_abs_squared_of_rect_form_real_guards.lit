@@ -1,0 +1,13 @@
+# Tracer: ComplexAbsSquaredOfRectForm checks both rectangular coefficients in R.
+# Before (incorrectly accepted):
+# C_abs(i + 1 * i)^2 = i^2 + 1^2
+# C_abs(0 + i * i)^2 = 0^2 + i^2
+# Former behavior: the comparisons 4=0 and 1=-1 were accepted.
+# Now: both real-coefficient premises are checked and retained.
+forall a, b R:
+    C_abs(a + b * i)^2 = a^2 + b^2
+    b^2 + a^2 = C_abs(a + i * b)^2
+C_abs(i + 1 * i)^2 = 4
+# Boundary: the formula requires real coefficients, even though C_abs accepts complex inputs.
+# Executable negatives: hcx_arithmetic_guards::false_universals_and_missing_coefficient_premises_reject.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/complex_abs_squared_of_rect_form_real_guards.lit

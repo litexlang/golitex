@@ -5,17 +5,7 @@
 //! No `family_intersect({}) = {}`: absolute empty ∩ is the universe class;
 //! Litex keeps empty-index ∩ on `index_intersect({}, X, A) = X`.
 
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, LessEqualFact, LessFact, QuantifierFreeFact};
-use crate::ast::names::BoundName;
-use crate::ast::obj::{
-    Add, AnonymousFn, ArithmeticOperator, ComplexAbs, ComplexOperator, Cos, Div, Exp,
-    ExpLogOperator, FiniteSeqSet, FnObj, FnObjHead, FunctionSpace, ImaginaryPart, IndexCart,
-    IndexIntersect, IndexUnion, IteratedOperator, ListSet, Literal, Log, Mul, Number, Obj, Pow,
-    RealPart, Reduce, SetFormer, SetOperator, Sin, StandardSet, Sub, TrigOperator,
-};
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::prelude::*;
 
 // Builtin IndexUnionEmptyIndex: index_union({}, X, A) = {}.
 // Example: have A fn({}) power_set(N); index_union({}, N, A) = {}.
@@ -41,9 +31,12 @@ pub struct FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof {}
 // Examples: {x N: x < 0} = {}, {x X: f(x) $in {}} = {}.
 pub struct SetBuilderObviouslyEmptyBuiltinRuleProof {}
 
-// Builtin ComplexAbsSquaredOfRectForm: C_abs(a + b*i)^2 = a^2 + b^2.
+// Builtin ComplexAbsSquaredOfRectForm: C_abs(a + b*i)^2 = a^2 + b^2 for real a,b.
 // Example: have a R; have b R; C_abs(a + b * i)^2 = a^2 + b^2.
-pub struct ComplexAbsSquaredOfRectFormBuiltinRuleProof {}
+pub struct ComplexAbsSquaredOfRectFormBuiltinRuleProof {
+    pub real_coefficient_real: VerifyFactResult,
+    pub imaginary_coefficient_real: VerifyFactResult,
+}
 
 // Builtin ExpOfSum: exp(a + b) = exp(a) * exp(b).
 // Example: have a R; have b R; exp(a + b) = exp(a) * exp(b).
@@ -144,11 +137,9 @@ impl Runtime {
                     ),
                 ));
             }
-            if complex_abs_squared_of_rect_form_shape(left, right) {
+            if let Some(proof) = self.try_complex_abs_squared_of_rect_form(left, right, child)? {
                 return Ok(Some(
-                    EqualityIdentitiesWave14BuiltinRuleProof::ComplexAbsSquaredOfRectForm(
-                        ComplexAbsSquaredOfRectFormBuiltinRuleProof {},
-                    ),
+                    EqualityIdentitiesWave14BuiltinRuleProof::ComplexAbsSquaredOfRectForm(proof),
                 ));
             }
             if exp_of_sum_shape(left, right) {
@@ -192,6 +183,45 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    fn try_complex_abs_squared_of_rect_form(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<ComplexAbsSquaredOfRectFormBuiltinRuleProof>> {
+        let Some((real, imaginary)) = complex_abs_squared_of_rect_form_coefficients(left, right)
+        else {
+            return Ok(None);
+        };
+        let real_premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: real,
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }
+        .into();
+        let real_coefficient_real = self.verify_builtin_rule_premise(&real_premise, state)?;
+        if real_coefficient_real.is_failed() {
+            return Ok(None);
+        }
+        let imaginary_premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: imaginary,
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }
+        .into();
+        let imaginary_coefficient_real =
+            self.verify_builtin_rule_premise(&imaginary_premise, state)?;
+        if imaginary_coefficient_real.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ComplexAbsSquaredOfRectFormBuiltinRuleProof::new(
+            real_coefficient_real,
+            imaginary_coefficient_real,
+        )))
     }
 
     fn try_log_base_power(
@@ -405,28 +435,41 @@ fn set_builder_obviously_empty_shape(left: &Obj, right: &Obj) -> bool {
     }
 }
 
-fn complex_abs_squared_of_rect_form_shape(left: &Obj, right: &Obj) -> bool {
+fn complex_abs_squared_of_rect_form_coefficients(left: &Obj, right: &Obj) -> Option<(Obj, Obj)> {
     // C_abs(a + b * i)^2 = a^2 + b^2  (also a + i * b)
     let Some((abs_arg, two)) = match_pow(left) else {
-        return false;
+        return None;
     };
     if !is_number_two(two) {
-        return false;
+        return None;
     }
     let Obj::ComplexOperator(ComplexOperator::ComplexAbs(ComplexAbs { arg })) = abs_arg else {
-        return false;
+        return None;
     };
     let Some((a, bi)) = match_add(arg) else {
-        return false;
+        return None;
     };
     let Some(b) = imag_scaled_coeff(bi) else {
-        return false;
+        return None;
     };
     let Some((a2, b2)) = match_add(right) else {
-        return false;
+        return None;
     };
-    square_of(a2) == Some(a) && square_of(b2) == Some(b)
-        || square_of(a2) == Some(b) && square_of(b2) == Some(a)
+    let matches = square_of(a2) == Some(a) && square_of(b2) == Some(b)
+        || square_of(a2) == Some(b) && square_of(b2) == Some(a);
+    matches.then(|| (a.clone(), b.clone()))
+}
+
+impl ComplexAbsSquaredOfRectFormBuiltinRuleProof {
+    pub fn new(
+        real_coefficient_real: VerifyFactResult,
+        imaginary_coefficient_real: VerifyFactResult,
+    ) -> Self {
+        Self {
+            real_coefficient_real,
+            imaginary_coefficient_real,
+        }
+    }
 }
 
 fn imag_scaled_coeff(obj: &Obj) -> Option<&Obj> {

@@ -6,8 +6,8 @@ verification: **49/49 top-level statements**, including all 17 original
 named theorems and four derived Hom-closure lemmas. The selected interface
 is `Category<Obj, Mor>` with ordered dependent fields, fixed function return
 carriers, and guarded composition. All original named declarations remain
-active, with no trust or extra axioms. The proof-completion round changed
-Litex source and records only; see the [acceptance record](../../../scripts/math_concepts_in_litex_upstream/experience/problem_notes/category_proof_completion_acceptance.md).
+active, with no trust or extra axioms. The proof-completion round changed only
+the Litex source and its verification records.
 
 The standalone [Category regression](../../../examples/wd/category_dependent_fields.lit)
 checks the two-parameter struct, unit/associativity laws, and an actual guarded

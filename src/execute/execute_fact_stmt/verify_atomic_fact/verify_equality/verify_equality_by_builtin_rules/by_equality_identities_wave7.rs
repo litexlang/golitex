@@ -2,25 +2,20 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, NotEqualFact};
-use crate::ast::obj::{
-    Abs, Add, ArithmeticOperator, Gcd, IntegerOperator, Literal, Mod, Mul, Neg, Number, Obj, Sign,
-    Sub,
-};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::prelude::*;
 
 // Builtin GcdDividesArgument: a % gcd(a, b) = 0 (and symmetrically for b).
 // Example: have a Z; have b Z; trust a != 0; trust gcd(a,b) $in N+; trust gcd(a,b) != 0;
 //          a % gcd(a, b) = 0.
 pub struct GcdDividesArgumentBuiltinRuleProof {}
 
-// Builtin ProductModFactorZero: (a * b) % a = 0 (or (a * b) % b = 0).
-// Example: have a N+; have b Z; trust a != 0; let p = a * b; trust p $in Z; (a * b) % a = 0
-//          (when WD of the mod expression succeeds).
-pub struct ProductModFactorZeroBuiltinRuleProof {}
+// Builtin ProductModFactorZero: (a * b) % a = 0 when b is an integer.
+// Example: forall a N+, b Z: (a * b) % a = 0.
+// The enclosing modulo WD still checks its dividend and nonzero divisor.
+pub struct ProductModFactorZeroBuiltinRuleProof {
+    pub multiplier_integer: VerifyFactResult,
+}
 
 // Builtin EqualityFromTwoSidedWeakOrder: a = b from both weak-order directions.
 // Either direction may be stored as <= or its converse >=.
@@ -93,11 +88,9 @@ impl Runtime {
                     ),
                 ));
             }
-            if product_mod_factor_zero_shape(left, right) {
+            if let Some(proof) = self.try_product_mod_factor_zero(left, right, child)? {
                 return Ok(Some(
-                    EqualityIdentitiesWave7BuiltinRuleProof::ProductModFactorZero(
-                        ProductModFactorZeroBuiltinRuleProof {},
-                    ),
+                    EqualityIdentitiesWave7BuiltinRuleProof::ProductModFactorZero(proof),
                 ));
             }
             if let Some(p) = self.try_sign_of_negation(left, right)? {
@@ -142,6 +135,31 @@ impl Runtime {
             ));
         }
         Ok(None)
+    }
+
+    fn try_product_mod_factor_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<ProductModFactorZeroBuiltinRuleProof>> {
+        let Some(multiplier) = product_mod_factor_zero_multiplier(left, right) else {
+            return Ok(None);
+        };
+        let premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: multiplier,
+            set: Obj::StandardSet(StandardSet::Z),
+            line_file: None,
+        }
+        .into();
+        let multiplier_integer = self.verify_builtin_rule_premise(&premise, state)?;
+        if multiplier_integer.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ProductModFactorZeroBuiltinRuleProof::new(
+            multiplier_integer,
+        )))
     }
 
     fn try_sign_of_negation(
@@ -428,18 +446,30 @@ fn gcd_divides_argument_shape(remainder: &Obj, zero: &Obj) -> bool {
     dividend.ir() == g1.ir() || dividend.ir() == g2.ir()
 }
 
-fn product_mod_factor_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
+fn product_mod_factor_zero_multiplier(remainder: &Obj, zero: &Obj) -> Option<Obj> {
     if !is_zero_obj(zero) {
-        return false;
+        return None;
     }
     let Some((dividend, modulus)) = match_mod(remainder) else {
-        return false;
+        return None;
     };
     let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) = dividend
     else {
-        return false;
+        return None;
     };
-    modulus.ir() == a.ir() || modulus.ir() == b.ir()
+    if modulus.ir() == a.ir() {
+        Some(b.as_ref().clone())
+    } else if modulus.ir() == b.ir() {
+        Some(a.as_ref().clone())
+    } else {
+        None
+    }
+}
+
+impl ProductModFactorZeroBuiltinRuleProof {
+    pub fn new(multiplier_integer: VerifyFactResult) -> Self {
+        Self { multiplier_integer }
+    }
 }
 
 fn match_mod(obj: &Obj) -> Option<(&Obj, &Obj)> {

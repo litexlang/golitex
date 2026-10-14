@@ -1,0 +1,17 @@
+# Tracer: the absolute value of a square needs a real base.
+# Before (incorrectly accepted):
+# abs(i^2) = i^2
+# i^2 = -1
+# abs(i^2) = -1
+# 0 <= abs(i^2)
+# 0 <= -1
+# Former behavior: all five statements passed in strict mode.
+# Now: the identity is available for a checked real base.
+forall a R:
+    abs(a^2) = a^2
+abs((-2)^2) = (-2)^2
+i^2 = -1
+0 <= abs(i^2)
+# Boundary: abs(i^2) = i^2 rejects because i is not real.
+# Executable negative: abs_square_real_guard::complex_square_does_not_prove_negative_absolute_value.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/abs_square_real_base_guard.lit

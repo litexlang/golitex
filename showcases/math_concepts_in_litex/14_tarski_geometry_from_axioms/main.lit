@@ -634,6 +634,7 @@ thm segment_congruence_addition:
         $are_segments_congruent(Point, Cong, b, c, b2, c2)
         =>:
             $are_segments_congruent(Point, Cong, a, c, a2, c2)
+    $TarskiNeutralDimensionlessSetting(Point, Bet, Cong, lower_a, lower_b, lower_c)
     a = b or a != b
     by cases:
         ? $are_segments_congruent(Point, Cong, a, c, a2, c2)
@@ -664,6 +665,9 @@ thm inner_five_segment:
         $is_inner_five_segment_configuration(Point, Bet, Cong, a, b, c, d, a2, b2, c2, d2)
         =>:
             $are_segments_congruent(Point, Cong, b, d, b2, d2)
+    $TarskiNeutralDimensionlessSetting(Point, Bet, Cong, lower_a, lower_b, lower_c)
+    $is_between(Point, Bet, a, b, c)
+    $is_between(Point, Bet, a2, b2, c2)
     a = c or a != c
     by cases:
         ? $are_segments_congruent(Point, Cong, b, d, b2, d2)
@@ -680,6 +684,8 @@ thm inner_five_segment:
             (a2, b2, a2) $in Bet
             a2 = b2
             (a, d, a2, d2) = (b, d, b2, d2)
+            $are_segments_congruent(Point, Cong, a, d, a2, d2)
+            (a, d, a2, d2) $in Cong
             by def $are_segments_congruent(Point, Cong, b, d, b2, d2)
         case a != c:
             release thm point_has_strict_extension(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c)
@@ -777,6 +783,7 @@ thm triangle_congruence_sss_gives_angles:
         $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
         =>:
             $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
+    $TarskiNeutralDimensionlessSetting(Point, Bet, Cong, lower_a, lower_b, lower_c)
     release thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
     claim:
         ? a2 != b2
@@ -944,6 +951,7 @@ thm point_reflection_unique:
         $is_point_reflection(Point, Bet, Cong, point, reflected2, center)
         =>:
             reflected1 = reflected2
+    $TarskiNeutralDimensionlessSetting(Point, Bet, Cong, lower_a, lower_b, lower_c)
     release thm point_reflection_is_midpoint(Point, Bet, Cong, point, reflected1, center)
     $is_midpoint(Point, Bet, Cong, center, point, reflected1)
     release thm point_reflection_is_midpoint(Point, Bet, Cong, point, reflected2, center)

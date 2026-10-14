@@ -1,7 +1,0 @@
-# Chapter 1: Orientation.
-# Natural numbers and induction lead to sets, maps, rationals and real-number interfaces.
-# Epsilon-tail definitions support sequence limits and series convergence arguments.
-# Injections and earlier map predicates support countability and product representations.
-# Familiar carriers use Litex builtins; the explicit foundation axioms remain assumptions.
-# This introductory export contains no mathematical declarations.
-# Chapters 9--11 and the omitted branches listed in STATUS.md are outside this selection.

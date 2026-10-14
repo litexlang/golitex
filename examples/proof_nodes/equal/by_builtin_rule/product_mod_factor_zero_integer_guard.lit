@@ -1,0 +1,16 @@
+# Tracer: ProductModFactorZero checks the other factor's integer membership.
+# Before (incorrectly accepted):
+# (2 * (1 / 2)) % 2 = 0
+# (2 * (1 / 2)) % 2 = 1
+# 0 = 1
+# Former behavior: all three lines passed, deriving a false equality.
+# Now: integral multipliers retain the identity; the fractional example has remainder 1.
+forall n N+, k Z:
+    (n * k) % n = 0
+    (k * n) % n = 0
+    0 = (n * k) % n
+(2 * (1 / 2)) % 2 = 1
+0 != 1
+# Boundary: the old zero-remainder assertion and false real-parameter schema reject.
+# Executable negatives: hcx_arithmetic_guards::original_contradictions_reject_only_the_false_steps.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/product_mod_factor_zero_integer_guard.lit

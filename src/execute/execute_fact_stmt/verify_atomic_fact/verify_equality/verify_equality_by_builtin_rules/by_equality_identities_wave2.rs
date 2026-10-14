@@ -3,10 +3,10 @@
 //! One matcher ↔ one dedicated proof struct.
 
 use super::log_algebra_base_proof::LogAlgebraBaseProof;
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, LessEqualFact};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessEqualFact};
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Div, ExpLogOperator, IntegerOperator, Literal, Log, Mod, Mul,
-    Number, Obj, Pow, Sqrt, Sub,
+    Number, Obj, Pow, Sqrt, StandardSet, Sub,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -60,8 +60,11 @@ pub struct AbsOfNegationBuiltinRuleProof {}
 // Builtin AbsProduct: abs(a*b) = abs(a)*abs(b).
 pub struct AbsProductBuiltinRuleProof {}
 
-// Builtin AbsSquare: abs(a^2) = a^2.
-pub struct AbsSquareBuiltinRuleProof {}
+// Builtin AbsSquare: abs(a^2) = a^2 for real a.
+// Example: have a R; abs(a^2) = a^2.
+pub struct AbsSquareBuiltinRuleProof {
+    pub base_real: VerifyFactResult,
+}
 
 // --- log ---
 
@@ -264,7 +267,7 @@ impl Runtime {
             if let Some(p) = self.try_abs_product(left, right)? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::AbsProduct(p)));
             }
-            if let Some(p) = self.try_abs_square(left, right)? {
+            if let Some(p) = self.try_abs_square(left, right, child.clone())? {
                 return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::AbsSquare(p)));
             }
             if let Some(p) = self.try_log_base_self(left, right, child.clone())? {
@@ -626,6 +629,7 @@ impl Runtime {
         &mut self,
         left: &Obj,
         right: &Obj,
+        verify_state: VerifyState,
     ) -> RuntimeResult<Option<AbsSquareBuiltinRuleProof>> {
         let Some(arg) = match_abs(left) else {
             return Ok(None);
@@ -641,7 +645,18 @@ impl Runtime {
             return Ok(None);
         };
         if is_two_obj(rexp) && rbase.ir() == base.ir() {
-            return Ok(Some(AbsSquareBuiltinRuleProof {}));
+            let premise: Fact = InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: base.clone(),
+                set: Obj::StandardSet(StandardSet::R),
+                line_file: None,
+            }
+            .into();
+            let base_real = self.verify_builtin_rule_premise(&premise, verify_state)?;
+            if base_real.is_failed() {
+                return Ok(None);
+            }
+            return Ok(Some(AbsSquareBuiltinRuleProof { base_real }));
         }
         Ok(None)
     }

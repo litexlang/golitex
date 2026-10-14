@@ -2693,62 +2693,59 @@ impl AbsProductBuiltinRuleProof {
 impl AbsSquareBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
-            "Square of the absolute value of a real number",
-            "The Square of the absolute value of a real number law gives: abs(a)² = a²",
+            "Absolute value of a real square",
+            "For real a, abs(a²) = a²",
         )
     }
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("实数绝对值的平方", "实数绝对值的平方可写为：abs(a)² = a²")
+        text("实数平方的绝对值", "若 a 是实数，则 abs(a²) = a²")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("實數絕對值的平方", "實數絕對值的平方可寫為：abs(a)² = a²")
+        text("實數平方的絕對值", "若 a 是實數，則 abs(a²) = a²")
     }
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         text(
-            "Carré de la valeur absolue d’un réel",
-            "La propriété « Carré de la valeur absolue d’un réel » donne: abs(a)² = a²",
+            "Valeur absolue du carré d’un réel",
+            "Pour a réel, abs(a²) = a²",
         )
     }
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         text(
-            "Квадрат модуля вещественного числа",
-            "Свойство «Квадрат модуля вещественного числа» выражается равенством: abs(a)² = a²",
+            "Модуль квадрата вещественного числа",
+            "Для вещественного a выполняется abs(a²) = a²",
         )
     }
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         text(
-            "Cuadrado del valor absoluto de un real",
-            "La propiedad «Cuadrado del valor absoluto de un real» se expresa como: abs(a)² = a²",
+            "Valor absoluto del cuadrado de un real",
+            "Para a real, abs(a²) = a²",
         )
     }
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         text(
-            "مربع القيمة المطلقة لعدد حقيقي",
-            "تُكتب خاصية «مربع القيمة المطلقة لعدد حقيقي» كما يلي: abs(a)² = a²",
+            "القيمة المطلقة لمربع عدد حقيقي",
+            "إذا كان a حقيقيًا، فإن abs(a²) = a²",
         )
     }
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "実数の絶対値の二乗",
-            "実数の絶対値の二乗は次の式で表されます：abs(a)² = a²",
-        )
+        text("実数の二乗の絶対値", "a が実数ならば abs(a²) = a²")
     }
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "실수 절댓값의 제곱",
-            "실수 절댓값의 제곱은 다음 식으로 나타납니다: abs(a)² = a²",
-        )
+        text("실수 제곱의 절댓값", "a가 실수이면 abs(a²) = a²")
     }
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Bình phương giá trị tuyệt đối của số thực", "Tính chất «Bình phương giá trị tuyệt đối của số thực» được biểu diễn bởi: abs(a)² = a²")
+        text(
+            "Giá trị tuyệt đối của bình phương số thực",
+            "Với a là số thực, abs(a²) = a²",
+        )
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

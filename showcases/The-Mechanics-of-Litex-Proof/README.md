@@ -1,16 +1,15 @@
 # The Mechanics of Litex Proof
 
-This is the complete registered Litex teaching module, with a preface, checked
-citation theorems, Chapters 0–10 and the final lesson-status export. The source
-workspace is `scripts/The-Mechanics-of-Litex-Proof/`; the ordered module entry is
-`textbook/litex.config`.
+This is the registered Litex teaching module, with
+citation theorems, Chapters 0–10 and the final lesson-status export. The ordered
+public module entry is [`litex.config`](litex.config).
 
 Build and run the whole book from the repository root:
 
 ```sh
 cargo build --release
-target/release/litex -strict -r scripts/The-Mechanics-of-Litex-Proof/textbook
-target/release/litex -r scripts/The-Mechanics-of-Litex-Proof/textbook
+target/release/litex -strict -r showcases/The-Mechanics-of-Litex-Proof
+target/release/litex -r showcases/The-Mechanics-of-Litex-Proof
 ```
 
 For a configured chapter checkpoint, use `-strict -f` with its path. Current
@@ -18,8 +17,7 @@ CLI output must report `run_result: "success"`, `session_terminated: false`, `te
 The repo JSON summarizes success; it does not expose per-export statement
 counts. The complete configuration contains 14 exports; no active trust, axiom or
 abstract proposition remains.
-Whole-book acceptance and current-build provenance are recorded in the paired
-workspace's `experience/problem_notes/2026-10-6-callable-coordinates_acceptance.md`.
+The public source and manifest are the maintained release artifact.
 
 When the book introduces a concept already supplied by Litex, it first explains
 the mathematical definition and checks small examples, then comments the switch
@@ -83,17 +81,12 @@ The corresponding source interfaces are:
   bare `-t^2` as `-(t^2)`, the book does not use that implicit spelling.
 
 The mathematical rationale and dependency map live in
-[`math_collections.md`](math_collections.md). Iteration evidence is kept outside
-the shipping module in
-`scripts/The-Mechanics-of-Litex-Proof/experience/proof_journals/`.
+[`math_collections.md`](math_collections.md). Working journals are intentionally
+kept outside the published module.
 
 ## Editing workflow
 
-Use an empty configured file in the workspace's `.draft/` area with the current
-release `-strict -f <file> -session`. Replay statements in source order, one
-complete frame at a time; current CLI framing does not support the older
-compact/runner/before/try protocol. Record materially distinct proof attempts
-in the paired workspace's `experience/proof_journals/` before materialization.
+For proof-authoring workflow, use the repository [Agent Guide](../../docs/AgentGuide.md).
 Finish a changed file with a clean configured `-strict -f` gate. Whole-book
 verification uses the actual `-r` entry above, never an inference from isolated
 chapter results. Preserve source statements, domains and teaching comments.

@@ -29,6 +29,19 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+The arithmetic premise repairs have dedicated tracers for
+[integer remainder multipliers](equal/by_builtin_rule/product_mod_factor_zero_integer_guard.lit),
+[integer odd-power parameters](equal/by_builtin_rule/minus_one_odd_natural_power_integer_guard.lit),
+[real-part coefficients](equal/by_builtin_rule/re_of_real_plus_imag_scaled_real_guards.lit),
+[imaginary-part coefficients](equal/by_builtin_rule/img_of_real_plus_imag_scaled_real_guards.lit), and
+[squared-modulus coefficients](equal/by_builtin_rule/complex_abs_squared_of_rect_form_real_guards.lit).
+The identities retain checked Z/R premise evidence. Complete-expression
+well-definedness does not establish these matched-parameter conditions;
+the `hcx_arithmetic_guards` Rust regressions execute the false former assertions.
+The [absolute value of a real square](equal/by_builtin_rule/abs_square_real_base_guard.lit)
+also checks its base in `R`: `abs(i^2)=i^2` was a separate false acceptance,
+and `abs_square_real_guard` keeps that boundary executable.
+
 [Checked-zero addition](equal/by_builtin_rule/add_zero_from_equalities.lit)
 checks `a+b=c` from `b=c`, `a=0`, or `a=c`, `b=0`, including reversed goals.
 The [literal coordinate carrier](atomic/by_known_special_property/literal_tuple_numeric_coordinate.lit)

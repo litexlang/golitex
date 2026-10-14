@@ -352,12 +352,19 @@ thm continuous_image_of_compact_is_compact:
         $is_compact_subset(X, open_sets_X, K)
         =>:
             $is_compact_subset(Y, open_sets_Y, fn_range(\restricted<X,Y,f,K>))
+    $TopologicalMapSetting(X, open_sets_X, Y, open_sets_Y, f)
+    $TopologicalSpaceSetting(Y, open_sets_Y)
     release thm restriction_type(X,Y,f,K)
     claim:
         ? forall Index set, cover fn(index Index) open_sets_Y:
             fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(cover))
             =>:
                 exist J power_set(Index) st {$is_finite_set(J), fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))}
+        open_sets_Y $subset power_set(Y)
+        claim:
+            ? forall cover_index Index:
+                cover(cover_index) $in power_set(Y)
+            cover(cover_index) $in open_sets_Y
         have fn pullback_cover(index Index) open_sets_X = \inverse_image<X,Y,f,cover(index)>
         claim:
             ? K $subset family_union(fn_range(pullback_cover))
@@ -378,8 +385,7 @@ thm continuous_image_of_compact_is_compact:
                 point $in pullback_cover(selected_index)
                 pullback_cover(selected_index) $in fn_range(pullback_cover)
                 point $in family_union(fn_range(pullback_cover))
-            by def:
-                ? K $subset family_union(fn_range(pullback_cover))
+            by def K $subset family_union(fn_range(pullback_cover))
         exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(\restricted<Index,open_sets_X,pullback_cover,J>))}
         obtain J from exist source_J power_set(Index) st {$is_finite_set(source_J), K $subset family_union(fn_range(\restricted<Index,open_sets_X,pullback_cover,source_J>))}
         witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,finite_indices>))} from J:
@@ -420,8 +426,6 @@ thm continuous_image_of_compact_is_compact:
                     witness exist target_open fn_range(\restricted<Index,open_sets_Y,cover,J>) st {image_point $in target_open} from cover(selected_index):
                         image_point $in cover(selected_index)
                     image_point $in family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))
-                by def:
-                    ? fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))
-    by def:
-        ? fn_range(\restricted<X,Y,f,K>) $subset Y
+                by def fn_range(\restricted<X,Y,f,K>) $subset family_union(fn_range(\restricted<Index,open_sets_Y,cover,J>))
+    by def fn_range(\restricted<X,Y,f,K>) $subset Y
     by def $is_compact_subset(Y, open_sets_Y, fn_range(\restricted<X,Y,f,K>))

@@ -1,12 +1,11 @@
 # IMO inequalities in Litex
 
-Six official IMO inequality problems, with five standalone Litex proofs. Each
+Five official IMO inequality problems, each with a standalone Litex proof. Each
 problem page gives its full hypotheses, mathematical proof idea when available,
 and official source links. The proof files contain no user trust or axioms.
 
 | Problem | Topic | Litex proof |
 |---|---|---|
-| [1975 P1](imo_1975_p1.md) | Ordered sequences and permutations | Statement only; not attempted |
 | [1983 P6](imo_1983_p6.md) | Triangle-side polynomial inequality and equality cases | [Proof](imo_1983_p6.lit) |
 | [1995 P2](imo_1995_p2.md) | Reciprocal cubic inequality | [Proof](imo_1995_p2.lit) |
 | [2001 P2](imo_2001_p2.md) | Radical inequality | [Proof](imo_2001_p2.lit) |

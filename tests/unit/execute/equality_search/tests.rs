@@ -21,6 +21,12 @@ mod stored_known_first;
 #[path = "stored_alpha.rs"]
 mod stored_alpha;
 
+#[path = "hcx_arithmetic_guards.rs"]
+mod hcx_arithmetic_guards;
+
+#[path = "abs_square_real_guard.rs"]
+mod abs_square_real_guard;
+
 #[test]
 fn identity_and_alpha_work_without_builtin_entry() {
     for (code, shape) in [

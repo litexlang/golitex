@@ -215,7 +215,9 @@ steps each taking approximately `t` to verify, one Session costs approximately
 This models one submission per step with unchanged prerequisites, excluding
 initial loading, separate checkpoint/final checks and required restart/replay.
 
-## Independent Lean rechecking is a goal
+<a id="independent-lean-rechecking-is-a-goal"></a>
+
+## Independent Lean rechecking for a supported mathematical subset
 
 Litex checks supported source with its own verifier. The preview
 `litex -lean -f <standalone-file>` replays supported typed results into Lean
@@ -292,13 +294,11 @@ Browse the [showcase index](showcases/README.md) for mathematical lectures,
 textbook adaptations, proof tutorials, problems, theory libraries and feature demonstrations.
 The [CLI reference](docs/cli.md) explains commands and verification output;
 the [Manual](docs/Manual.md) and [examples](examples/README.md) are starting
-points for writing more Litex. [Analysis with Litex](showcases/analysis_notes/README.md) develops limits and
-infinite sums in a self-contained mathematical lecture. The separate
-[Tao Analysis chapter development](showcases/analysis/README.md) contains
-selected Chapters 1–8, with retained axioms and omitted branches stated explicitly.
-[Mathematics in Litex](showcases/Mathematics-in-Litex/README.md) adapts selected
-material from *Mathematics in Lean*, following witnesses, sets and functions
-through recursive constructions and algebraic structures. The full argument and further
+points for writing more Litex. [Linear Algebra in Litex](showcases/linear_algebra/README.md)
+is a compact mathematical introduction. The
+[Tao Analysis chapter development](showcases/analysis/README.md) is a larger,
+non-strict adaptation of selected Chapters 1–8; it states its four user axioms,
+one abstract predicate and omitted branches explicitly. The full argument and further
 source examples
 are in the [Blueprint](docs/Litex_Blueprint.md) and
 [中文蓝图](docs/Litex中文蓝图.md).
@@ -324,3 +324,42 @@ Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu,
 Sheng Xu, Keyao Zhu, and Zhaoxuan Hong for their support and advice.
 
 Litex is released under the [Apache License 2.0](LICENSE).
+
+## Project claims, deliverables and evidence
+
+Litex investigates whether a language organized around mathematical facts can
+help people and AI construct, understand, check and reuse knowledge in the
+same source text. Its current deliverables include a working language and
+verifier, persistent interaction, mathematical developments and a Lean
+compilation path for a defined subset. The following map connects those
+claims to artifacts readers can inspect.
+
+| Current claim | Delivered implementation | Evidence and reading entry | Scope of the conclusion |
+| --- | --- | --- | --- |
+| Authors can state mathematical facts directly and have supported connections checked. | Objects, facts, definitions, well-definedness checks and local verification procedures. | [Source examples](examples/README.md), [language manual](docs/Manual.md) and [implementation guide](src/README.md). | The implemented mathematical interfaces and proof routes, under the [documented trust boundary](docs/Manual.md#trust-boundary). |
+| Accepted knowledge can support later mathematical work. | Retained facts, reusable definitions and theorems, citations and modules. | [Knowledge reuse](docs/Litex_Blueprint.md#workflow-reuse) and [mathematical developments](showcases/README.md). | Reuse under each declaration's premises, scope and import rules; individual developments identify their assumptions and checking status. |
+| People and agents can repair a step while keeping earlier accepted context. | A persistent Session, structured failure feedback and JSON results. | [Executable Session demonstration](examples/agent_session_demo/README.md) and [JSON contract](docs/cli.md#json-output-contract). | The demonstrated interaction and context-retention behavior. Its effect on authoring time and proof quality requires separate measurement. |
+| A defined mathematical subset can be compiled to Lean, independently rechecked and used through native Mathlib interfaces. | Typed-result replay, a Lean semantic core, generated source pairs and handwritten adapters. | [Coverage and example map](docs/Litex_To_Lean_Compiler_Guide.md#current-mathematical-coverage-and-examples), [source/generated pairs](lean/examples/) and [complete Adapter example](docs/examples/litex_to_lean/add_zero/README.md). | The reviewed routes and dated Lean checks. The 2026-10-12 checkpoint covers 74 pairs; native use additionally relies on the checked model and adapter for that interface. |
+| Mathematical source and results can feed other tools. | JSON output, LaTeX export and experimental Python/C extraction. | [JSON output](docs/cli.md#json-output-contract), [LaTeX exporter](src/compile_to_latex/README.md) and [computation examples](docs/Litex_Blueprint.md#workflow-use). | Each tool's supported input and output contract. LaTeX export renders parsed source without verifying it; executable extraction handles supported computational fragments. |
+
+These artifacts establish concrete language and workflow capabilities. The
+broader research question is how much this design reduces learning, writing,
+review, repair and reuse costs across users and tasks. That question can be
+tested through comparative tasks and user studies; the delivered mechanisms
+provide a system on which to perform those studies.
+
+Litex is an open-source project created and maintained by a mathematics PhD
+student with limited time and resources, with support and contributions from
+others. This context explains its development priorities and pace. The table
+provides a basis for assessing the work already delivered and choosing useful
+next contributions.
+
+When evaluating the project, distinguish whether an existing claim is supported,
+whether a particular use case needs additional capabilities, and whether a
+longer-term research goal has been demonstrated. Criticism can identify a
+specific claim, artifact or missing piece of evidence; proposed extensions can
+state the use case they would enable. An absent extension alone does not refute
+an established local result, and a local result does not establish broader
+performance or coverage. The [Blueprint](docs/Litex_Blueprint.md#claims-deliverables-evidence)
+([中文](docs/Litex中文蓝图.md#claims-deliverables-evidence)) places this map in the
+language's research context.

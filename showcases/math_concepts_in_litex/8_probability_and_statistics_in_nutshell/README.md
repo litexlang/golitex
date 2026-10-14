@@ -31,5 +31,4 @@ verification on 2026-10-01. The explicit `two_point_vector` function carrier
 retains coordinates 1 and 2. An existing template constructs the affine
 coordinate function; expanding its coordinates and the weighted sums proves
 linearity. The fair-coin expectation and variance are checked as `1/2` and
-`1/4`. See [`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md)
-for the proof journals and file/module gates. The Lean comparison was not rerun.
+`1/4`. The Lean comparison was not rerun.

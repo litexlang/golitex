@@ -68,6 +68,7 @@ thm setting_add_left_cancel:
         add_V(p, q) = add_V(p, r)
         =>:
             q = r
+    $has_vector_space_laws(K, V, scalar_one, scalar_add, scalar_mul, zero_V, add_V, smul_V)
     obtain inverse_p from exist inverse_p V st {add_V(p, inverse_p) = zero_V}
     add_V(inverse_p, p) = add_V(p, inverse_p) = zero_V
     q = add_V(zero_V, q) = add_V(add_V(inverse_p, p), q) = add_V(inverse_p, add_V(p, q)) = add_V(inverse_p, add_V(p, r)) = add_V(add_V(inverse_p, p), r) = add_V(zero_V, r) = r
@@ -77,6 +78,7 @@ thm setting_scalar_times_zero_vector:
         $VectorSpaceSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V)
         =>:
             smul_V(coefficient, zero_V) = zero_V
+    $has_vector_space_laws(K, V, scalar_one, scalar_add, scalar_mul, zero_V, add_V, smul_V)
     have q V = smul_V(coefficient, zero_V)
     add_V(zero_V, zero_V) = zero_V
     smul_V(coefficient, add_V(zero_V, zero_V)) = smul_V(coefficient, zero_V) = q
@@ -87,13 +89,14 @@ thm setting_scalar_times_zero_vector:
     release thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, q, q, zero_V)
     q = zero_V
 
-# Tracer theorem: the common scalar field is part of the ambient setting, so
-# the proof needs no record projections or source/target field-equality fact.
 thm setting_linear_map_sends_zero_to_zero:
     ? forall K nonempty_set, scalar_zero K, scalar_one K, scalar_add fn(x, y K) K, scalar_neg fn(x K) K, scalar_mul fn(x, y K) K, scalar_inv fn(x K) K, V nonempty_set, W nonempty_set, zero_V V, add_V fn(x, y V) V, smul_V fn(a K, x V) V, zero_W W, add_W fn(x, y W) W, smul_W fn(a K, x W) W, T fn(v V) W:
         $LinearMapSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W, T)
         =>:
             T(zero_V) = zero_W
+    $VectorSpacesSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W)
+    $has_vector_space_laws(K, V, scalar_one, scalar_add, scalar_mul, zero_V, add_V, smul_V)
+    $has_vector_space_laws(K, W, scalar_one, scalar_add, scalar_mul, zero_W, add_W, smul_W)
     add_V(zero_V, zero_V) = zero_V
     T(add_V(zero_V, zero_V)) = add_W(T(zero_V), T(zero_V))
     add_W(T(zero_V), T(zero_V)) = T(add_V(zero_V, zero_V)) = T(zero_V)
@@ -123,6 +126,9 @@ thm setting_linear_map_kernel_is_subspace:
         $LinearMapSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W, T)
         =>:
             $is_subspace_in_setting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, \setting_linear_kernel<V, W, zero_W, T>)
+    $VectorSpacesSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W)
+    $has_vector_space_laws(K, V, scalar_one, scalar_add, scalar_mul, zero_V, add_V, smul_V)
+    $has_vector_space_laws(K, W, scalar_one, scalar_add, scalar_mul, zero_W, add_W, smul_W)
     release thm setting_linear_map_sends_zero_to_zero(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W, T)
     T(zero_V) = zero_W
     \setting_linear_kernel<V, W, zero_W, T> = {candidate V: T(candidate) = zero_W}
@@ -331,6 +337,7 @@ thm setting_projection_x_axis_is_linear:
         $is_linear_map_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
     release thm setting_real_numbers_form_field()
     release thm setting_real_plane_is_vector_space()
+    $VectorSpaceSetting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul)
     claim:
         ? forall u, v cart(R, R):
             setting_projection_x_axis(setting_plane_add(u, v)) = setting_plane_add(setting_projection_x_axis(u), setting_projection_x_axis(v))

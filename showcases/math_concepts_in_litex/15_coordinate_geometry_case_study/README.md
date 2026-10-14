@@ -5,8 +5,8 @@ pairs, geometric predicates, and proofs. It contains 41 definitions and
 186 theorems covering vectors, distances, lines, triangles, circles, and
 related geometric constructions.
 
-The source is Jiachen Shen and Keyao Zhu's
-[geo.lit](../../../scripts/LitexGeo-AutoBuild/shenjiachen/新geo和geo_definitions/geo.lit).
+The source is Jiachen Shen and Keyao Zhu's public
+[`geo.lit`](../../2D_Geometry/geo.lit).
 The showcase copy preserves its definitions, hypotheses, conclusions, and
 proof steps. Its 402 theorem calls use `release thm` in place of `by thm`.
 The pinned source snapshot remains historical; the current maintained library supplies this migration.

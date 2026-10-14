@@ -516,6 +516,7 @@ claim:
             by for:
                 ? forall k 0...1:
                     k^2 != 2
+                k^2 < 2
         case n >= 1 + 1:
             0 <= n
             2 <= n

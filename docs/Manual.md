@@ -8551,7 +8551,7 @@ zero. Use that fact to recover the equality cases of nonnegative bounds.
 | Take the root of a square with `x>=0` | `sqrt(x^2) = x` |
 | Square a square root with `x>=0` | `sqrt(x)^2 = x` |
 | Separate a product's magnitude | `\|x*y\| = \|x\|*\|y\|` |
-| Remove absolute value from a square | `\|x^2\| = x^2` |
+| Remove absolute value from a real square | `x $in R` gives `\|x^2\| = x^2` |
 | Compare magnitudes | `a^2<=b^2` gives `\|a\|<=\|b\|` |
 | Recover signed order from squares | With `a,b>=0`, `a^2<=b^2` gives `a<=b` |
 | Recover zero from a square | `x^2=0` gives `x=0` |
@@ -9827,6 +9827,9 @@ write a smaller intermediate fact that exposes a supported shape.
 
 ### Exact calculation and native result carriers
 
+The identity `(-1)^(2*m+1)=-1` checks that the matched parameter `m` is an
+integer. An integral complete exponent alone does not establish odd parity.
+
 Closed numeric integer powers also accept negative exponents by taking the
 reciprocal of a nonzero base. Exact rational comparison covers nonterminating
 fractions and binary `min`/`max`; no rounded decimal is used as proof evidence.
@@ -10104,6 +10107,10 @@ This route is exact and zero-premise: division side conditions are still
 checked by well-definedness, and a successful equality reports
 `exact complex algebraic normalization`. It does not introduce approximate
 complex evaluation or an order on `C`.
+
+The rectangular identities `re(a+b*i)=a`, `img(a+b*i)=b`, and
+`C_abs(a+b*i)^2=a^2+b^2` require both coefficients `a` and `b` in `R`.
+A well-defined complex argument does not establish those real memberships.
 
 `re(z)`, `img(z)`, and `C_abs(z)` are dedicated unary builtin expression
 forms with domain `C` and result set `R`, at the same object-model level as
@@ -10605,7 +10612,7 @@ aggregate, and remainder rows.
 | Division | From `a/b=c` and `b!=0`, Litex proves `a=c*b`. From `a=b*c` and `b!=0`, it proves `a/b=c`. The displayed multiplier and divisor positions must match; the rule does not silently commute a product first. |
 | Absolute value and square root | A known sign selects `\|x\|=x` or `\|x\|=(-x)`; `\|x\|=0` gives `x=0`; even powers may replace a real base by its absolute value. Square-root rules include the principal-root square, special values, product/quotient laws under their domains, and `sqrt(a^2)=a` when `a>=0`. |
 | Powers and logarithms | Zero/one, exponent addition, iterated power, product power, negative exponent, roots, and inverse logarithm/power shapes are supported only in the carrier branches listed below. |
-| Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs. A positive common divisor `d` divides `gcd(a,b)`; `lcm(a,b)` for positive integer inputs divides every integer common multiple. `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
+| Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs. A positive common divisor `d` divides `gcd(a,b)`; `lcm(a,b)` for positive integer inputs divides every integer common multiple. `(a*b)%a=(a*b)%b=0` requires integer factors and the respective nonzero divisor. Integer membership of the complete product alone is insufficient. |
 | Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of differences, unions and power sets, concrete product cardinality by expansion, and empty-set equality from emptiness or zero finite cardinality. The general symbolic Cartesian-product cardinality formula remains a migration gap. |
 | Tuples and Cartesian products | Tuple reconstruction from exact Cartesian membership; equality from equal complete finite domains and every coordinate; canonical `index_cart` expansion. Retired dimensions and projection operators are not public syntax. |
 | Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, `by fn_extension` / pointwise forall, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |

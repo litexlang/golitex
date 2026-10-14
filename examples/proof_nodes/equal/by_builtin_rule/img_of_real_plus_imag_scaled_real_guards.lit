@@ -1,0 +1,13 @@
+# Tracer: ImgOfRealPlusImagScaled checks both rectangular coefficients in R.
+# Before (incorrectly accepted):
+# img(i + i) = 1
+# img(0 + i * i) = i
+# Former behavior: imaginary contributions inside either coefficient were ignored.
+# Now: both real-coefficient premises are checked and retained.
+forall a, b R:
+    img(a + b * i) = b
+    b = img(i * b + a)
+img(i + i) = 2
+# Boundary: either coefficient outside R prevents this identity from justifying the goal.
+# Executable negatives: hcx_arithmetic_guards::false_operand_orders_and_complex_second_coefficients_reject.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/img_of_real_plus_imag_scaled_real_guards.lit

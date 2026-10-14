@@ -287,6 +287,11 @@ prop is_natural_transformation(CObj set, CMor set, source_category &Category<COb
     $is_functor(CObj, CMor, source_category, DObj, DMor, target_category, G_object, G_arrow)
     forall typed_object CObj:
         component(typed_object) $in target_category.Hom(F_object(typed_object), G_object(typed_object))
+    forall typed_source, typed_target CObj, typed_arrow CMor:
+        typed_arrow $in source_category.Hom(typed_source, typed_target)
+        =>:
+            F_arrow(typed_source, typed_target, typed_arrow) $in target_category.Hom(F_object(typed_source), F_object(typed_target))
+            G_arrow(typed_source, typed_target, typed_arrow) $in target_category.Hom(G_object(typed_source), G_object(typed_target))
     forall natural_source, natural_target CObj, natural_arrow CMor:
         natural_arrow $in source_category.Hom(natural_source, natural_target)
         =>:

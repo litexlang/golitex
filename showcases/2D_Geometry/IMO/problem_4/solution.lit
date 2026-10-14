@@ -497,7 +497,7 @@ thm configuration_scalar_bridge_4:
             dot(vec(a, b), vec(a, c)) = distance_sq(m, a) - distance_sq(m, b)
 
     by def $problem_4_configuration(side_b,side_c,t,a,b,c,m)
-    by def $is_midpoint(m,b,c)
+    $is_midpoint(m,b,c)
     c(1)-m(1) = c(1)-(b(1)+c(1))/2 = -(b(1)-(b(1)+c(1))/2) = -(b(1)-m(1))
     c(2)-m(2) = c(2)-(b(2)+c(2))/2 = -(b(2)-(b(2)+c(2))/2) = -(b(2)-m(2))
     release thm distance_coordinates_4(m,a)
