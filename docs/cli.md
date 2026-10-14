@@ -410,11 +410,33 @@ line on stderr and exit with code `2`.
 `-e`, `-f`, or `-r` run, keep the last Runtime environment and continue in the
 ordinary REPL. Failed batch runs do not enter that REPL.
 
-Example:
+**Use `-session` for iterative Litex authoring. Load the accepted prefix once,
+then submit one top-level statement at a time in that same process. An ordinary
+rejection keeps earlier accepted definitions and facts; repair the rejected
+statement there. Do not rerun the whole file whenever you add a few lines.**
+
+For an existing passing file:
 
 ```bash
 litex -session -f chapter.lit
 ```
+
+For a short comparison, start `litex -lang en -session -e 'have a R = 2'`,
+then enter each statement separately. The failure JSON is abbreviated:
+
+```text
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
+```
+
+`a = 2` survives the ordinary rejection. Two separate `-e` commands cannot
+share that context: `litex -e 'have a R = 2'` succeeds, but a later
+`litex -e 'a + 1 = 3'` fails because its new process has no declaration of `a`.
+Use clean batch file runs for baselines, coherent checkpoints, and final
+acceptance. Hard errors can stop the REPL; restart and replay accepted source
+when needed. See the [Agent Guide](AgentGuide.md) for restart boundaries.
 
 ## Project Modules
 

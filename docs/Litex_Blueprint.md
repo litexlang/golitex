@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 13, 2026.
+Last updated: October 14, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -22,7 +22,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
   - [3.2 Think, Write, and Check as You Go](#workflow-exploration)
   - [3.3 Keep Today’s Results for the Next Exploration](#workflow-reuse)
   - [3.4 Use Mathematical Results for Computation and Communication](#workflow-use)
-- [4. Humans, AI, and Litex Advance Proofs Together](#interaction-loop)
+- [4. Litex Is Well Suited to Interaction with AI](#interaction-loop)
 - [5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)](#compatibility)
 - [6. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
 - [7. The Art of Seeking What Is Different](#conclusions)
@@ -165,19 +165,6 @@ $is_less(2, 4)
 
 Mathematical work often begins with a small question: write a definition, try a few examples, check the conditions, and keep the useful results. I want formalization to fit into that process, so work already done becomes a starting point for further exploration. The underlying design principle is to let accepted mathematical statements leave knowledge that later work can depend on.
 
-**Check as I write.** In a fresh REPL session, I can write a definition and check concrete inputs. The reciprocal function below accepts nonzero real numbers: input `2` passes, while input `0` is rejected during the condition check. The failure line summarizes the diagnostic:
-
-```text
-litex> have fn f(x R: x != 0) R = 1 / x
-success
-litex> f(2) = 1 / 2
-success
-litex> f(0) = 0
-Failed: input 0 does not satisfy x != 0.
-litex> f(4) = 1 / 4
-success
-```
-
 **Save knowledge for use in another file.** In the later [Newton-update example](#workflow-exploration), I save the function definition and fixed-point theorem in `newton.lit`. With the project organized as in Section 3.3, I can cite the established result from another file:
 
 <!-- litex:skip-test -->
@@ -233,7 +220,7 @@ See Section 3 for the complete definitions, proofs, and project setup.
 
 **4. AI can work with people to advance proofs through explicit feedback.**
 
-AI can help try different approaches, fill in steps, and correct errors. People focus on the problem and its mathematical meaning; Litex provides verification feedback. Their shared work should accumulate checkable results.
+AI proposes mathematical steps, people choose the problem and its meaning, and Litex provides verification feedback. See [Section 4](#interaction-loop) for the interaction and code comparison.
 
 ![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
 
@@ -353,9 +340,9 @@ saved by `have fn`. With `have fn f(t R) R=t+1`, `2*f(x)=2*x+2` can omit the
 expanded middle term. It unfolds each original outermost call once, retains
 checked domains and guards, and checks a residual with further rewrite and
 generic definition/forall expansion disabled. Inserted bodies and ordinary call
-arguments are not traversed. See the [runnable tracer](../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit).
+arguments are not traversed. See the runnable tracer (`examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit`).
 
-The [plane identity example](../examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit)
+The plane identity example (`examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit`)
 checks `plane_add((0,0),x)=(x(1),x(2))=x` without separate zero-coordinate
 statements. Each coordinate sum retains proofs that one summand is zero and
 the other equals its target; the function domain and coordinate indices remain
@@ -808,8 +795,8 @@ direct conclusions and stores them without another WD or inference pass. Its
 result retains the source and genuine applicability evidence; a Lean adapter
 uses that instance data with proved rules and constructors in `Litex.lean`. An explicit
 later statement can verify a stored conclusion and start the next step. See
-the [one-step tracer](../examples/infer/atomic/one_step_store_only.lit) and the
-[current acceptance checkpoint](../src/store_fact_and_infer/one_step_acceptance.md).
+the one-step tracer (`examples/infer/atomic/one_step_store_only.lit`) and the
+current acceptance checkpoint (`src/store_fact_and_infer/one_step_acceptance.md`).
 
 </details>
 
@@ -920,7 +907,7 @@ call also needs a function body. Merely writing `let g = f` after
 fails well-definedness. An explicit wrapper `have fn g(x R) R = f(x)` supplies
 its own checked signature and body, and supports `g(4) = 5`. Membership
 `g $in fn(x R) R` alone supplies callability without a concrete value.
-See the [function metadata boundary](Manual.md#advanced-interface-details)
+See the function metadata boundary (`Manual.md`)
 for the distinction between indexed facts and equality transport.
 
 This does not cancel static constraints or inference. Before accepting an expression, Litex still checks domains, return sets, structure fields, and other well-definedness obligations, and derives membership and carrier facts in proofs through dedicated rules. The difference is that such inference adds facts such as `e $in S` to the context, rather than inferring a privileged type `e : T` that decides the object's identity.
@@ -1110,7 +1097,7 @@ claim:
 have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 ```
 
-We can now try concrete values. After successfully loading the code above into the REPL, enter the following three statements in the same session. The failure line summarizes the JSON diagnostic:
+We can now try concrete values. Load a passing prefix once with `litex -session -f accepted-prefix.lit`, including the code above, then enter the following three statements in that same Session. The initial file must pass before the REPL opens. Do not rerun the file for each new candidate. The failure line summarizes the JSON diagnostic:
 
 ```text
 litex> newton_sqrt_two(1) = 3 / 2
@@ -1297,13 +1284,45 @@ From an exploration to a reusable theorem, then to computation and communication
 
 <a id="interaction-loop"></a>
 
-## 4. Humans, AI, and Litex Advance Proofs Together
+## 4. Litex Is Well Suited to Interaction with AI
 
 _“By ‘augmenting human intellect’ we mean increasing the capability of a man to approach a complex problem situation…”_
 
 _— Douglas Engelbart, Augmenting Human Intellect: A Conceptual Framework (1962), Introduction (excerpt)_
 
-Humans own the mathematical problem, key constructions, and final judgment. AI proposes or revises the next source fragment; Litex checks it and returns grounds or a stopping point. Accepted statements become the background for the next fragment; people or external tools can record and repair failed attempts. This is how statement-level verification can enter a collaborative workflow:
+**Litex is well suited to an AI agent's step-by-step interaction.** AI can express a candidate as a mathematical fact, inspect verification feedback, and revise its next input while the live Session retains accepted knowledge. Each successful statement becomes usable context for the next proposal.
+
+Humans own the mathematical problem, key constructions, and final judgment. People or external tools can record failed attempts and their repair. Statement-level verification brings these roles together in a collaborative workflow.
+
+<a id="session-authoring"></a>
+
+**Check as I write, keeping accepted work.** When writing or repairing Litex code, **open `-session` once and keep the same process**. An ordinary failed statement does not erase earlier accepted definitions and facts. Never rerun the whole file from the beginning whenever a few new lines are added.
+
+Start with an accepted real value:
+
+```bash
+litex -lang en -session -e 'have a R = 2'
+```
+
+Enter the next statements one at a time in that process. The failure JSON is abbreviated:
+
+```text
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
+```
+
+The failed `a = 3` does not remove `a = 2`; the next calculation still uses it. For an AI author, the rejection gives a concrete stopping point: `why_failed.phase` is `"search_proof"` and `why_failed.goal` is `"a = 3"`. AI can read this feedback and propose the next statement using the retained context. Compare with two independent commands:
+
+```bash
+litex -lang en -e 'have a R = 2'
+litex -lang en -e 'a + 1 = 3'
+```
+
+The first succeeds; the second fails because its new process has no declaration of `a`. It would need the accepted declaration loaded again. Keeping the Session avoids reconstructing that context for each attempt. Save accepted source, and run a separate clean file check at a coherent checkpoint or at the end. If the process stops or the loaded context must change, restart and replay the accepted source; [the mathematical workflow in Section 3](#workflow-exploration) applies this rule to a longer example.
+
+**The collaboration loop between people, AI, and Litex:**
 
 ```text
 Human proposes a mathematical problem and an intended solution
@@ -1320,9 +1339,9 @@ Litex structured verification result                │
    │     → record this code                         │
    │     → record how Litex ran it                  │
    │     → go to the next fragment ─────────────────┘
-   └─ RolledBack
+   └─ statement rejected
          → evidence-based diagnosis
-         → repair the same fragment and try again
+         → repair the same statement in the same Session
                          ↓
 All successful fragments are joined in order → the problem is solved and formalized
                          ↓
@@ -1331,7 +1350,7 @@ Human experts perform a basic check
 These Litex programs become building blocks for later problems
 ```
 
-Each round handles a definition, theorem, or small proof fragment. Accepted fragments become grounds for later proofs; failed attempts do not change the existing mathematical context. If collaboration tools save candidate source and output, people and AI can revisit the repair process; those tools maintain the full attempt record. Once all fragments pass, humans still need to check whether the formal statement is faithful to the original problem and mathematical intent.
+Each round submits one top-level statement, such as a definition or a theorem with its full proof. Its ordinary failure discards only its own tentative state. A fragment containing several statements is not one transaction: successful statements can commit even if another fails. If collaboration tools save candidate source and output, people and AI can revisit the repair process; those tools maintain the full attempt record. At checkpoints and at the end, save the accepted statements in order and verify the complete file from a clean process. Humans still need to check whether the formal statement is faithful to the original problem and mathematical intent.
 
 <details>
 <summary><strong>Example: walking one fragment formalization loop by the flowchart</strong></summary>
@@ -1463,11 +1482,11 @@ If the theorem eventually passes verification and human review, the convergence 
 
 ## 5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)
 
-Litex-to-Lean compilation is being extended through checked examples. The goal is to give a readable Litex development an independently checkable proof, while preserving its objects, hypotheses and conclusion. Three pieces work together: Litex checks the source, the compiler replays the recorded evidence, and [lean/Litex.lean](../lean/Litex.lean) gives the generated expressions their meaning in Lean.
+Litex-to-Lean compilation is being extended through checked examples. The goal is to give a readable Litex development an independently checkable proof, while preserving its objects, hypotheses and conclusion. Three pieces work together: Litex checks the source, the compiler replays the recorded evidence, and `lean/Litex.lean` gives the generated expressions their meaning in Lean.
 
 ### Start with an arbitrary object
 
-The maintained [arbitrary-real example](../lean/examples/arbitrary_real_laws/statement.lit) is small enough to read in full:
+The maintained arbitrary-real example (`lean/examples/arbitrary_real_laws/statement.lit`) is small enough to read in full:
 
 ```litex
 have arbitrary_real R
@@ -1476,13 +1495,13 @@ arbitrary_real + 0 = arbitrary_real
 arbitrary_real >= arbitrary_real
 ```
 
-The first line introduces an arbitrary member of `R`, not a particular numerical value. The remaining facts express reflexivity, adding zero and real order reflexivity. Its [generated Lean proof](../lean/examples/arbitrary_real_laws/statement.lean) retains an object with a generic host representation and a separate membership hypothesis `Litex.In a Litex.R`. Learning that an object is real does not replace its host representation with Lean's `ℝ`.
+The first line introduces an arbitrary member of `R`, not a particular numerical value. The remaining facts express reflexivity, adding zero and real order reflexivity. Its generated Lean proof (`lean/examples/arbitrary_real_laws/statement.lean`) retains an object with a generic host representation and a separate membership hypothesis `Litex.In a Litex.R`. Learning that an object is real does not replace its host representation with Lean's `ℝ`.
 
 This matters beyond a short arithmetic example: a translation must preserve what the author declared, rather than quietly specialize an arbitrary object to a convenient value or representation.
 
 ### What `Litex.lean` says these objects and facts mean
 
-`Representation M α` specifies which values of a host type `α` are well-defined and how they denote values in the semantic universe `M.Value`. A certified object packages its value with that well-definedness proof. The following is an actual declaration from [Litex.lean](../lean/Litex.lean), not generated problem output:
+`Representation M α` specifies which values of a host type `α` are well-defined and how they denote values in the semantic universe `M.Value`. A certified object packages its value with that well-definedness proof. The following is an actual declaration from `lean/Litex.lean`, not generated problem output:
 
 ```lean
 structure Obj {M : Semantics.{u}} (α : Type v) [Representation M α] where
@@ -1503,7 +1522,7 @@ Different host types can represent Litex objects. Source equality compares their
 
 ### Keep the function's domain in its proof
 
-The [guarded quotient example](../lean/examples/real_quotient_distributes/statement.lit) adds a function and a named theorem:
+The guarded quotient example (`lean/examples/real_quotient_distributes/statement.lit`) adds a function and a named theorem:
 
 ```litex
 have fn quotient(a, b R: b != 0) R = a / b
@@ -1523,7 +1542,7 @@ thm quotient_distributes:
 
 The nonzero guard is part of the function's domain. `Litex.lean` represents the formula as a graph over that guarded domain, with evidence that the body returns a member of `R`. A call requires function membership, argument membership and the guard. Its division constructor additionally requires the denominator's nonzero proof. This preserves Litex's partial division even though Lean's underlying field division is a total operation.
 
-The [generated proof](../lean/examples/real_quotient_distributes/statement.lean) replays the function expansions and the selected arithmetic equality, including their domain evidence. Source facts and their citations retain names derived from the original FactIds. The compiler follows those checked results; it does not ask Lean to discover a substitute proof of a potentially different statement.
+The generated proof (`lean/examples/real_quotient_distributes/statement.lean`) replays the function expansions and the selected arithmetic equality, including their domain evidence. Source facts and their citations retain names derived from the original FactIds. The compiler follows those checked results; it does not ask Lean to discover a substitute proof of a potentially different statement.
 
 ### What independent checking establishes
 
@@ -1531,7 +1550,7 @@ Generated theorems are parameterized by `M : Litex.Semantics`; set and function 
 
 Generating Lean source and checking it with Lean's kernel are separate steps. For a supported route, independent checking validates the generated proposition and proof relative to the stated semantic contracts and Lean's foundations. Broader coverage must be established by extending the interfaces and proof replay, with unsupported routes rejected explicitly.
 
-A final theorem stated entirely in ordinary Mathlib concepts needs a further adapter that connects these denotations to the intended native objects and proposition. That conversion and its proof deserve their own review. The maintained [compiler guide](Litex_To_Lean_Compiler_Guide.md) explains source/generated pairs; the [CLI reference](cli.md#lean-compiler-boundary) gives invocation restrictions. Complete source/generated pairs are maintained under [lean/examples](../lean/examples/).
+A final theorem stated entirely in ordinary Mathlib concepts needs a further adapter that connects these denotations to the intended native objects and proposition. That conversion and its proof deserve their own review. The maintained compiler guide (`Litex_To_Lean_Compiler_Guide.md`) explains source/generated pairs; the CLI reference (`cli.md`) gives invocation restrictions. Complete source/generated pairs are maintained under `lean/examples/`.
 
 Verification checkpoint, 2026-10-10: both examples above passed strict Litex execution, Lean generation and Lean 4.31.0 checking against the local pinned Mathlib environment. This checks these examples and their semantic interface, not the entire compiler coverage.
 

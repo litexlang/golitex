@@ -1,9 +1,88 @@
 # Litex-to-Lean Compiler Implementation
 
-This module compiles the completed typed execution result into Lean source.
-The [compiler guide](../../docs/Litex_To_Lean_Compiler_Guide.md) explains source
-semantics and examples; [CLI documentation](../../docs/cli.md#lean-compiler-boundary)
-owns invocation and output behavior.
+This module compiles a completed Litex execution result into a Lean proof.
+A handwritten adapter can then expose that proof as an ordinary Lean/Mathlib
+theorem. The example below shows the complete path before the implementation
+details.
+
+## A small example: adding zero
+
+Start with this complete [Litex source](../../lean/examples/add_zero/statement.lit):
+
+```litex
+# Adding zero leaves every complex object unchanged.
+
+forall a C:
+    a + 0 = a
+```
+
+Running `litex -strict -lean -f lean/examples/add_zero/statement.lit` from the
+repository root writes Lean source to stdout. The paired
+[generated Lean file](../../lean/examples/add_zero/statement.lean) contains that output.
+That file imports [Litex.lean](../../lean/Litex.lean) and proves `h_2`: a complex
+member plus zero is `Litex.Same` to the original object. Its input remains a
+generic `Litex.Obj` with a separate membership fact `h_15`; the addition
+constructor receives the membership proofs for both operands. The compiler
+replays the checked source result, including these construction conditions.
+
+To use this proof with an ordinary `x : ℂ`, the complete
+[Adapter.lean](../../docs/examples/litex_to_lean/add_zero/Adapter.lean) is:
+
+```lean
+import examples.add_zero.statement
+
+namespace Adapter
+
+theorem complexAddZero (x : ℂ) : x + 0 = x := by
+  let M := Litex.NumericModel.model
+  have h := LitexCompiled.file_lean_x2f_examples_x2f_add_x5f_zero_x2f_statement_x2e_lit.h_2
+    (M := M) (Litex.number x) (Litex.numberInC x)
+  exact (Litex.NativeBridge.addSame_iff x 0 x).mp h
+
+end Adapter
+```
+
+`M` selects the concrete numeric model. `Litex.number x` represents the native
+complex number, and `Litex.numberInC x` supplies its membership certificate.
+The adapter calls the generated `h_2`; the proved `addSame_iff` bridge converts
+that result into native `x + 0 = x`. It does not prove the identity again.
+
+An ordinary Lean file can now import this adapter. The complete
+[Final.lean](../../docs/examples/litex_to_lean/add_zero/Final.lean) is:
+
+```lean
+import add_zero.Adapter
+
+theorem complexAddZero (x : ℂ) : x + 0 = x := by
+  exact Adapter.complexAddZero x
+```
+
+Its theorem statement uses only Mathlib's `ℂ`, addition and equality. Only the
+proof body calls `Adapter`. Thus the file chain is:
+
+```text
+statement.lit → statement.lean → Adapter.lean → Final.lean
+                 generated       handwritten    ordinary Lean interface
+```
+
+This intentionally elementary example demonstrates proof reuse and the
+representation conversion. The short `Final.lean` is a consumer of the
+compiled proof; it is not the raw compiler output. The source/generated pair
+belongs under `lean/examples/`, while the handwritten adapter and consumer
+belong under `docs/examples/litex_to_lean/`.
+
+On 2026-10-14, this source regenerated the same Lean bytes, and the generated
+module, Adapter and Final passed Lean 4.31.0 with the pinned Mathlib environment.
+The proof dependency check confirmed that Final reaches the generated `h_2`
+through Adapter; the axiom audit found only standard Lean axioms.
+
+For larger examples, see the [source/generated collection](../../lean/examples/)
+and the [compiler guide](../../docs/Litex_To_Lean_Compiler_Guide.md).
+The guide covers the [native Mathlib workflow](../../docs/Litex_To_Lean_Compiler_Guide.md#using-a-generated-result-in-ordinary-mathlib)
+and [acceptance boundary](../../docs/Litex_To_Lean_Compiler_Guide.md#what-successful-output-establishes);
+[CLI documentation](../../docs/cli.md#lean-compiler-boundary) owns invocation
+and output behavior. Native adapters are currently handwritten; the remaining
+sections describe result replay and its supported scope.
 
 ## Public entrypoint
 
@@ -239,8 +318,16 @@ explicit rejection branches.
 The full Newton source is
 `lean/examples/newton_residual_bound/statement.lit`. Its all-index residual
 proof passed strict verification and whole-file compilation. Complete generated
-Lean checking and native all-index bound acceptance remain pending; successful
-smaller-prefix checks do not establish those gates.
+Lean checking and native all-index bound acceptance remain incomplete. This
+experiment was paused at the user's request on 2026-10-13; smaller-prefix
+checks do not establish those gates. The maintained small demonstration is
+[newton_residual_identity](../../lean/examples/newton_residual_identity/statement.lit),
+with its [generated Lean](../../lean/examples/newton_residual_identity/statement.lean)
+and checked [native consumer](../../docs/examples/litex_to_lean/newton_residual/Final.lean).
+Two frozen CLI runs produced byte-identical
+`lean/examples/newton_residual_bound/statement.lean` (7,341,525 bytes). Each
+recorded run took about 18 minutes; no output-size or performance benefit is
+claimed.
 The final 2026-10-13 regression gates passed 429 compiler tests and 78 separate
 JSON tests. Selected induction, theorem-result capture and by-thm selection
 filters also passed; their overlapping tests are not counted as another total.

@@ -7,6 +7,11 @@ statements. Every runnable block below is self-contained.
 For installation use [setup](setup.md). The [Manual](Manual.md) owns the exact
 language contracts; [CLI](cli.md) owns commands and output.
 
+> **Litex is well suited to interactive work with AI: propose a fact, check it,
+> read feedback, and revise or continue in one live `-session`. Ordinary failures
+> preserve earlier accepted definitions and facts. Never rerun from the beginning
+> after adding a few new lines.** See the [short comparison](#run-and-read-feedback).
+
 ## Find your next move
 
 | I need to… | Start here |
@@ -414,10 +419,29 @@ In a source checkout, build with `cargo build --release` and use
 present and runs the configured prefix through that file; otherwise it runs
 the file alone. `-r` checks a complete configured project.
 
-Use `litex` for the REPL or `litex -session -f path/to/file.lit` to continue a
-successful file run. End an indented REPL block with a blank line. Session
-output contains interactive text; use a separate batch command for a final
-JSON check.
+For iterative authoring, use `litex -session -f path/to/file.lit` to load a
+passing prefix once and continue in that same REPL. Or start with one value:
+
+```bash
+litex -lang en -session -e 'have a R = 2'
+```
+
+Submit each statement separately; the failure JSON is abbreviated:
+
+```text
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
+```
+
+The failed statement leaves `a = 2` available. In contrast, separate
+`litex -e 'have a R = 2'` and `litex -e 'a + 1 = 3'` commands cannot share
+the declaration: the second fails. Do not reload every accepted statement
+after each small edit. End an indented REPL block with a blank line. Use
+separate batch commands at coherent checkpoints and for the final JSON check.
+Restart and replay accepted source if the process stops or the context must
+change; see the [Agent Guide](AgentGuide.md).
 
 For machine readers, use `-lang en`. Require exit 0 and these fields in the
 batch envelope (other fields omitted here):

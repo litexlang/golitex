@@ -2,7 +2,7 @@
 
 文档由沈嘉辰创建和维护。
 
-最后更新：2026 年 10 月 13 日。
+最后更新：2026 年 10 月 14 日。
 
 官网页面: https://litexlang.com/doc/Litex中文蓝图
 
@@ -22,7 +22,7 @@
   - [3.2 边想边写，边写边检查](#workflow-exploration)
   - [3.3 把今天的成果，留给下一次探索](#workflow-reuse)
   - [3.4 让数学成果用于计算与交流](#workflow-use)
-- [4. 人、AI 与 Litex 共同推进证明](#interaction-loop)
+- [4. Litex 适合与 AI 交互](#interaction-loop)
 - [5. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）](#compatibility)
 - [6. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
 - [7. 追寻与众不同的艺术](#conclusions)
@@ -164,19 +164,6 @@ $is_less(2, 4)
 
 数学工作常从一个小问题开始：写下定义，试几个例子，检查条件，再把有用的结论留下来。我希望形式化能融入这个过程，让已经做过的工作成为继续探索的起点。背后的设计原则是：让已接受的数学语句留下后续可以依赖的知识。
 
-**边写边检查。** 在一个新的 REPL 会话中，我可以写下定义，再检查具体输入。下面的倒数函数只接收非零实数；输入 `2` 可以通过，输入 `0` 则在条件检查时被拒绝。失败行概括了诊断：
-
-```text
-litex> have fn f(x R: x != 0) R = 1 / x
-success
-litex> f(2) = 1 / 2
-success
-litex> f(0) = 0
-失败：输入 0 不满足 x != 0 的条件。
-litex> f(4) = 1 / 4
-success
-```
-
 **把知识保存下来，在其他文件中使用。** 在后文的[牛顿更新例子](#workflow-exploration)中，我把函数定义与不动点定理保存在 `newton.lit`。按第 3.3 节组织项目后，我可以在另一个文件中直接引用已有成果：
 
 <!-- litex:skip-test -->
@@ -232,7 +219,7 @@ release thm newton::fixed_point(sqrt(2))
 
 **4. AI 可以和人一起，在明确反馈中推进证明。**
 
-AI 可以协助尝试不同思路、补充步骤和修正错误；人关注问题本身与数学意义；Litex 提供验证反馈。三者共同工作的过程，应当能够积累可检查的成果。
+AI 协助提出数学步骤，人选择问题与数学意义，Litex 提供验证反馈。具体的交互方式与代码对照见[第 4 节](#interaction-loop)。
 
 ![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
 
@@ -367,7 +354,7 @@ Litex 的设计特点在于把这些能力组织为同一种日常使用方式�
 <details>
 <summary><strong>哪些步骤 Litex 自动检查，哪些需要作者写出来？</strong></summary>
 
-[平面零向量例子](../examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit)
+平面零向量例子 (`examples/proof_nodes/equal/by_builtin_rule/add_zero_from_equalities.lit`)
 直接检查 `plane_add((0,0),x)=(x(1),x(2))=x`，无需另写零向量的坐标值。
 每个加法保留“一个加数等于零”和“另一加数等于目标”的证明；函数定义域
 和坐标索引仍须通过检查，这条局部路线不会重新开启通用 rewrite 搜索。
@@ -879,7 +866,7 @@ Lean 把数学组织成有类型的项：经过细化后，核心表达式由 `�
 
 Litex 则把数学组织成对象与逐步增长的事实上下文。`e $in S` 是对象语言中的成员事实，与等式、序关系和其他谓词处于同一逻辑层。因此，同一对象可被证明属于多个无关或相互重叠的集合：成员关系是对象之间的关系，不是唯一内生赋值 `typeOf(e) = S`。
 
-对象能力的查找读取已检查的声明和为该确切对象建立索引的事实。函数调用检查需要签名；验证具体函数值还需要函数体。在 `have fn f(x R) R = x + 1` 后仅写 `let g = f`，不会转移该可调用契约：`g(4) = 5` 在良定义性阶段失败。显式包装 `have fn g(x R) R = f(x)` 提供自己的已检查签名和函数体，支持 `g(4) = 5`。仅有成员事实 `g $in fn(x R) R` 提供可调用性，并不确定具体函数值。建立索引的事实与相等传递的区别见[函数接口细节](Litex手册.md#advanced-interface-details)。
+对象能力的查找读取已检查的声明和为该确切对象建立索引的事实。函数调用检查需要签名；验证具体函数值还需要函数体。在 `have fn f(x R) R = x + 1` 后仅写 `let g = f`，不会转移该可调用契约：`g(4) = 5` 在良定义性阶段失败。显式包装 `have fn g(x R) R = f(x)` 提供自己的已检查签名和函数体，支持 `g(4) = 5`。仅有成员事实 `g $in fn(x R) R` 提供可调用性，并不确定具体函数值。建立索引的事实与相等传递的区别见函数接口细节 (`Litex手册.md`)。
 
 这不等于取消静态约束或推断。Litex 在接受表达式前仍会检查定义域、返回集合、结构字段和其他良定义性义务，并通过专用规则在证明中推出成员与载体事实。区别在于，这种推断向上下文增加 `e $in S` 一类事实，而不是推断一个决定对象身份的特权类型 `e : T`。
 
@@ -1068,7 +1055,7 @@ claim:
 have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 ```
 
-现在可以试几个具体值。把上面的代码成功加载到 REPL 后，下面三句依次在同一个会话中输入；失败行概括了 JSON 中的诊断：
+现在可以试几个具体值。用 `litex -session -f accepted-prefix.lit` 一次加载包含上述代码的已通过前缀，再依次向同一个 Session 输入以下三句。初始文件必须通过，才能进入 REPL；不要为每条新候选重新运行文件。失败行概括了 JSON 中的诊断：
 
 ```text
 litex> newton_sqrt_two(1) = 3 / 2
@@ -1255,13 +1242,45 @@ LaTeX 转换负责呈现数学源码，数学验证需要单独运行。
 
 <a id="interaction-loop"></a>
 
-## 4. 人、AI 与 Litex 共同推进证明
+## 4. Litex 适合与 AI 交互
 
 _“所谓增强人的智力，就是增强人面对复杂问题的能力……”_
 
 _— Douglas Engelbart，《增强人类智力：概念框架》（1962），引言（节选）_
 
-人负责数学问题、关键构造与最终判断；AI 提出或修订下一段源码；Litex 检查该段并返回依据或停止位置。已接受的语句成为下一段的背景，失败语句则留给人或外部工具记录和修复。这是逐句验证结果进入协作流程的方式：
+**Litex 适合 AI agent 逐步交互。** AI 可以把候选写成数学事实，查看验证反馈，修正下一次输入；活动 Session 则保留已接受的知识。每条成功语句都会成为下一次提议可用的上下文。
+
+人负责数学问题、关键构造与最终判断。人或外部工具可以记录失败尝试及其修复过程。逐句验证将这些角色连接成协作工作流。
+
+<a id="session-authoring"></a>
+
+**边写边检查，保留已经正确的知识。** 编写或修复 Litex 代码时，**开启 `-session`，始终保持同一个进程**。普通语句失败不会清除之前已接受的定义和事实。绝不要每加几条新代码，就把整个文件从头重新跑一遍。
+
+先接受一个实数值：
+
+```bash
+litex -lang en -session -e 'have a R = 2'
+```
+
+随后在同一个进程中逐条输入。失败 JSON 在这里被缩略：
+
+```text
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
+```
+
+失败的 `a = 3` 不会移除 `a = 2`，下一句仍能使用它。对 AI 作者，拒绝反馈给出了具体的停止位置：`why_failed.phase` 为 `"search_proof"`，`why_failed.goal` 为 `"a = 3"`。AI 可以读取这份反馈，利用保留的上下文提出下一句。对照两个独立命令：
+
+```bash
+litex -lang en -e 'have a R = 2'
+litex -lang en -e 'a + 1 = 3'
+```
+
+第一条成功；第二条失败，因为新进程没有 `a` 的声明，必须重新加载已接受的声明。保留 Session，就不必为每次尝试重新构建上下文。保存已接受源码，在连贯的阶段检查点或最终验收时另行运行干净文件检查。如果进程停止或已加载上下文必须改变，则重启并重放已接受源码；[第 3 节的数学工作流](#workflow-exploration)将这条规则用于更长的例子。
+
+**人、AI 与 Litex 的协作循环：**
 
 ```text
 人类提出数学问题及其解答意图
@@ -1278,9 +1297,9 @@ Litex 结构化验证结果                    │
    │     → 记录这段代码                 │
    │     → 记录 Litex 如何运行它        │
    │     → 进入下一片段 ────────────────┘
-   └─ RolledBack
+   └─ 语句被拒绝
          → 基于证据的诊断
-         → 修复同一个片段，再试
+         → 在同一个 Session 中修复这条语句，再试
                          ↓
 全部成功片段按顺序衔接 → 问题得到解决与形式化
                          ↓
@@ -1289,7 +1308,7 @@ Litex 结构化验证结果                    │
 这些 Litex 代码成为后续其他问题的基石
 ```
 
-每轮只处理一个定义、定理或小证明片段。通过检查的片段成为后续证明的依据，失败尝试不会改变已有的数学上下文。如果协作工具保存候选源码及其输出，人和 AI 就能回看修复过程；完整的尝试记录由这些工具维护。全部片段通过后，人还须核对形式陈述是否忠实于原题与数学意图。
+每轮提交一条顶层语句，例如一个定义，或带完整证明的定理。普通失败只丢弃该语句自身的暂存状态。包含多条语句的片段不是一个事务：即使某句失败，其他成功语句也可以提交。如果协作工具保存候选源码及其输出，人和 AI 就能回看修复过程；完整的尝试记录由这些工具维护。在阶段检查点和最终验收时，将已接受语句按顺序保存，再从干净进程验证完整文件。人仍须核对形式陈述是否忠实于原题与数学意图。
 
 <details>
 <summary><strong>示例：按流程图走一遍片段形式化循环</strong></summary>
@@ -1402,11 +1421,11 @@ thm converges_to_mul_const:
 
 ## 5. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）
 
-Litex 到 Lean 的编译正在通过可检查的例子逐步扩展。目标是让可读的 Litex 数学发展获得可独立检查的证明，同时保留原来的对象、前提和结论。这条路径由三部分组成：Litex 检查源码，编译器重放记录下来的证据，[lean/Litex.lean](../lean/Litex.lean)为生成的表达式提供 Lean 中的语义。
+Litex 到 Lean 的编译正在通过可检查的例子逐步扩展。目标是让可读的 Litex 数学发展获得可独立检查的证明，同时保留原来的对象、前提和结论。这条路径由三部分组成：Litex 检查源码，编译器重放记录下来的证据，`lean/Litex.lean`为生成的表达式提供 Lean 中的语义。
 
 ### 从任意对象开始
 
-维护中的[任意实数例子](../lean/examples/arbitrary_real_laws/statement.lit)可以完整读下来：
+维护中的任意实数例子 (`lean/examples/arbitrary_real_laws/statement.lit`)可以完整读下来：
 
 ```litex
 have arbitrary_real R
@@ -1415,13 +1434,13 @@ arbitrary_real + 0 = arbitrary_real
 arbitrary_real >= arbitrary_real
 ```
 
-第一行引入 `R` 的任意成员，不指定某个数值。后面的事实分别表达自反性、加零不变和实数序的自反性。对应的[生成 Lean 证明](../lean/examples/arbitrary_real_laws/statement.lean)保留具有一般宿主表示的对象，并单独保留成员关系前提 `Litex.In a Litex.R`。知道对象属于实数集合，不会把它的宿主表示替换成 Lean 的 `ℝ`。
+第一行引入 `R` 的任意成员，不指定某个数值。后面的事实分别表达自反性、加零不变和实数序的自反性。对应的生成 Lean 证明 (`lean/examples/arbitrary_real_laws/statement.lean`)保留具有一般宿主表示的对象，并单独保留成员关系前提 `Litex.In a Litex.R`。知道对象属于实数集合，不会把它的宿主表示替换成 Lean 的 `ℝ`。
 
 这不只是让算术例子更短：翻译必须保留作者真正声明的对象，不能悄悄把任意对象换成方便计算的具体值或表示。
 
 ### `Litex.lean` 如何解释对象与事实
 
-`Representation M α` 规定宿主类型 `α` 的哪些值是良定义的，以及它们如何解释为语义宇宙 `M.Value` 中的值。认证对象把值和良定义性证明放在一起。下面是 [Litex.lean](../lean/Litex.lean)中的实际声明，不是某个问题的生成产物：
+`Representation M α` 规定宿主类型 `α` 的哪些值是良定义的，以及它们如何解释为语义宇宙 `M.Value` 中的值。认证对象把值和良定义性证明放在一起。下面是 `lean/Litex.lean`中的实际声明，不是某个问题的生成产物：
 
 ```lean
 structure Obj {M : Semantics.{u}} (α : Type v) [Representation M α] where
@@ -1442,7 +1461,7 @@ structure Obj {M : Semantics.{u}} (α : Type v) [Representation M α] where
 
 ### 函数的定义域必须留在证明里
 
-[带保护条件的除法例子](../lean/examples/real_quotient_distributes/statement.lit)进一步引入函数和命名定理：
+带保护条件的除法例子 (`lean/examples/real_quotient_distributes/statement.lit`)进一步引入函数和命名定理：
 
 ```litex
 have fn quotient(a, b R: b != 0) R = a / b
@@ -1462,7 +1481,7 @@ thm quotient_distributes:
 
 非零保护条件属于函数的定义域。`Litex.lean` 将公式表示为该受限定义域上的函数图，并要求证明函数体返回 `R` 的成员。调用需要函数成员关系、参数成员关系和保护条件；除法对象的构造器还要求分母非零的证明。这保留了 Litex 除法的部分定义，即使 Lean 底层的域除法是全定义运算。
 
-对应的[生成证明](../lean/examples/real_quotient_distributes/statement.lean)重放函数展开与实际选中的算术等式，包括它们的定义域证据。源码事实和引用保留由原始 FactId 派生的名字。编译器沿已检查的结果生成证明，不让 Lean 重新寻找一个可能已经改变陈述的替代证明。
+对应的生成证明 (`lean/examples/real_quotient_distributes/statement.lean`)重放函数展开与实际选中的算术等式，包括它们的定义域证据。源码事实和引用保留由原始 FactId 派生的名字。编译器沿已检查的结果生成证明，不让 Lean 重新寻找一个可能已经改变陈述的替代证明。
 
 ### 独立复核确立什么
 
@@ -1470,7 +1489,7 @@ thm quotient_distributes:
 
 生成 Lean 源码与通过 Lean 内核检查是两个步骤。对受支持的路线，独立检查验证的是相对于所列语义契约和 Lean 基础的生成命题与证明。更广的覆盖必须通过扩展语义接口和证明重放逐项建立；尚未支持的路线应明确拒绝。
 
-如果最终定理要完全使用普通 Mathlib 概念，还需要 adapter 将这些语义值连接到目标的原生对象与命题。这一步的表示转换和证明需要单独审查。维护中的[编译器指南](Litex到Lean编译器指南.md)讲解源码与生成结果，[CLI 参考](Litex命令行参考.md#lean-compiler-boundary)说明调用限制。完整的源码与生成结果在 [lean/examples](../lean/examples/) 中维护。
+如果最终定理要完全使用普通 Mathlib 概念，还需要 adapter 将这些语义值连接到目标的原生对象与命题。这一步的表示转换和证明需要单独审查。维护中的编译器指南 (`Litex到Lean编译器指南.md`)讲解源码与生成结果，CLI 参考 (`Litex命令行参考.md`)说明调用限制。完整的源码与生成结果在 `lean/examples/` 中维护。
 
 验证检查点（2026-10-10）：本节两个例子均通过严格 Litex 运行、Lean 生成，以及本地固定 Mathlib 环境下的 Lean 4.31.0 检查。这验证这两个例子及其语义接口，不代表整个编译器的覆盖验收。
 

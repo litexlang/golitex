@@ -21,6 +21,10 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 Litex is designed as an everyday formal language for everyone who wants to
 write and understand checkable mathematics.
 
+**Litex is well suited to interactive work with AI:** AI proposes a mathematical
+step, Litex checks it and returns feedback, and AI revises or continues from
+accepted knowledge in the same Session.
+
 Write the next mathematical fact directly; Litex checks it and shows the
 grounds it found or where checking stopped.
 
@@ -35,6 +39,11 @@ number: Litex records `a $in R` and `a = 2`. It then checks `a + 1 = 3` using
 the available facts and stores that equality for later steps. The author
 chooses what to establish; Litex searches for supported local grounds and
 reports the method it found.
+
+> **When writing or repairing Litex code, open `-session` and keep that process
+> alive. An ordinary failed statement preserves earlier accepted definitions
+> and facts. Never rerun the whole file from the beginning whenever you add a
+> few new lines.** See the [short comparison below](#work-with-people-and-ai-through-feedback).
 
 Definitions join the same flow:
 
@@ -148,31 +157,55 @@ without `trust`, then applies it to a `singleton` function to obtain
 ## Work with people and AI through feedback
 
 A person chooses the question, constructions, and mathematical meaning. AI can
-propose or revise a small source fragment. Litex checks that fragment and
-returns structured grounds or a stopping point; accepted steps become the
-background for the next attempt. Failed statements do not enter the accepted
-context. An external writing tool can save attempts and feedback for later
-review—the language does not automatically archive the full collaboration.
+state the next mathematical fact directly. Litex checks it; structured feedback
+identifies a rejected statement's phase and goal. A live `-session` keeps the
+accepted definitions and facts available while AI repairs a candidate or
+proposes the next step. These mechanisms support a repeated
+**propose → check → read feedback → revise → continue** interaction.
+
+An external writing tool can save attempts and feedback for later review;
+that tool owns the full collaboration record.
 
 [![Litex Agent Pipeline: AI proposes Litex steps, the verifier returns JSON feedback, and accepted facts accumulate into checked source.](assets/litex-agent-pipeline.png)](assets/litex-agent-pipeline.png)
 
 *AI proposes, Litex checks, and accepted knowledge accumulates. The output
 previews illustrate possible uses of the checked source.*
 
-First attempt (rejected):
+**Keep the accepted context in one Session.** Start with a checked declaration:
 
-<!-- litex:skip-test -->
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(0) = 0
+```bash
+litex -lang en -session -e 'have a R = 2'
 ```
 
-Revised attempt (accepted):
+Enter each next statement in that same process. The failure JSON is abbreviated:
 
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(2) = 1 / 2
+```text
+litex> a = 3
+{"run_result": "failure", ..., "session_terminated": false, "termination": null}
+litex> a + 1 = 3
+success
 ```
+
+The failed `a = 3` does not remove the accepted `a = 2`. The next calculation
+uses it immediately, without repeating the declaration. For an AI author, the
+rejection supplies `why_failed.phase: "search_proof"` and
+`why_failed.goal: "a = 3"`: it can inspect that stopping point and propose a
+supported next statement while keeping the accepted context.
+
+Compare with two independent commands:
+
+```bash
+litex -lang en -e 'have a R = 2'
+litex -lang en -e 'a + 1 = 3'
+```
+
+The first command succeeds; the second fails because its new process has no
+declaration of `a`. Starting over requires reloading the accepted code.
+For an existing passing file, use `litex -session -f accepted-prefix.lit`, then
+submit new top-level statements one at a time. Save accepted source and run a
+separate clean file check at a coherent checkpoint or at the end. Restart and
+replay only when the process stops or the loaded context must change; see the
+[Agent Guide](docs/AgentGuide.md) for the exact boundaries.
 
 ## Independent Lean rechecking is a goal
 
@@ -180,10 +213,17 @@ Litex checks supported source with its own verifier. The preview
 `litex -lean -f <standalone-file>` replays supported typed results into Lean
 source. [`lean/Litex.lean`](lean/Litex.lean) owns the semantic interface and
 [`lean/examples/`](lean/examples/) contains problem-specific source/generated
-pairs. Generation and Lean kernel checking are separate gates; this numeric
-slice does not cover the complete Litex system. Development material and the
-earlier compiler are local-only under ignored `scripts/`. See the
+pairs. Generation and Lean kernel checking are separate gates; the current
+compiler profile does not cover the complete Litex system. Development
+material and the earlier compiler are local-only under ignored `scripts/`. See the
 [Blueprint's Lean section](docs/Litex_Blueprint.md#compatibility).
+
+Explore the [source/generated example collection](lean/examples/), from exact
+arithmetic and guarded functions to bounded sets, theorem reuse and rational
+inverse maps. The documented 2026-10-12 checkpoint checked 74 pairs with real
+Lean/Mathlib. The compiler guide offers a [five-example reading path](docs/Litex_To_Lean_Compiler_Guide.md#explore-the-example-collection)
+with direct links to both files in each pair, so readers can inspect the
+mathematics and the implemented translation together.
 
 <table>
 <thead><tr><th>Litex</th><th>Lean (handwritten)</th></tr></thead>
