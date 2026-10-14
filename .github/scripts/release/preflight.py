@@ -57,9 +57,12 @@ PLATFORMS = {
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    repository_root = Path(__file__).resolve().parents[3]
-
     try:
+        if args.assert_run_json:
+            validate_success_run_json(sys.stdin.read(), args.returncode)
+            return 0
+
+        repository_root = Path(__file__).resolve().parents[3]
         cargo_version = package_version(repository_root / "Cargo.toml")
         version = args.version or cargo_version
         if version != cargo_version:
@@ -133,10 +136,29 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--installed-binary", type=Path,
         help="check an installed executable from an external project without a std environment override",
     )
+    source.add_argument(
+        "--assert-run-json",
+        action="store_true",
+        help="validate a Litex run JSON envelope from stdin against the current CLI contract",
+    )
     parser.add_argument("--std", type=Path, help="installed std directory, required with --installed-binary")
+    parser.add_argument(
+        "--returncode",
+        type=int,
+        default=0,
+        help="process exit code paired with --assert-run-json (default: 0)",
+    )
     arguments = parser.parse_args(argv)
     if arguments.std is not None and arguments.installed_binary is None:
         parser.error("--std is only used with --installed-binary")
+    if arguments.assert_run_json and (
+        arguments.version is not None
+        or arguments.target is not None
+        or arguments.archive is not None
+        or arguments.installed_binary is not None
+        or arguments.std is not None
+    ):
+        parser.error("--assert-run-json cannot be combined with packaging options")
     return arguments
 
 
@@ -346,7 +368,7 @@ def validate_archive_member(name: str, is_link: bool) -> None:
         raise PreflightError(f"macOS metadata must not be shipped: {name!r}")
 
 
-def validate_run_output(output: str, returncode: int) -> None:
+def validate_success_run_json(output: str, returncode: int = 0) -> dict:
     try:
         envelope = json.loads(output)
     except json.JSONDecodeError as error:
@@ -357,8 +379,6 @@ def validate_run_output(output: str, returncode: int) -> None:
         raise PreflightError("smoke test run output is not an object")
     if envelope.get("kind") != "run" or envelope.get("detail") != "normal":
         raise PreflightError("smoke test output is not a Normal run")
-    if envelope.get("target") != "file" or not isinstance(envelope.get("path"), str):
-        raise PreflightError("smoke test run target is not a file")
     if (
         envelope.get("run_result") != "success"
         or envelope.get("session_terminated") is not False
@@ -372,6 +392,13 @@ def validate_run_output(output: str, returncode: int) -> None:
         for statement in statements
     ):
         raise PreflightError("smoke test did not retain successful statement results")
+    return envelope
+
+
+def validate_run_output(output: str, returncode: int) -> None:
+    envelope = validate_success_run_json(output, returncode)
+    if envelope.get("target") != "file" or not isinstance(envelope.get("path"), str):
+        raise PreflightError("smoke test run target is not a file")
 
 
 def validate_version_output(output: str, returncode: int, version: str) -> None:

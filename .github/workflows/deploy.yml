@@ -92,6 +92,7 @@ jobs:
     name: Build ${{ matrix.os_name }}-${{ matrix.arch }}
     needs: [validate, quality]
     strategy:
+      fail-fast: false
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
@@ -215,6 +216,7 @@ jobs:
     needs: [validate, build]
     runs-on: ${{ matrix.runner }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: amd64
@@ -470,8 +472,13 @@ jobs:
               ENV.delete("LITEX_STD_PATH")
               output = JSON.parse(shell_output("#{bin}/litex -lang en -strict -f #{testpath}/test.lit"))
               assert_equal "run", output.fetch("kind")
-              assert_equal true, output.fetch("success")
-              assert_nil output.fetch("session_error")
+              assert_equal "normal", output.fetch("detail")
+              assert_equal "success", output.fetch("run_result")
+              assert_equal false, output.fetch("session_terminated")
+              assert_nil output.fetch("termination")
+              results = output.fetch("statement_results")
+              refute_empty results
+              assert results.all? { |row| row.fetch("statement_result") == "accepted" }
             end
           end
           FORMULA
@@ -619,11 +626,11 @@ jobs:
           trap 'rm -f "${SMOKE_DIR}/smoke.lit" "${SMOKE_DIR}/litex.config"; rmdir "${SMOKE_DIR}"' EXIT
           printf '%s\n' '[import std]' 'basics' '[export]' 'smoke = "./smoke.lit"' > "${SMOKE_DIR}/litex.config"
           printf '%s\n' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_DIR}/smoke.lit"
-          if ! OUTPUT=$(docker run --rm -v "${SMOKE_DIR}:/work:ro" -w /work "ghcr.io/litexlang/litex:${VERSION}" -lang en -f smoke.lit); then
+          if ! OUTPUT=$(docker run --rm -v "${SMOKE_DIR}:/work:ro" -w /work "ghcr.io/litexlang/litex:${VERSION}" -lang en -strict -f smoke.lit); then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
-          if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["run_result"] == "success" and r["session_terminated"] is False and r["termination"] is None'; then
+          if ! printf '%s\n' "${OUTPUT}" | python3 .github/scripts/release/preflight.py --assert-run-json; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -672,11 +679,11 @@ jobs:
             printf '%s\n' '[import std]' 'basics' '[export]' 'smoke = "./smoke.lit"' > "${SMOKE_DIR}/litex.config"
             printf '%s\n' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_DIR}/smoke.lit"
             cd "${SMOKE_DIR}"
-            if ! OUTPUT=$(LITEX_STD_PATH=/usr/share/litex/std litex -lang en -f smoke.lit); then
+            if ! OUTPUT=$(LITEX_STD_PATH=/usr/share/litex/std litex -lang en -strict -f smoke.lit); then
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi
-            if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["run_result"] == "success" and r["session_terminated"] is False and r["termination"] is None'; then
+            if ! printf '%s\n' "${OUTPUT}" | python3 -c 'import json, sys; r = json.load(sys.stdin); assert r["kind"] == "run" and r["detail"] == "normal" and r["run_result"] == "success" and r["session_terminated"] is False and r["termination"] is None; rows = r["statement_results"]; assert isinstance(rows, list) and rows and all(row.get("statement_result") == "accepted" for row in rows)'; then
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi

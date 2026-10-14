@@ -57,14 +57,19 @@ asset class is missing. WiX 3.14.1 and cargo-wix 0.3.9 are pinned.
 ## Native gates and publishing boundary
 
 The build matrix executes archive and installed-layout tests on macOS ARM,
-Linux amd64/arm64, and Windows amd64. Both Debian architectures have a native
+Linux amd64/arm64, and Windows amd64 with `fail-fast: false`, so one platform
+failure does not cancel the others. Both Debian architectures have a native
 installation/probe job. Each Unix build also installs its archive through the
 actual generated Homebrew formula, and the Windows build installs its ZIP
 through the generated Scoop manifest. `package_manager_smoke.py` supplies the
 archive via a loopback server, checks installed std, then removes only that
 test installation; its Homebrew tap edits are restored. Cleanup queries actual manager state,
 including an installation command that failed after creating the package.
-No manifest is published. The Homebrew setup action is pinned to the official
+Homebrew / Docker / web-server smokes assert the current run JSON contract
+(`run_result`, `session_terminated`, `termination`, non-empty accepted
+`statement_results`), not the retired `success` / `session_error` fields.
+Repo-local Docker and examples smokes call `preflight.py --assert-run-json`
+so that contract stays shared. No manifest is published. The Homebrew setup action is pinned to the official
 2026.07.10.1 revision, rather than a moving branch. Linux uses Ubuntu 22.04 runners rather than building
 against a newer Ubuntu libc than the Debian bookworm runtime.
 
