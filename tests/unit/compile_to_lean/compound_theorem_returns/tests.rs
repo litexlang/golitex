@@ -461,40 +461,40 @@ fn compound_theorem_returns_do_not_publish_early_packages_during_later_wd() {
 
 #[test]
 fn compound_theorem_returns_keep_caller_wd_outside_closed_and_future_stores() {
-    for future in [true, false] {
-        let (mut result, compiler) = super::execute(SUM_CHAIN);
-        let replacement = if future {
-            let VerifyObjWellDefinedResult::Success(wd) =
-                &super::let_definition(&result.statement_results[3]).value_well_defined
-            else {
-                panic!("later alias WD")
-            };
-            let ObjWellDefinedProof::ByKnown { obj, wd_id } = wd else {
-                panic!("actual completed caller cache token")
-            };
-            (obj.clone(), *wd_id)
-        } else {
-            let call = super::by_theorem_mut(&mut result.statement_results[2]);
-            let ObjWellDefinedProof::ByKnown { obj, wd_id } =
-                &super::equality_proof(&call.selected_proof)
-                    .well_defined_proof
-                    .left
-            else {
-                panic!("closed return selection cache")
-            };
-            (obj.clone(), *wd_id)
-        };
-        let call = super::by_theorem_mut(&mut result.statement_results[2]);
-        let FactWellDefinedProof::Equality(wd) = &mut call.selected_wd else {
-            panic!("actual caller equality WD")
-        };
-        wd.left = ObjWellDefinedProof::ByKnown {
-            obj: replacement.0,
-            wd_id: replacement.1,
-        };
-        super::compile_run(&result, &compiler, "wrong_caller_package_wd")
-            .expect_err("closed and later cache records cannot replace the caller construction");
-    }
+    // Selected equality left WD for `by thm sum_chain` is now a ByDef
+    // reconstruction of `a_sum+0` (no ByKnown cache token on that package).
+    // The future-store attack still applies: a later `let` ByKnown for the same
+    // add must not replace the caller construction.
+    let (mut result, compiler) = super::execute(SUM_CHAIN);
+    let call = super::by_theorem(&result.statement_results[2]);
+    assert!(
+        matches!(
+            &super::equality_proof(&call.selected_proof)
+                .well_defined_proof
+                .left,
+            ObjWellDefinedProof::ByDef { .. }
+        ),
+        "selected proof left is reconstructed by definition"
+    );
+    let VerifyObjWellDefinedResult::Success(wd) =
+        &super::let_definition(&result.statement_results[3]).value_well_defined
+    else {
+        panic!("later alias WD")
+    };
+    let ObjWellDefinedProof::ByKnown { obj, wd_id } = wd else {
+        panic!("actual completed caller cache token")
+    };
+    let replacement = (obj.clone(), *wd_id);
+    let call = super::by_theorem_mut(&mut result.statement_results[2]);
+    let FactWellDefinedProof::Equality(wd) = &mut call.selected_wd else {
+        panic!("actual caller equality WD")
+    };
+    wd.left = ObjWellDefinedProof::ByKnown {
+        obj: replacement.0,
+        wd_id: replacement.1,
+    };
+    super::compile_run(&result, &compiler, "wrong_caller_package_wd")
+        .expect_err("later cache records cannot replace the caller construction");
 }
 
 #[test]

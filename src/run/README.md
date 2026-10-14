@@ -179,7 +179,7 @@ No Runtime, no config.
 |---------|-------------------|--------------------|-------------------|
 | `RunFile` / `RunEval` / `RunRepo` | `statement_result: "rejected"`; run failure | `session_terminated: true`, `termination.phase: "import"` | structured termination in batch JSON |
 | `RunRepl` | printed per step | start fails as `Err` | `Err` |
-| `ExtractExecutableCode` | verification required before artifact | `Err` | extracted-code artifact error JSON |
+| `ExtractExecutableCode` | soft verification failure → artifact JSON with `process_failed` | `Err` (hard launch/runtime) | extracted-code artifact error JSON |
 | `CompileToLatex` | not verified; parse-only artifact | manifest error → `Err` | LaTeX artifact error JSON |
 
 Process exit uses `outcome.process_failed()` (failed run/artifact).

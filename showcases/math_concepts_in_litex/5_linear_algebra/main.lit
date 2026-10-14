@@ -105,9 +105,11 @@ thm add_left_cancel:
     space.add(x, neg(x)) = space.zero
     space.add(neg(x), x) = space.add(x, neg(x)) = space.zero
     space.add(neg(x), space.add(x, y)) = space.add(space.add(neg(x), x), y)
-    space.add(space.add(neg(x), x), y) = space.add(space.zero, y) = y
+    space.add(space.zero, y) = y
+    space.add(space.add(neg(x), x), y) = space.add(space.zero, y)
     space.add(neg(x), space.add(x, z)) = space.add(space.add(neg(x), x), z)
-    space.add(space.add(neg(x), x), z) = space.add(space.zero, z) = z
+    space.add(space.zero, z) = z
+    space.add(space.add(neg(x), x), z) = space.add(space.zero, z)
     y = space.add(neg(x), space.add(x, y)) = space.add(neg(x), space.add(x, z)) = z
 
 # Compare 0*x with 0*x + 0*x and cancel to derive the zero-scalar law.

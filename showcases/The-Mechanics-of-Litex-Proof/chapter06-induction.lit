@@ -376,21 +376,26 @@ claim:
                 A(k + 1) = A(k) + (k + 1)
         n >= 0
         =>:
-            A(n) = n * (n + 1) / 2
+            A(n) = (n * (n + 1)) / 2
     by induc n from 0:
-        ? A(n) = n * (n + 1) / 2
-        A(0) = 0 = 0 * (0 + 1) / 2
+        ? A(n) = (n * (n + 1)) / 2
+        A(0) = 0 = (0 * (0 + 1)) / 2
 
         claim:
             ? forall m Z:
                 m >= 0
-                A(m) = m * (m + 1) / 2
+                A(m) = (m * (m + 1)) / 2
                 =>:
-                    A(m + 1) = (m + 1) * ((m + 1) + 1) / 2
+                    A(m + 1) = ((m + 1) * ((m + 1) + 1)) / 2
             A(m + 1) = A(m) + (m + 1)
-            A(m) + (m + 1) = m * (m + 1) / 2 + (m + 1)
-            m * (m + 1) / 2 + (m + 1) = (m + 1) * (m / 2 + 1) = (m + 1) * ((m + 2) / 2)
-            (m + 1) * ((m + 2) / 2) = (m + 1) * (((m + 1) + 1) / 2)
+            A(m) + (m + 1) = (m * (m + 1)) / 2 + (m + 1)
+            (m * (m + 1)) / 2 + (m + 1) = (m * (m + 1)) / 2 + (2 * (m + 1)) / 2
+            (m * (m + 1)) / 2 + (2 * (m + 1)) / 2 = (m * (m + 1) + 2 * (m + 1)) / 2
+            m * (m + 1) + 2 * (m + 1) = (m + 2) * (m + 1)
+            (m * (m + 1) + 2 * (m + 1)) / 2 = ((m + 1) * (m + 2)) / 2
+            (m + 1) * (m + 2) = (m + 1) * ((m + 1) + 1)
+            ((m + 1) * (m + 2)) / 2 = ((m + 1) * ((m + 1) + 1)) / 2
+            A(m + 1) = ((m + 1) * ((m + 1) + 1)) / 2
 
 # 6.2.5 Example
 
@@ -1309,9 +1314,12 @@ sketch:
                                     factorial(a + b) = (a + b) * factorial(a + b - 1)
                                     pascal(a, b) * factorial(a) * factorial(b) = (pascal(a - 1, b) + pascal(a, b - 1)) * factorial(a) * factorial(b)
                                     (pascal(a - 1, b) + pascal(a, b - 1)) * factorial(a) * factorial(b) = pascal(a - 1, b) * factorial(a) * factorial(b) + pascal(a, b - 1) * factorial(a) * factorial(b)
-                                    pascal(a - 1, b) * factorial(a) * factorial(b) = pascal(a - 1, b) * (a * factorial(a - 1)) * factorial(b) = a * pascal(a - 1, b) * factorial(a - 1) * factorial(b)
-                                    pascal(a, b - 1) * factorial(a) * factorial(b) = pascal(a, b - 1) * factorial(a) * (b * factorial(b - 1)) = b * pascal(a, b - 1) * factorial(a) * factorial(b - 1)
-                                    pascal(a - 1, b) * factorial(a) * factorial(b) + pascal(a, b - 1) * factorial(a) * factorial(b) = a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b)) + b * (pascal(a, b - 1) * factorial(a) * factorial(b - 1))
+                                    pascal(a - 1, b) * factorial(a) * factorial(b) = pascal(a - 1, b) * (a * factorial(a - 1)) * factorial(b)
+                                    pascal(a - 1, b) * (a * factorial(a - 1)) * factorial(b) = a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b))
+                                    pascal(a, b - 1) * factorial(a) * factorial(b) = pascal(a, b - 1) * factorial(a) * (b * factorial(b - 1))
+                                    pascal(a, b - 1) * factorial(a) * (b * factorial(b - 1)) = b * (pascal(a, b - 1) * factorial(a) * factorial(b - 1))
+                                    pascal(a - 1, b) * factorial(a) * factorial(b) + pascal(a, b - 1) * factorial(a) * factorial(b) = a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b)) + pascal(a, b - 1) * factorial(a) * factorial(b)
+                                    a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b)) + pascal(a, b - 1) * factorial(a) * factorial(b) = a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b)) + b * (pascal(a, b - 1) * factorial(a) * factorial(b - 1))
                                     a * (pascal(a - 1, b) * factorial(a - 1) * factorial(b)) + b * (pascal(a, b - 1) * factorial(a) * factorial(b - 1)) = a * factorial((a - 1) + b) + b * factorial(a + (b - 1))
                                     a * factorial((a - 1) + b) + b * factorial(a + (b - 1)) = a * factorial(a + b - 1) + b * factorial(a + b - 1)
                                     a * factorial(a + b - 1) + b * factorial(a + b - 1) = (a + b) * factorial(a + b - 1)
