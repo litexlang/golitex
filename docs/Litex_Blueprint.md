@@ -33,6 +33,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
   - [Personal Reflection: Does Litex Fill a Paradigm Gap in AI Reasoning?](#summary-bottom-up-and-top-down)
 - [Appendix: Litex from a Systems Engineering Perspective](#systems-engineering)
 - [Appendix: Source Gallery](#overview-gallery)
+- [Project Claims, Deliverables and Evidence](#claims-deliverables-evidence)
 
 <a id="overview"></a>
 
@@ -2210,3 +2211,45 @@ pointwise or partition premises. Detailed results expose the term calculations;
 `eval` displays the exact value and publishes the checked source-to-result
 equality; algorithm trace steps cite their defining equations. These verifier
 paths do not establish Lean export support.
+
+<a id="claims-deliverables-evidence"></a>
+
+## Project Claims, Deliverables and Evidence
+
+Litex investigates whether organizing mathematics around facts, incremental
+checking and retained knowledge can help people and AI construct, understand
+and reuse checkable reasoning in the same source text. The language,
+verification workflow, mathematical developments and supported Lean
+translation described here are implemented artifacts through which this
+research question can be examined.
+
+| Current claim | Delivered implementation | Evidence in this Blueprint | Scope of the conclusion |
+| --- | --- | --- | --- |
+| Authors can state mathematical facts directly and have supported connections checked. | Mathematical objects, facts and definitions, well-definedness checks and local verification procedures. | [Fact-oriented source and checking routes](#fact-oriented-interface), [source gallery](#overview-gallery) and the [systems engineering example](#systems-engineering). | The implemented object and proof interfaces, under the verifier's stated foundations and assumptions. |
+| Accepted knowledge can support later mathematical work. | Retained facts, reusable definitions and theorems, citations and modules. | [What each statement leaves behind](#execution-model) and [reuse of earlier results](#workflow-reuse). | Reuse under the original premises, scopes and import rules; the checking status belongs to the particular development. |
+| People and agents can repair a step while keeping earlier accepted context. | A persistent Session, structured failure feedback and JSON results. | [The Session interaction example](#interaction-loop) and [verification records](#execution-model). | The demonstrated interaction and retention of accepted context. Changes in authoring time or proof quality require separate measurement. |
+| A defined mathematical subset can be compiled to Lean and connected to ordinary Mathlib mathematics. | Typed-result replay, a Lean semantic core, generated source pairs and representation bridges; complete native examples also use handwritten adapters. | [Independent Lean rechecking](#compatibility), its dated verification checkpoint and linked compiler guide. | Reviewed source-to-Lean routes and checked examples. Native use additionally requires the model and adapter for the particular interface. |
+| Mathematical source and results can feed other tools. | JSON output, LaTeX export and experimental Python/C extraction. | [Structured knowledge records](#execution-model), [export examples](#overview-spine) and [computation and communication](#workflow-use). | Each tool's supported input and output contract. LaTeX export renders parsed source without verifying it; executable extraction handles supported computational fragments. |
+
+These artifacts establish concrete language and workflow capabilities. The
+broader research question is how much this design reduces learning, writing,
+review, repair and reuse costs across users and tasks. Comparative tasks and
+user studies can test that question; the delivered mechanisms provide a
+system on which to perform those studies. The vision of making formalization
+useful throughout the sciences builds on this research question.
+
+Litex is an open-source project created and maintained by a mathematics PhD
+student with limited time and resources, with support and contributions from
+others. This context explains its development priorities and pace. The table
+provides a basis for assessing the work already delivered and choosing useful
+next contributions.
+
+When evaluating the project, distinguish whether an existing claim is supported,
+whether a particular use case needs additional capabilities, and whether a
+longer-term research goal has been demonstrated. Criticism can identify a
+specific claim, artifact or missing piece of evidence; proposed extensions can
+state the use case they would enable. An absent extension alone does not refute
+an established local result, and a local result does not establish broader
+performance or coverage. The relevance of the research question itself can
+also be discussed separately from whether the delivered system implements its
+stated mechanisms.

@@ -19,10 +19,8 @@ inequality. The published Litex file contains no direct trust or local axiom.
 The sequence carrier is written explicitly as `fn(index N+) R`, preserving
 the original one-based indexing. The constant proof establishes the tail
 before choosing its witness. Uniqueness uses `n1 + n2` as a common tail index,
-then direct absolute-difference symmetry and triangle facts. All five formerly
-failing statements now pass; see
-[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md) for evidence.
-The Lean comparison was not rerun.
+then direct absolute-difference symmetry and triangle facts. The published
+module passed its dated strict check. The Lean comparison was not rerun.
 
 This module itself stops at sequence-limit existence, uniqueness, and safe
 selection. The broader calculus/real-analysis direction may later grow through

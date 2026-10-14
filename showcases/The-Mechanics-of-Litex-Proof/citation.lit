@@ -65,8 +65,10 @@ thm gcd_comm:
         ? b != 0 or a != 0
         by cases:
             ? b != 0 or a != 0
-            case a != 0
-            case b != 0
+            case a != 0:
+                a != 0
+            case b != 0:
+                b != 0
     gcd(a, b) $in N+
     a % gcd(a, b) = 0
     b % gcd(a, b) = 0
@@ -216,7 +218,8 @@ thm bezout_identity:
                 v = 0
                 by cases:
                     ? u != 0
-                    case u != 0
+                    case u != 0:
+                        u != 0 or v != 0
                     case v != 0:
                         impossible v = 0
                 release thm gcd_euclidean_base(u)
@@ -255,7 +258,8 @@ thm bezout_identity:
                 r <= measure or r >= measure + 1
                 by cases:
                     ? r <= measure
-                    case r <= measure
+                    case r <= measure:
+                        r <= measure + 1
                     case r >= measure + 1:
                         impossible r < measure + 1
                 $bezout_at_measure(r)
@@ -284,9 +288,6 @@ thm bezout_identity:
     abs(b) = abs(b)
     exist x Z, y Z st {gcd(a, b) = x * a + y * b}
 
-# Weil, Exercise II.8: every rational number has a reduced fraction.
-# A negative rational needs an integer numerator, so the denominator is chosen
-# positive and the reducedness condition is `gcd(p, d) = 1`.
 thm gcd_of_prime_is_one_or_prime:
     ? forall a Z, p N+:
         $prime(p)

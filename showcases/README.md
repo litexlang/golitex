@@ -5,8 +5,8 @@ read a chapter development, study a problem's proof, or see how checked
 mathematics connects to other tools. Choose a collection by what you want to
 learn; analysis, algebra and geometry are subjects within these categories.
 
-For a short mathematical introduction, begin with [Analysis with Litex](analysis_notes/README.md)
-or [Linear Algebra in Litex](linear_algebra/README.md). For a systematic introduction
+For a short mathematical introduction, begin with [Linear Algebra in Litex](linear_algebra/README.md).
+For a systematic introduction
 to writing proofs, follow [The Mechanics of Litex Proof](The-Mechanics-of-Litex-Proof/README.md).
 
 ## Mathematical lecture notes
@@ -17,9 +17,8 @@ lecture a chapter-by-chapter adaptation.
 
 | Collection | Mathematical progression | Scope |
 | --- | --- | --- |
-| [Analysis with Litex](analysis_notes/README.md) | Reciprocal sequences → limits and their uniqueness → sums of limits → geometric sequences and partial sums | Independent lecture file with local definitions and proofs; no textbook module imports. |
 | [Linear Algebra in Litex](linear_algebra/README.md) | Coordinate operations → vector spaces and subspaces → span, bases and unique coordinates | Selected lectures inspired by Axler's *Linear Algebra Done Right*, using the real plane. |
-| [Mathematical Concepts in Litex](math_concepts_in_litex/README.md) | Subject-specific slices from school mathematics to undergraduate structures | A collection of separate subject modules, rather than a complete curriculum. The probability-theory entry remains a draft. |
+| [Mathematical Concepts in Litex](math_concepts_in_litex/README.md) | Subject-specific slices from elementary constructions to undergraduate structures | A collection of checked vertical slices, rather than a complete curriculum. |
 
 ## Textbook adaptations
 
@@ -28,8 +27,7 @@ identify the mathematics included, selected examples and omitted material.
 
 | Collection | Source and direction | Scope |
 | --- | --- | --- |
-| [Tao's Analysis I in Litex](analysis/README.md) | Terence Tao's *Analysis I*: induction, sets and maps, real numbers, limits, series and countability | Selected Chapters 1–8 and Appendix A; not the complete book. Construction and completeness assumptions remain explicit. |
-| [Mathematics in Litex](Mathematics-in-Litex/README.md) | Jeremy Avigad and Patrick Massot's *Mathematics in Lean*: witnesses, functions, sets, recursion and algebraic structures | Selected material from Chapters 1–8; not a reproduction of every source example or Lean technique. |
+| [Tao's Analysis I in Litex](analysis/README.md) | Terence Tao's *Analysis I*: induction, sets and maps, real numbers, limits, series and countability | A non-strict adaptation of selected Chapters 1–8 and Appendix A. It retains four user axioms and one abstract predicate, and is not a complete formalization. |
 
 ## Litex proof tutorials
 
@@ -48,7 +46,7 @@ coordinate or scalar model.
 
 | Collection | Problems | Scope |
 | --- | --- | --- |
-| [IMO inequalities](imo_inequalities/README.md) | Ordered sequences, polynomial and radical inequalities, equality cases and optimal constants | Six problem pages, five standalone proofs. IMO 1975 P1 is statement-only and has not been attempted. |
+| [IMO inequalities](imo_inequalities/README.md) | Polynomial and radical inequalities, equality cases and optimal constants | Five official problems with five standalone proofs. |
 | [IMO geometry](2D_Geometry/README.md#imo-examples) | Triangle and circle configurations, constructions, inequalities and incidence counting | Twelve problems with fifteen solution packages. The README distinguishes full configurations from scalar and normalized variants. |
 
 ## Mathematical theory libraries
@@ -75,8 +73,8 @@ show how its output can be used elsewhere.
 The categories describe each collection's purpose, not its completion or
 verification status. Each collection's own README and available verification
 records specify its assumptions, supported scope and dated checks. A selected
-chapter development is not a completed book; a statement-only problem is not
-a proof. Litex checks still rely on its verifier and builtin mathematical rules.
+chapter development is not a completed book. Litex checks still rely on its
+verifier and builtin mathematical rules.
 
 New showcases should join the category matching their main reading purpose.
 Describe their mathematical subject, reading scale and implemented scope in

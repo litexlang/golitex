@@ -39,9 +39,7 @@ The complete Litex file and registered module passed strict release
 verification on 2026-10-01, with no trusted steps. The finite domain remains
 exactly `{1, 2, 3}`: its proved numeric carrier is written explicitly in the
 function signatures. Enumeration uses the displayed set, and extensionality
-uses two previously proved subset relations. See
-[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md) for the proof
-journals and file/module gates. The Lean comparison was not rerun.
+uses two previously proved subset relations. The Lean comparison was not rerun.
 
 More advanced material—axiomatic set theory, inverse images,
 equivalence relations, quotients, cardinal comparison, and

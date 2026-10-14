@@ -5,28 +5,21 @@ and early undergraduate topics.
 The numeric prefixes are editorial order only: the projects do not import one
 another.
 
-Migration checkpoint (2026-10-05): the current published collection has
-17 standalone subject modules and 18 Litex source files. The maintainer
-replaced the former coordinate-geometry problem collection with the complete
-plane-geometry library from
-[`geo.lit`](../../scripts/LitexGeo-AutoBuild/shenjiachen/新geo和geo_definitions/geo.lit).
-This is an intentional scope change: the old geometry problem modules are
-outside the current collection. The pinned legacy snapshot remains available
-for historical comparison.
+The current published collection has 16 standalone subject modules and 17
+Litex source files. Each module presents one bounded vertical slice rather
+than trying to survey its entire subject. The coordinate-geometry entry uses
+the maintained public plane-geometry library in
+[`showcases/2D_Geometry`](../2D_Geometry/README.md).
 
 The published subject files and their configured modules have passed strict
-verification on the same current release binary recorded in the migration
-acceptance notes (2026-10-05). The replacement geometry module is checked through its
-complete file and its actual standalone module entry. Probability theory
-under `17_probability_theory` remains a draft without a published Litex entry.
-Lean analogies are outside these Litex verification results.
+verification on the same release binary used for the dated checks in their
+READMEs. The geometry module was checked through its complete file and actual
+standalone module entry. Lean analogies are outside these Litex verification
+results.
 
-The current public Litex sources contain 710 `release thm` calls, no executable
-`by thm`, no direct `trust`, and no axioms. Exact source hashes, verification
-commands, and scope boundaries are recorded in
-[`和showcase有关.md`](../../plan/迁移的plan/和showcase有关.md), the
-[release migration acceptance](../../scripts/math_concepts_in_litex_upstream/experience/problem_notes/showcase_release_migration_acceptance.md),
-and the [geometry replacement acceptance](experience/problem_notes/plane-geometry-replacement-acceptance-2026-10-05.md).
+The current public Litex sources contain no direct `trust` or global axioms.
+Each module README states its verification boundary; Lean analogies are
+separate comparison artifacts.
 
 Use `release thm name(args)` for theorem instances in this collection.
 An exact released conclusion needs no repeated fact line. Keep a following
@@ -43,7 +36,6 @@ The usual project artifacts are:
 
 | No. | Project | Main line / flagship |
 | ---: | --- | --- |
-| 1 | `1_middle_school_math_in_nutshell` | equations, AM-GM, geometry, probability, statistics |
 | 2 | `2_sets_functions_and_relations_in_nutshell` | finite sets, a callable function, a relation, and injectivity |
 | 2 | `2_euclidean_geometry` | the equilateral-triangle construction from Euclid I.1 |
 | 3 | `3_number_theory` | gcd/Bezout and linear Diophantine solvability |
@@ -60,7 +52,6 @@ The usual project artifacts are:
 | 14 | `14_tarski_geometry_from_axioms` | GeoCoq-aligned SST Chapters 2–11, Euclid I.5, and exact angle-based SAS |
 | 15 | `15_coordinate_geometry_case_study` | standalone plane geometry: 41 definitions and 186 proved theorems |
 | 16 | `16_category_theory_in_set_theory` | categories, functors, natural transformations, and finite instances |
-| 17 | `17_probability_theory` | draft probability-theory work; no active `main.lit` |
 
 Run any project from the repository root:
 
@@ -77,13 +68,10 @@ contexts are expressed as predicates with explicit theorem premises during
 this migration; structs are for values that must be constructed,
 stored, passed, compared, or returned.
 
-Active Litex sources contain no direct `trust` or axioms. Lean analogies state
+Active Litex sources contain no direct `trust` or global axioms. Lean analogies state
 missing mathematics as explicit structure fields or theorem hypotheses;
 analytic comparisons may use the repository's Mathlib environment for
 standard objects such as real series.
-The restoration journals are under `plan/迁移的plan/proof_journals/` and the
-passing restoration examples are under
-`scripts/math_concepts_in_litex_upstream/experience/problem_notes/`.
 
 ## Intended completion boundary
 
@@ -133,9 +121,3 @@ Algebraic geometry, homological algebra, representation theory, model theory,
 and universal algebra are explicit collection non-goals. Empty placeholder
 modules are not created for future subjects; their boundaries live here until
 there is a checked vertical slice to publish.
-
-Current-src acceptance (2026-10-06): all 27 public showcase modules and 21
-file checks pass strict verification (48/48), including the complete geometry
-library and nine IMO solution packages. See the
-[current acceptance](experience/problem_notes/current-cli-migration-acceptance-2026-10-06.md).
-Lean comparisons are excluded from this Litex result.

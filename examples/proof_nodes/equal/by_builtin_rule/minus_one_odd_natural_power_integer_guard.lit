@@ -1,0 +1,12 @@
+# Tracer: MinusOneOddNaturalPower checks the parameter in Z.
+# Before (incorrectly accepted):
+# (-1)^(2 * (1 / 2) + 1) = -1
+# Former behavior: a syntactically odd-looking but even exponent was accepted.
+# Now: the parameter is integral, including negative integers.
+forall m Z:
+    (-1)^(2 * m + 1) = -1
+    -1 = (-1)^(m * 2 + 1)
+(-1)^(2 * (1 / 2) + 1) = 1
+# Boundary: integer membership of the complete exponent alone is insufficient.
+# Executable negatives: hcx_arithmetic_guards::false_universals_and_missing_coefficient_premises_reject.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/minus_one_odd_natural_power_integer_guard.lit

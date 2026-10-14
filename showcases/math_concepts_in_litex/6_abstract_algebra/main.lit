@@ -349,6 +349,7 @@ thm ring_homomorphism_kernel_is_ideal:
         =>:
             $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, {candidate A: map(candidate) = zero_B})
     by def $is_ring_homomorphism(A, add_A, zero_A, neg_A, mul_A, one_A, B, add_B, zero_B, neg_B, mul_B, one_B, map)
+    $is_commutative_ring(B, add_B, zero_B, neg_B, mul_B, one_B)
     claim:
         ? zero_A $in {candidate A: map(candidate) = zero_B}
         map(zero_A) = zero_B
@@ -380,6 +381,7 @@ thm field_is_integral_domain:
         =>:
             $is_integral_domain(A, add, zero, neg, mul, one)
     by def $is_field(A, add, zero, neg, mul, one)
+    $is_commutative_ring(A, add, zero, neg, mul, one)
     claim:
         ? forall x, y A:
             mul(x, y) = zero
@@ -400,6 +402,7 @@ thm prime_ideal_gives_integral_domain_quotient:
         $is_prime_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
         =>:
             $is_integral_domain(B, add_B, zero_B, neg_B, mul_B, one_B)
+    $is_ring_homomorphism(A, add_A, zero_A, neg_A, mul_A, one_A, B, add_B, zero_B, neg_B, mul_B, one_B, map)
     by def $is_prime_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
     by def $is_quotient_ring_presentation(A, add_A, zero_A, neg_A, mul_A, one_A, B, add_B, zero_B, neg_B, mul_B, one_B, map, I)
     claim:
@@ -436,6 +439,7 @@ thm integral_domain_quotient_gives_prime_ideal:
         $is_integral_domain(B, add_B, zero_B, neg_B, mul_B, one_B)
         =>:
             $is_prime_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+    $is_ring_homomorphism(A, add_A, zero_A, neg_A, mul_A, one_A, B, add_B, zero_B, neg_B, mul_B, one_B, map)
     by def $is_integral_domain(B, add_B, zero_B, neg_B, mul_B, one_B)
     by def $is_quotient_ring_presentation(A, add_A, zero_A, neg_A, mul_A, one_A, B, add_B, zero_B, neg_B, mul_B, one_B, map, I)
     $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)

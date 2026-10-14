@@ -5,21 +5,17 @@ finite observations. How can a finite index control every later term of a
 sequence? When does a sequence of partial sums approach a real value? What
 allows us to choose that value uniquely and use it in a later argument?
 
-This independent adaptation follows selected developments from Terence Tao's
+This non-strict adaptation follows selected developments from Terence Tao's
 *Analysis I*. Induction leads to sets and maps; rational Cauchy sequences lead
 to real-number interfaces; completeness supports limits, series and
 countability. Definitions and proofs remain in chapter order, so a reader can
 follow the mathematical dependencies as well as individual results.
 
-For a shorter introduction, start with [Analysis with Litex](../analysis_notes/README.md).
-Its self-contained lecture file develops reciprocal and geometric sequences
-and a geometric series with local definitions and proofs. These chapters
-provide a separate, broader mathematical development.
-
-The collection contains selected Chapters 1–8 and Appendix A. Familiar number
+The collection contains selected Chapters 2–8 and Appendix A. Familiar number
 systems and operations use Litex builtins; construction and completeness
-assumptions remain explicit. It is not a complete formalization or an official
-edition of the book.
+assumptions remain explicit. Four user axioms and one abstract predicate remain,
+so this is not a strict proof development, a complete formalization or an
+official edition of the book.
 
 ## A small fact inside a larger construction
 
@@ -94,7 +90,6 @@ and the [assumption boundary](STATUS.md).
 
 | Read | Mathematical progression |
 | --- | --- |
-| [Chapter 1](chapter01-introduction.lit) | Orientation; see this README for the reading path |
 | [Chapter 2](chapter02-natural-numbers.lit) | Induction, recursion and natural numbers |
 | [Chapter 3](chapter03-set-theory.lit) | Sets, maps, finite cardinality and products |
 | [Chapter 4](chapter04-integers-and-rationals.lit) | Formal differences, rational arithmetic and distance |
@@ -106,8 +101,8 @@ and the [assumption boundary](STATUS.md).
 
 [Mathematical interfaces](math_collections.md) explains the main dependencies.
 The [manifest](litex.config) preserves their verified export order.
-The introduction files are deliberately brief: book prose and historical
-migration notes are omitted from these public code files.
+This README supplies the reading path; comment-only introduction exports have
+been removed from the executable module.
 
 ## What the evidence establishes
 
@@ -116,13 +111,8 @@ non-strict Litex run on 2026-10-13. It reported 190 successful main-file
 statements. All ten published source files retain the exact executable lines,
 indentation and order from those verified inputs; only inactive prose,
 comments and blank lines were removed. [verification.json](verification.json)
-records the original binary hash, source hashes and publication checks.
-A prior import-based lecture also verified this public chapter module as its
-dependency on a current release build. That lecture has since been replaced
-by an independent one. The [historical receipt](lecture-import-verification_2026_10_13.json)
-retains the old input hashes and 15 main-file results; it does not describe
-the current short lecture. These checks do not establish compatibility with
-every Litex release.
+records the original binary hash, source hashes and publication checks. These
+checks do not establish compatibility with every Litex release.
 
 The retained scope has **zero active direct `trust` statements**, while its
 original foundation axioms remain. Scope omissions are not proofs. For space, set-indexed sums, the optional

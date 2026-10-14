@@ -731,6 +731,8 @@ thm zero_variation_forces_equal_to_first:
                 by def:
                     ? $equal_after(offset + 1)
 
+    release thm natural_predecessor_nonnegative_7(target)
+    target - 1 $in N
     1 + (target - 1) = target
     1 + (target - 1) <= n
     $equal_after(target - 1)

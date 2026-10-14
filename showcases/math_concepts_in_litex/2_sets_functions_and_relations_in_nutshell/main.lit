@@ -34,10 +34,8 @@ thm first_union_second:
     3 $in union(first_set, second_set)
     4 $in union(first_set, second_set)
     {1, 2, 3, 4} $subset union(first_set, second_set)
-    by extension:
-        ? union(first_set, second_set) = {1, 2, 3, 4}
+    by extension union(first_set, second_set) = {1, 2, 3, 4}
 
-# The displayed finite domain is a subset of the numeric carrier.
 first_set $subset R
 forall x first_set:
     x $in R
@@ -54,11 +52,11 @@ thm successor_moves_first_set_to_second_set:
             element $in R
             =>:
                 element + 1 $in {2, 3, 4}
+        element + 1 $in {2, 3, 4}
     x $in {1, 2, 3}
     x + 1 $in {2, 3, 4}
     x + 1 $in second_set
 
-# First presentation: a named function defined by its formula.
 have fn successor_on_first(x R: x $in first_set) second_set = x + 1
 
 # Second presentation: the same map as an anonymous function value.

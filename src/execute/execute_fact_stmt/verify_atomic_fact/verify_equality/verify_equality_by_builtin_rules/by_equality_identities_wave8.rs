@@ -2,14 +2,7 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
-use crate::ast::fact::{EqualFact, Fact, InFact};
-use crate::ast::obj::{
-    Abs, Add, ArithmeticOperator, Gcd, IntegerOperator, Lcm, Literal, Mod, Mul, Neg, Number, Obj,
-    Pow, Quot, StandardSet, Sub,
-};
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::prelude::*;
 
 // Builtin QuotEuclideanDecomposition: a = d * quot(a, d) + (a % d)
 // (also accepts quot(a, d) * d on the product side).
@@ -27,9 +20,11 @@ pub struct SquareSumComponentZeroBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin MinusOneOddNaturalPower: (-1)^(2 * m + 1) = -1.
+// Builtin MinusOneOddNaturalPower: (-1)^(2 * m + 1) = -1 for integral m.
 // Example: have m N; (-1)^(2 * m + 1) = -1.
-pub struct MinusOneOddNaturalPowerBuiltinRuleProof {}
+pub struct MinusOneOddNaturalPowerBuiltinRuleProof {
+    pub parameter_integer: VerifyFactResult,
+}
 
 // Builtin LcmGcdProductAbs: lcm(a, b) * gcd(a, b) = abs(a * b).
 // Example: have a Z; have b Z; trust a != 0; trust b != 0;
@@ -66,11 +61,9 @@ impl Runtime {
                     ),
                 ));
             }
-            if minus_one_odd_natural_power_shape(left, right) {
+            if let Some(proof) = self.try_minus_one_odd_natural_power(left, right, verify_state)? {
                 return Ok(Some(
-                    EqualityIdentitiesWave8BuiltinRuleProof::MinusOneOddNaturalPower(
-                        MinusOneOddNaturalPowerBuiltinRuleProof {},
-                    ),
+                    EqualityIdentitiesWave8BuiltinRuleProof::MinusOneOddNaturalPower(proof),
                 ));
             }
             if lcm_gcd_product_abs_shape(left, right) {
@@ -87,6 +80,31 @@ impl Runtime {
             ));
         }
         Ok(None)
+    }
+
+    fn try_minus_one_odd_natural_power(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<MinusOneOddNaturalPowerBuiltinRuleProof>> {
+        let Some(parameter) = minus_one_odd_natural_power_parameter(left, right) else {
+            return Ok(None);
+        };
+        let premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: parameter,
+            set: Obj::StandardSet(StandardSet::Z),
+            line_file: None,
+        }
+        .into();
+        let parameter_integer = self.verify_builtin_rule_premise(&premise, state)?;
+        if parameter_integer.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(MinusOneOddNaturalPowerBuiltinRuleProof::new(
+            parameter_integer,
+        )))
     }
 
     fn try_square_sum_component_zero(
@@ -212,27 +230,39 @@ fn mod_dividend_minus_remainder_zero_shape(remainder: &Obj, zero: &Obj) -> bool 
     a.ir() == inner_a.ir() && modulus.ir() == inner_b.ir()
 }
 
-fn minus_one_odd_natural_power_shape(pow_side: &Obj, neg_one_side: &Obj) -> bool {
+fn minus_one_odd_natural_power_parameter(pow_side: &Obj, neg_one_side: &Obj) -> Option<Obj> {
     if !is_neg_one_obj(neg_one_side) {
-        return false;
+        return None;
     }
     let Some((base, exponent)) = match_pow(pow_side) else {
-        return false;
+        return None;
     };
     if !is_neg_one_obj(base) {
-        return false;
+        return None;
     }
     // exponent = 2 * m + 1
     let Some((even_part, one)) = match_add(exponent) else {
-        return false;
+        return None;
     };
     if !is_one_obj(one) {
-        return false;
+        return None;
     }
     let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) = even_part else {
-        return false;
+        return None;
     };
-    is_two_obj(left.as_ref()) || is_two_obj(right.as_ref())
+    if is_two_obj(left.as_ref()) {
+        Some(right.as_ref().clone())
+    } else if is_two_obj(right.as_ref()) {
+        Some(left.as_ref().clone())
+    } else {
+        None
+    }
+}
+
+impl MinusOneOddNaturalPowerBuiltinRuleProof {
+    pub fn new(parameter_integer: VerifyFactResult) -> Self {
+        Self { parameter_integer }
+    }
 }
 
 fn lcm_gcd_product_abs_shape(product: &Obj, abs_product: &Obj) -> bool {

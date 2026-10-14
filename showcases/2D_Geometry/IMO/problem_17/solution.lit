@@ -3782,8 +3782,8 @@ thm problem_17:
     by def $circle_tangent_to_line(center_3, radius_3, line_cd_a, line_cd_b, line_cd_c)
     by def $circle_internally_tangent_to_semicircle(center_2, radius_2, center_gamma, radius_gamma, point_a, point_b, point_c)
     by def $circle_internally_tangent_to_semicircle(center_3, radius_3, center_gamma, radius_gamma, point_a, point_b, point_c)
-    by def $circles_internally_tangent(center_2, radius_2, center_gamma, radius_gamma)
-    by def $circles_internally_tangent(center_3, radius_3, center_gamma, radius_gamma)
+    $circles_internally_tangent(center_2, radius_2, center_gamma, radius_gamma)
+    $circles_internally_tangent(center_3, radius_3, center_gamma, radius_gamma)
 
     # Build an oriented orthonormal basis along the diameter AB.
     by thm squared_distance_coordinates_17(center_gamma,point_a)
