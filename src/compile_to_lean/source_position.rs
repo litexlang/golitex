@@ -3260,10 +3260,7 @@ fn visit_owner<T>(
                     .iter()
                     .rev()
                 {
-                    if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(
-                        carrier,
-                    )) = carrier
-                    {
+                    if let ParamTypeWellDefinedProof::Obj(carrier) = carrier {
                         if let Some(value) = visit_complete_wd(carrier, position, wd, verify)? {
                             return Ok(Some(value));
                         }
@@ -3379,10 +3376,7 @@ fn visit_owner<T>(
                     .iter()
                     .rev()
                 {
-                    if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(
-                        carrier,
-                    )) = carrier
-                    {
+                    if let ParamTypeWellDefinedProof::Obj(carrier) = carrier {
                         if let Some(value) = visit_complete_wd(carrier, position, wd, verify)? {
                             return Ok(Some(value));
                         }
@@ -3988,9 +3982,7 @@ fn visit_owner<T>(
                 }
             }
             if position.before > 0 {
-                if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(proof)) =
-                    carrier
-                {
+                if let ParamTypeWellDefinedProof::Obj(proof) = carrier {
                     let prior = SourcePosition {
                         before: 0,
                         ..*position
@@ -4003,9 +3995,7 @@ fn visit_owner<T>(
         }
         SourceOwner::ParamTypeWD(carrier) => {
             if position.before > 0 {
-                if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(proof)) =
-                    carrier
-                {
+                if let ParamTypeWellDefinedProof::Obj(proof) = carrier {
                     let prior = SourcePosition {
                         before: 0,
                         ..*position
@@ -4140,10 +4130,7 @@ fn visit_owner<T>(
                 .zip(&proof.param_type_well_defined)
             {
                 if offset < position.before {
-                    if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(
-                        carrier,
-                    )) = carrier
-                    {
+                    if let ParamTypeWellDefinedProof::Obj(carrier) = carrier {
                         let prior = SourcePosition {
                             before: offset,
                             ..*position
@@ -4629,9 +4616,7 @@ fn visit_header<T>(
     {
         let end = offset + group.params.len();
         if offset < position.before {
-            if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(proof)) =
-                proof
-            {
+            if let ParamTypeWellDefinedProof::Obj(proof) = proof {
                 let prior = SourcePosition {
                     before: offset,
                     ..*position

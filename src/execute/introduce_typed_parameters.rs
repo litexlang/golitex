@@ -28,6 +28,7 @@ use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferR
 use crate::execute::release_one_struct_layer::{
     FailToReleaseOneStructLayer, ReleaseOneStructLayerProof,
 };
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
@@ -109,19 +110,16 @@ impl Runtime {
             let one = TypedParameterList {
                 groups: vec![group.clone()],
             };
-            let proof =
-                self.verify_param_type_well_definedness(&group.param_type, verify_state.clone())?;
-            if proof.is_failed() {
-                let failed = match proof {
-                    ParamTypeWellDefinedProof::Obj(wd) => wd,
-                    ParamTypeWellDefinedProof::Set
-                    | ParamTypeWellDefinedProof::NonemptySet
-                    | ParamTypeWellDefinedProof::FiniteSet => {
-                        unreachable!("kind param types never soft-fail well-definedness")
-                    }
-                };
-                return Ok(Err(IntroduceTypedParametersFailed::ParamType(failed)));
-            }
+            let proof = match self
+                .verify_param_type_well_definedness(&group.param_type, verify_state.clone())?
+            {
+                VerifyParamTypeWellDefinedResult::Success(proof) => proof,
+                VerifyParamTypeWellDefinedResult::Failed { obj, reason } => {
+                    return Ok(Err(IntroduceTypedParametersFailed::ParamType(
+                        VerifyObjWellDefinedResult::Failed { obj, reason },
+                    )));
+                }
+            };
             param_type_well_defined.push(proof);
             let defined = self.define_typed_parameters_in_current_env(
                 &one,
@@ -161,19 +159,13 @@ impl Runtime {
         let param_type_well_defined =
             self.verify_typed_parameters_well_definedness(typed_parameters, verify_state)?;
         let mut kept = Vec::with_capacity(param_type_well_defined.len());
-        for proof in param_type_well_defined {
-            if proof.is_failed() {
-                let failed = match proof {
-                    ParamTypeWellDefinedProof::Obj(wd) => wd,
-                    ParamTypeWellDefinedProof::Set
-                    | ParamTypeWellDefinedProof::NonemptySet
-                    | ParamTypeWellDefinedProof::FiniteSet => {
-                        unreachable!("kind param types never soft-fail well-definedness")
-                    }
-                };
-                return Ok(Err(failed));
+        for result in param_type_well_defined {
+            match result {
+                VerifyParamTypeWellDefinedResult::Success(proof) => kept.push(proof),
+                VerifyParamTypeWellDefinedResult::Failed { obj, reason } => {
+                    return Ok(Err(VerifyObjWellDefinedResult::Failed { obj, reason }));
+                }
             }
-            kept.push(proof);
         }
         Ok(Ok(kept))
     }

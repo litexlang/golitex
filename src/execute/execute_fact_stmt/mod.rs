@@ -24,7 +24,9 @@ pub mod verify_or_fact;
 mod verify_state;
 pub mod well_defined_results;
 
-pub use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
+pub use crate::execute::exec_stmt_result::{
+    ParamTypeWellDefinedProof, VerifyParamTypeWellDefinedResult,
+};
 pub use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 pub use crate::store_fact_and_infer::StoreFactAndInferResult;
 pub use result::{ExecFactStmtResult, ExecFactStmtSuccessResult};

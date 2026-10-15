@@ -341,15 +341,9 @@ impl LitexToLeanCompiler {
                 }
             };
             match wd {
-                ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(wd)) => {
+                ParamTypeWellDefinedProof::Obj(wd) => {
                     ensure_object(set, wd)?;
                     self.compile_wd(wd, position)?;
-                }
-                ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Failed { .. }) => {
-                    return Err(LeanCompileError::new(
-                        "Forall/ParameterWD",
-                        "Parameter WD failed.",
-                    ))
                 }
                 ParamTypeWellDefinedProof::Set
                 | ParamTypeWellDefinedProof::NonemptySet

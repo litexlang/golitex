@@ -23,3 +23,16 @@ asks to delete them. Preserve existing nested repositories and their histories.
 Publish requested deliverables in the appropriate public directories, such as
 `textbooks/`, `examples/`, `docs/`, or `showcases/`; do not expose the local
 scripts workspace itself.
+
+## Release scope: local textbooks are optional
+
+Local textbook projects under `scripts/`, including Analysis, MIL, Mechanics,
+LADR, and NTFB, are not required release gates. Do not run them merely because
+the user asks whether Cargo tests pass or whether Litex is ready to release.
+Run them only when the user explicitly requests textbook work or verification.
+Their absence, failures, or timeouts alone must not be treated as release blockers.
+
+This maintainer instruction overrides any bundled skill or older release note
+that includes local textbooks in a mandatory full-release gate. In particular,
+do not use `.github/scripts/predeploy_gate.py` as a mandatory release gate while
+it includes these local textbook projects.

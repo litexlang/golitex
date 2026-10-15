@@ -63,8 +63,9 @@ impl LitexToLeanCompiler {
                 .zip(&proof.type_preflight.param_type_well_defined)
             {
                 match (&group.param_type, wd) {
-                    (ParamType::Obj(set), ParamTypeWellDefinedProof::Obj(result)) => {
-                        self.compile_wd(success_object_wd(result, set)?, position)?;
+                    (ParamType::Obj(set), ParamTypeWellDefinedProof::Obj(proof)) => {
+                        ensure_object(set, proof)?;
+                        self.compile_wd(proof, position)?;
                         standard_term(match set {
                             Obj::StandardSet(set) => set,
                             _ => {

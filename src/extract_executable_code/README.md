@@ -55,10 +55,31 @@ fragment using `double`, without a generated `main`. Litex verification
 establishes the source mathematics, not IEEE-754 rounding, overflow, or target
 compiler behavior.
 
+## Naming constraints
+
+Choose distinct names across all files included in one extraction. Repository
+extraction (`-r`) combines exports into one Python or C namespace and keeps
+plain declaration names; it does not add export prefixes or detect collisions.
+For example, `have shared R = 1` in one export and `have shared R = 2` in
+another both verify in Litex, but Python overwrites the first value and C
+rejects the duplicate definition. Prefer names such as `first_shared` and
+`second_shared`, and apply the same convention to `algo` names.
+
+For Python, avoid naming a constant, algorithm or parameter `math`. The
+renderer uses `import math` and references such as `math.pi` and `math.floor`.
+For example, `have math R = 2` followed by `have tau R = pi` emits
+`math = 2.0` followed by `tau = math.pi`, which raises `AttributeError`.
+Use a descriptive name such as `scale` for that constant instead. Also avoid
+shadowing Python builtins used by generated code, such as `int`, `min` and
+`max`.
+
 C fragments may `#include <stdlib.h>` (and similar) and call helpers such as
 `abort()`. Avoid Litex `have` / `algo` names that collide with those library
 symbols (`abort`, `exit`, `malloc`, …); the backend does not rename or reject
 them.
+
+These naming collisions can still produce an artifact marked successful.
+Check the generated program in the target language before relying on it.
 
 ## v1 extractable surface (new kernel)
 

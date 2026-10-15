@@ -84,6 +84,9 @@ mod order_bound_capture_tests;
 #[cfg(test)]
 mod order_stage_a_remainder_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/execute/param_type_wd/tests.rs"]
+mod param_type_wd_tests;
+#[cfg(test)]
 #[path = "../../tests/unit/execute/special_property/tests.rs"]
 mod special_property_tests;
 #[cfg(test)]
@@ -99,6 +102,7 @@ mod wd_obligation_tests;
 pub use exec_stmt_result::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult,
     ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
+    VerifyParamTypeWellDefinedResult,
 };
 pub use execute_axiom_stmt::{ExecAxiomStmtFailed, ExecAxiomStmtResult, ExecAxiomStmtSuccess};
 pub use execute_def_abstract_prop_stmt::{

@@ -32,9 +32,7 @@ use crate::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 use crate::execute::execute_def_template_stmt::ExecDefTemplateStmtResult;
 use crate::execute::execute_def_thm_stmt::ExecDefThmStmtResult;
 use crate::execute::execute_eval_stmt::ExecCommandStmtResult;
-use crate::execute::execute_fact_stmt::{
-    ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
-};
+use crate::execute::execute_fact_stmt::{ExecFactStmtResult, VerifyFactResult};
 use crate::execute::execute_have_by_fn_preimage_stmt::ExecHaveByFnPreimageStmtResult;
 use crate::execute::execute_have_by_replacement_axiom_stmt::ExecHaveByReplacementAxiomStmtResult;
 use crate::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
@@ -53,14 +51,23 @@ use crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult;
 use crate::execute::execute_release_struct_def_stmt::ExecReleaseStructDefStmtResult;
 use crate::execute::execute_unsafe_stmt::ExecTrustBoundaryStmtResult;
 use crate::execute::execute_witness_stmt::ExecWitnessStmtResult;
+use crate::prelude::*;
 
-// WD of one parameter-type annotation (not a Fact).
+// Success-only WD evidence for one parameter-type annotation (not a Fact).
 // Example: `x R` → Obj(WD of `R`); bare `set` → Set.
 pub enum ParamTypeWellDefinedProof {
     Set,
     NonemptySet,
     FiniteSet,
-    Obj(VerifyObjWellDefinedResult),
+    Obj(ObjWellDefinedProof),
+}
+
+pub enum VerifyParamTypeWellDefinedResult {
+    Success(ParamTypeWellDefinedProof),
+    Failed {
+        obj: Obj,
+        reason: FailToVerifyObjWellDefinedResult,
+    },
 }
 
 // Fact obligation indexed by ParamType.
@@ -72,12 +79,9 @@ pub enum ParamTypeFactCheckResult {
     Obj(VerifyFactResult),
 }
 
-impl ParamTypeWellDefinedProof {
+impl VerifyParamTypeWellDefinedResult {
     pub fn is_failed(&self) -> bool {
-        match self {
-            Self::Obj(wd) => wd.is_failed(),
-            Self::Set | Self::NonemptySet | Self::FiniteSet => false,
-        }
+        matches!(self, Self::Failed { .. })
     }
 }
 

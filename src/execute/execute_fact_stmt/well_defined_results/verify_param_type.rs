@@ -1,10 +1,4 @@
-use crate::ast::param::{ParamType, TypedParameterList};
-use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
-use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
-use crate::execute::IntroduceTypedParametersResult;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::prelude::*;
 
 impl Runtime {
     // Called inside a quantifier's local WD scope. Each carrier may refer to
@@ -41,7 +35,7 @@ impl Runtime {
         &mut self,
         typed_parameters: &TypedParameterList,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Vec<ParamTypeWellDefinedProof>> {
+    ) -> RuntimeResult<Vec<VerifyParamTypeWellDefinedResult>> {
         let mut out = Vec::new();
         for group in &typed_parameters.groups {
             out.push(
@@ -55,14 +49,18 @@ impl Runtime {
         &mut self,
         param_type: &ParamType,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ParamTypeWellDefinedProof> {
-        match param_type {
-            ParamType::Set(_) => Ok(ParamTypeWellDefinedProof::Set),
-            ParamType::NonemptySet(_) => Ok(ParamTypeWellDefinedProof::NonemptySet),
-            ParamType::FiniteSet(_) => Ok(ParamTypeWellDefinedProof::FiniteSet),
-            ParamType::Obj(obj) => Ok(ParamTypeWellDefinedProof::Obj(
-                self.verify_obj_well_definedness(obj, verify_state)?,
-            )),
-        }
+    ) -> RuntimeResult<VerifyParamTypeWellDefinedResult> {
+        let proof = match param_type {
+            ParamType::Set(_) => ParamTypeWellDefinedProof::Set,
+            ParamType::NonemptySet(_) => ParamTypeWellDefinedProof::NonemptySet,
+            ParamType::FiniteSet(_) => ParamTypeWellDefinedProof::FiniteSet,
+            ParamType::Obj(obj) => match self.verify_obj_well_definedness(obj, verify_state)? {
+                VerifyObjWellDefinedResult::Success(proof) => ParamTypeWellDefinedProof::Obj(proof),
+                VerifyObjWellDefinedResult::Failed { obj, reason } => {
+                    return Ok(VerifyParamTypeWellDefinedResult::Failed { obj, reason });
+                }
+            },
+        };
+        Ok(VerifyParamTypeWellDefinedResult::Success(proof))
     }
 }

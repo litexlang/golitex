@@ -97,7 +97,7 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             match wd {
-                ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(wd)) => {
+                ParamTypeWellDefinedProof::Obj(wd) => {
                     ensure_object(set, wd)?;
                     self.compile_wd(wd, &group_position)?;
                 }
