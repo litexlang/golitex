@@ -1,3 +1,4 @@
+pub mod import_failure;
 pub mod output;
 pub mod run_command;
 pub mod run_command_outcome;

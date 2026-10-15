@@ -30,7 +30,7 @@ impl Runtime {
     pub(crate) fn parse_token_block(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         // Tokenizer never emits empty headers.
         let first = block.header[0].as_str();
-        match first {
+        let result = match first {
             PROP => self.parse_def_prop_stmt(block),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(block),
             LET => self.parse_let_stmt(block),
@@ -94,7 +94,11 @@ impl Runtime {
             BY => self.parse_by_stmt(block),
             REGISTER => self.parse_register_stmt(block),
             _ => self.parse_fact_stmt(block),
-        }
+        };
+        result.map_err(|error| match &block.source {
+            Some(source) => error.with_source_context(source),
+            None => error,
+        })
     }
 
     fn parse_have_dispatch(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {

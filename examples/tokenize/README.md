@@ -16,6 +16,7 @@ Exit 0 is enough.
 line_continuation.lit      trailing \\ joins the next physical line
 unicode_math_aliases.lit   Unicode math aliases share ASCII Litex semantics
 positive_integer_alias.lit Z+ and N+ share one canonical positive-natural set
+parse_error_diagnostics.lit missing-delimiter diagnostic and corrected source
 ```
 
 ## Run all

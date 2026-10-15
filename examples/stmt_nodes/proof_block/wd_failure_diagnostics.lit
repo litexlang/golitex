@@ -1,0 +1,31 @@
+# Diagnostic regression: the unguarded statement below is rejected because
+# (1 / x) needs x != 0, even though the outer stage is forall proof search.
+# Before: only search_proof was reported. Now: category well_defined, expression
+# (1 / x), obligation x != 0, with the full failed-child evidence preserved.
+# Rejected inputs are exercised in wd_failure_diagnostics_tests:
+# forall x R => 1 / x = 1 / x
+# have bad R = 1 / 0
+# 1 = 1 or 1 / 0 = 1 / 0
+# Boundary: forall x R => x = x + 1 is proof_search, not well_defined.
+# Boundary: have bad N = -1 is membership; have bad {} is nonempty.
+
+# Adding the actual domain condition makes the reciprocal well-defined.
+forall x R:
+    x != 0
+    =>:
+        1 / x = 1 / x
+
+have half R = 1 / 2
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+
+# Nested proof steps and witness declarations use the same diagnostics.
+claim:
+    ? half = 1 / 2
+    half = 1 / 2
+
+witness exist w R st {w = w} from 1
+
+struct GoodFields:
+    value R
+    spare R

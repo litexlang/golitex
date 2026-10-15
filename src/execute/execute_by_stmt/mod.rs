@@ -55,6 +55,7 @@ pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 pub(crate) use helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
 pub(crate) use result::ExecByFnExtensionStmtFailed;
 pub(crate) use result::{ByCasesBranchFailed, ExecByCasesStmtFailed, ExecByExtensionStmtFailed};
+pub(crate) use result::{ExecByDefStmtFailed, ExecByForStmtFailed};
 
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/showcase_regressions/tests.rs"]

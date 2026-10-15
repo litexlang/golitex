@@ -38,7 +38,16 @@ pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_o
 };
 pub(crate) use crate::launch_command::LaunchCommand;
 #[cfg(test)]
-pub(crate) use crate::launch_command::{parse_launch_command, OutputLanguage};
+pub(crate) use crate::launch_command::parse_launch_command;
+pub(crate) use crate::launch_command::OutputLanguage;
+pub(crate) use crate::knowledge_base::JsonValue;
+pub(crate) use crate::execute::{
+    ExecHaveObjEqualStmtFailed,
+    ExecDefStructStmtFailed, ExecHaveFnByForallExistUniqueStmtFailed,
+    ExecHaveObjByExistFactsStmtFailed, ExecObtainObjFromExistFactStmtFailed,
+    ExecObtainObjFromAtomicFactStmtFailed, ExecHaveByReplacementAxiomStmtFailed,
+    ExecHaveByFnPreimageStmtFailed,
+};
 #[cfg(test)]
 pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::{
     FailToVerifyArithmeticOperatorObjWellDefinedResult, FailToVerifyObjWellDefinedByDefCommon,
@@ -79,3 +88,14 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::helper::{c
 pub(crate) use crate::rational_expression::{compare_number_strings, is_closed_numeric_expr, NumberCompareResult};
 pub(crate) use crate::rational_expression::closed_scalar_membership::{exact_complex_inhabits_standard_set, normalized_decimal_inhabits_standard_set};
 pub(crate) use crate::rational_expression::exact_complex::exact_complex_coordinates;
+pub(crate) use crate::execute::execute_by_stmt::{
+    ExecByDefStmtFailed, ExecByEnumerateFiniteSetStmtFailed, ExecByForStmtFailed,
+};
+
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::definition_proof_failed::DefinitionProofFailed;
+pub(crate) use crate::run::import_failure::{ImportFailure, ImportFailureCause};
+pub(crate) use crate::execute::execute_fact_stmt::verify_and_fact::{VerifyAndFactResult, VerifyAndFactFailed};
+pub(crate) use crate::execute::execute_fact_stmt::verify_chain_fact::{VerifyChainFactResult, VerifyChainFactFailed};
+pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact::{VerifyForallFactResult, VerifyForallFactFailed};
+pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::{VerifyForallFactWithIffResult, VerifyForallFactWithIffFailed};
+pub(crate) use crate::execute::execute_fact_stmt::verify_not_forall_fact::{VerifyNotForallFactResult, VerifyNotForallFactFailed};

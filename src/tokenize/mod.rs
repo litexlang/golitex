@@ -1,9 +1,14 @@
+mod mapped_line;
 mod symbols;
 mod token_block;
 mod tokenizer;
 
 #[cfg(test)]
 mod tokenizer_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/tokenize/diagnostics.rs"]
+mod diagnostic_tests;
 
 #[cfg(test)]
 #[path = "../../tests/unit/tokenize/nonempty_blocks.rs"]

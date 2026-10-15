@@ -23,6 +23,43 @@ Extraction artifacts use the same command metadata on success and failure:
 failure; `error` is null on success. Artifact field names follow `-lang` just
 like run envelopes; the English schema applies with `-lang en`.
 
+## Failed-stage diagnostics
+
+Normal `why_failed.diagnostic` and the Detailed failed statement's `diagnostic`
+share a summary derived from the actual typed failure branch. `category` is a
+stable enum value; `message` and field names follow `-lang`. `expression` and
+`obligation` are included only when the retained result supplies them.
+
+The output-only `FailureKind` distinguishes `well_defined`, `proof_search`,
+`membership`, `nonempty`, `name_clash`, `arity`, `unsupported`, `instantiation`,
+`storage`, `domain`, `definition_construction`, `struct_expansion`,
+`definition_proof_unavailable`, `name_not_found`, `evaluation`,
+`algorithm_dispatch`, `depth_limit`, `cyclic_evaluation`, `aggregate_budget`,
+and `aggregate_range`. Execution's stage-specific failure enums remain
+the evidence owners; this summary does not replace them or classify prose.
+The existing `phase` identifies where execution stopped, while `category`
+identifies the failure purpose. For example, a forall's `search_proof` stage
+may contain a `well_defined` failure in its conclusion.
+
+For `forall x R => 1 / x = 1 / x`, the summary is `well_defined`, expression
+`(1 / x)`, obligation `x != 0`. Failure to prove that obligation remains inside
+the full evidence tree. `have a N = -1` instead reports `membership`, and
+`have a {}` reports `nonempty`. Neither a missing proof nor a missing WD proof
+asserts that the statement is mathematically false. Successful statements do
+not inherit failed candidate diagnostics. These summaries do not expand
+Compact output.
+
+The summary follows only the actual failed child, preserving proof-step and
+branch indices in the detailed tree. It never reruns verification or scans
+speculative candidate failures. Some existing results retain only an opaque
+message: those get their typed stage category without invented operands or
+obligations. Explicit `by def` distinguishes an unavailable definition route
+from a failed defining obligation using `DefinitionProofFailed`; the latter retains its
+requirement index, fact and verification result. Full parsed source is retained
+at run level;
+standalone nested results may still use `<well_defined_not_proven>` when their
+producer does not retain the complete original fact.
+
 ## Detail levels
 
 Successful `by thm` / `release thm` results retain their parsed `TheoremCall`
@@ -85,6 +122,25 @@ and `infers`; Detailed output retains the original/re-written source, rewrite
 citations, checked algorithm equations, result-equality WD, real `fact_id`
 and `store_and_infer`. The calculation trace is its proof certificate. A failed
 computation or result check publishes no equality.
+
+Normal registration failures expose the same typed failure payload as Detailed,
+including predicate lookup, arity and the failed law proof. Evaluation's
+non-proof failures expose stable `cause` values and localized `diagnostic`
+messages in both views. Explicit definition failures retain the actual failed
+requirement (including builtin definitions), its zero-based index and its
+verification tree. An unavailable definition remains a distinct category.
+Ordinary search discards unsuccessful definition routes as before.
+
+Proof-body failures include their parsed statement and `source_location` from
+the AST's existing line/path. Each nested body retains its own location; branch
+and step indices retain their previous meaning. No AST location fields are
+added. Source text is rendered parsed syntax, not a new file read.
+
+Import diagnostics project `ImportFailure`: the failed path, typed cause and
+ordered caller chain. Rejected exports retain their rejected statement texts,
+including when mounted for `-e` or `-f`. Successful import/cache/scope behavior
+and the existing hard-stop contract remain unchanged. Focused contracts live
+in `error_context_tests.rs` and `tests/integration/cli_feedback.rs`.
 
 Default CLI / test emit uses **Normal**. **Compact** and **Detailed** are
 implemented under `project_compact` / `project_detailed`

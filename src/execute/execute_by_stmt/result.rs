@@ -269,7 +269,7 @@ pub struct ExecByDefStmtSuccess {
 
 pub enum ExecByDefStmtFailed {
     // No supported definition, or its defining obligations did not verify.
-    DefinitionUnavailable,
+    Definition(crate::prelude::DefinitionProofFailed),
     GoalWd(VerifyFactWellDefinedResult),
     Proof(VerifyFactResult),
     Store(String),

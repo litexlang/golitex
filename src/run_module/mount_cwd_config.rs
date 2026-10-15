@@ -3,6 +3,7 @@
 use super::load_config::{load_config_or_empty, resolve_std_root};
 use super::run_export_file::run_export_file;
 use super::run_import_module::{run_import_module, RunImportModuleOutcome};
+use crate::prelude::*;
 use crate::run::run_command_outcome::RunSessionError;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::collections::HashSet;
@@ -51,7 +52,10 @@ pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOu
             &mut file_results,
         )? {
             RunImportModuleOutcome::Done => {}
-            RunImportModuleOutcome::SessionError(session_error) => {
+            RunImportModuleOutcome::SessionError(mut session_error) => {
+                if let RunSessionError::FailToImport(failure) = &mut session_error {
+                    failure.prepend(&cwd);
+                }
                 return Ok(MountCwdConfigOutcome::SessionError(session_error));
             }
         }
@@ -70,10 +74,11 @@ pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOu
             Ok(file_result) => {
                 if !file_result.run.success {
                     return Ok(MountCwdConfigOutcome::SessionError(
-                        file_result
-                            .run
-                            .session_error
-                            .unwrap_or(RunSessionError::FailToImport),
+                        file_result.run.session_error.clone().unwrap_or_else(|| {
+                            RunSessionError::FailToImport(ImportFailure::rejected_export(
+                                &file_result,
+                            ))
+                        }),
                     ));
                 }
             }

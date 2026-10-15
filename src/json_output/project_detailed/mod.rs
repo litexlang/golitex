@@ -4,19 +4,22 @@ mod aggregate_evaluation;
 mod aggregate_identity;
 mod atomic_builtin_rewrite;
 mod builtin_atomic_gen;
-mod entry;
+pub(in crate::json_output) mod by_failure;
+pub(in crate::json_output) mod definition_failure;
+pub(in crate::json_output) mod entry;
 mod equality_builtin_gen;
 mod exist_builtin_gen;
 mod function_domain;
+mod helper;
 mod induction;
 mod known_special_property;
 mod known_tuple;
 mod or_builtin_gen;
 mod project_have_fn_cases;
 mod reduce_rules;
-mod register;
+pub(in crate::json_output) mod register;
 mod searched;
-mod stmt;
+pub(in crate::json_output) mod stmt;
 mod store;
 mod strategy_gen;
 mod theorem;
@@ -44,9 +47,9 @@ mod closed_calculation;
 
 mod structural_membership;
 
-mod witness_failure;
+pub(in crate::json_output) mod witness_failure;
 
-mod proof_block_failure;
+pub(in crate::json_output) mod proof_block_failure;
 pub(in crate::json_output) use proof_block_failure::{
     project_cases_failure, project_claim_failure, project_contra_failure, project_extension_failure,
 };
@@ -61,3 +64,5 @@ pub(in crate::json_output) use stmt::{
     project_expand_range, project_release_cart_def, project_release_struct_def,
     project_release_tuple_def,
 };
+
+pub(in crate::json_output) mod eval_failure;

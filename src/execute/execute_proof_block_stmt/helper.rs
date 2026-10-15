@@ -19,6 +19,7 @@ pub(in crate::execute) fn run_proof_body_stmts(
         if result.is_failed() {
             return Ok(Err(ProofBlockBodyFailed {
                 step_index,
+                statement: stmt.clone(),
                 result: Box::new(result),
             }));
         }

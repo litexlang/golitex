@@ -1,3 +1,4 @@
+use crate::prelude::DefinitionProofFailed;
 use crate::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, NormalAtomicFact,
 };
@@ -14,7 +15,7 @@ use std::collections::HashMap;
 
 impl Runtime {
     // Ambient definition expansion: builtin predicate defs, then user `prop` defs.
-    // Soft miss → Ok(None). Does not handle abstract_prop or statement `by def`.
+    // Soft misses retain their typed cause. Does not handle abstract_prop or statement `by def`.
     // Example (user prop):
     //   prop above_zero(x R):
     //       x > 0
@@ -27,27 +28,30 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByDefinition>> {
-        if let Some(proof) =
-            self.search_builtin_prop_definition_proof(fact, verify_state.clone())?
-        {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(proof),
-            ));
+    ) -> RuntimeResult<Result<AtomicExceptEqualityFactSearchProofByDefinition, DefinitionProofFailed>>
+    {
+        match self.search_builtin_prop_definition_proof(fact, verify_state.clone())? {
+            Ok(proof) => {
+                return Ok(Ok(
+                    AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(proof),
+                ))
+            }
+            Err(DefinitionProofFailed::Unavailable) => {}
+            Err(failed) => return Ok(Err(failed)),
         }
 
         let AtomicFact::NormalAtomicFact(normal) = fact else {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Unavailable));
         };
         // Plain / file-root / cross-mod: store keys stay unqualified local names.
         if self.def_abstract_prop_visible(&normal.predicate).is_some() {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Unavailable));
         }
         let Some(definition) = self.def_prop_visible(&normal.predicate) else {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Unavailable));
         };
         if definition.iff_facts.is_empty() {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Unavailable));
         }
         let definition = definition.clone();
         self.prove_normal_atomic_by_user_prop_definition(normal, &definition, verify_state)
@@ -58,10 +62,14 @@ impl Runtime {
         normal: &NormalAtomicFact,
         definition: &DefPropStmt,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByDefinition>> {
+    ) -> RuntimeResult<Result<AtomicExceptEqualityFactSearchProofByDefinition, DefinitionProofFailed>>
+    {
         let flat = flatten_typed_parameters(&definition.typed_parameters);
         if flat.len() != normal.body.len() {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Arity {
+                expected: flat.len(),
+                actual: normal.body.len(),
+            }));
         }
         // Build full subst first, then instantiate Obj domains in param types
         // (`one A`, `H power_set(A)`, `mul fn(...) A`) so obligations use call-site
@@ -73,31 +81,40 @@ impl Runtime {
         }
         let mut requirement_facts = Vec::new();
         for ((_param, param_type), arg) in flat.iter().zip(normal.body.iter()) {
-            let Ok(inst_type) = self.inst_param_type(param_type, &subst) else {
-                return Ok(None);
+            let inst_type = match self.inst_param_type(param_type, &subst) {
+                Ok(value) => value,
+                Err(error) => {
+                    return Ok(Err(DefinitionProofFailed::Instantiate(error.to_string())))
+                }
             };
             let Some(type_fact) = type_obligation_fact(arg, &inst_type, &mut self.global_ids)
             else {
-                return Ok(None);
+                return Ok(Err(DefinitionProofFailed::Unavailable));
             };
             requirement_facts.push(type_fact);
         }
         for iff_fact in &definition.iff_facts {
             let instantiated = match self.inst_fact(iff_fact, &subst) {
                 Ok(f) => f,
-                Err(_) => return Ok(None),
+                Err(error) => {
+                    return Ok(Err(DefinitionProofFailed::Instantiate(error.to_string())))
+                }
             };
             requirement_facts.push(instantiated);
         }
         let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
-        for requirement in &requirement_facts {
+        for (index, requirement) in requirement_facts.iter().enumerate() {
             let proof = self.verify_fact(requirement, verify_state.clone())?;
             if proof.is_failed() {
-                return Ok(None);
+                return Ok(Err(DefinitionProofFailed::Requirement {
+                    index,
+                    fact: requirement.clone(),
+                    result: Box::new(proof),
+                }));
             }
             proof_of_requirement_facts.push(proof);
         }
-        Ok(Some(
+        Ok(Ok(
             AtomicExceptEqualityFactSearchProofByDefinition::UserDefinedProp(
                 UserDefinedPropDefinitionProof {
                     requirement_facts,

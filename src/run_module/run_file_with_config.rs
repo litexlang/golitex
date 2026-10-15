@@ -5,6 +5,7 @@ use super::run_export_file::run_export_file;
 use super::run_import_module::{run_import_module, RunImportModuleOutcome};
 use crate::launch_command::LaunchCommand;
 use crate::module_manager::LitexConfigExport;
+use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunLitexCodeResult, RunSessionError};
 use crate::run::run_repl::run_repl_loop;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -68,7 +69,10 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             &mut mount_files,
         )? {
             RunImportModuleOutcome::Done => {}
-            RunImportModuleOutcome::SessionError(session_error) => {
+            RunImportModuleOutcome::SessionError(mut session_error) => {
+                if let RunSessionError::FailToImport(failure) = &mut session_error {
+                    failure.prepend(&module_dir);
+                }
                 return Ok(fail_to_import_result(&runtime, path, session_error));
             }
         }
@@ -100,10 +104,11 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                     return Ok(fail_to_import_result(
                         &runtime,
                         path,
-                        file_result
-                            .run
-                            .session_error
-                            .unwrap_or(RunSessionError::FailToImport),
+                        file_result.run.session_error.clone().unwrap_or_else(|| {
+                            RunSessionError::FailToImport(ImportFailure::rejected_export(
+                                &file_result,
+                            ))
+                        }),
                     ));
                 }
                 if is_target {

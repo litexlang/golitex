@@ -1,4 +1,6 @@
 use crate::runtime::{CodeSource, RuntimeParseError, RuntimeResult};
+use std::ops::Range;
+use std::sync::Arc;
 
 /// One indented source unit handed from tokenizer to parser.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -8,6 +10,9 @@ pub struct TokenBlock {
     pub line: usize,
     pub source_path: CodeSource,
     pub parse_index: usize,
+    /// Original input and byte ranges, before comments, joining and aliases.
+    pub source: Option<Arc<str>>,
+    pub token_spans: Vec<Range<usize>>,
 }
 
 impl TokenBlock {
@@ -23,6 +28,8 @@ impl TokenBlock {
             line,
             source_path,
             parse_index: 0,
+            source: None,
+            token_spans: Vec::new(),
         }
     }
 
@@ -30,14 +37,7 @@ impl TokenBlock {
         self.header
             .get(self.parse_index)
             .map(|token| token.as_str())
-            .ok_or_else(|| {
-                RuntimeParseError::new(
-                    "unexpected end of tokens",
-                    self.line,
-                    self.source_path.clone(),
-                )
-                .into()
-            })
+            .ok_or_else(|| self.parse_error("unexpected end of tokens"))
     }
 
     pub fn advance(&mut self) -> RuntimeResult<String> {
@@ -67,14 +67,16 @@ impl TokenBlock {
     }
 
     pub fn expect(&mut self, expected: &str) -> RuntimeResult<()> {
-        let got = self.current()?;
+        let Some(got) = self.peek() else {
+            let mut error =
+                self.error_at_cursor(format!("expected `{expected}`, reached end of line"));
+            if let Some(source) = &mut error.source {
+                source.label = Some(format!("missing `{expected}`"));
+            }
+            return Err(error.into());
+        };
         if got != expected {
-            return Err(RuntimeParseError::new(
-                format!("expected `{expected}`, got `{got}`"),
-                self.line,
-                self.source_path.clone(),
-            )
-            .into());
+            return Err(self.parse_error(format!("expected `{expected}`, got `{got}`")));
         }
         self.parse_index += 1;
         Ok(())
@@ -83,12 +85,7 @@ impl TokenBlock {
     pub fn expect_colon_end_of_header(&mut self) -> RuntimeResult<()> {
         self.expect(":")?;
         if !self.exceed_end_of_head() {
-            return Err(RuntimeParseError::new(
-                "trailing tokens after `:`",
-                self.line,
-                self.source_path.clone(),
-            )
-            .into());
+            return Err(self.parse_error("trailing tokens after `:`"));
         }
         Ok(())
     }
@@ -98,6 +95,33 @@ impl TokenBlock {
     }
 
     pub fn parse_error(&self, message: impl Into<String>) -> crate::runtime::RuntimeError {
-        RuntimeParseError::new(message, self.line, self.source_path.clone()).into()
+        self.error_at_cursor(message).into()
+    }
+
+    pub fn error_at_cursor(&self, message: impl Into<String>) -> RuntimeParseError {
+        let error = RuntimeParseError::new(message, self.line, self.source_path.clone());
+        let offset = self
+            .token_spans
+            .get(self.parse_index)
+            .map(|span| span.start)
+            .or_else(|| self.token_spans.last().map(|span| span.end));
+        match (&self.source, offset) {
+            (Some(source), Some(offset)) => error.with_source(source, offset),
+            _ => error,
+        }
+    }
+
+    pub fn header_slice(&self, range: Range<usize>) -> Self {
+        let mut block = Self::new(
+            self.header[range.clone()].to_vec(),
+            Vec::new(),
+            self.line,
+            self.source_path.clone(),
+        );
+        block.source = self.source.clone();
+        if let Some(spans) = self.token_spans.get(range) {
+            block.token_spans = spans.to_vec();
+        }
+        block
     }
 }

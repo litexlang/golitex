@@ -66,7 +66,7 @@ fn mounted_export_errors_keep_their_runtime_classification() {
     let soft = run_project(command).unwrap();
     assert!(matches!(
         soft.run.session_error,
-        Some(RunSessionError::FailToImport)
+        Some(RunSessionError::FailToImport(_))
     ));
     fs::remove_dir_all(root).unwrap();
 }

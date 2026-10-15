@@ -23,6 +23,15 @@ pub fn localize_key(english_key: &str, lang: OutputLanguage) -> String {
 
 fn chinese_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "源码位置",
+        "import_chain" => "导入链",
+        "failed_statements" => "被拒绝的语句",
+
+        "diagnostic" => "诊断",
+        "category" => "类别",
+        "expression" => "表达式",
+        "obligation" => "待证条件",
+
         "set_equality" => "集合相等证明",
         "introduced_parameter" => "引入参数",
         "pointwise_equality" => "逐点相等证明",
@@ -182,6 +191,15 @@ fn chinese_key(english_key: &str) -> &str {
 
 fn chinesetraditional_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "原始碼位置",
+        "import_chain" => "匯入鏈",
+        "failed_statements" => "被拒絕的敘述",
+
+        "diagnostic" => "診斷",
+        "category" => "類別",
+        "expression" => "表達式",
+        "obligation" => "待證條件",
+
         "set_equality" => "集合相等證明",
         "introduced_parameter" => "引入參數",
         "pointwise_equality" => "逐點相等證明",
@@ -336,6 +354,15 @@ fn chinesetraditional_key(english_key: &str) -> &str {
 
 fn french_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "emplacement_source",
+        "import_chain" => "chaine_importation",
+        "failed_statements" => "instructions_rejetees",
+
+        "diagnostic" => "diagnostic",
+        "category" => "catégorie",
+        "expression" => "expression",
+        "obligation" => "obligation",
+
         "set_equality" => "égalité_ensembles",
         "introduced_parameter" => "paramètre_introduit",
         "pointwise_equality" => "égalité_point_par_point",
@@ -489,6 +516,15 @@ fn french_key(english_key: &str) -> &str {
 
 fn russian_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "место_в_исходнике",
+        "import_chain" => "цепочка_импорта",
+        "failed_statements" => "отклонённые_инструкции",
+
+        "diagnostic" => "диагностика",
+        "category" => "категория",
+        "expression" => "выражение",
+        "obligation" => "обязательство",
+
         "set_equality" => "равенство_множеств",
         "introduced_parameter" => "введённый_параметр",
         "pointwise_equality" => "поточечное_равенство",
@@ -642,6 +678,15 @@ fn russian_key(english_key: &str) -> &str {
 
 fn spanish_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "ubicacion_fuente",
+        "import_chain" => "cadena_importacion",
+        "failed_statements" => "sentencias_rechazadas",
+
+        "diagnostic" => "diagnóstico",
+        "category" => "categoría",
+        "expression" => "expresión",
+        "obligation" => "obligación",
+
         "set_equality" => "igualdad_conjuntos",
         "introduced_parameter" => "parámetro_introducido",
         "pointwise_equality" => "igualdad_punto_a_punto",
@@ -795,6 +840,15 @@ fn spanish_key(english_key: &str) -> &str {
 
 fn arabic_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "موضع_المصدر",
+        "import_chain" => "سلسلة_الاستيراد",
+        "failed_statements" => "العبارات_المرفوضة",
+
+        "diagnostic" => "التشخيص",
+        "category" => "الفئة",
+        "expression" => "التعبير",
+        "obligation" => "الشرط_المطلوب",
+
         "set_equality" => "مساواة_المجموعات",
         "introduced_parameter" => "المعامل_المقدّم",
         "pointwise_equality" => "المساواة_النقطية",
@@ -948,6 +1002,15 @@ fn arabic_key(english_key: &str) -> &str {
 
 fn japanese_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "ソース位置",
+        "import_chain" => "インポート経路",
+        "failed_statements" => "拒否された文",
+
+        "diagnostic" => "診断",
+        "category" => "分類",
+        "expression" => "式",
+        "obligation" => "証明義務",
+
         "set_equality" => "集合の等価性",
         "introduced_parameter" => "導入されたパラメータ",
         "pointwise_equality" => "各点での等価性",
@@ -1101,6 +1164,15 @@ fn japanese_key(english_key: &str) -> &str {
 
 fn korean_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "소스_위치",
+        "import_chain" => "가져오기_경로",
+        "failed_statements" => "거부된_문장",
+
+        "diagnostic" => "진단",
+        "category" => "분류",
+        "expression" => "표현식",
+        "obligation" => "증명_의무",
+
         "set_equality" => "집합_동등성",
         "introduced_parameter" => "도입된_매개변수",
         "pointwise_equality" => "점별_동등성",
@@ -1256,6 +1328,15 @@ fn korean_key(english_key: &str) -> &str {
 
 fn vietnamese_key(english_key: &str) -> &str {
     match english_key {
+        "source_location" => "vi_tri_nguon",
+        "import_chain" => "chuoi_nhap",
+        "failed_statements" => "cau_lenh_bi_tu_choi",
+
+        "diagnostic" => "chẩn_đoán",
+        "category" => "loại",
+        "expression" => "biểu_thức",
+        "obligation" => "nghĩa_vụ",
+
         "set_equality" => "đẳng_thức_tập_hợp",
         "introduced_parameter" => "tham_số_được_đưa_vào",
         "pointwise_equality" => "đẳng_thức_từng_điểm",

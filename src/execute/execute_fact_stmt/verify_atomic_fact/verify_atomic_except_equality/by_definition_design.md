@@ -40,6 +40,14 @@ twins). `NormalAtomicFact` / `NotNormalAtomicFact` are **user-defined
 
 Each struct carries `requirement_facts` and `proof_of_requirement_facts`.
 
+Definition search returns its existing success proof or `DefinitionProofFailed`.
+Failure distinguishes an unavailable route, arity/instantiation failure, and
+the first rejected requirement with its index, instantiated fact and verifier
+result. Builtin and user definitions retain these failures at the point of
+verification. Explicit `by def` projects the failure; ordinary search treats
+it as an unsuccessful route and continues in the existing order. Success proof
+structures and verification budgets are unchanged.
+
 ## Official definition table
 
 | Surface | Obligations (sketch) |

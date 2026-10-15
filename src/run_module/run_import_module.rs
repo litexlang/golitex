@@ -3,6 +3,7 @@
 use super::import_kb::{try_finish_import_from_kb, write_kb_after_cold_import, ImportKbHit};
 use super::load_config::{load_config, normalize_module_dir};
 use super::run_export_file::run_export_file;
+use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunSessionError};
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashSet;
@@ -38,12 +39,18 @@ pub fn run_import_module(
     }
     if running.contains(&key) {
         return Ok(RunImportModuleOutcome::SessionError(
-            RunSessionError::FailToImport,
+            RunSessionError::FailToImport(ImportFailure::new(
+                key.clone(),
+                ImportFailureCause::Cycle,
+            )),
         ));
     }
     if !key.is_dir() {
         return Ok(RunImportModuleOutcome::SessionError(
-            RunSessionError::FailToImport,
+            RunSessionError::FailToImport(ImportFailure::new(
+                key.clone(),
+                ImportFailureCause::MissingDirectory,
+            )),
         ));
     }
 
@@ -70,9 +77,12 @@ pub fn run_import_module(
             file_results,
         )? {
             RunImportModuleOutcome::Done => {}
-            outcome @ RunImportModuleOutcome::SessionError(_) => {
+            RunImportModuleOutcome::SessionError(mut error) => {
+                if let RunSessionError::FailToImport(failure) = &mut error {
+                    failure.prepend(&key);
+                }
                 running.remove(&key);
-                return Ok(outcome);
+                return Ok(RunImportModuleOutcome::SessionError(error));
             }
         }
     }
@@ -87,10 +97,13 @@ pub fn run_import_module(
             .mount_module(display_name, key.clone(), config.clone())
         {
             Ok(mod_id) => mod_id,
-            Err(_) => {
+            Err(message) => {
                 running.remove(&key);
                 return Ok(RunImportModuleOutcome::SessionError(
-                    RunSessionError::FailToImport,
+                    RunSessionError::FailToImport(ImportFailure::new(
+                        key.clone(),
+                        ImportFailureCause::Mount(message),
+                    )),
                 ));
             }
         };
@@ -133,11 +146,11 @@ pub fn run_import_module(
             }
         };
         let failed = !file_result.run.success;
-        let session_error = file_result
-            .run
-            .session_error
-            .clone()
-            .unwrap_or(RunSessionError::FailToImport);
+        let session_error = file_result.run.session_error.clone().unwrap_or_else(|| {
+            let mut failure = ImportFailure::rejected_export(&file_result);
+            failure.prepend(&key);
+            RunSessionError::FailToImport(failure)
+        });
         file_results.push(file_result);
         if failed {
             running.remove(&key);

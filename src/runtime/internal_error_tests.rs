@@ -77,8 +77,12 @@ fn internal_error_ordinary_user_failures_keep_their_existing_classification() {
         launch.to_string()
     );
     assert_eq!(
-        RunSessionError::FailToImport.to_string(),
-        "failed to import project"
+        RunSessionError::FailToImport(crate::prelude::ImportFailure::new(
+            "missing".into(),
+            crate::prelude::ImportFailureCause::MissingDirectory,
+        ))
+        .to_string(),
+        "failed to import project: module directory does not exist: missing"
     );
     let mut rt = runtime();
     let proof = rt.run_litex_code("0 = 1").unwrap();

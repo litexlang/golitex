@@ -97,10 +97,11 @@ impl VerifyFactResult {
                 )) => true,
                 _ => false,
             },
-            Self::ForallFact(r) => matches!(
-                r.as_ref(),
-                VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_))
-            ),
+            Self::ForallFact(r) => match r.as_ref() {
+                VerifyForallFactResult::Success(_) => false,
+                VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_)) => true,
+                VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof { failed_then, .. }) => failed_then.is_wd_failed(),
+            },
             Self::ForallFactWithIff(r) => match r.as_ref() {
                 VerifyForallFactWithIffResult::Failed(
                     VerifyForallFactWithIffFailed::FailThenImpliesIff { then_implies_iff, .. },

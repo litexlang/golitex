@@ -27,12 +27,12 @@ pub fn exec_by_def_stmt(
     let (proof_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         // Explicit definition requests must recheck the defining clauses even
         // when ordinary search can prove (or already knows) the target.
-        let Some(definition) = rt.search_atomic_except_equality_fact_proof_by_definition(
+        let definition = match rt.search_atomic_except_equality_fact_proof_by_definition(
             &stmt.fact,
             proof_verify_state(),
-        )?
-        else {
-            return Ok(Err(ExecByDefStmtFailed::DefinitionUnavailable));
+        )? {
+            Ok(proof) => proof,
+            Err(failed) => return Ok(Err(ExecByDefStmtFailed::Definition(failed))),
         };
         let well_defined =
             match rt.verify_atomic_fact_well_definedness(&stmt.fact, proof_verify_state())? {

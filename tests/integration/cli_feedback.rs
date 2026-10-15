@@ -99,6 +99,168 @@ fn assert_no_generic_success_key(value: &JsonValue) {
 }
 
 #[test]
+fn import_diagnostics_preserve_missing_paths_cycles_and_rejected_exports() {
+    let dir = FixtureDir::new();
+    fs::create_dir(dir.0.join("a")).unwrap();
+    fs::create_dir(dir.0.join("b")).unwrap();
+    for path in ["main.lit", "a/main.lit", "b/main.lit"] {
+        fs::write(dir.0.join(path), "1 = 1\n").unwrap();
+    }
+    fs::write(
+        dir.0.join("litex.config"),
+        "[export]\nmain = \"./main.lit\"\n[import]\nA = \"./a\"\n",
+    )
+    .unwrap();
+    fs::write(
+        dir.0.join("a/litex.config"),
+        "[export]\nmain = \"./main.lit\"\n[import]\nMissing = \"../missing\"\n",
+    )
+    .unwrap();
+    let missing = batch(&dir.run(&["-lang", "en", "-e", "1 = 1"], None), 1, false);
+    assert_session_state(&missing, true);
+    let termination = field(&missing, "termination");
+    assert_eq!(field(termination, "phase").as_str(), Ok("import"));
+    assert_eq!(
+        field(termination, "cause").as_str(),
+        Ok("missing_directory")
+    );
+    assert!(field(termination, "path")
+        .as_str()
+        .unwrap()
+        .ends_with("missing"));
+    assert_eq!(
+        field(termination, "import_chain").as_array().unwrap().len(),
+        3
+    );
+
+    fs::write(
+        dir.0.join("a/litex.config"),
+        "[export]\nmain = \"./main.lit\"\n[import]\nB = \"../b\"\n",
+    )
+    .unwrap();
+    fs::write(
+        dir.0.join("b/litex.config"),
+        "[export]\nmain = \"./main.lit\"\n[import]\nA = \"../a\"\n",
+    )
+    .unwrap();
+    let cycle = batch(&dir.run(&["-lang", "en", "-r", "."], None), 1, false);
+    assert_session_state(&cycle, true);
+    let termination = field(&cycle, "termination");
+    assert_eq!(field(termination, "cause").as_str(), Ok("cycle"));
+    let chain = field(termination, "import_chain").as_array().unwrap();
+    assert_eq!(chain.len(), 4);
+    assert_eq!(chain[1], chain[3]);
+    assert!(chain[1].as_str().unwrap().ends_with("/a"));
+    assert!(chain[2].as_str().unwrap().ends_with("/b"));
+
+    fs::write(
+        dir.0.join("a/litex.config"),
+        "[export]\nbad = \"./bad.lit\"\n",
+    )
+    .unwrap();
+    fs::write(dir.0.join("a/bad.lit"), "1 = 2\n").unwrap();
+    fs::write(dir.0.join("target.lit"), "1 = 1\n").unwrap();
+    for args in [
+        vec!["-lang", "en", "-e", "1 = 1"],
+        vec!["-lang", "en", "-f", "target.lit"],
+    ] {
+        let rejected = batch(&dir.run(&args, None), 1, false);
+        assert_session_state(&rejected, true);
+        let termination = field(&rejected, "termination");
+        assert_eq!(field(termination, "cause").as_str(), Ok("rejected_export"));
+        assert!(field(termination, "path")
+            .as_str()
+            .unwrap()
+            .ends_with("bad.lit"));
+        assert_eq!(
+            field(termination, "failed_statements").as_array().unwrap()[0].as_str(),
+            Ok("1 = 2")
+        );
+    }
+    fs::write(dir.0.join("a/bad.lit"), "1 = 1\n").unwrap();
+    batch(&dir.run(&["-lang", "en", "-e", "1 = 1"], None), 0, true);
+}
+
+#[test]
+fn definition_and_eval_diagnostics_reach_the_cli_without_terminating_session() {
+    let dir = FixtureDir::new();
+    let code = "prop positive(x R):\n    x > 0\nby def $positive(0)\nby def $positive(1)\n";
+    let json = batch(
+        &dir.run(&["-lang", "en", "-strict", "-e", code], None),
+        1,
+        false,
+    );
+    assert_session_state(&json, false);
+    let statements = field(&json, "statement_results").as_array().unwrap();
+    let failure = field(field(&statements[1], "why_failed"), "failure");
+    assert_eq!(
+        field(failure, "phase").as_str(),
+        Ok("definition_requirement")
+    );
+    assert_eq!(field(failure, "goal").as_str(), Ok("0 > 0"));
+    assert_eq!(
+        field(&statements[2], "statement_result").as_str(),
+        Ok("accepted")
+    );
+
+    let json = batch(
+        &dir.run(
+            &[
+                "-lang",
+                "en",
+                "-strict",
+                "-e",
+                "eval sum(1,1025,fn(k Z) Z {1})\neval 1 + 1",
+            ],
+            None,
+        ),
+        1,
+        false,
+    );
+    assert_session_state(&json, false);
+    let statements = field(&json, "statement_results").as_array().unwrap();
+    let reason = field(&statements[0], "why_failed");
+    assert_eq!(
+        field(field(reason, "diagnostic"), "category").as_str(),
+        Ok("aggregate_budget")
+    );
+    assert_eq!(
+        field(field(reason, "failure"), "cause").as_str(),
+        Ok("aggregate_budget_exceeded")
+    );
+    assert_eq!(
+        field(&statements[1], "statement_result").as_str(),
+        Ok("accepted")
+    );
+}
+
+#[test]
+fn nested_failure_source_location_reaches_file_output() {
+    let dir = FixtureDir::new();
+    fs::write(
+        dir.0.join("nested.lit"),
+        "claim:\n    ? 1 = 1\n    sketch:\n        have x {1} = 2\n",
+    )
+    .unwrap();
+    let json = batch(
+        &dir.run(&["-lang", "en", "-strict", "-f", "nested.lit"], None),
+        1,
+        false,
+    );
+    assert_session_state(&json, false);
+    let statements = field(&json, "statement_results").as_array().unwrap();
+    let claim = field(field(&statements[0], "why_failed"), "failure");
+    let sketch = field(field(claim, "result"), "failure");
+    assert_eq!(field(sketch, "statement").as_str(), Ok("have x {1} = 2"));
+    let source = field(sketch, "source_location");
+    assert_eq!(field(source, "line"), &JsonValue::Number(4.0));
+    assert!(field(source, "path")
+        .as_str()
+        .unwrap()
+        .ends_with("nested.lit"));
+}
+
+#[test]
 fn run_result_and_session_termination_are_orthogonal() {
     let dir = FixtureDir::new();
 
@@ -490,15 +652,64 @@ fn eval_session_hard_errors_retain_the_initial_proof_and_report_once() {
 }
 
 #[test]
+fn parse_diagnostic_keeps_batch_json_and_renders_repl_source() {
+    let dir = FixtureDir::new();
+    let code = "have a R = (1 + 2";
+    for lang in ["en", "zh"] {
+        let output = dir.run(&["-lang", lang, "-e", code], None);
+        assert_eq!(output.status.code(), Some(1));
+        assert!(output.stderr.is_empty(), "{output:?}");
+        let json = JsonValue::parse(std::str::from_utf8(&output.stdout).unwrap()).unwrap();
+        let text = json.stringify_pretty();
+        assert!(
+            text.contains("parse_error: expected `)`, reached end of line"),
+            "{text}"
+        );
+        assert!(text.contains("column 18"), "{text}");
+        assert!(text.contains("<eval>"), "{text}");
+    }
+    fs::write(dir.0.join("example.lit"), format!("let kept = 1\n{code}\n")).unwrap();
+    let json = batch(&dir.run(&["-f", "example.lit"], None), 1, false);
+    assert_session_state(&json, true);
+    assert_eq!(
+        field(&json, "statement_results").as_array().unwrap().len(),
+        1
+    );
+    let message = field(field(&json, "termination"), "message")
+        .as_str()
+        .unwrap();
+    assert!(
+        message.contains("at line 2 in example.lit (column 18)"),
+        "{message}"
+    );
+
+    let output = dir.run(&[], Some(&format!("{code}\n")));
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(std::str::from_utf8(&output.stderr).unwrap(), "Parse error: expected `)`, reached end of line\n --> <repl>:1:18\n  |\n1 | have a R = (1 + 2\n  |                  ^ missing `)`\n");
+    let output = dir.run(&[], Some("have a R = (1 + 2]\n"));
+    let error = std::str::from_utf8(&output.stderr).unwrap();
+    assert!(error.contains("expected `)`, got `]`"), "{error}");
+    assert!(error.ends_with("  |                  ^\n"), "{error}");
+
+    batch(
+        &dir.run(&["-strict", "-e", "have a R = (1 + 2)\na = 3"], None),
+        0,
+        true,
+    );
+    let json = batch(&dir.run(&["-e", "1 = 2"], None), 1, false);
+    assert_session_state(&json, false);
+}
+
+#[test]
 fn bare_repl_reports_hard_errors_once() {
     let dir = FixtureDir::new();
     for input in ["have\n", "\"\n"] {
         let output = dir.run(&[], Some(input));
         assert_eq!(output.status.code(), Some(1));
         let stderr = std::str::from_utf8(&output.stderr).unwrap();
-        assert_eq!(stderr.matches("parse_error:").count(), 1, "{stderr}");
+        assert_eq!(stderr.matches("Parse error:").count(), 1, "{stderr}");
         assert!(stderr.contains("<repl>"));
-        assert!(!String::from_utf8_lossy(&output.stdout).contains("parse_error:"));
+        assert!(!String::from_utf8_lossy(&output.stdout).contains("Parse error:"));
     }
 }
 
