@@ -3,6 +3,7 @@ mod folds;
 mod helper;
 mod intersection;
 mod membership;
+mod number_theory;
 mod real_analysis;
 mod sums;
 

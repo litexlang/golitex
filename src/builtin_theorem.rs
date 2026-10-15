@@ -33,6 +33,9 @@ pub enum BuiltinTheoremId {
     RealLowerBoundLeGreatestLowerBound,
     RealArchimedeanNaturalUpperBound,
     RationalBetweenReals,
+    GcdWithPrimeIsOneOrPrime,
+    PrimeDividesProduct,
+    PrimeDividesPower,
 }
 
 impl BuiltinTheoremId {
@@ -73,6 +76,9 @@ impl BuiltinTheoremId {
             "real_lower_bound_le_greatest_lower_bound" => Self::RealLowerBoundLeGreatestLowerBound,
             "real_archimedean_natural_upper_bound" => Self::RealArchimedeanNaturalUpperBound,
             "rational_between_reals" => Self::RationalBetweenReals,
+            "gcd_with_prime_is_one_or_prime" => Self::GcdWithPrimeIsOneOrPrime,
+            "prime_divides_product" => Self::PrimeDividesProduct,
+            "prime_divides_power" => Self::PrimeDividesPower,
             _ => return None,
         })
     }
@@ -114,6 +120,9 @@ impl BuiltinTheoremId {
             Self::RealLowerBoundLeGreatestLowerBound => "real_lower_bound_le_greatest_lower_bound",
             Self::RealArchimedeanNaturalUpperBound => "real_archimedean_natural_upper_bound",
             Self::RationalBetweenReals => "rational_between_reals",
+            Self::GcdWithPrimeIsOneOrPrime => "gcd_with_prime_is_one_or_prime",
+            Self::PrimeDividesProduct => "prime_divides_product",
+            Self::PrimeDividesPower => "prime_divides_power",
         }
     }
 }
@@ -135,7 +144,9 @@ impl BuiltinTheoremId {
             Self::RealMemberLeLeastUpperBound
             | Self::RealLeastUpperBoundLeUpperBound
             | Self::RealGreatestLowerBoundLeMember
-            | Self::RealLowerBoundLeGreatestLowerBound => 3,
+            | Self::RealLowerBoundLeGreatestLowerBound
+            | Self::PrimeDividesProduct
+            | Self::PrimeDividesPower => 3,
             _ => 2,
         }
     }

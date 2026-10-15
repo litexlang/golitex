@@ -669,6 +669,9 @@ fn builtin_theorems_do_not_certify_missing_premises_or_bad_shapes() {
         "release thm real_lower_bound_le_greatest_lower_bound({0}, 0, -1)",
         "release thm real_archimedean_natural_upper_bound(i)",
         "release thm rational_between_reals(1, 0)",
+        "release thm gcd_with_prime_is_one_or_prime(14, 4)",
+        "release thm prime_divides_product(4, 9, 4)",
+        "release thm prime_divides_power(6, 2, 4)",
         "$is_real_least_upper_bound({0}, 0)",
     ] {
         let mut rt = runtime();

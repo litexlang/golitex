@@ -1,0 +1,8 @@
+# Before: named builtin was not found.
+# release thm gcd_with_prime_is_one_or_prime(14, 5)
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/gcd_with_prime_is_one_or_prime.lit
+$prime(5)
+release thm gcd_with_prime_is_one_or_prime(14, 5)
+gcd(14, 5) = 1 or gcd(14, 5) = 5
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

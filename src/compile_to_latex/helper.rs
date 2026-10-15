@@ -156,7 +156,8 @@ fn join_connective(items: Vec<String>, sep: &str) -> String {
 }
 
 pub(super) fn inline(text: &str) -> String {
-    format!(r"\({text}\)")
+    // Prefer $...$ over \(...\): lost backslashes would turn \(...\) into visible ( ... ).
+    format!("${text}$")
 }
 pub(super) fn display(text: &str) -> String {
     format!("\\[\n{text}\n\\]\n")

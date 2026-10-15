@@ -366,7 +366,7 @@ litex> a + 1 = 3
 success
 ```
 
-普通拒绝后，`a = 2` 仍在。两个独立的 `-e` 命令不能共享上下文：`litex -e 'have a R = 2'` 成功，但随后单独运行 `litex -e 'a + 1 = 3'` 会失败，因为新进程没有 `a` 的声明。干净的批量文件运行用于基线、连贯的阶段检查点和最终验收。硬错误可能停止 REPL；必要时重启并重放已接受源码。重启边界见 [Agent Guide](Litex智能体指南.md)。
+普通拒绝后，`a = 2` 仍在。两个独立的 `-e` 命令不能共享上下文：`litex -e 'have a R = 2'` 成功，但随后单独运行 `litex -e 'a + 1 = 3'` 会失败，因为新进程没有 `a` 的声明。干净的批量文件运行用于基线、连贯的阶段检查点和最终验收。硬错误可能停止 REPL；必要时重启并重放已接受源码。面向智能体的循环与更完整的对照，见 [如何把 Litex 接到你的 AI agent](#how-to-connect-litex-to-your-ai-agent) 和 [智能体指南](Litex智能体指南.md)。
 
 <a id="project-modules"></a>
 
@@ -439,3 +439,52 @@ litex -session -f examples/claim_obtain_scope.lit
 内部的 `CompileToLatex` 和 `ExtractExecutableCode` 是不同启动命令，也有不同结果类型。`-latex` 经过普通命令分派器；它不共用 C/Python 的验证与可执行代码提取流水线。
 
 续接的已注册文件会话，其定义查找仍关联到已打开文件环境记录的发布所有者。新诊断仍使用 `<repl>`。这也包括由细化 template 载体投影出的谓词；查找绝不借用属于其他根或导出模块 ID 的实时环境。[续接导出示例](../examples/wd/continued_export_repl/README.md)记录文件到 REPL 的工作流。
+
+<a id="how-to-connect-litex-to-your-ai-agent"></a>
+
+## 如何把 Litex 接到你的 AI agent
+
+Litex 适合 propose → check → revise → continue 循环。智能体（或任何调用 `litex` 的工具）应把 CLI 当作活的数学上下文，而不是每候选一行就重启一次的脚本运行器。
+
+**打开一个书写用 Session，并在修复步骤期间保持该进程运行。** 用 `-session` 只加载一次已接受的定义和事实，再向同一进程提交新的顶层语句。普通被拒绝的语句会被丢弃；先前已接受的上下文仍然可用。智能体可用 JSON 反馈修复下一条提案，而无需重建已检查前缀。
+
+### 一个持久 Session
+
+```bash
+litex -strict -lang en -session \
+  -e 'have a R = 2'
+```
+
+然后在**同一个**进程中：
+
+```text
+litex> a = 3
+{"run_result": "failure", "session_terminated": false}
+litex> a + 1 = 3
+success
+```
+
+`a = 2` 只记录一次。拒绝 `a = 3` 后，该事实仍可用于检查 `a + 1 = 3`。从拒绝 JSON 中读取 `run_result`、`session_terminated` 和 `termination`（上例只展示了部分字段）。只要 `session_terminated` 为 false 且再次出现 `litex>` 提示符，就在原地修复。
+
+### 每次尝试都开新进程
+
+```bash
+litex -strict -lang en -e '
+have a R = 2
+a = 3'
+
+litex -strict -lang en -e '
+have a R = 2
+a + 1 = 3'
+```
+
+第二条命令必须先重放 `a = 2`，才能检查 `a + 1 = 3`。更长的前缀也要一并重放。内层循环优先用一个活 Session；把干净的 `-e` / `-f` 运行留给基线、连贯检查点和最终验证。
+
+### 智能体实用清单
+
+1. 启动 `litex -strict -lang en -session`（可选 `-e` / `-f` 加载已接受前缀）。在普通软失败期间保持该进程打开。
+2. 每次提交一条顶层语句；缩进块用空行结束。消费完本次响应后再发下一条候选。
+3. 看到纯文本 `success` 时，在进程外记录已接受源码。软拒绝（`statement_result: "rejected"`，`session_terminated: false`）时保留 Session，只修复失败语句。
+4. 在检查点，对已保存文件另跑干净的 `litex -f` / `-e` 门禁；书写 Session 可继续保持打开。若进程停止，或其已加载的模块上下文必须变更，则重启并重放已记录的源码。
+
+[官网 playground](https://litexlang.com) 是整份源码分开运行；它不能替代本地持久 Session。完整智能体工作流、重启边界与二次方代价说明见 [智能体指南](Litex智能体指南.md)。本页的 flag 形态与 JSON 字段仍是智能体应解析的契约。

@@ -1,6 +1,6 @@
 //! Reserved theorem applications, separate from ordinary proof search.
 use super::helper::*;
-use super::{folds, intersection, membership, real_analysis, sums};
+use super::{folds, intersection, membership, number_theory, real_analysis, sums};
 use crate::ast::fact::Fact;
 use crate::ast::names::AtomicName;
 use crate::ast::obj::*;
@@ -136,6 +136,9 @@ fn prepare_contract(
         | FiniteSetSummandLessEqualSum
         | FiniteSetSumSubstitution
         | SumOverBijectiveFiniteSetEnumerations => sums::prepare_sums(rt, id, args)?,
+        GcdWithPrimeIsOneOrPrime | PrimeDividesProduct | PrimeDividesPower => {
+            number_theory::prepare_number_theory(rt, id, args)
+        }
         _ => real_analysis::prepare_real_analysis(rt, id, args),
     };
     Ok(result)

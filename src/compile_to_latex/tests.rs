@@ -31,7 +31,7 @@ fn identity_has_ten_localized_latex_renderings() {
         );
         assert!(text.contains(r"x\in \mathbb{R}"), "{text}");
         assert!(text.contains(r"\mathit{identity}(2)"), "{text}");
-        assert!(text.contains(r"\(2 = 2\)"), "{text}");
+        assert!(text.contains("$2 = 2$"), "{text}");
         assert!(!text.contains("@a@") && !text.contains("#1#"));
         if lang != OutputLanguage::English {
             assert!(
@@ -55,7 +55,7 @@ fn conversion_does_not_publish_definitions_facts_or_evaluation() {
     let before = store_definition_memory(&rt.execution_environments_stack[0].definitions).unwrap();
     let text = to_latex("have a R = 7\n1 = 2\neval 1 + 1", &mut rt).unwrap();
     assert!(text.contains("1 = 2"));
-    assert!(text.contains(r"Evaluate \(1 + 1\)."));
+    assert!(text.contains("Evaluate $1 + 1$."));
     assert!(!text.contains("1 + 1 = 2"));
     let env = &rt.execution_environments_stack[0];
     assert_eq!(before, store_definition_memory(&env.definitions).unwrap());
@@ -232,12 +232,13 @@ fn single_conclusions_and_calls_omit_redundant_parentheses() {
     )
     .unwrap();
     assert!(
-        text.contains(r"we have \(\mathit{distance\_from\_zero}(x) = \left|x\right| \geq 0\)"),
+        text.contains(r"we have $\mathit{distance\_from\_zero}(x) = \left|x\right| \geq 0$"),
         "{text}"
     );
-    assert!(!text.contains(r"we have \(\left("), "{text}");
+    assert!(!text.contains(r"we have $\left("), "{text}");
+    assert!(!text.contains(r"we have \("), "{text}");
     assert!(text.contains(r"a \Longleftrightarrow"), "{text}");
-    assert!(!text.contains(r"For every \(\)"), "{text}");
+    assert!(!text.contains("For every $$"), "{text}");
     assert!(text.contains(r"\exists! k\in \mathbb{N}:\ k = 0"), "{text}");
     assert!(text.contains(r"\neg a"), "{text}");
     assert!(!text.contains(r"a\left("), "{text}");
