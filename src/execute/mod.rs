@@ -151,7 +151,9 @@ pub use execute_have_fn_by_induc_stmt::{
 };
 pub use execute_have_fn_equal_case_by_case_stmt::{
     ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
-    ExecHaveFnEqualCaseByCaseStmtSuccessResult, StoreHaveFnCaseByCaseAndInferResult,
+    ExecHaveFnEqualCaseByCaseStmtSuccessResult, HaveFnCaseReturnCheckSuccess,
+    HaveFnCasesCoverageSuccess, HaveFnCasesDisjointSuccess, IntroduceFnSetClauseBindersResult,
+    StoreHaveFnCaseByCaseAndInferResult,
 };
 pub use execute_have_fn_equal_stmt::{
     ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult,

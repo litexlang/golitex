@@ -1,0 +1,14 @@
+# Tracer: finite-product pointwise evidence retains its local binder scope.
+# Before (same source verified, but its selected proof dropped the binder env):
+# forall S finite_set:
+#     S $subset Z
+#     =>:
+#         finite_set_product(S, fn(x S) Z {x}) = finite_set_product(S, fn(x S) Z {x + 0})
+# Now: set equality, parameter introduction and pointwise equality retain their evidence.
+# Boundary: replacing x + 0 with x + 1 must still fail (Rust negative regression).
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_strategy/finite_set_product_pointwise_scope.lit
+
+forall S finite_set:
+    S $subset Z
+    =>:
+        finite_set_product(S, fn(x S) Z {x}) = finite_set_product(S, fn(x S) Z {x + 0})

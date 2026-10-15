@@ -56,6 +56,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
 | [definition/field_function_preimage.lit](definition/field_function_preimage.lit) | Preimage of a checked callable field | Retain `ops.op` as the application head and preserve source, arity and guard checks |
 | `definition/have_fn_*.lit` | Define named functions | `have fn … =` / `by cases` / `by induc` / `by exist!` |
+| [definition/have_fn_cases_evidence.lit](definition/have_fn_cases_evidence.lit) | Piecewise proof evidence | Coverage, disjointness and branch return checks retain their local evidence |
 | `definition/def_algo.lit` | Algo fn + executable cases | `algo f(x R) R by cases:` … |
 | [command/eval_store_result.lit](command/eval_store_result.lit) | Compute and publish the result equality | `eval sum(0,3,flag)` stores `sum(0,3,flag)=3` for later proof; failure rolls back |
 | `definition/def_prop.lit` | Concrete predicate | `prop P(x A):` body |
@@ -93,6 +94,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | `by/finite_set_conditional_proof_steps.lit` | Conditional enumeration and nested proof steps | finite list guards, live binder names, and local nested `by def` |
 | `unsafe/template_strict_policy.lit` | Strict template trust policy | ordinary run accepts; strict rejects template trust-have |
 | `command/eval_source_domain.lit` | Source WD before eval | valid natural-domain calls compute; invalid calls reject |
+| [command/extract_python_math_alias.lit](command/extract_python_math_alias.lit) | Collision-free Python math import | Preserve user names and select an unused `litex_math[_N]` alias |
 | `command/eval.lit` | Display eval: closed-numeric rewrite + algo | `eval 3!` / `eval sqrt(4)` / `eval a + 1` / `eval nonzero_flag(0) + 1` |
 | `command/eval_closed_numeric_complex.lit` | Nested closed-numeric display eval | `eval gcd(54,(-24))+3!*sqrt(4)` / rewrite `a+b*c` |
 

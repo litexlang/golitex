@@ -1,14 +1,15 @@
 use crate::ast::fact::{ExistShapedFact, PlainExistFact, QuantifierFreeFact};
-use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::well_defined_result::{
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
     VerifyExistShapedFactWellDefinedResult,
 };
+use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    fail_to_verify_obj_well_defined_others, FactWellDefinedProof, FailToVerifyObjWellDefinedResult,
+    fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::IntroduceTypedParametersResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -24,10 +25,10 @@ impl Runtime {
             rt.verify_plain_exist_fact_well_definedness_in_local(plain, verify_state.clone())
         })?;
         match stages {
-            Ok((param_type_well_defined, body)) => Ok(
+            Ok((introduced_params, assumed_body_facts)) => Ok(
                 VerifyExistShapedFactWellDefinedResult::Success(ExistShapedFactWellDefinedProof {
-                    param_type_well_defined,
-                    body,
+                    introduced_params,
+                    assumed_body_facts,
                     local_env,
                 }),
             ),
@@ -41,14 +42,14 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<
         Result<
-            (Vec<ParamTypeWellDefinedProof>, Vec<FactWellDefinedProof>),
+            (IntroduceTypedParametersResult, Vec<AssumeDomFactResult>),
             FailToVerifyExistShapedFactWellDefinedResult,
         >,
     > {
-        let param_type_well_defined = match self
+        let introduced_params = match self
             .verify_and_define_wd_parameters(&plain.typed_parameters, verify_state.clone())?
         {
-            Ok(introduced) => introduced.param_type_well_defined,
+            Ok(introduced) => introduced,
             Err(failed) => {
                 return Ok(Err(
                     FailToVerifyExistShapedFactWellDefinedResult::ParamType(extract_obj_wd_fail(
@@ -58,22 +59,28 @@ impl Runtime {
             }
         };
 
-        let mut succeeded_body = Vec::with_capacity(plain.facts.len());
+        let mut assumed_body_facts = Vec::with_capacity(plain.facts.len());
         for (failed_index, qf) in plain.facts.iter().enumerate() {
             match self.verify_quantifier_free_fact_well_definedness(qf, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     // Assume each body fact before later ones (same as forall dom
                     // and prop body): e.g. `a != 0 or b != 0` before `l = line(a,b,c)`.
                     let as_fact = quantifier_free_fact_to_fact(qf.clone());
-                    let _ = self.store_fact_and_infer(&as_fact, verify_state)?;
-                    succeeded_body.push(proof);
+                    let store_and_infer = self.store_fact_and_infer(&as_fact, verify_state)?;
+                    assumed_body_facts.push(AssumeDomFactResult {
+                        well_defined: proof,
+                        store_and_infer,
+                    });
                 }
                 VerifyFactWellDefinedResult::Failed(failed_body) => {
                     return Ok(Err(
                         FailToVerifyExistShapedFactWellDefinedResult::BodyFact {
                             failed_index,
-                            param_type_well_defined,
-                            succeeded_body,
+                            param_type_well_defined: introduced_params.param_type_well_defined,
+                            succeeded_body: assumed_body_facts
+                                .into_iter()
+                                .map(|a| a.well_defined)
+                                .collect(),
                             failed_body: Box::new(failed_body),
                         },
                     ));
@@ -81,7 +88,7 @@ impl Runtime {
             }
         }
 
-        Ok(Ok((param_type_well_defined, succeeded_body)))
+        Ok(Ok((introduced_params, assumed_body_facts)))
     }
 }
 

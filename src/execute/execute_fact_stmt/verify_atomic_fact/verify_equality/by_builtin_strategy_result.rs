@@ -2,8 +2,8 @@ use crate::ast::fact::Fact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
 // Equality proofs that need one or more requirement subgoals (unlike pure
-// Calculation builtins). Each variant owns its requirement facts and their
-// VerifyFactResult proofs.
+// Calculation builtins). Each variant owns its checked premises; scoped
+// pointwise steps also retain their parameter introduction and environment.
 pub enum EqualitySearchProofByBuiltinStrategy {
     CosZeroIntegerOffset(CosZeroIntegerOffsetStrategySingleStep),
     TupleComponentEquality(TupleComponentEqualityStrategySingleStep),
@@ -62,8 +62,10 @@ pub struct ExtremumEqualityStrategySingleStep {
 //     = finite_set_product({1}, fn(x {1}) Z {0 + 1})
 // via `{1} = {1}` and local `1 = 0 + 1`.
 pub struct FiniteSetProductPointwiseEqualityStrategySingleStep {
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub set_equality: VerifyFactResult,
+    pub introduced_parameter: crate::execute::StoreHaveObjAndInferResult,
+    pub pointwise_equality: VerifyFactResult,
+    pub local_env: Box<crate::exec_env::ExecEnv>,
 }
 
 // Prove a congruence equality modulo n by discharging modulus identity and

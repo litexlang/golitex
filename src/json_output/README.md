@@ -40,7 +40,11 @@ proofs; a non-forall body contains proof steps and its single conclusion
 proof. The goal WD remains a separate stage. Detailed forall WD exposes
 the same introduction/domain producer fields; its existing
 `param_type_well_defined`, `auto_opened_struct_layers` and `dom` fields remain
-derived views of those owners.
+derived views of those owners. Exist / `not forall` / `forall … <=>` WD keep the
+same producer fields (`introduced_params` plus assumed body or domain stores);
+their older `param_type_well_defined` / `body` / `dom` views remain derived.
+Detailed `expand` / `release struct def` project the values, membership, stores
+and failure reasons already present on the exec results.
 
 Detailed explicit theorem calls add `callee`, distinguishing the resolved
 user theorem, user axiom and builtin. Successful `by thm` also retains the
@@ -226,6 +230,19 @@ Known Or preserves its stored branch shape and uses identity/alpha or visible
 stored equality paths for each argument; it does not start broader truth search.
 See the
 [equality result tree](../execute/execute_fact_stmt/verify_atomic_fact/verify_equality/README.md).
+
+## Piecewise and pointwise evidence
+
+Ordinary `have fn ... by cases` success projects `fn_set_well_defined`,
+`coverage`, `disjoint`, `case_return_checks` and its stores. Coverage and branch
+checks include their actual binder introductions; disjointness and return
+checks include the corresponding assumed-branch stores. `algo ... by cases`
+reuses this projection under `define_fn`. Closed environments remain in Rust
+evidence and are omitted from JSON. The finite-product pointwise strategy uses
+`set_equality`, `introduced_parameter` and `pointwise_equality` instead of the
+former parallel requirement arrays. These field names are localized in every
+supported output language. Retaining these results does not add Lean replay
+support for these previously unsupported routes.
 
 ## Induction evidence and failures
 

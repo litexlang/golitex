@@ -1,0 +1,12 @@
+# Tracer: ordinary piecewise definitions retain and project all successful checks.
+# Before (same source verified, but disjointness returned only bool):
+# have fn choose(x R) R by cases:
+#     case x < 0: x
+#     case x >= 0: x + 1
+# Now: coverage, each disjoint pair and each return check retain scoped evidence.
+# Boundary: overlapping branches and a branch with 1 / 0 remain rejected.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/definition/have_fn_cases_evidence.lit
+
+have fn choose(x R) R by cases:
+    case x < 0: x
+    case x >= 0: x + 1

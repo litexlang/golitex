@@ -42,10 +42,13 @@ pub use result::{
     ExecByExtensionStmtResult, ExecByFnExtensionStmtResult, ExecByForStmtResult,
     ExecByInducStmtFailed, ExecByInducStmtResult, ExecByInducStmtSuccess, ExecByStmtResult,
     ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult, ExecByThmStmtFailed,
-    ExecByThmStmtResult, ExecByThmStmtSuccess, ExecExpandRangeStmtResult,
-    ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseRegularityAxiomStmtResult,
-    ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess,
-    ExecReleaseZornLemmaStmtResult, ResolvedTheoremCallee,
+    ExecByThmStmtResult, ExecByThmStmtSuccess, ExecExpandRangeStmtFailed,
+    ExecExpandRangeStmtResult, ExecExpandRangeStmtSuccess, ExecReleaseAxiomOfChoiceStmtFailed,
+    ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseAxiomOfChoiceStmtSuccess,
+    ExecReleaseRegularityAxiomStmtFailed, ExecReleaseRegularityAxiomStmtResult,
+    ExecReleaseRegularityAxiomStmtSuccess, ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult,
+    ExecReleaseThmStmtSuccess, ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
+    ExecReleaseZornLemmaStmtSuccess, ResolvedTheoremCallee,
 };
 pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 // Existing failure IR consumed by the crate's Normal/Detailed JSON projection.

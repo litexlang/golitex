@@ -10858,6 +10858,7 @@ double newton_sqrt_two_step(double x) {
 }
 ```
 
+不要使用可能与 C 后端引入或调用的库符号冲突的 Litex 名称，例如 `abort`、`exit`、`malloc`，以及 `<math.h>` / `<stdlib.h>` 中的名称。导出器不会重命名或拒绝这类冲突；请改用用户侧标识符（例如 `user_abort`）。
 
 主机循环以与递归 `sqrt_two_newton_iterate` 定义相同的模式重复验证的单步：
 

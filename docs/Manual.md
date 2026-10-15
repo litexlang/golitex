@@ -11729,6 +11729,11 @@ double newton_sqrt_two_step(double x) {
 }
 ```
 
+Do not use Litex names that collide with C library symbols the backend may
+emit or include, such as `abort`, `exit`, `malloc`, or names from `<math.h>` /
+`<stdlib.h>`. The extractor does not rename or reject those collisions; choose
+user-facing identifiers instead (for example `user_abort`).
+
 The host loop repeats the verified single step in the same pattern as the
 recursive `sqrt_two_newton_iterate` definition:
 

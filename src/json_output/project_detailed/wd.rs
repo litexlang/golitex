@@ -323,9 +323,24 @@ pub(super) fn project_exist_wd_proof(
         vec![
             ("type", string("exist_shaped")),
             (
+                "introduced_params",
+                super::verify::project_introduced_params(&proof.introduced_params, runtime),
+            ),
+            (
+                "assumed_body_facts",
+                JsonValue::Array(
+                    proof
+                        .assumed_body_facts
+                        .iter()
+                        .map(|a| super::verify::project_assume_dom(a, runtime))
+                        .collect(),
+                ),
+            ),
+            (
                 "param_type_well_defined",
                 JsonValue::Array(
                     proof
+                        .introduced_params
                         .param_type_well_defined
                         .iter()
                         .map(|p| project_param_type_wd(p, runtime))
@@ -336,9 +351,9 @@ pub(super) fn project_exist_wd_proof(
                 "body",
                 JsonValue::Array(
                     proof
-                        .body
+                        .assumed_body_facts
                         .iter()
-                        .map(|f| project_fact_wd_proof(f, runtime))
+                        .map(|a| project_fact_wd_proof(&a.well_defined, runtime))
                         .collect(),
                 ),
             ),
@@ -446,9 +461,24 @@ fn project_forall_iff_wd(
         vec![
             ("type", string("forall_iff")),
             (
+                "introduced_params",
+                super::verify::project_introduced_params(&proof.introduced_params, runtime),
+            ),
+            (
+                "assumed_dom_facts",
+                JsonValue::Array(
+                    proof
+                        .assumed_dom_facts
+                        .iter()
+                        .map(|a| super::verify::project_assume_dom(a, runtime))
+                        .collect(),
+                ),
+            ),
+            (
                 "param_type_well_defined",
                 JsonValue::Array(
                     proof
+                        .introduced_params
                         .param_type_well_defined
                         .iter()
                         .map(|p| project_param_type_wd(p, runtime))
@@ -459,9 +489,9 @@ fn project_forall_iff_wd(
                 "dom",
                 JsonValue::Array(
                     proof
-                        .dom
+                        .assumed_dom_facts
                         .iter()
-                        .map(|f| project_fact_wd_proof(f, runtime))
+                        .map(|a| project_fact_wd_proof(&a.well_defined, runtime))
                         .collect(),
                 ),
             ),
@@ -495,9 +525,24 @@ fn project_not_forall_wd(proof: &NotForallFactWellDefinedProof, runtime: &Runtim
         vec![
             ("type", string("not_forall")),
             (
+                "introduced_params",
+                super::verify::project_introduced_params(&proof.introduced_params, runtime),
+            ),
+            (
+                "assumed_dom_facts",
+                JsonValue::Array(
+                    proof
+                        .assumed_dom_facts
+                        .iter()
+                        .map(|a| super::verify::project_assume_dom(a, runtime))
+                        .collect(),
+                ),
+            ),
+            (
                 "param_type_well_defined",
                 JsonValue::Array(
                     proof
+                        .introduced_params
                         .param_type_well_defined
                         .iter()
                         .map(|p| project_param_type_wd(p, runtime))
@@ -508,9 +553,9 @@ fn project_not_forall_wd(proof: &NotForallFactWellDefinedProof, runtime: &Runtim
                 "dom",
                 JsonValue::Array(
                     proof
-                        .dom
+                        .assumed_dom_facts
                         .iter()
-                        .map(|f| project_fact_wd_proof(f, runtime))
+                        .map(|a| project_fact_wd_proof(&a.well_defined, runtime))
                         .collect(),
                 ),
             ),

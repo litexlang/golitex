@@ -287,6 +287,22 @@ JSON presentation (not Rust names): Success → `"statement_result": "accepted"`
 Failed → `"statement_result": "rejected"`, SessionError → `"session_terminated": true`
 plus structured `termination`.
 
+## Scoped proof evidence
+
+The finite-product pointwise strategy retains its set-equality proof, parameter
+introduction, pointwise-equality proof and closed local environment in execution
+order. The local parameter's membership citations remain resolvable after the
+strategy returns; they are not published to the surrounding scope. The tracer is
+`examples/proof_nodes/equal/by_builtin_strategy/finite_set_product_pointwise_scope.lit`.
+
+Ordinary piecewise function definitions retain binder introduction for coverage,
+each pairwise disjointness proof and each branch return check. Disjointness also
+retains the assumed branch, the verified negated component and the local
+environment, including when the reverse implication supplies the proof.
+Return checks retain the branch assumption before body WD and return membership.
+These are captured execution results, with unchanged branch order and search
+permissions. See `examples/stmt_nodes/definition/have_fn_cases_evidence.lit`.
+
 ## Transactional `exec_stmt`
 
 ```text

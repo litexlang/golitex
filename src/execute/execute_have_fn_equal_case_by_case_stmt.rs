@@ -37,12 +37,24 @@ pub enum ExecHaveFnEqualCaseByCaseStmtFailed {
 }
 
 pub struct HaveFnCasesCoverageSuccess {
+    pub binder_introduction: IntroduceFnSetClauseBindersResult,
     pub coverage_check: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub struct HaveFnCasesDisjointSuccess {
+    pub i: usize,
+    pub j: usize,
+    pub binder_introduction: IntroduceFnSetClauseBindersResult,
+    pub assumption_stored: StoreFactAndInferResult,
+    pub negated_component: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
 }
 
 pub struct HaveFnCaseReturnCheckSuccess {
     pub case_index: usize,
+    pub binder_introduction: IntroduceFnSetClauseBindersResult,
+    pub assumption_stored: StoreFactAndInferResult,
     pub body_well_defined: VerifyObjWellDefinedResult,
     pub body_in_ret_set: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
@@ -67,6 +79,7 @@ pub struct ExecHaveFnEqualCaseByCaseStmtSuccessResult {
     pub statement: HaveFnEqualCaseByCaseStmt,
     pub fn_set_well_defined: VerifyObjWellDefinedResult,
     pub coverage: HaveFnCasesCoverageSuccess,
+    pub disjoint: Vec<HaveFnCasesDisjointSuccess>,
     pub case_return_checks: Vec<HaveFnCaseReturnCheckSuccess>,
     pub store_and_infer_result: StoreHaveFnCaseByCaseAndInferResult,
 }
@@ -129,11 +142,14 @@ impl Runtime {
             }
         };
 
-        if let Some((i, j)) = self.verify_have_fn_cases_disjoint(stmt, verify_state.clone())? {
-            return Ok(ExecHaveFnEqualCaseByCaseStmtResult::Failed(
-                ExecHaveFnEqualCaseByCaseStmtFailed::Disjoint { i, j },
-            ));
-        }
+        let disjoint = match self.verify_have_fn_cases_disjoint(stmt, verify_state)? {
+            Ok(proofs) => proofs,
+            Err((i, j)) => {
+                return Ok(ExecHaveFnEqualCaseByCaseStmtResult::Failed(
+                    ExecHaveFnEqualCaseByCaseStmtFailed::Disjoint { i, j },
+                ))
+            }
+        };
 
         let mut case_return_checks = Vec::with_capacity(stmt.cases.len());
         for (case_index, (case_fact, equal_to)) in
@@ -164,6 +180,7 @@ impl Runtime {
                 statement: stmt.clone(),
                 fn_set_well_defined,
                 coverage,
+                disjoint,
                 case_return_checks,
                 store_and_infer_result,
             },
@@ -177,7 +194,8 @@ impl Runtime {
     ) -> RuntimeResult<Result<HaveFnCasesCoverageSuccess, ExecHaveFnEqualCaseByCaseStmtFailed>>
     {
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
+            let binder_introduction =
+                rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
             let or_fact = Fact::OrFact(OrFact {
                 fact_id: rt.global_ids.allocate_fact_id(),
                 facts: stmt.cases.clone(),
@@ -189,10 +207,11 @@ impl Runtime {
                     coverage_check,
                 )));
             }
-            Ok(Ok(coverage_check))
+            Ok(Ok((binder_introduction, coverage_check)))
         })?;
         match inner {
-            Ok(coverage_check) => Ok(Ok(HaveFnCasesCoverageSuccess {
+            Ok((binder_introduction, coverage_check)) => Ok(Ok(HaveFnCasesCoverageSuccess {
+                binder_introduction,
                 coverage_check,
                 local_env,
             })),
@@ -204,20 +223,25 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<(usize, usize)>> {
+    ) -> RuntimeResult<Result<Vec<HaveFnCasesDisjointSuccess>, (usize, usize)>> {
+        let mut proofs = Vec::new();
         for i in 0..stmt.cases.len() {
             for j in (i + 1)..stmt.cases.len() {
-                if !self.have_fn_case_pair_is_disjoint(
+                let Some(proof) = self.have_fn_case_pair_is_disjoint(
                     stmt,
                     &stmt.cases[i],
                     &stmt.cases[j],
+                    i,
+                    j,
                     verify_state.clone(),
-                )? {
-                    return Ok(Some((i, j)));
-                }
+                )?
+                else {
+                    return Ok(Err((i, j)));
+                };
+                proofs.push(proof);
             }
         }
-        Ok(None)
+        Ok(Ok(proofs))
     }
 
     fn have_fn_case_pair_is_disjoint(
@@ -225,12 +249,16 @@ impl Runtime {
         stmt: &HaveFnEqualCaseByCaseStmt,
         left: &AndChainAtomicFact,
         right: &AndChainAtomicFact,
+        i: usize,
+        j: usize,
         verify_state: VerifyState,
-    ) -> RuntimeResult<bool> {
-        if self.have_fn_case_implies_not_other(stmt, left, right, verify_state.clone())? {
-            return Ok(true);
+    ) -> RuntimeResult<Option<HaveFnCasesDisjointSuccess>> {
+        if let Some(proof) =
+            self.have_fn_case_implies_not_other(stmt, left, right, i, j, verify_state)?
+        {
+            return Ok(Some(proof));
         }
-        self.have_fn_case_implies_not_other(stmt, right, left, verify_state)
+        self.have_fn_case_implies_not_other(stmt, right, left, i, j, verify_state)
     }
 
     fn have_fn_case_implies_not_other(
@@ -238,12 +266,15 @@ impl Runtime {
         stmt: &HaveFnEqualCaseByCaseStmt,
         assumed: &AndChainAtomicFact,
         other: &AndChainAtomicFact,
+        i: usize,
+        j: usize,
         verify_state: VerifyState,
-    ) -> RuntimeResult<bool> {
-        let (ok, _env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
+    ) -> RuntimeResult<Option<HaveFnCasesDisjointSuccess>> {
+        let (proof, local_env) = self.run_in_local_env_and_take_env(|rt| {
+            let binder_introduction =
+                rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
             let assumed_fact = and_chain_as_fact(assumed);
-            let _ = rt.store_fact_and_infer(&assumed_fact, verify_state)?;
+            let assumption_stored = rt.store_fact_and_infer(&assumed_fact, verify_state)?;
             for atom in flatten_and_chain_atoms(rt, other)? {
                 let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id())
                 else {
@@ -252,7 +283,7 @@ impl Runtime {
                 let checked =
                     rt.verify_fact(&Fact::AtomicFact(negated.clone()), verify_state.clone())?;
                 if !checked.is_failed() {
-                    return Ok(true);
+                    return Ok(Some((binder_introduction, assumption_stored, checked)));
                 }
                 // Strict order implies the weak opposite of the other branch.
                 // Example: assumed `x > 0`, other `x < 0` → prove `x >= 0` (= not x < 0).
@@ -264,13 +295,24 @@ impl Runtime {
                     let weak_checked =
                         rt.verify_fact(&Fact::AtomicFact(weak), verify_state.clone())?;
                     if !weak_checked.is_failed() {
-                        return Ok(true);
+                        return Ok(Some((binder_introduction, assumption_stored, weak_checked)));
                     }
                 }
             }
-            Ok(false)
+            Ok(None)
         })?;
-        Ok(ok)
+        Ok(proof.map(
+            |(binder_introduction, assumption_stored, negated_component)| {
+                HaveFnCasesDisjointSuccess {
+                    i,
+                    j,
+                    binder_introduction,
+                    assumption_stored,
+                    negated_component,
+                    local_env,
+                }
+            },
+        ))
     }
 
     fn verify_have_fn_case_return(
@@ -283,8 +325,10 @@ impl Runtime {
     ) -> RuntimeResult<Result<HaveFnCaseReturnCheckSuccess, ExecHaveFnEqualCaseByCaseStmtFailed>>
     {
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
-            rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
-            let _ = rt.store_fact_and_infer(&and_chain_as_fact(case_fact), verify_state)?;
+            let binder_introduction =
+                rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause, verify_state)?;
+            let assumption_stored =
+                rt.store_fact_and_infer(&and_chain_as_fact(case_fact), verify_state)?;
 
             let body_well_defined =
                 rt.verify_obj_well_definedness(equal_to, verify_state.clone())?;
@@ -311,15 +355,24 @@ impl Runtime {
                 )));
             }
 
-            Ok(Ok((body_well_defined, body_in_ret_set)))
-        })?;
-        match inner {
-            Ok((body_well_defined, body_in_ret_set)) => Ok(Ok(HaveFnCaseReturnCheckSuccess {
-                case_index,
+            Ok(Ok((
+                binder_introduction,
+                assumption_stored,
                 body_well_defined,
                 body_in_ret_set,
-                local_env,
-            })),
+            )))
+        })?;
+        match inner {
+            Ok((binder_introduction, assumption_stored, body_well_defined, body_in_ret_set)) => {
+                Ok(Ok(HaveFnCaseReturnCheckSuccess {
+                    case_index,
+                    binder_introduction,
+                    assumption_stored,
+                    body_well_defined,
+                    body_in_ret_set,
+                    local_env,
+                }))
+            }
             Err(failed) => Ok(Err(failed)),
         }
     }
