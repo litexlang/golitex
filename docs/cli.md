@@ -441,7 +441,9 @@ share that context: `litex -e 'have a R = 2'` succeeds, but a later
 `litex -e 'a + 1 = 3'` fails because its new process has no declaration of `a`.
 Use clean batch file runs for baselines, coherent checkpoints, and final
 acceptance. Hard errors can stop the REPL; restart and replay accepted source
-when needed. See the [Agent Guide](AgentGuide.md) for restart boundaries.
+when needed. For the agent-oriented loop and a fuller side-by-side comparison,
+see [How to connect Litex to your AI agent](#how-to-connect-litex-to-your-ai-agent)
+and the [Agent Guide](AgentGuide.md).
 
 ## Project Modules
 
@@ -566,3 +568,74 @@ use `<repl>`. This includes predicates projected by refined template carriers;
 lookup never borrows the live environment for a different root or imported
 export ID. The [continued-export example](../examples/wd/continued_export_repl/README.md)
 records the file-to-REPL workflow.
+
+## How to connect Litex to your AI agent
+
+Litex is built for a propose → check → revise → continue loop. An agent (or any
+tool that shells out to `litex`) should treat the CLI as a live math context,
+not as a one-shot script runner for every candidate line.
+
+**Open one authoring Session and keep that process running while you repair
+steps.** Load accepted definitions and facts once with `-session`, then submit
+new top-level statements to the same process. An ordinary rejected statement is
+discarded; earlier accepted context remains available. The agent can use the
+JSON feedback to repair its next proposal without rebuilding the checked
+prefix.
+
+### One persistent Session
+
+```bash
+litex -strict -lang en -session \
+  -e 'have a R = 2'
+```
+
+Then, in that same process:
+
+```text
+litex> a = 3
+{"run_result": "failure", "session_terminated": false}
+litex> a + 1 = 3
+success
+```
+
+Record `a = 2` once. Rejecting `a = 3` leaves that fact available for checking
+`a + 1 = 3`. Read `run_result`, `session_terminated`, and `termination` from the
+rejection JSON (the excerpt above shows selected fields only). While
+`session_terminated` is false and another `litex>` prompt appears, repair in
+place.
+
+### A fresh process for every attempt
+
+```bash
+litex -strict -lang en -e '
+have a R = 2
+a = 3'
+
+litex -strict -lang en -e '
+have a R = 2
+a + 1 = 3'
+```
+
+The second command must replay `a = 2` before it can check `a + 1 = 3`. A long
+prefix would need to be replayed too. Prefer one live Session for the inner
+loop; reserve clean `-e` / `-f` runs for baselines, coherent checkpoints, and
+final verification.
+
+### Practical agent checklist
+
+1. Start `litex -strict -lang en -session` (optionally with `-e` / `-f` to load
+   an accepted prefix). Keep that process open across ordinary soft failures.
+2. Submit one top-level statement at a time; finish an indented block with a
+   blank line. Consume the response before sending the next candidate.
+3. On plain-text `success`, journal the accepted source outside the process.
+   On soft rejection (`statement_result: "rejected"`, `session_terminated: false`),
+   keep the Session and repair only the failed statement.
+4. At checkpoints, run a separate clean `litex -f` / `-e` gate on the saved
+   file while the authoring Session can stay open. If the process stops or its
+   loaded module context must change, restart and replay the journaled source.
+
+The [website playground](https://litexlang.com) runs complete source files
+separately; it is not a substitute for a persistent local Session. Full agent
+workflow, restart boundaries, and quadratic-cost notes live in the
+[Agent Guide](AgentGuide.md). Flag shapes and JSON fields on this page remain
+the contract the agent should parse.

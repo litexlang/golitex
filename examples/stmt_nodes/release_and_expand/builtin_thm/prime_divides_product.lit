@@ -1,0 +1,9 @@
+# Before: named builtin was not found.
+# release thm prime_divides_product(4, 9, 3)
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_product.lit
+$prime(3)
+$dvd(4 * 9, 3)
+release thm prime_divides_product(4, 9, 3)
+$dvd(4, 3) or $dvd(9, 3)
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

@@ -1,0 +1,9 @@
+# Before: named builtin was not found.
+# release thm prime_divides_power(6, 2, 2)
+# Now: native builtin contract; verify premises before storing conclusions.
+# Run: target/release/litex -f examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_power.lit
+$prime(2)
+$dvd(6 ^ 2, 2)
+release thm prime_divides_power(6, 2, 2)
+$dvd(6, 2)
+# Boundary: wrong arity, wrong argument shape or an unproved premise must fail.

@@ -13,8 +13,10 @@ Interactive REPL users may issue `import std basics` as a terminal command;
 the command updates only that REPL's in-memory dependency manifest. The import
 exports no names. Use native Litex vocabulary directly, including
 `quot(a, d)`, `$dvd(x, d)`, `gcd(a, b)`, `lcm(a, b)`, `$prime(p)`,
-and the bare reserved theorem `rational_has_unique_reduced_fraction(q)`.
+and the bare reserved theorems `rational_has_unique_reduced_fraction(q)`,
+`gcd_with_prime_is_one_or_prime(a, p)`, `prime_divides_product(a, b, p)`, and
+`prime_divides_power(a, k, p)`.
 
 A development that needs a theorem not supplied by the kernel should define
-and prove it in its own module. In particular, textbook-facing Euclidean and
-Bezout interfaces now live with the textbooks that use them.
+and prove it in its own module. Textbook-facing Euclidean algorithm and
+Bezout interfaces still live with the textbooks that use them.

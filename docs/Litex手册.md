@@ -32,7 +32,7 @@
 |兼容性和证据|理解已移除形式、假设和验证记录|[兼容性](#removed-and-renamed-public-forms)、[覆盖范围](#verification-and-coverage)、[附录](#appendix)|
 |设计背景和参考|了解设计影响、数学来源和相关工作|[参考文献](#design-context-and-references)|
 
-原生库存有 **51 个公共语句形式、93 个活动对象叶子、20 个内置原子族及其否定形式、两个原生证书谓词**，以及 29 个保留的原生定理接口。稳定的 S/O/F/C 标识符在合并后仍然存在。此清单列出了公共原生语言，而不是每个导入的定理或每个单独的内核重写。
+原生库存有 **51 个公共语句形式、93 个活动对象叶子、20 个内置原子族及其否定形式、两个原生证书谓词**，以及 32 个保留的原生定理接口。稳定的 S/O/F/C 标识符在合并后仍然存在。此清单列出了公共原生语言，而不是每个导入的定理或每个单独的内核重写。
 
 详细语言参考集中在本手册中。S/O/F/C 条目编号用于稳定导航。预期拒绝和迁移示例带有跳过标记，不属于正向可运行示例。`trust` 与公理示例展示普通模式下的假设，不是严格证明；严格模式的拒绝行为单独说明。可运行代码块应独立执行。
 
@@ -7150,6 +7150,9 @@ exist L R st {$is_real_greatest_lower_bound({0}, L)}
 |`real_lower_bound_le_greatest_lower_bound`| 3 |投影任何已证明的下界 <= 下确界。|[固定装置](../examples/stmt_nodes/release_and_expand/builtin_thm/real_lower_bound_le_greatest_lower_bound.lit)|
 |`real_archimedean_natural_upper_bound`| 1 |产生一个正自然大于实数的参数。|[固定装置](../examples/stmt_nodes/release_and_expand/builtin_thm/real_archimedean_natural_upper_bound.lit)|
 |`rational_between_reals`| 2 |严格在两个有序实数参数之间生成有理数。|[固定装置](../examples/stmt_nodes/release_and_expand/builtin_thm/rational_between_reals.lit)|
+|`gcd_with_prime_is_one_or_prime`| 2 |由 `$prime(p)` 得到 `gcd(a, p) = 1 or gcd(a, p) = p`。|[固定装置](../examples/stmt_nodes/release_and_expand/builtin_thm/gcd_with_prime_is_one_or_prime.lit)|
+|`prime_divides_product`| 3 |Euclid 引理：`$prime(p)` 且 `$dvd(a * b, p)` 推出 `$dvd(a, p) or $dvd(b, p)`。|[固定装置](../examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_product.lit)|
+|`prime_divides_power`| 3 |由 `$prime(p)` 与 `$dvd(a ^ k, p)`（`k $in N+`）得到 `$dvd(a, p)`。|[固定装置](../examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_power.lit)|
 
 对于成员关系接口，传递完整的构造器，其中夹具显示 1：`family_intersect_member(x, family_intersect(F))` 采用交集对象，而不是 F。函数/元组接口检查完整的定义域，而不是接受一些有效调用作为替代。源码注册表为 [BuiltinTheoremId](../src/builtin_theorem.rs)；库存保留了精确的夹具命令、哈希值和成功的结果。
 
@@ -9124,7 +9127,7 @@ Detailed 输出记录 `AddZeroLeftFromEqualities` / `AddZeroRightFromEqualities`
 
 下面的目录记录了公共数学形状，而不是检查器调度序。例如，`sqrt(t) != 0` 需要严格前提 `t > 0`； `t >= 0` 不够，因为 `sqrt(0) = 0`。同样，区间非空性取决于相应的严格或弱端点比较。
 
-量化或复合需求使用 [29 个保留的定理接口](#reserved-builtin-theorem-interfaces)。索引拥有其参数、前提和已检查的示例；它还链接 [LUB](#c01-native-least-upper-bound-certificate) 和 [GLB](#c02-native-greatest-lower-bound-certificate) 证书。
+量化或复合需求使用 [32 个保留的定理接口](#reserved-builtin-theorem-interfaces)。索引拥有其参数、前提和已检查的示例；它还链接 [LUB](#c01-native-least-upper-bound-certificate) 和 [GLB](#c02-native-greatest-lower-bound-certificate) 证书。
 
 
 两个实数-界谓词保留为不透明证书。定理的完整性介绍了它们；四个投影定理消耗它们。它们不能被重新定义为用户道具或仅通过命名来证明。选择支持的乘积非空性在详细 JSON 中被标识为 `axiom_of_choice`。其他调用携带 `builtin_theorem` 出处、定理身份、参数、有序要求证明和结论 WD 证据。 failed 调用不存储结论。两个 JSON 视图现在都公开查找、arity、shape、argument-type、前提、结论-WD 或 selected-事实失败；索引是从零开始的，前提故障包括确切的目标。

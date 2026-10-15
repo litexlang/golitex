@@ -35,7 +35,9 @@ Spanish (`es`), Arabic (`ar`), Japanese (`ja`), Korean (`ko`), and Vietnamese
 language dispatch and equal-sized phrase tables. There is no fallback language.
 
 Default output is an embeddable fragment combining text paragraphs, inline or
-display math, case arrays, and scoped proof quotations. `-document` (or the Rust
+display math, case arrays, and scoped proof quotations. Inline math uses `$...$`
+(not `\(...\)`), so preview or copy paths that drop a backslash do not turn the
+delimiters into literal parentheses around the formula. `-document` (or the Rust
 `to_latex_document` API) adds a XeLaTeX article wrapper using `amsmath`,
 `amssymb`, `fontspec`, and `geometry`. Its bundled TeX Live font recipes use:
 

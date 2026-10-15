@@ -38,7 +38,7 @@ identity may need the defining equation as an explicit bridge.
 
 The native inventory has **51 public statement forms, 93 active object leaves,
 20 builtin atomic families with their negative forms, and two native certificate
-predicates**, plus the 29 reserved native theorem interfaces. Stable S/O/F/C
+predicates**, plus the 32 reserved native theorem interfaces. Stable S/O/F/C
 identifiers survive the merge. This inventories the public native language,
 not every imported theorem or every individual kernel rewrite.
 
@@ -7305,6 +7305,9 @@ example below, with its retained fixture-consumer boundary recorded separately.
 | `real_lower_bound_le_greatest_lower_bound` | 3 | Project any proved lower bound <= infimum. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/real_lower_bound_le_greatest_lower_bound.lit) |
 | `real_archimedean_natural_upper_bound` | 1 | Produce a positive natural greater than a real argument. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/real_archimedean_natural_upper_bound.lit) |
 | `rational_between_reals` | 2 | Produce a rational strictly between two ordered real arguments. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/rational_between_reals.lit) |
+| `gcd_with_prime_is_one_or_prime` | 2 | From `$prime(p)`, conclude `gcd(a, p) = 1 or gcd(a, p) = p`. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/gcd_with_prime_is_one_or_prime.lit) |
+| `prime_divides_product` | 3 | Euclid's lemma: `$prime(p)` and `$dvd(a * b, p)` imply `$dvd(a, p) or $dvd(b, p)`. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_product.lit) |
+| `prime_divides_power` | 3 | From `$prime(p)` and `$dvd(a ^ k, p)` with `k $in N+`, conclude `$dvd(a, p)`. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_power.lit) |
 
 For membership interfaces, pass the complete constructor where the fixture
 shows one: `family_intersect_member(x, family_intersect(F))` takes the
@@ -9575,7 +9578,7 @@ checker dispatch order. For example, `sqrt(t) != 0` requires the strict premise
 `t > 0`; `t >= 0` is insufficient because `sqrt(0) = 0`. Likewise, interval
 nonemptiness depends on the appropriate strict or weak endpoint comparison.
 
-Quantified or compound requirements use the [29 reserved theorem interfaces](#reserved-builtin-theorem-interfaces).
+Quantified or compound requirements use the [32 reserved theorem interfaces](#reserved-builtin-theorem-interfaces).
 That index owns their arities, premises and checked examples; it also links the
 [LUB](#c01-native-least-upper-bound-certificate) and
 [GLB](#c02-native-greatest-lower-bound-certificate) certificates.
