@@ -509,11 +509,30 @@ fn project_equality_builtin_strategy(
             &p.requirement_facts,
             &p.proof_of_requirement_facts,
         ),
-        EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(p) => (
-            "FiniteSetProductPointwiseEquality",
-            &p.requirement_facts,
-            &p.proof_of_requirement_facts,
-        ),
+        EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("FiniteSetProductPointwiseEquality")),
+                    (
+                        "set_equality",
+                        project_verify_fact(&p.set_equality, runtime),
+                    ),
+                    (
+                        "introduced_parameter",
+                        super::store::project_have_store_and_infer(
+                            &p.introduced_parameter,
+                            runtime,
+                        ),
+                    ),
+                    (
+                        "pointwise_equality",
+                        project_verify_fact(&p.pointwise_equality, runtime),
+                    ),
+                ],
+            );
+        }
         EqualitySearchProofByBuiltinStrategy::ModCongruence(p) => (
             "ModCongruence",
             &p.requirement_facts,

@@ -38,9 +38,6 @@ impl Runtime {
         };
 
         let child = ctx;
-        let mut requirement_facts = Vec::with_capacity(2);
-        let mut proof_of_requirement_facts = Vec::with_capacity(2);
-
         let set_goal: Fact = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left.set.as_ref().clone(),
@@ -52,9 +49,6 @@ impl Runtime {
         if set_proof.is_failed() {
             return Ok(None);
         }
-        requirement_facts.push(set_goal);
-        proof_of_requirement_facts.push(set_proof);
-
         let pointwise_goal: Fact = EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),
             left: left_at_x,
@@ -63,25 +57,28 @@ impl Runtime {
         }
         .into();
         let pointwise_set = left.set.as_ref().clone();
-        let (pointwise_proof, _local_env) = self.run_in_local_env_and_take_env(|rt| {
-            let params = TypedParameterList {
-                groups: vec![TypedParameterGroup {
-                    params: vec![binder.clone()],
-                    param_type: ParamType::Obj(pointwise_set.clone()),
-                }],
-            };
-            rt.define_typed_parameters_in_current_env(&params, None, ctx)?;
-            rt.verify_fact(&pointwise_goal, child)
-        })?;
-        if pointwise_proof.is_failed() {
+        let ((introduced_parameter, pointwise_equality), local_env) = self
+            .run_in_local_env_and_take_env(|rt| {
+                let params = TypedParameterList {
+                    groups: vec![TypedParameterGroup {
+                        params: vec![binder.clone()],
+                        param_type: ParamType::Obj(pointwise_set.clone()),
+                    }],
+                };
+                let introduced_parameter =
+                    rt.define_typed_parameters_in_current_env(&params, None, ctx)?;
+                let pointwise_equality = rt.verify_fact(&pointwise_goal, child)?;
+                Ok((introduced_parameter, pointwise_equality))
+            })?;
+        if pointwise_equality.is_failed() {
             return Ok(None);
         }
-        requirement_facts.push(pointwise_goal);
-        proof_of_requirement_facts.push(pointwise_proof);
 
         Ok(Some(FiniteSetProductPointwiseEqualityStrategySingleStep {
-            requirement_facts,
-            proof_of_requirement_facts,
+            set_equality: set_proof,
+            introduced_parameter,
+            pointwise_equality,
+            local_env,
         }))
     }
 }

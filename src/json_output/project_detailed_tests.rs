@@ -265,7 +265,12 @@ fn detailed_atomic_builtin_rewrite_preserves_citation_and_residual() {
             .as_array()
             .unwrap();
         assert_eq!(cites.len(), 1);
-        let dom = obj_field(verify, "assumed_dom_facts").as_array().unwrap();
+        let dom = obj_field(
+            verify,
+            &super::json_keys::localize_key("assumed_dom_facts", language),
+        )
+        .as_array()
+        .unwrap();
         let dom_store = obj_field(
             &dom[0],
             if english {

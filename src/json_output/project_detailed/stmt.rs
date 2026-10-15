@@ -119,16 +119,9 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             }
         },
         ExecDefinitionStmtResult::HaveFnEqualCaseByCase(r) => match r {
-            ExecHaveFnEqualCaseByCaseStmtResult::Success(s) => project_success_failed_shell(
-                "have_fn_equal_case_by_case",
-                true,
-                Some(s.statement.readable_string()),
-                Some(project_have_store_ids(
-                    &s.store_and_infer_result.stored_fact_ids,
-                    runtime,
-                )),
-                runtime,
-            ),
+            ExecHaveFnEqualCaseByCaseStmtResult::Success(s) => {
+                super::project_have_fn_cases::project_have_fn_cases(s, runtime)
+            }
             ExecHaveFnEqualCaseByCaseStmtResult::Failed(failure) => object_for(
                 runtime,
                 vec![
@@ -244,16 +237,39 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 ],
             ),
         },
-        ExecDefinitionStmtResult::DefAlgoByCases(r) => project_success_failed_shell(
-            "def_algo_by_cases",
-            !r.is_failed(),
-            match r {
-                ExecDefAlgoByCasesStmtResult::Success(s) => Some(s.statement.readable_string()),
-                _ => None,
-            },
-            None,
-            runtime,
-        ),
+        ExecDefinitionStmtResult::DefAlgoByCases(r) => match r {
+            ExecDefAlgoByCasesStmtResult::Success(s) => object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(true)),
+                    ("kind", string("def_algo_by_cases")),
+                    ("statement", string(s.statement.readable_string())),
+                    (
+                        "define_fn",
+                        super::project_have_fn_cases::project_have_fn_cases(&s.define_fn, runtime),
+                    ),
+                ],
+            ),
+            ExecDefAlgoByCasesStmtResult::Failed(f) => {
+                use crate::execute::ExecDefAlgoByCasesStmtFailed;
+                let failure = match f {
+                    ExecDefAlgoByCasesStmtFailed::AlgoAlreadyDefined => {
+                        string("algorithm is already defined")
+                    }
+                    ExecDefAlgoByCasesStmtFailed::DefineFn(f) => {
+                        project_cases_definition_failure(f, runtime)
+                    }
+                };
+                object_for(
+                    runtime,
+                    vec![
+                        ("statement_result", statement_result_value(false)),
+                        ("kind", string("def_algo_by_cases")),
+                        ("failure", failure),
+                    ],
+                )
+            }
+        },
         ExecDefinitionStmtResult::DefAlgoByInduc(r) => project_induc_algo(r, runtime),
         ExecDefinitionStmtResult::DefThm(r) => project_def_thm(r, runtime),
         ExecDefinitionStmtResult::Axiom(r) => project_axiom(r, runtime),
@@ -1600,36 +1616,392 @@ fn project_release_and_expand(
     result: &ExecReleaseAndExpandStmtResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    if let ExecReleaseAndExpandStmtResult::TupleDef(result) = result {
-        return project_release_tuple_def(result, runtime);
+    match result {
+        ExecReleaseAndExpandStmtResult::TupleDef(result) => {
+            project_release_tuple_def(result, runtime)
+        }
+        ExecReleaseAndExpandStmtResult::CartDef(result) => {
+            project_release_cart_def(result, runtime)
+        }
+        ExecReleaseAndExpandStmtResult::Thm(result) => {
+            super::theorem::project_release_thm(result, runtime)
+        }
+        ExecReleaseAndExpandStmtResult::StructDef(result) => {
+            project_release_struct_def(result, runtime)
+        }
+        ExecReleaseAndExpandStmtResult::ObjDef(result) => project_release_obj_def(result, runtime),
+        ExecReleaseAndExpandStmtResult::ExpandRange(result) => {
+            project_expand_range(result, runtime)
+        }
+        ExecReleaseAndExpandStmtResult::ZornLemma(result) => {
+            project_release_zorn_lemma(result, runtime)
+        }
+        ExecReleaseAndExpandStmtResult::AxiomOfChoice(result) => {
+            project_release_axiom_of_choice(result, runtime)
+        }
+        ExecReleaseAndExpandStmtResult::RegularityAxiom(result) => {
+            project_release_regularity_axiom(result, runtime)
+        }
     }
-    if let ExecReleaseAndExpandStmtResult::CartDef(result) = result {
-        return project_release_cart_def(result, runtime);
+}
+
+pub(in crate::json_output) fn project_release_struct_def(
+    result: &crate::execute::ExecReleaseStructDefStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::ExecReleaseStructDefStmtFailed as F;
+    use crate::execute::ExecReleaseStructDefStmtResult as R;
+    match result {
+        R::Success(s) => object_for(
+            runtime,
+            vec![
+                ("statement_result", statement_result_value(true)),
+                ("kind", string("release_struct_def")),
+                ("statement", string(s.statement.readable_string())),
+                ("struct_obj", string(s.struct_obj.readable_string())),
+                ("membership", project_verify_fact(&s.membership, runtime)),
+                (
+                    "release",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("obj", string(s.release.obj.readable_string())),
+                            ("struct_obj", string(s.release.struct_obj.readable_string())),
+                            (
+                                "store_and_infer",
+                                JsonValue::Array(
+                                    s.release
+                                        .store_and_infer
+                                        .iter()
+                                        .map(|stored| project_store_and_infer(stored, runtime))
+                                        .collect(),
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+        ),
+        R::Failed(failure) => {
+            let (phase, details) = match failure {
+                F::NoDefinitionOwnedCarrier { obj } => (
+                    "no_definition_owned_carrier",
+                    object_for(runtime, vec![("obj", string(obj.readable_string()))]),
+                ),
+                F::Membership(membership) => {
+                    ("membership", project_verify_fact(membership, runtime))
+                }
+                F::Release(failed) => (
+                    "release",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("obj", string(failed.obj.readable_string())),
+                            ("struct_obj", string(failed.struct_obj.readable_string())),
+                            ("reason", string(&failed.reason)),
+                        ],
+                    ),
+                ),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("release_struct_def")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
+        }
     }
-    if let ExecReleaseAndExpandStmtResult::Thm(result) = result {
-        return super::theorem::project_release_thm(result, runtime);
-    }
-    let kind = match result {
-        ExecReleaseAndExpandStmtResult::Thm(_) => "release_thm",
-        ExecReleaseAndExpandStmtResult::StructDef(_) => "release_struct_def",
-        ExecReleaseAndExpandStmtResult::ObjDef(_) => "release_obj_def",
-        ExecReleaseAndExpandStmtResult::CartDef(_) => "release_cart_def",
-        ExecReleaseAndExpandStmtResult::TupleDef(_) => "release_tuple_def",
-        ExecReleaseAndExpandStmtResult::ExpandRange(_) => "expand_range",
-        ExecReleaseAndExpandStmtResult::ZornLemma(_) => "release_zorn_lemma",
-        ExecReleaseAndExpandStmtResult::AxiomOfChoice(_) => "release_axiom_of_choice",
-        ExecReleaseAndExpandStmtResult::RegularityAxiom(_) => "release_regularity_axiom",
+}
+
+fn project_release_obj_def(
+    result: &crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_release_obj_def_stmt::{
+        ExecReleaseObjDefStmtFailed as F, ExecReleaseObjDefStmtResult as R,
     };
-    object_for(
-        runtime,
-        vec![
-            (
-                "statement_result",
-                statement_result_value(!result.is_failed()),
-            ),
-            ("kind", string(kind)),
-        ],
-    )
+    match result {
+        R::Success(s) => object_for(
+            runtime,
+            vec![
+                ("statement_result", statement_result_value(true)),
+                ("kind", string("release_obj_def")),
+                ("statement", string(s.statement.readable_string())),
+                (
+                    "store_and_infer",
+                    JsonValue::Array(
+                        s.store_and_infer
+                            .iter()
+                            .map(|stored| project_store_and_infer(stored, runtime))
+                            .collect(),
+                    ),
+                ),
+            ],
+        ),
+        R::Failed(failure) => {
+            let (phase, details) = match failure {
+                F::DefinitionNotFound { name } => (
+                    "definition_not_found",
+                    object_for(runtime, vec![("name", string(name.ir_string()))]),
+                ),
+                F::ParamTypeNotReleasable { name } => (
+                    "param_type_not_releasable",
+                    object_for(runtime, vec![("name", string(name.ir_string()))]),
+                ),
+                F::NameNotInDefinition { name } => (
+                    "name_not_in_definition",
+                    object_for(runtime, vec![("name", string(name.ir_string()))]),
+                ),
+                F::FlattenInduc { name, reason } => (
+                    "flatten_induc",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("name", string(name.ir_string())),
+                            ("reason", string(reason)),
+                        ],
+                    ),
+                ),
+                F::Instantiate { name, reason } => (
+                    "instantiate",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("name", string(name.ir_string())),
+                            ("reason", string(reason)),
+                        ],
+                    ),
+                ),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("release_obj_def")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
+        }
+    }
+}
+
+pub(in crate::json_output) fn project_expand_range(
+    result: &crate::execute::execute_by_stmt::ExecExpandRangeStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::{
+        ExecExpandRangeStmtFailed as F, ExecExpandRangeStmtResult as R,
+    };
+    match result {
+        R::Success(s) => object_for(
+            runtime,
+            vec![
+                ("statement_result", statement_result_value(true)),
+                ("kind", string("expand_range")),
+                (
+                    "values",
+                    JsonValue::Array(
+                        s.values
+                            .iter()
+                            .map(|value| string(value.readable_string()))
+                            .collect(),
+                    ),
+                ),
+                ("membership", project_verify_fact(&s.membership, runtime)),
+                ("stored", project_store_and_infer(&s.stored, runtime)),
+            ],
+        ),
+        R::Failed(failure) => {
+            let (phase, details) = match failure {
+                F::Domain(message) => ("domain", string(message)),
+                F::Membership(membership) => {
+                    ("membership", project_verify_fact(membership, runtime))
+                }
+                F::Store(message) => ("store", string(message)),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("expand_range")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
+        }
+    }
+}
+
+fn project_release_zorn_lemma(
+    result: &crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::{
+        ExecReleaseZornLemmaStmtFailed as F, ExecReleaseZornLemmaStmtResult as R,
+    };
+    match result {
+        R::Success(s) => object_for(
+            runtime,
+            vec![
+                ("statement_result", statement_result_value(true)),
+                ("kind", string("release_zorn_lemma")),
+                ("set_wd", project_verify_obj_wd(&s.set_wd, runtime)),
+                (
+                    "proof_steps",
+                    JsonValue::Array(
+                        s.proof_steps
+                            .iter()
+                            .map(|step| project_stmt_detailed(step, runtime))
+                            .collect(),
+                    ),
+                ),
+                ("obligations", project_verify_facts(&s.obligations, runtime)),
+                ("stored", project_store_and_infer(&s.stored, runtime)),
+            ],
+        ),
+        R::Failed(failure) => {
+            let (phase, details) = match failure {
+                F::SetWd(wd) => ("set_wd", project_verify_obj_wd(wd, runtime)),
+                F::PropInterface(message) => ("prop_interface", string(message)),
+                F::ProofBody(body) => (
+                    "proof_body",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("step_index", JsonValue::Number(body.step_index as f64)),
+                            ("result", project_stmt_detailed(&body.result, runtime)),
+                        ],
+                    ),
+                ),
+                F::Obligation { index, result } => (
+                    "obligation",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("index", JsonValue::Number(*index as f64)),
+                            ("result", project_verify_fact(result, runtime)),
+                        ],
+                    ),
+                ),
+                F::Store(message) => ("store", string(message)),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("release_zorn_lemma")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
+        }
+    }
+}
+
+fn project_release_axiom_of_choice(
+    result: &crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::{
+        ExecReleaseAxiomOfChoiceStmtFailed as F, ExecReleaseAxiomOfChoiceStmtResult as R,
+    };
+    match result {
+        R::Success(s) => object_for(
+            runtime,
+            vec![
+                ("statement_result", statement_result_value(true)),
+                ("kind", string("release_axiom_of_choice")),
+                ("family_wd", project_verify_obj_wd(&s.family_wd, runtime)),
+                (
+                    "proof_steps",
+                    JsonValue::Array(
+                        s.proof_steps
+                            .iter()
+                            .map(|step| project_stmt_detailed(step, runtime))
+                            .collect(),
+                    ),
+                ),
+                ("obligations", project_verify_facts(&s.obligations, runtime)),
+                ("stored", project_store_and_infer(&s.stored, runtime)),
+            ],
+        ),
+        R::Failed(failure) => {
+            let (phase, details) = match failure {
+                F::FamilyWd(wd) => ("family_wd", project_verify_obj_wd(wd, runtime)),
+                F::ProofBody(body) => (
+                    "proof_body",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("step_index", JsonValue::Number(body.step_index as f64)),
+                            ("result", project_stmt_detailed(&body.result, runtime)),
+                        ],
+                    ),
+                ),
+                F::Obligation { index, result } => (
+                    "obligation",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("index", JsonValue::Number(*index as f64)),
+                            ("result", project_verify_fact(result, runtime)),
+                        ],
+                    ),
+                ),
+                F::Store(message) => ("store", string(message)),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("release_axiom_of_choice")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
+        }
+    }
+}
+
+fn project_release_regularity_axiom(
+    result: &crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::{
+        ExecReleaseRegularityAxiomStmtFailed as F, ExecReleaseRegularityAxiomStmtResult as R,
+    };
+    match result {
+        R::Success(s) => object_for(
+            runtime,
+            vec![
+                ("statement_result", statement_result_value(true)),
+                ("kind", string("release_regularity_axiom")),
+                ("set_wd", project_verify_obj_wd(&s.set_wd, runtime)),
+                ("nonempty", project_verify_fact(&s.nonempty, runtime)),
+                ("stored", project_store_and_infer(&s.stored, runtime)),
+            ],
+        ),
+        R::Failed(failure) => {
+            let (phase, details) = match failure {
+                F::SetWd(wd) => ("set_wd", project_verify_obj_wd(wd, runtime)),
+                F::Nonempty(fact) => ("nonempty", project_verify_fact(fact, runtime)),
+                F::Store(message) => ("store", string(message)),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("statement_result", statement_result_value(false)),
+                    ("kind", string("release_regularity_axiom")),
+                    ("phase", string(phase)),
+                    ("failure", details),
+                ],
+            )
+        }
+    }
 }
 
 fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> JsonValue {
@@ -1856,26 +2228,6 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
             ),
         },
     }
-}
-
-fn project_success_failed_shell(
-    kind: &str,
-    success: bool,
-    statement: Option<String>,
-    store: Option<JsonValue>,
-    runtime: &Runtime,
-) -> JsonValue {
-    let mut entries = vec![
-        ("statement_result", statement_result_value(success)),
-        ("kind", string(kind)),
-    ];
-    if let Some(stmt) = statement {
-        entries.push(("statement", string(stmt)));
-    }
-    if let Some(store) = store {
-        entries.push(("store_and_infer", store));
-    }
-    object_for(runtime, entries)
 }
 
 #[allow(dead_code)]

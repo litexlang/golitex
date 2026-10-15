@@ -23,6 +23,20 @@ pub fn localize_key(english_key: &str, lang: OutputLanguage) -> String {
 
 fn chinese_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "集合相等证明",
+        "introduced_parameter" => "引入参数",
+        "pointwise_equality" => "逐点相等证明",
+        "binder_introduction" => "绑定参数引入",
+        "defined_params" => "已定义参数",
+        "assumed_dom_facts" => "假设的定义域事实",
+        "assumed_body_facts" => "假设的主体事实",
+        "coverage_check" => "覆盖性检查",
+        "case_return_checks" => "分支返回检查",
+        "body_well_defined" => "函数体良定性",
+        "body_in_ret_set" => "返回集合成员证明",
+        "define_fn" => "函数定义",
+        "membership_store" => "成员关系存储",
+        "case_defining_stores" => "分支定义存储",
         "artifact" => "产物",
         "format" => "格式",
         "output_path" => "输出路径",
@@ -168,6 +182,20 @@ fn chinese_key(english_key: &str) -> &str {
 
 fn chinesetraditional_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "集合相等證明",
+        "introduced_parameter" => "引入參數",
+        "pointwise_equality" => "逐點相等證明",
+        "binder_introduction" => "綁定參數引入",
+        "defined_params" => "已定義參數",
+        "assumed_dom_facts" => "假設的定義域事實",
+        "assumed_body_facts" => "假設的主體事實",
+        "coverage_check" => "覆蓋性檢查",
+        "case_return_checks" => "分支返回檢查",
+        "body_well_defined" => "函數體良定性",
+        "body_in_ret_set" => "返回集合成員證明",
+        "define_fn" => "函數定義",
+        "membership_store" => "成員關係儲存",
+        "case_defining_stores" => "分支定義儲存",
         "artifact" => "產物",
         "format" => "格式",
         "output_path" => "輸出路徑",
@@ -308,6 +336,19 @@ fn chinesetraditional_key(english_key: &str) -> &str {
 
 fn french_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "égalité_ensembles",
+        "introduced_parameter" => "paramètre_introduit",
+        "pointwise_equality" => "égalité_point_par_point",
+        "binder_introduction" => "introduction_paramètres_liés",
+        "defined_params" => "paramètres_définis",
+        "assumed_dom_facts" => "faits_domaine_supposés",
+        "coverage_check" => "vérification_couverture",
+        "case_return_checks" => "vérifications_retour_cas",
+        "body_well_defined" => "bonne_définition_corps",
+        "body_in_ret_set" => "appartenance_ensemble_retour",
+        "define_fn" => "définition_fonction",
+        "membership_store" => "appartenance_stockée",
+        "case_defining_stores" => "définitions_cas_stockées",
         "artifact" => "artefact",
         "format" => "format",
         "output_path" => "chemin_sortie",
@@ -448,6 +489,19 @@ fn french_key(english_key: &str) -> &str {
 
 fn russian_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "равенство_множеств",
+        "introduced_parameter" => "введённый_параметр",
+        "pointwise_equality" => "поточечное_равенство",
+        "binder_introduction" => "введение_связанных_параметров",
+        "defined_params" => "определённые_параметры",
+        "assumed_dom_facts" => "предположенные_условия_области",
+        "coverage_check" => "проверка_полноты_случаев",
+        "case_return_checks" => "проверки_возвратов_ветвей",
+        "body_well_defined" => "корректность_тела",
+        "body_in_ret_set" => "принадлежность_множеству_возврата",
+        "define_fn" => "определение_функции",
+        "membership_store" => "сохранённая_принадлежность",
+        "case_defining_stores" => "сохранённые_определения_ветвей",
         "artifact" => "артефакт",
         "format" => "формат",
         "output_path" => "путь_вывода",
@@ -588,6 +642,19 @@ fn russian_key(english_key: &str) -> &str {
 
 fn spanish_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "igualdad_conjuntos",
+        "introduced_parameter" => "parámetro_introducido",
+        "pointwise_equality" => "igualdad_punto_a_punto",
+        "binder_introduction" => "introducción_parámetros_ligados",
+        "defined_params" => "parámetros_definidos",
+        "assumed_dom_facts" => "hechos_dominio_asumidos",
+        "coverage_check" => "verificación_cobertura",
+        "case_return_checks" => "verificaciones_retorno_casos",
+        "body_well_defined" => "buena_definición_cuerpo",
+        "body_in_ret_set" => "pertenencia_conjunto_retorno",
+        "define_fn" => "definición_función",
+        "membership_store" => "pertenencia_almacenada",
+        "case_defining_stores" => "definiciones_casos_almacenadas",
         "artifact" => "artefacto",
         "format" => "formato",
         "output_path" => "ruta_salida",
@@ -728,6 +795,19 @@ fn spanish_key(english_key: &str) -> &str {
 
 fn arabic_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "مساواة_المجموعات",
+        "introduced_parameter" => "المعامل_المقدّم",
+        "pointwise_equality" => "المساواة_النقطية",
+        "binder_introduction" => "تقديم_المعاملات_المقيدة",
+        "defined_params" => "المعاملات_المعرّفة",
+        "assumed_dom_facts" => "حقائق_المجال_المفترضة",
+        "coverage_check" => "فحص_التغطية",
+        "case_return_checks" => "فحوص_إرجاع_الفروع",
+        "body_well_defined" => "حسن_تعريف_الجسم",
+        "body_in_ret_set" => "الانتماء_إلى_مجموعة_الإرجاع",
+        "define_fn" => "تعريف_الدالة",
+        "membership_store" => "الانتماء_المخزن",
+        "case_defining_stores" => "تعريفات_الفروع_المخزنة",
         "artifact" => "منتج",
         "format" => "تنسيق",
         "output_path" => "مسار_الإخراج",
@@ -868,6 +948,19 @@ fn arabic_key(english_key: &str) -> &str {
 
 fn japanese_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "集合の等価性",
+        "introduced_parameter" => "導入されたパラメータ",
+        "pointwise_equality" => "各点での等価性",
+        "binder_introduction" => "束縛パラメータの導入",
+        "defined_params" => "定義されたパラメータ",
+        "assumed_dom_facts" => "仮定された定義域の事実",
+        "coverage_check" => "網羅性の検証",
+        "case_return_checks" => "分岐の戻り値検証",
+        "body_well_defined" => "本体の定義の適切性",
+        "body_in_ret_set" => "戻り値集合への所属",
+        "define_fn" => "関数の定義",
+        "membership_store" => "格納された所属関係",
+        "case_defining_stores" => "格納された分岐定義",
         "artifact" => "成果物",
         "format" => "フォーマット",
         "output_path" => "出力パス",
@@ -1008,6 +1101,19 @@ fn japanese_key(english_key: &str) -> &str {
 
 fn korean_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "집합_동등성",
+        "introduced_parameter" => "도입된_매개변수",
+        "pointwise_equality" => "점별_동등성",
+        "binder_introduction" => "바인딩된_매개변수_도입",
+        "defined_params" => "정의된_매개변수",
+        "assumed_dom_facts" => "가정된_정의역_사실",
+        "coverage_check" => "포괄성_검사",
+        "case_return_checks" => "분기_반환_검사",
+        "body_well_defined" => "본문_정의의_타당성",
+        "body_in_ret_set" => "반환_집합_소속",
+        "define_fn" => "함수_정의",
+        "membership_store" => "저장된_소속_관계",
+        "case_defining_stores" => "저장된_분기_정의",
         "artifact" => "산출물",
         "format" => "포맷",
         "output_path" => "출력_경로",
@@ -1150,6 +1256,19 @@ fn korean_key(english_key: &str) -> &str {
 
 fn vietnamese_key(english_key: &str) -> &str {
     match english_key {
+        "set_equality" => "đẳng_thức_tập_hợp",
+        "introduced_parameter" => "tham_số_được_đưa_vào",
+        "pointwise_equality" => "đẳng_thức_từng_điểm",
+        "binder_introduction" => "đưa_vào_tham_số_bị_ràng_buộc",
+        "defined_params" => "tham_số_đã_định_nghĩa",
+        "assumed_dom_facts" => "sự_kiện_miền_được_giả_sử",
+        "coverage_check" => "kiểm_tra_bao_phủ",
+        "case_return_checks" => "kiểm_tra_giá_trị_trả_về_các_nhánh",
+        "body_well_defined" => "tính_xác_định_tốt_của_thân",
+        "body_in_ret_set" => "thuộc_tập_giá_trị_trả_về",
+        "define_fn" => "định_nghĩa_hàm",
+        "membership_store" => "quan_hệ_thuộc_đã_lưu",
+        "case_defining_stores" => "định_nghĩa_các_nhánh_đã_lưu",
         "artifact" => "sản_phẩm",
         "format" => "định_dạng",
         "output_path" => "đường_dẫn_đầu_ra",

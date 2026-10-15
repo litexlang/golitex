@@ -561,11 +561,21 @@ fn project_release(r: &ExecReleaseAndExpandStmtResult, runtime: &Runtime) -> Jso
         },
         ExecReleaseAndExpandStmtResult::StructDef(x) => match x {
             ExecReleaseStructDefStmtResult::Success(s) => {
-                success_plain(runtime, s.statement.readable_string(), "release_struct")
+                let (stores, infers) = flatten_store_nodes(runtime, &s.release.store_and_infer);
+                success_parts(
+                    runtime,
+                    s.statement.readable_string(),
+                    "release_struct",
+                    stores,
+                    infers,
+                )
             }
-            ExecReleaseStructDefStmtResult::Failed(_) => {
-                failed(runtime, "release struct …", "release_struct")
-            }
+            ExecReleaseStructDefStmtResult::Failed(_) => failed_with_details(
+                runtime,
+                "release struct …",
+                "release_struct",
+                super::project_detailed::project_release_struct_def(x, runtime),
+            ),
         },
         ExecReleaseAndExpandStmtResult::ObjDef(x) => match x {
             ExecReleaseObjDefStmtResult::Success(s) => {
@@ -600,34 +610,71 @@ fn project_release(r: &ExecReleaseAndExpandStmtResult, runtime: &Runtime) -> Jso
                 runtime, "release cart def …", "release_cart_def", super::project_detailed::project_release_cart_def(x, runtime),
             ),
         },
-        ExecReleaseAndExpandStmtResult::ExpandRange(x) => {
-            if x.is_failed() {
-                failed(runtime, "expand range …", "expand_range")
-            } else {
-                success_plain(runtime, "expand range …".into(), "expand_range")
+        ExecReleaseAndExpandStmtResult::ExpandRange(x) => match x {
+            crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Success(s) => {
+                let (stores, infers) = flatten_store_nodes(runtime, std::slice::from_ref(&s.stored));
+                success_parts(
+                    runtime,
+                    "expand range …".into(),
+                    "expand_range",
+                    stores,
+                    infers,
+                )
             }
-        }
-        ExecReleaseAndExpandStmtResult::ZornLemma(x) => {
-            if x.is_failed() {
+            crate::execute::execute_by_stmt::ExecExpandRangeStmtResult::Failed(_) => {
+                failed_with_details(
+                    runtime,
+                    "expand range …",
+                    "expand_range",
+                    super::project_detailed::project_expand_range(x, runtime),
+                )
+            }
+        },
+        ExecReleaseAndExpandStmtResult::ZornLemma(x) => match x {
+            crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtResult::Success(s) => {
+                let (stores, infers) = flatten_store_nodes(runtime, std::slice::from_ref(&s.stored));
+                success_parts(
+                    runtime,
+                    "release zorn …".into(),
+                    "release_zorn",
+                    stores,
+                    infers,
+                )
+            }
+            crate::execute::execute_by_stmt::ExecReleaseZornLemmaStmtResult::Failed(_) => {
                 failed(runtime, "release zorn …", "release_zorn")
-            } else {
-                success_plain(runtime, "release zorn …".into(), "release_zorn")
             }
-        }
-        ExecReleaseAndExpandStmtResult::AxiomOfChoice(x) => {
-            if x.is_failed() {
+        },
+        ExecReleaseAndExpandStmtResult::AxiomOfChoice(x) => match x {
+            crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtResult::Success(s) => {
+                let (stores, infers) = flatten_store_nodes(runtime, std::slice::from_ref(&s.stored));
+                success_parts(
+                    runtime,
+                    "release choice …".into(),
+                    "release_choice",
+                    stores,
+                    infers,
+                )
+            }
+            crate::execute::execute_by_stmt::ExecReleaseAxiomOfChoiceStmtResult::Failed(_) => {
                 failed(runtime, "release choice …", "release_choice")
-            } else {
-                success_plain(runtime, "release choice …".into(), "release_choice")
             }
-        }
-        ExecReleaseAndExpandStmtResult::RegularityAxiom(x) => {
-            if x.is_failed() {
+        },
+        ExecReleaseAndExpandStmtResult::RegularityAxiom(x) => match x {
+            crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtResult::Success(s) => {
+                let (stores, infers) = flatten_store_nodes(runtime, std::slice::from_ref(&s.stored));
+                success_parts(
+                    runtime,
+                    "release regularity …".into(),
+                    "release_regularity",
+                    stores,
+                    infers,
+                )
+            }
+            crate::execute::execute_by_stmt::ExecReleaseRegularityAxiomStmtResult::Failed(_) => {
                 failed(runtime, "release regularity …", "release_regularity")
-            } else {
-                success_plain(runtime, "release regularity …".into(), "release_regularity")
             }
-        }
+        },
     }
 }
 

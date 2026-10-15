@@ -9,6 +9,9 @@ pub(crate) use crate::execute::{ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmt
 pub(crate) use crate::execute::execute_def_thm_stmt::{ExecDefThmStmtResult, ExecDefThmStmtSuccess, ExecDefThmBodyProof};
 pub(crate) use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult, ExecByThmStmtSuccess, ResolvedTheoremCallee};
 pub(crate) use crate::execute::{ExecStmtResult, ParamTypeWellDefinedProof};
+pub(crate) use crate::execute::{
+    ExecHaveFnEqualCaseByCaseStmtSuccessResult, IntroduceFnSetClauseBindersResult,
+};
 pub(crate) use crate::execute::execute_fact_stmt::*;
 pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact::{
     VerifyForallFactProof, VerifyForallFactSuccess, VerifyKnownForallFactProof,

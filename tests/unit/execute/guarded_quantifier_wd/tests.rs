@@ -59,11 +59,34 @@ fn guarded_quantifier_wd_retains_stages_and_local_guard_evidence() {
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(ExecDefPropStmtResult::Success(s))) = &results[0] else { panic!("definition success") };
         match (&s.assumed_iff_facts[0].well_defined, iff) {
             (FactWellDefinedProof::NotForall(p), false) => {
-                assert_eq!((p.param_type_well_defined.len(), p.dom.len(), p.then.len()), (1, 1, 1));
+                assert_eq!(
+                    (
+                        p.introduced_params.param_type_well_defined.len(),
+                        p.assumed_dom_facts.len(),
+                        p.then.len()
+                    ),
+                    (1, 1, 1)
+                );
+                assert!(!p.assumed_dom_facts[0]
+                    .store_and_infer
+                    .stored_fact_ids()
+                    .is_empty());
                 assert!(!p.local_env.well_defined_objects.object_to_wd_id.is_empty());
             }
             (FactWellDefinedProof::ForallFactWithIff(p), true) => {
-                assert_eq!((p.param_type_well_defined.len(), p.dom.len(), p.then.len(), p.iff.len()), (1, 1, 1, 1));
+                assert_eq!(
+                    (
+                        p.introduced_params.param_type_well_defined.len(),
+                        p.assumed_dom_facts.len(),
+                        p.then.len(),
+                        p.iff.len()
+                    ),
+                    (1, 1, 1, 1)
+                );
+                assert!(!p.assumed_dom_facts[0]
+                    .store_and_infer
+                    .stored_fact_ids()
+                    .is_empty());
                 assert!(!p.local_env.well_defined_objects.object_to_wd_id.is_empty());
             }
             _ => panic!("independent quantified WD evidence must be retained"),

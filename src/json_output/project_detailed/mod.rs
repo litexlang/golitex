@@ -12,6 +12,7 @@ mod induction;
 mod known_special_property;
 mod known_tuple;
 mod or_builtin_gen;
+mod project_have_fn_cases;
 mod reduce_rules;
 mod register;
 mod searched;
@@ -56,4 +57,7 @@ pub(in crate::json_output) use template_failure::project_template_failure;
 
 mod log_algebra_base;
 
-pub(in crate::json_output) use stmt::{project_release_cart_def, project_release_tuple_def};
+pub(in crate::json_output) use stmt::{
+    project_expand_range, project_release_cart_def, project_release_struct_def,
+    project_release_tuple_def,
+};

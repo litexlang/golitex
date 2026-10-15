@@ -55,6 +55,11 @@ fragment using `double`, without a generated `main`. Litex verification
 establishes the source mathematics, not IEEE-754 rounding, overflow, or target
 compiler behavior.
 
+C fragments may `#include <stdlib.h>` (and similar) and call helpers such as
+`abort()`. Avoid Litex `have` / `algo` names that collide with those library
+symbols (`abort`, `exit`, `malloc`, …); the backend does not rename or reject
+them.
+
 ## v1 extractable surface (new kernel)
 
 - Constants: `have a R = 1` (numeric param types)
