@@ -94,8 +94,15 @@ cargo test --release --all-targets --locked
 cargo package --list --allow-dirty --locked --offline
 ```
 
-Run the registered real-Lean/textbook gates too before release. Cargo test names
-alone do not establish their execution. A native macOS check cannot establish
+Run the registered real-Lean gates too before release. Cargo test names
+alone do not establish their execution. Local textbook projects under `scripts/`
+are optional and are not release prerequisites. Run them only when the user
+explicitly requests textbook work or verification; their absence, failures, or
+timeouts alone are not release blockers. The combined
+`.github/scripts/predeploy_gate.py` includes those projects and must not be used
+as a mandatory release gate. See the release-scope rule in `AGENTS.md`.
+
+A native macOS check cannot establish
 Windows MSI execution or Linux runtime compatibility. Remote publication also
 needs `CRATES_IO_TOKEN`, `HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, and the
 `WEB_DEPLOY_*` secrets; local CLI authentication does not prove those secrets.

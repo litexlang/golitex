@@ -207,7 +207,16 @@ pub(super) fn project_param_type_wd(
             runtime,
             vec![
                 ("type", string("obj")),
-                ("well_defined", project_verify_obj_wd(wd, runtime)),
+                (
+                    "well_defined",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("well_defined_result", well_defined_result_value(true)),
+                            ("proof", project_obj_wd_proof(wd, runtime)),
+                        ],
+                    ),
+                ),
             ],
         ),
     }

@@ -149,9 +149,7 @@ impl LitexToLeanCompiler {
         {
             return Err(LeanCompileError::new("WD/InductionHeaderCapture", "The final integer induction header differs from its retained original introduction."));
         }
-        let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(carrier)) =
-            &introduced.param_type_well_defined[0]
-        else {
+        let ParamTypeWellDefinedProof::Obj(carrier) = &introduced.param_type_well_defined[0] else {
             return Err(LeanCompileError::unsupported(
                 "WD/InductionCarrierFormation",
             ));

@@ -299,8 +299,10 @@ fn guarded_domain_exclusion_retains_checked_forall_sources_in_ten_languages() {
                     detailed.contains("return_bound_vacuous_empty_domain"),
                     "missing vacuous return evidence: {detailed}"
                 );
+                let body_key =
+                    crate::json_output::json_keys::localize_key("body_well_defined", language);
                 assert!(
-                    detailed.contains("body_well_defined"),
+                    detailed.contains(&body_key),
                     "missing mandatory body WD: {detailed}"
                 );
             }

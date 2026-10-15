@@ -36,6 +36,8 @@ impl ExecAxiomStmtResult {
     }
 }
 
+// Call only through Runtime::exec_stmt, which enforces -strict and owns the
+// statement transaction. This branch intentionally does not repeat that check.
 pub fn exec_axiom_stmt(
     runtime: &mut Runtime,
     stmt: &AxiomStmt,

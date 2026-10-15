@@ -40,7 +40,7 @@ impl LitexToLeanCompiler {
         };
         let store = induction_parameter_store(&proof.introduced_parameter)?;
         let carrier = induction_carrier(&proof.introduced_parameter)?;
-        if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(wd)) =
+        if let ParamTypeWellDefinedProof::Obj(wd) =
             &proof.introduced_parameter.param_type_well_defined[0]
         {
             self.compile_wd(wd, &header)?;
@@ -206,7 +206,7 @@ impl LitexToLeanCompiler {
         let introduced = SourcePosition { before: 1, ..scope };
         let store = induction_parameter_store(&case.introduced_parameter)?;
         induction_carrier(&case.introduced_parameter)?;
-        if let ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(wd)) =
+        if let ParamTypeWellDefinedProof::Obj(wd) =
             &case.introduced_parameter.param_type_well_defined[0]
         {
             self.compile_wd(wd, &scope)?;
@@ -369,9 +369,7 @@ fn induction_parameter_store(
 }
 
 fn induction_carrier(intro: &IntroduceTypedParametersResult) -> Result<&Obj, LeanCompileError> {
-    let Some(ParamTypeWellDefinedProof::Obj(VerifyObjWellDefinedResult::Success(wd))) =
-        intro.param_type_well_defined.first()
-    else {
+    let Some(ParamTypeWellDefinedProof::Obj(wd)) = intro.param_type_well_defined.first() else {
         return Err(LeanCompileError::unsupported("Induction/ParameterWD"));
     };
     let obj = wd.obj();

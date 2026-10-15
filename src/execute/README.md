@@ -279,7 +279,14 @@ Leaf Success/Fail types live at the head of each statement file;
 `exec_stmt_result.rs` keeps the top-level dispatch shells plus shared
 ParamType shells:
 
-- `ParamTypeWellDefinedProof` — type-annotation WD
+- `ParamTypeWellDefinedProof` — success-only type-annotation WD; its `Obj`
+  variant contains `ObjWellDefinedProof`, never an object-check result.
+- `VerifyParamTypeWellDefinedResult` — `Success(ParamTypeWellDefinedProof)`
+  or `Failed { obj, reason }`. Parameter checking returns this result, and
+  parameter introduction retains only successful proofs. Operational errors
+  still use the outer `RuntimeResult::Err`; failed object subjects and reasons
+  remain available to statement diagnostics. JSON keeps its existing WD
+  success/failure envelopes, and Lean consumes the retained success evidence.
 - `ParamTypeFactCheckResult` — fact obligation by ParamType (`have` nonempty,
   `witness` membership, …)
 

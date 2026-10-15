@@ -8,7 +8,7 @@ pub(crate) use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResul
 pub(crate) use crate::execute::{ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult, ExecLetObjStmtResult, ExecLetObjStmtSuccessResult, IntroduceTypedParametersResult};
 pub(crate) use crate::execute::execute_def_thm_stmt::{ExecDefThmStmtResult, ExecDefThmStmtSuccess, ExecDefThmBodyProof};
 pub(crate) use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult, ExecByThmStmtSuccess, ResolvedTheoremCallee};
-pub(crate) use crate::execute::{ExecStmtResult, ParamTypeWellDefinedProof};
+pub(crate) use crate::execute::{ExecStmtResult, ParamTypeWellDefinedProof, VerifyParamTypeWellDefinedResult};
 pub(crate) use crate::execute::{
     ExecHaveFnEqualCaseByCaseStmtSuccessResult, IntroduceFnSetClauseBindersResult,
 };
@@ -39,6 +39,10 @@ pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_o
 pub(crate) use crate::launch_command::LaunchCommand;
 #[cfg(test)]
 pub(crate) use crate::launch_command::{parse_launch_command, OutputLanguage};
+#[cfg(test)]
+pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::{
+    FailToVerifyArithmeticOperatorObjWellDefinedResult, FailToVerifyObjWellDefinedByDefCommon,
+};
 #[cfg(test)]
 pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::VerifyEqualitySuccess;
 #[cfg(test)]

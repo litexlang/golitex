@@ -136,7 +136,8 @@ impl LitexToLeanCompiler {
             let carrier = Obj::StandardSet(set.clone());
             match &captured.param_type_well_defined {
                 ParamTypeWellDefinedProof::Obj(wd) => {
-                    self.compile_wd(success_object_wd(wd, &carrier)?, position)?;
+                    ensure_object(&carrier, wd)?;
+                    self.compile_wd(wd, position)?;
                 }
                 _ => return Err(LeanCompileError::unsupported("Have/CarrierWD")),
             }
