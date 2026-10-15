@@ -1,3 +1,4 @@
+use super::mapped_line::MappedLine;
 use super::symbols::{
     key_symbols_sorted_by_len_desc, unicode_alias_tokens, COLON, C_NOT_ZERO, N_POSITIVE,
     Q_NEGATIVE, Q_NOT_ZERO, Q_POSITIVE, R_NEGATIVE, R_NOT_ZERO, R_POSITIVE, UNICODE_C_NOT_ZERO,
@@ -7,6 +8,8 @@ use super::symbols::{
 };
 use super::token_block::TokenBlock;
 use crate::runtime::{CodeSource, RuntimeParseError, RuntimeResult};
+use std::ops::Range;
+use std::sync::Arc;
 
 pub struct Tokenizer;
 
@@ -16,25 +19,30 @@ impl Tokenizer {
     }
 
     pub fn tokenize(&self, code: &str, source_path: CodeSource) -> RuntimeResult<Vec<TokenBlock>> {
-        let stripped = self.strip_triple_quote_comment_blocks(code, &source_path)?;
-        let joined = self.join_line_continuations(&stripped, &source_path)?;
-        let lines: Vec<&str> = joined.lines().collect();
-        let mut index = 0;
-        self.parse_level(&lines, &mut index, 0, &source_path)
+        let result = (|| {
+            let stripped = self.strip_triple_quote_comment_blocks(code, &source_path)?;
+            let lines = self.join_line_continuations(&stripped, code, &source_path)?;
+            let mut index = 0;
+            self.parse_level(&lines, &mut index, 0, &source_path, &Arc::from(code))
+        })();
+        result.map_err(|error: crate::runtime::RuntimeError| error.with_source_context(code))
     }
 
     // Skip ASCII `"..."` inline asides. They are not tokens and must not cross lines.
     fn strip_inline_asides(
         &self,
-        line: &str,
+        line: &MappedLine,
         line_no: usize,
         source_path: &CodeSource,
-    ) -> RuntimeResult<String> {
-        let mut out = String::with_capacity(line.len());
+        source: &str,
+    ) -> RuntimeResult<MappedLine> {
+        let mut out = String::with_capacity(line.text.len());
+        let mut offsets = Vec::new();
         let mut i = 0;
-        let bytes = line.as_bytes();
+        let bytes = line.text.as_bytes();
         while i < bytes.len() {
             if bytes[i] == b'"' {
+                let quote_start = i;
                 i += 1;
                 let mut closed = false;
                 while i < bytes.len() {
@@ -43,7 +51,7 @@ impl Tokenizer {
                         closed = true;
                         break;
                     }
-                    let ch = line[i..].chars().next().unwrap_or('\0');
+                    let ch = line.text[i..].chars().next().unwrap_or('\0');
                     i += ch.len_utf8();
                 }
                 if !closed {
@@ -52,21 +60,24 @@ impl Tokenizer {
                         line_no,
                         source_path.clone(),
                     )
+                    .with_source(source, line.offsets[quote_start])
                     .into());
                 }
                 continue;
             }
-            let ch = line[i..].chars().next().unwrap_or('\0');
+            let ch = line.text[i..].chars().next().unwrap_or('\0');
             out.push(ch);
+            offsets.extend_from_slice(&line.offsets[i..i + ch.len_utf8()]);
             i += ch.len_utf8();
         }
-        Ok(out)
+        Ok(MappedLine::new(out, offsets))
     }
 
-    fn tokenize_line(&self, line: &str) -> Vec<String> {
-        let line = line.trim_end();
+    fn tokenize_line(&self, mapped: &MappedLine) -> (Vec<String>, Vec<Range<usize>>) {
+        let line = mapped.text.trim_end();
         let symbols = key_symbols_sorted_by_len_desc();
         let mut tokens = Vec::with_capacity(line.len());
+        let mut spans = Vec::new();
         let mut i = 0;
         let bytes = line.as_bytes();
 
@@ -100,6 +111,7 @@ impl Tokenizer {
                     && Self::compact_set_suffix_has_right_boundary(sym, line, i + sym_len)
                 {
                     tokens.push(sym.to_string());
+                    spans.push(mapped.offsets[i]..mapped.offsets[i + sym_len - 1] + 1);
                     i += sym_len;
                     matched = true;
                     break;
@@ -121,6 +133,7 @@ impl Tokenizer {
                     i += next_ch.len_utf8();
                 }
                 tokens.push(line[start..i].to_string());
+                spans.push(mapped.offsets[start]..mapped.offsets[i - 1] + 1);
                 continue;
             }
 
@@ -137,23 +150,28 @@ impl Tokenizer {
                     }
                 }
                 tokens.push(line[start..i].to_string());
+                spans.push(mapped.offsets[start]..mapped.offsets[i - 1] + 1);
                 continue;
             }
 
             let ch = line[i..].chars().next().unwrap_or('\0');
             tokens.push(ch.to_string());
+            spans.push(mapped.offsets[i]..mapped.offsets[i + ch.len_utf8() - 1] + 1);
             i += ch.len_utf8();
         }
 
         let mut canonical_tokens = Vec::with_capacity(tokens.len());
-        for token in tokens {
+        let mut canonical_spans = Vec::with_capacity(spans.len());
+        for (token, span) in tokens.into_iter().zip(spans) {
             if let Some(alias_tokens) = unicode_alias_tokens(token.as_str()) {
                 canonical_tokens.extend(alias_tokens.iter().map(|token| (*token).to_string()));
+                canonical_spans.extend(alias_tokens.iter().map(|_| span.clone()));
             } else {
                 canonical_tokens.push(token);
+                canonical_spans.push(span);
             }
         }
-        canonical_tokens
+        (canonical_tokens, canonical_spans)
     }
 
     // A line that is exactly `"""` after trim opens/closes a block comment.
@@ -208,20 +226,40 @@ impl Tokenizer {
     fn join_line_continuations(
         &self,
         source_code: &str,
+        original_code: &str,
         source_path: &CodeSource,
-    ) -> RuntimeResult<String> {
-        let mut lines: Vec<String> = source_code.lines().map(|line| line.to_string()).collect();
+    ) -> RuntimeResult<Vec<MappedLine>> {
+        let mut start = 0;
+        let starts: Vec<usize> = original_code
+            .split_inclusive('\n')
+            .map(|line| {
+                let offset = start;
+                start += line.len();
+                offset
+            })
+            .collect();
+        let mut lines: Vec<MappedLine> = source_code
+            .lines()
+            .enumerate()
+            .map(|(index, line)| {
+                MappedLine::new(
+                    line.to_string(),
+                    (starts[index]..starts[index] + line.len()).collect(),
+                )
+            })
+            .collect();
         let mut i = 0;
         while i < lines.len() {
-            if !Self::line_ends_with_line_continuation(&lines[i]) {
+            if !Self::line_ends_with_line_continuation(&lines[i].text) {
                 i += 1;
                 continue;
             }
             let open_line = i + 1;
             let start = i;
-            let mut joined = lines[i].clone();
-            while Self::line_ends_with_line_continuation(&joined) {
-                joined = Self::strip_trailing_line_continuation(&joined);
+            let mut joined = MappedLine::new(lines[i].text.clone(), lines[i].offsets.clone());
+            while Self::line_ends_with_line_continuation(&joined.text) {
+                joined.text = Self::strip_trailing_line_continuation(&joined.text);
+                joined.offsets.truncate(joined.text.len());
                 i += 1;
                 if i >= lines.len() {
                     return Err(RuntimeParseError::new(
@@ -231,27 +269,30 @@ impl Tokenizer {
                     )
                     .into());
                 }
-                joined.push_str(&lines[i]);
-                lines[i] = String::new();
+                joined.text.push_str(&lines[i].text);
+                joined.offsets.extend_from_slice(&lines[i].offsets);
+                lines[i] = MappedLine::new(String::new(), Vec::new());
             }
             lines[start] = joined;
             i = start + 1;
         }
-        Ok(lines.join("\n"))
+        Ok(lines)
     }
 
     fn parse_level(
         &self,
-        lines: &[&str],
+        lines: &[MappedLine],
         i: &mut usize,
         base_indent: usize,
         source_path: &CodeSource,
+        source: &Arc<str>,
     ) -> RuntimeResult<Vec<TokenBlock>> {
         let mut items = Vec::new();
         let mut body_indent = None;
 
         while *i < lines.len() {
-            let raw = lines[*i];
+            let mapped = &lines[*i];
+            let raw = mapped.text.as_str();
             let line_no = *i + 1;
             let indent = Self::indent_level(raw);
             let content = raw.trim();
@@ -276,25 +317,29 @@ impl Tokenizer {
                     line_no,
                     source_path.clone(),
                 )
+                .with_source(source, mapped.offsets[raw.len() - raw.trim_start().len()])
                 .into());
             }
 
             *i += 1;
             // Hash comments may contain arbitrary quotes. Keep hashes inside
             // actual inline asides, then validate only the remaining code.
-            let content = Self::code_prefix_before_hash_comment(content);
+            let content = Self::code_prefix_before_hash_comment(raw);
+            let content = MappedLine::new(
+                content.to_string(),
+                mapped.offsets[..content.len()].to_vec(),
+            );
             // Strip `"..."` asides before structure checks and tokenization.
-            let content = self.strip_inline_asides(content, line_no, source_path)?;
-            let content = content.trim();
-            if content.is_empty() {
+            let content = self.strip_inline_asides(&content, line_no, source_path, source)?;
+            if content.text.trim().is_empty() {
                 continue;
             }
 
-            let header_tokens = self.tokenize_line(content);
+            let (header_tokens, token_spans) = self.tokenize_line(&content);
             if header_tokens.is_empty() {
                 continue;
             }
-            for token in &header_tokens {
+            for (token, span) in header_tokens.iter().zip(&token_spans) {
                 if token.starts_with("__") {
                     return Err(RuntimeParseError::new(
                         format!(
@@ -304,11 +349,12 @@ impl Tokenizer {
                         line_no,
                         source_path.clone(),
                     )
+                    .with_source(source, span.start)
                     .into());
                 }
             }
 
-            if Self::ends_with_colon(content) {
+            let body = if Self::ends_with_colon(&content.text) {
                 if *i >= lines.len() {
                     return Err(RuntimeParseError::new(
                         "block header missing body",
@@ -317,7 +363,7 @@ impl Tokenizer {
                     )
                     .into());
                 }
-                let next_indent = Self::indent_level(lines[*i]);
+                let next_indent = Self::indent_level(&lines[*i].text);
                 if next_indent <= indent {
                     return Err(RuntimeParseError::new(
                         "expected indent",
@@ -326,7 +372,7 @@ impl Tokenizer {
                     )
                     .into());
                 }
-                let body = self.parse_level(lines, i, next_indent, source_path)?;
+                let body = self.parse_level(lines, i, next_indent, source_path, source)?;
                 if body.is_empty() {
                     return Err(RuntimeParseError::new(
                         "block header requires a nonempty body",
@@ -335,20 +381,14 @@ impl Tokenizer {
                     )
                     .into());
                 }
-                items.push(TokenBlock::new(
-                    header_tokens,
-                    body,
-                    line_no,
-                    source_path.clone(),
-                ));
+                body
             } else {
-                items.push(TokenBlock::new(
-                    header_tokens,
-                    vec![],
-                    line_no,
-                    source_path.clone(),
-                ));
-            }
+                Vec::new()
+            };
+            let mut block = TokenBlock::new(header_tokens, body, line_no, source_path.clone());
+            block.source = Some(source.clone());
+            block.token_spans = token_spans;
+            items.push(block);
 
             if let Some(expected) = body_indent {
                 if indent != expected {

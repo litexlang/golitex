@@ -11,10 +11,15 @@ fn node(rt: &Runtime, phase: &str, index: Option<usize>, failure: JsonValue) -> 
     if let Some(index) = index {
         entries.push(("index", JsonValue::Number(index as f64)));
     }
-    object_for(rt, entries)
+    crate::json_output::helper::inherit_failure_field(rt, object_for(rt, entries), "failure")
 }
 fn message(rt: &Runtime, text: &str) -> JsonValue {
-    object_for(rt, vec![("message", string(text))])
+    crate::json_output::helper::with_failure_diagnostic(
+        rt,
+        object_for(rt, vec![("message", string(text))]),
+        crate::json_output::failure_kind::FailureKind::WellDefined,
+        vec![],
+    )
 }
 
 pub(super) fn project_fact_wd_failure(
@@ -76,7 +81,12 @@ pub(super) fn project_forall_wd_failure(
     use crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::*;
     match failure {
         ParamType(p) => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
-        AutoOpenStructLayer(_) => message(rt, "failed to open struct carrier"),
+        AutoOpenStructLayer(failed) => crate::json_output::helper::with_failure_diagnostic(
+            rt,
+            super::definition_failure::project_struct_layer_failure(failed, rt),
+            crate::json_output::failure_kind::FailureKind::WellDefined,
+            vec![],
+        ),
         DomFact {
             failed_index,
             failed_dom,
@@ -107,7 +117,7 @@ pub(super) fn project_atomic_wd_failure(
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
         FailToVerifyAtomicFactWellDefinedResult, PredicateSignatureWellDefinedFailure,
     };
-    match failure {
+    let projected = match failure {
         FailToVerifyAtomicFactWellDefinedResult::Argument(reason) => {
             project_obj_wd_failure(reason, rt)
         }
@@ -179,11 +189,21 @@ pub(super) fn project_atomic_wd_failure(
             }
             object_for(rt, fields)
         }
+    };
+    let mut details = Vec::new();
+    if let FailToVerifyAtomicFactWellDefinedResult::Domain { requirement, .. } = failure {
+        details.push(("obligation", string(requirement.readable_string())));
     }
+    crate::json_output::helper::with_failure_diagnostic(
+        rt,
+        projected,
+        crate::json_output::failure_kind::FailureKind::WellDefined,
+        details,
+    )
 }
 
 fn common(f: &FailToVerifyObjWellDefinedByDefCommon, rt: &Runtime) -> JsonValue {
-    match f {
+    let projected = match f {
         FailToVerifyObjWellDefinedByDefCommon::Child { obj, child } => object_for(
             rt,
             vec![
@@ -192,23 +212,43 @@ fn common(f: &FailToVerifyObjWellDefinedByDefCommon, rt: &Runtime) -> JsonValue 
                 ("failure", project_obj_wd_failure(child, rt)),
             ],
         ),
-        FailToVerifyObjWellDefinedByDefCommon::Requirement { obj, result } => object_for(
-            rt,
-            vec![
-                ("phase", string("requirement")),
-                ("obj", string(obj.readable_string())),
-                ("result", project_verify_fact(result, rt)),
-            ],
-        ),
+        FailToVerifyObjWellDefinedByDefCommon::Requirement { obj, result } => {
+            let projected = object_for(
+                rt,
+                vec![
+                    ("phase", string("requirement")),
+                    ("obj", string(obj.readable_string())),
+                    ("result", project_verify_fact(result, rt)),
+                ],
+            );
+            let projected =
+                crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+            let mut details = vec![("expression", string(obj.readable_string()))];
+            if !result.is_wd_failed() {
+                details.push((
+                    "obligation",
+                    string(crate::json_output::project_normal::verify_goal_display(
+                        result,
+                    )),
+                ));
+            }
+            return crate::json_output::helper::with_failure_diagnostic(
+                rt,
+                projected,
+                crate::json_output::failure_kind::FailureKind::WellDefined,
+                details,
+            );
+        }
         FailToVerifyObjWellDefinedByDefCommon::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 pub(super) fn project_obj_wd_failure(
     f: &FailToVerifyObjWellDefinedResult,
     rt: &Runtime,
 ) -> JsonValue {
-    match f {
+    let projected = match f {
         FailToVerifyObjWellDefinedResult::Identifier(p) => node(
             rt,
             "Identifier",
@@ -308,7 +348,13 @@ pub(super) fn project_obj_wd_failure(
         FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(p) => {
             node(rt, "InstantiatedTemplateObj", None, common(&p.0, rt))
         }
-    }
+    };
+    crate::json_output::helper::with_failure_diagnostic(
+        rt,
+        projected,
+        crate::json_output::failure_kind::FailureKind::WellDefined,
+        vec![],
+    )
 }
 
 fn project_fail_to_verify_literal_obj_well_defined_result(
@@ -681,112 +727,122 @@ fn project_leaf_fail_to_verify_fn_obj_obj_well_defined(
     p: &FailToVerifyFnObjObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyFnObjObjWellDefined::NotInFunctionSet => {
             message(rt, "no matching function signature")
         }
         FailToVerifyFnObjObjWellDefined::Domain(p) => common(p, rt),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_index_union_obj_well_defined(
     p: &FailToVerifyIndexUnionObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyIndexUnionObjWellDefined::NotInFunctionSet => {
             message(rt, "no matching function signature")
         }
         FailToVerifyIndexUnionObjWellDefined::Domain(p) => common(p, rt),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_index_intersect_obj_well_defined(
     p: &FailToVerifyIndexIntersectObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyIndexIntersectObjWellDefined::NotInFunctionSet => {
             message(rt, "no matching function signature")
         }
         FailToVerifyIndexIntersectObjWellDefined::Domain(p) => common(p, rt),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_index_cart_obj_well_defined(
     p: &FailToVerifyIndexCartObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyIndexCartObjWellDefined::NotInFunctionSet => {
             message(rt, "no matching function signature")
         }
         FailToVerifyIndexCartObjWellDefined::Domain(p) => common(p, rt),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_fn_range_obj_well_defined(
     p: &FailToVerifyFnRangeObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyFnRangeObjWellDefined::NotInFunctionSet => {
             message(rt, "no matching function signature")
         }
         FailToVerifyFnRangeObjWellDefined::Domain(p) => common(p, rt),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_standard_set_obj_well_defined(
     p: &FailToVerifyStandardSetObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyStandardSetObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_number_obj_well_defined(
     p: &FailToVerifyNumberObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyNumberObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_imaginary_unit_obj_well_defined(
     p: &FailToVerifyImaginaryUnitObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyImaginaryUnitObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_euler_number_obj_well_defined(
     p: &FailToVerifyEulerNumberObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyEulerNumberObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_pi_obj_well_defined(
     p: &FailToVerifyPiObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyPiObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_identifier_obj_well_defined(
     p: &FailToVerifyIdentifierObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyIdentifierObjWellDefined::Undefined { obj } => object_for(
             rt,
             vec![
@@ -795,13 +851,14 @@ fn project_leaf_fail_to_verify_identifier_obj_well_defined(
             ],
         ),
         FailToVerifyIdentifierObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 fn project_leaf_fail_to_verify_set_builder_obj_well_defined(
     p: &FailToVerifySetBuilderObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifySetBuilderObjWellDefined::ParamSet { obj, failed } => object_for(
             rt,
             vec![
@@ -821,14 +878,15 @@ fn project_leaf_fail_to_verify_set_builder_obj_well_defined(
             project_fact_wd_failure(failed, rt),
         ),
         FailToVerifySetBuilderObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_fn_set_obj_well_defined(
     p: &FailToVerifyFnSetObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder { failed_index } => {
             object_for(
                 rt,
@@ -873,14 +931,15 @@ fn project_leaf_fail_to_verify_fn_set_obj_well_defined(
             ],
         ),
         FailToVerifyFnSetObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_leaf_fail_to_verify_anonymous_fn_obj_well_defined(
     p: &FailToVerifyAnonymousFnObjWellDefined,
     rt: &Runtime,
 ) -> JsonValue {
-    match p {
+    let projected = match p {
         FailToVerifyAnonymousFnObjWellDefined::ParamTypeCitesEarlierBinder { failed_index } => {
             object_for(
                 rt,
@@ -941,7 +1000,8 @@ fn project_leaf_fail_to_verify_anonymous_fn_obj_well_defined(
             project_verify_fact(failed, rt),
         ),
         FailToVerifyAnonymousFnObjWellDefined::Others(text) => message(rt, text),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(rt, projected, "failure")
 }
 
 fn project_preimage_construction_failure(
@@ -966,4 +1026,16 @@ fn project_preimage_construction_failure(
             )],
         ),
     }
+}
+
+pub(super) fn project_or_wd_failure(
+    failure: &crate::execute::execute_fact_stmt::FailToVerifyOrFactWellDefinedResult,
+    rt: &Runtime,
+) -> JsonValue {
+    node(
+        rt,
+        "branch",
+        Some(failure.failed_index),
+        project_fact_wd_failure(&failure.failed_branch, rt),
+    )
 }

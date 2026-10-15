@@ -7,12 +7,14 @@
 
 pub mod emit;
 pub mod explain;
+mod failure_kind;
 pub mod helper;
 pub mod json_keys;
 pub mod project_compact;
 pub mod project_detailed;
 pub mod project_normal;
 mod project_stmt_catalog;
+mod source;
 
 #[cfg(test)]
 mod acceptance_tests;
@@ -43,3 +45,10 @@ pub use project_normal::{project_run_normal, project_stmt_normal, OutputDetail};
 use crate::knowledge_base::JsonValue;
 
 pub type OutputJson = JsonValue;
+
+#[cfg(test)]
+#[path = "../../tests/unit/json_output/wd_failure_diagnostics/tests.rs"]
+mod wd_failure_diagnostics_tests;
+
+#[cfg(test)]
+mod error_context_tests;

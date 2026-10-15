@@ -101,6 +101,11 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
 Parse dispatch: `src/parse/README.md`.
 
+[Definition failure diagnostics](by/by_def_failure_diagnostics.lit) preserves
+the positive user/builtin definition routes. Its paired JSON and CLI tests
+execute rejected requirements, unavailable definitions, and continuation after
+a soft failure; nested proof diagnostics also retain statement locations.
+
 `release zorn_lemma` is wired (see `release_and_expand/release_zorn_lemma.lit`):
 named upper-bound / maximality props are checked by IR alignment against the
 exact forall shapes; obligations are fact-only in the body (trust them outside
@@ -189,3 +194,9 @@ and the actual nonempty failure stage and child. Normal and execution verdicts
 are unchanged; local_env remains omitted. The source-owned note (historical task record; retired)
 records the strict file gate, focused tests and deliberate exclusion of the
 legacy wrong-witness function-space shortcut.
+
+`proof_block/wd_failure_diagnostics.lit` demonstrates guarded expressions whose
+unguarded forms now expose the actual WD obligation. Its Rust companion
+`wd_failure_diagnostics_tests` checks rejected inputs across Normal/Detailed,
+including membership and nonempty boundaries, nested proof steps, and Session
+rollback.

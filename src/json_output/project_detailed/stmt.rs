@@ -39,7 +39,7 @@ use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
 pub fn project_stmt_detailed(result: &ExecStmtResult, runtime: &Runtime) -> JsonValue {
-    match result {
+    let projected = match result {
         ExecStmtResult::Fact(fact) => super::entry::project_fact_only(fact, runtime),
         ExecStmtResult::Definition(def) => project_definition(def, runtime),
         ExecStmtResult::Witness(w) => project_witness(w, runtime),
@@ -49,7 +49,30 @@ pub fn project_stmt_detailed(result: &ExecStmtResult, runtime: &Runtime) -> Json
         ExecStmtResult::ReleaseAndExpand(r) => project_release_and_expand(r, runtime),
         ExecStmtResult::ProofBlock(p) => project_proof_block(p, runtime),
         ExecStmtResult::Command(c) => project_command(c, runtime),
-    }
+    };
+    let projected =
+        crate::json_output::helper::inherit_failure_field(runtime, projected, "failure");
+    let projected =
+        crate::json_output::helper::inherit_failure_field(runtime, projected, "why_failed");
+    let projected = crate::json_output::helper::inherit_failure_field(runtime, projected, "verify");
+    let projected = crate::json_output::helper::inherit_failure_field(
+        runtime,
+        projected,
+        "anonymous_fn_well_defined",
+    );
+    let projected = crate::json_output::helper::inherit_failure_field(
+        runtime,
+        projected,
+        "fn_set_well_defined",
+    );
+    let projected =
+        crate::json_output::helper::inherit_failure_field(runtime, projected, "value_well_defined");
+    let projected = crate::json_output::helper::inherit_failure_field(
+        runtime,
+        projected,
+        "source_well_defined",
+    );
+    crate::json_output::helper::inherit_failure_field(runtime, projected, "well_defined")
 }
 
 fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> JsonValue {
@@ -473,11 +496,15 @@ fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> Js
                 ),
             ],
         ),
-        ExecDefStructStmtResult::Failed(_) => object_for(
+        ExecDefStructStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
                 ("statement_result", statement_result_value(false)),
                 ("kind", string("def_struct")),
+                (
+                    "failure",
+                    super::definition_failure::project_struct_failure(failed, runtime),
+                ),
             ],
         ),
     }
@@ -560,11 +587,15 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ),
                 ],
             ),
-            ExecHaveObjByExistFactsStmtResult::Failed(_) => object_for(
+            ExecHaveObjByExistFactsStmtResult::Failed(failed) => object_for(
                 runtime,
                 vec![
                     ("statement_result", statement_result_value(false)),
                     ("kind", string("have_obj_by_exist_facts")),
+                    (
+                        "failure",
+                        super::definition_failure::project_have_exist_failure(failed, runtime),
+                    ),
                 ],
             ),
         },
@@ -581,11 +612,15 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ),
                 ],
             ),
-            ExecObtainObjFromExistFactStmtResult::Failed(_) => object_for(
+            ExecObtainObjFromExistFactStmtResult::Failed(failed) => object_for(
                 runtime,
                 vec![
                     ("statement_result", statement_result_value(false)),
                     ("kind", string("obtain_obj_from_exist_fact")),
+                    (
+                        "failure",
+                        super::definition_failure::project_obtain_exist_failure(failed, runtime),
+                    ),
                 ],
             ),
         },
@@ -602,11 +637,15 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ),
                 ],
             ),
-            ExecObtainObjFromAtomicFactStmtResult::Failed(_) => object_for(
+            ExecObtainObjFromAtomicFactStmtResult::Failed(failed) => object_for(
                 runtime,
                 vec![
                     ("statement_result", statement_result_value(false)),
                     ("kind", string("obtain_obj_from_atomic_fact")),
+                    (
+                        "failure",
+                        super::definition_failure::project_obtain_atomic_failure(failed, runtime),
+                    ),
                 ],
             ),
         },
@@ -623,11 +662,15 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ),
                 ],
             ),
-            ExecHaveByFnPreimageStmtResult::Failed(_) => object_for(
+            ExecHaveByFnPreimageStmtResult::Failed(failed) => object_for(
                 runtime,
                 vec![
                     ("statement_result", statement_result_value(false)),
                     ("kind", string("have_by_fn_preimage")),
+                    (
+                        "failure",
+                        super::definition_failure::project_preimage_failure(failed, runtime),
+                    ),
                 ],
             ),
         },
@@ -644,11 +687,15 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     ),
                 ],
             ),
-            ExecHaveByReplacementAxiomStmtResult::Failed(_) => object_for(
+            ExecHaveByReplacementAxiomStmtResult::Failed(failed) => object_for(
                 runtime,
                 vec![
                     ("statement_result", statement_result_value(false)),
                     ("kind", string("have_by_replacement_axiom")),
+                    (
+                        "failure",
+                        super::definition_failure::project_replacement_failure(failed, runtime),
+                    ),
                 ],
             ),
         },
@@ -775,10 +822,11 @@ pub(in crate::json_output) fn project_def_prop_failure(
             super::wd_failure::project_fact_wd_failure(wd, runtime),
         ),
     };
-    object_for(
+    let projected = object_for(
         runtime,
         vec![("phase", string(phase)), ("failure", failure)],
-    )
+    );
+    crate::json_output::helper::inherit_failure_field(runtime, projected, "failure")
 }
 
 fn project_def_abstract_prop(
@@ -1146,8 +1194,14 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
                         s.carrier.ir().as_str(),
                     )),
                 ),
-                ("right_domain", super::function_domain::project_source(&s.right_domain, runtime)),
-                ("function_domain", super::function_domain::project_function_domain(&s.domain_match, runtime)),
+                (
+                    "right_domain",
+                    super::function_domain::project_source(&s.right_domain, runtime),
+                ),
+                (
+                    "function_domain",
+                    super::function_domain::project_function_domain(&s.domain_match, runtime),
+                ),
                 ("proof_steps", project_stmt_steps(&s.proof_steps, runtime)),
                 (
                     "pointwise_proof",
@@ -1161,29 +1215,7 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
             vec![
                 ("statement_result", statement_result_value(false)),
                 ("kind", string("by_fn_extension")),
-                ("failure", match failed {
-                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::GoalWd(result) => object_for(runtime, vec![
-                        ("phase", string("goal_well_defined")), ("result", project_verify_fact_wd_result(result, runtime)),
-                    ]),
-                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::NoCompatibleFnSet => object_for(runtime, vec![("phase", string("function_space_unavailable"))]),
-                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::DomainMatch(candidates) => object_for(runtime, vec![
-                        ("phase", string("function_domain")),
-                        ("candidates", JsonValue::Array(candidates.iter().map(|candidate| object_for(runtime, vec![
-                            ("right_domain", super::function_domain::project_source(&candidate.right_source, runtime)),
-                            ("result", super::function_domain::project_function_domain_failure(&candidate.result, runtime)),
-                        ])).collect())),
-                    ]),
-                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::ProofBody(f) => object_for(runtime, vec![
-                        ("phase", string("proof_body")), ("index", JsonValue::Number(f.step_index as f64)),
-                        ("result", project_stmt_detailed(&f.result, runtime)),
-                    ]),
-                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::Pointwise(result) => object_for(runtime, vec![
-                        ("phase", string("pointwise")), ("result", project_verify_fact(result, runtime)),
-                    ]),
-                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::Store(message) => object_for(runtime, vec![
-                        ("phase", string("store")), ("message", string(message.clone())),
-                    ]),
-                }),
+                ("failure", project_fn_extension_failure(failed, runtime)),
             ],
         ),
     }
@@ -1333,11 +1365,15 @@ fn project_by_def(result: &ExecByDefStmtResult, runtime: &Runtime) -> JsonValue 
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),
-        ExecByDefStmtResult::Failed(_) => object_for(
+        ExecByDefStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
                 ("statement_result", statement_result_value(false)),
                 ("kind", string("by_def")),
+                (
+                    "failure",
+                    super::by_failure::project_by_def_failure(failed, runtime),
+                ),
             ],
         ),
     }
@@ -1449,11 +1485,15 @@ fn project_by_enumerate(
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),
-        ExecByEnumerateFiniteSetStmtResult::Failed(_) => object_for(
+        ExecByEnumerateFiniteSetStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
                 ("statement_result", statement_result_value(false)),
                 ("kind", string("by_enumerate_finite_set")),
+                (
+                    "failure",
+                    super::by_failure::project_enumerate_failure(failed, runtime),
+                ),
             ],
         ),
     }
@@ -1477,11 +1517,15 @@ fn project_by_for(result: &ExecByForStmtResult, runtime: &Runtime) -> JsonValue 
                 ("stored", project_store_and_infer(&s.stored, runtime)),
             ],
         ),
-        ExecByForStmtResult::Failed(_) => object_for(
+        ExecByForStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
                 ("statement_result", statement_result_value(false)),
                 ("kind", string("by_for")),
+                (
+                    "failure",
+                    super::by_failure::project_by_for_failure(failed, runtime),
+                ),
             ],
         ),
     }
@@ -1873,6 +1917,14 @@ fn project_release_zorn_lemma(
                         runtime,
                         vec![
                             ("step_index", JsonValue::Number(body.step_index as f64)),
+                            ("statement", string(body.statement.readable_string())),
+                            (
+                                "source_location",
+                                crate::json_output::source::project_statement_source(
+                                    &body.statement,
+                                    runtime,
+                                ),
+                            ),
                             ("result", project_stmt_detailed(&body.result, runtime)),
                         ],
                     ),
@@ -1938,6 +1990,14 @@ fn project_release_axiom_of_choice(
                         runtime,
                         vec![
                             ("step_index", JsonValue::Number(body.step_index as f64)),
+                            ("statement", string(body.statement.readable_string())),
+                            (
+                                "source_location",
+                                crate::json_output::source::project_statement_source(
+                                    &body.statement,
+                                    runtime,
+                                ),
+                            ),
                             ("result", project_stmt_detailed(&body.result, runtime)),
                         ],
                     ),
@@ -2199,33 +2259,24 @@ fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonVal
                     ),
                 ],
             ),
-            ExecEvalStmtResult::Failed(
-                crate::execute::ExecEvalStmtFailed::AggregateBudgetExceeded,
-            ) => object_for(
-                runtime,
-                vec![
-                    ("statement_result", statement_result_value(false)),
-                    ("kind", string("eval")),
-                    ("cause", string("aggregate_budget_exceeded")),
-                ],
-            ),
-            ExecEvalStmtResult::Failed(
-                crate::execute::ExecEvalStmtFailed::AggregateRangeOverflow,
-            ) => object_for(
-                runtime,
-                vec![
-                    ("statement_result", statement_result_value(false)),
-                    ("kind", string("eval")),
-                    ("cause", string("aggregate_range_overflow")),
-                ],
-            ),
-            ExecEvalStmtResult::Failed(_) => object_for(
-                runtime,
-                vec![
-                    ("statement_result", statement_result_value(false)),
-                    ("kind", string("eval")),
-                ],
-            ),
+            ExecEvalStmtResult::Failed(failed) => {
+                let details = super::eval_failure::project_eval_failure(failed, runtime);
+                let mut projected = object_for(
+                    runtime,
+                    vec![
+                        ("statement_result", statement_result_value(false)),
+                        ("kind", string("eval")),
+                    ],
+                );
+                if let (JsonValue::Object(fields), JsonValue::Object(details)) =
+                    (&mut projected, details)
+                {
+                    for (key, value) in details.iter() {
+                        fields.insert(key.clone(), value.clone());
+                    }
+                }
+                projected
+            }
         },
     }
 }
@@ -2471,4 +2522,46 @@ pub(in crate::json_output) fn project_release_tuple_def(
             )
         }
     }
+}
+
+pub(in crate::json_output) fn project_fn_extension_failure(
+    failed: &crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::*;
+    use crate::json_output::failure_kind::FailureKind;
+    let projected = match failed {
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::GoalWd(result) => object_for(runtime, vec![
+                        ("phase", string("goal_well_defined")), ("result", project_verify_fact_wd_result(result, runtime)),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::NoCompatibleFnSet => object_for(runtime, vec![("phase", string("function_space_unavailable"))]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::DomainMatch(candidates) => object_for(runtime, vec![
+                        ("phase", string("function_domain")),
+                        ("candidates", JsonValue::Array(candidates.iter().map(|candidate| object_for(runtime, vec![
+                            ("right_domain", super::function_domain::project_source(&candidate.right_source, runtime)),
+                            ("result", super::function_domain::project_function_domain_failure(&candidate.result, runtime)),
+                        ])).collect())),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::ProofBody(f) => object_for(runtime, vec![
+                        ("phase", string("proof_body")), ("index", JsonValue::Number(f.step_index as f64)),
+                ("statement", string(f.statement.readable_string())),
+                ("source_location", crate::json_output::source::project_statement_source(&f.statement, runtime)),
+                        ("result", project_stmt_detailed(&f.result, runtime)),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::Pointwise(result) => object_for(runtime, vec![
+                        ("phase", string("pointwise")), ("result", project_verify_fact(result, runtime)),
+                    ]),
+                    crate::execute::execute_by_stmt::ExecByFnExtensionStmtFailed::Store(message) => object_for(runtime, vec![
+                        ("phase", string("store")), ("message", string(message.clone())),
+                    ]),
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(runtime, projected, "result");
+    let kind = match failed {
+        GoalWd(_) => FailureKind::WellDefined,
+        NoCompatibleFnSet | DomainMatch(_) => FailureKind::Domain,
+        Pointwise(result) => FailureKind::for_verification(result),
+        Store(_) => FailureKind::Storage,
+        ProofBody(_) => return projected,
+    };
+    crate::json_output::helper::with_failure_diagnostic(runtime, projected, kind, vec![])
 }

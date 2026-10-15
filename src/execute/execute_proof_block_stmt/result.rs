@@ -25,6 +25,7 @@ impl ExecProofBlockStmtResult {
 // Soft-fail inside a proof-block body step.
 pub struct ProofBlockBodyFailed {
     pub step_index: usize,
+    pub statement: crate::ast::stmt::Stmt,
     pub result: Box<ExecStmtResult>,
 }
 

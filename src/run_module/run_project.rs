@@ -4,6 +4,7 @@ use super::load_config::{load_config, resolve_std_root};
 use super::run_export_file::run_export_file;
 use super::run_import_module::{run_import_module, RunImportModuleOutcome};
 use crate::launch_command::LaunchCommand;
+use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunRepoResult, RunSessionError};
 use crate::run::run_repl::run_repl_loop;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -55,7 +56,10 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
             &mut file_results,
         )? {
             RunImportModuleOutcome::Done => {}
-            RunImportModuleOutcome::SessionError(session_error) => {
+            RunImportModuleOutcome::SessionError(mut session_error) => {
+                if let RunSessionError::FailToImport(failure) = &mut session_error {
+                    failure.prepend(&root);
+                }
                 return Ok(finish_repo(
                     &runtime,
                     root,
@@ -82,11 +86,9 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         ) {
             Ok(file_result) => {
                 let failed = !file_result.run.success;
-                let session_error = file_result
-                    .run
-                    .session_error
-                    .clone()
-                    .unwrap_or(RunSessionError::FailToImport);
+                let session_error = file_result.run.session_error.clone().unwrap_or_else(|| {
+                    RunSessionError::FailToImport(ImportFailure::rejected_export(&file_result))
+                });
                 file_results.push(file_result);
                 if failed {
                     return Ok(finish_repo(

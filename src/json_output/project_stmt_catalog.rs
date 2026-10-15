@@ -96,10 +96,13 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 "have_fn_forall_exist_unique",
                 &s.stored_fact_ids,
             ),
-            ExecHaveFnByForallExistUniqueStmtResult::Failed(_) => failed(
+            ExecHaveFnByForallExistUniqueStmtResult::Failed(failed) => failed_with_details(
                 runtime,
                 "have fn … by exist!",
                 "have_fn_forall_exist_unique",
+                super::project_detailed::definition_failure::project_have_fn_exist_failure(
+                    failed, runtime,
+                ),
             ),
         },
         ExecDefinitionStmtResult::HaveFnByInduc(r) => match r {
@@ -154,7 +157,14 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                     infers,
                 )
             }
-            ExecDefStructStmtResult::Failed(_) => failed(runtime, "struct …", "def_struct"),
+            ExecDefStructStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "struct …",
+                "def_struct",
+                super::project_detailed::definition_failure::project_struct_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecDefinitionStmtResult::DefTemplate(r) => match r {
             ExecDefTemplateStmtResult::Success(s) => {
@@ -274,9 +284,12 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "have_in_nonempty",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveObjInNonemptySetStmtResult::Failed(_) => {
-                failed(runtime, "have …", "have_in_nonempty")
-            }
+            ExecHaveObjInNonemptySetStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "have …",
+                "have_in_nonempty",
+                super::project_detailed::entry::project_have_in_failed(failed, runtime),
+            ),
         },
         ExecDefineObjStmtResult::HaveObjEqual(r) => match r {
             ExecHaveObjEqualStmtResult::Success(s) => success_with_ids(
@@ -285,7 +298,14 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "have_equal",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveObjEqualStmtResult::Failed(_) => failed(runtime, "have … = …", "have_equal"),
+            ExecHaveObjEqualStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "have … = …",
+                "have_equal",
+                super::project_detailed::definition_failure::project_have_equal_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecDefineObjStmtResult::HaveObjByExistFacts(r) => match r {
             ExecHaveObjByExistFactsStmtResult::Success(s) => success_with_ids(
@@ -294,9 +314,14 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "have_by_exist",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveObjByExistFactsStmtResult::Failed(_) => {
-                failed(runtime, "have … by exist", "have_by_exist")
-            }
+            ExecHaveObjByExistFactsStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "have … by exist",
+                "have_by_exist",
+                super::project_detailed::definition_failure::project_have_exist_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecDefineObjStmtResult::ObtainObjFromExistFact(r) => match r {
             ExecObtainObjFromExistFactStmtResult::Success(s) => success_with_ids(
@@ -305,9 +330,14 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "obtain_exist",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecObtainObjFromExistFactStmtResult::Failed(_) => {
-                failed(runtime, "obtain … from exist", "obtain_exist")
-            }
+            ExecObtainObjFromExistFactStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "obtain … from exist",
+                "obtain_exist",
+                super::project_detailed::definition_failure::project_obtain_exist_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecDefineObjStmtResult::ObtainObjFromAtomicFact(r) => match r {
             ExecObtainObjFromAtomicFactStmtResult::Success(s) => success_with_ids(
@@ -316,9 +346,14 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "obtain_atomic",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecObtainObjFromAtomicFactStmtResult::Failed(_) => {
-                failed(runtime, "obtain … from atomic", "obtain_atomic")
-            }
+            ExecObtainObjFromAtomicFactStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "obtain … from atomic",
+                "obtain_atomic",
+                super::project_detailed::definition_failure::project_obtain_atomic_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecDefineObjStmtResult::HaveByFnPreimage(r) => match r {
             ExecHaveByFnPreimageStmtResult::Success(s) => success_with_ids(
@@ -327,9 +362,14 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "have_by_preimage",
                 &s.store_and_infer_result.stored_fact_ids,
             ),
-            ExecHaveByFnPreimageStmtResult::Failed(_) => {
-                failed(runtime, "have by preimage …", "have_by_preimage")
-            }
+            ExecHaveByFnPreimageStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "have by preimage …",
+                "have_by_preimage",
+                super::project_detailed::definition_failure::project_preimage_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecDefineObjStmtResult::HaveByReplacementAxiom(r) => match r {
             ExecHaveByReplacementAxiomStmtResult::Success(s) => success_with_ids(
@@ -338,9 +378,14 @@ fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                 "have_by_replacement",
                 &s.stored_fact_ids,
             ),
-            ExecHaveByReplacementAxiomStmtResult::Failed(_) => {
-                failed(runtime, "have by replacement …", "have_by_replacement")
-            }
+            ExecHaveByReplacementAxiomStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "have by replacement …",
+                "have_by_replacement",
+                super::project_detailed::definition_failure::project_replacement_failure(
+                    failed, runtime,
+                ),
+            ),
         },
     }
 }
@@ -354,9 +399,14 @@ fn project_witness(w: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonValue {
                 "witness_exist",
                 &s.store_and_infer_result,
             ),
-            ExecWitnessExistFactStmtResult::Failed(_) => {
-                failed(runtime, "witness exist …", "witness_exist")
-            }
+            ExecWitnessExistFactStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "witness exist …",
+                "witness_exist",
+                super::project_detailed::witness_failure::project_witness_exist_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecWitnessStmtResult::WitnessAtomicFact(r) => match r {
             ExecWitnessAtomicFactStmtResult::Success(s) => success_from_store(
@@ -365,9 +415,14 @@ fn project_witness(w: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonValue {
                 "witness_atomic",
                 &s.store_and_infer_result,
             ),
-            ExecWitnessAtomicFactStmtResult::Failed(_) => {
-                failed(runtime, "witness …", "witness_atomic")
-            }
+            ExecWitnessAtomicFactStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "witness …",
+                "witness_atomic",
+                super::project_detailed::witness_failure::project_witness_atomic_failure(
+                    failed, runtime,
+                ),
+            ),
         },
         ExecWitnessStmtResult::WitnessNonemptySet(r) => match r {
             ExecWitnessNonemptySetStmtResult::Success(s) => success_from_store(
@@ -376,9 +431,14 @@ fn project_witness(w: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonValue {
                 "witness_nonempty",
                 &s.store_and_infer_result,
             ),
-            ExecWitnessNonemptySetStmtResult::Failed(_) => {
-                failed(runtime, "witness nonempty …", "witness_nonempty")
-            }
+            ExecWitnessNonemptySetStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "witness nonempty …",
+                "witness_nonempty",
+                super::project_detailed::witness_failure::project_witness_nonempty_failure(
+                    failed, runtime,
+                ),
+            ),
         },
     }
 }
@@ -444,7 +504,12 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
             ExecByDefStmtResult::Success(s) => {
                 success_from_store(runtime, "by def".into(), "by_def", &s.stored)
             }
-            ExecByDefStmtResult::Failed(_) => failed(runtime, "by def", "by_def"),
+            ExecByDefStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "by def",
+                "by_def",
+                super::project_detailed::by_failure::project_by_def_failure(failed, runtime),
+            ),
         },
         ExecByStmtResult::Extension(r) => match r {
             ExecByExtensionStmtResult::Success(s) => {
@@ -464,23 +529,34 @@ fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
                 "by_fn_extension",
                 &s.stored,
             ),
-            ExecByFnExtensionStmtResult::Failed(_) => {
-                failed(runtime, "by fn_extension", "by_fn_extension")
-            }
+            ExecByFnExtensionStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "by fn_extension",
+                "by_fn_extension",
+                super::project_detailed::stmt::project_fn_extension_failure(failed, runtime),
+            ),
         },
         ExecByStmtResult::EnumerateFiniteSet(r) => match r {
             ExecByEnumerateFiniteSetStmtResult::Success(s) => {
                 success_from_store(runtime, "by enumerate".into(), "by_enumerate", &s.stored)
             }
-            ExecByEnumerateFiniteSetStmtResult::Failed(_) => {
-                failed(runtime, "by enumerate", "by_enumerate")
-            }
+            ExecByEnumerateFiniteSetStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "by enumerate",
+                "by_enumerate",
+                super::project_detailed::by_failure::project_enumerate_failure(failed, runtime),
+            ),
         },
         ExecByStmtResult::For(r) => match r {
             ExecByForStmtResult::Success(s) => {
                 success_from_store(runtime, "by for".into(), "by_for", &s.stored)
             }
-            ExecByForStmtResult::Failed(_) => failed(runtime, "by for", "by_for"),
+            ExecByForStmtResult::Failed(failed) => failed_with_details(
+                runtime,
+                "by for",
+                "by_for",
+                super::project_detailed::by_failure::project_by_for_failure(failed, runtime),
+            ),
         },
         ExecByStmtResult::Thm(r) => match r {
             ExecByThmStmtResult::Success(s) => success_from_store(
@@ -533,7 +609,12 @@ fn project_register(r: &ExecRegisterStmtResult, runtime: &Runtime) -> JsonValue 
     if ok {
         success_plain(runtime, kind.replace('_', " "), kind)
     } else {
-        failed(runtime, &kind.replace('_', " "), kind)
+        failed_with_details(
+            runtime,
+            &kind.replace('_', " "),
+            kind,
+            super::project_detailed::register::project_register_failure(r, runtime),
+        )
     }
 }
 
@@ -705,16 +786,7 @@ fn project_proof_block(p: &ExecProofBlockStmtResult, runtime: &Runtime) -> JsonV
                     runtime,
                     "sketch",
                     "sketch",
-                    object(
-                        output_language(runtime),
-                        vec![
-                            ("step_index", JsonValue::Number(f.step_index as f64)),
-                            (
-                                "result",
-                                super::project_normal::project_stmt_normal(&f.result, runtime),
-                            ),
-                        ],
-                    ),
+                    super::project_detailed::proof_block_failure::body(f, runtime),
                 )
             }
         },
@@ -766,40 +838,12 @@ fn project_command(c: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
                 "eval",
                 super::project_detailed::project_verify_equal_wd(wd, runtime),
             ),
-            ExecEvalStmtResult::Failed(
-                crate::execute::ExecEvalStmtFailed::UnsupportedExpression,
-            ) => failed_with_details(
+            ExecEvalStmtResult::Failed(failed) => failed_with_details(
                 runtime,
                 "eval …",
                 "eval",
-                object(
-                    output_language(runtime),
-                    vec![("cause", string("unsupported_expression"))],
-                ),
+                super::project_detailed::eval_failure::project_eval_failure(failed, runtime),
             ),
-            ExecEvalStmtResult::Failed(
-                crate::execute::ExecEvalStmtFailed::AggregateBudgetExceeded,
-            ) => failed_with_details(
-                runtime,
-                "eval …",
-                "eval",
-                object(
-                    output_language(runtime),
-                    vec![("cause", string("aggregate_budget_exceeded"))],
-                ),
-            ),
-            ExecEvalStmtResult::Failed(
-                crate::execute::ExecEvalStmtFailed::AggregateRangeOverflow,
-            ) => failed_with_details(
-                runtime,
-                "eval …",
-                "eval",
-                object(
-                    output_language(runtime),
-                    vec![("cause", string("aggregate_range_overflow"))],
-                ),
-            ),
-            ExecEvalStmtResult::Failed(_) => failed(runtime, "eval …", "eval"),
         },
     }
 }
@@ -897,6 +941,18 @@ fn failed_with_details(
     let reason_key = super::json_keys::localize_key("why_failed", lang);
     if let JsonValue::Object(fields) = &mut value {
         if let Some(JsonValue::Object(mut reason)) = fields.get(&reason_key).cloned() {
+            let diagnostic_key = super::json_keys::localize_key("diagnostic", lang);
+            if let JsonValue::Object(detail_fields) = &details {
+                if let Some(diagnostic) = detail_fields.get(&diagnostic_key) {
+                    reason.insert(diagnostic_key, diagnostic.clone());
+                    if let JsonValue::Object(summary) = diagnostic {
+                        let message_key = super::json_keys::localize_key("message", lang);
+                        if let Some(message) = summary.get(&message_key) {
+                            reason.insert(message_key, message.clone());
+                        }
+                    }
+                }
+            }
             reason.insert(super::json_keys::localize_key("failure", lang), details);
             fields.insert(reason_key, JsonValue::Object(reason));
         }

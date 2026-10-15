@@ -92,13 +92,38 @@ pub(crate) fn session_termination_value(
 ) -> JsonValue {
     match error {
         RunSessionError::Runtime(error) => runtime_termination_value(error, language),
-        RunSessionError::FailToImport => object(
-            language,
-            vec![
+        RunSessionError::FailToImport(failure) => {
+            use crate::prelude::ImportFailureCause;
+            let (cause, details) = match &failure.cause {
+                ImportFailureCause::MissingDirectory => ("missing_directory", None),
+                ImportFailureCause::Cycle => ("cycle", None),
+                ImportFailureCause::Mount(message) => ("mount", Some(("reason", string(message)))),
+                ImportFailureCause::RejectedExport { statements } => (
+                    "rejected_export",
+                    Some(("failed_statements", array_of_strings(statements.clone()))),
+                ),
+            };
+            let mut fields = vec![
                 ("phase", string("import")),
                 ("message", string(error.to_string())),
-            ],
-        ),
+                ("cause", string(cause)),
+                ("path", string(failure.path.display().to_string())),
+                (
+                    "import_chain",
+                    array_of_strings(
+                        failure
+                            .import_chain
+                            .iter()
+                            .map(|path| path.display().to_string())
+                            .collect(),
+                    ),
+                ),
+            ];
+            if let Some(detail) = details {
+                fields.push(detail);
+            }
+            object(language, fields)
+        }
     }
 }
 
@@ -122,7 +147,7 @@ pub(super) fn fact_line(fact: &Fact) -> Option<usize> {
     fact_source_line(fact).map(|line| line.line)
 }
 
-fn fact_source_line(fact: &Fact) -> Option<&SourceLine> {
+pub(super) fn fact_source_line(fact: &Fact) -> Option<&SourceLine> {
     match fact {
         Fact::AtomicFact(a) => atomic_source_line(a),
         Fact::AndFact(f) => f.line_file.as_ref(),
@@ -394,5 +419,60 @@ pub(super) fn phase_value_well_defined(lang: OutputLanguage) -> &'static str {
         OutputLanguage::Vietnamese => "Tính xác định tốt",
 
         OutputLanguage::Chinese => "良定性",
+    }
+}
+
+/// Attach a human summary without altering the field-isomorphic evidence tree.
+pub(super) fn with_failure_diagnostic(
+    runtime: &Runtime,
+    mut value: JsonValue,
+    kind: super::failure_kind::FailureKind,
+    details: Vec<(&str, JsonValue)>,
+) -> JsonValue {
+    let lang = output_language(runtime);
+    let diagnostic_key = localize_key("diagnostic", lang);
+    if let JsonValue::Object(fields) = &mut value {
+        let mut diagnostic = match fields.get(&diagnostic_key) {
+            Some(JsonValue::Object(existing)) => existing.clone(),
+            _ => JsonObject::new(),
+        };
+        diagnostic.insert(localize_key("category", lang), string(kind.as_str()));
+        diagnostic.insert(
+            localize_key("message", lang),
+            string(super::explain::failure::failure_message(kind, lang)),
+        );
+        for (key, detail) in details {
+            diagnostic.insert(localize_key(key, lang), detail);
+        }
+        fields.insert(diagnostic_key, JsonValue::Object(diagnostic));
+    }
+    value
+}
+
+/// Copy only the summary of the actual failed child selected by its typed owner.
+/// No traversal of successful evidence or interpretation of message/phase strings.
+pub(super) fn inherit_failure_diagnostic(
+    runtime: &Runtime,
+    mut value: JsonValue,
+    failed_child: &JsonValue,
+) -> JsonValue {
+    let key = localize_key("diagnostic", output_language(runtime));
+    if let (JsonValue::Object(parent), JsonValue::Object(child)) = (&mut value, failed_child) {
+        if let Some(diagnostic) = child.get(&key) {
+            parent.insert(key, diagnostic.clone());
+        }
+    }
+    value
+}
+
+pub(super) fn inherit_failure_field(runtime: &Runtime, value: JsonValue, field: &str) -> JsonValue {
+    let key = localize_key(field, output_language(runtime));
+    let child = match &value {
+        JsonValue::Object(fields) => fields.get(&key).cloned(),
+        _ => None,
+    };
+    match child {
+        Some(child) => inherit_failure_diagnostic(runtime, value, &child),
+        None => value,
     }
 }

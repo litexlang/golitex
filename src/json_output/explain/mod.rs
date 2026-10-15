@@ -8,6 +8,7 @@
 
 pub mod atomic_builtin_rule;
 pub mod equality_builtin_rule;
+pub(super) mod failure;
 pub mod searched_proof_why;
 pub mod stmt_why;
 mod text;

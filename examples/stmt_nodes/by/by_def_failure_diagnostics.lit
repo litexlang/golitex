@@ -1,0 +1,25 @@
+# Tracer: explicit definition failures retain their actual obligation.
+#
+# Before:
+# prop positive(x R):
+#     x > 0
+# by def $positive(0)
+# Former result: DefinitionUnavailable discarded the failed 0 > 0 obligation.
+#
+# Now: the same negative call remains rejected with phase
+# definition_requirement, index 1 (after the parameter-type requirement),
+# goal 0 > 0, and the actual rejected verification result.
+# The executable negative checks are in src/json_output/error_context_tests.rs
+# and tests/integration/cli_feedback.rs. They also check no session termination
+# and a subsequent successful call in the same context.
+#
+# Active positive boundary: supported user and builtin definitions still verify.
+prop positive(x R):
+    x > 0
+by def $positive(1)
+by def {1} $proper_subset {1, 2}
+#
+# Boundary: abstract_prop still has no expandable definition; failed conditions
+# remain rejected. Ordinary search retains its original route order and budgets.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/by/by_def_failure_diagnostics.lit
+# Focused negative gate: cargo test --release --lib json_output::error_context_tests

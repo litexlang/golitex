@@ -4,120 +4,197 @@ use crate::execute::execute_witness_stmt::{
     ExecWitnessAtomicFactStmtFailed, ExecWitnessExistFactStmtFailed,
     ExecWitnessNonemptySetStmtFailed,
 };
+use crate::json_output::failure_kind::FailureKind;
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
-pub(super) fn project_witness_nonempty_failure(
+pub(in crate::json_output) fn project_witness_nonempty_failure(
     failure: &ExecWitnessNonemptySetStmtFailed,
     rt: &Runtime,
 ) -> JsonValue {
+    let projected = {
+        use ExecWitnessNonemptySetStmtFailed::*;
+        match failure {
+            ObjWd(result) => object_for(
+                rt,
+                vec![
+                    ("phase", string("obj_well_defined")),
+                    ("result", project_verify_obj_wd(result, rt)),
+                ],
+            ),
+            SetWd(result) => object_for(
+                rt,
+                vec![
+                    ("phase", string("set_well_defined")),
+                    ("result", project_verify_obj_wd(result, rt)),
+                ],
+            ),
+            ProofBody(failure) => object_for(
+                rt,
+                vec![
+                    ("phase", string("proof_body")),
+                    ("step_index", JsonValue::Number(failure.step_index as f64)),
+                    ("statement", string(failure.statement.readable_string())),
+                    (
+                        "source_location",
+                        crate::json_output::source::project_statement_source(
+                            &failure.statement,
+                            rt,
+                        ),
+                    ),
+                    (
+                        "result",
+                        super::stmt::project_stmt_detailed(&failure.result, rt),
+                    ),
+                ],
+            ),
+            Membership(result) => verify_phase("membership", result, rt),
+        }
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
     use ExecWitnessNonemptySetStmtFailed::*;
-    match failure {
-        ObjWd(result) => object_for(
-            rt,
-            vec![
-                ("phase", string("obj_well_defined")),
-                ("result", project_verify_obj_wd(result, rt)),
-            ],
-        ),
-        SetWd(result) => object_for(
-            rt,
-            vec![
-                ("phase", string("set_well_defined")),
-                ("result", project_verify_obj_wd(result, rt)),
-            ],
-        ),
-        ProofBody(failure) => object_for(
-            rt,
-            vec![
-                ("phase", string("proof_body")),
-                ("step_index", JsonValue::Number(failure.step_index as f64)),
-                (
-                    "result",
-                    super::stmt::project_stmt_detailed(&failure.result, rt),
-                ),
-            ],
-        ),
-        Membership(result) => verify_phase("membership", result, rt),
+    let kind = match failure {
+        Membership(result) => Some(FailureKind::for_obligation(result, FailureKind::Membership)),
+        ObjWd(_) | SetWd(_) | ProofBody(_) => None,
+    };
+    match kind {
+        Some(kind) => {
+            crate::json_output::helper::with_failure_diagnostic(rt, projected, kind, vec![])
+        }
+        None => projected,
     }
 }
 
-pub(super) fn project_witness_atomic_failure(
+pub(in crate::json_output) fn project_witness_atomic_failure(
     failure: &ExecWitnessAtomicFactStmtFailed,
     rt: &Runtime,
 ) -> JsonValue {
+    let projected = {
+        use ExecWitnessAtomicFactStmtFailed::*;
+        match failure {
+            AbstractProp => phase("abstract_prop", rt),
+            PropNotFound => phase("prop_not_found", rt),
+            BadDefinition(message) => message_phase("definition", message, rt),
+            Instantiate(message) => message_phase("instantiate", message, rt),
+            PropArgumentType { index, result } => object_for(
+                rt,
+                vec![
+                    ("phase", string("prop_argument_type")),
+                    ("index", JsonValue::Number(*index as f64)),
+                    ("result", project_verify_fact(result, rt)),
+                ],
+            ),
+            ExistCheck(failure) => object_for(
+                rt,
+                vec![
+                    ("phase", string("exist_check")),
+                    ("failure", project_witness_exist_failure(failure, rt)),
+                ],
+            ),
+        }
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
     use ExecWitnessAtomicFactStmtFailed::*;
-    match failure {
-        AbstractProp => phase("abstract_prop", rt),
-        PropNotFound => phase("prop_not_found", rt),
-        BadDefinition(message) => message_phase("definition", message, rt),
-        Instantiate(message) => message_phase("instantiate", message, rt),
-        PropArgumentType { index, result } => object_for(
-            rt,
-            vec![
-                ("phase", string("prop_argument_type")),
-                ("index", JsonValue::Number(*index as f64)),
-                ("result", project_verify_fact(result, rt)),
-            ],
-        ),
-        ExistCheck(failure) => object_for(
-            rt,
-            vec![
-                ("phase", string("exist_check")),
-                ("failure", project_witness_exist_failure(failure, rt)),
-            ],
-        ),
+    let kind = match failure {
+        AbstractProp => Some(FailureKind::DefinitionProofUnavailable),
+        PropNotFound => Some(FailureKind::NameNotFound),
+        BadDefinition(_) => Some(FailureKind::Unsupported),
+        Instantiate(_) => Some(FailureKind::Instantiation),
+        PropArgumentType { result, .. } => {
+            Some(FailureKind::for_obligation(result, FailureKind::Membership))
+        }
+        ExistCheck(_) => None,
+    };
+    match kind {
+        Some(kind) => {
+            crate::json_output::helper::with_failure_diagnostic(rt, projected, kind, vec![])
+        }
+        None => projected,
     }
 }
 
-pub(super) fn project_witness_exist_failure(
+pub(in crate::json_output) fn project_witness_exist_failure(
     failure: &ExecWitnessExistFactStmtFailed,
     rt: &Runtime,
 ) -> JsonValue {
+    let projected = {
+        use ExecWitnessExistFactStmtFailed::*;
+        match failure {
+            WitnessCountMismatch => phase("witness_count", rt),
+            ExistFactWellDefined(failure) => object_for(
+                rt,
+                vec![
+                    ("phase", string("exist_well_defined")),
+                    (
+                        "failure",
+                        super::wd_failure::project_fact_wd_failure(failure, rt),
+                    ),
+                ],
+            ),
+            WitnessObjWellDefined(result) => object_for(
+                rt,
+                vec![
+                    ("phase", string("witness_well_defined")),
+                    ("result", project_verify_obj_wd(result, rt)),
+                ],
+            ),
+            WitnessTypeInstantiate(message) => {
+                message_phase("witness_type_instantiate", message, rt)
+            }
+            WitnessType(result) => verify_phase("witness_type", result, rt),
+            IntroduceBinders(failure) => object_for(
+                rt,
+                vec![
+                    ("phase", string("introduce_binders")),
+                    ("failure", project_introduce_failure(failure, rt)),
+                ],
+            ),
+            ProofBody(failure) => object_for(
+                rt,
+                vec![
+                    ("phase", string("proof_body")),
+                    ("step_index", JsonValue::Number(failure.step_index as f64)),
+                    ("statement", string(failure.statement.readable_string())),
+                    (
+                        "source_location",
+                        crate::json_output::source::project_statement_source(
+                            &failure.statement,
+                            rt,
+                        ),
+                    ),
+                    (
+                        "result",
+                        super::stmt::project_stmt_detailed(&failure.result, rt),
+                    ),
+                ],
+            ),
+            BodyCheck(result) => verify_phase("body_check", result, rt),
+            BodyInstantiate => phase("body_instantiate", rt),
+            Uniqueness(result) => verify_phase("uniqueness", result, rt),
+        }
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
     use ExecWitnessExistFactStmtFailed::*;
-    match failure {
-        WitnessCountMismatch => phase("witness_count", rt),
-        ExistFactWellDefined(failure) => object_for(
-            rt,
-            vec![
-                ("phase", string("exist_well_defined")),
-                (
-                    "failure",
-                    super::wd_failure::project_fact_wd_failure(failure, rt),
-                ),
-            ],
-        ),
-        WitnessObjWellDefined(result) => object_for(
-            rt,
-            vec![
-                ("phase", string("witness_well_defined")),
-                ("result", project_verify_obj_wd(result, rt)),
-            ],
-        ),
-        WitnessTypeInstantiate(message) => message_phase("witness_type_instantiate", message, rt),
-        WitnessType(result) => verify_phase("witness_type", result, rt),
-        IntroduceBinders(failure) => object_for(
-            rt,
-            vec![
-                ("phase", string("introduce_binders")),
-                ("failure", project_introduce_failure(failure, rt)),
-            ],
-        ),
-        ProofBody(failure) => object_for(
-            rt,
-            vec![
-                ("phase", string("proof_body")),
-                ("step_index", JsonValue::Number(failure.step_index as f64)),
-                (
-                    "result",
-                    super::stmt::project_stmt_detailed(&failure.result, rt),
-                ),
-            ],
-        ),
-        BodyCheck(result) => verify_phase("body_check", result, rt),
-        BodyInstantiate => phase("body_instantiate", rt),
-        Uniqueness(result) => verify_phase("uniqueness", result, rt),
+    let kind = match failure {
+        WitnessCountMismatch => Some(FailureKind::Arity),
+        WitnessTypeInstantiate(_) | BodyInstantiate => Some(FailureKind::Instantiation),
+        WitnessType(result) => Some(FailureKind::for_obligation(result, FailureKind::Membership)),
+        ExistFactWellDefined(_)
+        | WitnessObjWellDefined(_)
+        | IntroduceBinders(_)
+        | ProofBody(_)
+        | BodyCheck(_)
+        | Uniqueness(_) => None,
+    };
+    match kind {
+        Some(kind) => {
+            crate::json_output::helper::with_failure_diagnostic(rt, projected, kind, vec![])
+        }
+        None => projected,
     }
 }
 
@@ -125,46 +202,48 @@ fn project_introduce_failure(
     failure: &crate::execute::IntroduceTypedParametersFailed,
     rt: &Runtime,
 ) -> JsonValue {
-    use crate::execute::IntroduceTypedParametersFailed::*;
-    match failure {
-        ParamType(result) => object_for(
-            rt,
-            vec![
-                ("phase", string("param_type")),
-                ("result", project_verify_obj_wd(result, rt)),
-            ],
-        ),
-        AutoOpenStructLayer {
-            param_type_well_defined,
-            defined_params,
-            opened_before_fail,
-            failed,
-        } => object_for(
-            rt,
-            vec![
-                ("phase", string("auto_open_struct_layer")),
-                (
-                    "param_type_well_defined",
-                    JsonValue::Array(
-                        param_type_well_defined
-                            .iter()
-                            .map(|p| project_param_type_wd(p, rt))
-                            .collect(),
-                    ),
+    let projected =
+        {
+            use crate::execute::IntroduceTypedParametersFailed::*;
+            match failure {
+                ParamType(result) => object_for(
+                    rt,
+                    vec![
+                        ("phase", string("param_type")),
+                        ("result", project_verify_obj_wd(result, rt)),
+                    ],
                 ),
-                (
-                    "defined_params",
-                    super::store::project_have_store_and_infer(defined_params, rt),
-                ),
-                (
-                    "opened_before_fail",
-                    JsonValue::Array(
-                        opened_before_fail
-                            .iter()
-                            .map(|p| {
-                                object_for(
-                                    rt,
-                                    vec![
+                AutoOpenStructLayer {
+                    param_type_well_defined,
+                    defined_params,
+                    opened_before_fail,
+                    failed,
+                } => object_for(
+                    rt,
+                    vec![
+                        ("phase", string("auto_open_struct_layer")),
+                        (
+                            "param_type_well_defined",
+                            JsonValue::Array(
+                                param_type_well_defined
+                                    .iter()
+                                    .map(|p| project_param_type_wd(p, rt))
+                                    .collect(),
+                            ),
+                        ),
+                        (
+                            "defined_params",
+                            super::store::project_have_store_and_infer(defined_params, rt),
+                        ),
+                        (
+                            "opened_before_fail",
+                            JsonValue::Array(
+                                opened_before_fail
+                                    .iter()
+                                    .map(|p| {
+                                        object_for(
+                                            rt,
+                                            vec![
                                         ("obj", string(p.obj.readable_string())),
                                         ("struct_obj", string(p.struct_obj.readable_string())),
                                         (
@@ -179,24 +258,38 @@ fn project_introduce_failure(
                                             ),
                                         ),
                                     ],
-                                )
-                            })
-                            .collect(),
-                    ),
+                                        )
+                                    })
+                                    .collect(),
+                            ),
+                        ),
+                        (
+                            "failure",
+                            object_for(
+                                rt,
+                                vec![
+                                    ("obj", string(failed.obj.readable_string())),
+                                    ("struct_obj", string(failed.struct_obj.readable_string())),
+                                    ("reason", string(&failed.reason)),
+                                ],
+                            ),
+                        ),
+                    ],
                 ),
-                (
-                    "failure",
-                    object_for(
-                        rt,
-                        vec![
-                            ("obj", string(failed.obj.readable_string())),
-                            ("struct_obj", string(failed.struct_obj.readable_string())),
-                            ("reason", string(&failed.reason)),
-                        ],
-                    ),
-                ),
-            ],
-        ),
+            }
+        };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
+    use crate::execute::IntroduceTypedParametersFailed::*;
+    let kind = match failure {
+        ParamType(_) => None,
+        AutoOpenStructLayer { .. } => Some(FailureKind::StructExpansion),
+    };
+    match kind {
+        Some(kind) => {
+            crate::json_output::helper::with_failure_diagnostic(rt, projected, kind, vec![])
+        }
+        None => projected,
     }
 }
 
@@ -216,13 +309,18 @@ fn verify_phase(
     result: &crate::execute::execute_fact_stmt::VerifyFactResult,
     rt: &Runtime,
 ) -> JsonValue {
-    object_for(
-        rt,
-        vec![
-            ("phase", string(name)),
-            ("result", project_verify_fact(result, rt)),
-        ],
-    )
+    let projected = {
+        object_for(
+            rt,
+            vec![
+                ("phase", string(name)),
+                ("result", project_verify_fact(result, rt)),
+            ],
+        )
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
+    projected
 }
 
 #[cfg(test)]

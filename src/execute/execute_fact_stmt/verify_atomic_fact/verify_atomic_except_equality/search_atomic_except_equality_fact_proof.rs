@@ -38,7 +38,7 @@ impl Runtime {
             }
         }
         if let Some(child) = state.for_premises(DefinitionAndForall) {
-            if let Some(proof) =
+            if let Ok(proof) =
                 self.search_atomic_except_equality_fact_proof_by_definition(fact, child)?
             {
                 return Ok(Some(P::ByDefinition(proof)));

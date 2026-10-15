@@ -1,0 +1,20 @@
+# Tracer: missing-delimiter diagnostics preserve original source positions.
+#
+# Before (rejected):
+# have a R = (1 + 2
+# Former diagnostic: parse_error: unexpected end of tokens at line 1 in <eval>
+# Current diagnostic for that same rejected input:
+# Parse error: expected `)`, reached end of line
+#  --> <eval>:1:18
+#   |
+# 1 | have a R = (1 + 2
+#   |                  ^ missing `)`
+#
+# Now: adding the missing delimiter verifies the intended value.
+have a R = (1 + 2)
+a = 3
+#
+# Boundary: missing and mismatched delimiters remain parse errors (exit 1).
+# Evidence: cargo test --release --lib tokenize::diagnostic_tests
+# Evidence: cargo test --release --test cli_feedback
+# Evidence: target/release/litex -lang en -strict -f examples/tokenize/parse_error_diagnostics.lit

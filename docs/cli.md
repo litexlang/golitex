@@ -46,6 +46,25 @@ rejected interactive block makes the final `run_result` a failure without
 marking the session terminated; a hard error additionally sets structured
 termination information. Interactive parse/tokenizer errors refer to `<repl>`.
 
+Parse errors include the original source line. When the parser knows the exact
+token position, the diagnostic includes a one-based character column and a
+caret. For example, an omitted closing parenthesis produces:
+
+```text
+Parse error: expected `)`, reached end of line
+ --> <repl>:1:18
+  |
+1 | have a R = (1 + 2
+  |                  ^ missing `)`
+```
+
+Token positions survive inline asides, Unicode aliases, and `\\` continuations;
+continued input points into the original physical line. Columns count Unicode
+scalar values, with tabs counted as one source character and displayed as four
+spaces. For a non-ASCII prefix the caret line repeats that prefix, so terminal
+character widths do not require guessing. Older diagnostics that only know a
+line show that line without an invented column or caret.
+
 Run a `.lit` file:
 
 ```bash
@@ -177,6 +196,27 @@ fix a domain obligation, or repair the statement.
 
 ## JSON Output Contract
 
+Failure reports retain the rejected stage's context. Registration failures
+distinguish missing predicates, wrong arity (`expected` / `actual`), and an
+unproved registration law. Evaluation failures distinguish unsupported input,
+failed exact evaluation, algorithm dispatch, recursion depth, active-call
+cycles, aggregate budget, and aggregate range overflow through stable `cause`
+values and localized diagnostic messages.
+
+Explicit `by def` failures distinguish an unavailable definition from a failed
+definition requirement. A failed requirement includes its zero-based `index`,
+instantiated `goal`, and verification result; parameter-type requirements precede
+definition clauses. Nested proof-body failures retain the parsed `statement`
+and `source_location` (`path` and one-based `line`, or null for synthetic input).
+The statement is rendered from the parsed syntax, not a verbatim source slice.
+
+Import termination retains `phase: import` and adds `cause`, `path`, and an
+ordered `import_chain`. Causes are `missing_directory`, `cycle`, `mount`, and
+`rejected_export`; mount failures retain `reason`, and rejected exports retain
+`failed_statements`. Underlying parsing and I/O errors retain their original
+termination phases. These diagnostics do not change acceptance, rollback,
+search budgets, or session-stopping behavior.
+
 `-e`, `-f`, and `-r` batch outcomes emit one Normal `run` document on stdout.
 Tokenization, parsing and early I/O failures also produce a failed Normal
 document with `session_terminated: true` and structured `termination`. Invalid command-line shapes still produce text
@@ -189,6 +229,13 @@ The projection
 is defined in [`src/json_output/README.md`](../src/json_output/README.md).
 It does **not** dump the full verify/exec IR; that tree remains available for
 the Rust Detailed projection and other tooling.
+
+When stderr is an interactive terminal, a batch parse/tokenizer error also
+prints the source diagnostic there. Stdout remains one JSON document. With
+stderr redirected or captured, batch commands retain JSON-only feedback;
+`termination.message` includes the expected token and the column when known.
+The bare REPL prints its source diagnostic once on stderr even when captured.
+The diagnostic heading is English; `-lang` continues to control JSON feedback.
 When a downstream reader closes stdout, Litex preserves the command's exit
 status without panicking. Other output I/O errors are reported normally.
 
@@ -639,3 +686,22 @@ separately; it is not a substitute for a persistent local Session. Full agent
 workflow, restart boundaries, and quadratic-cost notes live in the
 [Agent Guide](AgentGuide.md). Flag shapes and JSON fields on this page remain
 the contract the agent should parse.
+
+### Well-definedness and failed-stage summaries
+
+Classified WD and execution-stage failures include `why_failed.diagnostic` in
+Normal and the same `diagnostic` in Detailed. With `-lang en`, its fields are
+`category`, `message`, and, when retained by the verifier, `expression` and
+`obligation`. Keys and messages follow the selected language; category values
+remain stable.
+
+For `forall x R => 1 / x = 1 / x`, the category is `well_defined`, the expression
+is `(1 / x)`, and the missing obligation is `x != 0`. A failed forall conclusion
+therefore exposes its WD cause even when its outer execution stage is
+`search_proof`. Ordinary unproved conclusions use `proof_search`; failed object
+membership and nonempty-carrier checks use `membership` and `nonempty`.
+The original nested failure evidence remains available. These are verification
+failures, not claims that a proposition has been disproved, and do not terminate
+an interactive Session. See [the output contract](../src/json_output/README.md#failed-stage-diagnostics)
+for the full category list and evidence boundaries, and
+[the guarded examples](../examples/stmt_nodes/proof_block/wd_failure_diagnostics.lit).

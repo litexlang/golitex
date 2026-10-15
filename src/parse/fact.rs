@@ -376,12 +376,7 @@ impl Runtime {
             let Some(arrow_index) = arrow_index else {
                 return Err(tb.parse_error("inline forall: expected `=>` after domain fact"));
             };
-            let mut premise = TokenBlock::new(
-                tb.header[tb.parse_index..arrow_index].to_vec(),
-                vec![],
-                tb.line,
-                tb.source_path.clone(),
-            );
+            let mut premise = tb.header_slice(tb.parse_index..arrow_index);
             dom_facts.push(self.parse_complete_fact(&mut premise)?);
             tb.parse_index = arrow_index;
         }

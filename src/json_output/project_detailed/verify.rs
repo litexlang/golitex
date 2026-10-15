@@ -44,7 +44,7 @@ pub(in crate::json_output) fn project_verify_fact(
     verify: &VerifyFactResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    match verify {
+    let projected = match verify {
         VerifyFactResult::AtomicExceptEquality(r) => project_atomic_except(r, runtime),
         VerifyFactResult::Equality(r) => project_equality(r, runtime),
         VerifyFactResult::AndFact(r) => project_and(r, runtime),
@@ -54,7 +54,62 @@ pub(in crate::json_output) fn project_verify_fact(
         VerifyFactResult::ForallFact(r) => project_forall(r, runtime),
         VerifyFactResult::ForallFactWithIff(r) => project_forall_iff(r, runtime),
         VerifyFactResult::NotForall(r) => project_not_forall(r, runtime),
+    };
+    if !verify.is_failed() {
+        return projected;
     }
+    let child_key = match verify {
+        VerifyFactResult::AtomicExceptEquality(_)
+        | VerifyFactResult::Equality(_)
+        | VerifyFactResult::OrFact(_)
+        | VerifyFactResult::ExistShapedFact(_) => "failure",
+        VerifyFactResult::AndFact(_) => "failed_component",
+        VerifyFactResult::ChainFact(_) => "failed_adjacent",
+        VerifyFactResult::ForallFact(r) => match r.as_ref() {
+            VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {
+                ..
+            }) => "failed_then",
+            VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_)) => {
+                "failure"
+            }
+            VerifyForallFactResult::Success(_) => unreachable!("failed result checked above"),
+        },
+        VerifyFactResult::ForallFactWithIff(r) => match r.as_ref() {
+            VerifyForallFactWithIffResult::Failed(
+                VerifyForallFactWithIffFailed::FailThenImpliesIff { .. },
+            ) => "then_implies_iff",
+            VerifyForallFactWithIffResult::Failed(
+                VerifyForallFactWithIffFailed::FailIffImpliesThen { .. },
+            ) => "iff_implies_then",
+            VerifyForallFactWithIffResult::Success(_) => {
+                unreachable!("failed result checked above")
+            }
+        },
+        VerifyFactResult::NotForall(_) => "prove_derived_exist",
+    };
+    let projected =
+        crate::json_output::helper::inherit_failure_field(runtime, projected, child_key);
+    let kind = crate::json_output::failure_kind::FailureKind::for_verification(verify);
+    let diagnostic_key = crate::json_output::json_keys::localize_key(
+        "diagnostic",
+        runtime.launch_command.output_language(),
+    );
+    let has_child_summary = projected
+        .as_object()
+        .unwrap()
+        .get(&diagnostic_key)
+        .is_some();
+    let details = if !verify.is_wd_failed() && !has_child_summary {
+        vec![(
+            "obligation",
+            string(crate::json_output::project_normal::verify_goal_display(
+                verify,
+            )),
+        )]
+    } else {
+        vec![]
+    };
+    crate::json_output::helper::with_failure_diagnostic(runtime, projected, kind, details)
 }
 
 pub(super) fn project_atomic_except_success(
@@ -334,14 +389,20 @@ fn project_or(result: &VerifyOrFactResult, runtime: &Runtime) -> JsonValue {
                 ),
             ],
         ),
-        VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToVerifyWellDefined(_)) => object_for(
-            runtime,
-            vec![
-                ("type", string("or")),
-                ("verification_result", verification_result_value(false)),
-                ("phase", string("well_defined")),
-            ],
-        ),
+        VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToVerifyWellDefined(failed)) => {
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("or")),
+                    ("verification_result", verification_result_value(false)),
+                    ("phase", string("well_defined")),
+                    (
+                        "failure",
+                        super::wd_failure::project_or_wd_failure(failed, runtime),
+                    ),
+                ],
+            )
+        }
         VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToSearchProof {
             fact,
             well_defined_proof,
@@ -433,36 +494,51 @@ pub(super) fn project_exist_failed(
     failed: &VerifyExistShapedFactFailed,
     runtime: &Runtime,
 ) -> JsonValue {
-    match failed {
-        VerifyExistShapedFactFailed::FailToVerifyWellDefined(failure) => object_for(
-            runtime,
-            vec![
-                ("type", string(kind)),
-                ("verification_result", verification_result_value(false)),
-                ("phase", string("well_defined")),
-                (
-                    "failure",
-                    super::wd_failure::project_exist_wd_failure(failure, runtime),
-                ),
-            ],
+    let projected = {
+        match failed {
+            VerifyExistShapedFactFailed::FailToVerifyWellDefined(failure) => object_for(
+                runtime,
+                vec![
+                    ("type", string(kind)),
+                    ("verification_result", verification_result_value(false)),
+                    ("phase", string("well_defined")),
+                    (
+                        "failure",
+                        super::wd_failure::project_exist_wd_failure(failure, runtime),
+                    ),
+                ],
+            ),
+            VerifyExistShapedFactFailed::FailToSearchProof {
+                fact,
+                well_defined_proof,
+            } => object_for(
+                runtime,
+                vec![
+                    ("type", string(kind)),
+                    ("verification_result", verification_result_value(false)),
+                    ("phase", string("search_proof")),
+                    ("fact", string(exist_fact_display(fact))),
+                    (
+                        "well_defined",
+                        super::wd::project_exist_wd_proof(well_defined_proof, runtime),
+                    ),
+                ],
+            ),
+        }
+    };
+    let projected =
+        crate::json_output::helper::inherit_failure_field(runtime, projected, "failure");
+    let (category, details) = match failed {
+        VerifyExistShapedFactFailed::FailToVerifyWellDefined(_) => (
+            crate::json_output::failure_kind::FailureKind::WellDefined,
+            vec![],
         ),
-        VerifyExistShapedFactFailed::FailToSearchProof {
-            fact,
-            well_defined_proof,
-        } => object_for(
-            runtime,
-            vec![
-                ("type", string(kind)),
-                ("verification_result", verification_result_value(false)),
-                ("phase", string("search_proof")),
-                ("fact", string(exist_fact_display(fact))),
-                (
-                    "well_defined",
-                    super::wd::project_exist_wd_proof(well_defined_proof, runtime),
-                ),
-            ],
+        VerifyExistShapedFactFailed::FailToSearchProof { fact, .. } => (
+            crate::json_output::failure_kind::FailureKind::ProofSearch,
+            vec![("obligation", string(exist_fact_display(fact)))],
         ),
-    }
+    };
+    crate::json_output::helper::with_failure_diagnostic(runtime, projected, category, details)
 }
 
 fn project_forall(result: &VerifyForallFactResult, runtime: &Runtime) -> JsonValue {

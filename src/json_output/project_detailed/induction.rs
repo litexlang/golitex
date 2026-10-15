@@ -241,6 +241,11 @@ fn project_case_failure(phase: &str, f: &ByInducCaseFailed, rt: &Runtime) -> Jso
             vec![
                 ("phase", induction_phase("proof_body", rt)),
                 ("step_index", JsonValue::Number(body.step_index as f64)),
+                ("statement", string(body.statement.readable_string())),
+                (
+                    "source_location",
+                    crate::json_output::source::project_statement_source(&body.statement, rt),
+                ),
                 (
                     "result",
                     super::stmt::project_stmt_detailed(&body.result, rt),

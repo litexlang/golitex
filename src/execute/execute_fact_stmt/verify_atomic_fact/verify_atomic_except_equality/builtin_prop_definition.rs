@@ -4,6 +4,7 @@
 //! Prove every obligation → accept the predicate.
 //! One predicate ↔ one proof struct under `BuiltinPropDefinitionProof`.
 
+use crate::prelude::*;
 use crate::ast::fact::{
     AndChainAtomicFact, AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact,
     ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, InjectiveFact, IsChoiceFunctionForFact,
@@ -30,12 +31,12 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Try builtin definition expansion for dedicated AtomicFact variants.
-    // Soft miss → Ok(None).
+    // Soft misses retain their typed cause.
     pub(super) fn search_builtin_prop_definition_proof(
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
             AtomicFact::SubsetFact(f) => self.prove_subset_by_definition(f, verify_state),
             AtomicFact::SupersetFact(f) => self.prove_superset_by_definition(f, verify_state),
@@ -54,7 +55,7 @@ impl Runtime {
             AtomicFact::PrimeFact(f) => self.prove_prime_by_definition(f, verify_state),
             AtomicFact::CoprimeFact(f) => self.prove_coprime_by_definition(f, verify_state),
             AtomicFact::DvdFact(f) => self.prove_dvd_by_definition(f, verify_state),
-            _ => Ok(None),
+            _ => Ok(Err(DefinitionProofFailed::Unavailable)),
         }
     }
 
@@ -63,7 +64,7 @@ impl Runtime {
         &mut self,
         fact: &SubsetFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let x = self.fresh_internal_param();
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
         let forall = Fact::ForallFact(ForallFact {
@@ -80,12 +81,12 @@ impl Runtime {
             ))],
             line_file: None,
         });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![forall], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Subset(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(vec![forall], verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Subset(
             BuiltinSubsetDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -98,7 +99,7 @@ impl Runtime {
         &mut self,
         fact: &SupersetFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let x = self.fresh_internal_param();
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
         let forall = Fact::ForallFact(ForallFact {
@@ -115,12 +116,12 @@ impl Runtime {
             ))],
             line_file: None,
         });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![forall], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Superset(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(vec![forall], verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Superset(
             BuiltinSupersetDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -133,14 +134,14 @@ impl Runtime {
         &mut self,
         fact: &ProperSubsetFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let requirements = self.proper_subset_definition_requirements(fact);
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::ProperSubset(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::ProperSubset(
             BuiltinProperSubsetDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -153,14 +154,14 @@ impl Runtime {
         &mut self,
         fact: &ProperSupersetFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let requirements = self.proper_superset_definition_requirements(fact);
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::ProperSuperset(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::ProperSuperset(
             BuiltinProperSupersetDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -173,16 +174,16 @@ impl Runtime {
         &mut self,
         fact: &InjectiveFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let Some(requirements) = self.injective_definition_requirements(fact) else {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Unavailable));
         };
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Injective(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Injective(
             BuiltinInjectiveDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -230,16 +231,16 @@ impl Runtime {
         &mut self,
         fact: &SurjectiveFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let Some(requirements) = self.surjective_definition_requirements(fact) else {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Unavailable));
         };
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Surjective(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Surjective(
             BuiltinSurjectiveDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -286,14 +287,14 @@ impl Runtime {
         &mut self,
         fact: &BijectiveFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let requirements = self.bijective_definition_requirements(fact);
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Bijective(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Bijective(
             BuiltinBijectiveDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -306,16 +307,16 @@ impl Runtime {
         &mut self,
         fact: &IsChoiceFunctionForFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let Some(requirements) = self.choice_definition_requirements(fact) else {
-            return Ok(None);
+            return Ok(Err(DefinitionProofFailed::Unavailable));
         };
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::IsChoiceFunctionFor(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::IsChoiceFunctionFor(
             BuiltinIsChoiceFunctionForDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -360,14 +361,14 @@ impl Runtime {
         &mut self,
         fact: &crate::ast::fact::PrimeFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let requirements = self.prime_definition_requirements(fact);
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Prime(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Prime(
             BuiltinPrimeDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -380,14 +381,14 @@ impl Runtime {
         &mut self,
         fact: &CoprimeFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let requirements = self.coprime_definition_requirements(fact);
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Coprime(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Coprime(
             BuiltinCoprimeDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -400,14 +401,14 @@ impl Runtime {
         &mut self,
         fact: &DvdFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         let requirements = self.dvd_definition_requirements(fact);
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(requirements, verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::Dvd(
+        let (requirement_facts, proof_of_requirement_facts) =
+            match self.verify_definition_requirements(requirements, verify_state)? {
+                Ok(proof) => proof,
+                Err(failed) => return Ok(Err(failed)),
+            };
+        Ok(Ok(BuiltinPropDefinitionProof::Dvd(
             BuiltinDvdDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
@@ -605,16 +606,20 @@ impl Runtime {
         &mut self,
         requirement_facts: Vec<Fact>,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
+    ) -> RuntimeResult<Result<(Vec<Fact>, Vec<VerifyFactResult>), DefinitionProofFailed>> {
         let mut proofs = Vec::with_capacity(requirement_facts.len());
-        for requirement in &requirement_facts {
+        for (index, requirement) in requirement_facts.iter().enumerate() {
             let proof = self.verify_fact(requirement, verify_state.clone())?;
             if proof.is_failed() {
-                return Ok(None);
+                return Ok(Err(DefinitionProofFailed::Requirement {
+                    index,
+                    fact: requirement.clone(),
+                    result: Box::new(proof),
+                }));
             }
             proofs.push(proof);
         }
-        Ok(Some((requirement_facts, proofs)))
+        Ok(Ok((requirement_facts, proofs)))
     }
 }
 

@@ -26,14 +26,14 @@ pub enum RunCommandOutcome {
 #[derive(Clone, Debug)]
 pub enum RunSessionError {
     Runtime(RuntimeError),
-    FailToImport,
+    FailToImport(crate::prelude::ImportFailure),
 }
 
 impl fmt::Display for RunSessionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Runtime(error) => write!(f, "{error}"),
-            Self::FailToImport => write!(f, "failed to import project"),
+            Self::FailToImport(failure) => write!(f, "failed to import project: {failure}"),
         }
     }
 }

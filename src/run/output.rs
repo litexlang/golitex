@@ -2,7 +2,7 @@
 
 use crate::runtime::{RuntimeError, RuntimeResult};
 use std::fmt::Arguments;
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
 
 /// A closed downstream reader discards output without changing verification's
@@ -38,6 +38,19 @@ pub fn write_command_outcome(outcome: &crate::run::RunCommandOutcome) -> Runtime
             if let Some(json) = outcome.normal_json() {
                 write_stdout(format_args!("{json}\n"))?;
             }
+            let run = match outcome {
+                crate::run::RunCommandOutcome::RunFile(result) => Some(&result.run),
+                crate::run::RunCommandOutcome::RunEval(result) => Some(&result.run),
+                crate::run::RunCommandOutcome::RunRepo(result) => Some(&result.run),
+                _ => None,
+            };
+            if io::stderr().is_terminal() {
+                if let Some(crate::run::RunSessionError::Runtime(RuntimeError::ParseError(error))) =
+                    run.and_then(|run| run.session_error.as_ref())
+                {
+                    write_stderr(format_args!("{}\n", error.diagnostic()))?;
+                }
+            }
             Ok(())
         }
     }
@@ -51,9 +64,16 @@ pub fn write_command_error(
     if let Some(json) =
         command.and_then(|command| crate::json_output::emit_command_error(command, error))
     {
-        return write_stdout(format_args!("{json}\n"));
+        write_stdout(format_args!("{json}\n"))?;
+        if io::stderr().is_terminal() {
+            if let RuntimeError::ParseError(error) = error {
+                write_stderr(format_args!("{}\n", error.diagnostic()))?;
+            }
+        }
+        return Ok(());
     }
     let diagnostic = match (command, error) {
+        (_, RuntimeError::ParseError(error)) => error.diagnostic(),
         (
             Some(crate::launch_command::LaunchCommand::CompileToLean { .. }),
             RuntimeError::Unsupported(message),
@@ -63,8 +83,15 @@ pub fn write_command_error(
         }
         _ => error.to_string(),
     };
-    writeln!(io::stderr().lock(), "{diagnostic}").map_err(|error| RuntimeError::Io {
-        path: PathBuf::from("<stderr>"),
-        message: error.to_string(),
-    })
+    write_stderr(format_args!("{diagnostic}\n"))
+}
+
+fn write_stderr(text: Arguments<'_>) -> RuntimeResult<()> {
+    io::stderr()
+        .lock()
+        .write_fmt(text)
+        .map_err(|error| RuntimeError::Io {
+            path: PathBuf::from("<stderr>"),
+            message: error.to_string(),
+        })
 }

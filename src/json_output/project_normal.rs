@@ -339,30 +339,36 @@ fn searched_proof_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
 
 fn why_failed(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
     let lang = output_language(runtime);
-    if verify.is_wd_failed() {
-        return object(
-            lang,
-            vec![
-                ("phase", string(phase_value_well_defined(lang))),
-                (
-                    "message",
-                    string(super::explain::well_defined_not_proven_message(lang)),
-                ),
-                (
-                    "verification",
-                    super::project_detailed::project_verify_fact(verify, runtime),
-                ),
-            ],
-        );
+    let verification = super::project_detailed::project_verify_fact(verify, runtime);
+    let mut entries = vec![
+        (
+            "phase",
+            string(if verify.is_wd_failed() {
+                phase_value_well_defined(lang)
+            } else {
+                phase_value_search_proof(lang)
+            }),
+        ),
+        ("goal", string(verify_goal_display(verify))),
+    ];
+    // Put the concise cause before its full evidence, preserving the actual
+    // failed child even when the outer execution stage was proof search.
+    if let Some(diagnostic) = verification
+        .as_object()
+        .unwrap()
+        .get(&super::json_keys::localize_key("diagnostic", lang))
+    {
+        if let Some(message) = diagnostic
+            .as_object()
+            .unwrap()
+            .get(&super::json_keys::localize_key("message", lang))
+        {
+            entries.push(("message", message.clone()));
+        }
+        entries.push(("diagnostic", diagnostic.clone()));
     }
-    let goal = verify_goal_display(verify);
-    object(
-        lang,
-        vec![
-            ("phase", string(phase_value_search_proof(lang))),
-            ("goal", string(goal)),
-        ],
-    )
+    entries.push(("verification", verification));
+    object(lang, entries)
 }
 
 fn why_from_atomic_except_searched(

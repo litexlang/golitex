@@ -258,14 +258,14 @@ pub(super) fn project_have_equal_only(
                 ),
             ],
         ),
-        ExecHaveObjEqualStmtResult::Failed(_) => object_for(
+        ExecHaveObjEqualStmtResult::Failed(failed) => object_for(
             runtime,
             vec![
                 ("statement_result", statement_result_value(false)),
                 ("kind", string("have_obj_equal")),
                 (
                     "why_failed",
-                    object_for(runtime, vec![("phase", string("have_obj_equal"))]),
+                    super::definition_failure::project_have_equal_failure(failed, runtime),
                 ),
                 (
                     "store_and_infer",
@@ -282,27 +282,30 @@ pub(super) fn project_have_equal_only(
     }
 }
 
-fn project_have_in_failed(
+pub(in crate::json_output) fn project_have_in_failed(
     failed: &ExecHaveObjInNonemptySetStmtFailed,
     runtime: &Runtime,
 ) -> JsonValue {
     match failed {
-        ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => object_for(
+        ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => super::helper::failure_stage(
             runtime,
-            vec![
-                ("phase", string("param_type")),
-                ("well_defined", project_verify_obj_wd(wd, runtime)),
-            ],
+            "param_type",
+            crate::json_output::failure_kind::FailureKind::WellDefined,
+            "well_defined",
+            project_verify_obj_wd(wd, runtime),
         ),
-        ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(v) => object_for(
+        ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(result) => super::helper::failure_stage(
             runtime,
-            vec![
-                ("phase", string("nonempty_check")),
-                ("verify", project_verify_fact(v, runtime)),
-            ],
+            "nonempty_check",
+            crate::json_output::failure_kind::FailureKind::for_obligation(
+                result,
+                crate::json_output::failure_kind::FailureKind::Nonempty,
+            ),
+            "verify",
+            project_verify_fact(result, runtime),
         ),
-        ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(_) => {
-            object_for(runtime, vec![("phase", string("auto_open_struct_layer"))])
+        ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed) => {
+            super::definition_failure::project_struct_layer_failure(failed, runtime)
         }
     }
 }

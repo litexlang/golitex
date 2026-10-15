@@ -326,7 +326,7 @@ fn wrong_same_name_owner_value_is_rejected_after_all_imports_load() {
     assert!(!wrong.run.success);
     assert!(matches!(
         wrong.run.session_error,
-        Some(RunSessionError::FailToImport)
+        Some(RunSessionError::FailToImport(_))
     ));
     assert_eq!(
         wrong.files.len(),

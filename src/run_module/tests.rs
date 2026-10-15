@@ -215,7 +215,7 @@ fn run_project_soft_fail_becomes_fail_to_import() {
     assert!(!result.run.success);
     assert!(matches!(
         result.run.session_error,
-        Some(RunSessionError::FailToImport)
+        Some(RunSessionError::FailToImport(_))
     ));
     assert_eq!(result.files.len(), 1);
     assert!(!result.files[0].run.success);
@@ -243,7 +243,7 @@ fn run_project_missing_import_dir_is_fail_to_import() {
     assert!(!result.run.success);
     assert!(matches!(
         result.run.session_error,
-        Some(RunSessionError::FailToImport)
+        Some(RunSessionError::FailToImport(_))
     ));
     assert!(result.files.is_empty());
 
@@ -337,7 +337,7 @@ fn run_file_mount_soft_fail_is_fail_to_import() {
     assert!(!result.run.success);
     assert!(matches!(
         result.run.session_error,
-        Some(RunSessionError::FailToImport)
+        Some(RunSessionError::FailToImport(_))
     ));
 
     let _ = fs::remove_dir_all(&root);
@@ -433,7 +433,7 @@ fn mount_cwd_config_soft_fail_is_fail_to_import() {
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
     assert!(matches!(
         outcome,
-        MountCwdConfigOutcome::SessionError(RunSessionError::FailToImport)
+        MountCwdConfigOutcome::SessionError(RunSessionError::FailToImport(_))
     ));
 
     std::env::set_current_dir(previous).expect("restore cwd");

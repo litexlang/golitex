@@ -1,5 +1,6 @@
 pub mod builtin_prop_definition;
 pub mod calculate_closed_atomic_except_equality_fact;
+pub mod definition_proof_failed;
 pub mod helper;
 mod known_premises;
 pub mod lookup_known_atomic_fact;

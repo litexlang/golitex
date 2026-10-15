@@ -34,7 +34,7 @@ pub(in crate::json_output) fn project_verify_obj_wd(
     result: &VerifyObjWellDefinedResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    match result {
+    let projected = match result {
         VerifyObjWellDefinedResult::Success(proof) => object_for(
             runtime,
             vec![
@@ -54,7 +54,8 @@ pub(in crate::json_output) fn project_verify_obj_wd(
                 ),
             ],
         ),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(runtime, projected, "failure")
 }
 
 pub(super) fn project_atomic_wd_proof(
@@ -169,7 +170,7 @@ pub(in crate::json_output) fn project_verify_equal_wd(
     runtime: &Runtime,
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::VerifyEqualFactWellDefinedResult;
-    match result {
+    let projected = match result {
         VerifyEqualFactWellDefinedResult::Success(proof) => object_for(
             runtime,
             vec![
@@ -188,7 +189,8 @@ pub(in crate::json_output) fn project_verify_equal_wd(
                 ),
             ],
         ),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(runtime, projected, "failure")
 }
 
 pub(super) fn project_param_type_wd(
@@ -226,7 +228,7 @@ pub(super) fn project_verify_fact_wd_result(
     result: &crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult,
     runtime: &Runtime,
 ) -> JsonValue {
-    match result {
+    let projected = match result {
         crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(proof) => {
             object_for(
                 runtime,
@@ -247,7 +249,8 @@ pub(super) fn project_verify_fact_wd_result(
                 ),
             ],
         ),
-    }
+    };
+    crate::json_output::helper::inherit_failure_field(runtime, projected, "failure")
 }
 
 pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runtime) -> JsonValue {

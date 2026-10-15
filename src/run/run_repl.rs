@@ -71,10 +71,10 @@ fn mount_session_error_to_runtime_error(
 ) -> RuntimeError {
     match session_error {
         super::run_command_outcome::RunSessionError::Runtime(error) => error,
-        super::run_command_outcome::RunSessionError::FailToImport => {
-            RuntimeError::InvalidArguments(
-                "failed to import project from cwd `litex.config`".to_string(),
-            )
+        super::run_command_outcome::RunSessionError::FailToImport(failure) => {
+            RuntimeError::InvalidArguments(format!(
+                "failed to import project from cwd `litex.config`: {failure}"
+            ))
         }
     }
 }

@@ -15,131 +15,137 @@ pub(in crate::json_output) fn project_release_thm_failure(
     failed: &ExecReleaseThmStmtFailed,
     rt: &Runtime,
 ) -> JsonValue {
-    use ExecReleaseThmStmtFailed::*;
-    match failed {
-        ThmNotFound(name) => object_for(
-            rt,
-            vec![
-                ("phase", string("lookup")),
-                ("thm_name", string(name.clone())),
-                ("message", string(format!("theorem `{name}` was not found"))),
-            ],
-        ),
-        Shape(message) | Instantiate(message) => object_for(
-            rt,
-            vec![
-                (
-                    "phase",
-                    string(if matches!(failed, Shape(_)) {
-                        "call_shape"
-                    } else {
-                        "instantiate"
-                    }),
-                ),
-                ("message", string(message.clone())),
-            ],
-        ),
-        BuiltinArity {
-            theorem,
-            expected,
-            actual,
-        } => object_for(
-            rt,
-            vec![
-                ("phase", string("arity")),
-                ("thm_name", string(theorem.as_str())),
-                ("expected", JsonValue::Number(*expected as f64)),
-                ("actual", JsonValue::Number(*actual as f64)),
-                (
-                    "message",
-                    string(format!(
+    let projected = {
+        use ExecReleaseThmStmtFailed::*;
+        match failed {
+            ThmNotFound(name) => object_for(
+                rt,
+                vec![
+                    ("phase", string("lookup")),
+                    ("thm_name", string(name.clone())),
+                    ("message", string(format!("theorem `{name}` was not found"))),
+                ],
+            ),
+            Shape(message) | Instantiate(message) => object_for(
+                rt,
+                vec![
+                    (
+                        "phase",
+                        string(if matches!(failed, Shape(_)) {
+                            "call_shape"
+                        } else {
+                            "instantiate"
+                        }),
+                    ),
+                    ("message", string(message.clone())),
+                ],
+            ),
+            BuiltinArity {
+                theorem,
+                expected,
+                actual,
+            } => object_for(
+                rt,
+                vec![
+                    ("phase", string("arity")),
+                    ("thm_name", string(theorem.as_str())),
+                    ("expected", JsonValue::Number(*expected as f64)),
+                    ("actual", JsonValue::Number(*actual as f64)),
+                    (
+                        "message",
+                        string(format!(
                         "builtin theorem `{theorem}` expects {expected} argument(s), got {actual}"
                     )),
-                ),
-            ],
-        ),
-        BuiltinShape { theorem, message } => object_for(
-            rt,
-            vec![
-                ("phase", string("call_shape")),
-                ("thm_name", string(theorem.as_str())),
-                ("message", string(message.clone())),
-            ],
-        ),
-        Type {
-            theorem,
-            fact,
-            index,
-            result,
+                    ),
+                ],
+            ),
+            BuiltinShape { theorem, message } => object_for(
+                rt,
+                vec![
+                    ("phase", string("call_shape")),
+                    ("thm_name", string(theorem.as_str())),
+                    ("message", string(message.clone())),
+                ],
+            ),
+            Type {
+                theorem,
+                fact,
+                index,
+                result,
+            }
+            | Dom {
+                theorem,
+                fact,
+                index,
+                result,
+            } => object_for(
+                rt,
+                vec![
+                    (
+                        "phase",
+                        string(if matches!(failed, Type { .. }) {
+                            "argument_type"
+                        } else {
+                            "premise"
+                        }),
+                    ),
+                    ("thm_name", string(theorem.clone())),
+                    ("index", JsonValue::Number(*index as f64)),
+                    ("goal", string(fact.readable_string())),
+                    ("result", project_verify_fact(result, rt)),
+                ],
+            ),
+            ConclusionWd {
+                theorem,
+                fact,
+                index,
+                result,
+            } => object_for(
+                rt,
+                vec![
+                    ("phase", string("conclusion_well_defined")),
+                    ("thm_name", string(theorem.clone())),
+                    ("index", JsonValue::Number(*index as f64)),
+                    ("goal", string(fact.readable_string())),
+                    ("result", project_verify_fact_wd_result(result, rt)),
+                ],
+            ),
+            FunctionDomain { theorem, result } => object_for(
+                rt,
+                vec![
+                    ("phase", string("function_domain")),
+                    ("thm_name", string(theorem.clone())),
+                    (
+                        "result",
+                        super::function_domain::project_function_domain_failure(result, rt),
+                    ),
+                ],
+            ),
+            Store {
+                theorem,
+                index,
+                message,
+            } => object_for(
+                rt,
+                vec![
+                    ("phase", string("store")),
+                    ("thm_name", string(theorem.clone())),
+                    ("index", JsonValue::Number(*index as f64)),
+                    ("message", string(message.clone())),
+                ],
+            ),
         }
-        | Dom {
-            theorem,
-            fact,
-            index,
-            result,
-        } => object_for(
-            rt,
-            vec![
-                (
-                    "phase",
-                    string(if matches!(failed, Type { .. }) {
-                        "argument_type"
-                    } else {
-                        "premise"
-                    }),
-                ),
-                ("thm_name", string(theorem.clone())),
-                ("index", JsonValue::Number(*index as f64)),
-                ("goal", string(fact.readable_string())),
-                ("result", project_verify_fact(result, rt)),
-            ],
-        ),
-        ConclusionWd {
-            theorem,
-            fact,
-            index,
-            result,
-        } => object_for(
-            rt,
-            vec![
-                ("phase", string("conclusion_well_defined")),
-                ("thm_name", string(theorem.clone())),
-                ("index", JsonValue::Number(*index as f64)),
-                ("goal", string(fact.readable_string())),
-                ("result", project_verify_fact_wd_result(result, rt)),
-            ],
-        ),
-        FunctionDomain { theorem, result } => object_for(
-            rt,
-            vec![
-                ("phase", string("function_domain")),
-                ("thm_name", string(theorem.clone())),
-                (
-                    "result",
-                    super::function_domain::project_function_domain_failure(result, rt),
-                ),
-            ],
-        ),
-        Store {
-            theorem,
-            index,
-            message,
-        } => object_for(
-            rt,
-            vec![
-                ("phase", string("store")),
-                ("thm_name", string(theorem.clone())),
-                ("index", JsonValue::Number(*index as f64)),
-                ("message", string(message.clone())),
-            ],
-        ),
-    }
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
+    projected
 }
 pub(in crate::json_output) fn project_by_thm_failure(
     failed: &ExecByThmStmtFailed,
     rt: &Runtime,
 ) -> JsonValue {
-    match failed {
+    let projected = {
+        match failed {
         ExecByThmStmtFailed::Release(failed) => project_release_thm_failure(failed, rt),
         ExecByThmStmtFailed::NotReturned { theorem, fact, conclusions } => object_for(rt, vec![
             ("phase", string("selected_fact")), ("reason", string("not_returned")),
@@ -150,6 +156,10 @@ pub(in crate::json_output) fn project_by_thm_failure(
         ExecByThmStmtFailed::Selected { theorem, fact, result } => object_for(rt, vec![("phase", string("selected_fact")), ("thm_name", string(theorem.clone())), ("goal", string(fact.readable_string())), ("result", project_verify_fact(result, rt))]),
         ExecByThmStmtFailed::Store { theorem, message } => object_for(rt, vec![("phase", string("store")), ("thm_name", string(theorem.clone())), ("message", string(message.clone()))]),
     }
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
+    projected
 }
 pub(super) fn project_resolved_theorem_callee(
     callee: &ResolvedTheoremCallee,
@@ -367,53 +377,63 @@ pub(in crate::json_output) fn project_def_thm_failure(
     failed: &crate::execute::ExecDefThmStmtFailed,
     rt: &Runtime,
 ) -> JsonValue {
-    use crate::execute::ExecDefThmStmtFailed::*;
-    match failed {
-        GoalUnsupported(text) => object_for(
-            rt,
-            vec![
-                ("phase", string("goal_unsupported")),
-                ("message", string(text.clone())),
-            ],
-        ),
-        NameClash(text) | Introduce(text) | Store(text) => object_for(
-            rt,
-            vec![
-                (
-                    "phase",
-                    string(match failed {
-                        NameClash(_) => "name_clash",
-                        Introduce(_) => "introduce",
-                        _ => "store",
-                    }),
-                ),
-                ("message", string(text.clone())),
-            ],
-        ),
-        GoalWd(result) => object_for(
-            rt,
-            vec![
-                ("phase", string("goal_well_defined")),
-                ("result", project_verify_fact_wd_result(result, rt)),
-            ],
-        ),
-        ProofBody(f) => object_for(
-            rt,
-            vec![
-                ("phase", string("proof_body")),
-                ("index", JsonValue::Number(f.step_index as f64)),
-                ("result", super::stmt::project_stmt_detailed(&f.result, rt)),
-            ],
-        ),
-        Conclusion { index, result } => object_for(
-            rt,
-            vec![
-                ("phase", string("conclusion")),
-                ("index", JsonValue::Number(*index as f64)),
-                ("result", project_verify_fact(result, rt)),
-            ],
-        ),
-    }
+    let projected = {
+        use crate::execute::ExecDefThmStmtFailed::*;
+        match failed {
+            GoalUnsupported(text) => object_for(
+                rt,
+                vec![
+                    ("phase", string("goal_unsupported")),
+                    ("message", string(text.clone())),
+                ],
+            ),
+            NameClash(text) | Introduce(text) | Store(text) => object_for(
+                rt,
+                vec![
+                    (
+                        "phase",
+                        string(match failed {
+                            NameClash(_) => "name_clash",
+                            Introduce(_) => "introduce",
+                            _ => "store",
+                        }),
+                    ),
+                    ("message", string(text.clone())),
+                ],
+            ),
+            GoalWd(result) => object_for(
+                rt,
+                vec![
+                    ("phase", string("goal_well_defined")),
+                    ("result", project_verify_fact_wd_result(result, rt)),
+                ],
+            ),
+            ProofBody(f) => object_for(
+                rt,
+                vec![
+                    ("phase", string("proof_body")),
+                    ("index", JsonValue::Number(f.step_index as f64)),
+                    ("statement", string(f.statement.readable_string())),
+                    (
+                        "source_location",
+                        crate::json_output::source::project_statement_source(&f.statement, rt),
+                    ),
+                    ("result", super::stmt::project_stmt_detailed(&f.result, rt)),
+                ],
+            ),
+            Conclusion { index, result } => object_for(
+                rt,
+                vec![
+                    ("phase", string("conclusion")),
+                    ("index", JsonValue::Number(*index as f64)),
+                    ("result", project_verify_fact(result, rt)),
+                ],
+            ),
+        }
+    };
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
+    let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
+    projected
 }
 
 pub(super) fn project_builtin_function_domain(
