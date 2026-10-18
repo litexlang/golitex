@@ -118,9 +118,12 @@ prop is_foot(f, p, a, b cart(R, R)):
     $is_on_line(f, a, b)
     dot(vec(p, f), vec(a, b)) = 0
 
-# Ray bd bisects angle abc (requires nonzero arms via angle congruence).
+# Ray bd internally bisects the nondegenerate angle abc.
+# Equal angles and a positive dot product select the inward ray.
 prop is_angle_bisector(a, b, c, d cart(R, R)):
+    not $is_collinear(a, b, c)
     $are_angles_congruent(a, b, d, d, b, c)
+    angle_cos_num(a, b, d) > 0
 
 # a, b, c form a non-degenerate triangle.
 prop is_triangle(a, b, c cart(R, R)):
@@ -153,9 +156,9 @@ prop are_triangles_similar(p, q, r, u, v, w cart(R, R)):
     $are_angles_congruent(p, q, r, u, v, w)
     $are_angles_congruent(p, r, q, u, w, v)
 
-# Quadrilateral abcd is a parallelogram (opposite sides parallel).
-# Euclidean: this forces a parallelogram; a flat/collinear quad is still allowed.
+# Quadrilateral abcd is a nondegenerate parallelogram.
 prop is_parallelogram(a, b, c, d cart(R, R)):
+    $is_triangle(a, b, c)
     $is_parallel(a, b, d, c)
     $is_parallel(a, d, b, c)
 

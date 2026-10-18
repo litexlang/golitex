@@ -47,6 +47,159 @@ After the examples, [Section 8](#8-a-design-perspective-what-the-author-states-w
 connects them into a proposal about formal-language design: which decisions
 belong in the mathematical source, and which work the checker should reconstruct.
 
+<a id="syntax-semantics-and-foundations"></a>
+
+## Start Here: Syntax, Semantics, Objects, and Foundations
+
+Litex’s ambition is to become a Python for formal mathematics: a language that students, engineers, and researchers can use in their own work. Writing fewer symbols is one part of that goal. Another is letting familiar mathematical ideas, domain conditions, and proof order map directly to source.
+
+| Dimension | Lean / Mathlib | Litex’s source interface |
+| --- | --- | --- |
+| Syntax | Theorems have typed statements and proof terms; tactics and automation can construct those terms. | State the next fact; the verifier searches for its justification in the accepted context. |
+| Operation semantics | Some familiar operations are extended outside their usual textbook domains. | Establish that an expression is defined before accepting a fact that uses it. |
+| Objects and properties | Types, coercions, subtypes, and proof arguments organize interfaces. | Membership and conditions are facts about the object; guarded calls check those facts in context. |
+| Mathematical foundations | Dependent type theory organizes mathematical objects, propositions, and proofs. | A set-theoretic source model starts with sets, functions, relations, and explicit facts. |
+
+### Syntax: start with the fact
+
+Lean can prove a tiny arithmetic statement concisely:
+
+```lean
+example : (1 : Nat) + 1 = 2 := by
+  rfl
+```
+
+The corresponding Litex input is the fact itself:
+
+```litex
+1 + 1 = 2
+```
+
+The difference is the authoring interface, not a claim that this arithmetic is difficult for Lean. Larger arguments still require the author to choose meaningful intermediate steps. [Section 1](#1-direct-facts-short-estimates-and-typed-domains) compares that workflow on actual proofs.
+
+<a id="ordinary-mathematics"></a>
+
+### Semantics: Litex follows ordinary mathematics
+
+**Litex aims to preserve familiar textbook meanings and domain conditions.** Division requires a nonzero denominator; a real square root requires a nonnegative input. The verifier must establish those conditions before accepting a fact that uses the expression. This lets authors keep the mathematical meaning they intend while the language checks its conditions of use.
+
+The next three examples concern operation definitions. Mathlib’s extensions are deliberate library conventions, not requirements of dependent type theory. Lean can also represent restricted domains.
+
+#### Division by zero
+
+Mathlib’s standard real-number division satisfies:
+
+```lean
+import Mathlib
+
+example : (1 : ℝ) / 0 = 0 := by
+  simp
+```
+
+Litex puts the nonzero condition in the function’s domain:
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+`1 / 0 = 0` is rejected by Litex at well-definedness: the required fact `0 != 0` cannot be established. It is not accepted with a default value. Mathlib documents its convention in [`div_zero`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero).
+
+The distinction is where the nonzero condition is enforced. Mathlib requires it for laws such as `x / x = 1`; Litex checks it before accepting the quotient's use in a fact. Even `1 / 0 = 1 / 0` is rejected. The [Lean division-by-zero FAQ](https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/) explains Mathlib's choice and why its extended division does not allow invalid cancellation at zero.
+
+#### Natural-number subtraction
+
+Lean’s natural-number subtraction truncates at zero:
+
+```lean
+example : (1 : Nat) - 2 = 0 := by
+  decide
+```
+
+Litex does not give subtraction a truncated natural-number meaning just because both operands are natural numbers:
+
+```litex
+1 - 2 = -1
+1 - 2 $in Z
+```
+
+The result is an integer. Lean also has ordinary integer subtraction; the distinction is which operation the types select. See [`Nat.sub`](https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/#Nat.sub).
+
+#### A negative input to a real square-root function
+
+Mathlib extends `Real.sqrt` to negative inputs by returning zero:
+
+```lean
+import Mathlib
+
+example : Real.sqrt (-1) = 0 := by
+  exact Real.sqrt_eq_zero_of_nonpos (by norm_num)
+```
+
+Litex’s real square-root operation requires a nonnegative input:
+
+```litex
+have fn real_root(x R: x >= 0) R = sqrt(x)
+real_root(4) = 2
+```
+
+`sqrt(-1) = 0` is rejected at well-definedness, where `0 <= -1` is required. This is a difference in the operation’s domain convention. Mathlib’s value does not assert that zero squared equals negative one; its usual square-root identities retain their domain hypotheses. See [`Real.sqrt_eq_zero_of_nonpos`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos).
+
+### Objects: knowing a property and packaging a subtype
+
+Suppose we already have a real `x` and a proof that `0 <= x`. A Lean interface accepting a nonnegative-real subtype packages the value and proof together:
+
+```lean
+import Mathlib
+
+def nonnegativeInput (x : {y : ℝ // 0 ≤ y}) : ℝ := x.val
+
+example (x : ℝ) (h : 0 ≤ x) : nonnegativeInput ⟨x, h⟩ = x := by
+  rfl
+```
+
+The corresponding Litex interface keeps the condition as a fact about the argument:
+
+```litex
+have fn nonnegative_input(x R: x >= 0) R = x
+
+forall x R:
+    x >= 0
+    =>:
+        nonnegative_input(x) = x
+```
+
+Litex checks the known condition when it uses the same `x` as an argument; the source does not package a value–proof pair for this guard. The obligation remains: `nonnegative_input(-1) = -1` is rejected at well-definedness. Lean can alternatively use a separate proof parameter, and automation can fill some packaging; this compares interfaces, not an inability of Lean to express guarded functions. See [Lean’s subtypes](https://lean-lang.org/doc/reference/latest/Basic-Types/Subtypes/).
+
+The same distinction appears in numeric representations. The real `1` and complex `1` have different Lean types, but their standard embedding agrees:
+
+```lean
+import Mathlib
+
+example : ((1 : ℝ) : ℂ) = (1 : ℂ) := by
+  simp
+```
+
+In Litex, membership facts can accumulate about one source object:
+
+```litex
+have a N = 1
+a $in Z
+a $in R
+a $in C
+```
+
+This does not say that Lean’s real and complex ones are mathematically unequal, or that generated Lean is untyped. It exposes different source interfaces for identity, membership, and representation. The following `Eq`/`Same` section examines the bridge in more detail; Mathlib’s numeric embedding is documented by [`Complex.ofReal_one`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Basic/Complex/Basic.html#Complex.ofReal_one).
+
+### Foundations: a different starting point, not only shorter code
+
+Different foundations can each be internally consistent while organizing objects, equality, and proofs differently. Lean uses [dependent type theory](https://lean-lang.org/theorem_proving_in_lean4/Dependent-Type-Theory/); mathematical exposition is often set-oriented. Neither description is an unconditional proof of a foundation’s consistency, and everyday mathematics does not have one unique formal presentation. The division and square-root extensions above are library definitions, not consequences forced by Lean’s axioms.
+
+Litex explores whether familiar source-level objects, domain conditions, and fact-oriented proof writing can lower the cost of constructing and understanding checked mathematics. This is a design goal to evaluate across tasks. The examples establish these particular behaviors, not universal coverage, superior correctness, or complete Lean compilation.
+
+---
+
+
 ## A Semantic Difference Behind the Syntax: `Eq` and `Same`
 
 One of the most important differences is not visible from surface proof

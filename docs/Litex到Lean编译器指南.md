@@ -525,6 +525,8 @@ target/release/litex -strict -lean -f lean/examples/rational_inverse_maps/statem
 
 以上代码片段来自维护中的示例与语义接口，不是完整的能力清单。其所属产物改变时，应同步更新。实现映射保留在[编译器 README](../src/compile_to_lean/README.md)中；开发夹具、验收记录与构建工具保留在仅限本地的编译器工作区 `scripts/litex_to_lean/`。
 
+<a id="current-mathematical-coverage-and-examples"></a>
+
 ## 当前覆盖的数学范围与示例
 
 **Litex 已经在一个明确的数学子集上打通了从源码证明、编译生成 Lean 到 Lean 复核的流程：

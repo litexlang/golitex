@@ -6493,7 +6493,7 @@ not x $in Z
 
 作为实数并不在整数中建立非成员关系。该 failed 检查也不建立 `x $in Z`。将未证明目标与其否定区分开来。
 
-**证据：** M01–M07。 **源码:** [原子 WD](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)、[结构成员关系](../src/execute/execute_fact_stmt/verify_atomic_fact/search_structural_membership.rs)、[签名载体推导](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/membership_signed_standard_set.rs)、[生成器投影](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/membership_projection.rs)、[子集推导](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/subset.rs)。
+**证据：** M01–M07。 **源码:** [原子 WD](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs)、[结构成员关系](../src/execute/execute_fact_stmt/verify_atomic_fact/search_structural_membership.rs)、[签名载体推导](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/membership_signed_standard_set.rs)、[生成器投影](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/infer_in_fact.rs)、[子集推导](../src/store_fact_and_infer/infer_fact/infer_atomic_fact/infer_atomic_except_equality/subset.rs)。
 
 <a id="alpha-matching-and-restricted-equality-transport"></a>
 

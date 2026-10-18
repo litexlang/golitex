@@ -18,6 +18,8 @@ lecture a chapter-by-chapter adaptation.
 | Collection | Mathematical progression | Scope |
 | --- | --- | --- |
 | [Linear Algebra in Litex](linear_algebra/README.md) | Coordinate operations → vector spaces and subspaces → span, bases and unique coordinates | Selected lectures inspired by Axler's *Linear Algebra Done Right*, using the real plane. |
+| [Topology in Litex](topology/README.md) | Open and closed sets → continuous maps → homeomorphisms | Two chapters with discrete and indiscrete two-point spaces, continuous composition and the closed-preimage criterion. |
+| [Abstract Algebra in Litex](abstract_algebra/README.md) | Groups and subgroups → homomorphisms → kernels and injectivity | Two chapters on group theory, using integer addition, multiples, doubling and the zero map. |
 | [Mathematical Concepts in Litex](math_concepts_in_litex/README.md) | Subject-specific slices from elementary constructions to undergraduate structures | A collection of checked vertical slices, rather than a complete curriculum. |
 
 ## Textbook adaptations

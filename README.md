@@ -5,6 +5,8 @@
 
 ### Write mathematics. See why it holds.
 
+**Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”), not “LYE-tek” (“赖泰克”).
+
 Created and maintained by Jiachen Shen.
 
 _“Language is an instrument of human reason, and not merely a medium for the expression of thought.”_
@@ -17,10 +19,36 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 [阅读中文蓝图](docs/Litex中文蓝图.md)
 </div>
 
+## The goal of Litex
+
+Why does writing a formal mathematical proof often feel so different from
+writing the same proof on paper? Litex explores a language-design question:
+
+**What should a formal proof language look like if it were designed around ordinary mathematical writing?**
+
+Litex aims to bridge the expressive freedom of natural language and the rigor
+of formal verification. The goal is to let mathematicians develop definitions
+and arguments in familiar ways, with assumptions, conditions, and reasoning
+made precise enough for a machine to check.
+
+**Litex follows ordinary mathematics:** it preserves familiar textbook meanings
+and domain conditions. Lean/Mathlib's standard real division satisfies
+[`(1 : ℝ) / 0 = 0`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero).
+Litex requires `x != 0` before accepting `1 / x`, and rejects `1 / 0 = 0`
+as not well-defined. This is a deliberate choice of operation semantics;
+Lean can also represent restricted domains. See the
+[Lean–Litex examples](docs/Representative_Lean_Litex_Example_Comparisons.md#ordinary-mathematics)
+for division, subtraction, and real square roots.
+
+The significance of a new mathematical language lies in helping mathematicians
+across all branches advance their work and deepen their understanding together.
+Litex's long-term ambition is a shared language for expressing ideas, examining
+proofs, and building on one another's knowledge. The
+[Blueprint](docs/Litex_Blueprint.md#goal-of-litex) develops this goal.
+
 ## Write a fact and see what it leaves behind
 
-Litex is designed as an everyday formal language for everyone who wants to
-write and understand checkable mathematics.
+Litex is a human-readable, set-theoretic, fact-oriented, compilable-to-Lean formal language.
 
 **Litex is well suited to interactive work with AI:** AI proposes a mathematical
 step, Litex checks it and returns feedback, and AI revises or continues from

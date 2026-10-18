@@ -1986,6 +1986,13 @@ class SetSemantics (M : Semantics.{u}) where
   sepValue : M.Value → (M.Value → Prop) → M.Value
   sep_members : ∀ D p x, M.mem x (sepValue D p) ↔ M.mem x D ∧ p x
   sep_isSet : ∀ D p, M.isSet D → M.isSet (sepValue D p)
+  unionValue : M.Value → M.Value → M.Value
+  union_members : ∀ A B x, M.mem x (unionValue A B) ↔ M.mem x A ∨ M.mem x B
+  union_isSet : ∀ A B, M.isSet A → M.isSet B → M.isSet (unionValue A B)
+  powerValue : M.Value → M.Value
+  power_members : ∀ A B, M.mem B (powerValue A) ↔
+    M.isSet B ∧ ∀ x, M.mem x B → M.mem x A
+  power_isSet : ∀ A, M.isSet A → M.isSet (powerValue A)
   ext : ∀ A B, M.isSet A → M.isSet B → (∀ x, M.mem x A ↔ M.mem x B) → A = B
 
 noncomputable instance numericSetSemantics : SetSemantics NumericModel.model where
@@ -1998,6 +2005,12 @@ noncomputable instance numericSetSemantics : SetSemantics NumericModel.model whe
   sepValue D p := ZFSet.sep p D
   sep_members _ _ _ := ZFSet.mem_sep
   sep_isSet _ _ _ := True.intro
+  unionValue := (· ∪ ·)
+  union_members _ _ _ := ZFSet.mem_union
+  union_isSet _ _ _ _ := True.intro
+  powerValue := ZFSet.powerset
+  power_members _ _ := by simp only [ZFSet.mem_powerset]; exact ⟨fun h => ⟨True.intro, h⟩, fun h => h.2⟩
+  power_isSet _ _ := True.intro
   ext _ _ _ _ := ZFSet.ext
 
 /-- Positivity is a faithful real denotation witness, including its carrier. -/
