@@ -285,6 +285,31 @@ pub(super) fn project_obj_wd_failure(
             None,
             project_fail_to_verify_integer_operator_obj_well_defined_result(p, rt),
         ),
+        FailToVerifyObjWellDefinedResult::HyperbolicOperator(p) => node(
+            rt,
+            "HyperbolicOperator",
+            None,
+            match p {
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Sinh(p) => {
+                    node(rt, "Sinh", None, common(&p.0, rt))
+                }
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Cosh(p) => {
+                    node(rt, "Cosh", None, common(&p.0, rt))
+                }
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Tanh(p) => {
+                    node(rt, "Tanh", None, common(&p.0, rt))
+                }
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Coth(p) => {
+                    node(rt, "Coth", None, common(&p.0, rt))
+                }
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Sech(p) => {
+                    node(rt, "Sech", None, common(&p.0, rt))
+                }
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Csch(p) => {
+                    node(rt, "Csch", None, common(&p.0, rt))
+                }
+            },
+        ),
         FailToVerifyObjWellDefinedResult::TrigOperator(p) => node(
             rt,
             "TrigOperator",
@@ -461,6 +486,12 @@ fn project_fail_to_verify_trig_operator_obj_well_defined_result(
     rt: &Runtime,
 ) -> JsonValue {
     match f {
+        FailToVerifyTrigOperatorObjWellDefinedResult::Csc(p) => {
+            node(rt, "Csc", None, common(&p.0, rt))
+        }
+        FailToVerifyTrigOperatorObjWellDefinedResult::Sec(p) => {
+            node(rt, "Sec", None, common(&p.0, rt))
+        }
         FailToVerifyTrigOperatorObjWellDefinedResult::Sin(p) => {
             node(rt, "Sin", None, common(&p.0, rt))
         }
@@ -513,6 +544,9 @@ fn project_fail_to_verify_complex_operator_obj_well_defined_result(
     rt: &Runtime,
 ) -> JsonValue {
     match f {
+        FailToVerifyComplexOperatorObjWellDefinedResult::Conjugate(p) => {
+            node(rt, "Conjugate", None, common(&p.0, rt))
+        }
         FailToVerifyComplexOperatorObjWellDefinedResult::RealPart(p) => {
             node(rt, "RealPart", None, common(&p.0, rt))
         }
@@ -530,6 +564,9 @@ fn project_fail_to_verify_set_operator_obj_well_defined_result(
     rt: &Runtime,
 ) -> JsonValue {
     match f {
+        FailToVerifySetOperatorObjWellDefinedResult::SymmetricDifference(p) => {
+            node(rt, "SymmetricDifference", None, common(&p.0, rt))
+        }
         FailToVerifySetOperatorObjWellDefinedResult::Union(p) => {
             node(rt, "Union", None, common(&p.0, rt))
         }

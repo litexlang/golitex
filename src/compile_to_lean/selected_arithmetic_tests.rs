@@ -19,6 +19,101 @@ const MUL_MONOTONE: &str = "claim:\n    ? forall a R, b R, c R:\n        0 <= c\
 const DIV_ZERO_LOWER: &str = "claim:\n    ? forall a R, b R:\n        0 < b\n        0 <= a\n        =>:\n            0 <= a / b\n    0 <= a / b\n";
 const DIV_ZERO_UPPER: &str = "claim:\n    ? forall a R, b R:\n        0 < b\n        a <= 0\n        =>:\n            a / b <= 0\n    a / b <= 0\n";
 
+#[test]
+fn sqrt_quotient_square_lean_rejects_the_unhandled_rule_certificate() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::SqrtQuotientSquareProof;
+
+    let (mut result, mut compiler) = checked("0=0\n2^2=4*1^2\n");
+    compiler
+        .compile_run(&result, "sqrt_quotient_square_baseline")
+        .expect("supported numeric claim before replacing its proof route");
+    let tokens = crate::tokenize::Tokenizer::new()
+        .tokenize("sqrt(4)=2/1", compiler.runtime.current_file.clone())
+        .unwrap();
+    let Stmt::Fact(source) = compiler.runtime.parse(&tokens).unwrap().remove(0) else {
+        panic!("source equation");
+    };
+    let source = compiler
+        .runtime
+        .verify_fact(&source, VerifyState::top_level())
+        .unwrap();
+    assert!(!source.is_failed());
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(step)) = &mut result.statement_results[1]
+    else {
+        panic!("checked numeric equality");
+    };
+    let VerifyFactResult::Equality(proof) = &mut step.verify_result else {
+        panic!("target equality");
+    };
+    let VerifyEqualityResult::Success(proof) = proof.as_mut() else {
+        panic!("checked target");
+    };
+    proof.searched_proof = EqualFactSearchedProof::ByBuiltinRule(
+        EqualitySearchProofByBuiltinRule::ElementaryArithmetic(
+            ElementaryArithmeticProof::SqrtQuotientSquare(SqrtQuotientSquareProof::new(source)),
+        ),
+    );
+    assert_eq!(
+        compiler
+            .compile_run(&result, "sqrt_quotient_square_unhandled")
+            .unwrap_err()
+            .route,
+        "Equality/BuiltinRule"
+    );
+}
+
+#[test]
+fn integer_quotient_remainder_lean_rejects_the_unsupported_structural_node() {
+    use super::source_position::{SourceOwner, SourcePosition};
+
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let prefix = rt
+        .run_litex_code("have k Z\nhave a Z=2*k\na%2=(2*k)%2=0\n")
+        .unwrap();
+    assert!(prefix.success && prefix.session_error.is_none());
+    let tokens = crate::tokenize::Tokenizer::new()
+        .tokenize("a/2 $in Z", rt.current_file.clone())
+        .unwrap();
+    let Stmt::Fact(fact) = rt.parse(&tokens).unwrap().remove(0) else {
+        panic!("membership");
+    };
+    let VerifyFactResult::AtomicExceptEquality(result) =
+        rt.verify_fact(&fact, VerifyState::top_level()).unwrap()
+    else {
+        panic!("atomic result");
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(result) = *result else {
+        panic!("checked quotient");
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) =
+        result.searched_proof
+    else {
+        panic!("actual structural evidence");
+    };
+    assert!(matches!(
+        proof.reason,
+        StructuralMembershipReason::ExactIntegerDiv { .. }
+    ));
+    let compiler = LitexToLeanCompiler::new(rt);
+    let position = SourcePosition {
+        parent: None,
+        owner: SourceOwner::Run(&prefix),
+        before: prefix.statement_results.len(),
+    };
+    assert_eq!(
+        compiler
+            .compile_structural(&proof, &position)
+            .unwrap_err()
+            .route,
+        "StructuralMembership/ExactIntegerDiv"
+    );
+}
+
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {
         code: String::new(),

@@ -99,6 +99,23 @@ impl Runtime {
                 left: child(&v.left, target)?,
                 right: child(&v.right, target)?,
             },
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(v)) if matches!(target, Z) => {
+                let numerator = child(&v.left, &Z)?;
+                let denominator = child(&v.right, &Z)?;
+                let remainder = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
+                    left: v.left.clone(),
+                    right: v.right.clone(),
+                }));
+                let zero = Obj::Literal(Literal::Number(Number::new("0".into())));
+                // Cite only an existing equality path. The enclosing Div WD
+                // already owns the nonzero divisor; do not reopen BT search.
+                let zero_remainder = self.lookup_known_obj_equality(&remainder, &zero)?;
+                P::ExactIntegerDiv {
+                    numerator,
+                    denominator,
+                    zero_remainder: Box::new(zero_remainder),
+                }
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Div(v)) if matches!(target, Q | R | C) => {
                 P::Div {
                     left: child(&v.left, target)?,
@@ -223,7 +240,17 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
             ExpLogOperator::Log(_) => (R, K::Log),
             ExpLogOperator::Ln(_) => (R, K::Ln),
         },
+        Obj::HyperbolicOperator(v) => match v {
+            HyperbolicOperator::Sinh(_) => (R, K::Sinh),
+            HyperbolicOperator::Cosh(_) => (RPos, K::Cosh),
+            HyperbolicOperator::Tanh(_) => (R, K::Tanh),
+            HyperbolicOperator::Coth(_) => (RStar, K::Coth),
+            HyperbolicOperator::Sech(_) => (RPos, K::Sech),
+            HyperbolicOperator::Csch(_) => (RStar, K::Csch),
+        },
         Obj::TrigOperator(v) => match v {
+            TrigOperator::Csc(_) => (RStar, K::Csc),
+            TrigOperator::Sec(_) => (RStar, K::Sec),
             TrigOperator::Sin(_) => (R, K::Sin),
             TrigOperator::Cos(_) => (R, K::Cos),
             TrigOperator::Tan(_) => (R, K::Tan),
@@ -234,6 +261,7 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
             TrigOperator::Arccot(_) => (R, K::Arccot),
         },
         Obj::ComplexOperator(v) => match v {
+            ComplexOperator::Conjugate(_) => (C, K::Conjugate),
             ComplexOperator::RealPart(_) => (R, K::RealPart),
             ComplexOperator::ImaginaryPart(_) => (R, K::ImaginaryPart),
             ComplexOperator::ComplexAbs(_) => (R, K::ComplexAbs),

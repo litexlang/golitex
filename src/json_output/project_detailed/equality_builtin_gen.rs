@@ -12,6 +12,58 @@ pub(super) fn project_equality_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::SymmetricDifference(p) => {
+            let mut fields = vec![
+                ("type", string("builtin_rule")),
+                ("rule", string(p.rule_id())),
+            ];
+            if let crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_symmetric_difference::SymmetricDifferenceEqualityProof::SymDiffFiniteRationals(proof) = p {
+                for (name, values) in [("left_values", &proof.left_values),("right_values", &proof.right_values),("result_values", &proof.result_values)] {
+                    fields.push((name, JsonValue::Array(values.iter().map(|value| string(value.to_obj().readable_string())).collect())));
+                }
+            }
+            object_for(runtime, fields)
+        }
+        EqualitySearchProofByBuiltinRule::Conjugation(p) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("rule", string(p.rule_id())),
+            ];
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_conjugation::ConjugationEqualityProof as P;
+            match p {
+                P::ConjugateReal(proof) => entries.push((
+                    "real",
+                    super::structural_membership::project_structural_membership(
+                        &proof.real,
+                        runtime,
+                    ),
+                )),
+                P::ConjugateNaturalPower(proof) => entries.push((
+                    "natural_exponent",
+                    super::structural_membership::project_structural_membership(
+                        &proof.natural_exponent,
+                        runtime,
+                    ),
+                )),
+                _ => {}
+            }
+            object_for(runtime, entries)
+        }
+        EqualitySearchProofByBuiltinRule::ReciprocalTrig(p) => {
+            let entries = vec![
+                ("type", string("builtin_rule")),
+                ("rule", string(p.rule_id())),
+            ];
+            object_for(runtime, entries)
+        }
+        EqualitySearchProofByBuiltinRule::Hyperbolic(p) => {
+            let entries = vec![
+                ("type", string("builtin_rule")),
+                ("rule", string(p.rule_id())),
+            ];
+            object_for(runtime, entries)
+        }
+
         EqualitySearchProofByBuiltinRule::AddZeroLeftFromEqualities(p) => object_for(
             runtime,
             vec![
@@ -587,6 +639,10 @@ pub(super) fn project_equality_builtin_rule(
                 ("rule", string(p.rule_id())),
             ];
             match p {
+                P::SqrtQuotientSquare(p) => entries.push((
+                    "quotient_equation",
+                    project_verify_fact(&p.quotient_equation, runtime),
+                )),
                 P::SqrtSquareNonpositive(p) => entries.push((
                     "nonpositive_argument",
                     project_verify_fact(&p.nonpositive_argument, runtime),

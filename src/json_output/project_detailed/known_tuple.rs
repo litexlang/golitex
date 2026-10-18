@@ -186,7 +186,7 @@ pub(super) fn project_shape(shape: &KnownTupleShapeProof, runtime: &Runtime) -> 
     object_for(runtime, fields)
 }
 
-fn project_value(value: &KnownTupleValueProof, runtime: &Runtime) -> JsonValue {
+pub(super) fn project_value(value: &KnownTupleValueProof, runtime: &Runtime) -> JsonValue {
     object_for(
         runtime,
         vec![
@@ -204,7 +204,7 @@ fn project_value(value: &KnownTupleValueProof, runtime: &Runtime) -> JsonValue {
     )
 }
 
-fn project_function_applicability(
+pub(super) fn project_function_applicability(
     proof: &KnownFunctionTupleValueProof,
     runtime: &Runtime,
 ) -> JsonValue {

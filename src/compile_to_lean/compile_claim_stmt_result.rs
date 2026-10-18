@@ -328,7 +328,7 @@ impl LitexToLeanCompiler {
             &body_fact,
             &compiled,
             body_position,
-        )])
+        )?])
     }
 }
 

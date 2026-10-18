@@ -5,6 +5,9 @@ use crate::ast::obj::{
     OneSideInfinityIntervalObj, Pow, ProductShape, Quot, SetFormer, SetOperator, Sign, Sin, Sqrt,
     StructAndFieldAccessObj, Sub, Tan, TrigOperator,
 };
+use crate::ast::obj::{
+    Conjugate, Cosh, Coth, Csc, Csch, HyperbolicOperator, Sec, Sech, Sinh, Tanh,
+};
 use crate::exec_env::known_fact_memory::ObjIR;
 
 // Same-shape child pairs for MatchingOneArgByOne (legacy same_shape peel).
@@ -149,6 +152,44 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(l)),
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(r)),
         ) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Sec(l)), Obj::TrigOperator(TrigOperator::Sec(r))) => {
+            unary!(l, r)
+        }
+        (Obj::TrigOperator(TrigOperator::Csc(l)), Obj::TrigOperator(TrigOperator::Csc(r))) => {
+            unary!(l, r)
+        }
+        (
+            Obj::ComplexOperator(ComplexOperator::Conjugate(l)),
+            Obj::ComplexOperator(ComplexOperator::Conjugate(r)),
+        ) => unary!(l, r),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(r)),
+        ) => unary!(l, r),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(r)),
+        ) => unary!(l, r),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(r)),
+        ) => unary!(l, r),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(r)),
+        ) => unary!(l, r),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(r)),
+        ) => unary!(l, r),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(r)),
+        ) => unary!(l, r),
+        (
+            Obj::SetOperator(SetOperator::SymmetricDifference(l)),
+            Obj::SetOperator(SetOperator::SymmetricDifference(r)),
+        ) => binary!(l, r),
         (Obj::TrigOperator(TrigOperator::Sin(l)), Obj::TrigOperator(TrigOperator::Sin(r))) => {
             unary!(l, r)
         }
@@ -514,6 +555,33 @@ pub(crate) fn replace_scalar_subterms(
             Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt {
                 arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),
             }))
+        }
+        Obj::TrigOperator(TrigOperator::Sec(a)) => {
+            Sec::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::TrigOperator(TrigOperator::Csc(a)) => {
+            Csc::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::ComplexOperator(ComplexOperator::Conjugate(a)) => {
+            Conjugate::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(a)) => {
+            Sinh::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(a)) => {
+            Cosh::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(a)) => {
+            Tanh::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(a)) => {
+            Coth::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(a)) => {
+            Sech::new(replace_scalar_subterms(&a.arg, replacement)).into()
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(a)) => {
+            Csch::new(replace_scalar_subterms(&a.arg, replacement)).into()
         }
         Obj::TrigOperator(TrigOperator::Sin(a)) => Obj::TrigOperator(TrigOperator::Sin(Sin {
             arg: Box::new(replace_scalar_subterms(&a.arg, replacement)),

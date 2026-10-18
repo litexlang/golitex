@@ -31,7 +31,7 @@ impl LitexToLeanCompiler {
         let name = format!("h_{}", proof.statement.fact.fact_id().value());
         let declaration = format!(
             "theorem {name}{} : {} :=\n  {}",
-            self.context_header(position),
+            self.context_header(position)?,
             compiled.0,
             compiled.1.replace('\n', "\n  ")
         );
@@ -327,7 +327,7 @@ impl LitexToLeanCompiler {
             &body_fact,
             &compiled,
             body_position,
-        )])
+        )?])
     }
 }
 

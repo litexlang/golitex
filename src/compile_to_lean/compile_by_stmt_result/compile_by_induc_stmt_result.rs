@@ -46,7 +46,7 @@ impl LitexToLeanCompiler {
             self.compile_wd(wd, &header)?;
         }
         let (mut binders, mut introductions) =
-            self.introduce_numeric_parameter(&proof.parameter, carrier, store, &introduced)?;
+            self.introduce_member_parameter(&proof.parameter, carrier, store, &introduced)?;
         let fact = self.resolve_fact(store.primary_fact_id(), &introduced)?;
         let h_z = format!("h_{}", fact.fact_id().value());
         let mut definitions = self.compile_parameter_inferences(
@@ -285,7 +285,7 @@ impl LitexToLeanCompiler {
                 conjunction_projection("_induction_hypothesis", j - 1, induction.goals.len())
             };
             let compiled = (proposition, proof);
-            lines.push(self.emit_internal_fact(&source, &compiled, &formed));
+            lines.push(self.emit_internal_fact(&source, &compiled, &formed)?);
             lines.extend(self.compile_stored_inferences(
                 &assumption.store_and_infer,
                 &source,

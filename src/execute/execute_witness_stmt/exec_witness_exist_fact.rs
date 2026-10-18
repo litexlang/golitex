@@ -23,6 +23,7 @@ use crate::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
+use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
@@ -83,10 +84,12 @@ pub struct WitnessExistObligationSuccess {
     pub uniqueness_check: Option<VerifyFactResult>,
 }
 
-// Stage order: ambient → proof_steps → obligations → local_env → store.
+// Stage order: ambient → binders → equalities → proof_steps → obligations → local_env → store.
 pub struct ExecWitnessExistFactStmtSuccessResult {
     pub statement: WitnessExistFact,
     pub ambient: WitnessExistAmbientSuccess,
+    pub introduced_params: IntroduceTypedParametersResult,
+    pub witness_equalities: Vec<StoreFactAndInferResult>,
     pub proof_steps: Vec<ExecStmtResult>,
     pub obligations: WitnessExistObligationSuccess,
     pub local_env: Box<ExecEnv>,
@@ -125,7 +128,14 @@ impl Runtime {
             &stmt.proof,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )? {
-            Ok((ambient, proof_steps, obligations, local_env)) => {
+            Ok((
+                ambient,
+                introduced_params,
+                witness_equalities,
+                proof_steps,
+                obligations,
+                local_env,
+            )) => {
                 let exist_as_fact = exist_shaped_fact_to_fact(&stmt.exist_shaped_fact_in_witness);
                 let store_and_infer_result = self.store_fact_and_infer(
                     &exist_as_fact,
@@ -135,6 +145,8 @@ impl Runtime {
                     ExecWitnessExistFactStmtSuccessResult {
                         statement: stmt.clone(),
                         ambient,
+                        introduced_params,
+                        witness_equalities,
                         proof_steps,
                         obligations,
                         local_env,
@@ -162,6 +174,8 @@ impl Runtime {
         Result<
             (
                 WitnessExistAmbientSuccess,
+                IntroduceTypedParametersResult,
+                Vec<StoreFactAndInferResult>,
                 Vec<ExecStmtResult>,
                 WitnessExistObligationSuccess,
                 Box<ExecEnv>,
@@ -200,14 +214,17 @@ impl Runtime {
         let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
             // Nested local may bind the same surface names as an ambient obtain;
             // define_typed_parameters checks the top env only.
-            match rt.introduce_typed_parameters(&plain.typed_parameters, verify_state.clone())? {
-                Ok(_) => {}
+            let introduced_params = match rt
+                .introduce_typed_parameters(&plain.typed_parameters, verify_state.clone())?
+            {
+                Ok(introduced) => introduced,
                 Err(failed) => {
                     return Ok(Err(ExecWitnessExistFactStmtFailed::IntroduceBinders(
                         failed,
                     )));
                 }
-            }
+            };
+            let mut witness_equalities = Vec::with_capacity(equal_tos.len());
             {
                 let mut witness_index = 0;
                 for group in &plain.typed_parameters.groups {
@@ -222,7 +239,8 @@ impl Runtime {
                                 right: witness.clone(),
                                 line_file: plain.line_file.clone(),
                             }));
-                        rt.store_fact_and_infer(&equal_fact, verify_state)?;
+                        witness_equalities
+                            .push(rt.store_fact_and_infer(&equal_fact, verify_state)?);
                     }
                 }
             }
@@ -238,15 +256,25 @@ impl Runtime {
                 need_uniqueness,
                 verify_state.clone(),
             )? {
-                Ok(obligations) => Ok(Ok((proof_steps, obligations))),
+                Ok(obligations) => Ok(Ok((
+                    introduced_params,
+                    witness_equalities,
+                    proof_steps,
+                    obligations,
+                ))),
                 Err(failed) => Ok(Err(failed)),
             }
         })?;
 
         match local_outcome {
-            Ok((proof_steps, obligations)) => {
-                Ok(Ok((ambient, proof_steps, obligations, local_env)))
-            }
+            Ok((introduced_params, witness_equalities, proof_steps, obligations)) => Ok(Ok((
+                ambient,
+                introduced_params,
+                witness_equalities,
+                proof_steps,
+                obligations,
+                local_env,
+            ))),
             Err(failed) => Ok(Err(failed)),
         }
     }

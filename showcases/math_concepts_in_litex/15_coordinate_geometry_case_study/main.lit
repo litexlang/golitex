@@ -1781,45 +1781,7 @@ thm isosceles_implies_equal_projections:
         (c(1) - a(1))^2 + (c(2) - a(2))^2 - (c(1) - b(1))^2 - (c(2) - b(2))^2 = 0
         =>:
             (a(1) - c(1)) * (b(1) - a(1)) + (a(2) - c(2)) * (b(2) - a(2)) - (b(1) - c(1)) * (a(1) - b(1)) - (b(2) - c(2)) * (a(2) - b(2)) = 0
-    release thm distance_sq_coordinate_formula(c, a)
-    release thm distance_sq_coordinate_formula(c, b)
-    distance_sq(c, a) = (c(1) - a(1))^2 + (c(2) - a(2))^2
-    distance_sq(c, b) = (c(1) - b(1))^2 + (c(2) - b(2))^2
-    (c(1) - a(1))^2 + (c(2) - a(2))^2 - ((c(1) - b(1))^2 + (c(2) - b(2))^2) = 0
-    distance_sq(c, a) - distance_sq(c, b) = 0
-    distance_sq(c, a) = distance_sq(c, b)
-    release thm isosceles_base_dot(c, a, b)
-    dot(vec(a, c), vec(a, b)) = dot(vec(b, c), vec(b, a))
-    release thm vec_coordinate_formula(a, c)
-    release thm vec_coordinate_formula(a, b)
-    release thm vec_coordinate_formula(b, c)
-    release thm vec_coordinate_formula(b, a)
-    vec(a, c) = (c(1) - a(1), c(2) - a(2))
-    vec(a, b) = (b(1) - a(1), b(2) - a(2))
-    vec(b, c) = (c(1) - b(1), c(2) - b(2))
-    vec(b, a) = (a(1) - b(1), a(2) - b(2))
-    release thm dot_coordinate_formula(vec(a, c), vec(a, b))
-    release thm dot_coordinate_formula(vec(b, c), vec(b, a))
-    dot(vec(a, c), vec(a, b)) = (c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2))
-    dot(vec(b, c), vec(b, a)) = (c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2))
-    (c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2)) = (c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2))
-    (c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2)) - ((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2))) = 0
-    (a(1) - c(1)) = -(c(1) - a(1))
-    (a(2) - c(2)) = -(c(2) - a(2))
-    (b(1) - c(1)) = -(c(1) - b(1))
-    (b(2) - c(2)) = -(c(2) - b(2))
-    (a(1) - c(1)) * (b(1) - a(1)) = -(c(1) - a(1)) * (b(1) - a(1)) = -((c(1) - a(1)) * (b(1) - a(1)))
-    (a(2) - c(2)) * (b(2) - a(2)) = -(c(2) - a(2)) * (b(2) - a(2)) = -((c(2) - a(2)) * (b(2) - a(2)))
-    (b(1) - c(1)) * (a(1) - b(1)) = -(c(1) - b(1)) * (a(1) - b(1)) = -((c(1) - b(1)) * (a(1) - b(1)))
-    (b(2) - c(2)) * (a(2) - b(2)) = -(c(2) - b(2)) * (a(2) - b(2)) = -((c(2) - b(2)) * (a(2) - b(2)))
-    (a(1) - c(1)) * (b(1) - a(1)) + (a(2) - c(2)) * (b(2) - a(2)) = -((c(1) - a(1)) * (b(1) - a(1))) + (-((c(2) - a(2)) * (b(2) - a(2)))) = -((c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2)))
-    (b(1) - c(1)) * (a(1) - b(1)) + (b(2) - c(2)) * (a(2) - b(2)) = -((c(1) - b(1)) * (a(1) - b(1))) + (-((c(2) - b(2)) * (a(2) - b(2)))) = -((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2)))
-    (a(1) - c(1)) * (b(1) - a(1)) + (a(2) - c(2)) * (b(2) - a(2)) - ((b(1) - c(1)) * (a(1) - b(1)) + (b(2) - c(2)) * (a(2) - b(2))) = -((c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2))) - (-((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2))))
-    -((c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2))) - (-((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2)))) = ((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2))) - ((c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2)))
-    ((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2))) - ((c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2))) = -((c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2)) - ((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2))))
-    -((c(1) - a(1)) * (b(1) - a(1)) + (c(2) - a(2)) * (b(2) - a(2)) - ((c(1) - b(1)) * (a(1) - b(1)) + (c(2) - b(2)) * (a(2) - b(2)))) = 0
-    (a(1) - c(1)) * (b(1) - a(1)) + (a(2) - c(2)) * (b(2) - a(2)) - ((b(1) - c(1)) * (a(1) - b(1)) + (b(2) - c(2)) * (a(2) - b(2))) = 0
-    (a(1) - c(1)) * (b(1) - a(1)) + (a(2) - c(2)) * (b(2) - a(2)) - (b(1) - c(1)) * (a(1) - b(1)) - (b(2) - c(2)) * (a(2) - b(2)) = 0
+    (a(1) - c(1)) * (b(1) - a(1)) + (a(2) - c(2)) * (b(2) - a(2)) - (b(1) - c(1)) * (a(1) - b(1)) - (b(2) - c(2)) * (a(2) - b(2)) = -((c(1) - a(1))^2 + (c(2) - a(2))^2 - (c(1) - b(1))^2 - (c(2) - b(2))^2) = 0
 
 # An equidistant point has zero dot product with the centered base direction.
 thm equidistant_implies_perp_bisector_dot:
@@ -2821,6 +2783,8 @@ thm strict_triangle_one_side:
     distance_sq(a, c) = distance_sq(a, b) + distance_sq(b, c) - 2 * dot(vec(b, a), vec(b, c)) = -2 * dot(vec(b, a), vec(b, c)) + (distance_sq(a, b) + distance_sq(b, c)) = 2 * dot(vec(a, b), vec(b, c)) + (distance_sq(a, b) + distance_sq(b, c)) = distance_sq(a, b) + distance_sq(b, c) + 2 * dot(vec(a, b), vec(b, c))
     dot(vec(a, b), vec(b, c)) + dot(vec(a, b), vec(b, c)) < (distance(a, b) * distance(b, c)) + (distance(a, b) * distance(b, c))
     2 * dot(vec(a, b), vec(b, c)) < 2 * (distance(a, b) * distance(b, c))
+    2 * (distance(a, b) * distance(b, c)) = 2 * distance(a, b) * distance(b, c)
+    2 * dot(vec(a, b), vec(b, c)) < 2 * distance(a, b) * distance(b, c)
     distance_sq(a, b) + distance_sq(b, c) + 2 * dot(vec(a, b), vec(b, c)) < distance_sq(a, b) + distance_sq(b, c) + 2 * distance(a, b) * distance(b, c)
     distance_sq(a, c) < distance_sq(a, b) + distance_sq(b, c) + 2 * distance(a, b) * distance(b, c)
     (distance(a, b) + distance(b, c))^2 = distance(a, b)^2 + distance(b, c)^2 + 2 * distance(a, b) * distance(b, c)

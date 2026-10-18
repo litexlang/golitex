@@ -17,6 +17,17 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinComplementNonzeroFromCos(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("SinComplementNonzeroFromCos")), ("source_nonzero", super::searched::project_known_premise(&p.source_nonzero, runtime))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::NegationNonzero(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("NegationNonzero")), ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CoshNonzero(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CoshNonzero"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SechNonzero(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("SechNonzero"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CothNonzero(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CothNonzero"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CschNonzero(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CschNonzero"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SecNonzero(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("SecNonzero"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::CscNonzero(_)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("CscNonzero"))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::SinhNonzeroFromArgument(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("SinhNonzeroFromArgument")), ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::ConjugateNonzeroFromArgument(p)) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("ConjugateNonzeroFromArgument")), ("argument_nonzero", project_verify_fact(&p.argument_nonzero, runtime))]),
+
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::SubtractionOrderPairs(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("SubtractionOrderPairs")),
             ("minuend_order", project_verify_fact(&p.minuend_order, runtime)),

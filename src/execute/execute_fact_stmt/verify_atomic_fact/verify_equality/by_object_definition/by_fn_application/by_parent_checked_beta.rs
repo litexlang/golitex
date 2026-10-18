@@ -40,6 +40,7 @@ pub struct ParentCheckedBetaTwoSidesProof {
 }
 
 pub enum ParentCheckedBetaFunctionBody {
+    StructField(super::struct_field_value::StructFieldValueProof),
     KnownFiniteFunctionCoordinate {
         source:
             Box<crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof>,
@@ -185,9 +186,62 @@ impl Runtime {
         if app_wd.obj() != side {
             return Ok(None);
         }
+        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field)) = side {
+            return Ok(self
+                .struct_field_value(field, state)?
+                .map(|(proof, value)| (ParentCheckedBetaFunctionBody::StructField(proof), value)));
+        }
         let Obj::FnObj(app) = side else {
             return Ok(None);
         };
+        if let FnObjHead::FieldAccess(field) = app.head.as_ref() {
+            let receiver =
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field.clone()));
+            if let VerifyObjWellDefinedResult::Success(receiver_well_defined) =
+                self.verify_obj_well_definedness(&receiver, state)?
+            {
+                if let Some((receiver_function_body, value)) =
+                    self.parent_checked_beta_body(&receiver, &receiver_well_defined, state)?
+                {
+                    // A field's actual literal/declared function can be called.
+                    // Do not chase a graph of field-valued aliases (possibly
+                    // cyclic) under the guise of structural beta reduction.
+                    if !matches!(
+                        &value,
+                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
+                            | Obj::Identifier(_)
+                            | Obj::InstantiatedTemplateObj(_)
+                    ) {
+                        return Ok(None);
+                    }
+                    let application = Obj::FnObj(FnObj {
+                        head: Box::new(FnObjHead::from_obj(value)),
+                        body: app.body.clone(),
+                    });
+                    if let VerifyObjWellDefinedResult::Success(application_well_defined) =
+                        self.verify_obj_well_definedness(&application, state)?
+                    {
+                        if let Some((application_function_body, expanded_body)) = self
+                            .parent_checked_beta_body(
+                                &application,
+                                &application_well_defined,
+                                state,
+                            )?
+                        {
+                            return Ok(Some((
+                                ParentCheckedBetaFunctionBody::ReturnedKnownFunctionApplication {
+                                    receiver_well_defined: Box::new(receiver_well_defined),
+                                    receiver_function_body: Box::new(receiver_function_body),
+                                    application_well_defined: Box::new(application_well_defined),
+                                    application_function_body: Box::new(application_function_body),
+                                },
+                                expanded_body,
+                            )));
+                        }
+                    }
+                }
+            }
+        }
         if let Some(receiver) = self.finite_function_application_receiver(app) {
             if let Some(index) =
                 crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize(

@@ -14,6 +14,7 @@ mod finite_subset_size;
 mod lcm_divisibility;
 mod leaves;
 mod native_fixed_base;
+mod native_operations;
 mod scalar_division_relations;
 mod scalar_identities;
 
@@ -25,6 +26,19 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -287,6 +301,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -549,6 +576,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -811,6 +851,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -1075,6 +1128,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -1338,6 +1404,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -1602,6 +1681,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -1864,6 +1956,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -2126,6 +2231,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",
@@ -2388,6 +2506,19 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::Conjugation(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
+            }
+            Self::ReciprocalTrig(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
+            }
+            Self::Hyperbolic(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
+            }
+            Self::SymmetricDifference(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
+            }
+
             Self::AddZeroLeftFromEqualities(_) => {
                 add_zero_from_equalities::add_zero_from_equalities_text(
                     "AddZeroLeftFromEqualities",

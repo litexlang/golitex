@@ -1,6 +1,6 @@
 use super::helper::{
-    and_chain_fact, assume_fact, close_by_contradiction, or_fact_from_and_chains,
-    proof_verify_state, store_goal_fact, verify_goal_fact,
+    and_chain_fact, assume_fact_with_wd, close_by_contradiction, or_fact_from_and_chains,
+    proof_verify_state, store_goal_fact_with_wd, verify_goal_fact,
 };
 use super::result::{
     ByCasesBranchClosingSuccess, ByCasesBranchFailed, ByCasesBranchSuccess, ExecByCasesStmtFailed,
@@ -8,6 +8,7 @@ use super::result::{
 };
 use crate::ast::fact::Fact;
 use crate::ast::stmt::ByCasesStmt;
+use crate::execute::execute_fact_stmt::ProveAndStoreThenFactResult;
 use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -64,10 +65,14 @@ pub fn exec_by_cases_stmt(
         }
     }
 
+    let mut stored_wd = Vec::with_capacity(stmt.then_facts.len());
     let mut stored = Vec::with_capacity(stmt.then_facts.len());
     for (index, fact) in stmt.then_facts.iter().enumerate() {
-        match store_goal_fact(runtime, fact)? {
-            Ok(s) => stored.push(s),
+        match store_goal_fact_with_wd(runtime, fact)? {
+            Ok((wd, store)) => {
+                stored_wd.push(wd);
+                stored.push(store);
+            }
             Err(message) => {
                 return Ok(ExecByStmtResult::Cases(ExecByCasesStmtResult::Failed(
                     ExecByCasesStmtFailed::Store { index, message },
@@ -81,6 +86,7 @@ pub fn exec_by_cases_stmt(
             then_facts_wd,
             coverage,
             branches,
+            stored_wd,
             stored,
         },
     )))
@@ -94,10 +100,12 @@ fn exec_one_case_branch(
     let assumption = stmt.cases[index].clone();
     let case_fact = and_chain_fact(&assumption);
     let (outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let assumptions_stored = match assume_fact(rt, &case_fact)? {
+        let assumed = match assume_fact_with_wd(rt, &case_fact)? {
             Ok(s) => s,
             Err(msg) => return Ok(Err(ByCasesBranchFailed::AssumeCase(msg))),
         };
+        let assumption_wd = assumed.well_defined;
+        let assumptions_stored = assumed.store_and_infer;
         let assumption_fact_id = assumptions_stored.primary_fact_id();
         let assumption_components = assumptions_stored.atomic_components();
         let proof_steps = match run_proof_body_stmts(rt, &stmt.proofs[index])? {
@@ -112,8 +120,7 @@ fn exec_one_case_branch(
                 }
             }
         } else {
-            let mut checks = Vec::with_capacity(stmt.then_facts.len());
-            let mut conclusion_fact_ids = Vec::with_capacity(stmt.then_facts.len());
+            let mut proved_then_facts = Vec::with_capacity(stmt.then_facts.len());
             for (then_index, then_fact) in stmt.then_facts.iter().enumerate() {
                 let proof = verify_goal_fact(rt, then_fact)?;
                 if proof.is_failed() {
@@ -126,17 +133,17 @@ fn exec_one_case_branch(
                     then_fact,
                     crate::execute::execute_fact_stmt::VerifyState::top_level(),
                 )?;
-                conclusion_fact_ids.push(Some(stored.primary_fact_id()));
-                checks.push(proof);
+                proved_then_facts.push(ProveAndStoreThenFactResult {
+                    verify_result: proof,
+                    store_and_infer: stored,
+                });
             }
-            ByCasesBranchClosingSuccess::ThenFacts {
-                checks,
-                conclusion_fact_ids,
-            }
+            ByCasesBranchClosingSuccess::ThenFacts { proved_then_facts }
         };
         Ok(Ok((
             assumption_fact_id,
             assumption_components,
+            assumption_wd,
             assumptions_stored,
             proof_steps,
             closing,
@@ -147,6 +154,7 @@ fn exec_one_case_branch(
         Ok((
             assumption_fact_id,
             assumption_components,
+            assumption_wd,
             assumptions_stored,
             proof_steps,
             closing,
@@ -154,6 +162,7 @@ fn exec_one_case_branch(
             assumption,
             assumption_fact_id,
             assumption_components,
+            assumption_wd,
             assumptions_stored,
             proof_steps,
             closing,

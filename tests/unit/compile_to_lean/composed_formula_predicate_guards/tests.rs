@@ -162,8 +162,13 @@ fn composed_formula_predicate_guards_keep_the_original_constructor_shapes() {
         Some(FnObjDomainFnSetEvidence::InFunctionSet { .. })
     ));
     let output = super::compile_run(&result, &compiler, "owned_composed_shape").unwrap();
+    assert!(output.contains("Litex.formulaFn2 (M := M)"));
+    assert!(output.contains("Litex.FunctionSignature.two (M := M)"));
     assert!(output.contains("Litex.FunctionSemantics.callValue"));
-    assert!(output.contains("Litex.FunctionSemantics.pairValue"));
+    // Multiple source arguments form a complete indexed tuple; pairValue is
+    // reserved for graph edges, not the observable function input.
+    assert!(output.contains("Litex.FiniteFunction.tupleValue (M := M) !["));
+    assert!(!output.contains("Litex.FunctionSemantics.pairValue"));
     assert!(output.contains("Litex.call2"));
 }
 

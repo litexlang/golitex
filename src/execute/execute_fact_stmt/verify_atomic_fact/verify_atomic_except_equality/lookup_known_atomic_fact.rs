@@ -59,8 +59,8 @@ impl Runtime {
                 candidates.extend(knowns.iter().cloned());
             }
         }
-        // Candidate matching is read-only. Build the same visible graph once
-        // on demand instead of cloning it for every unsuccessful argument.
+        // Candidate matching is read-only. Exact path queries borrow only
+        // reachable edges; a caller-provided snapshot can still be reused.
         let mut adjacency = None;
         for known in candidates {
             let args = atomic_fact_args_ref(&known);
@@ -109,8 +109,11 @@ impl Runtime {
         if let Some(proof) = search_equal_fact_proof_by_they_are_the_same(&comparison) {
             return Some(proof.into());
         }
-        let adjacency = adjacency.get_or_insert_with(|| self.visible_equivalence_class_adjacency());
-        if let Some(path) = super::super::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency(&adjacency, left, right) {
+        let path = match adjacency.as_ref() {
+            Some(graph) => super::super::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency(graph, left, right),
+            None => self.equivalence_class_path(left, right),
+        };
+        if let Some(path) = path {
             return Some(EqualFactSearchedProof::ByEquivalenceClass(
                 KnownEqualityPathProof::new(path).into(),
             ));

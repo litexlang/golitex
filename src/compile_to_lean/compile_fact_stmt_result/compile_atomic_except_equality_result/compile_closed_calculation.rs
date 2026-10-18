@@ -76,10 +76,20 @@ impl LitexToLeanCompiler {
                     "Closed membership changes the target set.",
                 ))
             }
-            ClosedMembershipCalculationProof::IntegerRange { .. } => {
-                return Err(LeanCompileError::unsupported(
-                    "ClosedMembership/IntegerRange",
-                ))
+            ClosedMembershipCalculationProof::IntegerRange {
+                value,
+                set: recorded,
+                start,
+                end,
+            } => {
+                if recorded.ir() != set.ir() {
+                    return Err(LeanCompileError::new(
+                        "ClosedMembership/RangeSubject",
+                        "The integer-range certificate names another source set.",
+                    ));
+                }
+                return self
+                    .compile_closed_range_membership(element, set, value, start, end, position);
             }
         };
         if *target == StandardSet::RPos {
@@ -190,5 +200,65 @@ impl LitexToLeanCompiler {
             standard_term(target)?,
             native.1
         ))
+    }
+
+    fn compile_closed_range_membership(
+        &self,
+        element: &Obj,
+        set: &Obj,
+        value: &ClosedScalarValue,
+        start: &ClosedScalarValue,
+        end: &ClosedScalarValue,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Obj::SetFormer(SetFormer::ClosedRange(range)) = set else {
+            return Err(LeanCompileError::unsupported(
+                "ClosedMembership/HalfOpenRange",
+            ));
+        };
+        let integer = |object: &Obj,
+                       recorded: &ClosedScalarValue|
+         -> Result<(i128, String), LeanCompileError> {
+            let scalar = match recorded {
+                ClosedScalarValue::Decimal(value) => scalar_decimal(value)?,
+                ClosedScalarValue::ExactComplex { real, imaginary } if imaginary.is_zero() => {
+                    real.clone()
+                }
+                _ => {
+                    return Err(LeanCompileError::unsupported(
+                        "ClosedMembership/RangeScalar",
+                    ))
+                }
+            };
+            let native = self.compile_numeric_observation(object, position)?;
+            if native.3.as_ref() != Some(&scalar) {
+                return Err(LeanCompileError::new(
+                    "ClosedMembership/RangeValue",
+                    "A recorded integer differs from the original closed expression.",
+                ));
+            }
+            let value = scalar
+                .to_i128_if_integer()
+                .ok_or_else(|| LeanCompileError::unsupported("ClosedMembership/RangeInteger"))?;
+            Ok((
+                value,
+                format!(
+                    "(({}).trans (congrArg M.number (by norm_num : {} = (({value} : ℤ) : ℂ))))",
+                    native.1, native.0
+                ),
+            ))
+        };
+        let (lower, h_lower) = integer(&range.start, start)?;
+        let (upper, h_upper) = integer(&range.end, end)?;
+        let (value, h_value) = integer(element, value)?;
+        if lower > value || value > upper {
+            return Err(LeanCompileError::new(
+                "ClosedMembership/RangeBounds",
+                "The recorded integer is outside the closed source bounds.",
+            ));
+        }
+        let term = self.compile_object_reference(set, position)?;
+        let element = self.compile_object_reference(element, position)?;
+        Ok(format!("(by\n  let _range := {term}\n  exact Litex.inClosedRangeOfDenote _range.val.start _range.val.finish {element} _range.wd.1 _range.wd.2 ({lower} : ℤ) ({upper} : ℤ) ({value} : ℤ) {h_lower} {h_upper} {h_value} (by norm_num) (by norm_num))"))
     }
 }

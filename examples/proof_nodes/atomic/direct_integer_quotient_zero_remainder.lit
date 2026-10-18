@@ -1,0 +1,32 @@
+# Exact integer quotients compose from a stored zero remainder.
+# Before (rejected inside the sqrt(2) proof):
+# release thm prime_divides_power(p, 2, 2)
+# q^2 = p^2 / 2 = 2 * (p / 2)^2
+# q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
+# Former failure: ((2 * ((p / 2) ^ 2)) % 2) = 0.
+# The old workaround was the separate statement: p / 2 $in Z.
+# Now: the complete proof needs no separate quotient-carrier statement.
+by contra:
+    ? not sqrt(2) $in Q
+    release thm rational_has_unique_reduced_fraction(sqrt(2))
+    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+    p^2 = 2 * q^2
+    p^2 % 2 = (2 * q^2) % 2 = 0
+    release thm prime_divides_power(p, 2, 2)
+    q^2 = p^2 / 2 = 2 * (p / 2)^2
+    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
+    release thm prime_divides_power(q, 2, 2)
+    impossible 2 <= gcd(p, q) = 1
+
+forall a, b Z:
+    b != 0
+    a % b = 0
+    =>:
+        (a / b)^2 $in Z
+        (b * (a / b)^2) % b = 0
+
+# Boundary: both operands must be integers; division WD owns b!=0.
+# The remainder equality is cited, never searched by reopening a builtin.
+# No natural/sign refinement or unknown/false remainder is supplied.
+# Gate: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/direct_integer_quotient_zero_remainder.lit
+# Regression: tests/unit/execute/direct_structural_membership/integer_quotient_remainder.rs

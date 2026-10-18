@@ -15,13 +15,6 @@ pub(crate) fn proof_verify_state() -> VerifyState {
     VerifyState::top_level()
 }
 
-pub(super) fn assume_fact(
-    runtime: &mut Runtime,
-    fact: &Fact,
-) -> RuntimeResult<Result<StoreFactAndInferResult, String>> {
-    Ok(assume_fact_with_wd(runtime, fact)?.map(|result| result.store_and_infer))
-}
-
 pub(super) fn assume_fact_with_wd(
     runtime: &mut Runtime,
     fact: &Fact,

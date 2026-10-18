@@ -1,3 +1,7 @@
+use crate::ast::obj::{
+    Conjugate, Cosh, Coth, Csc, Csch, HyperbolicOperator, Sec, Sech, Sinh, SymmetricDifference,
+    Tanh,
+};
 mod arith;
 mod atom;
 mod binder_obj;
@@ -78,6 +82,38 @@ impl Runtime {
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => {
                 self.inst_abs_obj(a, param_to_arg_map)
             }
+            Obj::TrigOperator(TrigOperator::Sec(a)) => {
+                Ok(Sec::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::TrigOperator(TrigOperator::Csc(a)) => {
+                Ok(Csc::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::ComplexOperator(ComplexOperator::Conjugate(a)) => {
+                Ok(Conjugate::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(a)) => {
+                Ok(Sinh::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(a)) => {
+                Ok(Cosh::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(a)) => {
+                Ok(Tanh::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(a)) => {
+                Ok(Coth::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(a)) => {
+                Ok(Sech::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(a)) => {
+                Ok(Csch::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?).into())
+            }
+            Obj::SetOperator(SetOperator::SymmetricDifference(a)) => Ok(SymmetricDifference::new(
+                self.inst_obj_rec(&a.left, param_to_arg_map)?,
+                self.inst_obj_rec(&a.right, param_to_arg_map)?,
+            )
+            .into()),
             Obj::TrigOperator(TrigOperator::Sin(a)) => self.inst_sin_obj(a, param_to_arg_map),
             Obj::TrigOperator(TrigOperator::Arcsin(a)) => self.inst_arcsin_obj(a, param_to_arg_map),
             Obj::TrigOperator(TrigOperator::Arccos(a)) => self.inst_arccos_obj(a, param_to_arg_map),

@@ -12,6 +12,9 @@ use crate::ast::obj::{
     SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
     StructAndFieldAccessObj, StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, Union,
 };
+use crate::ast::obj::{
+    Conjugate, Cosh, Coth, Csc, Csch, Sec, Sech, Sinh, SymmetricDifference, Tanh,
+};
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
@@ -24,6 +27,7 @@ use crate::parse::keywords::{
     RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, SUM,
     TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
+use crate::parse::keywords::{CONJ, COSH, COTH, CSC, CSCH, SEC, SECH, SINH, SYM_DIFF, TANH};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
@@ -434,6 +438,39 @@ fn try_parse_keyword_primary(
             tb.advance()?;
             Ok(Some(Obj::Literal(Literal::Pi(Pi))))
         }
+        SEC => Ok(Some(parse_unary_keyword(rt, tb, SEC, |arg| {
+            Sec::new(arg).into()
+        })?)),
+        CSC => Ok(Some(parse_unary_keyword(rt, tb, CSC, |arg| {
+            Csc::new(arg).into()
+        })?)),
+        CONJ => Ok(Some(parse_unary_keyword(rt, tb, CONJ, |arg| {
+            Conjugate::new(arg).into()
+        })?)),
+        SINH => Ok(Some(parse_unary_keyword(rt, tb, SINH, |arg| {
+            Sinh::new(arg).into()
+        })?)),
+        COSH => Ok(Some(parse_unary_keyword(rt, tb, COSH, |arg| {
+            Cosh::new(arg).into()
+        })?)),
+        TANH => Ok(Some(parse_unary_keyword(rt, tb, TANH, |arg| {
+            Tanh::new(arg).into()
+        })?)),
+        COTH => Ok(Some(parse_unary_keyword(rt, tb, COTH, |arg| {
+            Coth::new(arg).into()
+        })?)),
+        SECH => Ok(Some(parse_unary_keyword(rt, tb, SECH, |arg| {
+            Sech::new(arg).into()
+        })?)),
+        CSCH => Ok(Some(parse_unary_keyword(rt, tb, CSCH, |arg| {
+            Csch::new(arg).into()
+        })?)),
+        SYM_DIFF => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            SYM_DIFF,
+            |left, right| SymmetricDifference::new(left, right).into(),
+        )?)),
         SIN => Ok(Some(parse_unary_keyword(rt, tb, SIN, |arg| {
             Obj::TrigOperator(TrigOperator::Sin(Sin { arg: Box::new(arg) }))
         })?)),

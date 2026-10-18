@@ -95,6 +95,10 @@ mod statement_boundary_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/struct_field_instantiation/tests.rs"]
 mod struct_field_instantiation_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/execute/struct_return_field_access/tests.rs"]
+mod struct_return_field_access_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/wd_obligations/tests.rs"]
 mod wd_obligation_tests;

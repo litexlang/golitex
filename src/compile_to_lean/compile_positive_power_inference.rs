@@ -159,7 +159,7 @@ impl LitexToLeanCompiler {
                 checked_positive.0, checked_positive.1, exponent.0, exponent.1,
             );
             let conclusion = (self.fact_proposition(&fact, &formed)?, proof);
-            declarations.push(self.emit_internal_fact(&fact, &conclusion, &formed));
+            declarations.push(self.emit_internal_fact(&fact, &conclusion, &formed)?);
         }
         Ok(declarations)
     }

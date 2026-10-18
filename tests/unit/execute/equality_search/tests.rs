@@ -27,6 +27,9 @@ mod hcx_arithmetic_guards;
 #[path = "abs_square_real_guard.rs"]
 mod abs_square_real_guard;
 
+#[path = "sqrt_quotient_square.rs"]
+mod sqrt_quotient_square;
+
 #[test]
 fn identity_and_alpha_work_without_builtin_entry() {
     for (code, shape) in [
@@ -444,6 +447,54 @@ fn failed_definition_chain_does_not_store_its_endpoint() {
         .equivalence_class_path(&goal.left, &goal.right)
         .is_none());
     assert!(verify(&mut runtime, "y = 4", VerifyState::top_level()).is_failed());
+}
+
+#[test]
+fn borrowed_equality_paths_preserve_cross_scope_order_and_scope_exit() {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have a R");
+    exec_ok(&mut rt, "let b = a");
+    exec_ok(&mut rt, "let c = b");
+    let root_goal = equal(&mut rt, "a = c");
+    let before = store_sizes(&rt);
+    rt.run_in_local_env_and_take_env(|rt| {
+        exec_ok(rt, "a = c");
+        exec_ok(rt, "let d = c");
+        for source in ["a = d", "d = a", "a = c", "a = 0", "a = a"] {
+            let goal = equal(rt, source);
+            let graph = rt.visible_equivalence_class_adjacency();
+            let expected = super::equivalence_class_graph::equivalence_class_path_in_adjacency(
+                &graph,
+                &goal.left,
+                &goal.right,
+            );
+            let path = rt.equivalence_class_path(&goal.left, &goal.right);
+            assert_eq!(path, expected, "{source}");
+            if let Some(path) = path {
+                check_path(
+                    rt,
+                    &KnownEqualityPathProof::new(path),
+                    &goal.left,
+                    &goal.right,
+                );
+            }
+        }
+        assert_eq!(
+            rt.equivalence_class_path(&root_goal.left, &root_goal.right)
+                .unwrap()
+                .len(),
+            1
+        );
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(store_sizes(&rt), before);
+    assert_eq!(
+        rt.equivalence_class_path(&root_goal.left, &root_goal.right)
+            .unwrap()
+            .len(),
+        2
+    );
 }
 
 fn runtime() -> Runtime {

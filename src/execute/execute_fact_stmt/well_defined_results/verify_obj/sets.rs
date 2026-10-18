@@ -8,6 +8,7 @@ use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use crate::ast::fact::{AtomicFact, InFact, NotEqualFact};
+use crate::ast::obj::SymmetricDifference;
 use crate::ast::obj::{
     Cart, FamilyIntersect, FamilyUnion, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
     FunctionSpace, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj,
@@ -34,6 +35,17 @@ impl Runtime {
     pub(super) fn verify_intersect_obj_well_definedness_by_def(
         &mut self,
         value: &Intersect,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        self.verify_binary_obj_well_definedness_by_def(
+            value.left.as_ref(),
+            value.right.as_ref(),
+            verify_state,
+        )
+    }
+    pub(super) fn verify_sym_diff_obj_well_definedness_by_def(
+        &mut self,
+        value: &SymmetricDifference,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_obj_well_definedness_by_def(

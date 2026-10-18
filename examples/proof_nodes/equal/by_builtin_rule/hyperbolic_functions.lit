@@ -1,0 +1,90 @@
+# Before: (exp(x)-exp(-x))/2, (exp(x)+exp(-x))/2 (write the expansion explicitly).
+# Now: native objects preserve domains and expose named builtin relationships.
+# Negative/domain controls: tests/unit/execute/native_latex_operations/tests.rs
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/hyperbolic_functions.lit
+
+sinh(0)=0
+
+cosh(0)=1
+
+tanh(0)=0
+
+sech(0)=1
+
+forall x R:
+    sinh(x)=(exp(x)-exp(-x))/2
+
+forall x R:
+    cosh(x)=(exp(x)+exp(-x))/2
+
+forall x R:
+    cosh(x) $in R+
+
+forall x R:
+    cosh(x)!=0
+
+forall x R:
+    tanh(x)=sinh(x)/cosh(x)
+
+forall x R:
+    sech(x)=1/cosh(x)
+
+forall x R:
+    cosh(x)^2-sinh(x)^2=1
+
+forall x R:
+    exp(x)=cosh(x)+sinh(x)
+
+forall x R:
+    exp(-x)=cosh(x)-sinh(x)
+
+forall x R:
+    1-tanh(x)^2=sech(x)^2
+
+forall x R:
+    tanh(x)=sinh(x)*sech(x)
+
+forall x R:
+    sinh(-x)=-sinh(x)
+
+forall x R:
+    cosh(-x)=cosh(x)
+
+forall x R:
+    tanh(-x)=-tanh(x)
+
+forall x R:
+    sech(-x)=sech(x)
+
+forall x R:
+    sinh(2*x)=2*sinh(x)*cosh(x)
+
+forall x R:
+    cosh(2*x)=cosh(x)^2+sinh(x)^2
+
+forall x R*:
+    sinh(x)!=0
+
+forall x R*:
+    coth(x)=cosh(x)/sinh(x)
+
+forall x R*:
+    csch(x)=1/sinh(x)
+
+forall x R*:
+    coth(x)^2-1=csch(x)^2
+
+forall x R*:
+    tanh(x)*coth(x)=1
+
+forall x R*:
+    coth(-x)=-coth(x)
+
+forall x R*:
+    csch(-x)=-csch(x)
+
+forall x,y R:
+    sinh(x+y)=sinh(x)*cosh(y)+cosh(x)*sinh(y)
+
+forall x,y R:
+    cosh(x+y)=cosh(x)*cosh(y)+sinh(x)*sinh(y)

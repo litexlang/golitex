@@ -8,7 +8,7 @@ related geometric constructions.
 The source is Jiachen Shen and Keyao Zhu's public
 [`geo.lit`](../../2D_Geometry/geo.lit).
 The showcase copy preserves its definitions, hypotheses, conclusions, and
-proof steps. Its 402 theorem calls use `release thm` in place of `by thm`.
+proof steps. Its unselected theorem calls use `release thm` in place of `by thm`.
 The pinned source snapshot remains historical; the current maintained library supplies this migration.
 
 Run the showcase from the repository root:

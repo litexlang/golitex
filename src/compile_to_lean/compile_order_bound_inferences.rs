@@ -199,7 +199,7 @@ impl LitexToLeanCompiler {
                 )
             };
             let emitted = (self.fact_proposition(&fact, &formed)?, proof);
-            declarations.push(self.emit_internal_fact(&fact, &emitted, &preceding));
+            declarations.push(self.emit_internal_fact(&fact, &emitted, &preceding)?);
         }
         Ok(declarations)
     }

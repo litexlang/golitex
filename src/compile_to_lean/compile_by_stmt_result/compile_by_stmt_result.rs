@@ -20,9 +20,13 @@ impl LitexToLeanCompiler {
             ExecByStmtResult::Induc(result) => {
                 self.compile_by_induc_result(result, position, index, local)
             }
-            ExecByStmtResult::Cases(_)
-            | ExecByStmtResult::Contra(_)
-            | ExecByStmtResult::Extension(_)
+            ExecByStmtResult::Cases(result) => {
+                self.compile_by_cases_result(result, position, index, local)
+            }
+            ExecByStmtResult::Contra(result) => {
+                self.compile_by_contra_result(result, position, index, local)
+            }
+            ExecByStmtResult::Extension(_)
             | ExecByStmtResult::FnExtension(_)
             | ExecByStmtResult::EnumerateFiniteSet(_)
             | ExecByStmtResult::For(_)

@@ -1,3 +1,4 @@
+use crate::ast::obj::HyperbolicOperator;
 use std::collections::HashMap;
 use std::mem::discriminant;
 
@@ -289,6 +290,44 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(l)),
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(r)),
         ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Sec(l)), Obj::TrigOperator(TrigOperator::Sec(r))) => {
+            objs_alpha_equal(&l.arg, &r.arg, map)
+        }
+        (Obj::TrigOperator(TrigOperator::Csc(l)), Obj::TrigOperator(TrigOperator::Csc(r))) => {
+            objs_alpha_equal(&l.arg, &r.arg, map)
+        }
+        (
+            Obj::ComplexOperator(ComplexOperator::Conjugate(l)),
+            Obj::ComplexOperator(ComplexOperator::Conjugate(r)),
+        ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(r)),
+        ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(r)),
+        ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(r)),
+        ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(r)),
+        ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(r)),
+        ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(l)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(r)),
+        ) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (
+            Obj::SetOperator(SetOperator::SymmetricDifference(l)),
+            Obj::SetOperator(SetOperator::SymmetricDifference(r)),
+        ) => objs_alpha_equal(&l.left, &r.left, map) && objs_alpha_equal(&l.right, &r.right, map),
         (Obj::TrigOperator(TrigOperator::Sin(l)), Obj::TrigOperator(TrigOperator::Sin(r))) => {
             objs_alpha_equal(&l.arg, &r.arg, map)
         }

@@ -93,7 +93,7 @@ impl LitexToLeanCompiler {
                     index,
                     local,
                     &formed,
-                ));
+                )?);
             }
             let published = SourcePosition {
                 before: 2 * returned_index + 2,

@@ -66,14 +66,6 @@ impl LitexToLeanCompiler {
                     (ParamType::Obj(set), ParamTypeWellDefinedProof::Obj(proof)) => {
                         ensure_object(set, proof)?;
                         self.compile_wd(proof, position)?;
-                        standard_term(match set {
-                            Obj::StandardSet(set) => set,
-                            _ => {
-                                return Err(LeanCompileError::unsupported(
-                                    "HaveEqual/DependentCarrier",
-                                ))
-                            }
-                        })?;
                     }
                     (ParamType::Set(_), ParamTypeWellDefinedProof::Set) => {}
                     _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
@@ -177,7 +169,7 @@ impl LitexToLeanCompiler {
                 members[index].1.clone(),
             );
 
-            declarations.push(self.emit_internal_fact(&member_fact, &member, position));
+            declarations.push(self.emit_internal_fact(&member_fact, &member, position)?);
             declarations.extend(self.compile_parameter_inferences(
                 &stores[index],
                 &member_fact,
@@ -188,7 +180,7 @@ impl LitexToLeanCompiler {
                 self.fact_proposition(&equal, position)?,
                 format!("(Litex.sameRefl {})", values[index]),
             );
-            declarations.push(self.emit_internal_fact(&equal, &equal_proof, position));
+            declarations.push(self.emit_internal_fact(&equal, &equal_proof, position)?);
         }
         Ok(declarations.join("\n"))
     }

@@ -218,3 +218,10 @@ isolation. Noncallable and ill-defined-target fixtures are in `../wd_negative/`.
 [Checked argument numeric domains](checked_argument_numeric_domain.lit) reuse the current atomic proof’s successful object WD when reduced domain rechecking cannot replay it. Missing finiteness and invalid partial-operation guards remain rejected.
 
 [Continued registered-file REPL](continued_export_repl/README.md) checks the publication owner of predicates projected from refined template carriers after entering the session.
+
+[Struct return fields](struct_return_field_access.lit) calls fields directly on
+function results, template objects and generic template function results. A
+declaration selects the field view; actual receiver and callable-field guards
+remain required. Regression tests also cover nested results, wrong fields and
+carriers, later memberships that cannot select a view, rollback, and detailed
+proof output in `tests/unit/execute/struct_return_field_access/tests.rs`.

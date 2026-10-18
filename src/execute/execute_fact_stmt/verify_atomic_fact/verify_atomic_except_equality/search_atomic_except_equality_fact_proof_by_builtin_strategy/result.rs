@@ -8,6 +8,11 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    SymDiffMembershipLeft(SymDiffMembershipLeftStrategySingleStep),
+    SymDiffMembershipRight(SymDiffMembershipRightStrategySingleStep),
+    SymDiffNonmembershipBoth(SymDiffNonmembershipBothStrategySingleStep),
+    SymDiffNonmembershipNeither(SymDiffNonmembershipNeitherStrategySingleStep),
+
     FiniteFunctionApplicationMembership(FiniteFunctionApplicationMembershipStrategySingleStep),
     FunctionSetMembership(FunctionSetMembershipStrategySingleStep),
     ListSetMembership(ListSetMembershipStrategySingleStep),
@@ -1361,4 +1366,21 @@ pub struct SeqSetNonemptyFromCodomainStrategySingleStep {
     pub signature: crate::ast::obj::FnSet,
     pub codomain_nonempty:
         crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
+}
+
+pub struct SymDiffMembershipLeftStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct SymDiffMembershipRightStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct SymDiffNonmembershipBothStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+pub struct SymDiffNonmembershipNeitherStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

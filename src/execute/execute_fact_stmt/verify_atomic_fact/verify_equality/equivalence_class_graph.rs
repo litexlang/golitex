@@ -12,6 +12,23 @@ pub fn equivalence_class_path_in_adjacency(
     left: &Obj,
     right: &Obj,
 ) -> Option<Vec<(Obj, Obj, FactId)>> {
+    equivalence_class_path_from_neighbors(left, right, |key| {
+        adjacency
+            .get(key)
+            .into_iter()
+            .flatten()
+            .map(|(peer, fact)| (peer, fact))
+            .collect()
+    })
+}
+
+// Borrow only visited edges. Both a query snapshot and the live, read-only
+// scope stack supply exactly the same neighbor order and path certificate.
+pub(super) fn equivalence_class_path_from_neighbors<'a>(
+    left: &Obj,
+    right: &Obj,
+    neighbors: impl Fn(&ObjIR) -> Vec<(&'a ObjIR, &'a EqualFact)>,
+) -> Option<Vec<(Obj, Obj, FactId)>> {
     let left_key = left.ir();
     let right_key = right.ir();
     if left_key == right_key {
@@ -19,7 +36,7 @@ pub fn equivalence_class_path_in_adjacency(
     }
 
     let mut visited = HashSet::new();
-    let mut parent: HashMap<ObjIR, (ObjIR, EqualFact)> = HashMap::new();
+    let mut parent: HashMap<ObjIR, (ObjIR, &EqualFact)> = HashMap::new();
     let mut queue = VecDeque::new();
     visited.insert(left_key.clone());
     queue.push_back(left_key.clone());
@@ -30,15 +47,12 @@ pub fn equivalence_class_path_in_adjacency(
             found = true;
             break;
         }
-        let Some(neighbors) = adjacency.get(&current) else {
-            continue;
-        };
-        for (peer_key, equal_fact) in neighbors.iter() {
+        for (peer_key, equal_fact) in neighbors(&current) {
             if visited.contains(peer_key) {
                 continue;
             }
             visited.insert(peer_key.clone());
-            parent.insert(peer_key.clone(), (current.clone(), equal_fact.clone()));
+            parent.insert(peer_key.clone(), (current.clone(), equal_fact));
             queue.push_back(peer_key.clone());
         }
     }

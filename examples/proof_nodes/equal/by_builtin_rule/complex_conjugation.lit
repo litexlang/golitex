@@ -1,0 +1,47 @@
+# Before: re(z) - i*img(z) (write the expansion explicitly).
+# Now: native objects preserve domains and expose named builtin relationships.
+# Negative/domain controls: tests/unit/execute/native_latex_operations/tests.rs
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/complex_conjugation.lit
+
+conj(i) = -i
+
+conj(3-4*i) = 3+4*i
+
+forall z C:
+    conj(z) = re(z)-i*img(z)
+
+forall z C:
+    conj(conj(z)) = z
+
+forall z C:
+    re(conj(z)) = re(z)
+
+forall z C:
+    img(conj(z)) = -img(z)
+
+forall z C:
+    C_abs(conj(z)) = C_abs(z)
+
+forall z C:
+    z*conj(z) = C_abs(z)^2
+
+forall z C:
+    conj(-z) = -conj(z)
+
+forall z,w C:
+    conj(z+w) = conj(z)+conj(w)
+
+forall z,w C:
+    conj(z-w) = conj(z)-conj(w)
+
+forall z,w C:
+    conj(z*w) = conj(z)*conj(w)
+
+forall z C,w C*:
+    conj(z/w) = conj(z)/conj(w)
+
+forall z C,n N:
+    conj(z^n) = conj(z)^n
+
+forall x R:
+    conj(x) = x

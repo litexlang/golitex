@@ -361,7 +361,7 @@ impl LitexToLeanCompiler {
                     owner: SourceOwner::ParamTypeWD(wd),
                     before: 1,
                 };
-                let (new_binders, new_arguments) = self.introduce_numeric_parameter(
+                let (new_binders, new_arguments) = self.introduce_member_parameter(
                     parameter,
                     set,
                     &stores[offset],
@@ -482,7 +482,7 @@ impl LitexToLeanCompiler {
             }
             self.validate_store(&proved.store_and_infer.store, &expected)?;
 
-            definitions.push(self.emit_internal_fact(&expected, &compiled, position));
+            definitions.push(self.emit_internal_fact(&expected, &compiled, position)?);
             let complete = SourcePosition {
                 before: head_count + index + 1,
                 ..*position

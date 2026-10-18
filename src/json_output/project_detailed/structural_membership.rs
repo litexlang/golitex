@@ -66,6 +66,23 @@ pub(super) fn project_structural_membership(
                 "abs"
             }
         }
+        ExactIntegerDiv {
+            numerator,
+            denominator,
+            zero_remainder,
+        } => {
+            fields.push(("numerator", project_structural_membership(numerator, rt)));
+            fields.push((
+                "denominator",
+                project_structural_membership(denominator, rt),
+            ));
+            fields.push((
+                "zero_remainder",
+                super::searched::project_equal_searched(zero_remainder, rt),
+            ));
+            fields.push(("domain_evidence", string("enclosing_object_wd")));
+            "exact_integer_div"
+        }
         Pow { base, exponent } => {
             fields.push(("base", project_structural_membership(base, rt)));
             fields.push(("exponent", project_structural_membership(exponent, rt)));
@@ -104,6 +121,16 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
         Cos => "cos",
         Tan => "tan",
         Cot => "cot",
+        Sec => "sec",
+        Csc => "csc",
+        Conjugate => "conj",
+        Sinh => "sinh",
+        Cosh => "cosh",
+        Tanh => "tanh",
+        Coth => "coth",
+        Sech => "sech",
+        Csch => "csch",
+
         Arcsin => "arcsin",
         Arccos => "arccos",
         Arctan => "arctan",

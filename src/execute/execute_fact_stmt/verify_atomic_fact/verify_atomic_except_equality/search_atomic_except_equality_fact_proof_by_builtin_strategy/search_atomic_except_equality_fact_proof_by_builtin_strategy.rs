@@ -36,6 +36,10 @@ impl Runtime {
             ));
         }
 
+        if let Some(proof) = self.search_sym_diff_membership_strategy(fact, ctx)? {
+            return Ok(Some(proof));
+        }
+
         // nonzero (NotEqual)
         if let Some(proof) = self.search_nonzero_product_strategy(fact, ctx)? {
             return Ok(Some(

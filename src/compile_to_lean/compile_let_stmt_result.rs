@@ -50,7 +50,7 @@ impl LitexToLeanCompiler {
         );
         Ok(format!(
             "{declaration}\n{}",
-            self.emit_internal_fact(&fact, &compiled, &after_alias)
+            self.emit_internal_fact(&fact, &compiled, &after_alias)?
         ))
     }
 
@@ -69,7 +69,7 @@ impl LitexToLeanCompiler {
         } else {
             format!(
                 "noncomputable def {name}{} := {value}",
-                self.context_header(position)
+                self.context_header(position)?
             )
         })
     }

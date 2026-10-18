@@ -35,14 +35,15 @@ pub use exec_by_thm_stmt::{exec_by_thm_stmt, exec_release_thm_stmt};
 pub use exec_by_zorn_lemma_stmt::exec_release_zorn_lemma_stmt;
 pub use exec_expand_range_stmt::exec_expand_range_stmt;
 pub use result::{
-    BuiltinFunctionDomainProof, BuiltinThmApplication, ByInducBodySuccess, ByInducCaseFailed,
+    BuiltinFunctionDomainProof, BuiltinThmApplication, ByCasesBranchClosingSuccess,
+    ByCasesBranchSuccess, ByContradictionClosingSuccess, ByInducBodySuccess, ByInducCaseFailed,
     ByInducCaseSuccess, EnumerateAssignmentOutcome, EnumerateAssignmentSuccess,
-    ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult, ExecByDefStmtSuccess,
-    ExecByEnumerateFiniteSetStmtFailed, ExecByEnumerateFiniteSetStmtResult,
-    ExecByExtensionStmtResult, ExecByFnExtensionStmtResult, ExecByForStmtResult,
-    ExecByInducStmtFailed, ExecByInducStmtResult, ExecByInducStmtSuccess, ExecByStmtResult,
-    ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult, ExecByThmStmtFailed,
-    ExecByThmStmtResult, ExecByThmStmtSuccess, ExecExpandRangeStmtFailed,
+    ExecByCasesStmtResult, ExecByCasesStmtSuccess, ExecByContraStmtResult, ExecByContraStmtSuccess,
+    ExecByDefStmtResult, ExecByDefStmtSuccess, ExecByEnumerateFiniteSetStmtFailed,
+    ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult, ExecByFnExtensionStmtResult,
+    ExecByForStmtResult, ExecByInducStmtFailed, ExecByInducStmtResult, ExecByInducStmtSuccess,
+    ExecByStmtResult, ExecByStrongInducStmtFailed, ExecByStrongInducStmtResult,
+    ExecByThmStmtFailed, ExecByThmStmtResult, ExecByThmStmtSuccess, ExecExpandRangeStmtFailed,
     ExecExpandRangeStmtResult, ExecExpandRangeStmtSuccess, ExecReleaseAxiomOfChoiceStmtFailed,
     ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseAxiomOfChoiceStmtSuccess,
     ExecReleaseRegularityAxiomStmtFailed, ExecReleaseRegularityAxiomStmtResult,
@@ -60,3 +61,7 @@ pub(crate) use result::{ExecByDefStmtFailed, ExecByForStmtFailed};
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/showcase_regressions/tests.rs"]
 mod showcase_regressions;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/execute/lean_result_capture/tests.rs"]
+mod lean_result_capture_tests;

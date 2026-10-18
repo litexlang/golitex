@@ -16,3 +16,5 @@ pub mod structural_order_weak;
 pub mod subset;
 
 pub use result::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
+
+mod sym_diff_membership;

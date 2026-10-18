@@ -202,6 +202,32 @@ impl Runtime {
             ));
         };
 
+        let mut stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
+        if let Obj::FnObj(application) = value.obj.as_ref() {
+            let head = super::helper::fn_obj_head_as_obj(&application.head);
+            if let Some(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
+                self.definition_owned_type(&head)
+            {
+                // The default view belongs to this declaration. Another later
+                // signature must not bypass its own argument/guard obligations.
+                let Ok(declared_call) =
+                    self.try_verify_fn_obj_against_fn_set(application, &signature, verify_state)?
+                else {
+                    return Ok(field_access_fail(
+                        root,
+                        "the declared struct return signature does not accept this call"
+                            .to_string(),
+                    ));
+                };
+                stages
+                    .child_obj_well_defined
+                    .extend(declared_call.child_obj_well_defined);
+                stages
+                    .requirement_fact_verified
+                    .extend(declared_call.requirement_fact_verified);
+            }
+        }
+
         let mut receiver = value.obj.as_ref().clone();
         for (index, field_name) in value.fields.iter().enumerate() {
             let plain = carrier.name.local_name().to_string();
@@ -247,7 +273,6 @@ impl Runtime {
                 }));
         }
 
-        let stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
         match finish_by_def(&root, stages) {
             Ok(by_def) => Ok(VerifyObjWellDefinedResult::Success(
                 ObjWellDefinedProof::ByDef {

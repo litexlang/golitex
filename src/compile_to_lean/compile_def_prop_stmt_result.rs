@@ -33,7 +33,7 @@ impl LitexToLeanCompiler {
             self.compile_concrete_prop_definition(proof, &definition_position)?;
         Ok(format!(
             "def prop_{index}{}{} : Prop :=\n  {}",
-            self.context_header(position),
+            self.context_header(position)?,
             if binders.is_empty() {
                 String::new()
             } else {
@@ -86,10 +86,7 @@ impl LitexToLeanCompiler {
         let mut offset = 0;
         for (group, wd) in groups.iter().zip(&proof.param_type_well_defined) {
             let set = match &group.param_type {
-                ParamType::Obj(set) => {
-                    self.compile_numeric_carrier(set, position)?;
-                    set
-                }
+                ParamType::Obj(set) => set,
                 _ => return Err(LeanCompileError::unsupported("Prop/ParameterCarrier")),
             };
             let group_position = SourcePosition {
@@ -104,7 +101,7 @@ impl LitexToLeanCompiler {
                 _ => {
                     return Err(LeanCompileError::new(
                         "Prop/ParameterWD",
-                        "Predicate carrier evidence differs from its numeric source header.",
+                        "Predicate carrier evidence differs from its source header.",
                     ))
                 }
             }
@@ -158,7 +155,11 @@ impl LitexToLeanCompiler {
         {
             if !matches!(
                 fact,
-                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
+                Fact::AtomicFact(_)
+                    | Fact::AndFact(_)
+                    | Fact::ChainFact(_)
+                    | Fact::OrFact(_)
+                    | Fact::ExistFact(_)
             ) {
                 return Err(LeanCompileError::unsupported("Prop/CompoundClause"));
             }

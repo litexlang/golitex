@@ -30,6 +30,10 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::Witness(crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessExistFact(crate::execute::execute_witness_stmt::ExecWitnessExistFactStmtResult::Success(proof))) => {
+                    for step in &proof.proof_steps { statement(step, out); }
+                }
+
                 ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
                     ExecHaveFnByInducStmtResult::Success(proof),
                 )) => {
@@ -135,7 +139,7 @@ impl LitexToLeanCompiler {
         _index: usize,
         local: bool,
         position: &SourcePosition<'_>,
-    ) -> String {
+    ) -> Result<String, LeanCompileError> {
         let name = format!("h_{}", source.fact_id().value());
         let kind = if local { "have" } else { "theorem" };
         let declaration = format!(
@@ -143,33 +147,32 @@ impl LitexToLeanCompiler {
             if local {
                 String::new()
             } else {
-                self.context_header(position)
+                self.context_header(position)?
             },
             fact.0,
             fact.1.replace('\n', "\n  ")
         );
-        declaration
+        Ok(declaration)
     }
 
     pub(in crate::compile_to_lean) fn context_header(
         &self,
         position: &SourcePosition<'_>,
-    ) -> String {
+    ) -> Result<String, LeanCompileError> {
         let binders = position.context_parameters().into_iter().map(|(parameter, set, fact_id)| {
             let id = parameter.id.value();
             let fact_id = fact_id.value();
             let proposition = match set {
-                Some(Obj::StandardSet(set)) => format!("Litex.In _value_i{id} {}", standard_term(set).expect("validated numeric carrier")),
+                Some(set) => format!("Litex.In _value_i{id} {}", self.compile_object_reference(set, position)?),
                 None => format!("Litex.IsSet _value_i{id}"),
-                _ => unreachable!("validated context carrier"),
             };
-            format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : {proposition})")
-        }).collect::<Vec<_>>();
-        if binders.is_empty() {
+            Ok(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : {proposition})"))
+        }).collect::<Result<Vec<_>, LeanCompileError>>()?;
+        Ok(if binders.is_empty() {
             String::new()
         } else {
             format!(" {}", binders.join(" "))
-        }
+        })
     }
 
     pub(in crate::compile_to_lean) fn context_application(
@@ -281,23 +284,23 @@ impl LitexToLeanCompiler {
         fact: &Fact,
         compiled: &(String, String),
         position: &SourcePosition<'_>,
-    ) -> String {
+    ) -> Result<String, LeanCompileError> {
         let name = format!("h_{}", fact.fact_id().value());
         let local = position.is_local();
-        format!(
+        Ok(format!(
             "{} {name}{} : {} :=\n  {}",
             if local { "have" } else { "theorem" },
             if local {
                 String::new()
             } else {
-                self.context_header(position)
+                self.context_header(position)?
             },
             compiled.0,
             compiled.1.replace('\n', "\n  ")
-        )
+        ))
     }
 
-    pub(in crate::compile_to_lean) fn introduce_numeric_parameter(
+    pub(in crate::compile_to_lean) fn introduce_member_parameter(
         &self,
         parameter: &BoundName,
         set: &Obj,
@@ -409,6 +412,7 @@ impl LitexToLeanCompiler {
                 }
                 Ok(proposition)
             }
+            Fact::ExistFact(fact) => self.exist_proposition(fact, position),
             _ => Err(LeanCompileError::unsupported("Declaration/CompoundFact")),
         }
     }
@@ -474,6 +478,18 @@ impl LitexToLeanCompiler {
             AtomicFact::NormalAtomicFact(normal) => {
                 self.compile_normal_atomic_proposition(normal, position)
             }
+            AtomicFact::NotNormalAtomicFact(normal) => {
+                let positive = NormalAtomicFact {
+                    fact_id: normal.fact_id,
+                    predicate: normal.predicate.clone(),
+                    body: normal.body.clone(),
+                    line_file: normal.line_file.clone(),
+                };
+                Ok(format!(
+                    "¬ ({})",
+                    self.compile_normal_atomic_proposition(&positive, position)?
+                ))
+            }
             AtomicFact::IsFiniteSetFact(_)
             | AtomicFact::SupersetFact(_)
             | AtomicFact::ProperSubsetFact(_)
@@ -485,7 +501,6 @@ impl LitexToLeanCompiler {
             | AtomicFact::SurjectiveFact(_)
             | AtomicFact::BijectiveFact(_)
             | AtomicFact::IsChoiceFunctionForFact(_)
-            | AtomicFact::NotNormalAtomicFact(_)
             | AtomicFact::NotIsSetFact(_)
             | AtomicFact::NotIsNonemptySetFact(_)
             | AtomicFact::NotIsFiniteSetFact(_)
@@ -551,11 +566,16 @@ impl LitexToLeanCompiler {
         {
             return Ok(term);
         }
-        if let Some(term) = position.with_visible_inferred_subject(object, &mut |_, _| {
-            // The named rule creates this primitive; its Lean constructor proves WD.
-            // This is not a replacement Verify result or an arbitrary cache fallback.
-            self.compile_inferred_obj(object, position)
-        })? {
+        if let Some(term) =
+            position.with_visible_inferred_subject(object, &mut |store, producer| {
+                if let Some(term) = self.compile_cart_inferred_subject(object, store, producer)? {
+                    return Ok(term);
+                }
+                // The named rule creates this primitive; its Lean constructor proves WD.
+                // This is not a replacement Verify result or an arbitrary cache fallback.
+                self.compile_inferred_obj(object, position)
+            })?
+        {
             return Ok(term);
         }
         if let Some(term) = self.compile_callee_constructor_reference(object, position)? {

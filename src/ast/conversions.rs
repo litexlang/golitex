@@ -547,3 +547,126 @@ impl From<ExistOrAndChainAtomicFact> for Fact {
         }
     }
 }
+
+impl From<crate::ast::obj::Sec> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Sec) -> Self {
+        Self::TrigOperator(crate::ast::obj::TrigOperator::Sec(value))
+    }
+}
+
+impl crate::ast::obj::Sec {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Csc> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Csc) -> Self {
+        Self::TrigOperator(crate::ast::obj::TrigOperator::Csc(value))
+    }
+}
+
+impl crate::ast::obj::Csc {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Conjugate> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Conjugate) -> Self {
+        Self::ComplexOperator(crate::ast::obj::ComplexOperator::Conjugate(value))
+    }
+}
+
+impl crate::ast::obj::Conjugate {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Sinh> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Sinh) -> Self {
+        Self::HyperbolicOperator(crate::ast::obj::HyperbolicOperator::Sinh(value))
+    }
+}
+
+impl crate::ast::obj::Sinh {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Cosh> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Cosh) -> Self {
+        Self::HyperbolicOperator(crate::ast::obj::HyperbolicOperator::Cosh(value))
+    }
+}
+
+impl crate::ast::obj::Cosh {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Tanh> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Tanh) -> Self {
+        Self::HyperbolicOperator(crate::ast::obj::HyperbolicOperator::Tanh(value))
+    }
+}
+
+impl crate::ast::obj::Tanh {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Coth> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Coth) -> Self {
+        Self::HyperbolicOperator(crate::ast::obj::HyperbolicOperator::Coth(value))
+    }
+}
+
+impl crate::ast::obj::Coth {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Sech> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Sech) -> Self {
+        Self::HyperbolicOperator(crate::ast::obj::HyperbolicOperator::Sech(value))
+    }
+}
+
+impl crate::ast::obj::Sech {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::Csch> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::Csch) -> Self {
+        Self::HyperbolicOperator(crate::ast::obj::HyperbolicOperator::Csch(value))
+    }
+}
+
+impl crate::ast::obj::Csch {
+    pub fn new(arg: crate::ast::obj::Obj) -> Self {
+        Self { arg: Box::new(arg) }
+    }
+}
+
+impl From<crate::ast::obj::SymmetricDifference> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::SymmetricDifference) -> Self {
+        Self::SetOperator(crate::ast::obj::SetOperator::SymmetricDifference(value))
+    }
+}
+
+impl crate::ast::obj::SymmetricDifference {
+    pub fn new(left: crate::ast::obj::Obj, right: crate::ast::obj::Obj) -> Self {
+        Self {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}

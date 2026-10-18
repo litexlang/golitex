@@ -4,6 +4,7 @@ pub mod by_have_fn_equal;
 pub mod by_have_fn_equal_case_by_case;
 pub mod by_parent_checked_beta;
 pub mod result;
+pub mod struct_field_value;
 
 pub use result::EqualitySearchProofByFnApplicationObjectDefinition;
 

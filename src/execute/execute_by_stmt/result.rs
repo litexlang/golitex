@@ -3,8 +3,8 @@ use crate::ast::obj::FnSet;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::AssumeDomFactResult;
 use crate::execute::execute_fact_stmt::{
-    ProveAndStoreThenFactResult, VerifyFactResult, VerifyFactWellDefinedResult,
-    VerifyObjWellDefinedResult,
+    FactWellDefinedProof, ProveAndStoreThenFactResult, VerifyFactResult,
+    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_proof_block_stmt::ProofBlockBodyFailed;
 use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
@@ -150,7 +150,7 @@ pub enum ExecByContraStmtResult {
     Failed(ExecByContraStmtFailed),
 }
 
-// Stage order: goal_wd → negation_assumed → proof_steps → closing → local_env → stored.
+// Stage order: goal_wd → assumption WD/store → proof_steps → closing → local_env → output WD/store.
 // Lean-replay cites: goal / reverse_assumption(+fact_id) / assumption_components / closing.
 pub struct ExecByContraStmtSuccess {
     pub goal_wd: VerifyFactWellDefinedResult,
@@ -158,10 +158,12 @@ pub struct ExecByContraStmtSuccess {
     pub reverse_assumption: Fact,
     pub reverse_assumption_fact_id: FactId,
     pub assumption_components: Vec<(FactId, AtomicFact)>,
+    pub reverse_assumption_wd: FactWellDefinedProof,
     pub negation_assumed: StoreFactAndInferResult,
     pub proof_steps: Vec<ExecStmtResult>,
     pub closing: ByContradictionClosingSuccess,
     pub local_env: Box<ExecEnv>,
+    pub stored_wd: FactWellDefinedProof,
     pub stored: StoreFactAndInferResult,
 }
 
@@ -189,11 +191,12 @@ pub enum ExecByCasesStmtResult {
     Failed(ExecByCasesStmtFailed),
 }
 
-// Stage order: then_facts_wd → coverage → branches → stored.
+// Stage order: then_facts_wd → coverage → branches → each output WD/store.
 pub struct ExecByCasesStmtSuccess {
     pub then_facts_wd: Vec<VerifyFactWellDefinedResult>,
     pub coverage: VerifyFactResult,
     pub branches: Vec<ByCasesBranchSuccess>,
+    pub stored_wd: Vec<FactWellDefinedProof>,
     pub stored: Vec<StoreFactAndInferResult>,
 }
 
@@ -202,6 +205,7 @@ pub struct ByCasesBranchSuccess {
     pub assumption: AndChainAtomicFact,
     pub assumption_fact_id: FactId,
     pub assumption_components: Vec<(FactId, AtomicFact)>,
+    pub assumption_wd: FactWellDefinedProof,
     pub assumptions_stored: StoreFactAndInferResult,
     pub proof_steps: Vec<ExecStmtResult>,
     pub closing: ByCasesBranchClosingSuccess,
@@ -210,9 +214,7 @@ pub struct ByCasesBranchSuccess {
 
 pub enum ByCasesBranchClosingSuccess {
     ThenFacts {
-        checks: Vec<VerifyFactResult>,
-        // Aligned with `then_facts`; Some when the branch stored that conclusion locally.
-        conclusion_fact_ids: Vec<Option<FactId>>,
+        proved_then_facts: Vec<ProveAndStoreThenFactResult>,
     },
     Impossible(ByContradictionClosingSuccess),
 }

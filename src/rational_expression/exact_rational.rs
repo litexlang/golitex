@@ -1,4 +1,5 @@
 use super::integer_factorization::factor_positive_integer;
+use crate::ast::obj::HyperbolicOperator;
 use crate::ast::obj::{
     ArithmeticOperator, ComplexOperator, ExpLogOperator, IntegerOperator, Literal, Number, Obj,
 };
@@ -109,6 +110,19 @@ impl EvalRational {
                 let base = Self::from_obj(&log.base)?;
                 let argument = Self::from_obj(&log.arg)?;
                 exact_rational_log(&base, &argument)
+            }
+            Obj::HyperbolicOperator(operator) => {
+                let (argument, value) = match operator {
+                    HyperbolicOperator::Sinh(v) => (&v.arg, 0),
+                    HyperbolicOperator::Tanh(v) => (&v.arg, 0),
+                    HyperbolicOperator::Cosh(v) => (&v.arg, 1),
+                    HyperbolicOperator::Sech(v) => (&v.arg, 1),
+                    HyperbolicOperator::Coth(_) | HyperbolicOperator::Csch(_) => return None,
+                };
+                if !Self::from_obj(argument)?.is_zero() {
+                    return None;
+                }
+                Self::new(value, 1)
             }
             Obj::ExpLogOperator(ExpLogOperator::Exp(exp)) => {
                 if !Self::from_obj(&exp.arg)?.is_zero() {

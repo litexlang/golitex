@@ -2,7 +2,7 @@
 //! Field taxonomy follows the legacy language; methods are added later.
 //! Identity: BoundName / IdentifierId for plain refs; FactId; SourceLine.
 //!
-//! Layout: top-level `Obj` is 16 families; each family enum wraps the same leaf
+//! Layout: top-level `Obj` groups mathematical families; each family enum wraps the same leaf
 //! payload structs as before. Leaf structs follow in stable order after `Obj`.
 //! Nested helpers that are not themselves `Obj` variants sit with their owning leaf.
 //!
@@ -42,6 +42,9 @@ pub enum Obj {
 
     // Trig and inverse trig. Example: `sin(0)`, `arctan(0)`.
     TrigOperator(TrigOperator),
+
+    // Real hyperbolic functions. Example: `sinh(0)`, `cosh(0)`.
+    HyperbolicOperator(HyperbolicOperator),
 
     // Exp / log / sqrt. Example: `exp(0)`, `ln(1)`, `log(2, 8)`, `sqrt(4)`.
     ExpLogOperator(ExpLogOperator),
@@ -138,10 +141,22 @@ pub enum TrigOperator {
     Cos(Cos),
     Tan(Tan),
     Cot(Cot),
+    Sec(Sec),
+    Csc(Csc),
     Arcsin(Arcsin),
     Arccos(Arccos),
     Arctan(Arctan),
     Arccot(Arccot),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum HyperbolicOperator {
+    Sinh(Sinh),
+    Cosh(Cosh),
+    Tanh(Tanh),
+    Coth(Coth),
+    Sech(Sech),
+    Csch(Csch),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -156,6 +171,7 @@ pub enum ExpLogOperator {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ComplexOperator {
     // Real part of a complex. Surface: `re(z)`. Example: `re(i)` (0).
+    Conjugate(Conjugate),
     RealPart(RealPart),
 
     // Imaginary part of a complex. Surface: `img(z)`. Example: `img(i)` (1).
@@ -179,6 +195,7 @@ pub enum SetOperator {
     // Relative complement: elements in A but not in B.
     // Surface: `set_minus(A, B)`. Example: `set_minus({1, 2, 3}, {2})` ({1, 3}).
     SetMinus(SetMinus),
+    SymmetricDifference(SymmetricDifference),
 
     // Union of a family of sets (here: a set of sets).
     // Surface: `family_union(F)`. Example: `family_union({{1}, {2, 3}})` ({1, 2, 3}).
@@ -1068,4 +1085,65 @@ pub enum IntervalObj {
 pub struct IntervalObjStruct {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
+}
+
+// `sec`: real argument, cos(arg) != 0.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sec {
+    pub arg: Box<Obj>,
+}
+
+// `csc`: real argument, sin(arg) != 0.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Csc {
+    pub arg: Box<Obj>,
+}
+
+// `conj`: complex argument.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Conjugate {
+    pub arg: Box<Obj>,
+}
+
+// `sinh`: real argument.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sinh {
+    pub arg: Box<Obj>,
+}
+
+// `cosh`: real argument.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Cosh {
+    pub arg: Box<Obj>,
+}
+
+// `tanh`: real argument.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Tanh {
+    pub arg: Box<Obj>,
+}
+
+// `coth`: nonzero real argument.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Coth {
+    pub arg: Box<Obj>,
+}
+
+// `sech`: real argument.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sech {
+    pub arg: Box<Obj>,
+}
+
+// `csch`: nonzero real argument.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Csch {
+    pub arg: Box<Obj>,
+}
+
+// `sym_diff`: two well-defined objects in the pure-set model.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SymmetricDifference {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
 }

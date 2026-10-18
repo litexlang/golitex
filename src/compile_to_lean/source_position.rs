@@ -1,6 +1,13 @@
+use crate::execute::execute_witness_stmt::{ExecWitnessStmtResult, ExecWitnessExistFactStmtResult, ExecWitnessExistFactStmtSuccessResult, ExecWitnessAtomicFactStmtResult, ExecWitnessAtomicFactStmtSuccessResult};
+use crate::execute::execute_witness_stmt::{WitnessExistAmbientSuccess, WitnessExistObligationSuccess};
+use crate::execute::execute_by_stmt::{ExecByContraStmtResult, ExecByContraStmtSuccess, ExecByCasesStmtResult, ByCasesBranchSuccess, ByCasesBranchClosingSuccess, ByContradictionClosingSuccess};
+use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactWellDefinedProof;
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef;
+use crate::execute::{ExecObtainObjFromExistFactStmtResult, ObtainExistVerifySuccess};
+use crate::execute::ExecObtainObjFromAtomicFactStmtResult;
 use crate::execute::execute_proof_block_stmt::{ExecClaimBodyProof, ExecClaimStmtResult, ExecClaimStmtSuccess, ExecProofBlockStmtResult};
 use crate::store_fact_and_infer::{InferInFactResult, InferStrictLowerBoundPositiveResult, InferWeakIntegerLowerBoundInNResult};
-use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{SetBuilderObjWellDefinedProof, SetFormerObjWellDefinedProofByDef};
+use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{ProductShapeObjWellDefinedProofByDef, SetBuilderObjWellDefinedProof, SetFormerObjWellDefinedProofByDef};
 use super::helper::verified_subject;
 use super::LeanCompileError;
 use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByDefStmtSuccess, ExecByInducStmtResult, ExecByInducStmtSuccess, ByInducCaseSuccess};
@@ -11,6 +18,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_o
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::{FunctionBodyNormalizationProof, AnonymousFunctionBodyExpansionProof, FunctionBodyExpansionProof};
 use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::VerifyAtomicExceptEqualityFactSuccess;
 use crate::execute::execute_by_stmt::{ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess};
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution;
@@ -49,6 +57,7 @@ pub(super) enum SourceOwner<'a> {
     Run(&'a RunLitexCodeResult),
     Statement(&'a ExecStmtResult),
     Verify(&'a VerifyFactResult),
+    AtomicVerify(&'a VerifyAtomicExceptEqualityFactSuccess),
     WD(&'a ObjWellDefinedProof),
     SetBuilder(&'a SetBuilder, &'a SetBuilderObjWellDefinedProof),
     Named(&'a ExecDefThmStmtSuccess),
@@ -56,6 +65,14 @@ pub(super) enum SourceOwner<'a> {
     Forall(&'a VerifyForallFactSuccess),
     EmptyForall(&'a crate::execute::execute_fact_stmt::verify_forall_fact::VerifyEmptyParameterDomainForallProof),
     ForallWD(&'a ForallFact, &'a ForallFactWellDefinedProof),
+    // Params, then each sequential body WD/assumption pair.
+    ExistWD(&'a PlainExistFact, &'a ExistShapedFactWellDefinedProof),
+    // Local stages only: params, equality stores, proof steps, body checks, uniqueness.
+    WitnessExist(&'a ExecWitnessExistFactStmtSuccessResult),
+    WitnessAtomic(&'a ExecWitnessAtomicFactStmtSuccessResult),
+    // Assumption WD, assumption store, proof steps, closing checks/stores.
+    Contra(&'a ExecByContraStmtSuccess),
+    CasesBranch(&'a ByCasesBranchSuccess),
     KnownForall(&'a VerifyKnownForallFactProof),
     KnownApplication(&'a SearchProofByKnownForallFact),
     CalleeInstance(&'a SearchProofByKnownForallFact),
@@ -111,6 +128,32 @@ impl<'a> SourcePosition<'a> {
             owner,
             before,
         }
+    }
+
+    /// Original search child `index`, after this atomic result's complete WD.
+    pub fn atomic_search_prior(&self, index: usize) -> Result<Self, LeanCompileError> {
+        let proof = match self.owner {
+            SourceOwner::AtomicVerify(proof) => proof,
+            SourceOwner::Verify(VerifyFactResult::AtomicExceptEquality(result)) => {
+                let VerifyAtomicExceptEqualityFactResult::Success(proof) = result.as_ref() else {
+                    return Err(LeanCompileError::new(
+                        "Atomic/FailedSearchCursor",
+                        "A failed atomic result has no completed search children.",
+                    ));
+                };
+                proof
+            }
+            _ => {
+                return Err(LeanCompileError::new(
+                    "Atomic/SearchCursor",
+                    "Atomic search must retain its original successful result owner.",
+                ))
+            }
+        };
+        Ok(Self {
+            before: atomic_formation_stage_count(&proof.well_defined_proof) + index,
+            ..*self
+        })
     }
 
     /// Only already completed top-level ordinary-have introductions are arguments.
@@ -170,6 +213,11 @@ impl<'a> SourcePosition<'a> {
                 | SourceOwner::Claim(_)
                 | SourceOwner::Forall(_)
                 | SourceOwner::EmptyForall(_)
+                | SourceOwner::ExistWD(_, _)
+                | SourceOwner::WitnessExist(_)
+                | SourceOwner::WitnessAtomic(_)
+                | SourceOwner::Contra(_)
+                | SourceOwner::CasesBranch(_)
                 | SourceOwner::ForallWD(_, _)
                 | SourceOwner::KnownForall(_)
                 | SourceOwner::Call(_)
@@ -451,6 +499,11 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
+                SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
+                SourceOwner::Contra(p) => Some(p.local_env.as_ref()),
+                SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ThmRelease(p) => Some(p.local_env.as_ref()),
@@ -492,6 +545,11 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Forall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EmptyForall(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ForallWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::ExistWD(_, p) => Some(p.local_env.as_ref()),
+                SourceOwner::WitnessExist(p) => Some(p.local_env.as_ref()),
+                SourceOwner::WitnessAtomic(p) => Some(p.local_env.as_ref()),
+                SourceOwner::Contra(p) => Some(p.local_env.as_ref()),
+                SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => Some(p.well_defined.local_env.as_ref()),
                 SourceOwner::Call(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ThmRelease(p) => Some(p.local_env.as_ref()),
@@ -534,7 +592,59 @@ impl<'a> SourcePosition<'a> {
         let actual = self.source_fact(id, runtime)?;
         let mut ceiling = Some(self);
         let mut cancellation_primary_is_stored = false;
+        let mut local_primary_is_stored = false;
         while let Some(current) = ceiling {
+            if let SourceOwner::PropInference(store) = current.owner {
+                if store.primary_fact_id() == id {
+                    local_primary_is_stored = true;
+                }
+            }
+            if matches!(
+                current.owner,
+                SourceOwner::ExistWD(_, _)
+                    | SourceOwner::WitnessExist(_)
+                    | SourceOwner::WitnessAtomic(_)
+                    | SourceOwner::Contra(_)
+                    | SourceOwner::CasesBranch(_)
+            ) {
+                let complete = SourcePosition {
+                    before: usize::MAX,
+                    ..*current
+                };
+                let present = fact_reference_in_owner(current, id, actual)?.is_some();
+                if !local_primary_is_stored
+                    && fact_reference_in_owner(&complete, id, actual)?.is_some()
+                    && !present
+                {
+                    return Err(LeanCompileError::new(
+                        "Scope/FutureProducer",
+                        "The exact local store is after this original source stage.",
+                    ));
+                }
+                local_primary_is_stored |= present;
+            }
+            if let SourceOwner::Statement(statement) = current.owner {
+                if witness_statement(statement).is_some()
+                    || obtain_parts(statement).is_some()
+                    || matches!(
+                        statement,
+                        ExecStmtResult::By(
+                            ExecByStmtResult::Contra(_) | ExecByStmtResult::Cases(_)
+                        )
+                    )
+                {
+                    if !local_primary_is_stored
+                        && statement_reference(statement, id, actual, None, usize::MAX)?.is_some()
+                        && statement_reference(statement, id, actual, None, current.before)?
+                            .is_none()
+                    {
+                        return Err(LeanCompileError::new(
+                            "Scope/FutureReturn",
+                            "The output store is after this original statement stage.",
+                        ));
+                    }
+                }
+            }
             let recursive_future = match current.owner {
                 SourceOwner::Induction(proof) => {
                     (current.before == 0
@@ -848,6 +958,38 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<(&'a BoundName, Option<&'a Obj>, FactId, String), LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
+            if matches!(
+                current.owner,
+                SourceOwner::ExistWD(_, _)
+                    | SourceOwner::WitnessExist(_)
+                    | SourceOwner::WitnessAtomic(_)
+                    | SourceOwner::Contra(_)
+                    | SourceOwner::CasesBranch(_)
+            ) {
+                let complete = SourcePosition {
+                    before: usize::MAX,
+                    ..*current
+                };
+                if parameter_in_owner(&complete, id).is_some()
+                    && parameter_in_owner(current, id).is_none()
+                {
+                    return Err(LeanCompileError::new(
+                        "Identifier/FutureProducer",
+                        "The local binder is introduced after this source stage.",
+                    ));
+                }
+            }
+            if let SourceOwner::Statement(statement) = current.owner {
+                if obtain_parts(statement).is_some()
+                    && parameter_in_statement(statement, usize::MAX, id).is_some()
+                    && parameter_in_statement(statement, current.before, id).is_none()
+                {
+                    return Err(LeanCompileError::new(
+                        "Identifier/FutureProducer",
+                        "The obtained binder is introduced after this source stage.",
+                    ));
+                }
+            }
             if let Some((name, carrier, store)) = parameter_in_owner(current, id) {
                 let fact_id = store.primary_fact_id();
                 let fact = self.source_fact(fact_id, runtime)?;
@@ -993,6 +1135,31 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<Option<T>, LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
+            if let Some((steps, head)) = local_steps(current.owner) {
+                for (index, statement) in steps
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    let prior = SourcePosition {
+                        before: head + index,
+                        ..*current
+                    };
+                    let completed = SourcePosition {
+                        before: head + index + 1,
+                        ..*current
+                    };
+                    if !obeys_active_stage_ceilings(self, &completed) {
+                        continue;
+                    }
+                    if let Some(value) =
+                        alias_in_statement(statement, object, usize::MAX, &prior, callback)?
+                    {
+                        return Ok(Some(value));
+                    }
+                }
+            }
             match current.owner {
                 SourceOwner::Run(run) => {
                     for (index, statement) in run
@@ -1107,6 +1274,33 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<Option<T>, LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
+            if let Some((steps, head)) = local_steps(current.owner) {
+                for (index, statement) in steps
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    let prior = SourcePosition {
+                        before: head + index,
+                        ..*current
+                    };
+                    let completed = SourcePosition {
+                        before: head + index + 1,
+                        ..*current
+                    };
+                    if !obeys_active_stage_ceilings(self, &completed) {
+                        continue;
+                    }
+                    if let Some(proof) = statement_known_application(statement) {
+                        let caller =
+                            SourcePosition::new(Some(&prior), SourceOwner::Statement(statement), 0);
+                        if let Some(value) = callback(proof, &caller)? {
+                            return Ok(Some(value));
+                        }
+                    }
+                }
+            }
             match current.owner {
                 SourceOwner::CalleeInstance(proof) => {
                     let mut caller = current
@@ -1250,6 +1444,37 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<Option<T>, LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
+            if let Some((steps, head)) = local_steps(current.owner) {
+                for (index, statement) in steps
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    let prior = SourcePosition {
+                        before: head + index,
+                        ..*current
+                    };
+                    let completed = SourcePosition {
+                        before: head + index + 1,
+                        ..*current
+                    };
+                    if !obeys_active_stage_ceilings(self, &completed) {
+                        continue;
+                    }
+                    if let Some(owner) = statement_forall_constructor_owner(statement, id) {
+                        let declaration =
+                            SourcePosition::new(Some(&prior), SourceOwner::Statement(statement), 0);
+                        return visit_forall_constructor(
+                            owner,
+                            then_index,
+                            pattern,
+                            &declaration,
+                            callback,
+                        );
+                    }
+                }
+            }
             match current.owner {
                 SourceOwner::InductionCase(_, proof) => {
                     let head = 1 + proof.assumptions.len();
@@ -1474,11 +1699,177 @@ fn parameter_from_groups<'a>(
     None
 }
 
+// These views borrow the original stage owners; they do not cache introductions or proofs.
+fn local_steps(owner: SourceOwner<'_>) -> Option<(&[ExecStmtResult], usize)> {
+    match owner {
+        SourceOwner::WitnessExist(p) => Some((
+            &p.proof_steps,
+            p.introduced_params
+                .defined_params
+                .store_and_infer_results
+                .len()
+                + p.witness_equalities.len(),
+        )),
+        SourceOwner::WitnessAtomic(p) => Some((
+            &p.proof_steps,
+            p.introduced_params
+                .defined_params
+                .store_and_infer_results
+                .len()
+                + p.witness_equalities.len(),
+        )),
+        SourceOwner::Contra(p) => Some((&p.proof_steps, 2)),
+        SourceOwner::CasesBranch(p) => Some((&p.proof_steps, 2)),
+        _ => None,
+    }
+}
+
+fn witness_header(
+    owner: SourceOwner<'_>,
+) -> Option<(
+    &PlainExistFact,
+    &IntroduceTypedParametersResult,
+    &[StoreFactAndInferResult],
+)> {
+    match owner {
+        SourceOwner::WitnessExist(p) => Some((
+            p.statement.exist_shaped_fact_in_witness.plain(),
+            &p.introduced_params,
+            &p.witness_equalities,
+        )),
+        SourceOwner::WitnessAtomic(p) => Some((
+            p.projected_exist.plain(),
+            &p.introduced_params,
+            &p.witness_equalities,
+        )),
+        _ => None,
+    }
+}
+
+fn witness_statement(
+    statement: &ExecStmtResult,
+) -> Option<(
+    &WitnessExistAmbientSuccess,
+    &[VerifyFactResult],
+    SourceOwner<'_>,
+    &StoreFactAndInferResult,
+)> {
+    match statement {
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
+            ExecWitnessExistFactStmtResult::Success(p),
+        )) => Some((
+            &p.ambient,
+            &[],
+            SourceOwner::WitnessExist(p),
+            &p.store_and_infer_result,
+        )),
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(
+            ExecWitnessAtomicFactStmtResult::Success(p),
+        )) => Some((
+            &p.ambient,
+            &p.prop_argument_type_checks,
+            SourceOwner::WitnessAtomic(p),
+            &p.store_and_infer_result,
+        )),
+        _ => None,
+    }
+}
+
+fn witness_ambient_len(
+    ambient: &WitnessExistAmbientSuccess,
+    arguments: &[VerifyFactResult],
+) -> usize {
+    arguments.len() + 1 + ambient.witness_obj_well_defined.len() + ambient.witness_type_checks.len()
+}
+
+fn obtain_parts(statement: &ExecStmtResult) -> Option<(&[BoundName], &StoreHaveObjAndInferResult)> {
+    match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                ExecObtainObjFromExistFactStmtResult::Success(p),
+            ),
+        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                ExecObtainObjFromAtomicFactStmtResult::Success(p),
+            ),
+        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        _ => None,
+    }
+}
+
+fn parameter_in_statement(
+    statement: &ExecStmtResult,
+    before: usize,
+    id: IdentifierId,
+) -> Option<(&BoundName, Option<&Obj>, &StoreFactAndInferResult)> {
+    if let Some(have) = ordinary_have(statement) {
+        return parameter_from_groups(
+            &have.statement.param_def.groups,
+            &have.store_and_infer_result.store_and_infer_results,
+            before,
+            id,
+        );
+    }
+    let (names, stores) = obtain_parts(statement)?;
+    let (index, name) = names.iter().enumerate().find(|(_, name)| name.id == id)?;
+    if index >= before.saturating_sub(1) {
+        return None;
+    }
+    let store = stores.store_and_infer_results.get(index)?;
+    let carrier = match &store.store {
+        StoreFactResult::AtomicFact(p) => match &p.fact {
+            AtomicFact::InFact(f) => Some(&f.set),
+            AtomicFact::IsSetFact(_) => None,
+            _ => return None,
+        },
+        _ => return None,
+    };
+    Some((name, carrier, store.as_ref()))
+}
+
+fn stored_reference(
+    store: &StoreFactAndInferResult,
+    id: FactId,
+    actual: &Fact,
+) -> Result<Option<String>, LeanCompileError> {
+    if store.primary_fact_id() == id {
+        check_store_subject(&store.store, actual)?;
+        return Ok(Some(format!("h_{}", id.value())));
+    }
+    Ok(infer_has_fact(store, id, actual)?.then(|| format!("h_{}", id.value())))
+}
+
 fn parameter_in_owner<'a>(
     position: &SourcePosition<'a>,
     id: IdentifierId,
 ) -> Option<(&'a BoundName, Option<&'a Obj>, &'a StoreFactAndInferResult)> {
+    if let Some((steps, head)) = local_steps(position.owner) {
+        for statement in steps
+            .iter()
+            .take(position.before.saturating_sub(head))
+            .rev()
+        {
+            if let Some(parameter) = parameter_in_statement(statement, usize::MAX, id) {
+                return Some(parameter);
+            }
+        }
+    }
+    if let Some((fact, introduced, _)) = witness_header(position.owner) {
+        return parameter_from_groups(
+            &fact.typed_parameters.groups,
+            &introduced.defined_params.store_and_infer_results,
+            position.before,
+            id,
+        );
+    }
     match position.owner {
+        SourceOwner::ExistWD(fact, p) => parameter_from_groups(
+            &fact.typed_parameters.groups,
+            &p.introduced_params.defined_params.store_and_infer_results,
+            position.before,
+            id,
+        ),
         SourceOwner::Induction(proof) if position.before > 0 => {
             induction_parameter(&proof.parameter, &proof.introduced_parameter, id)
         }
@@ -1490,15 +1881,8 @@ fn parameter_in_owner<'a>(
                 .take(position.before.saturating_sub(head))
                 .rev()
             {
-                if let Some(have) = ordinary_have(statement) {
-                    if let Some(parameter) = parameter_from_groups(
-                        &have.statement.param_def.groups,
-                        &have.store_and_infer_result.store_and_infer_results,
-                        usize::MAX,
-                        id,
-                    ) {
-                        return Some(parameter);
-                    }
+                if let Some(parameter) = parameter_in_statement(statement, usize::MAX, id) {
+                    return Some(parameter);
                 }
             }
             if position.before > 0 {
@@ -1591,15 +1975,8 @@ fn parameter_in_owner<'a>(
                 .take(position.before.saturating_sub(head))
                 .rev()
             {
-                if let Some(have) = ordinary_have(step) {
-                    if let Some(parameter) = parameter_from_groups(
-                        &have.statement.param_def.groups,
-                        &have.store_and_infer_result.store_and_infer_results,
-                        usize::MAX,
-                        id,
-                    ) {
-                        return Some(parameter);
-                    }
+                if let Some(parameter) = parameter_in_statement(step, usize::MAX, id) {
+                    return Some(parameter);
                 }
             }
             match (&p.statement.fact, &p.body) {
@@ -1624,15 +2001,8 @@ fn parameter_in_owner<'a>(
                 .take(position.before.saturating_sub(head))
                 .rev()
             {
-                if let Some(have) = ordinary_have(step) {
-                    if let Some(parameter) = parameter_from_groups(
-                        &have.statement.param_def.groups,
-                        &have.store_and_infer_result.store_and_infer_results,
-                        usize::MAX,
-                        id,
-                    ) {
-                        return Some(parameter);
-                    }
+                if let Some(parameter) = parameter_in_statement(step, usize::MAX, id) {
+                    return Some(parameter);
                 }
             }
             match (&p.statement.fact, &p.body) {
@@ -1650,29 +2020,13 @@ fn parameter_in_owner<'a>(
                 _ => None,
             }
         }
-        SourceOwner::Statement(statement) => ordinary_have(statement).and_then(|p| {
-            parameter_from_groups(
-                &p.statement.param_def.groups,
-                &p.store_and_infer_result.store_and_infer_results,
-                position.before,
-                id,
-            )
-        }),
+        SourceOwner::Statement(statement) => parameter_in_statement(statement, position.before, id),
         SourceOwner::Run(run) => run
             .statement_results
             .iter()
             .take(position.before)
             .rev()
-            .find_map(|statement| {
-                ordinary_have(statement).and_then(|p| {
-                    parameter_from_groups(
-                        &p.statement.param_def.groups,
-                        &p.store_and_infer_result.store_and_infer_results,
-                        usize::MAX,
-                        id,
-                    )
-                })
-            }),
+            .find_map(|statement| parameter_in_statement(statement, usize::MAX, id)),
         _ => None,
     }
 }
@@ -1757,6 +2111,7 @@ fn check_store_subject(store: &StoreFactResult, actual: &Fact) -> Result<(), Lea
         StoreFactResult::AndFact(p) => Fact::AndFact(p.fact.clone()),
         StoreFactResult::ChainFact(p) => Fact::ChainFact(p.fact.clone()),
         StoreFactResult::OrFact(p) => Fact::OrFact(p.fact.clone()),
+        StoreFactResult::ExistShapedFact(p) => crate::ast::fact::exist_shaped_fact_to_fact(&p.fact),
         _ => return Err(LeanCompileError::unsupported("Store/Compound")),
     };
     if store.primary_fact_id() != actual.fact_id() {
@@ -1857,6 +2212,9 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
                     .flat_map(|s| s.stored_conclusions())
                     .collect::<Vec<_>>(),
                 InferInFactResult::SignedStandardSetSign(p) => p.derived.iter().collect(),
+                InferInFactResult::CartCoordinates(_) | InferInFactResult::ClosedRange(_) => {
+                    r.stored_conclusions()
+                }
                 _ => Vec::new(),
             })
             .collect(),
@@ -2014,7 +2372,42 @@ fn statement_reference(
         Some((run, index)) => application(&name, &context_arguments_before(run, index)),
         None => name,
     };
+    if let Some((ambient, arguments, _, store)) = witness_statement(statement) {
+        return if before > witness_ambient_len(ambient, arguments) {
+            Ok(stored_reference(store, id, actual)?.map(global_reference))
+        } else {
+            Ok(None)
+        };
+    }
+    if let Some((_, stores)) = obtain_parts(statement) {
+        for store in stores
+            .store_and_infer_results
+            .iter()
+            .take(before.saturating_sub(1))
+        {
+            if let Some(reference) = stored_reference(store, id, actual)? {
+                return Ok(Some(global_reference(reference)));
+            }
+        }
+        return Ok(None);
+    }
     match statement {
+        ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(p))) => {
+            if before > 3 {
+                Ok(stored_reference(&p.stored, id, actual)?.map(global_reference))
+            } else {
+                Ok(None)
+            }
+        }
+        ExecStmtResult::By(ExecByStmtResult::Cases(ExecByCasesStmtResult::Success(p))) => {
+            let head = p.then_facts_wd.len() + 2;
+            for store in p.stored.iter().take(before.saturating_sub(head) / 2) {
+                if let Some(reference) = stored_reference(store, id, actual)? {
+                    return Ok(Some(global_reference(reference)));
+                }
+            }
+            Ok(None)
+        }
         ExecStmtResult::By(ExecByStmtResult::Induc(ExecByInducStmtResult::Success(proof)))
             if before > 0 =>
         {
@@ -2233,7 +2626,75 @@ fn fact_reference_in_owner(
     id: FactId,
     actual: &Fact,
 ) -> Result<Option<String>, LeanCompileError> {
+    if let Some((steps, head)) = local_steps(position.owner) {
+        for statement in steps
+            .iter()
+            .take(position.before.saturating_sub(head))
+            .rev()
+        {
+            if let Some(reference) = statement_reference(statement, id, actual, None, usize::MAX)? {
+                return Ok(Some(reference));
+            }
+        }
+    }
+    if let Some((fact, introduced, equalities)) = witness_header(position.owner) {
+        let count = parameter_count(&fact.typed_parameters.groups);
+        for store in equalities
+            .iter()
+            .take(position.before.saturating_sub(count))
+            .rev()
+        {
+            if let Some(reference) = stored_reference(store, id, actual)? {
+                return Ok(Some(reference));
+            }
+        }
+        return header_reference(
+            &fact.typed_parameters.groups,
+            introduced,
+            &[],
+            position.before,
+            id,
+            actual,
+        );
+    }
     match position.owner {
+        SourceOwner::ExistWD(fact, p) => header_reference(
+            &fact.typed_parameters.groups,
+            &p.introduced_params,
+            &p.assumed_body_facts,
+            position.before,
+            id,
+            actual,
+        ),
+        SourceOwner::WitnessExist(_) | SourceOwner::WitnessAtomic(_) => {
+            unreachable!("witness header handled above")
+        }
+        SourceOwner::Contra(p) => {
+            if position.before > 1 {
+                stored_reference(&p.negation_assumed, id, actual)
+            } else {
+                Ok(None)
+            }
+        }
+        SourceOwner::CasesBranch(p) => {
+            let head = 2 + p.proof_steps.len();
+            if let ByCasesBranchClosingSuccess::ThenFacts { proved_then_facts } = &p.closing {
+                for proved in proved_then_facts
+                    .iter()
+                    .take(position.before.saturating_sub(head) / 2)
+                {
+                    if let Some(reference) = stored_reference(&proved.store_and_infer, id, actual)?
+                    {
+                        return Ok(Some(reference));
+                    }
+                }
+            }
+            if position.before > 1 {
+                stored_reference(&p.assumptions_stored, id, actual)
+            } else {
+                Ok(None)
+            }
+        }
         SourceOwner::Induction(proof) => {
             let mut stores = Vec::new();
             if position.before > 0 {
@@ -2778,6 +3239,7 @@ fn fact_reference_in_owner(
         }
         // Formation children can supply construction evidence, never a truth producer.
         SourceOwner::Verify(_)
+        | SourceOwner::AtomicVerify(_)
         | SourceOwner::AtomicWD(_)
         | SourceOwner::FactWD(_)
         | SourceOwner::HaveEqualType(_)
@@ -2942,6 +3404,17 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         (SourceOwner::Run(a), SourceOwner::Run(b)) => std::ptr::eq(a, b),
         (SourceOwner::Statement(a), SourceOwner::Statement(b)) => std::ptr::eq(a, b),
         (SourceOwner::Verify(a), SourceOwner::Verify(b)) => std::ptr::eq(a, b),
+        (SourceOwner::AtomicVerify(a), SourceOwner::AtomicVerify(b)) => std::ptr::eq(a, b),
+        (
+            SourceOwner::AtomicVerify(a),
+            SourceOwner::Verify(VerifyFactResult::AtomicExceptEquality(b)),
+        )
+        | (
+            SourceOwner::Verify(VerifyFactResult::AtomicExceptEquality(b)),
+            SourceOwner::AtomicVerify(a),
+        ) => {
+            matches!(b.as_ref(), VerifyAtomicExceptEqualityFactResult::Success(b) if std::ptr::eq(a, b))
+        }
         (SourceOwner::WD(a), SourceOwner::WD(b)) => std::ptr::eq(a, b),
         (SourceOwner::SetBuilder(a, pa), SourceOwner::SetBuilder(b, pb)) => {
             std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
@@ -2951,6 +3424,11 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         (SourceOwner::Forall(a), SourceOwner::Forall(b)) => std::ptr::eq(a, b),
         (SourceOwner::EmptyForall(a), SourceOwner::EmptyForall(b)) => std::ptr::eq(a, b),
         (SourceOwner::ForallWD(_, a), SourceOwner::ForallWD(_, b)) => std::ptr::eq(a, b),
+        (SourceOwner::ExistWD(_, a), SourceOwner::ExistWD(_, b)) => std::ptr::eq(a, b),
+        (SourceOwner::WitnessExist(a), SourceOwner::WitnessExist(b)) => std::ptr::eq(a, b),
+        (SourceOwner::WitnessAtomic(a), SourceOwner::WitnessAtomic(b)) => std::ptr::eq(a, b),
+        (SourceOwner::Contra(a), SourceOwner::Contra(b)) => std::ptr::eq(a, b),
+        (SourceOwner::CasesBranch(a), SourceOwner::CasesBranch(b)) => std::ptr::eq(a, b),
         (SourceOwner::KnownForall(a), SourceOwner::KnownForall(b)) => std::ptr::eq(a, b),
         (SourceOwner::KnownApplication(a), SourceOwner::KnownApplication(b)) => std::ptr::eq(a, b),
         (SourceOwner::CalleeInstance(a), SourceOwner::CalleeInstance(b)) => std::ptr::eq(a, b),
@@ -3167,6 +3645,341 @@ fn visit_function_formation<T>(
     Ok(None)
 }
 
+fn visit_fact_stage<T>(
+    proof: &FactWellDefinedProof,
+    stage: usize,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    if position.before <= stage {
+        return Ok(None);
+    }
+    let prior = SourcePosition {
+        before: stage,
+        ..*position
+    };
+    let formation = SourcePosition::new(Some(&prior), SourceOwner::FactWD(proof), usize::MAX);
+    visit_fact_formation(proof, usize::MAX, &formation, wd, verify)
+}
+
+fn visit_verify_stage<T>(
+    proof: &VerifyFactResult,
+    stage: usize,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    if position.before <= stage {
+        return Ok(None);
+    }
+    let prior = SourcePosition {
+        before: stage,
+        ..*position
+    };
+    visit_complete_verify(proof, &prior, wd, verify)
+}
+
+fn visit_store_stage<T>(
+    store: &StoreFactAndInferResult,
+    stage: usize,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    if position.before <= stage {
+        return Ok(None);
+    }
+    let completed = SourcePosition {
+        before: stage + 1,
+        ..*position
+    };
+    let inference = SourcePosition::new(
+        Some(&completed),
+        SourceOwner::PropInference(store),
+        usize::MAX,
+    );
+    visit_owner(&inference, wd, verify)
+}
+
+fn visit_closed_scope<T>(
+    owner: SourceOwner<'_>,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    let mut closed = |evidence: SourceConstructor<'_>, cursor: &SourcePosition<'_>| {
+        let closed = match evidence {
+            SourceConstructor::Checked(proof) => closed_leaf(proof.obj()),
+            SourceConstructor::Inferred(store) => {
+                store.atomic_components().iter().all(|(_, fact)| {
+                    atomic_fact_args_ref(fact)
+                        .iter()
+                        .all(|object| closed_leaf(object))
+                })
+            }
+        };
+        if closed {
+            wd(evidence, cursor)
+        } else {
+            Ok(None)
+        }
+    };
+    let scope = SourcePosition::new(Some(position), owner, usize::MAX);
+    visit_owner(&scope, &mut closed, &mut |_, _| Ok(None))
+}
+
+fn visit_contradiction_closing<T>(
+    closing: &ByContradictionClosingSuccess,
+    head: usize,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    if let Some(value) =
+        visit_verify_stage(&closing.negated_impossible, head + 1, position, wd, verify)?
+    {
+        return Ok(Some(value));
+    }
+    visit_verify_stage(&closing.impossible, head, position, wd, verify)
+}
+
+fn visit_local_scope<T>(
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    let (steps, head) = local_steps(position.owner).expect("local proof owner");
+    let closing_head = head + steps.len();
+    match position.owner {
+        SourceOwner::WitnessExist(p) => {
+            if let Some(value) =
+                visit_witness_obligations(&p.obligations, closing_head, position, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
+        }
+        SourceOwner::WitnessAtomic(p) => {
+            if let Some(value) =
+                visit_witness_obligations(&p.obligations, closing_head, position, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
+        }
+        SourceOwner::Contra(p) => {
+            if let Some(value) =
+                visit_contradiction_closing(&p.closing, closing_head, position, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
+        }
+        SourceOwner::CasesBranch(p) => match &p.closing {
+            ByCasesBranchClosingSuccess::Impossible(closing) => {
+                if let Some(value) =
+                    visit_contradiction_closing(closing, closing_head, position, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+            ByCasesBranchClosingSuccess::ThenFacts { proved_then_facts } => {
+                for (index, proof) in proved_then_facts.iter().enumerate().rev() {
+                    if let Some(value) = visit_store_stage(
+                        &proof.store_and_infer,
+                        closing_head + 2 * index + 1,
+                        position,
+                        wd,
+                        verify,
+                    )? {
+                        return Ok(Some(value));
+                    }
+                    if let Some(value) = visit_verify_stage(
+                        &proof.verify_result,
+                        closing_head + 2 * index,
+                        position,
+                        wd,
+                        verify,
+                    )? {
+                        return Ok(Some(value));
+                    }
+                }
+            }
+        },
+        _ => unreachable!("local proof owner"),
+    }
+    for (index, statement) in steps
+        .iter()
+        .take(position.before.saturating_sub(head))
+        .enumerate()
+        .rev()
+    {
+        let prior = SourcePosition {
+            before: head + index,
+            ..*position
+        };
+        if let Some(value) = visit_statement(statement, usize::MAX, &prior, wd, verify)? {
+            return Ok(Some(value));
+        }
+    }
+    if let Some((fact, introduced, equalities)) = witness_header(position.owner) {
+        let count = parameter_count(&fact.typed_parameters.groups);
+        for (index, store) in equalities.iter().enumerate().rev() {
+            if let Some(value) = visit_store_stage(store, count + index, position, wd, verify)? {
+                return Ok(Some(value));
+            }
+        }
+        return visit_header(
+            &fact.typed_parameters.groups,
+            introduced,
+            &[],
+            position,
+            wd,
+            verify,
+        );
+    }
+    let (assumption, store) = match position.owner {
+        SourceOwner::Contra(p) => (&p.reverse_assumption_wd, &p.negation_assumed),
+        SourceOwner::CasesBranch(p) => (&p.assumption_wd, &p.assumptions_stored),
+        _ => unreachable!("local assumption owner"),
+    };
+    if let Some(value) = visit_store_stage(store, 1, position, wd, verify)? {
+        return Ok(Some(value));
+    }
+    visit_fact_stage(assumption, 0, position, wd, verify)
+}
+
+fn visit_witness_obligations<T>(
+    obligations: &WitnessExistObligationSuccess,
+    head: usize,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    if let Some(proof) = &obligations.uniqueness_check {
+        if let Some(value) = visit_verify_stage(
+            proof,
+            head + obligations.body_checks.len(),
+            position,
+            wd,
+            verify,
+        )? {
+            return Ok(Some(value));
+        }
+    }
+    for (index, proof) in obligations.body_checks.iter().enumerate().rev() {
+        if let Some(value) = visit_verify_stage(proof, head + index, position, wd, verify)? {
+            return Ok(Some(value));
+        }
+    }
+    Ok(None)
+}
+
+fn visit_witness_statement<T>(
+    ambient: &WitnessExistAmbientSuccess,
+    arguments: &[VerifyFactResult],
+    owner: SourceOwner<'_>,
+    store: &StoreFactAndInferResult,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    let ambient_end = witness_ambient_len(ambient, arguments);
+    if let Some(value) = visit_store_stage(store, ambient_end, position, wd, verify)? {
+        return Ok(Some(value));
+    }
+    if position.before > ambient_end {
+        let caller = SourcePosition {
+            before: ambient_end,
+            ..*position
+        };
+        if let Some(value) = visit_closed_scope(owner, &caller, wd)? {
+            return Ok(Some(value));
+        }
+    }
+    let obj_head = arguments.len() + 1;
+    let type_head = obj_head + ambient.witness_obj_well_defined.len();
+    for (index, proof) in ambient.witness_type_checks.iter().enumerate().rev() {
+        if let Some(value) = visit_verify_stage(proof, type_head + index, position, wd, verify)? {
+            return Ok(Some(value));
+        }
+    }
+    for (index, proof) in ambient.witness_obj_well_defined.iter().enumerate().rev() {
+        if position.before > obj_head + index {
+            if let VerifyObjWellDefinedResult::Success(proof) = proof {
+                let prior = SourcePosition {
+                    before: obj_head + index,
+                    ..*position
+                };
+                if let Some(value) = visit_complete_wd(proof, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+        }
+    }
+    if position.before > arguments.len() {
+        let (fact, _, _) = witness_header(owner).expect("witness owner");
+        if let FactWellDefinedProof::ExistFact(proof) = &ambient.exist_fact_well_defined {
+            let prior = SourcePosition {
+                before: arguments.len(),
+                ..*position
+            };
+            if let Some(value) = visit_closed_scope(SourceOwner::ExistWD(fact, proof), &prior, wd)?
+            {
+                return Ok(Some(value));
+            }
+        }
+    }
+    for (index, proof) in arguments.iter().enumerate().rev() {
+        if let Some(value) = visit_verify_stage(proof, index, position, wd, verify)? {
+            return Ok(Some(value));
+        }
+    }
+    Ok(None)
+}
+
 fn visit_owner<T>(
     position: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
@@ -3179,6 +3992,20 @@ fn visit_owner<T>(
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
     match position.owner {
+        SourceOwner::ExistWD(fact, proof) => {
+            return visit_header(
+                &fact.typed_parameters.groups,
+                &proof.introduced_params,
+                &proof.assumed_body_facts,
+                position,
+                wd,
+                verify,
+            )
+        }
+        SourceOwner::WitnessExist(_)
+        | SourceOwner::WitnessAtomic(_)
+        | SourceOwner::Contra(_)
+        | SourceOwner::CasesBranch(_) => return visit_local_scope(position, wd, verify),
         SourceOwner::Induction(proof) => {
             for (index, result) in proof
                 .goals_wd
@@ -3569,6 +4396,9 @@ fn visit_owner<T>(
         SourceOwner::Verify(proof) => {
             return visit_verify_formation(proof, position.before, position, wd, verify)
         }
+        SourceOwner::AtomicVerify(proof) => {
+            return visit_atomic_verify_formation(proof, position.before, position, wd, verify)
+        }
         SourceOwner::WD(proof) => {
             if let Some(value) = visit_function_formation(proof, position, wd, verify)? {
                 return Ok(Some(value));
@@ -3675,7 +4505,7 @@ fn visit_owner<T>(
                 }
             }
             return visit_header(
-                &proof.fact,
+                &proof.fact.typed_parameters.groups,
                 &proof.introduced_params,
                 &proof.assumed_dom_facts,
                 position,
@@ -3705,7 +4535,7 @@ fn visit_owner<T>(
                 }
             }
             return visit_header(
-                fact,
+                &fact.typed_parameters.groups,
                 &proof.introduced_params,
                 &proof.assumed_dom_facts,
                 position,
@@ -3736,7 +4566,7 @@ fn visit_owner<T>(
                 }
             }
             return visit_header(
-                &proof.fact,
+                &proof.fact.typed_parameters.groups,
                 &proof.well_defined.introduced_params,
                 &proof.well_defined.assumed_dom_facts,
                 position,
@@ -3764,7 +4594,7 @@ fn visit_owner<T>(
                 (&proof.statement.fact, &proof.body)
             {
                 return visit_header(
-                    fact,
+                    &fact.typed_parameters.groups,
                     &body.introduced_params,
                     &body.assumed_dom_facts,
                     position,
@@ -3793,7 +4623,7 @@ fn visit_owner<T>(
                 (&proof.statement.fact, &proof.body)
             {
                 return visit_header(
-                    fact,
+                    &fact.typed_parameters.groups,
                     &body.introduced_params,
                     &body.assumed_dom_facts,
                     position,
@@ -4546,7 +5376,7 @@ fn visit_owner<T>(
 }
 
 fn visit_header<T>(
-    fact: &ForallFact,
+    groups: &[TypedParameterGroup],
     introduced: &IntroduceTypedParametersResult,
     doms: &[AssumeDomFactResult],
     position: &SourcePosition<'_>,
@@ -4559,7 +5389,7 @@ fn visit_header<T>(
         &SourcePosition<'_>,
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
-    let count = parameter_count(&fact.typed_parameters.groups);
+    let count = parameter_count(groups);
     for (index, dom) in doms
         .iter()
         .take(position.before.saturating_sub(count))
@@ -4608,12 +5438,7 @@ fn visit_header<T>(
         }
     }
     let mut offset = 0;
-    for (group, proof) in fact
-        .typed_parameters
-        .groups
-        .iter()
-        .zip(&introduced.param_type_well_defined)
-    {
+    for (group, proof) in groups.iter().zip(&introduced.param_type_well_defined) {
         let end = offset + group.params.len();
         if offset < position.before {
             if let ParamTypeWellDefinedProof::Obj(proof) = proof {
@@ -4645,7 +5470,104 @@ fn visit_statement<T>(
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
     let position = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
+    let completed = SourcePosition { before, ..position };
+    if let Some((ambient, arguments, owner, store)) = witness_statement(statement) {
+        return visit_witness_statement(ambient, arguments, owner, store, &completed, wd, verify);
+    }
+    if let Some((_, stores)) = obtain_parts(statement) {
+        for (index, store) in stores.store_and_infer_results.iter().enumerate().rev() {
+            if let Some(value) = visit_store_stage(store, 1 + index, &completed, wd, verify)? {
+                return Ok(Some(value));
+            }
+        }
+        if before == 0 {
+            return Ok(None);
+        }
+        return match statement {
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                    ExecObtainObjFromExistFactStmtResult::Success(p),
+                ),
+            )) => {
+                let (fact, proof) = match &p.verify_exist {
+                    ObtainExistVerifySuccess::Exist(p) => (p.fact.plain(), &p.well_defined_proof),
+                    ObtainExistVerifySuccess::ExistUnique(p) => {
+                        (p.fact.plain(), &p.well_defined_proof)
+                    }
+                };
+                visit_closed_scope(SourceOwner::ExistWD(fact, proof), &position, wd)
+            }
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                    ExecObtainObjFromAtomicFactStmtResult::Success(p),
+                ),
+            )) => visit_complete_verify(&p.verify_atomic, &position, wd, verify),
+            _ => unreachable!("obtain statement"),
+        };
+    }
     match statement {
+        ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(p))) => {
+            if let Some(value) = visit_store_stage(&p.stored, 3, &completed, wd, verify)? {
+                return Ok(Some(value));
+            }
+            if let Some(value) = visit_fact_stage(&p.stored_wd, 2, &completed, wd, verify)? {
+                return Ok(Some(value));
+            }
+            if before > 1 {
+                let caller = SourcePosition {
+                    before: 1,
+                    ..position
+                };
+                if let Some(value) = visit_closed_scope(SourceOwner::Contra(p), &caller, wd)? {
+                    return Ok(Some(value));
+                }
+            }
+            if let VerifyFactWellDefinedResult::Success(proof) = &p.goal_wd {
+                return visit_fact_stage(proof, 0, &completed, wd, verify);
+            }
+            Ok(None)
+        }
+        ExecStmtResult::By(ExecByStmtResult::Cases(ExecByCasesStmtResult::Success(p))) => {
+            let head = p.then_facts_wd.len() + 2;
+            for (index, (formation, store)) in p.stored_wd.iter().zip(&p.stored).enumerate().rev() {
+                if let Some(value) =
+                    visit_store_stage(store, head + 2 * index + 1, &completed, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+                if let Some(value) =
+                    visit_fact_stage(formation, head + 2 * index, &completed, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
+            if before >= head {
+                let caller = SourcePosition {
+                    before: head - 1,
+                    ..position
+                };
+                for branch in p.branches.iter().rev() {
+                    if let Some(value) =
+                        visit_closed_scope(SourceOwner::CasesBranch(branch), &caller, wd)?
+                    {
+                        return Ok(Some(value));
+                    }
+                }
+            }
+            if let Some(value) =
+                visit_verify_stage(&p.coverage, p.then_facts_wd.len(), &completed, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
+            for (index, formation) in p.then_facts_wd.iter().enumerate().rev() {
+                if let VerifyFactWellDefinedResult::Success(proof) = formation {
+                    if let Some(value) = visit_fact_stage(proof, index, &completed, wd, verify)? {
+                        return Ok(Some(value));
+                    }
+                }
+            }
+            Ok(None)
+        }
         ExecStmtResult::By(ExecByStmtResult::Induc(ExecByInducStmtResult::Success(proof)))
             if before > 0 =>
         {
@@ -5045,6 +5967,20 @@ fn visit_complete_verify<T>(
             }
         }
     }
+    if let VerifyFactResult::ExistShapedFact(result) = proof {
+        let formation = match result.as_ref() {
+            VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(p)) => {
+                Some((p.fact.plain(), &p.well_defined_proof))
+            }
+            VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(
+                p,
+            )) => Some((p.fact.plain(), &p.well_defined_proof)),
+            _ => None,
+        };
+        if let Some((fact, formation)) = formation {
+            return visit_closed_scope(SourceOwner::ExistWD(fact, formation), parent, wd);
+        }
+    }
     visit_verify_formation(proof, usize::MAX, &position, wd, verify)
 }
 
@@ -5116,25 +6052,7 @@ fn visit_verify_formation<T>(
         },
         VerifyFactResult::AtomicExceptEquality(proof) => {
             if let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_ref() {
-                if before == usize::MAX {
-                    if let AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(known) = &proof.searched_proof {
-                        let scope = SourcePosition::new(Some(position), SourceOwner::KnownApplication(known), known.arg_match_proofs.len() + known_application_requirements(known).len());
-                        if let Some(value) = visit_owner(&scope, wd, verify)? { return Ok(Some(value)); }
-                    }
-                    if let AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(
-                        crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(unfold),
-                    ) = &proof.searched_proof {
-                        let scope = SourcePosition::new(Some(position), SourceOwner::AtomicFnUnfold(unfold), unfold.unfold_equal_proofs.len() + 1);
-                        if let Some(value) = visit_owner(&scope, wd, verify)? { return Ok(Some(value)); }
-                    }
-                }
-                return visit_atomic_formation(
-                    &proof.well_defined_proof,
-                    before,
-                    position,
-                    wd,
-                    verify,
-                );
+                return visit_atomic_verify_formation(proof, before, position, wd, verify);
             }
         }
         VerifyFactResult::AndFact(result) => {
@@ -5174,6 +6092,189 @@ fn visit_verify_formation<T>(
         _ => {}
     }
     Ok(None)
+}
+
+fn visit_atomic_verify_formation<T>(
+    proof: &VerifyAtomicExceptEqualityFactSuccess,
+    before: usize,
+    position: &SourcePosition<'_>,
+    wd: &mut dyn FnMut(
+        SourceConstructor<'_>,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+    verify: &mut dyn FnMut(
+        &VerifyFactResult,
+        &SourcePosition<'_>,
+    ) -> Result<Option<T>, LeanCompileError>,
+) -> Result<Option<T>, LeanCompileError> {
+    let head = atomic_formation_stage_count(&proof.well_defined_proof);
+    for (index, child) in atomic_search_stages(proof)
+        .into_iter()
+        .take(before.saturating_sub(head))
+        .enumerate()
+        .rev()
+    {
+        // Keep the completion boundary in ancestry while the child callback
+        // receives its actual pre-stage cursor. Ancestor scans must not make
+        // this child available at its own pending prefix.
+        let completed = SourcePosition {
+            before: head + index + 1,
+            ..*position
+        };
+        let prior = SourcePosition {
+            parent: Some(&completed),
+            before: head + index,
+            ..*position
+        };
+        let found = match child {
+            AtomicSearchStage::WD(child) => visit_complete_wd(child, &prior, wd, verify)?,
+            AtomicSearchStage::Verify(child) => visit_complete_verify(child, &prior, wd, verify)?,
+            AtomicSearchStage::Atomic(child) => {
+                let child_scope =
+                    SourcePosition::new(Some(&prior), SourceOwner::AtomicVerify(child), usize::MAX);
+                visit_owner(&child_scope, wd, verify)?
+            }
+        };
+        if found.is_some() {
+            return Ok(found);
+        }
+    }
+    if before == usize::MAX {
+        if let AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(known) =
+            &proof.searched_proof
+        {
+            let scope = SourcePosition::new(
+                Some(position),
+                SourceOwner::KnownApplication(known),
+                known.arg_match_proofs.len() + known_application_requirements(known).len(),
+            );
+            if let Some(value) = visit_owner(&scope, wd, verify)? {
+                return Ok(Some(value));
+            }
+        }
+        if let AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(
+            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(unfold),
+        ) = &proof.searched_proof {
+            let scope = SourcePosition::new(Some(position), SourceOwner::AtomicFnUnfold(unfold), unfold.unfold_equal_proofs.len() + 1);
+            if let Some(value) = visit_owner(&scope, wd, verify)? { return Ok(Some(value)); }
+        }
+    }
+    visit_atomic_formation(&proof.well_defined_proof, before, position, wd, verify)
+}
+
+fn atomic_formation_stage_count(proof: &AtomicFactWellDefinedProof) -> usize {
+    proof.well_defined_of_each_parameter.len()
+        + match &proof.predicate_domain {
+            PredicateDomainProof::ByRequirements(requirements) => requirements.len(),
+            _ => 0,
+        }
+}
+
+enum AtomicSearchStage<'a> {
+    WD(&'a ObjWellDefinedProof),
+    Verify(&'a VerifyFactResult),
+    Atomic(&'a VerifyAtomicExceptEqualityFactSuccess),
+}
+
+fn function_domain_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::function_domain::FunctionDomainMatchProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::function_domain::{
+        CompleteFunctionDomainSourceProof, FunctionDomainComparisonProof,
+    };
+    stages.push(AtomicSearchStage::WD(&proof.function_wd));
+    stages.push(AtomicSearchStage::WD(&proof.target_wd));
+    match &proof.source.source {
+        CompleteFunctionDomainSourceProof::TemplateDefinition { instance_wd, .. } => {
+            stages.push(AtomicSearchStage::WD(instance_wd))
+        }
+        CompleteFunctionDomainSourceProof::ApplicationReturn {
+            application_children,
+            application_requirements,
+            ..
+        } => {
+            stages.extend(
+                application_children
+                    .iter()
+                    .map(|child| AtomicSearchStage::WD(child)),
+            );
+            stages.extend(
+                application_requirements
+                    .iter()
+                    .map(AtomicSearchStage::Verify),
+            );
+        }
+        _ => {}
+    }
+    if let FunctionDomainComparisonProof::MutualInclusion {
+        forward_proof,
+        reverse_proof,
+        ..
+    } = &proof.comparison
+    {
+        stages.push(AtomicSearchStage::Verify(forward_proof));
+        stages.push(AtomicSearchStage::Verify(reverse_proof));
+    }
+}
+
+// Borrow the children retained by these selected search routes. No new proof,
+// wrapper result, or persistent lookup table is manufactured here.
+fn atomic_search_stages(
+    proof: &VerifyAtomicExceptEqualityFactSuccess,
+) -> Vec<AtomicSearchStage<'_>> {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::{InFactSearchProofByBuiltinRule, PowerSetMembershipSubsetProof};
+    let mut stages = Vec::new();
+    match &proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule),
+        ) => match rule {
+            InFactSearchProofByBuiltinRule::CartMembership(proof) => {
+                function_domain_search_stages(&proof.domain, &mut stages);
+                stages.extend(
+                    proof
+                        .proof_of_requirement_facts
+                        .iter()
+                        .map(AtomicSearchStage::Verify),
+                );
+            }
+            InFactSearchProofByBuiltinRule::PowerSetMembership(proof) => {
+                if let PowerSetMembershipSubsetProof::VerifiedSubset(child) = &proof.subset_proof {
+                    stages.push(AtomicSearchStage::Atomic(child));
+                }
+            }
+            InFactSearchProofByBuiltinRule::UnionMembershipFromLeft(proof) => {
+                stages.push(AtomicSearchStage::Verify(&proof.left_membership_proof))
+            }
+            InFactSearchProofByBuiltinRule::UnionMembershipFromRight(proof) => {
+                stages.push(AtomicSearchStage::Verify(&proof.right_membership_proof))
+            }
+            _ => {}
+        },
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
+            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartMembership(proof),
+        ) => {
+            function_domain_search_stages(&proof.domain, &mut stages);
+            stages.extend(
+                proof
+                    .proof_of_requirement_facts
+                    .iter()
+                    .map(AtomicSearchStage::Verify),
+            );
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
+            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowerSetMembership(proof),
+        ) => {
+            stages.extend(
+                proof
+                    .proof_of_requirement_facts
+                    .iter()
+                    .map(AtomicSearchStage::Verify),
+            );
+        }
+        _ => {}
+    }
+    stages
 }
 
 fn visit_atomic_formation<T>(
@@ -5289,6 +6390,22 @@ fn arithmetic_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
     if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::ProductShape(proof),
+        ..
+    } = proof
+    {
+        return match proof {
+            ProductShapeObjWellDefinedProofByDef::Cart(proof) => Some((
+                &proof.child_obj_well_defined,
+                &proof.requirement_fact_verified,
+            )),
+            ProductShapeObjWellDefinedProofByDef::Tuple(proof) => Some((
+                &proof.child_obj_well_defined,
+                &proof.requirement_fact_verified,
+            )),
+        };
+    }
+    if let ObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::FnObj(proof),
         ..
     } = proof
@@ -5308,6 +6425,32 @@ fn arithmetic_stages(
             &proof.child_obj_well_defined,
             &proof.requirement_fact_verified,
         ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ClosedRange(proof)),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::SetOperator(proof),
+        ..
+    } = proof
+    {
+        return match proof {
+            SetOperatorObjWellDefinedProofByDef::Union(p) => {
+                Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            SetOperatorObjWellDefinedProofByDef::PowerSet(p) => {
+                Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            _ => None,
+        };
     }
     let ObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ArithmeticOperator(proof),
@@ -5876,3 +7019,7 @@ fn order_bound_stages(
         }
     }
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/compile_to_lean/geo_scope_cursor/tests.rs"]
+mod geo_scope_cursor_tests;
