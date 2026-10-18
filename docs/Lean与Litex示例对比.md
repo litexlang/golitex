@@ -25,6 +25,159 @@ https://github.com/litexlang/golitex/blob/main/docs/Representative_Lean_Litex_Ex
 
 完整的 `Group` 对比放在蓝图中，不在此重复。本页集中展示能增加独立证据的示例。示例之后，[第 8 节](#8-a-design-perspective-what-the-author-states-what-the-checker-reconstructs)将它们连接到一个形式化语言设计提案：哪些决定属于数学源码，哪些工作应由检查器重建。
 
+<a id="syntax-semantics-and-foundations"></a>
+
+## 从语法、语义、对象与数学基础开始
+
+Litex 的目标，是成为形式化语言里的 Python，让学生、工程师与研究者能把形式化数学用进自己的工作。减少输入符号是其中一部分；另一部分，是让熟悉的数学想法、定义域条件与论证顺序直接对应源码。
+
+| 角度 | Lean / Mathlib | Litex 的源码接口 |
+| --- | --- | --- |
+| 语法 | 定理具有带类型的陈述与证明项；tactic 和自动化可以构造证明项。 | 直接写下一条事实，由验证器在已接受的上下文中寻找依据。 |
+| 运算语义 | 一些熟悉的运算被扩展到了教科书通常不使用的定义域。 | 接受使用某个表达式的事实之前，先建立表达式有定义。 |
+| 对象与性质 | 通过类型、转换、子类型与证明参数组织接口。 | 成员关系与条件是对象的事实；带条件的调用直接检查上下文中的这些事实。 |
+| 数学基础 | 以依赖类型论组织数学对象、命题与证明。 | 以集合论源码模型，从集合、函数、关系与显式事实出发。 |
+
+### 语法：先写想要成立的事实
+
+Lean 可以简洁地证明一个小算式：
+
+```lean
+example : (1 : Nat) + 1 = 2 := by
+  rfl
+```
+
+对应的 Litex 输入就是事实本身：
+
+```litex
+1 + 1 = 2
+```
+
+区别在于书写证明的接口，并非这个算式对 Lean 很难。更大的证明仍需要作者选择有意义的中间步骤。[第 1 节](#1-direct-facts-short-estimates-and-typed-domains)用实际证明比较这种工作流。
+
+<a id="ordinary-mathematics"></a>
+
+### 语义：Litex 走“正常数学”的路线
+
+**Litex 希望保留通常教科书中的数学含义与定义域条件。** 除法要求分母非零，实数平方根要求输入非负。接受使用这些表达式的事实之前，验证器必须先建立相应条件。这里的“正常数学”落实为一个具体目标：作者沿用自己想表达的数学含义，由语言检查其使用条件。
+
+下面三个例子涉及运算定义。Mathlib 的扩展是库的主动约定，并非依赖类型论必然要求如此；Lean 也能表达受限的定义域。
+
+#### 除以零
+
+Mathlib 的标准实数除法满足：
+
+```lean
+import Mathlib
+
+example : (1 : ℝ) / 0 = 0 := by
+  simp
+```
+
+Litex 将非零条件放在函数定义域中：
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+Litex 在良定义性检查处拒绝 `1 / 0 = 0`：所需条件 `0 != 0` 无法成立，不会给它一个默认值。Mathlib 的对应约定见 [`div_zero`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero)。
+
+区别在于非零条件在哪里被检查。Mathlib 在 `x / x = 1` 等定理中要求这个前提；Litex 在接受含有该除法的事实之前就检查它，连 `1 / 0 = 1 / 0` 也会被拒绝。[Lean 的除零 FAQ](https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/)解释了 Mathlib 的选择，以及为何这种扩展不允许在零分母处错误地约分。
+
+#### 自然数减法
+
+Lean 的自然数减法在零处截断：
+
+```lean
+example : (1 : Nat) - 2 = 0 := by
+  decide
+```
+
+Litex 不会因为两个输入都是自然数，就把减法改成截断减法：
+
+```litex
+1 - 2 = -1
+1 - 2 $in Z
+```
+
+结果是整数。Lean 也提供通常的整数减法；这里的区别是类型选择了哪种运算。参见 [`Nat.sub`](https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/#Nat.sub)。
+
+#### 负数输入的实数平方根函数
+
+Mathlib 将 `Real.sqrt` 扩展为对负数返回零：
+
+```lean
+import Mathlib
+
+example : Real.sqrt (-1) = 0 := by
+  exact Real.sqrt_eq_zero_of_nonpos (by norm_num)
+```
+
+Litex 的实数平方根运算要求输入非负：
+
+```litex
+have fn real_root(x R: x >= 0) R = sqrt(x)
+real_root(4) = 2
+```
+
+`sqrt(-1) = 0` 在良定义性检查处被拒绝，那里要求 `0 <= -1`。这体现的是运算定义域约定的区别。Mathlib 的值并不表示零的平方等于负一；通常的平方根恒等式仍保留定义域前提。参见 [`Real.sqrt_eq_zero_of_nonpos`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos)。
+
+### 对象：知道一个性质，与打包一个子类型
+
+假设已有实数 `x`，也已证明 `0 <= x`。接受非负实数子类型的 Lean 接口，把值与证明打包在一起：
+
+```lean
+import Mathlib
+
+def nonnegativeInput (x : {y : ℝ // 0 ≤ y}) : ℝ := x.val
+
+example (x : ℝ) (h : 0 ≤ x) : nonnegativeInput ⟨x, h⟩ = x := by
+  rfl
+```
+
+对应的 Litex 接口将条件保留为参数的事实：
+
+```litex
+have fn nonnegative_input(x R: x >= 0) R = x
+
+forall x R:
+    x >= 0
+    =>:
+        nonnegative_input(x) = x
+```
+
+Litex 使用同一个 `x` 作为参数时检查已知条件，源码不需要为这个条件把值与证明打包。条件义务仍在：`nonnegative_input(-1) = -1` 会在良定义性检查处被拒绝。Lean 也能改用独立的证明参数，自动化还可以补全部分打包工作；这里比较的是接口，而非声称 Lean 不能表达带条件的函数。参见 [Lean 子类型](https://lean-lang.org/doc/reference/latest/Basic-Types/Subtypes/)。
+
+数值表示也体现了类似区别。实数 `1` 与复数 `1` 属于不同的 Lean 类型，但通过标准嵌入后相等：
+
+```lean
+import Mathlib
+
+example : ((1 : ℝ) : ℂ) = (1 : ℂ) := by
+  simp
+```
+
+在 Litex 中，同一个源码对象可以逐步积累成员事实：
+
+```litex
+have a N = 1
+a $in Z
+a $in R
+a $in C
+```
+
+这不是说 Lean 中的实数一与复数一在数学上不相等，也不是说生成的 Lean 没有类型，而是展示身份、成员关系与表示的源码接口有所不同。后面的 `Eq`/`Same` 章节进一步讨论桥接；Mathlib 的数值嵌入见 [`Complex.ofReal_one`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Basic/Complex/Basic.html#Complex.ofReal_one)。
+
+### 数学基础：起点的差异，也影响表达
+
+不同的基础体系可以各自在内部保持一致，同时采用不同方式组织对象、相等与证明。Lean 使用[依赖类型论](https://lean-lang.org/theorem_proving_in_lean4/Dependent-Type-Theory/)，数学论述则常以集合为出发点。这些描述不构成任何体系绝对一致性的证明，日常数学也没有唯一的形式化表述。上面的除零和平方根扩展属于库定义，并非 Lean 公理强制的结果。
+
+Litex 探索的是：熟悉的源码对象、定义域条件与事实导向证明写法，能否降低构造与理解可检查数学的成本。这是需要跨任务检验的设计目标；这些示例证明的是各自具体行为，不代表普遍覆盖、更高正确性或完整的 Lean 编译能力。
+
+---
+
+
 <a id="a-semantic-difference-behind-the-syntax-eq-and-same"></a>
 
 ## 语法背后的语义差异：`Eq` 与 `Same`

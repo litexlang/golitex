@@ -55,6 +55,15 @@ theorems justify the changes of representation between these descriptions.
 Distinct endpoints, positive radii and nondegenerate triangles remain visible
 where the corresponding interface requires them.
 
+`is_parallelogram(a,b,c,d)` requires a nondegenerate triangle `abc` as well as
+parallel opposite sides. Rectangles, rhombi, and squares inherit that condition.
+`is_angle_bisector(a,b,c,d)` selects the internal ray `bd` of a nondegenerate
+angle: it requires noncollinear `a,b,c`, equal angles `abd` and `dbc`, and
+`angle_cos_num(a,b,d) > 0`. Thus the reverse ray and zero or straight angles
+are excluded; `d` can be any nonzero point on the internal ray.
+See the [interface design notes](math_collections.md) and
+[executable boundary cases](definition_boundaries/main.lit).
+
 ## Library entrypoints
 
 | Source | Content |

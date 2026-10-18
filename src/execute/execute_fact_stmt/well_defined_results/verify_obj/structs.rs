@@ -272,10 +272,7 @@ impl Runtime {
         if let Some(carrier) = self.defined_as_struct_visible_in_stack(obj) {
             return Some(carrier);
         }
-        let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = obj else {
-            return None;
-        };
-        match self.resolve_field_access_field_type(access)? {
+        match self.definition_owned_type(obj)? {
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) => {
                 Some(carrier)
             }

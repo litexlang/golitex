@@ -6,6 +6,7 @@
 mod binder;
 mod closed_numeric_eval_wd;
 mod core;
+mod definition_owned_type;
 mod entry;
 pub(crate) mod fail_to_verify_obj_well_defined;
 mod helper;

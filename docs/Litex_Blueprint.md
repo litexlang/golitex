@@ -1,8 +1,10 @@
 # Litex: A Formal Language Where Mathematics Verifies Itself
 
+**Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”), not “LYE-tek” (“赖泰克”).
+
 Created and maintained by Jiachen Shen.
 
-Last updated: October 14, 2026.
+Last updated: October 17, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -11,7 +13,8 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 ## Table of Contents
 
 - [0. Litex Blueprint Overview](#overview)
-  - [0.1 Five Characteristics: How Litex Works](#overview-spine)
+  - [0.1 The Goal of Litex](#goal-of-litex)
+  - [0.2 Five Characteristics: How Litex Works](#overview-spine)
 - [1. Write Facts and See Why They Hold](#fact-oriented)
   - [1.1 Fact-Oriented: Writing “What Holds” into the Source](#fact-oriented-interface)
   - [1.2 What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
@@ -43,7 +46,9 @@ _“Language is an instrument of human reason, and not merely a medium for the e
 
 _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
-*Started in 2024, Litex is a formal language that organizes everyday mathematics around sets and facts. It hopes to [become a Python for formal languages, helping more people gradually become formalization experts](#reader-programmers).*
+**Litex is a human-readable, set-theoretic, fact-oriented, compilable-to-Lean formal language.**
+
+*Started in 2024, Litex hopes to [become a Python for formal languages, helping more people gradually become formalization experts](#reader-programmers).*
 
 **As AI makes reasoning easier to generate, how can we turn that reasoning into knowledge we can trust, understand, and build on?** A conclusion needs explicit premises, an argument needs checkable grounds, and a result needs to be understood by others who can develop it further. As candidate reasoning grows in volume, the costs of checking, understanding, and reuse become increasingly important.
 
@@ -60,9 +65,25 @@ As AI grows more capable, Human–AI mathematical workflows could enable explora
 **Starting from mathematics, Litex’s vision is to bring understandable, checkable reasoning into a [wider world of knowledge](#ecosystem-role).** Mathematics is the mother of the natural sciences; I hope formal languages can reach wherever mathematics reaches and brings benefits, and that Litex can contribute to that journey as part of the infrastructure for trustworthy reasoning in the AI era.
 
 
+<a id="goal-of-litex"></a>
+
+### 0.1 The Goal of Litex
+
+Why does writing a formal mathematical proof often feel so different from writing the same proof on paper? This gap motivates Litex's central language-design question:
+
+**What should a formal proof language look like if it were designed around ordinary mathematical writing?**
+
+Litex aims to bridge the expressive freedom of natural language and the rigor of formal verification. Ordinary mathematical writing is the starting point for the design: how mathematicians introduce objects, define concepts, state assumptions, and develop an argument. The challenge is to preserve that way of thinking while making the conditions and grounds of each step precise enough for a machine to check. Authors still choose the mathematical ideas and proof route; the language should help make those ideas both understandable and checkable.
+
+**Litex follows ordinary mathematics: familiar textbook meanings and domain conditions.** Division requires a nonzero denominator, and a real square root requires a nonnegative input. The language should help authors check these conditions so that the mathematics in their source stays close to the mathematics they intend. The [operation comparison below](#ordinary-mathematics) shows how this choice applies to concrete expressions.
+
+The significance of a new mathematical language lies in helping mathematicians across all branches advance their work and deepen their understanding together. A shared language should make it easier to explain a construction, examine a proof, recognize connections, and build on someone else's results. **Litex's long-term ambition is to help mathematical knowledge and understanding grow together across the whole discipline.** Whether its design can do so must be tested through the work of writing, reading, checking, and reusing mathematics.
+
+The following five characteristics describe how Litex pursues this goal.
+
 <a id="overview-spine"></a>
 
-### 0.1 Five Characteristics: How Litex Works
+### 0.2 Five Characteristics: How Litex Works
 
 For a visual overview of how a fact is checked and accepted knowledge extends the context, see the [Litex Verification Pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png).
 
@@ -842,6 +863,21 @@ end
 Lean first declares a common element type `α : Type*`, then declares `s`, `t`, `u : Set α`. This makes the theorem reusable over any element type; `Type*` also involves the universe hierarchy of types.
 
 This comparison shows how the two languages introduce sets and develop a proof: Lean first declares the element type, while Litex directly states and checks facts about the sets. Lean can also prove the result with a short proof or automation; the textbook's expanded steps are retained here to make the comparison easier to follow.
+
+<a id="ordinary-mathematics"></a>
+
+**Ordinary mathematics: familiar operations retain familiar meanings and domains.** Lean/Mathlib extends standard real division to zero denominators, satisfying [`(1 : ℝ) / 0 = 0`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero); its [`Real.sqrt`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos) returns zero for negative inputs. Litex follows the usual textbook domains: using `1 / x` requires establishing `x != 0`, and using real `sqrt(x)` requires establishing `x >= 0`.
+
+These conditions belong directly in function definitions, and the verifier finds or proves them in context at each call:
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+Both `1 / 0 = 0` and `sqrt(-1) = 0` are rejected at well-definedness. Even `1 / 0 = 1 / 0` cannot make an expression defined merely by having identical sides. Authors do not pass a proof of the nonzero condition as an extra argument to each division, but the mathematical condition must hold and the verifier must establish it.
+
+Here, “ordinary mathematics” refers to everyday conventions for operations and domains. Mathlib's extensions are deliberate library definitions, and Lean can also represent restricted domains; laws such as `x / x = 1` still require a nonzero hypothesis, as explained in the [Lean division-by-zero FAQ](https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/). Litex's design goal is to let authors retain familiar mathematical meanings while the language handles routine checks of their conditions.
 
 > **Set theory provides the foundation; everyday writing can start from familiar concepts.**
 

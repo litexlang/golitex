@@ -5,6 +5,8 @@
 
 ### 写数学。看见它为何成立。
 
+**读音：** Litex 读作 /ˈliːtɛk/（“里泰克”），不是“赖泰克”。
+
 由沈嘉辰创建和维护。
 
 _“Language is an instrument of human reason, and not merely a medium for the expression of thought.”_
@@ -17,9 +19,21 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 [Read the Blueprint](Litex_Blueprint.md)
 </div>
 
+## Litex 的目标
+
+为什么同一个数学证明，写成形式化证明时的感受，常常与写在纸上如此不同？Litex 探索的是一个语言设计问题：
+
+**如果围绕日常数学写作来设计，一门形式化证明语言应该是什么样的？**
+
+Litex 希望在自然语言的表达自由与形式化验证的严格性之间搭起桥梁，让数学家沿着熟悉的方式发展定义与论证，同时把假设、条件与推理表达得足够精确，使机器能够检查。
+
+**Litex 走“正常数学”的路线：保留通常教科书中的数学含义与定义域条件。** Lean/Mathlib 的标准实数除法满足 [`(1 : ℝ) / 0 = 0`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero)。Litex 则要求先建立 `x != 0`，才接受 `1 / x`；`1 / 0 = 0` 会因表达式没有定义而被拒绝。这是运算语义的主动选择，Lean 同样能表达受限定义域。除法、减法与实数平方根的具体对照见 [Lean–Litex 示例](Lean与Litex示例对比.md#ordinary-mathematics)。
+
+一门新数学语言的意义，在于帮助各个分支的数学家共同推进工作，加深对数学的认识与理解。Litex 的长期愿景，是让表达想法、审阅证明、继承彼此的知识拥有一门共同的语言。[蓝图](Litex中文蓝图.md#goal-of-litex)进一步展开了这一目标。
+
 ## 写下一条事实，看它留下了什么
 
-Litex 面向每一位希望书写并理解可检查数学的人，是日常可用的形式化语言。
+Litex 是一门人类可读、基于集合论、面向事实、可编译到 Lean 的形式化语言。
 
 **Litex 很适合与 AI 交互：** AI 提出数学步骤，Litex 检查并返回反馈，AI 在同一 Session 中基于已接受的知识修正或继续。
 

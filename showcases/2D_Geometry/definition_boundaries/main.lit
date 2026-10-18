@@ -1,0 +1,300 @@
+# Before: opposite-side parallelism admitted collinear quadrilaterals.
+# prop is_parallelogram(a,b,c,d cart(R,R)):
+#     $is_parallel(a,b,d,c)
+#     $is_parallel(a,d,b,c)
+# Before: equal angles alone admitted the reverse bisecting ray.
+# prop is_angle_bisector(a,b,c,d cart(R,R)):
+#     $are_angles_congruent(a,b,d,d,b,c)
+# Now: use the actual strengthened definitions, with both positive and negative proofs.
+# Boundary: noncollinearity excludes flat quadrilaterals and zero/straight angles.
+# Run: target/release/litex -lang en -strict -f showcases/2D_Geometry/definition_boundaries/main.lit
+
+release obj def geo::vec
+release obj def geo::dot
+release obj def geo::det
+release obj def geo::distance_sq
+release obj def geo::angle_cos_num
+release obj def geo::angle_cos_den
+
+thm boundary_det_coordinates:
+    ? forall a, b, c, d cart(R,R):
+        geo::det(geo::vec(a,b),geo::vec(c,d)) = (b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+    geo::vec(a,b)(1) = b(1)-a(1)
+    geo::vec(a,b)(2) = b(2)-a(2)
+    geo::vec(c,d)(1) = d(1)-c(1)
+    geo::vec(c,d)(2) = d(2)-c(2)
+    geo::det(geo::vec(a,b),geo::vec(c,d)) = geo::vec(a,b)(1)*geo::vec(c,d)(2)-geo::vec(a,b)(2)*geo::vec(c,d)(1) = (b(1)-a(1))*(d(2)-c(2))-(b(2)-a(2))*(d(1)-c(1))
+
+thm boundary_dot_coordinates:
+    ? forall a, b, c, d cart(R,R):
+        geo::dot(geo::vec(a,b),geo::vec(c,d)) = (b(1)-a(1))*(d(1)-c(1))+(b(2)-a(2))*(d(2)-c(2))
+    geo::vec(a,b)(1) = b(1)-a(1)
+    geo::vec(a,b)(2) = b(2)-a(2)
+    geo::vec(c,d)(1) = d(1)-c(1)
+    geo::vec(c,d)(2) = d(2)-c(2)
+    geo::dot(geo::vec(a,b),geo::vec(c,d)) = geo::vec(a,b)(1)*geo::vec(c,d)(1)+geo::vec(a,b)(2)*geo::vec(c,d)(2) = (b(1)-a(1))*(d(1)-c(1))+(b(2)-a(2))*(d(2)-c(2))
+
+# A rectangle remains a parallelogram.
+claim:
+    ? $geo::is_parallelogram((0,0),(2,0),(2,1),(0,1))
+    have a cart(R,R) = (0,0)
+    have b cart(R,R) = (2,0)
+    have c cart(R,R) = (2,1)
+    have d cart(R,R) = (0,1)
+    a(1)=0
+    a(2)=0
+    b(1)=2
+    b(2)=0
+    c(1)=2
+    c(2)=1
+    d(1)=0
+    d(2)=1
+    release thm boundary_det_coordinates(a,b,a,c)
+    geo::det(geo::vec(a,b),geo::vec(a,c))=2
+    by def $geo::is_triangle(a,b,c)
+    release thm boundary_det_coordinates(a,b,d,c)
+    geo::det(geo::vec(a,b),geo::vec(d,c))=0
+    by contra:
+        ? a != b
+        a(1)=b(1)
+        impossible a(1)=b(1)
+    by contra:
+        ? d != c
+        d(1)=c(1)
+        impossible d(1)=c(1)
+    by def $geo::is_parallel(a,b,d,c)
+    release thm boundary_det_coordinates(a,d,b,c)
+    geo::det(geo::vec(a,d),geo::vec(b,c))=0
+    by contra:
+        ? a != d
+        a(2)=d(2)
+        impossible a(2)=d(2)
+    by contra:
+        ? b != c
+        b(2)=c(2)
+        impossible b(2)=c(2)
+    by def $geo::is_parallel(a,d,b,c)
+    by def $geo::is_parallelogram(a,b,c,d)
+
+# Both old parallelism conditions hold, but collinearity rules out a parallelogram.
+claim:
+    ? not $geo::is_parallelogram((0,0),(1,0),(4,0),(2,0))
+    have a cart(R,R) = (0,0)
+    have b cart(R,R) = (1,0)
+    have c cart(R,R) = (4,0)
+    have d cart(R,R) = (2,0)
+    a(1)=0
+    a(2)=0
+    b(1)=1
+    b(2)=0
+    c(1)=4
+    c(2)=0
+    d(1)=2
+    d(2)=0
+    release thm boundary_det_coordinates(a,b,a,c)
+    release thm boundary_det_coordinates(a,b,d,c)
+    geo::det(geo::vec(a,b),geo::vec(d,c))=0
+    by contra:
+        ? a != b
+        a(1)=b(1)
+        impossible a(1)=b(1)
+    by contra:
+        ? d != c
+        d(1)=c(1)
+        impossible d(1)=c(1)
+    by def $geo::is_parallel(a,b,d,c)
+    release thm boundary_det_coordinates(a,d,b,c)
+    geo::det(geo::vec(a,d),geo::vec(b,c))=0
+    by contra:
+        ? a != d
+        a(1)=d(1)
+        impossible a(1)=d(1)
+    by contra:
+        ? b != c
+        b(1)=c(1)
+        impossible b(1)=c(1)
+    by def $geo::is_parallel(a,d,b,c)
+    geo::det(geo::vec(a,b),geo::vec(a,c))=0
+    by contra:
+        ? not $geo::is_parallelogram(a,b,c,d)
+        $geo::is_triangle(a,b,c)
+        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=0
+
+# The internal right-angle bisector is accepted, with its tip beyond the opposite side.
+claim:
+    ? $geo::is_angle_bisector((1,0),(0,0),(0,1),(1,1))
+    have a cart(R,R) = (1,0)
+    have b cart(R,R) = (0,0)
+    have c cart(R,R) = (0,1)
+    have d cart(R,R) = (1,1)
+    a(1)=1
+    a(2)=0
+    b(1)=0
+    b(2)=0
+    c(1)=0
+    c(2)=1
+    d(1)=1
+    d(2)=1
+    by contra:
+        ? a != b
+        a(1)=b(1)
+        impossible a(1)=b(1)
+    by contra:
+        ? c != b
+        c(2)=b(2)
+        impossible c(2)=b(2)
+    by contra:
+        ? d != b
+        d(1)=b(1)
+        impossible d(1)=b(1)
+    release thm boundary_det_coordinates(a,b,a,c)
+    geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+    by contra:
+        ? not $geo::is_collinear(a,b,c)
+        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+    release thm boundary_dot_coordinates(b,a,b,d)
+    geo::dot(geo::vec(b,a),geo::vec(b,d))=1
+    release thm boundary_dot_coordinates(b,d,b,c)
+    geo::dot(geo::vec(b,d),geo::vec(b,c))=1
+    release thm boundary_dot_coordinates(b,a,b,a)
+    geo::dot(geo::vec(b,a),geo::vec(b,a))=1
+    release thm boundary_dot_coordinates(b,c,b,c)
+    geo::dot(geo::vec(b,c),geo::vec(b,c))=1
+    release thm boundary_dot_coordinates(b,d,b,d)
+    geo::dot(geo::vec(b,d),geo::vec(b,d))=2
+    geo::distance_sq(b,a)=geo::dot(geo::vec(b,a),geo::vec(b,a))=1
+    geo::distance_sq(b,c)=geo::dot(geo::vec(b,c),geo::vec(b,c))=1
+    geo::distance_sq(b,d)=geo::dot(geo::vec(b,d),geo::vec(b,d))=2
+    geo::angle_cos_num(a,b,d)=geo::dot(geo::vec(b,a),geo::vec(b,d))=1
+    geo::angle_cos_num(d,b,c)=geo::dot(geo::vec(b,d),geo::vec(b,c))=1
+    geo::angle_cos_den(a,b,d)=geo::distance_sq(b,a)*geo::distance_sq(b,d)=2
+    geo::angle_cos_den(d,b,c)=geo::distance_sq(b,d)*geo::distance_sq(b,c)=2
+    by def $geo::are_angles_congruent(a,b,d,d,b,c)
+    by def $geo::is_angle_bisector(a,b,c,d)
+
+# The reverse ray satisfies the old equal-angle condition but is not internal.
+claim:
+    ? not $geo::is_angle_bisector((1,0),(0,0),(0,1),(-1,-1))
+    have a cart(R,R) = (1,0)
+    have b cart(R,R) = (0,0)
+    have c cart(R,R) = (0,1)
+    have d cart(R,R) = (-1,-1)
+    a(1)=1
+    a(2)=0
+    b(1)=0
+    b(2)=0
+    c(1)=0
+    c(2)=1
+    d(1)=-1
+    d(2)=-1
+    by contra:
+        ? a != b
+        a(1)=b(1)
+        impossible a(1)=b(1)
+    by contra:
+        ? c != b
+        c(2)=b(2)
+        impossible c(2)=b(2)
+    by contra:
+        ? d != b
+        d(1)=b(1)
+        impossible d(1)=b(1)
+    release thm boundary_det_coordinates(a,b,a,c)
+    geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+    by contra:
+        ? not $geo::is_collinear(a,b,c)
+        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=-1
+    release thm boundary_dot_coordinates(b,a,b,d)
+    geo::dot(geo::vec(b,a),geo::vec(b,d))=-1
+    release thm boundary_dot_coordinates(b,d,b,c)
+    geo::dot(geo::vec(b,d),geo::vec(b,c))=-1
+    release thm boundary_dot_coordinates(b,a,b,a)
+    geo::dot(geo::vec(b,a),geo::vec(b,a))=1
+    release thm boundary_dot_coordinates(b,c,b,c)
+    geo::dot(geo::vec(b,c),geo::vec(b,c))=1
+    release thm boundary_dot_coordinates(b,d,b,d)
+    geo::dot(geo::vec(b,d),geo::vec(b,d))=2
+    geo::distance_sq(b,a)=geo::dot(geo::vec(b,a),geo::vec(b,a))=1
+    geo::distance_sq(b,c)=geo::dot(geo::vec(b,c),geo::vec(b,c))=1
+    geo::distance_sq(b,d)=geo::dot(geo::vec(b,d),geo::vec(b,d))=2
+    geo::angle_cos_num(a,b,d)=geo::dot(geo::vec(b,a),geo::vec(b,d))=-1
+    geo::angle_cos_num(d,b,c)=geo::dot(geo::vec(b,d),geo::vec(b,c))=-1
+    geo::angle_cos_den(a,b,d)=geo::distance_sq(b,a)*geo::distance_sq(b,d)=2
+    geo::angle_cos_den(d,b,c)=geo::distance_sq(b,d)*geo::distance_sq(b,c)=2
+    by def $geo::are_angles_congruent(a,b,d,d,b,c)
+    geo::angle_cos_num(a,b,d)<=0
+    by contra:
+        ? not $geo::is_angle_bisector(a,b,c,d)
+        geo::angle_cos_num(a,b,d)>0
+        impossible geo::angle_cos_num(a,b,d)>0
+
+claim:
+    ? forall a,b,c,d cart(R,R):
+        $geo::is_collinear(a,b,c)
+        =>:
+            not $geo::is_angle_bisector(a,b,c,d)
+    by contra:
+        ? not $geo::is_angle_bisector(a,b,c,d)
+        impossible $geo::is_collinear(a,b,c)
+
+claim:
+    ? forall a,b,c,d cart(R,R):
+        not $geo::is_triangle(a,b,c)
+        =>:
+            not $geo::is_parallelogram(a,b,c,d)
+    by contra:
+        ? not $geo::is_parallelogram(a,b,c,d)
+        $geo::is_triangle(a,b,c)
+        impossible $geo::is_triangle(a,b,c)
+
+# An obtuse parent angle also has an acute internal half-angle.
+claim:
+    ? $geo::is_angle_bisector((3,4),(0,0),(3,-4),(1,0))
+    have a cart(R,R) = (3,4)
+    have b cart(R,R) = (0,0)
+    have c cart(R,R) = (3,-4)
+    have d cart(R,R) = (1,0)
+    a(1)=3
+    a(2)=4
+    b(1)=0
+    b(2)=0
+    c(1)=3
+    c(2)=-4
+    d(1)=1
+    d(2)=0
+    by contra:
+        ? a != b
+        a(1)=b(1)
+        impossible a(1)=b(1)
+    by contra:
+        ? c != b
+        c(2)=b(2)
+        impossible c(2)=b(2)
+    by contra:
+        ? d != b
+        d(1)=b(1)
+        impossible d(1)=b(1)
+    release thm boundary_det_coordinates(a,b,a,c)
+    geo::det(geo::vec(a,b),geo::vec(a,c))=24
+    by contra:
+        ? not $geo::is_collinear(a,b,c)
+        impossible geo::det(geo::vec(a,b),geo::vec(a,c))=24
+    release thm boundary_dot_coordinates(b,a,b,d)
+    geo::dot(geo::vec(b,a),geo::vec(b,d))=3
+    release thm boundary_dot_coordinates(b,d,b,c)
+    geo::dot(geo::vec(b,d),geo::vec(b,c))=3
+    release thm boundary_dot_coordinates(b,a,b,a)
+    geo::dot(geo::vec(b,a),geo::vec(b,a))=25
+    release thm boundary_dot_coordinates(b,c,b,c)
+    geo::dot(geo::vec(b,c),geo::vec(b,c))=25
+    release thm boundary_dot_coordinates(b,d,b,d)
+    geo::dot(geo::vec(b,d),geo::vec(b,d))=1
+    geo::distance_sq(b,a)=geo::dot(geo::vec(b,a),geo::vec(b,a))=25
+    geo::distance_sq(b,c)=geo::dot(geo::vec(b,c),geo::vec(b,c))=25
+    geo::distance_sq(b,d)=geo::dot(geo::vec(b,d),geo::vec(b,d))=1
+    geo::angle_cos_num(a,b,d)=geo::dot(geo::vec(b,a),geo::vec(b,d))=3
+    geo::angle_cos_num(d,b,c)=geo::dot(geo::vec(b,d),geo::vec(b,c))=3
+    geo::angle_cos_den(a,b,d)=geo::distance_sq(b,a)*geo::distance_sq(b,d)=25
+    geo::angle_cos_den(d,b,c)=geo::distance_sq(b,d)*geo::distance_sq(b,c)=25
+    by def $geo::are_angles_congruent(a,b,d,d,b,c)
+    by def $geo::is_angle_bisector(a,b,c,d)
