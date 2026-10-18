@@ -75,7 +75,7 @@ pub enum NotNormalAtomicFactSearchProofByBuiltinRule {}
 
 pub enum ProperSubsetFactSearchProofByBuiltinRule {}
 pub enum ProperSupersetFactSearchProofByBuiltinRule {}
-pub enum DvdFactSearchProofByBuiltinRule {}
+pub use super::dvd::DvdFactSearchProofByBuiltinRule;
 pub enum InjectiveFactSearchProofByBuiltinRule {}
 pub enum SurjectiveFactSearchProofByBuiltinRule {}
 pub enum BijectiveFactSearchProofByBuiltinRule {}

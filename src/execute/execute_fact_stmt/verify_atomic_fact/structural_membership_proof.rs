@@ -1,7 +1,7 @@
 use super::closed_calculation_proof::ClosedMembershipCalculationProof;
+use super::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use super::AtomicExceptEqualityFactSearchProofByKnownAtomicFact;
 use crate::ast::obj::{Obj, StandardSet};
-use crate::prelude::EqualFactSearchedProof;
 
 // Success-only tree. Constructor rules use the enclosing fact's object WD;
 // division and integer powers therefore retain their domain guards in that WD.
@@ -35,7 +35,7 @@ pub enum StructuralMembershipReason {
     ExactIntegerDiv {
         numerator: Box<StructuralMembershipProof>,
         denominator: Box<StructuralMembershipProof>,
-        zero_remainder: Box<EqualFactSearchedProof>,
+        divisibility: Box<AtomicExceptEqualityFactKnownProof>,
     },
     Neg {
         argument: Box<StructuralMembershipProof>,

@@ -4,8 +4,7 @@
 
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{
-    Abs, ArithmeticOperator, Ceil, Exp, ExpLogOperator, Floor, IntegerOperator, Literal, Ln, Max,
-    Min, Mod, Number, Obj,
+    Abs, ArithmeticOperator, Ceil, Exp, ExpLogOperator, Floor, Ln, Max, Min, Obj,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -63,12 +62,6 @@ pub struct CeilOfIntegerBuiltinRuleProof {
 
 // --- mod ---
 
-// Builtin ModSelfZero: a % a = 0 when a != 0.
-// Example: have a N+; a % a = 0.
-pub struct ModSelfZeroBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
-}
-
 pub enum EqualityIdentitiesWave3BuiltinRuleProof {
     MinIdempotent(MinIdempotentBuiltinRuleProof),
     MaxIdempotent(MaxIdempotentBuiltinRuleProof),
@@ -79,7 +72,6 @@ pub enum EqualityIdentitiesWave3BuiltinRuleProof {
     LnOfExp(LnOfExpBuiltinRuleProof),
     FloorOfInteger(FloorOfIntegerBuiltinRuleProof),
     CeilOfInteger(CeilOfIntegerBuiltinRuleProof),
-    ModSelfZero(ModSelfZeroBuiltinRuleProof),
 }
 
 impl Runtime {
@@ -130,11 +122,6 @@ impl Runtime {
                 return Ok(Some(
                     EqualityIdentitiesWave3BuiltinRuleProof::CeilOfInteger(p),
                 ));
-            }
-            if let Some(p) = self.try_mod_self_zero(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave3BuiltinRuleProof::ModSelfZero(
-                    p,
-                )));
             }
         }
         Ok(None)
@@ -304,30 +291,6 @@ impl Runtime {
             proof_of_requirement_facts: vec![proof],
         }))
     }
-
-    fn try_mod_self_zero(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ModSelfZeroBuiltinRuleProof>> {
-        let Some((dividend, modulus)) = match_mod(left) else {
-            return Ok(None);
-        };
-        if dividend.ir() != modulus.ir() {
-            return Ok(None);
-        }
-        if !is_zero_obj(right) {
-            return Ok(None);
-        }
-        let proof = self.verify_order_nonzero(modulus, verify_state)?;
-        if proof.is_failed() {
-            return Ok(None);
-        }
-        Ok(Some(ModSelfZeroBuiltinRuleProof {
-            proof_of_requirement_facts: vec![proof],
-        }))
-    }
 }
 
 fn match_min(obj: &Obj) -> Option<(&Obj, &Obj)> {
@@ -381,20 +344,4 @@ fn match_ceil(obj: &Obj) -> Option<&Obj> {
         Obj::ArithmeticOperator(ArithmeticOperator::Ceil(Ceil { arg })) => Some(arg.as_ref()),
         _ => None,
     }
-}
-
-fn match_mod(obj: &Obj) -> Option<(&Obj, &Obj)> {
-    match obj {
-        Obj::IntegerOperator(IntegerOperator::Mod(Mod { left, right })) => {
-            Some((left.as_ref(), right.as_ref()))
-        }
-        _ => None,
-    }
-}
-
-fn is_zero_obj(obj: &Obj) -> bool {
-    matches!(
-        obj,
-        Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "0"
-    )
 }

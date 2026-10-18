@@ -8,6 +8,8 @@ mod arithmetic_congruence_tests;
 mod bounded_set_combinations_tests;
 #[path = "../../tests/unit/compile_to_lean/by_definition_in_theorem/tests.rs"]
 mod by_definition_in_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/cached_formula_head/tests.rs"]
+mod cached_formula_head_tests;
 #[path = "../../tests/unit/compile_to_lean/cancellation_inference/tests.rs"]
 mod cancellation_inference_tests;
 #[path = "../../tests/unit/compile_to_lean/chain_and/tests.rs"]
@@ -18,8 +20,12 @@ mod composed_formula_predicate_guards_tests;
 mod compound_theorem_returns_tests;
 #[path = "../../tests/unit/compile_to_lean/concrete_predicate_transport/tests.rs"]
 mod concrete_predicate_transport_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_cart_coordinates/tests.rs"]
+mod finite_cart_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
+#[path = "../../tests/unit/compile_to_lean/function_codomain_coordinates/tests.rs"]
+mod function_codomain_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/inference_publication_once/tests.rs"]
 mod inference_publication_once_tests;
 #[path = "../../tests/unit/compile_to_lean/local_arbitrary_have/tests.rs"]
@@ -34,6 +40,10 @@ mod natural_function_wd_tests;
 mod nonzero_difference_tests;
 #[path = "../../tests/unit/compile_to_lean/numeric_carrier_closure/tests.rs"]
 mod numeric_carrier_closure_tests;
+#[path = "../../tests/unit/compile_to_lean/returned_cart_call/tests.rs"]
+mod returned_cart_call_tests;
+#[path = "../../tests/unit/compile_to_lean/set_builder_function_bodies/tests.rs"]
+mod set_builder_function_bodies_tests;
 #[path = "../../tests/unit/compile_to_lean/subset_numeric_membership/tests.rs"]
 mod subset_numeric_membership_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;

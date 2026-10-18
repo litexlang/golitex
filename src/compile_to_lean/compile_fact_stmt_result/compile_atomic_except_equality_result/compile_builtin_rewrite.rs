@@ -172,6 +172,10 @@ impl LitexToLeanCompiler {
                 | AtomicFact::GreaterFact(_)
                 | AtomicFact::LessEqualFact(_)
                 | AtomicFact::GreaterEqualFact(_)
+                | AtomicFact::NotLessFact(_)
+                | AtomicFact::NotGreaterFact(_)
+                | AtomicFact::NotLessEqualFact(_)
+                | AtomicFact::NotGreaterEqualFact(_)
         ) {
             return Err(LeanCompileError::unsupported(
                 "Atomic/BuiltinRewrite/PredicateTransport",
@@ -380,6 +384,40 @@ impl LitexToLeanCompiler {
                 &compiled_child.1,
                 position,
             ),
+            (
+                from @ (AtomicFact::NotLessFact(_)
+                | AtomicFact::NotGreaterFact(_)
+                | AtomicFact::NotLessEqualFact(_)
+                | AtomicFact::NotGreaterEqualFact(_)),
+                to @ (AtomicFact::NotLessFact(_)
+                | AtomicFact::NotGreaterFact(_)
+                | AtomicFact::NotLessEqualFact(_)
+                | AtomicFact::NotGreaterEqualFact(_)),
+            ) => {
+                // Negation reverses the implication: move a hypothetical
+                // positive goal to the residual, then apply the checked child.
+                // These polarity views retain the original IDs and create no
+                // verification result or new equality evidence.
+                let positive_goal = crate::ast::fact::negate_atomic_fact(to, to.fact_id())
+                    .ok_or_else(|| LeanCompileError::unsupported("AtomicRewrite/OrderNegation"))?;
+                let positive_residual = crate::ast::fact::negate_atomic_fact(from, from.fact_id())
+                    .ok_or_else(|| LeanCompileError::unsupported("AtomicRewrite/OrderNegation"))?;
+                let reverse_arguments = arguments
+                    .iter()
+                    .map(|proof| format!("({proof}).symm"))
+                    .collect::<Vec<_>>();
+                let transported = self.compile_order_known_atomic_transport(
+                    &positive_goal,
+                    &positive_residual,
+                    &reverse_arguments,
+                    "_rewrite_positive",
+                    position,
+                )?;
+                Ok(format!(
+                    "(fun _rewrite_positive => ({}) {transported})",
+                    compiled_child.1,
+                ))
+            }
             _ => Err(LeanCompileError::unsupported(
                 "Atomic/BuiltinRewrite/PredicateTransport",
             )),

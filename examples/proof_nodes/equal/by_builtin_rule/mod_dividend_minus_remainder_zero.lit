@@ -1,4 +1,5 @@
-# Node: equal.ByBuiltinRule.ModDividendMinusRemainderZero
+# Zero-remainder compatibility: DvdZeroRemainder delegates to the native $dvd rule.
+# Historical node: equal.ByBuiltinRule.ModDividendMinusRemainderZero
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/mod_dividend_minus_remainder_zero.lit
 
 have a Z

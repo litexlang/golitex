@@ -5,18 +5,6 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::prelude::*;
 
-// Builtin GcdDividesArgument: a % gcd(a, b) = 0 (and symmetrically for b).
-// Example: have a Z; have b Z; trust a != 0; trust gcd(a,b) $in N+; trust gcd(a,b) != 0;
-//          a % gcd(a, b) = 0.
-pub struct GcdDividesArgumentBuiltinRuleProof {}
-
-// Builtin ProductModFactorZero: (a * b) % a = 0 when b is an integer.
-// Example: forall a N+, b Z: (a * b) % a = 0.
-// The enclosing modulo WD still checks its dividend and nonzero divisor.
-pub struct ProductModFactorZeroBuiltinRuleProof {
-    pub multiplier_integer: VerifyFactResult,
-}
-
 // Builtin EqualityFromTwoSidedWeakOrder: a = b from both weak-order directions.
 // Either direction may be stored as <= or its converse >=.
 // Example: have a R; have b R; trust a <= b; trust b <= a; a = b.
@@ -61,8 +49,6 @@ pub struct SubtractionFromKnownAdditionBuiltinRuleProof {
 }
 
 pub enum EqualityIdentitiesWave7BuiltinRuleProof {
-    GcdDividesArgument(GcdDividesArgumentBuiltinRuleProof),
-    ProductModFactorZero(ProductModFactorZeroBuiltinRuleProof),
     EqualityFromTwoSidedWeakOrder(EqualityFromTwoSidedWeakOrderBuiltinRuleProof),
     DiffZeroFromEqualOperands(DiffZeroFromEqualOperandsBuiltinRuleProof),
     ZeroProductCancel(ZeroProductCancelBuiltinRuleProof),
@@ -81,18 +67,6 @@ impl Runtime {
     ) -> RuntimeResult<Option<EqualityIdentitiesWave7BuiltinRuleProof>> {
         let child = verify_state;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
-            if gcd_divides_argument_shape(left, right) {
-                return Ok(Some(
-                    EqualityIdentitiesWave7BuiltinRuleProof::GcdDividesArgument(
-                        GcdDividesArgumentBuiltinRuleProof {},
-                    ),
-                ));
-            }
-            if let Some(proof) = self.try_product_mod_factor_zero(left, right, child)? {
-                return Ok(Some(
-                    EqualityIdentitiesWave7BuiltinRuleProof::ProductModFactorZero(proof),
-                ));
-            }
             if let Some(p) = self.try_sign_of_negation(left, right)? {
                 return Ok(Some(
                     EqualityIdentitiesWave7BuiltinRuleProof::SignOfNegation(p),
@@ -135,31 +109,6 @@ impl Runtime {
             ));
         }
         Ok(None)
-    }
-
-    fn try_product_mod_factor_zero(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        state: VerifyState,
-    ) -> RuntimeResult<Option<ProductModFactorZeroBuiltinRuleProof>> {
-        let Some(multiplier) = product_mod_factor_zero_multiplier(left, right) else {
-            return Ok(None);
-        };
-        let premise: Fact = InFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            element: multiplier,
-            set: Obj::StandardSet(StandardSet::Z),
-            line_file: None,
-        }
-        .into();
-        let multiplier_integer = self.verify_builtin_rule_premise(&premise, state)?;
-        if multiplier_integer.is_failed() {
-            return Ok(None);
-        }
-        Ok(Some(ProductModFactorZeroBuiltinRuleProof::new(
-            multiplier_integer,
-        )))
     }
 
     fn try_sign_of_negation(
@@ -430,63 +379,6 @@ impl Runtime {
             }
         }
         Ok(None)
-    }
-}
-
-fn gcd_divides_argument_shape(remainder: &Obj, zero: &Obj) -> bool {
-    if !is_zero_obj(zero) {
-        return false;
-    }
-    let Some((dividend, modulus)) = match_mod(remainder) else {
-        return false;
-    };
-    let Some((g1, g2)) = match_gcd(modulus) else {
-        return false;
-    };
-    dividend.ir() == g1.ir() || dividend.ir() == g2.ir()
-}
-
-fn product_mod_factor_zero_multiplier(remainder: &Obj, zero: &Obj) -> Option<Obj> {
-    if !is_zero_obj(zero) {
-        return None;
-    }
-    let Some((dividend, modulus)) = match_mod(remainder) else {
-        return None;
-    };
-    let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })) = dividend
-    else {
-        return None;
-    };
-    if modulus.ir() == a.ir() {
-        Some(b.as_ref().clone())
-    } else if modulus.ir() == b.ir() {
-        Some(a.as_ref().clone())
-    } else {
-        None
-    }
-}
-
-impl ProductModFactorZeroBuiltinRuleProof {
-    pub fn new(multiplier_integer: VerifyFactResult) -> Self {
-        Self { multiplier_integer }
-    }
-}
-
-fn match_mod(obj: &Obj) -> Option<(&Obj, &Obj)> {
-    match obj {
-        Obj::IntegerOperator(IntegerOperator::Mod(Mod { left, right })) => {
-            Some((left.as_ref(), right.as_ref()))
-        }
-        _ => None,
-    }
-}
-
-fn match_gcd(obj: &Obj) -> Option<(&Obj, &Obj)> {
-    match obj {
-        Obj::IntegerOperator(IntegerOperator::Gcd(Gcd { left, right })) => {
-            Some((left.as_ref(), right.as_ref()))
-        }
-        _ => None,
     }
 }
 

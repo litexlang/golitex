@@ -239,7 +239,7 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | COTH
             | SECH
             | CSCH
-            | SYM_DIFF
+            | SET_DIFF
             | ARCSIN
             | ARCCOS
             | ARCTAN
@@ -302,4 +302,4 @@ pub const TANH: &str = "tanh";
 pub const COTH: &str = "coth";
 pub const SECH: &str = "sech";
 pub const CSCH: &str = "csch";
-pub const SYM_DIFF: &str = "sym_diff";
+pub const SET_DIFF: &str = "set_diff";

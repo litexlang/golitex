@@ -1,8 +1,6 @@
 //! Every positive common multiple bounds the least common multiple.
-use crate::ast::fact::{EqualFact, Fact, InFact, LessEqualFact};
-use crate::ast::obj::{
-    Abs, ArithmeticOperator, IntegerOperator, Literal, Mod, Number, Obj, StandardSet,
-};
+use crate::ast::fact::{DvdFact, Fact, InFact, LessEqualFact};
+use crate::ast::obj::{Abs, ArithmeticOperator, IntegerOperator, Obj, StandardSet};
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -18,7 +16,7 @@ impl Runtime {
         fact: &LessEqualFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<LcmCommonMultipleBoundProof>> {
-        // a,b in Z*, m in N+, m%abs(a)=m%abs(b)=0 imply lcm(a,b)<=m.
+        // a,b in Z*, m in N+, $dvd(m,abs(a)), $dvd(m,abs(b)) imply lcm(a,b)<=m.
         let Obj::IntegerOperator(IntegerOperator::Lcm(lcm)) = &fact.left else {
             return Ok(None);
         };
@@ -43,16 +41,10 @@ impl Runtime {
         }
         let mut multiples = Vec::new();
         for arg in [&lcm.left, &lcm.right] {
-            let remainder = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
-                left: Box::new(fact.right.clone()),
-                right: Box::new(Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
-                    arg: arg.clone(),
-                }))),
-            }));
-            let premise: Fact = EqualFact {
+            let premise: Fact = DvdFact {
                 fact_id: self.global_ids.allocate_fact_id(),
-                left: remainder,
-                right: Obj::Literal(Literal::Number(Number::new("0".into()))),
+                left: fact.right.clone(),
+                right: Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: arg.clone() })),
                 line_file: fact.line_file.clone(),
             }
             .into();

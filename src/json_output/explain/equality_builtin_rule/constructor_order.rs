@@ -76,28 +76,3 @@ impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ver
         OutputLanguage::Vietnamese=>self.rule_name_and_message_vi(),
     }}
 }
-
-impl crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_factorial_divisibility::FactorialDivisibilityProof {
-    pub fn rule_name_and_message_en(&self)->BuiltinRuleText { text("Factorial divisibility","Factorial divisibility: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_zh(&self)->BuiltinRuleText { text("阶乘整除","阶乘整除: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_zh_hant(&self)->BuiltinRuleText { text("階乘整除","階乘整除: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_fr(&self)->BuiltinRuleText { text("Divisibilité des factorielles","Divisibilité des factorielles: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_ru(&self)->BuiltinRuleText { text("Делимость факториалов","Делимость факториалов: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_es(&self)->BuiltinRuleText { text("Divisibilidad de factoriales","Divisibilidad de factoriales: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_ar(&self)->BuiltinRuleText { text("قسمة المضروبات","قسمة المضروبات: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_ja(&self)->BuiltinRuleText { text("階乗の整除","階乗の整除: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_ko(&self)->BuiltinRuleText { text("계승의 나눗셈","계승의 나눗셈: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message_vi(&self)->BuiltinRuleText { text("Tính chia hết của giai thừa","Tính chia hết của giai thừa: m,n in N; m<=n => factorial(n)%factorial(m)=0") }
-    pub fn rule_name_and_message(&self,lang:OutputLanguage)->BuiltinRuleText { match lang {
-        OutputLanguage::English=>self.rule_name_and_message_en(),
-        OutputLanguage::Chinese=>self.rule_name_and_message_zh(),
-        OutputLanguage::ChineseTraditional=>self.rule_name_and_message_zh_hant(),
-        OutputLanguage::French=>self.rule_name_and_message_fr(),
-        OutputLanguage::Russian=>self.rule_name_and_message_ru(),
-        OutputLanguage::Spanish=>self.rule_name_and_message_es(),
-        OutputLanguage::Arabic=>self.rule_name_and_message_ar(),
-        OutputLanguage::Japanese=>self.rule_name_and_message_ja(),
-        OutputLanguage::Korean=>self.rule_name_and_message_ko(),
-        OutputLanguage::Vietnamese=>self.rule_name_and_message_vi(),
-    }}
-}

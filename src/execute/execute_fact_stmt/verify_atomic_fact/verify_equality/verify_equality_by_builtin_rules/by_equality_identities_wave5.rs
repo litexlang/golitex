@@ -33,23 +33,6 @@ pub struct LcmCommutativeBuiltinRuleProof {}
 // Example: have a Z; lcm(a, a) = abs(a).
 pub struct LcmIdempotentAbsBuiltinRuleProof {}
 
-// Parent equality WD owns integer operands and the nonzero abs modulus.
-// Example: a in Z*, b in Z implies lcm(a,b)%abs(a)=0.
-pub struct LcmLeftAbsDivisibilityProof {}
-impl LcmLeftAbsDivisibilityProof {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-// Example: a in Z, b in Z* implies lcm(a,b)%abs(b)=0.
-pub struct LcmRightAbsDivisibilityProof {}
-impl LcmRightAbsDivisibilityProof {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 // --- gcd ---
 
 // Builtin GcdCommutative: gcd(a, b) = gcd(b, a).
@@ -86,8 +69,7 @@ pub enum EqualityIdentitiesWave5BuiltinRuleProof {
     QuotSelfOne(QuotSelfOneBuiltinRuleProof),
     LcmCommutative(LcmCommutativeBuiltinRuleProof),
     LcmIdempotentAbs(LcmIdempotentAbsBuiltinRuleProof),
-    LcmLeftAbsDivisibility(LcmLeftAbsDivisibilityProof),
-    LcmRightAbsDivisibility(LcmRightAbsDivisibilityProof),
+
     GcdCommutative(GcdCommutativeBuiltinRuleProof),
     GcdIdempotentAbs(GcdIdempotentAbsBuiltinRuleProof),
     GcdRightZeroAbs(GcdRightZeroAbsBuiltinRuleProof),
@@ -120,30 +102,6 @@ impl Runtime {
                 return Ok(Some(
                     EqualityIdentitiesWave5BuiltinRuleProof::LcmIdempotentAbs(p),
                 ));
-            }
-            // A well-defined lcm is a multiple of each nonzero input's abs.
-            // Match only the selected operand; unrelated divisors do not qualify.
-            if is_zero_obj(right) {
-                if let Obj::IntegerOperator(IntegerOperator::Mod(rem)) = left {
-                    if let (Some((a, b)), Some(divisor)) =
-                        (match_lcm(&rem.left), match_abs(&rem.right))
-                    {
-                        if divisor.ir() == a.ir() {
-                            return Ok(Some(
-                                EqualityIdentitiesWave5BuiltinRuleProof::LcmLeftAbsDivisibility(
-                                    LcmLeftAbsDivisibilityProof::new(),
-                                ),
-                            ));
-                        }
-                        if divisor.ir() == b.ir() {
-                            return Ok(Some(
-                                EqualityIdentitiesWave5BuiltinRuleProof::LcmRightAbsDivisibility(
-                                    LcmRightAbsDivisibilityProof::new(),
-                                ),
-                            ));
-                        }
-                    }
-                }
             }
             if let Some(p) = self.try_gcd_commutative(left, right)? {
                 return Ok(Some(

@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.Dvd.DvdDividendMinusRemainder
+forall a Z,d Z*:
+    $dvd(a-a%d,d)
+
+# Nonzero integer divisor and integer dividend are checked by predicate WD.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/dvd_dividend_minus_remainder.lit

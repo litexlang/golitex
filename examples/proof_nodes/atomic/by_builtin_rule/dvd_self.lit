@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.Dvd.DvdSelf
+forall a Z*:
+    $dvd(a,a)
+
+# Nonzero integer divisor and integer dividend are checked by predicate WD.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/dvd_self.lit

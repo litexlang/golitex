@@ -46,6 +46,7 @@ impl VerifyAtomicExceptEqualityFactResult {
 
 // Mirrors search_atomic_except_equality_fact_proof stage order.
 pub enum AtomicExceptEqualityFactSearchedProof {
+    ByKnownZeroRemainder(super::known_divisibility::KnownZeroRemainderProof),
     ByStructuralMembership(super::super::structural_membership_proof::StructuralMembershipProof),
     ByClosedCalculation(
         super::super::closed_calculation_proof::ClosedAtomicExceptEqualityCalculationProof,
@@ -91,7 +92,8 @@ impl AtomicExceptEqualityFactKnownProof {
             AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => {
                 Some(proof.cite_fact_id)
             }
-            AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_)
+            AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(_)
+            | AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_)
             | AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_)
             | AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(_)
             | AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(_)

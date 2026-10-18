@@ -1007,7 +1007,12 @@ impl<'a> SourcePosition<'a> {
                     }
                 }
                 check_store_subject(&store.store, fact)?;
-                return Ok((name, carrier, fact_id, format!("h_{}", fact_id.value())));
+                let reference = if self.global_obtain_position(id).is_some() {
+                    self.visible_fact(fact_id, runtime)?.1
+                } else {
+                    format!("h_{}", fact_id.value())
+                };
+                return Ok((name, carrier, fact_id, reference));
             }
             position = current.parent;
         }
@@ -1015,6 +1020,45 @@ impl<'a> SourcePosition<'a> {
             "Identifier/Producer",
             "The identifier has no introduction in the active source results.",
         ))
+    }
+
+    /// The original top-level context of an obtained name. Local eliminations
+    /// are absent from Run and keep their lexical name without new arguments.
+    pub fn global_obtain_position(&self, id: IdentifierId) -> Option<Self> {
+        let mut cursor = Some(self);
+        while let Some(current) = cursor {
+            if let SourceOwner::Statement(statement) = current.owner {
+                if obtain_parts(statement)
+                    .is_some_and(|(names, _)| names.iter().any(|n| n.id == id))
+                {
+                    if let Some(parent) = current.parent {
+                        if matches!(parent.owner, SourceOwner::Run(_)) {
+                            return Some(*parent);
+                        }
+                    }
+                    return None;
+                }
+            }
+            if let SourceOwner::Run(run) = current.owner {
+                for (index, statement) in run
+                    .statement_results
+                    .iter()
+                    .take(current.before)
+                    .enumerate()
+                {
+                    if obtain_parts(statement)
+                        .is_some_and(|(names, _)| names.iter().any(|n| n.id == id))
+                    {
+                        return Some(Self {
+                            before: index,
+                            ..*current
+                        });
+                    }
+                }
+            }
+            cursor = current.parent;
+        }
+        None
     }
 
     pub fn with_visible_wd<T>(
@@ -1133,120 +1177,140 @@ impl<'a> SourcePosition<'a> {
             &SourcePosition<'_>,
         ) -> Result<T, LeanCompileError>,
     ) -> Result<Option<T>, LeanCompileError> {
-        let mut position = Some(self);
-        while let Some(current) = position {
-            if let Some((steps, head)) = local_steps(current.owner) {
+        let mut cursor = Some(self);
+        while let Some(current) = cursor {
+            let steps = match current.owner {
+                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Named(proof) => Some(named_steps(proof)),
+                SourceOwner::Claim(proof) => Some(claim_steps(proof)),
+                SourceOwner::InductionCase(_, proof) => {
+                    Some((proof.proof_steps.as_slice(), 1 + proof.assumptions.len()))
+                }
+                _ => local_steps(current.owner),
+            };
+            if let Some((steps, head)) = steps {
                 for (index, statement) in steps
                     .iter()
                     .take(current.before.saturating_sub(head))
                     .enumerate()
                     .rev()
                 {
-                    let prior = SourcePosition {
-                        before: head + index,
-                        ..*current
-                    };
-                    let completed = SourcePosition {
+                    let completed = Self {
                         before: head + index + 1,
                         ..*current
                     };
                     if !obeys_active_stage_ceilings(self, &completed) {
                         continue;
                     }
+                    let prior = Self {
+                        before: head + index,
+                        ..*current
+                    };
                     if let Some(value) =
-                        alias_in_statement(statement, object, usize::MAX, &prior, callback)?
+                        alias_in_statement(statement, object, usize::MAX, &prior, self, callback)?
                     {
                         return Ok(Some(value));
                     }
                 }
             }
-            match current.owner {
-                SourceOwner::Run(run) => {
-                    for (index, statement) in run
-                        .statement_results
-                        .iter()
-                        .take(current.before)
-                        .enumerate()
-                        .rev()
-                    {
-                        let prior = SourcePosition::new(None, SourceOwner::Run(run), index);
-                        if let Some(value) =
-                            alias_in_statement(statement, object, usize::MAX, &prior, callback)?
-                        {
-                            return Ok(Some(value));
-                        }
+            if let SourceOwner::Statement(statement) = current.owner {
+                if let Some(parent) = current.parent {
+                    if let Some(value) = alias_in_statement(
+                        statement,
+                        object,
+                        current.before,
+                        parent,
+                        self,
+                        callback,
+                    )? {
+                        return Ok(Some(value));
                     }
                 }
-                SourceOwner::Statement(statement) => {
-                    if let Some(parent) = current.parent {
-                        if let Some(value) =
-                            alias_in_statement(statement, object, current.before, parent, callback)?
-                        {
-                            return Ok(Some(value));
-                        }
-                    }
-                }
-                SourceOwner::InductionCase(_, proof) => {
-                    let head = 1 + proof.assumptions.len();
-                    for (index, statement) in proof
-                        .proof_steps
-                        .iter()
-                        .take(current.before.saturating_sub(head))
-                        .enumerate()
-                        .rev()
-                    {
-                        let prior = SourcePosition {
-                            before: head + index,
-                            ..*current
-                        };
-                        if let Some(value) =
-                            alias_in_statement(statement, object, usize::MAX, &prior, callback)?
-                        {
-                            return Ok(Some(value));
-                        }
-                    }
-                }
-                SourceOwner::Named(proof) => {
-                    let (steps, head) = named_steps(proof);
-                    for (index, statement) in steps
-                        .iter()
-                        .take(current.before.saturating_sub(head))
-                        .enumerate()
-                        .rev()
-                    {
-                        let prior = SourcePosition {
-                            before: head + index,
-                            ..*current
-                        };
-                        if let Some(value) =
-                            alias_in_statement(statement, object, usize::MAX, &prior, callback)?
-                        {
-                            return Ok(Some(value));
-                        }
-                    }
-                }
-                SourceOwner::Claim(proof) => {
-                    let (steps, head) = claim_steps(proof);
-                    for (index, statement) in steps
-                        .iter()
-                        .take(current.before.saturating_sub(head))
-                        .enumerate()
-                        .rev()
-                    {
-                        let prior = SourcePosition {
-                            before: head + index,
-                            ..*current
-                        };
-                        if let Some(value) =
-                            alias_in_statement(statement, object, usize::MAX, &prior, callback)?
-                        {
-                            return Ok(Some(value));
-                        }
-                    }
-                }
-                _ => {}
             }
-            position = current.parent;
+            cursor = current.parent;
+        }
+        Ok(None)
+    }
+
+    /// Borrow only active or completed obtain results in the lexical prefix.
+    /// The callback keeps the original producer context when used later.
+    pub fn with_visible_obtain<T>(
+        &self,
+        callback: &mut impl FnMut(
+            &ExecDefineObjStmtResult,
+            &SourcePosition<'_>,
+        ) -> Result<Option<T>, LeanCompileError>,
+    ) -> Result<Option<T>, LeanCompileError> {
+        let mut cursor = Some(self);
+        while let Some(current) = cursor {
+            let steps = match current.owner {
+                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Named(proof) => Some(named_steps(proof)),
+                SourceOwner::Claim(proof) => Some(claim_steps(proof)),
+                SourceOwner::InductionCase(_, proof) => {
+                    Some((proof.proof_steps.as_slice(), 1 + proof.assumptions.len()))
+                }
+                _ => local_steps(current.owner),
+            };
+            if let Some((steps, head)) = steps {
+                for (index, statement) in steps
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    let completed = Self {
+                        before: head + index + 1,
+                        ..*current
+                    };
+                    if !obeys_active_stage_ceilings(self, &completed) {
+                        continue;
+                    }
+                    let prior = Self {
+                        before: head + index,
+                        ..*current
+                    };
+                    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                        proof @ (ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                            ExecObtainObjFromExistFactStmtResult::Success(_),
+                        )
+                        | ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                            ExecObtainObjFromAtomicFactStmtResult::Success(_),
+                        )),
+                    )) = statement
+                    {
+                        let producer = SourcePosition::new(
+                            Some(&prior),
+                            SourceOwner::Statement(statement),
+                            usize::MAX,
+                        );
+                        if !obeys_active_stage_ceilings(self, &producer) {
+                            continue;
+                        }
+                        if let Some(value) = callback(proof, &producer)? {
+                            return Ok(Some(value));
+                        }
+                    }
+                }
+            }
+            if let SourceOwner::Statement(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(
+                    proof @ (ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                        ExecObtainObjFromExistFactStmtResult::Success(_),
+                    )
+                    | ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                        ExecObtainObjFromAtomicFactStmtResult::Success(_),
+                    )),
+                ),
+            )) = current.owner
+            {
+                if obeys_active_stage_ceilings(self, current) {
+                    if let Some(value) = callback(proof, current)? {
+                        return Ok(Some(value));
+                    }
+                }
+            }
+            cursor = current.parent;
         }
         Ok(None)
     }
@@ -3282,6 +3346,7 @@ fn alias_in_statement<T>(
     object: &Obj,
     before: usize,
     parent: &SourcePosition<'_>,
+    active: &SourcePosition<'_>,
     callback: &mut impl FnMut(
         &BoundName,
         &Obj,
@@ -3289,6 +3354,32 @@ fn alias_in_statement<T>(
         &SourcePosition<'_>,
     ) -> Result<T, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
+    // This exact literal already has a source declaration. Reuse its emitted
+    // constructor only after both original formation stages have completed.
+    if let (
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+            ExecHaveFnEqualStmtResult::Success(proof),
+        )),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(literal)),
+    ) = (statement, object)
+    {
+        if before >= 2 && &proof.statement.equal_to_anonymous_fn == literal {
+            let completed = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 2);
+            if !obeys_active_stage_ceilings(active, &completed) {
+                return Ok(None);
+            }
+            let original =
+                super::helper::success_object_wd(&proof.anonymous_fn_well_defined, object)?;
+            let producer = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
+            return callback(
+                &proof.statement.name,
+                original.obj(),
+                &proof.anonymous_fn_well_defined,
+                &producer,
+            )
+            .map(Some);
+        }
+    }
     let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object else {
         return Ok(None);
     };
@@ -3296,6 +3387,10 @@ fn alias_in_statement<T>(
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(p)),
         )) if before > 0 && p.statement.name.id == *id => {
+            let completed = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 1);
+            if !obeys_active_stage_ceilings(active, &completed) {
+                return Ok(None);
+            }
             let position = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
             callback(
                 &p.statement.name,
@@ -3322,6 +3417,14 @@ fn alias_in_statement<T>(
                         p.statement.objs_equal_to.get(index),
                         p.equal_to_well_defined.get(index),
                     ) {
+                        let completed = SourcePosition::new(
+                            Some(parent),
+                            SourceOwner::Statement(statement),
+                            2 * count + index + 1,
+                        );
+                        if !obeys_active_stage_ceilings(active, &completed) {
+                            return Ok(None);
+                        }
                         let position = SourcePosition::new(
                             Some(parent),
                             SourceOwner::Statement(statement),
@@ -3384,17 +3487,27 @@ fn visit_visible<T>(
 }
 
 fn obeys_active_stage_ceilings(start: &SourcePosition<'_>, producer: &SourcePosition<'_>) -> bool {
-    // Ancestor traversal must not reopen later stages of an active original owner.
-    let mut active = Some(start);
-    while let Some(ceiling) = active {
-        let mut candidate = Some(producer);
-        while let Some(stage) = candidate {
+    // Check only newly opened candidate stages. A callback can inherit a
+    // completed-child marker followed by its pre-stage replay cursor; the
+    // shared suffix was already admitted by the original lookup and is not
+    // another attempt to reopen that child while replaying its internal WD.
+    let mut candidate = Some(producer);
+    while let Some(stage) = candidate {
+        let mut shared = Some(start);
+        while let Some(active) = shared {
+            if std::ptr::eq(stage, active) {
+                return true;
+            }
+            shared = active.parent;
+        }
+        let mut active = Some(start);
+        while let Some(ceiling) = active {
             if same_source_owner(ceiling.owner, stage.owner) && stage.before > ceiling.before {
                 return false;
             }
-            candidate = stage.parent;
+            active = ceiling.parent;
         }
-        active = ceiling.parent;
+        candidate = stage.parent;
     }
     true
 }

@@ -7092,6 +7092,19 @@ this predicate's domain.
 
 **Relationships and inference.** The positive definition checks a % d = 0 and an integer multiplier witness a = k * d. A positive fact exposes those clauses for later use.
 
+Divisibility builtin rules use `$dvd` directly: an integer product is divisible
+by either nonzero integer factor; gcd divides its arguments; lcm is divisible
+by the absolute values of its nonzero arguments; common divisors and multiples
+compose through gcd and lcm; and an earlier factorial divides a later one.
+Integer-quotient membership and common-divisor bounds also consume `$dvd`.
+Product rules check the other factor's integer membership from the displayed
+expression; they do not search for an unknown multiplier. Known equalities can
+transport these facts, as in the
+[complete irrationality proof](../examples/proof_nodes/atomic/by_builtin_rule/dvd_unified.lit).
+An already stored `a % d = 0` supplies a read-only divisibility certificate.
+Zero-remainder goals reuse the native divisibility rules; general remainder
+calculations retain `%`.
+
 **Nearest boundary.** This ordering differs from the conventional written relation d | a. A zero divisor is outside the native predicate domain.
 
 **Checked example.**
@@ -9766,7 +9779,7 @@ factorial inputs remain unsupported.
 ### Native elementary operation additions
 
 See [Native elementary operations](native-elementary-operators.md) for `conj`,
-`sec`, `csc`, `sinh`, `cosh`, `tanh`, `coth`, `sech`, `csch`, and `sym_diff`,
+`sec`, `csc`, `sinh`, `cosh`, `tanh`, `coth`, `sech`, `csch`, and `set_diff`,
 including domains, builtin relationships, strict examples and compiler boundaries.
 
 ### Native real trigonometry (beta preview)
@@ -10766,9 +10779,10 @@ forall a, b, c R:
 This soft-fails because multiplication reverses or collapses order when the
 sign of `c` is not known.
 
-The [gcd universal divisor](../examples/proof_nodes/equal/by_builtin_rule/gcd_common_divisor.lit)
-and [lcm universal multiple](../examples/proof_nodes/equal/by_builtin_rule/lcm_common_multiple.lit)
-examples use ordinary remainder facts. The
+The [gcd universal divisor](../examples/proof_nodes/atomic/by_builtin_rule/dvd_gcd_common_divisor.lit)
+and [lcm universal multiple](../examples/proof_nodes/atomic/by_builtin_rule/dvd_lcm_common_multiple.lit)
+examples use native `$dvd` facts. The older zero-remainder spellings remain
+supported through the same rules. The
 [factorial/product theorem](../examples/proof_nodes/equal/by_builtin_rule/factorial_product_relation.lit)
 uses existing induction, factorial successor and product endpoint rules on `N+`;
 it adds no primitive factorial-product identity and no empty-range convention.

@@ -1,15 +1,15 @@
 use super::less_equal::{
-    zero_obj, LessEqualFactSearchProofByBuiltinRule, PositiveCommonDivisorLeGcdBuiltinRuleProof,
+    LessEqualFactSearchProofByBuiltinRule, PositiveCommonDivisorLeGcdBuiltinRuleProof,
 };
-use crate::ast::fact::{EqualFact, Fact, InFact, LessEqualFact};
-use crate::ast::obj::{IntegerOperator, Mod, Obj, StandardSet};
+use crate::ast::fact::{DvdFact, Fact, InFact, LessEqualFact};
+use crate::ast::obj::{IntegerOperator, Obj, StandardSet};
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // A positive common integer divisor is at most the positive greatest common
     // divisor. Outer fact WD already checks integer inputs and excludes (0,0).
-    // Example: d in N+, a%d=0, b%d=0 imply d <= gcd(a,b).
+    // Example: d in N+, $dvd(a,d), $dvd(b,d) imply d <= gcd(a,b).
     pub(super) fn positive_common_divisor_le_gcd_proof(
         &mut self,
         fact: &LessEqualFact,
@@ -28,38 +28,32 @@ impl Runtime {
         if divisor_in_n_pos_proof.is_failed() {
             return Ok(None);
         }
-        let left = Fact::from(EqualFact {
+        let left = Fact::from(DvdFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: Obj::IntegerOperator(IntegerOperator::Mod(Mod {
-                left: gcd.left.clone(),
-                right: Box::new(fact.left.clone()),
-            })),
-            right: zero_obj(),
+            left: *gcd.left.clone(),
+            right: fact.left.clone(),
             line_file: fact.line_file.clone(),
         });
-        let left_remainder_zero_proof = self.verify_builtin_rule_premise(&left, state)?;
-        if left_remainder_zero_proof.is_failed() {
+        let left_divisibility_proof = self.verify_builtin_rule_premise(&left, state)?;
+        if left_divisibility_proof.is_failed() {
             return Ok(None);
         }
-        let right = Fact::from(EqualFact {
+        let right = Fact::from(DvdFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: Obj::IntegerOperator(IntegerOperator::Mod(Mod {
-                left: gcd.right.clone(),
-                right: Box::new(fact.left.clone()),
-            })),
-            right: zero_obj(),
+            left: *gcd.right.clone(),
+            right: fact.left.clone(),
             line_file: fact.line_file.clone(),
         });
-        let right_remainder_zero_proof = self.verify_builtin_rule_premise(&right, state)?;
-        if right_remainder_zero_proof.is_failed() {
+        let right_divisibility_proof = self.verify_builtin_rule_premise(&right, state)?;
+        if right_divisibility_proof.is_failed() {
             return Ok(None);
         }
         Ok(Some(
             LessEqualFactSearchProofByBuiltinRule::PositiveCommonDivisorLeGcd(
                 PositiveCommonDivisorLeGcdBuiltinRuleProof {
                     divisor_in_n_pos_proof,
-                    left_remainder_zero_proof,
-                    right_remainder_zero_proof,
+                    left_divisibility_proof,
+                    right_divisibility_proof,
                 },
             ),
         ))

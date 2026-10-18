@@ -99,7 +99,7 @@ fn scalar_rules_retain_checked_premise_citations() {
                 "numerator_integer",
                 "denominator_integer",
                 "denominator_nonzero",
-                "zero_remainder",
+                "divisibility",
             ][..],
         ),
     ] {

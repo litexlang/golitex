@@ -5,9 +5,185 @@ use crate::execute::execute_by_stmt::{
     ExecByContraStmtResult, ExecByContraStmtSuccess,
 };
 use crate::prelude::*;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::{
+    AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
+    AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution,
+};
 
 const CONTRA: &str = "have a C\nby contra:\n    ? a = a\n    a = a\n    impossible a = a\na = a\n";
 const CASES: &str = "have a R\nby cases:\n    ? a = a\n    case a = 0:\n        a = a\n    case a != 0:\n        a = a\na = a\n";
+// Original geo theorem: its closing proof rewrites `not z > 0` via `z = 0`.
+const CONTRA_POSITIVE_FACTOR: &str = "thm cancel_positive_right_factor:\n    ? forall a, b, z R:\n        z > 0\n        a * z = b * z\n        =>:\n            a = b\n    by contra:\n        ? z != 0\n        impossible z > 0\n    a = (a * z) / z = (b * z) / z = b\n";
+
+fn positive_factor_contra(result: &mut RunLitexCodeResult) -> &mut ExecByContraStmtSuccess {
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+        ExecDefThmStmtResult::Success(theorem),
+    )) = &mut result.statement_results[0]
+    else {
+        panic!("original named theorem")
+    };
+    let ExecDefThmBodyProof::Forall(body) = &mut theorem.body else {
+        panic!("original forall body")
+    };
+    let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(proof))) =
+        &mut body.proof_steps[0]
+    else {
+        panic!("original nested contra")
+    };
+    proof
+}
+
+fn negative_order_rewrite(
+    result: &mut RunLitexCodeResult,
+) -> &mut AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution {
+    let VerifyFactResult::AtomicExceptEquality(verification) =
+        &mut positive_factor_contra(result).closing.negated_impossible
+    else {
+        panic!("original negative order verification")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(verification) = verification.as_mut() else {
+        panic!("successful negative order")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(proof),
+    ) = &mut verification.searched_proof
+    else {
+        panic!("original closed numeric substitution")
+    };
+    proof
+}
+
+fn negative_order_calculation(
+    result: &mut RunLitexCodeResult,
+) -> &mut ClosedComparisonCalculationProof {
+    let VerifyFactResult::AtomicExceptEquality(verification) =
+        &mut negative_order_rewrite(result).proof_of_rewritten_fact
+    else {
+        panic!("original negative closed child")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(verification) = verification.as_mut() else {
+        panic!("successful closed child")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(
+        ClosedAtomicExceptEqualityCalculationProof::NotGreater(proof),
+    ) = &mut verification.searched_proof
+    else {
+        panic!("original not-greater calculation")
+    };
+    proof
+}
+
+#[test]
+fn geo_contra_transports_original_negative_order_equality() {
+    let (mut result, compiler) = checked(CONTRA_POSITIVE_FACTOR);
+    assert_eq!(
+        negative_order_rewrite(&mut result)
+            .cited_equal_fact_ids
+            .len(),
+        1
+    );
+    let lean = compiler
+        .compile_run(&result, "geo_contra_positive_factor")
+        .expect("original contra compiles");
+    assert!(lean.contains("fun _rewrite_positive =>"));
+    assert!(lean.contains("Litex.ltOfSame"));
+}
+
+#[test]
+fn geo_contra_rejects_missing_negative_order_citation() {
+    let (mut result, compiler) = checked(CONTRA_POSITIVE_FACTOR);
+    negative_order_rewrite(&mut result)
+        .cited_equal_fact_ids
+        .clear();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "geo_contra_missing_equality")
+            .unwrap_err()
+            .route,
+        "AtomicRewrite/Citations"
+    );
+}
+
+#[test]
+fn geo_contra_rejects_changed_negative_order_child_subject() {
+    let (mut result, compiler) = checked(CONTRA_POSITIVE_FACTOR);
+    let goal = crate::compile_to_lean::helper::source_subject(
+        &positive_factor_contra(&mut result)
+            .closing
+            .negated_impossible,
+    )
+    .expect("original goal");
+    negative_order_rewrite(&mut result).rewritten_fact = goal;
+    assert_eq!(
+        compiler
+            .compile_run(&result, "geo_contra_wrong_residual")
+            .unwrap_err()
+            .route,
+        "AtomicRewrite/ChildSubject"
+    );
+}
+
+#[test]
+fn geo_contra_rejects_reordered_closing_verifications() {
+    let (mut result, compiler) = checked(CONTRA_POSITIVE_FACTOR);
+    let closing = &mut positive_factor_contra(&mut result).closing;
+    std::mem::swap(&mut closing.impossible, &mut closing.negated_impossible);
+    assert_eq!(
+        compiler
+            .compile_run(&result, "geo_contra_swapped_closing")
+            .unwrap_err()
+            .route,
+        "Theorem/ProofStepCapture"
+    );
+}
+
+#[test]
+fn geo_contra_rejects_changed_negative_closed_comparison() {
+    let (mut result, compiler) = checked(CONTRA_POSITIVE_FACTOR);
+    negative_order_calculation(&mut result).comparison =
+        crate::rational_expression::NumberCompareResult::Greater;
+    assert_eq!(
+        compiler
+            .compile_run(&result, "geo_contra_wrong_closed_comparison")
+            .unwrap_err()
+            .route,
+        "Order/ClosedValues"
+    );
+}
+
+#[test]
+fn geo_contra_rejects_changed_negative_closed_values() {
+    let (mut result, compiler) = checked(CONTRA_POSITIVE_FACTOR);
+    let ClosedValuePair::Decimal { left, .. } = &mut negative_order_calculation(&mut result).values
+    else {
+        panic!("original closed zero decimals")
+    };
+    *left = "1".into();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "geo_contra_wrong_closed_values")
+            .unwrap_err()
+            .route,
+        "Order/ClosedValues"
+    );
+}
+
+#[test]
+fn geo_contra_negative_closed_calculation_ignores_presentation() {
+    let (mut result, compiler) = checked(CONTRA_POSITIVE_FACTOR);
+    let expected = compiler
+        .compile_run(&result, "geo_contra_presentation")
+        .expect("original negative comparison");
+    let calculation = negative_order_calculation(&mut result);
+    calculation.left_normal = "presentation only".into();
+    calculation.right_normal = "not an expression".into();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "geo_contra_presentation")
+            .expect("typed values remain unchanged"),
+        expected
+    );
+}
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {

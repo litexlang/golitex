@@ -467,8 +467,8 @@ impl LitexToLeanCompiler {
                 ExistOrAndChainAtomicFact::AndFact(and) => Fact::AndFact(and.clone()),
                 ExistOrAndChainAtomicFact::ChainFact(chain) => Fact::ChainFact(chain.clone()),
                 ExistOrAndChainAtomicFact::OrFact(or) => Fact::OrFact(or.clone()),
-                ExistOrAndChainAtomicFact::ExistFact(_)
-                | ExistOrAndChainAtomicFact::ExistUniqueFact(_)
+                ExistOrAndChainAtomicFact::ExistFact(exist) => Fact::ExistFact(exist.clone()),
+                ExistOrAndChainAtomicFact::ExistUniqueFact(_)
                 | ExistOrAndChainAtomicFact::NotExistFact(_) => {
                     return Err(LeanCompileError::unsupported("Forall/CompoundThen"))
                 }

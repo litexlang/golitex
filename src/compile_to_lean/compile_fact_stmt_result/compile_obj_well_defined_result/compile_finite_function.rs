@@ -45,7 +45,8 @@ impl LitexToLeanCompiler {
         let proof = if matches!(&source.element, Obj::ProductShape(ProductShape::Tuple(_))) {
             format!("(by simpa only [Litex.FiniteFunction.call_tuple] using (Litex.FiniteFunction.coordinate_mem {member} ({index} : Fin {n})))")
         } else {
-            format!("(show Litex.In {term} {factor} from (by change M.mem (Litex.FunctionSemantics.callValue (Litex.denote {receiver}) (M.number ({} : ℂ))) (Litex.denote {factor}); have _litex_coordinate := Litex.FiniteFunction.coordinate_mem {member} ({index} : Fin {n}); change M.mem (Litex.FunctionSemantics.callValue (Litex.denote {receiver}) (Litex.FiniteFunction.index ({index} : Fin {n}))) (Litex.denote {factor}) at _litex_coordinate; simpa [Litex.FiniteFunction.index] using _litex_coordinate))", index + 1)
+            let coordinate = coordinate_membership(&receiver, &factor, member, index, n);
+            format!("(show Litex.In {term} {factor} from {coordinate})")
         };
         Ok((term, proof))
     }
@@ -60,11 +61,26 @@ impl LitexToLeanCompiler {
     ) -> Result<Option<String>, LeanCompileError> {
         let mut current = Some(position);
         while let Some(cursor) = current {
-            if let SourceOwner::AtomicInference(
-                Fact::AtomicFact(AtomicFact::InFact(source)),
-                crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
-            ) = cursor.owner
-            {
+            let inference = match cursor.owner {
+                SourceOwner::AtomicInference(
+                    Fact::AtomicFact(AtomicFact::InFact(source)),
+                    crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
+                ) => Some((source, rules)),
+                SourceOwner::PropInference(captured) => match (&captured.store, &captured.infer) {
+                    (
+                        StoreFactResult::AtomicFact(seed),
+                        Some(crate::store_fact_and_infer::InferResult::AtomicFact(
+                            crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
+                        )),
+                    ) => match &seed.fact {
+                        AtomicFact::InFact(source) => Some((source, rules)),
+                        _ => None,
+                    },
+                    _ => None,
+                },
+                _ => None,
+            };
+            if let Some((source, rules)) = inference {
                 for rule in rules {
                     let crate::store_fact_and_infer::InferInFactResult::CartCoordinates(
                         projections,
@@ -72,7 +88,7 @@ impl LitexToLeanCompiler {
                     else {
                         continue;
                     };
-                    for projection in &projections.coordinates {
+                    for (index, projection) in projections.coordinates.iter().enumerate() {
                         if projection.membership.primary_fact_id() != store.primary_fact_id() {
                             continue;
                         }
@@ -85,6 +101,32 @@ impl LitexToLeanCompiler {
                         if derived.element.ir() != object.ir() {
                             continue;
                         }
+                        let Obj::ProductShape(ProductShape::Cart(cart)) = &source.set else {
+                            return Err(LeanCompileError::new(
+                                "CartInference/Carrier",
+                                "The original coordinate projection has another source carrier.",
+                            ));
+                        };
+                        let expected = crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(
+                            &source.element, index,
+                        ).map_err(|error| LeanCompileError::new("CartInference/Coordinate", &error))?;
+                        if projection.coordinate_index != index
+                            || projections.coordinates.len() != cart.args.len()
+                            || derived.element.ir() != expected.ir()
+                            || cart
+                                .args
+                                .get(index)
+                                .is_none_or(|factor| factor.ir() != derived.set.ir())
+                        {
+                            return Err(LeanCompileError::new(
+                                "CartInference/Subject",
+                                "The selected projection differs from its original receiver, index or factor.",
+                            ));
+                        }
+                        self.validate_store(
+                            &projection.membership.store,
+                            &Fact::AtomicFact(stored.fact.clone()),
+                        )?;
                         let (_, member) = self.cited_fact_reference(source.fact_id, cursor)?;
                         return self
                             .compile_cart_inference_coordinate(
@@ -141,7 +183,14 @@ impl LitexToLeanCompiler {
             &proof.carrier_equal,
             position,
         )?;
-        let coordinate = format!("(by simpa only [Litex.FiniteFunction.index] using (Litex.FiniteFunction.coordinate_mem {member} ({} : Fin {})))", proof.index - 1, cart.args.len());
+        let receiver = self.compile_object_reference(&receiver, position)?;
+        let coordinate = coordinate_membership(
+            &receiver,
+            &source,
+            &member,
+            proof.index - 1,
+            cart.args.len(),
+        );
         Ok(format!("(Litex.inOfSame {call} {call} {source} {target} (Litex.sameRefl {call}) {equality} {coordinate})"))
     }
 
@@ -214,37 +263,72 @@ impl LitexToLeanCompiler {
         shape: &KnownTupleShapeProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let KnownTupleShapeProof::CartesianMembership(proof) = shape else {
-            return Err(LeanCompileError::unsupported(
-                "FiniteFunction/ShapeEvidence",
-            ));
+        let (membership, factors, subject_path, carrier_path, citation) = match shape {
+            KnownTupleShapeProof::CartesianMembership(proof) => {
+                let (cited, citation) =
+                    self.cited_fact_reference(proof.membership.fact_id, position)?;
+                let expected = Fact::AtomicFact(AtomicFact::InFact(proof.membership.clone()));
+                if cited != &expected
+                    || self.resolve_fact(proof.membership.fact_id, position)? != expected
+                {
+                    return Err(LeanCompileError::new(
+                        "FiniteFunction/MembershipCitation",
+                        "The recorded Cartesian membership differs from its visible original producer.",
+                    ));
+                }
+                (
+                    &proof.membership,
+                    &proof.cart,
+                    &proof.subject_equal,
+                    &proof.carrier_equal,
+                    citation,
+                )
+            }
+            KnownTupleShapeProof::FunctionCodomain(proof) => {
+                // This membership is an internal goal, not a published fact.
+                // Its original signature-use evidence proves the call's output.
+                let member = self.compile_fn_return_codomain(
+                    &proof.membership,
+                    &proof.membership_proof,
+                    position,
+                )?;
+                (
+                    &proof.membership,
+                    &proof.cart,
+                    &proof.function_equal,
+                    &proof.carrier_equal,
+                    member,
+                )
+            }
+            other => {
+                let source = match other {
+                    KnownTupleShapeProof::TupleEquality(_) => "TupleEquality",
+                    KnownTupleShapeProof::CartesianCoordinate(_) => "CartesianCoordinate",
+                    _ => unreachable!(),
+                };
+                return Err(LeanCompileError::new(
+                    "FiniteFunction/ShapeEvidence",
+                    &format!(
+                    "The recorded {source} shape does not yet have a Cartesian membership compiler."
+                ),
+                ));
+            }
         };
-        let (cited, citation) = self.cited_fact_reference(proof.membership.fact_id, position)?;
-        let expected = Fact::AtomicFact(AtomicFact::InFact(proof.membership.clone()));
-        if cited != &expected || self.resolve_fact(proof.membership.fact_id, position)? != expected
-        {
-            return Err(LeanCompileError::new(
-                "FiniteFunction/MembershipCitation",
-                "The recorded Cartesian membership differs from its visible original producer.",
-            ));
-        }
-        let literal = Obj::ProductShape(ProductShape::Cart(proof.cart.clone()));
+        let literal = Obj::ProductShape(ProductShape::Cart(factors.clone()));
         let cart = self.compile_object_reference(&literal, position)?;
         let subject = self.compile_object_reference(receiver, position)?;
-        let original = self.compile_object_reference(&proof.membership.element, position)?;
-        let carrier = self.compile_object_reference(&proof.membership.set, position)?;
-        let subject_equal = self.compile_equality_path(
-            receiver,
-            &proof.membership.element,
-            &proof.subject_equal,
-            position,
-        )?;
-        let carrier_equal = self.compile_equality_path(
-            &proof.membership.set,
-            &literal,
-            &proof.carrier_equal,
-            position,
-        )?;
+        let original = self.compile_object_reference(&membership.element, position)?;
+        let carrier = self.compile_object_reference(&membership.set, position)?;
+        let subject_equal =
+            self.compile_equality_path(receiver, &membership.element, subject_path, position)?;
+        let carrier_equal =
+            self.compile_equality_path(&membership.set, &literal, carrier_path, position)?;
+        // The original empty paths have just been checked against both
+        // endpoints. Their transport is the identity, so retain the exact
+        // proof without rebuilding the same Cartesian constructor.
+        if subject_path.path.is_empty() && carrier_path.path.is_empty() {
+            return Ok((cart, citation));
+        }
         Ok((cart.clone(), format!("(Litex.inOfSame {original} {subject} {carrier} {cart} ({subject_equal}).symm {carrier_equal} {citation})")))
     }
 
@@ -274,11 +358,34 @@ impl LitexToLeanCompiler {
         // Replaying the constructor also checks its original index requirement.
         self.compile_finite_fn_call(application, proof, finite, position)?;
         let (_, member) = self.compile_cart_shape_member(&receiver, &finite.source, position)?;
-        Ok((output, format!("(by simpa only [Litex.FiniteFunction.index] using (Litex.FiniteFunction.coordinate_mem {member} ({} : Fin {})))", index - 1, cart.args.len())))
+        let receiver = self.compile_object_reference(&receiver, position)?;
+        let carrier = self.compile_object_reference(carrier, position)?;
+        Ok((
+            output,
+            coordinate_membership(&receiver, &carrier, &member, index - 1, cart.args.len()),
+        ))
     }
 }
 
-pub(super) fn finite_call_parts(application: &FnObj) -> Result<(Obj, &Obj), LeanCompileError> {
+/// The selected coordinate rule uses a Fin index; the source call uses a
+/// one-based complex numeral. Expose both denotations before normalizing it.
+pub(super) fn coordinate_membership(
+    receiver: &str,
+    factor: &str,
+    member: &str,
+    index: usize,
+    arity: usize,
+) -> String {
+    let body = format!(
+        "change M.mem (Litex.FunctionSemantics.callValue (Litex.denote {receiver}) (M.number ({} : ℂ))) (Litex.denote {factor})\nhave _litex_coordinate := (Litex.FiniteFunction.coordinate_mem {member} ({index} : Fin {arity}))\nchange M.mem (Litex.FunctionSemantics.callValue (Litex.denote {receiver}) (Litex.FiniteFunction.index ({index} : Fin {arity}))) (Litex.denote {factor}) at _litex_coordinate\nsimpa [Litex.FiniteFunction.index] using _litex_coordinate",
+        index + 1,
+    );
+    format!("(by\n  {}\n)", body.replace('\n', "\n  "))
+}
+
+pub(in crate::compile_to_lean) fn finite_call_parts(
+    application: &FnObj,
+) -> Result<(Obj, &Obj), LeanCompileError> {
     let arguments = application
         .body
         .last()

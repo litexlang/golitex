@@ -4,7 +4,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     BijectiveFactSearchProofByBuiltinRule,
     CoprimeByComputation,
     CoprimeFactSearchProofByBuiltinRule,
-    DvdFactSearchProofByBuiltinRule,
     InjectiveFactSearchProofByBuiltinRule,
     IsChoiceFunctionForFactSearchProofByBuiltinRule,
     NormalAtomicFactSearchProofByBuiltinRule,
@@ -504,78 +503,6 @@ impl CoprimeByComputation {
             OutputLanguage::Korean => self.rule_name_and_message_ko(),
             OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
         }
-    }
-}
-
-impl DvdFactSearchProofByBuiltinRule {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::English);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::Chinese);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::ChineseTraditional);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::French);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::Russian);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::Spanish);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::Arabic);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::Japanese);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::Korean);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        let _ = (self, OutputLanguage::Vietnamese);
-        unreachable!("empty atomic builtin family has no proof variants")
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-
-    pub fn cite_fact_id(&self) -> Option<FactId> {
-        let _ = self;
-        unreachable!("empty atomic builtin family has no proof variants")
     }
 }
 

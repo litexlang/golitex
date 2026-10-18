@@ -566,6 +566,9 @@ impl LitexToLeanCompiler {
         {
             return Ok(term);
         }
+        if let Some(term) = self.compile_obtain_constructor_reference(object, position)? {
+            return Ok(term);
+        }
         if let Some(term) =
             position.with_visible_inferred_subject(object, &mut |store, producer| {
                 if let Some(term) = self.compile_cart_inferred_subject(object, store, producer)? {
@@ -597,7 +600,13 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         position
             .visible_parameter(id, &self.runtime)
-            .map(|(parameter, _, _, _)| format!("_value_i{}", parameter.id.value()))
+            .map(|(parameter, _, _, _)| {
+                let name = format!("_value_i{}", parameter.id.value());
+                match position.global_obtain_position(id) {
+                    Some(producer) => self.context_application(&name, &producer),
+                    None => name,
+                }
+            })
             .map_err(|_| {
                 LeanCompileError::new(
                     "Identifier/Producer",

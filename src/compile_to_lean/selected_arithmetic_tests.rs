@@ -8,6 +8,39 @@ use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::DivSharedPositiveDenomLessEqualStrategySingleStep;
 
+#[test]
+fn dvd_unified_lean_rejects_the_actual_native_rule_certificate() {
+    let mut rt = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let prefix = rt.run_litex_code("have d Z*,k Z").unwrap();
+    assert!(prefix.success && prefix.session_error.is_none());
+    let tokens = crate::tokenize::Tokenizer::new()
+        .tokenize("$dvd(d*k,d)", rt.current_file.clone())
+        .unwrap();
+    let Stmt::Fact(fact) = rt.parse(&tokens).unwrap().remove(0) else {
+        panic!("fact")
+    };
+    let VerifyFactResult::AtomicExceptEquality(result) =
+        rt.verify_fact(&fact, VerifyState::top_level()).unwrap()
+    else {
+        panic!("atomic")
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(result) = *result else {
+        panic!("success")
+    };
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(rule) = result.searched_proof else {
+        panic!("native rule")
+    };
+    assert_eq!(
+        super::helper::unsupported_atomic_builtin(&rule).route,
+        "Atomic/DvdBuiltin"
+    );
+}
+
 const POSITIVE_POWER: &str =
     "claim:\n    ? forall n N:\n        (1 / 4)^n > 0\n    (1 / 4)^n > 0\n";
 const ABS_EVEN: &str = "claim:\n    ? forall x R:\n        |x|^2=x^2\n    |x|^2=x^2\n";

@@ -1,0 +1,9 @@
+# Node: atomic.ByBuiltinRule.Dvd.DvdGcdCommonDivisor
+forall a,b Z*,d N+:
+    $dvd(a,d)
+    $dvd(b,d)
+    =>:
+        $dvd(gcd(a,b),d)
+
+# Nonzero integer divisor and integer dividend are checked by predicate WD.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/dvd_gcd_common_divisor.lit

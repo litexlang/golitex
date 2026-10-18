@@ -19,6 +19,15 @@ impl LitexToLeanCompiler {
                 "A failed existence result is not proof evidence.",
             ));
         };
+        self.compile_verify_plain_exist_success(proof, position)
+    }
+
+    /// Obtain retains this exact success directly, without a VerifyFact wrapper.
+    pub(in crate::compile_to_lean) fn compile_verify_plain_exist_success(
+        &self,
+        proof: &VerifyPlainExistFactSuccess,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
         let ExistShapedFact::Exist(fact) = &proof.fact else {
             return Err(LeanCompileError::new(
                 "Exist/Family",

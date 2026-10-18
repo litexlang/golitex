@@ -1,5 +1,5 @@
 use crate::ast::fact::{
-    AtomicFact, BijectiveFact, DvdFact, InjectiveFact, IsChoiceFunctionForFact, NotBijectiveFact,
+    AtomicFact, BijectiveFact, InjectiveFact, IsChoiceFunctionForFact, NotBijectiveFact,
     NotDvdFact, NotInjectiveFact, NotIsChoiceFunctionForFact, NotIsSetFact, NotProperSubsetFact,
     NotProperSupersetFact, NotSurjectiveFact, ProperSubsetFact, ProperSupersetFact, SurjectiveFact,
 };
@@ -8,13 +8,13 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
     AtomicExceptEqualityFactSearchProofByBuiltinRule, BijectiveFactSearchProofByBuiltinRule,
-    DvdFactSearchProofByBuiltinRule, InjectiveFactSearchProofByBuiltinRule,
-    IsChoiceFunctionForFactSearchProofByBuiltinRule, NotBijectiveFactSearchProofByBuiltinRule,
-    NotDvdFactSearchProofByBuiltinRule, NotInjectiveFactSearchProofByBuiltinRule,
-    NotIsChoiceFunctionForFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
-    NotProperSubsetFactSearchProofByBuiltinRule, NotProperSupersetFactSearchProofByBuiltinRule,
-    NotSurjectiveFactSearchProofByBuiltinRule, ProperSubsetFactSearchProofByBuiltinRule,
-    ProperSupersetFactSearchProofByBuiltinRule, SurjectiveFactSearchProofByBuiltinRule,
+    InjectiveFactSearchProofByBuiltinRule, IsChoiceFunctionForFactSearchProofByBuiltinRule,
+    NotBijectiveFactSearchProofByBuiltinRule, NotDvdFactSearchProofByBuiltinRule,
+    NotInjectiveFactSearchProofByBuiltinRule, NotIsChoiceFunctionForFactSearchProofByBuiltinRule,
+    NotIsSetFactSearchProofByBuiltinRule, NotProperSubsetFactSearchProofByBuiltinRule,
+    NotProperSupersetFactSearchProofByBuiltinRule, NotSurjectiveFactSearchProofByBuiltinRule,
+    ProperSubsetFactSearchProofByBuiltinRule, ProperSupersetFactSearchProofByBuiltinRule,
+    SurjectiveFactSearchProofByBuiltinRule,
 };
 
 impl Runtime {
@@ -168,14 +168,6 @@ impl Runtime {
         _fact: &ProperSupersetFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<ProperSupersetFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_dvd_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &DvdFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<DvdFactSearchProofByBuiltinRule>> {
         Ok(None)
     }
 

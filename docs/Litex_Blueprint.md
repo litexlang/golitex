@@ -4,7 +4,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: October 17, 2026.
+Last updated: October 18, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -14,21 +14,22 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 - [0. Litex Blueprint Overview](#overview)
   - [0.1 The Goal of Litex](#goal-of-litex)
-  - [0.2 Five Characteristics: How Litex Works](#overview-spine)
-- [1. Write Facts and See Why They Hold](#fact-oriented)
-  - [1.1 Fact-Oriented: Writing “What Holds” into the Source](#fact-oriented-interface)
-  - [1.2 What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
-- [2. Start from Familiar Mathematical Axioms and Notation: Litex’s Set-Theoretic Foundation](#set-theory)
-  - [2.1 The Design Difficulty: Making Concrete Mathematics a Working Language](#design-difficulty)
-- [3. Let Formalization Fit the Mathematical Workflow](#mathematical-workflow)
-  - [3.1 Each Step Leaves Knowledge for the Next](#workflow-principle)
-  - [3.2 Think, Write, and Check as You Go](#workflow-exploration)
-  - [3.3 Keep Today’s Results for the Next Exploration](#workflow-reuse)
-  - [3.4 Use Mathematical Results for Computation and Communication](#workflow-use)
-- [4. Litex Is Well Suited to Interaction with AI](#interaction-loop)
-- [5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)](#compatibility)
-- [6. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
-- [7. The Art of Seeking What Is Different](#conclusions)
+  - [0.2 Six Characteristics: One Mathematical Workflow](#overview-spine)
+- [1. Familiar Expressions Should Keep Their Mathematical Meaning](#ordinary-mathematics)
+- [2. Write Facts and See Why They Hold](#fact-oriented)
+  - [2.1 Fact-Oriented: Writing “What Holds” into the Source](#fact-oriented-interface)
+  - [2.2 What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
+- [3. Start from Familiar Mathematical Axioms and Notation: Litex’s Set-Theoretic Foundation](#set-theory)
+  - [3.1 The Design Difficulty: Making Concrete Mathematics a Working Language](#design-difficulty)
+- [4. Let Formalization Fit the Mathematical Workflow](#mathematical-workflow)
+  - [4.1 Each Step Leaves Knowledge for the Next](#workflow-principle)
+  - [4.2 Think, Write, and Check as You Go](#workflow-exploration)
+  - [4.3 Keep Today’s Results for the Next Exploration](#workflow-reuse)
+  - [4.4 Use Mathematical Results for Computation and Communication](#workflow-use)
+- [5. Litex Is Well Suited to Interaction with AI](#interaction-loop)
+- [6. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)](#compatibility)
+- [7. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
+- [8. The Art of Seeking What Is Different](#conclusions)
   - [Litex's Mathematical Values](#mathematical-values)
   - [Special Thanks](#special-thanks)
 - [Appendix: Programming, Mathematics, and Formalization with Litex](#overview-readers)
@@ -46,247 +47,189 @@ _“Language is an instrument of human reason, and not merely a medium for the e
 
 _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 
-**Litex is a human-readable, set-theoretic, fact-oriented, compilable-to-Lean formal language.**
+**A familiar mathematical expression can mean something different in Lean.**
+In ordinary real arithmetic, `1 / 0` is undefined; Lean/Mathlib's real division
+satisfies `(1 : ℝ) / 0 = 0`. In ordinary integer arithmetic, `1 - 2 = -1`;
+Lean's natural-number subtraction satisfies `(1 : Nat) - 2 = 0`.
+These differences concern mathematical meaning, before proof syntax even enters
+the picture.
 
-*Started in 2024, Litex hopes to [become a Python for formal languages, helping more people gradually become formalization experts](#reader-programmers).*
+| Expression | Usual textbook convention | Lean / Mathlib | Litex |
+| --- | --- | --- | --- |
+| Division by zero | `1 / 0` is undefined. | `(1 : ℝ) / 0 = 0` | Rejects `1 / 0 = 0` because the division is undefined. |
+| Subtraction beyond the natural numbers | In integer arithmetic, `1 - 2 = -1`. | `(1 : Nat) - 2 = 0`: subtraction truncates at zero. | `1 - 2 = -1`; the result belongs to `Z`. |
+| Real square root of a negative number | There is no real square root of `-1`. | `Real.sqrt (-1) = 0` | Rejects `sqrt(-1) = 0` because the real square root is undefined. |
 
-**As AI makes reasoning easier to generate, how can we turn that reasoning into knowledge we can trust, understand, and build on?** A conclusion needs explicit premises, an argument needs checkable grounds, and a result needs to be understood by others who can develop it further. As candidate reasoning grows in volume, the costs of checking, understanding, and reuse become increasingly important.
+These are documented defaults: [division by zero](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero), [natural-number
+subtraction](https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/#Nat.sub), and [real square roots](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos). In Lean, choosing `Int`
+instead of `Nat` gives `(1 : Int) - 2 = -1`; the type selects a different
+subtraction. Mathlib deliberately extends division and real square root beyond
+their usual domains. **Recognizing the symbols is therefore not enough to know
+which mathematics a formal statement expresses.** A checker validates the
+statement under those definitions; the author must still check that it means
+what they intended.
 
-Formal languages let machines rigorously check reasoning and let results be [cited again under explicit conditions](#workflow-reuse). AI makes formal code easier to generate. Even after that code passes checking, people still need to see what it actually expresses, which assumptions it relies on, and whether it faithfully captures their intent. **People need to understand and control the language that carries their own ideas.**
+**Litex starts from familiar mathematical meanings and checks their conditions
+of use.** Division requires a nonzero denominator; real square root requires a
+nonnegative input. Subtracting two natural numbers does not silently truncate
+the result at zero. These choices make ordinary meanings and domain checks
+part of the language's default authoring experience.
 
-**Litex explores a formal language in which human understanding and machine checking meet in the same text.** It organizes reasoning through [familiar mathematical objects, conditions, and facts](#set-theory): people choose definitions, constructions, and key steps; [AI assists with writing and repair](#interaction-loop); the language [checks supported connections and records the grounds for each step](#execution-model). It asks whether this form of expression can lower the cost for people and AI to construct, review, repair, and reuse checkable knowledge.
+**Litex is a human-readable, set-theoretic, fact-oriented formal language,
+with experimental Lean compilation for supported proofs.** Its design question
+starts with the mathematical text itself: how should objects, assumptions,
+definitions, and reasoning steps be represented so that people can understand
+them and machines can check them?
 
-The concision of Litex source comes from the coordination among objects, facts, statements, and verification procedures developed through sustained iteration. It makes the mechanical work connecting common proof steps part of the language's default checking, letting authors state mathematical steps directly and build on existing knowledge. The [systems engineering perspective](#systems-engineering) follows a small reciprocal function through this design work.
+Litex explores whether keeping mathematical meaning, direct fact statements,
+and stepwise feedback together can lower the cost of constructing, reading,
+reviewing, repairing, and reusing checked knowledge. That is a design hypothesis
+to test through real mathematical work, not a measured universal advantage.
 
-Litex also includes a [compiler design for translation to Lean](#compatibility), exploring how supported verification grounds can become Lean proofs for independent rechecking and connection to the existing formalization ecosystem. See the [Litex-to-Lean compiler design guide](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md) for the design and current supported scope. The Litex-to-Lean compiler is expected to be completed by the end of 2026.
+As AI produces more candidate reasoning, this question becomes more pressing:
+both the proof and the meaning of its statement need scrutiny. People choose
+the problem and its meaning, AI can assist with writing, and Litex checks
+supported steps and retains accepted knowledge. A successful design could help
+checking and understanding keep pace with the volume of candidate reasoning.
 
-As AI grows more capable, Human–AI mathematical workflows could enable exploration on a scale difficult to imagine today. Traditional review, with manual scrutiny that often takes more than a year, cannot alone keep pace with a growing volume of candidate proofs; checking the logical correctness of proofs with formal languages often takes only minutes, making their adoption a growing necessity. **Mathematicians should [understand and control their formal tools](#reader-mathematicians), making the medium of mathematical knowledge itself something they can understand, discuss, and improve, rather than a black box left to AI.** Litex aims to substantially lower the barrier to mastering a formal language: through familiar mathematical expression and [a proof interface that states facts directly](#fact-oriented-interface), it seeks to reduce the effort of translating mathematical ideas into computer language, freeing mathematicians to devote more attention to the ideas themselves.
-
-**Starting from mathematics, Litex’s vision is to bring understandable, checkable reasoning into a [wider world of knowledge](#ecosystem-role).** Mathematics is the mother of the natural sciences; I hope formal languages can reach wherever mathematics reaches and brings benefits, and that Litex can contribute to that journey as part of the infrastructure for trustworthy reasoning in the AI era.
-
+*Started in 2024 and created and maintained by Jiachen Shen, Litex aims to
+[become a Python for formal languages](#reader-programmers), helping more
+people master the tools that carry their mathematical ideas.*
 
 <a id="goal-of-litex"></a>
 
 ### 0.1 The Goal of Litex
 
-Why does writing a formal mathematical proof often feel so different from writing the same proof on paper? This gap motivates Litex's central language-design question:
+**Write mathematics as mathematics: preserve its intended meaning, state its
+conditions, and develop its reasoning in a form that can be checked.**
 
-**What should a formal proof language look like if it were designed around ordinary mathematical writing?**
+This goal connects semantics to the writing experience. A reciprocal should
+carry its nonzero condition; an elementary equality should be writable as an
+equality; a definition should become usable knowledge for the next statement.
+Authors choose the mathematical ideas and proof route. The language checks
+supported domain obligations and local reasoning, and explains where it stops.
 
-Litex aims to bridge the expressive freedom of natural language and the rigor of formal verification. Ordinary mathematical writing is the starting point for the design: how mathematicians introduce objects, define concepts, state assumptions, and develop an argument. The challenge is to preserve that way of thinking while making the conditions and grounds of each step precise enough for a machine to check. Authors still choose the mathematical ideas and proof route; the language should help make those ideas both understandable and checkable.
-
-**Litex follows ordinary mathematics: familiar textbook meanings and domain conditions.** Division requires a nonzero denominator, and a real square root requires a nonnegative input. The language should help authors check these conditions so that the mathematics in their source stays close to the mathematics they intend. The [operation comparison below](#ordinary-mathematics) shows how this choice applies to concrete expressions.
-
-The significance of a new mathematical language lies in helping mathematicians across all branches advance their work and deepen their understanding together. A shared language should make it easier to explain a construction, examine a proof, recognize connections, and build on someone else's results. **Litex's long-term ambition is to help mathematical knowledge and understanding grow together across the whole discipline.** Whether its design can do so must be tested through the work of writing, reading, checking, and reusing mathematics.
-
-The following five characteristics describe how Litex pursues this goal.
+The long-term ambition is to help mathematical knowledge and understanding
+grow together across the discipline. The six characteristics below develop
+the same goal from expression through collaboration and independent rechecking.
 
 <a id="overview-spine"></a>
 
-### 0.2 Five Characteristics: How Litex Works
+### 0.2 Six Characteristics: One Mathematical Workflow
 
-For a visual overview of how a fact is checked and accepted knowledge extends the context, see the [Litex Verification Pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png).
+These six characteristics follow one path: preserve the intended mathematics,
+state it directly, build its objects, keep the results, collaborate through
+feedback, and carry supported proofs into independent checking.
 
-**These five characteristics explore one question: can organizing knowledge around facts and feedback lower the cost for people and AI to construct, understand, review, and reuse checkable mathematics?**
+| Characteristic | What it means when writing mathematics |
+| --- | --- |
+| **1. Familiar mathematical meanings and domains** | `1 - 2 = -1`; division requires a nonzero denominator. [Meanings and domains](#ordinary-mathematics). |
+| **2. Write mathematical facts directly** | Write `1 + 1 = 2`; the language checks the fact and explains its grounds. [Facts](#fact-oriented). |
+| **3. Familiar objects, axioms, and notation** | Define sets, functions, and relations using membership, conditions, and familiar symbols. [Mathematical objects](#set-theory). |
+| **4. A continuous mathematical workflow** | Explore, define, prove, reuse, and turn supported results into computation or LaTeX. [Workflow](#mathematical-workflow). |
+| **5. Work with AI through explicit feedback** | Propose a step, inspect the result, and repair it while retaining accepted knowledge. [Human–AI interaction](#interaction-loop). |
+| **6. Independent Lean rechecking and interoperability** | Compile supported proof routes to Lean and connect them to Mathlib through reviewed interfaces. [Lean connection (experimental)](#compatibility). |
 
-**1. I can write proofs in terms of mathematical facts.**
+The chapters below follow this order. The [verification pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png) shows how a fact is checked and extends the available context.
 
-I still need to think through the proof, choose constructions and intermediate results, and state the mathematical fact that should hold next. For local steps supported by current knowledge, Litex checks the conditions and grounds, then explains what it found. This is its fact-oriented proof interface.
+<a id="ordinary-mathematics"></a>
 
-For example, I can state an arithmetic fact directly:
+## 1. Familiar Expressions Should Keep Their Mathematical Meaning
 
-```litex
-1 + 1 = 2
-```
-
-The following statement records show the current CLI output in English and Chinese side by side; Litex currently supports 10 output languages. `proof_method` (`证明方法` in Chinese) explains the grounds, while `stores` (`存储` in Chinese) records facts that can be used later:
-
-<table>
-<thead>
-<tr><th>English (<code>-lang en</code>)</th><th>Chinese (<code>-lang zh</code>)</th></tr>
-</thead>
-<tbody>
-<tr>
-<td><pre><code class="language-json">{
-  "statement_result": "accepted",
-  "statement": "1 + 1 = 2",
-  "proof_method": {
-    "type": "by_closed_calculation",
-    "rule_name": "Closed calculation",
-    "message": "Exact evaluation of closed expressions without proof search"
-  },
-  "stores": ["1 + 1 = 2"],
-  "infers": []
-}</code></pre></td>
-<td><pre><code class="language-json">{
-  "语句判定": "accepted",
-  "语句": "1 + 1 = 2",
-  "证明方法": {
-    "类型": "封闭计算",
-    "规则名": "封闭计算",
-    "说明": "精确计算封闭表达式，不递归搜索证明"
-  },
-  "存储": ["1 + 1 = 2"],
-  "推断": []
-}</code></pre></td>
-</tr>
-</tbody>
-</table>
-
-I can also define oddness and then state a concrete judgment:
-
-```litex
-prop is_odd(x Z):
-    x % 2 = 1
-
-$is_odd(3)
-```
-
-The JSON record for `$is_odd(3)` shows that the language checks the fact by unfolding the definition and retains the resulting concrete facts:
-
-```json
-{
-  "statement_result": "accepted",
-  "statement": "$is_odd(3)",
-  "proof_method": {
-    "type": "by_definition",
-    "rule_name": "By definition",
-    "message": "Verified by unfolding a definition"
-  },
-  "stores": ["$is_odd(3)"],
-  "infers": ["3 $in Z", "3 % 2 = 1"]
-}
-```
-
-These records let both people and AI see whether a statement passed, what kind of grounds the language found, and what the step left behind.
-
-**Multilingual feedback.** The CLI can present this JSON feedback in multiple languages. The same source can receive Chinese field names and explanations, or feedback in French and other languages. Thanks in part to AI-assisted translation, this multilingual explanatory copy became feasible; choosing an output language does not change the Litex source or its verification. The current output locales are `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, and `vi`.
-
-**2. I can start from familiar mathematical axioms and notation.**
-
-Litex takes the ZFC axioms of set theory as its foundation and organizes mathematics through sets, elements, functions, and relations. It also accepts familiar symbols such as `∈`, `⊆`, and `∩`, so readers learning formalization can keep using their mathematical intuition and familiar notation as far as possible.
-
-For example, real numbers, sets, functions, and relations can appear together in one small example:
-
-```litex
-have a R = 2
-
-have S set = {x R: x > 0}
-
-have fn f(x R) R = x^2
-
-prop is_less(x, y R):
-    x < y
-
-$is_less(2, 4)
-```
-
-`have a R = 2` introduces both `a $in R` and `a = 2`. `S` is the set of positive real numbers, `f` is the square function on the reals, and `is_less` expresses strict inequality between two reals. The final statement verifies the concrete relation `2 < 4`. These objects follow the organization of everyday mathematics.
-
-**3. Formalization can follow the way I work through mathematics.**
-
-Mathematical work often begins with a small question: write a definition, try a few examples, check the conditions, and keep the useful results. I want formalization to fit into that process, so work already done becomes a starting point for further exploration. The underlying design principle is to let accepted mathematical statements leave knowledge that later work can depend on.
-
-**Save knowledge for use in another file.** In the later [Newton-update example](#workflow-exploration), I save the function definition and fixed-point theorem in `newton.lit`. With the project organized as in Section 3.3, I can cite the established result from another file:
-
-<!-- litex:skip-test -->
-```litex
-release obj def newton::newton_sqrt_two
-release thm newton::fixed_point(sqrt(2))
-```
-
-**Put results to work in a calculation.** Supported computational fragments can be extracted as Python or C. For example, this piecewise definition of absolute value produces the Python code alongside it:
-
-<table data-blueprint-conversion="python" style="table-layout:fixed;width:100%;border-collapse:collapse;">
-<thead>
-<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex source</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">Python code</th></tr>
-</thead>
-<tbody>
-<tr>
-<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>algo absolute(x R) R by cases:
-    case x &gt;= 0: x
-    case x &lt; 0: -x</code></pre></td>
-<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>def absolute(x):
-    if x &gt;= 0.0:
-        return x
-    elif x &lt; 0.0:
-        return (0.0 - x)
-    raise AssertionError(&quot;unreachable verified Litex cases&quot;)</code></pre></td>
-</tr>
-</tbody>
-</table>
-
-For extraction details and supported forms, see the [Python/C extraction implementation](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code).
-
-**Use mathematical content in your own tools.** The verifier’s JSON output contains statement text, stored facts, inferred facts, and proof summaries. Readers can extract that content for their own indexes and visualizations; the [litexlang.com](https://litexlang.com) homepage includes an interactive example of a mathematical concept relationship graph. Normal JSON summarizes verification rather than recording every dependency. See the [JSON output contract](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract) for its fields and limits.
-
-**Write mathematics for others to read.** Mathematical source can also be converted to LaTeX for lecture notes or a manuscript. A mathematical fact appears on the left and its actual typesetting source on the right. Conversion handles presentation; mathematical verification is a separate step:
-
-<table data-blueprint-conversion="latex" style="table-layout:fixed;width:100%;border-collapse:collapse;">
-<thead>
-<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex source</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">LaTeX source</th></tr>
-</thead>
-<tbody>
-<tr>
-<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>1 + 1 = 2</code></pre></td>
-<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>\[
-1 + 1 = 2
-\]</code></pre></td>
-</tr>
-</tbody>
-</table>
-
-See the [LaTeX conversion implementation](https://github.com/litexlang/golitex/tree/main/src/compile_to_latex) for how mathematical source is rendered.
-
-See Section 3 for the complete definitions, proofs, and project setup.
-
-**4. AI can work with people to advance proofs through explicit feedback.**
-
-AI proposes mathematical steps, people choose the problem and its meaning, and Litex provides verification feedback. See [Section 4](#interaction-loop) for the interaction and code comparison.
-
-![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
-
-**5. A supported proof can also be checked by Lean.**
-
-I want expressions closer to everyday mathematics to compile into Lean proof objects, receive an independent check, and connect to the existing ecosystem. The initial standalone compiler now provides this route for a limited set of verification results.
-
-For example, the source in `lean/examples/one_equals_itself/statement.lit` states that one equals itself:
-
-```litex
-1 = 1
-```
-
-The paired Lean source for this example has the following proof form, with only the generated namespace omitted:
+The opening examples expose the first problem Litex addresses: a proof can be
+accepted while familiar notation has a meaning the author did not intend.
+With Mathlib imported, these Lean statements all have proofs:
 
 ```lean
-import Litex
+import Mathlib
 
-universe u
-variable {M : Litex.Semantics.{u}}
-
-theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
-  (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))
+example : (1 : ℝ) / 0 = 0 := by simp
+example : (1 : Nat) - 2 = 0 := by rfl
+example : (1 : Int) - 2 = -1 := by rfl
+example : Real.sqrt (-1) = 0 := by
+  exact Real.sqrt_eq_zero_of_nonpos (by norm_num)
 ```
 
-`Litex.number` returns an `Obj ℂ` containing the native number and its well-definedness proof. `Litex.Same` compares represented meanings under the explicit `Semantics` parameter `M`; the compiler replays the checked reflexivity route through `Litex.sameRefl`. This generated example passes Lean checking, but it does not establish a complete Litex model or compilation of every proof route.
+For a reader expecting ordinary integer subtraction, the two subtraction
+lines make the issue visible: changing the type changes what `-` does.
+The division and square-root lines instead assign values where the usual
+real operations are undefined. The burden is to understand those choices
+before trusting that a checked formula says what one meant.
 
-The maintained source locations are the [Lean semantic interface](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean) and [paired compiler examples](https://github.com/litexlang/golitex/tree/main/lean/examples). Section 5 explains independent rechecking through a maintained example.
+**Litex makes familiar meanings and domain conditions the starting point.**
+The subtraction keeps its ordinary integer value:
 
-Whether you are a mathematician, a programmer, or a Lean user, Litex can offer new knowledge and perspectives; if you are interested, continue with [Programming, Mathematics, and Formalization with Litex](#overview-readers) at the end of this document.
+```litex
+1 - 2 = -1
+1 - 2 $in Z
+```
 
-The following chapters develop these five characteristics in order, then discuss the language ecosystem; reader comparisons and further source examples appear in the appendices.
+For partial operations, the conditions belong in the definition itself:
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+Read the first line as “for a nonzero real number `x`, define its reciprocal
+to be `1 / x`.” A call must satisfy that condition. `reciprocal(0) = 0` is
+rejected at well-definedness, as are `1 / 0 = 0` and `sqrt(-1) = 0`.
+Even `1 / 0 = 1 / 0` is rejected: identical sides do not make division defined.
+
+These choices address concrete differences in default mathematical expression.
+Lean can also encode restricted domains, and its cancellation theorems retain
+the required hypotheses. Litex puts domain checking directly on the source
+expressions authors use. Authors remain responsible for choosing the intended definitions and
+theorem statements; the language checks the supported conditions and proof steps.
+
+Once the expression means what the author intends, the next question is how
+to state the fact itself. That leads to the second characteristic: **write the
+mathematical statement, and let the language check its supported grounds.**
 
 <a id="fact-oriented"></a>
 
-## 1. Write Facts and See Why They Hold
+## 2. Write Facts and See Why They Hold
 
 _“Readability counts.”_
 
 _— Tim Peters, The Zen of Python (PEP 20)_
 
+**Writing mathematics should mean writing mathematics.** To state that one plus
+one equals two, the Litex source is the fact itself:
+
+```litex
+1 + 1 = 2
+```
+
+A short Lean proof of the same arithmetic fact is:
+
+```lean
+example : (1 : Nat) + 1 = 2 := by rfl
+```
+
+In Litex, an ordinary fact is itself an instruction to check that fact.
+The author writes the equality directly, without an `example` declaration
+or a proof command for this calculation.
+For harder arguments, authors still supply constructions and meaningful
+intermediate steps; Litex checks the local connections it supports.
+
+The same principle extends from a calculation to a mathematical sentence.
+“For every real number `x`, if `x > 0`, then `x + 1 > 1`” becomes:
+
+```litex
+forall x R:
+    x > 0
+    =>:
+        x + 1 > 1
+```
+
+The order on the page is the order of the thought: introduce an arbitrary
+real number, state the assumption, then state the conclusion. The condition
+before `=>:` is an assumption; the conclusion after it must be checked.
+
 <a id="fact-oriented-interface"></a>
 
-### 1.1 Fact-Oriented: Writing “What Holds” into the Source
+### 2.1 Fact-Oriented: Writing “What Holds” into the Source
 
 When an author writes the fact that should hold next, Litex starts checking: it first checks well-definedness, then searches builtin rules and strategies, known facts, universal facts, and definitions for local grounds. The language selects and combines verification methods for many routine steps; authors still supply key constructions, witnesses, and estimates.
 
@@ -436,7 +379,7 @@ The operations authors omit still have to be performed. To check `0 <= x + y` di
 
 **Search and maintenance costs.** Searching for further intermediate conclusions, rewrites, or recursive unfoldings adds branches and combinations to handle. The default workflow therefore has explicit permissions: it seeks grounds for a supplied local step, with authors supplying mathematical routes at the supported boundary. Repeated mechanical bridges should still prompt an audit for missing shared support. Every additional path needs review of its mathematical conditions, evidence, and cost; code size cannot substitute for that review.
 
-Here, “verification kernel” means the project's verification and execution implementation, including grounds search, builtin mathematical rules, well-definedness checks, fact storage, and feedback. The [Lean Language Reference](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) separates elaboration and tactic execution from the trusted kernel that checks core proof terms; code-size comparisons need to distinguish these responsibilities. Current verification relies on the correctness of Litex's verifier and its builtin and inference rules. [Section 5](#compatibility) explains the goal and current status of independent Lean rechecking.
+Here, “verification kernel” means the project's verification and execution implementation, including grounds search, builtin mathematical rules, well-definedness checks, fact storage, and feedback. The [Lean Language Reference](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) separates elaboration and tactic execution from the trusted kernel that checks core proof terms; code-size comparisons need to distinguish these responsibilities. Current verification relies on the correctness of Litex's verifier and its builtin and inference rules. [Section 6](#compatibility) explains the goal and current status of independent Lean rechecking.
 
 </details>
 
@@ -681,9 +624,11 @@ Local automation can sit on different logical foundations. Litex asks whether or
 
 </details>
 
+**Multilingual feedback.** The same source can receive JSON explanations in English, Chinese, or another supported output language. Current locales are `en`, `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, and `vi`. The language setting changes the feedback, not the mathematics being checked. The next section explains what these records retain.
+
 <a id="execution-model"></a>
 
-### 1.2 What Each Statement Leaves Behind: Checkable Knowledge Records
+### 2.2 What Each Statement Leaves Behind: Checkable Knowledge Records
 
 Each accepted statement adds knowledge that later proof steps can use. Its execution result records the top-level grounds, stored facts, and inferences within their scope; a failure identifies where checking stopped. Reading source and result together shows why the step holds and what it leaves behind. More complete verification evidence remains in the internal result tree for detailed tools and the Lean compiler.
 
@@ -780,7 +725,7 @@ A failed statement adds neither `stores` nor `infers` to the accepted context. A
 
 </details>
 
-In the example above, the record shows that `a + 1 = 2` uses the definition `a = 1`, definition reduction and numerical calculation. The equality then becomes available to later steps. Normal JSON summarizes the result; Detailed JSON expands the premises and fact citations. Readers can [trace these connections](#reader-mathematicians), and tools can display them as a graph. Section 4 shows how to [use the feedback interactively](#interaction-loop); Section 5 covers [independent Lean rechecking](#compatibility).
+In the example above, the record shows that `a + 1 = 2` uses the definition `a = 1`, definition reduction and numerical calculation. The equality then becomes available to later steps. Normal JSON summarizes the result; Detailed JSON expands the premises and fact citations. Readers can [trace these connections](#reader-mathematicians), and tools can display them as a graph. Section 5 shows how to [use the feedback interactively](#interaction-loop); Section 6 covers [independent Lean rechecking](#compatibility).
 
 ![Litex fact-relation graph example](https://litexlang.com/_next/image?url=%2Fassets%2Fknowledge_graph.png&w=640&q=75)
 
@@ -820,13 +765,35 @@ current acceptance checkpoint (`src/store_fact_and_infer/one_step_acceptance.md`
 
 <a id="set-theory"></a>
 
-## 2. Start from Familiar Mathematical Axioms and Notation: Litex’s Set-Theoretic Foundation
+## 3. Start from Familiar Mathematical Axioms and Notation: Litex’s Set-Theoretic Foundation
 
 _“Language design is a curious mixture of grand ideas and fiddly details.”_
 
 _— Bjarne Stroustrup_
 
 Litex takes set theory as its mathematical foundation and organizes mathematics through sets, elements, functions, and relations. Authors can write membership, subset relations, function applications, and equalities directly, without first unfolding the concrete set-theoretic construction of common objects. The aim is to let readers work with familiar mathematical concepts and reduce the extra effort of understanding formal representations. How builtin rules and number-system interfaces correspond to foundational theory still needs to be documented and audited.
+
+Facts need objects to talk about. The third characteristic carries the same
+mathematical reading order into definitions of functions and sets.
+
+“Define distance from zero; points at `-3` and `3` have the same distance” becomes:
+
+```litex
+have fn distance_from_zero(x R) R = |x|
+distance_from_zero(-3) = distance_from_zero(3) = 3
+```
+
+“Collect all positive real numbers into a set; two belongs to it” becomes:
+
+```litex
+have positive_reals set = {x R: x > 0}
+2 $in positive_reals
+```
+
+Here `forall`, `have fn`, and the set-builder notation give precise forms to
+familiar mathematical sentences. Litex uses a controlled formal syntax;
+the correspondence is between the mathematical thought and the source, without
+claiming to understand unrestricted natural-language prose.
 
 For example, if `s` is contained in `t`, then after intersecting each with the same set `u`, the former is still contained in the latter:
 
@@ -863,21 +830,6 @@ end
 Lean first declares a common element type `α : Type*`, then declares `s`, `t`, `u : Set α`. This makes the theorem reusable over any element type; `Type*` also involves the universe hierarchy of types.
 
 This comparison shows how the two languages introduce sets and develop a proof: Lean first declares the element type, while Litex directly states and checks facts about the sets. Lean can also prove the result with a short proof or automation; the textbook's expanded steps are retained here to make the comparison easier to follow.
-
-<a id="ordinary-mathematics"></a>
-
-**Ordinary mathematics: familiar operations retain familiar meanings and domains.** Lean/Mathlib extends standard real division to zero denominators, satisfying [`(1 : ℝ) / 0 = 0`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero); its [`Real.sqrt`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos) returns zero for negative inputs. Litex follows the usual textbook domains: using `1 / x` requires establishing `x != 0`, and using real `sqrt(x)` requires establishing `x >= 0`.
-
-These conditions belong directly in function definitions, and the verifier finds or proves them in context at each call:
-
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-Both `1 / 0 = 0` and `sqrt(-1) = 0` are rejected at well-definedness. Even `1 / 0 = 1 / 0` cannot make an expression defined merely by having identical sides. Authors do not pass a proof of the nonzero condition as an extra argument to each division, but the mathematical condition must hold and the verifier must establish it.
-
-Here, “ordinary mathematics” refers to everyday conventions for operations and domains. Mathlib's extensions are deliberate library definitions, and Lean can also represent restricted domains; laws such as `x / x = 1` still require a nonzero hypothesis, as explained in the [Lean division-by-zero FAQ](https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/). Litex's design goal is to let authors retain familiar mathematical meanings while the language handles routine checks of their conditions.
 
 > **Set theory provides the foundation; everyday writing can start from familiar concepts.**
 
@@ -951,7 +903,7 @@ Lean's core is based on dependent type theory; Litex chooses to organize user-fa
 
 <a id="design-difficulty"></a>
 
-### 2.1 The Design Difficulty: Making Concrete Mathematics a Working Language
+### 3.1 The Design Difficulty: Making Concrete Mathematics a Working Language
 
 “More concrete” refers to the mathematical vocabulary authors ordinarily work with. The [Lean Language Reference](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) explains that Lean elaborates surface syntax into core type-theoretic expressions whose proof terms the kernel checks; compiler IR for executable programs belongs to another path. Lean also has rich notation and automation. Litex chooses sets, membership facts, and named functions to organize everyday writing.
 
@@ -1040,7 +992,7 @@ The group is only a small demonstration. A stronger test is whether a small team
 [Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
 uses polymorphic higher-order logic.
 
-Litex's user-facing propositional language is broadly first-order in style: atomic relations or named predicates are organized through restricted classical logical forms and quantifiers. It prefers canonical fact shapes; propositions and proofs cannot be arbitrarily combined as ordinary first-class values—so forms such as `forall p prop` are disallowed; Section 1 explains how that keeps the fact table indexable by predicate name. This describes only the propositional interface; the verifier also checks well-definedness and searches for grounds from definitions, context, and supported rules.
+Litex's user-facing propositional language is broadly first-order in style: atomic relations or named predicates are organized through restricted classical logical forms and quantifiers. It prefers canonical fact shapes; propositions and proofs cannot be arbitrarily combined as ordinary first-class values—so forms such as `forall p prop` are disallowed; Section 2 explains how that keeps the fact table indexable by predicate name. This describes only the propositional interface; the verifier also checks well-definedness and searches for grounds from definitions, context, and supported rules.
 
 In this background, Litex's question falls more specifically on the user-facing object interface:
 can a small, membership-centered set-theoretic surface cover substantial mathematics without requiring users to manage type
@@ -1050,7 +1002,7 @@ universes first?
 
 <a id="mathematical-workflow"></a>
 
-## 3. Let Formalization Fit the Mathematical Workflow
+## 4. Let Formalization Fit the Mathematical Workflow
 
 _“If I have seen further it is by standing on the shoulders of Giants.”_
 
@@ -1063,7 +1015,7 @@ Consider one Newton update toward √2. We will explore it, save a proved proper
 <a id="workflow-principle"></a>
 <a id="bottom-up"></a>
 
-### 3.1 Each Step Leaves Knowledge for the Next
+### 4.1 Each Step Leaves Knowledge for the Next
 
 A principle running through Litex's design supports this workflow: **each accepted mathematical statement should leave knowledge that later work can use within its scope.**
 
@@ -1109,13 +1061,13 @@ The chain reassociates the product, substitutes `a * b = c * d`, substitutes `g 
 <details>
 <summary><strong>Place in the design space: forward proof is not Litex's invention</strong></summary>
 
-Mizar, Isar, ACL2, and Naproche already support forward text, theorem accumulation, or stepwise checking, so “bottom-up” is not unique to Litex. Litex tests a combination: ordinary facts automatically trigger local verification, extend the context when they succeed, and keep accepted or stopped paths visible for humans or AI to inspect and repair; explicit proof structure is written only when ordinary verification is insufficient. A fuller comparison appears in Section 1's summary “Litex and Naproche—Similar Goals, Different Core Interfaces.”
+Mizar, Isar, ACL2, and Naproche already support forward text, theorem accumulation, or stepwise checking, so “bottom-up” is not unique to Litex. Litex tests a combination: ordinary facts automatically trigger local verification, extend the context when they succeed, and keep accepted or stopped paths visible for humans or AI to inspect and repair; explicit proof structure is written only when ordinary verification is insufficient. A fuller comparison appears in Section 2's summary “Litex and Naproche—Similar Goals, Different Core Interfaces.”
 
 </details>
 
 <a id="workflow-exploration"></a>
 
-### 3.2 Think, Write, and Check as You Go
+### 4.2 Think, Write, and Check as You Go
 
 Starting from a positive number `x`, the update is `(x + 2 / x) / 2`. Positivity matters: it makes the division meaningful and keeps the updated number positive. We first check that property, then define the function:
 
@@ -1147,7 +1099,7 @@ Feedback returns directly to the mathematical question: does the input meet the 
 
 <a id="workflow-reuse"></a>
 
-### 3.3 Keep Today's Results for the Next Exploration
+### 4.3 Keep Today's Results for the Next Exploration
 
 After calculating a few values, we can prove a general property: if a positive `x` satisfies `x^2 = 2`, the Newton update leaves it unchanged. A concrete experiment has led to mathematical knowledge that can be cited again.
 
@@ -1240,12 +1192,12 @@ The later file uses an established theorem to continue its own work. As results 
 
 As knowledge grows, downstream tools can organize the mathematical content in Litex's ordinary JSON. In this example, a theorem call retains its name, arguments and selected conclusion in the statement text, while accepted facts appear in `stores` and `infers`. This supports custom views; the concise Normal output does not record every dependency.
 
-*The CLI provides native mathematical dependency graphs. The website currently displays a projection of Normal JSON; the native graph is not yet connected there. A dependency graph helps inspect knowledge relationships; independent proof rechecking is the separate work discussed in Section 5.*
+*The CLI provides native mathematical dependency graphs. The website currently displays a projection of Normal JSON; the native graph is not yet connected there. A dependency graph helps inspect knowledge relationships; independent proof rechecking is the separate work discussed in Section 6.*
 
 <a id="workflow-use"></a>
 <a id="executable-code"></a>
 
-### 3.4 Use Mathematical Results for Computation and Communication
+### 4.4 Use Mathematical Results for Computation and Communication
 
 Beyond saving and reusing results, we can put them to work in a calculation or write them up for others to read. Litex is developing both routes to connect formal source with everyday mathematical work.
 
@@ -1313,11 +1265,11 @@ Python/C extraction remains limited to supported computational fragments. The em
 
 LaTeX conversion presents the mathematical source; mathematical verification must be run separately.
 
-From an exploration to a reusable theorem, then to computation and communication: this is the mathematical workflow the third characteristic aims to connect. A finished proof should give the next piece of mathematics a place to begin.
+From an exploration to a reusable theorem, then to computation and communication: this is the mathematical workflow the fourth characteristic aims to connect. A finished proof should give the next piece of mathematics a place to begin.
 
 <a id="interaction-loop"></a>
 
-## 4. Litex Is Well Suited to Interaction with AI
+## 5. Litex Is Well Suited to Interaction with AI
 
 _“By ‘augmenting human intellect’ we mean increasing the capability of a man to approach a complex problem situation…”_
 
@@ -1368,7 +1320,7 @@ litex -lang en -e 'have a R = 2'
 litex -lang en -e 'a + 1 = 3'
 ```
 
-The first succeeds; the second fails because its new process has no declaration of `a`. It would need the accepted declaration loaded again. Keeping the Session avoids reconstructing that context for each attempt. Save accepted source, and run a separate clean file check at a coherent checkpoint or at the end. If the process stops or the loaded context must change, restart and replay the accepted source; [the mathematical workflow in Section 3](#workflow-exploration) applies this rule to a longer example.
+The first succeeds; the second fails because its new process has no declaration of `a`. It would need the accepted declaration loaded again. Keeping the Session avoids reconstructing that context for each attempt. Save accepted source, and run a separate clean file check at a coherent checkpoint or at the end. If the process stops or the loaded context must change, restart and replay the accepted source; [the mathematical workflow in Section 4](#workflow-exploration) applies this rule to a longer example.
 
 **The collaboration loop between people, AI, and Litex:**
 
@@ -1528,9 +1480,9 @@ If the theorem eventually passes verification and human review, the convergence 
 
 <a id="compatibility"></a>
 
-## 5. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)
+## 6. Connect to Lean for Independent Rechecking and Mathlib Interoperability (Experimental)
 
-Litex-to-Lean compilation is being extended through checked examples. The goal is to give a readable Litex development an independently checkable proof, while preserving its objects, hypotheses and conclusion. Three pieces work together: Litex checks the source, the compiler replays the recorded evidence, and `lean/Litex.lean` gives the generated expressions their meaning in Lean.
+Independent rechecking must preserve the mathematical meanings and domain conditions introduced in the first characteristic. Litex-to-Lean compilation is being extended through checked examples. The goal is to give a readable Litex development an independently checkable proof, while preserving its objects, hypotheses and conclusion. Three pieces work together: Litex checks the source, the compiler replays the recorded evidence, and `lean/Litex.lean` gives the generated expressions their meaning in Lean.
 
 ### Start with an arbitrary object
 
@@ -1604,7 +1556,7 @@ Verification checkpoint, 2026-10-10: both examples above passed strict Litex exe
 
 <a id="ecosystem-role"></a>
 
-## 6. From Language to Ecosystem: The Role Litex Aims to Play
+## 7. From Language to Ecosystem: The Role Litex Aims to Play
 
 _“The best way to predict the future is to invent it.”_
 
@@ -1616,8 +1568,8 @@ Litex aims to use the same verified source and results for human reading, AI-ass
 | --- | --- |
 | Readable reasoning front end | Mathematical objects, conditions, intermediate facts, and conclusions that people can inspect directly |
 | Checkable reasoning data layer | Machine-checked facts and verification grounds, clear stopping points, and explicitly marked trust boundaries |
-| Connection to existing ecosystems | Initial standalone Lean compilation and rechecking for supported verification results (Section 5, experimental); full-system coverage remains incomplete, and new Lean/Mathlib adapters remain separate, handwritten work |
-| Proof to executable code (experimental) | Convert checked computational fragments into runnable Python or C (Section 3.4) |
+| Connection to existing ecosystems | Initial standalone Lean compilation and rechecking for supported verification results (Section 6, experimental); full-system coverage remains incomplete, and new Lean/Mathlib adapters remain separate, handwritten work |
+| Proof to executable code (experimental) | Convert checked computational fragments into runnable Python or C (Section 4.4) |
 
 Mathematical examples, experience reports and ideas for tools are welcome at litexlang@outlook.com.
 
@@ -1634,7 +1586,7 @@ AI tools can change the cost for a small team to write, inspect, and iterate on 
 
 <a id="conclusions"></a>
 
-## 7. The Art of Seeking What Is Different
+## 8. The Art of Seeking What Is Different
 
 _“A mathematician, like a painter or a poet, is a maker of patterns.”_
 
@@ -1725,7 +1677,7 @@ When I first encountered Lean, I was astonished: mathematics could be written as
 
 As I learned, a few questions took shape. What if I could simply write `1 + 1 = 2`, without first writing `example` and then `by ...`? What if, after defining oddness, I could write `$odd(13)` and let the language check it against the definition? What if, already knowing that all humans are mortal and that Socrates is human, I could write that Socrates is mortal without explicitly citing the universal premise again?
 
-These questions led to a concrete interface choice: authors decide the next mathematical step; the language searches for supported local grounds and explains what the step leaves in context. The cost is that the verifier must handle well-definedness, premise matching, result records, and failure locations. Section 2.1 develops that design responsibility. Lean users can judge this as a different default workflow, rather than only shorter notation.
+These questions led to a concrete interface choice: authors decide the next mathematical step; the language searches for supported local grounds and explains what the step leaves in context. The cost is that the verifier must handle well-definedness, premise matching, result records, and failure locations. Section 3.1 develops that design responsibility. Lean users can judge this as a different default workflow, rather than only shorter notation.
 
 ```text
 Lean:  proposition → proof goal → tactic refinement → proof term → kernel check
@@ -1907,9 +1859,9 @@ Lean (writing math):  strict typing feel  ≈ static
 Litex:                many-set membership ≈ dynamic (Python-like)
 ```
 
-Fact and rule tables transfer some grounds retrieval from the author to the language. [Section 1](#fact-oriented) explains the boundaries of that default search path, and the [division of verification responsibilities](#automation-implementation) explains the engineering cost. Authors can omit many operations because each supported path handles premises, results, and failure feedback in the implementation.
+Fact and rule tables transfer some grounds retrieval from the author to the language. [Section 2](#fact-oriented) explains the boundaries of that default search path, and the [division of verification responsibilities](#automation-implementation) explains the engineering cost. Authors can omit many operations because each supported path handles premises, results, and failure feedback in the implementation.
 
-There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 3.4)—again experimental, and narrow, not a full language backend.
+There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 4.4)—again experimental, and narrow, not a full language backend.
 
 <a id="reader-other-domains"></a>
 
@@ -2247,11 +2199,12 @@ Follow the links for source examples, checking records and support details.
 
 | Current claim | Implementation | Examples and checking records | Scope |
 | --- | --- | --- | --- |
+| Familiar operations retain the documented meanings and domains. | Arithmetic semantics and well-definedness checks. | [Subtraction and guarded division](#ordinary-mathematics), and the [reciprocal systems example](#systems-engineering). | The demonstrated operation interfaces; correspondence with an intended mathematical statement remains a separate review. |
 | Authors can state mathematical facts directly and have supported connections checked. | Mathematical objects, facts and definitions, well-definedness checks and local verification procedures. | [Fact-oriented source and checking routes](#fact-oriented-interface), [source gallery](#overview-gallery) and the [systems engineering example](#systems-engineering). | The implemented object and proof interfaces, under the verifier's stated foundations and assumptions. |
 | Accepted knowledge can support later mathematical work. | Retained facts, reusable definitions and theorems, citations and modules. | [What each statement leaves behind](#execution-model) and [reuse of earlier results](#workflow-reuse). | Reuse under the original premises, scopes and import rules; the checking status belongs to the particular development. |
 | People and agents can repair a step while keeping earlier accepted context. | A persistent Session, structured failure feedback and JSON results. | [The Session interaction example](#interaction-loop) and [verification records](#execution-model). | The demonstrated interaction and retention of accepted context. Changes in authoring time or proof quality require separate measurement. |
 | A defined mathematical subset can be compiled to Lean and connected to ordinary Mathlib mathematics. | Typed-result replay, a Lean semantic core, generated source pairs and representation bridges; complete native examples also use handwritten adapters. | [Independent Lean rechecking](#compatibility), its dated verification checkpoint and linked compiler guide. | Reviewed source-to-Lean routes and checked examples. Native use additionally requires the model and adapter for the particular interface. |
-| Mathematical source and results can feed other tools. | JSON output, LaTeX export and experimental Python/C extraction. | [Structured knowledge records](#execution-model), [export examples](#overview-spine) and [computation and communication](#workflow-use). | Each tool's supported input and output contract. LaTeX export renders parsed source without verifying it; executable extraction handles supported computational fragments. |
+| Mathematical source and results can feed other tools. | JSON output, LaTeX export and experimental Python/C extraction. | [Structured knowledge records](#execution-model) and [computation and communication](#workflow-use). | Each tool's supported input and output contract. LaTeX export renders parsed source without verifying it; executable extraction handles supported computational fragments. |
 
 ## A note to readers
 

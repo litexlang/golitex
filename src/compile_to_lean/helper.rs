@@ -414,6 +414,10 @@ pub(super) fn unsupported_atomic_builtin(
     proof: &AtomicExceptEqualityFactSearchProofByBuiltinRule,
 ) -> LeanCompileError {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(_) => {
+            LeanCompileError::unsupported("Atomic/DvdBuiltin")
+        }
+
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsSetFact(_) => LeanCompileError::new(
             "Builtin/IsSet",
             "Sethood certificate does not match its subject.",
@@ -432,7 +436,6 @@ pub(super) fn unsupported_atomic_builtin(
         | AtomicExceptEqualityFactSearchProofByBuiltinRule::ProperSupersetFact(_)
         | AtomicExceptEqualityFactSearchProofByBuiltinRule::PrimeFact(_)
         | AtomicExceptEqualityFactSearchProofByBuiltinRule::CoprimeFact(_)
-        | AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(_)
         | AtomicExceptEqualityFactSearchProofByBuiltinRule::InjectiveFact(_)
         | AtomicExceptEqualityFactSearchProofByBuiltinRule::SurjectiveFact(_)
         | AtomicExceptEqualityFactSearchProofByBuiltinRule::BijectiveFact(_)
@@ -571,6 +574,26 @@ pub(super) fn validate_statement_capture(
         (Stmt::Fact(fact), ExecStmtResult::Fact(ExecFactStmtResult::Success(proof))) => {
             verified_subject(&proof.verify_result).as_ref() == Some(fact)
         }
+        (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromAtomicFact(
+                stmt,
+            ))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                    crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof),
+                ),
+            )),
+        ) => stmt == &proof.statement,
+        (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromExistFact(
+                stmt,
+            ))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                    crate::execute::ExecObtainObjFromExistFactStmtResult::Success(proof),
+                ),
+            )),
+        ) => stmt == &proof.statement,
         (
             Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(stmt))),
             ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -776,6 +799,21 @@ pub(super) fn instantiated_object_matches(
         }
     }
     match (expected, actual) {
+        (Obj::ProductShape(expected), Obj::ProductShape(actual)) => {
+            let (expected, actual) = match (expected, actual) {
+                (ProductShape::Tuple(expected), ProductShape::Tuple(actual)) => {
+                    (&expected.args, &actual.args)
+                }
+                (ProductShape::Cart(expected), ProductShape::Cart(actual)) => {
+                    (&expected.args, &actual.args)
+                }
+                _ => return false,
+            };
+            expected.len() == actual.len()
+                && expected.iter().zip(actual).all(|(expected, actual)| {
+                    instantiated_object_matches(expected, actual, substitution)
+                })
+        }
         (Obj::FnObj(expected), Obj::FnObj(actual)) => {
             // Substituting p := F(a) into p(x) preserves the inserted prefix
             // F(a) and substitutes only the original argument groups.
@@ -914,6 +952,60 @@ pub(super) fn instantiated_fact_matches(
                             &Fact::AtomicFact(expected.clone()),
                             &Fact::AtomicFact(actual.clone()),
                             substitution,
+                        )
+                    })
+        }
+        (Fact::OrFact(expected), Fact::OrFact(actual)) => {
+            expected.facts.len() == actual.facts.len()
+                && expected
+                    .facts
+                    .iter()
+                    .zip(&actual.facts)
+                    .all(|(expected, actual)| {
+                        instantiated_fact_matches(
+                            &crate::ast::fact::and_chain_as_fact(expected),
+                            &crate::ast::fact::and_chain_as_fact(actual),
+                            substitution,
+                        )
+                    })
+        }
+        (Fact::ExistFact(expected), Fact::ExistFact(actual)) => {
+            if expected.typed_parameters.groups.len() != actual.typed_parameters.groups.len()
+                || expected.facts.len() != actual.facts.len()
+            {
+                return false;
+            }
+            let mut scoped = substitution.clone();
+            for id in expected.typed_parameters.ordered_param_ids() {
+                scoped.remove(&id);
+            }
+            expected
+                .typed_parameters
+                .groups
+                .iter()
+                .zip(&actual.typed_parameters.groups)
+                .all(|(left, right)| {
+                    left.params
+                        .iter()
+                        .map(|p| p.id)
+                        .eq(right.params.iter().map(|p| p.id))
+                        && match (&left.param_type, &right.param_type) {
+                            (ParamType::Obj(left), ParamType::Obj(right)) => {
+                                instantiated_object_matches(left, right, &scoped)
+                            }
+                            (ParamType::Set(_), ParamType::Set(_)) => true,
+                            _ => false,
+                        }
+                })
+                && expected
+                    .facts
+                    .iter()
+                    .zip(&actual.facts)
+                    .all(|(left, right)| {
+                        instantiated_fact_matches(
+                            &crate::instantiate::quantifier_free_fact_to_fact(left.clone()),
+                            &crate::instantiate::quantifier_free_fact_to_fact(right.clone()),
+                            &scoped,
                         )
                     })
         }

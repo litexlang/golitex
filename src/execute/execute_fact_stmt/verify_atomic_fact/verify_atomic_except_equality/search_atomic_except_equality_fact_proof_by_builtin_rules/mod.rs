@@ -1,5 +1,6 @@
 pub mod abs_positive_from_nonzero;
 pub mod complex_triangle;
+pub mod dvd;
 pub mod exp_ln_order;
 pub mod factorial_order;
 pub mod finite_index_union;

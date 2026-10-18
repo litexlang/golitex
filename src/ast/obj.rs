@@ -1141,7 +1141,7 @@ pub struct Csch {
     pub arg: Box<Obj>,
 }
 
-// `sym_diff`: two well-defined objects in the pure-set model.
+// `set_diff`: two well-defined objects in the pure-set model.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SymmetricDifference {
     pub left: Box<Obj>,

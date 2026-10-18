@@ -45,7 +45,30 @@ impl LitexToLeanCompiler {
             | (
                 AtomicFact::GreaterEqualFact(_),
                 ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(p),
-            ) => self.compile_closed_comparison(goal, p, position),
+            ) => self.compile_closed_comparison(goal, p, false, position),
+            (
+                AtomicFact::NotLessFact(_),
+                ClosedAtomicExceptEqualityCalculationProof::NotLess(p),
+            )
+            | (
+                AtomicFact::NotGreaterFact(_),
+                ClosedAtomicExceptEqualityCalculationProof::NotGreater(p),
+            )
+            | (
+                AtomicFact::NotLessEqualFact(_),
+                ClosedAtomicExceptEqualityCalculationProof::NotLessEqual(p),
+            )
+            | (
+                AtomicFact::NotGreaterEqualFact(_),
+                ClosedAtomicExceptEqualityCalculationProof::NotGreaterEqual(p),
+            ) => {
+                // A polarity view reuses the original subject and ID. The
+                // actual negative certificate is checked below, not replaced
+                // by a newly calculated positive proof.
+                let positive = crate::ast::fact::negate_atomic_fact(goal, goal.fact_id())
+                    .ok_or_else(|| LeanCompileError::unsupported("Order/ClosedNegation"))?;
+                self.compile_closed_comparison(&positive, p, true, position)
+            }
             _ => Err(LeanCompileError::new(
                 "Order/ClosedFamily",
                 "The typed closed comparison variant has another source predicate family.",
@@ -57,6 +80,7 @@ impl LitexToLeanCompiler {
         &self,
         goal: &AtomicFact,
         proof: &ClosedComparisonCalculationProof,
+        negative: bool,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let (kind, left, right) = source_order_parts(goal)?;
@@ -99,7 +123,7 @@ impl LitexToLeanCompiler {
             SourceOrderKind::LessEqual => comparison != NumberCompareResult::Greater,
             SourceOrderKind::GreaterEqual => comparison != NumberCompareResult::Less,
         };
-        if !values_match || comparison != proof.comparison || !true_order {
+        if !values_match || comparison != proof.comparison || true_order == negative {
             return Err(LeanCompileError::new(
                 "Order/ClosedValues",
                 "Typed comparison values, comparison tag or source orientation do not agree.",
@@ -128,9 +152,24 @@ impl LitexToLeanCompiler {
             "le_iff_asReal"
         };
         let relation = if strict { "<" } else { "≤" };
+        let equivalence = format!(
+            "(Litex.NativeBridge.{observation} {} {} {low_r} {high_r})",
+            self.compile_object_reference(low, position)?,
+            self.compile_object_reference(high, position)?,
+        );
+        let equivalence = if negative {
+            format!("(not_congr {equivalence})")
+        } else {
+            equivalence
+        };
+        let native_relation = if negative {
+            format!("¬ (_litex_r {relation} _litex_s)")
+        } else {
+            format!("_litex_r {relation} _litex_s")
+        };
         Ok(format!(
-            "((Litex.NativeBridge.{observation} {} {} {low_r} {high_r}).mpr (by\n  have _litex_left_value : Litex.NativeBridge.asReal {lhs} {ha} = {r} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {lhs} {ha}).symm.trans (({}).trans (congrArg M.number (by norm_num))))\n  have _litex_right_value : Litex.NativeBridge.asReal {rhs} {hb} = {s} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {rhs} {hb}).symm.trans (({}).trans (congrArg M.number (by norm_num))))\n  exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => _litex_r {relation} _litex_s) {low_value} {high_value}) (by norm_num)))",
-            self.compile_object_reference(low, position)?, self.compile_object_reference(high, position)?, x.1, y.1,
+            "({equivalence}.mpr (by\n  have _litex_left_value : Litex.NativeBridge.asReal {lhs} {ha} = {r} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {lhs} {ha}).symm.trans (({}).trans (congrArg M.number (by norm_num))))\n  have _litex_right_value : Litex.NativeBridge.asReal {rhs} {hb} = {s} := by\n    apply Complex.ofReal_injective\n    exact M.number_injective ((Litex.NativeBridge.asReal_spec {rhs} {hb}).symm.trans (({}).trans (congrArg M.number (by norm_num))))\n  exact Eq.mpr (congrArg₂ (fun _litex_r _litex_s : ℝ => {native_relation}) {low_value} {high_value}) (by norm_num)))",
+            x.1, y.1,
         ))
     }
 

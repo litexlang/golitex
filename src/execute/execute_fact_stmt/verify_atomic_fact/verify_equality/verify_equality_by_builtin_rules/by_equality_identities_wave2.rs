@@ -3,6 +3,7 @@
 //! One matcher ↔ one dedicated proof struct.
 
 use super::log_algebra_base_proof::LogAlgebraBaseProof;
+use crate::ast::fact::DvdFact;
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessEqualFact};
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Div, ExpLogOperator, IntegerOperator, Literal, Log, Mod, Mul,
@@ -164,14 +165,6 @@ pub struct LogChangeOfBaseBuiltinRuleProof {
 
 // --- mod ---
 
-// Builtin ZeroMod: 0 % a = 0 when a != 0.
-pub struct ZeroModBuiltinRuleProof {
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
-}
-
-// Builtin ModOne: a % 1 = 0.
-pub struct ModOneBuiltinRuleProof {}
-
 // Builtin OneModAtLeastTwo: 1 % m = 1 when 2 <= m.
 pub struct OneModAtLeastTwoBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
@@ -182,7 +175,7 @@ pub struct NestedSameModAbsorptionBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-// Builtin ModCompatibleSmallerModulus: a % d = (a % m) % d when m % d = 0.
+// Builtin ModCompatibleSmallerModulus: a % d = (a % m) % d when $dvd(m, d).
 // Mathematical property: if the larger modulus is a multiple of the smaller,
 // nested reduction by the larger modulus does not change remainder mod d.
 // Example: forall p Z: p % 2 = (p % 8) % 2.
@@ -210,8 +203,7 @@ pub enum EqualityIdentitiesWave2BuiltinRuleProof {
     LogQuotient(LogQuotientBuiltinRuleProof),
     LogReciprocal(LogReciprocalBuiltinRuleProof),
     LogChangeOfBase(LogChangeOfBaseBuiltinRuleProof),
-    ZeroMod(ZeroModBuiltinRuleProof),
-    ModOne(ModOneBuiltinRuleProof),
+
     OneModAtLeastTwo(OneModAtLeastTwoBuiltinRuleProof),
     NestedSameModAbsorption(NestedSameModAbsorptionBuiltinRuleProof),
     ModCompatibleSmallerModulus(ModCompatibleSmallerModulusBuiltinRuleProof),
@@ -305,12 +297,6 @@ impl Runtime {
                 return Ok(Some(
                     EqualityIdentitiesWave2BuiltinRuleProof::LogChangeOfBase(p),
                 ));
-            }
-            if let Some(p) = self.try_zero_mod(left, right, child.clone())? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::ZeroMod(p)));
-            }
-            if let Some(p) = self.try_mod_one(left, right)? {
-                return Ok(Some(EqualityIdentitiesWave2BuiltinRuleProof::ModOne(p)));
             }
             if let Some(p) = self.try_one_mod_at_least_two(left, right, child.clone())? {
                 return Ok(Some(
@@ -1000,41 +986,6 @@ impl Runtime {
         }))
     }
 
-    fn try_zero_mod(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ZeroModBuiltinRuleProof>> {
-        let Some((dividend, modulus)) = match_mod(left) else {
-            return Ok(None);
-        };
-        if !is_zero_obj(dividend) || !is_zero_obj(right) {
-            return Ok(None);
-        }
-        let proof = self.verify_order_nonzero(modulus, verify_state)?;
-        if proof.is_failed() {
-            return Ok(None);
-        }
-        Ok(Some(ZeroModBuiltinRuleProof {
-            proof_of_requirement_facts: vec![proof],
-        }))
-    }
-
-    fn try_mod_one(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-    ) -> RuntimeResult<Option<ModOneBuiltinRuleProof>> {
-        let Some((_dividend, modulus)) = match_mod(left) else {
-            return Ok(None);
-        };
-        if is_one_obj(modulus) && is_zero_obj(right) {
-            return Ok(Some(ModOneBuiltinRuleProof {}));
-        }
-        Ok(None)
-    }
-
     fn try_one_mod_at_least_two(
         &mut self,
         left: &Obj,
@@ -1092,7 +1043,7 @@ impl Runtime {
         }))
     }
 
-    // When: goal is `a % d = (a % m) % d` and `m % d = 0` is provable.
+    // When: goal is `a % d = (a % m) % d` and `$dvd(m, d)` is provable.
     // After: nested mod by a multiple of d preserves the remainder mod d.
     // Example: `p % 2 = (p % 8) % 2`.
     fn try_mod_compatible_smaller_modulus(
@@ -1116,24 +1067,18 @@ impl Runtime {
         if a_left.ir() != a_inner.ir() {
             return Ok(None);
         }
-        let zero = Obj::Literal(Literal::Number(Number {
-            normalized_value: "0".to_string(),
-        }));
-        let rem = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
-            left: Box::new(m.clone()),
-            right: Box::new(d_left.clone()),
-        }));
-        let divisible = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+        let divisible: Fact = DvdFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: rem,
-            right: zero,
+            left: m.clone(),
+            right: d_left.clone(),
             line_file: None,
-        }));
+        }
+        .into();
         let divisible_proof = self.verify_builtin_rule_premise(&divisible, verify_state.clone())?;
         if divisible_proof.is_failed() {
             return Ok(None);
         }
-        // Manual: only for positive integer moduli m, d with m % d = 0.
+        // Manual: only for positive integer moduli m, d with $dvd(m, d).
         let small_pos = self.verify_order_in_pos_nat(d_left, verify_state.clone())?;
         if small_pos.is_failed() {
             return Ok(None);

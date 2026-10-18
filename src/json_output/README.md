@@ -802,11 +802,31 @@ The regression test inspects nested power/subtraction/known certificates and
 both Normal output languages.
 
 An `exact_integer_div` node retains integer `numerator` and `denominator`
-subtrees plus the `zero_remainder` equality path and its stored citations.
+subtrees plus a `divisibility` premise for `$dvd(numerator, denominator)`.
+That premise cites a stored divisibility fact or retains a
+`by_known_zero_remainder` certificate with the original equality path.
 Its nonzero-divisor evidence belongs to `enclosing_object_wd`. The node
 performs no fresh remainder search; it composes inside powers and products
 at the existing Direct ceiling. Lean replay for this new node remains an
 explicit `StructuralMembership/ExactIntegerDiv` unsupported result.
+
+Native divisibility builtin nodes have `family: DvdFact`, an individual `Dvd*`
+rule name and all checked premise results. `DvdProductFactor` retains the other
+factor's integer-membership proof; gcd/lcm/factorial nodes retain their domain,
+divisibility and order premises. `DvdZeroRemainder` is the equality adapter: its
+`divisibility_fact` and native `divisibility` proof inherit the enclosing
+modulo WD, whose integer/nonzero requirements coincide with `$dvd`'s domain.
+The adapter does not start another general truth search. The inverse known
+zero-remainder certificate reads stored equality paths only; no rule searches
+for a multiplier witness. Native Dvd and known-zero-remainder Lean replay
+remain explicitly unsupported.
+
+Divisibility predicate WD retains either the original `Z*` divisor check or
+the equivalent `Z` and `!= 0` obligations at the same inherited ceiling.
+`PredicateDomainProof::ByKnownZeroRemainder` can instead cite the domain of an
+already checked modulo equality. Both forms keep the integer and nonzero
+requirements; neither reopens another rule level. That new WD certificate is
+explicitly unsupported by Lean replay as `WD/DvdKnownZeroRemainder`.
 
 ## Output languages
 

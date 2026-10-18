@@ -13,6 +13,8 @@ const LITERAL: &str = "$is_set(fn(x R: x != 0) R {x}(2))\n";
 const EQUALITY_ALIAS: &str = "let call_alias = fn(x R) R {x}\n$is_set(call_alias(2))\n";
 const TWO_GUARDS: &str =
     "have fn call_two_guards(x R: x != 0, x > 0) R = x\n$is_set(call_two_guards(2))\n";
+const OR_GUARD: &str = "have fn call_either_nonzero(x, y R: x != 0 or y != 0) R = x + y\n$is_set(call_either_nonzero(0, 2))\n";
+const COMPOUND_OR_GUARD: &str = "have fn call_or_compound(x R: 0 < x < 3 or x = 4 and x != 0) R = x\n$is_set(call_or_compound(2))\n";
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {
@@ -242,6 +244,76 @@ fn function_call_output_law_consumes_all_ordered_guard_clauses() {
     compiler
         .compile_run(&result, "two_guard_call")
         .expect("full constructor consumes the entire conjunction");
+}
+
+#[test]
+fn function_call_replays_exact_disjunction_guard_substitution() {
+    for (source, guard_index, namespace) in [
+        (OR_GUARD, 2, "atomic_or_guard"),
+        (COMPOUND_OR_GUARD, 1, "compound_or_guard"),
+    ] {
+        let (result, compiler) = checked(source);
+        let (_, _, proof) = call_parts(call_atomic(&result, 1));
+        let Fact::OrFact(guard) =
+            super::helper::source_subject(&proof.requirement_fact_verified[guard_index]).unwrap()
+        else {
+            panic!("the recorded call guard is a disjunction");
+        };
+        assert_eq!(guard.facts.len(), 2);
+        if source == COMPOUND_OR_GUARD {
+            assert!(matches!(guard.facts[0], AndChainAtomicFact::ChainFact(_)));
+            assert!(matches!(guard.facts[1], AndChainAtomicFact::AndFact(_)));
+        }
+        let (_, output, _) = compile_leaf(&result, &compiler, 1)
+            .expect("the actual ordered disjunction guard instantiates its recorded binders");
+        assert_eq!(output, StandardSet::R);
+        compiler
+            .compile_run(&result, namespace)
+            .expect("the complete constructor replays the original disjunction proof");
+    }
+}
+
+fn or_guard_mut(result: &mut RunLitexCodeResult) -> &mut OrFact {
+    let VerifyFactResult::OrFact(guard) =
+        &mut call_evidence_mut(result, 1).requirement_fact_verified[2]
+    else {
+        panic!("actual disjunction guard result");
+    };
+    let VerifyOrFactResult::Success(guard) = guard.as_mut() else {
+        panic!("successful original disjunction guard");
+    };
+    &mut guard.fact
+}
+
+#[test]
+fn function_call_rejects_reordered_disjunction_guard_branches() {
+    let (mut result, compiler) = checked(OR_GUARD);
+    or_guard_mut(&mut result).facts.swap(0, 1);
+    assert_eq!(
+        compile_leaf(&result, &compiler, 1).unwrap_err().route,
+        "WD/FnObj/GuardSubject"
+    );
+}
+
+#[test]
+fn function_call_rejects_a_missing_disjunction_guard_branch() {
+    let (mut result, compiler) = checked(OR_GUARD);
+    or_guard_mut(&mut result).facts.pop();
+    assert_eq!(
+        compile_leaf(&result, &compiler, 1).unwrap_err().route,
+        "WD/FnObj/GuardSubject"
+    );
+}
+
+#[test]
+fn function_call_rejects_a_disjunction_guard_branch_for_another_argument() {
+    let (mut result, compiler) = checked(OR_GUARD);
+    let guard = or_guard_mut(&mut result);
+    guard.facts[1] = guard.facts[0].clone();
+    assert_eq!(
+        compile_leaf(&result, &compiler, 1).unwrap_err().route,
+        "WD/FnObj/GuardSubject"
+    );
 }
 
 #[test]

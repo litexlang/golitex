@@ -1,3 +1,4 @@
+# Zero-remainder compatibility: DvdZeroRemainder delegates to the native $dvd rule.
 # Before: the exact mathematical target failed proof search.
 # forall m,n N:
 #     m<=n

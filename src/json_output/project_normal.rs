@@ -376,6 +376,10 @@ fn why_from_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(_) => {
+            searched_proof_why_json(runtime, "by_definition")
+        }
+
         AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_) => {
             searched_proof_why_json(runtime, "structural_membership")
         }

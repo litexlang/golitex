@@ -176,8 +176,8 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Example: known `x < 4` proves `x < 6`.
     NumericUpperBoundWeakenLt(NumericUpperBoundWeakenLtBuiltinRuleProof),
     // Positive even integer exceeds one.
-    // Mathematical property: `i $in N+` and `i % 2 = 0` ⇒ `1 < i`.
-    // Example: after `have i N+` and `trust i % 2 = 0`, prove `1 < i`.
+    // Mathematical property: `i $in N+` and `$dvd(i, 2)` ⇒ `1 < i`.
+    // Example: after `have i N+` and `trust $dvd(i, 2)`, prove `1 < i`.
     PositiveEvenGtOne(PositiveEvenGtOneBuiltinRuleProof),
     // Right addend congruence (strict): `a < b` ⇒ `a + c < b + c`.
     // Example: known `x < y` proves `x + 1 < y + 1`.

@@ -1,3 +1,4 @@
+# Zero-remainder compatibility: DvdZeroRemainder delegates to the native $dvd rule.
 # Parent equality WD requires an integer nonzero modulus.
 # The unselected lcm operand is allowed to be zero.
 forall a,b Z*:

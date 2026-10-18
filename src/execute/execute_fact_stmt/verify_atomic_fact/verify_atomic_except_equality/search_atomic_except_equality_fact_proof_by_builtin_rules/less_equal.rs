@@ -458,8 +458,8 @@ pub struct IntegerDiffAtLeastOneLeBuiltinRuleProof {
 
 pub struct PositiveCommonDivisorLeGcdBuiltinRuleProof {
     pub divisor_in_n_pos_proof: VerifyFactResult,
-    pub left_remainder_zero_proof: VerifyFactResult,
-    pub right_remainder_zero_proof: VerifyFactResult,
+    pub left_divisibility_proof: VerifyFactResult,
+    pub right_divisibility_proof: VerifyFactResult,
 }
 
 pub struct FiniteSetMaxMemberLeBuiltinRuleProof {

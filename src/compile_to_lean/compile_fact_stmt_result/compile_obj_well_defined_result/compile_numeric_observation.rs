@@ -366,25 +366,36 @@ impl LitexToLeanCompiler {
                 proof: ObjWellDefinedProofByDef::FnObj(_),
             } => {
                 let (call, output, member) = self.numeric_function_output_wd(wd, position)?;
-                let complex = match output {
-                    StandardSet::N => format!("(Litex.naturalToComplex {call} {member})"),
-                    StandardSet::Z => format!("(Litex.integerToComplex {call} {member})"),
-                    StandardSet::Q => format!("(Litex.rationalToComplex {call} {member})"),
-                    StandardSet::R => format!("(Litex.realToComplex {call} {member})"),
-                    StandardSet::RPos => format!("(Litex.positiveRealToComplex {call} {member})"),
-                    StandardSet::C => member,
+                let (carrier, bridge) = match output {
+                    StandardSet::N => ("N", Some("naturalToComplex")),
+                    StandardSet::Z => ("Z", Some("integerToComplex")),
+                    StandardSet::Q => ("Q", Some("rationalToComplex")),
+                    StandardSet::R => ("R", Some("realToComplex")),
+                    StandardSet::RPos => ("RPos", Some("positiveRealToComplex")),
+                    StandardSet::C => ("C", None),
                     _ => {
                         return Err(LeanCompileError::unsupported(
                             "Arithmetic/FunctionOutputCarrier",
                         ))
                     }
                 };
-                // The term is this actual constructor, so observing its return
-                // law never asks the current WD cursor to rediscover itself.
+                let member =
+                    format!("(show Litex.In _litex_numeric_call Litex.{carrier} from {member})");
+                let complex = match bridge {
+                    Some(bridge) => {
+                        format!("(Litex.{bridge} _litex_numeric_call {member})")
+                    }
+                    None => member,
+                };
+                // Keep the original constructor and return law, sharing the
+                // constructor locally instead of repeating its full WD term.
+                let setup = format!(
+                    "let _litex_numeric_call := {call}\n  have _litex_numeric_member : Litex.In _litex_numeric_call Litex.C := {complex}"
+                );
                 Ok((
-                    format!("(Litex.NativeBridge.asComplex {call} {complex})"),
-                    format!("(Litex.NativeBridge.asComplex_spec {call} {complex})"),
-                    complex,
+                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex _litex_numeric_call _litex_numeric_member)"),
+                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex_spec _litex_numeric_call _litex_numeric_member)"),
+                    format!("(by\n  {setup}\n  exact _litex_numeric_member)"),
                     None,
                 ))
             }

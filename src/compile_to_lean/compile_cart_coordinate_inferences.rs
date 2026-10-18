@@ -147,6 +147,67 @@ mod tests {
         }
     }
 
+    fn membership_store(result: &RunLitexCodeResult) -> &StoreFactAndInferResult {
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(proof),
+            ),
+        )) = &result.statement_results[0]
+        else {
+            panic!("original parameter declaration")
+        };
+        &proof.store_and_infer_result.store_and_infer_results[0]
+    }
+
+    #[test]
+    fn cart_projection_constructor_replays_the_original_prop_inference_owner() {
+        let (result, compiler) = checked();
+        let (_, _, proof) = capture(&result);
+        let store = &proof.coordinates[0].membership.store;
+        let StoreFactResult::AtomicFact(stored) = store else {
+            panic!("original coordinate membership")
+        };
+        let AtomicFact::InFact(member) = &stored.fact else {
+            panic!("original coordinate membership")
+        };
+        let root = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+        let current = SourcePosition::new(
+            Some(&root),
+            SourceOwner::PropInference(membership_store(&result)),
+            1,
+        );
+        let term = compiler
+            .compile_cart_inferred_subject(&member.element, store, &current)
+            .unwrap()
+            .expect("the completed original projection supplies its constructor");
+        assert!(term.contains("Litex.cartCall"));
+    }
+
+    #[test]
+    fn cart_projection_prop_owner_rejects_same_id_with_another_factor() {
+        let (result, compiler) = checked();
+        let (_, _, proof) = capture(&result);
+        let mut projection = copy_projection(&proof.coordinates[0]);
+        let StoreFactResult::AtomicFact(stored) = &mut projection.membership.store else {
+            panic!("original coordinate membership")
+        };
+        let AtomicFact::InFact(member) = &mut stored.fact else {
+            panic!("original coordinate membership")
+        };
+        member.set = Obj::StandardSet(StandardSet::Q);
+        let object = member.element.clone();
+        let root = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+        let current = SourcePosition::new(
+            Some(&root),
+            SourceOwner::PropInference(membership_store(&result)),
+            1,
+        );
+        let error = compiler
+            .compile_cart_inferred_subject(&object, &projection.membership.store, &current)
+            .unwrap_err();
+        assert!(error.to_string().contains("CartInference/Subject"));
+    }
+
     #[test]
     fn cart_projection_emits_each_original_coordinate_once() {
         let (result, compiler) = checked();

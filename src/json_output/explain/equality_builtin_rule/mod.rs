@@ -4,14 +4,12 @@
 
 mod add_zero_from_equalities;
 mod calculation;
-mod common_obj_relations;
 mod constructor_order;
 mod elementary_definitions;
 mod exponential_logarithm_identities;
 mod finite_partition;
 mod finite_set_reindex;
 mod finite_subset_size;
-mod lcm_divisibility;
 mod leaves;
 mod native_fixed_base;
 mod native_operations;
@@ -26,6 +24,7 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_en(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
@@ -76,11 +75,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_en(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_en(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_en(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_en(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_en(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_en(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_en(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_en(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_en(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_en(),
 
@@ -139,8 +133,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_en(),
             Self::LogReciprocal(p) => p.rule_name_and_message_en(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_en(),
-            Self::ZeroMod(p) => p.rule_name_and_message_en(),
-            Self::ModOne(p) => p.rule_name_and_message_en(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_en(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_en(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_en(),
@@ -153,7 +145,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_en(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_en(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_en(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_en(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_en(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_en(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_en(),
@@ -174,8 +165,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_en(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_en(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_en(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_en(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_en(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_en(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_en(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_en(),
@@ -186,7 +175,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_en(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_en(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_en(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_en(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_en(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_en(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_en(),
@@ -301,6 +289,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_zh(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
@@ -351,11 +340,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_zh(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_zh(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_zh(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_zh(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_zh(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_zh(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_zh(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_zh(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_zh(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_zh(),
 
@@ -414,8 +398,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_zh(),
             Self::LogReciprocal(p) => p.rule_name_and_message_zh(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_zh(),
-            Self::ZeroMod(p) => p.rule_name_and_message_zh(),
-            Self::ModOne(p) => p.rule_name_and_message_zh(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_zh(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_zh(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_zh(),
@@ -428,7 +410,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_zh(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_zh(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_zh(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_zh(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_zh(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_zh(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_zh(),
@@ -449,8 +430,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_zh(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_zh(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_zh(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_zh(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_zh(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_zh(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_zh(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_zh(),
@@ -461,7 +440,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_zh(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_zh(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_zh(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_zh(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_zh(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_zh(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_zh(),
@@ -576,6 +554,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_zh_hant(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
             }
@@ -626,11 +605,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_zh_hant(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_zh_hant(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_zh_hant(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_zh_hant(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_zh_hant(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_zh_hant(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_zh_hant(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_zh_hant(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_zh_hant(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_zh_hant(),
 
@@ -689,8 +663,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_zh_hant(),
             Self::LogReciprocal(p) => p.rule_name_and_message_zh_hant(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_zh_hant(),
-            Self::ZeroMod(p) => p.rule_name_and_message_zh_hant(),
-            Self::ModOne(p) => p.rule_name_and_message_zh_hant(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_zh_hant(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_zh_hant(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_zh_hant(),
@@ -703,7 +675,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_zh_hant(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_zh_hant(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_zh_hant(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_zh_hant(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_zh_hant(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_zh_hant(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_zh_hant(),
@@ -724,8 +695,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_zh_hant(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_zh_hant(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_zh_hant(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_zh_hant(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_zh_hant(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_zh_hant(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_zh_hant(),
@@ -736,7 +705,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_zh_hant(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_zh_hant(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_zh_hant(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_zh_hant(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_zh_hant(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_zh_hant(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_zh_hant(),
@@ -851,6 +819,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_fr(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
             }
@@ -901,11 +870,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_fr(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_fr(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_fr(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_fr(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_fr(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_fr(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_fr(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_fr(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_fr(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_fr(),
 
@@ -964,8 +928,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_fr(),
             Self::LogReciprocal(p) => p.rule_name_and_message_fr(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_fr(),
-            Self::ZeroMod(p) => p.rule_name_and_message_fr(),
-            Self::ModOne(p) => p.rule_name_and_message_fr(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_fr(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_fr(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_fr(),
@@ -978,7 +940,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_fr(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_fr(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_fr(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_fr(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_fr(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_fr(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_fr(),
@@ -999,8 +960,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_fr(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_fr(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_fr(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_fr(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_fr(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_fr(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_fr(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_fr(),
@@ -1011,7 +970,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_fr(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_fr(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_fr(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_fr(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_fr(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_fr(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_fr(),
@@ -1128,6 +1086,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ru(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
             }
@@ -1178,11 +1137,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_ru(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_ru(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_ru(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_ru(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_ru(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_ru(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ru(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ru(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ru(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ru(),
 
@@ -1241,8 +1195,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_ru(),
             Self::LogReciprocal(p) => p.rule_name_and_message_ru(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_ru(),
-            Self::ZeroMod(p) => p.rule_name_and_message_ru(),
-            Self::ModOne(p) => p.rule_name_and_message_ru(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_ru(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_ru(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_ru(),
@@ -1255,7 +1207,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_ru(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_ru(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_ru(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_ru(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_ru(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_ru(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_ru(),
@@ -1276,8 +1227,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_ru(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_ru(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_ru(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_ru(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_ru(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_ru(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_ru(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_ru(),
@@ -1288,7 +1237,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_ru(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_ru(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_ru(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_ru(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_ru(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_ru(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_ru(),
@@ -1404,6 +1352,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_es(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
             }
@@ -1454,11 +1403,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_es(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_es(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_es(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_es(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_es(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_es(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_es(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_es(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_es(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_es(),
 
@@ -1517,8 +1461,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_es(),
             Self::LogReciprocal(p) => p.rule_name_and_message_es(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_es(),
-            Self::ZeroMod(p) => p.rule_name_and_message_es(),
-            Self::ModOne(p) => p.rule_name_and_message_es(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_es(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_es(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_es(),
@@ -1531,7 +1473,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_es(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_es(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_es(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_es(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_es(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_es(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_es(),
@@ -1552,8 +1493,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_es(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_es(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_es(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_es(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_es(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_es(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_es(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_es(),
@@ -1564,7 +1503,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_es(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_es(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_es(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_es(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_es(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_es(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_es(),
@@ -1681,6 +1619,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ar(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
             }
@@ -1731,11 +1670,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_ar(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_ar(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_ar(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_ar(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_ar(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_ar(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ar(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ar(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ar(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ar(),
 
@@ -1794,8 +1728,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_ar(),
             Self::LogReciprocal(p) => p.rule_name_and_message_ar(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_ar(),
-            Self::ZeroMod(p) => p.rule_name_and_message_ar(),
-            Self::ModOne(p) => p.rule_name_and_message_ar(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_ar(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_ar(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_ar(),
@@ -1808,7 +1740,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_ar(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_ar(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_ar(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_ar(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_ar(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_ar(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_ar(),
@@ -1829,8 +1760,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_ar(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_ar(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_ar(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_ar(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_ar(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_ar(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_ar(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_ar(),
@@ -1841,7 +1770,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_ar(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_ar(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_ar(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_ar(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_ar(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_ar(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_ar(),
@@ -1956,6 +1884,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ja(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
             }
@@ -2006,11 +1935,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_ja(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_ja(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_ja(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_ja(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_ja(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_ja(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ja(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ja(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ja(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ja(),
 
@@ -2069,8 +1993,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_ja(),
             Self::LogReciprocal(p) => p.rule_name_and_message_ja(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_ja(),
-            Self::ZeroMod(p) => p.rule_name_and_message_ja(),
-            Self::ModOne(p) => p.rule_name_and_message_ja(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_ja(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_ja(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_ja(),
@@ -2083,7 +2005,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_ja(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_ja(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_ja(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_ja(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_ja(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_ja(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_ja(),
@@ -2104,8 +2025,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_ja(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_ja(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_ja(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_ja(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_ja(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_ja(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_ja(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_ja(),
@@ -2116,7 +2035,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_ja(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_ja(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_ja(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_ja(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_ja(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_ja(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_ja(),
@@ -2231,6 +2149,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ko(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
             }
@@ -2281,11 +2200,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_ko(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_ko(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_ko(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_ko(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_ko(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_ko(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_ko(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_ko(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_ko(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_ko(),
 
@@ -2344,8 +2258,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_ko(),
             Self::LogReciprocal(p) => p.rule_name_and_message_ko(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_ko(),
-            Self::ZeroMod(p) => p.rule_name_and_message_ko(),
-            Self::ModOne(p) => p.rule_name_and_message_ko(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_ko(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_ko(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_ko(),
@@ -2358,7 +2270,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_ko(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_ko(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_ko(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_ko(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_ko(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_ko(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_ko(),
@@ -2379,8 +2290,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_ko(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_ko(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_ko(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_ko(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_ko(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_ko(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_ko(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_ko(),
@@ -2391,7 +2300,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_ko(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_ko(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_ko(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_ko(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_ko(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_ko(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_ko(),
@@ -2506,6 +2414,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_vi(),
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
             }
@@ -2556,11 +2465,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::RangeSize(p) => p.rule_name_and_message_vi(),
             Self::ClosedRangeSize(p) => p.rule_name_and_message_vi(),
             Self::EuclideanRemainder(p) => p.rule_name_and_message_vi(),
-            Self::GcdCommonDivisor(p) => p.rule_name_and_message_vi(),
-            Self::LcmCommonMultiple(p) => p.rule_name_and_message_vi(),
-            Self::FactorialDivisibility(p) => p.rule_name_and_message_vi(),
-            Self::LcmLeftAbsDivisibility(p) => p.rule_name_and_message_vi(),
-            Self::LcmRightAbsDivisibility(p) => p.rule_name_and_message_vi(),
             Self::FiniteSetProductReindex(p) => p.rule_name_and_message_vi(),
             Self::FiniteSetReduceReindex(p) => p.rule_name_and_message_vi(),
 
@@ -2619,8 +2523,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LogQuotient(p) => p.rule_name_and_message_vi(),
             Self::LogReciprocal(p) => p.rule_name_and_message_vi(),
             Self::LogChangeOfBase(p) => p.rule_name_and_message_vi(),
-            Self::ZeroMod(p) => p.rule_name_and_message_vi(),
-            Self::ModOne(p) => p.rule_name_and_message_vi(),
             Self::OneModAtLeastTwo(p) => p.rule_name_and_message_vi(),
             Self::NestedSameModAbsorption(p) => p.rule_name_and_message_vi(),
             Self::ModCompatibleSmallerModulus(p) => p.rule_name_and_message_vi(),
@@ -2633,7 +2535,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::LnOfExp(p) => p.rule_name_and_message_vi(),
             Self::FloorOfInteger(p) => p.rule_name_and_message_vi(),
             Self::CeilOfInteger(p) => p.rule_name_and_message_vi(),
-            Self::ModSelfZero(p) => p.rule_name_and_message_vi(),
             Self::FloorOfCeilOfInteger(p) => p.rule_name_and_message_vi(),
             Self::CeilOfFloorOfInteger(p) => p.rule_name_and_message_vi(),
             Self::SqrtOfSquareEqualsAbs(p) => p.rule_name_and_message_vi(),
@@ -2654,8 +2555,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::MaxLeftWhenLessEqual(p) => p.rule_name_and_message_vi(),
             Self::MinLeftWhenLessEqual(p) => p.rule_name_and_message_vi(),
             Self::MinRightWhenLessEqual(p) => p.rule_name_and_message_vi(),
-            Self::GcdDividesArgument(p) => p.rule_name_and_message_vi(),
-            Self::ProductModFactorZero(p) => p.rule_name_and_message_vi(),
             Self::EqualityFromTwoSidedWeakOrder(p) => p.rule_name_and_message_vi(),
             Self::DiffZeroFromEqualOperands(p) => p.rule_name_and_message_vi(),
             Self::EqualFromKnownDifferenceZero(p) => p.rule_name_and_message_vi(),
@@ -2666,7 +2565,6 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SignOfProduct(p) => p.rule_name_and_message_vi(),
             Self::SubtractionFromKnownAddition(p) => p.rule_name_and_message_vi(),
             Self::QuotEuclideanDecomposition(p) => p.rule_name_and_message_vi(),
-            Self::ModDividendMinusRemainderZero(p) => p.rule_name_and_message_vi(),
             Self::SquareSumComponentZero(p) => p.rule_name_and_message_vi(),
             Self::MinusOneOddNaturalPower(p) => p.rule_name_and_message_vi(),
             Self::LcmGcdProductAbs(p) => p.rule_name_and_message_vi(),
@@ -2796,6 +2694,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::DvdZeroRemainder(_) => None,
             Self::FiniteSeqReconstruction(p) => Some(p.membership.fact_id),
             Self::EqualFromKnownDifferenceZero(p) => Some(p.cite_fact_id),
             _ => None,

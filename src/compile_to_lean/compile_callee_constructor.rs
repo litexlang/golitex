@@ -220,7 +220,7 @@ impl LitexToLeanCompiler {
     }
 }
 
-fn exact_constructor_pattern<'a>(
+pub(in crate::compile_to_lean) fn exact_constructor_pattern<'a>(
     pattern: &'a Obj,
     object: &Obj,
     substitution: &HashMap<IdentifierId, Obj>,
