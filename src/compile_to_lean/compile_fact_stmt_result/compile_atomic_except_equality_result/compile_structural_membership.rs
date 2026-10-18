@@ -129,6 +129,9 @@ impl LitexToLeanCompiler {
             StructuralMembershipReason::Div { left, right } => {
                 self.compile_structural_binary(proof, left, right, BinaryArithmetic::Div, position)
             }
+            StructuralMembershipReason::ExactIntegerDiv { .. } => Err(
+                LeanCompileError::unsupported("StructuralMembership/ExactIntegerDiv"),
+            ),
             StructuralMembershipReason::Neg { argument } => {
                 let operand = match &proof.element {
                     Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => x.arg.as_ref(),

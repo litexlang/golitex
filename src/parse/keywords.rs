@@ -230,6 +230,16 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | COS
             | TAN
             | COT
+            | SEC
+            | CSC
+            | CONJ
+            | SINH
+            | COSH
+            | TANH
+            | COTH
+            | SECH
+            | CSCH
+            | SYM_DIFF
             | ARCSIN
             | ARCCOS
             | ARCTAN
@@ -282,3 +292,14 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | LET
     )
 }
+
+pub const SEC: &str = "sec";
+pub const CSC: &str = "csc";
+pub const CONJ: &str = "conj";
+pub const SINH: &str = "sinh";
+pub const COSH: &str = "cosh";
+pub const TANH: &str = "tanh";
+pub const COTH: &str = "coth";
+pub const SECH: &str = "sech";
+pub const CSCH: &str = "csch";
+pub const SYM_DIFF: &str = "sym_diff";

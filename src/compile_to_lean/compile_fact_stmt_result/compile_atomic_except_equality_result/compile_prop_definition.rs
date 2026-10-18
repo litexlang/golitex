@@ -153,11 +153,24 @@ impl LitexToLeanCompiler {
         fact: &AtomicFact,
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
+        let negative_view;
         let (normal, predicate, arity) = match (fact, signature) {
             (
                 AtomicFact::NormalAtomicFact(normal),
                 PredicateSignatureWellDefinedProof::Prop { predicate, arity },
             ) => (normal, predicate, arity),
+            (
+                AtomicFact::NotNormalAtomicFact(normal),
+                PredicateSignatureWellDefinedProof::Prop { predicate, arity },
+            ) => {
+                negative_view = NormalAtomicFact {
+                    fact_id: normal.fact_id,
+                    predicate: normal.predicate.clone(),
+                    body: normal.body.clone(),
+                    line_file: normal.line_file.clone(),
+                };
+                (&negative_view, predicate, arity)
+            }
             _ => {
                 return Err(LeanCompileError::new(
                     "Prop/SignatureFamily",
@@ -363,7 +376,7 @@ impl LitexToLeanCompiler {
                     )
                 };
                 let member = (self.fact_proposition(&fact, &formed)?, proof);
-                declarations.push(self.emit_internal_fact(&fact, &member, position));
+                declarations.push(self.emit_internal_fact(&fact, &member, position)?);
                 declarations.extend(self.compile_stored_projections(
                     &derived.store,
                     &fact,

@@ -114,7 +114,7 @@ impl LitexToLeanCompiler {
             self.fact_proposition(&membership, &after_member)?,
             format!("(Litex.formulaFnInFnSet {object})"),
         );
-        let member_declaration = self.emit_internal_fact(&membership, &member, &after_member);
+        let member_declaration = self.emit_internal_fact(&membership, &member, &after_member)?;
 
         let after_equal = SourcePosition {
             before: 4,
@@ -129,7 +129,7 @@ impl LitexToLeanCompiler {
         );
         Ok(format!(
             "{declaration}\n{member_declaration}\n{}",
-            self.emit_internal_fact(&defining_equal, &equal, &after_equal)
+            self.emit_internal_fact(&defining_equal, &equal, &after_equal)?
         ))
     }
 }

@@ -1,6 +1,7 @@
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
+use crate::ast::obj::HyperbolicOperator;
 use crate::ast::obj::{
     ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace,
     IntegerOperator, IteratedOperator, Literal, Obj, ProductShape, SetFormer, SetOperator,
@@ -177,6 +178,68 @@ fn pack_success_by_def(
             ObjWellDefinedProofByDef::ArithmeticOperator(
                 ArithmeticOperatorObjWellDefinedProofByDef::Abs(
                     AbsObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::TrigOperator(TrigOperator::Sec(_)) => ObjWellDefinedProofByDef::TrigOperator(
+            TrigOperatorObjWellDefinedProofByDef::Sec(SecObjWellDefinedProof::from_stages(stages)),
+        ),
+        Obj::TrigOperator(TrigOperator::Csc(_)) => ObjWellDefinedProofByDef::TrigOperator(
+            TrigOperatorObjWellDefinedProofByDef::Csc(CscObjWellDefinedProof::from_stages(stages)),
+        ),
+        Obj::ComplexOperator(ComplexOperator::Conjugate(_)) => {
+            ObjWellDefinedProofByDef::ComplexOperator(
+                ComplexOperatorObjWellDefinedProofByDef::Conjugate(
+                    ConjugateObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(_)) => {
+            ObjWellDefinedProofByDef::HyperbolicOperator(
+                HyperbolicOperatorObjWellDefinedProofByDef::Sinh(
+                    SinhObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(_)) => {
+            ObjWellDefinedProofByDef::HyperbolicOperator(
+                HyperbolicOperatorObjWellDefinedProofByDef::Cosh(
+                    CoshObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(_)) => {
+            ObjWellDefinedProofByDef::HyperbolicOperator(
+                HyperbolicOperatorObjWellDefinedProofByDef::Tanh(
+                    TanhObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(_)) => {
+            ObjWellDefinedProofByDef::HyperbolicOperator(
+                HyperbolicOperatorObjWellDefinedProofByDef::Coth(
+                    CothObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(_)) => {
+            ObjWellDefinedProofByDef::HyperbolicOperator(
+                HyperbolicOperatorObjWellDefinedProofByDef::Sech(
+                    SechObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(_)) => {
+            ObjWellDefinedProofByDef::HyperbolicOperator(
+                HyperbolicOperatorObjWellDefinedProofByDef::Csch(
+                    CschObjWellDefinedProof::from_stages(stages),
+                ),
+            )
+        }
+        Obj::SetOperator(SetOperator::SymmetricDifference(_)) => {
+            ObjWellDefinedProofByDef::SetOperator(
+                SetOperatorObjWellDefinedProofByDef::SymmetricDifference(
+                    SymmetricDifferenceObjWellDefinedProof::from_stages(stages),
                 ),
             )
         }
@@ -600,6 +663,72 @@ pub(super) fn wrap_common_fail(
             FailToVerifyObjWellDefinedResult::ArithmeticOperator(
                 FailToVerifyArithmeticOperatorObjWellDefinedResult::Abs(
                     FailToVerifyAbsObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::TrigOperator(TrigOperator::Sec(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(
+            FailToVerifyTrigOperatorObjWellDefinedResult::Sec(FailToVerifySecObjWellDefined(
+                common,
+            )),
+        ),
+        Obj::TrigOperator(TrigOperator::Csc(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(
+            FailToVerifyTrigOperatorObjWellDefinedResult::Csc(FailToVerifyCscObjWellDefined(
+                common,
+            )),
+        ),
+        Obj::ComplexOperator(ComplexOperator::Conjugate(_)) => {
+            FailToVerifyObjWellDefinedResult::ComplexOperator(
+                FailToVerifyComplexOperatorObjWellDefinedResult::Conjugate(
+                    FailToVerifyConjugateObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(_)) => {
+            FailToVerifyObjWellDefinedResult::HyperbolicOperator(
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Sinh(
+                    FailToVerifySinhObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(_)) => {
+            FailToVerifyObjWellDefinedResult::HyperbolicOperator(
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Cosh(
+                    FailToVerifyCoshObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(_)) => {
+            FailToVerifyObjWellDefinedResult::HyperbolicOperator(
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Tanh(
+                    FailToVerifyTanhObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(_)) => {
+            FailToVerifyObjWellDefinedResult::HyperbolicOperator(
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Coth(
+                    FailToVerifyCothObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(_)) => {
+            FailToVerifyObjWellDefinedResult::HyperbolicOperator(
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Sech(
+                    FailToVerifySechObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(_)) => {
+            FailToVerifyObjWellDefinedResult::HyperbolicOperator(
+                FailToVerifyHyperbolicOperatorObjWellDefinedResult::Csch(
+                    FailToVerifyCschObjWellDefined(common),
+                ),
+            )
+        }
+        Obj::SetOperator(SetOperator::SymmetricDifference(_)) => {
+            FailToVerifyObjWellDefinedResult::SetOperator(
+                FailToVerifySetOperatorObjWellDefinedResult::SymmetricDifference(
+                    FailToVerifySymmetricDifferenceObjWellDefined(common),
                 ),
             )
         }

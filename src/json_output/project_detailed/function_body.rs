@@ -84,6 +84,127 @@ pub(super) fn project_parent_checked_function_body(
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentCheckedBetaFunctionBody;
     match proof {
+        ParentCheckedBetaFunctionBody::StructField(proof) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::struct_field_value::StructTupleValueSource;
+            let source = match &proof.source {
+                StructTupleValueSource::Known(p) => super::known_tuple::project_value(p, runtime),
+                StructTupleValueSource::Function(p) => object_for(
+                    runtime,
+                    vec![
+                        ("type", string("function_tuple")),
+                        (
+                            "function_equal",
+                            project_known_equality_path(&p.function_equal, runtime),
+                        ),
+                        (
+                            "applicability",
+                            super::known_tuple::project_function_applicability(p, runtime),
+                        ),
+                        (
+                            "value",
+                            string(
+                                Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(
+                                    p.value.clone(),
+                                ))
+                                .readable_string(),
+                            ),
+                        ),
+                    ],
+                ),
+                StructTupleValueSource::ReturnedFunction {
+                    body,
+                    application_well_defined,
+                    function,
+                } => object_for(
+                    runtime,
+                    vec![
+                        ("type", string("returned_function_tuple")),
+                        ("body", project_parent_checked_function_body(body, runtime)),
+                        (
+                            "application_well_defined",
+                            super::wd::project_obj_wd_proof(application_well_defined, runtime),
+                        ),
+                        (
+                            "function_equal",
+                            project_known_equality_path(&function.function_equal, runtime),
+                        ),
+                        (
+                            "applicability",
+                            super::known_tuple::project_function_applicability(function, runtime),
+                        ),
+                        (
+                            "value",
+                            string(
+                                Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(
+                                    function.value.clone(),
+                                ))
+                                .readable_string(),
+                            ),
+                        ),
+                    ],
+                ),
+                StructTupleValueSource::Template { instance, value } => object_for(
+                    runtime,
+                    vec![
+                        ("type", string("template_tuple")),
+                        (
+                            "instance",
+                            string(
+                                Obj::InstantiatedTemplateObj(instance.clone()).readable_string(),
+                            ),
+                        ),
+                        (
+                            "value",
+                            string(
+                                Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(
+                                    value.clone(),
+                                ))
+                                .readable_string(),
+                            ),
+                        ),
+                    ],
+                ),
+                StructTupleValueSource::Returned { body, value } => object_for(
+                    runtime,
+                    vec![
+                        ("type", string("returned_tuple")),
+                        ("body", project_parent_checked_function_body(body, runtime)),
+                        (
+                            "value",
+                            string(
+                                Obj::ProductShape(crate::ast::obj::ProductShape::Tuple(
+                                    value.clone(),
+                                ))
+                                .readable_string(),
+                            ),
+                        ),
+                    ],
+                ),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("struct_field_value")),
+                    (
+                        "receiver_well_defined",
+                        super::wd::project_obj_wd_proof(&proof.receiver_well_defined, runtime),
+                    ),
+                    (
+                        "carrier",
+                        string(
+                            Obj::StructAndFieldAccessObj(
+                                crate::ast::obj::StructAndFieldAccessObj::StructObj(
+                                    proof.carrier.clone(),
+                                ),
+                            )
+                            .readable_string(),
+                        ),
+                    ),
+                    ("index", string(proof.index.to_string())),
+                    ("source", source),
+                ],
+            )
+        }
         ParentCheckedBetaFunctionBody::KnownFiniteFunctionCoordinate { source, index } => {
             object_for(
                 runtime,

@@ -81,6 +81,10 @@ fn coordinates(obj: &Obj, depth: usize) -> Option<(EvalRational, EvalRational)> 
         return Some((real, EvalRational::new(0, 1)?));
     }
     match obj {
+        Obj::ComplexOperator(ComplexOperator::Conjugate(value)) => {
+            let (real, imaginary) = coordinates(&value.arg, depth + 1)?;
+            Some((real, EvalRational::new(0, 1)?.sub(&imaginary)?))
+        }
         Obj::Literal(Literal::ImaginaryUnit(_)) => {
             Some((EvalRational::new(0, 1)?, EvalRational::new(1, 1)?))
         }

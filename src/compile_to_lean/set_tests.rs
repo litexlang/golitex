@@ -10,6 +10,41 @@ fn execute(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
 }
 
 #[test]
+fn union_and_power_set_membership_replay_the_selected_premises() {
+    let (result, compiler) = execute("1 $in union(R, C)\nR $in power_set(R)\n");
+    let lean = compiler.compile_run(&result, "set_operators").unwrap();
+    assert!(lean.contains("Litex.inUnion_iff"));
+    assert!(lean.contains("Litex.inPowerSet_iff"));
+    assert!(!lean.contains("sorry"));
+}
+
+#[test]
+fn union_formation_rejects_a_missing_original_operand() {
+    let (mut result, compiler) = execute("have U set = union(R, C)\n");
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(proof)),
+    )) = &mut result.statement_results[0]
+    else {
+        panic!("set alias");
+    };
+    let VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::SetOperator(
+            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetOperatorObjWellDefinedProofByDef::Union(wd)
+        ), ..
+    }) = &mut proof.equal_to_well_defined[0] else {
+        panic!("union constructor");
+    };
+    wd.child_obj_well_defined.pop();
+    assert_eq!(
+        compiler
+            .compile_run(&result, "missing_union_child")
+            .unwrap_err()
+            .route,
+        "SetOperator/Stages"
+    );
+}
+
+#[test]
 fn arbitrary_set_preserves_its_generic_carrier_and_exact_store() {
     let (result, compiler) = execute("have A set\n$is_set(A)\nA = A\n");
     let lean = compiler.compile_run(&result, "arbitrary_set").unwrap();

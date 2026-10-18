@@ -137,11 +137,20 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
     ) -> Option<Vec<(Obj, Obj, FactId)>> {
-        equivalence_class_path_in_adjacency(
-            &self.visible_equivalence_class_adjacency(),
-            left,
-            right,
-        )
+        super::equivalence_class_graph::equivalence_class_path_from_neighbors(left, right, |key| {
+            self.execution_environments_stack
+                .iter()
+                .rev()
+                .filter_map(|env| {
+                    env.facts
+                        .known_equivalence_classes
+                        .generating_edges
+                        .get(key)
+                })
+                .flatten()
+                .map(|(peer, fact)| (peer, fact))
+                .collect()
+        })
     }
 
     // Class keys across visible envs via generating-edge connectivity.

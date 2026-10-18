@@ -19,6 +19,7 @@ pub enum ObjWellDefinedProofByDef {
     ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef),
     IntegerOperator(IntegerOperatorObjWellDefinedProofByDef),
     TrigOperator(TrigOperatorObjWellDefinedProofByDef),
+    HyperbolicOperator(HyperbolicOperatorObjWellDefinedProofByDef),
     ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef),
     ComplexOperator(ComplexOperatorObjWellDefinedProofByDef),
     SetOperator(SetOperatorObjWellDefinedProofByDef),
@@ -62,6 +63,8 @@ pub enum IntegerOperatorObjWellDefinedProofByDef {
 }
 
 pub enum TrigOperatorObjWellDefinedProofByDef {
+    Csc(CscObjWellDefinedProof),
+    Sec(SecObjWellDefinedProof),
     Sin(SinObjWellDefinedProof),
     Cos(CosObjWellDefinedProof),
     Tan(TanObjWellDefinedProof),
@@ -80,12 +83,14 @@ pub enum ExpLogOperatorObjWellDefinedProofByDef {
 }
 
 pub enum ComplexOperatorObjWellDefinedProofByDef {
+    Conjugate(ConjugateObjWellDefinedProof),
     RealPart(RealPartObjWellDefinedProof),
     ImaginaryPart(ImaginaryPartObjWellDefinedProof),
     ComplexAbs(ComplexAbsObjWellDefinedProof),
 }
 
 pub enum SetOperatorObjWellDefinedProofByDef {
+    SymmetricDifference(SymmetricDifferenceObjWellDefinedProof),
     Union(UnionObjWellDefinedProof),
     Intersect(IntersectObjWellDefinedProof),
     SetMinus(SetMinusObjWellDefinedProof),
@@ -1290,4 +1295,173 @@ pub struct PreimageSetObjWellDefinedProof {
     pub requirement_fact_verified: Vec<VerifyFactResult>,
     pub construction:
         crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof,
+}
+
+pub enum HyperbolicOperatorObjWellDefinedProofByDef {
+    Sinh(SinhObjWellDefinedProof),
+    Cosh(CoshObjWellDefinedProof),
+    Tanh(TanhObjWellDefinedProof),
+    Coth(CothObjWellDefinedProof),
+    Sech(SechObjWellDefinedProof),
+    Csch(CschObjWellDefinedProof),
+}
+
+pub struct SecObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl SecObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct CscObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl CscObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct ConjugateObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl ConjugateObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct SinhObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl SinhObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct CoshObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl CoshObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct TanhObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl TanhObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct CothObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl CothObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct SechObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl SechObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct CschObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl CschObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
+}
+
+pub struct SymmetricDifferenceObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl SymmetricDifferenceObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        let (child_obj_well_defined, requirement_fact_verified) =
+            stages.into_success_child_proofs();
+        Self {
+            child_obj_well_defined,
+            requirement_fact_verified,
+        }
+    }
 }

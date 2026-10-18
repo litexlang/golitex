@@ -1,0 +1,39 @@
+# Before: union(set_minus(A,B),set_minus(B,A)) (write the expansion explicitly).
+# Now: native objects preserve domains and expose named builtin relationships.
+# Negative/domain controls: tests/unit/execute/native_latex_operations/tests.rs
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/symmetric_difference.lit
+
+forall A,B set:
+    sym_diff(A,B)=union(set_minus(A,B),set_minus(B,A))
+
+forall A,B set:
+    sym_diff(A,B)=sym_diff(B,A)
+
+forall A,B set:
+    sym_diff(sym_diff(A,B),B)=A
+
+forall A,B set:
+    sym_diff(A,B)=set_minus(union(A,B),intersect(A,B))
+
+forall A set:
+    sym_diff(A,A)={}
+
+forall A set:
+    sym_diff(A,{})=A
+
+forall A set:
+    sym_diff({},A)=A
+
+forall A,B,D set:
+    sym_diff(sym_diff(A,B),D)=sym_diff(A,sym_diff(B,D))
+
+forall A,B,D set:
+    intersect(A,sym_diff(B,D))=sym_diff(intersect(A,B),intersect(A,D))
+
+1 $in sym_diff({1,2},{2,3})
+
+3 $in sym_diff({1,2},{2,3})
+
+not 2 $in sym_diff({1,2},{2,3})
+
+not 4 $in sym_diff({1,2},{2,3})

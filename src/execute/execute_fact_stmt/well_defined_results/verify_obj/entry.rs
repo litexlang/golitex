@@ -7,6 +7,7 @@ use super::fail_to_verify_obj_well_defined::FailToVerifyObjWellDefinedResult;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::ObjWellDefinedProofByDef;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
+use crate::ast::obj::HyperbolicOperator;
 use crate::ast::obj::{
     ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FnObjHead, FunctionSpace,
     IntegerOperator, IteratedOperator, Literal, Obj, ProductShape, SetFormer, SetOperator,
@@ -266,6 +267,36 @@ impl Runtime {
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(value)) => {
                 self.verify_abs_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::TrigOperator(TrigOperator::Sec(value)) => {
+                self.verify_sec_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::TrigOperator(TrigOperator::Csc(value)) => {
+                self.verify_csc_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::ComplexOperator(ComplexOperator::Conjugate(value)) => {
+                self.verify_conj_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(value)) => {
+                self.verify_sinh_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(value)) => {
+                self.verify_cosh_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(value)) => {
+                self.verify_tanh_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(value)) => {
+                self.verify_coth_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(value)) => {
+                self.verify_sech_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(value)) => {
+                self.verify_csch_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::SetOperator(SetOperator::SymmetricDifference(value)) => {
+                self.verify_sym_diff_obj_well_definedness_by_def(value, verify_state)
             }
             Obj::TrigOperator(TrigOperator::Sin(value)) => {
                 self.verify_sin_obj_well_definedness_by_def(value, verify_state)

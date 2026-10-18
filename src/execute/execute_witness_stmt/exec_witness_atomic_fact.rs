@@ -25,6 +25,7 @@ use crate::ast::stmt::WitnessAtomicFact;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ExecStmtResult;
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
+use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
 use crate::runtime::{IdentifierId, Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -55,13 +56,15 @@ pub enum ExecWitnessAtomicFactStmtFailed {
     ExistCheck(ExecWitnessExistFactStmtFailed),
 }
 
-// Stage order: prop argument types → projected_exist → ambient → proof_steps
+// Stage order: prop argument types → projected_exist → ambient → binders → equalities → proof_steps
 // → obligations → local_env → store.
 pub struct ExecWitnessAtomicFactStmtSuccessResult {
     pub statement: WitnessAtomicFact,
     pub prop_argument_type_checks: Vec<VerifyFactResult>,
     pub projected_exist: ExistShapedFact,
     pub ambient: WitnessExistAmbientSuccess,
+    pub introduced_params: IntroduceTypedParametersResult,
+    pub witness_equalities: Vec<StoreFactAndInferResult>,
     pub proof_steps: Vec<ExecStmtResult>,
     pub obligations: WitnessExistObligationSuccess,
     pub local_env: Box<ExecEnv>,
@@ -159,20 +162,20 @@ impl Runtime {
             }
         };
 
-        let (ambient, proof_steps, obligations, local_env) = match self
-            .run_witness_exist_with_proof(
+        let (ambient, introduced_params, witness_equalities, proof_steps, obligations, local_env) =
+            match self.run_witness_exist_with_proof(
                 &projected_exist,
                 &stmt.witnesses,
                 &stmt.proof,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )? {
-            Ok(v) => v,
-            Err(failed) => {
-                return Ok(ExecWitnessAtomicFactStmtResult::Failed(
-                    ExecWitnessAtomicFactStmtFailed::ExistCheck(failed),
-                ));
-            }
-        };
+                Ok(v) => v,
+                Err(failed) => {
+                    return Ok(ExecWitnessAtomicFactStmtResult::Failed(
+                        ExecWitnessAtomicFactStmtFailed::ExistCheck(failed),
+                    ));
+                }
+            };
 
         let atomic_as_fact =
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(stmt.atomic_fact.clone()));
@@ -187,6 +190,8 @@ impl Runtime {
                 prop_argument_type_checks,
                 projected_exist,
                 ambient,
+                introduced_params,
+                witness_equalities,
                 proof_steps,
                 obligations,
                 local_env,

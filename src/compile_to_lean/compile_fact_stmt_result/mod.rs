@@ -1,5 +1,6 @@
 mod compile_atomic_except_equality_result;
 mod compile_equality_result;
+mod compile_exist_fact_result;
 mod compile_fact_stmt_result;
 mod compile_forall_fact_result;
 mod compile_obj_well_defined_result;

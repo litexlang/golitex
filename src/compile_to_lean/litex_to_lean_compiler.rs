@@ -9,6 +9,7 @@ use crate::execute::execute_by_stmt::{
 use crate::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactResult;
 use crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult;
 use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
+use crate::execute::execute_witness_stmt::{ExecWitnessExistFactStmtResult, ExecWitnessStmtResult};
 use crate::execute::ExecDefPropStmtResult;
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
@@ -91,7 +92,23 @@ impl LitexToLeanCompiler {
 
 fn object_uses_functions(object: &Obj) -> bool {
     match object {
-        Obj::FnObj(_) | Obj::FunctionSpace(_) => true,
+        Obj::FnObj(_) | Obj::FunctionSpace(_) | Obj::ProductShape(_) => true,
+        Obj::SetFormer(SetFormer::ListSet(set)) => {
+            set.list.iter().any(|item| object_uses_functions(item))
+        }
+        Obj::SetFormer(SetFormer::SetBuilder(set)) => {
+            object_uses_functions(&set.param_set)
+                || set.facts.iter().any(|fact| {
+                    fact_uses_functions(&crate::instantiate::quantifier_free_fact_to_fact(
+                        fact.clone(),
+                    ))
+                })
+        }
+        Obj::SetFormer(SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_)) => true,
+        Obj::SetOperator(SetOperator::PowerSet(set)) => object_uses_functions(&set.set),
+        Obj::SetOperator(SetOperator::Union(set)) => {
+            object_uses_functions(&set.left) || object_uses_functions(&set.right)
+        }
         Obj::ArithmeticOperator(operation) => match operation {
             ArithmeticOperator::Add(x) => {
                 object_uses_functions(&x.left) || object_uses_functions(&x.right)
@@ -131,8 +148,17 @@ fn fact_uses_functions(fact: &Fact) -> bool {
             .facts
             .iter()
             .any(|branch| fact_uses_functions(&crate::ast::fact::and_chain_as_fact(branch))),
+        Fact::ExistFact(fact) | Fact::ExistUniqueFact(fact) | Fact::NotExistFact(fact) => {
+            fact.typed_parameters.groups.iter().any(|group| {
+                matches!(&group.param_type, ParamType::Obj(carrier) if object_uses_functions(carrier))
+            }) || fact.facts.iter().any(|clause| {
+                fact_uses_functions(&crate::instantiate::quantifier_free_fact_to_fact(clause.clone()))
+            })
+        }
         Fact::ForallFact(fact) => {
-            fact.dom_facts.iter().any(fact_uses_functions)
+            fact.typed_parameters.groups.iter().any(|group| {
+                matches!(&group.param_type, ParamType::Obj(carrier) if object_uses_functions(carrier))
+            }) || fact.dom_facts.iter().any(fact_uses_functions)
                 || fact.then_facts.iter().any(|fact| match fact {
                     ExistOrAndChainAtomicFact::AtomicFact(fact) => atomic_fact_args_ref(fact)
                         .into_iter()
@@ -148,7 +174,11 @@ fn fact_uses_functions(fact: &Fact) -> bool {
                     ExistOrAndChainAtomicFact::OrFact(fact) => {
                         fact_uses_functions(&Fact::OrFact(fact.clone()))
                     }
-                    _ => false,
+                    ExistOrAndChainAtomicFact::ExistFact(fact)
+                    | ExistOrAndChainAtomicFact::ExistUniqueFact(fact)
+                    | ExistOrAndChainAtomicFact::NotExistFact(fact) => {
+                        fact_uses_functions(&Fact::ExistFact(fact.clone()))
+                    }
                 })
         }
         _ => false,
@@ -157,6 +187,12 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(ExecWitnessExistFactStmtResult::Success(proof))) => {
+            fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.statement.exist_shaped_fact_in_witness))
+                || proof.statement.equal_tos.iter().any(object_uses_functions)
+                || proof.proof_steps.iter().any(statement_uses_functions)
+        }
+
         ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
             ExecClaimStmtResult::Success(proof),
         )) => {
@@ -201,6 +237,13 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
             .objs_equal_to
             .iter()
             .any(object_uses_functions),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(proof),
+            ),
+        )) => proof.statement.param_def.groups.iter().any(|group| {
+            matches!(&group.param_type, ParamType::Obj(carrier) if object_uses_functions(carrier))
+        }),
         _ => false,
     }
 }
@@ -209,6 +252,7 @@ fn object_uses_sets(object: &Obj) -> bool {
     match object {
         Obj::StandardSet(StandardSet::RPos) => true,
         Obj::SetFormer(SetFormer::ListSet(_) | SetFormer::SetBuilder(_)) => true,
+        Obj::SetOperator(SetOperator::Union(_) | SetOperator::PowerSet(_)) => true,
         Obj::ArithmeticOperator(operator) => match operator {
             ArithmeticOperator::Add(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Sub(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
@@ -237,6 +281,13 @@ fn fact_uses_sets(fact: &Fact) -> bool {
             .facts
             .iter()
             .any(|branch| fact_uses_sets(&crate::ast::fact::and_chain_as_fact(branch))),
+        Fact::ExistFact(fact) | Fact::ExistUniqueFact(fact) | Fact::NotExistFact(fact) => {
+            fact.typed_parameters.groups.iter().any(|group| {
+                matches!(&group.param_type, ParamType::Obj(carrier) if object_uses_sets(carrier))
+            }) || fact.facts.iter().any(|clause| {
+                fact_uses_sets(&crate::instantiate::quantifier_free_fact_to_fact(clause.clone()))
+            })
+        }
         Fact::ForallFact(f) => {
             f.typed_parameters
                 .groups
@@ -255,7 +306,11 @@ fn fact_uses_sets(fact: &Fact) -> bool {
                     ExistOrAndChainAtomicFact::OrFact(f) => {
                         fact_uses_sets(&Fact::OrFact(f.clone()))
                     }
-                    _ => false,
+                    ExistOrAndChainAtomicFact::ExistFact(fact)
+                    | ExistOrAndChainAtomicFact::ExistUniqueFact(fact)
+                    | ExistOrAndChainAtomicFact::NotExistFact(fact) => {
+                        fact_uses_sets(&Fact::ExistFact(fact.clone()))
+                    }
                 })
         }
         _ => false,
@@ -267,6 +322,15 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         return true;
     }
     match statement {
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
+            ExecWitnessExistFactStmtResult::Success(proof),
+        )) => {
+            fact_uses_sets(&crate::ast::fact::exist_shaped_fact_to_fact(
+                &proof.statement.exist_shaped_fact_in_witness,
+            )) || proof.statement.equal_tos.iter().any(object_uses_sets)
+                || proof.proof_steps.iter().any(statement_uses_sets)
+        }
+
         ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
             ExecClaimStmtResult::Success(proof),
         )) => {
@@ -361,6 +425,24 @@ fn verify_has_set_inference(proof: &VerifyFactResult) -> bool {
 
 fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
+            ExecWitnessExistFactStmtResult::Success(proof),
+        )) => {
+            proof
+                .introduced_params
+                .defined_params
+                .store_and_infer_results
+                .iter()
+                .any(|store| store_has_set_inference(store))
+                || proof.witness_equalities.iter().any(store_has_set_inference)
+                || proof
+                    .obligations
+                    .body_checks
+                    .iter()
+                    .any(verify_has_set_inference)
+                || store_has_set_inference(&proof.store_and_infer_result)
+        }
+
         ExecStmtResult::Fact(ExecFactStmtResult::Success(proof)) => {
             store_has_set_inference(&proof.store_and_infer_result)
                 || verify_has_set_inference(&proof.verify_result)

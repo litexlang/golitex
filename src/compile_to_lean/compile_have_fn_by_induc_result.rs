@@ -135,7 +135,7 @@ impl LitexToLeanCompiler {
             format!(
                 "theorem h_{}{} : {} :=\n  {}",
                 stored.membership_fact_id.value(),
-                self.context_header(position),
+                self.context_header(position)?,
                 member.0,
                 member.1
             ),
@@ -359,7 +359,11 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             let compiled = self.compile_verify(result, &site)?;
-            definitions.push(self.emit_internal_fact(&source_subject(result)?, &compiled, &site));
+            definitions.push(self.emit_internal_fact(
+                &source_subject(result)?,
+                &compiled,
+                &site,
+            )?);
         }
         let formed = SourcePosition {
             before: 7,
@@ -370,7 +374,7 @@ impl LitexToLeanCompiler {
             &source_subject(&proof.case_checks.coverage)?,
             &coverage,
             &formed,
-        ));
+        )?);
         for disjoint in &proof.case_checks.disjoint {
             let scope =
                 SourcePosition::new(Some(&formed), SourceOwner::RecursiveDisjoint(disjoint), 1);
@@ -753,7 +757,7 @@ impl LitexToLeanCompiler {
         } else {
             format!("let _index := Litex.NativeBridge.asNat _value_i{id} h_{member_id}\n  have _index_spec : Litex.denote _value_i{id} = M.number (_index : ℂ) := Litex.NativeBridge.asNat_spec _value_i{id} h_{member_id}\n  have _index_positive : 0 < _index := Litex.NativeBridge.naturalValue_pos (Litex.denote _value_i{id}) h_{member_id} h_{guard_id}\n  obtain ⟨_previous, _index_eq⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt _index_positive)\n  rw [_index_spec, _index_eq]\n  exact Litex.recursiveNatFn_succ {object} _previous")
         };
-        Ok(format!("theorem h_{}{} : ∀ {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{member_id} : Litex.In _value_i{id} Litex.N) (h_{guard_id} : {guard}), {proposition} := by\n  intro _Host_i{id} _rep_i{id} _value_i{id} h_{member_id} h_{guard_id}\n  {body}", forall.fact_id.value(), self.context_header(outer)))
+        Ok(format!("theorem h_{}{} : ∀ {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{member_id} : Litex.In _value_i{id} Litex.N) (h_{guard_id} : {guard}), {proposition} := by\n  intro _Host_i{id} _rep_i{id} _value_i{id} h_{member_id} h_{guard_id}\n  {body}", forall.fact_id.value(), self.context_header(outer)?))
     }
 }
 

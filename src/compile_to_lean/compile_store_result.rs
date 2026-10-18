@@ -58,37 +58,18 @@ impl LitexToLeanCompiler {
     ) -> Result<Vec<String>, LeanCompileError> {
         let mut declarations =
             self.compile_set_builder_parameter_inferences(store, member_fact, member, position)?;
-        let (infer, rules) = match &store.infer {
-            Some(InferResult::AtomicFact(infer @ InferAtomicFactResult::InFact(rules))) => {
-                (infer, rules)
-            }
-            _ => return Ok(declarations),
-        };
-        for (index, rule) in rules.iter().enumerate() {
-            if let InferInFactResult::SignedStandardSetSign(sign) = rule {
-                // Builder projections precede the sign rule in this original
-                // membership dispatcher. Keep the sign's own WD/store pending.
-                let completed = rules[..index]
-                    .iter()
-                    .filter_map(|rule| match rule {
-                        InferInFactResult::SetBuilder(proof) => Some(proof),
-                        _ => None,
-                    })
-                    .flat_map(|proof| &proof.steps)
-                    .map(|step| step.projections.len())
-                    .sum();
-                let pending = SourcePosition::new(
-                    Some(position),
-                    SourceOwner::AtomicInference(member_fact, infer),
-                    completed,
-                );
-                declarations.extend(self.compile_natural_sign_inference(
-                    sign,
-                    member_fact,
-                    member,
-                    &pending,
-                )?);
-            }
+        if let Some(InferResult::AtomicFact(infer)) = &store.infer {
+            let current = SourcePosition::new(
+                Some(position),
+                SourceOwner::AtomicInference(member_fact, infer),
+                0,
+            );
+            declarations.extend(self.compile_atomic_inferences(
+                infer,
+                member_fact,
+                member,
+                &current,
+            )?);
         }
         Ok(declarations)
     }
@@ -176,7 +157,7 @@ impl LitexToLeanCompiler {
                 member.1
             ),
         );
-        declarations.push(self.emit_internal_fact(&fact, &compiled, &formed));
+        declarations.push(self.emit_internal_fact(&fact, &compiled, &formed)?);
         Ok(declarations)
     }
 
@@ -245,7 +226,7 @@ impl LitexToLeanCompiler {
                 _ => unreachable!(),
             };
             let compiled = (self.fact_proposition(&fact, &formed)?, proof);
-            declarations.push(self.emit_internal_fact(&fact, &compiled, &formed));
+            declarations.push(self.emit_internal_fact(&fact, &compiled, &formed)?);
         }
         Ok(declarations)
     }
@@ -261,9 +242,10 @@ impl LitexToLeanCompiler {
             StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
             StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
             StoreFactResult::OrFact(stored) => Fact::OrFact(stored.fact.clone()),
-            StoreFactResult::ExistShapedFact(_)
-            | StoreFactResult::NotForallFact(_)
-            | StoreFactResult::ForallFactWithIff(_) => {
+            StoreFactResult::ExistShapedFact(stored) => {
+                crate::ast::fact::exist_shaped_fact_to_fact(&stored.fact)
+            }
+            StoreFactResult::NotForallFact(_) | StoreFactResult::ForallFactWithIff(_) => {
                 return Err(LeanCompileError::unsupported("Store/Compound"))
             }
         };

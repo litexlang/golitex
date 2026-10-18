@@ -128,19 +128,17 @@ impl LitexToLeanCompiler {
                 }
                 continue;
             }
-            let set = match &group.param_type {
-                ParamType::Obj(Obj::StandardSet(set)) => set,
-                _ => return Err(LeanCompileError::unsupported("Have/NumericCarrier")),
+            let carrier = match &group.param_type {
+                ParamType::Obj(carrier) => carrier,
+                _ => return Err(LeanCompileError::unsupported("Have/ParameterKind")),
             };
-            standard_term(set)?;
-            let carrier = Obj::StandardSet(set.clone());
-            match &captured.param_type_well_defined {
+            let carrier_term = match &captured.param_type_well_defined {
                 ParamTypeWellDefinedProof::Obj(wd) => {
-                    ensure_object(&carrier, wd)?;
-                    self.compile_wd(wd, position)?;
+                    ensure_object(carrier, wd)?;
+                    self.compile_wd(wd, position)?
                 }
                 _ => return Err(LeanCompileError::unsupported("Have/CarrierWD")),
-            }
+            };
             let group_formed = SourcePosition {
                 before: 1,
                 ..*position
@@ -170,7 +168,7 @@ impl LitexToLeanCompiler {
             } else {
                 format!(
                     "theorem {check_name}{} : {} := {}",
-                    self.context_header(position),
+                    self.context_header(position)?,
                     nonempty.0,
                     nonempty.1
                 )
@@ -219,12 +217,12 @@ impl LitexToLeanCompiler {
                     ));
                     declarations.push(format!(
                         "have h_{member_id} : Litex.In _value_i{id} {} := _member_i{id}",
-                        standard_term(set)?,
+                        carrier_term,
                     ));
                 } else {
-                    let (binders, arguments) = self.introduce_numeric_parameter(
+                    let (binders, arguments) = self.introduce_member_parameter(
                         parameter,
-                        &carrier,
+                        carrier,
                         store,
                         &carrier_position,
                     )?;

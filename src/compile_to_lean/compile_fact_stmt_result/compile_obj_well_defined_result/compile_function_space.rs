@@ -52,11 +52,11 @@ impl LitexToLeanCompiler {
         };
         ensure_object(&signature.ret_set, &wd.ret_set_well_defined)?;
         self.compile_wd(&wd.ret_set_well_defined, &return_position)?;
-        let checked_header = self.compile_function_raw_header(signature, position)?;
         let completed_return = SourcePosition {
             before: return_position.before + 1,
             ..*position
         };
+        let checked_header = self.compile_function_raw_header(signature, &completed_return)?;
         let signature = self.compile_fn_signature(signature, &completed_return)?;
         Ok(format!(
             "(by\n  have _checked_header : {checked_header} := by\n    {}\n    exact True.intro\n  exact Litex.fnSet {signature})",
@@ -118,6 +118,9 @@ impl LitexToLeanCompiler {
             member.0.replace('\n', "\n  "),
             member.1.replace('\n', "\n  ")
         );
+        if !self.function_uses_numeric_interface(signature) {
+            return self.compile_formula_function_on(function, &h_return, &membership_position);
+        }
         let domains = self.compile_function_domains(signature, position)?;
         let guard = self.compile_function_guard_template(signature, position)?;
         let body = self.compile_function_body_template(function, position)?;
@@ -134,6 +137,62 @@ impl LitexToLeanCompiler {
         ))
     }
 
+    fn compile_formula_function_on(
+        &self,
+        function: &AnonymousFn,
+        checked_return: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let signature = &function.body;
+        let inputs = self.compile_function_input_sets(signature, position)?;
+        let output = self.compile_object_reference(&signature.ret_set, position)?;
+        let variables = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|group| &group.params)
+            .map(|parameter| format!("_raw_i{}", parameter.id.value()))
+            .collect::<Vec<_>>();
+        let binders = variables
+            .iter()
+            .map(|name| format!("({name} : M.Value)"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let members = variables
+            .iter()
+            .zip(&inputs)
+            .map(|(name, input)| format!("M.mem {name} (Litex.denote {input})"))
+            .collect::<Vec<_>>()
+            .join(" → ");
+        let guard = self.compile_function_guard_template(signature, position)?;
+        let body = self.compile_function_body_template(function, position)?;
+        let arguments = variables.join(" ");
+        let checked_type = format!(
+            "∀ {binders}, {members} → ({guard} {arguments}) → M.mem ({body} {arguments}) (Litex.denote {output})"
+        );
+        let (domain, domain_set) = self.compile_function_base_domain(signature, position)?;
+        let packed_guard = self.compile_function_packed_guard_template(signature, position)?;
+        let packed_body = self.compile_function_packed_body_template(function, position)?;
+        let packed_values = self.compile_function_packed_values(signature, "_litex_input")?;
+        let memberships = if inputs.len() == 1 {
+            "_litex_members".into()
+        } else {
+            (0..inputs.len()).map(|index| format!(
+                "(by simpa [Litex.FiniteFunction.index] using Litex.FiniteFunction.coordinate_mem _litex_members ({index} : Fin {}))",
+                inputs.len()
+            )).collect::<Vec<_>>().join(" ")
+        };
+        let h_return = format!(
+            "(by\n  have _litex_checked_return : {checked_type} := {}\n  intro _litex_input _litex_domain\n  obtain ⟨_litex_members, _litex_guard⟩ := (Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {packed_guard} _litex_input).mp _litex_domain\n  exact _litex_checked_return {} {memberships} _litex_guard)",
+            checked_return.replace('\n', "\n  "),
+            packed_values.join(" ")
+        );
+        let compiled_signature = self.compile_fn_signature(signature, position)?;
+        Ok(format!(
+            "(Litex.formulaFnOn {compiled_signature} {packed_body} {h_return})"
+        ))
+    }
+
     fn compile_function_binder_head(
         &self,
         signature: &FnSet,
@@ -142,7 +201,9 @@ impl LitexToLeanCompiler {
         assumed: &[AssumeDomFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        self.compile_function_domains(signature, position)?;
+        if self.function_uses_numeric_interface(signature) {
+            self.compile_function_domains(signature, position)?;
+        }
         let groups = &signature.set_bound_parameters.groups;
         let parameters = groups
             .iter()
@@ -263,7 +324,7 @@ impl LitexToLeanCompiler {
                 before: prior.before + 1,
                 ..*position
             };
-            lines.push(self.emit_internal_fact(&fact, &compiled, &completed));
+            lines.push(self.emit_internal_fact(&fact, &compiled, &completed)?);
             let compiled = (compiled.0, format!("h_{}", fact.fact_id().value()));
             lines.extend(self.compile_set_builder_parameter_inferences(
                 &paired.store_and_infer,
@@ -297,7 +358,6 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let domains = self.compile_function_domains(signature, position)?;
         let parameters = signature
             .set_bound_parameters
             .groups
@@ -313,10 +373,21 @@ impl LitexToLeanCompiler {
             .map(|name| format!("({name} : M.Value)"))
             .collect::<Vec<_>>()
             .join(" ");
+        let domains = if self.function_uses_numeric_interface(signature) {
+            self.compile_function_domains(signature, position)?
+                .into_iter()
+                .map(|domain| format!("(M.standard {domain})"))
+                .collect::<Vec<_>>()
+        } else {
+            self.compile_function_input_sets(signature, position)?
+                .into_iter()
+                .map(|domain| format!("(Litex.denote {domain})"))
+                .collect::<Vec<_>>()
+        };
         let members = variables
             .iter()
             .zip(&domains)
-            .map(|(name, domain)| format!("M.mem {name} (M.standard {domain})"))
+            .map(|(name, domain)| format!("M.mem {name} {domain}"))
             .collect::<Vec<_>>()
             .join(" → ");
         let guard = self.compile_function_guard_template(signature, position)?;

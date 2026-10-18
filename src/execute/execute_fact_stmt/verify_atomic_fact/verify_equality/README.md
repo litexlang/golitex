@@ -182,6 +182,12 @@ facts, or prove mathematical equivalence between different bodies.
 
 ## One equivalence-class stage
 
+Exact stored-path queries borrow only edges reachable from the submitted left
+endpoint, reading inner scopes before ancestors and preserving stored edge
+order. Their BFS parent map borrows facts; only the final certificate copies
+its oriented endpoints and FactIds. They neither clone the whole visible graph
+nor publish facts. A supplied local snapshot remains a valid query source.
+
 `search_equal_fact_proof_by_equivalence_class` builds one local snapshot of the
 visible generating-edge graph. It first searches for a stored path connecting
 the goal endpoints. If no exact path exists, it can cite one visible stored

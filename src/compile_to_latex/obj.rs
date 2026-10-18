@@ -81,11 +81,24 @@ fn expression(
                 TrigOperator::Sin(x) => operator("sin", &[o(&x.arg)?]),
                 TrigOperator::Cos(x) => operator("cos", &[o(&x.arg)?]),
                 TrigOperator::Tan(x) => operator("tan", &[o(&x.arg)?]),
+                TrigOperator::Sec(x) => operator("sec", &[o(&x.arg)?]),
+                TrigOperator::Csc(x) => operator("csc", &[o(&x.arg)?]),
                 TrigOperator::Cot(x) => operator("cot", &[o(&x.arg)?]),
                 TrigOperator::Arcsin(x) => operator("arcsin", &[o(&x.arg)?]),
                 TrigOperator::Arccos(x) => operator("arccos", &[o(&x.arg)?]),
                 TrigOperator::Arctan(x) => operator("arctan", &[o(&x.arg)?]),
                 TrigOperator::Arccot(x) => operator("arccot", &[o(&x.arg)?]),
+            },
+            50,
+        ),
+        Obj::HyperbolicOperator(x) => (
+            match x {
+                HyperbolicOperator::Sinh(x) => operator("sinh", &[o(&x.arg)?]),
+                HyperbolicOperator::Cosh(x) => operator("cosh", &[o(&x.arg)?]),
+                HyperbolicOperator::Tanh(x) => operator("tanh", &[o(&x.arg)?]),
+                HyperbolicOperator::Coth(x) => operator("coth", &[o(&x.arg)?]),
+                HyperbolicOperator::Sech(x) => operator("sech", &[o(&x.arg)?]),
+                HyperbolicOperator::Csch(x) => operator("csch", &[o(&x.arg)?]),
             },
             50,
         ),
@@ -102,6 +115,7 @@ fn expression(
         ),
         Obj::ComplexOperator(x) => (
             match x {
+                ComplexOperator::Conjugate(x) => format!(r"\overline{{{}}}", o(&x.arg)?),
                 ComplexOperator::RealPart(x) => operator("Re", &[o(&x.arg)?]),
                 ComplexOperator::ImaginaryPart(x) => operator("Im", &[o(&x.arg)?]),
                 ComplexOperator::ComplexAbs(x) => format!(r"\left|{}\right|", o(&x.arg)?),
@@ -109,6 +123,10 @@ fn expression(
             50,
         ),
         Obj::SetOperator(x) => match x {
+            SetOperator::SymmetricDifference(x) => (
+                format!(r"{} \triangle {}", e(&x.left, 10)?, e(&x.right, 11)?),
+                10,
+            ),
             SetOperator::Union(x) => (
                 format!(r"{} \cup {}", e(&x.left, 10)?, e(&x.right, 11)?),
                 10,

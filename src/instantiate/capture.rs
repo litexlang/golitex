@@ -1,3 +1,4 @@
+use crate::ast::obj::HyperbolicOperator;
 use std::collections::{HashMap, HashSet};
 
 use crate::ast::obj::{
@@ -131,6 +132,18 @@ pub fn collect_free_plain_ids(
         Obj::ArithmeticOperator(ArithmeticOperator::Sign(a)) => collect_unary(&a.arg, bound, out),
         Obj::IntegerOperator(IntegerOperator::Factorial(a)) => collect_unary(&a.arg, bound, out),
         Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Sec(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Csc(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ComplexOperator(ComplexOperator::Conjugate(a)) => collect_unary(&a.arg, bound, out),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(a)) => collect_unary(&a.arg, bound, out),
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(a)) => collect_unary(&a.arg, bound, out),
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(a)) => collect_unary(&a.arg, bound, out),
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(a)) => collect_unary(&a.arg, bound, out),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(a)) => collect_unary(&a.arg, bound, out),
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(a)) => collect_unary(&a.arg, bound, out),
+        Obj::SetOperator(SetOperator::SymmetricDifference(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
         Obj::TrigOperator(TrigOperator::Sin(a)) => collect_unary(&a.arg, bound, out),
         Obj::TrigOperator(TrigOperator::Arcsin(a)) => collect_unary(&a.arg, bound, out),
         Obj::TrigOperator(TrigOperator::Arccos(a)) => collect_unary(&a.arg, bound, out),

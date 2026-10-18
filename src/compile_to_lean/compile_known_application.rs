@@ -565,7 +565,7 @@ impl LitexToLeanCompiler {
             proofs[0].clone()
         } else {
             format!(
-                "(congrArg₂ (Litex.FunctionSemantics.pairValue (M := M)) {} {})",
+                "(congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) {} {})",
                 proofs[0], proofs[1]
             )
         };

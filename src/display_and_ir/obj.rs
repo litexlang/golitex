@@ -190,6 +190,16 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
+                Obj::TrigOperator(TrigOperator::Sec(x)) => s.push_str(&x.ir()),
+                Obj::TrigOperator(TrigOperator::Csc(x)) => s.push_str(&x.ir()),
+                Obj::ComplexOperator(ComplexOperator::Conjugate(x)) => s.push_str(&x.ir()),
+                Obj::HyperbolicOperator(HyperbolicOperator::Sinh(x)) => s.push_str(&x.ir()),
+                Obj::HyperbolicOperator(HyperbolicOperator::Cosh(x)) => s.push_str(&x.ir()),
+                Obj::HyperbolicOperator(HyperbolicOperator::Tanh(x)) => s.push_str(&x.ir()),
+                Obj::HyperbolicOperator(HyperbolicOperator::Coth(x)) => s.push_str(&x.ir()),
+                Obj::HyperbolicOperator(HyperbolicOperator::Sech(x)) => s.push_str(&x.ir()),
+                Obj::HyperbolicOperator(HyperbolicOperator::Csch(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::SymmetricDifference(x)) => s.push_str(&x.ir()),
                 Obj::TrigOperator(TrigOperator::Sin(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
@@ -1044,3 +1054,14 @@ impl Pi {
     }
     impl_display_pair!();
 }
+
+impl_obj_kw_unary!(Sec, SEC, arg);
+impl_obj_kw_unary!(Csc, CSC, arg);
+impl_obj_kw_unary!(Conjugate, CONJ, arg);
+impl_obj_kw_unary!(Sinh, SINH, arg);
+impl_obj_kw_unary!(Cosh, COSH, arg);
+impl_obj_kw_unary!(Tanh, TANH, arg);
+impl_obj_kw_unary!(Coth, COTH, arg);
+impl_obj_kw_unary!(Sech, SECH, arg);
+impl_obj_kw_unary!(Csch, CSCH, arg);
+impl_obj_kw_call!(SymmetricDifference, SYM_DIFF, left, right);

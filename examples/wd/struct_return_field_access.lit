@@ -1,0 +1,40 @@
+# A factory and a template return a struct whose operation adds a fixed value.
+# Their declared carriers select the fields directly, without a named wrapper.
+# Before (rejected after the same declarations):
+# make(2).op(3) = 5
+# \shifted<2>.op(3) = 5
+# Former rejection: object has no definition-time struct carrier for field `op`.
+# A typed named wrapper and an explicit field equality worked.
+# Now: these expressions below verify directly, including generic return types.
+# Boundary: wrong fields, invalid call/template guards, false values and a view
+# inferred only from later membership remain rejected. Struct laws still use
+# explicit release; arbitrary function-body alias chains are not unfolded.
+# Evidence: cargo build --release
+# target/release/litex -strict -lang en -f examples/wd/struct_return_field_access.lit
+# Regression: tests/unit/execute/struct_return_field_access/tests.rs
+struct Box:
+    op fn(x R) R
+    tag N
+
+forall f fn(x R) R:
+    (f, 0) $in &Box
+
+have fn make(a R) &Box = (fn(x R) R {x + a}, 0)
+make(2).op(3) = 5
+make(2).tag = 0
+
+template<a R>:
+    have shifted &Box = (fn(x R) R {x + a}, 0)
+
+\shifted<2>.op(3) = 5
+\shifted<2>.tag = 0
+
+struct GenericPair<S set>:
+    first S
+    second S
+
+template<S set>:
+    have fn pair(x, y S) &GenericPair<S> = (x, y)
+
+\pair<R>(2, 3).first = 2
+\pair<R>(2, 3).second = 3

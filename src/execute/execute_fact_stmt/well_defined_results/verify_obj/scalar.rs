@@ -12,6 +12,7 @@ use crate::ast::obj::{
     Floor, Gcd, ImaginaryPart, IntegerOperator, Lcm, Literal, Ln, Log, Max, Min, Mod, Mul, Neg,
     Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, TrigOperator,
 };
+use crate::ast::obj::{Conjugate, Cosh, Coth, Csc, Csch, Sec, Sech, Sinh, Tanh};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::exact_rational::EvalRational;
@@ -597,6 +598,205 @@ impl Runtime {
             "arccot",
             verify_state,
         )
+    }
+
+    pub(super) fn verify_sec_obj_well_definedness_by_def(
+        &mut self,
+        value: &Sec,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let mut reqs = Vec::new();
+        reqs.push(self.require_obj_in_standard_set(
+            value.arg.as_ref(),
+            StandardSet::R,
+            verify_state.clone(),
+            "sec argument must belong to R".to_string(),
+        )?);
+        // Principal arctan range is open around ±pi/2, so cos(arctan(x)) != 0.
+        if matches!(
+            value.arg.as_ref(),
+            Obj::TrigOperator(TrigOperator::Arctan(_))
+        ) {
+            return Ok(self.with_requirements(proof, reqs));
+        }
+        let denom = Obj::TrigOperator(TrigOperator::Cos(Cos {
+            arg: Box::new(value.arg.as_ref().clone()),
+        }));
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".to_string(),
+        }));
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: denom,
+            right: zero,
+            line_file: None,
+        });
+        reqs.push(self.verify_required_atomic_fact(
+            nonzero,
+            verify_state,
+            "sec requires cos(arg) != 0".to_string(),
+        )?);
+        Ok(self.with_requirements(proof, reqs))
+    }
+
+    pub(super) fn verify_csc_obj_well_definedness_by_def(
+        &mut self,
+        value: &Csc,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let mut reqs = Vec::new();
+        reqs.push(self.require_obj_in_standard_set(
+            value.arg.as_ref(),
+            StandardSet::R,
+            verify_state.clone(),
+            "csc argument must belong to R".to_string(),
+        )?);
+        // Principal arccot range is (0, pi), so sin(arccot(x)) != 0.
+        if matches!(
+            value.arg.as_ref(),
+            Obj::TrigOperator(TrigOperator::Arccot(_))
+        ) {
+            return Ok(self.with_requirements(proof, reqs));
+        }
+        let denom = Obj::TrigOperator(TrigOperator::Sin(Sin {
+            arg: Box::new(value.arg.as_ref().clone()),
+        }));
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".to_string(),
+        }));
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: denom,
+            right: zero,
+            line_file: None,
+        });
+        reqs.push(self.verify_required_atomic_fact(
+            nonzero,
+            verify_state,
+            "csc requires sin(arg) != 0".to_string(),
+        )?);
+        Ok(self.with_requirements(proof, reqs))
+    }
+
+    pub(super) fn verify_conj_obj_well_definedness_by_def(
+        &mut self,
+        value: &Conjugate,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        self.verify_unary_carrier_obj_well_definedness_by_def(
+            value.arg.as_ref(),
+            StandardSet::C,
+            "conj",
+            verify_state,
+        )
+    }
+
+    pub(super) fn verify_sinh_obj_well_definedness_by_def(
+        &mut self,
+        value: &Sinh,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        self.verify_unary_carrier_obj_well_definedness_by_def(
+            value.arg.as_ref(),
+            StandardSet::R,
+            "sinh",
+            verify_state,
+        )
+    }
+
+    pub(super) fn verify_cosh_obj_well_definedness_by_def(
+        &mut self,
+        value: &Cosh,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        self.verify_unary_carrier_obj_well_definedness_by_def(
+            value.arg.as_ref(),
+            StandardSet::R,
+            "cosh",
+            verify_state,
+        )
+    }
+
+    pub(super) fn verify_tanh_obj_well_definedness_by_def(
+        &mut self,
+        value: &Tanh,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        self.verify_unary_carrier_obj_well_definedness_by_def(
+            value.arg.as_ref(),
+            StandardSet::R,
+            "tanh",
+            verify_state,
+        )
+    }
+
+    pub(super) fn verify_coth_obj_well_definedness_by_def(
+        &mut self,
+        value: &Coth,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        let mut proof = self.verify_unary_carrier_obj_well_definedness_by_def(
+            value.arg.as_ref(),
+            StandardSet::R,
+            "coth",
+            verify_state,
+        )?;
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: value.arg.as_ref().clone(),
+            right: Obj::Literal(crate::ast::obj::Literal::Number(Number::new("0".into()))),
+            line_file: None,
+        });
+        let required = self.verify_required_atomic_fact(
+            nonzero,
+            verify_state,
+            "coth requires arg != 0".into(),
+        )?;
+        proof.requirement_fact_verified.push(required);
+        Ok(proof)
+    }
+
+    pub(super) fn verify_sech_obj_well_definedness_by_def(
+        &mut self,
+        value: &Sech,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        self.verify_unary_carrier_obj_well_definedness_by_def(
+            value.arg.as_ref(),
+            StandardSet::R,
+            "sech",
+            verify_state,
+        )
+    }
+
+    pub(super) fn verify_csch_obj_well_definedness_by_def(
+        &mut self,
+        value: &Csch,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        let mut proof = self.verify_unary_carrier_obj_well_definedness_by_def(
+            value.arg.as_ref(),
+            StandardSet::R,
+            "csch",
+            verify_state,
+        )?;
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: value.arg.as_ref().clone(),
+            right: Obj::Literal(crate::ast::obj::Literal::Number(Number::new("0".into()))),
+            line_file: None,
+        });
+        let required = self.verify_required_atomic_fact(
+            nonzero,
+            verify_state,
+            "csch requires arg != 0".into(),
+        )?;
+        proof.requirement_fact_verified.push(required);
+        Ok(proof)
     }
 
     pub(super) fn verify_cos_obj_well_definedness_by_def(

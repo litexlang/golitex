@@ -15,7 +15,10 @@ impl LitexToLeanCompiler {
         proof: &FnObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        self.compile_fn_call_with_return(application, proof, position)
+        if let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &proof.domain_fn_set {
+            return self.compile_finite_fn_call(application, proof, finite, position);
+        }
+        self.compile_fn_call(application, proof, position)
             .map(|(call, _)| call)
     }
 
@@ -27,13 +30,36 @@ impl LitexToLeanCompiler {
         proof: &FnObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(StandardSet, String), LeanCompileError> {
-        let (call, output) = self.compile_fn_call_with_return(application, proof, position)?;
-        let law = if application.body[0].len() == 1 {
+        if let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &proof.domain_fn_set {
+            return self.compile_finite_numeric_output(application, proof, finite, position);
+        }
+        let (call, output) = self.compile_fn_call(application, proof, position)?;
+        let output = self.compile_numeric_carrier(&output, position)?;
+        let member = self.compile_call_output_proof(application, proof, &call)?;
+        Ok((output, member))
+    }
+
+    fn compile_call_output_proof(
+        &self,
+        application: &FnObj,
+        proof: &FnObjObjWellDefinedProof,
+        call: &str,
+    ) -> Result<String, LeanCompileError> {
+        let signature = match &proof.domain_fn_set {
+            Some(
+                FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
+                | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set },
+            ) => fn_set,
+            _ => return Err(LeanCompileError::unsupported("Function/OutputSignature")),
+        };
+        let law = if !self.function_uses_numeric_interface(signature) {
+            "callOnInOutput"
+        } else if application.body[0].len() == 1 {
             "callInOutput"
         } else {
             "call2InOutput"
         };
-        Ok((output, format!("(Litex.{law} {call})")))
+        Ok(format!("(Litex.{law} {call})"))
     }
 
     pub(in crate::compile_to_lean) fn compile_fn_call_with_return(
@@ -42,6 +68,22 @@ impl LitexToLeanCompiler {
         proof: &FnObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, StandardSet), LeanCompileError> {
+        if let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &proof.domain_fn_set {
+            let call = self.compile_finite_fn_call(application, proof, finite, position)?;
+            let (output, _) =
+                self.compile_finite_numeric_output(application, proof, finite, position)?;
+            return Ok((call, output));
+        }
+        let (call, output) = self.compile_fn_call(application, proof, position)?;
+        Ok((call, self.compile_numeric_carrier(&output, position)?))
+    }
+
+    fn compile_fn_call(
+        &self,
+        application: &FnObj,
+        proof: &FnObjObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, Obj), LeanCompileError> {
         let evidence = proof.domain_fn_set.as_ref().ok_or_else(|| {
             LeanCompileError::new(
                 "WD/FnObj/DomainEvidence",
@@ -53,12 +95,17 @@ impl LitexToLeanCompiler {
             | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => fn_set,
             _ => return Err(LeanCompileError::unsupported("WD/FnObj/DomainEvidence")),
         };
-        let domains = self.compile_function_domains(signature, position)?;
-        let output = self.compile_numeric_carrier(&signature.ret_set, position)?;
-        if application.body.len() != 1 || application.body[0].len() + 1 != domains.len() {
+        let parameter_count: usize = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .map(|group| group.params.len())
+            .sum();
+        let output = signature.ret_set.as_ref().clone();
+        if application.body.len() != 1 || application.body[0].len() != parameter_count {
             return Err(LeanCompileError::new(
                 "WD/FnObj/Arity",
-                "The call must have one argument group matching its recorded one/two-parameter signature.",
+                "The call must have one argument group matching its recorded signature.",
             ));
         }
         let arguments = &application.body[0];
@@ -268,6 +315,16 @@ impl LitexToLeanCompiler {
             &requirement_terms,
             &formed,
         )?;
+        if !self.function_uses_numeric_interface(signature) {
+            let (argument, domain) = self.compile_packed_call_domain(
+                signature,
+                &argument_terms,
+                &members,
+                &guard_proof,
+                &formed,
+            )?;
+            return Ok((format!("(Litex.callOn {compiled_signature} {head_term} {argument} {membership} {domain})"), output));
+        }
         let (constructor_arguments, target) =
             self.compile_function_constructor_arguments(signature, &formed)?;
         let constructor = match (arguments.len() == 1, target) {
@@ -285,6 +342,67 @@ impl LitexToLeanCompiler {
             ),
             output,
         ))
+    }
+
+    fn compile_packed_call_domain(
+        &self,
+        signature: &FnSet,
+        arguments: &[String],
+        members: &[String],
+        guard: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let sets = self.compile_function_input_sets(signature, position)?;
+        if sets.len() != arguments.len() || sets.len() != members.len() {
+            return Err(LeanCompileError::new(
+                "Function/PackedDomain",
+                "Every source argument needs its own ordered carrier certificate.",
+            ));
+        }
+        let (packed, base_member) = if arguments.len() == 1 {
+            (arguments[0].clone(), members[0].clone())
+        } else {
+            let values = arguments
+                .iter()
+                .map(|argument| format!("(Litex.denote {argument})"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let sets = sets
+                .iter()
+                .map(|set| format!("(Litex.denote {set})"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let wd = arguments
+                .iter()
+                .map(|argument| format!("exact Litex.isSet {argument}"))
+                .collect::<Vec<_>>()
+                .join("\n  · ");
+            let membership = members
+                .iter()
+                .map(|member| format!("exact {member}"))
+                .collect::<Vec<_>>()
+                .join("\n  · ");
+            (format!("(Litex.tuple (M := M) ![{values}] (by\n  intro i\n  fin_cases i\n  · {wd}))"),
+                format!("(Litex.FiniteFunction.tuple_inCart (M := M) ![{values}] ![{sets}] (by\n  intro i\n  fin_cases i\n  · {membership}))"))
+        };
+        let (domain, domain_set) = self.compile_function_base_domain(signature, position)?;
+        let output = self.compile_object_reference(&signature.ret_set, position)?;
+        let packed_guard = self.compile_function_packed_guard_template(signature, position)?;
+        let guard_proof = if signature.dom_facts.is_empty() {
+            "True.intro".to_string()
+        } else if arguments.len() == 1 {
+            guard.to_string()
+        } else {
+            let values = arguments
+                .iter()
+                .map(|argument| format!("(Litex.denote {argument})"))
+                .collect::<Vec<_>>();
+            let raw_guard = self.compile_function_guard_template(signature, position)?;
+            let equality =
+                self.compile_function_packed_application_equality(&raw_guard, &values)?;
+            format!("(Eq.mpr {equality} {guard})")
+        };
+        Ok((packed.clone(), format!("((Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {packed_guard} (Litex.denote {packed})).mpr ⟨{base_member}, {guard_proof}⟩)")))
     }
 }
 
@@ -305,8 +423,9 @@ impl LitexToLeanCompiler {
         if let InFactSearchProofByKnownSpecialProperty::KnownSubsetMembership(proof) = rule {
             return self.compile_known_subset_member(goal, proof, position);
         }
-        let target = self.compile_numeric_carrier(&goal.set, position)?;
-        let target = &target;
+        if let InFactSearchProofByKnownSpecialProperty::TupleCoordinate(proof) = rule {
+            return self.compile_tuple_coordinate_member(goal, proof, position);
+        }
         let proof = position.with_visible_wd(&goal.element, &mut |wd, producer| {
             let ObjWellDefinedProof::ByDef {
                 obj: Obj::FnObj(application),
@@ -315,7 +434,7 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The original constructor is not this function application."));
             };
             let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
-            let (call, _) = self.compile_fn_call_with_return(application, evidence, &ctor_position)?;
+            let call = self.compile_fn_obj_wd(application, evidence, &ctor_position)?;
             let selected = evidence.domain_fn_set.as_ref().ok_or_else(|| LeanCompileError::new("FunctionReturn/DomainEvidence", "The original call has no domain source."))?;
             let (selected_signature, selected_id, selected_path) = match selected {
                 FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id, function_equal } => (fn_set, Some(*fact_id), Some(function_equal)),
@@ -334,12 +453,14 @@ impl LitexToLeanCompiler {
                         return Err(LeanCompileError::new("FunctionReturn/LiteralSignature", "The literal return payload differs from the actual owned call signature."));
                     }
                     let equality = self.compile_fn_return_set_match(&p.applied_return_set, &goal.set, &p.return_set_match, position)?;
-                    let (_, member) = self.compile_fn_output_membership(application, evidence, &ctor_position)?;
+                    let member = self.compile_call_output_proof(application, evidence, &call)?;
                     let source_set = self.compile_object_reference(&p.applied_return_set, position)?;
                     let target_set = self.compile_object_reference(&goal.set, position)?;
                     Ok(format!("(Litex.inOfSame {call} {call} {source_set} {target_set} (Litex.sameRefl {call}) {equality} {member})"))
                 }
                 InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(p) => {
+                    let target = self.compile_numeric_carrier(&goal.set, position)?;
+                    let target = &target;
                     if &p.target_set != target || p.signature_returns.is_empty() {
                         return Err(LeanCompileError::new("FunctionReturn/SupersetTarget", "The recorded upper bound differs from the goal or has no source signatures."));
                     }
@@ -416,7 +537,7 @@ impl LitexToLeanCompiler {
                     }
                     let main_match = main_match.ok_or_else(|| LeanCompileError::new("FunctionReturn/SelectedSignature", "The chosen return source has no recorded return-set match."))?;
                     let (source_set, equality, member) = if let Some(equality) = selected_match {
-                        let (_, member) = self.compile_fn_output_membership(application, evidence, &ctor_position)?;
+                        let member = self.compile_call_output_proof(application, evidence, &call)?;
                         (selected_signature.ret_set.as_ref(), equality, member)
                     } else if selected_same_domains {
                         let (packed, domain) = self.compile_fn_return_domain(application, evidence, main_signature, &ctor_position)?;
@@ -564,7 +685,7 @@ impl LitexToLeanCompiler {
         Ok((signature, format!("(Litex.inOfSame {source_term} {head_term} {space} {space} {equality} (Litex.sameRefl {space}) {member})")))
     }
 
-    fn compile_fn_return_set_match(
+    pub(in crate::compile_to_lean) fn compile_fn_return_set_match(
         &self,
         source: &Obj,
         target: &Obj,
@@ -661,6 +782,16 @@ impl LitexToLeanCompiler {
         let guard = self.compile_function_guard_template(signature, position)?;
         let (members, guard_proof) =
             self.compile_function_domain_certificates(signature, &terms, &proofs, position)?;
+        if !self.function_uses_numeric_interface(signature) {
+            let (packed, domain) = self.compile_packed_call_domain(
+                signature,
+                &terms,
+                &members,
+                &guard_proof,
+                position,
+            )?;
+            return Ok((format!("(Litex.denote {packed})"), domain));
+        }
         let (constructor_arguments, target) =
             self.compile_function_constructor_arguments(signature, position)?;
         let (packed, inputs, conjunction, law) = if terms.len() == 1 {
@@ -675,7 +806,19 @@ impl LitexToLeanCompiler {
                 },
             )
         } else {
-            (format!("(Litex.FunctionSemantics.pairValue (M := M) (Litex.denote {}) (Litex.denote {}))", terms[0], terms[1]), format!("(Litex.denote {}) (Litex.denote {})", terms[0], terms[1]), format!("⟨{}, {}, {guard_proof}⟩", members[0], members[1]), if target { "twoTarget_domain" } else { "two_domain" })
+            (
+                format!(
+                    "(Litex.FiniteFunction.pack2 (M := M) (Litex.denote {}) (Litex.denote {}))",
+                    terms[0], terms[1]
+                ),
+                format!("(Litex.denote {}) (Litex.denote {})", terms[0], terms[1]),
+                format!("⟨{}, {}, {guard_proof}⟩", members[0], members[1]),
+                if target {
+                    "twoTarget_domain"
+                } else {
+                    "two_domain"
+                },
+            )
         };
         Ok((
             packed,

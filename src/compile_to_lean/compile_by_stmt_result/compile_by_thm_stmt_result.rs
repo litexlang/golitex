@@ -22,7 +22,7 @@ impl LitexToLeanCompiler {
                     index,
                     local,
                     position,
-                ))
+                )?)
             }
             ExecByThmStmtResult::Failed(_) => Err(LeanCompileError::new(
                 "ByThm/Failed",
@@ -112,7 +112,7 @@ impl LitexToLeanCompiler {
                 self.fact_proposition(fact, &prior)?,
                 conjunction_projection(&application, index, conclusions_count),
             );
-            definitions.push(self.emit_internal_fact(fact, &compiled, &prior));
+            definitions.push(self.emit_internal_fact(fact, &compiled, &prior)?);
             let published = SourcePosition {
                 before: return_head + index + 1,
                 ..*position
@@ -260,7 +260,7 @@ impl LitexToLeanCompiler {
                             &subject,
                             &member,
                             &type_position,
-                        ));
+                        )?);
                         application_arguments.push(format!("h_{}", subject.fact_id().value()));
                         self.validate_store(&type_stores[offset].store, &subject)?;
                         let published = SourcePosition {
@@ -326,7 +326,7 @@ impl LitexToLeanCompiler {
             }
             let subject = source_subject(result)?;
             self.validate_store(&stored.store, &subject)?;
-            definitions.push(self.emit_internal_fact(&subject, &compiled, &domain_position));
+            definitions.push(self.emit_internal_fact(&subject, &compiled, &domain_position)?);
             application_arguments.push(format!("h_{}", subject.fact_id().value()));
             let published = SourcePosition {
                 before: type_proofs.len() + index + 1,

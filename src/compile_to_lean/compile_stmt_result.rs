@@ -33,7 +33,9 @@ impl LitexToLeanCompiler {
             ExecStmtResult::Definition(result) => {
                 self.compile_definition_statement(result, position, index, local)
             }
-            ExecStmtResult::Witness(_) => Err(LeanCompileError::unsupported("Witness")),
+            ExecStmtResult::Witness(result) => {
+                self.compile_witness_statement(result, position, index, local)
+            }
             ExecStmtResult::Trust(_) => Err(LeanCompileError::unsupported("Trust")),
             ExecStmtResult::By(result) => self.compile_by_statement(result, position, index, local),
             ExecStmtResult::Register(_) => Err(LeanCompileError::unsupported("Register")),

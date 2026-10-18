@@ -11,6 +11,27 @@ pub(super) fn project_atomic_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipLeft(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("SymDiffMembershipLeft")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipRight(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("SymDiffMembershipRight")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffNonmembershipBoth(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("SymDiffNonmembershipBoth")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffNonmembershipNeither(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("SymDiffNonmembershipNeither")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteFunctionApplicationMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteFunctionApplicationMembership")),

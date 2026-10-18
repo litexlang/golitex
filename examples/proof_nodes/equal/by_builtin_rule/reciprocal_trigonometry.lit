@@ -1,0 +1,80 @@
+# Before: 1/cos(x), 1/sin(x) (write the expansion explicitly).
+# Now: native objects preserve domains and expose named builtin relationships.
+# Negative/domain controls: tests/unit/execute/native_latex_operations/tests.rs
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rule/reciprocal_trigonometry.lit
+
+sec(0) = 1
+
+sec(pi) = -1
+
+csc(pi/2) = 1
+
+forall x R:
+    cos(x)!=0
+    =>:
+        sec(x)=1/cos(x)
+
+forall x R:
+    cos(x)!=0
+    =>:
+        sec(x)*cos(x)=1
+
+forall x R:
+    cos(x)!=0
+    =>:
+        sec(x)^2=1+tan(x)^2
+
+forall x R:
+    cos(x)!=0
+    =>:
+        sec(-x)=sec(x)
+
+forall x R:
+    cos(x)!=0
+    =>:
+        sec(x+2*pi)=sec(x)
+
+forall x R:
+    cos(x)!=0
+    =>:
+        sec(x+pi)=-sec(x)
+
+forall x R:
+    sin(x)!=0
+    =>:
+        csc(x)=1/sin(x)
+
+forall x R:
+    sin(x)!=0
+    =>:
+        csc(x)*sin(x)=1
+
+forall x R:
+    sin(x)!=0
+    =>:
+        csc(x)^2=1+cot(x)^2
+
+forall x R:
+    sin(x)!=0
+    =>:
+        csc(-x)=-csc(x)
+
+forall x R:
+    sin(x)!=0
+    =>:
+        csc(x+2*pi)=csc(x)
+
+forall x R:
+    sin(x)!=0
+    =>:
+        csc(x+pi)=-csc(x)
+
+forall x R:
+    cos(x)!=0
+    =>:
+        tan(x)=sin(x)*sec(x)
+
+forall x R:
+    sin(x)!=0
+    =>:
+        cot(x)=cos(x)*csc(x)

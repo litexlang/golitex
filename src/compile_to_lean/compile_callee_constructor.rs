@@ -163,7 +163,7 @@ impl LitexToLeanCompiler {
             before: 1,
             ..*position
         };
-        let (mut binders, _) = self.introduce_numeric_parameter(
+        let (mut binders, _) = self.introduce_member_parameter(
             &proof.parameter,
             carrier.obj(),
             parameter_store,

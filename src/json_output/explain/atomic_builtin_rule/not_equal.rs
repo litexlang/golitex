@@ -51,6 +51,42 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
             }
+            Self::CoshNonzero(_) => text(
+                "CoshNonzero",
+                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SechNonzero(_) => text(
+                "SechNonzero",
+                "Defined sech(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CothNonzero(_) => text(
+                "CothNonzero",
+                "Defined coth(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CschNonzero(_) => text(
+                "CschNonzero",
+                "Defined csch(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SecNonzero(_) => text(
+                "SecNonzero",
+                "Defined sec(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CscNonzero(_) => text(
+                "CscNonzero",
+                "Defined csc(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text(
+                "SinhNonzeroFromArgument",
+                "x != 0 and checked domain => sinh(x) != 0",
+            ),
+            Self::ConjugateNonzeroFromArgument(_) => text(
+                "ConjugateNonzeroFromArgument",
+                "x != 0 and checked domain => conjugate(x) != 0",
+            ),
+            Self::SinComplementNonzeroFromCos(_) => {
+                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
+            }
             Self::ExpNonzero(_) => text("Exponential is nonzero", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text(
                 "Factorial is nonzero",
@@ -149,6 +185,42 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
             }
+            Self::CoshNonzero(_) => text(
+                "CoshNonzero",
+                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SechNonzero(_) => text(
+                "SechNonzero",
+                "Defined sech(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CothNonzero(_) => text(
+                "CothNonzero",
+                "Defined coth(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CschNonzero(_) => text(
+                "CschNonzero",
+                "Defined csch(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SecNonzero(_) => text(
+                "SecNonzero",
+                "Defined sec(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CscNonzero(_) => text(
+                "CscNonzero",
+                "Defined csc(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text(
+                "SinhNonzeroFromArgument",
+                "x != 0 and checked domain => sinh(x) != 0",
+            ),
+            Self::ConjugateNonzeroFromArgument(_) => text(
+                "ConjugateNonzeroFromArgument",
+                "x != 0 and checked domain => conjugate(x) != 0",
+            ),
+            Self::SinComplementNonzeroFromCos(_) => {
+                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
+            }
             Self::ExpNonzero(_) => text("指数函数非零", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => {
                 text("阶乘非零", "n in N: factorial(n)>0 => factorial(n)!=0")
@@ -230,6 +302,42 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
             }
+            Self::CoshNonzero(_) => text(
+                "CoshNonzero",
+                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SechNonzero(_) => text(
+                "SechNonzero",
+                "Defined sech(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CothNonzero(_) => text(
+                "CothNonzero",
+                "Defined coth(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CschNonzero(_) => text(
+                "CschNonzero",
+                "Defined csch(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SecNonzero(_) => text(
+                "SecNonzero",
+                "Defined sec(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CscNonzero(_) => text(
+                "CscNonzero",
+                "Defined csc(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text(
+                "SinhNonzeroFromArgument",
+                "x != 0 and checked domain => sinh(x) != 0",
+            ),
+            Self::ConjugateNonzeroFromArgument(_) => text(
+                "ConjugateNonzeroFromArgument",
+                "x != 0 and checked domain => conjugate(x) != 0",
+            ),
+            Self::SinComplementNonzeroFromCos(_) => {
+                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
+            }
             Self::ExpNonzero(_) => text("指數函數非零", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => {
                 text("階乘非零", "n in N: factorial(n)>0 => factorial(n)!=0")
@@ -297,6 +405,16 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::CoshNonzero(_) => text("CoshNonzero", "Defined cosh(x) != 0; enclosing WD retains the domain"),
+            Self::SechNonzero(_) => text("SechNonzero", "Defined sech(x) != 0; enclosing WD retains the domain"),
+            Self::CothNonzero(_) => text("CothNonzero", "Defined coth(x) != 0; enclosing WD retains the domain"),
+            Self::CschNonzero(_) => text("CschNonzero", "Defined csch(x) != 0; enclosing WD retains the domain"),
+            Self::SecNonzero(_) => text("SecNonzero", "Defined sec(x) != 0; enclosing WD retains the domain"),
+            Self::CscNonzero(_) => text("CscNonzero", "Defined csc(x) != 0; enclosing WD retains the domain"),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text("SinhNonzeroFromArgument", "x != 0 and checked domain => sinh(x) != 0"),
+            Self::ConjugateNonzeroFromArgument(_) => text("ConjugateNonzeroFromArgument", "x != 0 and checked domain => conjugate(x) != 0"),
+            Self::SinComplementNonzeroFromCos(_) => text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0"),
             Self::ExpNonzero(_) => text("Exponentielle non nulle", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Factorielle non nulle", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Signe non nul de l’argument", "x in R, x!=0 => sign(x)!=0"),
@@ -347,6 +465,16 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::CoshNonzero(_) => text("CoshNonzero", "Defined cosh(x) != 0; enclosing WD retains the domain"),
+            Self::SechNonzero(_) => text("SechNonzero", "Defined sech(x) != 0; enclosing WD retains the domain"),
+            Self::CothNonzero(_) => text("CothNonzero", "Defined coth(x) != 0; enclosing WD retains the domain"),
+            Self::CschNonzero(_) => text("CschNonzero", "Defined csch(x) != 0; enclosing WD retains the domain"),
+            Self::SecNonzero(_) => text("SecNonzero", "Defined sec(x) != 0; enclosing WD retains the domain"),
+            Self::CscNonzero(_) => text("CscNonzero", "Defined csc(x) != 0; enclosing WD retains the domain"),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text("SinhNonzeroFromArgument", "x != 0 and checked domain => sinh(x) != 0"),
+            Self::ConjugateNonzeroFromArgument(_) => text("ConjugateNonzeroFromArgument", "x != 0 and checked domain => conjugate(x) != 0"),
+            Self::SinComplementNonzeroFromCos(_) => text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0"),
             Self::ExpNonzero(_) => text("Экспонента не равна нулю", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Факториал не равен нулю", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Ненулевой знак аргумента", "x in R, x!=0 => sign(x)!=0"),
@@ -397,6 +525,16 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::CoshNonzero(_) => text("CoshNonzero", "Defined cosh(x) != 0; enclosing WD retains the domain"),
+            Self::SechNonzero(_) => text("SechNonzero", "Defined sech(x) != 0; enclosing WD retains the domain"),
+            Self::CothNonzero(_) => text("CothNonzero", "Defined coth(x) != 0; enclosing WD retains the domain"),
+            Self::CschNonzero(_) => text("CschNonzero", "Defined csch(x) != 0; enclosing WD retains the domain"),
+            Self::SecNonzero(_) => text("SecNonzero", "Defined sec(x) != 0; enclosing WD retains the domain"),
+            Self::CscNonzero(_) => text("CscNonzero", "Defined csc(x) != 0; enclosing WD retains the domain"),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text("SinhNonzeroFromArgument", "x != 0 and checked domain => sinh(x) != 0"),
+            Self::ConjugateNonzeroFromArgument(_) => text("ConjugateNonzeroFromArgument", "x != 0 and checked domain => conjugate(x) != 0"),
+            Self::SinComplementNonzeroFromCos(_) => text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0"),
             Self::ExpNonzero(_) => text("Exponencial no nula", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Factorial no nulo", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Signo no nulo del argumento", "x in R, x!=0 => sign(x)!=0"),
@@ -460,6 +598,42 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
+            Self::CoshNonzero(_) => text(
+                "CoshNonzero",
+                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SechNonzero(_) => text(
+                "SechNonzero",
+                "Defined sech(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CothNonzero(_) => text(
+                "CothNonzero",
+                "Defined coth(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CschNonzero(_) => text(
+                "CschNonzero",
+                "Defined csch(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SecNonzero(_) => text(
+                "SecNonzero",
+                "Defined sec(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CscNonzero(_) => text(
+                "CscNonzero",
+                "Defined csc(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text(
+                "SinhNonzeroFromArgument",
+                "x != 0 and checked domain => sinh(x) != 0",
+            ),
+            Self::ConjugateNonzeroFromArgument(_) => text(
+                "ConjugateNonzeroFromArgument",
+                "x != 0 and checked domain => conjugate(x) != 0",
+            ),
+            Self::SinComplementNonzeroFromCos(_) => {
+                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
             }
             Self::ExpNonzero(_) => text("الدالة الأسية غير صفرية", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text(
@@ -555,6 +729,42 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
+            }
+            Self::CoshNonzero(_) => text(
+                "CoshNonzero",
+                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SechNonzero(_) => text(
+                "SechNonzero",
+                "Defined sech(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CothNonzero(_) => text(
+                "CothNonzero",
+                "Defined coth(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CschNonzero(_) => text(
+                "CschNonzero",
+                "Defined csch(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SecNonzero(_) => text(
+                "SecNonzero",
+                "Defined sec(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CscNonzero(_) => text(
+                "CscNonzero",
+                "Defined csc(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text(
+                "SinhNonzeroFromArgument",
+                "x != 0 and checked domain => sinh(x) != 0",
+            ),
+            Self::ConjugateNonzeroFromArgument(_) => text(
+                "ConjugateNonzeroFromArgument",
+                "x != 0 and checked domain => conjugate(x) != 0",
+            ),
+            Self::SinComplementNonzeroFromCos(_) => {
+                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
             }
             Self::ExpNonzero(_) => text("指数関数はゼロでない", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text(
@@ -653,6 +863,42 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
             }
+            Self::CoshNonzero(_) => text(
+                "CoshNonzero",
+                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SechNonzero(_) => text(
+                "SechNonzero",
+                "Defined sech(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CothNonzero(_) => text(
+                "CothNonzero",
+                "Defined coth(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CschNonzero(_) => text(
+                "CschNonzero",
+                "Defined csch(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::SecNonzero(_) => text(
+                "SecNonzero",
+                "Defined sec(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::CscNonzero(_) => text(
+                "CscNonzero",
+                "Defined csc(x) != 0; enclosing WD retains the domain",
+            ),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text(
+                "SinhNonzeroFromArgument",
+                "x != 0 and checked domain => sinh(x) != 0",
+            ),
+            Self::ConjugateNonzeroFromArgument(_) => text(
+                "ConjugateNonzeroFromArgument",
+                "x != 0 and checked domain => conjugate(x) != 0",
+            ),
+            Self::SinComplementNonzeroFromCos(_) => {
+                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
+            }
             Self::ExpNonzero(_) => text("지수 함수는 영이 아님", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text(
                 "팩토리얼은 영이 아님",
@@ -734,6 +980,16 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::CotNonzeroFromCos(_) => text("CotNonzeroFromCos", "Defined cot(x), cos(x)!=0 => cot(x)!=0"),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0"),
+            Self::CoshNonzero(_) => text("CoshNonzero", "Defined cosh(x) != 0; enclosing WD retains the domain"),
+            Self::SechNonzero(_) => text("SechNonzero", "Defined sech(x) != 0; enclosing WD retains the domain"),
+            Self::CothNonzero(_) => text("CothNonzero", "Defined coth(x) != 0; enclosing WD retains the domain"),
+            Self::CschNonzero(_) => text("CschNonzero", "Defined csch(x) != 0; enclosing WD retains the domain"),
+            Self::SecNonzero(_) => text("SecNonzero", "Defined sec(x) != 0; enclosing WD retains the domain"),
+            Self::CscNonzero(_) => text("CscNonzero", "Defined csc(x) != 0; enclosing WD retains the domain"),
+            Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
+            Self::SinhNonzeroFromArgument(_) => text("SinhNonzeroFromArgument", "x != 0 and checked domain => sinh(x) != 0"),
+            Self::ConjugateNonzeroFromArgument(_) => text("ConjugateNonzeroFromArgument", "x != 0 and checked domain => conjugate(x) != 0"),
+            Self::SinComplementNonzeroFromCos(_) => text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0"),
             Self::ExpNonzero(_) => text("Hàm mũ khác không", "x in R: exp(x)>0 => exp(x)!=0"),
             Self::FactorialNonzero(_) => text("Giai thừa khác không", "n in N: factorial(n)>0 => factorial(n)!=0"),
             Self::SignNonzeroFromArgument(_) => text("Dấu của đối số khác không", "x in R, x!=0 => sign(x)!=0"),

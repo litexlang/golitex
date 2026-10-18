@@ -91,7 +91,7 @@ impl LitexToLeanCompiler {
             compiled.1,
         );
         let conclusion = (self.fact_proposition(&fact, &formed)?, proof);
-        declarations.push(self.emit_internal_fact(&fact, &conclusion, position));
+        declarations.push(self.emit_internal_fact(&fact, &conclusion, position)?);
         Ok(declarations)
     }
 }

@@ -474,13 +474,9 @@ impl LitexToLeanCompiler {
             owner: SourceOwner::WD(wd),
             before: 0,
         };
-        let (call, output) = self.compile_fn_call_with_return(application, proof, &constructor)?;
-        let law = if application.body[0].len() == 1 {
-            "callInOutput"
-        } else {
-            "call2InOutput"
-        };
-        let member = format!("(Litex.{law} {call})");
+        let call = self.compile_fn_obj_wd(application, proof, &constructor)?;
+        let (output, member) =
+            self.compile_fn_output_membership(application, proof, &constructor)?;
         Ok((call, output, member))
     }
 

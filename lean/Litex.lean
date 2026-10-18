@@ -1,6 +1,7 @@
 import Mathlib.Data.Complex.Basic
 import Mathlib.Algebra.Order.Archimedean.Real.Basic
 import Mathlib.Tactic.FieldSimp
+import Mathlib.Tactic.FinCases
 import Mathlib.SetTheory.ZFC.Ordinal
 
 /-! Litex object semantics, certified constructors, and native numeric bridges.
@@ -2005,11 +2006,14 @@ noncomputable instance numericSetSemantics : SetSemantics NumericModel.model whe
   sepValue D p := ZFSet.sep p D
   sep_members _ _ _ := ZFSet.mem_sep
   sep_isSet _ _ _ := True.intro
-  unionValue := (· ∪ ·)
+  unionValue := ZFSet.union
   union_members _ _ _ := ZFSet.mem_union
   union_isSet _ _ _ _ := True.intro
   powerValue := ZFSet.powerset
-  power_members _ _ := by simp only [ZFSet.mem_powerset]; exact ⟨fun h => ⟨True.intro, h⟩, fun h => h.2⟩
+  power_members A B := by
+    change B ∈ ZFSet.powerset A ↔ True ∧ ZFSet.Subset B A
+    exact ⟨fun h => ⟨True.intro, ZFSet.mem_powerset.mp h⟩,
+      fun h => ZFSet.mem_powerset.mpr h.2⟩
   power_isSet _ _ := True.intro
   ext _ _ _ _ := ZFSet.ext
 
@@ -2431,7 +2435,8 @@ namespace FunctionSemantics
 
 variable {M : Semantics.{u}} [F : FunctionSemantics M]
 
-/-- Decoding is only used internally to interpret a two-parameter formula graph. -/
+/-- Decode the raw ordered-pair encoding used by graph edges. Source tuples
+are finite indexed graphs and use `FiniteFunction.unpack2` below. -/
 noncomputable def unpairValue (p : M.Value) : M.Value × M.Value := by
   classical
   exact if h : ∃ v : M.Value × M.Value, p = F.pairValue v.1 v.2 then
@@ -2449,54 +2454,456 @@ theorem unpair_pair (a b : M.Value) :
 
 end FunctionSemantics
 
-inductive NumericInputDomain where
-  | one (input : StandardSetValue)
-  | two (first second : StandardSetValue)
+namespace FiniteFunction
 
-/-- Inputs retain the supported numeric domains. A codomain is a certified
-semantic set, so derived sets keep their exact membership contract. -/
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+def finiteSetValue : List M.Value → M.Value
+  | [] => F.emptyValue
+  | a :: xs => F.insertValue a (finiteSetValue xs)
+
+theorem finiteSet_members (xs : List M.Value) (x : M.Value) :
+    M.mem x (finiteSetValue xs) ↔ x ∈ xs := by
+  induction xs with
+  | nil => exact ⟨fun h => (F.empty_members x h).elim, fun h => nomatch h⟩
+  | cons a xs ih =>
+    rw [finiteSetValue, F.insert_members, List.mem_cons, ih]
+
+theorem finiteSet_isSet (xs : List M.Value) (h : ∀ x ∈ xs, M.isSet x) :
+    M.isSet (finiteSetValue xs) := by
+  induction xs with
+  | nil => exact F.empty_isSet
+  | cons a xs ih =>
+    exact F.insert_isSet _ _ (h a (List.mem_cons_self))
+      (ih (fun x hx => h x (List.mem_cons_of_mem a hx)))
+
+def index {n : ℕ} (i : Fin n) : M.Value := M.number ((i.val + 1 : ℕ) : ℂ)
+
+omit F in
+theorem index_injective {n : ℕ} : Function.Injective (index (M := M) (n := n)) := by
+  intro i j h
+  have hcast := M.number_injective h
+  have hnat : i.val + 1 = j.val + 1 := by exact_mod_cast hcast
+  exact Fin.ext (Nat.add_right_cancel hnat)
+
+def indexSet (n : ℕ) : M.Value := finiteSetValue (List.ofFn (index (M := M) (n := n)))
+
+theorem indexSet_members {n : ℕ} (x : M.Value) :
+    M.mem x (indexSet n) ↔ ∃ i : Fin n, x = index i := by
+  simp only [indexSet, finiteSet_members, List.mem_ofFn]
+  exact ⟨fun ⟨i, h⟩ => ⟨i, h.symm⟩, fun ⟨i, h⟩ => ⟨i, h.symm⟩⟩
+
+theorem index_mem {n : ℕ} (i : Fin n) : M.mem (index (M := M) i) (indexSet n) :=
+  (indexSet_members _).mpr ⟨i, rfl⟩
+
+theorem indexSet_isSet (n : ℕ) : M.isSet (indexSet (M := M) n) := by
+  apply finiteSet_isSet
+  intro x hx
+  obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hx
+  exact isSet (number ((i.val + 1 : ℕ) : ℂ))
+
+def tupleValue {n : ℕ} (a : Fin n → M.Value) : M.Value :=
+  finiteSetValue (List.ofFn (fun i => F.pairValue (index i) (a i)))
+
+theorem tuple_members {n : ℕ} (a : Fin n → M.Value) (p : M.Value) :
+    M.mem p (tupleValue a) ↔ ∃ i : Fin n, p = F.pairValue (index i) (a i) := by
+  simp only [tupleValue, finiteSet_members, List.mem_ofFn]
+  exact ⟨fun ⟨i, h⟩ => ⟨i, h.symm⟩, fun ⟨i, h⟩ => ⟨i, h.symm⟩⟩
+
+theorem tuple_pair_mem {n : ℕ} (a : Fin n → M.Value) (x y : M.Value) :
+    M.mem (F.pairValue x y) (tupleValue a) ↔
+      ∃ i : Fin n, x = index i ∧ y = a i := by
+  rw [tuple_members]
+  constructor
+  · rintro ⟨i, h⟩
+    exact ⟨i, F.pair_injective h⟩
+  · rintro ⟨i, rfl, rfl⟩
+    exact ⟨i, rfl⟩
+
+theorem tuple_isFunction {n : ℕ} (a : Fin n → M.Value) :
+    IsFunctionGraph F.pairValue (indexSet n) (finiteSetValue (List.ofFn a))
+      (tupleValue a) := by
+  constructor
+  · intro p hp
+    obtain ⟨i, rfl⟩ := (tuple_members a p).mp hp
+    exact ⟨index i, index_mem i, a i,
+      (finiteSet_members _ _).mpr (List.mem_ofFn.mpr ⟨i, rfl⟩), rfl⟩
+  · intro x hx
+    obtain ⟨i, rfl⟩ := (indexSet_members x).mp hx
+    refine ⟨a i, (tuple_pair_mem a _ _).mpr ⟨i, rfl, rfl⟩, ?_⟩
+    intro y hy
+    obtain ⟨j, hij, hy⟩ := (tuple_pair_mem a _ _).mp hy
+    have hji : i = j := index_injective hij
+    exact hy.trans (congrArg a hji.symm)
+
+theorem tuple_isSet {n : ℕ} (a : Fin n → M.Value) : M.isSet (tupleValue a) :=
+  M.member_isSet ((F.fnSet_members _ _ _).mpr (tuple_isFunction a))
+
+theorem call_tuple {n : ℕ} (a : Fin n → M.Value) (i : Fin n) :
+    F.callValue (tupleValue a) (index i) = a i := by
+  have h := F.call_graph _ _ _ _ (tuple_isFunction a) (index_mem i)
+  obtain ⟨j, hij, hy⟩ := (tuple_pair_mem a _ _).mp h
+  exact hy.trans (congrArg a (index_injective hij).symm)
+
+def finiteUnionValue : List M.Value → M.Value
+  | [] => F.emptyValue
+  | A :: As => F.unionValue A (finiteUnionValue As)
+
+theorem finiteUnion_members (As : List M.Value) (x : M.Value) :
+    M.mem x (finiteUnionValue As) ↔ ∃ A ∈ As, M.mem x A := by
+  induction As with
+  | nil =>
+    exact ⟨fun h => (F.empty_members x h).elim, fun ⟨A, hA, _⟩ => nomatch hA⟩
+  | cons A As ih =>
+    rw [finiteUnionValue, F.union_members, ih]
+    constructor
+    · rintro (hx | ⟨B, hB, hx⟩)
+      · exact ⟨A, List.mem_cons_self, hx⟩
+      · exact ⟨B, List.mem_cons_of_mem A hB, hx⟩
+    · rintro ⟨B, hB, hx⟩
+      rcases List.mem_cons.mp hB with rfl | hB
+      · exact Or.inl hx
+      · exact Or.inr ⟨B, hB, hx⟩
+
+theorem finiteUnion_isSet (As : List M.Value) (h : ∀ A ∈ As, M.isSet A) :
+    M.isSet (finiteUnionValue As) := by
+  induction As with
+  | nil => exact F.empty_isSet
+  | cons A As ih =>
+    exact F.union_isSet _ _ (h A List.mem_cons_self)
+      (ih (fun B hB => h B (List.mem_cons_of_mem A hB)))
+
+def cartValue {n : ℕ} (A : Fin n → M.Value) : M.Value :=
+  F.sepValue (F.fnSetValue (indexSet n) (finiteUnionValue (List.ofFn A)))
+    (fun p => ∀ i, M.mem (F.callValue p (index i)) (A i))
+
+theorem cart_members {n : ℕ} (A : Fin n → M.Value) (p : M.Value) :
+    M.mem p (cartValue A) ↔
+      IsFunctionGraph F.pairValue (indexSet n) (finiteUnionValue (List.ofFn A)) p ∧
+      ∀ i, M.mem (F.callValue p (index i)) (A i) := by
+  rw [cartValue, F.sep_members, F.fnSet_members]
+
+theorem cart_isSet {n : ℕ} (A : Fin n → M.Value) (hA : ∀ i, M.isSet (A i)) :
+    M.isSet (cartValue A) := by
+  apply F.sep_isSet
+  apply F.fnSet_isSet _ _ (indexSet_isSet n)
+  apply finiteUnion_isSet
+  intro B hB
+  obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hB
+  exact hA i
+
+theorem tuple_inCart {n : ℕ} (a A : Fin n → M.Value) (h : ∀ i, M.mem (a i) (A i)) :
+    M.mem (tupleValue a) (cartValue A) := by
+  apply (cart_members A _).mpr
+  constructor
+  · constructor
+    · intro p hp
+      obtain ⟨i, rfl⟩ := (tuple_members a p).mp hp
+      refine ⟨index i, index_mem i, a i, ?_, rfl⟩
+      exact (finiteUnion_members _ _).mpr ⟨A i, List.mem_ofFn.mpr ⟨i, rfl⟩, h i⟩
+    · exact (tuple_isFunction a).2
+  · intro i
+    rw [call_tuple]
+    exact h i
+
+theorem coordinate_mem {n : ℕ} {A : Fin n → M.Value} {p : M.Value}
+    (hp : M.mem p (cartValue A)) (i : Fin n) : M.mem (F.callValue p (index i)) (A i) :=
+  ((cart_members A p).mp hp).2 i
+
+theorem graph_pair_value {D B f x y : M.Value}
+    (hf : IsFunctionGraph F.pairValue D B f) (hxy : M.mem (F.pairValue x y) f) :
+    M.mem x D ∧ y = F.callValue f x := by
+  obtain ⟨a, ha, b, _, hab⟩ := hf.1 _ hxy
+  obtain ⟨rfl, rfl⟩ := F.pair_injective hab
+  have hcall := F.call_graph D B f x hf ha
+  obtain ⟨z, _, hz⟩ := hf.2 x ha
+  exact ⟨ha, (hz y hxy).trans (hz _ hcall).symm⟩
+
+theorem cart_ext {n : ℕ} {A B : Fin n → M.Value} {p q : M.Value}
+    (hp : M.mem p (cartValue A)) (hq : M.mem q (cartValue B))
+    (h : ∀ i : Fin n, F.callValue p (index i) = F.callValue q (index i)) : p = q := by
+  apply F.ext p q (M.member_isSet hp) (M.member_isSet hq)
+  intro edge
+  constructor
+  · intro he
+    obtain ⟨x, hx, y, _, rfl⟩ := ((cart_members A p).mp hp).1.1 edge he
+    obtain ⟨i, rfl⟩ := (indexSet_members x).mp hx
+    have hy := (graph_pair_value ((cart_members A p).mp hp).1 he).2
+    rw [hy, h i]
+    exact F.call_graph _ _ _ _ ((cart_members B q).mp hq).1 (index_mem i)
+  · intro he
+    obtain ⟨x, hx, y, _, rfl⟩ := ((cart_members B q).mp hq).1.1 edge he
+    obtain ⟨i, rfl⟩ := (indexSet_members x).mp hx
+    have hy := (graph_pair_value ((cart_members B q).mp hq).1 he).2
+    rw [hy, ← h i]
+    exact F.call_graph _ _ _ _ ((cart_members A p).mp hp).1 (index_mem i)
+
+theorem reconstruct {n : ℕ} {A : Fin n → M.Value} {p : M.Value}
+    (hp : M.mem p (cartValue A)) :
+    p = tupleValue (fun i : Fin n => F.callValue p (index i)) := by
+  apply cart_ext hp (tuple_inCart _ A (coordinate_mem hp))
+  intro i
+  rw [call_tuple]
+
+def pack2 (a b : M.Value) : M.Value := tupleValue ![a, b]
+
+def unpack2 (p : M.Value) : M.Value × M.Value :=
+  (F.callValue p (M.number 1), F.callValue p (M.number 2))
+
+theorem unpack_pack2 (a b : M.Value) : unpack2 (pack2 a b) = (a, b) := by
+  apply Prod.ext
+  · simpa [unpack2, pack2, index] using call_tuple ![a, b] (0 : Fin 2)
+  · simpa [unpack2, pack2, index] using call_tuple ![a, b] (1 : Fin 2)
+
+theorem pack2_injective : Function.Injective2 (pack2 (M := M)) := by
+  intro a b c d h
+  have hp := congrArg (unpack2 (M := M)) h
+  rw [unpack_pack2, unpack_pack2] at hp
+  exact ⟨congrArg Prod.fst hp, congrArg Prod.snd hp⟩
+
+theorem cart2_members (A B p : M.Value) :
+    M.mem p (cartValue ![A, B]) ↔
+      ∃ a, M.mem a A ∧ ∃ b, M.mem b B ∧ p = pack2 a b := by
+  constructor
+  · intro hp
+    refine ⟨F.callValue p (M.number 1), by simpa [index] using coordinate_mem hp (0 : Fin 2),
+      F.callValue p (M.number 2), by simpa [index] using coordinate_mem hp (1 : Fin 2), ?_⟩
+    refine (reconstruct hp).trans (congrArg tupleValue ?_)
+    funext i
+    fin_cases i <;> simp [index]
+  · rintro ⟨a, ha, b, hb, rfl⟩
+    apply tuple_inCart
+    intro i
+    fin_cases i
+    · exact ha
+    · exact hb
+
+end FiniteFunction
+
+structure TupleObj (M : Semantics.{u}) (n : ℕ) where
+  values : Fin n → M.Value
+
+instance tupleRepresentation {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ} :
+    Representation M (TupleObj M n) where
+  wd t := ∀ i, M.isSet (t.values i)
+  denote t := FiniteFunction.tupleValue t.values
+  wd_isSet {t} _ := FiniteFunction.tuple_isSet t.values
+
+def tuple {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
+    (values : Fin n → M.Value) (hSets : ∀ i, M.isSet (values i)) :
+    Obj (M := M) (TupleObj M n) := ⟨⟨values⟩, hSets⟩
+
+structure CartObj (M : Semantics.{u}) (n : ℕ) where
+  factors : Fin n → M.Value
+
+instance cartRepresentation {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ} :
+    Representation M (CartObj M n) where
+  wd c := ∀ i, M.isSet (c.factors i)
+  denote c := FiniteFunction.cartValue c.factors
+  wd_isSet {c} h := FiniteFunction.cart_isSet c.factors h
+
+def cart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
+    (factors : Fin n → M.Value) (hSets : ∀ i, M.isSet (factors i)) :
+    Obj (M := M) (CartObj M n) := ⟨⟨factors⟩, hSets⟩
+
+theorem tupleInCart {M : Semantics.{u}} [FunctionSemantics M] {n : ℕ}
+    (t : Obj (M := M) (TupleObj M n)) (c : Obj (M := M) (CartObj M n))
+    (h : ∀ i, M.mem (t.val.values i) (c.val.factors i)) : In t c :=
+  FiniteFunction.tuple_inCart _ _ h
+
+theorem tuple_coordinate {M : Semantics.{u}} [F : FunctionSemantics M] {n : ℕ}
+    (t : Obj (M := M) (TupleObj M n)) (i : Fin n) :
+    F.callValue (denote t) (FiniteFunction.index i) = t.val.values i :=
+  FiniteFunction.call_tuple _ i
+
+structure ClosedRangeObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  start : Obj (M := M) α
+  finish : Obj (M := M) β
+
+def ClosedRangeObj.condition {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (r : ClosedRangeObj (M := M) α β) (value : M.Value) : Prop :=
+  ∃ lower upper k : ℤ, denote r.start = M.number (lower : ℂ) ∧
+    denote r.finish = M.number (upper : ℂ) ∧ value = M.number (k : ℂ) ∧
+    lower ≤ k ∧ k ≤ upper
+
+instance closedRangeRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (ClosedRangeObj (M := M) α β) where
+  wd r := In r.start Z ∧ In r.finish Z
+  denote r := S.sepValue (M.standard .integer) r.condition
+  wd_isSet _ := S.sep_isSet _ _ (M.standard_isSet .integer)
+
+def closedRange {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (ha : In a Z) (hb : In b Z) :
+    Obj (M := M) (ClosedRangeObj (M := M) α β) := ⟨⟨a, b⟩, ⟨ha, hb⟩⟩
+
+theorem inClosedRange_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (p : Obj (M := M) γ)
+    (ha : In a Z) (hb : In b Z) :
+    In p (closedRange a b ha hb) ↔
+      ∃ lower upper k : ℤ, denote a = M.number (lower : ℂ) ∧
+        denote b = M.number (upper : ℂ) ∧ denote p = M.number (k : ℂ) ∧
+        lower ≤ k ∧ k ≤ upper := by
+  change M.mem (denote p) (S.sepValue (M.standard .integer) _) ↔ _
+  rw [S.sep_members]
+  constructor
+  · exact fun h => h.2
+  · rintro ⟨lower, upper, k, hl, hu, hp, hlo, hhi⟩
+    exact ⟨(M.integer_members _).mpr ⟨k, hp⟩, lower, upper, k, hl, hu, hp, hlo, hhi⟩
+
+theorem inClosedRangeOfDenote {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β) (p : Obj (M := M) γ)
+    (ha : In a Z) (hb : In b Z) (lower upper k : ℤ)
+    (hl : denote a = M.number (lower : ℂ))
+    (hu : denote b = M.number (upper : ℂ))
+    (hp : denote p = M.number (k : ℂ)) (hlo : lower ≤ k) (hhi : k ≤ upper) :
+    In p (closedRange a b ha hb) :=
+  (inClosedRange_iff a b p ha hb).mpr ⟨lower, upper, k, hl, hu, hp, hlo, hhi⟩
+
+theorem numberInClosedRange {M : Semantics.{u}} [SetSemantics M]
+    (lower upper k : ℤ) (hlo : lower ≤ k) (hhi : k ≤ upper) :
+    In (number (M := M) (k : ℂ))
+      (closedRange (number (lower : ℂ)) (number (upper : ℂ))
+        (NativeBridge.numberInZ lower) (NativeBridge.numberInZ upper)) :=
+  inClosedRangeOfDenote _ _ _ _ _ lower upper k rfl rfl rfl hlo hhi
+
+theorem closedRange_indexSet {M : Semantics.{u}} [F : FunctionSemantics M] (n : ℕ)
+    (ha : In (number (M := M) 1) Z) (hb : In (number (M := M) (n : ℂ)) Z) :
+    denote (closedRange (number (M := M) 1) (number (n : ℂ)) ha hb) =
+      FiniteFunction.indexSet (M := M) n := by
+  apply F.ext _ _ (isSet _) (FiniteFunction.indexSet_isSet n)
+  intro value
+  change M.mem value (F.sepValue (M.standard .integer) _) ↔ _
+  rw [F.sep_members, FiniteFunction.indexSet_members]
+  constructor
+  · rintro ⟨_, lower, upper, k, hl, hu, hv, hlo, hhi⟩
+    have hl' : lower = 1 := by
+      change M.number 1 = M.number (lower : ℂ) at hl
+      have h := M.number_injective hl
+      exact_mod_cast h.symm
+    have hu' : upper = (n : ℤ) := by
+      change M.number (n : ℂ) = M.number (upper : ℂ) at hu
+      have h := M.number_injective hu
+      exact_mod_cast h.symm
+    subst lower
+    subst upper
+    have hk0 : 0 ≤ k := le_trans (by norm_num) hlo
+    have hk : (k.toNat : ℤ) = k := Int.toNat_of_nonneg hk0
+    have hkn : k.toNat ≤ n := by exact_mod_cast (hk.symm ▸ hhi)
+    have hkpos : 1 ≤ k.toNat := by exact_mod_cast (hk.symm ▸ hlo)
+    let i : Fin n := ⟨k.toNat - 1, by omega⟩
+    refine ⟨i, hv.trans ?_⟩
+    unfold FiniteFunction.index
+    apply congrArg M.number
+    have hi : i.val + 1 = k.toNat := by dsimp [i]; omega
+    rw [hi]
+    exact_mod_cast hk.symm
+  · rintro ⟨i, rfl⟩
+    have hk : M.mem (FiniteFunction.index (M := M) i) (M.standard .integer) := by
+      apply (M.integer_members _).mpr
+      refine ⟨(i.val + 1 : ℕ), ?_⟩
+      simp [FiniteFunction.index]
+    refine ⟨hk, 1, (n : ℤ), ((i.val + 1 : ℕ) : ℤ), ?_, ?_, ?_, ?_, ?_⟩
+    · change M.number 1 = M.number ((1 : ℤ) : ℂ)
+      norm_num
+    · change M.number (n : ℂ) = M.number ((n : ℤ) : ℂ)
+      norm_num
+    · simp [FiniteFunction.index]
+    · exact_mod_cast (Nat.succ_le_succ (Nat.zero_le i.val))
+    · exact_mod_cast (Nat.succ_le_of_lt i.isLt)
+
+
+structure UnionObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  left : Obj (M := M) α
+  right : Obj (M := M) β
+
+instance unionRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (UnionObj (M := M) α β) where
+  wd _ := True
+  denote p := S.unionValue (denote p.left) (denote p.right)
+  wd_isSet {p} _ := S.union_isSet _ _ (isSet p.left) (isSet p.right)
+
+def union {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) :
+    Obj (M := M) (UnionObj (M := M) α β) := ⟨⟨A, B⟩, True.intro⟩
+
+theorem inUnion_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (A : Obj (M := M) β) (B : Obj (M := M) γ) :
+    In a (union A B) ↔ In a A ∨ In a B := S.union_members _ _ _
+
+structure PowerSetObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  bound : Obj (M := M) α
+
+instance powerSetRepresentation {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} [Representation M α] : Representation M (PowerSetObj (M := M) α) where
+  wd _ := True
+  denote p := S.powerValue (denote p.bound)
+  wd_isSet {p} _ := S.power_isSet _ (isSet p.bound)
+
+def powerSet {M : Semantics.{u}} [SetSemantics M]
+    {α : Type v} [Representation M α] (A : Obj (M := M) α) :
+    Obj (M := M) (PowerSetObj (M := M) α) := ⟨⟨A⟩, True.intro⟩
+
+theorem inPowerSet_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (A : Obj (M := M) α) (B : Obj (M := M) β) : In A (powerSet B) ↔ Subset A B := by
+  change M.mem (denote A) (S.powerValue (denote B)) ↔ _
+  rw [S.power_members]
+  exact ⟨fun h => h.2, fun h => ⟨isSet A, h⟩⟩
+
+
+/-- A function signature records its exact checked domain and return set. -/
 structure FunctionSignature (M : Semantics.{u}) where
-  inputs : NumericInputDomain
+  domain : M.Value
+  domain_isSet : M.isSet domain
   output : M.Value
   output_isSet : M.isSet output
-  guard : M.Value → Prop
 
 namespace FunctionSignature
 
 variable {M : Semantics.{u}} [F : FunctionSemantics M]
 
+def ofDomain (D B : M.Value) (hD : M.isSet D) (hB : M.isSet B) : FunctionSignature M :=
+  ⟨D, hD, B, hB⟩
+
+def withGuard (D B : M.Value) (hD : M.isSet D) (hB : M.isSet B)
+    (guard : M.Value → Prop) : FunctionSignature M :=
+  ⟨F.sepValue D guard, F.sep_isSet D guard hD, B, hB⟩
+
+theorem withGuard_domain (D B : M.Value) (hD : M.isSet D) (hB : M.isSet B)
+    (guard : M.Value → Prop) (x : M.Value) :
+    M.mem x (withGuard D B hD hB guard).domain ↔ M.mem x D ∧ guard x :=
+  F.sep_members D guard x
+
 def oneTarget (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
     (guard : M.Value → Prop) : FunctionSignature M :=
-  ⟨.one A, B, hB, guard⟩
+  withGuard (M.standard A) B (M.standard_isSet A) hB guard
 
 noncomputable def twoTarget (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
     (guard : M.Value → M.Value → Prop) : FunctionSignature M :=
-  ⟨.two A E, B, hB, fun p => guard (FunctionSemantics.unpairValue p).1
-    (FunctionSemantics.unpairValue p).2⟩
+  withGuard (FiniteFunction.cartValue ![M.standard A, M.standard E]) B
+    (FiniteFunction.cart_isSet _ (by intro i; fin_cases i <;> exact M.standard_isSet _))
+    hB (fun p => guard (FiniteFunction.unpack2 p).1 (FiniteFunction.unpack2 p).2)
 
 def one (A B : StandardSetValue) (guard : M.Value → Prop) : FunctionSignature M :=
   oneTarget A (M.standard B) (M.standard_isSet B) guard
 
 noncomputable def two (A E B : StandardSetValue) (guard : M.Value → M.Value → Prop) :
-    FunctionSignature M :=
-  twoTarget A E (M.standard B) (M.standard_isSet B) guard
-
-def baseDomain (s : FunctionSignature M) : M.Value :=
-  match s.inputs with
-  | .one A => M.standard A
-  | .two A E => F.productValue (M.standard A) (M.standard E)
-
-def domain (s : FunctionSignature M) : M.Value := F.sepValue s.baseDomain s.guard
+    FunctionSignature M := twoTarget A E (M.standard B) (M.standard_isSet B) guard
 
 def target (s : FunctionSignature M) : M.Value := s.output
-
-theorem domain_isSet (s : FunctionSignature M) : M.isSet s.domain := by
-  apply F.sep_isSet
-  cases s with
-  | mk inputs output output_isSet guard =>
-    cases inputs with
-    | one A => exact M.standard_isSet A
-    | two A E => exact F.product_isSet _ _ (M.standard_isSet A) (M.standard_isSet E)
 
 theorem oneTarget_domain (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
     (guard : M.Value → Prop) (x : M.Value) :
@@ -2504,21 +2911,20 @@ theorem oneTarget_domain (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
   F.sep_members _ _ _
 
 theorem twoTarget_domain (A E : StandardSetValue) (B : M.Value) (hB : M.isSet B)
-    (guard : M.Value → M.Value → Prop)
-    (a b : M.Value) :
-    M.mem (F.pairValue a b) (twoTarget A E B hB guard).domain ↔
+    (guard : M.Value → M.Value → Prop) (a b : M.Value) :
+    M.mem (FiniteFunction.pack2 a b) (twoTarget A E B hB guard).domain ↔
       M.mem a (M.standard A) ∧ M.mem b (M.standard E) ∧ guard a b := by
-  change M.mem (F.pairValue a b)
-    (F.sepValue (F.productValue (M.standard A) (M.standard E)) _) ↔ _
+  change M.mem (FiniteFunction.pack2 a b)
+    (F.sepValue (FiniteFunction.cartValue ![M.standard A, M.standard E]) _) ↔ _
   rw [F.sep_members]
-  simp only [twoTarget, FunctionSemantics.unpair_pair]
+  simp only [FiniteFunction.unpack_pack2]
   constructor
   · rintro ⟨h, hg⟩
-    obtain ⟨x, hx, y, hy, hp⟩ := (F.product_members _ _ _).mp h
-    obtain ⟨rfl, rfl⟩ := F.pair_injective hp
+    obtain ⟨x, hx, y, hy, hp⟩ := (FiniteFunction.cart2_members _ _ _).mp h
+    obtain ⟨rfl, rfl⟩ := FiniteFunction.pack2_injective hp
     exact ⟨hx, hy, hg⟩
   · rintro ⟨ha, hb, hg⟩
-    exact ⟨(F.product_members _ _ _).mpr ⟨a, ha, b, hb, rfl⟩, hg⟩
+    exact ⟨(FiniteFunction.cart2_members _ _ _).mpr ⟨a, ha, b, hb, rfl⟩, hg⟩
 
 theorem one_domain (A B : StandardSetValue) (guard : M.Value → Prop) (x : M.Value) :
     M.mem x (one A B guard).domain ↔ M.mem x (M.standard A) ∧ guard x :=
@@ -2526,7 +2932,7 @@ theorem one_domain (A B : StandardSetValue) (guard : M.Value → Prop) (x : M.Va
 
 theorem two_domain (A E B : StandardSetValue) (guard : M.Value → M.Value → Prop)
     (a b : M.Value) :
-    M.mem (F.pairValue a b) (two A E B guard).domain ↔
+    M.mem (FiniteFunction.pack2 a b) (two A E B guard).domain ↔
       M.mem a (M.standard A) ∧ M.mem b (M.standard E) ∧ guard a b :=
   twoTarget_domain A E (M.standard B) (M.standard_isSet B) guard a b
 
@@ -2570,15 +2976,17 @@ noncomputable def formulaFn2Target {M : Semantics.{u}} [F : FunctionSemantics M]
     (hReturn : ∀ x y, M.mem x (M.standard A) → M.mem y (M.standard E) →
       guard x y → M.mem (body x y) B) : Obj (M := M) (FormulaFn M) := by
   let s := FunctionSignature.twoTarget A E B hB guard
-  let interpretation := fun p => body (FunctionSemantics.unpairValue p).1
-    (FunctionSemantics.unpairValue p).2
+  let interpretation := fun p => body (FiniteFunction.unpack2 p).1
+    (FiniteFunction.unpack2 p).2
   refine ⟨⟨s, interpretation⟩, ?_⟩
   intro p hp
-  obtain ⟨hproduct, hg⟩ := (F.sep_members s.baseDomain s.guard p).mp hp
-  obtain ⟨x, hx, y, hy, rfl⟩ := (F.product_members _ _ _).mp hproduct
+  obtain ⟨hproduct, hg⟩ := (F.sep_members
+    (FiniteFunction.cartValue ![M.standard A, M.standard E])
+    (fun p => guard (FiniteFunction.unpack2 p).1 (FiniteFunction.unpack2 p).2) p).mp hp
+  obtain ⟨x, hx, y, hy, rfl⟩ := (FiniteFunction.cart2_members _ _ _).mp hproduct
   change M.mem (body _ _) B
-  simpa only [FunctionSemantics.unpair_pair] using hReturn x y hx hy
-    (by simpa only [s, FunctionSignature.twoTarget, FunctionSemantics.unpair_pair] using hg)
+  simpa only [FiniteFunction.unpack_pack2] using hReturn x y hx hy
+    (by simpa only [s, FunctionSignature.twoTarget, FiniteFunction.unpack_pack2] using hg)
 
 def formulaFn {M : Semantics.{u}} [FunctionSemantics M]
     (A B : StandardSetValue) (guard : M.Value → Prop) (body : M.Value → M.Value)
@@ -2596,6 +3004,69 @@ noncomputable def formulaFn2 {M : Semantics.{u}} [FunctionSemantics M]
 theorem formulaFnInFnSet {M : Semantics.{u}} [FunctionSemantics M]
     (f : Obj (M := M) (FormulaFn M)) : In f (fnSet f.val.signature) :=
   FunctionSemantics.graph_inFnSet _ _ _ f.wd
+
+def formulaFnOn {M : Semantics.{u}} [FunctionSemantics M]
+    (signature : FunctionSignature M) (body : M.Value → M.Value)
+    (hReturn : ∀ x, M.mem x signature.domain → M.mem (body x) signature.output) :
+    Obj (M := M) (FormulaFn M) := ⟨⟨signature, body⟩, hReturn⟩
+
+structure CallOnObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  signature : FunctionSignature M
+  function : Obj (M := M) α
+  argument : Obj (M := M) β
+
+instance callOnRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (CallOnObj (M := M) α β) where
+  wd c := In c.function (fnSet c.signature) ∧ M.mem (denote c.argument) c.signature.domain
+  denote c := F.callValue (denote c.function) (denote c.argument)
+  wd_isSet h := M.member_isSet (FunctionSemantics.call_mem _ _ _ _ h.1 h.2)
+
+def callOn {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (signature : FunctionSignature M) (f : Obj (M := M) α) (a : Obj (M := M) β)
+    (hf : In f (fnSet signature)) (ha : M.mem (denote a) signature.domain) :
+    Obj (M := M) (CallOnObj (M := M) α β) := ⟨⟨signature, f, a⟩, hf, ha⟩
+
+theorem callOnInOutput {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (c : Obj (M := M) (CallOnObj (M := M) α β)) :
+    In c (semanticObject c.val.signature.output c.val.signature.output_isSet) :=
+  FunctionSemantics.call_mem _ _ _ _ c.wd.1 c.wd.2
+
+/-- A Cartesian membership supplies the complete finite function contract. -/
+def cartCall {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] {n : ℕ}
+    (p : Obj (M := M) α) (c : Obj (M := M) (CartObj M n)) (a : Obj (M := M) β)
+    (hp : In p c) (ha : M.mem (denote a) (FiniteFunction.indexSet n)) :
+    Obj (M := M) (CallOnObj (M := M) α β) :=
+  let signature := FunctionSignature.ofDomain (FiniteFunction.indexSet n)
+    (FiniteFunction.finiteUnionValue (List.ofFn c.val.factors))
+    (FiniteFunction.indexSet_isSet n)
+    (FiniteFunction.finiteUnion_isSet _ (by
+      intro A hA
+      obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hA
+      exact c.wd i))
+  callOn signature p a ((F.fnSet_members _ _ _).mpr
+    ((FiniteFunction.cart_members _ _).mp hp).1) ha
+
+theorem callOnCongr {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type t} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (c : Obj (M := M) (CallOnObj (M := M) α β))
+    (d : Obj (M := M) (CallOnObj (M := M) γ δ))
+    (hf : Same c.val.function d.val.function) (ha : Same c.val.argument d.val.argument) :
+    Same c d := congrArg₂ F.callValue hf ha
+
+theorem callFormulaOn_denote {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (signature : FunctionSignature M) (body : M.Value → M.Value)
+    (hReturn : ∀ x, M.mem x signature.domain → M.mem (body x) signature.output)
+    (a : Obj (M := M) α) (ha : M.mem (denote a) signature.domain) :
+    denote (callOn signature (formulaFnOn signature body hReturn) a
+      (formulaFnInFnSet _) ha) = body (denote a) :=
+  FunctionSemantics.call_graphValue _ _ _ hReturn _ ha
 
 structure CallObj {M : Semantics.{u}} (α : Type v) (β : Type w)
     [Representation M α] [Representation M β] where
@@ -2651,7 +3122,7 @@ noncomputable instance call2Representation {M : Semantics.{u}} [F : FunctionSema
   wd c := In c.function (fnSet (FunctionSignature.twoTarget c.firstInput c.secondInput
     c.output c.output_isSet c.guard)) ∧ M.mem (denote c.first) (M.standard c.firstInput) ∧
     M.mem (denote c.second) (M.standard c.secondInput) ∧ c.guard (denote c.first) (denote c.second)
-  denote c := F.callValue (denote c.function) (F.pairValue (denote c.first) (denote c.second))
+  denote c := F.callValue (denote c.function) (FiniteFunction.pack2 (denote c.first) (denote c.second))
   wd_isSet {c} h := M.member_isSet (FunctionSemantics.call_mem _ _ _ _ h.1
     ((FunctionSignature.twoTarget_domain c.firstInput c.secondInput c.output
       c.output_isSet c.guard _ _).mpr h.2))
@@ -2719,7 +3190,7 @@ theorem call2Congr {α : Type v} {β : Type w} {γ : Type t}
     (d : Obj (M := M) (CallObj2 (M := M) δ ε ζ))
     (hf : Same c.val.function d.val.function)
     (ha : Same c.val.first d.val.first) (hb : Same c.val.second d.val.second) :
-    Same c d := congrArg₂ F.callValue hf (congrArg₂ F.pairValue ha hb)
+    Same c d := congrArg₂ F.callValue hf (congrArg₂ FiniteFunction.pack2 ha hb)
 
 theorem callFormulaTarget_denote {α : Type v} [Representation M α]
     (A : StandardSetValue) (B : M.Value) (hB : M.isSet B)
@@ -2754,13 +3225,13 @@ theorem callFormula2Target_denote {α : Type v} {β : Type w}
       (formulaFnInFnSet _) ha hb hg) = body (denote a) (denote b) := by
   have h := FunctionSemantics.call_graphValue _ _ _
     (formulaFn2Target A E B hB guard body hReturn).wd
-    (F.pairValue (denote a) (denote b))
+    (FiniteFunction.pack2 (denote a) (denote b))
     ((FunctionSignature.twoTarget_domain A E B hB guard _ _).mpr ⟨ha, hb, hg⟩)
   change F.callValue (F.graphValue (FunctionSignature.twoTarget A E B hB guard).domain
     (FunctionSignature.twoTarget A E B hB guard).target (fun p => body
-      (FunctionSemantics.unpairValue p).1 (FunctionSemantics.unpairValue p).2))
-    (F.pairValue (denote a) (denote b)) = body (denote a) (denote b)
-  simpa only [formulaFn2Target, FunctionSemantics.unpair_pair] using h
+      (FiniteFunction.unpack2 p).1 (FiniteFunction.unpack2 p).2))
+    (FiniteFunction.pack2 (denote a) (denote b)) = body (denote a) (denote b)
+  simpa only [formulaFn2Target, FiniteFunction.unpack_pack2] using h
 
 theorem callFormula2Target_same {α : Type v} {β : Type w} {γ : Type t}
     [Representation M α] [Representation M β] [Representation M γ]
@@ -2806,14 +3277,14 @@ theorem callFormula2_denote {α : Type v} {β : Type w}
     denote (call2 A E B guard (formulaFn2 A E B guard body hReturn) a b
       (formulaFnInFnSet _) ha hb hg) = body (denote a) (denote b) := by
   have h := FunctionSemantics.call_graphValue _ _ _ (formulaFn2 A E B guard body hReturn).wd
-    (F.pairValue (denote a) (denote b))
+    (FiniteFunction.pack2 (denote a) (denote b))
     ((FunctionSignature.two_domain A E B guard _ _).mpr ⟨ha, hb, hg⟩)
   change F.callValue (F.graphValue (FunctionSignature.two A E B guard).domain
-    (FunctionSignature.two A E B guard).target (fun p => body (FunctionSemantics.unpairValue p).1
-      (FunctionSemantics.unpairValue p).2))
-    (F.pairValue (denote a) (denote b)) = body (denote a) (denote b)
+    (FunctionSignature.two A E B guard).target (fun p => body (FiniteFunction.unpack2 p).1
+      (FiniteFunction.unpack2 p).2))
+    (FiniteFunction.pack2 (denote a) (denote b)) = body (denote a) (denote b)
   simpa only [formulaFn2, formulaFn2Target, FunctionSignature.two,
-    FunctionSemantics.unpair_pair] using h
+    FiniteFunction.unpack_pack2] using h
 
 theorem callFormula2_same {α : Type v} {β : Type w} {γ : Type t}
     [Representation M α] [Representation M β] [Representation M γ]

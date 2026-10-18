@@ -1,0 +1,38 @@
+# Tracer: square a checked square-root quotient equation.
+# Before (rejected):
+# forall a R, p, q C:
+#     a >= 0
+#     q != 0
+#     sqrt(a) = p / q
+#     =>:
+#         p^2 = a * q^2
+# Former failure: search_proof for (p ^ 2) = (a * (q ^ 2)).
+# The previous checked bridge was:
+# p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2
+# Now: the motivating proof uses the direct SqrtQuotientSquare step.
+by contra:
+    ? not sqrt(2) $in Q
+    release thm rational_has_unique_reduced_fraction(sqrt(2))
+    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+    p^2 = 2 * q^2
+    p^2 % 2 = (2 * q^2) % 2 = 0
+    release thm prime_divides_power(p, 2, 2)
+    p / 2 $in Z
+    q^2 = p^2 / 2 = 2 * (p / 2)^2
+    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
+    release thm prime_divides_power(q, 2, 2)
+    impossible 2 <= gcd(p, q) = 1
+
+# The same rule for a symbolic radicand and general scalar quotient.
+forall a R, p, q C:
+    a >= 0
+    q != 0
+    sqrt(a) = p / q
+    =>:
+        p^2 = a * q^2
+
+# Boundary: the checked source equation, nonnegative real radicand and
+# nonzero denominator are required. Squaring supplies no converse sign rule.
+# Executable negative controls: tests/unit/execute/equality_search/sqrt_quotient_square.rs
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/sqrt_quotient_square.lit
+# Implementation: src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_elementary_arithmetic.rs

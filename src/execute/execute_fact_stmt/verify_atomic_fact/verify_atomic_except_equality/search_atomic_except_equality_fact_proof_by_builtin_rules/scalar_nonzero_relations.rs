@@ -98,6 +98,26 @@ impl Runtime {
             if !EvalRational::from_obj(zero).is_some_and(|n| n.is_zero()) {
                 continue;
             }
+            // Complement identity sin(pi/2-x)=cos(x), retaining the actual
+            // cosine premise. The angle coefficient is a closed exact rational.
+            if let Obj::TrigOperator(T::Sin(value)) = value {
+                if let Obj::ArithmeticOperator(A::Sub(angle)) = &*value.arg {
+                    if crate::rational_expression::pi_multiple::pi_coefficient(&angle.left)
+                        .and_then(|q| EvalRational::from_obj(&q))
+                        == EvalRational::new(1, 2)
+                    {
+                        let source = trig(&angle.right, false);
+                        if let Some(source_nonzero) = self
+                            .known_not_equal_proof(&source, zero)
+                            .or_else(|| self.known_not_equal_proof(zero, &source))
+                        {
+                            return Ok(Some(P::SinComplementNonzeroFromCos(
+                                SinComplementNonzeroFromCosProof { source_nonzero },
+                            )));
+                        }
+                    }
+                }
+            }
             // sin(-x)=-sin(x), cos(-x)=cos(x); integer pi shifts preserve
             // nonzero sine/cosine. Read only the prescribed source endpoint.
             for sine in [true, false] {
@@ -246,4 +266,8 @@ fn trig(argument: &Obj, sine: bool) -> Obj {
             arg: Box::new(argument.clone()),
         }))
     }
+}
+
+pub struct SinComplementNonzeroFromCosProof {
+    pub source_nonzero: AtomicExceptEqualityFactKnownProof,
 }

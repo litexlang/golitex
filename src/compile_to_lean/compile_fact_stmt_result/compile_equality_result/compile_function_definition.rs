@@ -247,6 +247,11 @@ impl LitexToLeanCompiler {
             }
         };
         let (function, known_path) = match source {
+            ParentCheckedBetaFunctionBody::StructField(_) => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionDefinition/StructField",
+                ))
+            }
             ParentCheckedBetaFunctionBody::KnownAnonymousFunction {
                 function,
                 function_equal,
@@ -292,9 +297,9 @@ impl LitexToLeanCompiler {
         };
         if !function_domains_alpha_equal(&function.body, actual_domain)
             || call.body.len() != 1
-            || !(1..=2).contains(&call.body[0].len())
+            || !(1..=3).contains(&call.body[0].len())
         {
-            return Err(LeanCompileError::new("FunctionDefinition/ParentDomain", "The selected literal does not match the parent's complete one/two-argument domain."));
+            return Err(LeanCompileError::new("FunctionDefinition/ParentDomain", "The selected literal does not match the parent's complete ordered argument domain."));
         }
         let parameters = function
             .body
@@ -336,6 +341,18 @@ impl LitexToLeanCompiler {
                 "rfl".to_string(),
             )
         };
+        if !self.function_uses_numeric_interface(&function.body) {
+            let endpoint = self.compile_normalization_value(expanded, position)?;
+            let application_value = self.compile_normalization_value(application, position)?;
+            let body_equality = self.compile_packed_function_body_equality(
+                function,
+                &call.body[0],
+                "_litex_original.val.argument",
+                &endpoint,
+                position,
+            )?;
+            return Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f (Litex.denote _litex_original.val.argument)) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd (Litex.denote _litex_original.val.argument) _litex_original.wd.2\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"));
+        }
         let (constructor_arguments, target) =
             self.compile_function_constructor_arguments(&function.body, position)?;
         let guard = self.compile_function_guard_template(&function.body, position)?;
@@ -350,9 +367,9 @@ impl LitexToLeanCompiler {
             )
         } else {
             (
-                "(Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
+                "(Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
                 format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _ _).mpr _litex_original.wd.2)", if target { "twoTarget_domain" } else { "two_domain" }),
-                format!("(by change {body} (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).1 (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).2 = {endpoint}; simp only [Litex.FunctionSemantics.unpair_pair])"),
+                format!("(by change {body} (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).1 (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).2 = {endpoint}; simp only [Litex.FiniteFunction.unpack_pack2])"),
             )
         };
         Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {argument}) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd {argument} {domain_proof}\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"))
@@ -457,7 +474,7 @@ impl LitexToLeanCompiler {
             .flat_map(|group| &group.params)
             .collect::<Vec<_>>();
         let arguments = &application.body[0];
-        if parameters.len() != arguments.len() || !(1..=2).contains(&arguments.len()) {
+        if parameters.len() != arguments.len() || !(1..=3).contains(&arguments.len()) {
             return Err(LeanCompileError::new(
                 "FunctionDefinition/Arguments",
                 "Beta arguments differ from the selected literal's ordered parameters.",
@@ -501,6 +518,17 @@ impl LitexToLeanCompiler {
         let literal_position = SourcePosition { before: 2, ..step };
         let selected = self.compile_wd(&proof.body_application_well_defined, &literal_position)?;
         let completed = SourcePosition { before: 3, ..step };
+        if !self.function_uses_numeric_interface(&function.body) {
+            let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;
+            let body_equality = self.compile_packed_function_body_equality(
+                function,
+                arguments,
+                "_litex_literal.val.argument",
+                &expanded,
+                &completed,
+            )?;
+            return Ok(format!("(by\n  let _litex_original := {actual}\n  let _litex_literal := {selected}\n  have _litex_call_eq := Litex.callOnCongr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.argument)\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_literal.val.function.wd (Litex.denote _litex_literal.val.argument) _litex_literal.wd.2\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"));
+        }
         let (constructor_arguments, target) =
             self.compile_function_constructor_arguments(&function.body, &completed)?;
         let guard = self.compile_function_guard_template(&function.body, &completed)?;
@@ -543,9 +571,29 @@ impl LitexToLeanCompiler {
                     standard_value_constructor(&output)?
                 )
             };
-            let return_proof = format!("(by intro _x _y _hx _hy _hg; have _h := _litex_literal.val.function.wd (Litex.FunctionSemantics.pairValue (M := M) _x _y) ((Litex.FunctionSignature.{domain_law} {constructor_arguments} {guard} _x _y).mpr ⟨_hx, _hy, _hg⟩); change M.mem ({body} (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).1 (Litex.FunctionSemantics.unpairValue (M := M) (Litex.FunctionSemantics.pairValue (M := M) _x _y)).2) {output} at _h; simpa only [Litex.FunctionSemantics.unpair_pair] using _h)");
+            let return_proof = format!("(by intro _x _y _hx _hy _hg; have _h := _litex_literal.val.function.wd (Litex.FiniteFunction.pack2 (M := M) _x _y) ((Litex.FunctionSignature.{domain_law} {constructor_arguments} {guard} _x _y).mpr ⟨_hx, _hy, _hg⟩); change M.mem ({body} (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) _x _y)).1 (Litex.FiniteFunction.unpack2 (M := M) (Litex.FiniteFunction.pack2 (M := M) _x _y)).2) {output} at _h; simpa only [Litex.FiniteFunction.unpack_pack2] using _h)");
             Ok(format!("(by\n  {}\n  have _litex_call_eq := Litex.call2Congr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.first) (Litex.sameRefl _litex_original.val.second)\n  have _litex_beta := Litex.{beta_law} {constructor_arguments} {guard} {body} {return_proof} _litex_literal.val.first _litex_literal.val.second _litex_literal.wd.2.1 _litex_literal.wd.2.2.1 _litex_literal.wd.2.2.2\n  exact _litex_call_eq.trans (_litex_beta.trans (show {body} (Litex.denote _litex_literal.val.first) (Litex.denote _litex_literal.val.second) = {expanded} from rfl))\n)", names.replace('\n', "\n  ")))
         }
+    }
+
+    fn compile_packed_function_body_equality(
+        &self,
+        function: &AnonymousFn,
+        arguments: &[Box<Obj>],
+        packed: &str,
+        expanded: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let packed_body = self.compile_function_packed_body_template(function, position)?;
+        let body = self.compile_function_body_template(function, position)?;
+        let values = arguments
+            .iter()
+            .map(|argument| self.compile_normalization_value(argument, position))
+            .collect::<Result<Vec<_>, _>>()?;
+        let equality = self.compile_function_packed_application_equality(&body, &values)?;
+        Ok(format!(
+            "(by change {packed_body} (Litex.denote {packed}) = {expanded}; exact {equality})"
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_normalization_value(
@@ -557,6 +605,24 @@ impl LitexToLeanCompiler {
             Obj::Literal(Literal::Number(number)) => {
                 Ok(format!("(M.number {})", number_literal(number, "ℂ")?))
             }
+            Obj::ProductShape(shape) => {
+                let (constructor, children) = match shape {
+                    ProductShape::Tuple(value) => ("tupleValue", &value.args),
+                    ProductShape::Cart(value) => ("cartValue", &value.args),
+                };
+                let values = children
+                    .iter()
+                    .map(|child| self.compile_normalization_value(child, position))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let vector = if values.is_empty() {
+                    "(fun i : Fin 0 => Fin.elim0 i)".into()
+                } else {
+                    format!("![{}]", values.join(", "))
+                };
+                Ok(format!(
+                    "(Litex.FiniteFunction.{constructor} (M := M) {vector})"
+                ))
+            }
             Obj::ArithmeticOperator(operator) => {
                 let (operation, children) = normalization_arithmetic_children(operator)?;
                 let values = children
@@ -567,25 +633,32 @@ impl LitexToLeanCompiler {
                 Ok(format!("({operation} {})", values.join(" ")))
             }
             Obj::FnObj(application)
-                if application.body.len() == 1 && (1..=2).contains(&application.body[0].len()) =>
+                if !application.body.is_empty()
+                    && application
+                        .body
+                        .iter()
+                        .all(|group| (1..=3).contains(&group.len())) =>
             {
                 let head = function_head_object(application.head.as_ref())?;
-                let function = self.compile_normalization_value(&head, position)?;
-                let values = application.body[0]
-                    .iter()
-                    .map(|argument| self.compile_normalization_value(argument, position))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let argument = if values.len() == 1 {
-                    values[0].clone()
-                } else {
-                    format!(
-                        "(Litex.FunctionSemantics.pairValue (M := M) {} {})",
-                        values[0], values[1]
-                    )
-                };
-                Ok(format!(
-                    "(Litex.FunctionSemantics.callValue (M := M) {function} {argument})"
-                ))
+                let mut function = self.compile_normalization_value(&head, position)?;
+                for group in &application.body {
+                    let values = group
+                        .iter()
+                        .map(|argument| self.compile_normalization_value(argument, position))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let argument = if values.len() == 1 {
+                        values[0].clone()
+                    } else {
+                        format!(
+                            "(Litex.FiniteFunction.tupleValue (M := M) ![{}])",
+                            values.join(", ")
+                        )
+                    };
+                    function = format!(
+                        "(Litex.FunctionSemantics.callValue (M := M) {function} {argument})"
+                    );
+                }
+                Ok(function)
             }
             _ => Ok(format!(
                 "(Litex.denote {})",
@@ -633,11 +706,15 @@ impl LitexToLeanCompiler {
                 }
                 Ok(None)
             }
-            Obj::FnObj(call) if call.body.len() == 1 && (1..=2).contains(&call.body[0].len()) => {
+            Obj::FnObj(call) if call.body.len() == 1 && (1..=3).contains(&call.body[0].len()) => {
                 let function = self.compile_normalization_value(
                     &function_head_object(call.head.as_ref())?,
                     position,
                 )?;
+                let values = call.body[0]
+                    .iter()
+                    .map(|argument| self.compile_normalization_value(argument, position))
+                    .collect::<Result<Vec<_>, _>>()?;
                 let mut rebuilt = call.clone();
                 let count = rebuilt.body[0].len();
                 for (index, child) in rebuilt.body[0].iter_mut().enumerate() {
@@ -652,12 +729,9 @@ impl LitexToLeanCompiler {
                         let proof = if count == 1 {
                             format!("(congrArg (fun _x => Litex.FunctionSemantics.callValue (M := M) {function} _x) {equality})")
                         } else {
-                            let pair = if index == 0 {
-                                format!("(congrArg₂ (Litex.FunctionSemantics.pairValue (M := M)) {equality} rfl)")
-                            } else {
-                                format!("(congrArg₂ (Litex.FunctionSemantics.pairValue (M := M)) rfl {equality})")
-                            };
-                            format!("(congrArg (fun _x => Litex.FunctionSemantics.callValue (M := M) {function} _x) {pair})")
+                            let mut context_values = values.clone();
+                            context_values[index] = "_x".into();
+                            format!("(congrArg (fun _x => Litex.FunctionSemantics.callValue (M := M) {function} (Litex.FiniteFunction.tupleValue (M := M) ![{}])) {equality})", context_values.join(", "))
                         };
                         return Ok(Some((Obj::FnObj(rebuilt), proof)));
                     }

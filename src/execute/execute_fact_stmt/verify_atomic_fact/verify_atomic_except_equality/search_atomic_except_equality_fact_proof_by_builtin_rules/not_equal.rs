@@ -1,3 +1,4 @@
+use crate::ast::obj::HyperbolicOperator;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::verify_trig_interval_bound::trig_interval_bound_spellings;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use crate::ast::fact::{
@@ -21,6 +22,17 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
+    SinComplementNonzeroFromCos(super::scalar_nonzero_relations::SinComplementNonzeroFromCosProof),
+    NegationNonzero(NegationNonzeroProof),
+    CoshNonzero(CoshNonzeroProof),
+    SechNonzero(SechNonzeroProof),
+    CothNonzero(CothNonzeroProof),
+    CschNonzero(CschNonzeroProof),
+    SecNonzero(SecNonzeroProof),
+    CscNonzero(CscNonzeroProof),
+    SinhNonzeroFromArgument(SinhNonzeroFromArgumentProof),
+    ConjugateNonzeroFromArgument(ConjugateNonzeroFromArgumentProof),
+
     ProductFactorNonzeroWithZeroAlias(super::scalar_nonzero_relations::ProductFactorNonzeroWithZeroAliasProof),
     EulerNonunit(super::scalar_nonzero_relations::EulerNonunitProof),
     CotNonzeroFromCos(super::scalar_nonzero_relations::CotNonzeroFromCosProof),
@@ -406,6 +418,85 @@ impl Runtime {
                 continue;
             }
             match value {
+                Obj::HyperbolicOperator(HyperbolicOperator::Cosh(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CoshNonzero(
+                        CoshNonzeroProof,
+                    )))
+                }
+                Obj::HyperbolicOperator(HyperbolicOperator::Sech(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SechNonzero(
+                        SechNonzeroProof,
+                    )))
+                }
+                Obj::HyperbolicOperator(HyperbolicOperator::Coth(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CothNonzero(
+                        CothNonzeroProof,
+                    )))
+                }
+                Obj::HyperbolicOperator(HyperbolicOperator::Csch(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CschNonzero(
+                        CschNonzeroProof,
+                    )))
+                }
+                Obj::TrigOperator(TrigOperator::Sec(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::SecNonzero(
+                        SecNonzeroProof,
+                    )))
+                }
+                Obj::TrigOperator(TrigOperator::Csc(_)) => {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CscNonzero(
+                        CscNonzeroProof,
+                    )))
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Neg(value)) => {
+                    let requirement: Fact = NotEqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: value.arg.as_ref().clone(),
+                        right: zero.clone(),
+                        line_file: None,
+                    }
+                    .into();
+                    let argument_nonzero = self.verify_fact(&requirement, verify_state)?;
+                    if !argument_nonzero.is_failed() {
+                        return Ok(Some(NotEqualFactSearchProofByBuiltinRule::NegationNonzero(
+                            NegationNonzeroProof { argument_nonzero },
+                        )));
+                    }
+                }
+                Obj::HyperbolicOperator(HyperbolicOperator::Sinh(value)) => {
+                    let requirement: Fact = NotEqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: value.arg.as_ref().clone(),
+                        right: zero.clone(),
+                        line_file: None,
+                    }
+                    .into();
+                    let argument_nonzero = self.verify_fact(&requirement, verify_state)?;
+                    if !argument_nonzero.is_failed() {
+                        return Ok(Some(
+                            NotEqualFactSearchProofByBuiltinRule::SinhNonzeroFromArgument(
+                                SinhNonzeroFromArgumentProof { argument_nonzero },
+                            ),
+                        ));
+                    }
+                }
+                Obj::ComplexOperator(ComplexOperator::Conjugate(value)) => {
+                    let requirement: Fact = NotEqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: value.arg.as_ref().clone(),
+                        right: zero.clone(),
+                        line_file: None,
+                    }
+                    .into();
+                    let argument_nonzero = self.verify_fact(&requirement, verify_state)?;
+                    if !argument_nonzero.is_failed() {
+                        return Ok(Some(
+                            NotEqualFactSearchProofByBuiltinRule::ConjugateNonzeroFromArgument(
+                                ConjugateNonzeroFromArgumentProof { argument_nonzero },
+                            ),
+                        ));
+                    }
+                }
                 Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => {
                     return Ok(Some(NotEqualFactSearchProofByBuiltinRule::ExpNonzero(
                         ExpNonzeroProof,
@@ -1358,3 +1449,20 @@ fn is_half_pi_obj(obj: &Obj) -> bool {
 #[cfg(test)]
 #[path = "../../../../../../tests/unit/execute/zero_nonzero_reflection/tests.rs"]
 mod zero_nonzero_reflection_tests;
+
+pub struct CoshNonzeroProof;
+pub struct SechNonzeroProof;
+pub struct CothNonzeroProof;
+pub struct CschNonzeroProof;
+pub struct SecNonzeroProof;
+pub struct CscNonzeroProof;
+pub struct SinhNonzeroFromArgumentProof {
+    pub argument_nonzero: VerifyFactResult,
+}
+pub struct ConjugateNonzeroFromArgumentProof {
+    pub argument_nonzero: VerifyFactResult,
+}
+
+pub struct NegationNonzeroProof {
+    pub argument_nonzero: VerifyFactResult,
+}

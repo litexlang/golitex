@@ -133,7 +133,7 @@ impl LitexToLeanCompiler {
                     before: usize::MAX,
                 };
                 let compiled = (self.fact_proposition(&fact, &formed)?, term);
-                declarations.push(self.emit_internal_fact(&fact, &compiled, position));
+                declarations.push(self.emit_internal_fact(&fact, &compiled, position)?);
                 declarations.extend(self.compile_stored_projections(
                     &derived.store,
                     &fact,

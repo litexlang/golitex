@@ -7,6 +7,9 @@ use crate::prelude::AtomicExceptEqualityFactSearchedProof as PSearch;
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
+#[path = "integer_quotient_remainder.rs"]
+mod integer_quotient_remainder;
+
 #[test]
 fn maintained_structural_and_tuple_tracers() {
     for code in [

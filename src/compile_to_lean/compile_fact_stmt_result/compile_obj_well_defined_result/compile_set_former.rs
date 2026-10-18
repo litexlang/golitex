@@ -20,13 +20,17 @@ impl LitexToLeanCompiler {
             (SetFormer::SetBuilder(set), SetFormerObjWellDefinedProofByDef::SetBuilder(wd)) => {
                 self.compile_set_builder_wd(set, wd, position)
             }
-            (SetFormer::ListSet(_) | SetFormer::SetBuilder(_), _) => Err(LeanCompileError::new(
-                "SetFormer/WDSubject",
-                "Set formation evidence has another constructor family.",
-            )),
+            (SetFormer::ClosedRange(set), SetFormerObjWellDefinedProofByDef::ClosedRange(wd)) => {
+                self.compile_closed_range_wd(set, wd, position)
+            }
+            (SetFormer::ListSet(_) | SetFormer::SetBuilder(_) | SetFormer::ClosedRange(_), _) => {
+                Err(LeanCompileError::new(
+                    "SetFormer/WDSubject",
+                    "Set formation evidence has another constructor family.",
+                ))
+            }
             (
                 SetFormer::Range(_)
-                | SetFormer::ClosedRange(_)
                 | SetFormer::FiniteSeqSet(_)
                 | SetFormer::SeqSet(_)
                 | SetFormer::OneSideInfinityIntervalObj(_)

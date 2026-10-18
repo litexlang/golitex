@@ -17,6 +17,7 @@ pub enum FailToVerifyObjWellDefinedResult {
     ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult),
     IntegerOperator(FailToVerifyIntegerOperatorObjWellDefinedResult),
     TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult),
+    HyperbolicOperator(FailToVerifyHyperbolicOperatorObjWellDefinedResult),
     ExpLogOperator(FailToVerifyExpLogOperatorObjWellDefinedResult),
     ComplexOperator(FailToVerifyComplexOperatorObjWellDefinedResult),
     SetOperator(FailToVerifySetOperatorObjWellDefinedResult),
@@ -60,6 +61,8 @@ pub enum FailToVerifyIntegerOperatorObjWellDefinedResult {
 }
 
 pub enum FailToVerifyTrigOperatorObjWellDefinedResult {
+    Csc(FailToVerifyCscObjWellDefined),
+    Sec(FailToVerifySecObjWellDefined),
     Sin(FailToVerifySinObjWellDefined),
     Cos(FailToVerifyCosObjWellDefined),
     Tan(FailToVerifyTanObjWellDefined),
@@ -78,12 +81,14 @@ pub enum FailToVerifyExpLogOperatorObjWellDefinedResult {
 }
 
 pub enum FailToVerifyComplexOperatorObjWellDefinedResult {
+    Conjugate(FailToVerifyConjugateObjWellDefined),
     RealPart(FailToVerifyRealPartObjWellDefined),
     ImaginaryPart(FailToVerifyImaginaryPartObjWellDefined),
     ComplexAbs(FailToVerifyComplexAbsObjWellDefined),
 }
 
 pub enum FailToVerifySetOperatorObjWellDefinedResult {
+    SymmetricDifference(FailToVerifySymmetricDifferenceObjWellDefined),
     Union(FailToVerifyUnionObjWellDefined),
     Intersect(FailToVerifyIntersectObjWellDefined),
     SetMinus(FailToVerifySetMinusObjWellDefined),
@@ -426,3 +431,32 @@ pub enum FailToVerifyPreimageSetObjWellDefined {
         crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionFailure,
     ),
 }
+
+pub enum FailToVerifyHyperbolicOperatorObjWellDefinedResult {
+    Sinh(FailToVerifySinhObjWellDefined),
+    Cosh(FailToVerifyCoshObjWellDefined),
+    Tanh(FailToVerifyTanhObjWellDefined),
+    Coth(FailToVerifyCothObjWellDefined),
+    Sech(FailToVerifySechObjWellDefined),
+    Csch(FailToVerifyCschObjWellDefined),
+}
+
+pub struct FailToVerifySecObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyCscObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyConjugateObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifySinhObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyCoshObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyTanhObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyCothObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifySechObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyCschObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifySymmetricDifferenceObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);

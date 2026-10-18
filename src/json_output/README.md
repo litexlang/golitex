@@ -801,6 +801,13 @@ does not establish WD. No synthetic FactId replaces a derived constructor proof.
 The regression test inspects nested power/subtraction/known certificates and
 both Normal output languages.
 
+An `exact_integer_div` node retains integer `numerator` and `denominator`
+subtrees plus the `zero_remainder` equality path and its stored citations.
+Its nonzero-divisor evidence belongs to `enclosing_object_wd`. The node
+performs no fresh remainder search; it composes inside powers and products
+at the existing Direct ceiling. Lean replay for this new node remains an
+explicit `StructuralMembership/ExactIntegerDiv` unsupported result.
+
 ## Output languages
 
 `-lang` supports English (`en`), simplified Chinese (`zh`), traditional Chinese
@@ -895,6 +902,9 @@ explains that the value is zero before giving `arcsin(0) = 0`. Keep identities,
 domain restrictions, operand order, and positive/negative conclusions accurate
 to the owning verifier rule. In particular, `SqrtSquare` describes squaring a
 square root, `(sqrt(x))^2 = x` for nonnegative real `x`;
+the Detailed `SqrtQuotientSquare` node records its checked `quotient_equation`
+(`sqrt(a)=p/q`), including root/division WD and the equality citation, before
+concluding `p^2=a*q^2`;
 `IntersectSetMinusSelfEmpty` describes `A ∩ (B \ A) = ∅`; and
 `ZeroFromNatAndOneLe` derives `n != 0` from `n $in N` and `1 <= n`.
 

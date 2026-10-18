@@ -10,6 +10,14 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if !self.function_uses_numeric_interface(signature) {
+            let (domain, domain_set) = self.compile_function_base_domain(signature, position)?;
+            let output = self.compile_object_reference(&signature.ret_set, position)?;
+            let guard = self.compile_function_packed_guard_template(signature, position)?;
+            return Ok(format!(
+                "(Litex.FunctionSignature.withGuard (M := M) {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {guard})"
+            ));
+        }
         let domains = self.compile_function_domains(signature, position)?;
         let guard = self.compile_function_guard_template(signature, position)?;
         let (arguments, target) =
@@ -22,6 +30,164 @@ impl LitexToLeanCompiler {
         };
         Ok(format!(
             "(Litex.FunctionSignature.{constructor} (M := M) {arguments} {guard})"
+        ))
+    }
+
+    pub(in crate::compile_to_lean) fn function_uses_numeric_interface(
+        &self,
+        signature: &FnSet,
+    ) -> bool {
+        let count: usize = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .map(|group| group.params.len())
+            .sum();
+        (1..=2).contains(&count)
+            && signature
+                .set_bound_parameters
+                .groups
+                .iter()
+                .all(|group| matches!(group.param_type.as_ref(), Obj::StandardSet(_)))
+            && matches!(signature.ret_set.as_ref(), Obj::StandardSet(_))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_input_sets(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let mut identities = Vec::new();
+        let mut sets = Vec::new();
+        for group in &signature.set_bound_parameters.groups {
+            let set = self.compile_object_reference(&group.param_type, position)?;
+            for parameter in &group.params {
+                if identities.contains(&parameter.id) {
+                    return Err(LeanCompileError::new(
+                        "Function/ParameterIdentity",
+                        "Function parameters repeat a source identity.",
+                    ));
+                }
+                identities.push(parameter.id);
+                sets.push(set.clone());
+            }
+        }
+        if !(1..=3).contains(&sets.len()) {
+            return Err(LeanCompileError::unsupported("Function/Arity"));
+        }
+        Ok(sets)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_base_domain(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let sets = self.compile_function_input_sets(signature, position)?;
+        if sets.len() == 1 {
+            return Ok((
+                format!("(Litex.denote {})", sets[0]),
+                format!("(Litex.isSet {})", sets[0]),
+            ));
+        }
+        let values = format!(
+            "![{}]",
+            sets.iter()
+                .map(|set| format!("(Litex.denote {set})"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        let proofs = sets
+            .iter()
+            .map(|set| format!("exact Litex.isSet {set}"))
+            .collect::<Vec<_>>()
+            .join("\n  · ");
+        Ok((format!("(Litex.FiniteFunction.cartValue (M := M) {values})"),
+            format!("(Litex.FiniteFunction.cart_isSet (M := M) {values} (by\n  intro i\n  fin_cases i\n  · {proofs}))")))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_packed_values(
+        &self,
+        signature: &FnSet,
+        input: &str,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let count: usize = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .map(|group| group.params.len())
+            .sum();
+        if !(1..=3).contains(&count) {
+            return Err(LeanCompileError::unsupported("Function/Arity"));
+        }
+        if count == 1 {
+            return Ok(vec![input.to_string()]);
+        }
+        Ok((1..=count)
+            .map(|index| {
+                format!(
+                    "(Litex.FunctionSemantics.callValue (M := M) {input} (M.number ({index} : ℂ)))"
+                )
+            })
+            .collect())
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_packed_guard_template(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let guard = self.compile_function_guard_template(signature, position)?;
+        let values = self.compile_function_packed_values(signature, "_litex_input")?;
+        Ok(format!(
+            "(fun (_litex_input : M.Value) => {guard} {})",
+            values.join(" ")
+        ))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_packed_reduction_laws(
+        &self,
+        values: &[String],
+    ) -> Result<Vec<String>, LeanCompileError> {
+        if !(1..=3).contains(&values.len()) {
+            return Err(LeanCompileError::unsupported("Function/Arity"));
+        }
+        if values.len() == 1 {
+            return Ok(Vec::new());
+        }
+        let vector = format!("![{}]", values.join(", "));
+        Ok(values.iter().enumerate().map(|(index, value)| format!(
+            "(show Litex.FunctionSemantics.callValue (M := M) (Litex.FiniteFunction.tupleValue {vector}) (M.number ({} : ℂ)) = {value} from by simpa [Litex.FiniteFunction.index] using Litex.FiniteFunction.call_tuple {vector} ({index} : Fin {}))",
+            index + 1, values.len()
+        )).collect())
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_packed_application_equality(
+        &self,
+        template: &str,
+        values: &[String],
+    ) -> Result<String, LeanCompileError> {
+        let laws = self.compile_function_packed_reduction_laws(values)?;
+        Ok(match laws.as_slice() {
+            [] => "rfl".into(),
+            [first, second] => format!("(congrArg₂ {template} {first} {second})"),
+            [first, second, third] => format!(
+                "(congrArg₂ (fun _f _x => _f _x) (congrArg₂ {template} {first} {second}) {third})"
+            ),
+            _ => return Err(LeanCompileError::unsupported("Function/Arity")),
+        })
+    }
+
+    pub(in crate::compile_to_lean) fn compile_function_packed_body_template(
+        &self,
+        function: &AnonymousFn,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let body = self.compile_function_body_template(function, position)?;
+        let values = self.compile_function_packed_values(&function.body, "_litex_input")?;
+        Ok(format!(
+            "(fun (_litex_input : M.Value) => {body} {})",
+            values.join(" ")
         ))
     }
 
@@ -101,6 +267,9 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<IdentifierId>, LeanCompileError> {
+        if !self.function_uses_numeric_interface(signature) {
+            return Ok(Vec::new());
+        }
         let mut positive = Vec::new();
         for group in &signature.set_bound_parameters.groups {
             if self.compile_numeric_carrier(&group.param_type, position)? == StandardSet::RPos {
@@ -183,7 +352,9 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        self.compile_function_domains(signature, position)?;
+        if self.function_uses_numeric_interface(signature) {
+            self.compile_function_domains(signature, position)?;
+        }
         let parameters = signature
             .set_bound_parameters
             .groups
@@ -221,7 +392,9 @@ impl LitexToLeanCompiler {
         function: &AnonymousFn,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        self.compile_function_domains(&function.body, position)?;
+        if self.function_uses_numeric_interface(&function.body) {
+            self.compile_function_domains(&function.body, position)?;
+        }
         let parameters = function
             .body
             .set_bound_parameters
@@ -274,6 +447,64 @@ impl LitexToLeanCompiler {
                 "(M.standard Litex.StandardSetValue.{})",
                 standard_value_constructor(set)?
             )),
+            Obj::ProductShape(shape) => {
+                let (constructor, children) = match shape {
+                    ProductShape::Cart(value) => ("cartValue", &value.args),
+                    ProductShape::Tuple(value) => ("tupleValue", &value.args),
+                };
+                let values = children
+                    .iter()
+                    .map(|child| expression(child))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let vector = if values.is_empty() {
+                    "(fun i : Fin 0 => Fin.elim0 i)".to_string()
+                } else {
+                    format!("![{}]", values.join(", "))
+                };
+                Ok(format!(
+                    "(Litex.FiniteFunction.{constructor} (M := M) {vector})"
+                ))
+            }
+            Obj::SetFormer(SetFormer::ListSet(value)) => {
+                let values = value
+                    .list
+                    .iter()
+                    .map(|child| expression(child))
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(format!(
+                    "(Litex.FiniteFunction.finiteSetValue (M := M) [{}])",
+                    values.join(", ")
+                ))
+            }
+            Obj::SetFormer(SetFormer::SetBuilder(value)) => {
+                let bound = expression(&value.param_set)?;
+                let variable = format!("_raw_i{}", value.param_binding.id.value());
+                let mut inner = bindings.clone();
+                inner.insert(value.param_binding.id, variable.clone());
+                let mut clauses = Vec::new();
+                for clause in &value.facts {
+                    clauses.push(self.compile_function_raw_predicate(
+                        &function_guard_fact(clause)?,
+                        position,
+                        &inner,
+                    )?);
+                }
+                let predicate = clauses
+                    .into_iter()
+                    .rev()
+                    .reduce(|tail, head| format!("({head} ∧ {tail})"))
+                    .unwrap_or_else(|| "True".into());
+                Ok(format!("(Litex.SetSemantics.sepValue (M := M) {bound} (fun ({variable} : M.Value) => {predicate}))"))
+            }
+            Obj::SetOperator(SetOperator::PowerSet(value)) => Ok(format!(
+                "(Litex.SetSemantics.powerValue (M := M) {})",
+                expression(&value.set)?
+            )),
+            Obj::SetOperator(SetOperator::Union(value)) => Ok(format!(
+                "(Litex.SetSemantics.unionValue (M := M) {} {})",
+                expression(&value.left)?,
+                expression(&value.right)?
+            )),
             Obj::ArithmeticOperator(operator) => {
                 if let ArithmeticOperator::Abs(value) = operator {
                     return Ok(format!(
@@ -300,44 +531,49 @@ impl LitexToLeanCompiler {
                 Ok(format!("(M.{name} {left}{right})"))
             }
             Obj::FnObj(application) => {
-                if application.body.len() != 1 || !(1..=2).contains(&application.body[0].len()) {
+                if application.body.is_empty()
+                    || application
+                        .body
+                        .iter()
+                        .any(|group| !(1..=3).contains(&group.len()))
+                {
                     return Err(LeanCompileError::unsupported("Function/BodyCallArity"));
                 }
-                let FnObjHead::Identifier(identifier @ IdentifierObj::Plain { .. }) =
-                    application.head.as_ref()
-                else {
-                    return Err(LeanCompileError::unsupported("Function/BodyCallHead"));
+                let object = match application.head.as_ref() {
+                    FnObjHead::Identifier(identifier) => Obj::Identifier(identifier.clone()),
+                    FnObjHead::Object(object) => object.as_ref().clone(),
+                    _ => return Err(LeanCompileError::unsupported("Function/BodyCallHead")),
                 };
-                let object = Obj::Identifier(identifier.clone());
-                let head = if let Some(value) = match identifier {
-                    IdentifierObj::Plain { id, .. } => bindings.get(id),
+                let mut head = if let Some(value) = match &object {
+                    Obj::Identifier(IdentifierObj::Plain { id, .. }) => bindings.get(id),
                     _ => None,
                 } {
                     // A recursive interpretation is supplied by this exact
                     // source binder, not by a compiler-owned function registry.
                     value.clone()
                 } else {
-                    self.validate_formula_head_producer(&object, position)?;
-                    format!(
-                        "(Litex.denote {})",
-                        self.compile_object_reference(&object, position)?
-                    )
+                    if matches!(object, Obj::Identifier(_)) {
+                        self.validate_formula_head_producer(&object, position)?;
+                    }
+                    expression(&object)?
                 };
-                let arguments = application.body[0]
-                    .iter()
-                    .map(|argument| expression(argument))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let argument = if arguments.len() == 1 {
-                    arguments[0].clone()
-                } else {
-                    format!(
-                        "(Litex.FunctionSemantics.pairValue (M := M) {} {})",
-                        arguments[0], arguments[1]
-                    )
-                };
-                Ok(format!(
-                    "(Litex.FunctionSemantics.callValue (M := M) {head} {argument})"
-                ))
+                for group in &application.body {
+                    let arguments = group
+                        .iter()
+                        .map(|argument| expression(argument))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let argument = if arguments.len() == 1 {
+                        arguments[0].clone()
+                    } else {
+                        format!(
+                            "(Litex.FiniteFunction.tupleValue (M := M) ![{}])",
+                            arguments.join(", ")
+                        )
+                    };
+                    head =
+                        format!("(Litex.FunctionSemantics.callValue (M := M) {head} {argument})");
+                }
+                Ok(head)
             }
             _ => Err(LeanCompileError::unsupported("Function/BodyObject")),
         }
@@ -399,6 +635,25 @@ impl LitexToLeanCompiler {
                     self.compile_function_raw_fact_bound(&edge, position, bindings)
                 })
                 .collect::<Result<Vec<_>, _>>()?,
+            Fact::OrFact(fact) => {
+                let mut clauses = Vec::new();
+                for branch in &fact.facts {
+                    let source = match branch {
+                        AndChainAtomicFact::AtomicFact(value) => Fact::AtomicFact(value.clone()),
+                        AndChainAtomicFact::AndFact(value) => Fact::AndFact(value.clone()),
+                        AndChainAtomicFact::ChainFact(value) => Fact::ChainFact(value.clone()),
+                    };
+                    clauses.push(self.compile_function_raw_predicate(&source, position, bindings)?);
+                }
+                return clauses
+                    .into_iter()
+                    .rev()
+                    .reduce(|tail, head| format!("({head} ∨ {tail})"))
+                    .ok_or_else(|| LeanCompileError::unsupported("Function/EmptyCompoundClause"));
+            }
+            Fact::ExistFact(fact) => {
+                return self.compile_exist_raw_predicate(fact, position, bindings)
+            }
             _ => {
                 return Err(LeanCompileError::unsupported(
                     "Function/GuardPredicateClause",
@@ -505,7 +760,6 @@ impl LitexToLeanCompiler {
                             "Function/GuardPredicateCarrier",
                         ));
                     };
-                    self.compile_numeric_carrier(carrier, &producer)?;
                     clauses.push(format!(
                         "(M.mem {argument} {})",
                         self.compile_function_raw_expression_bound(
@@ -548,8 +802,6 @@ pub(super) fn function_guard_fact(source: &QuantifierFreeFact) -> Result<Fact, L
         QuantifierFreeFact::AtomicFact(fact) => Ok(Fact::AtomicFact(fact.clone())),
         QuantifierFreeFact::AndFact(fact) => Ok(Fact::AndFact(fact.clone())),
         QuantifierFreeFact::ChainFact(fact) => Ok(Fact::ChainFact(fact.clone())),
-        QuantifierFreeFact::OrFact(_) => {
-            Err(LeanCompileError::unsupported("Function/DisjunctiveGuard"))
-        }
+        QuantifierFreeFact::OrFact(fact) => Ok(Fact::OrFact(fact.clone())),
     }
 }

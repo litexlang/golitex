@@ -50,6 +50,12 @@ impl LitexToLeanCompiler {
                     (Obj::SetFormer(set), ObjWellDefinedProofByDef::SetFormer(proof)) => {
                         self.compile_set_former(set, proof, position)?
                     }
+                    (Obj::ProductShape(shape), ObjWellDefinedProofByDef::ProductShape(proof)) => {
+                        self.compile_product_shape_wd(shape, proof, position)?
+                    }
+                    (Obj::SetOperator(operator), ObjWellDefinedProofByDef::SetOperator(proof)) => {
+                        self.compile_set_operator_wd(operator, proof, position)?
+                    }
                     (Obj::FunctionSpace(space), ObjWellDefinedProofByDef::FunctionSpace(proof)) => {
                         self.compile_function_space_wd(space, proof, position)?
                     }
@@ -181,7 +187,10 @@ impl LitexToLeanCompiler {
         }
         match &wd.predicate_signature {
             PredicateSignatureWellDefinedProof::Builtin => {
-                if matches!(fact, AtomicFact::NormalAtomicFact(_)) {
+                if matches!(
+                    fact,
+                    AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
+                ) {
                     return Err(LeanCompileError::new(
                         "Prop/SignatureFamily",
                         "A concrete source predicate cannot use a builtin predicate signature.",
@@ -239,7 +248,11 @@ impl LitexToLeanCompiler {
                 }
             }
             PredicateDomainProof::ByRequirements(requirements) => {
-                if matches!(fact, AtomicFact::NormalAtomicFact(_)) && !requirements.is_empty() {
+                if matches!(
+                    fact,
+                    AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
+                ) && !requirements.is_empty()
+                {
                     return Err(LeanCompileError::new(
                         "WD/PropDomain",
                         "Concrete predicate formation has no extra domain stages; its typed memberships belong to definition proof or assumption meaning.",
@@ -366,6 +379,9 @@ impl LitexToLeanCompiler {
                 }
                 Ok(())
             }
+            (FactWellDefinedProof::ExistFact(proof), Fact::ExistFact(fact)) => self
+                .compile_exist_formation(fact, proof, position)
+                .map(|_| ()),
             (
                 FactWellDefinedProof::AndFact { .. }
                 | FactWellDefinedProof::ChainFact { .. }

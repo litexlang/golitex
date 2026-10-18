@@ -1,6 +1,7 @@
 mod compile_additive_inference;
 mod compile_by_stmt_result;
 mod compile_callee_constructor;
+mod compile_cart_coordinate_inferences;
 mod compile_chain_closures;
 mod compile_claim_stmt_result;
 mod compile_compound_fact;
@@ -29,6 +30,7 @@ mod compile_run;
 mod compile_stmt_result;
 mod compile_store_result;
 mod compile_subtractive_inference;
+mod compile_witness_stmt_result;
 mod helper;
 mod lean_compile_error;
 mod litex_to_lean_compiler;

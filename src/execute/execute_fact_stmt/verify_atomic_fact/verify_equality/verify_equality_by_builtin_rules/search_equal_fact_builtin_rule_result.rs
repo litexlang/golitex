@@ -130,6 +130,11 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    SymmetricDifference(super::by_symmetric_difference::SymmetricDifferenceEqualityProof),
+    Conjugation(super::by_conjugation::ConjugationEqualityProof),
+    ReciprocalTrig(super::by_reciprocal_trig::ReciprocalTrigEqualityProof),
+    Hyperbolic(super::by_hyperbolic::HyperbolicEqualityProof),
+
     AddZeroLeftFromEqualities(
         super::add_zero_from_equalities_builtin_rule_proof::AddZeroLeftFromEqualitiesBuiltinRuleProof,
     ),

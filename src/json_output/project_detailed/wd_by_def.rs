@@ -1000,6 +1000,106 @@ pub(super) fn project_obj_wd_by_def(
                 runtime,
             )
         }
+        ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sec(p)) => {
+            project_common_by_def(
+                obj,
+                "TrigOperator",
+                "Sec",
+                &p.child_obj_well_defined,
+                &p.requirement_fact_verified,
+                runtime,
+            )
+        }
+        ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Csc(p)) => {
+            project_common_by_def(
+                obj,
+                "TrigOperator",
+                "Csc",
+                &p.child_obj_well_defined,
+                &p.requirement_fact_verified,
+                runtime,
+            )
+        }
+        ObjWellDefinedProofByDef::ComplexOperator(
+            ComplexOperatorObjWellDefinedProofByDef::Conjugate(p),
+        ) => project_common_by_def(
+            obj,
+            "ComplexOperator",
+            "Conjugate",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
+        ObjWellDefinedProofByDef::HyperbolicOperator(
+            HyperbolicOperatorObjWellDefinedProofByDef::Sinh(p),
+        ) => project_common_by_def(
+            obj,
+            "HyperbolicOperator",
+            "Sinh",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
+        ObjWellDefinedProofByDef::HyperbolicOperator(
+            HyperbolicOperatorObjWellDefinedProofByDef::Cosh(p),
+        ) => project_common_by_def(
+            obj,
+            "HyperbolicOperator",
+            "Cosh",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
+        ObjWellDefinedProofByDef::HyperbolicOperator(
+            HyperbolicOperatorObjWellDefinedProofByDef::Tanh(p),
+        ) => project_common_by_def(
+            obj,
+            "HyperbolicOperator",
+            "Tanh",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
+        ObjWellDefinedProofByDef::HyperbolicOperator(
+            HyperbolicOperatorObjWellDefinedProofByDef::Coth(p),
+        ) => project_common_by_def(
+            obj,
+            "HyperbolicOperator",
+            "Coth",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
+        ObjWellDefinedProofByDef::HyperbolicOperator(
+            HyperbolicOperatorObjWellDefinedProofByDef::Sech(p),
+        ) => project_common_by_def(
+            obj,
+            "HyperbolicOperator",
+            "Sech",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
+        ObjWellDefinedProofByDef::HyperbolicOperator(
+            HyperbolicOperatorObjWellDefinedProofByDef::Csch(p),
+        ) => project_common_by_def(
+            obj,
+            "HyperbolicOperator",
+            "Csch",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
+        ObjWellDefinedProofByDef::SetOperator(
+            SetOperatorObjWellDefinedProofByDef::SymmetricDifference(p),
+        ) => project_common_by_def(
+            obj,
+            "SetOperator",
+            "SymmetricDifference",
+            &p.child_obj_well_defined,
+            &p.requirement_fact_verified,
+            runtime,
+        ),
         ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sin(p)) => {
             project_common_by_def(
                 obj,

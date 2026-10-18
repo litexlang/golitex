@@ -263,6 +263,22 @@ impl Runtime {
         if let Some(proof) = self.scalar_extra_equality(fact, verify_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ScalarExtra(proof)));
         }
+        if let Some(proof) = super::by_symmetric_difference::symmetric_difference(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::SymmetricDifference(
+                proof,
+            )));
+        }
+        if let Some(proof) = self.search_conjugation(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::Conjugation(proof)));
+        }
+        if let Some(proof) = self.search_reciprocal_trig(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ReciprocalTrig(
+                proof,
+            )));
+        }
+        if let Some(proof) = self.search_hyperbolic(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::Hyperbolic(proof)));
+        }
         if let Some(proof) = super::by_native_fixed_base::native_fixed_base(fact) {
             return Ok(Some(proof));
         }

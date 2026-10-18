@@ -3,7 +3,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferResult};
+use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
 
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_compound_stores(
@@ -79,7 +79,7 @@ impl LitexToLeanCompiler {
                 self.fact_proposition(&fact, position)?,
                 conjunction_projection(&compiled.1, index, components.len()),
             );
-            declarations.push(self.emit_internal_fact(&fact, &projection, position));
+            declarations.push(self.emit_internal_fact(&fact, &projection, position)?);
         }
         let group = SourcePosition::new(Some(position), SourceOwner::CompoundInference(store), 0);
         match &store.infer {
@@ -130,7 +130,7 @@ impl LitexToLeanCompiler {
                         self.context_application(&name, &prior)
                     };
                     let seed = (self.fact_proposition(&captured.fact, &prior)?, reference);
-                    declarations.push(self.emit_internal_fact(&captured.fact, &seed, &prior));
+                    declarations.push(self.emit_internal_fact(&captured.fact, &seed, &prior)?);
                     let name = format!("h_{}", captured.fact.fact_id().value());
                     let reference = if prior.is_local() {
                         name
@@ -196,7 +196,7 @@ impl LitexToLeanCompiler {
                 self.fact_proposition(&fact, position)?,
                 conjunction_projection(&compiled.1, index, components.len()),
             );
-            declarations.push(self.emit_internal_fact(&fact, &projection, position));
+            declarations.push(self.emit_internal_fact(&fact, &projection, position)?);
         }
         Ok(declarations)
     }
@@ -326,12 +326,34 @@ impl LitexToLeanCompiler {
             }
             InferAtomicFactResult::InFact(rules) => {
                 let mut declarations = Vec::new();
-                if matches!(atomic, AtomicFact::InFact(member) if matches!(member.set, Obj::StandardSet(StandardSet::N | StandardSet::RPos)))
-                {
-                    for rule in rules {
-                        if let crate::store_fact_and_infer::InferInFactResult::SignedStandardSetSign(sign) = rule {
-                            declarations.extend(self.compile_natural_sign_inference(sign, seed, compiled, position)?);
+                let mut completed = position.before;
+                for rule in rules {
+                    let prior = SourcePosition {
+                        before: completed,
+                        ..*position
+                    };
+                    match rule {
+                        InferInFactResult::SignedStandardSetSign(sign) if matches!(atomic, AtomicFact::InFact(member) if matches!(member.set, Obj::StandardSet(StandardSet::N | StandardSet::RPos))) =>
+                        {
+                            declarations.extend(
+                                self.compile_natural_sign_inference(sign, seed, compiled, &prior)?,
+                            );
                         }
+                        InferInFactResult::CartCoordinates(proof) => {
+                            declarations.extend(self.compile_cart_coordinate_inferences(
+                                proof, seed, compiled, &prior,
+                            )?);
+                        }
+                        _ => {}
+                    }
+                    if matches!(
+                        rule,
+                        InferInFactResult::SetBuilder(_)
+                            | InferInFactResult::SignedStandardSetSign(_)
+                            | InferInFactResult::CartCoordinates(_)
+                            | InferInFactResult::ClosedRange(_)
+                    ) {
+                        completed += rule.stored_conclusions().len();
                     }
                 }
                 Ok(declarations)

@@ -1314,6 +1314,13 @@ For an ordinary atomic fact, Litex follows this public progression:
 Atomic truth search uses one shared permission ceiling. Level 0 (`Direct`)
 first reads stored facts/identity/alpha paths, then tries closed exact calculation
 and deterministic structural membership.
+Preview: integer division composes here when both operands have integer
+carrier evidence and the exact zero-remainder equality is already known.
+Thus `(a/b)^2 $in Z` can use stored `a%b=0` without first publishing
+`a/b $in Z`; the enclosing division WD still requires `b!=0`. This route
+cites the known equality rather than starting another builtin search, and
+does not infer a natural or positive quotient. See the
+[zero-remainder composition example](../examples/proof_nodes/atomic/direct_integer_quotient_zero_remainder.lit).
 Special properties (level 1) may use level-0 premises; builtin rules (level 2)
 may use level 1; strategies (level 3) and definition/forall (level 4) may use
 level 2. Rewrite is available at level 4 once per branch. Numeric and atomic
@@ -5308,6 +5315,14 @@ log(2, 1) = 0
 **Well-definedness and domain.** x $in R; 0 <= x. Child WD also applies.
 
 **Common native properties and proof routes.** Nonnegative real codomain; sqrt(x)^2 = x and sqrt(x^2) = |x| for real x.
+
+**Preview: squaring a quotient equation.** From a checked `sqrt(a) = p / q`,
+the equality builtin verifies `p^2 = a * q^2`, including reversed equality
+and swapped product factors. The source equation must itself be well-defined:
+`a` is a nonnegative real, and scalar `q` is nonzero. The scalar numerator and
+denominator may be complex; `sqrt` keeps its real domain. This is a forward
+implication and supplies no sign condition for the converse. See the
+[checked rule and sqrt(2) proof](../examples/proof_nodes/equal/by_builtin_rule/sqrt_quotient_square.lit).
 
 **Nearest boundary.** A complex square-root interpretation is not supplied by this real primitive; sqrt(x^2) is not x for arbitrary real x.
 
@@ -9358,10 +9373,19 @@ work the same way. A final field may be called, as in
 defined return carrier is a struct, as in `make_box(f).entries(i)`. A callable
 field's defined carrier must be a function set.
 
-When `expr` is a materialized template-selected struct object, a callable
-field projects through the selected tuple value before application. Thus an
-entries field defined by an anonymous function can be evaluated directly once
-the selected object's struct membership is known.
+Function results and template objects use their declared struct carrier
+directly. For example, after defining `make(a R) &Box` with an `op` field,
+`make(2).op(3)` is a callable expression; a template object declared with
+`&Box` likewise supports `\shifted<2>.op(3)`. No intermediate named binding
+is needed. Generic return carriers substitute both template and function
+arguments before resolving fields. Actual function arguments, template
+conditions and callable-field guards remain checked, including when a later
+membership supplies another function signature.
+
+Field values project through a checked definition's actual returned tuple.
+This does not automatically release the struct's laws or discover function
+bodies through arbitrary alias chains. See the runnable
+[struct return fields example](../examples/wd/struct_return_field_access.lit).
 
 A vector-space structure can own its scalar system rather than asking each
 single-space theorem to carry scalar operations separately. With
@@ -9738,6 +9762,12 @@ n! $in N+
 The type rule preserves the domains: `gcd(0, 0)` is undefined, `sign(0)` and
 `lcm(0, 0)` cannot be assigned `N+`, and complex exponential and negative
 factorial inputs remain unsupported.
+
+### Native elementary operation additions
+
+See [Native elementary operations](native-elementary-operators.md) for `conj`,
+`sec`, `csc`, `sinh`, `cosh`, `tanh`, `coth`, `sech`, `csch`, and `sym_diff`,
+including domains, builtin relationships, strict examples and compiler boundaries.
 
 ### Native real trigonometry (beta preview)
 

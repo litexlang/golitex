@@ -1,16 +1,14 @@
 //! Narrow arithmetic identities; all semantic premises use the builtin entry.
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, NotEqualFact};
-use crate::ast::obj::{ArithmeticOperator as A, ExpLogOperator, IntegerOperator, Literal, Number, Obj, Pow, StandardSet};
-use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
+use crate::prelude::*;
+use crate::ast::obj::ArithmeticOperator as A;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
-use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ElementaryArithmeticProof {
     ZeroToPositiveRealPower {
         requirements: Vec<VerifyFactResult>,
     },
     SqrtSquareNonpositive(SqrtSquareNonpositiveProof),
+    SqrtQuotientSquare(SqrtQuotientSquareProof),
     ModNegation {
         requirements: Vec<VerifyFactResult>,
     },
@@ -34,6 +32,16 @@ pub enum ElementaryArithmeticProof {
 pub struct SqrtSquareNonpositiveProof {
     pub nonpositive_argument: VerifyFactResult,
 }
+pub struct SqrtQuotientSquareProof {
+    pub quotient_equation: Box<VerifyFactResult>,
+}
+impl SqrtQuotientSquareProof {
+    pub fn new(quotient_equation: VerifyFactResult) -> Self {
+        Self {
+            quotient_equation: Box::new(quotient_equation),
+        }
+    }
+}
 impl SqrtSquareNonpositiveProof {
     pub fn new(nonpositive_argument: VerifyFactResult) -> Self {
         Self {
@@ -46,6 +54,7 @@ impl ElementaryArithmeticProof {
         match self {
             Self::ZeroToPositiveRealPower { .. } => "ZeroToPositiveRealPower",
             Self::SqrtSquareNonpositive(_) => "SqrtSquareNonpositive",
+            Self::SqrtQuotientSquare(_) => "SqrtQuotientSquare",
             Self::ModNegation { .. } => "ModNegation",
             Self::ModNaturalPower { .. } => "ModNaturalPower",
             Self::AbsEvenPower => "AbsEvenPower",
@@ -63,6 +72,45 @@ impl Runtime {
     ) -> RuntimeResult<Option<ElementaryArithmeticProof>> {
         use ElementaryArithmeticProof as P;
         for (left, right) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
+            // sqrt(a)=p/q implies p^2=a*q^2. Checking the original equation
+            // retains sqrt(a)'s real nonnegative domain and q!=0, even though
+            // neither restriction is present in the squared goal's WD.
+            // This implication is valid for complex p,q; it has no converse.
+            if let (Some((numerator, exponent)), Obj::ArithmeticOperator(A::Mul(product))) =
+                (pow_args(left), right)
+            {
+                if is_number(exponent, "2") {
+                    for (radicand, denominator_power) in [
+                        (&*product.left, &*product.right),
+                        (&*product.right, &*product.left),
+                    ] {
+                        let Some((denominator, exponent)) = pow_args(denominator_power) else {
+                            continue;
+                        };
+                        if !is_number(exponent, "2") {
+                            continue;
+                        }
+                        let source: Fact = EqualFact {
+                            fact_id: self.global_ids.allocate_fact_id(),
+                            left: Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt {
+                                arg: Box::new(radicand.clone()),
+                            })),
+                            right: Obj::ArithmeticOperator(A::Div(Div {
+                                left: Box::new(numerator.clone()),
+                                right: Box::new(denominator.clone()),
+                            })),
+                            line_file: fact.line_file.clone(),
+                        }
+                        .into();
+                        let quotient_equation = self.verify_builtin_rule_premise(&source, state)?;
+                        if !quotient_equation.is_failed() {
+                            return Ok(Some(P::SqrtQuotientSquare(SqrtQuotientSquareProof::new(
+                                quotient_equation,
+                            ))));
+                        }
+                    }
+                }
+            }
             // Zero to a strictly positive real exponent is zero; 0^0 remains 1.
             // Example: r in R+ => 0^r = 0, including r = 1/n for n in N+.
             if let Some((base, exponent)) = pow_args(left) {

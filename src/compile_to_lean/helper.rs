@@ -1,6 +1,7 @@
 use super::LeanCompileError;
-use crate::ast::stmt::ReleaseAndExpandStmt;
+use crate::ast::stmt::{ReleaseAndExpandStmt, WitnessStmt};
 use crate::execute::execute_by_stmt::ExecByDefStmtResult;
+use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult;
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -376,6 +377,9 @@ pub(super) fn unsupported_wd_definition(proof: &ObjWellDefinedProofByDef) -> Lea
         ObjWellDefinedProofByDef::IntegerOperator(_) => {
             LeanCompileError::unsupported("WD/IntegerOperator")
         }
+        ObjWellDefinedProofByDef::HyperbolicOperator(_) => {
+            LeanCompileError::unsupported("WD/HyperbolicOperator")
+        }
         ObjWellDefinedProofByDef::TrigOperator(_) => {
             LeanCompileError::unsupported("WD/TrigOperator")
         }
@@ -539,6 +543,12 @@ pub(super) fn verified_subject(result: &VerifyFactResult) -> Option<Fact> {
             crate::execute::execute_fact_stmt::verify_or_fact::VerifyOrFactResult::Success(proof) => Some(Fact::OrFact(proof.fact.clone())),
             _ => None,
         },
+        VerifyFactResult::ExistShapedFact(result) => match result.as_ref() {
+            VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(proof)) => Some(crate::ast::fact::exist_shaped_fact_to_fact(&proof.fact)),
+            VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(proof)) => Some(crate::ast::fact::exist_shaped_fact_to_fact(&proof.fact)),
+            VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Success(proof)) => Some(crate::ast::fact::exist_shaped_fact_to_fact(&proof.fact)),
+            _ => None,
+        },
         _ => None,
     }
 }
@@ -548,6 +558,16 @@ pub(super) fn validate_statement_capture(
     result: &ExecStmtResult,
 ) -> Result<(), LeanCompileError> {
     let matches = match (source, result) {
+        (
+            Stmt::Witness(WitnessStmt::WitnessExistFact(source)),
+            ExecStmtResult::Witness(
+                crate::execute::execute_witness_stmt::ExecWitnessStmtResult::WitnessExistFact(
+                    crate::execute::execute_witness_stmt::ExecWitnessExistFactStmtResult::Success(
+                        proof,
+                    ),
+                ),
+            ),
+        ) => source == &proof.statement,
         (Stmt::Fact(fact), ExecStmtResult::Fact(ExecFactStmtResult::Success(proof))) => {
             verified_subject(&proof.verify_result).as_ref() == Some(fact)
         }
@@ -584,6 +604,63 @@ pub(super) fn validate_statement_capture(
             stmt.call == proof.call
                 && verified_subject(&proof.selected_proof).as_ref()
                     == Some(&Fact::AtomicFact(stmt.selected_fact.clone()))
+        }
+        (
+            Stmt::By(ByStmt::ByContraStmt(stmt)),
+            ExecStmtResult::By(ExecByStmtResult::Contra(
+                crate::execute::execute_by_stmt::ExecByContraStmtResult::Success(proof),
+            )),
+        ) => {
+            stmt.to_prove == proof.goal
+                && stmt.impossible_fact == proof.closing.impossible_fact
+                && verified_subject(&proof.closing.impossible).as_ref()
+                    == Some(&stmt.impossible_fact)
+                && stored_capture_matches(&proof.stored.store, &stmt.to_prove)
+                && validate_captured_steps(&stmt.proof, &proof.proof_steps)?
+        }
+        (
+            Stmt::By(ByStmt::ByCasesStmt(stmt)),
+            ExecStmtResult::By(ExecByStmtResult::Cases(
+                crate::execute::execute_by_stmt::ExecByCasesStmtResult::Success(proof),
+            )),
+        ) => {
+            if stmt.cases.is_empty()
+                || stmt.then_facts.is_empty()
+                || stmt.cases.len() != proof.branches.len()
+                || stmt.proofs.len() != stmt.cases.len()
+                || stmt.impossible_facts.len() != stmt.cases.len()
+                || stmt.then_facts.len() != proof.then_facts_wd.len()
+                || stmt.then_facts.len() != proof.stored_wd.len()
+                || stmt.then_facts.len() != proof.stored.len()
+                || !matches!(verified_subject(&proof.coverage), Some(Fact::OrFact(coverage)) if coverage.facts == stmt.cases)
+            {
+                false
+            } else {
+                let mut matches = stmt
+                    .then_facts
+                    .iter()
+                    .zip(&proof.stored)
+                    .all(|(source, stored)| stored_capture_matches(&stored.store, source));
+                for (index, branch) in proof.branches.iter().enumerate() {
+                    matches &= branch.assumption == stmt.cases[index]
+                        && validate_captured_steps(&stmt.proofs[index], &branch.proof_steps)?;
+                    matches &= match (&stmt.impossible_facts[index], &branch.closing) {
+                        (Some(impossible), crate::execute::execute_by_stmt::ByCasesBranchClosingSuccess::Impossible(closing)) => {
+                            let impossible = Fact::AtomicFact(impossible.clone());
+                            closing.impossible_fact == impossible
+                                && verified_subject(&closing.impossible).as_ref() == Some(&impossible)
+                        }
+                        (None, crate::execute::execute_by_stmt::ByCasesBranchClosingSuccess::ThenFacts { proved_then_facts }) => {
+                            proved_then_facts.len() == stmt.then_facts.len()
+                                && proved_then_facts.iter().zip(&stmt.then_facts).all(|(proved, source)|
+                                    verified_subject(&proved.verify_result).as_ref() == Some(source)
+                                        && stored_capture_matches(&proved.store_and_infer.store, source))
+                        }
+                        _ => false,
+                    };
+                }
+                matches
+            }
         }
         (
             Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseThmStmt(stmt)),
@@ -657,6 +734,35 @@ pub(super) fn validate_statement_capture(
     }
 }
 
+fn validate_captured_steps(
+    source: &[Stmt],
+    captured: &[ExecStmtResult],
+) -> Result<bool, LeanCompileError> {
+    if source.len() != captured.len() {
+        return Ok(false);
+    }
+    for (source, captured) in source.iter().zip(captured) {
+        validate_statement_capture(source, captured)?;
+    }
+    Ok(true)
+}
+
+fn stored_capture_matches(store: &StoreFactResult, expected: &Fact) -> bool {
+    let fact = match store {
+        StoreFactResult::AtomicFact(stored) => Fact::AtomicFact(stored.fact.clone()),
+        StoreFactResult::AndFact(stored) => Fact::AndFact(stored.fact.clone()),
+        StoreFactResult::ChainFact(stored) => Fact::ChainFact(stored.fact.clone()),
+        StoreFactResult::OrFact(stored) => Fact::OrFact(stored.fact.clone()),
+        StoreFactResult::ForallFact(stored) => Fact::ForallFact(stored.fact.clone()),
+        StoreFactResult::ExistShapedFact(stored) => {
+            crate::ast::fact::exist_shaped_fact_to_fact(&stored.fact)
+        }
+        StoreFactResult::NotForallFact(stored) => Fact::NotForall(stored.fact.clone()),
+        StoreFactResult::ForallFactWithIff(stored) => Fact::ForallFactWithIff(stored.fact.clone()),
+    };
+    fact == *expected && store.primary_fact_id() == expected.fact_id()
+}
+
 // Validate substitution against captured objects only. This neither creates
 // fresh source IDs nor invokes Runtime instantiation or verification.
 pub(super) fn instantiated_object_matches(
@@ -671,12 +777,45 @@ pub(super) fn instantiated_object_matches(
     }
     match (expected, actual) {
         (Obj::FnObj(expected), Obj::FnObj(actual)) => {
-            expected.head == actual.head
-                && expected.body.len() == actual.body.len()
+            // Substituting p := F(a) into p(x) preserves the inserted prefix
+            // F(a) and substitutes only the original argument groups.
+            let inserted = match expected.head.as_ref() {
+                FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) => {
+                    match substitution.get(id) {
+                        Some(Obj::FnObj(call)) => Some(call),
+                        _ => None,
+                    }
+                }
+                _ => None,
+            };
+            let prefix = inserted.map_or(0, |call| call.body.len());
+            let head_matches = if let Some(call) = inserted {
+                call.head == actual.head
+                    && actual.body.len() >= prefix
+                    && call
+                        .body
+                        .iter()
+                        .zip(&actual.body)
+                        .all(|(expected, actual)| {
+                            expected.len() == actual.len()
+                                && expected
+                                    .iter()
+                                    .zip(actual)
+                                    .all(|(expected, actual)| expected.ir() == actual.ir())
+                        })
+            } else {
+                instantiated_object_matches(
+                    &function_head_object_for_match(&expected.head),
+                    &function_head_object_for_match(&actual.head),
+                    substitution,
+                )
+            };
+            head_matches
+                && expected.body.len() + prefix == actual.body.len()
                 && expected
                     .body
                     .iter()
-                    .zip(&actual.body)
+                    .zip(actual.body.iter().skip(prefix))
                     .all(|(expected, actual)| {
                         expected.len() == actual.len()
                             && expected.iter().zip(actual).all(|(expected, actual)| {
@@ -728,6 +867,20 @@ pub(super) fn instantiated_object_matches(
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(b)),
         ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
         _ => expected.ir() == actual.ir(),
+    }
+}
+
+fn function_head_object_for_match(head: &FnObjHead) -> Obj {
+    match head {
+        FnObjHead::Identifier(value) => Obj::Identifier(value.clone()),
+        FnObjHead::Object(value) => value.as_ref().clone(),
+        FnObjHead::AnonymousFnLiteral(value) => {
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(value.as_ref().clone()))
+        }
+        FnObjHead::FieldAccess(value) => {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(value.clone()))
+        }
+        FnObjHead::InstantiatedTemplateObj(value) => Obj::InstantiatedTemplateObj(value.clone()),
     }
 }
 
@@ -863,4 +1016,78 @@ pub(super) fn validate_namespace(value: &str) -> Result<(), LeanCompileError> {
         ));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod function_substitution_tests {
+    use super::*;
+
+    fn runtime() -> Runtime {
+        Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        })
+    }
+
+    fn name(runtime: &mut Runtime, text: &str) -> (IdentifierId, Obj) {
+        let id = runtime.global_ids.allocate_identifier_id();
+        (id, Obj::Identifier(IdentifierObj::plain(id, text.into())))
+    }
+
+    fn call(head: Obj, arguments: Vec<Obj>) -> Obj {
+        Obj::FnObj(FnObj {
+            head: Box::new(FnObjHead::from_obj(head)),
+            body: vec![arguments.into_iter().map(Box::new).collect()],
+        })
+    }
+
+    #[test]
+    fn source_function_parameter_substitutes_in_coordinate_head_by_id() {
+        let mut runtime = runtime();
+        let (p_id, p) = name(&mut runtime, "u");
+        let (_, argument) = name(&mut runtime, "u");
+        let (_, wrong) = name(&mut runtime, "u");
+        let one = Obj::Literal(Literal::Number(Number::new("1".into())));
+        let expected = call(p, vec![one.clone()]);
+        let substitution = HashMap::from([(p_id, argument.clone())]);
+        assert!(instantiated_object_matches(
+            &expected,
+            &call(argument, vec![one.clone()]),
+            &substitution
+        ));
+        assert!(!instantiated_object_matches(
+            &expected,
+            &call(wrong, vec![one]),
+            &substitution
+        ));
+    }
+
+    #[test]
+    fn inserted_application_prefix_retains_its_simultaneous_bindings() {
+        let mut runtime = runtime();
+        let (p_id, p) = name(&mut runtime, "p");
+        let (a_id, a) = name(&mut runtime, "a");
+        let (_, f) = name(&mut runtime, "F");
+        let seven = Obj::Literal(Literal::Number(Number::new("7".into())));
+        let expected = call(p, vec![a.clone()]);
+        let replacement = call(f.clone(), vec![a.clone()]);
+        let substitution = HashMap::from([(p_id, replacement.clone()), (a_id, seven.clone())]);
+        let Obj::FnObj(mut actual) = replacement else {
+            unreachable!()
+        };
+        actual.body.push(vec![Box::new(seven.clone())]);
+        assert!(instantiated_object_matches(
+            &expected,
+            &Obj::FnObj(actual.clone()),
+            &substitution
+        ));
+        actual.body[0][0] = Box::new(seven);
+        assert!(!instantiated_object_matches(
+            &expected,
+            &Obj::FnObj(actual),
+            &substitution
+        ));
+    }
 }
