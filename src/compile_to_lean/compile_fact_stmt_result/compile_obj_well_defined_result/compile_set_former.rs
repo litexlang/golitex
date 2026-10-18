@@ -168,6 +168,15 @@ impl LitexToLeanCompiler {
         let mut clauses = Vec::new();
         for (i, (source, captured)) in set.facts.iter().zip(&proof.assumed_facts).enumerate() {
             let fact = crate::instantiate::quantifier_free_fact_to_fact(source.clone());
+            let in_clause = |stage: &str, mut error: LeanCompileError| {
+                error.message = format!(
+                    "Set-builder clause {} ({stage}, fact {}): {}",
+                    i + 1,
+                    fact.fact_id().value(),
+                    error.message
+                );
+                error
+            };
             if !matches!(
                 &fact,
                 Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
@@ -180,7 +189,8 @@ impl LitexToLeanCompiler {
                 before: 2 + i,
                 ..scope
             };
-            self.compile_fact_wd(&captured.well_defined, &fact, &prior)?;
+            self.compile_fact_wd(&captured.well_defined, &fact, &prior)
+                .map_err(|error| in_clause("formation", error))?;
             self.validate_store(&captured.store_and_infer.store, &fact)?;
             let formed = SourcePosition {
                 parent: Some(&prior),
@@ -188,25 +198,31 @@ impl LitexToLeanCompiler {
                 before: usize::MAX,
             };
             let clause = (
-                self.fact_proposition(&fact, &formed)?,
+                self.fact_proposition(&fact, &formed)
+                    .map_err(|error| in_clause("proposition", error))?,
                 format!("h_{}", fact.fact_id().value()),
             );
             let completed = SourcePosition {
                 before: 3 + i,
                 ..scope
             };
-            let mut derived = self.compile_set_builder_parameter_inferences(
-                &captured.store_and_infer,
-                &fact,
-                &clause,
-                &completed,
-            )?;
-            derived.extend(self.compile_stored_inferences(
-                &captured.store_and_infer,
-                &fact,
-                &clause,
-                &completed,
-            )?);
+            let mut derived = self
+                .compile_set_builder_parameter_inferences(
+                    &captured.store_and_infer,
+                    &fact,
+                    &clause,
+                    &completed,
+                )
+                .map_err(|error| in_clause("parameter inference", error))?;
+            derived.extend(
+                self.compile_stored_inferences(
+                    &captured.store_and_infer,
+                    &fact,
+                    &clause,
+                    &completed,
+                )
+                .map_err(|error| in_clause("stored inference", error))?,
+            );
             clauses.push((clause.1, clause.0, derived));
         }
         let mut meaning = if let Some((_, last, _)) = clauses.pop() {

@@ -12,7 +12,7 @@ const TRACERS: &[(&str,&str)] = &[
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/floor_monotone.lit"),"FloorMonotone"),
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/ceil_monotone.lit"),"CeilMonotone"),
     (include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/euclidean_remainder.lit"),"EuclideanRemainder"),
-    (include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/factorial_divisibility.lit"),"FactorialDivisibility"),
+    (include_str!("../../../../examples/proof_nodes/equal/by_builtin_rule/factorial_divisibility.lit"),"DvdFactorial"),
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/complex_triangle.lit"),"ComplexTriangle"),
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/complex_reverse_triangle.lit"),"ComplexReverseTriangle"),
     (include_str!("../../../../examples/proof_nodes/atomic/by_builtin_rule/lcm_common_multiple_bound.lit"),"LcmCommonMultipleBound"),

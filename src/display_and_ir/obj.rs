@@ -1064,4 +1064,4 @@ impl_obj_kw_unary!(Tanh, TANH, arg);
 impl_obj_kw_unary!(Coth, COTH, arg);
 impl_obj_kw_unary!(Sech, SECH, arg);
 impl_obj_kw_unary!(Csch, CSCH, arg);
-impl_obj_kw_call!(SymmetricDifference, SYM_DIFF, left, right);
+impl_obj_kw_call!(SymmetricDifference, SET_DIFF, left, right);

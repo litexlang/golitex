@@ -113,6 +113,26 @@ impl Runtime {
                 },
             ));
         }
+        // A stored well-defined a%d=0 has exactly Dvd's integer/nonzero
+        // domain. Reuse that checked source, including at a reduced ceiling.
+        let divisibility_args = match fact {
+            AtomicFact::DvdFact(f) => Some((&f.left, &f.right)),
+            AtomicFact::NotDvdFact(f) => Some((&f.left, &f.right)),
+            _ => None,
+        };
+        if let Some((dividend, divisor)) = divisibility_args {
+            if let Some(source) = self.lookup_known_zero_remainder(dividend, divisor) {
+                return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                    AtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::ByKnownZeroRemainder(Box::new(
+                            source,
+                        )),
+                    },
+                ));
+            }
+        }
         let mut first_failure = None;
         for requirements in self.atomic_predicate_domain_requirement_routes(fact) {
             let mut predicate_domain = Vec::new();
@@ -232,6 +252,31 @@ impl Runtime {
     ) -> Vec<Vec<crate::ast::fact::Fact>> {
         use crate::ast::obj::{FamilyUnion, SetOperator};
         let primary = self.atomic_predicate_domain_requirements(fact);
+        let divisibility_args = match fact {
+            AtomicFact::DvdFact(f) => Some((&f.left, &f.right)),
+            AtomicFact::NotDvdFact(f) => Some((&f.left, &f.right)),
+            _ => None,
+        };
+        if let Some((dividend, divisor)) = divisibility_args {
+            use crate::ast::fact::{Fact, InFact, NotEqualFact};
+            use crate::ast::obj::{Literal, Number, StandardSet};
+            let mut expanded = Vec::new();
+            for element in [dividend, divisor] {
+                expanded.push(Fact::from(InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: element.clone(),
+                    set: Obj::StandardSet(StandardSet::Z),
+                    line_file: None,
+                }));
+            }
+            expanded.push(Fact::from(NotEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: divisor.clone(),
+                right: Obj::Literal(Literal::Number(Number::new("0".into()))),
+                line_file: None,
+            }));
+            return vec![primary, expanded];
+        }
         if let Some((domain, codomain, function)) = function_property_signature_args(fact) {
             return self
                 .callable_signature_requirement_routes(domain, codomain, function)

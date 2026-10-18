@@ -60,20 +60,10 @@ impl Runtime {
                 proof,
             )));
         }
-        if let Some(proof) = self.search_gcd_common_divisor(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::GcdCommonDivisor(
+        if let Some(proof) = self.search_dvd_zero_remainder(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::DvdZeroRemainder(
                 proof,
             )));
-        }
-        if let Some(proof) = self.search_lcm_common_multiple(fact, verify_state)? {
-            return Ok(Some(EqualitySearchProofByBuiltinRule::LcmCommonMultiple(
-                proof,
-            )));
-        }
-        if let Some(proof) = self.search_factorial_divisibility(fact, verify_state)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinRule::FactorialDivisibility(proof),
-            ));
         }
         if let Some(proof) = self.search_cartesian_size(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::CartesianSize(proof)));
@@ -333,8 +323,6 @@ fn map_equality_identities_wave2_proof(
         W::LogQuotient(p) => EqualitySearchProofByBuiltinRule::LogQuotient(p),
         W::LogReciprocal(p) => EqualitySearchProofByBuiltinRule::LogReciprocal(p),
         W::LogChangeOfBase(p) => EqualitySearchProofByBuiltinRule::LogChangeOfBase(p),
-        W::ZeroMod(p) => EqualitySearchProofByBuiltinRule::ZeroMod(p),
-        W::ModOne(p) => EqualitySearchProofByBuiltinRule::ModOne(p),
         W::OneModAtLeastTwo(p) => EqualitySearchProofByBuiltinRule::OneModAtLeastTwo(p),
         W::NestedSameModAbsorption(p) => {
             EqualitySearchProofByBuiltinRule::NestedSameModAbsorption(p)
@@ -359,7 +347,6 @@ fn map_equality_identities_wave3_proof(
         W::LnOfExp(p) => EqualitySearchProofByBuiltinRule::LnOfExp(p),
         W::FloorOfInteger(p) => EqualitySearchProofByBuiltinRule::FloorOfInteger(p),
         W::CeilOfInteger(p) => EqualitySearchProofByBuiltinRule::CeilOfInteger(p),
-        W::ModSelfZero(p) => EqualitySearchProofByBuiltinRule::ModSelfZero(p),
     }
 }
 
@@ -383,10 +370,6 @@ fn map_equality_identities_wave5_proof(
         W::QuotSelfOne(p) => EqualitySearchProofByBuiltinRule::QuotSelfOne(p),
         W::LcmCommutative(p) => EqualitySearchProofByBuiltinRule::LcmCommutative(p),
         W::LcmIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(p),
-        W::LcmLeftAbsDivisibility(p) => EqualitySearchProofByBuiltinRule::LcmLeftAbsDivisibility(p),
-        W::LcmRightAbsDivisibility(p) => {
-            EqualitySearchProofByBuiltinRule::LcmRightAbsDivisibility(p)
-        }
         W::GcdCommutative(p) => EqualitySearchProofByBuiltinRule::GcdCommutative(p),
         W::GcdIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(p),
         W::GcdRightZeroAbs(p) => EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(p),
@@ -418,8 +401,6 @@ fn map_equality_identities_wave7_proof(
 ) -> EqualitySearchProofByBuiltinRule {
     use super::by_equality_identities_wave7::EqualityIdentitiesWave7BuiltinRuleProof as W;
     match proof {
-        W::GcdDividesArgument(p) => EqualitySearchProofByBuiltinRule::GcdDividesArgument(p),
-        W::ProductModFactorZero(p) => EqualitySearchProofByBuiltinRule::ProductModFactorZero(p),
         W::EqualityFromTwoSidedWeakOrder(p) => {
             EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(p)
         }
@@ -444,9 +425,6 @@ fn map_equality_identities_wave8_proof(
     match proof {
         W::QuotEuclideanDecomposition(p) => {
             EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(p)
-        }
-        W::ModDividendMinusRemainderZero(p) => {
-            EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(p)
         }
         W::SquareSumComponentZero(p) => EqualitySearchProofByBuiltinRule::SquareSumComponentZero(p),
         W::MinusOneOddNaturalPower(p) => {

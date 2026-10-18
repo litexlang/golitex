@@ -77,10 +77,8 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByClosedCalculation(proof) => {
                 self.compile_closed_equality(fact, proof, position)?
             }
-            EqualFactSearchedProof::ByKnownSpecialProperty(_) => {
-                return Err(LeanCompileError::unsupported(
-                    "Equality/KnownSpecialProperty",
-                ))
+            EqualFactSearchedProof::ByKnownSpecialProperty(proof) => {
+                self.compile_equality_known_special_property(fact, proof, position)?
             }
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(proof),

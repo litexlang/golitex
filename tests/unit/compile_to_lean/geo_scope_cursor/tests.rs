@@ -434,9 +434,32 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
     let mut exact = false;
     visit_visible(
         &complete,
-        &mut |evidence, _| {
+        &mut |evidence, site| {
             if let SourceConstructor::Checked(candidate) = evidence {
                 if std::ptr::eq(candidate, target) {
+                    // Replay the actual completed constructor through the
+                    // callback's pre-stage cursor. Its own completed children
+                    // remain visible despite the inherited completion marker.
+                    let (_, children, _, _, _) =
+                        function_binder(target).expect("target function-domain formation");
+                    let child = children[0].as_ref();
+                    let replay = SourcePosition::new(Some(site), SourceOwner::WD(target), 1);
+                    let nested = visit_visible(
+                        &replay,
+                        &mut |nested, _| match nested {
+                            SourceConstructor::Checked(candidate)
+                                if std::ptr::eq(candidate, child) =>
+                            {
+                                Ok(Some(()))
+                            }
+                            _ => Ok(None),
+                        },
+                        &mut |_, _| Ok(None),
+                    )?;
+                    assert!(
+                        nested.is_some(),
+                        "callback replay must retain the original completed child WD"
+                    );
                     exact = true;
                     return Ok(Some(()));
                 }
@@ -451,4 +474,96 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
         "the exact original target WD is visible after its stage"
     );
     assert!(same_source_owner(direct.owner, full.owner));
+}
+
+fn declared_literal(statement: &ExecStmtResult) -> (&ExecHaveFnEqualStmtSuccessResult, Obj) {
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+        ExecHaveFnEqualStmtResult::Success(proof),
+    )) = statement
+    else {
+        panic!("formula declaration");
+    };
+    (
+        proof,
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+            proof.statement.equal_to_anonymous_fn.clone(),
+        )),
+    )
+}
+
+#[test]
+fn geo_scope_cursor_named_literal_reuse_requires_both_original_formation_stages() {
+    let (run, runtime) = checked("have fn shifted(z R) R = z + 1\n");
+    let statement = &run.statement_results[0];
+    let (proof, literal) = declared_literal(statement);
+    let complete = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    for before in [0, 1] {
+        let pending =
+            SourcePosition::new(Some(&complete), SourceOwner::Statement(statement), before);
+        assert!(pending
+            .with_visible_alias(&literal, &mut |_, _, _, _| Ok(()))
+            .unwrap()
+            .is_none());
+    }
+    let emitted = SourcePosition::new(Some(&complete), SourceOwner::Statement(statement), 2);
+    let found = emitted
+        .with_visible_alias(&literal, &mut |name, object, wd, producer| {
+            assert_eq!(name, &proof.statement.name);
+            assert_eq!(object, &literal);
+            assert!(std::ptr::eq(wd, &proof.anonymous_fn_well_defined));
+            assert_eq!(producer.before, 0);
+            assert!(producer
+                .with_visible_alias(&literal, &mut |_, _, _, _| Ok(()))
+                .unwrap()
+                .is_none());
+            Ok(())
+        })
+        .unwrap();
+    assert!(found.is_some());
+    let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);
+    let reference = compiler
+        .compile_object_reference(&literal, &emitted)
+        .unwrap();
+    assert!(reference.contains(&format!("_object_i{}", proof.statement.name.id.value())));
+    assert!(!reference.contains("Litex.formulaFn"));
+}
+
+#[test]
+fn geo_scope_cursor_named_literal_reuse_rejects_future_and_distinct_binder_identities() {
+    let (run, _) = checked("have fn first(z R) R = z + 1\nhave fn second(w R) R = w + 1\n");
+    let (_, later) = declared_literal(&run.statement_results[1]);
+    let full = SourcePosition::new(None, SourceOwner::Run(&run), 2);
+    let prefix = SourcePosition::new(Some(&full), SourceOwner::Run(&run), 1);
+    assert!(prefix
+        .with_visible_alias(&later, &mut |_, _, _, _| Ok(()))
+        .unwrap()
+        .is_none());
+    assert!(full
+        .with_visible_alias(&later, &mut |_, _, _, _| Ok(()))
+        .unwrap()
+        .is_some());
+}
+
+#[test]
+fn geo_scope_cursor_named_literal_reuse_does_not_export_closed_claim_constructor() {
+    let (run, _) = checked("claim:\n    ? 1 = 1\n    have fn hidden(w R) R = w + 1\n    1 = 1\n");
+    let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
+        claim,
+    ))) = &run.statement_results[0]
+    else {
+        panic!("claim");
+    };
+    let (steps, head) = claim_steps(claim);
+    let (_, literal) = declared_literal(&steps[0]);
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    let local = SourcePosition::new(Some(&root), SourceOwner::Claim(claim), head + 1);
+    assert!(local
+        .with_visible_alias(&literal, &mut |_, _, _, position| Ok(position.is_local()))
+        .unwrap()
+        .unwrap());
+    let outside = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    assert!(outside
+        .with_visible_alias(&literal, &mut |_, _, _, _| Ok(()))
+        .unwrap()
+        .is_none());
 }

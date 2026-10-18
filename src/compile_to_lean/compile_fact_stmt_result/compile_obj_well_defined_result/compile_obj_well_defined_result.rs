@@ -24,6 +24,35 @@ impl LitexToLeanCompiler {
                         "WD id resolves to another object.",
                     ));
                 }
+                // A beta expansion can cite the cached anonymous body of its
+                // original named declaration. That declaration already emitted
+                // this certified object; share it without replacing the selected
+                // call's argument, domain, or guard evidence.
+                if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) = obj {
+                    let mut ancestor = Some(position);
+                    while let Some(cursor) = ancestor {
+                        if let SourceOwner::FunctionExpansion(expansion) = cursor.owner {
+                            if let Obj::FnObj(application) = &expansion.application {
+                                if let FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) =
+                                    application.head.as_ref()
+                                {
+                                    if let Ok((declaration, producer, _)) =
+                                        position.visible_function(id)
+                                    {
+                                        if &declaration.statement.equal_to_anonymous_fn == function
+                                        {
+                                            return Ok(self.context_application(
+                                                &format!("_object_i{}", id.value()),
+                                                &producer,
+                                            ));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        ancestor = cursor.parent;
+                    }
+                }
                 // A cache record is not a proof. Only an earlier replayed constructor
                 // or an explicitly introduced certified parameter supplies this term.
                 let term = self.compile_object_reference(obj, position)?;
@@ -205,6 +234,9 @@ impl LitexToLeanCompiler {
             }
         }
         match &wd.predicate_domain {
+            PredicateDomainProof::ByKnownZeroRemainder(_) => {
+                return Err(LeanCompileError::unsupported("WD/DvdKnownZeroRemainder"));
+            }
             PredicateDomainProof::ByCheckedArguments(requirements) => {
                 if !matches!(
                     fact,

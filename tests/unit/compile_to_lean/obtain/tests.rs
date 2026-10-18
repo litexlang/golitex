@@ -1,0 +1,284 @@
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+use crate::compile_to_lean::LitexToLeanCompiler;
+use crate::execute::execute_proof_block_stmt::{ExecClaimStmtResult, ExecProofBlockStmtResult};
+use crate::execute::{
+    ExecObtainObjFromExistFactStmtResult, ExecObtainObjFromExistFactStmtSuccessResult,
+};
+use crate::prelude::*;
+
+fn checked(source: &str) -> (RunLitexCodeResult, Runtime) {
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let run = runtime.run_litex_code(source).unwrap();
+    assert!(
+        run.success && run.session_error.is_none(),
+        "{}",
+        crate::json_output::emit_run_detailed(&run, &runtime, "obtain", None)
+    );
+    (run, runtime)
+}
+
+fn obtain(statement: &mut ExecStmtResult) -> &mut ExecObtainObjFromExistFactStmtSuccessResult {
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::ObtainObjFromExistFact(
+            ExecObtainObjFromExistFactStmtResult::Success(proof),
+        ),
+    )) = statement
+    else {
+        panic!("obtain");
+    };
+    proof
+}
+
+const SOURCE: &str = "witness exist m, n R st {n != 0, m = 1 / n} from 1, 1:\n    1 / 1 = 1\nobtain x, y from exist m, n R st {n != 0, m = 1 / n}\ny != 0\nx = 1 / y\n";
+
+#[test]
+fn geo_obtain_replays_guarded_formation_at_renamed_witnesses() {
+    let (mut run, runtime) = checked(SOURCE);
+    let proof = obtain(&mut run.statement_results[1]);
+    let ids: Vec<_> = proof
+        .statement
+        .equal_tos
+        .iter()
+        .map(|p| p.id.value())
+        .collect();
+    let output = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "obtain")
+        .unwrap();
+    for id in ids {
+        assert!(output.contains(&format!("noncomputable def _value_i{id}")));
+        assert!(!output.contains(&format!("variable {{_Host_i{id}")));
+    }
+    assert!(output.contains("Classical.choose_spec"));
+    assert!(output.contains("(fun (_value_i"));
+    assert!(!output.contains("sorry"));
+}
+
+#[test]
+fn geo_obtain_rejects_missing_original_store() {
+    let (mut run, runtime) = checked(SOURCE);
+    obtain(&mut run.statement_results[1])
+        .store_and_infer_result
+        .store_and_infer_results
+        .pop();
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "bad")
+        .unwrap_err();
+    assert_eq!(error.route, "Obtain/Stages");
+}
+
+#[test]
+fn geo_obtain_rejects_reordered_subjects_even_with_consistent_id_view() {
+    let (mut run, runtime) = checked(SOURCE);
+    let stores = &mut obtain(&mut run.statement_results[1]).store_and_infer_result;
+    stores.store_and_infer_results.swap(2, 3);
+    stores.stored_fact_ids = stores
+        .store_and_infer_results
+        .iter()
+        .flat_map(|s| s.stored_fact_ids())
+        .collect();
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "bad")
+        .unwrap_err();
+    assert_eq!(error.route, "Obtain/StoreSubject");
+}
+
+#[test]
+fn geo_obtain_rejects_different_output_binders() {
+    let (mut run, runtime) = checked(SOURCE);
+    obtain(&mut run.statement_results[1])
+        .statement
+        .equal_tos
+        .swap(0, 1);
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "bad")
+        .unwrap_err();
+    assert_eq!(error.route, "Obtain/StoreSubject");
+}
+
+#[test]
+fn geo_obtain_constructor_lookup_cannot_reopen_pending_statement_through_ancestor() {
+    let (run, _) = checked(SOURCE);
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), run.statement_results.len());
+    let pending = SourcePosition::new(
+        Some(&root),
+        SourceOwner::Statement(&run.statement_results[1]),
+        1,
+    );
+    let found = pending
+        .with_visible_obtain(&mut |_, producer| Ok((producer.before > 1).then_some(())))
+        .unwrap();
+    assert!(found.is_none());
+}
+
+#[test]
+fn geo_obtain_global_reference_uses_producer_context_before_later_have() {
+    let (mut run, runtime) = checked("have a R\nwitness exist m, n R st {n != 0, m = a / n} from a, 1:\n    a / 1 = a\nobtain u, v from exist m, n R st {n != 0, m = a / n}\nhave unrelated R\nu = a / v\n");
+    let id = obtain(&mut run.statement_results[2]).statement.equal_tos[0].id;
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), run.statement_results.len());
+    let producer = root.global_obtain_position(id).unwrap();
+    assert_eq!(producer.before, 2);
+    assert_eq!(producer.context_parameters().len(), 1);
+    let compiler = LitexToLeanCompiler::new(runtime);
+    let reference = compiler.compile_parameter_reference(id, &root).unwrap();
+    let context = producer.context_parameters();
+    assert!(reference.contains(&format!("_value_i{}", context[0].0.id.value())));
+    assert_eq!(reference.matches("_Host_i").count(), 2);
+    compiler.compile_run(&run, "obtain_context").unwrap();
+}
+
+#[test]
+fn geo_obtain_local_elimination_does_not_export_names() {
+    let (run, runtime) = checked("claim:\n    ? 1 = 1\n    witness exist m, n R st {n != 0, m = 1 / n} from 1, 1:\n        1 / 1 = 1\n    obtain local_x, local_y from exist m, n R st {n != 0, m = 1 / n}\n    local_y != 0\n    local_x = 1 / local_y\n    1 = 1\n");
+    let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
+        claim,
+    ))) = &run.statement_results[0]
+    else {
+        panic!("claim");
+    };
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::ObtainObjFromExistFact(
+            ExecObtainObjFromExistFactStmtResult::Success(proof),
+        ),
+    )) = &claim.body.proof_steps()[1]
+    else {
+        panic!("obtain");
+    };
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    assert!(root
+        .visible_parameter(proof.statement.equal_tos[0].id, &runtime)
+        .is_err());
+    assert!(root
+        .global_obtain_position(proof.statement.equal_tos[0].id)
+        .is_none());
+    assert!(root
+        .with_visible_obtain(&mut |_, _| Ok(Some(())))
+        .unwrap()
+        .is_none());
+    let output = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "local_obtain")
+        .unwrap();
+    assert!(output.contains("rcases "));
+    assert!(!output.contains("noncomputable def _value_i"));
+}
+
+const ATOMIC_SOURCE: &str = "prop has_copy(seed R):\n    exist m, n R st {n != 0, m = seed / n}\nwitness exist m, n R st {n != 0, m = 2 / n} from 2, 1:\n    2 / 1 = 2\n$has_copy(2)\nobtain x, y from $has_copy(2)\nx = 2 / y\n";
+
+fn atomic_obtain(
+    statement: &mut ExecStmtResult,
+) -> &mut crate::execute::ExecObtainObjFromAtomicFactStmtSuccessResult {
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+            crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof),
+        ),
+    )) = statement
+    else {
+        panic!("atomic obtain");
+    };
+    proof
+}
+
+#[test]
+fn geo_atomic_obtain_replays_outer_and_inner_constructor_binders() {
+    let (run, runtime) = checked(ATOMIC_SOURCE);
+    let output = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "atomic_obtain")
+        .unwrap();
+    assert!(output.contains("Classical.choose_spec"));
+    assert!(output.contains("noncomputable def _value_i"));
+    assert!(output.contains("(fun {_Host_i"));
+    assert!(output.contains(" : Type _}"));
+    assert!(!output.contains("sorry"));
+}
+
+#[test]
+fn geo_atomic_obtain_rejects_changed_projected_clause() {
+    let (mut run, runtime) = checked(ATOMIC_SOURCE);
+    let ExistShapedFact::Exist(projected) =
+        &mut atomic_obtain(&mut run.statement_results[3]).projected_exist
+    else {
+        panic!("plain");
+    };
+    projected.facts.swap(0, 1);
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "bad")
+        .unwrap_err();
+    assert_eq!(error.route, "ObtainAtomic/ProjectionSubject");
+}
+
+#[test]
+fn geo_atomic_obtain_rejects_changed_output_order() {
+    let (mut run, runtime) = checked(ATOMIC_SOURCE);
+    atomic_obtain(&mut run.statement_results[3])
+        .statement
+        .equal_tos
+        .swap(0, 1);
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "bad")
+        .unwrap_err();
+    assert_eq!(error.route, "Obtain/StoreSubject");
+}
+
+#[test]
+fn geo_atomic_obtain_rejects_missing_ordered_store() {
+    let (mut run, runtime) = checked(ATOMIC_SOURCE);
+    atomic_obtain(&mut run.statement_results[3])
+        .store_and_infer_result
+        .store_and_infer_results
+        .pop();
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "bad")
+        .unwrap_err();
+    assert_eq!(error.route, "Obtain/Stages");
+}
+
+#[test]
+fn geo_atomic_obtain_constructor_cannot_reopen_pending_statement() {
+    let (run, _) = checked(ATOMIC_SOURCE);
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), run.statement_results.len());
+    let pending = SourcePosition::new(
+        Some(&root),
+        SourceOwner::Statement(&run.statement_results[3]),
+        1,
+    );
+    assert!(pending
+        .with_visible_obtain(&mut |_, producer| Ok((producer.before > 1).then_some(())))
+        .unwrap()
+        .is_none());
+}
+
+#[test]
+fn geo_atomic_obtain_local_objects_do_not_escape_claim() {
+    let source = format!("{ATOMIC_SOURCE}claim:\n    ? 1 = 1\n    obtain local_x, local_y from $has_copy(2)\n    local_x = 2 / local_y\n    1 = 1\n");
+    let (run, runtime) = checked(&source);
+    let last = run.statement_results.last().unwrap();
+    let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
+        claim,
+    ))) = last
+    else {
+        panic!("claim");
+    };
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+            crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof),
+        ),
+    )) = &claim.body.proof_steps()[0]
+    else {
+        panic!("obtain");
+    };
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), run.statement_results.len());
+    assert!(root
+        .visible_parameter(proof.statement.equal_tos[0].id, &runtime)
+        .is_err());
+    assert!(root
+        .global_obtain_position(proof.statement.equal_tos[0].id)
+        .is_none());
+    let output = LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "atomic_local")
+        .unwrap();
+    assert!(output.contains("rcases "));
+}

@@ -279,8 +279,8 @@ fn positive_common_divisor_gcd_bound_requires_both_residues() {
     let text = detail.stringify();
     for field in [
         "divisor_in_n_pos_proof",
-        "left_remainder_zero_proof",
-        "right_remainder_zero_proof",
+        "left_divisibility_proof",
+        "right_divisibility_proof",
     ] {
         assert!(text.contains(field));
     }

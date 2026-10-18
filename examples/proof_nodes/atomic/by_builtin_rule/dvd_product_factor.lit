@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.Dvd.DvdProductFactor
+forall d Z*,k Z:
+    $dvd(d*k,d)
+    $dvd(k*d,d)
+
+# Nonzero integer divisor and integer dividend are checked by predicate WD.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/dvd_product_factor.lit

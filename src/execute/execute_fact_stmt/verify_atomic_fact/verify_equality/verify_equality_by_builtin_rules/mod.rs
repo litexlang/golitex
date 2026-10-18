@@ -1,6 +1,7 @@
 pub mod aggregate_identity_builtin_rule_proof;
 pub mod by_cartesian_size;
 pub mod by_closed_trig;
+pub mod by_dvd_zero_remainder;
 pub mod by_elementary_arithmetic;
 pub mod by_empty_function_graph;
 pub mod by_equal_from_known_difference_zero;
@@ -19,7 +20,6 @@ pub mod by_equality_identities_wave7;
 pub mod by_equality_identities_wave8;
 pub mod by_equality_identities_wave9;
 pub mod by_euclidean_remainder;
-pub mod by_factorial_divisibility;
 pub mod by_finite_map_size;
 pub mod by_finite_set_product_reindex;
 pub mod by_finite_set_reduce_reindex;
@@ -53,8 +53,6 @@ pub mod by_elementary_definitions;
 pub mod by_native_fixed_base;
 
 pub mod log_algebra_base_proof;
-
-pub mod by_gcd_lcm_universal_divisibility;
 
 mod by_trig_quotient_relations;
 #[cfg(test)]

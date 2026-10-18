@@ -121,7 +121,7 @@ fn successful_rule_nodes_retain_actual_membership_citations() {
         (
             "have n N+, k Z",
             "(n*k)%n=0",
-            "ProductModFactorZero",
+            "DvdProductFactor",
             &[("multiplier_integer", "k $in Z")][..],
         ),
         (

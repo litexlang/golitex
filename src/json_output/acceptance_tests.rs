@@ -14,18 +14,16 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave2::{
     AbsOfNegationBuiltinRuleProof, AbsProductBuiltinRuleProof, LogBaseSelfBuiltinRuleProof,
-    LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, ModOneBuiltinRuleProof,
-    NestedSameModAbsorptionBuiltinRuleProof, ModCompatibleSmallerModulusBuiltinRuleProof,
+    LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, NestedSameModAbsorptionBuiltinRuleProof, ModCompatibleSmallerModulusBuiltinRuleProof,
     OneModAtLeastTwoBuiltinRuleProof,
     OneToAnyPowerBuiltinRuleProof, SqrtOfSquareBuiltinRuleProof, SqrtOneBuiltinRuleProof,
     SqrtProductBuiltinRuleProof, SqrtQuotientBuiltinRuleProof, SqrtSquareBuiltinRuleProof,
-    SqrtZeroBuiltinRuleProof, ZeroModBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof
+    SqrtZeroBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::{
     AbsAbsAbsorptionBuiltinRuleProof, CeilOfIntegerBuiltinRuleProof, ExpOfLnBuiltinRuleProof,
     FloorOfIntegerBuiltinRuleProof, LnOfExpBuiltinRuleProof, MaxCommutativeBuiltinRuleProof,
-    MaxIdempotentBuiltinRuleProof, MinCommutativeBuiltinRuleProof, MinIdempotentBuiltinRuleProof,
-    ModSelfZeroBuiltinRuleProof
+    MaxIdempotentBuiltinRuleProof, MinCommutativeBuiltinRuleProof, MinIdempotentBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave4::{
     CeilOfFloorOfIntegerBuiltinRuleProof, FloorOfCeilOfIntegerBuiltinRuleProof,
@@ -45,15 +43,13 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::{
     AbsEqualsSignTimesArgBuiltinRuleProof, DiffZeroFromEqualOperandsBuiltinRuleProof,
-    EqualityFromTwoSidedWeakOrderBuiltinRuleProof, GcdDividesArgumentBuiltinRuleProof,
-    SignOfNegationBuiltinRuleProof,
+    EqualityFromTwoSidedWeakOrderBuiltinRuleProof, SignOfNegationBuiltinRuleProof,
     SignOfProductBuiltinRuleProof, SignTimesAbsEqualsArgBuiltinRuleProof,
     SubtractionFromKnownAdditionBuiltinRuleProof, ZeroProductCancelBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_from_known_difference_zero::EqualFromKnownDifferenceZeroBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave8::{
-    LcmGcdProductAbsBuiltinRuleProof, ModDividendMinusRemainderZeroBuiltinRuleProof,
-    QuotEuclideanDecompositionBuiltinRuleProof,
+    LcmGcdProductAbsBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
     SquareSumComponentZeroBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::{
@@ -315,10 +311,6 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         actual_equality_builtin_fixture(
             "forall a,b,x R+:\n    a!=1\n    b!=1\n    =>:\n        log(a,x)=log(b,x)/log(b,a)\n",
         ),
-        EqualitySearchProofByBuiltinRule::ZeroMod(ZeroModBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
-        EqualitySearchProofByBuiltinRule::ModOne(ModOneBuiltinRuleProof {}),
         EqualitySearchProofByBuiltinRule::OneModAtLeastTwo(OneModAtLeastTwoBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
@@ -345,9 +337,6 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
             proof_of_requirement_facts: Vec::new(),
         }),
         EqualitySearchProofByBuiltinRule::CeilOfInteger(CeilOfIntegerBuiltinRuleProof {
-            proof_of_requirement_facts: Vec::new(),
-        }),
-        EqualitySearchProofByBuiltinRule::ModSelfZero(ModSelfZeroBuiltinRuleProof {
             proof_of_requirement_facts: Vec::new(),
         }),
         EqualitySearchProofByBuiltinRule::FloorOfCeilOfInteger(
@@ -416,7 +405,6 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
                 proof_of_requirement_facts: Vec::new(),
             },
         ),
-        EqualitySearchProofByBuiltinRule::GcdDividesArgument(GcdDividesArgumentBuiltinRuleProof {}),
         actual_equality_builtin_fixture("forall n N+, k Z:\n    (n*k)%n=0\n"),
         EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(
             EqualityFromTwoSidedWeakOrderBuiltinRuleProof {
@@ -452,9 +440,6 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
         ),
         EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(
             QuotEuclideanDecompositionBuiltinRuleProof {},
-        ),
-        EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(
-            ModDividendMinusRemainderZeroBuiltinRuleProof {},
         ),
         EqualitySearchProofByBuiltinRule::SquareSumComponentZero(
             SquareSumComponentZeroBuiltinRuleProof {
@@ -706,8 +691,9 @@ fn all_equality_rules() -> Vec<EqualitySearchProofByBuiltinRule> {
 #[test]
 fn acceptance_equality_builtin_all_variants_bilingual() {
     let rules = all_equality_rules();
-    // Four identity leaves moved to TheyAreTheSame; indexed lookup is now a class proof.
-    assert_eq!(rules.len(), 191);
+    // Five former modulo leaves moved to native Dvd. The actual product
+    // fixture covers their common DvdZeroRemainder equality adapter.
+    assert_eq!(rules.len(), 186);
     for (index, rule) in rules.iter().enumerate() {
         let context = format!("equality variant {index}");
         let en = rule.rule_name_and_message(OutputLanguage::English);

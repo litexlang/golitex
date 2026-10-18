@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinRule.Dvd.DvdFactorial
+forall m,n N:
+    m<=n
+    =>:
+        $dvd(n!,m!)
+
+# Nonzero integer divisor and integer dividend are checked by predicate WD.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/dvd_factorial.lit

@@ -86,6 +86,9 @@ pub(super) fn project_atomic_wd_proof(
     };
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     let domain = match &proof.predicate_domain {
+        PredicateDomainProof::ByKnownZeroRemainder(p) => {
+            super::divisibility::project_known_zero_remainder(p, runtime)
+        }
         PredicateDomainProof::ByKnownFact(cite) => object_for(
             runtime,
             vec![

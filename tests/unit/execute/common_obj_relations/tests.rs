@@ -113,24 +113,24 @@ fn common_obj_relations_actual_leaves_keep_ten_language_text_and_typed_evidence(
     for (code, name, fields, law) in [
         (
             GCD,
-            "GcdCommonDivisor",
+            "DvdGcdCommonDivisor",
             vec![
                 "divisor_positive",
                 "first_divisibility",
                 "second_divisibility",
             ],
-            "gcd(a,b)%d=0",
+            "$dvd(gcd(a,b),d)",
         ),
         (
             LCM,
-            "LcmCommonMultiple",
+            "DvdLcmCommonMultiple",
             vec![
                 "first_positive",
                 "second_positive",
                 "first_divisibility",
                 "second_divisibility",
             ],
-            "m%lcm(a,b)=0",
+            "$dvd(m,lcm(a,b))",
         ),
         (
             SIN_POS,
@@ -215,8 +215,8 @@ fn common_obj_relations_actual_leaves_keep_ten_language_text_and_typed_evidence(
 fn common_obj_relations_reverse_equalities_and_signed_inputs_pass() {
     for code in [
         GCD.replace("a!=0", "b!=0")
-            .replace("gcd(a,b)%d=0", "0=gcd(a,b)%d"),
-        LCM.replace("m%lcm(a,b)=0", "0=m%lcm(a,b)"),
+            .replace("$dvd(gcd(a,b),d)", "0=gcd(a,b)%d"),
+        LCM.replace("$dvd(m,lcm(a,b))", "0=m%lcm(a,b)"),
         SIN_POS.replace("0<sin(x)", "sin(x)>0"),
         SIN_ORDER.replace("sin(a)<sin(b)", "sin(b)>sin(a)"),
         LOG_NONZERO.replace("log(b,x)!=0", "0!=log(b,x)"),
@@ -338,10 +338,10 @@ fn common_obj_relations_search_ceiling_and_failed_rollback_hold() {
 fn common_obj_relations_actual_assumption_citations_survive_projection() {
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
         for (code, name, fields) in [
-            ("forall a,b Z*,d N+:\n    a%d=0\n    b%d=0\n    =>:\n        gcd(a,b)%d=0\n", "GcdCommonDivisor", vec!["first_divisibility", "second_divisibility"]),
+            ("forall a,b Z*,d N+:\n    a%d=0\n    b%d=0\n    =>:\n        gcd(a,b)%d=0\n", "DvdGcdCommonDivisor", vec!["first_divisibility", "second_divisibility"]),
             (SIN_POS, "SinPositiveOnOpenPi", vec!["lower_bound", "upper_bound"]),
             (SIN_ORDER, "SinStrictMonotoneOnHalfPi", vec!["left_lower_bound", "right_upper_bound", "argument_order"]),
-            (LCM, "LcmCommonMultiple", vec!["first_divisibility", "second_divisibility"]),
+            (LCM, "DvdLcmCommonMultiple", vec!["first_divisibility", "second_divisibility"]),
             ("forall b,x R:\n    b>0\n    b!=1\n    x>0\n    x!=1\n    =>:\n        log(b,x)!=0\n", "LogNonzeroFromNonunitArgument", vec!["base_proof", "base_proof", "argument_proof", "argument_proof"]),
         ] {
             let json = check(&mut runtime(language), code, true);

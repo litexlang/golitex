@@ -102,18 +102,12 @@ impl Runtime {
             Obj::ArithmeticOperator(ArithmeticOperator::Div(v)) if matches!(target, Z) => {
                 let numerator = child(&v.left, &Z)?;
                 let denominator = child(&v.right, &Z)?;
-                let remainder = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
-                    left: v.left.clone(),
-                    right: v.right.clone(),
-                }));
-                let zero = Obj::Literal(Literal::Number(Number::new("0".into())));
-                // Cite only an existing equality path. The enclosing Div WD
-                // already owns the nonzero divisor; do not reopen BT search.
-                let zero_remainder = self.lookup_known_obj_equality(&remainder, &zero)?;
+                // Cite known divisibility only; enclosing Div WD owns d!=0.
+                let divisibility = self.lookup_known_dvd_premise(&v.left, &v.right)?;
                 P::ExactIntegerDiv {
                     numerator,
                     denominator,
-                    zero_remainder: Box::new(zero_remainder),
+                    divisibility: Box::new(divisibility),
                 }
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Div(v)) if matches!(target, Q | R | C) => {

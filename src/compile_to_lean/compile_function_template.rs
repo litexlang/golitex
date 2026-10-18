@@ -483,18 +483,23 @@ impl LitexToLeanCompiler {
                 inner.insert(value.param_binding.id, variable.clone());
                 let mut clauses = Vec::new();
                 for clause in &value.facts {
-                    clauses.push(self.compile_function_raw_predicate(
-                        &function_guard_fact(clause)?,
-                        position,
-                        &inner,
-                    )?);
+                    let fact = function_guard_fact(clause)?;
+                    clauses.push((
+                        fact.fact_id(),
+                        self.compile_function_raw_predicate(&fact, position, &inner)?,
+                    ));
                 }
-                let predicate = clauses
-                    .into_iter()
-                    .rev()
-                    .reduce(|tail, head| format!("({head} ∧ {tail})"))
+                let mut predicate = clauses
+                    .pop()
+                    .map(|(_, clause)| clause)
                     .unwrap_or_else(|| "True".into());
-                Ok(format!("(Litex.SetSemantics.sepValue (M := M) {bound} (fun ({variable} : M.Value) => {predicate}))"))
+                for (id, clause) in clauses.into_iter().rev() {
+                    predicate = format!("(∃ (h_{} : {clause}), {predicate})", id.value());
+                }
+                // Match SetBuilderObj.condition and the ordered assumptions
+                // emitted by compile_set_builder_wd, including certification of
+                // the bound member. Its witness changes no object denotation.
+                Ok(format!("(Litex.SetSemantics.sepValue (M := M) {bound} (fun ({variable} : M.Value) => ∃ (_ : M.mem {variable} {bound}), {predicate}))"))
             }
             Obj::SetOperator(SetOperator::PowerSet(value)) => Ok(format!(
                 "(Litex.SetSemantics.powerValue (M := M) {})",

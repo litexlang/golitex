@@ -53,6 +53,9 @@ pub struct AtomicFactWellDefinedProof {
 // Arguments and the visible signature are still checked before this dispatch.
 pub enum PredicateDomainProof {
     ByKnownFact(super::AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
+    ByKnownZeroRemainder(
+        Box<super::verify_atomic_except_equality::known_divisibility::KnownZeroRemainderProof>,
+    ),
     ByRequirements(Vec<PredicateDomainWellDefinedProof>),
     ByCheckedArguments(Vec<PredicateDomainArgumentMembershipProof>),
 }

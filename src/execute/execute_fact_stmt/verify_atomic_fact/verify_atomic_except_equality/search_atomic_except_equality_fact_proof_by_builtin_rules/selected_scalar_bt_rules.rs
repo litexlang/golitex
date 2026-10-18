@@ -44,20 +44,20 @@ pub struct ExactIntegerQuotientProof {
     pub numerator_integer: VerifyFactResult,
     pub denominator_integer: VerifyFactResult,
     pub denominator_nonzero: VerifyFactResult,
-    pub zero_remainder: VerifyFactResult,
+    pub divisibility: VerifyFactResult,
 }
 impl ExactIntegerQuotientProof {
     pub fn new(
         numerator_integer: VerifyFactResult,
         denominator_integer: VerifyFactResult,
         denominator_nonzero: VerifyFactResult,
-        zero_remainder: VerifyFactResult,
+        divisibility: VerifyFactResult,
     ) -> Self {
         Self {
             numerator_integer,
             denominator_integer,
             denominator_nonzero,
-            zero_remainder,
+            divisibility,
         }
     }
 }
@@ -205,7 +205,7 @@ impl Runtime {
         fact: &InFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<super::in_fact::InFactSearchProofByBuiltinRule>> {
-        // a,b in Z, b!=0, a%b=0 => a/b in Z, for either divisor sign.
+        // a,b in Z, b!=0, $dvd(a,b) => a/b in Z, for either divisor sign.
         if !matches!(&fact.set, Obj::StandardSet(StandardSet::Z)) {
             return Ok(None);
         }
@@ -238,19 +238,15 @@ impl Runtime {
         if denominator_nonzero.is_failed() {
             return Ok(None);
         }
-        let remainder = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
-            left: div.left.clone(),
-            right: div.right.clone(),
-        }));
-        let premise: Fact = EqualFact {
+        let premise: Fact = DvdFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: remainder,
-            right: Obj::Literal(Literal::Number(Number::new("0".into()))),
+            left: *div.left.clone(),
+            right: *div.right.clone(),
             line_file: fact.line_file.clone(),
         }
         .into();
-        let zero_remainder = self.verify_builtin_rule_premise(&premise, state)?;
-        if zero_remainder.is_failed() {
+        let divisibility = self.verify_builtin_rule_premise(&premise, state)?;
+        if divisibility.is_failed() {
             return Ok(None);
         }
         Ok(Some(
@@ -258,7 +254,7 @@ impl Runtime {
                 numerator_integer,
                 denominator_integer,
                 denominator_nonzero,
-                zero_remainder,
+                divisibility,
             )
             .into(),
         ))

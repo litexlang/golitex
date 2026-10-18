@@ -17,6 +17,11 @@ impl Runtime {
         if let Some(proof) = self.lookup_known_atomic_fact(fact) {
             return Ok(Some(P::ByKnownAtomicFact(proof)));
         }
+        if let AtomicFact::DvdFact(dvd) = fact {
+            if let Some(proof) = self.lookup_known_zero_remainder(&dvd.left, &dvd.right) {
+                return Ok(Some(P::ByKnownZeroRemainder(proof)));
+            }
+        }
         if let Some(proof) = calculate_closed_atomic_except_equality_fact(fact) {
             return Ok(Some(P::ByClosedCalculation(proof)));
         }

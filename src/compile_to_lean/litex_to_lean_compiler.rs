@@ -187,6 +187,13 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromAtomicFact(crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof)),
+        )) => fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.projected_exist))
+            || proof.statement.fact.body.iter().any(object_uses_functions),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromExistFact(crate::execute::ExecObtainObjFromExistFactStmtResult::Success(proof)),
+        )) => fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.statement.fact)),
         ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(ExecWitnessExistFactStmtResult::Success(proof))) => {
             fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.statement.exist_shaped_fact_in_witness))
                 || proof.statement.equal_tos.iter().any(object_uses_functions)
@@ -322,6 +329,32 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         return true;
     }
     match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof),
+            ),
+        )) => {
+            fact_uses_sets(&crate::ast::fact::exist_shaped_fact_to_fact(
+                &proof.projected_exist,
+            )) || proof
+                .store_and_infer_result
+                .store_and_infer_results
+                .iter()
+                .any(|store| store_has_set_inference(store))
+        }
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                crate::execute::ExecObtainObjFromExistFactStmtResult::Success(proof),
+            ),
+        )) => {
+            fact_uses_sets(&crate::ast::fact::exist_shaped_fact_to_fact(
+                &proof.statement.fact,
+            )) || proof
+                .store_and_infer_result
+                .store_and_infer_results
+                .iter()
+                .any(|store| store_has_set_inference(store))
+        }
         ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
             ExecWitnessExistFactStmtResult::Success(proof),
         )) => {

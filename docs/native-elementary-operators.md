@@ -15,10 +15,13 @@ Litex spellings; this feature does not parse raw LaTeX commands.
 | `coth(x)` | `x in R`, `x!=0` | `cosh(x)/sinh(x)`, in `R*` |
 | `sech(x)` | `x in R` | `1/cosh(x)`, in `R+` |
 | `csch(x)` | `x in R`, `x!=0` | `1/sinh(x)`, in `R*` |
-| `sym_diff(A,B)` | Both objects are well-defined in Litex's pure-set model | `union(set_minus(A,B),set_minus(B,A))` |
+| `set_diff(A,B)` | Both objects are well-defined in Litex's pure-set model | `union(set_minus(A,B),set_minus(B,A))` |
 
 These ten spellings are reserved object names. They cannot be declaration or
 parameter names. `compose` and `restrict` are deferred.
+
+`set_diff` denotes symmetric difference (elements in exactly one operand).
+Ordinary set subtraction is `set_minus`.
 
 ```litex
 conj(3-4*i) = 3+4*i
@@ -40,10 +43,10 @@ forall x R*:
     coth(x) = cosh(x)/sinh(x)
 
 forall A set:
-    sym_diff(A,A) = {}
-1 $in sym_diff({1,2},{2,3})
-not 2 $in sym_diff({1,2},{2,3})
-sym_diff({1,2},{2,3}) = {1,3}
+    set_diff(A,A) = {}
+1 $in set_diff({1,2},{2,3})
+not 2 $in set_diff({1,2},{2,3})
+set_diff({1,2},{2,3}) = {1,3}
 ```
 
 The current builtin equations cover conjugation's coordinates, involution,

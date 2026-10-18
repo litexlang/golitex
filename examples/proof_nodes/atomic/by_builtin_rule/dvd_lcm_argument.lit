@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.Dvd.DvdLcmArgument
+forall a,b Z*:
+    $dvd(lcm(a,b),abs(a))
+    $dvd(lcm(a,b),abs(b))
+
+# Nonzero integer divisor and integer dividend are checked by predicate WD.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/dvd_lcm_argument.lit

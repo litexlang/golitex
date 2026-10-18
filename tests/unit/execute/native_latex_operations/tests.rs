@@ -70,11 +70,11 @@ fn native_latex_operations_domains_and_false_neighbors() {
         "forall x R:\n    cosh(x)^2+sinh(x)^2=1",
         "forall x,y R:\n    sinh(x+y)=sinh(x)+sinh(y)",
         "forall x R:\n    sinh(-x)=sinh(x)",
-        "sym_diff({1},{1})={1}",
-        "sym_diff({1,2},{2,3})={1,2,3}",
-        "2 $in sym_diff({1,2},{2,3})",
-        "not 1 $in sym_diff({1,2},{2,3})",
-        "forall A,B set:\n    sym_diff(A,B)=union(A,B)",
+        "set_diff({1},{1})={1}",
+        "set_diff({1,2},{2,3})={1,2,3}",
+        "2 $in set_diff({1,2},{2,3})",
+        "not 1 $in set_diff({1,2},{2,3})",
+        "forall A,B set:\n    set_diff(A,B)=union(A,B)",
     ] {
         check(&mut runtime(), code, false);
     }
@@ -102,12 +102,12 @@ fn native_latex_operations_substitution_congruence_and_carriers() {
         "have fn f(x R) R = cosh(x)\nf(0)=1",
         "have fn f(z C) C = conj(z)\nf(i)=-i",
         "forall x,y R:\n    x=y\n    =>:\n        sinh(x)=sinh(y)",
-        "forall A,B,D set:\n    A=B\n    =>:\n        sym_diff(A,D)=sym_diff(B,D)",
+        "forall A,B,D set:\n    A=B\n    =>:\n        set_diff(A,D)=set_diff(B,D)",
         "forall x R:\n    sinh(x) $in R\n    cosh(x) $in R+\n    tanh(x) $in R\n    sech(x) $in R+",
         "forall x R*:\n    coth(x) $in R*\n    csch(x) $in R*",
         "forall z C:\n    conj(z) $in C",
-        "sym_diff({1,2},{2,3})={3,1}",
-        "sym_diff({1/2,2},{0.5,3})={2,3}",
+        "set_diff({1,2},{2,3})={3,1}",
+        "set_diff({1/2,2},{0.5,3})={2,3}",
         "forall x R:\n    cos(x)!=0\n    =>:\n        sec(x) $in R*",
         "forall x R:\n    sin(x)!=0\n    =>:\n        csc(x) $in R*",
         "forall x R:\n    tanh(x)*cosh(x)=sinh(x)\n    sech(x)*cosh(x)=1",
@@ -119,7 +119,7 @@ fn native_latex_operations_substitution_congruence_and_carriers() {
 #[test]
 fn native_latex_operations_reserved_names_and_arity() {
     for name in [
-        "conj", "sec", "csc", "sinh", "cosh", "tanh", "coth", "sech", "csch", "sym_diff",
+        "conj", "sec", "csc", "sinh", "cosh", "tanh", "coth", "sech", "csch", "set_diff",
     ] {
         let mut rt = runtime();
         let tokens = Tokenizer::new()
@@ -138,8 +138,8 @@ fn native_latex_operations_reserved_names_and_arity() {
         "conj(1,2)=1",
         "sec()=1",
         "sinh(0,0)=0",
-        "sym_diff({})={}",
-        "sym_diff({},{},{})={}",
+        "set_diff({})={}",
+        "set_diff({},{},{})={}",
     ] {
         let mut rt = runtime();
         let tokens = Tokenizer::new()
@@ -157,7 +157,7 @@ fn native_latex_operations_typed_evidence_and_search_ceiling() {
             "forall x R:\n    cosh(x)^2-sinh(x)^2=1",
             "HyperbolicPythagorean",
         ),
-        ("forall A set:\n    sym_diff(A,A)={}", "SymDiffSelf"),
+        ("forall A set:\n    set_diff(A,A)={}", "SymDiffSelf"),
     ] {
         let mut rt = runtime();
         let tokens = Tokenizer::new()
@@ -183,7 +183,7 @@ fn native_latex_operations_typed_evidence_and_search_ceiling() {
 #[test]
 fn native_latex_operations_latex_projection_and_lean_fail_closed() {
     let latex=crate::compile_to_latex::to_latex_from_source(
-        "conj(i)=-i\nsec(0)=1\ncsc(pi/2)=1\nsinh(0)=0\ncosh(0)=1\ntanh(0)=0\ncoth(1)=coth(1)\nsech(0)=1\ncsch(1)=csch(1)\nsym_diff({1},{2})={1,2}",
+        "conj(i)=-i\nsec(0)=1\ncsc(pi/2)=1\nsinh(0)=0\ncosh(0)=1\ntanh(0)=0\ncoth(1)=coth(1)\nsech(0)=1\ncsch(1)=csch(1)\nset_diff({1},{2})={1,2}",
         OutputLanguage::English).unwrap();
     for fragment in [
         "\\overline",

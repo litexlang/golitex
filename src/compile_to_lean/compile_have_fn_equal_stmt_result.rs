@@ -123,8 +123,12 @@ impl LitexToLeanCompiler {
         let defining_equal = self.resolve_fact(stores.defining_equal_fact_id, &after_equal)?;
         alias_equality_subject(&defining_equal, &proof.statement.name, &anonymous)?;
         self.validate_store(&stores.defining_equal.store, &defining_equal)?;
+        // The definition above is this exact checked anonymous object. Keep the
+        // original equality citation, but refer to the definition on both sides
+        // instead of elaborating its complete body a second time. Unfolding the
+        // definition recovers the original stored right-hand side.
         let equal = (
-            self.fact_proposition(&defining_equal, &after_equal)?,
+            format!("Litex.Same {object} {object}"),
             format!("(Litex.sameRefl {object})"),
         );
         Ok(format!(

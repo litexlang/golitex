@@ -56,17 +56,15 @@ use super::by_equality_identities_wave2::{
     LogArgPowerBuiltinRuleProof, LogBaseSelfBuiltinRuleProof, LogChangeOfBaseBuiltinRuleProof,
     LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, LogProductBuiltinRuleProof,
     LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof,
-    ModCompatibleSmallerModulusBuiltinRuleProof, ModOneBuiltinRuleProof,
-    NestedSameModAbsorptionBuiltinRuleProof, OneModAtLeastTwoBuiltinRuleProof,
-    OneToAnyPowerBuiltinRuleProof, SqrtOfSquareBuiltinRuleProof, SqrtOneBuiltinRuleProof,
-    SqrtProductBuiltinRuleProof, SqrtQuotientBuiltinRuleProof, SqrtSquareBuiltinRuleProof,
-    SqrtZeroBuiltinRuleProof, ZeroModBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof,
+    ModCompatibleSmallerModulusBuiltinRuleProof, NestedSameModAbsorptionBuiltinRuleProof,
+    OneModAtLeastTwoBuiltinRuleProof, OneToAnyPowerBuiltinRuleProof, SqrtOfSquareBuiltinRuleProof,
+    SqrtOneBuiltinRuleProof, SqrtProductBuiltinRuleProof, SqrtQuotientBuiltinRuleProof,
+    SqrtSquareBuiltinRuleProof, SqrtZeroBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof,
 };
 use super::by_equality_identities_wave3::{
     AbsAbsAbsorptionBuiltinRuleProof, CeilOfIntegerBuiltinRuleProof, ExpOfLnBuiltinRuleProof,
     FloorOfIntegerBuiltinRuleProof, LnOfExpBuiltinRuleProof, MaxCommutativeBuiltinRuleProof,
     MaxIdempotentBuiltinRuleProof, MinCommutativeBuiltinRuleProof, MinIdempotentBuiltinRuleProof,
-    ModSelfZeroBuiltinRuleProof,
 };
 use super::by_equality_identities_wave4::{
     CeilOfFloorOfIntegerBuiltinRuleProof, FloorOfCeilOfIntegerBuiltinRuleProof,
@@ -76,8 +74,7 @@ use super::by_equality_identities_wave5::{
     FactorialSuccessorBuiltinRuleProof, GcdCommutativeBuiltinRuleProof,
     GcdIdempotentAbsBuiltinRuleProof, GcdLeftZeroAbsBuiltinRuleProof,
     GcdRightZeroAbsBuiltinRuleProof, LcmCommutativeBuiltinRuleProof,
-    LcmIdempotentAbsBuiltinRuleProof, LcmLeftAbsDivisibilityProof, LcmRightAbsDivisibilityProof,
-    QuotByOneBuiltinRuleProof, QuotSelfOneBuiltinRuleProof,
+    LcmIdempotentAbsBuiltinRuleProof, QuotByOneBuiltinRuleProof, QuotSelfOneBuiltinRuleProof,
 };
 use super::by_equality_identities_wave6::{
     AbsNonnegEqualsSelfBuiltinRuleProof, AbsNonposEqualsNegationBuiltinRuleProof,
@@ -87,15 +84,13 @@ use super::by_equality_identities_wave6::{
 };
 use super::by_equality_identities_wave7::{
     AbsEqualsSignTimesArgBuiltinRuleProof, DiffZeroFromEqualOperandsBuiltinRuleProof,
-    EqualityFromTwoSidedWeakOrderBuiltinRuleProof, GcdDividesArgumentBuiltinRuleProof,
-    ProductModFactorZeroBuiltinRuleProof, SignOfNegationBuiltinRuleProof,
+    EqualityFromTwoSidedWeakOrderBuiltinRuleProof, SignOfNegationBuiltinRuleProof,
     SignOfProductBuiltinRuleProof, SignTimesAbsEqualsArgBuiltinRuleProof,
     SubtractionFromKnownAdditionBuiltinRuleProof, ZeroProductCancelBuiltinRuleProof,
 };
 use super::by_equality_identities_wave8::{
     LcmGcdProductAbsBuiltinRuleProof, MinusOneOddNaturalPowerBuiltinRuleProof,
-    ModDividendMinusRemainderZeroBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
-    SquareSumComponentZeroBuiltinRuleProof,
+    QuotEuclideanDecompositionBuiltinRuleProof, SquareSumComponentZeroBuiltinRuleProof,
 };
 use super::by_equality_identities_wave9::{
     EmptySetFromNotNonemptyBuiltinRuleProof, IntersectAssociativeBuiltinRuleProof,
@@ -130,6 +125,7 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    DvdZeroRemainder(super::by_dvd_zero_remainder::DvdZeroRemainderProof),
     SymmetricDifference(super::by_symmetric_difference::SymmetricDifferenceEqualityProof),
     Conjugation(super::by_conjugation::ConjugationEqualityProof),
     ReciprocalTrig(super::by_reciprocal_trig::ReciprocalTrigEqualityProof),
@@ -159,9 +155,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     RangeSize(super::by_range_size::RangeSizeProof),
     ClosedRangeSize(super::by_range_size::ClosedRangeSizeProof),
     EuclideanRemainder(super::by_euclidean_remainder::EuclideanRemainderProof),
-    GcdCommonDivisor(super::by_gcd_lcm_universal_divisibility::GcdCommonDivisorProof),
-    LcmCommonMultiple(super::by_gcd_lcm_universal_divisibility::LcmCommonMultipleProof),
-    FactorialDivisibility(super::by_factorial_divisibility::FactorialDivisibilityProof),
+
     FiniteSetProductReindex(super::by_finite_set_product_reindex::FiniteSetProductReindexProof),
     FiniteSetReduceReindex(super::by_finite_set_reduce_reindex::FiniteSetReduceReindexProof),
 
@@ -227,8 +221,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     LogQuotient(LogQuotientBuiltinRuleProof),
     LogReciprocal(LogReciprocalBuiltinRuleProof),
     LogChangeOfBase(LogChangeOfBaseBuiltinRuleProof),
-    ZeroMod(ZeroModBuiltinRuleProof),
-    ModOne(ModOneBuiltinRuleProof),
+
     OneModAtLeastTwo(OneModAtLeastTwoBuiltinRuleProof),
     NestedSameModAbsorption(NestedSameModAbsorptionBuiltinRuleProof),
     ModCompatibleSmallerModulus(ModCompatibleSmallerModulusBuiltinRuleProof),
@@ -241,7 +234,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     LnOfExp(LnOfExpBuiltinRuleProof),
     FloorOfInteger(FloorOfIntegerBuiltinRuleProof),
     CeilOfInteger(CeilOfIntegerBuiltinRuleProof),
-    ModSelfZero(ModSelfZeroBuiltinRuleProof),
+
     FloorOfCeilOfInteger(FloorOfCeilOfIntegerBuiltinRuleProof),
     CeilOfFloorOfInteger(CeilOfFloorOfIntegerBuiltinRuleProof),
     SqrtOfSquareEqualsAbs(SqrtOfSquareEqualsAbsBuiltinRuleProof),
@@ -249,8 +242,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     QuotSelfOne(QuotSelfOneBuiltinRuleProof),
     LcmCommutative(LcmCommutativeBuiltinRuleProof),
     LcmIdempotentAbs(LcmIdempotentAbsBuiltinRuleProof),
-    LcmLeftAbsDivisibility(LcmLeftAbsDivisibilityProof),
-    LcmRightAbsDivisibility(LcmRightAbsDivisibilityProof),
+
     GcdCommutative(GcdCommutativeBuiltinRuleProof),
     GcdIdempotentAbs(GcdIdempotentAbsBuiltinRuleProof),
     GcdRightZeroAbs(GcdRightZeroAbsBuiltinRuleProof),
@@ -264,8 +256,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     MaxLeftWhenLessEqual(MaxLeftWhenLessEqualBuiltinRuleProof),
     MinLeftWhenLessEqual(MinLeftWhenLessEqualBuiltinRuleProof),
     MinRightWhenLessEqual(MinRightWhenLessEqualBuiltinRuleProof),
-    GcdDividesArgument(GcdDividesArgumentBuiltinRuleProof),
-    ProductModFactorZero(ProductModFactorZeroBuiltinRuleProof),
+
     EqualityFromTwoSidedWeakOrder(EqualityFromTwoSidedWeakOrderBuiltinRuleProof),
     DiffZeroFromEqualOperands(DiffZeroFromEqualOperandsBuiltinRuleProof),
     EqualFromKnownDifferenceZero(EqualFromKnownDifferenceZeroBuiltinRuleProof),
@@ -276,7 +267,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     SignOfProduct(SignOfProductBuiltinRuleProof),
     SubtractionFromKnownAddition(SubtractionFromKnownAdditionBuiltinRuleProof),
     QuotEuclideanDecomposition(QuotEuclideanDecompositionBuiltinRuleProof),
-    ModDividendMinusRemainderZero(ModDividendMinusRemainderZeroBuiltinRuleProof),
+
     SquareSumComponentZero(SquareSumComponentZeroBuiltinRuleProof),
     MinusOneOddNaturalPower(MinusOneOddNaturalPowerBuiltinRuleProof),
     LcmGcdProductAbs(LcmGcdProductAbsBuiltinRuleProof),

@@ -1,4 +1,5 @@
-# Node: equal.ByBuiltinRule.GcdDividesArgument
+# Zero-remainder compatibility: DvdZeroRemainder delegates to the native $dvd rule.
+# Historical node: equal.ByBuiltinRule.GcdDividesArgument
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/gcd_divides_argument.lit
 
 have a Z*

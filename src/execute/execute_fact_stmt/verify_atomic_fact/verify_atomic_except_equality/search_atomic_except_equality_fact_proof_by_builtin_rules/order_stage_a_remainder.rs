@@ -4,11 +4,12 @@
 //!
 //! One matcher ↔ one dedicated proof struct (see less_equal.rs / less.rs).
 
-use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessEqualFact, LessFact};
+use crate::ast::fact::DvdFact;
+use crate::ast::fact::{AtomicFact, Fact, InFact, LessEqualFact, LessFact};
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
     Add, ArithmeticOperator, Div, FiniteSetMax, FiniteSetMin, FiniteSetStat,
-    IntegerOperator, Literal, Mod, Mul, Number, Obj, SetOperator, Sub, Union,
+    Literal, Mul, Number, Obj, SetOperator, Sub, Union,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::{
     DivMonotoneStrictSameNegDivisorBuiltinRuleProof, LessFactSearchProofByBuiltinRule,
@@ -16,7 +17,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     PositiveEvenGtOneBuiltinRuleProof,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{
-    zero_obj, DivMonotoneWeakSameNegDivisorBuiltinRuleProof,
+    DivMonotoneWeakSameNegDivisorBuiltinRuleProof,
     FiniteSetMaxMemberLeBuiltinRuleProof, FiniteSetMinMemberLeBuiltinRuleProof,
     FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof,
     FiniteSetSizeUnionLeSumBuiltinRuleProof, IntegerAdjacencyLeBuiltinRuleProof,
@@ -548,7 +549,7 @@ impl Runtime {
     }
 
     // Positive even integer exceeds one.
-    // Example: known `i $in N+` and `i % 2 = 0` prove `1 < i`.
+    // Example: known `i $in N+` and `$dvd(i, 2)` prove `1 < i`.
     fn positive_even_gt_one_proof(
         &mut self,
         fact: &LessFact,
@@ -562,12 +563,13 @@ impl Runtime {
         if in_n_pos_proof.is_failed() {
             return Ok(None);
         }
-        let even_goal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+        let even_goal: Fact = DvdFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            left: mod_obj(integer, &two_obj()),
-            right: zero_obj(),
+            left: integer.clone(),
+            right: two_obj(),
             line_file: None,
-        }));
+        }
+        .into();
         let even_proof = self.verify_builtin_rule_premise(&even_goal, verify_state)?;
         if even_proof.is_failed() {
             return Ok(None);
@@ -830,13 +832,6 @@ fn add_obj(left: &Obj, right: &Obj) -> Obj {
 
 fn div_obj(left: &Obj, right: &Obj) -> Obj {
     Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
-        left: Box::new(left.clone()),
-        right: Box::new(right.clone()),
-    }))
-}
-
-fn mod_obj(left: &Obj, right: &Obj) -> Obj {
-    Obj::IntegerOperator(IntegerOperator::Mod(Mod {
         left: Box::new(left.clone()),
         right: Box::new(right.clone()),
     }))

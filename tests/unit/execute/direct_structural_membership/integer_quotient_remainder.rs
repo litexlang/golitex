@@ -93,7 +93,7 @@ fn integer_quotient_remainder_keeps_citations_and_locale_output() {
         let node = exact_node(&detail, &key).expect("actual exact integer division certificate");
         let text = node.stringify_pretty();
         assert!(
-            text.contains("zero_remainder") && text.contains("enclosing_object_wd"),
+            text.contains("divisibility") && text.contains("enclosing_object_wd"),
             "{text}"
         );
         assert!(

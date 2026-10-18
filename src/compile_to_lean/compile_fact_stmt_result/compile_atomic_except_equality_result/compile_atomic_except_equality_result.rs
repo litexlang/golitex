@@ -45,6 +45,9 @@ impl LitexToLeanCompiler {
         let position = &formed;
         let proposition = self.atomic_proposition(&success.fact, position)?;
         let proof = match &success.searched_proof {
+                AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(_) => {
+                    return Err(LeanCompileError::unsupported("Atomic/KnownZeroRemainder"));
+                }
                 AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) => {
                     match &success.fact {
                         AtomicFact::InFact(fact)
@@ -75,7 +78,7 @@ impl LitexToLeanCompiler {
                 },
                 AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(ClosedAtomicExceptEqualityCalculationProof::NotEqual(proof)) =>
                     self.compile_closed_not_equal(&success.fact, proof, position)?,
-                AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(certificate @ (ClosedAtomicExceptEqualityCalculationProof::Less(_) | ClosedAtomicExceptEqualityCalculationProof::Greater(_) | ClosedAtomicExceptEqualityCalculationProof::LessEqual(_) | ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(_))) => self.compile_closed_order(&success.fact, certificate, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(certificate @ (ClosedAtomicExceptEqualityCalculationProof::Less(_) | ClosedAtomicExceptEqualityCalculationProof::Greater(_) | ClosedAtomicExceptEqualityCalculationProof::LessEqual(_) | ClosedAtomicExceptEqualityCalculationProof::GreaterEqual(_) | ClosedAtomicExceptEqualityCalculationProof::NotLess(_) | ClosedAtomicExceptEqualityCalculationProof::NotGreater(_) | ClosedAtomicExceptEqualityCalculationProof::NotLessEqual(_) | ClosedAtomicExceptEqualityCalculationProof::NotGreaterEqual(_))) => self.compile_closed_order(&success.fact, certificate, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_) => {
                     return Err(LeanCompileError::unsupported(
                         "Atomic/ClosedCalculationNonMembership",

@@ -12,6 +12,26 @@ pub(super) fn project_equality_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::DvdZeroRemainder(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("DvdZeroRemainder")),
+                (
+                    "divisibility_fact",
+                    string(
+                        crate::ast::fact::AtomicFact::DvdFact(p.divisibility_fact.clone())
+                            .readable_string(),
+                    ),
+                ),
+                (
+                    "divisibility",
+                    super::divisibility::project_dvd(&p.divisibility, runtime),
+                ),
+                ("domain_evidence", string("enclosing_modulo_wd")),
+            ],
+        ),
+
         EqualitySearchProofByBuiltinRule::SymmetricDifference(p) => {
             let mut fields = vec![
                 ("type", string("builtin_rule")),
@@ -357,49 +377,6 @@ pub(super) fn project_equality_builtin_rule(
             object_for(runtime, entries)
         }
 
-        EqualitySearchProofByBuiltinRule::GcdCommonDivisor(p) => object_for(
-            runtime,
-            vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("GcdCommonDivisor")),
-                (
-                    "divisor_positive",
-                    project_verify_fact(&p.divisor_positive, runtime),
-                ),
-                (
-                    "first_divisibility",
-                    project_verify_fact(&p.first_divisibility, runtime),
-                ),
-                (
-                    "second_divisibility",
-                    project_verify_fact(&p.second_divisibility, runtime),
-                ),
-            ],
-        ),
-        EqualitySearchProofByBuiltinRule::LcmCommonMultiple(p) => object_for(
-            runtime,
-            vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("LcmCommonMultiple")),
-                (
-                    "first_positive",
-                    project_verify_fact(&p.first_positive, runtime),
-                ),
-                (
-                    "second_positive",
-                    project_verify_fact(&p.second_positive, runtime),
-                ),
-                (
-                    "first_divisibility",
-                    project_verify_fact(&p.first_divisibility, runtime),
-                ),
-                (
-                    "second_divisibility",
-                    project_verify_fact(&p.second_divisibility, runtime),
-                ),
-            ],
-        ),
-
         EqualitySearchProofByBuiltinRule::TanQuotientDefinition(_) => object_for(
             runtime,
             vec![
@@ -419,20 +396,6 @@ pub(super) fn project_equality_builtin_rule(
             vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("GcdEuclideanStep")),
-            ],
-        ),
-        EqualitySearchProofByBuiltinRule::LcmLeftAbsDivisibility(_) => object_for(
-            runtime,
-            vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("LcmLeftAbsDivisibility")),
-            ],
-        ),
-        EqualitySearchProofByBuiltinRule::LcmRightAbsDivisibility(_) => object_for(
-            runtime,
-            vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("LcmRightAbsDivisibility")),
             ],
         ),
         EqualitySearchProofByBuiltinRule::FiniteSetProductReindex(p) => object_for(
@@ -489,22 +452,6 @@ pub(super) fn project_equality_builtin_rule(
                     "endpoint_order",
                     project_verify_fact(&p.endpoint_order, runtime),
                 ),
-            ],
-        ),
-        EqualitySearchProofByBuiltinRule::FactorialDivisibility(p) => object_for(
-            runtime,
-            vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("FactorialDivisibility")),
-                (
-                    "earlier_natural",
-                    project_verify_fact(&p.earlier_natural, runtime),
-                ),
-                (
-                    "later_natural",
-                    project_verify_fact(&p.later_natural, runtime),
-                ),
-                ("order", project_verify_fact(&p.order, runtime)),
             ],
         ),
         EqualitySearchProofByBuiltinRule::EuclideanRemainder(p) => object_for(
@@ -1338,22 +1285,6 @@ pub(super) fn project_equality_builtin_rule(
                 ),
             ],
         ),
-        EqualitySearchProofByBuiltinRule::ZeroMod(p) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("ZeroMod")),
-            ];
-            entries.push((
-                "proof_of_requirement_facts",
-                project_verify_facts(&p.proof_of_requirement_facts, runtime),
-            ));
-            object_for(runtime, entries)
-        }
-        EqualitySearchProofByBuiltinRule::ModOne(p) => {
-            let entries = vec![("type", string("builtin_rule")), ("rule", string("ModOne"))];
-            let _ = p;
-            object_for(runtime, entries)
-        }
         EqualitySearchProofByBuiltinRule::OneModAtLeastTwo(p) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1461,17 +1392,6 @@ pub(super) fn project_equality_builtin_rule(
             let mut entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("CeilOfInteger")),
-            ];
-            entries.push((
-                "proof_of_requirement_facts",
-                project_verify_facts(&p.proof_of_requirement_facts, runtime),
-            ));
-            object_for(runtime, entries)
-        }
-        EqualitySearchProofByBuiltinRule::ModSelfZero(p) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("ModSelfZero")),
             ];
             entries.push((
                 "proof_of_requirement_facts",
@@ -1681,25 +1601,6 @@ pub(super) fn project_equality_builtin_rule(
             ));
             object_for(runtime, entries)
         }
-        EqualitySearchProofByBuiltinRule::GcdDividesArgument(p) => {
-            let entries = vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("GcdDividesArgument")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        }
-        EqualitySearchProofByBuiltinRule::ProductModFactorZero(p) => object_for(
-            runtime,
-            vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("ProductModFactorZero")),
-                (
-                    "multiplier_integer",
-                    project_verify_fact(&p.multiplier_integer, runtime),
-                ),
-            ],
-        ),
         EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(p) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1795,14 +1696,6 @@ pub(super) fn project_equality_builtin_rule(
             let entries = vec![
                 ("type", string("builtin_rule")),
                 ("rule", string("QuotEuclideanDecomposition")),
-            ];
-            let _ = p;
-            object_for(runtime, entries)
-        }
-        EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(p) => {
-            let entries = vec![
-                ("type", string("builtin_rule")),
-                ("rule", string("ModDividendMinusRemainderZero")),
             ];
             let _ = p;
             object_for(runtime, entries)

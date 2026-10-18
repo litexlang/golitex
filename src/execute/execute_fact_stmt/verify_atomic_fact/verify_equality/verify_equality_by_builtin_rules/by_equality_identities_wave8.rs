@@ -9,10 +9,6 @@ use crate::prelude::*;
 // Example: have a Z; have d N+; a = d * quot(a, d) + (a % d).
 pub struct QuotEuclideanDecompositionBuiltinRuleProof {}
 
-// Builtin ModDividendMinusRemainderZero: (a - (a % b)) % b = 0.
-// Example: have a Z; have b N+; (a - (a % b)) % b = 0.
-pub struct ModDividendMinusRemainderZeroBuiltinRuleProof {}
-
 // Builtin SquareSumComponentZero: a = 0 (or b = 0) from known a^2 + b^2 = 0
 // (also accepts a * a squares).
 // Example: have a R; have b R; trust a^2 + b^2 = 0; a = 0.
@@ -34,7 +30,7 @@ pub struct LcmGcdProductAbsBuiltinRuleProof {}
 
 pub enum EqualityIdentitiesWave8BuiltinRuleProof {
     QuotEuclideanDecomposition(QuotEuclideanDecompositionBuiltinRuleProof),
-    ModDividendMinusRemainderZero(ModDividendMinusRemainderZeroBuiltinRuleProof),
+
     SquareSumComponentZero(SquareSumComponentZeroBuiltinRuleProof),
     MinusOneOddNaturalPower(MinusOneOddNaturalPowerBuiltinRuleProof),
     LcmGcdProductAbs(LcmGcdProductAbsBuiltinRuleProof),
@@ -51,13 +47,6 @@ impl Runtime {
                 return Ok(Some(
                     EqualityIdentitiesWave8BuiltinRuleProof::QuotEuclideanDecomposition(
                         QuotEuclideanDecompositionBuiltinRuleProof {},
-                    ),
-                ));
-            }
-            if mod_dividend_minus_remainder_zero_shape(left, right) {
-                return Ok(Some(
-                    EqualityIdentitiesWave8BuiltinRuleProof::ModDividendMinusRemainderZero(
-                        ModDividendMinusRemainderZeroBuiltinRuleProof {},
                     ),
                 ));
             }
@@ -214,22 +203,6 @@ fn match_quot_product(obj: &Obj) -> Option<(&Obj, &Obj)> {
     None
 }
 
-fn mod_dividend_minus_remainder_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
-    if !is_zero_obj(zero) {
-        return false;
-    }
-    let Some((dividend, modulus)) = match_mod(remainder) else {
-        return false;
-    };
-    let Some((a, inner_mod)) = match_sub(dividend) else {
-        return false;
-    };
-    let Some((inner_a, inner_b)) = match_mod(inner_mod) else {
-        return false;
-    };
-    a.ir() == inner_a.ir() && modulus.ir() == inner_b.ir()
-}
-
 fn minus_one_odd_natural_power_parameter(pow_side: &Obj, neg_one_side: &Obj) -> Option<Obj> {
     if !is_neg_one_obj(neg_one_side) {
         return None;
@@ -350,15 +323,6 @@ fn match_pow(obj: &Obj) -> Option<(&Obj, &Obj)> {
 fn match_add(obj: &Obj) -> Option<(&Obj, &Obj)> {
     match obj {
         Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) => {
-            Some((left.as_ref(), right.as_ref()))
-        }
-        _ => None,
-    }
-}
-
-fn match_sub(obj: &Obj) -> Option<(&Obj, &Obj)> {
-    match obj {
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })) => {
             Some((left.as_ref(), right.as_ref()))
         }
         _ => None,

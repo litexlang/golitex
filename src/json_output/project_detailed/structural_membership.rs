@@ -69,7 +69,7 @@ pub(super) fn project_structural_membership(
         ExactIntegerDiv {
             numerator,
             denominator,
-            zero_remainder,
+            divisibility,
         } => {
             fields.push(("numerator", project_structural_membership(numerator, rt)));
             fields.push((
@@ -77,8 +77,8 @@ pub(super) fn project_structural_membership(
                 project_structural_membership(denominator, rt),
             ));
             fields.push((
-                "zero_remainder",
-                super::searched::project_equal_searched(zero_remainder, rt),
+                "divisibility",
+                super::searched::project_known_premise(divisibility, rt),
             ));
             fields.push(("domain_evidence", string("enclosing_object_wd")));
             "exact_integer_div"

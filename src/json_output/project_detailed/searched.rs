@@ -53,6 +53,9 @@ pub(super) fn project_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(p) => {
+            super::divisibility::project_known_zero_remainder(p, runtime)
+        }
         AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(p) => {
             super::structural_membership::project_structural_membership(p, runtime)
         }

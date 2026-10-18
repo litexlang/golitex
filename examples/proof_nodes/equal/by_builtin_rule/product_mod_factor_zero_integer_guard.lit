@@ -1,3 +1,4 @@
+# Zero-remainder compatibility: DvdZeroRemainder delegates to the native $dvd rule.
 # Tracer: ProductModFactorZero checks the other factor's integer membership.
 # Before (incorrectly accepted):
 # (2 * (1 / 2)) % 2 = 0

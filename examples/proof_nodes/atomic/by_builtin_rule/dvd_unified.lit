@@ -1,0 +1,28 @@
+# Native divisibility composes with checked equalities; no multiplier search.
+# Before (rejected without explicit modulo bridges):
+# by contra:
+#     ? not sqrt(2) $in Q
+#     release thm rational_has_unique_reduced_fraction(sqrt(2))
+#     obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+#     p^2 = 2 * q^2
+#     release thm prime_divides_power(p, 2, 2)
+#     q^2 = p^2 / 2 = 2 * (p / 2)^2
+#     release thm prime_divides_power(q, 2, 2)
+#     impossible 2 <= gcd(p, q) = 1
+# Former rejection: $dvd(p^2, 2), then $dvd(q^2, 2).
+# Now: the complete proof needs only its two algebraic equalities.
+by contra:
+    ? not sqrt(2) $in Q
+    release thm rational_has_unique_reduced_fraction(sqrt(2))
+    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+    p^2 = 2 * q^2
+    release thm prime_divides_power(p, 2, 2)
+    q^2 = p^2 / 2 = 2 * (p / 2)^2
+    release thm prime_divides_power(q, 2, 2)
+    impossible 2 <= gcd(p, q) = 1
+
+# Boundary: product divisibility still requires an integer other factor and
+# a nonzero integer divisor. $dvd(2 * (1 / 2), 2) must be rejected.
+# Equality transport reuses stored equations; no unknown factor is invented.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_rule/dvd_unified.lit
+# Tests: tests/unit/execute/dvd_unified.rs

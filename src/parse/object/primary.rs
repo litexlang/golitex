@@ -27,7 +27,7 @@ use crate::parse::keywords::{
     RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, SUM,
     TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
-use crate::parse::keywords::{CONJ, COSH, COTH, CSC, CSCH, SEC, SECH, SINH, SYM_DIFF, TANH};
+use crate::parse::keywords::{CONJ, COSH, COTH, CSC, CSCH, SEC, SECH, SET_DIFF, SINH, TANH};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
@@ -465,10 +465,10 @@ fn try_parse_keyword_primary(
         CSCH => Ok(Some(parse_unary_keyword(rt, tb, CSCH, |arg| {
             Csch::new(arg).into()
         })?)),
-        SYM_DIFF => Ok(Some(parse_binary_keyword(
+        SET_DIFF => Ok(Some(parse_binary_keyword(
             rt,
             tb,
-            SYM_DIFF,
+            SET_DIFF,
             |left, right| SymmetricDifference::new(left, right).into(),
         )?)),
         SIN => Ok(Some(parse_unary_keyword(rt, tb, SIN, |arg| {

@@ -58,8 +58,16 @@ impl LitexToLeanCompiler {
                             owner: SourceOwner::FunctionNormalization(&proof.normalization),
                             before: usize::MAX,
                         };
+                        let equality_type = format!(
+                            "{} = {}",
+                            self.compile_normalization_value(original, position)?,
+                            self.compile_normalization_value(&residual.right, &completed)?,
+                        );
                         let residual = self.compile_verify(&proof.residual_equal, &completed)?;
-                        let equality = format!("(({normalization}).trans {})", residual.1);
+                        let equality = format!(
+                            "(show {equality_type} from by\n  have _litex_residual : {} := {}\n  exact ({normalization}).trans _litex_residual)",
+                            residual.0.replace('\n', "\n  "), residual.1.replace('\n', "\n  "),
+                        );
                         Ok(if reversed {
                             format!("({equality}).symm")
                         } else {
@@ -96,9 +104,14 @@ impl LitexToLeanCompiler {
                         _ => return Err(LeanCompileError::new("FunctionDefinition/ResidualEndpoints", "The two-body residual differs from the exact ordered normalized bodies.")),
                     }
                         let residual = self.compile_verify(&proof.residual_equal, &completed)?;
+                        let equality_type = format!(
+                            "{} = {}",
+                            self.compile_normalization_value(&fact.left, position)?,
+                            self.compile_normalization_value(&fact.right, &after_left)?,
+                        );
                         Ok(format!(
-                            "(({left}).trans (({}).trans ({right}).symm))",
-                            residual.1
+                            "(show {equality_type} from by\n  have _litex_residual : {} := {}\n  exact ({left}).trans (_litex_residual.trans ({right}).symm))",
+                            residual.0.replace('\n', "\n  "), residual.1.replace('\n', "\n  "),
                         ))
                     }
                     EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(
@@ -519,6 +532,7 @@ impl LitexToLeanCompiler {
         let selected = self.compile_wd(&proof.body_application_well_defined, &literal_position)?;
         let completed = SourcePosition { before: 3, ..step };
         if !self.function_uses_numeric_interface(&function.body) {
+            let application_value = self.compile_normalization_value(&proof.application, &step)?;
             let expanded = self.compile_normalization_value(&proof.expanded_body, &completed)?;
             let body_equality = self.compile_packed_function_body_equality(
                 function,
@@ -527,7 +541,7 @@ impl LitexToLeanCompiler {
                 &expanded,
                 &completed,
             )?;
-            return Ok(format!("(by\n  let _litex_original := {actual}\n  let _litex_literal := {selected}\n  have _litex_call_eq := Litex.callOnCongr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.argument)\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_literal.val.function.wd (Litex.denote _litex_literal.val.argument) _litex_literal.wd.2\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"));
+            return Ok(format!("(show {application_value} = {expanded} from by\n  let _litex_original := {actual}\n  let _litex_literal := {selected}\n  have _litex_call_eq := Litex.callOnCongr _litex_original _litex_literal {head_equal} (Litex.sameRefl _litex_original.val.argument)\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_literal.val.function.wd (Litex.denote _litex_literal.val.argument) _litex_literal.wd.2\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"));
         }
         let (constructor_arguments, target) =
             self.compile_function_constructor_arguments(&function.body, &completed)?;

@@ -189,7 +189,7 @@ impl LitexToLeanCompiler {
         Ok(())
     }
 
-    fn prop_argument_substitution(
+    pub(in crate::compile_to_lean) fn prop_argument_substitution(
         &self,
         declaration: &ExecDefPropStmtSuccessResult,
         normal: &NormalAtomicFact,
@@ -318,6 +318,10 @@ impl LitexToLeanCompiler {
                     StoreFactResult::AtomicFact(fact) => Fact::AtomicFact(fact.fact.clone()),
                     StoreFactResult::AndFact(fact) => Fact::AndFact(fact.fact.clone()),
                     StoreFactResult::ChainFact(fact) => Fact::ChainFact(fact.fact.clone()),
+                    StoreFactResult::ExistShapedFact(stored) => match &stored.fact {
+                        ExistShapedFact::Exist(fact) => Fact::ExistFact(fact.clone()),
+                        _ => return Err(LeanCompileError::unsupported("Prop/InferExistFamily")),
+                    },
                     _ => return Err(LeanCompileError::unsupported("Prop/InferCompoundClause")),
                 };
                 let witness_index = if body {
@@ -375,7 +379,12 @@ impl LitexToLeanCompiler {
                         names[witness_index]
                     )
                 };
-                let member = (self.fact_proposition(&fact, &formed)?, proof);
+                let proposition = if matches!(fact, Fact::ExistFact(_)) {
+                    self.compile_prop_clause_instance(normal, index, &compiled.1, &formed)?
+                } else {
+                    self.fact_proposition(&fact, &formed)?
+                };
+                let member = (proposition, proof);
                 declarations.push(self.emit_internal_fact(&fact, &member, position)?);
                 declarations.extend(self.compile_stored_projections(
                     &derived.store,

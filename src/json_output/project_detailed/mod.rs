@@ -6,6 +6,7 @@ mod atomic_builtin_rewrite;
 mod builtin_atomic_gen;
 pub(in crate::json_output) mod by_failure;
 pub(in crate::json_output) mod definition_failure;
+mod divisibility;
 pub(in crate::json_output) mod entry;
 mod equality_builtin_gen;
 mod exist_builtin_gen;

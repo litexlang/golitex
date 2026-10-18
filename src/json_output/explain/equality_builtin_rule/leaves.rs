@@ -14,18 +14,16 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
     AbsOfNegationBuiltinRuleProof, AbsProductBuiltinRuleProof, AbsSquareBuiltinRuleProof,
     LogArgPowerBuiltinRuleProof, LogBaseSelfBuiltinRuleProof, LogChangeOfBaseBuiltinRuleProof,
     LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, LogProductBuiltinRuleProof,
-    LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof, ModOneBuiltinRuleProof,
-    NestedSameModAbsorptionBuiltinRuleProof, ModCompatibleSmallerModulusBuiltinRuleProof,
+    LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof, NestedSameModAbsorptionBuiltinRuleProof, ModCompatibleSmallerModulusBuiltinRuleProof,
     OneModAtLeastTwoBuiltinRuleProof,
     OneToAnyPowerBuiltinRuleProof, SqrtOfSquareBuiltinRuleProof, SqrtOneBuiltinRuleProof,
     SqrtProductBuiltinRuleProof, SqrtQuotientBuiltinRuleProof, SqrtSquareBuiltinRuleProof,
-    SqrtZeroBuiltinRuleProof, ZeroModBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof
+    SqrtZeroBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave3::{
     AbsAbsAbsorptionBuiltinRuleProof, CeilOfIntegerBuiltinRuleProof, ExpOfLnBuiltinRuleProof,
     FloorOfIntegerBuiltinRuleProof, LnOfExpBuiltinRuleProof, MaxCommutativeBuiltinRuleProof,
-    MaxIdempotentBuiltinRuleProof, MinCommutativeBuiltinRuleProof, MinIdempotentBuiltinRuleProof,
-    ModSelfZeroBuiltinRuleProof
+    MaxIdempotentBuiltinRuleProof, MinCommutativeBuiltinRuleProof, MinIdempotentBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave4::{
     CeilOfFloorOfIntegerBuiltinRuleProof, FloorOfCeilOfIntegerBuiltinRuleProof,
@@ -45,15 +43,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave7::{
     AbsEqualsSignTimesArgBuiltinRuleProof, DiffZeroFromEqualOperandsBuiltinRuleProof,
-    EqualityFromTwoSidedWeakOrderBuiltinRuleProof, GcdDividesArgumentBuiltinRuleProof,
-    ProductModFactorZeroBuiltinRuleProof, SignOfNegationBuiltinRuleProof,
+    EqualityFromTwoSidedWeakOrderBuiltinRuleProof, SignOfNegationBuiltinRuleProof,
     SignOfProductBuiltinRuleProof, SignTimesAbsEqualsArgBuiltinRuleProof,
     SubtractionFromKnownAdditionBuiltinRuleProof, ZeroProductCancelBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equal_from_known_difference_zero::EqualFromKnownDifferenceZeroBuiltinRuleProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave8::{
     LcmGcdProductAbsBuiltinRuleProof, MinusOneOddNaturalPowerBuiltinRuleProof,
-    ModDividendMinusRemainderZeroBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
+    QuotEuclideanDecompositionBuiltinRuleProof,
     SquareSumComponentZeroBuiltinRuleProof
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_equality_identities_wave9::{
@@ -3422,163 +3419,6 @@ impl LogChangeOfBaseBuiltinRuleProof {
     }
 }
 
-impl ZeroModBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Remainder of zero",
-            "The Remainder of zero law gives: 0 mod n = 0",
-        )
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("零的余数", "零的余数可写为：0 mod n = 0")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("零的餘數", "零的餘數可寫為：0 mod n = 0")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Reste de zéro",
-            "La propriété « Reste de zéro » donne: 0 mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Остаток от деления нуля",
-            "Свойство «Остаток от деления нуля» выражается равенством: 0 mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Resto de cero",
-            "La propiedad «Resto de cero» se expresa como: 0 mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "باقي قسمة الصفر",
-            "تُكتب خاصية «باقي قسمة الصفر» كما يلي: 0 mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("零の剰余", "零の剰余は次の式で表されます：0 mod n = 0")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "영의 나머지",
-            "영의 나머지은 다음 식으로 나타납니다: 0 mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Số dư của không",
-            "Tính chất «Số dư của không» được biểu diễn bởi: 0 mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl ModOneBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Remainder modulo one",
-            "The Remainder modulo one law gives: a mod 1 = 0",
-        )
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("除以一的余数", "除以一的余数可写为：a mod 1 = 0")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("除以一的餘數", "除以一的餘數可寫為：a mod 1 = 0")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Reste modulo un",
-            "La propriété « Reste modulo un » donne: a mod 1 = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Остаток по модулю один",
-            "Свойство «Остаток по модулю один» выражается равенством: a mod 1 = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Resto módulo uno",
-            "La propiedad «Resto módulo uno» se expresa como: a mod 1 = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "الباقي بترديد واحد",
-            "تُكتب خاصية «الباقي بترديد واحد» كما يلي: a mod 1 = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "一を法とする剰余",
-            "一を法とする剰余は次の式で表されます：a mod 1 = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "일로 나눈 나머지",
-            "일로 나눈 나머지은 다음 식으로 나타납니다: a mod 1 = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Số dư khi chia cho một",
-            "Tính chất «Số dư khi chia cho một» được biểu diễn bởi: a mod 1 = 0",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
 impl OneModAtLeastTwoBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
@@ -4494,83 +4334,6 @@ impl CeilOfIntegerBuiltinRuleProof {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         text("⌈n⌉ với n nguyên", "⌈n⌉ = n khi n là số nguyên")
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl ModSelfZeroBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Remainder when a nonzero integer divides itself",
-            "The Remainder when a nonzero integer divides itself law gives: a mod a = 0",
-        )
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "非零整数除以自身的余数",
-            "非零整数除以自身的余数可写为：a mod a = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "非零整數除以自身的餘數",
-            "非零整數除以自身的餘數可寫為：a mod a = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Reste d’un entier non nul divisé par lui-même",
-            "La propriété « Reste d’un entier non nul divisé par lui-même » donne: a mod a = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Остаток ненулевого целого при делении на себя", "Свойство «Остаток ненулевого целого при делении на себя» выражается равенством: a mod a = 0")
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Resto de un entero no nulo dividido por sí mismo", "La propiedad «Resto de un entero no nulo dividido por sí mismo» se expresa como: a mod a = 0")
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "باقي قسمة عدد صحيح غير صفري على نفسه",
-            "تُكتب خاصية «باقي قسمة عدد صحيح غير صفري على نفسه» كما يلي: a mod a = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "零でない整数を自身で割った剰余",
-            "零でない整数を自身で割った剰余は次の式で表されます：a mod a = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "영이 아닌 정수를 자기 자신으로 나눈 나머지",
-            "영이 아닌 정수를 자기 자신으로 나눈 나머지은 다음 식으로 나타납니다: a mod a = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Số dư của số nguyên khác không chia cho chính nó", "Tính chất «Số dư của số nguyên khác không chia cho chính nó» được biểu diễn bởi: a mod a = 0")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -6183,151 +5946,6 @@ impl MinRightWhenLessEqualBuiltinRuleProof {
     }
 }
 
-impl GcdDividesArgumentBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Greatest common divisor divides both arguments",
-            "The greatest common divisor divides each of the two integer arguments",
-        )
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("gcd 整除", "gcd(a,b) 整除 a（以及 b）")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("gcd 整除", "gcd(a,b) 整除 a 及 b")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Divisibilité par gcd", "gcd(a,b) divise a et b")
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Делимость на gcd", "gcd(a,b) делит a и b")
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Divisibilidad por gcd", "gcd(a,b) divide a y b")
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("القسمة على gcd", "gcd(a,b) يقسم a وb")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("gcd による整除", "gcd(a,b) は a と b を割り切ります")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("gcd 나눔", "gcd(a,b)는 a와 b를 나눕니다")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Chia hết bởi gcd", "gcd(a,b) chia hết a và b")
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl ProductModFactorZeroBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Remainder of an integer multiple",
-            "The Remainder of an integer multiple law gives: (k·n) mod n = 0",
-        )
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text(
-            "整数倍除以因子的余数",
-            "整数倍除以因子的余数可写为：(k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text(
-            "整數倍除以因子的餘數",
-            "整數倍除以因子的餘數可寫為：(k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Reste d’un multiple entier",
-            "La propriété « Reste d’un multiple entier » donne: (k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Остаток целого кратного",
-            "Свойство «Остаток целого кратного» выражается равенством: (k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Resto de un múltiplo entero",
-            "La propiedad «Resto de un múltiplo entero» se expresa como: (k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text(
-            "باقي قسمة مضاعف صحيح",
-            "تُكتب خاصية «باقي قسمة مضاعف صحيح» كما يلي: (k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text(
-            "整数倍の剰余",
-            "整数倍の剰余は次の式で表されます：(k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text(
-            "정수 배수의 나머지",
-            "정수 배수의 나머지은 다음 식으로 나타납니다: (k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Số dư của một bội nguyên",
-            "Tính chất «Số dư của một bội nguyên» được biểu diễn bởi: (k·n) mod n = 0",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
 impl EqualityFromTwoSidedWeakOrderBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
@@ -7131,62 +6749,6 @@ impl QuotEuclideanDecompositionBuiltinRuleProof {
             "Phân tích Euclid theo thương và số dư",
             "Tính chất «Phân tích Euclid theo thương và số dư» được biểu diễn bởi: a = (a quot n)·n + (a mod n)",
         )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl ModDividendMinusRemainderZeroBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("mod remainder", "a − (a mod n) is divisible by n")
-    }
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("模余数", "a − (a mod n) 可被 n 整除")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("模運算餘數", "a − (a mod n) 可被 n 整除")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text("Reste modulaire", "a − (a mod n) est divisible par n")
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Остаток по модулю", "a − (a mod n) делится на n")
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Resto modular", "a − (a mod n) es divisible por n")
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("باقي القسمة", "a − (a mod n) يقبل القسمة على n")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("剰余", "a − (a mod n) は n で割り切れます")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("나머지", "a − (a mod n)은 n으로 나누어집니다")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Số dư", "a − (a mod n) chia hết cho n")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

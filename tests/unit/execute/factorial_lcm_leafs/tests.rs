@@ -118,10 +118,7 @@ fn factorial_actual_premise_citations_survive_english_and_chinese() {
 
 #[test]
 fn lcm_both_operands_and_equality_directions_pass_with_parent_wd() {
-    for (side, rule) in [
-        ("a", "LcmLeftAbsDivisibility"),
-        ("b", "LcmRightAbsDivisibility"),
-    ] {
+    for (side, rule) in [("a", "DvdLcmArgument"), ("b", "DvdLcmArgument")] {
         for reverse in [false, true] {
             let remainder = format!("lcm(a,b)%abs({side})");
             let goal = if reverse {
@@ -284,11 +281,11 @@ fn four_actual_winning_leaves_own_distinct_ten_language_explanations() {
         ),
         (
             "forall a,b Z*:\n    lcm(a,b)%abs(a)=0\n",
-            "abs(a)!=0 => lcm(a,b)%abs(a)=0",
+            "$dvd(lcm(a,b),abs(a))",
         ),
         (
             "forall a,b Z*:\n    lcm(a,b)%abs(b)=0\n",
-            "abs(b)!=0 => lcm(a,b)%abs(b)=0",
+            "$dvd(lcm(a,b),abs(b))",
         ),
     ] {
         let mut rt = runtime(OutputLanguage::English);

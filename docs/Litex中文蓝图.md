@@ -4,7 +4,7 @@
 
 文档由沈嘉辰创建和维护。
 
-最后更新：2026 年 10 月 17 日。
+最后更新：2026 年 10 月 18 日。
 
 官网页面: https://litexlang.com/doc/Litex中文蓝图
 
@@ -14,21 +14,22 @@
 
 - [0. Litex 蓝图总览](#overview)
   - [0.1 Litex 的目标](#goal-of-litex)
-  - [0.2 五个特点：Litex是怎么工作的](#overview-spine)
-- [1. 写下事实，看到成立的依据](#fact-oriented)
-  - [1.1 事实导向：把“什么成立”写进源码](#fact-oriented-interface)
-  - [1.2 每句话都留下什么：可检查知识记录](#execution-model)
-- [2. 从熟悉的数学公理和符号开始：Litex 的集合论基础](#set-theory)
-  - [2.1 设计难处：把具体的数学写法做成工作语言](#design-difficulty)
-- [3. 让形式化融入数学工作流](#mathematical-workflow)
-  - [3.1 每一步，都留下可以继续使用的知识](#workflow-principle)
-  - [3.2 边想边写，边写边检查](#workflow-exploration)
-  - [3.3 把今天的成果，留给下一次探索](#workflow-reuse)
-  - [3.4 让数学成果用于计算与交流](#workflow-use)
-- [4. Litex 适合与 AI 交互](#interaction-loop)
-- [5. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）](#compatibility)
-- [6. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
-- [7. 追寻与众不同的艺术](#conclusions)
+  - [0.2 六大特点：同一条数学工作流](#overview-spine)
+- [1. 熟悉的表达，应当保留熟悉的数学含义](#ordinary-mathematics)
+- [2. 写下事实，看到成立的依据](#fact-oriented)
+  - [2.1 事实导向：把“什么成立”写进源码](#fact-oriented-interface)
+  - [2.2 每句话都留下什么：可检查知识记录](#execution-model)
+- [3. 从熟悉的数学公理和符号开始：Litex 的集合论基础](#set-theory)
+  - [3.1 设计难处：把具体的数学写法做成工作语言](#design-difficulty)
+- [4. 让形式化融入数学工作流](#mathematical-workflow)
+  - [4.1 每一步，都留下可以继续使用的知识](#workflow-principle)
+  - [4.2 边想边写，边写边检查](#workflow-exploration)
+  - [4.3 把今天的成果，留给下一次探索](#workflow-reuse)
+  - [4.4 让数学成果用于计算与交流](#workflow-use)
+- [5. Litex 适合与 AI 交互](#interaction-loop)
+- [6. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）](#compatibility)
+- [7. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
+- [8. 追寻与众不同的艺术](#conclusions)
   - [Litex 的数学价值观](#mathematical-values)
   - [特别感谢](#special-thanks)
 - [附录：编程、数学与Litex形式化](#overview-readers)
@@ -46,246 +47,127 @@ _“语言是人类理性的工具，而不只是表达思想的媒介。”_
 
 _— George Boole，《思维的规律》（1854），第 II 章（节选）_
 
-**Litex 是一门人类可读、基于集合论、面向事实、可编译到 Lean 的形式化语言。**
+**我们熟悉的数学表达，在 Lean 中可能有截然不同的含义。** 通常的实数算术中，`1 / 0` 没有定义；Lean/Mathlib 的实数除法却满足 `(1 : ℝ) / 0 = 0`。通常的整数算术中，`1 - 2 = -1`；Lean 的自然数减法却满足 `(1 : Nat) - 2 = 0`。在讨论证明语法之前，数学表达的含义就已经出现了差异。
 
-*Litex 始于 2024 年，希望[成为形式化语言里的 Python，让更多人逐步成为形式化专家](#reader-programmers)。*
+| 表达式 | 通常的教科书约定 | Lean / Mathlib | Litex |
+| --- | --- | --- | --- |
+| 除以零 | `1 / 0` 没有定义。 | `(1 : ℝ) / 0 = 0` | 拒绝 `1 / 0 = 0`，因为除法没有定义。 |
+| 减法超出自然数范围 | 在整数算术中，`1 - 2 = -1`。 | `(1 : Nat) - 2 = 0`：减法在零处截断。 | `1 - 2 = -1`，结果属于 `Z`。 |
+| 负数的实数平方根 | `-1` 没有实数平方根。 | `Real.sqrt (-1) = 0` | 拒绝 `sqrt(-1) = 0`，因为实数平方根没有定义。 |
 
-**当 AI 越来越容易生成推理，我们怎样把这些推理变成可以信赖、理解和继续使用的知识？** 一个结论需要明确的前提，一段论证需要可检查的依据，一份成果还需要让别人读懂，并在其上继续构造。随着候选推理不断增加，检查、理解和复用的成本变得更加关键。
+这些默认规则都有明确文档：[除零](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero)、[自然数减法](https://lean-lang.org/doc/reference/latest/Basic-Types/Natural-Numbers/#Nat.sub)和[实数平方根](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos)。在 Lean 中把 `Nat` 换成 `Int`，就有 `(1 : Int) - 2 = -1`，类型选择了不同的减法；Mathlib 则有意把除法和实数平方根扩展到通常定义域之外。**因此，认得符号，并不等于知道形式化陈述表达的是哪一种数学。** 检查器按这些定义验证陈述，作者仍须确认它是否表达了原本的数学意图。
 
-形式化语言让机器能够严格检查推理，也让结果可以[在明确的条件下被再次引用](#workflow-reuse)。AI 则让形式化代码更容易生成。但代码通过检查之后，人仍需要看清：它究竟表达了什么，依赖哪些假设，是否忠实于原本的意图。**人需要能够理解和掌握承载自己思想的语言。**
+**Litex 从熟悉的数学含义出发，检查表达式的使用条件。** 除法要求分母非零，实数平方根要求输入非负；两个自然数相减，也不会把结果悄悄截断为零。这些选择让通常的数学含义和定义域检查进入语言的默认书写方式。
 
-**Litex 探索一种让人的理解与机器的检查发生在同一份文本中的形式化语言。** 它以[熟悉的数学对象、条件和事实](#set-theory)组织推理：人选择定义、构造与关键步骤，[AI 协助书写和修复](#interaction-loop)，语言[检查受支持的连接，并留下每一步的依据](#execution-model)。它要检验的是，这种表达方式能否降低人和 AI 构造、审阅、修复与复用可检查知识的成本。
+**Litex 是一门人类可读、基于集合论、面向事实的形式化语言，并提供面向受支持证明的实验性 Lean 编译。** 它的语言设计问题从数学文本本身出发：对象、假设、定义与推理步骤应该怎样表达，才能既让人理解，又让机器检查？
 
-Litex 源码的简洁，来自对象、事实、语句与验证流程之间长期磨合出的配合。它把常见证明中的机械衔接纳入语言的默认检查，让作者能够直接陈述数学步骤，并在已有知识上继续构造。[从系统工程的角度看 Litex](#systems-engineering)以一个倒数函数展开这项设计工作。
+Litex 探索的是，把数学含义、直接陈述事实和逐步反馈结合起来，能否降低构造、阅读、审阅、修复与复用可检查知识的成本。这是一项需要通过真实数学工作检验的设计假设，尚不是已经测得的普遍优势。
 
-Litex 还包含[到 Lean 的编译器设计](#compatibility)，探索把受支持的验证依据转化为 Lean 证明，让这些表达接受独立复核，并连接现有形式化生态。设计与当前支持范围见 [Litex 到 Lean 编译器设计指南](https://github.com/litexlang/golitex/blob/main/docs/Litex_To_Lean_Compiler_Guide.md)。预期Litex到Lean的编译器在2026年底完成。
+当 AI 产生越来越多候选推理时，这个问题变得更加紧迫：证明本身和陈述的含义都需要审查。人选择问题与数学意义，AI 可以协助书写，Litex 检查受支持的步骤并保留已接受的知识。有效的设计，有望帮助检查和理解能力跟上候选推理的增长。
 
-随着 AI 能力增强，人–AI 协作的数学工作流有望让今天难以想象的探索规模成为可能。依赖动辄超过1年的漫长人工核查的传统审稿方式，难以独自跟上候选证明不断增长的节奏；借助形式化语言检查证明的逻辑正确性往往只要几分钟，因此是大势所趋。**数学家应当[理解并掌握手中的形式化工具](#reader-mathematicians)，让数学知识的载体本身成为可以理解、讨论和改进的知识，而非交给 AI 处理的黑盒。** Litex 的目标是大幅降低掌握形式化语言的门槛：通过熟悉的数学表达与[直接陈述事实的证明接口](#fact-oriented-interface)，减少把数学想法转写为计算机语言的负担，让数学家能把更多精力投入数学想法本身。
-
-**从数学出发，Litex 的愿景是让可理解、可检查的推理[走向更广阔的知识世界](#ecosystem-role)。** 数学是自然科学之母；我希望数学触及并惠及的角落，形式化语言也能触及，Litex 也能参与其中成为AI时代可信推理基础设施的一部分。
+*Litex 始于 2024 年，由沈嘉辰创建和维护，希望[成为形式化语言里的 Python](#reader-programmers)，让更多人能够掌握承载自己数学思想的工具。*
 
 <a id="goal-of-litex"></a>
 
 ### 0.1 Litex 的目标
 
-为什么同一个数学证明，写成形式化证明时的感受，常常与写在纸上如此不同？这种距离引出了 Litex 探索的核心语言设计问题：
+**写数学，就是表达数学本身：保留原本的含义，写清使用条件，沿着可以检查的步骤展开推理。**
 
-**如果围绕日常数学写作来设计，一门形式化证明语言应该是什么样的？**
+这个目标把数学语义和书写体验连接起来。倒数应当带着非零条件，简单等式应当可以直接写成等式，一条定义应当成为下一条陈述可使用的知识。作者选择数学想法与证明路线，语言检查受支持的定义域义务和局部推理，并说明检查停在何处。
 
-Litex 希望在自然语言的表达自由与形式化验证的严格性之间搭起桥梁。日常数学写作是语言设计的出发点：数学家怎样引入对象、定义概念、陈述假设，又怎样展开论证。挑战在于保留这种思考方式，同时把每一步的条件与依据表达得足够精确，使机器能够检查。作者仍然选择数学想法与证明路线，语言则应帮助这些想法成为既能读懂、又能检查的表达。
-
-**Litex 走“正常数学”的路线：保留通常教科书中的数学含义与定义域条件。** 例如，除法要求分母非零，实数平方根要求输入非负。语言应帮助作者检查这些条件，让脑海中的数学与源码中的数学尽可能一致。[下面的运算对照](#ordinary-mathematics)说明这一选择如何落实到具体表达式。
-
-一门新数学语言的意义，在于帮助各个分支的数学家共同推进工作，加深对数学的认识与理解。一门共同的语言，应当让解释构造、审阅证明、发现联系、继承他人的成果变得更容易。**Litex 的长期愿景，是让整个数学共同体的知识与理解一同深化。** 这样的设计能否实现这一愿景，需要在书写、阅读、检查与复用数学的实际工作中检验。
-
-下面五个特点说明 Litex 如何追求这一目标。
+长期愿景是让整个数学共同体的知识与理解一同深化。下面六大特点，从表达、协作到独立复核，逐步展开同一个目标。
 
 <a id="overview-spine"></a>
 
-### 0.2 五个特点：Litex是怎么工作的
+### 0.2 六大特点：同一条数学工作流
 
-想直观看到一条事实如何被检查、通过后如何扩展上下文，可以先看 [Litex 验证流程图（Litex Verification Pipeline）](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)。
+这六大特点沿着同一条路径展开：保留数学含义，直接陈述事实，构造数学对象，积累已有成果，通过反馈协作，再把受支持的证明交给独立检查。
 
-**这五个特点围绕一个问题：以事实和反馈组织知识，能否降低人和 AI 构造、理解、审阅与复用可检查数学的成本？**
+| 特点 | 对数学写作意味着什么 |
+| --- | --- |
+| **1. 熟悉的数学含义与定义域** | `1 - 2 = -1`；使用除法必须满足分母非零。[含义与定义域](#ordinary-mathematics)。 |
+| **2. 直接写数学事实** | 写下 `1 + 1 = 2`，语言检查这条事实并解释依据。[事实导向](#fact-oriented)。 |
+| **3. 熟悉的对象、公理与符号** | 用成员关系、条件和熟悉的符号定义集合、函数与关系。[数学对象](#set-theory)。 |
+| **4. 连贯的数学工作流** | 探索、定义、证明、复用，并把受支持的成果用于计算或 LaTeX 排版。[数学工作流](#mathematical-workflow)。 |
+| **5. 通过明确反馈与 AI 协作** | 提出步骤、检查结果，在保留已接受知识的同时修复失败步骤。[人–AI 交互](#interaction-loop)。 |
+| **6. 独立 Lean 复核与生态互通** | 将受支持的证明路线编译到 Lean，并通过已审阅接口连接 Mathlib。[Lean 连接（实验性）](#compatibility)。 |
 
-**1. 我可以用数学事实来写证明。**
+后文章节按这个顺序展开。[验证流程图](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)展示一条事实如何被检查，并扩展后续可用的上下文。
 
-我仍然需要思考证明，选择构造和中间结论，并写下接下来应当成立的数学事实。对于当前知识能够支持的局部步骤，Litex 会检查条件与依据，再向我解释它找到了什么。这是它的事实导向（fact-oriented）证明接口。
+<a id="ordinary-mathematics"></a>
 
-例如，我可以直接写下一条计算事实：
+## 1. 熟悉的表达，应当保留熟悉的数学含义
 
-```litex
-1 + 1 = 2
-```
-
-下面并列展示当前 CLI 输出中对应的英文和中文语句记录；Litex 当前支持 10 种输出语言。`proof_method`（中文为 `证明方法`）说明依据，`stores`（中文为 `存储`）记录后面可以继续使用的事实：
-
-<table>
-<thead>
-<tr><th>英文（<code>-lang en</code>）</th><th>中文（<code>-lang zh</code>）</th></tr>
-</thead>
-<tbody>
-<tr>
-<td><pre><code class="language-json">{
-  "statement_result": "accepted",
-  "statement": "1 + 1 = 2",
-  "proof_method": {
-    "type": "by_closed_calculation",
-    "rule_name": "Closed calculation",
-    "message": "Exact evaluation of closed expressions without proof search"
-  },
-  "stores": ["1 + 1 = 2"],
-  "infers": []
-}</code></pre></td>
-<td><pre><code class="language-json">{
-  "语句判定": "accepted",
-  "语句": "1 + 1 = 2",
-  "证明方法": {
-    "类型": "封闭计算",
-    "规则名": "封闭计算",
-    "说明": "精确计算封闭表达式，不递归搜索证明"
-  },
-  "存储": ["1 + 1 = 2"],
-  "推断": []
-}</code></pre></td>
-</tr>
-</tbody>
-</table>
-
-我也可以先定义奇数，再写下一个具体判断：
-
-```litex
-prop is_odd(x Z):
-    x % 2 = 1
-
-$is_odd(3)
-```
-
-这句 `$is_odd(3)` 对应的 JSON 记录说明，语言通过展开定义完成检查，并留下定义中的具体事实：
-
-```json
-{
-  "statement_result": "accepted",
-  "statement": "$is_odd(3)",
-  "proof_method": {
-    "type": "by_definition",
-    "rule_name": "By definition",
-    "message": "Verified by unfolding a definition"
-  },
-  "stores": ["$is_odd(3)"],
-  "infers": ["3 $in Z", "3 % 2 = 1"]
-}
-```
-
-这些记录让人和 AI 都能看到：这一句检查是否成功，语言找到了哪一种依据，以及这一步留下了什么。
-
-**多语种验证反馈。** CLI 可以用多种语言呈现这些 JSON 验证反馈。同一段源码可以得到中文字段名与说明，也可以选择法文等其他语言的反馈。感谢 AI 工具在翻译上的协助，使多语种验证说明成为可能；选择输出语言不会改变 Litex 源码或验证结果。当前支持的输出语言代码是 `en`、`zh`、`zh-hant`、`fr`、`ru`、`es`、`ar`、`ja`、`ko` 和 `vi`。
-
-**2. 我可以从熟悉的数学公理和符号开始。**
-
-Litex 以 ZFC 集合论公理为基础，用集合、元素、函数与关系组织数学。成员关系、子集和交集可以沿用熟悉的 `∈`、`⊆`、`∩` 等符号，让读者学习形式化时，尽可能继续使用原有的数学直觉与表达习惯。
-
-例如，把实数、集合、函数和关系放在同一个小例子里：
-
-```litex
-have a R = 2
-
-have S set = {x R: x > 0}
-
-have fn f(x R) R = x^2
-
-prop is_less(x, y R):
-    x < y
-
-$is_less(2, 4)
-```
-
-`have a R = 2` 同时引入了 `a $in R` 和 `a = 2`。`S` 是正实数集合，`f` 是实数上的平方函数，`is_less` 表达两个实数之间的小于关系；最后一句验证了具体关系 `2 < 4`。这些对象沿用日常数学中的组织方式。
-
-**3. 形式化可以顺着我的数学工作流展开。**
-
-数学工作常从一个小问题开始：写下定义，试几个例子，检查条件，再把有用的结论留下来。我希望形式化能融入这个过程，让已经做过的工作成为继续探索的起点。背后的设计原则是：让已接受的数学语句留下后续可以依赖的知识。
-
-**把知识保存下来，在其他文件中使用。** 在后文的[牛顿更新例子](#workflow-exploration)中，我把函数定义与不动点定理保存在 `newton.lit`。按第 3.3 节组织项目后，我可以在另一个文件中直接引用已有成果：
-
-<!-- litex:skip-test -->
-```litex
-release obj def newton::newton_sqrt_two
-release thm newton::fixed_point(sqrt(2))
-```
-
-**让成果用于计算。** 支持范围内的计算片段可以抽取为 Python 或 C。比如，下面的绝对值分段定义，可以转换为右侧的 Python 代码：
-
-<table data-blueprint-conversion="python" style="table-layout:fixed;width:100%;border-collapse:collapse;">
-<thead>
-<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex 源码</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">Python 代码</th></tr>
-</thead>
-<tbody>
-<tr>
-<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>algo absolute(x R) R by cases:
-    case x &gt;= 0: x
-    case x &lt; 0: -x</code></pre></td>
-<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>def absolute(x):
-    if x &gt;= 0.0:
-        return x
-    elif x &lt; 0.0:
-        return (0.0 - x)
-    raise AssertionError(&quot;unreachable verified Litex cases&quot;)</code></pre></td>
-</tr>
-</tbody>
-</table>
-
-想了解抽取过程与支持范围，可以查看 [Python/C 抽取实现](https://github.com/litexlang/golitex/tree/main/src/extract_executable_code)。
-
-**让自己的工具使用数学内容。** 验证器的 JSON 输出包含语句文本、存储的事实、推导的事实和证明摘要。用户可以提取这些内容，自行建立索引和可视化；官网 [litexlang.com](https://litexlang.com) 首页就有一个可交互的数学概念关系图例子。普通 JSON 概括验证结果，没有记录每一条依赖。字段和边界见 [JSON 输出约定](https://github.com/litexlang/golitex/blob/main/docs/cli.md#json-output-contract)。
-
-**把数学写成便于阅读的文稿。** 数学源码也可以转换为 LaTeX，用于讲义和文稿。左侧是一条数学事实，右侧是实际生成的排版源码；转换负责呈现，数学验证另行进行：
-
-<table data-blueprint-conversion="latex" style="table-layout:fixed;width:100%;border-collapse:collapse;">
-<thead>
-<tr><th scope="col" style="width:50%;text-align:left;background:#f3f8f5;border-color:#dbe5df;">Litex 源码</th><th scope="col" style="width:50%;text-align:left;background:#f3f6fa;border-color:#dbe2e9;">LaTeX 源码</th></tr>
-</thead>
-<tbody>
-<tr>
-<td style="vertical-align:top;border-color:#dbe5df;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>1 + 1 = 2</code></pre></td>
-<td style="vertical-align:top;border-color:#dbe2e9;"><pre style="margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;"><code>\[
-1 + 1 = 2
-\]</code></pre></td>
-</tr>
-</tbody>
-</table>
-
-源码到排版的转换过程见 [LaTeX 转换实现](https://github.com/litexlang/golitex/tree/main/src/compile_to_latex)。
-
-完整的定义、证明与项目配置，见第 3 节。
-
-**4. AI 可以和人一起，在明确反馈中推进证明。**
-
-AI 协助提出数学步骤，人选择问题与数学意义，Litex 提供验证反馈。具体的交互方式与代码对照见[第 4 节](#interaction-loop)。
-
-![Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
-
-**5. 受支持的证明，还能交给 Lean 再检查一次。**
-
-我希望这些更贴近日常数学的表达，能够编译为 Lean 证明对象，接受独立复核并连接现有生态。初始的独立文件编译器，已经为有限范围内的验证结果提供了这条路线。
-
-例如，`lean/examples/one_equals_itself/statement.lit` 写下数字一等于自身：
-
-```litex
-1 = 1
-```
-
-这一例子的配对 Lean 源码具有如下证明形式，仅省略自动生成的命名空间：
+开场的例子揭示了 Litex 首先要解决的问题：证明可以通过检查，但熟悉的符号可能表达了作者没有预期到的含义。导入 Mathlib 后，下面这些 Lean 陈述都能得到证明：
 
 ```lean
-import Litex
+import Mathlib
 
-universe u
-variable {M : Litex.Semantics.{u}}
-
-theorem fact_1 : Litex.Same (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) :=
-  (Litex.sameRefl (Litex.number (M := M) (1 : ℂ)))
+example : (1 : ℝ) / 0 = 0 := by simp
+example : (1 : Nat) - 2 = 0 := by rfl
+example : (1 : Int) - 2 = -1 := by rfl
+example : Real.sqrt (-1) = 0 := by
+  exact Real.sqrt_eq_zero_of_nonpos (by norm_num)
 ```
 
-`Litex.number` 返回 `Obj ℂ`，其中保留原生数字及其良定义证明。`Litex.Same` 在显式的 `Semantics` 参数 `M` 下比较对象表示的数学意义；编译器通过 `Litex.sameRefl` 回放已经检查的反身性路线。这个生成例子已通过 Lean 检查，但不表示完整 Litex 模型或所有证明路线都已实现。
+对于期待通常整数减法的读者，两行减法把问题直接摆在眼前：改变类型，就改变了减号的含义。除法和平方根的两行则在通常实数运算没有定义的地方赋予了数值。作者必须先理解这些选择，才能判断已经通过检查的公式是否表达了自己的原意。
 
-维护中的源码位置是 [Lean 语义接口](https://github.com/litexlang/golitex/blob/main/lean/Litex.lean)与[成对的编译例子](https://github.com/litexlang/golitex/tree/main/lean/examples)。第 5 节通过当前维护的例子说明独立复核边界。
+**Litex 把熟悉的数学含义和定义域条件作为起点。** 减法保留通常的整数结果：
 
-无论你是数学家、程序员，还是 Lean 用户，都可以从 Litex 中发现新的知识与视角；感兴趣的话，可以继续阅读文末的[编程、数学与Litex形式化](#overview-readers)。
+```litex
+1 - 2 = -1
+1 - 2 $in Z
+```
 
-后文依次展开这五个特点，再讨论语言生态；读者比较与更多源码例子放在附录。
+对于有定义域限制的运算，条件直接进入定义：
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+第一行读作：“对非零实数 `x`，把它的倒数定义为 `1 / x`。”调用时必须满足这个条件。`reciprocal(0) = 0` 会在良定义性检查处被拒绝，`1 / 0 = 0` 和 `sqrt(-1) = 0` 也是如此。即使写成 `1 / 0 = 1 / 0`，两边相同也不能使除法有定义。
+
+这些选择针对的是默认数学表达中的具体差异。Lean 也能编码受限定义域，其约分定理仍保留必要的假设；Litex 则直接在作者使用的源码表达式上检查定义域。作者负责选择符合原意的定义和定理陈述，语言检查受支持的条件与证明步骤。
+
+表达式保留了作者想要的含义之后，下一步就是怎样陈述事实本身。这引出了第二大特点：**写下数学陈述，由语言检查受支持的成立依据。**
 
 <a id="fact-oriented"></a>
 
-## 1. 写下事实，看到成立的依据
+## 2. 写下事实，看到成立的依据
 
 _“可读性很重要。”_
 
 _— Tim Peters，《Python 之禅》（PEP 20）_
 
+**写数学，就应该是在写数学。** 要陈述一加一等于二，Litex 源码就是这条事实本身：
+
+```litex
+1 + 1 = 2
+```
+
+同一算术事实的一种简短 Lean 证明是：
+
+```lean
+example : (1 : Nat) + 1 = 2 := by rfl
+```
+
+Litex 把普通事实本身作为检查入口：作者直接写等式，无需为这条计算套上 `example` 声明，也无需选择证明命令。更难的论证仍需要作者给出构造与有意义的中间步骤，Litex 检查受支持的局部连接。
+
+同样的原则可以从一个算式延伸到一句数学陈述。“对任意实数 `x`，若 `x > 0`，则 `x + 1 > 1`”可以写成：
+
+```litex
+forall x R:
+    x > 0
+    =>:
+        x + 1 > 1
+```
+
+纸面顺序就是思考顺序：引入任意实数，写出假设，再写结论。`=>:` 前的条件是局部假设，后面的结论必须通过检查。
+
 <a id="fact-oriented-interface"></a>
 
-### 1.1 事实导向：把“什么成立”写进源码
+### 2.1 事实导向：把“什么成立”写进源码
 
 作者写下接下来应当成立的事实，Litex 就开始检查：先确认表达式是否良定义，再从内置规则与策略、已知事实、全称事实和定义中寻找局部依据。许多常见步骤的验证方法由语言选择和组合；关键构造、见证和估计仍由作者给出。
 
@@ -433,7 +315,7 @@ f(1) = f(1 - 1) + 1 = 0 + 1 = 1
 
 **搜索与维护成本。** 让系统继续寻找中间结论、尝试更多改写或递归展开，需要更多搜索分支和组合处理。默认流程因此有明确权限：对给出的局部步骤寻找依据，在支持边界处由作者补充数学路线。反复出现的机械衔接仍应检查是否缺少通用支持。每条新增路径都需要审查数学条件、证据和成本，代码规模本身不能替代这些审查。
 
-这里的“验证内核”指项目中的验证与执行实现，包含依据搜索、内置数学规则、良定义检查、事实存储和反馈。[Lean 的语言参考](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)将精化与 tactic 执行和检查核心证明项的可信内核分开；比较代码规模时需要区分这些职责。当前验证依赖 Litex 验证器及其内置规则、推理规则的正确性；[第 5 节](#compatibility)说明独立 Lean 复核的目标与现状。
+这里的“验证内核”指项目中的验证与执行实现，包含依据搜索、内置数学规则、良定义检查、事实存储和反馈。[Lean 的语言参考](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)将精化与 tactic 执行和检查核心证明项的可信内核分开；比较代码规模时需要区分这些职责。当前验证依赖 Litex 验证器及其内置规则、推理规则的正确性；[第 6 节](#compatibility)说明独立 Lean 复核的目标与现状。
 
 </details>
 
@@ -650,9 +532,11 @@ Lean tactic 证明与 Litex 事实导向写法的命令式／声明式类比，�
 
 </details>
 
+**多语言反馈。** 同一份源码可以得到英文、中文或其他受支持输出语言的 JSON 说明。当前语言代码为 `en`、`zh`、`zh-hant`、`fr`、`ru`、`es`、`ar`、`ja`、`ko` 和 `vi`。语言设置改变反馈，不改变被检查的数学。下一节说明这些记录保留什么。
+
 <a id="execution-model"></a>
 
-### 1.2 每句话都留下什么：可检查知识记录
+### 2.2 每句话都留下什么：可检查知识记录
 
 每条通过验证的语句都为后面的证明增加可用的知识。执行结果记录本步的顶层依据、存入的事实和适用范围内的推断；失败时则指出停止位置。读者把源码和结果放在一起，就能看见这一步如何成立、又留下了什么。更完整的验证证据保留在内部结果树中，供详细工具和 Lean 编译器使用。
 
@@ -749,7 +633,7 @@ Normal JSON 是面向人与工具的摘要，日常 `-e` / `-f` / `-r` 不会打
 
 </details>
 
-上例中，结果记录显示 `a + 1 = 2` 用到了定义 `a = 1`、定义化简和数值计算；这个等式随后成为可引用的事实。Normal JSON 给出摘要，Detailed JSON 则展开前提和事实引用。读者可以据此[追溯证明中的联系](#reader-mathematicians)，工具也可以把这些关系画成图。第 4 节介绍怎样在[交互中使用反馈](#interaction-loop)，第 5 节介绍 [Lean 独立复核](#compatibility)。
+上例中，结果记录显示 `a + 1 = 2` 用到了定义 `a = 1`、定义化简和数值计算；这个等式随后成为可引用的事实。Normal JSON 给出摘要，Detailed JSON 则展开前提和事实引用。读者可以据此[追溯证明中的联系](#reader-mathematicians)，工具也可以把这些关系画成图。第 5 节介绍怎样在[交互中使用反馈](#interaction-loop)，第 6 节介绍 [Lean 独立复核](#compatibility)。
 
 ![Litex 事实关系图示例](https://litexlang.com/_next/image?url=%2Fassets%2Fknowledge_graph.png&w=640&q=75)
 
@@ -779,13 +663,31 @@ JSON 和关系图呈现内部执行结果。Lean 编译器读取受支持的结�
 
 <a id="set-theory"></a>
 
-## 2. 从熟悉的数学公理和符号开始：Litex 的集合论基础
+## 3. 从熟悉的数学公理和符号开始：Litex 的集合论基础
 
 _“语言设计，是宏大思想与繁琐细节的一种奇妙混合。”_
 
 _— Bjarne Stroustrup_
 
 Litex 以集合论为数学基础，用集合、元素、函数和关系组织数学。源码可以直接写下成员关系、子集关系、函数应用和等式，无须先展开常见对象的具体集合论构造。这种写法的目标，是让读者沿用熟悉的数学概念，降低理解形式化表示的额外成本。内置规则和数系接口如何对应基础理论，仍须逐项说明和审查。
+
+事实需要讨论的对象。第三大特点把同样的数学阅读顺序延伸到函数和集合的定义。
+
+“定义到原点的距离；`-3` 和 `3` 到原点一样远”可以写成：
+
+```litex
+have fn distance_from_zero(x R) R = |x|
+distance_from_zero(-3) = distance_from_zero(3) = 3
+```
+
+“把所有正实数收集成一个集合；二属于这个集合”可以写成：
+
+```litex
+have positive_reals set = {x R: x > 0}
+2 $in positive_reals
+```
+
+`forall`、`have fn` 和集合描述式，为熟悉的数学语句提供精确形式。Litex 使用有明确规则的形式语法；这里贴近自然语言的是数学思路与源码之间的对应，并不表示系统能够理解任意自然语言段落。
 
 例如，若 `s` 包含在 `t` 中，那么二者分别与同一集合 `u` 取交集后，前者仍包含在后者中：
 
@@ -822,21 +724,6 @@ end
 Lean 先声明共同元素类型 `α : Type*`，再声明 `s`、`t`、`u : Set α`。这让定理可在任意元素类型上复用；`Type*` 还涉及类型的宇宙层级。
 
 这里比较的是两种语言怎样引入集合并展开证明：Lean 先声明集合的元素类型，Litex 直接写下并检查集合之间的事实。Lean 同样可以用短证明或自动化完成这个结论；这里保留教材的展开步骤，方便读者对照。
-
-<a id="ordinary-mathematics"></a>
-
-**“正常数学”：让熟悉的运算保留熟悉的含义与定义域。** Lean/Mathlib 将标准实数除法扩展到零分母，满足 [`(1 : ℝ) / 0 = 0`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Algebra/GroupWithZero/Basic.html#div_zero)；其 [`Real.sqrt`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Real/Sqrt.html#Real.sqrt_eq_zero_of_nonpos) 对负数输入返回零。Litex 选择通常教科书中的约定：使用 `1 / x` 要先建立 `x != 0`，使用实数 `sqrt(x)` 要先建立 `x >= 0`。
-
-这些条件直接进入函数定义，验证器在每次调用时从上下文中查找或证明它们：
-
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-`1 / 0 = 0` 和 `sqrt(-1) = 0` 都会在良定义性检查处被拒绝。即使写成 `1 / 0 = 1 / 0`，两边相同也不能使表达式有定义。作者无需把非零条件的证明作为额外参数传给每一次除法；但相应的数学条件必须成立，并且能由验证器建立。
-
-这里的“正常数学”指日常数学的运算与定义域约定。Mathlib 的扩展是有意采用的库定义，Lean 也能表达受限定义域；`x / x = 1` 等恒等式仍要求非零前提，详见 [Lean 的除零 FAQ](https://xenaproject.wordpress.com/2020/07/05/division-by-zero-in-type-theory-a-faq/)。Litex 的设计目标，是让作者沿用熟悉的数学含义，并由语言承担常规条件的检查工作。
 
 > **集合论是数学基础；日常书写可以从熟悉的概念开始。**
 
@@ -902,7 +789,7 @@ Lean 以依赖类型论为核心；Litex 选择以集合与成员事实组织用
 
 <a id="design-difficulty"></a>
 
-### 2.1 设计难处：把具体的数学写法做成工作语言
+### 3.1 设计难处：把具体的数学写法做成工作语言
 
 “更具体”说的是作者通常直接使用的数学词汇。[Lean 的语言参考](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)说明，Lean 表层语法精化为核心类型论表达式，并由内核检查证明；可执行程序的编译器 IR 是另一条路径。Lean 也有丰富的记号与自动化。Litex 则选择用集合、成员事实和具名函数组织日常书写。
 
@@ -991,7 +878,7 @@ Lean 也能在不使用 Mathlib 的情况下自行定义群。这组例子比较
 [Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
 使用多态高阶逻辑。
 
-Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系或具名谓词通过受限的经典逻辑形式和量词组织。它偏好规范事实形态，命题和证明不能作为普通一等值任意组合——因此也不允许 `forall p prop` 一类对命题的量化；第 1 节说明这如何使事实表能按谓词名索引。这只描述命题接口；验证器还会检查良定义性，并从定义、上下文和受支持规则中寻找依据。
+Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系或具名谓词通过受限的经典逻辑形式和量词组织。它偏好规范事实形态，命题和证明不能作为普通一等值任意组合——因此也不允许 `forall p prop` 一类对命题的量化；第 2 节说明这如何使事实表能按谓词名索引。这只描述命题接口；验证器还会检查良定义性，并从定义、上下文和受支持规则中寻找依据。
 
 在这个背景下，Litex 的问题更具体地落在面向用户的对象接口上：
 一套小型、以成员关系为中心的集合论式表层，能否在不要求用户先管理类型
@@ -1001,7 +888,7 @@ Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系�
 
 <a id="mathematical-workflow"></a>
 
-## 3. 让形式化融入数学工作流
+## 4. 让形式化融入数学工作流
 
 _“如果我看得更远，那是因为我站在巨人的肩上。”_
 
@@ -1014,7 +901,7 @@ _— Isaac Newton，致 Robert Hooke 的信（1676）_
 <a id="workflow-principle"></a>
 <a id="bottom-up"></a>
 
-### 3.1 每一步，都留下可以继续使用的知识
+### 4.1 每一步，都留下可以继续使用的知识
 
 支撑这条工作流的是一个贯穿 Litex 设计的原则：**每条已接受的数学语句，都应在自己的作用域内为后续工作留下可用的知识。**
 
@@ -1060,13 +947,13 @@ claim:
 <details>
 <summary><strong>设计空间中的位置：前向证明并非 Litex 首创</strong></summary>
 
-Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步检查，因此“自下而上”并非 Litex 独有。Litex 检验的是组合：普通事实自动触发局部验证，通过后扩展上下文，同时让已接受或停下来的路径保持可见，供用户或人工智能检查和修复；只有常规验证不足时才写显式证明结构。更完整的比较见第 1 节的小结“Litex 与 Naproche——相近目标，不同核心接口”。
+Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步检查，因此“自下而上”并非 Litex 独有。Litex 检验的是组合：普通事实自动触发局部验证，通过后扩展上下文，同时让已接受或停下来的路径保持可见，供用户或人工智能检查和修复；只有常规验证不足时才写显式证明结构。更完整的比较见第 2 节的小结“Litex 与 Naproche——相近目标，不同核心接口”。
 
 </details>
 
 <a id="workflow-exploration"></a>
 
-### 3.2 边想边写，边写边检查
+### 4.2 边想边写，边写边检查
 
 从一个正数 `x` 出发，更新公式是 `(x + 2 / x) / 2`。这里的“正数”有实际作用：它保证除法有意义，也让更新后的数仍然为正。先检查这件事，再定义函数：
 
@@ -1098,7 +985,7 @@ success
 
 <a id="workflow-reuse"></a>
 
-### 3.3 把今天的成果，留给下一次探索
+### 4.3 把今天的成果，留给下一次探索
 
 算出几个值之后，我们可以证明一个一般性质：如果正数 `x` 满足 `x^2 = 2`，牛顿更新就保持它不变。这一步把具体尝试推进为可以再次引用的数学知识。
 
@@ -1191,12 +1078,12 @@ missing != singleton(0)
 
 积累之后，用户可以通过 Litex 的普通 JSON 自行组织数学内容。例如，上面定理的调用会在语句文本中保留名称、参数和选定结论，已接受的事实则记录在 `stores` 和 `infers` 中。这些数据可以用于自己的展示工具；简洁的普通输出并没有记录所有依赖关系。
 
-*当前 CLI 已提供原生数学依赖图；网页目前展示的是 Normal JSON 的关系投影，原生图尚未接入。依赖图用于查看知识关系，独立证明复核仍是第 5 节讨论的另一项工作。*
+*当前 CLI 已提供原生数学依赖图；网页目前展示的是 Normal JSON 的关系投影，原生图尚未接入。依赖图用于查看知识关系，独立证明复核仍是第 6 节讨论的另一项工作。*
 
 <a id="workflow-use"></a>
 <a id="executable-code"></a>
 
-### 3.4 让数学成果用于计算与交流
+### 4.4 让数学成果用于计算与交流
 
 保存和复用之外，数学成果还可以继续用于计算，也可以写成供别人阅读的文稿。Litex 正在提供这两种出口，让形式化源码与日常数学工作发生更多联系。
 
@@ -1264,11 +1151,11 @@ Python/C 抽取仍限于支持的计算片段。生成代码使用浮点数；Li
 
 LaTeX 转换负责呈现数学源码，数学验证需要单独运行。
 
-从一次探索到一个可复用的定理，再到计算和交流，这是第三个特点希望连接起来的数学工作流。一次证明的完成，也应当成为下一次数学工作的开始。
+从一次探索到一个可复用的定理，再到计算和交流，这是第四个特点希望连接起来的数学工作流。一次证明的完成，也应当成为下一次数学工作的开始。
 
 <a id="interaction-loop"></a>
 
-## 4. Litex 适合与 AI 交互
+## 5. Litex 适合与 AI 交互
 
 _“所谓增强人的智力，就是增强人面对复杂问题的能力……”_
 
@@ -1319,7 +1206,7 @@ litex -lang en -e 'have a R = 2'
 litex -lang en -e 'a + 1 = 3'
 ```
 
-第一条成功；第二条失败，因为新进程没有 `a` 的声明，必须重新加载已接受的声明。保留 Session，就不必为每次尝试重新构建上下文。保存已接受源码，在连贯的阶段检查点或最终验收时另行运行干净文件检查。如果进程停止或已加载上下文必须改变，则重启并重放已接受源码；[第 3 节的数学工作流](#workflow-exploration)将这条规则用于更长的例子。
+第一条成功；第二条失败，因为新进程没有 `a` 的声明，必须重新加载已接受的声明。保留 Session，就不必为每次尝试重新构建上下文。保存已接受源码，在连贯的阶段检查点或最终验收时另行运行干净文件检查。如果进程停止或已加载上下文必须改变，则重启并重放已接受源码；[第 4 节的数学工作流](#workflow-exploration)将这条规则用于更长的例子。
 
 **人、AI 与 Litex 的协作循环：**
 
@@ -1460,9 +1347,9 @@ thm converges_to_mul_const:
 
 <a id="compatibility"></a>
 
-## 5. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）
+## 6. 连接 Lean 独立复核，并与 Mathlib 兼容（Experimental）
 
-Litex 到 Lean 的编译正在通过可检查的例子逐步扩展。目标是让可读的 Litex 数学发展获得可独立检查的证明，同时保留原来的对象、前提和结论。这条路径由三部分组成：Litex 检查源码，编译器重放记录下来的证据，`lean/Litex.lean`为生成的表达式提供 Lean 中的语义。
+独立复核必须保留第一大特点中的数学含义与定义域条件。Litex 到 Lean 的编译正在通过可检查的例子逐步扩展。目标是让可读的 Litex 数学发展获得可独立检查的证明，同时保留原来的对象、前提和结论。这条路径由三部分组成：Litex 检查源码，编译器重放记录下来的证据，`lean/Litex.lean`为生成的表达式提供 Lean 中的语义。
 
 ### 从任意对象开始
 
@@ -1536,7 +1423,7 @@ thm quotient_distributes:
 
 <a id="ecosystem-role"></a>
 
-## 6. 从语言到生态：Litex 想扮演什么角色
+## 7. 从语言到生态：Litex 想扮演什么角色
 
 _“预测未来最好的方式，就是创造未来。”_
 
@@ -1548,8 +1435,8 @@ Litex 希望让同一份经过验证的源码和结果，用于人的阅读、AI
 | --- | --- |
 | 可读推理的前端 | 人可以直接审核的数学对象、条件、中间事实和结论 |
 | 可信推理数据的生产层 | 经过机器检查的事实与验证来源、明确的停止边界，以及被显式标出的可信边界 |
-| 现有生态的接入层 | 初始的独立文件 Lean 编译与复核，支持有限范围的验证结果（第 5 节，Experimental）；整个系统的覆盖尚未完成，新增 Lean/Mathlib adapter 仍明确分离，由 AI 或人类编写 |
-| 证明 → 可执行代码（Experimental） | 把已检查的计算片段转化成可运行的 Python / C（第 3.4 节） |
+| 现有生态的接入层 | 初始的独立文件 Lean 编译与复核，支持有限范围的验证结果（第 6 节，Experimental）；整个系统的覆盖尚未完成，新增 Lean/Mathlib adapter 仍明确分离，由 AI 或人类编写 |
+| 证明 → 可执行代码（Experimental） | 把已检查的计算片段转化成可运行的 Python / C（第 4.4 节） |
 
 欢迎带着数学例子、使用反馈或工具想法来交流：litexlang@outlook.com。
 
@@ -1566,7 +1453,7 @@ AI 工具改变的是小团队编写、检查和迭代大量实现工作的成�
 
 <a id="conclusions"></a>
 
-## 7. 追寻与众不同的艺术
+## 8. 追寻与众不同的艺术
 
 _“数学家像画家或诗人一样，是模式的创造者。”_
 
@@ -1650,7 +1537,7 @@ Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu
 
 学习过程中，我渐渐有了几个问题。What if，我能直接写下 `1 + 1 = 2`，不用先写 `example`，再接一个 `by ...`？What if，定义了奇数以后，我直接写 `$odd(13)`，语言就能按定义检查它？What if，已经知道“所有人都会死”和“苏格拉底是人”，我就能直接写“苏格拉底会死”，不用再点名引用那条全称前提？
 
-这些问题汇成一个具体的界面选择：作者决定数学上的下一步，语言寻找受支持的局部依据，并说明这一步给上下文留下什么。代价是验证器须承担良定义性、依据匹配、结果记录与失败定位；第 2.1 节已展开这项设计责任。Lean 用户可以据此判断，自己得到的是另一种默认工作流，而不只是几处较短的记号。
+这些问题汇成一个具体的界面选择：作者决定数学上的下一步，语言寻找受支持的局部依据，并说明这一步给上下文留下什么。代价是验证器须承担良定义性、依据匹配、结果记录与失败定位；第 3.1 节已展开这项设计责任。Lean 用户可以据此判断，自己得到的是另一种默认工作流，而不只是几处较短的记号。
 
 ```text
 Lean:  命题 → 证明目标 → tactic 精化 → 证明项 → 内核检查
@@ -1832,9 +1719,9 @@ Lean（写数学时）:  严格类型手感  ≈ static
 Litex:             多集合归属    ≈ dynamic（偏 Python）
 ```
 
-事实表与规则表把一部分依据检索工作从作者转移给语言；[第 1 节](#fact-oriented)说明这条默认路径的搜索边界，[验证实现的分工](#automation-implementation)解释相应的工程成本。作者能少写许多操作，是因为每条受支持的路径都在实现中处理了前提、结果与失败反馈。
+事实表与规则表把一部分依据检索工作从作者转移给语言；[第 2 节](#fact-oriented)说明这条默认路径的搜索边界，[验证实现的分工](#automation-implementation)解释相应的工程成本。作者能少写许多操作，是因为每条受支持的路径都在实现中处理了前提、结果与失败反馈。
 
-还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 3.4 节）——同样标明实验性，且范围很窄，不是整门语言的后端。
+还有第二条程序员常关心的实验性编译路线：计算片段在 Litex 里检查过之后，可以尝试抽出可运行的 Python 或 C（第 4.4 节）——同样标明实验性，且范围很窄，不是整门语言的后端。
 
 <a id="reader-other-domains"></a>
 
@@ -2123,11 +2010,12 @@ mom_age = 3 * 15 + 4 = 49
 
 | 当前主张 | 已有实现 | 例子与检查记录 | 适用范围 |
 | --- | --- | --- | --- |
+| 熟悉的运算保留文档说明的含义与定义域。 | 算术语义与良定义性检查。 | [减法与带条件的除法](#ordinary-mathematics)，以及[倒数函数的系统工程例子](#systems-engineering)。 | 已展示的运算接口；是否忠实对应预期数学陈述仍须单独审阅。 |
 | 作者可以直接陈述数学事实，由系统检查受支持的衔接。 | 数学对象、事实与定义，良定义检查和局部验证流程。 | [事实导向的源码与验证路线](#fact-oriented-interface)、[源码速览](#overview-gallery)和[系统工程实例](#systems-engineering)。 | 已实现的对象与证明接口，以及验证器明确采用的基础和假设。 |
 | 已接受的知识可以支持后续数学工作。 | 保留的事实、可复用的定义与定理、引用和模块机制。 | [每条语句留下的知识记录](#execution-model)和[已有成果的复用](#workflow-reuse)。 | 原有前提、作用域与导入规则下的复用；具体数学开发有各自的检查状态。 |
 | 人和 agent 可以修复当前步骤，同时保留此前接受的上下文。 | 持续 Session、结构化失败反馈和 JSON 结果。 | [Session 交互实例](#interaction-loop)和[验证记录](#execution-model)。 | 实例展示的交互与上下文保留行为；写作耗时和证明质量的变化需另行测量。 |
 | 一个明确的数学子集已经能编译到 Lean，并连接普通 Mathlib 数学。 | typed result 驱动的编译器、Lean 语义核心、源码／生成文件对与表示桥接；完整原生案例还包含手写 Adapter。 | [Lean 独立复核](#compatibility)、其中注明日期的验收记录及链接的编译器指南。 | 已审查的源码到 Lean 路线和通过检查的例子；原生使用还依赖对应接口的模型与 Adapter。 |
-| 数学源码和结果可以供其他工具使用。 | JSON 输出、LaTeX 导出与实验性的 Python/C 抽取。 | [结构化知识记录](#execution-model)、[导出实例](#overview-spine)和[计算与交流](#workflow-use)。 | 各工具支持的输入输出契约；LaTeX 导出呈现解析后的源码而不执行验证，可执行代码抽取处理受支持的计算片段。 |
+| 数学源码和结果可以供其他工具使用。 | JSON 输出、LaTeX 导出与实验性的 Python/C 抽取。 | [结构化知识记录](#execution-model)与[计算与交流](#workflow-use)。 | 各工具支持的输入输出契约；LaTeX 导出呈现解析后的源码而不执行验证，可执行代码抽取处理受支持的计算片段。 |
 
 ## 写给读者
 

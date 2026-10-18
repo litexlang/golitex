@@ -53,7 +53,7 @@ pub(super) fn project_atomic_builtin_rule(
             ("numerator_integer", project_verify_fact(&p.numerator_integer, runtime)),
             ("denominator_integer", project_verify_fact(&p.denominator_integer, runtime)),
             ("denominator_nonzero", project_verify_fact(&p.denominator_nonzero, runtime)),
-            ("zero_remainder", project_verify_fact(&p.zero_remainder, runtime)),
+            ("divisibility", project_verify_fact(&p.divisibility, runtime)),
         ]),
 
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::AbsPositiveFromNonzero(p)) => object_for(runtime, vec![
@@ -1601,8 +1601,8 @@ pub(super) fn project_atomic_builtin_rule(
             ("type", string("builtin_rule")), ("family", string("LessEqualFact")),
             ("rule", string("PositiveCommonDivisorLeGcd")),
             ("divisor_in_n_pos_proof", project_verify_fact(&p.divisor_in_n_pos_proof, runtime)),
-            ("left_remainder_zero_proof", project_verify_fact(&p.left_remainder_zero_proof, runtime)),
-            ("right_remainder_zero_proof", project_verify_fact(&p.right_remainder_zero_proof, runtime)),
+            ("left_divisibility_proof", project_verify_fact(&p.left_divisibility_proof, runtime)),
+            ("right_divisibility_proof", project_verify_fact(&p.right_divisibility_proof, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetMaxMemberLe(p)) => {
             let mut entries = vec![
@@ -2842,9 +2842,7 @@ pub(super) fn project_atomic_builtin_rule(
         AtomicExceptEqualityFactSearchProofByBuiltinRule::ProperSupersetFact(_) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("ProperSupersetFact")),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(_) => object_for(runtime, vec![
-            ("type", string("builtin_rule")), ("family", string("DvdFact")),
-        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(p) => super::divisibility::project_dvd(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InjectiveFact(_) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InjectiveFact")),
         ]),

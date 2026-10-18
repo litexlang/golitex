@@ -141,6 +141,6 @@ impl LitexToLeanCompiler {
         let complete = position.atomic_search_prior(2 + proofs.len())?;
         let carrier = self.compile_object_reference(&definition.right, &complete)?;
         let target = self.compile_object_reference(&fact.set, &complete)?;
-        Ok(format!("(by\n  let _checked_domain_target := {checked_target}\n  let _function := {function}\n  let _tuple := {tuple}\n  let _cart := {carrier}\n  let _target := {target}\n  have _tupleMember : Litex.In _tuple _cart := Litex.tupleInCart _tuple _cart {}\n  exact Litex.inOfSame _tuple _function _cart _target ({tuple_equal}).symm ({carrier_equal}).symm _tupleMember)", coordinate_proof.replace('\n', "\n  ")))
+        Ok(format!("(by\n  let _checked_domain_target := {checked_target}\n  let _function := {function}\n  let _tuple := {tuple}\n  let _cart := {carrier}\n  let _target := {target}\n  have _tupleMember : Litex.In _tuple _cart := Litex.tupleInCart _tuple _cart {}\n  have _tupleSame : Litex.Same _function _tuple := {tuple_equal}\n  have _carrierSame : Litex.Same _target _cart := {carrier_equal}\n  exact Litex.inOfSame _tuple _function _cart _target _tupleSame.symm _carrierSame.symm _tupleMember)", coordinate_proof.replace('\n', "\n  ")))
     }
 }

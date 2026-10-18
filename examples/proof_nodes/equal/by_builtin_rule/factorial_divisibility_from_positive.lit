@@ -1,3 +1,4 @@
+# Zero-remainder compatibility: DvdZeroRemainder delegates to the native $dvd rule.
 claim:
     ? forall n N:
         factorial(n)!=0

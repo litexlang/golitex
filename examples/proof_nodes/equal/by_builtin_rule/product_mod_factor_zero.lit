@@ -1,4 +1,5 @@
-# Node: equal.ByBuiltinRule.ProductModFactorZero
+# Zero-remainder compatibility: DvdZeroRemainder delegates to the native $dvd rule.
+# Historical node: equal.ByBuiltinRule.ProductModFactorZero
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/product_mod_factor_zero.lit
 
 forall a Z, b Z:

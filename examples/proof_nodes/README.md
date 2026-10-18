@@ -29,6 +29,13 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 
+The [native divisibility proof](atomic/by_builtin_rule/dvd_unified.lit)
+proves that `sqrt(2)` is irrational with two algebraic equalities and no
+explicit modulo statements. Divisibility rules produce and consume `$dvd`;
+the older zero-remainder examples exercise a common compatibility adapter.
+Product divisibility checks the other displayed factor in `Z`, and never
+searches for an unknown multiplier.
+
 The arithmetic premise repairs have dedicated tracers for
 [integer remainder multipliers](equal/by_builtin_rule/product_mod_factor_zero_integer_guard.lit),
 [integer odd-power parameters](equal/by_builtin_rule/minus_one_odd_natural_power_integer_guard.lit),

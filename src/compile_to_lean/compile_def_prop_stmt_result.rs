@@ -48,6 +48,81 @@ impl LitexToLeanCompiler {
         proof: &ExecDefPropStmtSuccessResult,
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, String), LeanCompileError> {
+        let (binders, memberships, parameter_definitions) =
+            self.compile_prop_parameter_prefix(proof, position, false)?;
+        let count = proof.statement.typed_parameters.ordered_param_ids().len();
+        let mut clauses = Vec::new();
+        for (index, (fact, assumed)) in proof
+            .statement
+            .iff_facts
+            .iter()
+            .zip(&proof.assumed_iff_facts)
+            .enumerate()
+        {
+            if !matches!(
+                fact,
+                Fact::AtomicFact(_)
+                    | Fact::AndFact(_)
+                    | Fact::ChainFact(_)
+                    | Fact::OrFact(_)
+                    | Fact::ExistFact(_)
+            ) {
+                return Err(LeanCompileError::unsupported("Prop/CompoundClause"));
+            }
+            let prior = SourcePosition {
+                before: count + index,
+                ..*position
+            };
+            self.compile_fact_wd(&assumed.well_defined, fact, &prior)?;
+            self.validate_store(&assumed.store_and_infer.store, fact)?;
+            let formed = SourcePosition {
+                parent: Some(&prior),
+                owner: SourceOwner::FactWD(&assumed.well_defined),
+                before: usize::MAX,
+            };
+            let clause = (
+                self.fact_proposition(fact, &formed)?,
+                format!("h_{}", fact.fact_id().value()),
+            );
+            let completed = SourcePosition {
+                before: count + index + 1,
+                ..*position
+            };
+            let mut derived = self.compile_set_builder_parameter_inferences(
+                &assumed.store_and_infer,
+                fact,
+                &clause,
+                &completed,
+            )?;
+            derived.extend(self.compile_stored_inferences(
+                &assumed.store_and_infer,
+                fact,
+                &clause,
+                &completed,
+            )?);
+            clauses.push((clause.1, clause.0, derived));
+        }
+        let (_, mut meaning, _) = clauses.pop().expect("validated nonempty predicate clauses");
+        for (name, clause, derived) in clauses.into_iter().rev() {
+            let suffix = self.scope_proposition(meaning, &derived);
+            meaning = format!("∃ ({name} : {clause}), {suffix}");
+        }
+        // A proof witness retains each source domain without making it a Lean
+        // parameter. Later constructor WD can depend on the exact earlier fact.
+        meaning = self.scope_proposition(meaning, &parameter_definitions);
+        for (name, member) in memberships.into_iter().rev() {
+            meaning = format!("∃ ({name} : {member}), {meaning}");
+        }
+        Ok((binders, meaning))
+    }
+    /// Original declaration binders and their ordered membership evidence.
+    /// The same prefix is replayed when an original clause is instantiated.
+    pub(in crate::compile_to_lean) fn compile_prop_parameter_prefix(
+        &self,
+        proof: &ExecDefPropStmtSuccessResult,
+        position: &SourcePosition<'_>,
+        instantiate_host_universes: bool,
+    ) -> Result<(Vec<String>, Vec<(String, String)>, Vec<String>), LeanCompileError> {
         let groups = &proof.statement.typed_parameters.groups;
         let parameters = groups
             .iter()
@@ -130,7 +205,12 @@ impl LitexToLeanCompiler {
                 }
                 self.validate_store(&store.store, &fact)?;
                 let id = parameter.id.value();
-                binders.push(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"));
+                let universe = if instantiate_host_universes {
+                    "_".into()
+                } else {
+                    format!("v{id}")
+                };
+                binders.push(format!("{{_Host_i{id} : Type {universe}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"));
                 let member = (
                     self.fact_proposition(&fact, &formed)?,
                     format!("h_{}", fact.fact_id().value()),
@@ -145,68 +225,6 @@ impl LitexToLeanCompiler {
                 offset += 1;
             }
         }
-        let mut clauses = Vec::new();
-        for (index, (fact, assumed)) in proof
-            .statement
-            .iff_facts
-            .iter()
-            .zip(&proof.assumed_iff_facts)
-            .enumerate()
-        {
-            if !matches!(
-                fact,
-                Fact::AtomicFact(_)
-                    | Fact::AndFact(_)
-                    | Fact::ChainFact(_)
-                    | Fact::OrFact(_)
-                    | Fact::ExistFact(_)
-            ) {
-                return Err(LeanCompileError::unsupported("Prop/CompoundClause"));
-            }
-            let prior = SourcePosition {
-                before: count + index,
-                ..*position
-            };
-            self.compile_fact_wd(&assumed.well_defined, fact, &prior)?;
-            self.validate_store(&assumed.store_and_infer.store, fact)?;
-            let formed = SourcePosition {
-                parent: Some(&prior),
-                owner: SourceOwner::FactWD(&assumed.well_defined),
-                before: usize::MAX,
-            };
-            let clause = (
-                self.fact_proposition(fact, &formed)?,
-                format!("h_{}", fact.fact_id().value()),
-            );
-            let completed = SourcePosition {
-                before: count + index + 1,
-                ..*position
-            };
-            let mut derived = self.compile_set_builder_parameter_inferences(
-                &assumed.store_and_infer,
-                fact,
-                &clause,
-                &completed,
-            )?;
-            derived.extend(self.compile_stored_inferences(
-                &assumed.store_and_infer,
-                fact,
-                &clause,
-                &completed,
-            )?);
-            clauses.push((clause.1, clause.0, derived));
-        }
-        let (_, mut meaning, _) = clauses.pop().expect("validated nonempty predicate clauses");
-        for (name, clause, derived) in clauses.into_iter().rev() {
-            let suffix = self.scope_proposition(meaning, &derived);
-            meaning = format!("∃ ({name} : {clause}), {suffix}");
-        }
-        // A proof witness retains each source domain without making it a Lean
-        // parameter. Later constructor WD can depend on the exact earlier fact.
-        meaning = self.scope_proposition(meaning, &parameter_definitions);
-        for (name, member) in memberships.into_iter().rev() {
-            meaning = format!("∃ ({name} : {member}), {meaning}");
-        }
-        Ok((binders, meaning))
+        Ok((binders, memberships, parameter_definitions))
     }
 }
