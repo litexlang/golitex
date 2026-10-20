@@ -59,6 +59,9 @@ pub(super) enum SourceOwner<'a> {
     Verify(&'a VerifyFactResult),
     AtomicVerify(&'a VerifyAtomicExceptEqualityFactSuccess),
     WD(&'a ObjWellDefinedProof),
+    // This constructor's first `usize` child/requirement stages have already
+    // been emitted as lexical lets/haves. Source order still controls visibility.
+    WDLocals(&'a ObjWellDefinedProof, usize),
     SetBuilder(&'a SetBuilder, &'a SetBuilderObjWellDefinedProof),
     Named(&'a ExecDefThmStmtSuccess),
     Claim(&'a ExecClaimStmtSuccess),
@@ -122,6 +125,63 @@ enum SourceConstructor<'a> {
 }
 
 impl<'a> SourcePosition<'a> {
+    pub fn wd_child_name(&self, index: usize) -> String {
+        let mut depth = 0;
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if matches!(position.owner, SourceOwner::WDLocals(..)) {
+                depth += 1;
+            }
+            cursor = position.parent;
+        }
+        format!("_wd_{depth}_{index}")
+    }
+
+    pub fn bound_wd_child(&self, proof: &ObjWellDefinedProof) -> Option<String> {
+        self.bound_child(|child| std::ptr::eq(child, proof))
+    }
+
+    pub fn bound_object_child(&self, object: &Obj) -> Option<String> {
+        // Equal denotations alone do not identify the same source construction.
+        self.bound_child(|child| child.obj() == object)
+    }
+
+    pub fn has_bound_verify(&self, result: &VerifyFactResult) -> bool {
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if let SourceOwner::WDLocals(proof, emitted) = position.owner {
+                if let Some((children, requirements)) = arithmetic_stages(proof) {
+                    if requirements
+                        .iter()
+                        .take(emitted.saturating_sub(children.len()))
+                        .any(|original| std::ptr::eq(original, result))
+                    {
+                        return true;
+                    }
+                }
+            }
+            cursor = position.parent;
+        }
+        false
+    }
+
+    fn bound_child(&self, matches: impl Fn(&ObjWellDefinedProof) -> bool) -> Option<String> {
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if let SourceOwner::WDLocals(proof, emitted) = position.owner {
+                if let Some((children, _)) = arithmetic_stages(proof) {
+                    for (index, child) in children.iter().take(emitted).enumerate().rev() {
+                        if matches(child) {
+                            return Some(position.wd_child_name(index));
+                        }
+                    }
+                }
+            }
+            cursor = position.parent;
+        }
+        None
+    }
+
     pub fn new(parent: Option<&'a Self>, owner: SourceOwner<'a>, before: usize) -> Self {
         Self {
             parent,
@@ -231,7 +291,11 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::PropDefinition(_)
                 | SourceOwner::ByDef(_)
                 | SourceOwner::SetBuilder(_, _) => return true,
-                SourceOwner::WD(proof) if function_binder(proof).is_some() => return true,
+                SourceOwner::WD(proof) | SourceOwner::WDLocals(proof, _)
+                    if function_binder(proof).is_some() =>
+                {
+                    return true
+                }
                 _ => {}
             }
             position = current.parent;
@@ -512,7 +576,9 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::PropDefinition(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ByDef(p) => Some(p.local_env.as_ref()),
                 SourceOwner::SetBuilder(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::WD(p) => function_binder(p).map(|(_, _, _, _, env)| env),
+                SourceOwner::WD(p) | SourceOwner::WDLocals(p, _) => {
+                    function_binder(p).map(|(_, _, _, _, env)| env)
+                }
                 SourceOwner::RecursiveFunction(p) => Some(p.local_env.as_ref()),
                 SourceOwner::RecursiveCase(p) => Some(p.local_env.as_ref()),
                 SourceOwner::RecursiveDisjoint(p) => Some(p.local_env.as_ref()),
@@ -558,7 +624,9 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::PropDefinition(p) => Some(p.local_env.as_ref()),
                 SourceOwner::ByDef(p) => Some(p.local_env.as_ref()),
                 SourceOwner::SetBuilder(_, p) => Some(p.local_env.as_ref()),
-                SourceOwner::WD(p) => function_binder(p).map(|(_, _, _, _, env)| env),
+                SourceOwner::WD(p) | SourceOwner::WDLocals(p, _) => {
+                    function_binder(p).map(|(_, _, _, _, env)| env)
+                }
                 SourceOwner::RecursiveFunction(p) => Some(p.local_env.as_ref()),
                 SourceOwner::RecursiveCase(p) => Some(p.local_env.as_ref()),
                 SourceOwner::RecursiveDisjoint(p) => Some(p.local_env.as_ref()),
@@ -2017,7 +2085,7 @@ fn parameter_in_owner<'a>(
                     )
                 })
         }
-        SourceOwner::WD(proof) => {
+        SourceOwner::WD(proof) | SourceOwner::WDLocals(proof, _) => {
             let (signature, carriers, parameters, _, _) = function_binder(proof)?;
             let before = position.before.saturating_sub(carriers.len());
             let mut index = 0;
@@ -3275,7 +3343,7 @@ fn fact_reference_in_owner(
                 Ok(None)
             }
         }
-        SourceOwner::WD(proof) => {
+        SourceOwner::WD(proof) | SourceOwner::WDLocals(proof, _) => {
             if let Some((_, carriers, parameters, domains, _)) = function_binder(proof) {
                 for store in parameters
                     .store_and_infer_results
@@ -3531,7 +3599,10 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         ) => {
             matches!(b.as_ref(), VerifyAtomicExceptEqualityFactResult::Success(b) if std::ptr::eq(a, b))
         }
-        (SourceOwner::WD(a), SourceOwner::WD(b)) => std::ptr::eq(a, b),
+        (
+            SourceOwner::WD(a) | SourceOwner::WDLocals(a, _),
+            SourceOwner::WD(b) | SourceOwner::WDLocals(b, _),
+        ) => std::ptr::eq(a, b),
         (SourceOwner::SetBuilder(a, pa), SourceOwner::SetBuilder(b, pb)) => {
             std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
         }
@@ -4515,7 +4586,7 @@ fn visit_owner<T>(
         SourceOwner::AtomicVerify(proof) => {
             return visit_atomic_verify_formation(proof, position.before, position, wd, verify)
         }
-        SourceOwner::WD(proof) => {
+        SourceOwner::WD(proof) | SourceOwner::WDLocals(proof, _) => {
             if let Some(value) = visit_function_formation(proof, position, wd, verify)? {
                 return Ok(Some(value));
             }
@@ -6516,7 +6587,7 @@ fn visit_fact_formation<T>(
     Ok(None)
 }
 
-fn arithmetic_stages(
+pub(super) fn arithmetic_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
     if let ObjWellDefinedProof::ByDef {

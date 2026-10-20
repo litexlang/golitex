@@ -60,3 +60,48 @@ fn returned_cart_call_rejects_reordered_layer_requirements() {
         .unwrap_err();
     assert_eq!(error.route, "WD/FnObj/ParameterMembership");
 }
+
+#[test]
+fn returned_cart_call_wd_lets_only_reuse_emitted_original_children() {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let (mut result, _) = super::execute(SOURCE);
+    let fact = super::forall_proof_mut(&mut result.statement_results[1]);
+    let equality = super::equality_proof_mut(&mut fact.proved_then_facts[0].verify_result);
+    let owner = &equality.well_defined_proof.left;
+    let ObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::FnObj(call),
+        ..
+    } = owner
+    else {
+        panic!("original call WD")
+    };
+    let first = call.child_obj_well_defined[0].as_ref();
+    let second = call.child_obj_well_defined[1].as_ref();
+    let before = SourcePosition::new(None, SourceOwner::WDLocals(owner, 0), 0);
+    assert!(before.bound_wd_child(first).is_none());
+    assert!(before.bound_object_child(second.obj()).is_none());
+    let after_first = SourcePosition::new(None, SourceOwner::WDLocals(owner, 1), 1);
+    assert!(after_first.bound_wd_child(first).is_some());
+    assert!(after_first.bound_object_child(first.obj()).is_some());
+    assert!(after_first.bound_wd_child(second).is_none());
+    assert!(after_first.bound_object_child(second.obj()).is_none());
+    // The enclosing constructor has not been emitted as one of its children.
+    assert!(after_first.bound_wd_child(owner).is_none());
+    let outside = SourcePosition::new(None, SourceOwner::WD(owner), usize::MAX);
+    assert!(outside.bound_wd_child(first).is_none());
+    let requirement = &call.requirement_fact_verified[0];
+    let before_requirements = SourcePosition::new(
+        None,
+        SourceOwner::WDLocals(owner, call.child_obj_well_defined.len()),
+        0,
+    );
+    assert!(!before_requirements.has_bound_verify(requirement));
+    let after_requirement = SourcePosition::new(
+        None,
+        SourceOwner::WDLocals(owner, call.child_obj_well_defined.len() + 1),
+        0,
+    );
+    assert!(after_requirement.has_bound_verify(requirement));
+    assert!(!after_requirement.has_bound_verify(&call.requirement_fact_verified[1]));
+    assert!(!outside.has_bound_verify(requirement));
+}

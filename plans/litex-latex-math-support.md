@@ -1,6 +1,6 @@
 # Litex support for common LaTeX mathematics
 
-Date: 2026-10-18. Status: implementation roadmap; the first category-1 scalar/set increment is implemented and verified.
+Date: 2026-10-18; updated 2026-10-20. Status: implementation roadmap; the first category-1 scalar/set increment, function composition and real sequence limits are implemented and verified, with remaining scope recorded below.
 
 ## Goal
 
@@ -49,7 +49,7 @@ For each operation, require all of the following:
 
 Later the same day, the user removed native restriction from scope and requested a careful composition design including `f ∘ g`. The [composition design](litex-function-composition.md) proposes `compose(f,g) = f ∘ g`, with unary outer function, fixed positive-arity inner function, preserved inner guards and complete domain, and right-associative notation. The first delivery is now implemented: native Obj/syntax, strict WD, application consumers, core laws and checked examples. Later mapping/preimage laws remain pending; see the composition plan for exact validation and limits. Restrictions continue to use `fn(x S) B {f(x)}` or an explicitly guarded multi-argument anonymous function.
 
-2026-10-20: the user selected limits as the first calculus planning task. The [limits plan](litex-limits.md) proposes real sequence and finite-point real function limits first, then one-sided and infinite approaches, followed by finite limsup/liminf. It separates candidate relations, nontrivial approach, existence, uniqueness and selected values, and records public-semantic and AST decisions before implementation. This is a design proposal, not delivered native limit support.
+2026-10-20: real sequence limits are implemented, with public `seq(R)` and equivalent `fn(k N+) R` inputs. First prove `$has_seq_limit(a,L)`; then use `lim(a)`. WD consumes convergence evidence and does not discover a limit from the sequence body. The [limits plan](litex-limits.md) records the exact scope and acceptance evidence; [common checked proofs](../examples/wd/sequence_limit_common_proofs.lit) and the [capability review](litex-sequence-limit-capability-review.md) record practical use and remaining proof friction. Finite-point real function limits, one-sided and infinite approaches, and finite limsup/liminf remain proposals. Their [four-phase continuation](litex-limits-next-phases.md) fixes the proposed order, mathematical contracts, BT groups, acceptance cases and unapproved AST additions, starting with finite-point function limits.
 
 ## Delivery order
 

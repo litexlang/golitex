@@ -51,6 +51,8 @@ discovery rule is installed in WD.
 
 See the [complete reciprocal proof](../examples/wd/sequence_limit.lit) and
 [equivalent sequence interfaces](../examples/wd/sequence_limit_interfaces.lit).
+For worked algebra, squeezing, geometric decay and epsilon-tail applications,
+see [common sequence-limit proofs](../examples/wd/sequence_limit_common_proofs.lit).
 
 ## Explicit builtin theorems
 

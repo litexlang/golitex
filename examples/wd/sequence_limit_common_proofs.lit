@@ -1,0 +1,426 @@
+# Common finite limits of real sequences.
+# Every convergence proof precedes selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/wd/sequence_limit_common_proofs.lit
+
+# Reciprocal sequence: epsilon-N proof.
+have fn a(k N+) R = 1/k
+
+claim:
+    ? forall epsilon R+:
+        exist n0 N+ st {{n N+: n >= n0} $subset preimage_set(a,{v R: abs(v-0) < epsilon})}
+    release thm real_archimedean_natural_upper_bound(1/epsilon)
+    obtain n0 from exist n0 N+ st {1/epsilon < n0}
+    0 < n0
+    (1/epsilon)*epsilon < n0*epsilon
+    (1/epsilon)*epsilon = 1
+    1 < n0*epsilon
+    1/n0 < (n0*epsilon)/n0
+    (n0*epsilon)/n0 = epsilon
+    1/n0 < epsilon
+    claim:
+        ? forall k N+:
+            k >= n0
+            =>:
+                abs(a(k)-0) < epsilon
+        0 < n0*k
+        1/k = n0/(n0*k)
+        n0/(n0*k) <= k/(n0*k)
+        k/(n0*k) = 1/n0
+        1/k <= 1/n0 < epsilon
+        a(k)-0 = a(k) = 1/k
+        0 < 1/k
+        abs(a(k)-0) = abs(1/k)
+        abs(1/k) = 1/k < epsilon
+    witness exist cutoff N+ st {{k N+: k >= cutoff} $subset preimage_set(a,{v R: abs(v-0) < epsilon})} from n0:
+        claim:
+            ? forall k {j N+: j >= n0}:
+                k $in preimage_set(a,{v R: abs(v-0) < epsilon})
+            abs(a(k)-0) < epsilon
+        by def {k N+: k >= n0} $subset preimage_set(a,{v R: abs(v-0) < epsilon})
+
+
+by def $has_seq_limit(a,0)
+lim(a)=0
+lim(a)+2=2
+lim(a) $in R
+
+# Constant sequences.
+have fn zero(k N+) R=0
+
+release thm seq_limit_constant(zero,0)
+
+have fn one(k N+) R=1
+
+release thm seq_limit_constant(one,1)
+
+have fn two(k N+) R=2
+
+release thm seq_limit_constant(two,2)
+
+# Reciprocal square.
+have fn square_seq(k N+) R = 1/k^2
+
+release thm seq_limit_power(a,0,2)
+
+claim:
+    ? forall k N+:
+        fn(j N+) R {a(j)^2}(k)=square_seq(k)
+    a(k)=1/k
+    fn(j N+) R {a(j)^2}(k)=a(k)^2=(1/k)^2=1/k^2=square_seq(k)
+
+by fn_extension square_seq = fn(k N+) R {a(k)^2}
+
+$has_seq_limit(square_seq,0)
+
+lim(square_seq)=0
+
+# Affine combination.
+have fn affine(k N+) R = 2+3/k
+
+release thm seq_limit_scale(a,0,3)
+
+have fn times_three(k N+) R=3*a(k)
+
+by fn_extension times_three = fn(k N+) R {3*a(k)}
+
+$has_seq_limit(times_three,0)
+
+release thm seq_limit_add(two,times_three,2,0)
+
+claim:
+    ? forall k N+:
+        fn(j N+) R {two(j)+times_three(j)}(k)=affine(k)
+    two(k)=2
+    a(k)=1/k
+    times_three(k)=3*a(k)=3/k
+    fn(j N+) R {two(j)+times_three(j)}(k)=two(k)+times_three(k)=2+3/k=affine(k)
+
+by fn_extension affine = fn(k N+) R {two(k)+times_three(k)}
+
+$has_seq_limit(affine,2)
+
+lim(affine)=2
+
+# Index shift.
+release thm seq_limit_shift(a,0,1)
+
+claim:
+    ? forall k N+:
+        k+1!=0
+    0<k
+    0<k+1
+    k+1!=0
+
+have fn shifted(k N+) R=1/(k+1)
+
+claim:
+    ? forall k N+:
+        fn(j N+) R {a(j+1)}(k)=shifted(k)
+    a(k+1)=1/(k+1)=shifted(k)
+    fn(j N+) R {a(j+1)}(k)=a(k+1)=shifted(k)
+
+release thm seq_limit_eventually_equal(fn(k N+) R {a(k+1)},shifted,0,1)
+
+lim(shifted)=0
+
+# A rational sequence.
+have fn ratio(k N+) R=k/(k+1)
+
+release thm seq_limit_subtract(one,shifted,1,0)
+
+claim:
+    ? forall k N+:
+        fn(j N+) R {one(j)-shifted(j)}(k)=ratio(k)
+    k+1!=0
+    one(k)=1
+    shifted(k)=1/(k+1)
+    ratio(k)=k/(k+1)=1-1/(k+1)=one(k)-shifted(k)
+    fn(j N+) R {one(j)-shifted(j)}(k)=one(k)-shifted(k)=ratio(k)
+
+by fn_extension ratio=fn(k N+) R {one(k)-shifted(k)}
+
+$has_seq_limit(ratio,1)
+
+lim(ratio)=1
+
+# Quotient of convergent sequences.
+have fn numerator(k N+) R=one(k)+a(k)
+
+release thm seq_limit_add(one,a,1,0)
+
+by fn_extension numerator=fn(k N+) R {one(k)+a(k)}
+
+$has_seq_limit(numerator,1)
+
+have fn denominator(k N+) R=two(k)+a(k)
+
+release thm seq_limit_add(two,a,2,0)
+
+by fn_extension denominator=fn(k N+) R {two(k)+a(k)}
+
+$has_seq_limit(denominator,2)
+
+claim:
+    ? forall k N+:
+        denominator(k)!=0
+    two(k)=2
+    a(k)=1/k
+    0<a(k)
+    denominator(k)=2+a(k)
+    0<denominator(k)
+
+release thm seq_limit_divide(numerator,denominator,1,2)
+
+lim(fn(k N+) R {numerator(k)/denominator(k)})=1/2
+
+# Oscillation controlled by a vanishing bound.
+release thm seq_limit_neg(a,0)
+
+have fn lower(k N+) R=-a(k)
+
+by fn_extension lower=fn(k N+) R {-a(k)}
+
+$has_seq_limit(lower,0)
+
+forall k N+:
+    -1<=sin(k)
+    sin(k)<=1
+
+have fn oscillatory(k N+) R=sin(k)/k
+
+claim:
+    ? forall k N+:
+        lower(k)<=oscillatory(k)
+        oscillatory(k)<=a(k)
+    -1<=sin(k)<=1
+    -1/k<=sin(k)/k<=1/k
+    a(k)=1/k
+    lower(k)=-a(k)=-1/k
+    oscillatory(k)=sin(k)/k
+    lower(k)<=oscillatory(k)<=a(k)
+
+release thm seq_limit_squeeze(lower,oscillatory,a,0,1)
+
+lim(oscillatory)=0
+
+# Square root via squeezing.
+claim:
+    ? forall k N+:
+        0<=1+1/k
+    0<1/k
+    0<1+1/k
+
+have fn root_sequence(k N+) R=sqrt(1+1/k)
+
+claim:
+    ? forall k N+:
+        1<=root_sequence(k)
+        root_sequence(k)<=1+1/k
+    0<1/k
+    0<1+1/k
+    1<=1+1/k
+    sqrt(1)<=sqrt(1+1/k)
+    1=sqrt(1)<=sqrt(1+1/k)=root_sequence(k)
+    1+1/k=1*(1+1/k)<=(1+1/k)*(1+1/k)=(1+1/k)^2
+    sqrt(1+1/k)<=sqrt((1+1/k)^2)
+    sqrt((1+1/k)^2)=abs(1+1/k)=1+1/k
+    root_sequence(k)=sqrt(1+1/k)<=sqrt((1+1/k)^2)=1+1/k
+
+have fn root_upper(k N+) R=1+1/k
+
+claim:
+    ? forall k N+:
+        fn(j N+) R {one(j)+a(j)}(k)=root_upper(k)
+    one(k)=1
+    a(k)=1/k
+    fn(j N+) R {one(j)+a(j)}(k)=one(k)+a(k)=1+1/k=root_upper(k)
+
+by fn_extension root_upper=fn(k N+) R {one(k)+a(k)}
+
+$has_seq_limit(root_upper,1)
+
+claim:
+    ? forall k N+:
+        one(k)<=root_sequence(k)
+        root_sequence(k)<=root_upper(k)
+    one(k)=1
+    root_upper(k)=1+1/k
+    one(k)=1<=root_sequence(k)<=1+1/k=root_upper(k)
+
+release thm seq_limit_squeeze(one,root_sequence,root_upper,1,1)
+
+lim(root_sequence)=1
+
+# Geometric decay via induction and squeezing.
+have fn geometric(k N+) R=(1/2)^k
+
+claim:
+    ? forall n N:
+        2^n>=n+1
+    by induc k from 0:
+        ? 2^k>=k+1
+        ? from k = 0:
+            2^0=1>=0+1
+        ? induc:
+            0<=k
+            0<=k+1
+            k $in N
+            1 $in N
+            2 $in C
+            2^(k+1)=2^k*2^1
+            2^1=2
+            2^k*2>=(k+1)*2
+            2^(k+1)>=(k+1)*2=(k+1)+(k+1)>=k+1+1
+
+claim:
+    ? forall k N+:
+        (1/2)^k=1/(2^k)
+    0<2^k
+    1/2=2^(-1)
+    (1/2)^k=(2^(-1))^k=2^((-1)*k)
+    (-1)*k=-k
+    2^((-1)*k)=2^(-k)=1/(2^k)
+
+claim:
+    ? forall k N+:
+        zero(k)<=geometric(k)
+        geometric(k)<=a(k)
+    have power R=2^k
+    2^k>=k+1>k>0
+    0<power
+    k<=power
+    0<k*power
+    1/power=k/(k*power)<=power/(k*power)=1/k
+    geometric(k)=(1/2)^k=1/(2^k)=1/power
+    zero(k)=0<1/power<=1/k=a(k)
+
+release thm seq_limit_squeeze(zero,geometric,a,0,1)
+
+lim(geometric)=0
+
+# Using an epsilon tail at a chosen index.
+thm epsilon_tail_at:
+    ? forall seq_u seq(R),limit_u R,epsilon R+,cutoff,k N+:
+        {j N+:j>=cutoff} $subset preimage_set(seq_u,{v R:abs(v-limit_u)<epsilon})
+        k>=cutoff
+        =>:
+            abs(seq_u(k)-limit_u)<epsilon
+    k $in {j N+:j>=cutoff}
+    k $in preimage_set(seq_u,{v R:abs(v-limit_u)<epsilon})
+    seq_u(k) $in {v R:abs(v-limit_u)<epsilon}
+    abs(seq_u(k)-limit_u)<epsilon
+
+# Changing finitely many terms.
+claim:
+    ? forall changed seq(R):
+        forall k N+:
+            k>=2
+            =>:
+                a(k)=changed(k)
+        =>:
+            $has_seq_limit(changed,0)
+    release thm seq_limit_eventually_equal(a,changed,0,2)
+
+# Even-index subsequence with an explicit output sequence.
+claim:
+    ? forall seq_u,subsequence seq(R),limit_u R:
+        $has_seq_limit(seq_u,limit_u)
+        forall k N+:
+            subsequence(k)=seq_u(2*k)
+        =>:
+            $has_seq_limit(subsequence,limit_u)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(subsequence,{v R:abs(v-limit_u)<epsilon})}
+        release thm seq_limit_tail(seq_u,limit_u,epsilon)
+        obtain n0 from exist n0 N+ st {{k N+:k>=n0} $subset preimage_set(seq_u,{v R:abs(v-limit_u)<epsilon})}
+        claim:
+            ? forall k {j N+:j>=n0}:
+                k $in preimage_set(subsequence,{v R:abs(v-limit_u)<epsilon})
+            2*k>=k>=n0
+            release thm epsilon_tail_at(seq_u,limit_u,epsilon,n0,2*k)
+            subsequence(k)=seq_u(2*k)
+            abs(subsequence(k)-limit_u)=abs(seq_u(2*k)-limit_u)<epsilon
+            subsequence(k) $in {v R:abs(v-limit_u)<epsilon}
+            k $in preimage_set(subsequence,{v R:abs(v-limit_u)<epsilon})
+        witness exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(subsequence,{v R:abs(v-limit_u)<epsilon})} from n0:
+            by def {k N+:k>=n0} $subset preimage_set(subsequence,{v R:abs(v-limit_u)<epsilon})
+    by def $has_seq_limit(subsequence,limit_u)
+
+# Positive limit gives eventual positivity.
+claim:
+    ? forall seq_u seq(R),limit_u R+:
+        $has_seq_limit(seq_u,limit_u)
+        =>:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(seq_u,R+)}
+    release thm seq_limit_tail(seq_u,limit_u,limit_u/2)
+    obtain n0 from exist n0 N+ st {{k N+:k>=n0} $subset preimage_set(seq_u,{v R:abs(v-limit_u)<limit_u/2})}
+    claim:
+        ? forall k {j N+:j>=n0}:
+            k $in preimage_set(seq_u,R+)
+        release thm epsilon_tail_at(seq_u,limit_u,limit_u/2,n0,k)
+        abs(seq_u(k)-limit_u)<limit_u/2
+        by contra:
+            ? 0<seq_u(k)
+            seq_u(k)<=0
+            0<=-seq_u(k)
+            limit_u=limit_u+0<=limit_u+(-seq_u(k))=limit_u-seq_u(k)
+            limit_u<=limit_u-seq_u(k)<=abs(limit_u-seq_u(k))=abs(seq_u(k)-limit_u)<limit_u/2<limit_u
+            impossible limit_u<limit_u
+        seq_u(k) $in R+
+        k $in preimage_set(seq_u,R+)
+    witness exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(seq_u,R+)} from n0:
+        by def {k N+:k>=n0} $subset preimage_set(seq_u,R+)
+
+# Nonzero limit gives eventual nonzero terms.
+claim:
+    ? forall seq_u seq(R),limit_u R:
+        $has_seq_limit(seq_u,limit_u)
+        limit_u!=0
+        =>:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(seq_u,{v R:v!=0})}
+    0<abs(limit_u)
+    release thm seq_limit_tail(seq_u,limit_u,abs(limit_u)/2)
+    obtain n0 from exist n0 N+ st {{k N+:k>=n0} $subset preimage_set(seq_u,{v R:abs(v-limit_u)<abs(limit_u)/2})}
+    claim:
+        ? forall k {j N+:j>=n0}:
+            k $in preimage_set(seq_u,{v R:v!=0})
+        release thm epsilon_tail_at(seq_u,limit_u,abs(limit_u)/2,n0,k)
+        by contra:
+            ? seq_u(k)!=0
+            seq_u(k)-limit_u=-limit_u
+            abs(seq_u(k)-limit_u)=abs(-limit_u)=abs(limit_u)
+            abs(limit_u)<abs(limit_u)/2<abs(limit_u)
+            impossible abs(limit_u)<abs(limit_u)
+        seq_u(k) $in {v R:v!=0}
+        k $in preimage_set(seq_u,{v R:v!=0})
+    witness exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(seq_u,{v R:v!=0})} from n0:
+        by def {k N+:k>=n0} $subset preimage_set(seq_u,{v R:v!=0})
+
+# The identity sequence has no finite real limit.
+have fn identity_sequence(k N+) R=k
+
+claim:
+    ? forall candidate R:
+        not $has_seq_limit(identity_sequence,candidate)
+    by contra:
+        ? not $has_seq_limit(identity_sequence,candidate)
+        release thm seq_limit_tail(identity_sequence,candidate,1)
+        obtain n0 from exist n0 N+ st {{k N+:k>=n0} $subset preimage_set(identity_sequence,{v R:abs(v-candidate)<1})}
+        release thm real_archimedean_natural_upper_bound(abs(candidate)+n0+2)
+        obtain m from exist m N+ st {abs(candidate)+n0+2<m}
+        0<=abs(candidate)
+        1<=n0
+        n0=0+n0<=abs(candidate)+n0<abs(candidate)+n0+2<m
+        release thm epsilon_tail_at(identity_sequence,candidate,1,n0,m)
+        candidate<=abs(candidate)
+        candidate+1<=abs(candidate)+1<=abs(candidate)+n0<abs(candidate)+n0+2<m
+        identity_sequence(m)=m
+        1=(candidate+1)-candidate<m-candidate<=abs(m-candidate)=abs(identity_sequence(m)-candidate)<1
+        impossible 1<1
+
+# Rejecting an incorrect candidate by uniqueness.
+by contra:
+    ? not $has_seq_limit(zero,1)
+    release thm seq_limit_unique(zero,0,1)
+    impossible 0=1

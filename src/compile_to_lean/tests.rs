@@ -922,8 +922,7 @@ fn phase1_equality_paths_preserve_orientation_and_transport() {
         ));
     }
     let output = compile_run(&result, &compiler, "phase1_paths").expect("oriented equality paths");
-    assert!(output.contains("let _litex_path_start := "));
-    assert!(output.contains("exact Litex.sameRefl _litex_path_start"));
+    assert!(!output.contains("_litex_path_start"));
     assert!(output.contains(".trans"));
     assert!(output.contains(".symm"));
     assert!(output.contains("congrArg₂ M.addValue"));
@@ -1565,8 +1564,8 @@ fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
     let output = compile_run(&result, &compiler, "phase1_computed_alias")
         .expect("computed alias membership and arithmetic WD");
     assert!(output.contains("Litex.inOfSame"));
-    assert!(output.contains("let _litex_same := (Litex.add"));
-    assert!(output.contains("exact Litex.sameRefl _litex_same"));
+    assert!(output.contains("Litex.add"));
+    assert!(output.contains("(show @Eq M.Value _ _ from Eq.refl _)"));
     assert!(!output.contains("NativeBridge.sameOfDenoteNumber"));
 }
 

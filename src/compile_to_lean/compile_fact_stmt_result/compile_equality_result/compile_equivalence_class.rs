@@ -100,13 +100,8 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let mut current = left;
-        let start = self.compile_object_reference(left, position)?;
-        // Finish the original constructor before transitivity constrains its
-        // denotation; tactic-built objects otherwise retain host-type metavariables.
-        let mut compiled = format!(
-            "(by\n  let _litex_path_start := {}\n  exact Litex.sameRefl _litex_path_start\n)",
-            start.replace('\n', "\n  ")
-        );
+        self.compile_object_reference(left, position)?;
+        let mut compiled: Option<String> = None;
         self.compile_object_reference(right, position)?;
         for (from, to, id) in &proof.path {
             if from.ir() != current.ir() {
@@ -116,7 +111,10 @@ impl LitexToLeanCompiler {
                 ));
             }
             let step = self.compile_registered_equality(*id, from, to, position)?;
-            compiled = format!("(({compiled}).trans {step})");
+            compiled = Some(match compiled {
+                Some(previous) => format!("(({previous}).trans {step})"),
+                None => step,
+            });
             current = to;
         }
         if current.ir() != right.ir() {
@@ -125,7 +123,10 @@ impl LitexToLeanCompiler {
                 "The recorded equality path does not end at the requested endpoint.",
             ));
         }
-        Ok(compiled)
+        // A nonempty path starts with its actual first cited equality. An empty
+        // path is reflexivity; infer the semantic value from the expected Eq
+        // instead of embedding the entire certified object again.
+        Ok(compiled.unwrap_or_else(|| "(show @Eq M.Value _ _ from Eq.refl _)".to_string()))
     }
 
     pub(in crate::compile_to_lean) fn compile_registered_equality(
