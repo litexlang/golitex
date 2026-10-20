@@ -12,7 +12,7 @@ impl LitexToLeanCompiler {
         if let Some(term) = position.bound_wd_child(proof) {
             return Ok(term);
         }
-        if let Some((children, requirements)) = arithmetic_stages(proof) {
+        if let Some((children, _)) = arithmetic_stages(proof) {
             if children.iter().any(|child| {
                 !matches!(
                     child.obj(),
@@ -33,23 +33,9 @@ impl LitexToLeanCompiler {
                         term
                     ));
                 }
-                for (index, requirement) in requirements.iter().enumerate() {
-                    let stage = children.len() + index;
-                    let prior = SourcePosition::new(
-                        Some(position),
-                        SourceOwner::WDLocals(proof, stage),
-                        stage,
-                    );
-                    let (proposition, term) = self.compile_verify(requirement, &prior)?;
-                    let id = source_subject(requirement)?.fact_id();
-                    bindings.push_str(&format!(
-                        "have h_{} : {proposition} := {term};\n",
-                        id.value()
-                    ));
-                }
                 let formed = SourcePosition::new(
                     Some(position),
-                    SourceOwner::WDLocals(proof, children.len() + requirements.len()),
+                    SourceOwner::WDLocals(proof, children.len()),
                     0,
                 );
                 let term = self.compile_wd_body(proof, &formed)?;
@@ -77,6 +63,9 @@ impl LitexToLeanCompiler {
                         "WD/ByKnown",
                         "WD id resolves to another object.",
                     ));
+                }
+                if let Some(term) = position.registered_wd_reference(obj, Some(*wd_id))? {
+                    return Ok(term);
                 }
                 // A beta expansion can cite the cached anonymous body of its
                 // original named declaration. That declaration already emitted
@@ -299,6 +288,9 @@ impl LitexToLeanCompiler {
             }
         }
         match &wd.predicate_domain {
+            PredicateDomainProof::FunctionLimit(_) => {
+                return Err(LeanCompileError::unsupported("WD/FunctionLimitPredicate"))
+            }
             PredicateDomainProof::SequenceLimit(_) => {
                 return Err(LeanCompileError::unsupported("WD/SequenceLimitPredicate"))
             }

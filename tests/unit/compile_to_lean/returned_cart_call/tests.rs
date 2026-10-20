@@ -23,6 +23,7 @@ fn returned_cart_call_replays_both_original_coordinate_domains() {
         .expect("both one-based coordinates replay from the original call's ordered evidence");
     assert!(output.contains("exact M.real_subset_complex _ _litex_real_member"));
     assert!(output.contains("Litex.subInR"));
+    assert!(output.contains(".val.signature"));
 }
 
 #[test]
@@ -89,19 +90,36 @@ fn returned_cart_call_wd_lets_only_reuse_emitted_original_children() {
     assert!(after_first.bound_wd_child(owner).is_none());
     let outside = SourcePosition::new(None, SourceOwner::WD(owner), usize::MAX);
     assert!(outside.bound_wd_child(first).is_none());
-    let requirement = &call.requirement_fact_verified[0];
-    let before_requirements = SourcePosition::new(
+}
+
+#[test]
+fn returned_cart_call_output_reuse_requires_the_original_application_and_wd() {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let (mut result, _) = super::execute(SOURCE);
+    let fact = super::forall_proof_mut(&mut result.statement_results[1]);
+    let conclusion = &fact.proved_then_facts[0];
+    let VerifyFactResult::Equality(equality) = &conclusion.verify_result else {
+        panic!("equality")
+    };
+    let VerifyEqualityResult::Success(equality) = equality.as_ref() else {
+        panic!("successful equality")
+    };
+    let ObjWellDefinedProof::ByDef {
+        obj: Obj::FnObj(application),
+        proof: ObjWellDefinedProofByDef::FnObj(call),
+    } = &equality.well_defined_proof.left
+    else {
+        panic!("original call WD")
+    };
+    let emitted = SourcePosition::new(
         None,
-        SourceOwner::WDLocals(owner, call.child_obj_well_defined.len()),
+        SourceOwner::FormedSubjects(&conclusion.verify_result, &conclusion.store_and_infer),
         0,
     );
-    assert!(!before_requirements.has_bound_verify(requirement));
-    let after_requirement = SourcePosition::new(
-        None,
-        SourceOwner::WDLocals(owner, call.child_obj_well_defined.len() + 1),
-        0,
-    );
-    assert!(after_requirement.has_bound_verify(requirement));
-    assert!(!after_requirement.has_bound_verify(&call.requirement_fact_verified[1]));
-    assert!(!outside.has_bound_verify(requirement));
+    assert!(emitted.bound_fn_call(application, call).is_some());
+    let mut different = application.clone();
+    different.body[0].swap(0, 1);
+    assert!(emitted.bound_fn_call(&different, call).is_none());
+    let outside = SourcePosition::new(None, SourceOwner::Verify(&conclusion.verify_result), 0);
+    assert!(outside.bound_fn_call(application, call).is_none());
 }

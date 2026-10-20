@@ -1,0 +1,12 @@
+# Must reject normally: local sparse.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_local_sparse.lit
+
+thm sparse_s:
+    ? forall af,bf fn(x R) R,L R:
+        $has_limit_left(af,0,L)
+        forall x {-1}:
+            af(x)=bf(x)
+        =>:
+            $has_limit_left(bf,0,L)
+    release thm fn_limit_left_real_accumulation(0)
+    by thm fn_limit_left_local_equal(af,bf,0,L,1) => $has_limit_left(bf,0,L)

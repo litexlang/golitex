@@ -85,4 +85,5 @@ pub mod by_reciprocal_trig;
 
 pub mod by_symmetric_difference;
 
+pub mod by_function_limit;
 pub mod by_sequence_limit;

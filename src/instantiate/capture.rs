@@ -55,6 +55,10 @@ pub fn collect_free_plain_ids(
     out: &mut HashSet<IdentifierId>,
 ) {
     match obj {
+        Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(a)) => {
+            collect_free_plain_ids(&a.function, bound, out);
+            collect_free_plain_ids(a.approach.point(), bound, out);
+        }
         Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(a)) => {
             collect_free_plain_ids(&a.sequence, bound, out)
         }

@@ -9875,6 +9875,23 @@ forall a seq(R), L R:
         lim(a) $in R
 ```
 
+### Finite-point real function limits (preview)
+
+`$has_limit_at(f,x0,L)` includes both nontrivial approach through the actual
+unary real domain and punctured epsilon-delta control. After a candidate or
+finite existence proof, `lim(f,x0)` selects the unique real value. The point
+need not belong to the domain; empty or isolated domains supply no vacuous
+limit. WD consumes proof and never discovers a limit from the function body.
+See [Function limits](function-limits.md) for explicit BT calls and examples.
+
+```litex
+forall f fn(x R) R, x0,L R:
+    $has_limit_at(f,x0,L)
+    =>:
+        lim(f,x0) = L
+        lim(f,x0) $in R
+```
+
 ### Native elementary operation additions
 
 See [Native elementary operations](native-elementary-operators.md) for `conj`,

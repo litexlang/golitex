@@ -1,0 +1,76 @@
+# Tracer: left/right limits of a jump and ordinary-limit nonexistence.
+# Before (native one-sided values did not exist):
+# have fn jump(x R:x!=0) R=abs(x)/x
+# lim_left(jump,0)=-1
+# Former rejection: parse_error: undefined name `lim_left`.
+# Now: prove each side's accumulation and epsilon-delta control before selection.
+# Boundary: the two values differ; no ordinary finite candidate exists.
+# Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_sides.lit
+
+have fn jump(x R:x!=0) R=abs(x)/x
+
+claim:
+    ? forall r R+:
+        exist x {t R:t!=0} st {0<0-x and 0-x<r}
+    0<r/2<r
+    -r<0
+    -r $in R
+    -r/2<0
+    -r/2!=0
+    0-(-r/2)=r/2
+    witness exist x {t R:t!=0} st {0<0-x and 0-x<r} from -r/2
+
+claim:
+    ? forall epsilon R+:
+        exist delta R+ st {{x {t R:t!=0}:0<0-x and 0-x<delta} $subset preimage_set(jump,{v R:abs(v-(-1))<epsilon})}
+    witness exist delta R+ st {{x {t R:t!=0}:0<0-x and 0-x<delta} $subset preimage_set(jump,{v R:abs(v-(-1))<epsilon})} from epsilon:
+        claim:
+            ? forall x {t {s R:s!=0}:0<0-t and 0-t<epsilon}:
+                x $in preimage_set(jump,{v R:abs(v-(-1))<epsilon})
+            x $in {s R:s!=0}
+            x $in R
+            x!=0
+            x<0
+            abs(x)=-x
+            x/x=1
+            jump(x)=abs(x)/x=(-x)/x=-(x/x)=-1
+            abs(jump(x)-(-1))=0<epsilon
+            jump(x) $in {v R:abs(v-(-1))<epsilon}
+        by def {x {t R:t!=0}:0<0-x and 0-x<epsilon} $subset preimage_set(jump,{v R:abs(v-(-1))<epsilon})
+
+by def $has_limit_left(jump,0,-1)
+
+lim_left(jump,0)=-1
+
+claim:
+    ? forall r R+:
+        exist x {t R:t!=0} st {0<x-0 and x-0<r}
+    0<r/2<r
+    r/2!=0
+    witness exist x {t R:t!=0} st {0<x-0 and x-0<r} from r/2
+
+claim:
+    ? forall epsilon R+:
+        exist delta R+ st {{x {t R:t!=0}:0<x-0 and x-0<delta} $subset preimage_set(jump,{v R:abs(v-(1))<epsilon})}
+    witness exist delta R+ st {{x {t R:t!=0}:0<x-0 and x-0<delta} $subset preimage_set(jump,{v R:abs(v-(1))<epsilon})} from epsilon:
+        claim:
+            ? forall x {t {s R:s!=0}:0<t-0 and t-0<epsilon}:
+                x $in preimage_set(jump,{v R:abs(v-(1))<epsilon})
+            x $in {s R:s!=0}
+            x $in R
+            x!=0
+            0<x
+            abs(x)=x
+            x/x=1
+            jump(x)=abs(x)/x=x/x=1
+            abs(jump(x)-(1))=0<epsilon
+            jump(x) $in {v R:abs(v-(1))<epsilon}
+        by def {x {t R:t!=0}:0<x-0 and x-0<epsilon} $subset preimage_set(jump,{v R:abs(v-(1))<epsilon})
+
+by def $has_limit_right(jump,0,1)
+
+lim_right(jump,0)=1
+
+lim_left(jump,0)+lim_right(jump,0)=0
+
+release thm fn_limit_sides_mismatch(jump,0,-1,1)

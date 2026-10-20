@@ -1,0 +1,15 @@
+# Explicit finite-point function-limit theorem; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_divide.lit
+
+thm fn_limit_at_divide_example:
+    ? forall fa,ga,ha fn(x R) R,x0,A,B R:
+        $has_limit_at(fa,x0,A)
+        $has_limit_at(ga,x0,B)
+        B!=0
+        forall x R:
+            ga(x)!=0
+        forall x R:
+            ha(x)=fa(x)/ga(x)
+        =>:
+            $has_limit_at(ha,x0,A/B)
+    release thm fn_limit_at_divide(fa,ga,ha,x0,A,B)

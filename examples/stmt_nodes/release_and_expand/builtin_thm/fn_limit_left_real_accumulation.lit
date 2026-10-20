@@ -1,0 +1,4 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_left_real_accumulation.lit
+
+release thm fn_limit_left_real_accumulation(0)

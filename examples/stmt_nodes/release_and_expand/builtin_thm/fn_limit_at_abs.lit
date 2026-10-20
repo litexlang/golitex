@@ -1,0 +1,11 @@
+# Explicit finite-point function-limit theorem; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_abs.lit
+
+thm fn_limit_at_abs_example:
+    ? forall fa,ha fn(x R) R,x0,A R:
+        $has_limit_at(fa,x0,A)
+        forall x R:
+            ha(x)=abs(fa(x))
+        =>:
+            $has_limit_at(ha,x0,abs(A))
+    release thm fn_limit_at_abs(fa,ha,x0,A)

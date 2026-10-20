@@ -28,6 +28,14 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
         match obj {
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(a)) => {
+                Ok(crate::ast::obj::FunctionLimit::with_approach(
+                    self.inst_obj_rec(&a.function, param_to_arg_map)?,
+                    a.approach
+                        .with_point(self.inst_obj_rec(a.approach.point(), param_to_arg_map)?),
+                )
+                .into())
+            }
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(a)) => {
                 Ok(crate::ast::obj::SequenceLimit::new(
                     self.inst_obj_rec(&a.sequence, param_to_arg_map)?,

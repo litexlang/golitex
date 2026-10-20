@@ -1,0 +1,5 @@
+# Must fail: finite-point function limit nonreal domain.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_nonreal_domain.lit
+
+have fn nonreal_input_function(x C) R=0
+$has_limit_at(nonreal_input_function,0,0)

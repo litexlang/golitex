@@ -77,15 +77,17 @@ independence makes them unique. The notes prove the standard expansion and
 
 `is_finite_dimensional` expresses the existence of a finite spanning list.
 `has_basis_length(..., n)` expresses the existence of a basis with length `n`.
-The plane has such a basis with length two. Defining a general dimension
-requires the further theorems that finite-dimensional spaces have bases and
-that any two bases have equal length.
+The plane has such a basis with length two, and has no basis of length one
+(so the concrete dimension picture is already pinned between these bounds).
+Defining a general dimension still requires that every finite-dimensional
+space has a basis and that any two bases have equal length.
 
 Ordered-list relations `is_prefix_of_length` and `is_list_with_index_removed`
-prepare the dependence lemma: linear dependence is the negation of
-independence, and a nontrivial zero combination supplies coefficients for
-selecting a redundant vector. The general selection and span-preserving
-deletion theorems are not yet proved.
+support the dependence lemma. Linear dependence is the negation of
+independence. For length two, `dependence_lemma_length_two` selects the
+largest nonzero coefficient index and places that vector in the span of the
+preceding prefix. `span_of_dependent_pair_reduces` then shows that every
+combination of the pair already lies in that prefix span.
 
 ## Linear maps
 
@@ -93,4 +95,7 @@ deletion theorems are not yet proved.
 over the same field. Kernels and ranges reuse the builtin sets
 `preimage(T, zero)` and `fn_range(T)`. Composition is the template
 `map_compose`. The projection onto the horizontal axis is the running example:
-its kernel is the vertical axis and its range is the horizontal axis.
+its kernel is the vertical axis and its range is the horizontal axis. Chapter 4
+records the corresponding eigenvector equations, the Euclidean `dot`
+product with orthonormality of `e1` and `e2`, and the matrix of projection
+relative to the standard basis (columns are the images of `e1` and `e2`).

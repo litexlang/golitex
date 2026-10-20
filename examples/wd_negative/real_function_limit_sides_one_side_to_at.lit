@@ -1,0 +1,7 @@
+# Must reject normally: one side to at.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_one_side_to_at.lit
+
+forall af fn(x R) R,p,L R:
+    $has_limit_left(af,p,L)
+    =>:
+        $has_limit_at(af,p,L)

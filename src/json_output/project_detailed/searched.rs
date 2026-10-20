@@ -875,6 +875,11 @@ fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runti
 
 fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtime) -> JsonValue {
     let (kind, requirements, proofs) = match proof {
+        BuiltinPropDefinitionProof::FunctionLimit(p) => (
+            "FunctionLimit",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::SequenceLimit(p) => (
             "SequenceLimit",
             &p.requirement_facts,

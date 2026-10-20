@@ -1,0 +1,7 @@
+# Must reject normally: wrong point.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_wrong_point.lit
+
+forall af fn(x R) R,p,L R:
+    $has_limit_right(af,p,L)
+    =>:
+        lim_right(af,p+1)=L

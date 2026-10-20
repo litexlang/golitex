@@ -1,0 +1,11 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_right_scale.lit
+
+thm fn_limit_right_scale_example:
+    ? forall fa,ha fn(x R) R,x0,A R,c R:
+        $has_limit_right(fa,x0,A)
+        forall x R:
+            ha(x)=c*fa(x)
+        =>:
+            $has_limit_right(ha,x0,c*A)
+    release thm fn_limit_right_scale(fa,ha,x0,A,c)

@@ -24,7 +24,8 @@ mod wrap_obj_well_defined_by_def;
 pub use entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 pub use fail_to_verify_obj_well_defined::{
     fail_to_verify_obj_well_defined_others, FailToVerifyFnSetObjWellDefined,
-    FailToVerifyFunctionSpaceObjWellDefinedResult, FailToVerifyLimitOperatorObjWellDefinedResult,
-    FailToVerifyObjWellDefinedResult, FailToVerifySequenceLimitObjWellDefined,
+    FailToVerifyFunctionLimitObjWellDefined, FailToVerifyFunctionSpaceObjWellDefinedResult,
+    FailToVerifyLimitOperatorObjWellDefinedResult, FailToVerifyObjWellDefinedResult,
+    FailToVerifySequenceLimitObjWellDefined,
 };
 pub use obj_well_defined_proof_by_def::*;

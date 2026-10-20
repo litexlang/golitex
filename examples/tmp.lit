@@ -1,16 +1,12 @@
-# Temporary scratch file for Litex probes.
-litex -session 
+# Probe: empty finite_set_reduce with explicit unordered-fold laws (non-numeric carrier shape).
+# Gate: target/release/litex -lang en -strict -f examples/tmp.lit
 
->>> have fn vec_add(a, b) cart(R, R) = (a(1) + b(1) , a(2) + b(2))
-
-Litex: error a, b cart(R, R)
-
->>> have fn vec_add(a, b cart(R, R)) cart(R, R) = (a(1) + b(1) , a(2) + b(2))
-
-Litex: accepted
-
->>> ...
-
-```geo.lit
-have fn vec_add(a, b cart(R, R)) cart(R, R) = (a(1) + b(1) , a(2) + b(2))
-```
+thm empty_fold_with_laws:
+    ? forall E nonempty_set, add fn(x, y E) E, zero E, term fn(selected N) E:
+        forall x, y E:
+            add(x, y) = add(y, x)
+        forall x, y, z E:
+            add(add(x, y), z) = add(x, add(y, z))
+        =>:
+            finite_set_reduce({}, term, add, zero) = zero
+    finite_set_reduce({}, term, add, zero) = zero

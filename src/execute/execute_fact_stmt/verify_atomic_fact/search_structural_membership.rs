@@ -213,6 +213,7 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
     use StandardSet::*;
     Some(match element {
         Obj::LimitOperator(LimitOperator::Sequence(_)) => (R, K::SequenceLimit),
+        Obj::LimitOperator(LimitOperator::Function(_)) => (R, K::FunctionLimit),
         Obj::ArithmeticOperator(v) => match v {
             ArithmeticOperator::Floor(_) => (Z, K::Floor),
             ArithmeticOperator::Ceil(_) => (Z, K::Ceil),

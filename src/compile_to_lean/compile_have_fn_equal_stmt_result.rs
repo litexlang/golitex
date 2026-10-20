@@ -111,7 +111,9 @@ impl LitexToLeanCompiler {
         let name = format!("_object_i{}", proof.statement.name.id.value());
         let object = self.context_application(&name, &after_definition);
         let member = (
-            self.fact_proposition(&membership, &after_member)?,
+            // Formation above checked this exact signature. Its stored field
+            // avoids printing the complete domain/guard a second time.
+            format!("Litex.In {object} (Litex.fnSet ({object}).val.signature)"),
             format!("(Litex.formulaFnInFnSet {object})"),
         );
         let member_declaration = self.emit_internal_fact(&membership, &member, &after_member)?;

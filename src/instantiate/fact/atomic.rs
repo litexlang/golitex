@@ -235,6 +235,28 @@ impl Runtime {
                 right: self.inst_obj_rec(&f.right, param_to_arg_map)?,
                 line_file: f.line_file.clone(),
             })),
+            AtomicFact::HasFunctionLimitFact(f) => Ok(crate::ast::fact::HasFunctionLimitFact {
+                fact_id,
+                function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                approach: f
+                    .approach
+                    .with_point(self.inst_obj_rec(f.approach.point(), param_to_arg_map)?),
+                value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotHasFunctionLimitFact(f) => {
+                Ok(crate::ast::fact::NotHasFunctionLimitFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    approach: f
+                        .approach
+                        .with_point(self.inst_obj_rec(f.approach.point(), param_to_arg_map)?),
+                    value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
             AtomicFact::HasSequenceLimitFact(f) => Ok(crate::ast::fact::HasSequenceLimitFact {
                 fact_id,
                 sequence: self.inst_obj_rec(&f.sequence, param_to_arg_map)?,

@@ -1,0 +1,12 @@
+# Explicit finite-point function-limit theorem; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_compare.lit
+
+thm fn_limit_at_compare_example:
+    ? forall fa,ga fn(x R) R,x0,A,B R,r R+:
+        $has_limit_at(fa,x0,A)
+        $has_limit_at(ga,x0,B)
+        forall x {t R:0<abs(t-x0) and abs(t-x0)<r}:
+            fa(x)<=ga(x)
+        =>:
+            A<=B
+    release thm fn_limit_at_compare(fa,ga,x0,A,B,r)

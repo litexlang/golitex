@@ -1470,10 +1470,21 @@ impl SymmetricDifferenceObjWellDefinedProof {
 }
 
 pub enum LimitOperatorObjWellDefinedProofByDef {
+    Function(FunctionLimitObjWellDefinedProof),
     Sequence(SequenceLimitObjWellDefinedProof),
 }
 pub struct SequenceLimitObjWellDefinedProof {
     pub sequence_wd: Box<ObjWellDefinedProof>,
     pub sequence_domain: crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof,
     pub convergence: crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof,
+}
+
+pub struct FunctionLimitObjWellDefinedProof {
+    pub approach: crate::ast::obj::LimitApproach,
+    pub function_wd: Box<ObjWellDefinedProof>,
+    pub point_wd: Box<ObjWellDefinedProof>,
+    pub function_domain:
+        crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof,
+    pub point_real: Box<VerifyFactResult>,
+    pub convergence: crate::execute::execute_fact_stmt::function_limit::FunctionConvergenceProof,
 }

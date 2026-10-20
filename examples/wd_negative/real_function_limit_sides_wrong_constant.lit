@@ -1,0 +1,6 @@
+# Must reject normally: wrong constant.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_wrong_constant.lit
+
+have fn wrong_const_s(x R) R=11
+release thm fn_limit_right_real_accumulation(0)
+release thm fn_limit_right_constant(wrong_const_s,0,12)

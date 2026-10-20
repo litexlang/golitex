@@ -38,6 +38,35 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
+            AtomicFact::HasFunctionLimitFact(f) => {
+                let Some(domain) =
+                    self.checked_real_function_limit_domain(&f.function, verify_state)?
+                else {
+                    return Ok(Err(DefinitionProofFailed::Unavailable));
+                };
+                let accumulation =
+                    self.function_limit_accumulation(domain.domain.clone(), f.approach.clone());
+                let epsilon = self.function_limit_epsilon(
+                    f.function.clone(),
+                    domain.domain,
+                    f.approach.clone(),
+                    f.value.clone(),
+                );
+                match self
+                    .verify_definition_requirements(vec![accumulation, epsilon], verify_state)?
+                {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::FunctionLimit(
+                            super::result::BuiltinFunctionLimitDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
+
             AtomicFact::HasSequenceLimitFact(f) => {
                 let epsilon_fact =
                     self.sequence_limit_epsilon_fact(f.sequence.clone(), f.value.clone());

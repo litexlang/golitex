@@ -1,0 +1,11 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_left_power.lit
+
+thm fn_limit_left_power_example:
+    ? forall fa,ha fn(x R) R,x0,A R,m N:
+        $has_limit_left(fa,x0,A)
+        forall x R:
+            ha(x)=fa(x)^m
+        =>:
+            $has_limit_left(ha,x0,A^m)
+    release thm fn_limit_left_power(fa,ha,x0,A,m)

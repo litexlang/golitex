@@ -40,6 +40,12 @@ impl LitexToLeanCompiler {
         let mut definitions = Vec::new();
         let mut values = Vec::new();
         let mut sethood = Vec::new();
+        let leaves = arguments.iter().all(|argument| {
+            matches!(
+                argument.as_ref(),
+                Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+            )
+        });
         for (index, (argument, wd)) in arguments.iter().zip(children).enumerate() {
             ensure_object(argument, wd)?;
             let child = self.compile_wd(
@@ -49,12 +55,26 @@ impl LitexToLeanCompiler {
                     ..*position
                 },
             )?;
-            let name = format!("_productChild_{index}");
-            definitions.push(format!("let {name} := {child}"));
+            let name = if leaves {
+                child
+            } else {
+                let name = format!("_productChild_{index}");
+                definitions.push(format!("let {name} := {child}"));
+                name
+            };
             values.push(format!("Litex.denote {name}"));
-            sethood.push(format!("Litex.isSet {name}"));
+            sethood.push(format!("(Litex.isSet {name})"));
         }
-        let h_sets = finite_vector_proof(&sethood);
+        let h_sets = if leaves {
+            sethood
+                .iter()
+                .rev()
+                .fold("(fun i => Fin.elim0 i)".to_owned(), |tail, proof| {
+                    format!("(Fin.cases {proof} {tail})")
+                })
+        } else {
+            finite_vector_proof(&sethood)
+        };
         let term = format!(
             "Litex.{constructor} (M := M) ![{}] {h_sets}",
             values.join(", ")

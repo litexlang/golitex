@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
@@ -13,17 +13,36 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         match result {
             ExecFactStmtResult::Success(success) => {
-                let compiled = self.compile_verify(&success.verify_result, position)?;
                 let source = source_subject(&success.verify_result)?;
-                self.validate_store(&success.store_and_infer_result.store, &source)?;
-                self.compile_completed_fact_statement(
+                let registered = self.compile_formed_subjects(
+                    &success.verify_result,
+                    &success.store_and_infer_result,
+                    position,
+                    local,
+                )?;
+                let formed = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::FormedSubjects(
+                        &success.verify_result,
+                        &success.store_and_infer_result,
+                    ),
+                    0,
+                );
+                let compiled = self.compile_verify(&success.verify_result, &formed)?;
+                let compiled = self.compile_completed_fact_statement(
                     &source,
                     compiled,
                     &success.store_and_infer_result,
                     position,
                     index,
                     local,
-                )
+                )?;
+                // The store's inference can cite these newly formed objects.
+                Ok(registered
+                    .into_iter()
+                    .chain([compiled])
+                    .collect::<Vec<_>>()
+                    .join("\n\n"))
             }
             ExecFactStmtResult::Failed(_) => Err(LeanCompileError::new(
                 "Fact/Failed",

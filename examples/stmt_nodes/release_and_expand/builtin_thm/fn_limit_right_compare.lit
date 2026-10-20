@@ -1,0 +1,12 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_right_compare.lit
+
+thm fn_limit_right_compare_example:
+    ? forall fa,ga fn(x R) R,x0,A,B R,r R+:
+        $has_limit_right(fa,x0,A)
+        $has_limit_right(ga,x0,B)
+        forall x {t R:0<t-x0 and t-x0<r}:
+            fa(x)<=ga(x)
+        =>:
+            A<=B
+    release thm fn_limit_right_compare(fa,ga,x0,A,B,r)

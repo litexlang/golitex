@@ -127,6 +127,14 @@ impl LitexToLeanCompiler {
             | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => fn_set,
             _ => return Err(LeanCompileError::unsupported("WD/FnObj/DomainEvidence")),
         };
+        if application.body.len() == 1 {
+            if let Some(call) = position.bound_fn_call(application, proof) {
+                // This exact original WD node was already checked and emitted.
+                // Its output theorem projects the same call's stored WD.
+                let member = self.compile_call_output_proof(application, proof, &call)?;
+                return Ok((call, signature.ret_set.as_ref().clone(), member));
+            }
+        }
         let parameter_count: usize = signature
             .set_bound_parameters
             .groups
@@ -275,7 +283,26 @@ impl LitexToLeanCompiler {
             before: child_count + first_requirement_count,
             ..*position
         };
-        let compiled_signature = self.compile_fn_signature(signature, &formed)?;
+        // A named formula already owns this exact checked signature. Project it
+        // instead of expanding the domain, target and guard at every call.
+        let named_signature = match (&head, evidence) {
+            (
+                Obj::Identifier(IdentifierObj::Plain { id, .. }),
+                FnObjDomainFnSetEvidence::InFunctionSet { fact_id, .. },
+            ) => formed
+                .visible_function(id)
+                .ok()
+                .is_some_and(|(declaration, _, _)| {
+                    *fact_id == declaration.store_and_infer_result.membership_fact_id
+                        && &declaration.statement.equal_to_anonymous_fn.body == signature
+                }),
+            _ => false,
+        };
+        let compiled_signature = if named_signature {
+            format!("({head_term}).val.signature")
+        } else {
+            self.compile_fn_signature(signature, &formed)?
+        };
         let guard = self.compile_function_guard_template(signature, &formed)?;
         let membership = match evidence {
             FnObjDomainFnSetEvidence::AnonymousLiteral { .. } => {
@@ -387,11 +414,18 @@ impl LitexToLeanCompiler {
                     &guard_proof,
                     &formed,
                 )?;
-            let output_set = self.compile_object_reference(&signature.ret_set, &formed)?;
-            let packed_guard = self.compile_function_packed_guard_template(signature, &formed)?;
-            let call = format!(
-                "(let {bindings};\nLitex.callOnDomain {domain} {output_set} {packed_guard} {head_term} {argument} {membership} {base_member} {packed_guard_proof})"
-            );
+            let call = if named_signature {
+                format!(
+                    "(let {bindings};\nLitex.callOn {compiled_signature} {head_term} {argument} {membership} ((Litex.SetSemantics.sep_members (M := M) _ _ _).mpr ⟨{base_member}, {packed_guard_proof}⟩))"
+                )
+            } else {
+                let output_set = self.compile_object_reference(&signature.ret_set, &formed)?;
+                let packed_guard =
+                    self.compile_function_packed_guard_template(signature, &formed)?;
+                format!(
+                    "(let {bindings};\nLitex.callOnDomain {domain} {output_set} {packed_guard} {head_term} {argument} {membership} {base_member} {packed_guard_proof})"
+                )
+            };
             let member = format!("(Litex.callOnInOutput {call})");
             return Ok((call, output, member));
         }

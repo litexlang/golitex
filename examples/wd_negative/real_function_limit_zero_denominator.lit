@@ -1,0 +1,9 @@
+# Must fail: finite-point function limit zero denominator.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_zero_denominator.lit
+
+have fn quotient_one(x R) R=1
+have fn quotient_zero(x R) R=0
+release thm fn_limit_at_real_accumulation(0)
+release thm fn_limit_at_constant(quotient_one,0,1)
+release thm fn_limit_at_constant(quotient_zero,0,0)
+release thm fn_limit_at_divide(quotient_one,quotient_zero,quotient_one,0,1,0)

@@ -1,0 +1,5 @@
+# Must fail: finite-point function limit without proof.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_without_proof.lit
+
+have fn unproved_limit_function(x R) R=17
+lim(unproved_limit_function,0)=17

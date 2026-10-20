@@ -1,0 +1,6 @@
+# Must fail: finite-point function limit isolated domain.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_isolated_domain.lit
+
+have fn isolated_limit_function(x {0}) R=29
+release thm fn_limit_at_real_accumulation(0)
+release thm fn_limit_at_constant(isolated_limit_function,0,29)

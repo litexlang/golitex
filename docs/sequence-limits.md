@@ -95,8 +95,10 @@ prove a candidate or its WD does not prove its negation.
 
 ## Scope and compatibility
 
-Only finite limits of real sequences are included. Function-at-point,
-one-sided, infinite-input, infinite-output, limsup and liminf interfaces are
+This page covers finite limits of real sequences. The delivered
+[finite-point function interface](function-limits.md) uses `lim(f,x0)` and
+`$has_limit_at(f,x0,L)` with the same proof-first selection contract.
+One-sided, infinite-input, infinite-output, limsup and liminf interfaces remain
 separate increments. `lim(a)` is an object constructor, not a higher-order
 function value that can be passed without its argument.
 

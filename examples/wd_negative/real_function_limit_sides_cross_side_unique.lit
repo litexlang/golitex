@@ -1,0 +1,10 @@
+# Must reject normally: cross side unique.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_cross_side_unique.lit
+
+thm cross_unique_s:
+    ? forall af fn(x R) R,p,A,B R:
+        $has_limit_left(af,p,A)
+        $has_limit_right(af,p,B)
+        =>:
+            A=B
+    release thm fn_limit_left_unique(af,p,A,B)

@@ -218,6 +218,12 @@ impl LitexToLeanCompiler {
             ));
         };
         let family_matches = match infer {
+            InferAtomicFactResult::HasFunctionLimitFact(_) => {
+                matches!(atomic, AtomicFact::HasFunctionLimitFact(_))
+            }
+            InferAtomicFactResult::NotHasFunctionLimitFact(_) => {
+                matches!(atomic, AtomicFact::NotHasFunctionLimitFact(_))
+            }
             InferAtomicFactResult::HasSequenceLimitFact(_) => {
                 matches!(atomic, AtomicFact::HasSequenceLimitFact(_))
             }
@@ -325,6 +331,10 @@ impl LitexToLeanCompiler {
             ));
         }
         match infer {
+            InferAtomicFactResult::HasFunctionLimitFact(_)
+            | InferAtomicFactResult::NotHasFunctionLimitFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/FunctionLimit"))
+            }
             InferAtomicFactResult::HasSequenceLimitFact(_)
             | InferAtomicFactResult::NotHasSequenceLimitFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/SequenceLimit"))

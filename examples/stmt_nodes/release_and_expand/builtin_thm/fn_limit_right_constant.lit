@@ -1,0 +1,11 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_right_constant.lit
+
+thm fn_limit_right_constant_example:
+    ? forall fa fn(x R) R,x0,c R:
+        forall x R:
+            fa(x)=c
+        =>:
+            $has_limit_right(fa,x0,c)
+    release thm fn_limit_right_real_accumulation(x0)
+    by thm fn_limit_right_constant(fa,x0,c) => $has_limit_right(fa,x0,c)

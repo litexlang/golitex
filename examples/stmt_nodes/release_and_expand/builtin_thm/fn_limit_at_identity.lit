@@ -1,0 +1,7 @@
+# Explicit finite-point function-limit theorem; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_identity.lit
+
+have fn identity_example_function(x R) R=x
+release thm fn_limit_at_real_accumulation(0)
+release thm fn_limit_at_identity(identity_example_function,0)
+lim(identity_example_function,0)=0

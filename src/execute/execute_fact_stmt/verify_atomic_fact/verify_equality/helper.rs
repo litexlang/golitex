@@ -61,6 +61,13 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
 
     match (left, right) {
         (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(r)),
+        ) if l.approach.same_direction(&r.approach) => Some(vec![
+            (*l.function.clone(), *r.function.clone()),
+            (l.approach.point().clone(), r.approach.point().clone()),
+        ]),
+        (
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(r)),
         ) => Some(vec![(*l.sequence.clone(), *r.sequence.clone())]),

@@ -473,7 +473,6 @@ impl LitexToLeanCompiler {
                     return Err(LeanCompileError::unsupported("Forall/CompoundThen"))
                 }
             };
-            let compiled = self.compile_verify(&proved.verify_result, position)?;
             if source_subject(&proved.verify_result)? != expected {
                 return Err(LeanCompileError::new(
                     "Forall/Then",
@@ -482,6 +481,18 @@ impl LitexToLeanCompiler {
             }
             self.validate_store(&proved.store_and_infer.store, &expected)?;
 
+            definitions.extend(self.compile_formed_subjects(
+                &proved.verify_result,
+                &proved.store_and_infer,
+                position,
+                true,
+            )?);
+            let formed = SourcePosition::new(
+                Some(position),
+                SourceOwner::FormedSubjects(&proved.verify_result, &proved.store_and_infer),
+                0,
+            );
+            let compiled = self.compile_verify(&proved.verify_result, &formed)?;
             definitions.push(self.emit_internal_fact(&expected, &compiled, position)?);
             let complete = SourcePosition {
                 before: head_count + index + 1,

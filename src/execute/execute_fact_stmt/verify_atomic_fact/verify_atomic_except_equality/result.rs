@@ -122,6 +122,7 @@ pub struct UserDefinedPropDefinitionProof {
 
 // One builtin predicate definition ↔ one dedicated evidence struct.
 pub enum BuiltinPropDefinitionProof {
+    FunctionLimit(BuiltinFunctionLimitDefinitionProof),
     SequenceLimit(BuiltinSequenceLimitDefinitionProof),
     Subset(BuiltinSubsetDefinitionProof),
     Superset(BuiltinSupersetDefinitionProof),
@@ -228,4 +229,9 @@ pub fn atomic_except_equality_fact_result_from_success(
 pub struct BuiltinSequenceLimitDefinitionProof {
     pub requirement_facts: Vec<crate::ast::fact::Fact>,
     pub proof_of_requirement_facts: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
+}
+
+pub struct BuiltinFunctionLimitDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

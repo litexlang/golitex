@@ -1,0 +1,6 @@
+# Must reject normally: empty domain.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_empty_domain.lit
+
+have fn empty_s(x {}) R=7
+release thm fn_limit_left_real_accumulation(0)
+release thm fn_limit_left_constant(empty_s,0,7)

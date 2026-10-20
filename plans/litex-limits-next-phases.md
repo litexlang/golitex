@@ -1,7 +1,9 @@
 # Next native limit phases
 
-Date: 2026-10-20. Status: planning only; proposed interfaces and AST additions
-below are not implemented or approved by this planning request.
+Date: 2026-10-20. Status: **F is approved and implemented**; S/I/U remain
+proposals with no implementation authorization. See the
+[F acceptance receipt](litex-function-limit-at-acceptance.md) and
+[live interface documentation](../docs/function-limits.md).
 
 Parent: [native limits](litex-limits.md) and
 [common mathematical operations](litex-latex-math-support.md).
@@ -22,7 +24,7 @@ practical baseline, including unresolved anonymous-function equality reuse.
 
 | Milestone | Proposed values | Proposed candidate relations | Completion boundary |
 | --- | --- | --- | --- |
-| F | `lim(f,x0)` | `$has_limit_at(f,x0,L)` | Finite-point, relative punctured limits of unary real-valued functions |
+| F — delivered | `lim(f,x0)` | `$has_limit_at(f,x0,L)` | Finite-point, relative punctured limits of unary real-valued functions |
 | S | `lim_left(f,x0)`, `lim_right(f,x0)` | `$has_limit_left(f,x0,L)`, `$has_limit_right(f,x0,L)` | Each side's own approach, algebra and ordinary/one-sided bridge |
 | I | `lim_pos_inf(f)`, `lim_neg_inf(f)` | `$has_limit_pos_inf(f,L)`, `$has_limit_neg_inf(f,L)` | Unbounded input approach; output still in `R` |
 | U | `limsup(a)`, `liminf(a)` | `$has_seq_limsup(a,L)`, `$has_seq_liminf(a,L)` | Finite values, with existence theorems and first acceptance focused on bounded real sequences |
@@ -51,8 +53,10 @@ sample values, or search for a numerical answer. Even constants require an
 explicit convergence theorem or definition proof. A failed proof does not
 establish the negated relation. Negated candidates mean logical negation.
 
-Current native source has only `lim(a)`. The primary F target is this
-**proposed proof/use excerpt, not an executable proof**:
+Native source now supports both `lim(a)` and `lim(f,x0)`. This abbreviated
+proof/use excerpt omits the defining-clause proofs and is **not an executable
+proof**; the [complete F tracer](../examples/wd/real_function_limit_at.lit)
+has passed strict verification:
 
 ```text
 have fn f(x R: x != 0) R = x^2/x
@@ -68,7 +72,7 @@ that radius; on legal nonzero inputs, `x^2/x=x`; for epsilon choose
 selected-value lines must fail for missing evidence. A zero limiting
 denominator is not a quotient-rule proof of this example.
 
-Planned durable tracer: `examples/wd/real_function_limit_at.lit`. Retain the
+Delivered durable tracer: `examples/wd/real_function_limit_at.lit`. Retain the
 old unsupported form as comments, the complete proved route as active code,
 and executable negative controls separately. No proof/WD example may use
 `trust`, a local axiom or an omitted proof.
@@ -175,8 +179,9 @@ unapproved quantifier shapes or recognize user predicates by their names.
 
 ## 4. Explicit BTs and mathematical prerequisites
 
-Names in this section are proposed call families. Their final argument
-contracts must be recorded before implementation; the mathematical premises
+F's final call contracts are recorded in [the live documentation](../docs/function-limits.md).
+S/I/U names remain proposed call families whose final argument contracts
+must be recorded before implementation. The mathematical premises
 below are mandatory regardless of spelling. Every BT retains its real
 premise proofs. Algebra BTs prove candidate facts; selected-value equalities
 follow afterward, rather than supplying their own existence premises.
@@ -205,7 +210,8 @@ signatures and domain obligations are an F checkpoint before coding rules.
 Local transport between different domains needs its own explicit premise:
 on some punctured neighborhood every target input is legal for the source,
 and the two values agree there; the target must accumulate. Agreement only
-on a sparse intersection is insufficient. This is the primary tracer's route.
+on a sparse intersection is insufficient. This is an alternative proof route
+for the primary tracer, whose delivered file uses direct epsilon-delta control.
 
 First F acceptance includes constant/identity, polynomial and rational
 examples, local equality and squeeze. General trigonometric/exponential/log
@@ -273,7 +279,8 @@ U obligation, not permission to add an opaque existence oracle.
 
 ## 5. Semantic decisions proposed for review
 
-These are recommendations, not recorded user approvals.
+The F relative-domain choice below was implemented under the user's stage-F
+approval. Choices specific to S/I/U remain recommendations.
 
 | Decision | Recommendation | Material alternative and cost |
 | --- | --- | --- |
@@ -287,7 +294,13 @@ The proposed native API keeps existing `lim(a)` and adds fixed-arity
 requested native operations/BT evidence. No extra abstraction is needed to
 make that alternative available.
 
-## 6. AST Struct Change Proposal — exact additions, unapproved
+## 6. AST scope — F approved; S/I/U proposed
+
+The user explicitly approved the first stage on 2026-10-20. Only
+`Function(FunctionLimit)`, `FunctionLimit`, `LimitApproach::AtPoint`, and
+`HasFunctionLimitFact` / `NotHasFunctionLimitFact` below have been added.
+The full sketch also displays later, unapproved S/I/U additions; none of
+those dormant variants or payloads have been added.
 
 Existing `SequenceLimit`, `HasSequenceLimitFact` and
 `NotHasSequenceLimitFact` retain their current fields. Extend the existing
@@ -359,8 +372,8 @@ or permanent display binders. Stage-ordered execution/proof results own the
 checked callable/domain, quantified approach/control, candidate/existence
 and uniqueness evidence, including local scopes and source FactIds.
 No existing payload field, Stmt, Identifier or Env/Runtime contract changes.
-Exact AST authorization is required before implementation; the earlier
-sequence-only approval does not cover these additions.
+Further AST authorization is required before S/I/U implementation. Neither
+the earlier sequence-only approval nor the later F approval covers them.
 
 ## 7. Owners and dependency order
 
@@ -458,7 +471,7 @@ Build/test only the new branch producers and directly affected consumers,
 the saved files and affected executable docs. Rust test filters must match
 actual registrations. No blanket release or local textbook gate is implied.
 
-## 9. Planning evidence and next handoff
+## 9. Planning evidence and implementation handoff
 
 This plan uses read-only source inspection of the native sequence/domain/
 completeness interfaces and the calculus/Analysis designs. The old calculus
@@ -467,7 +480,8 @@ explicit foundational assumptions. Reading either is not new verification.
 
 Planning acceptance consists of mathematical/domain/decision audits, local
 link and fence checks, whitespace checks and a scoped file-change audit.
-No future syntax, AST proposal, BT call or proof here has been executed.
+At that planning checkpoint no future syntax, AST proposal, BT call or proof
+here had been executed. The later F receipt below supersedes that status for F.
 
 Planning checks on 2026-10-20 passed for this continuation and both parent
 plans: 50 local links/anchors resolve, 16 non-executable code fences are
@@ -475,8 +489,12 @@ balanced, all seven proposed value spellings are present, and scoped
 whitespace checks pass. This task edits only those three planning documents;
 prior examples and concurrent compiler/showcase work remain outside its delta.
 
-Next implementation handoff is F only: settle relative-domain semantics and
-approve its exact Function/AtPoint and two Fact additions; finalize the F BT
-argument contracts; implement the punctured candidate-and-selection tracer.
-S/I/U remain separately reviewable increments rather than automatic scope
-expansion. Planning completion does not claim those implementations complete.
+F delivery is complete: proof-consuming WD, 22 explicit BT contracts, strict
+positive/negative examples, recursive/output consumers, and an explicit
+unsupported Lean boundary. Exact validation and remaining limits are recorded
+in the [F receipt](litex-function-limit-at-acceptance.md). The requested goal
+skill is installed as `$litex-function-limit-at`.
+
+S is next in the proposed delivery order. Its approach variants and bridge
+rules still require their own approval and implementation; S/I/U remain
+separately reviewable increments rather than automatic scope expansion.

@@ -12,13 +12,17 @@ impl Runtime {
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<StoreFactAndInferResult> {
         let store = self.store_fact(fact)?;
-        self.remember_formed_atomic_subjects(fact);
+        let formed_subjects = self.remember_formed_atomic_subjects(fact);
         let infer = if verify_state.allows_inference() {
             Some(self.infer_fact(fact, verify_state)?)
         } else {
             None
         };
-        Ok(StoreFactAndInferResult { store, infer })
+        Ok(StoreFactAndInferResult {
+            store,
+            formed_subjects,
+            infer,
+        })
     }
 }
 

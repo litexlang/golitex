@@ -1,17 +1,22 @@
 # Native limits: mathematical and implementation plan
 
-Date: 2026-10-20. Status: the sequence-only increment below is implemented;
-its acceptance receipt is recorded separately below. The broader function,
-one-sided, infinity and limsup/liminf roadmap remains a design proposal.
+Date: 2026-10-20. Status: the sequence increment and stage F finite-point
+function limits are implemented. The sequence receipt is below; see the
+[F receipt](litex-function-limit-at-acceptance.md) for the later delivery.
+One-sided, infinity and limsup/liminf scope remains a design proposal.
 
 Parent: [common LaTeX mathematics roadmap](litex-latex-math-support.md).
 
-Next work: [four-phase continuation plan](litex-limits-next-phases.md) for
-finite-point function limits, one-sided limits, approaches to infinity, and
-finite sequence limsup/liminf. That continuation is the current proposal for
-those increments and preserves the delivered proof-first WD contract.
+The [four-phase continuation](litex-limits-next-phases.md) records delivered
+F and proposed S/I/U. Current interfaces are documented for
+[sequences](../docs/sequence-limits.md) and
+[finite-point functions](../docs/function-limits.md); both require convergence
+evidence before selected-value use.
 
-## Current execution scope — real sequence limits only
+## Earlier execution scope — real sequence limits only
+
+This section records the first increment. The later F authorization/delivery
+is separate and does not retroactively broaden the sequence-only approval.
 
 On 2026-10-20 the user requested implementation of `lim(a)` with public
 domain `seq(R)`, also accepting its equivalent `fn(k N+) R` interface, and
@@ -152,10 +157,12 @@ and [focused Rust tests](../tests/unit/execute/sequence_limit/tests.rs).
 Every explicit theorem has a matching `seq_limit_*.lit` file under
 `examples/stmt_nodes/release_and_expand/builtin_thm/`; selection and uniqueness
 also have direct equality-rule tracers. All feature proof/WD tracers are free
-of `trust`. Function limits and the broader roadmap remain unimplemented.
+of `trust`. Function limits were outside that sequence-only delivery; the
+later [F receipt](litex-function-limit-at-acceptance.md) records their delivery.
 
 The sections below preserve the original broader design. Current delivered
-semantics and rules are specified in [Real sequence limits](../docs/sequence-limits.md).
+semantics and rules are specified in [Real sequence limits](../docs/sequence-limits.md)
+and [Finite-point function limits](../docs/function-limits.md).
 
 ## 1. Goal and proposed delivery boundary
 
@@ -414,12 +421,13 @@ of two domains is insufficient. This is the precise route for the main tracer.
 
 ## 7. Proposed native representation and evidence ownership
 
-### AST Struct Change Proposal — unapproved
+### Historical AST sketch — superseded
 
 The following is the earlier pre-delivery sketch. Its sequence branch is now
 implemented and authorized, so it is not a proposal to add that family again.
-The [continuation's exact per-phase proposal](litex-limits-next-phases.md#6-ast-struct-change-proposal--exact-additions-unapproved)
-supersedes its remaining function/directional/upper/lower scope.
+The [continuation's exact per-phase scope](litex-limits-next-phases.md#6-ast-scope--f-approved-siu-proposed)
+supersedes this sketch: F is approved/delivered; directional/upper/lower
+additions remain proposals.
 
 ```rust
 // New Obj family; no existing Obj payload field changes.
@@ -474,8 +482,9 @@ their actual local environments. Preserve the existing stage-ordered result
 and dispatcher contracts. No `Stmt`, `Identifier`, existing payload, Env,
 ExecEnv or Runtime field/state contract change is proposed.
 
-Implementation must obtain explicit approval of these exact AST additions.
-Approval of this planning task is not that approval.
+Implementation requires explicit approval of the exact AST additions. The
+later sequence/F approvals are recorded separately above; they do not cover
+the remaining directional or upper/lower additions in this historical sketch.
 
 ## 8. Dependency graph and implementation sequence
 

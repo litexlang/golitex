@@ -1,0 +1,7 @@
+# Explicit finite-point function-limit theorem; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_constant.lit
+
+have fn constant_example_function(x R) R=3
+release thm fn_limit_at_real_accumulation(0)
+release thm fn_limit_at_constant(constant_example_function,0,3)
+lim(constant_example_function,0)=3

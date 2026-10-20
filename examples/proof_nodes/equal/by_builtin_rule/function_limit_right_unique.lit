@@ -1,0 +1,8 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/function_limit_right_unique.lit
+
+forall af fn(x R) R,p,A,B R:
+    $has_limit_right(af,p,A)
+    $has_limit_right(af,p,B)
+    =>:
+        A=B

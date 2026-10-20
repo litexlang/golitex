@@ -56,7 +56,9 @@ impl AtomicFact {
             AtomicFact::PrimeFact(x) => x.ir(),
             AtomicFact::CoprimeFact(x) => x.ir(),
             AtomicFact::HasSequenceLimitFact(x) => x.ir(),
+            AtomicFact::HasFunctionLimitFact(x) => x.ir(),
             AtomicFact::NotHasSequenceLimitFact(x) => x.ir(),
+            AtomicFact::NotHasFunctionLimitFact(x) => x.ir(),
             AtomicFact::DvdFact(x) => x.ir(),
             AtomicFact::InjectiveFact(x) => x.ir(),
             AtomicFact::SurjectiveFact(x) => x.ir(),
@@ -105,7 +107,9 @@ impl AtomicFact {
             AtomicFact::PrimeFact(x) => x.display_string(),
             AtomicFact::CoprimeFact(x) => x.display_string(),
             AtomicFact::HasSequenceLimitFact(x) => x.display_string(),
+            AtomicFact::HasFunctionLimitFact(x) => x.display_string(),
             AtomicFact::NotHasSequenceLimitFact(x) => x.display_string(),
+            AtomicFact::NotHasFunctionLimitFact(x) => x.display_string(),
             AtomicFact::DvdFact(x) => x.display_string(),
             AtomicFact::InjectiveFact(x) => x.display_string(),
             AtomicFact::SurjectiveFact(x) => x.display_string(),
@@ -1084,3 +1088,29 @@ impl NotForallFact {
 
 impl_dollar_prefix_args!(HasSequenceLimitFact, HAS_SEQ_LIMIT, sequence, value);
 impl_not_dollar_prefix_args!(NotHasSequenceLimitFact, HAS_SEQ_LIMIT, sequence, value);
+
+impl HasFunctionLimitFact {
+    pub fn ir(&self) -> FactIR {
+        FactIR(format!(
+            "${}({}, {}, {})",
+            self.approach.predicate_name(),
+            self.function.ir(),
+            self.approach.point().ir(),
+            self.value.ir()
+        ))
+    }
+    impl_display_pair!();
+}
+
+impl NotHasFunctionLimitFact {
+    pub fn ir(&self) -> FactIR {
+        FactIR(format!(
+            "not ${}({}, {}, {})",
+            self.approach.predicate_name(),
+            self.function.ir(),
+            self.approach.point().ir(),
+            self.value.ir()
+        ))
+    }
+    impl_display_pair!();
+}

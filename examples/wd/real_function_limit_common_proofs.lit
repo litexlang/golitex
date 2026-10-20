@@ -1,0 +1,61 @@
+# Polynomial and rational limits from independently established candidates.
+# Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_common_proofs.lit
+
+have fn id_three(x R) R=x
+
+release thm fn_limit_at_real_accumulation(3)
+
+release thm fn_limit_at_identity(id_three,3)
+
+have fn square_three(x R) R=x^2
+
+claim:
+    ? forall x R:
+        square_three(x)=id_three(x)^2
+    id_three(x)=x
+    square_three(x)=x^2=id_three(x)^2
+
+release thm fn_limit_at_power(id_three,square_three,3,3,2)
+
+lim(square_three,3)=9
+
+have fn one_three(x R) R=1
+
+release thm fn_limit_at_constant(one_three,3,1)
+
+have fn numerator_three(x R) R=x^2+1
+
+claim:
+    ? forall x R:
+        numerator_three(x)=square_three(x)+one_three(x)
+    square_three(x)=x^2
+    one_three(x)=1
+    numerator_three(x)=x^2+1=square_three(x)+one_three(x)
+
+release thm fn_limit_at_add(square_three,one_three,numerator_three,3,9,1)
+
+lim(numerator_three,3)=10
+
+have fn two_three(x R) R=2
+
+release thm fn_limit_at_constant(two_three,3,2)
+
+claim:
+    ? forall x R:
+        two_three(x)!=0
+    two_three(x)=2
+
+have fn rational_three(x R) R=(x^2+1)/2
+
+claim:
+    ? forall x R:
+        rational_three(x)=numerator_three(x)/two_three(x)
+    two_three(x)=2
+    numerator_three(x)=x^2+1
+    rational_three(x)=(x^2+1)/2=numerator_three(x)/two_three(x)
+
+release thm fn_limit_at_divide(numerator_three,two_three,rational_three,3,10,2)
+
+lim(rational_three,3)=5
+
+lim(rational_three,3)+1=6

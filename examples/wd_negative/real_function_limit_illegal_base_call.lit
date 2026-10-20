@@ -1,0 +1,5 @@
+# Must fail: finite-point function limit illegal base call.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_illegal_base_call.lit
+
+have fn undefined_at_zero(x R:x!=0) R=x^2/x
+undefined_at_zero(0)=0

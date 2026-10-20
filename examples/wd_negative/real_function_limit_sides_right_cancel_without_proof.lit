@@ -1,0 +1,5 @@
+# Must reject normally: right cancel without proof.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_right_cancel_without_proof.lit
+
+have fn right_unproved_s(x R) R=5
+0*lim_right(right_unproved_s,0)=0

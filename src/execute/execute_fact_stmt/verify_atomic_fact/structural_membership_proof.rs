@@ -54,6 +54,7 @@ pub enum StructuralMembershipReason {
 // select user-function signatures, or prove any missing input-domain condition.
 pub enum IntrinsicCodomain {
     SequenceLimit,
+    FunctionLimit,
     Floor,
     Ceil,
     Sign,

@@ -1,0 +1,11 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_right_neg.lit
+
+thm fn_limit_right_neg_example:
+    ? forall fa,ha fn(x R) R,x0,A R:
+        $has_limit_right(fa,x0,A)
+        forall x R:
+            ha(x)=-fa(x)
+        =>:
+            $has_limit_right(ha,x0,-A)
+    release thm fn_limit_right_neg(fa,ha,x0,A)

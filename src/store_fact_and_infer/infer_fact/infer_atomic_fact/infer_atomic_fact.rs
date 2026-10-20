@@ -8,8 +8,14 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<InferAtomicFactResult> {
         match fact {
+            AtomicFact::HasFunctionLimitFact(_) => {
+                Ok(InferAtomicFactResult::HasFunctionLimitFact(Vec::new()))
+            }
             AtomicFact::HasSequenceLimitFact(_) => {
                 Ok(InferAtomicFactResult::HasSequenceLimitFact(Vec::new()))
+            }
+            AtomicFact::NotHasFunctionLimitFact(_) => {
+                Ok(InferAtomicFactResult::NotHasFunctionLimitFact(Vec::new()))
             }
             AtomicFact::NotHasSequenceLimitFact(_) => {
                 Ok(InferAtomicFactResult::NotHasSequenceLimitFact(Vec::new()))

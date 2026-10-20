@@ -1,0 +1,4 @@
+# Must reject normally: nonreal domain.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_nonreal_domain.lit
+
+$has_limit_left(fn(x C) R {0},0,0)

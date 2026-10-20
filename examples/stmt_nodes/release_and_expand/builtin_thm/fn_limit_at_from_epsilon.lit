@@ -1,0 +1,12 @@
+# Explicit finite-point function-limit theorem; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_from_epsilon.lit
+
+thm fn_limit_at_from_epsilon_example:
+    ? forall fa fn(x R) R,x0,L R:
+        forall r R+:
+            exist x R st {0<abs(x-x0) and abs(x-x0)<r}
+        forall epsilon R+:
+            exist delta R+ st {{x R:0<abs(x-x0) and abs(x-x0)<delta} $subset preimage_set(fa,{v R:abs(v-L)<epsilon})}
+        =>:
+            $has_limit_at(fa,x0,L)
+    release thm fn_limit_at_from_epsilon(fa,x0,L)

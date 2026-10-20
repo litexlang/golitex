@@ -278,6 +278,21 @@ impl Runtime {
                     }))
                 }
             }
+            crate::parse::keywords::HAS_LIMIT_AT | crate::parse::keywords::HAS_LIMIT_LEFT | crate::parse::keywords::HAS_LIMIT_RIGHT => {
+                n_args(name,&args,3,&line_file)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                let point = Box::new(args[1].clone());
+                let approach = match name {
+                    crate::parse::keywords::HAS_LIMIT_LEFT => crate::ast::obj::LimitApproach::FromLeft(point),
+                    crate::parse::keywords::HAS_LIMIT_RIGHT => crate::ast::obj::LimitApproach::FromRight(point),
+                    _ => crate::ast::obj::LimitApproach::AtPoint(point),
+                };
+                if positive {
+                    Ok(crate::ast::fact::HasFunctionLimitFact {fact_id,function:args[0].clone(),approach,value:args[2].clone(),line_file:Some(line_file)}.into())
+                } else {
+                    Ok(crate::ast::fact::NotHasFunctionLimitFact {fact_id,function:args[0].clone(),approach,value:args[2].clone(),line_file:Some(line_file)}.into())
+                }
+            }
             crate::parse::keywords::HAS_SEQ_LIMIT => {
                 two_args(name, &args, &line_file)?;
                 let fact_id = self.global_ids.allocate_fact_id();
