@@ -531,6 +531,9 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Some(term) = position.bound_object_child(object) {
+            return Ok(term);
+        }
         if let Some(term) =
             position.with_visible_alias(object, &mut |parameter, _, _, producer| {
                 let name = format!("_object_i{}", parameter.id.value());

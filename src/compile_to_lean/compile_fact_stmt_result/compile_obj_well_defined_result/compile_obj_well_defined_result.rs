@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+use crate::compile_to_lean::source_position::{arithmetic_stages, SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
@@ -9,12 +9,66 @@ impl LitexToLeanCompiler {
         proof: &ObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Some(term) = position.bound_wd_child(proof) {
+            return Ok(term);
+        }
+        if let Some((children, requirements)) = arithmetic_stages(proof) {
+            if children.iter().any(|child| {
+                !matches!(
+                    child.obj(),
+                    Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+                )
+            }) {
+                let mut bindings = String::new();
+                for (index, child) in children.iter().enumerate() {
+                    let prior = SourcePosition::new(
+                        Some(position),
+                        SourceOwner::WDLocals(proof, index),
+                        index,
+                    );
+                    let term = self.compile_wd(child, &prior)?;
+                    bindings.push_str(&format!(
+                        "let {} := {};\n",
+                        prior.wd_child_name(index),
+                        term
+                    ));
+                }
+                for (index, requirement) in requirements.iter().enumerate() {
+                    let stage = children.len() + index;
+                    let prior = SourcePosition::new(
+                        Some(position),
+                        SourceOwner::WDLocals(proof, stage),
+                        stage,
+                    );
+                    let (proposition, term) = self.compile_verify(requirement, &prior)?;
+                    let id = source_subject(requirement)?.fact_id();
+                    bindings.push_str(&format!(
+                        "have h_{} : {proposition} := {term};\n",
+                        id.value()
+                    ));
+                }
+                let formed = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::WDLocals(proof, children.len() + requirements.len()),
+                    0,
+                );
+                let term = self.compile_wd_body(proof, &formed)?;
+                return Ok(format!("({bindings}{term})"));
+            }
+        }
         let source_position = SourcePosition {
             parent: Some(position),
             owner: SourceOwner::WD(proof),
             before: 0,
         };
-        let position = &source_position;
+        self.compile_wd_body(proof, &source_position)
+    }
+
+    fn compile_wd_body(
+        &self,
+        proof: &ObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
         match proof {
             ObjWellDefinedProof::ByKnown { obj, wd_id } => {
                 let recorded = self.resolve_wd(*wd_id, position)?;

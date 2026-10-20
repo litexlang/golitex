@@ -8,6 +8,11 @@ impl LitexToLeanCompiler {
         result: &VerifyFactResult,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
+        if position.has_bound_verify(result) {
+            let id = crate::compile_to_lean::helper::source_subject(result)?.fact_id();
+            let name = format!("h_{}", id.value());
+            return Ok((format!("(typeOf {name})"), name));
+        }
         let source_position = SourcePosition {
             parent: Some(position),
             owner: SourceOwner::Verify(result),

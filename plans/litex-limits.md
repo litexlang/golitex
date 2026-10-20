@@ -6,6 +6,11 @@ one-sided, infinity and limsup/liminf roadmap remains a design proposal.
 
 Parent: [common LaTeX mathematics roadmap](litex-latex-math-support.md).
 
+Next work: [four-phase continuation plan](litex-limits-next-phases.md) for
+finite-point function limits, one-sided limits, approaches to infinity, and
+finite sequence limsup/liminf. That continuation is the current proposal for
+those increments and preserves the delivered proof-first WD contract.
+
 ## Current execution scope — real sequence limits only
 
 On 2026-10-20 the user requested implementation of `lim(a)` with public
@@ -191,8 +196,9 @@ These are source inspections, not fresh verifier results:
   non-isolated approach point. Its executable source currently implements
   derivative candidates, rather than that general function-limit interface.
 - [Obj](../src/ast/obj.rs) and [parser vocabulary](../src/parse/keywords.rs)
-  have no native limit operation. Existing local `lim` declarations must be
-  considered before reserving that name.
+  now include native sequence limits; function limits remain proposed. The
+  two public source-owned `lim` declarations were renamed as recorded in the
+  delivery receipt. New directional/upper/lower names need their own scan.
 - [Complete function domains](../src/execute/execute_fact_stmt/function_domain.rs)
   retain checked signatures, guards and sources. These are the starting point
   for deriving the actual unary domain, rather than calling `f(a)` to infer it.
@@ -224,14 +230,15 @@ lim(f,0) = 0
 ```
 
 Before: the function itself is expressible, but there is no native two-argument
-`lim` operation. Now, as a design target: the expression denotes the unique
-finite limit without evaluating `f(0)`. The proof route is punctured local
+`lim` operation. As a design target after an independent candidate proof,
+the expression denotes the unique finite limit without evaluating `f(0)`.
+The proof route is punctured local
 equality to the identity function, an approach-point proof and the identity
 limit. A division rule with denominator limit zero cannot justify it.
 
 First establish this route with explicit candidate/local-equality facts and a
-theorem call; the bare two-line form is a separate bounded-automation target.
-Do not hide an unimplemented proof route behind its proposed concise syntax.
+theorem call. The bare two-line form must continue to fail for missing
+convergence evidence; WD does not run a constructor theorem to discover it.
 
 Planned durable acceptance file: `examples/wd/real_function_limit_at.lit`.
 It should preserve the former unsupported syntax as comments, keep the new
@@ -310,8 +317,8 @@ points in `D_f`; a bounded or empty domain must not yield vacuous limits.
 1. Verify the operands and obtain their checked complete callable interface.
 2. Check real input/output carriers and the chosen approach data.
 3. Consume a proved existential or a proved concrete candidate, including its
-   nontrivial approach evidence. Bounded constructor rules may independently
-   construct such evidence for supported elementary cases.
+   nontrivial approach evidence. An explicit earlier theorem invocation may
+   establish it; WD does not invoke convergence constructors or discover it.
 4. Attach the uniqueness route for that approach and select its real value.
 5. Permit use inside arithmetic, another function call, or a later theorem.
 
@@ -369,10 +376,9 @@ use A's algebra plus local equality, without claiming every continuous
 function is automatically recognized.
 
 Small fixed-shape rules can be native BT leaves. Quantified assumptions,
-epsilon witnesses, squeeze/locality and reusable theorems should also have
-an explicit invocation route. Structural automation may descend through a
-supported function body using checked binders and guards; it must retain
-child evidence and a decreasing expression measure. No unrestricted search
+epsilon witnesses, squeeze/locality and reusable theorems have an explicit
+invocation route. The next increments do not include body-based candidate
+discovery or automatic theorem chaining inside WD. No unrestricted search
 for limits, global epsilon solver, numerical sampling or floating-point
 equality proof is proposed.
 
@@ -410,7 +416,10 @@ of two domains is insufficient. This is the precise route for the main tracer.
 
 ### AST Struct Change Proposal — unapproved
 
-For A, the minimal proposed additions are:
+The following is the earlier pre-delivery sketch. Its sequence branch is now
+implemented and authorized, so it is not a proposal to add that family again.
+The [continuation's exact per-phase proposal](litex-limits-next-phases.md#6-ast-struct-change-proposal--exact-additions-unapproved)
+supersedes its remaining function/directional/upper/lower scope.
 
 ```rust
 // New Obj family; no existing Obj payload field changes.
@@ -512,7 +521,8 @@ Implementation checkpoints after the semantic and AST decisions:
    result downstream, and reject self-justifying convergence.
 4. **Algebra and the tracer.** Check constants/identity/reciprocal, local
    equality and A's rule list with positive and negative requirements. Prove
-   the punctured example explicitly before measuring the bare direct route.
+   the punctured example explicitly; keep value use without a prior candidate
+   proof as an executable missing-evidence control.
 5. **Presentation and compatibility.** Complete substitution, capture-safe
    instantiation/alpha normalization, identity/IR, JSON and diagnostics;
    render sequence and function limit notation with correct binders and domains.
@@ -540,11 +550,11 @@ consumer validation. Keep old route ordering, permissions, scopes, memoization
 and transaction behavior. If an existing shared contract must change, classify
 that separately and return to the decision boundary.
 
-Reserving `lim` breaks existing bare declarations with that name; both the
-nutshell and Analysis Chapter 6 contain one. Namespace qualification behavior
-also needs a real parser test, not an assumption that qualification bypasses
-reserved-name rules. The alternate prefixed API avoids these specific bare
-name migrations. Final migration scope and counts must come from the scan.
+`lim` is now reserved and the two public source-owned selectors were renamed
+`sequence_limit_value`. New reserved names still need a compatibility scan.
+Namespace qualification behavior also needs a real parser test, not an
+assumption that qualification bypasses reserved-name rules. Final migration
+scope and counts must come from the scan; no local-only migration is implied.
 
 LaTeX should produce `\lim_{n\to\infty} a(n)` and
 `\lim_{x\to a,\,x\in D_f} f(x)`, preserving restricted domains when relevant;
@@ -596,8 +606,9 @@ local textbook gates are not automatically part of this feature.
 This planning pass inspects the sources linked above and checks this document's
 links, fences, scope and whitespace. It does not run new syntax, rebuild the
 binary, verify the analysis collection, or establish implementation results.
-The next handoff is semantic/name selection and the concrete AST decision,
-followed by A's candidate-and-selection tracer; no implementation starts here.
+The remaining handoff is F's semantic/AST decision and candidate-and-selection
+tracer in the [four-phase continuation](litex-limits-next-phases.md); the
+sequence-only implementation above is already delivered.
 
 Planning validation on 2026-10-20: local relative links in this plan and the
 parent roadmap resolve; this plan's eight fenced blocks are balanced and all

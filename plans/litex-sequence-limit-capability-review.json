@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-20",
+  "task": "Common sequence limit proof capability review",
+  "source_head": "5d5852763ae2bb1333084257784eedd5becddd6b",
+  "binary_sha256": "d69fcaa7d137aaa5438edb03ed8f779202adf1c79b9685db264f8d16ab5b3f63",
+  "semantics": "Historical observations, not normative must-reject tests for true statements. No kernel changes or trust.",
+  "observations": [
+    {
+      "id": "identity-anonymous-congruence",
+      "source": "claim:\n    ? forall x R:\n        fn(t R) R {t}(x)-1=x-1\n    fn(t R) R {t}(x)=x\n    fn(t R) R {t}(x)-1=x-1",
+      "mathematical_status": "true_statement",
+      "purpose": "historical capability observation; a current miss is not a permanent must-reject requirement",
+      "exit": 1,
+      "observed_success": false,
+      "run_result": "failure",
+      "session_terminated": false,
+      "termination": null,
+      "observed_failure": {
+        "phases": [
+          "claim",
+          "proof_body",
+          "search_proof"
+        ],
+        "obligations": [
+          "(fn (t R) R{t}(x) - 1) = (x - 1)"
+        ],
+        "messages": [
+          "Could not prove the goal."
+        ]
+      }
+    },
+    {
+      "id": "named-identity-congruence",
+      "source": "claim:\n    ? forall h fn(t R) R,x R:\n        h(x)=x\n        =>:\n            h(x)-1=x-1\n    h(x)-1=x-1",
+      "mathematical_status": "true_statement",
+      "purpose": "historical capability observation; a current miss is not a permanent must-reject requirement",
+      "exit": 0,
+      "observed_success": true,
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "id": "anonymous-equality-congruence-split",
+      "source": "claim:\n    ? forall f seq(R),k N+,c R:\n        abs(fn(t N+) R {f(2*t)}(k)-c)=abs(f(2*k)-c)\n    fn(t N+) R {f(2*t)}(k)=f(2*k)\n    fn(t N+) R {f(2*t)}(k)-c=f(2*k)-c\n    abs(fn(t N+) R {f(2*t)}(k)-c)=abs(f(2*k)-c)",
+      "mathematical_status": "true_statement",
+      "purpose": "historical capability observation; a current miss is not a permanent must-reject requirement",
+      "exit": 1,
+      "observed_success": false,
+      "run_result": "failure",
+      "session_terminated": false,
+      "termination": null,
+      "observed_failure": {
+        "phases": [
+          "claim",
+          "proof_body",
+          "search_proof"
+        ],
+        "obligations": [
+          "(fn (t N+) R{f((2 * t))}(k) - c) = (f((2 * k)) - c)"
+        ],
+        "messages": [
+          "Could not prove the goal."
+        ]
+      }
+    },
+    {
+      "id": "named-equality-congruence-control",
+      "source": "claim:\n    ? forall f,g seq(R),k N+,c R:\n        g(k)=f(2*k)\n        =>:\n            abs(g(k)-c)=abs(f(2*k)-c)\n    g(k)-c=f(2*k)-c\n    abs(g(k)-c)=abs(f(2*k)-c)",
+      "mathematical_status": "true_statement",
+      "purpose": "historical capability observation; a current miss is not a permanent must-reject requirement",
+      "exit": 0,
+      "observed_success": true,
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "id": "sine-upper-foundational-direct",
+      "source": "forall x R:\n    0<=x\n    x<=pi/2\n    =>:\n        sin(x)<=x",
+      "mathematical_status": "true_statement",
+      "purpose": "historical capability observation; a current miss is not a permanent must-reject requirement",
+      "exit": 1,
+      "observed_success": false,
+      "run_result": "failure",
+      "session_terminated": false,
+      "termination": null,
+      "observed_failure": {
+        "phases": [
+          "search_proof"
+        ],
+        "obligations": [
+          "sin(x) <= x"
+        ],
+        "messages": [
+          "Could not prove the goal."
+        ]
+      }
+    },
+    {
+      "id": "candidate-equality-transport-generic",
+      "source": "forall original,copied seq(R),limit_u R:\n    original=copied\n    $has_seq_limit(original,limit_u)\n    =>:\n        $has_seq_limit(copied,limit_u)",
+      "mathematical_status": "true_statement",
+      "purpose": "historical capability observation; a current miss is not a permanent must-reject requirement",
+      "exit": 0,
+      "observed_success": true,
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "id": "shift-definition-before-domain-lemma",
+      "source": "have fn shifted(k N+) R=1/(k+1)",
+      "mathematical_status": "well_defined_function",
+      "purpose": "observe the composite denominator obligation",
+      "exit": 1,
+      "observed_success": false,
+      "run_result": "failure",
+      "session_terminated": false,
+      "termination": null,
+      "observed_failure": {
+        "phases": [
+          "have_fn_equal",
+          "well_defined",
+          "FunctionSpace",
+          "AnonymousFn",
+          "body",
+          "ArithmeticOperator",
+          "Div",
+          "requirement",
+          "search_proof"
+        ],
+        "obligations": [
+          "(k + 1) != 0"
+        ],
+        "messages": [
+          "Could not prove that the statement is well-defined.",
+          "Could not prove the goal."
+        ]
+      }
+    },
+    {
+      "id": "shift-definition-after-domain-lemma",
+      "source": "claim:\n    ? forall k N+:\n        k+1!=0\n    0<k\n    0<k+1\n    k+1!=0\n\nhave fn shifted(k N+) R=1/(k+1)\nshifted(1)=1/2\n",
+      "mathematical_status": "true_statement",
+      "purpose": "verified explicit domain route",
+      "exit": 0,
+      "observed_success": true,
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "id": "identity-anonymous-beta-only",
+      "source": "forall x R:\n    fn(t R) R {t}(x)=x",
+      "mathematical_status": "true_statement",
+      "purpose": "positive beta-reduction control for the following congruence miss",
+      "exit": 0,
+      "observed_success": true,
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "id": "identity-named-definition-control",
+      "source": "have fn h(t R) R=t\nclaim:\n    ? forall x R:\n        h(x)-1=x-1\n    h(x)=x\n    h(x)-1=x-1",
+      "mathematical_status": "true_statement",
+      "purpose": "same explicit proof with an ordinary named function",
+      "exit": 0,
+      "observed_success": true,
+      "run_result": "success",
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "id": "successor-carrier-and-positive",
+      "source": "forall k N+:\n    k+1 $in N+\n    0<k+1\n",
+      "mathematical_status": "true_statement",
+      "purpose": "locate the positive-carrier/nonzero consumer boundary",
+      "exit": 0,
+      "observed_success": true,
+      "session_terminated": false,
+      "termination": null
+    },
+    {
+      "id": "successor-positive-before-definition",
+      "source": "forall k N+:\n    0<k+1\nhave fn shifted(k N+) R=1/(k+1)\n",
+      "mathematical_status": "true_statement",
+      "purpose": "locate the positive-carrier/nonzero consumer boundary",
+      "exit": 1,
+      "observed_success": false,
+      "session_terminated": false,
+      "termination": null
+    }
+  ],
+  "accepted_example": "examples/wd/sequence_limit_common_proofs.lit",
+  "accepted_example_lines": 426,
+  "accepted_example_gate": {
+    "strict": true,
+    "exit": 0,
+    "kind": "run",
+    "run_result": "success",
+    "session_terminated": false,
+    "termination": null,
+    "statements": 84
+  },
+  "binary": "tmp/2026-10-20/sequence-limit/target/release/litex",
+  "report": "plans/litex-sequence-limit-capability-review.md",
+  "scope": "Native real-sequence proof capability observations; no Rust changes, no full release gates"
+}

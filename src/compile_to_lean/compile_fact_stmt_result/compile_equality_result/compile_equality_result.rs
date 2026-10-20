@@ -61,17 +61,14 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         // Both parent-WD callers have already compiled and matched the original
         // endpoint certificates. Bare searched proofs still need these checks.
-        let checked_left = if parent_wd.is_none() {
-            let left = self.compile_object_reference(&fact.left, position)?;
+        if parent_wd.is_none() {
+            self.compile_object_reference(&fact.left, position)?;
             // Identical ASTs at this same cursor resolve the same original
             // producer. Keep the full second check when only their IR agrees.
             if fact.left != fact.right {
                 self.compile_object_reference(&fact.right, position)?;
             }
-            Some(left)
-        } else {
-            None
-        };
+        }
         let proof = match proof {
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_)) => {
                 if fact.left.ir() != fact.right.ir() {
@@ -80,17 +77,10 @@ impl LitexToLeanCompiler {
                         "Identity evidence has different endpoints.",
                     ));
                 }
-                let left = match checked_left {
-                    Some(left) => left,
-                    None => self.compile_object_reference(&fact.left, position)?,
-                };
-                // Elaborate the original constructor before the outer equality
-                // constrains its denotation. In particular, normalized function
-                // bodies may expect a semantic-value Eq rather than an Obj type.
-                format!(
-                    "(by\n  let _litex_same := {}\n  exact Litex.sameRefl _litex_same\n)",
-                    left.replace('\n', "\n  ")
-                )
+                // Endpoint formation has already consumed its original WD.
+                // Infer only M.Value from the equality's expected type, avoiding
+                // a second copy of the complete object and its certificates.
+                "(show @Eq M.Value _ _ from Eq.refl _)".to_string()
             }
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameFreeParamShape(
                 _,
