@@ -208,6 +208,9 @@ fn apply_fn_layer(function: &Obj, args: &[Obj]) -> Option<Obj> {
             FnObjHead::FieldAccess(fa.clone())
         }
         Obj::InstantiatedTemplateObj(t) => FnObjHead::InstantiatedTemplateObj(t.clone()),
+        Obj::FunctionSpace(FunctionSpace::Composition(_)) => {
+            FnObjHead::Object(Box::new(function.clone()))
+        }
         _ => return None,
     };
     Some(Obj::FnObj(FnObj {

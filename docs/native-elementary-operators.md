@@ -18,7 +18,9 @@ Litex spellings; this feature does not parse raw LaTeX commands.
 | `set_diff(A,B)` | Both objects are well-defined in Litex's pure-set model | `union(set_minus(A,B),set_minus(B,A))` |
 
 These ten spellings are reserved object names. They cannot be declaration or
-parameter names. `compose` and `restrict` are deferred.
+parameter names. Native `compose(f,g)` / `f ∘ g` is described in the
+[function composition preview](Manual.md#preview-function-composition).
+Function restriction uses ordinary anonymous functions.
 
 `set_diff` denotes symmetric difference (elements in exactly one operand).
 Ordinary set subtraction is `set_minus`.

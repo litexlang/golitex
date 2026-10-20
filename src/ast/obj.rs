@@ -275,6 +275,9 @@ pub enum FunctionSpace {
     // Example: `fn(x R) R {x + 1}`.
     AnonymousFn(AnonymousFn),
 
+    // Strict composition: outer(inner(args)), retaining the complete inner domain.
+    Composition(Composition),
+
     // Image of a function (range as a set). Example: `fn_range(f)`.
     // See Manual § Functions, application, and range.
     FnRange(FnRange),
@@ -884,6 +887,23 @@ pub struct FiniteSetMax {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetMin {
     pub set: Box<Obj>,
+}
+
+// Strict function composition. Both spellings `compose(f,g)` / `f ∘ g`
+// retain the tree; signatures and proof scopes belong to WD evidence.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Composition {
+    pub outer: Box<Obj>,
+    pub inner: Box<Obj>,
+}
+
+impl Composition {
+    pub fn new(outer: Obj, inner: Obj) -> Self {
+        Self {
+            outer: Box::new(outer),
+            inner: Box::new(inner),
+        }
+    }
 }
 
 // Image of a function. Example: `fn_range(f)`.

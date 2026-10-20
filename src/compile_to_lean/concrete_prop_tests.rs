@@ -1,3 +1,4 @@
+use super::source_position::{SourceOwner, SourcePosition};
 use super::LitexToLeanCompiler;
 use crate::prelude::*;
 use crate::store_fact_and_infer::InferNormalAtomicFactResult;
@@ -7,6 +8,7 @@ const NONZERO: &str = "prop nonzero(x R):\n    x != 0\n$nonzero(1)\nby def $nonz
 const SQUARE: &str = "prop square_is_one(x R):\n    x * x = 1\n$square_is_one(1)\n1 * 1 = 1";
 const GUARDED: &str =
     "prop guarded_identity(x R):\n    x != 0\n    x / x = 1\n$guarded_identity(1)\n1 / 1 = 1";
+const GUARDED_SET_PROJECTION: &str = "have fn guarded_reals(a R: a != 0) power_set(R) = R\nprop in_guarded_reals(x, y R):\n    y != 0\n    x $in guarded_reals(y)\nprop nested_guarded_reals(x, y R):\n    $in_guarded_reals(x, y)\n    x = x\n";
 
 fn checked(source: &str) -> (Runtime, RunLitexCodeResult) {
     let mut runtime = Runtime::new(LaunchCommand::Eval {
@@ -159,4 +161,158 @@ fn concrete_prop_rejects_reordered_domain_and_body_inferences() {
         .compile_run(&result, "reordered_prop_inference")
         .unwrap_err();
     assert!(error.route.starts_with("Prop/Infer"), "{error:?}");
+}
+
+fn local_projection_rules(
+    result: &mut RunLitexCodeResult,
+) -> &mut Vec<InferNormalAtomicFactResult> {
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+        crate::execute::ExecDefPropStmtResult::Success(definition),
+    )) = &mut result.statement_results[2]
+    else {
+        panic!("original nested predicate declaration");
+    };
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::NormalAtomicFact(rules))) =
+        &mut definition.assumed_iff_facts[0].store_and_infer.infer
+    else {
+        panic!("original predicate inference");
+    };
+    rules
+}
+
+#[test]
+fn local_prop_projection_retains_a_guarded_set_valued_call_without_new_wd() {
+    let (runtime, mut result) = checked(GUARDED_SET_PROJECTION);
+    let rules = local_projection_rules(&mut result);
+    let InferNormalAtomicFactResult::ParamTypes(parameters) = &rules[0] else {
+        panic!("parameter projections precede the body");
+    };
+    assert_eq!(parameters.derived.len(), 2);
+    let InferNormalAtomicFactResult::ExpandDefinition(body) = &rules[1] else {
+        panic!("original definition expansion");
+    };
+    assert_eq!(body.derived.len(), 2);
+    let StoreFactResult::AtomicFact(stored) = &body.derived[1].store else {
+        panic!("atomic membership projection");
+    };
+    let AtomicFact::InFact(member) = &stored.fact else {
+        panic!("membership in the returned set");
+    };
+    assert!(matches!(member.set, Obj::FnObj(_)));
+    let ids = rules
+        .iter()
+        .flat_map(InferNormalAtomicFactResult::stored_conclusions)
+        .map(|stored| stored.primary_fact_id())
+        .collect::<Vec<_>>();
+    let compiler = LitexToLeanCompiler::new(runtime);
+    let statement = &result.statement_results[2];
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+        crate::execute::ExecDefPropStmtResult::Success(definition),
+    )) = statement
+    else {
+        panic!("original nested predicate declaration");
+    };
+    let run_position = SourcePosition::new(None, SourceOwner::Run(&result), 2);
+    let statement_position =
+        SourcePosition::new(Some(&run_position), SourceOwner::Statement(statement), 0);
+    let completed = SourcePosition::new(
+        Some(&statement_position),
+        SourceOwner::PropDefinition(definition),
+        definition
+            .statement
+            .typed_parameters
+            .ordered_param_ids()
+            .len()
+            + 1,
+    );
+    let seed = &definition.statement.iff_facts[0];
+    let compiled_seed = (
+        compiler.fact_proposition(seed, &completed).unwrap(),
+        format!("h_{}", seed.fact_id().value()),
+    );
+    let projections = compiler
+        .compile_stored_inferences(
+            &definition.assumed_iff_facts[0].store_and_infer,
+            seed,
+            &compiled_seed,
+            &completed,
+        )
+        .unwrap();
+    assert_eq!(projections.len(), ids.len());
+    for (index, (id, projection)) in ids.iter().zip(&projections).enumerate() {
+        assert!(projection.starts_with(&format!("have h_{} :=\n", id.value())));
+        assert!(projection.contains(&format!(
+            "(show {} from {})",
+            compiled_seed.0, compiled_seed.1
+        )));
+        assert_eq!(projection.matches("Classical.choose_spec").count(), index);
+        assert_eq!(
+            projection.contains("(Classical.choose "),
+            index + 1 < ids.len()
+        );
+    }
+    let output = compiler
+        .compile_run(&result, "local_guarded_set_projection")
+        .unwrap();
+    assert!(output.contains("def prop_3 "));
+    // The final clause is x = x; none of these local projections is a lexical
+    // dependency, so the existing scope closer omits them from the artifact.
+    for id in ids {
+        assert!(!output.contains(&format!("let h_{} ", id.value())));
+    }
+}
+
+#[test]
+fn local_prop_projection_rejects_another_instantiated_set_subject() {
+    let (runtime, mut result) = checked(GUARDED_SET_PROJECTION);
+    let InferNormalAtomicFactResult::ExpandDefinition(body) =
+        &mut local_projection_rules(&mut result)[1]
+    else {
+        panic!("definition expansion");
+    };
+    let StoreFactResult::AtomicFact(stored) = &mut body.derived[1].store else {
+        panic!("atomic store");
+    };
+    let AtomicFact::InFact(member) = &mut stored.fact else {
+        panic!("membership store");
+    };
+    member.set = Obj::StandardSet(StandardSet::R);
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&result, "changed_local_projection_subject")
+        .unwrap_err();
+    assert_eq!(error.route, "Prop/InferBodySubject");
+}
+
+#[test]
+fn local_prop_projection_rejects_another_original_store_identity() {
+    let (runtime, mut result) = checked(GUARDED_SET_PROJECTION);
+    let InferNormalAtomicFactResult::ExpandDefinition(body) =
+        &mut local_projection_rules(&mut result)[1]
+    else {
+        panic!("definition expansion");
+    };
+    let wrong_id = body.derived[0].primary_fact_id();
+    let StoreFactResult::AtomicFact(stored) = &mut body.derived[1].store else {
+        panic!("atomic store");
+    };
+    stored.fact_id = wrong_id;
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&result, "changed_local_projection_identity")
+        .unwrap_err();
+    assert_eq!(error.route, "Prop/InferIdentity");
+}
+
+#[test]
+fn local_prop_projection_rejects_reordered_defining_clauses() {
+    let (runtime, mut result) = checked(GUARDED_SET_PROJECTION);
+    let InferNormalAtomicFactResult::ExpandDefinition(body) =
+        &mut local_projection_rules(&mut result)[1]
+    else {
+        panic!("definition expansion");
+    };
+    body.derived.swap(0, 1);
+    let error = LitexToLeanCompiler::new(runtime)
+        .compile_run(&result, "reordered_local_projection_clauses")
+        .unwrap_err();
+    assert_eq!(error.route, "Prop/InferBodySubject");
 }

@@ -243,6 +243,9 @@ pub(super) fn project_call_domains_alpha_match(
 
 pub(super) fn project_source(proof: &CompleteFunctionDomainProof, rt: &Runtime) -> JsonValue {
     let source = match &proof.source {
+        CompleteFunctionDomainSourceProof::Composition(source) => {
+            super::composition::callable(source, rt)
+        }
         CompleteFunctionDomainSourceProof::FiniteFunction(source) => {
             project_finite_function_source(source, rt)
         }
@@ -370,6 +373,7 @@ fn project_application_signature_source(
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::*;
     match source {
+        Composition(source) => super::composition::callable(source, rt),
         FiniteFunction(source) => project_finite_function_source(source, rt),
         InFunctionSet {
             fn_set,

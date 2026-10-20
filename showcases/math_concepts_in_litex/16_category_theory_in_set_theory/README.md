@@ -18,7 +18,7 @@ Obj set
   -> Mor set
   -> Hom(A, B) subset Mor for every A, B in Obj
   -> identity(A) in Hom(A, A)
-  -> compose(A, B, D, f, g) in Hom(A, D)
+  -> compose_morphism(A, B, D, f, g) in Hom(A, D)
   -> two unit laws and associativity
   -> typed object and arrow maps
   -> identity and composite functors
@@ -85,16 +85,16 @@ two Hom indices already record the endpoints.
 - `Mor set` is the ambient collection of arrow encodings.
 - `Hom(A, B)` is the set of morphisms from `A` to `B`.
 - `identity(A)` is an actual value in `Hom(A, A)`.
-- `compose(A, B, D, f, g)` is the actual value `g` after `f` in
+- `compose_morphism(A, B, D, f, g)` is the actual value `g` after `f` in
   `Hom(A, D)`.
 - `is_category(...)` requires the two unit laws and associativity.
 
-Function return carriers are fixed. `identity` and `compose` return `Mor`;
-the exact Hom output memberships are explicit category laws. `compose` retains
+Function return carriers are fixed. `identity` and `compose_morphism` return `Mor`;
+the exact Hom output memberships are explicit category laws. `compose_morphism` retains
 one call with domain conditions on its two input arrows.
 
-`Category<Obj, Mor>` stores `Hom`, `identity`, and `compose` in that order.
-The `compose` field type may refer to the earlier `Hom` field. This does not
+`Category<Obj, Mor>` stores `Hom`, `identity`, and `compose_morphism` in that order.
+The `compose_morphism` field type may refer to the earlier `Hom` field. This does not
 allow a function's own parameters in its parameter carriers or return object.
 The category theorem contexts bind an actual Category value, which supplies
 closure, both unit laws, and associativity. `is_functor` and
@@ -141,7 +141,7 @@ Obj = {0}
 Mor = {0}
 Hom(A, B) = {0}
 identity(A) = 0
-compose(A, B, C, f, g) = 0
+compose_morphism(A, B, C, f, g) = 0
 ```
 
 There is one object and one arrow, so both unit laws and associativity reduce
@@ -157,7 +157,7 @@ Obj = {0, 1}
 Mor = Obj x Obj
 Hom(A, B) = {(A, B)}
 identity(A) = (A, A)
-compose(A, B, C, (A, B), (B, C)) = (A, C)
+compose_morphism(A, B, C, (A, B), (B, C)) = (A, C)
 ```
 
 Thus every ordered pair of objects has exactly one arrow. This is the chaotic

@@ -1,0 +1,3 @@
+# Native strict composition: checked complete domains are required.
+forall fa fn(x R: x!=0) R:
+    fa ∘ (fn(t R: t!=0) R {t}) = fa

@@ -448,6 +448,10 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
             Obj::FunctionSpace(FunctionSpace::FnRange(r)),
         ) => objs_alpha_equal(&l.function, &r.function, map),
         (
+            Obj::FunctionSpace(FunctionSpace::Composition(l)),
+            Obj::FunctionSpace(FunctionSpace::Composition(r)),
+        ) => objs_alpha_equal(&l.outer, &r.outer, map) && objs_alpha_equal(&l.inner, &r.inner, map),
+        (
             Obj::FunctionSpace(FunctionSpace::Preimage(l)),
             Obj::FunctionSpace(FunctionSpace::Preimage(r)),
         ) => {

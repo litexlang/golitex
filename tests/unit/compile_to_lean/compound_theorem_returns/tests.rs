@@ -83,6 +83,36 @@ fn quotient_scalar_child_mut(statement: &mut ExecStmtResult) -> &mut VerifyFactR
 }
 
 #[test]
+fn equality_peer_bridge_rejects_each_wrong_original_endpoint_wd() {
+    for side in ["left", "right"] {
+        let (mut result, compiler) = super::execute(QUOTIENT_PACKAGE);
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+            &mut result.statement_results[7]
+        else {
+            panic!("the actual quotient equality statement")
+        };
+        let equality = super::equality_proof_mut(&mut statement.verify_result);
+        let EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::ViaPeers(peer),
+        ) = &mut equality.searched_proof
+        else {
+            panic!("the actual quotient proof uses its selected equality peer")
+        };
+        let wd = if side == "left" {
+            &mut peer.bridge.well_defined_proof.left
+        } else {
+            &mut peer.bridge.well_defined_proof.right
+        };
+        let wrong_subject = super::number_object("7");
+        assert_ne!(wd.obj().ir(), wrong_subject.ir());
+        super::replace_wd_subject(wd, wrong_subject);
+        let error = super::compile_run(&result, &compiler, "wrong_peer_endpoint_wd")
+            .expect_err("a selected peer cannot replace either original endpoint WD");
+        assert_eq!(error.route, "WD/Subject", "{side}: {error:?}");
+    }
+}
+
+#[test]
 fn scalar_division_child_formation_is_visible_only_after_completion_without_truth_export() {
     let (result, compiler) = super::execute(QUOTIENT_PACKAGE);
     let child = quotient_scalar_child(&result.statement_results[7]);

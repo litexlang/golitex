@@ -1,0 +1,28 @@
+# Tracer: strict composition keeps the complete guarded inner domain.
+# Previously: the parser rejected square ∘ gap as trailing tokens.
+# Now: both spellings construct the same checked binary function.
+# Boundary: h(3,1), h(1), and a nonunary outer function reject in Rust tests.
+# Run: target/release/litex -strict -lang en -f examples/wd/function_composition.lit
+
+have fn square(t R) R = t^2
+have fn gap(x,y R: x<y) R = y-x
+have h fn(x,y R: x<y) R = square ∘ gap
+h(1,3)=4
+compose(square,gap)(1,3)=4
+(square ∘ gap)(1,3)=square(gap(1,3))
+h(2,5)=9
+
+$is_set(preimage(square ∘ gap,4))
+
+have fn inv(x R: x!=0) R = 1/x
+forall g fn(x R) R:
+    forall x R:
+        g(x)!=0
+    =>:
+        compose(inv,g) $in fn(x R) R
+
+forall fa,fb fn(t R) R, ga,gb fn(x,y R: x<y) R:
+    fa=fb
+    ga=gb
+    =>:
+        fa ∘ ga = fb ∘ gb

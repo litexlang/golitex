@@ -247,6 +247,30 @@ impl LitexToLeanCompiler {
                 LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(p) => {
                     self.compile_even_power_nonnegative(goal, &p.base_in_real_proof, position)
                 }
+                LessEqualFactSearchProofByBuiltinRule::SqrtNonnegative(p) => {
+                    let (zero, value, strict) = source_order_oriented(goal)?;
+                    let Obj::ExpLogOperator(ExpLogOperator::Sqrt(root)) = value else {
+                        return Err(LeanCompileError::new(
+                            "SqrtNonnegative/Constructor",
+                            "The selected rule requires the original square-root constructor.",
+                        ));
+                    };
+                    if strict || !is_exact_zero(zero) {
+                        return Err(LeanCompileError::new(
+                            "SqrtNonnegative/OrderSubject",
+                            "The selected rule must conclude zero <= the square root.",
+                        ));
+                    }
+                    if !matches!(source_subject(&p.arg_nonnegative_proof)?,
+                        Fact::AtomicFact(AtomicFact::LessEqualFact(ref fact))
+                            if is_exact_zero(&fact.left) && fact.right.ir() == root.arg.ir())
+                    {
+                        return Err(LeanCompileError::new("SqrtNonnegative/RequirementSubject", "The selected child must certify the same square-root argument is nonnegative."));
+                    }
+                    let nonnegative = self.compile_verify(&p.arg_nonnegative_proof, position)?.1;
+                    let term = self.compile_object_reference(value, position)?;
+                    Ok(format!("(by\n  let _litex_sqrt := {term}\n  have _litex_nonnegative : Litex.Le (Litex.number (M := M) 0) _litex_sqrt.val.arg := {nonnegative}\n  exact Litex.sqrtNonnegative _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_nonnegative\n)"))
+                }
                 LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(_) => {
                     let (zero, value, strict) = source_order_oriented(goal)?;
                     if strict

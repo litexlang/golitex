@@ -104,7 +104,7 @@ fn anonymous_three_layer_named_return_and_composition_compute_exact_values() {
         "have fn add_three(x R) fn(u R) fn(v R) R = fn(y R) (fn(w R) R) {fn(z R) R {x+y+z}}\nadd_three(1)(2)(3)=6\n",
         "have fn step(x R) R = x+1\nhave fn choose(k N) fn(x R) R = step\nchoose(0)(2)=3\n",
         "have fn step(x R) R = x+1\nhave fn apply(g fn(x R) R, a R) R = g(a)\napply(step, 2)=3\n",
-        "have fn compose(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}\nhave fn step(x R) R = x+1\ncompose(step, step)(2)=4\n",
+        "have fn compose_on_R(f, g fn(x R) R) fn(t R) R = fn(t R) R {f(g(t))}\nhave fn step(x R) R = x+1\ncompose_on_R(step, step)(2)=4\n",
         "have fn add(x R) fn(y R) R = fn(y R) R {x+y}\nadd(1/3)(1/6)=1/2\nadd(0.1)(0.2)=0.3\n",
         "have fn step(x R) R = x+1\nhave fn twice(x R) R = step(x)+step(x)\ntwice(2)=6\n",
     ] {

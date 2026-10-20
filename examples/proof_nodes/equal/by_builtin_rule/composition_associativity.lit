@@ -1,0 +1,3 @@
+# Native strict composition: checked complete domains are required.
+forall fa,ga fn(x R) R, ha fn(x,y R: x<y) R:
+    (fa ∘ ga) ∘ ha = fa ∘ (ga ∘ ha)

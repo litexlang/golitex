@@ -260,6 +260,17 @@ fn function_call_replays_exact_disjunction_guard_substitution() {
             panic!("the recorded call guard is a disjunction");
         };
         assert_eq!(guard.facts.len(), 2);
+        if source == OR_GUARD {
+            let VerifyFactResult::OrFact(verified) = &proof.requirement_fact_verified[guard_index]
+            else {
+                panic!("actual verified disjunction");
+            };
+            assert!(
+                matches!(verified.as_ref(), VerifyOrFactResult::Success(verified)
+                if matches!(verified.searched_proof, OrFactSearchedProof::ByBuiltinRule(
+                    OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero(_))))
+            );
+        }
         if source == COMPOUND_OR_GUARD {
             assert!(matches!(guard.facts[0], AndChainAtomicFact::ChainFact(_)));
             assert!(matches!(guard.facts[1], AndChainAtomicFact::AndFact(_)));
@@ -273,7 +284,7 @@ fn function_call_replays_exact_disjunction_guard_substitution() {
     }
 }
 
-fn or_guard_mut(result: &mut RunLitexCodeResult) -> &mut OrFact {
+fn or_guard_proof_mut(result: &mut RunLitexCodeResult) -> &mut VerifyOrFactSuccess {
     let VerifyFactResult::OrFact(guard) =
         &mut call_evidence_mut(result, 1).requirement_fact_verified[2]
     else {
@@ -282,7 +293,11 @@ fn or_guard_mut(result: &mut RunLitexCodeResult) -> &mut OrFact {
     let VerifyOrFactResult::Success(guard) = guard.as_mut() else {
         panic!("successful original disjunction guard");
     };
-    &mut guard.fact
+    guard
+}
+
+fn or_guard_mut(result: &mut RunLitexCodeResult) -> &mut OrFact {
+    &mut or_guard_proof_mut(result).fact
 }
 
 #[test]
@@ -313,6 +328,50 @@ fn function_call_rejects_a_disjunction_guard_branch_for_another_argument() {
     assert_eq!(
         compile_leaf(&result, &compiler, 1).unwrap_err().route,
         "WD/FnObj/GuardSubject"
+    );
+}
+
+#[test]
+fn function_call_rejects_square_sum_evidence_for_another_recorded_component() {
+    let (mut result, compiler) = checked(OR_GUARD);
+    let OrFactSearchedProof::ByBuiltinRule(
+        OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero(selected),
+    ) = &mut or_guard_proof_mut(&mut result).searched_proof
+    else {
+        panic!("actual original square-sum component rule");
+    };
+    selected.left = selected.right.clone();
+    assert_eq!(
+        compile_leaf(&result, &compiler, 1).unwrap_err().route,
+        "Or/SquareSumSubject"
+    );
+}
+
+#[test]
+fn function_call_rejects_square_sum_child_for_another_pair() {
+    let (mut result, compiler) = checked(OR_GUARD);
+    let OrFactSearchedProof::ByBuiltinRule(
+        OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero(selected),
+    ) = &mut or_guard_proof_mut(&mut result).searched_proof
+    else {
+        panic!("actual original square-sum component rule");
+    };
+    let VerifyFactResult::AtomicExceptEquality(child) = &mut selected.square_sum_nonzero else {
+        panic!("actual original square-sum nonzero child");
+    };
+    let VerifyAtomicExceptEqualityFactResult::Success(child) = child.as_mut() else {
+        panic!("successful original square-sum nonzero child");
+    };
+    let AtomicFact::NotEqualFact(child) = &mut child.fact else {
+        panic!("original nonzero child subject");
+    };
+    let Obj::ArithmeticOperator(ArithmeticOperator::Add(sum)) = &mut child.left else {
+        panic!("original squared-component sum");
+    };
+    sum.right = sum.left.clone();
+    assert_eq!(
+        compile_leaf(&result, &compiler, 1).unwrap_err().route,
+        "Or/SquareSumPremise"
     );
 }
 

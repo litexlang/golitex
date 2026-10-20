@@ -44,6 +44,9 @@ pub(super) fn project_equality_builtin_rule(
             }
             object_for(runtime, fields)
         }
+        EqualitySearchProofByBuiltinRule::Composition(p) => {
+            super::composition::equality(p, runtime)
+        }
         EqualitySearchProofByBuiltinRule::Conjugation(p) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

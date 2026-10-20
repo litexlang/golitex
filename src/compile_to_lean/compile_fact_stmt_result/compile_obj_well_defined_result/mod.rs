@@ -10,6 +10,7 @@ mod compile_product_shape;
 mod compile_returned_cart_call;
 mod compile_set_former;
 mod compile_set_operator;
+mod compile_sqrt;
 
 pub(in crate::compile_to_lean) use compile_finite_function::{
     finite_call_parts, validate_finite_signature,

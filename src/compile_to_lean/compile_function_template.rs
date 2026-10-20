@@ -382,7 +382,7 @@ impl LitexToLeanCompiler {
         let guard = guards
             .into_iter()
             .rev()
-            .reduce(|tail, head| format!("({head} ∧ {tail})"))
+            .reduce(|tail, head| format!("(({head}) ∧ ({tail}))"))
             .unwrap_or_else(|| "True".into());
         Ok(format!("(fun {} => {guard})", parameters.join(" ")))
     }
@@ -509,6 +509,10 @@ impl LitexToLeanCompiler {
                 "(Litex.SetSemantics.unionValue (M := M) {} {})",
                 expression(&value.left)?,
                 expression(&value.right)?
+            )),
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(value)) => Ok(format!(
+                "(Litex.sqrtValue (M := M) {})",
+                expression(&value.arg)?
             )),
             Obj::ArithmeticOperator(operator) => {
                 if let ArithmeticOperator::Abs(value) = operator {
@@ -653,7 +657,7 @@ impl LitexToLeanCompiler {
                 return clauses
                     .into_iter()
                     .rev()
-                    .reduce(|tail, head| format!("({head} ∨ {tail})"))
+                    .reduce(|tail, head| format!("(({head}) ∨ ({tail}))"))
                     .ok_or_else(|| LeanCompileError::unsupported("Function/EmptyCompoundClause"));
             }
             Fact::ExistFact(fact) => {
@@ -668,7 +672,7 @@ impl LitexToLeanCompiler {
         clauses
             .into_iter()
             .rev()
-            .reduce(|tail, head| format!("({head} ∧ {tail})"))
+            .reduce(|tail, head| format!("(({head}) ∧ ({tail}))"))
             .ok_or_else(|| LeanCompileError::unsupported("Function/EmptyCompoundClause"))
     }
 

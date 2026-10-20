@@ -63,10 +63,16 @@ impl LitexToLeanCompiler {
                             self.compile_normalization_value(original, position)?,
                             self.compile_normalization_value(&residual.right, &completed)?,
                         );
-                        let residual = self.compile_verify(&proof.residual_equal, &completed)?;
+                        let compiled_residual =
+                            self.compile_verify(&proof.residual_equal, &completed)?;
+                        let residual_type = format!(
+                            "{} = {}",
+                            self.compile_normalization_value(&residual.left, &completed)?,
+                            self.compile_normalization_value(&residual.right, &completed)?,
+                        );
                         let equality = format!(
                             "(show {equality_type} from by\n  have _litex_residual : {} := {}\n  exact ({normalization}).trans _litex_residual)",
-                            residual.0.replace('\n', "\n  "), residual.1.replace('\n', "\n  "),
+                            residual_type.replace('\n', "\n  "), compiled_residual.1.replace('\n', "\n  "),
                         );
                         Ok(if reversed {
                             format!("({equality}).symm")
@@ -97,21 +103,28 @@ impl LitexToLeanCompiler {
                             owner: SourceOwner::FunctionNormalization(&proof.right_normalization),
                             before: usize::MAX,
                         };
-                        match source_subject(&proof.residual_equal)? {
+                        let residual_subject = source_subject(&proof.residual_equal)?;
+                        let residual = match &residual_subject {
                         Fact::AtomicFact(AtomicFact::EqualFact(residual))
                             if residual.left.ir() == proof.left_normalization.expanded_body.ir()
-                                && residual.right.ir() == proof.right_normalization.expanded_body.ir() => {}
+                                && residual.right.ir() == proof.right_normalization.expanded_body.ir() => residual,
                         _ => return Err(LeanCompileError::new("FunctionDefinition/ResidualEndpoints", "The two-body residual differs from the exact ordered normalized bodies.")),
-                    }
-                        let residual = self.compile_verify(&proof.residual_equal, &completed)?;
+                    };
+                        let compiled_residual =
+                            self.compile_verify(&proof.residual_equal, &completed)?;
                         let equality_type = format!(
                             "{} = {}",
                             self.compile_normalization_value(&fact.left, position)?,
                             self.compile_normalization_value(&fact.right, &after_left)?,
                         );
+                        let residual_type = format!(
+                            "{} = {}",
+                            self.compile_normalization_value(&residual.left, &completed)?,
+                            self.compile_normalization_value(&residual.right, &completed)?,
+                        );
                         Ok(format!(
                             "(show {equality_type} from by\n  have _litex_residual : {} := {}\n  exact ({left}).trans (_litex_residual.trans ({right}).symm))",
-                            residual.0.replace('\n', "\n  "), residual.1.replace('\n', "\n  "),
+                            residual_type.replace('\n', "\n  "), compiled_residual.1.replace('\n', "\n  "),
                         ))
                     }
                     EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(
@@ -260,6 +273,11 @@ impl LitexToLeanCompiler {
             }
         };
         let (function, known_path) = match source {
+            ParentCheckedBetaFunctionBody::Composition { .. } => {
+                return Err(LeanCompileError::unsupported(
+                    "function definition/Composition",
+                ))
+            }
             ParentCheckedBetaFunctionBody::StructField(_) => {
                 return Err(LeanCompileError::unsupported(
                     "FunctionDefinition/StructField",
@@ -637,6 +655,10 @@ impl LitexToLeanCompiler {
                     "(Litex.FiniteFunction.{constructor} (M := M) {vector})"
                 ))
             }
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(value)) => Ok(format!(
+                "(Litex.sqrtValue (M := M) {})",
+                self.compile_normalization_value(&value.arg, position)?
+            )),
             Obj::ArithmeticOperator(operator) => {
                 let (operation, children) = normalization_arithmetic_children(operator)?;
                 let values = children
@@ -693,6 +715,23 @@ impl LitexToLeanCompiler {
             return Ok(Some((replacement.clone(), beta.to_string())));
         }
         match current {
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(value)) => {
+                if let Some((argument, equality)) = self.embed_recorded_function_expansion(
+                    &value.arg,
+                    application,
+                    replacement,
+                    beta,
+                    position,
+                )? {
+                    let mut rebuilt = value.clone();
+                    rebuilt.arg = Box::new(argument);
+                    return Ok(Some((
+                        Obj::ExpLogOperator(ExpLogOperator::Sqrt(rebuilt)),
+                        format!("(congrArg (Litex.sqrtValue (M := M)) {equality})"),
+                    )));
+                }
+                Ok(None)
+            }
             Obj::ArithmeticOperator(operator) => {
                 let (operation, _) = normalization_arithmetic_children(operator)?;
                 let operation = arithmetic_operation_term(operation);

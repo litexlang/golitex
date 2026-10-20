@@ -16,6 +16,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (space, proof) {
+            (FunctionSpace::Composition(_), _) => Err(LeanCompileError::unsupported(
+                "WD/FunctionSpace/Composition",
+            )),
             (FunctionSpace::FnSet(signature), FunctionSpaceObjWellDefinedProofByDef::FnSet(wd)) => {
                 self.compile_function_set_wd(signature, wd, position)
             }

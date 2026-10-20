@@ -300,6 +300,25 @@ impl LitexToLeanCompiler {
         ))
     }
 
+    /// A projection or composition of typed citations determines its own type.
+    /// Retain explicit statements on exported declarations, while local facts
+    /// reuse that type without elaborating their constructors a second time.
+    pub(in crate::compile_to_lean) fn emit_internal_fact_reference(
+        &self,
+        fact: &Fact,
+        compiled: &(String, String),
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if !position.is_local() {
+            return self.emit_internal_fact(fact, compiled, position);
+        }
+        Ok(format!(
+            "have h_{} :=\n  {}",
+            fact.fact_id().value(),
+            compiled.1.replace('\n', "\n  ")
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn introduce_member_parameter(
         &self,
         parameter: &BoundName,
@@ -408,7 +427,7 @@ impl LitexToLeanCompiler {
                     return Err(LeanCompileError::unsupported("Or/Empty"));
                 };
                 while let Some(branch) = branches.pop() {
-                    proposition = format!("({branch} ∨ {proposition})");
+                    proposition = format!("(({branch}) ∨ ({proposition}))");
                 }
                 Ok(proposition)
             }

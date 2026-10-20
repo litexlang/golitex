@@ -24,8 +24,18 @@ pub struct FunctionBodyNormalizationProof {
 }
 
 pub enum FunctionBodyExpansionProof {
+    Composition(CompositionBodyExpansionProof),
     Anonymous(AnonymousFunctionBodyExpansionProof),
     FiniteCoordinate(FiniteCoordinateBodyExpansionProof),
+}
+
+pub struct CompositionBodyExpansionProof {
+    pub application: Obj,
+    pub application_well_defined: ObjWellDefinedProof,
+    pub composition: Composition,
+    pub function_equal: KnownEqualityPathProof,
+    pub expanded_body: Obj,
+    pub continued_body: Obj,
 }
 
 pub struct AnonymousFunctionBodyExpansionProof {
@@ -254,6 +264,35 @@ impl Runtime {
                 }
             }
         }
+        // Strict structural beta step; use the existing normalization budget
+        // and cycle check. No new search permission or anonymous WD obligation.
+        for (candidate, path) in self.composition_source_values(&tuple_function_head(prefix)) {
+            let Obj::FunctionSpace(FunctionSpace::Composition(composition)) = candidate else {
+                continue;
+            };
+            let inner = function_application(&composition.inner, prefix.body[0].clone())
+                .map_err(RuntimeError::InternalBug)?;
+            let expanded_body = function_application(&composition.outer, vec![Box::new(inner)])
+                .map_err(RuntimeError::InternalBug)?;
+            if expected_body.is_some_and(|expected| expected != &expanded_body) {
+                continue;
+            }
+            let VerifyObjWellDefinedResult::Success(application_well_defined) =
+                self.verify_obj_well_definedness(&application, state)?
+            else {
+                return Ok(None);
+            };
+            return Ok(Some(FunctionBodyExpansionProof::Composition(
+                CompositionBodyExpansionProof {
+                    application,
+                    application_well_defined,
+                    composition,
+                    function_equal: KnownEqualityPathProof::new(path),
+                    continued_body: expanded_body.clone(),
+                    expanded_body,
+                },
+            )));
+        }
         let candidates = self.function_body_candidates(prefix)?;
         Ok(self
             .checked_anonymous_function_body_expansion(prefix, state, expected_body, candidates)?
@@ -377,6 +416,7 @@ impl Runtime {
 impl FunctionBodyExpansionProof {
     fn expanded_body(&self) -> &Obj {
         match self {
+            Self::Composition(proof) => &proof.expanded_body,
             Self::Anonymous(proof) => &proof.expanded_body,
             Self::FiniteCoordinate(proof) => &proof.expanded_body,
         }
@@ -384,6 +424,7 @@ impl FunctionBodyExpansionProof {
 
     fn set_continued_body(&mut self, body: Obj) {
         match self {
+            Self::Composition(proof) => proof.continued_body = body,
             Self::Anonymous(proof) => proof.continued_body = body,
             Self::FiniteCoordinate(proof) => proof.continued_body = body,
         }
@@ -395,6 +436,9 @@ fn append_function_argument_groups(body: &Obj, groups: &[Vec<Box<Obj>>]) -> Opti
         return Some(body.clone());
     }
     let head = match body {
+        Obj::FunctionSpace(FunctionSpace::Composition(_)) => {
+            FnObjHead::Object(Box::new(body.clone()))
+        }
         Obj::Identifier(v) => FnObjHead::Identifier(v.clone()),
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(v)) => {
             FnObjHead::AnonymousFnLiteral(Box::new(v.clone()))

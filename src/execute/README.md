@@ -696,3 +696,23 @@ reuse their actual denominator sources. The shared normalizer and search
 permissions are unchanged.
 
 The factorial-as-product author tracer now reuses one checked identity-function object through induction, then verifies the original literal-function endpoint. Its induction result still needs explicit instantiation; the redundant echo after theorem release was removed. This preserves the current local alpha/equality policy and performs no global graph-endpoint scan. The relevant `common_obj_relations` consumer exercises that current author.
+
+## Strict composition branch
+
+`FunctionSpace::Composition` preserves the complete inner function domain. Its
+WD branch retains the checked operand interfaces and the existing anonymous
+function proof for `fn(args: inner_guards) OuterReturn {f(g(args))}`, including
+that proof's local scope. Existing WD/search/store order, permission ceilings,
+body-expansion budget and cache/transaction contracts are unchanged.
+
+Composition truth rules consume the enclosing atomic WD guarantee; they do
+not rerun universal compatibility at the lower builtin-premise ceiling. Their
+evidence distinguishes checked construction, cached WD and parent atomic WD,
+and retains the interfaces used to derive the signature. A bounded read-only
+composition-source guard excludes cyclic alias definitions such as
+`f = compose(id,f)`; it does not alter ordinary equality storage or search.
+
+This is an R1 branch extension with L3 producer/consumer checks. Reserving
+`compose` is a source compatibility change. Lean replay explicitly rejects
+this new constructor. See the [strict tracer](../../examples/wd/function_composition.lit)
+and `cargo test --release --lib function_composition`.

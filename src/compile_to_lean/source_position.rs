@@ -6503,6 +6503,19 @@ fn arithmetic_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
     if let ObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(
+                proof,
+            )),
+        ..
+    } = proof
+    {
+        return Some((
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+        ));
+    }
+    if let ObjWellDefinedProof::ByDef {
         proof: ObjWellDefinedProofByDef::ProductShape(proof),
         ..
     } = proof

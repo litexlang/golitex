@@ -392,7 +392,8 @@ fn pack_success_by_def(
                 ),
             )
         }
-        Obj::FunctionSpace(FunctionSpace::Preimage(_))
+        Obj::FunctionSpace(FunctionSpace::Composition(_))
+        | Obj::FunctionSpace(FunctionSpace::Preimage(_))
         | Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => {
             unreachable!("preimages use dedicated WD pipelines")
         }
@@ -942,7 +943,8 @@ pub(super) fn wrap_common_fail(
                 ),
             )
         }
-        Obj::FunctionSpace(FunctionSpace::Preimage(_))
+        Obj::FunctionSpace(FunctionSpace::Composition(_))
+        | Obj::FunctionSpace(FunctionSpace::Preimage(_))
         | Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => {
             unreachable!("preimages use dedicated WD pipelines")
         }

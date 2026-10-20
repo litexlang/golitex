@@ -92,6 +92,17 @@ impl LitexToLeanCompiler {
                         self.compile_fn_obj_wd(application, proof, position)?
                     }
                     (
+                        Obj::ExpLogOperator(ExpLogOperator::Sqrt(value)),
+                        ObjWellDefinedProofByDef::ExpLogOperator(
+                            ExpLogOperatorObjWellDefinedProofByDef::Sqrt(proof),
+                        ),
+                    ) => self.compile_sqrt_wd(
+                        &value.arg,
+                        &proof.child_obj_well_defined,
+                        &proof.requirement_fact_verified,
+                        position,
+                    )?,
+                    (
                         Obj::ArithmeticOperator(operator),
                         ObjWellDefinedProofByDef::ArithmeticOperator(wd),
                     ) => {

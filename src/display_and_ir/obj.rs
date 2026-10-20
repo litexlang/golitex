@@ -343,6 +343,7 @@ impl Obj {
                 Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(x)) => s.push_str(&x.ir()),
                 Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(x)) => s.push_str(&x.ir()),
                 Obj::FunctionSpace(FunctionSpace::FnRange(x)) => s.push_str(&x.ir()),
+                Obj::FunctionSpace(FunctionSpace::Composition(x)) => s.push_str(&x.ir()),
                 Obj::FunctionSpace(FunctionSpace::Preimage(x)) => s.push_str(&x.ir()),
                 Obj::FunctionSpace(FunctionSpace::PreimageSet(x)) => s.push_str(&x.ir()),
                 Obj::IteratedOperator(IteratedOperator::Sum(x)) => s.push_str(&x.ir()),
@@ -751,6 +752,7 @@ impl_obj_kw_call!(FiniteSetMax, FINITE_SET_MAX, set);
 impl_obj_kw_call!(FiniteSetMin, FINITE_SET_MIN, set);
 
 impl_obj_kw_call!(FnRange, FN_RANGE, function);
+impl_obj_kw_call!(Composition, COMPOSE, outer, inner);
 impl_obj_kw_call!(Preimage, PREIMAGE, function, value);
 impl_obj_kw_call!(PreimageSet, PREIMAGE_SET, function, target_set);
 

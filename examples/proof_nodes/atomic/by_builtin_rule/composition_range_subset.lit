@@ -1,0 +1,3 @@
+# Native strict composition: checked complete domains are required.
+forall fa fn(t R) R, ga fn(x,y R: x<y) R:
+    fn_range(fa ∘ ga) $subset fn_range(fa)

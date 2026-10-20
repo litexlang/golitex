@@ -557,6 +557,7 @@ pub struct CompleteFunctionDomainProof {
 
 pub enum CompleteFunctionDomainSourceProof {
     FiniteFunction(Box<super::finite_function::FiniteFunctionSignatureProof>),
+    Composition(Box<CompositionCallableProof>),
     AnonymousFunction {
         function: AnonymousFn,
         subject_equal: KnownEqualityPathProof,
@@ -744,6 +745,12 @@ impl Runtime {
                 }
             }
         }
+        for proof in self.composition_callables(function, ctx)? {
+            domains.push(CompleteFunctionDomainProof {
+                signature: proof.function.body.clone(),
+                source: CompleteFunctionDomainSourceProof::Composition(Box::new(proof)),
+            });
+        }
         // Do not read a neighbor's memberships: exact-subject properties are
         // the authority for complete domains, including checked space aliases.
         let mut seen_memberships = HashSet::new();
@@ -826,6 +833,13 @@ impl Runtime {
                     function_equal: KnownEqualityPathProof::new(function_path),
                 },
                 vec![Box::new(head_wd)],
+            ));
+        }
+        for source in self.composition_callables(&head, ctx)? {
+            signatures.push((
+                source.function.body.clone(),
+                FnObjDomainFnSetEvidence::Composition(Box::new(source)),
+                vec![],
             ));
         }
         for (signature, fact_id) in self.collect_in_function_set_candidates(&head) {

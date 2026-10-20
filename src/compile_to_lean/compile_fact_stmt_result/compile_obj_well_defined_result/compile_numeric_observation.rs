@@ -362,6 +362,22 @@ impl LitexToLeanCompiler {
                 Ok(pair)
             }
             ObjWellDefinedProof::ByDef {
+                obj: Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)),
+                proof:
+                    ObjWellDefinedProofByDef::ExpLogOperator(
+                        ExpLogOperatorObjWellDefinedProofByDef::Sqrt(_),
+                    ),
+            } => {
+                let term = self.compile_wd(wd, position)?;
+                let setup = format!("let _litex_sqrt := {term}\n  have _litex_sqrt_member : Litex.In _litex_sqrt Litex.C := Litex.sqrtInC _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2");
+                Ok((
+                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex _litex_sqrt _litex_sqrt_member)"),
+                    format!("(by\n  {setup}\n  exact Litex.NativeBridge.asComplex_spec _litex_sqrt _litex_sqrt_member)"),
+                    format!("(by\n  {setup}\n  exact _litex_sqrt_member)"),
+                    None,
+                ))
+            }
+            ObjWellDefinedProof::ByDef {
                 obj: Obj::FnObj(_),
                 proof: ObjWellDefinedProofByDef::FnObj(_),
             } => {

@@ -267,6 +267,13 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
             Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(r)),
         ) => Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())]),
         (
+            Obj::FunctionSpace(FunctionSpace::Composition(l)),
+            Obj::FunctionSpace(FunctionSpace::Composition(r)),
+        ) => Some(vec![
+            (l.outer.as_ref().clone(), r.outer.as_ref().clone()),
+            (l.inner.as_ref().clone(), r.inner.as_ref().clone()),
+        ]),
+        (
             Obj::FunctionSpace(FunctionSpace::Preimage(l)),
             Obj::FunctionSpace(FunctionSpace::Preimage(r)),
         ) => Some(vec![

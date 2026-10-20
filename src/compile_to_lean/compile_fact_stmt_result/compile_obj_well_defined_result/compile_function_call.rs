@@ -367,15 +367,30 @@ impl LitexToLeanCompiler {
             &formed,
         )?;
         if !self.function_uses_numeric_interface(signature) {
-            let (argument, domain) = self.compile_packed_call_domain(
-                signature,
-                &argument_terms,
-                &members,
-                &guard_proof,
-                &formed,
-            )?;
+            // The packed argument, its sethood and its domain all use the
+            // same checked children. Bind each source argument separately;
+            // nested calls must not be expanded at every use of the tuple.
+            let local_arguments = (0..argument_terms.len())
+                .map(|index| format!("_litex_call_arg_{index}"))
+                .collect::<Vec<_>>();
+            let bindings = local_arguments
+                .iter()
+                .zip(&argument_terms)
+                .map(|(name, term)| format!("{name} := {term}"))
+                .collect::<Vec<_>>()
+                .join(";\nlet ");
+            let (domain, argument, base_member, packed_guard_proof) = self
+                .compile_packed_call_arguments(
+                    signature,
+                    &local_arguments,
+                    &members,
+                    &guard_proof,
+                    &formed,
+                )?;
+            let output_set = self.compile_object_reference(&signature.ret_set, &formed)?;
+            let packed_guard = self.compile_function_packed_guard_template(signature, &formed)?;
             let call = format!(
-                "(Litex.callOn {compiled_signature} {head_term} {argument} {membership} {domain})"
+                "(let {bindings};\nLitex.callOnDomain {domain} {output_set} {packed_guard} {head_term} {argument} {membership} {base_member} {packed_guard_proof})"
             );
             let member = format!("(Litex.callOnInOutput {call})");
             return Ok((call, output, member));
@@ -403,14 +418,14 @@ impl LitexToLeanCompiler {
         Ok((call, output, member))
     }
 
-    fn compile_packed_call_domain(
+    fn compile_packed_call_arguments(
         &self,
         signature: &FnSet,
         arguments: &[String],
         members: &[String],
         guard: &str,
         position: &SourcePosition<'_>,
-    ) -> Result<(String, String), LeanCompileError> {
+    ) -> Result<(String, String, String, String), LeanCompileError> {
         let sets = self.compile_function_input_sets(signature, position)?;
         if sets.len() != arguments.len() || sets.len() != members.len() {
             return Err(LeanCompileError::new(
@@ -418,19 +433,24 @@ impl LitexToLeanCompiler {
                 "Every source argument needs its own ordered carrier certificate.",
             ));
         }
-        let (packed, base_member) = if arguments.len() == 1 {
-            (arguments[0].clone(), members[0].clone())
+        let (domain, packed, base_member) = if arguments.len() == 1 {
+            (sets[0].clone(), arguments[0].clone(), members[0].clone())
         } else {
             let values = arguments
                 .iter()
                 .map(|argument| format!("(Litex.denote {argument})"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let sets = sets
+            let set_values = sets
                 .iter()
                 .map(|set| format!("(Litex.denote {set})"))
                 .collect::<Vec<_>>()
                 .join(", ");
+            let set_wd = sets
+                .iter()
+                .map(|set| format!("exact Litex.isSet {set}"))
+                .collect::<Vec<_>>()
+                .join("\n  · ");
             let wd = arguments
                 .iter()
                 .map(|argument| format!("exact Litex.isSet {argument}"))
@@ -441,12 +461,10 @@ impl LitexToLeanCompiler {
                 .map(|member| format!("exact {member}"))
                 .collect::<Vec<_>>()
                 .join("\n  · ");
-            (format!("(Litex.tuple (M := M) ![{values}] (by\n  intro i\n  fin_cases i\n  · {wd}))"),
-                format!("(Litex.FiniteFunction.tuple_inCart (M := M) ![{values}] ![{sets}] (by\n  intro i\n  fin_cases i\n  · {membership}))"))
+            (format!("(Litex.cart (M := M) ![{set_values}] (by\n  intro i\n  fin_cases i\n  · {set_wd}))"),
+                format!("(Litex.tuple (M := M) ![{values}] (by\n  intro i\n  fin_cases i\n  · {wd}))"),
+                format!("(Litex.FiniteFunction.tuple_inCart (M := M) ![{values}] ![{set_values}] (by\n  intro i\n  fin_cases i\n  · {membership}))"))
         };
-        let (domain, domain_set) = self.compile_function_base_domain(signature, position)?;
-        let output = self.compile_object_reference(&signature.ret_set, position)?;
-        let packed_guard = self.compile_function_packed_guard_template(signature, position)?;
         let guard_proof = if signature.dom_facts.is_empty() {
             "True.intro".to_string()
         } else if arguments.len() == 1 {
@@ -461,7 +479,7 @@ impl LitexToLeanCompiler {
                 self.compile_function_packed_application_equality(&raw_guard, &values)?;
             format!("(Eq.mpr {equality} {guard})")
         };
-        Ok((packed.clone(), format!("((Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {packed_guard} (Litex.denote {packed})).mpr ⟨{base_member}, {guard_proof}⟩)")))
+        Ok((domain, packed, base_member, guard_proof))
     }
 }
 
@@ -639,7 +657,7 @@ impl LitexToLeanCompiler {
             }
             let main_match = main_match.ok_or_else(|| LeanCompileError::new("FunctionReturn/SelectedSignature", "The chosen return source has no recorded return-set match."))?;
             let (source_set, equality, member) = if let Some(equality) = selected_match {
-                let member = self.compile_call_output_proof(application, evidence, &call)?;
+                let member = self.compile_call_output_proof(application, evidence, "_litex_return_call")?;
                 (selected_signature.ret_set.as_ref(), equality, member)
             } else if selected_same_domains {
                 let (packed, domain) = self.compile_fn_return_domain(application, evidence, main_signature, &ctor_position)?;
@@ -651,7 +669,9 @@ impl LitexToLeanCompiler {
             };
             let source_set = self.compile_object_reference(source_set, position)?;
             let target_set = self.compile_object_reference(&goal.set, position)?;
-            Ok(format!("(Litex.inOfSame {call} {call} {source_set} {target_set} (Litex.sameRefl {call}) {equality} {member})"))
+            // The exact checked call supplies all three equality endpoints
+            // and the output law. Elaborate its constructor once locally.
+            Ok(format!("(by\n  let _litex_return_call := {call}\n  exact Litex.inOfSame _litex_return_call _litex_return_call {source_set} {target_set} (Litex.sameRefl _litex_return_call) {equality} {member})"))
         })?;
         proof.ok_or_else(|| {
             LeanCompileError::new(
@@ -882,14 +902,18 @@ impl LitexToLeanCompiler {
         let (members, guard_proof) =
             self.compile_function_domain_certificates(signature, &terms, &proofs, position)?;
         if !self.function_uses_numeric_interface(signature) {
-            let (packed, domain) = self.compile_packed_call_domain(
-                signature,
-                &terms,
-                &members,
-                &guard_proof,
-                position,
-            )?;
-            return Ok((format!("(Litex.denote {packed})"), domain));
+            let (domain, packed, base_member, packed_guard_proof) = self
+                .compile_packed_call_arguments(
+                    signature,
+                    &terms,
+                    &members,
+                    &guard_proof,
+                    position,
+                )?;
+            let output = self.compile_object_reference(&signature.ret_set, position)?;
+            let packed_guard = self.compile_function_packed_guard_template(signature, position)?;
+            let proof = format!("((Litex.FunctionSignature.withGuard_domain (Litex.denote {domain}) (Litex.denote {output}) (Litex.isSet {domain}) (Litex.isSet {output}) {packed_guard} (Litex.denote {packed})).mpr ⟨{base_member}, {packed_guard_proof}⟩)");
+            return Ok((format!("(Litex.denote {packed})"), proof));
         }
         let (constructor_arguments, target) =
             self.compile_function_constructor_arguments(signature, position)?;

@@ -1,4 +1,5 @@
 use super::LitexToLeanCompiler;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_have_fn_equal::ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::{
     FunctionBodyExpansionProof, FunctionBodyNormalizationProof,
 };
@@ -33,6 +34,12 @@ fn checked_source(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
 }
 
 fn normalization(result: &mut RunLitexCodeResult) -> &mut FunctionBodyNormalizationProof {
+    &mut unfolding(result).normalization
+}
+
+fn unfolding(
+    result: &mut RunLitexCodeResult,
+) -> &mut ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
         &mut result.statement_results[2]
     else {
@@ -61,7 +68,7 @@ fn normalization(result: &mut RunLitexCodeResult) -> &mut FunctionBodyNormalizat
     else {
         panic!("actual source function normalization route");
     };
-    &mut proof.normalization
+    proof
 }
 
 #[test]
@@ -137,4 +144,36 @@ fn absolute_value_normalization_rejects_missing_original_expansion() {
         .compile_run(&result, "missing_abs_beta_expansion")
         .unwrap_err();
     assert_eq!(error.route, "FunctionDefinition/ExpansionArity");
+}
+
+#[test]
+fn absolute_value_normalization_rejects_changed_residual_body() {
+    let (mut result, compiler) = checked();
+    let VerifyFactResult::Equality(residual) = &mut unfolding(&mut result).residual_equal else {
+        panic!("original residual equality");
+    };
+    let VerifyEqualityResult::Success(residual) = residual.as_mut() else {
+        panic!("original successful residual");
+    };
+    residual.fact.left = Obj::StandardSet(StandardSet::R);
+    let error = compiler
+        .compile_run(&result, "changed_abs_residual_body")
+        .unwrap_err();
+    assert_eq!(error.route, "FunctionDefinition/ResidualBody");
+}
+
+#[test]
+fn absolute_value_normalization_rejects_changed_residual_endpoint() {
+    let (mut result, compiler) = checked();
+    let VerifyFactResult::Equality(residual) = &mut unfolding(&mut result).residual_equal else {
+        panic!("original residual equality");
+    };
+    let VerifyEqualityResult::Success(residual) = residual.as_mut() else {
+        panic!("original successful residual");
+    };
+    residual.fact.right = Obj::StandardSet(StandardSet::R);
+    let error = compiler
+        .compile_run(&result, "changed_abs_residual_endpoint")
+        .unwrap_err();
+    assert_eq!(error.route, "FunctionDefinition/ResidualEndpoint");
 }

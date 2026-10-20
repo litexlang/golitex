@@ -152,6 +152,7 @@ fn induction_bound_from_obj(
             return induction_bound_from_anonymous_fn(name, a)
         }
         Obj::FunctionSpace(FunctionSpace::FnRange(a)) => vec![&a.function],
+        Obj::FunctionSpace(FunctionSpace::Composition(a)) => vec![&a.outer, &a.inner],
         Obj::FunctionSpace(FunctionSpace::Preimage(a)) => vec![&a.function, &a.value],
         Obj::FunctionSpace(FunctionSpace::PreimageSet(a)) => vec![&a.function, &a.target_set],
         Obj::ProductShape(ProductShape::Cart(a)) => a.args.iter().map(|o| o.as_ref()).collect(),

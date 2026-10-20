@@ -9,12 +9,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProo
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::parse::keywords::SUBSET;
+use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin proofs for `$subset`. One rule ↔ one dedicated proof struct.
 pub enum SubsetFactSearchProofByBuiltinRule {
     // Fixed inclusion among standard number sets.
     // Example: prove `N $subset R`.
+    CompositionRangeSubset(CompositionRangeSubsetProof),
     StandardSetSubset(StandardSetSubsetBuiltinRuleProof),
     // `intersect(A, B) $subset A`.
     // Example: prove `intersect({1, 2}, {2}) $subset {1, 2}`.
@@ -78,6 +80,10 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     // ⇒ `A $subset C`.
     // Example: trust `A $subset B`; trust `B $subset C`; prove `A $subset C`.
     SubsetTransitivity(SubsetTransitivityBuiltinRuleProof),
+}
+
+pub struct CompositionRangeSubsetProof {
+    pub callable: Box<CompositionCallableProof>,
 }
 
 pub struct StandardSetSubsetBuiltinRuleProof {
@@ -166,6 +172,27 @@ impl Runtime {
             return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(
                 SubsetReflexivityBuiltinRuleProof {},
             )));
+        }
+
+        // range(f ∘ g) ⊆ range(f); equality is not implied without surjectivity.
+        if let (
+            Obj::FunctionSpace(FunctionSpace::FnRange(left)),
+            Obj::FunctionSpace(FunctionSpace::FnRange(right)),
+        ) = (&fact.left, &fact.right)
+        {
+            for callable in
+                self.parent_checked_composition_callables(&left.function, verify_state)?
+            {
+                if callable.composition.outer.ir() == right.function.ir() {
+                    return Ok(Some(
+                        SubsetFactSearchProofByBuiltinRule::CompositionRangeSubset(
+                            CompositionRangeSubsetProof {
+                                callable: Box::new(callable),
+                            },
+                        ),
+                    ));
+                }
+            }
         }
 
         // A — shape dispatch

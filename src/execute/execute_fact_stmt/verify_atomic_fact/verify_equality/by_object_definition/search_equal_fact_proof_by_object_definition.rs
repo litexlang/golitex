@@ -6,7 +6,7 @@
 //! - Instantiated template (obj or fn head) → template body unfolds
 
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{FnObjHead, Obj, ProductShape};
+use crate::ast::obj::{FnObjHead, FunctionSpace, Obj, ProductShape};
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -82,6 +82,19 @@ impl Runtime {
                         parent_fact,
                         verify_state,
                     ),
+                FnObjHead::Object(value)
+                    if matches!(
+                        value.as_ref(),
+                        Obj::FunctionSpace(FunctionSpace::Composition(_))
+                    ) =>
+                {
+                    self.search_object_definition_for_fn_application(
+                        def_side,
+                        other_side,
+                        parent_fact,
+                        verify_state,
+                    )
+                }
                 FnObjHead::InstantiatedTemplateObj(_) => self
                     .search_object_definition_for_template_fn_application(
                         def_side,

@@ -1,0 +1,3 @@
+# Native strict composition: checked complete domains are required.
+forall fa fn(t R) R, ga fn(x,y R: x<y) R:
+    compose(fa,ga) = fn(a,b R: a<b) R {fa(ga(a,b))}

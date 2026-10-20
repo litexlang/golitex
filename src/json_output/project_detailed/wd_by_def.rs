@@ -283,6 +283,9 @@ pub(super) fn project_obj_wd_by_def(
             ];
             if let Some(domain) = &p.domain_fn_set {
                 let d = match domain {
+                    FnObjDomainFnSetEvidence::Composition(p) => {
+                        super::composition::callable(p, runtime)
+                    }
                     FnObjDomainFnSetEvidence::FiniteFunction(source) => {
                         super::function_domain::project_finite_function_source(source, runtime)
                     }
@@ -414,6 +417,9 @@ pub(super) fn project_obj_wd_by_def(
             ];
             object_for(runtime, entries)
         }
+        ObjWellDefinedProofByDef::FunctionSpace(
+            FunctionSpaceObjWellDefinedProofByDef::Composition(p),
+        ) => super::composition::construction(p, runtime),
         ObjWellDefinedProofByDef::FunctionSpace(
             FunctionSpaceObjWellDefinedProofByDef::Preimage(p),
         ) => project_preimage_wd(

@@ -9,13 +9,13 @@ objects and `Mor` bounds arrow encodings. The fields are ordered:
 struct Category<Obj set, Mor set>:
     Hom fn(source, target Obj) power_set(Mor)
     identity fn(object Obj) Mor
-    compose fn(source, middle, target Obj, f, g Mor: f $in Hom(source, middle), g $in Hom(middle, target)) Mor
+    compose_morphism fn(source, middle, target Obj, f, g Mor: f $in Hom(source, middle), g $in Hom(middle, target)) Mor
     # <=>: exact Hom closure, identities, and associativity
 ```
 
 A later field type may refer to earlier fields. A function's own parameter
 names remain unavailable in its parameter carriers and return object; they
-are available in its domain conditions and body. The `compose` field uses
+are available in its domain conditions and body. The `compose_morphism` field uses
 one guarded call and a fixed `Mor` return carrier. Exact endpoint typing is
 retained as category closure laws, not encoded as a dependent return type.
 
@@ -24,7 +24,7 @@ retained as category closure laws, not encoded as a dependent return type.
 | Concept | Interface | Required mathematics |
 | --- | --- | --- |
 | Category | `Category<Obj, Mor>` | identity and composite Hom closure, both unit laws, associativity |
-| Category data predicate | `is_category` | same laws on explicitly supplied Hom/identity/compose; used to check concrete data |
+| Category data predicate | `is_category` | same laws on explicitly supplied Hom/identity/compose_morphism; used to check concrete data |
 | Morphism, identity, selected composite | named propositions | precise Hom memberships and the corresponding equations |
 | Functor | `is_functor` on source/target Category values and two maps | arrow Hom closure, identity preservation, composition preservation |
 | Naturality square | `naturality_square_commutes` | input/image/component typing and one commuting square |

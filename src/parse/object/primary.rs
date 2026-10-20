@@ -16,6 +16,7 @@ use crate::ast::obj::{
     Conjugate, Cosh, Coth, Csc, Csch, Sec, Sech, Sinh, SymmetricDifference, Tanh,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
+use crate::parse::keywords::COMPOSE;
 use crate::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
     COT, C_ABS, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ,
@@ -743,6 +744,12 @@ fn try_parse_keyword_primary(
                 set: Box::new(set),
             }))
         })?)),
+        COMPOSE => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            COMPOSE,
+            |outer, inner| crate::ast::obj::Composition::new(outer, inner).into(),
+        )?)),
         FN_RANGE => Ok(Some(parse_unary_keyword(rt, tb, FN_RANGE, |function| {
             Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
                 function: Box::new(function),

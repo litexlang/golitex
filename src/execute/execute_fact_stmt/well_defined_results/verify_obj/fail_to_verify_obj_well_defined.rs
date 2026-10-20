@@ -8,6 +8,7 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult,
 };
+use crate::prelude::*;
 
 pub enum FailToVerifyObjWellDefinedResult {
     Identifier(FailToVerifyIdentifierObjWellDefined),
@@ -120,6 +121,7 @@ pub enum FailToVerifyFunctionSpaceObjWellDefinedResult {
     FnSet(FailToVerifyFnSetObjWellDefined),
     AnonymousFn(FailToVerifyAnonymousFnObjWellDefined),
     FnRange(FailToVerifyFnRangeObjWellDefined),
+    Composition(CompositionFailure),
     Preimage(FailToVerifyPreimageObjWellDefined),
     PreimageSet(FailToVerifyPreimageSetObjWellDefined),
 }
