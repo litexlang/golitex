@@ -1,0 +1,10 @@
+# Explicit finite-point function-limit theorem; all premises are checked.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_unique.lit
+
+thm fn_limit_at_unique_example:
+    ? forall fa fn(x R) R,x0,A,B R:
+        $has_limit_at(fa,x0,A)
+        $has_limit_at(fa,x0,B)
+        =>:
+            A=B
+    release thm fn_limit_at_unique(fa,x0,A,B)

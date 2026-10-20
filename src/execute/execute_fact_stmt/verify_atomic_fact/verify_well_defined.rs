@@ -113,6 +113,59 @@ impl Runtime {
                 },
             ));
         }
+        let function_limit = match fact {
+            AtomicFact::HasFunctionLimitFact(f) => {
+                Some((&f.function, f.approach.point(), &f.value))
+            }
+            AtomicFact::NotHasFunctionLimitFact(f) => {
+                Some((&f.function, f.approach.point(), &f.value))
+            }
+            _ => None,
+        };
+        if let Some((function, point, value)) = function_limit {
+            let Some(function_domain) =
+                self.checked_real_function_limit_domain(function, verify_state)?
+            else {
+                return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                    FailToVerifyAtomicFactWellDefinedResult::FunctionLimitDomain {
+                        function: function.clone(),
+                        well_defined_of_each_parameter: succeeded_args,
+                    },
+                ));
+            };
+            let mut real_proofs = Vec::new();
+            for element in [point, value] {
+                let requirement = self.function_limit_real_member(element.clone());
+                let result = self.verify_fact(&requirement, verify_state)?;
+                if result.is_failed() {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                        FailToVerifyAtomicFactWellDefinedResult::Domain {
+                            well_defined_of_each_parameter: succeeded_args,
+                            predicate_signature,
+                            completed: Vec::new(),
+                            requirement,
+                            result: Box::new(result),
+                        },
+                    ));
+                }
+                real_proofs.push(Box::new(result));
+            }
+            let value_real = real_proofs.pop().unwrap();
+            let point_real = real_proofs.pop().unwrap();
+            return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                AtomicFactWellDefinedProof {
+                    well_defined_of_each_parameter: succeeded_args,
+                    predicate_signature,
+                    predicate_domain: PredicateDomainProof::FunctionLimit(
+                        super::well_defined_result::FunctionLimitPredicateDomainProof {
+                            function_domain,
+                            point_real,
+                            value_real,
+                        },
+                    ),
+                },
+            ));
+        }
         // The new limit family consumes the checked callable argument's exact
         // signature; it does not rerun its body under the predicate-domain ceiling.
         let sequence_limit = match fact {
@@ -606,7 +659,9 @@ fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::CoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotCoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::HasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::HasFunctionLimitFact(f) => vec![&f.function, f.approach.point(), &f.value],
         AtomicFact::NotHasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasFunctionLimitFact(f) => vec![&f.function, f.approach.point(), &f.value],
         AtomicFact::DvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotDvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::InjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],

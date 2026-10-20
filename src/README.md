@@ -27,7 +27,7 @@ left by processing it.
 | [exec_env/known_fact_memory.rs](exec_env/known_fact_memory.rs) | `KnownFactMemory`, `KnownEquivalenceClassMemory` | Stored facts by `FactId`, plus indexes for equality, atomic facts and quantified conclusions. Equality classes aid lookup; their generating equality edges retain the facts that justify a path. |
 | [execute/exec_stmt_result.rs](execute/exec_stmt_result.rs) | `ExecStmtResult` | The statement-shaped result tree: what execution did and which nested result belongs to that action. |
 | [execute/execute_fact_stmt/verify_fact_result.rs](execute/execute_fact_stmt/verify_fact_result.rs) | `VerifyFactResult` | The proposition-shaped verification tree. Follow a branch to see well-definedness evidence, its successful proof route or its failure. |
-| [store_fact_and_infer/store_fact_and_infer_result/store_and_infer_result.rs](store_fact_and_infer/store_fact_and_infer_result/store_and_infer_result.rs) | `StoreFactAndInferResult` | The stored seed fact and forward consequences, represented as `store` and an optional `infer` stage. The latter is absent in store-only formation scopes. |
+| [store_fact_and_infer/store_fact_and_infer_result/store_and_infer_result.rs](store_fact_and_infer/store_fact_and_infer_result/store_and_infer_result.rs) | `StoreFactAndInferResult` | Ordered stages: `store`, `formed_subjects` (new atomic-argument WD registrations), and optional `infer`. The latter is absent in store-only formation scopes. |
 
 The source AST describes what was written. `ExecEnv` holds the knowledge
 available in a scope. The result tree describes how a statement was processed.

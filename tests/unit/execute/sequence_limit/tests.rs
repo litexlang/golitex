@@ -171,7 +171,7 @@ fn sequence_limit_tests_substitution_congruence_latex_and_reserved_names() {
         "have lim R=1",
         "prop has_seq_limit(a seq(R),L R):\n    L=L",
         "lim()=0",
-        "lim(1,2)=0",
+        "lim(1,2,3)=0",
         "$has_seq_limit(1)",
         "$has_seq_limit(1,2,3)",
     ] {

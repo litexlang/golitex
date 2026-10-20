@@ -68,12 +68,19 @@ pub(crate) fn flatten_def_prop_params(list: &TypedParameterList) -> Vec<BoundNam
 }
 
 impl crate::runtime::Runtime {
-    pub(crate) fn remember_formed_atomic_subjects(&mut self, fact: &crate::ast::fact::Fact) {
+    pub(crate) fn remember_formed_atomic_subjects(
+        &mut self,
+        fact: &crate::ast::fact::Fact,
+    ) -> Vec<super::FormedAtomicSubject> {
+        let mut formed = Vec::new();
         // Formation is established by user-fact verification or the named infer rule.
         // Cache only its direct atomic subjects in this scope, never the bound
         // internals of a quantified fact. Exploratory verify does not record WD.
         if let crate::ast::fact::Fact::AtomicFact(atomic) = fact {
-            for obj in crate::ast::fact::atomic_fact_args_ref(atomic) {
+            for (argument_index, obj) in crate::ast::fact::atomic_fact_args_ref(atomic)
+                .into_iter()
+                .enumerate()
+            {
                 // Named objects have their own definition evidence. Recording
                 // a second WD cache entry for each alias adds no certificate.
                 if matches!(obj, crate::ast::obj::Obj::Identifier(_)) {
@@ -84,8 +91,13 @@ impl crate::runtime::Runtime {
                     self.top_exec_env_mut()
                         .well_defined_objects
                         .record(obj.clone(), id);
+                    formed.push(super::FormedAtomicSubject {
+                        argument_index,
+                        wd_id: id,
+                    });
                 }
             }
         }
+        formed
     }
 }

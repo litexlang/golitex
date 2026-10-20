@@ -774,12 +774,41 @@ fn try_parse_keyword_primary(
                 n: Box::new(n),
             }))
         })?)),
-        crate::parse::keywords::LIM => Ok(Some(parse_unary_keyword(
-            rt,
-            tb,
-            crate::parse::keywords::LIM,
-            |sequence| crate::ast::obj::SequenceLimit::new(sequence).into(),
-        )?)),
+        crate::parse::keywords::LIM_LEFT | crate::parse::keywords::LIM_RIGHT => {
+            let left = token == crate::parse::keywords::LIM_LEFT;
+            tb.advance()?;
+            let mut args = parse_obj_list_paren(rt, tb)?;
+            if args.len() != 2 {
+                return Err(tb.parse_error("one-sided limits expect 2 function/point arguments"));
+            }
+            let point = Box::new(args.pop().unwrap());
+            let approach = if left {
+                crate::ast::obj::LimitApproach::FromLeft(point)
+            } else {
+                crate::ast::obj::LimitApproach::FromRight(point)
+            };
+            Ok(Some(
+                crate::ast::obj::FunctionLimit::with_approach(args.pop().unwrap(), approach).into(),
+            ))
+        }
+        crate::parse::keywords::LIM => {
+            tb.advance()?;
+            let mut args = parse_obj_list_paren(rt, tb)?;
+            match args.len() {
+                1 => Ok(Some(
+                    crate::ast::obj::SequenceLimit::new(args.remove(0)).into(),
+                )),
+                2 => {
+                    let point = args.pop().unwrap();
+                    Ok(Some(
+                        crate::ast::obj::FunctionLimit::new(args.pop().unwrap(), point).into(),
+                    ))
+                }
+                _ => Err(tb.parse_error(
+                    "`lim` expects 1 sequence argument or 2 function/point arguments",
+                )),
+            }
+        }
         // Infinite sequences in S. Example: `seq(R)`.
         SEQ => Ok(Some(parse_unary_keyword(rt, tb, SEQ, |set| {
             Obj::SetFormer(SetFormer::SeqSet(SeqSet { set: Box::new(set) }))

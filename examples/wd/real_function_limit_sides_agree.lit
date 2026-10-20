@@ -1,0 +1,34 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_sides_agree.lit
+
+have fn sided_identity(x R) R=x
+
+have fn sided_square(x R) R=x^2
+
+claim:
+    ? forall x R:
+        sided_square(x)=sided_identity(x)^2
+    sided_identity(x)=x
+    sided_square(x)=x^2=sided_identity(x)^2
+
+release thm fn_limit_left_real_accumulation(0)
+
+by thm fn_limit_left_identity(sided_identity,0) => $has_limit_left(sided_identity,0,0)
+
+by thm fn_limit_left_power(sided_identity,sided_square,0,0,2) => $has_limit_left(sided_square,0,0^2)
+
+lim_left(sided_square,0)=0
+
+release thm fn_limit_right_real_accumulation(0)
+
+by thm fn_limit_right_identity(sided_identity,0) => $has_limit_right(sided_identity,0,0)
+
+by thm fn_limit_right_power(sided_identity,sided_square,0,0,2) => $has_limit_right(sided_square,0,0^2)
+
+lim_right(sided_square,0)=0
+
+by thm fn_limit_from_sides(sided_square,0,0) => $has_limit_at(sided_square,0,0)
+
+lim(sided_square,0)=0
+
+lim(sided_square,0)+2=2

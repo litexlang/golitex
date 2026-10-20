@@ -1,0 +1,17 @@
+# Relative-domain finite limit at an excluded endpoint.
+# The domain R+ accumulates at zero; the call positive_identity_endpoint(0) is illegal.
+# Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_endpoints.lit
+
+have fn positive_identity_endpoint(x R+) R=x
+
+claim:
+    ? forall r R+:
+        exist x R+ st {0<abs(x-0) and abs(x-0)<r}
+    0<r/2<r
+    r/2-0=r/2
+    abs(r/2-0)=abs(r/2)=r/2
+    witness exist x R+ st {0<abs(x-0) and abs(x-0)<r} from r/2
+
+release thm fn_limit_at_identity(positive_identity_endpoint,0)
+
+lim(positive_identity_endpoint,0)=0

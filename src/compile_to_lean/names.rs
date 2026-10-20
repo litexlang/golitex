@@ -223,7 +223,12 @@ impl LitexToLeanCompiler {
             .collect::<Vec<_>>();
         let tokens = |text: &str| {
             text.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-                .filter(|token| token.starts_with("h_") || token.starts_with("_object_i"))
+                .filter(|token| {
+                    token.starts_with("h_")
+                        || token.starts_with("_object_i")
+                        || token.starts_with("_object_w")
+                        || token.starts_with("_object_h")
+                })
                 .map(str::to_string)
                 .collect::<Vec<_>>()
         };
@@ -499,6 +504,8 @@ impl LitexToLeanCompiler {
             | AtomicFact::ProperSupersetFact(_)
             | AtomicFact::PrimeFact(_)
             | AtomicFact::CoprimeFact(_)
+            | AtomicFact::HasFunctionLimitFact(_)
+            | AtomicFact::NotHasFunctionLimitFact(_)
             | AtomicFact::HasSequenceLimitFact(_)
             | AtomicFact::NotHasSequenceLimitFact(_)
             | AtomicFact::DvdFact(_)
@@ -532,6 +539,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         if let Some(term) = position.bound_object_child(object) {
+            return Ok(term);
+        }
+        if let Some(term) = position.registered_wd_reference(object, None)? {
             return Ok(term);
         }
         if let Some(term) =
@@ -568,6 +578,15 @@ impl LitexToLeanCompiler {
         }
         if let Some(term) = self.compile_recursive_signature_reference(object, position)? {
             return Ok(term);
+        }
+        if matches!(object, Obj::FnObj(_)) {
+            if let Some(Some(term)) = position
+                .with_visible_inferred_subject(object, &mut |store, producer| {
+                    self.compile_cart_inferred_subject(object, store, producer)
+                })?
+            {
+                return Ok(term);
+            }
         }
         if let Some(term) =
             position.with_visible_wd(object, &mut |wd, producer| self.compile_wd(wd, producer))?

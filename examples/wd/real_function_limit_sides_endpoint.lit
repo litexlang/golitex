@@ -1,0 +1,38 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_sides_endpoint.lit
+
+have fn sided_endpoint(x R+) R=x
+
+claim:
+    ? forall r R+:
+        exist x R+ st {0<abs(x-0) and abs(x-0)<r}
+    0<r/2<r
+    r/2-0=r/2
+    abs(r/2-0)=r/2
+    witness exist x R+ st {0<abs(x-0) and abs(x-0)<r} from r/2
+
+by thm fn_limit_at_identity(sided_endpoint,0) => $has_limit_at(sided_endpoint,0,0)
+
+claim:
+    ? forall r R+:
+        exist x R+ st {0<x-0 and x-0<r}
+    0<r/2<r
+    r/2-0=r/2
+    witness exist x R+ st {0<x-0 and x-0<r} from r/2
+
+by thm fn_limit_at_to_right(sided_endpoint,0,0) => $has_limit_right(sided_endpoint,0,0)
+
+lim_right(sided_endpoint,0)=0
+
+claim:
+    ? forall L R:
+        not $has_limit_left(sided_endpoint,0,L)
+    by contra:
+        ? not $has_limit_left(sided_endpoint,0,L)
+        release thm fn_limit_left_accumulation(sided_endpoint,0,L)
+        obtain x from exist x R+ st {0<0-x and 0-x<1}
+        0<x
+        x<0
+        impossible x<0
+
+lim(sided_endpoint,0)=0

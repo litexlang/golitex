@@ -1,0 +1,12 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_right_squeeze.lit
+
+thm fn_limit_right_squeeze_example:
+    ? forall fa,ga,ha fn(x R) R,x0,L R,r R+:
+        $has_limit_right(fa,x0,L)
+        $has_limit_right(ha,x0,L)
+        forall x {t R:0<t-x0 and t-x0<r}:
+            fa(x)<=ga(x)<=ha(x)
+        =>:
+            $has_limit_right(ga,x0,L)
+    release thm fn_limit_right_squeeze(fa,ga,ha,x0,L,r)

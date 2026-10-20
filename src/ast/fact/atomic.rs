@@ -5,6 +5,8 @@ use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicFact {
+    HasFunctionLimitFact(HasFunctionLimitFact),
+    NotHasFunctionLimitFact(NotHasFunctionLimitFact),
     HasSequenceLimitFact(HasSequenceLimitFact),
     NotHasSequenceLimitFact(NotHasSequenceLimitFact),
     // User-defined `$prop(...)` only. Official builtins have dedicated variants.
@@ -396,7 +398,9 @@ impl AtomicFact {
     pub fn fact_id(&self) -> FactId {
         match self {
             AtomicFact::HasSequenceLimitFact(f) => f.fact_id,
+            AtomicFact::HasFunctionLimitFact(f) => f.fact_id,
             AtomicFact::NotHasSequenceLimitFact(f) => f.fact_id,
+            AtomicFact::NotHasFunctionLimitFact(f) => f.fact_id,
             AtomicFact::NormalAtomicFact(f) => f.fact_id,
             AtomicFact::EqualFact(f) => f.fact_id,
             AtomicFact::LessFact(f) => f.fact_id,
@@ -450,6 +454,12 @@ impl AtomicFact {
             PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
+            AtomicFact::HasFunctionLimitFact(f) => AtomicName::Plain {
+                name: f.approach.predicate_name().into(),
+            },
+            AtomicFact::NotHasFunctionLimitFact(f) => AtomicName::Plain {
+                name: f.approach.predicate_name().into(),
+            },
             AtomicFact::HasSequenceLimitFact(_) | AtomicFact::NotHasSequenceLimitFact(_) => {
                 AtomicName::Plain {
                     name: "has_seq_limit".into(),
@@ -545,6 +555,24 @@ pub struct HasSequenceLimitFact {
 pub struct NotHasSequenceLimitFact {
     pub fact_id: FactId,
     pub sequence: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HasFunctionLimitFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub approach: crate::ast::obj::LimitApproach,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotHasFunctionLimitFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub approach: crate::ast::obj::LimitApproach,
     pub value: Obj,
     pub line_file: Option<SourceLine>,
 }

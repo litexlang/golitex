@@ -1,0 +1,5 @@
+# Must fail: finite-point function limit cancellation without proof.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_cancellation_without_proof.lit
+
+have fn unproved_cancellation_function(x R) R=19
+0*lim(unproved_cancellation_function,0)=0

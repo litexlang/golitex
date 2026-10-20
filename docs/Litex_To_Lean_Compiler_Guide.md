@@ -521,6 +521,21 @@ denominator. They preserve source conditions; they are not additional
 mathematical operands. Compilation must establish or resolve this exact
 construction evidence before emitting the equality proof.
 
+When storing an atomic fact registers a new object as well-defined,
+`StoreFactAndInferResult.formed_subjects` retains its original argument index
+and WD ID. The compiler connects that registration to the argument's checked
+construction and emits `_object_w<ID>` once. Later facts in the same source
+scope can reference that definition. Numeric literals keep their native
+constructors. Nested WD children can also share local Lean `let` bindings.
+These references reduce repeated construction terms without changing the
+selected proof or introducing new assumptions. The compiler reads registrations
+from preceding result records; it does not search the verifier again.
+Named formula calls can project the signature already stored in the function
+object when the original membership ID and signature match its declaration.
+An output-membership proof can likewise reuse an emitted call when both its
+application and original WD node match. Argument and domain checks still run
+when that constructor is first emitted.
+
 ## Citations and assumptions retain their scopes
 
 In the division example, `b != 0` belongs to the universal theorem's local

@@ -1,0 +1,6 @@
+# Must reject normally: isolated domain.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_isolated_domain.lit
+
+have fn isolated_s(x {0}) R=8
+release thm fn_limit_right_real_accumulation(0)
+release thm fn_limit_right_constant(isolated_s,0,8)

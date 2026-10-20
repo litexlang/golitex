@@ -1,0 +1,8 @@
+# Native finite-point function-limit unique equality rule.
+# Run: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/function_limit_unique.lit
+
+forall af fn(x R) R,p,A,B R:
+    $has_limit_at(af,p,A)
+    $has_limit_at(af,p,B)
+    =>:
+        A=B

@@ -1,0 +1,11 @@
+# Must reject normally: mismatching from sides.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_mismatching_from_sides.lit
+
+thm wrong_merge_s:
+    ? forall af fn(x R) R,p,A,B R:
+        $has_limit_left(af,p,A)
+        $has_limit_right(af,p,B)
+        A!=B
+        =>:
+            $has_limit_at(af,p,A)
+    by thm fn_limit_from_sides(af,p,A) => $has_limit_at(af,p,A)

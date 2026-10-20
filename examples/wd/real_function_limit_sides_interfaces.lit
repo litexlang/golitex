@@ -1,0 +1,54 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/wd/real_function_limit_sides_interfaces.lit
+
+forall D power_set(R),af fn(x D) R,p,L R:
+    $has_limit_left(af,p,L)
+    =>:
+        lim_left(af,p)=L
+        lim_left(af,p) $in R
+
+forall af fn(x R) R,p R:
+    exist L R st {$has_limit_left(af,p,L)}
+    =>:
+        lim_left(af,p) $in R
+
+forall af,ag fn(x R) R,p,q,L R:
+    af=ag
+    p=q
+    $has_limit_left(af,p,L)
+    =>:
+        $has_limit_left(ag,q,L)
+        lim_left(af,p)=lim_left(ag,q)
+
+forall af,ag fn(x R) R,p,q,L R:
+    af=ag
+    p=q
+    not $has_limit_left(af,p,L)
+    =>:
+        not $has_limit_left(ag,q,L)
+
+forall D power_set(R),af fn(x D) R,p,L R:
+    $has_limit_right(af,p,L)
+    =>:
+        lim_right(af,p)=L
+        lim_right(af,p) $in R
+
+forall af fn(x R) R,p R:
+    exist L R st {$has_limit_right(af,p,L)}
+    =>:
+        lim_right(af,p) $in R
+
+forall af,ag fn(x R) R,p,q,L R:
+    af=ag
+    p=q
+    $has_limit_right(af,p,L)
+    =>:
+        $has_limit_right(ag,q,L)
+        lim_right(af,p)=lim_right(ag,q)
+
+forall af,ag fn(x R) R,p,q,L R:
+    af=ag
+    p=q
+    not $has_limit_right(af,p,L)
+    =>:
+        not $has_limit_right(ag,q,L)

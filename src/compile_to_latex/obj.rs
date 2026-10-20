@@ -91,6 +91,37 @@ fn expression(
             },
             50,
         ),
+        Obj::LimitOperator(LimitOperator::Function(x)) => {
+            let source = format!(
+                "{} {}",
+                x.function.readable_string(),
+                x.approach.point().readable_string()
+            );
+            let mut bound = "x".to_string();
+            while source.contains(&bound) {
+                bound.push('x');
+            }
+            let bound = ident(&bound);
+            let function = o(&x.function)?;
+            let application = format!("{}{}", parens(&function), call_parens(&bound));
+            let direction = match &x.approach {
+                LimitApproach::AtPoint(_) => "",
+                LimitApproach::FromLeft(_) => "^{-}",
+                LimitApproach::FromRight(_) => "^{+}",
+            };
+            (
+                format!(
+                    r"\lim_{{\substack{{{}\to {{{}}}{}\\{}\in\operatorname{{dom}}({})}}}} {}",
+                    bound,
+                    o(x.approach.point())?,
+                    direction,
+                    bound,
+                    function,
+                    application
+                ),
+                50,
+            )
+        }
         Obj::LimitOperator(LimitOperator::Sequence(x)) => {
             let source = x.sequence.readable_string();
             let mut bound = "n".to_string();

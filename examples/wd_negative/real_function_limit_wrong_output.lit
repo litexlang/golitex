@@ -1,0 +1,10 @@
+# Must fail: finite-point function limit wrong output.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_wrong_output.lit
+
+have fn add_left(x R) R=37
+have fn add_right(x R) R=41
+have fn add_wrong(x R) R=79
+release thm fn_limit_at_real_accumulation(0)
+release thm fn_limit_at_constant(add_left,0,37)
+release thm fn_limit_at_constant(add_right,0,41)
+release thm fn_limit_at_add(add_left,add_right,add_wrong,0,37,41)

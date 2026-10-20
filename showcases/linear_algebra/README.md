@@ -8,7 +8,9 @@ and how the resulting facts support further mathematics.
 Read [linear_algebra.lit](linear_algebra.lit) from beginning to end. The notes
 move from coordinate operations to vector spaces and subspaces, then through
 linear combinations, bases and unique coordinates, finite combination algebra
-and span as a subspace, and finally to linear maps with kernels and ranges.
+and span as a subspace, linear maps with kernels and ranges, and finally to
+dependence lemmas, a concrete rank-nullity picture for projection, eigenvalues
+of that projection, and the Euclidean inner product on the plane.
 
 ## From coordinates to vector spaces
 
@@ -65,7 +67,9 @@ coefficient list. Adding or scaling coefficients adds or scales the value, so
 every finite span is a subspace. Linear maps preserve these combinations.
 Composition is written `map_compose` (the name `compose` is reserved by the
 language). The real-plane projection illustrates kernels and ranges on the
-coordinate axes.
+coordinate axes, with a concrete rank-nullity picture and its eigenvalues
+`0` and `1`. The Euclidean dot product then records orthonormality of the
+standard directions.
 
 ## Reading guide
 
@@ -76,13 +80,15 @@ coordinate axes.
 | 2.1–2.2 | Finite linear combinations; two-term sums; span; the standard directions span the plane |
 | 2.3–2.4 | Linear independence; repeated directions; bases; standard expansion and unique coordinates |
 | 2.5–2.6 | Finite-dimensional spaces; combination add/smul; span is a subspace |
+| 2.7 | Prefix/deletion; dependence; length-two dependence lemma; span reduction for a dependent pair |
 | 3.1–3.7 | Linear maps; zero preservation; composition; kernel and range; projection and an affine counterexample |
+| 4.1–4.5 | Basis length two; no basis of length one; standard basis plus any third vector is dependent; projection kernel/range and eigenvectors; Euclidean inner product; matrix of projection |
 
 These are selected, connected lectures rather than a complete translation of
-*Linear Algebra Done Right*. Prefix and deletion interfaces for ordered lists, together with linear
-dependence as the negation of independence, are now in place. The general
-dependence lemma, equality of basis lengths, and a general definition of
-dimension remain for subsequent lectures.
+*Linear Algebra Done Right*. The length-two dependence lemma and span-reduction
+for a redundant last vector are proved in general form. Equality of arbitrary
+basis lengths, a selected dimension function, matrices, and Gram–Schmidt remain
+for subsequent lectures.
 
 The source contains no `trust`, `axiom`, or `abstract_prop`.
 The inverse operation is defined only for nonzero scalars, and the same

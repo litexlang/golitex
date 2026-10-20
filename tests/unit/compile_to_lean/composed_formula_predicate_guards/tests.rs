@@ -163,7 +163,9 @@ fn composed_formula_predicate_guards_keep_the_original_constructor_shapes() {
     ));
     let output = super::compile_run(&result, &compiler, "owned_composed_shape").unwrap();
     assert!(output.contains("Litex.formulaFn2 (M := M)"));
-    assert!(output.contains("Litex.FunctionSignature.two (M := M)"));
+    // The formula owns its checked two-argument signature; membership projects
+    // that field instead of expanding the same signature again.
+    assert!(output.contains(".val.signature)"));
     assert!(output.contains("Litex.FunctionSemantics.callValue"));
     // Multiple source arguments form a complete indexed tuple; pairValue is
     // reserved for graph edges, not the observable function input.

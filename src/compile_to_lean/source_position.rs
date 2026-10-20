@@ -62,6 +62,7 @@ pub(super) enum SourceOwner<'a> {
     // This constructor's first `usize` child/requirement stages have already
     // been emitted as lexical lets/haves. Source order still controls visibility.
     WDLocals(&'a ObjWellDefinedProof, usize),
+    FormedSubjects(&'a VerifyFactResult, &'a StoreFactAndInferResult),
     SetBuilder(&'a SetBuilder, &'a SetBuilderObjWellDefinedProof),
     Named(&'a ExecDefThmStmtSuccess),
     Claim(&'a ExecClaimStmtSuccess),
@@ -146,33 +147,44 @@ impl<'a> SourcePosition<'a> {
         self.bound_child(|child| child.obj() == object)
     }
 
-    pub fn has_bound_verify(&self, result: &VerifyFactResult) -> bool {
-        let mut cursor = Some(self);
-        while let Some(position) = cursor {
-            if let SourceOwner::WDLocals(proof, emitted) = position.owner {
-                if let Some((children, requirements)) = arithmetic_stages(proof) {
-                    if requirements
-                        .iter()
-                        .take(emitted.saturating_sub(children.len()))
-                        .any(|original| std::ptr::eq(original, result))
-                    {
-                        return true;
-                    }
-                }
-            }
-            cursor = position.parent;
-        }
-        false
+    pub fn bound_fn_call(
+        &self,
+        application: &FnObj,
+        proof: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof,
+    ) -> Option<String> {
+        self.bound_child(|child| {
+            matches!(child,
+                ObjWellDefinedProof::ByDef {
+                    obj: Obj::FnObj(original_application),
+                    proof: ObjWellDefinedProofByDef::FnObj(original),
+                } if original_application == application && std::ptr::eq(original, proof)
+            )
+        })
     }
 
     fn bound_child(&self, matches: impl Fn(&ObjWellDefinedProof) -> bool) -> Option<String> {
         let mut cursor = Some(self);
         while let Some(position) = cursor {
+            if let SourceOwner::FormedSubjects(verify, store) = position.owner {
+                for subject in &store.formed_subjects {
+                    if let Ok(Some(proof)) = super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+                        verify, subject.argument_index,
+                    ) {
+                        let name = format!("_object_w{}", subject.wd_id.value());
+                        let term = if position.is_local() { name } else { position.context_application(&name) };
+                        if let Some(term) = projected_wd_child(proof, term, &matches) {
+                            return Some(term);
+                        }
+                    }
+                }
+            }
             if let SourceOwner::WDLocals(proof, emitted) = position.owner {
                 if let Some((children, _)) = arithmetic_stages(proof) {
                     for (index, child) in children.iter().take(emitted).enumerate().rev() {
-                        if matches(child) {
-                            return Some(position.wd_child_name(index));
+                        if let Some(term) =
+                            projected_wd_child(child, position.wd_child_name(index), &matches)
+                        {
+                            return Some(term);
                         }
                     }
                 }
@@ -1153,6 +1165,137 @@ impl<'a> SourcePosition<'a> {
             },
             &mut |_, _| Ok(None),
         )
+    }
+
+    /// Read only completed statement stores; do not traverse WD/search trees to
+    /// discover a registration that already has an exact source-owned identity.
+    pub fn registered_wd_reference(
+        &self,
+        object: &Obj,
+        id: Option<WellDefinednessId>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        if matches!(
+            object,
+            Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+        ) {
+            return Ok(None);
+        }
+        fn in_result(
+            verify: &VerifyFactResult,
+            store: &StoreFactAndInferResult,
+            producer: &SourcePosition<'_>,
+            active: &SourcePosition<'_>,
+            object: &Obj,
+            id: Option<WellDefinednessId>,
+        ) -> Result<Option<String>, LeanCompileError> {
+            if !obeys_active_stage_ceilings(active, producer) {
+                return Ok(None);
+            }
+            for subject in &store.formed_subjects {
+                if id.is_some_and(|id| id != subject.wd_id) {
+                    continue;
+                }
+                let proof =
+                    super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+                        verify,
+                        subject.argument_index,
+                    )?;
+                if let Some(proof) = proof {
+                    let name = format!("_object_w{}", subject.wd_id.value());
+                    let term = if producer.is_local() {
+                        name
+                    } else {
+                        producer.context_application(&name)
+                    };
+                    if id.is_some() {
+                        if proof.obj() == object {
+                            return Ok(Some(term));
+                        }
+                    } else if let Some(term) =
+                        projected_wd_child(proof, term, &|child| child.obj() == object)
+                    {
+                        return Ok(Some(term));
+                    }
+                }
+            }
+            Ok(None)
+        }
+        let in_statement = |statement: &ExecStmtResult, producer: &SourcePosition<'_>| {
+            if let ExecStmtResult::Fact(ExecFactStmtResult::Success(result)) = statement {
+                in_result(
+                    &result.verify_result,
+                    &result.store_and_infer_result,
+                    producer,
+                    self,
+                    object,
+                    id,
+                )
+            } else {
+                Ok(None)
+            }
+        };
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if let SourceOwner::Statement(statement) = position.owner {
+                if position.before > 0 {
+                    if let Some(name) = in_statement(statement, position)? {
+                        return Ok(Some(name));
+                    }
+                }
+            }
+            let statements = match position.owner {
+                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Named(proof) => Some(named_steps(proof)),
+                SourceOwner::Claim(proof) => Some(claim_steps(proof)),
+                _ => None,
+            };
+            if let Some((statements, head)) = statements {
+                for (index, statement) in statements
+                    .iter()
+                    .take(position.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    let prior = SourcePosition {
+                        before: head + index,
+                        ..*position
+                    };
+                    let producer =
+                        SourcePosition::new(Some(&prior), SourceOwner::Statement(statement), 1);
+                    if let Some(name) = in_statement(statement, &producer)? {
+                        return Ok(Some(name));
+                    }
+                }
+            }
+            if let SourceOwner::Forall(proof) = position.owner {
+                let head = parameter_count(&proof.fact.typed_parameters.groups)
+                    + proof.assumed_dom_facts.len();
+                for (index, conclusion) in proof
+                    .proved_then_facts
+                    .iter()
+                    .take(position.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    let producer = SourcePosition {
+                        before: head + index + 1,
+                        ..*position
+                    };
+                    if let Some(name) = in_result(
+                        &conclusion.verify_result,
+                        &conclusion.store_and_infer,
+                        &producer,
+                        self,
+                        object,
+                        id,
+                    )? {
+                        return Ok(Some(name));
+                    }
+                }
+            }
+            cursor = position.parent;
+        }
+        Ok(None)
     }
 
     pub fn with_visible_inferred_subject<T>(
@@ -2329,7 +2472,9 @@ fn prop_inference_stages(
 
 fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredFactResult> {
     match infer {
-        InferAtomicFactResult::HasSequenceLimitFact(_)
+        InferAtomicFactResult::HasFunctionLimitFact(_)
+        | InferAtomicFactResult::NotHasFunctionLimitFact(_)
+        | InferAtomicFactResult::HasSequenceLimitFact(_)
         | InferAtomicFactResult::NotHasSequenceLimitFact(_) => Vec::new(),
         InferAtomicFactResult::EqualFact(rules) => rules
             .iter()
@@ -3387,7 +3532,8 @@ fn fact_reference_in_owner(
         | SourceOwner::AtomicFnUnfold(_) => Ok(None),
         SourceOwner::FunctionNormalization(_)
         | SourceOwner::FunctionExpansion(_)
-        | SourceOwner::FunctionDefinitionRewrite(_) => Ok(None),
+        | SourceOwner::FunctionDefinitionRewrite(_)
+        | SourceOwner::FormedSubjects(..) => Ok(None),
     }
 }
 
@@ -4179,6 +4325,7 @@ fn visit_owner<T>(
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
     match position.owner {
+        SourceOwner::FormedSubjects(..) => {}
         SourceOwner::ExistWD(fact, proof) => {
             return visit_header(
                 &fact.typed_parameters.groups,
@@ -6585,6 +6732,56 @@ fn visit_fact_formation<T>(
         _ => {}
     }
     Ok(None)
+}
+
+/// A completed constructor already owns these certified children. Follow only
+/// fields which preserve the original host object, never denotation equality or
+/// a searched proof tree. Tuples, for example, retain values but not child hosts.
+fn projected_wd_child(
+    proof: &ObjWellDefinedProof,
+    term: String,
+    matches: &impl Fn(&ObjWellDefinedProof) -> bool,
+) -> Option<String> {
+    if matches(proof) {
+        return Some(term);
+    }
+    let fields: &[&str] = match proof {
+        ObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::FnObj(call),
+            ..
+        } if matches!(call.domain_fn_set, Some(
+            crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::FiniteFunction(_)
+        )) => &["function", "argument"],
+        _ => match proof.obj() {
+        Obj::ArithmeticOperator(
+            ArithmeticOperator::Add(_)
+            | ArithmeticOperator::Sub(_)
+            | ArithmeticOperator::Mul(_)
+            | ArithmeticOperator::Div(_),
+        ) => &["left", "right"],
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(_)) => &["base", "exponent"],
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(_) | ArithmeticOperator::Abs(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => &["arg"],
+        _ => return None,
+        },
+    };
+    let (children, _) = arithmetic_stages(proof)?;
+    if children.len() != fields.len() {
+        return None;
+    }
+    for (child, field) in children.iter().zip(fields) {
+        // Canonical leaves are shorter than a projection and need no sharing.
+        if matches!(
+            child.obj(),
+            Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+        ) {
+            continue;
+        }
+        if let Some(found) = projected_wd_child(child, format!("({term}).val.{field}"), matches) {
+            return Some(found);
+        }
+    }
+    None
 }
 
 pub(super) fn arithmetic_stages(

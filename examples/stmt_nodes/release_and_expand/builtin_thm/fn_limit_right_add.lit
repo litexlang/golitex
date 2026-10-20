@@ -1,0 +1,12 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_right_add.lit
+
+thm fn_limit_right_add_example:
+    ? forall fa,ga,ha fn(x R) R,x0,A,B R:
+        $has_limit_right(fa,x0,A)
+        $has_limit_right(ga,x0,B)
+        forall x R:
+            ha(x)=fa(x)+ga(x)
+        =>:
+            $has_limit_right(ha,x0,A+B)
+    release thm fn_limit_right_add(fa,ga,ha,x0,A,B)

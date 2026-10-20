@@ -3,7 +3,9 @@ use crate::runtime::FactId;
 use crate::store_fact_and_infer::StoreInferredFactResult;
 
 pub enum InferAtomicFactResult {
+    HasFunctionLimitFact(Vec<InferHasFunctionLimitFactResult>),
     HasSequenceLimitFact(Vec<InferHasSequenceLimitFactResult>),
+    NotHasFunctionLimitFact(Vec<InferNotHasFunctionLimitFactResult>),
     NotHasSequenceLimitFact(Vec<InferNotHasSequenceLimitFactResult>),
     NormalAtomicFact(Vec<InferNormalAtomicFactResult>),
     EqualFact(Vec<InferEqualFactResult>),
@@ -87,7 +89,13 @@ impl InferAtomicFactResult {
             Self::HasSequenceLimitFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }
+            Self::HasFunctionLimitFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
             Self::NotHasSequenceLimitFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotHasFunctionLimitFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }
             Self::DvdFact(rules) => rules.iter().flat_map(|r| r.stored_conclusions()).collect(),
@@ -179,6 +187,20 @@ impl InferHasSequenceLimitFactResult {
 }
 pub enum InferNotHasSequenceLimitFactResult {}
 impl InferNotHasSequenceLimitFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&crate::store_fact_and_infer::StoreInferredFactResult> {
+        match *self {}
+    }
+}
+
+pub enum InferHasFunctionLimitFactResult {}
+impl InferHasFunctionLimitFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&crate::store_fact_and_infer::StoreInferredFactResult> {
+        match *self {}
+    }
+}
+
+pub enum InferNotHasFunctionLimitFactResult {}
+impl InferNotHasFunctionLimitFactResult {
     pub fn stored_conclusions(&self) -> Vec<&crate::store_fact_and_infer::StoreInferredFactResult> {
         match *self {}
     }

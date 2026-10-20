@@ -1,0 +1,5 @@
+# Must reject normally: punctured without proof.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_punctured_without_proof.lit
+
+have fn unproved_jump_s(x R:x!=0) R=abs(x)/x
+lim_left(unproved_jump_s,0)=-1

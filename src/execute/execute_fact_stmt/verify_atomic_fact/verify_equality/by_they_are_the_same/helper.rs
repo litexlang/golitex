@@ -189,6 +189,14 @@ pub fn compound_objs_alpha_equal(left: &Obj, right: &Obj) -> bool {
 fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, IdentifierId>) -> bool {
     match (left, right) {
         (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(r)),
+        ) => {
+            l.approach.same_direction(&r.approach)
+                && objs_alpha_equal(&l.function, &r.function, map)
+                && objs_alpha_equal(l.approach.point(), r.approach.point(), map)
+        }
+        (
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(l)),
             Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(r)),
         ) => objs_alpha_equal(&l.sequence, &r.sequence, map),
@@ -801,6 +809,16 @@ fn atomic_facts_alpha_equal(
         return false;
     }
     match (left, right) {
+        (AtomicFact::HasFunctionLimitFact(l), AtomicFact::HasFunctionLimitFact(r)) => {
+            if !l.approach.same_direction(&r.approach) {
+                return false;
+            }
+        }
+        (AtomicFact::NotHasFunctionLimitFact(l), AtomicFact::NotHasFunctionLimitFact(r)) => {
+            if !l.approach.same_direction(&r.approach) {
+                return false;
+            }
+        }
         (AtomicFact::NormalAtomicFact(l), AtomicFact::NormalAtomicFact(r)) => {
             if l.predicate != r.predicate {
                 return false;

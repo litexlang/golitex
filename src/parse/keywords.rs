@@ -30,6 +30,11 @@ pub const TUPLE: &str = "tuple";
 pub const CART: &str = "cart";
 pub const LIM: &str = "lim";
 pub const HAS_SEQ_LIMIT: &str = "has_seq_limit";
+pub const HAS_LIMIT_LEFT: &str = "has_limit_left";
+pub const HAS_LIMIT_RIGHT: &str = "has_limit_right";
+pub const LIM_LEFT: &str = "lim_left";
+pub const LIM_RIGHT: &str = "lim_right";
+pub const HAS_LIMIT_AT: &str = "has_limit_at";
 pub const SEQ: &str = "seq";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const MATRIX: &str = "matrix";
@@ -291,6 +296,8 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | FINITE_SEQ
             | SEQ
             | LIM
+            | LIM_LEFT
+            | LIM_RIGHT
             | INDEX_UNION
             | INDEX_INTERSECT
             | INDEX_CART

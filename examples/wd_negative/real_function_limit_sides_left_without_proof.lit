@@ -1,0 +1,5 @@
+# Must reject normally: left without proof.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_left_without_proof.lit
+
+have fn left_unproved_s(x R) R=3
+lim_left(left_unproved_s,0)=3

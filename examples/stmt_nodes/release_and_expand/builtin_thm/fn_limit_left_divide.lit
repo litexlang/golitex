@@ -1,0 +1,15 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_left_divide.lit
+
+thm fn_limit_left_divide_example:
+    ? forall fa,ga,ha fn(x R) R,x0,A,B R:
+        $has_limit_left(fa,x0,A)
+        $has_limit_left(ga,x0,B)
+        B!=0
+        forall x R:
+            ga(x)!=0
+        forall x R:
+            ha(x)=fa(x)/ga(x)
+        =>:
+            $has_limit_left(ha,x0,A/B)
+    release thm fn_limit_left_divide(fa,ga,ha,x0,A,B)

@@ -6,6 +6,7 @@ mod exec_fact_stmt;
 pub(crate) mod finite_function;
 pub(crate) mod function_composition;
 pub(crate) mod function_domain;
+pub(crate) mod function_limit;
 pub(crate) mod function_preimage;
 mod helper;
 pub(crate) mod known_tuple;

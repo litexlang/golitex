@@ -1,0 +1,14 @@
+# Must reject normally: zero denominator.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_zero_denominator.lit
+
+thm zero_denom_s:
+    ? forall af,bf,hf fn(x R) R,p,A R:
+        $has_limit_left(af,p,A)
+        $has_limit_left(bf,p,0)
+        forall x R:
+            bf(x)!=0
+        forall x R:
+            hf(x)=af(x)/bf(x)
+        =>:
+            $has_limit_left(hf,p,A)
+    release thm fn_limit_left_divide(af,bf,hf,p,A,0)

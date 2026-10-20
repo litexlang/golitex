@@ -45,6 +45,9 @@ pub(super) fn project_obj_wd_by_def(
 ) -> JsonValue {
     match proof {
         ObjWellDefinedProofByDef::LimitOperator(
+            LimitOperatorObjWellDefinedProofByDef::Function(p),
+        ) => super::function_limit::object_wd(p, runtime),
+        ObjWellDefinedProofByDef::LimitOperator(
             LimitOperatorObjWellDefinedProofByDef::Sequence(p),
         ) => {
             let convergence = match &p.convergence {

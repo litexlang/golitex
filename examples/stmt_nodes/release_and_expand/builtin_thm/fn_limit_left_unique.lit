@@ -1,0 +1,10 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_left_unique.lit
+
+thm fn_limit_left_unique_example:
+    ? forall fa fn(x R) R,x0,A,B R:
+        $has_limit_left(fa,x0,A)
+        $has_limit_left(fa,x0,B)
+        =>:
+            A=B
+    release thm fn_limit_left_unique(fa,x0,A,B)

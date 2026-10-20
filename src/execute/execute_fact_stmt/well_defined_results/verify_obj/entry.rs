@@ -90,6 +90,10 @@ impl Runtime {
             return self.verify_identifier_obj_well_definedness(value, verify_state);
         }
 
+        if let Obj::LimitOperator(crate::ast::obj::LimitOperator::Function(value)) = obj {
+            return self.verify_function_limit_well_definedness(value, verify_state);
+        }
+
         if let Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(value)) = obj {
             return self.verify_sequence_limit_well_definedness(value, verify_state);
         }

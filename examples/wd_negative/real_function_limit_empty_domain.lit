@@ -1,0 +1,6 @@
+# Must fail: finite-point function limit empty domain.
+# Run: target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_empty_domain.lit
+
+have fn empty_limit_function(x {}) R=31
+release thm fn_limit_at_real_accumulation(0)
+release thm fn_limit_at_constant(empty_limit_function,0,31)

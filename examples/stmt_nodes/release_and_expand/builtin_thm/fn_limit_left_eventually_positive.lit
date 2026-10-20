@@ -1,0 +1,9 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_left_eventually_positive.lit
+
+thm fn_limit_left_eventually_positive_example:
+    ? forall fa fn(x R) R,x0 R,L R+:
+        $has_limit_left(fa,x0,L)
+        =>:
+            exist delta R+ st {{x R:0<x0-x and x0-x<delta} $subset preimage_set(fa,R+)}
+    release thm fn_limit_left_eventually_positive(fa,x0,L)

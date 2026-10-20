@@ -1,6 +1,6 @@
 # Litex support for common LaTeX mathematics
 
-Date: 2026-10-18; updated 2026-10-20. Status: implementation roadmap; the first category-1 scalar/set increment, function composition and real sequence limits are implemented and verified, with remaining scope recorded below.
+Date: 2026-10-18; updated 2026-10-20. Status: implementation roadmap; the first category-1 scalar/set increment, function composition, real sequence limits and finite-point real function limits are implemented and verified, with remaining scope recorded below.
 
 ## Goal
 
@@ -49,7 +49,9 @@ For each operation, require all of the following:
 
 Later the same day, the user removed native restriction from scope and requested a careful composition design including `f ∘ g`. The [composition design](litex-function-composition.md) proposes `compose(f,g) = f ∘ g`, with unary outer function, fixed positive-arity inner function, preserved inner guards and complete domain, and right-associative notation. The first delivery is now implemented: native Obj/syntax, strict WD, application consumers, core laws and checked examples. Later mapping/preimage laws remain pending; see the composition plan for exact validation and limits. Restrictions continue to use `fn(x S) B {f(x)}` or an explicitly guarded multi-argument anonymous function.
 
-2026-10-20: real sequence limits are implemented, with public `seq(R)` and equivalent `fn(k N+) R` inputs. First prove `$has_seq_limit(a,L)`; then use `lim(a)`. WD consumes convergence evidence and does not discover a limit from the sequence body. The [limits plan](litex-limits.md) records the exact scope and acceptance evidence; [common checked proofs](../examples/wd/sequence_limit_common_proofs.lit) and the [capability review](litex-sequence-limit-capability-review.md) record practical use and remaining proof friction. Finite-point real function limits, one-sided and infinite approaches, and finite limsup/liminf remain proposals. Their [four-phase continuation](litex-limits-next-phases.md) fixes the proposed order, mathematical contracts, BT groups, acceptance cases and unapproved AST additions, starting with finite-point function limits.
+2026-10-20: real sequence limits are implemented, with public `seq(R)` and equivalent `fn(k N+) R` inputs. First prove `$has_seq_limit(a,L)`; then use `lim(a)`. WD consumes convergence evidence and does not discover a limit from the sequence body. The [limits plan](litex-limits.md) records the exact scope and acceptance evidence; [common checked proofs](../examples/wd/sequence_limit_common_proofs.lit) and the [capability review](litex-sequence-limit-capability-review.md) record practical use and remaining proof friction.
+
+The same day, the user approved stage F's exact AST additions and requested its implementation plus a goal skill. [Finite-point function limits](../docs/function-limits.md) are now delivered: first prove `$has_limit_at(f,x0,L)`, then use `lim(f,x0)`. WD does not guess a limit. The [F receipt](litex-function-limit-at-acceptance.md) records the 22 explicit BTs, strict examples and consumer checks. The [four-phase continuation](litex-limits-next-phases.md) retains one-sided and infinite approaches, and finite limsup/liminf as separate, unapproved later increments.
 
 ## Delivery order
 

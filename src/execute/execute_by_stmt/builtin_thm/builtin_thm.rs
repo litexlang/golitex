@@ -65,6 +65,78 @@ fn prepare_contract(
     use BuiltinTheoremId::*;
     let a = args[0].clone();
     let result = match id {
+        FnLimitLeftRealAccumulation
+        | FnLimitLeftFromEpsilon
+        | FnLimitLeftControl
+        | FnLimitLeftAccumulation
+        | FnLimitLeftConstant
+        | FnLimitLeftIdentity
+        | FnLimitLeftUnique
+        | FnLimitLeftExists
+        | FnLimitLeftSelected
+        | FnLimitLeftNeg
+        | FnLimitLeftAbs
+        | FnLimitLeftScale
+        | FnLimitLeftPower
+        | FnLimitLeftAdd
+        | FnLimitLeftSubtract
+        | FnLimitLeftMultiply
+        | FnLimitLeftDivide
+        | FnLimitLeftLocalEqual
+        | FnLimitLeftCompare
+        | FnLimitLeftSqueeze
+        | FnLimitLeftEventuallyPositive
+        | FnLimitLeftEventuallyNonzero
+        | FnLimitRightRealAccumulation
+        | FnLimitRightFromEpsilon
+        | FnLimitRightControl
+        | FnLimitRightAccumulation
+        | FnLimitRightConstant
+        | FnLimitRightIdentity
+        | FnLimitRightUnique
+        | FnLimitRightExists
+        | FnLimitRightSelected
+        | FnLimitRightNeg
+        | FnLimitRightAbs
+        | FnLimitRightScale
+        | FnLimitRightPower
+        | FnLimitRightAdd
+        | FnLimitRightSubtract
+        | FnLimitRightMultiply
+        | FnLimitRightDivide
+        | FnLimitRightLocalEqual
+        | FnLimitRightCompare
+        | FnLimitRightSqueeze
+        | FnLimitRightEventuallyPositive
+        | FnLimitRightEventuallyNonzero
+        | FnLimitAtToLeft
+        | FnLimitAtToRight
+        | FnLimitFromSides
+        | FnLimitSidesMismatch
+        | FnLimitAtRealAccumulation
+        | FnLimitAtFromEpsilon
+        | FnLimitAtAccumulation
+        | FnLimitAtControl
+        | FnLimitAtConstant
+        | FnLimitAtIdentity
+        | FnLimitAtUnique
+        | FnLimitAtExists
+        | FnLimitAtSelected
+        | FnLimitAtNeg
+        | FnLimitAtAbs
+        | FnLimitAtScale
+        | FnLimitAtPower
+        | FnLimitAtAdd
+        | FnLimitAtSubtract
+        | FnLimitAtMultiply
+        | FnLimitAtDivide
+        | FnLimitAtLocalEqual
+        | FnLimitAtCompare
+        | FnLimitAtSqueeze
+        | FnLimitAtEventuallyPositive
+        | FnLimitAtEventuallyNonzero => {
+            return super::function_limits::prepare_function_limits(rt, id, args)
+        }
         SequenceLimitFromEpsilon
         | SequenceLimitTail
         | SequenceLimitConstant

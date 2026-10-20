@@ -24,6 +24,8 @@ mod concrete_predicate_transport_tests;
 mod finite_cart_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/fn_application_unfold_substitution/tests.rs"]
 mod fn_application_unfold_substitution_tests;
+#[path = "../../tests/unit/compile_to_lean/formed_subjects/tests.rs"]
+mod formed_subjects_tests;
 #[path = "../../tests/unit/compile_to_lean/function_codomain_coordinates/tests.rs"]
 mod function_codomain_coordinates_tests;
 #[path = "../../tests/unit/compile_to_lean/inference_context_citations/tests.rs"]
@@ -222,7 +224,19 @@ fn proof_names_replay_original_fact_ids_for_parameters_declarations_citations_an
         .split_once(&call_declaration)
         .expect("the actual call conclusion")
         .1;
-    assert!(call_output.contains(&format!("h_{} (M := M)", callable_id.value())));
+    let object_name = format!(
+        "_object_w{}",
+        call.store_and_infer_result.formed_subjects[0].wd_id.value()
+    );
+    assert!(call_output.contains(&object_name));
+    let constructor = output
+        .split_once(&format!("noncomputable def {object_name}"))
+        .expect("the original WD constructor is emitted once")
+        .1
+        .split_once(&call_declaration)
+        .unwrap()
+        .0;
+    assert!(constructor.contains(&format!("h_{} (M := M)", callable_id.value())));
     assert!(call_output.contains(&parameter_name));
     assert!(!output.contains("theorem fact_"));
     assert!(!output.contains("named_thm_"));
@@ -2266,7 +2280,7 @@ fn phase2_arbitrary_have_retains_generic_input_and_its_nonempty_evidence() {
         .expect("arbitrary real context");
     assert!(output.contains("Litex.Representation"));
     assert!(output.contains("Litex.Obj"));
-    assert!(!output.contains("noncomputable def _object_"));
+    assert!(!output.contains("noncomputable def _object_i"));
     // The real value is an exported context input. Zero occurs only as the
     // certified additive identity and the nonempty-carrier witness.
     assert!(output.contains("variable {_Host"));
@@ -2752,6 +2766,12 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
         StoreFactResult::AtomicFact(stored) => stored.fact = changed_goal,
         _ => panic!("atomic order primary store"),
     }
+    // The substituted cube already has a preceding registration. Retaining the
+    // square's new WD id would instead reject this mutation at registration.
+    forall.proved_then_facts[2]
+        .store_and_infer
+        .formed_subjects
+        .retain(|subject| subject.argument_index != 1);
     let changed_forall = forall.fact.clone();
     match &mut success.store_and_infer_result.store {
         StoreFactResult::ForallFact(stored) => stored.fact = changed_forall,

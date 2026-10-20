@@ -45,8 +45,7 @@ impl LitexToLeanCompiler {
         let proof = if matches!(&source.element, Obj::ProductShape(ProductShape::Tuple(_))) {
             format!("(by simpa only [Litex.FiniteFunction.call_tuple] using (Litex.FiniteFunction.coordinate_mem {member} ({index} : Fin {n})))")
         } else {
-            let coordinate = coordinate_membership(&receiver, &factor, member, index, n);
-            format!("(show Litex.In {term} {factor} from {coordinate})")
+            coordinate_membership(&receiver, &factor, member, index, n)
         };
         Ok((term, proof))
     }
@@ -127,15 +126,15 @@ impl LitexToLeanCompiler {
                             &projection.membership.store,
                             &Fact::AtomicFact(stored.fact.clone()),
                         )?;
-                        let (_, member) = self.cited_fact_reference(source.fact_id, cursor)?;
-                        return self
-                            .compile_cart_inference_coordinate(
-                                source,
-                                projection.coordinate_index,
-                                &member,
-                                cursor,
-                            )
-                            .map(|term| Some(term.0));
+                        let name = format!(
+                            "_object_h{}",
+                            projection.membership.primary_fact_id().value()
+                        );
+                        return Ok(Some(if cursor.is_local() {
+                            name
+                        } else {
+                            self.context_application(&name, cursor)
+                        }));
                     }
                 }
             }
@@ -201,6 +200,9 @@ impl LitexToLeanCompiler {
         finite: &FiniteFunctionSignatureProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let Some(call) = position.bound_fn_call(application, proof) {
+            return Ok(call);
+        }
         let (receiver, argument) = finite_call_parts(application)?;
         validate_finite_signature(finite)?;
         if proof.child_obj_well_defined.len() != 2 || proof.requirement_fact_verified.len() != 1 {
@@ -252,7 +254,9 @@ impl LitexToLeanCompiler {
             self.compile_cart_shape_member(&receiver, &finite.source, &formed)?;
         let n = finite.source.dimension();
         let source_range = self.compile_object_reference(domain, &formed)?;
-        Ok(format!("(by\n  let _receiver := {receiver_term}\n  let _argument := {argument_term}\n  let _cart := {cart}\n  let _sourceRange := {source_range}\n  have _cartMember : Litex.In _receiver _cart := {cart_member}\n  have _indexMember : M.mem (Litex.denote _argument) (Litex.FiniteFunction.indexSet {n}) := by\n    have _source := {member}\n    change M.mem (Litex.denote _argument) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (({n} : ℕ) : ℂ)) _sourceRange.wd.1 _sourceRange.wd.2)) at _source\n    rw [Litex.closedRange_indexSet] at _source\n    exact _source\n  exact Litex.cartCall _receiver _cart _argument _cartMember _indexMember)"))
+        // These are data definitions, not hypotheses. Term-level lets retain
+        // their defining values when a later proof projects a call's receiver.
+        Ok(format!("(let _receiver := {receiver_term};\nlet _argument := {argument_term};\nlet _cart := {cart};\nlet _sourceRange := {source_range};\nlet _cartMember : Litex.In _receiver _cart := {cart_member};\nlet _indexMember : M.mem (Litex.denote _argument) (Litex.FiniteFunction.indexSet {n}) := by\n  have _source := {member}\n  change M.mem (Litex.denote _argument) (Litex.denote (Litex.closedRange (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (({n} : ℕ) : ℂ)) _sourceRange.wd.1 _sourceRange.wd.2)) at _source\n  rw [Litex.closedRange_indexSet] at _source\n  exact _source;\nLitex.cartCall _receiver _cart _argument _cartMember _indexMember)"))
     }
 
     /// The recorded Cartesian membership is transported only along its own

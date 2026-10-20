@@ -86,6 +86,9 @@ pub(super) fn project_atomic_wd_proof(
     };
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     let domain = match &proof.predicate_domain {
+        PredicateDomainProof::FunctionLimit(p) => {
+            super::function_limit::predicate_domain(p, runtime)
+        }
         PredicateDomainProof::SequenceLimit(p) => object_for(
             runtime,
             vec![

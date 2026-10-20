@@ -64,7 +64,22 @@ impl LitexToLeanCompiler {
             let (coordinate, certificate) =
                 self.compile_cart_inference_coordinate(source, index, &member.1, &prior)?;
             let factor = self.compile_object_reference(&cart.args[index], &prior)?;
-            let compiled = (format!("Litex.In {coordinate} {factor}"), certificate);
+            let name = format!("_object_h{}", captured.primary_fact_id().value());
+            let local = prior.is_local();
+            declarations.push(if local {
+                format!("let {name} := {coordinate}")
+            } else {
+                format!(
+                    "noncomputable def {name}{} := {coordinate}",
+                    self.context_header(&prior)?
+                )
+            });
+            let reference = if local {
+                name
+            } else {
+                self.context_application(&name, &prior)
+            };
+            let compiled = (format!("Litex.In {reference} {factor}"), certificate);
             let formed = SourcePosition::new(
                 Some(&prior),
                 SourceOwner::InferredStore(&captured.store),
@@ -180,7 +195,7 @@ mod tests {
             .compile_cart_inferred_subject(&member.element, store, &current)
             .unwrap()
             .expect("the completed original projection supplies its constructor");
-        assert!(term.contains("Litex.cartCall"));
+        assert!(term.contains(&format!("_object_h{}", store.primary_fact_id().value())));
     }
 
     #[test]
@@ -219,12 +234,17 @@ mod tests {
         let declarations = compiler
             .compile_cart_coordinate_inferences(proof, &seed, &member, &current)
             .unwrap();
-        assert_eq!(declarations.len(), 2);
-        for (declaration, projection) in declarations.iter().zip(&proof.coordinates) {
-            assert!(declaration.starts_with(&format!(
+        assert_eq!(declarations.len(), 4);
+        for (declarations, projection) in declarations.chunks_exact(2).zip(&proof.coordinates) {
+            assert!(declarations[0].starts_with(&format!(
+                "noncomputable def _object_h{}",
+                projection.membership.primary_fact_id().value()
+            )));
+            assert!(declarations[1].starts_with(&format!(
                 "theorem h_{}",
                 projection.membership.primary_fact_id().value()
             )));
+            assert!(!declarations[1].contains("Litex.cartCall"));
         }
     }
 

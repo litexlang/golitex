@@ -46,7 +46,7 @@ pub enum Obj {
     // Real hyperbolic functions. Example: `sinh(0)`, `cosh(0)`.
     HyperbolicOperator(HyperbolicOperator),
 
-    // Finite real limit selected only after sequence convergence is proved.
+    // Finite real limits selected only after convergence is proved.
     LimitOperator(LimitOperator),
 
     // Exp / log / sqrt. Example: `exp(0)`, `ln(1)`, `log(2, 8)`, `sqrt(4)`.
@@ -1174,6 +1174,7 @@ pub struct SymmetricDifference {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LimitOperator {
     Sequence(SequenceLimit),
+    Function(FunctionLimit),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1184,6 +1185,68 @@ impl SequenceLimit {
     pub fn new(sequence: Obj) -> Self {
         Self {
             sequence: Box::new(sequence),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FunctionLimit {
+    pub function: Box<Obj>,
+    pub approach: LimitApproach,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LimitApproach {
+    AtPoint(Box<Obj>),
+    FromLeft(Box<Obj>),
+    FromRight(Box<Obj>),
+}
+
+impl LimitApproach {
+    pub fn with_point(&self, point: Obj) -> Self {
+        match self {
+            Self::AtPoint(_) => Self::AtPoint(Box::new(point)),
+            Self::FromLeft(_) => Self::FromLeft(Box::new(point)),
+            Self::FromRight(_) => Self::FromRight(Box::new(point)),
+        }
+    }
+    pub fn same_direction(&self, other: &Self) -> bool {
+        std::mem::discriminant(self) == std::mem::discriminant(other)
+    }
+    pub fn value_name(&self) -> &'static str {
+        match self {
+            Self::AtPoint(_) => "lim",
+            Self::FromLeft(_) => "lim_left",
+            Self::FromRight(_) => "lim_right",
+        }
+    }
+    pub fn predicate_name(&self) -> &'static str {
+        match self {
+            Self::AtPoint(_) => "has_limit_at",
+            Self::FromLeft(_) => "has_limit_left",
+            Self::FromRight(_) => "has_limit_right",
+        }
+    }
+
+    pub fn point(&self) -> &Obj {
+        match self {
+            Self::AtPoint(point) | Self::FromLeft(point) | Self::FromRight(point) => point,
+        }
+    }
+}
+
+impl FunctionLimit {
+    pub fn with_approach(function: Obj, approach: LimitApproach) -> Self {
+        Self {
+            function: Box::new(function),
+            approach,
+        }
+    }
+
+    pub fn new(function: Obj, point: Obj) -> Self {
+        Self {
+            function: Box::new(function),
+            approach: LimitApproach::AtPoint(Box::new(point)),
         }
     }
 }

@@ -1,0 +1,412 @@
+{
+  "binary": "tmp/2026-10-20/function-limit-at/target/release/litex",
+  "binary_sha256": "98219c714260082f33eb753f46f200b4d428ae76f98616832214b8f632b72398",
+  "positive": [
+    {
+      "path": "examples/wd/real_function_limit_at.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 8
+    },
+    {
+      "path": "examples/wd/real_function_limit_common_proofs.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 21
+    },
+    {
+      "path": "examples/wd/real_function_limit_endpoints.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 4
+    },
+    {
+      "path": "examples/wd/real_function_limit_interfaces.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 5
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_abs.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_accumulation.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_add.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_compare.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_constant.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 4
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_control.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_divide.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_eventually_nonzero.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_eventually_positive.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_exists.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_from_epsilon.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_identity.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 4
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_local_equal.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_multiply.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_neg.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_power.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_real_accumulation.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_scale.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_selected.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_squeeze.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_subtract.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_unique.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/proof_nodes/equal/by_builtin_rule/function_limit_selected.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    },
+    {
+      "path": "examples/proof_nodes/equal/by_builtin_rule/function_limit_unique.lit",
+      "exit_code": 0,
+      "run_result": "success",
+      "accepted_statements": 1
+    }
+  ],
+  "negative": [
+    {
+      "path": "examples/wd_negative/real_function_limit_cancellation_without_proof.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 1,
+      "rejected_statements": [
+        "(0 * lim(unproved_cancellation_function, 0)) = 0"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_empty_domain.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 2,
+      "rejected_statements": [
+        "release thm fn_limit_at_constant(empty_limit_function, 0, 31)"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_illegal_base_call.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 1,
+      "rejected_statements": [
+        "undefined_at_zero(0) = 0"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_isolated_domain.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 2,
+      "rejected_statements": [
+        "release thm fn_limit_at_constant(isolated_limit_function, 0, 29)"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_nonreal_domain.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 1,
+      "rejected_statements": [
+        "$has_limit_at(nonreal_input_function, 0, 0)"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_punctured_without_proof.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 1,
+      "rejected_statements": [
+        "lim(f, 0) = 0"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_without_proof.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 1,
+      "rejected_statements": [
+        "lim(unproved_limit_function, 0) = 17"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_wrong_output.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 6,
+      "rejected_statements": [
+        "release thm fn_limit_at_add(add_left, add_right, add_wrong, 0, 37, 41)"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_wrong_point.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 3,
+      "rejected_statements": [
+        "lim(wrong_point_function, 1) = 23"
+      ]
+    },
+    {
+      "path": "examples/wd_negative/real_function_limit_zero_denominator.lit",
+      "exit_code": 1,
+      "run_result": "failure",
+      "accepted_statements": 5,
+      "rejected_statements": [
+        "release thm fn_limit_at_divide(quotient_one, quotient_zero, quotient_one, 0, 1, 0)"
+      ]
+    }
+  ],
+  "languages": [
+    "en",
+    "zh",
+    "zh-hant",
+    "fr",
+    "ru",
+    "es",
+    "ar",
+    "ja",
+    "ko",
+    "vi"
+  ],
+  "latex": [
+    "examples/wd/real_function_limit_at.lit",
+    "examples/wd/real_function_limit_common_proofs.lit",
+    "examples/wd/real_function_limit_endpoints.lit",
+    "examples/wd/real_function_limit_interfaces.lit"
+  ],
+  "docs": [
+    {
+      "path": "docs/function-limits.md",
+      "fence_line_in_extracted_section": 14
+    },
+    {
+      "path": "docs/Manual.md",
+      "fence_line_in_extracted_section": 10
+    }
+  ],
+  "lean": {
+    "exit_code": 1,
+    "explicit_unsupported": true,
+    "artifact_written": false
+  },
+  "date": "2026-10-20",
+  "scope": "Stage F only: finite relative punctured real function limits; S/I/U not implemented.",
+  "working_tree_head": "cea83eb3cbdaa70f94f1aa5734c00eae1892992c",
+  "source_state": "Working-tree feature changes; no commit or whole-repository gate claimed. Concurrent unrelated work preserved.",
+  "rust_tests": [
+    {
+      "filter": "function_limit_tests",
+      "passed": 13,
+      "failed": 0,
+      "command": "cargo test --release --lib function_limit_tests --target-dir tmp/2026-10-20/function-limit-at/target",
+      "log": "tmp/2026-10-20/function-limit-at/tests-final.log"
+    },
+    {
+      "filter": "sequence_limit_tests",
+      "passed": 12,
+      "failed": 0,
+      "command": "cargo test --release --lib sequence_limit_tests --target-dir tmp/2026-10-20/function-limit-at/target",
+      "log": "tmp/2026-10-20/function-limit-at/sequence_limit_tests-regression.log"
+    },
+    {
+      "filter": "function_composition",
+      "passed": 17,
+      "failed": 0,
+      "command": "cargo test --release --lib function_composition --target-dir tmp/2026-10-20/function-limit-at/target",
+      "log": "tmp/2026-10-20/function-limit-at/function_composition-regression.log"
+    },
+    {
+      "filter": "compile_to_latex",
+      "passed": 12,
+      "failed": 0,
+      "command": "cargo test --release --lib compile_to_latex --target-dir tmp/2026-10-20/function-limit-at/target",
+      "log": "tmp/2026-10-20/function-limit-at/compile_to_latex-regression.log"
+    },
+    {
+      "filter": "builtin_thm",
+      "passed": 23,
+      "failed": 0,
+      "command": "cargo test --release --lib builtin_thm --target-dir tmp/2026-10-20/function-limit-at/target",
+      "log": "tmp/2026-10-20/function-limit-at/builtin_thm-regression.log"
+    }
+  ],
+  "strict_positive_contract": {
+    "exit_code": 0,
+    "kind": "run",
+    "run_result": "success",
+    "session_terminated": false,
+    "termination": null
+  },
+  "strict_negative_contract": {
+    "exit_code": "nonzero",
+    "kind": "run",
+    "run_result": "failure",
+    "session_terminated": false,
+    "termination": null
+  },
+  "skill": {
+    "path": "/Users/shenjiachen/.codex/skills/litex-function-limit-at",
+    "validation": "quick_validate.py: Skill is valid!",
+    "installed": true
+  },
+  "source_sha256": {
+    "src/ast/obj.rs": "19b24979e480fcd58c8ac27957671354bac8119b04fa9cb0445bc432579dd4a2",
+    "src/ast/fact/atomic.rs": "f17a0936945b1d6e7192025fce5604ba6f3e7d8c42bdc67c81b46537714154af",
+    "src/execute/execute_fact_stmt/function_limit.rs": "19caba4786119e4cb834387b42c5f734935e30763fa5c8671fdcf61d9a0b5c3a",
+    "src/execute/execute_by_stmt/builtin_thm/function_limits.rs": "effb3e461453fce87398b9b8e42a116eb205650241f1c9eac4e80a48e3ed75ab",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_function_limit.rs": "8e065f40b3ebe167130e3b8dc69a75b590664e19f85886894502f56be29a067a",
+    "src/json_output/project_detailed/function_limit.rs": "f25ee592a51389ffb021379e0e8878f32518203c2742e15a3bb393ff7e54d801",
+    "tests/unit/execute/function_limit/tests.rs": "8353a76e5ce2ca8717d6d65eab896661e0681ff30bca20c943a81ecfe7d95621",
+    "docs/function-limits.md": "eeb99937a455c6b84b874dee09fea80492d9234daff93f9d8b5961f8e957d58e",
+    "examples/wd/real_function_limit_at.lit": "945bcf08716d58fe92440b063b01cbd3b76ef77de46d6bae1859804e1b9beb25",
+    "examples/wd/real_function_limit_common_proofs.lit": "a993e4cf58f4b92da2fee9ff880188b1616c2122071e654f2f8090a5a7948167",
+    "examples/wd/real_function_limit_endpoints.lit": "d0925e603005acf4cb1108107d5956267611ce5baac8c1e2b09ba0375f2bb456",
+    "examples/wd/real_function_limit_interfaces.lit": "4d4d007e27507a06c65055d4ce5e5ded494592ea2b14bed9067f44bb178be76d",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_abs.lit": "812c72b606478657baa5c9d0bcaf9e2f9879c5838d40557d5f09ea89fff886a1",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_accumulation.lit": "49042cb62f86007dbccf4c690a380fa058e3a1a35af3b5d5bc7a69409fa3a920",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_add.lit": "142f219237f6b51495aa83097f0b4598583b320a2da781d7b1db5cbd54a30eed",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_compare.lit": "2ef6f795fa70bd44f9fae2d7c58d5a2a887ae83f67c16aa3681a1b662b719a0e",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_constant.lit": "9f7e60e2db4ae5c7b4adc44ea8333d93541021f31becab28e6176d1008a094b1",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_control.lit": "1103edf2fc2cf6a8f1f6b504f1d36778b61930f6e7a53c404334c85b2fa84b32",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_divide.lit": "47eba7a416400430034d0ea5b1581e1d30f1d16924b88207b77a3c43aed81fce",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_eventually_nonzero.lit": "ec111b2c5d5d9b5df2e950b825a26eebe0f66d7e7e6d27207cb8be30a8ed7ef1",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_eventually_positive.lit": "fad6f84fd2ffc11c11ae466536b98396cea87156fff761c33cb03423085ade16",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_exists.lit": "cf6c315c84ab5a5baaa7dbdd0c3df89505fa03c3a13dbaa588377f034421e145",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_from_epsilon.lit": "39f5f3af326d58a0b6bcb1a11553bb3eca428590fe3f282257232304582cffac",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_identity.lit": "ea993a53fdbcbaf9de9d33ea0cbf511f699003b6da1be7968632e29b2564ae35",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_local_equal.lit": "9c665b79e3fb119751217228d1db562a5e3806fbc16b509003058fc3ec5e213e",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_multiply.lit": "fe382cb5809e2e5676fcf0ab89ae2828cc79c92eb12e6c1342e8110b0637bdae",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_neg.lit": "c7dbfc6b3305eea04fb29015641e351e540fc9b787e231cd7f713c5bd417358b",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_power.lit": "6c64ec8d23b7570358ce81f8772fb6fc62e752cacda9c1b5da2a6b7c187eb550",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_real_accumulation.lit": "03e32382ea8aff1d4bc2fdd91b3cfbe96b51af8b0a15c5999a2d0a9653733f4d",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_scale.lit": "c22e1da1ce4e58f7aa80a761b0158282a2476c59accb2dfecfefc2ba164da528",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_selected.lit": "993498856c4c941477cf58079f0759c9d025e0ec11023d5d4d172977b031a728",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_squeeze.lit": "528d9a047ccca86e83739f9a710abd4aee236bec38907135fb5284fb41cd5f4e",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_subtract.lit": "a3caa89867c7ba5b2226a3ab6a76354bd63ce05da334aaed870cf8d395b29945",
+    "examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_unique.lit": "5d68e281932d19da34062b4fc1a72158f5a8cf31b614b04ccbb7378b0f63d559",
+    "examples/proof_nodes/equal/by_builtin_rule/function_limit_selected.lit": "4131bd14f97ae4a07e8cce79d530fc1caabcdca498e29416d73daacd3c185f19",
+    "examples/proof_nodes/equal/by_builtin_rule/function_limit_unique.lit": "451a45237aea86f9455721817972f6b5f8fc22435c554082412cc1ce09fafd6e",
+    "examples/wd_negative/real_function_limit_cancellation_without_proof.lit": "8c30ce5df987f9549da9ced0512b501aa965a5a0814316963abf4c0043cc4fcb",
+    "examples/wd_negative/real_function_limit_empty_domain.lit": "15949757a98efea0331c4617c339fae402597cafdd648fab907e67546d3d6edb",
+    "examples/wd_negative/real_function_limit_illegal_base_call.lit": "bc04ba1634d48b46c04f8f392c0b6ad91d9acafbdcbfb693f8808260193c9543",
+    "examples/wd_negative/real_function_limit_isolated_domain.lit": "7448a0d3a63bd28d5529446b52b334957c6e645682ec1c7cc1075a5ec2623b1c",
+    "examples/wd_negative/real_function_limit_nonreal_domain.lit": "ee5d1a9bccd1d9d8d9032923aacfeb82948a80e74c62222edaa271e15a87699f",
+    "examples/wd_negative/real_function_limit_punctured_without_proof.lit": "f8dc5654f29af62b3d361508e32321a6f8bb81109add19a9a9156fe83a347ebe",
+    "examples/wd_negative/real_function_limit_without_proof.lit": "3c2aba072c14f7db90e6a2b74d6c41a5a30f57889c60bec5db2965e151c92632",
+    "examples/wd_negative/real_function_limit_wrong_output.lit": "57232152f99e5beca9d0a048f74e63bac196e4c3280b7b5666eae1a31860d8c4",
+    "examples/wd_negative/real_function_limit_wrong_point.lit": "53bd60469fb99fd3697983d0a3a471ede03aeb5b2bfa73b6cce91a55a74a94c6",
+    "examples/wd_negative/real_function_limit_zero_denominator.lit": "ac4a05a4a295f62abf6364a0c280761cf87e5c4c5e190d023d461773ce9ec833"
+  },
+  "documentation_audit": {
+    "added_local_links_resolved": 41,
+    "documents_with_balanced_fences": 10,
+    "git_diff_check": "passed"
+  }
+}

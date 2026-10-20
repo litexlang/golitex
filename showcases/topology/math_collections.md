@@ -51,6 +51,22 @@ identities. Its inverse is explicit data. Merely requiring a continuous
 bijection would omit the essential inverse-continuity condition. The two-point
 swap gives a concrete homeomorphism distinct from the identity map.
 
+## Connectedness
+
+`is_connected(Ambient, space)` forbids a partition of the carrier into two
+nonempty open sets. `is_clopen` packages openness with closedness for the
+same subset. Spaces whose every open set is empty or the whole carrier are
+connected; the indiscrete two-point space is the running instance. The
+discrete two-point space admits the separation `{0}` and `{1}`, so it is not
+connected, and `{0}` is a nontrivial clopen set.
+
+`continuous_surjection_preserves_connectedness` is the Chapter 3 theorem:
+a continuous surjection pulls a target separation back to a source
+separation via preimage union and intersection identities, then returns an
+empty preimage to an empty target piece. Subspace connectedness, path
+connectedness and compactness remain outside this slice; compact images are
+developed separately in the settings-first topology concepts showcase.
+
 ## Dependency and reading order
 
 ```mermaid
@@ -65,12 +81,19 @@ flowchart LR
   E -->|proof| D[Continuous bijection counterexample]
   M -->|definition| H[Homeomorphisms]
   D -->|motivation| H
+  T -->|definition| N[Connectedness]
+  C -->|definition| N
+  E -->|proof| N
+  P -->|proof| Q[Continuous surjections preserve connectedness]
+  M -->|proof| Q
+  N -->|proof| Q
 ```
 
 Read in this order: sets, space laws, concrete spaces, closed sets, preimages,
-continuity, composition, and homeomorphisms. Edge labels distinguish definition,
-signature, law verification and proof dependencies; motivation is explanatory.
-These are selected elementary lectures, not a development of compactness,
-connectedness, metric topology, separation axioms or algebraic topology.
+continuity, composition, homeomorphisms, connectedness and continuous
+surjections. Edge labels distinguish definition, signature, law verification
+and proof dependencies; motivation is explanatory. These are selected
+elementary lectures, not a development of compactness, separation axioms,
+subspace or product topologies, metric topology or algebraic topology.
 All included definitions, constructions and proofs pass strict verification;
 there are no user assumptions or outstanding proof holes in this slice.

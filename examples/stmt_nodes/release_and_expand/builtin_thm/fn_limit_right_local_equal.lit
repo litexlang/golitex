@@ -1,0 +1,12 @@
+# One-sided real function limit: checked premises precede selected-value use.
+# Run: target/release/litex -strict -lang en -f examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_right_local_equal.lit
+
+thm fn_limit_right_local_equal_example:
+    ? forall fa,ga fn(x R) R,x0,L R,r R+:
+        $has_limit_right(fa,x0,L)
+        forall x {t R:0<t-x0 and t-x0<r}:
+            fa(x)=ga(x)
+        =>:
+            $has_limit_right(ga,x0,L)
+    release thm fn_limit_right_real_accumulation(x0)
+    release thm fn_limit_right_local_equal(fa,ga,x0,L,r)

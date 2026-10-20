@@ -1,13 +1,21 @@
 use crate::ast::fact::AtomicFact;
-use crate::runtime::FactId;
+use crate::runtime::{FactId, WellDefinednessId};
 
 use super::StoreFactResult;
 use crate::store_fact_and_infer::InferResult;
 
-// Store first; inference is absent in inferred-fact formation scopes.
+// Store → register formed atomic subjects → infer.
 pub struct StoreFactAndInferResult {
     pub store: StoreFactResult,
+    pub formed_subjects: Vec<FormedAtomicSubject>,
     pub infer: Option<InferResult>,
+}
+
+/// A registration actually created by this store, at the original argument index.
+/// The construction proof belongs to the enclosing verify/assumption producer.
+pub struct FormedAtomicSubject {
+    pub argument_index: usize,
+    pub wd_id: WellDefinednessId,
 }
 
 impl StoreFactAndInferResult {

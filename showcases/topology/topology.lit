@@ -482,3 +482,456 @@ claim:
         swap(x) = 1 - x
         swap(swap(x)) = 1 - swap(x) = 1 - (1 - x) = x
     by def $is_homeomorphism(points, points, discrete, discrete, swap, swap)
+# Chapter 3. Connectedness
+# A space is connected when it cannot be split into two nonempty open pieces.
+# The same two-point set is connected in the indiscrete topology and
+# disconnected in the discrete topology. Continuous surjections preserve
+# connectedness.
+
+# 3.1 Open separations and clopen sets
+prop is_connected(Ambient set, space &TopologicalSpace<Ambient>):
+    forall U, V space.opens:
+        union(U, V) = space.carrier
+        intersect(U, V) = {}
+        =>:
+            U = {} or V = {}
+
+prop is_clopen(Ambient set, space &TopologicalSpace<Ambient>, F power_set(space.carrier)):
+    F $in space.opens
+    $is_closed(Ambient, space, F)
+
+# The empty set and the whole carrier are always clopen.
+claim:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $is_clopen(Ambient, space, {})
+        $is_clopen(Ambient, space, space.carrier)
+    {} $in space.opens
+    space.carrier $in space.opens
+    $is_closed(Ambient, space, {})
+    $is_closed(Ambient, space, space.carrier)
+    by def $is_clopen(Ambient, space, {})
+    by def $is_clopen(Ambient, space, space.carrier)
+
+# 3.2 When every open set is empty or the whole space, the space is connected.
+prop has_only_trivial_opens(Ambient set, space &TopologicalSpace<Ambient>):
+    forall U space.opens:
+        U = {} or U = space.carrier
+
+thm opens_only_trivial_implies_connected:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $has_only_trivial_opens(Ambient, space)
+        =>:
+            $is_connected(Ambient, space)
+    claim:
+        ? forall U, V space.opens:
+            union(U, V) = space.carrier
+            intersect(U, V) = {}
+            =>:
+                U = {} or V = {}
+        U = {} or U = space.carrier
+        V $in power_set(space.carrier)
+        V $subset space.carrier
+        by cases:
+            ? U = {} or V = {}
+            case U = {}:
+                U = {}
+            case U = space.carrier:
+                intersect(U, V) = intersect(space.carrier, V) = V
+                V = {}
+    by def $is_connected(Ambient, space)
+
+# In the indiscrete two-point space every open set is trivial, so the space is connected.
+claim:
+    ? $has_only_trivial_opens(points, indiscrete)
+    claim:
+        ? forall U indiscrete.opens:
+            U = {} or U = points
+        U $in coarse_opens
+        U $in {{}, points}
+        U = {} or U = points
+    by def $has_only_trivial_opens(points, indiscrete)
+
+by thm opens_only_trivial_implies_connected(points, indiscrete) => $is_connected(points, indiscrete)
+
+# 3.3 The discrete two-point space is disconnected: the singletons form a separation.
+{1} $subset points
+
+{1} $in power_set(points)
+
+{1} $in discrete.opens
+
+{0} $in discrete.opens
+
+by extension:
+    ? union({0}, {1}) = points
+    claim:
+        ? forall x union({0}, {1}):
+            x $in points
+        x $in {0} or x $in {1}
+        by cases:
+            ? x $in points
+            case x $in {0}:
+                x = 0
+                0 $in points
+            case x $in {1}:
+                x = 1
+                1 $in points
+    claim:
+        ? forall x points:
+            x $in union({0}, {1})
+        x $in {0, 1}
+        x = 0 or x = 1
+        by cases:
+            ? x $in union({0}, {1})
+            case x = 0:
+                0 $in {0}
+                0 $in union({0}, {1})
+            case x = 1:
+                1 $in {1}
+                1 $in union({0}, {1})
+
+by extension:
+    ? intersect({0}, {1}) = {}
+    claim:
+        ? forall x intersect({0}, {1}):
+            x $in {}
+        x $in {0}
+        x $in {1}
+        x = 0
+        by contra:
+            ? x $in {}
+            impossible x $in {1}
+    claim:
+        ? forall x {}:
+            x $in intersect({0}, {1})
+        by contra:
+            ? x $in intersect({0}, {1})
+            impossible x $in {}
+
+union({0}, {1}) = discrete.carrier
+
+claim:
+    ? not $is_connected(points, discrete)
+    by contra:
+        ? not $is_connected(points, discrete)
+        {0} = {} or {1} = {}
+        claim:
+            ? 0 = 1
+            {0} = {} or {1} = {}
+            by cases:
+                ? 0 = 1
+                case {0} = {}:
+                    impossible {0} = {}
+                case {1} = {}:
+                    impossible {1} = {}
+        impossible 0 = 1
+
+# 3.4 Preimages preserve unions and intersections.
+thm preimage_union:
+    ? forall X, Y set, f fn(x X) Y, U, V power_set(Y):
+        preimage_set(f, union(U, V)) = union(preimage_set(f, U), preimage_set(f, V))
+    by extension:
+        ? preimage_set(f, union(U, V)) = union(preimage_set(f, U), preimage_set(f, V))
+        claim:
+            ? forall x preimage_set(f, union(U, V)):
+                x $in union(preimage_set(f, U), preimage_set(f, V))
+            f(x) $in union(U, V)
+            f(x) $in U or f(x) $in V
+            by cases:
+                ? x $in union(preimage_set(f, U), preimage_set(f, V))
+                case f(x) $in U:
+                    x $in preimage_set(f, U)
+                    x $in union(preimage_set(f, U), preimage_set(f, V))
+                case f(x) $in V:
+                    x $in preimage_set(f, V)
+                    x $in union(preimage_set(f, U), preimage_set(f, V))
+        claim:
+            ? forall x union(preimage_set(f, U), preimage_set(f, V)):
+                x $in preimage_set(f, union(U, V))
+            x $in preimage_set(f, U) or x $in preimage_set(f, V)
+            by cases:
+                ? x $in preimage_set(f, union(U, V))
+                case x $in preimage_set(f, U):
+                    f(x) $in U
+                    f(x) $in union(U, V)
+                case x $in preimage_set(f, V):
+                    f(x) $in V
+                    f(x) $in union(U, V)
+
+thm preimage_intersect:
+    ? forall X, Y set, f fn(x X) Y, U, V power_set(Y):
+        preimage_set(f, intersect(U, V)) = intersect(preimage_set(f, U), preimage_set(f, V))
+    by extension:
+        ? preimage_set(f, intersect(U, V)) = intersect(preimage_set(f, U), preimage_set(f, V))
+        claim:
+            ? forall x preimage_set(f, intersect(U, V)):
+                x $in intersect(preimage_set(f, U), preimage_set(f, V))
+            f(x) $in intersect(U, V)
+            f(x) $in U
+            f(x) $in V
+            x $in preimage_set(f, U)
+            x $in preimage_set(f, V)
+        claim:
+            ? forall x intersect(preimage_set(f, U), preimage_set(f, V)):
+                x $in preimage_set(f, intersect(U, V))
+            x $in preimage_set(f, U)
+            x $in preimage_set(f, V)
+            f(x) $in U
+            f(x) $in V
+            f(x) $in intersect(U, V)
+
+# Under a surjection, an empty preimage forces an empty target set.
+thm surjective_empty_preimage:
+    ? forall X, Y set, f fn(x X) Y, U power_set(Y):
+        $surjective(X, Y, f)
+        preimage_set(f, U) = {}
+        =>:
+            U = {}
+    by extension:
+        ? U = {}
+        claim:
+            ? forall y U:
+                y $in {}
+            y $in Y
+            obtain x from exist z X st {y = f(z)}
+            x $in preimage_set(f, U)
+            by contra:
+                ? y $in {}
+                impossible x $in {}
+        claim:
+            ? forall y {}:
+                y $in U
+            by contra:
+                ? y $in U
+                impossible y $in {}
+
+# 3.5 Continuous surjections preserve connectedness.
+thm continuous_surjection_preserves_connectedness:
+    ? forall A, B set, source &TopologicalSpace<A>, target &TopologicalSpace<B>, f fn(x source.carrier) target.carrier:
+        $is_connected(A, source)
+        $is_continuous(A, B, source, target, f)
+        $surjective(source.carrier, target.carrier, f)
+        =>:
+            $is_connected(B, target)
+    claim:
+        ? forall U, V target.opens:
+            union(U, V) = target.carrier
+            intersect(U, V) = {}
+            =>:
+                U = {} or V = {}
+        U $in power_set(target.carrier)
+        V $in power_set(target.carrier)
+        preimage_set(f, U) $in source.opens
+        preimage_set(f, V) $in source.opens
+        by thm preimage_union(source.carrier, target.carrier, f, U, V) => preimage_set(f, union(U, V)) = union(preimage_set(f, U), preimage_set(f, V))
+        preimage_set(f, union(U, V)) = preimage_set(f, target.carrier)
+        by extension:
+            ? preimage_set(f, target.carrier) = source.carrier
+            claim:
+                ? forall x preimage_set(f, target.carrier):
+                    x $in source.carrier
+                f(x) $in target.carrier
+            claim:
+                ? forall x source.carrier:
+                    x $in preimage_set(f, target.carrier)
+                f(x) $in target.carrier
+        union(preimage_set(f, U), preimage_set(f, V)) = source.carrier
+        by thm preimage_intersect(source.carrier, target.carrier, f, U, V) => preimage_set(f, intersect(U, V)) = intersect(preimage_set(f, U), preimage_set(f, V))
+        preimage_set(f, intersect(U, V)) = preimage_set(f, {})
+        by extension:
+            ? preimage_set(f, {}) = {}
+            claim:
+                ? forall x preimage_set(f, {}):
+                    x $in {}
+                f(x) $in {}
+                by contra:
+                    ? x $in {}
+                    impossible f(x) $in {}
+            claim:
+                ? forall x {}:
+                    x $in preimage_set(f, {})
+                by contra:
+                    ? x $in preimage_set(f, {})
+                    impossible x $in {}
+        intersect(preimage_set(f, U), preimage_set(f, V)) = {}
+        preimage_set(f, U) = {} or preimage_set(f, V) = {}
+        by cases:
+            ? U = {} or V = {}
+            case preimage_set(f, U) = {}:
+                by thm surjective_empty_preimage(source.carrier, target.carrier, f, U) => U = {}
+            case preimage_set(f, V) = {}:
+                by thm surjective_empty_preimage(source.carrier, target.carrier, f, V) => V = {}
+    by def $is_connected(B, target)
+
+# The identity map on the indiscrete space is a continuous surjection, so the
+# connectedness conclusion is available from the preservation theorem as well.
+by thm identity_is_continuous(points, indiscrete) => $is_continuous(points, points, indiscrete, indiscrete, \identity_map<indiscrete.carrier>)
+
+claim:
+    ? $surjective(indiscrete.carrier, indiscrete.carrier, \identity_map<indiscrete.carrier>)
+    claim:
+        ? forall y indiscrete.carrier:
+            exist x indiscrete.carrier st {y = \identity_map<indiscrete.carrier>(x)}
+        \identity_map<indiscrete.carrier>(y) = y
+        witness exist x indiscrete.carrier st {y = \identity_map<indiscrete.carrier>(x)} from y
+    by def $surjective(indiscrete.carrier, indiscrete.carrier, \identity_map<indiscrete.carrier>)
+
+by thm continuous_surjection_preserves_connectedness(points, points, indiscrete, indiscrete, \identity_map<indiscrete.carrier>) => $is_connected(points, indiscrete)
+
+# 3.6 Clopen sets detect connectedness.
+# If a space is connected, every clopen set is empty or the whole carrier.
+thm connected_implies_only_trivial_clopen:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>, F power_set(space.carrier):
+        $is_connected(Ambient, space)
+        $is_clopen(Ambient, space, F)
+        =>:
+            F = {} or F = space.carrier
+    F $in space.opens
+    $is_closed(Ambient, space, F)
+    set_minus(space.carrier, F) $in space.opens
+    by extension:
+        ? union(F, set_minus(space.carrier, F)) = space.carrier
+        claim:
+            ? forall x union(F, set_minus(space.carrier, F)):
+                x $in space.carrier
+            x $in F or x $in set_minus(space.carrier, F)
+            by cases:
+                ? x $in space.carrier
+                case x $in F:
+                    F $subset space.carrier
+                    x $in space.carrier
+                case x $in set_minus(space.carrier, F):
+                    x $in space.carrier
+        claim:
+            ? forall x space.carrier:
+                x $in union(F, set_minus(space.carrier, F))
+            x $in F or not x $in F
+            by cases:
+                ? x $in union(F, set_minus(space.carrier, F))
+                case x $in F:
+                    x $in union(F, set_minus(space.carrier, F))
+                case not x $in F:
+                    x $in set_minus(space.carrier, F)
+                    x $in union(F, set_minus(space.carrier, F))
+    by extension:
+        ? intersect(F, set_minus(space.carrier, F)) = {}
+        claim:
+            ? forall x intersect(F, set_minus(space.carrier, F)):
+                x $in {}
+            x $in F
+            x $in set_minus(space.carrier, F)
+            not x $in F
+            by contra:
+                ? x $in {}
+                impossible x $in F
+        claim:
+            ? forall x {}:
+                x $in intersect(F, set_minus(space.carrier, F))
+            by contra:
+                ? x $in intersect(F, set_minus(space.carrier, F))
+                impossible x $in {}
+    F = {} or set_minus(space.carrier, F) = {}
+    by cases:
+        ? F = {} or F = space.carrier
+        case F = {}:
+            F = {}
+        case set_minus(space.carrier, F) = {}:
+            by extension:
+                ? F = space.carrier
+                claim:
+                    ? forall x F:
+                        x $in space.carrier
+                    F $subset space.carrier
+                    x $in space.carrier
+                claim:
+                    ? forall x space.carrier:
+                        x $in F
+                    by contra:
+                        ? x $in F
+                        x $in set_minus(space.carrier, F)
+                        impossible x $in {}
+
+# Conversely, if the only clopen sets are trivial, then the space is connected.
+prop has_only_trivial_clopen(Ambient set, space &TopologicalSpace<Ambient>):
+    forall F power_set(space.carrier):
+        $is_clopen(Ambient, space, F)
+        =>:
+            F = {} or F = space.carrier
+
+thm only_trivial_clopen_implies_connected:
+    ? forall Ambient set, space &TopologicalSpace<Ambient>:
+        $has_only_trivial_clopen(Ambient, space)
+        =>:
+            $is_connected(Ambient, space)
+    claim:
+        ? forall U, V space.opens:
+            union(U, V) = space.carrier
+            intersect(U, V) = {}
+            =>:
+                U = {} or V = {}
+        U $in power_set(space.carrier)
+        by extension:
+            ? set_minus(space.carrier, U) = V
+            claim:
+                ? forall x set_minus(space.carrier, U):
+                    x $in V
+                not x $in U
+                x $in space.carrier
+                x $in union(U, V)
+                x $in U or x $in V
+                by cases:
+                    ? x $in V
+                    case x $in U:
+                        by contra:
+                            ? x $in V
+                            impossible not x $in U
+                    case x $in V:
+                        x $in V
+            claim:
+                ? forall x V:
+                    x $in set_minus(space.carrier, U)
+                x $in space.carrier
+                by contra:
+                    ? not x $in U
+                    x $in U
+                    x $in intersect(U, V)
+                    impossible x $in {}
+        by def $is_closed(Ambient, space, U)
+        by def $is_clopen(Ambient, space, U)
+        U = {} or U = space.carrier
+        V $in power_set(space.carrier)
+        V $subset space.carrier
+        by cases:
+            ? U = {} or V = {}
+            case U = {}:
+                U = {}
+            case U = space.carrier:
+                intersect(U, V) = intersect(space.carrier, V) = V
+                V = {}
+    by def $is_connected(Ambient, space)
+
+# On the discrete two-point space the singleton {0} is clopen and nontrivial,
+# matching the earlier separation.
+claim:
+    ? $is_clopen(points, discrete, {0})
+    {0} $in discrete.opens
+    $is_closed(points, discrete, {0})
+    by def $is_clopen(points, discrete, {0})
+
+# A nontrivial clopen set shows the discrete space is not "clopen-trivial",
+# matching the open-separation proof that it is disconnected.
+claim:
+    ? not $has_only_trivial_clopen(points, discrete)
+    by contra:
+        ? not $has_only_trivial_clopen(points, discrete)
+        {0} = {} or {0} = points
+        claim:
+            ? 0 = 1
+            {0} = {} or {0} = points
+            by cases:
+                ? 0 = 1
+                case {0} = {}:
+                    impossible {0} = {}
+                case {0} = points:
+                    impossible {0} = points
+        impossible 0 = 1

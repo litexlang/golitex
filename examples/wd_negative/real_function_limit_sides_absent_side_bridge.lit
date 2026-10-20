@@ -1,0 +1,9 @@
+# Must reject normally: absent side bridge.
+# Run (expected nonzero): target/release/litex -strict -lang en -f examples/wd_negative/real_function_limit_sides_absent_side_bridge.lit
+
+thm absent_side_s:
+    ? forall af fn(x R+) R,L R:
+        $has_limit_at(af,0,L)
+        =>:
+            $has_limit_left(af,0,L)
+    by thm fn_limit_at_to_left(af,0,L) => $has_limit_left(af,0,L)

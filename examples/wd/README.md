@@ -3,6 +3,15 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+[Finite-point function limits](real_function_limit_at.lit) prove the actual
+punctured approach and epsilon-delta condition before selecting `lim(f,x0)`.
+[Common proofs](real_function_limit_common_proofs.lit),
+[endpoint domains](real_function_limit_endpoints.lit), and
+[existence/congruence](real_function_limit_interfaces.lit) cover downstream
+use. WD consumes proved convergence, including before cancellation by zero.
+See the [22 theorem contracts](../../docs/function-limits.md) and matching
+`real_function_limit_*.lit` controls in `../wd_negative/`.
+
 [Returned sequence applications](sequence_return_application.lit) check each
 call layer of finite_seq, seq and aliased function-space returns, retaining
 the actual carrier equality and guards. The corresponding out-of-range and

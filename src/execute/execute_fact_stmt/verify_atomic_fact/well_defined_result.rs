@@ -6,6 +6,10 @@ use crate::execute::execute_fact_stmt::well_defined_results::{
 use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 pub enum FailToVerifyAtomicFactWellDefinedResult {
+    FunctionLimitDomain {
+        function: crate::ast::obj::Obj,
+        well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
+    },
     Argument(FailToVerifyObjWellDefinedResult),
     Predicate {
         well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
@@ -52,6 +56,7 @@ pub struct AtomicFactWellDefinedProof {
 // Reusing a checked proposition also reuses its predicate-domain evidence.
 // Arguments and the visible signature are still checked before this dispatch.
 pub enum PredicateDomainProof {
+    FunctionLimit(FunctionLimitPredicateDomainProof),
     SequenceLimit(SequenceLimitPredicateDomainProof),
     ByKnownFact(super::AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     ByKnownZeroRemainder(
@@ -104,4 +109,11 @@ pub struct SequenceLimitPredicateDomainProof {
     pub sequence_source:
         Box<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
     pub value_real: super::structural_membership_proof::StructuralMembershipProof,
+}
+
+pub struct FunctionLimitPredicateDomainProof {
+    pub function_domain:
+        crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof,
+    pub point_real: Box<VerifyFactResult>,
+    pub value_real: Box<VerifyFactResult>,
 }

@@ -224,7 +224,10 @@ impl Runtime {
         fact: &AtomicFact,
     ) -> Option<AtomicExceptEqualityFactSearchProofByKnownSpecialProperty> {
         match fact {
-            AtomicFact::HasSequenceLimitFact(_) | AtomicFact::NotHasSequenceLimitFact(_) => None,
+            AtomicFact::HasSequenceLimitFact(_)
+            | AtomicFact::NotHasSequenceLimitFact(_)
+            | AtomicFact::HasFunctionLimitFact(_)
+            | AtomicFact::NotHasFunctionLimitFact(_) => None,
             AtomicFact::EqualFact(_) => unreachable!("equality uses its own known search"),
             AtomicFact::InFact(fact) => self
                 .search_in_fact_proof_by_known_special_property(fact)

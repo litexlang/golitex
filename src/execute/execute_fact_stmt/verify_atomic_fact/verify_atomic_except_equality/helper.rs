@@ -35,6 +35,28 @@ pub(super) fn atomic_fact_with_args(
         }};
     }
     Some(match fact {
+        AtomicFact::HasFunctionLimitFact(f) => {
+            let (function, point, value) = take3!(args);
+            crate::ast::fact::HasFunctionLimitFact {
+                fact_id,
+                function,
+                approach: f.approach.with_point(point),
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotHasFunctionLimitFact(f) => {
+            let (function, point, value) = take3!(args);
+            crate::ast::fact::NotHasFunctionLimitFact {
+                fact_id,
+                function,
+                approach: f.approach.with_point(point),
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
         AtomicFact::HasSequenceLimitFact(f) => {
             let (sequence, value) = take2!(args);
             crate::ast::fact::HasSequenceLimitFact {

@@ -1,0 +1,7 @@
+# Native finite-point function-limit selected equality rule.
+# Run: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/function_limit_selected.lit
+
+forall af fn(x R) R,p,L R:
+    $has_limit_at(af,p,L)
+    =>:
+        lim(af,p)=L

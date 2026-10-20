@@ -42,7 +42,7 @@ fn finite_coordinate_uses_its_exact_citation_for_empty_equality_paths() {
         .compile_run(&result, "coordinate_citation")
         .unwrap();
     assert!(output.contains(&format!(
-        "have _cartMember : Litex.In _receiver _cart := h_{}",
+        "let _cartMember : Litex.In _receiver _cart := h_{}",
         id.value()
     )));
 }

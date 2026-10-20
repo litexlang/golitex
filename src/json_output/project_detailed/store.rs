@@ -48,6 +48,26 @@ pub(super) fn project_store_and_infer(
         .collect();
     let mut entries = vec![
         ("stores", JsonValue::Array(stores)),
+        (
+            "formed_subjects",
+            JsonValue::Array(
+                node.formed_subjects
+                    .iter()
+                    .map(|subject| {
+                        object_for(
+                            runtime,
+                            vec![
+                                (
+                                    "argument_index",
+                                    JsonValue::Number(subject.argument_index as f64),
+                                ),
+                                ("wd_id", string(subject.wd_id.to_string())),
+                            ],
+                        )
+                    })
+                    .collect(),
+            ),
+        ),
         ("infers", JsonValue::Array(infers)),
     ];
     let Some(infer) = &node.infer else {

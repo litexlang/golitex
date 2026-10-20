@@ -465,9 +465,15 @@ pub struct FailToVerifyCschObjWellDefined(pub FailToVerifyObjWellDefinedByDefCom
 pub struct FailToVerifySymmetricDifferenceObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub enum FailToVerifyLimitOperatorObjWellDefinedResult {
+    Function(FailToVerifyFunctionLimitObjWellDefined),
     Sequence(FailToVerifySequenceLimitObjWellDefined),
 }
 pub struct FailToVerifySequenceLimitObjWellDefined {
     pub obj: crate::ast::obj::Obj,
     pub result: Box<crate::execute::execute_fact_stmt::VerifyFactResult>,
+}
+
+pub struct FailToVerifyFunctionLimitObjWellDefined {
+    pub obj: Obj,
+    pub reason: crate::execute::execute_fact_stmt::function_limit::FunctionLimitWDFailure,
 }

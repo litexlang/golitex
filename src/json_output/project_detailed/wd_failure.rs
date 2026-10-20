@@ -118,6 +118,21 @@ pub(super) fn project_atomic_wd_failure(
         FailToVerifyAtomicFactWellDefinedResult, PredicateSignatureWellDefinedFailure,
     };
     let projected = match failure {
+        FailToVerifyAtomicFactWellDefinedResult::FunctionLimitDomain { function, .. } => {
+            object_for(
+                rt,
+                vec![
+                    ("phase", string("function_limit_domain")),
+                    ("function", string(function.readable_string())),
+                    (
+                        "message",
+                        string(
+                            "Requires an unambiguous complete unary real domain, including guards.",
+                        ),
+                    ),
+                ],
+            )
+        }
         FailToVerifyAtomicFactWellDefinedResult::Argument(reason) => {
             project_obj_wd_failure(reason, rt)
         }
@@ -249,6 +264,7 @@ pub(super) fn project_obj_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     let projected = match f {
+        FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::Function(p)) => super::function_limit::object_failure(p,rt),
         FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::Sequence(p)) => node(rt,"SequenceLimit",None,
             object_for(rt,vec![("obj",string(p.obj.readable_string())),("message",string("Sequence limit requires proved finite convergence; no limit is guessed from the body.")),("requirement",project_verify_fact(&p.result,rt))])),
 
