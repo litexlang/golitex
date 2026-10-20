@@ -86,6 +86,25 @@ pub(super) fn project_atomic_wd_proof(
     };
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     let domain = match &proof.predicate_domain {
+        PredicateDomainProof::SequenceLimit(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("checked_real_sequence_arguments")),
+                ("sequence_argument_index", JsonValue::Number(0.0)),
+                (
+                    "sequence_source",
+                    super::function_domain::project_source(&p.sequence_source, runtime),
+                ),
+                ("value_argument_index", JsonValue::Number(1.0)),
+                (
+                    "value_real",
+                    super::structural_membership::project_structural_membership(
+                        &p.value_real,
+                        runtime,
+                    ),
+                ),
+            ],
+        ),
         PredicateDomainProof::ByKnownZeroRemainder(p) => {
             super::divisibility::project_known_zero_remainder(p, runtime)
         }

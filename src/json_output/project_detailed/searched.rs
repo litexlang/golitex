@@ -53,6 +53,32 @@ pub(super) fn project_atomic_except_searched(
     runtime: &Runtime,
 ) -> JsonValue {
     match searched {
+        AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("by_template_membership")),
+                (
+                    "expanded_memberships",
+                    JsonValue::Array(
+                        p.expansions
+                            .iter()
+                            .map(|m| {
+                                string(
+                                    crate::ast::fact::Fact::AtomicFact(
+                                        crate::ast::fact::AtomicFact::InFact(m.clone()),
+                                    )
+                                    .readable_string(),
+                                )
+                            })
+                            .collect(),
+                    ),
+                ),
+                (
+                    "residual",
+                    project_atomic_except_searched(&p.residual, runtime),
+                ),
+            ],
+        ),
         AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(p) => {
             super::divisibility::project_known_zero_remainder(p, runtime)
         }
@@ -849,6 +875,11 @@ fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runti
 
 fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtime) -> JsonValue {
     let (kind, requirements, proofs) = match proof {
+        BuiltinPropDefinitionProof::SequenceLimit(p) => (
+            "SequenceLimit",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::Subset(p) => (
             "subset",
             &p.requirement_facts,

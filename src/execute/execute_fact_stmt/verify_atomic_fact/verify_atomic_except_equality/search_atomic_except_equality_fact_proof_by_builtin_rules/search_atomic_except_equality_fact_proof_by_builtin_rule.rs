@@ -24,6 +24,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinRule>> {
         match fact {
+            AtomicFact::HasSequenceLimitFact(_) | AtomicFact::NotHasSequenceLimitFact(_) => Ok(None),
             AtomicFact::EqualFact(_) => unreachable!(
                 "equality facts use the equality search pipeline, not atomic-except-equality builtin rules"
             ),

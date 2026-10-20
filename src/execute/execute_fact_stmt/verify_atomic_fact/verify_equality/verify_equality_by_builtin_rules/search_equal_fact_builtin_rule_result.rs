@@ -125,6 +125,7 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    SequenceLimit(super::by_sequence_limit::SequenceLimitEqualityProof),
     DvdZeroRemainder(super::by_dvd_zero_remainder::DvdZeroRemainderProof),
     SymmetricDifference(super::by_symmetric_difference::SymmetricDifferenceEqualityProof),
     Conjugation(super::by_conjugation::ConjugationEqualityProof),

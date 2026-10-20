@@ -774,6 +774,12 @@ fn try_parse_keyword_primary(
                 n: Box::new(n),
             }))
         })?)),
+        crate::parse::keywords::LIM => Ok(Some(parse_unary_keyword(
+            rt,
+            tb,
+            crate::parse::keywords::LIM,
+            |sequence| crate::ast::obj::SequenceLimit::new(sequence).into(),
+        )?)),
         // Infinite sequences in S. Example: `seq(R)`.
         SEQ => Ok(Some(parse_unary_keyword(rt, tb, SEQ, |set| {
             Obj::SetFormer(SetFormer::SeqSet(SeqSet { set: Box::new(set) }))

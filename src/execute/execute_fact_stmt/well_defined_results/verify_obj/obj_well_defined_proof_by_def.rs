@@ -12,6 +12,7 @@ use crate::prelude::*;
 use crate::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
+    LimitOperator(LimitOperatorObjWellDefinedProofByDef),
     Identifier(IdentifierObjWellDefinedProof),
     FnObj(FnObjObjWellDefinedProof),
     Literal(LiteralObjWellDefinedProofByDef),
@@ -1466,4 +1467,13 @@ impl SymmetricDifferenceObjWellDefinedProof {
             requirement_fact_verified,
         }
     }
+}
+
+pub enum LimitOperatorObjWellDefinedProofByDef {
+    Sequence(SequenceLimitObjWellDefinedProof),
+}
+pub struct SequenceLimitObjWellDefinedProof {
+    pub sequence_wd: Box<ObjWellDefinedProof>,
+    pub sequence_domain: crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof,
+    pub convergence: crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof,
 }

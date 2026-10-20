@@ -3,6 +3,8 @@ use crate::runtime::FactId;
 use crate::store_fact_and_infer::StoreInferredFactResult;
 
 pub enum InferAtomicFactResult {
+    HasSequenceLimitFact(Vec<InferHasSequenceLimitFactResult>),
+    NotHasSequenceLimitFact(Vec<InferNotHasSequenceLimitFactResult>),
     NormalAtomicFact(Vec<InferNormalAtomicFactResult>),
     EqualFact(Vec<InferEqualFactResult>),
     LessFact(Vec<InferLessFactResult>),
@@ -82,6 +84,12 @@ impl InferAtomicFactResult {
             }
             Self::PrimeFact(rules) => rules.iter().flat_map(|r| r.stored_conclusions()).collect(),
             Self::CoprimeFact(rules) => rules.iter().flat_map(|r| r.stored_conclusions()).collect(),
+            Self::HasSequenceLimitFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotHasSequenceLimitFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
             Self::DvdFact(rules) => rules.iter().flat_map(|r| r.stored_conclusions()).collect(),
             Self::InjectiveFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
@@ -160,5 +168,18 @@ impl InferAtomicFactResult {
             .into_iter()
             .flat_map(|s| s.stored_fact_ids())
             .collect()
+    }
+}
+
+pub enum InferHasSequenceLimitFactResult {}
+impl InferHasSequenceLimitFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&crate::store_fact_and_infer::StoreInferredFactResult> {
+        match *self {}
+    }
+}
+pub enum InferNotHasSequenceLimitFactResult {}
+impl InferNotHasSequenceLimitFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&crate::store_fact_and_infer::StoreInferredFactResult> {
+        match *self {}
     }
 }

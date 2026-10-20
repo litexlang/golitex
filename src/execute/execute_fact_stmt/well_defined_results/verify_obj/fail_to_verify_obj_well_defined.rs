@@ -11,6 +11,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result
 use crate::prelude::*;
 
 pub enum FailToVerifyObjWellDefinedResult {
+    LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult),
     Identifier(FailToVerifyIdentifierObjWellDefined),
     FnObj(FailToVerifyFnObjObjWellDefined),
     Literal(FailToVerifyLiteralObjWellDefinedResult),
@@ -462,3 +463,11 @@ pub struct FailToVerifySechObjWellDefined(pub FailToVerifyObjWellDefinedByDefCom
 pub struct FailToVerifyCschObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifySymmetricDifferenceObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub enum FailToVerifyLimitOperatorObjWellDefinedResult {
+    Sequence(FailToVerifySequenceLimitObjWellDefined),
+}
+pub struct FailToVerifySequenceLimitObjWellDefined {
+    pub obj: crate::ast::obj::Obj,
+    pub result: Box<crate::execute::execute_fact_stmt::VerifyFactResult>,
+}

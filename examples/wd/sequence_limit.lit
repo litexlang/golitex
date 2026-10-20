@@ -1,0 +1,45 @@
+# Real sequence limit: the epsilon-N proof precedes selected-value use.
+# Previously unsupported native use: lim(a)=0; lim(a)+2=2.
+# Before publishing has_seq_limit, both uses must still fail (see wd_negative).
+# Verify: target/release/litex -strict -lang en -f examples/wd/sequence_limit.lit
+
+have fn a(k N+) R = 1/k
+
+claim:
+    ? forall epsilon R+:
+        exist n0 N+ st {{n N+: n >= n0} $subset preimage_set(a,{v R: abs(v-0) < epsilon})}
+    release thm real_archimedean_natural_upper_bound(1/epsilon)
+    obtain n0 from exist n0 N+ st {1/epsilon < n0}
+    0 < n0
+    (1/epsilon)*epsilon < n0*epsilon
+    (1/epsilon)*epsilon = 1
+    1 < n0*epsilon
+    1/n0 < (n0*epsilon)/n0
+    (n0*epsilon)/n0 = epsilon
+    1/n0 < epsilon
+    claim:
+        ? forall k N+:
+            k >= n0
+            =>:
+                abs(a(k)-0) < epsilon
+        0 < n0*k
+        1/k = n0/(n0*k)
+        n0/(n0*k) <= k/(n0*k)
+        k/(n0*k) = 1/n0
+        1/k <= 1/n0 < epsilon
+        a(k)-0 = a(k) = 1/k
+        0 < 1/k
+        abs(a(k)-0) = abs(1/k)
+        abs(1/k) = 1/k < epsilon
+    witness exist cutoff N+ st {{k N+: k >= cutoff} $subset preimage_set(a,{v R: abs(v-0) < epsilon})} from n0:
+        claim:
+            ? forall k {j N+: j >= n0}:
+                k $in preimage_set(a,{v R: abs(v-0) < epsilon})
+            abs(a(k)-0) < epsilon
+        by def {k N+: k >= n0} $subset preimage_set(a,{v R: abs(v-0) < epsilon})
+
+
+by def $has_seq_limit(a,0)
+lim(a)=0
+lim(a)+2=2
+lim(a) $in R

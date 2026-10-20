@@ -4,6 +4,25 @@ use std::fmt;
 /// runtime rather than by a source `thm`/`axiom` declaration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinTheoremId {
+    SequenceLimitFromEpsilon,
+    SequenceLimitTail,
+    SequenceLimitConstant,
+    SequenceLimitNeg,
+    SequenceLimitAbs,
+    SequenceLimitScale,
+    SequenceLimitPower,
+    SequenceLimitAdd,
+    SequenceLimitSubtract,
+    SequenceLimitMultiply,
+    SequenceLimitDivide,
+    SequenceLimitEventuallyEqual,
+    SequenceLimitShift,
+    SequenceLimitCompare,
+    SequenceLimitSqueeze,
+    SequenceLimitUnique,
+    SequenceLimitExists,
+    SequenceLimitSelected,
+
     FunctionSetMember,
     SetBuilderMember,
     DefinedSetMember,
@@ -41,6 +60,25 @@ pub enum BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
         Some(match name {
+            "seq_limit_from_epsilon" => Self::SequenceLimitFromEpsilon,
+            "seq_limit_tail" => Self::SequenceLimitTail,
+            "seq_limit_constant" => Self::SequenceLimitConstant,
+            "seq_limit_neg" => Self::SequenceLimitNeg,
+            "seq_limit_abs" => Self::SequenceLimitAbs,
+            "seq_limit_scale" => Self::SequenceLimitScale,
+            "seq_limit_power" => Self::SequenceLimitPower,
+            "seq_limit_add" => Self::SequenceLimitAdd,
+            "seq_limit_subtract" => Self::SequenceLimitSubtract,
+            "seq_limit_multiply" => Self::SequenceLimitMultiply,
+            "seq_limit_divide" => Self::SequenceLimitDivide,
+            "seq_limit_eventually_equal" => Self::SequenceLimitEventuallyEqual,
+            "seq_limit_shift" => Self::SequenceLimitShift,
+            "seq_limit_compare" => Self::SequenceLimitCompare,
+            "seq_limit_squeeze" => Self::SequenceLimitSqueeze,
+            "seq_limit_unique" => Self::SequenceLimitUnique,
+            "seq_limit_exists" => Self::SequenceLimitExists,
+            "seq_limit_selected" => Self::SequenceLimitSelected,
+
             "fn_set_member" => Self::FunctionSetMember,
             "family_intersect_member" => Self::FamilyIntersectionMember,
             "family_intersect_member_facts" => Self::FamilyIntersectionMemberFacts,
@@ -85,6 +123,25 @@ impl BuiltinTheoremId {
 
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::SequenceLimitFromEpsilon => "seq_limit_from_epsilon",
+            Self::SequenceLimitTail => "seq_limit_tail",
+            Self::SequenceLimitConstant => "seq_limit_constant",
+            Self::SequenceLimitNeg => "seq_limit_neg",
+            Self::SequenceLimitAbs => "seq_limit_abs",
+            Self::SequenceLimitScale => "seq_limit_scale",
+            Self::SequenceLimitPower => "seq_limit_power",
+            Self::SequenceLimitAdd => "seq_limit_add",
+            Self::SequenceLimitSubtract => "seq_limit_subtract",
+            Self::SequenceLimitMultiply => "seq_limit_multiply",
+            Self::SequenceLimitDivide => "seq_limit_divide",
+            Self::SequenceLimitEventuallyEqual => "seq_limit_eventually_equal",
+            Self::SequenceLimitShift => "seq_limit_shift",
+            Self::SequenceLimitCompare => "seq_limit_compare",
+            Self::SequenceLimitSqueeze => "seq_limit_squeeze",
+            Self::SequenceLimitUnique => "seq_limit_unique",
+            Self::SequenceLimitExists => "seq_limit_exists",
+            Self::SequenceLimitSelected => "seq_limit_selected",
+
             Self::FunctionSetMember => "fn_set_member",
             Self::FamilyIntersectionMember => "family_intersect_member",
             Self::FamilyIntersectionMemberFacts => "family_intersect_member_facts",
@@ -136,6 +193,25 @@ impl fmt::Display for BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn arity(self) -> usize {
         match self {
+            Self::SequenceLimitFromEpsilon => 2,
+            Self::SequenceLimitTail => 3,
+            Self::SequenceLimitConstant => 2,
+            Self::SequenceLimitNeg => 2,
+            Self::SequenceLimitAbs => 2,
+            Self::SequenceLimitScale => 3,
+            Self::SequenceLimitPower => 3,
+            Self::SequenceLimitAdd => 4,
+            Self::SequenceLimitSubtract => 4,
+            Self::SequenceLimitMultiply => 4,
+            Self::SequenceLimitDivide => 4,
+            Self::SequenceLimitEventuallyEqual => 4,
+            Self::SequenceLimitShift => 3,
+            Self::SequenceLimitCompare => 5,
+            Self::SequenceLimitSqueeze => 5,
+            Self::SequenceLimitUnique => 3,
+            Self::SequenceLimitExists => 2,
+            Self::SequenceLimitSelected => 1,
+
             Self::FiniteSetHasBijectiveIndex
             | Self::RationalHasUniqueReducedFraction
             | Self::IndexCartesianNonemptyByChoiceFromFamily
@@ -153,7 +229,9 @@ impl BuiltinTheoremId {
 }
 
 pub fn is_reserved_builtin_name(name: &str) -> bool {
-    BuiltinTheoremId::from_name(name).is_some() || builtin_certificate_arity(name).is_some()
+    name == "has_seq_limit"
+        || BuiltinTheoremId::from_name(name).is_some()
+        || builtin_certificate_arity(name).is_some()
 }
 
 // Opaque legacy predicates produced by completeness and consumed by its

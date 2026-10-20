@@ -34,6 +34,7 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
             | AtomicFact::NotProperSupersetFact(_)
             | AtomicFact::NotPrimeFact(_)
             | AtomicFact::NotCoprimeFact(_)
+            | AtomicFact::NotHasSequenceLimitFact(_)
             | AtomicFact::NotDvdFact(_)
             | AtomicFact::NotInjectiveFact(_)
             | AtomicFact::NotSurjectiveFact(_)
@@ -76,6 +77,8 @@ pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotPrimeFact(f) => vec![&f.value],
         AtomicFact::CoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotCoprimeFact(f) => vec![&f.left, &f.right],
+        AtomicFact::HasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
         AtomicFact::DvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotDvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::InjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
@@ -423,6 +426,20 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
             fact_id: new_fact_id,
             left: f.left.clone(),
             right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::HasSequenceLimitFact(f) => crate::ast::fact::NotHasSequenceLimitFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotHasSequenceLimitFact(f) => crate::ast::fact::HasSequenceLimitFact {
+            fact_id: new_fact_id,
+            sequence: f.sequence.clone(),
+            value: f.value.clone(),
             line_file: f.line_file.clone(),
         }
         .into(),

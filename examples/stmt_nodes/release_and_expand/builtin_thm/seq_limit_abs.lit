@@ -1,0 +1,7 @@
+# seq_limit_abs: explicit premises and checked conclusion.
+claim:
+    ? forall seq_u seq(R),limit_u R:
+        $has_seq_limit(seq_u,limit_u)
+        =>:
+            $has_seq_limit(fn(k N+) R {abs(seq_u(k))},abs(limit_u))
+    by thm seq_limit_abs(seq_u,limit_u) => $has_seq_limit(fn(k N+) R {abs(seq_u(k))},abs(limit_u))

@@ -90,6 +90,10 @@ impl Runtime {
             return self.verify_identifier_obj_well_definedness(value, verify_state);
         }
 
+        if let Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(value)) = obj {
+            return self.verify_sequence_limit_well_definedness(value, verify_state);
+        }
+
         // Struct view `&Name` / `&Name(args)`: known definition + arity + param WD.
         if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value)) = obj {
             return self.verify_struct_obj_well_definedness(value, verify_state);
@@ -146,6 +150,7 @@ impl Runtime {
 
         // Indexed family / choice: `$is_set` half + family ∈ FnSet registration.
         match obj {
+            Obj::LimitOperator(_) => unreachable!("limit WD uses its own ordered proof stages"),
             Obj::SetOperator(SetOperator::IndexUnion(value)) => {
                 return self.verify_index_union_obj_well_definedness(value, verify_state);
             }
@@ -198,6 +203,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         match obj {
+            Obj::LimitOperator(_) => unreachable!("limit has dedicated WD stages"),
             Obj::Identifier(_) => {
                 unreachable!("Identifier WD uses verify_identifier_obj_well_definedness")
             }

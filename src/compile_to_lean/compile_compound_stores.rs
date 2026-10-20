@@ -218,6 +218,12 @@ impl LitexToLeanCompiler {
             ));
         };
         let family_matches = match infer {
+            InferAtomicFactResult::HasSequenceLimitFact(_) => {
+                matches!(atomic, AtomicFact::HasSequenceLimitFact(_))
+            }
+            InferAtomicFactResult::NotHasSequenceLimitFact(_) => {
+                matches!(atomic, AtomicFact::NotHasSequenceLimitFact(_))
+            }
             InferAtomicFactResult::NormalAtomicFact(_) => {
                 matches!(atomic, AtomicFact::NormalAtomicFact(_))
             }
@@ -319,6 +325,10 @@ impl LitexToLeanCompiler {
             ));
         }
         match infer {
+            InferAtomicFactResult::HasSequenceLimitFact(_)
+            | InferAtomicFactResult::NotHasSequenceLimitFact(_) => {
+                Err(LeanCompileError::unsupported("Inference/SequenceLimit"))
+            }
             InferAtomicFactResult::EqualFact(rules) => {
                 let AtomicFact::EqualFact(source) = atomic else {
                     unreachable!()
@@ -337,6 +347,11 @@ impl LitexToLeanCompiler {
                         ..*position
                     };
                     match rule {
+                        InferInFactResult::Template(_) => {
+                            return Err(LeanCompileError::unsupported(
+                                "Inference/TemplateMembership",
+                            ));
+                        }
                         InferInFactResult::SignedStandardSetSign(sign) if matches!(atomic, AtomicFact::InFact(member) if matches!(member.set, Obj::StandardSet(StandardSet::N | StandardSet::RPos))) =>
                         {
                             declarations.extend(

@@ -1,9 +1,156 @@
 # Native limits: mathematical and implementation plan
 
-Date: 2026-10-20. Status: design proposal; no limit syntax, AST, verifier rule,
-or runtime change is implemented or authorized by this document.
+Date: 2026-10-20. Status: the sequence-only increment below is implemented;
+its acceptance receipt is recorded separately below. The broader function,
+one-sided, infinity and limsup/liminf roadmap remains a design proposal.
 
 Parent: [common LaTeX mathematics roadmap](litex-latex-math-support.md).
+
+## Current execution scope — real sequence limits only
+
+On 2026-10-20 the user requested implementation of `lim(a)` with public
+domain `seq(R)`, also accepting its equivalent `fn(k N+) R` interface, and
+the matching WD and BT rules. This narrows the next increment to sequences;
+the broader A–D roadmap below remains subsequent scope.
+
+The sequence-only protected AST proposal is exactly:
+
+```rust
+// Add this Obj variant and this new family and leaf.
+Obj::LimitOperator(LimitOperator)
+enum LimitOperator { Sequence(SequenceLimit) }
+struct SequenceLimit { sequence: Box<Obj> }
+
+// Add these positive/negative AtomicFact variants and their leaves.
+AtomicFact::HasSequenceLimitFact(HasSequenceLimitFact)
+AtomicFact::NotHasSequenceLimitFact(NotHasSequenceLimitFact)
+struct HasSequenceLimitFact {
+    fact_id: FactId, sequence: Obj, value: Obj,
+    line_file: Option<SourceLine>,
+}
+struct NotHasSequenceLimitFact {
+    fact_id: FactId, sequence: Obj, value: Obj,
+    line_file: Option<SourceLine>,
+}
+```
+
+The Obj preserves operation identity through parsing, verification and
+presentation. The facts represent the actual epsilon-tail relation and its
+logical negation, rather than recognizing a user predicate by spelling.
+These recursive values carry no inferred signature, proof, cache or selected
+answer; existing proof results own the evidence. No existing payload fields,
+Stmt, Identifier or Env/Runtime state contracts are changed. A source-library
+selector using existing `have fn by exist!` remains possible, but requires an
+import and does not provide the requested native branches and BT interface.
+
+The user explicitly approved these concrete sequence-only AST additions on
+2026-10-20. This approval does not include function-limit payloads or additional
+Fact shapes.
+The behavior contract is: `$has_seq_limit(a,L)` checks sequence membership and
+real `L`, its truth follows epsilon-tail convergence; `lim(a)` additionally
+requires independently established finite convergence. The first acceptance
+file is `examples/wd/sequence_limit.lit`, with `1/k -> 0` and downstream use;
+oscillating/diverging sequences receive no default value.
+
+### Proof route before selected-value convenience
+
+The user challenged the proposed two-line `a(k)=1/k; lim(a)=0` tracer because
+it omitted the convergence proof. The revised first-delivery recommendation
+is proof-driven selection: WD consumes independently established convergence;
+it does not inspect the sequence body to discover its limit. This refinement
+was confirmed by the user before native implementation.
+
+Proof/use structure (the complete executable proof is in the acceptance example):
+
+```text
+have fn a(k N+) R = 1/k
+claim:
+    ? $has_seq_limit(a,0)
+    # Supply the epsilon-N proof here.
+lim(a) = 0
+lim(a) + 2 = 2
+```
+
+The actual mathematical proof is: for each positive epsilon choose a positive
+natural N greater than 1/epsilon, using the existing Archimedean interface.
+For k>=N, positivity gives 0<1/k<=1/N<epsilon. Only after that candidate fact
+has been proved should the selected value become available. A named theorem
+may package this checked argument for explicit later use.
+
+Recommended order within this sequence-only increment:
+
+1. Candidate relation and an explicit epsilon-tail proof introduction route.
+2. Uniqueness, then WD from a proved candidate/existential and real membership.
+3. Equality of the selected limit with an established candidate, followed by
+   ordinary equality substitution in downstream expressions.
+4. Algebra, eventual equality/shifts, order and squeeze from their actual
+   proved limit and tail premises. Each BT retains those premise proofs.
+
+The first acceptance distinguishes `lim(a)=0` before and after the candidate
+proof. Body-based discovery, including a special reciprocal-sequence match,
+is not part of the revised recommendation. The broader roadmap's constructor
+automation is deferred rather than being performed inside WD.
+
+Proof-interface implementation note: current existential bodies are
+quantifier-free, so an epsilon-tail definition cannot insert a raw nested
+forall there. First derive a faithful representation using existing tail
+restrictions, function ranges/subsets or an explicit witness interface; do
+not silently add unapproved helper Fact payloads or recognize user props by
+their spelling. Preserve the ordinary forall-epsilon / exists-cutoff meaning.
+
+## Delivered sequence-only acceptance receipt (2026-10-20)
+
+The user confirmed proof-driven selection and approved the exact AST additions
+above. Implemented: native `lim(a)`, positive/negative `has_seq_limit` facts,
+epsilon-tail definition introduction, proof-consuming WD, selected-value and
+uniqueness equality rules, real membership, recursive substitution/identity,
+JSON evidence, capture-avoiding LaTeX, and 18 explicit `seq_limit_*` theorems.
+No Env/Runtime fields or shared proof-search ceilings changed.
+
+- Release build passed using the task-isolated Cargo target directory.
+- `cargo test --release --lib sequence` passed 28 tests, including 12 new
+  sequence-limit tests. They cover explicit reciprocal convergence, candidate
+  versus existence interfaces, failure/context retention, guarded quotient and
+  shift WD, real domains, negation identities, algebra/order/locality laws,
+  missing premises, reserved names, substitution, JSON and compiler boundaries.
+- Five adjacent filters passed: `function_composition` (17),
+  `native_latex_operations` (7), `compile_to_latex` (12), `builtin_thm` (23),
+  and `prop_domain` (4).
+- All 18 theorem fixtures passed in one persistent release Session with
+  `seq(R)`, then all 18 passed with equivalent `fn(index N+) R`. Ordinary
+  negative probes preserved earlier accepted declarations and facts.
+- Final current-binary CLI gates passed 22 public strict positive examples,
+  two newly added documentation blocks and five public must-fail controls.
+  Positive runs had exit 0, Normal `kind=run`, `run_result=success`,
+  `session_terminated=false`, `termination=null`; negative runs had nonzero
+  exit, `run_result=failure` and no hard termination.
+- Selected-value output passed in all ten CLI languages. LaTeX rendering
+  succeeded with `verified=false`; unsupported Lean compilation rejected the
+  source explicitly without producing a Lean artifact.
+- The two public source-owned selectors were renamed `sequence_limit_value`.
+  The nutshell passed strict verification. Analysis Chapter 6 parsed/rendered
+  successfully; its optional complete registered-prefix execution ended with
+  exit 143 before a run result, so full Analysis verification is not claimed.
+  No local-only `scripts/` source was changed or used as a release gate.
+
+One existing adjacent audit is still failing:
+`every_rule_impl_owns_ten_methods_and_a_selection_only_dispatcher` compares
+literal `match lang` text with the unchanged Dvd dispatcher's `match language`.
+Both mismatching sources already occur in HEAD; neither was changed here.
+The other two `rule_language_methods` tests pass. This is recorded separately
+from the passing new rule/output checks.
+
+Durable sources: [complete reciprocal proof](../examples/wd/sequence_limit.lit),
+[both input/existence interfaces](../examples/wd/sequence_limit_interfaces.lit),
+[strict-order countercheck](../examples/equal_negative/sequence_limit_strict_order.lit),
+and [focused Rust tests](../tests/unit/execute/sequence_limit/tests.rs).
+Every explicit theorem has a matching `seq_limit_*.lit` file under
+`examples/stmt_nodes/release_and_expand/builtin_thm/`; selection and uniqueness
+also have direct equality-rule tracers. All feature proof/WD tracers are free
+of `trust`. Function limits and the broader roadmap remain unimplemented.
+
+The sections below preserve the original broader design. Current delivered
+semantics and rules are specified in [Real sequence limits](../docs/sequence-limits.md).
 
 ## 1. Goal and proposed delivery boundary
 

@@ -45,6 +45,12 @@ Finite-set inclusion tracers:
 - [A finite subset of equal size equals its containing set](proof_nodes/equal/by_builtin_rule/finite_set_equal_from_subset_size.lit), including an explicit singleton proof.
 - [A proper finite subset has smaller size](proof_nodes/atomic/by_builtin_rule/less_finite_set_size_proper_subset.lit), using either `$proper_subset` or `$subset` with disequality.
 
+Real sequence limit tracers:
+
+- [Explicit epsilon-N proof for 1/k, then selected-value use](wd/sequence_limit.lit).
+- [Equivalent seq(R) / fn(k N+) R and finite-existence interfaces](wd/sequence_limit_interfaces.lit).
+- [Limit rules and their premises](../docs/sequence-limits.md), with one `seq_limit_*.lit` example per theorem in `stmt_nodes/release_and_expand/builtin_thm/`.
+
 ## Other
 
 - [Python Session agent loop](agent_session_demo/README.md) drives the real CLI,
@@ -61,4 +67,5 @@ Standalone regression examples:
 - [Nonempty-set property arguments](nonempty_set_property_arguments.lit).
 - [Function construction by unique existence](have_fn_by_unique_existence.lit).
 - [Object-definition equalities](object_definition_equalities.lit).
+- [Template-defined type interfaces](stmt_nodes/definition/template_type_interfaces.lit).
 - [Inverse trigonometric principal intervals](inverse_trig_principal_intervals.lit).

@@ -111,7 +111,7 @@ claim:
                     L1 = L2
             release thm sequence_limit_unique(a, L1, L2)
 
-have fn lim by exist!:
+have fn sequence_limit_value by exist!:
     ? forall a fn(index N+) R:
         $is_convergent_sequence(a)
         =>:
@@ -120,4 +120,4 @@ have fn lim by exist!:
 forall a fn(index N+) R:
     $is_convergent_sequence(a)
     =>:
-        $has_limit(a, lim(a))
+        $has_limit(a, sequence_limit_value(a))

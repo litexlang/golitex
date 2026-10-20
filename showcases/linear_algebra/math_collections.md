@@ -81,6 +81,12 @@ The plane has such a basis with length two. Defining a general dimension
 requires the further theorems that finite-dimensional spaces have bases and
 that any two bases have equal length.
 
+Ordered-list relations `is_prefix_of_length` and `is_list_with_index_removed`
+prepare the dependence lemma: linear dependence is the negation of
+independence, and a nontrivial zero combination supplies coefficients for
+selecting a redundant vector. The general selection and span-preserving
+deletion theorems are not yet proved.
+
 ## Linear maps
 
 `is_linear_map` is a relation on an ordinary function between two vector spaces

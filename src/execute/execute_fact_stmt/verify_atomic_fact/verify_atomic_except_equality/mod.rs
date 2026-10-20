@@ -18,6 +18,7 @@ pub mod search_atomic_except_equality_fact_proof_by_known_rewrite;
 pub mod search_atomic_except_equality_fact_proof_by_known_special_property;
 pub mod search_atomic_except_equality_fact_proof_by_known_strategy;
 pub mod search_atomic_except_equality_fact_proof_directly;
+mod search_in_fact_proof;
 pub mod verify_atomic_except_equality;
 
 pub use search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;

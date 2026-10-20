@@ -9607,6 +9607,47 @@ trusted and is rejected under `-strict`; automatic publication does not prove
 its assumptions. The [runnable acceptance example](../examples/stmt_nodes/definition/template_definition_facts.lit)
 covers the definition families and direct use of their instances.
 
+#### Template-defined type interfaces
+
+For a checked `template<...>: have name set = RHS` with one defining RHS,
+`x $in \name<args>` converts the outer template carrier to its substituted RHS.
+The native membership verifier receives the same `VerifyState`; conversion
+neither enables a forbidden search stage nor gives another rewrite opportunity.
+Nested outer template instances use the same conversion. Ordinary identifiers
+stop conversion; this does not add general alias unfolding.
+
+```litex
+template<S set>:
+    have pairs set = cart(S,S)
+template<S set>:
+    have fn first(p \pairs<S>) S = p(1)
+\first<R>((1,2)) = 1
+
+template<S set,n N>:
+    have vectors set = finite_seq(S,n)
+have fn second(v \vectors<R,2>) R = v(2)
+second((1,2)) = 2
+```
+
+A checked membership or typed binder also exposes the converted membership and
+runs the native carrier's existing inference once. For example, the vector
+parameter gets the `finite_seq` function signature without a second manual
+equality to a function space. Consequences of that native inference remain
+store-only; this is not recursive inference on every derived fact.
+
+The [strict acceptance example](../examples/stmt_nodes/definition/template_type_interfaces.lit)
+covers function spaces, Cartesian products, finite sequences, power sets,
+set-builders, singleton sets, integer intervals, and nested template instances.
+Template arguments/guards, complete function domains, builder conditions, and
+coordinate bounds are still checked. Detailed output retains the conversion
+steps and the native membership proof. Lean replay of template instances and
+this evidence is unsupported and fails closed.
+
+Existing equality transport can use the newly provable template membership
+through a known equality. That does not give an ordinary alias the direct
+carrier interface of a template; alias readers and search permissions retain
+their existing rules.
+
 When a template selects a set-builder value, membership in the instance unfolds
 to membership in the defining set-builder. **Assumption demonstration (ordinary mode):**
 the following example explicitly assumes `$marked(1)`; it is rejected in strict mode.
@@ -9619,8 +9660,6 @@ template<S set>:
 
 trust $marked(1)
 1 $in R
-\marked_elements<R> = {x R: $marked(x)}
-release thm set_builder_member(1, {x R: $marked(x)})
 1 $in \marked_elements<R>
 ```
 
@@ -9818,6 +9857,23 @@ n! $in N+
 The type rule preserves the domains: `gcd(0, 0)` is undefined, `sign(0)` and
 `lcm(0, 0)` cannot be assigned `N+`, and complex exponential and negative
 factorial inputs remain unsupported.
+
+### Real sequence limits (preview)
+
+`$has_seq_limit(a,L)` is the epsilon-N candidate relation on `a seq(R)`,
+equivalently `a fn(k N+) R`, and `L R`. After a candidate or finite convergence
+existence is proved, `lim(a)` is a well-defined real object. WD consumes the
+proof; it does not infer a limit from the sequence body. For explicit epsilon
+proofs, native limit laws, exact premises and compatibility, see
+[Real sequence limits](sequence-limits.md).
+
+```litex
+forall a seq(R), L R:
+    $has_seq_limit(a,L)
+    =>:
+        lim(a) = L
+        lim(a) $in R
+```
 
 ### Native elementary operation additions
 

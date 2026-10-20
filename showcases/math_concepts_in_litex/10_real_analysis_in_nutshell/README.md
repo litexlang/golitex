@@ -2,7 +2,7 @@
 
 This standalone showcase expresses epsilon-tail convergence, includes proofs
 of constant-sequence convergence and uniqueness of sequence limits, and uses
-that existence-and-uniqueness result to define a canonical `lim` selector.
+that existence-and-uniqueness result to define a canonical `sequence_limit_value` selector.
 The complete Litex file and registered module passed strict release
 verification on 2026-10-01.
 

@@ -14,6 +14,7 @@ use crate::runtime::FactId;
 use crate::store_fact_and_infer::StoreInferredFactResult;
 
 pub enum InferInFactResult {
+    Template(super::InferTemplateMembershipResult),
     SetBuilder(InferSetBuilderMembershipProjectionResult),
     Preimage(InferInFactPreimageResult),
     PreimageSet(InferInFactPreimageSetResult),
@@ -42,6 +43,11 @@ pub enum InferInFactResult {
 impl InferInFactResult {
     pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
         match self {
+            Self::Template(p) => p
+                .stores
+                .iter()
+                .chain(p.native_rules.iter().flat_map(|r| r.stored_conclusions()))
+                .collect(),
             Self::SetBuilder(p) => p
                 .steps
                 .iter()

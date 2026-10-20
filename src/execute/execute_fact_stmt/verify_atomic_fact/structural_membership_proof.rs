@@ -53,6 +53,7 @@ pub enum StructuralMembershipReason {
 // Fixed output types only, after object WD. These do not evaluate the value,
 // select user-function signatures, or prove any missing input-domain condition.
 pub enum IntrinsicCodomain {
+    SequenceLimit,
     Floor,
     Ceil,
     Sign,

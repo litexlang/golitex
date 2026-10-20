@@ -1,0 +1,8 @@
+# Strict term inequalities do not imply strict inequalities between limits.
+forall strict_seq_u,strict_seq_v seq(R),strict_limit_u,strict_limit_v R:
+    $has_seq_limit(strict_seq_u,strict_limit_u)
+    $has_seq_limit(strict_seq_v,strict_limit_v)
+    forall k N+:
+        strict_seq_u(k)<strict_seq_v(k)
+    =>:
+        strict_limit_u<strict_limit_v

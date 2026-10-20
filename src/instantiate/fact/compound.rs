@@ -203,6 +203,8 @@ fn atomic_fact_obj_args(atomic: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotPrimeFact(f) => vec![&f.value],
         AtomicFact::CoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotCoprimeFact(f) => vec![&f.left, &f.right],
+        AtomicFact::HasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
         AtomicFact::DvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotDvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::InjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],

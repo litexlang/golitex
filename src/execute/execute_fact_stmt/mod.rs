@@ -11,6 +11,8 @@ mod helper;
 pub(crate) mod known_tuple;
 mod negate_quantifier_free_conjunction;
 mod result;
+pub(crate) mod sequence_limit;
+mod template_membership;
 mod verify;
 pub mod verify_and_fact;
 pub mod verify_atomic_fact;

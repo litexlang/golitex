@@ -1,0 +1,8 @@
+# seq_limit_multiply: explicit premises and checked conclusion.
+claim:
+    ? forall seq_u,seq_v seq(R),limit_u,limit_v R:
+        $has_seq_limit(seq_u,limit_u)
+        $has_seq_limit(seq_v,limit_v)
+        =>:
+            $has_seq_limit(fn(k N+) R {seq_u(k)*seq_v(k)},limit_u*limit_v)
+    by thm seq_limit_multiply(seq_u,seq_v,limit_u,limit_v) => $has_seq_limit(fn(k N+) R {seq_u(k)*seq_v(k)},limit_u*limit_v)

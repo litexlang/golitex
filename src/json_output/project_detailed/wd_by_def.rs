@@ -44,6 +44,29 @@ pub(super) fn project_obj_wd_by_def(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        ObjWellDefinedProofByDef::LimitOperator(
+            LimitOperatorObjWellDefinedProofByDef::Sequence(p),
+        ) => {
+            let convergence = match &p.convergence {
+                crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Candidate(c) => super::searched::project_known_premise(c, runtime),
+                crate::execute::execute_fact_stmt::sequence_limit::SequenceConvergenceProof::Existence { proof, .. } => super::verify::project_verify_fact(proof, runtime),
+            };
+            let domain=match &p.sequence_domain {
+                crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::CompleteSignature(source)=>super::function_domain::project_source(source,runtime),
+                crate::execute::execute_fact_stmt::sequence_limit::RealSequenceDomainProof::Membership(proof)=>super::verify::project_verify_fact(proof,runtime),
+            };
+            object_for(
+                runtime,
+                vec![
+                    ("type", string("by_def")),
+                    ("family", string("LimitOperator")),
+                    ("kind", string("Sequence")),
+                    ("sequence_wd", project_obj_wd_proof(&p.sequence_wd, runtime)),
+                    ("sequence_domain", domain),
+                    ("convergence", convergence),
+                ],
+            )
+        }
         ObjWellDefinedProofByDef::ArithmeticOperator(
             ArithmeticOperatorObjWellDefinedProofByDef::Abs(p),
         ) => project_common_by_def(

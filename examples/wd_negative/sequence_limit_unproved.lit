@@ -1,0 +1,3 @@
+# A declared real sequence does not supply its convergence proof.
+have fn a(k N+) R=1/k
+lim(a)=0

@@ -14,6 +14,39 @@ impl Runtime {
         in_fact: &InFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Vec<InferInFactResult>> {
+        let expansions = self.expand_template_membership(in_fact)?;
+        // Retain rules supplied by properties of the surface carrier as well
+        // as those supplied by its declaration-owned native definition.
+        let mut rules = self.infer_native_in_fact(in_fact, verify_state)?;
+        if let Some(native) = expansions.last() {
+            let mut stores = Vec::new();
+            for expanded in &expansions {
+                stores.push(
+                    self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(
+                        expanded.clone(),
+                    )))?,
+                );
+            }
+            // This is one inference pass on the declaration-normalized seed,
+            // not recursive inference on arbitrary derived conclusions.
+            let native_rules = self.infer_native_in_fact(native, verify_state)?;
+            rules.push(InferInFactResult::Template(
+                crate::store_fact_and_infer::InferTemplateMembershipResult {
+                    source_fact_id: in_fact.fact_id,
+                    expansions,
+                    stores,
+                    native_rules,
+                },
+            ));
+        }
+        Ok(rules)
+    }
+
+    fn infer_native_in_fact(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<InferInFactResult>> {
         let mut rules = Vec::new();
         if let Some((builder, equality_path, template_expansion)) =
             self.resolve_set_builder_for_membership_projection(&in_fact.set, verify_state)?

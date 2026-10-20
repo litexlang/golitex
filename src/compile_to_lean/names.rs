@@ -499,6 +499,8 @@ impl LitexToLeanCompiler {
             | AtomicFact::ProperSupersetFact(_)
             | AtomicFact::PrimeFact(_)
             | AtomicFact::CoprimeFact(_)
+            | AtomicFact::HasSequenceLimitFact(_)
+            | AtomicFact::NotHasSequenceLimitFact(_)
             | AtomicFact::DvdFact(_)
             | AtomicFact::InjectiveFact(_)
             | AtomicFact::SurjectiveFact(_)

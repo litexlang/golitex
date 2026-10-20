@@ -169,7 +169,7 @@ claim:
             exist! L R st {$has_limit(a, L)}
     obtain L from $is_convergent_sequence(a)
     witness exist! chosen_limit R st {$has_limit(a, chosen_limit)} from L
-have fn lim by exist!:
+have fn sequence_limit_value by exist!:
     ? forall a seq(R):
         $is_convergent_sequence(a)
         =>:

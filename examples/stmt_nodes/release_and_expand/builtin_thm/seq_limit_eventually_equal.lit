@@ -1,0 +1,11 @@
+# seq_limit_eventually_equal: explicit premises and checked conclusion.
+claim:
+    ? forall seq_u,seq_v seq(R),target_limit R,tail_cutoff N+:
+        $has_seq_limit(seq_u,target_limit)
+        forall k N+:
+            k>=tail_cutoff
+            =>:
+                seq_u(k)=seq_v(k)
+        =>:
+            $has_seq_limit(seq_v,target_limit)
+    by thm seq_limit_eventually_equal(seq_u,seq_v,target_limit,tail_cutoff) => $has_seq_limit(seq_v,target_limit)

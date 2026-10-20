@@ -2261,6 +2261,8 @@ fn prop_inference_stages(
 
 fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredFactResult> {
     match infer {
+        InferAtomicFactResult::HasSequenceLimitFact(_)
+        | InferAtomicFactResult::NotHasSequenceLimitFact(_) => Vec::new(),
         InferAtomicFactResult::EqualFact(rules) => rules
             .iter()
             .flat_map(|rule| rule.stored_conclusions())

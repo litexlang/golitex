@@ -79,8 +79,10 @@ coordinate axes.
 | 3.1–3.7 | Linear maps; zero preservation; composition; kernel and range; projection and an affine counterexample |
 
 These are selected, connected lectures rather than a complete translation of
-*Linear Algebra Done Right*. Dependence elimination, equality of basis lengths,
-and a general definition of dimension remain for subsequent lectures.
+*Linear Algebra Done Right*. Prefix and deletion interfaces for ordered lists, together with linear
+dependence as the negation of independence, are now in place. The general
+dependence lemma, equality of basis lengths, and a general definition of
+dimension remain for subsequent lectures.
 
 The source contains no `trust`, `axiom`, or `abstract_prop`.
 The inverse operation is defined only for nonzero scalars, and the same

@@ -47,6 +47,8 @@ mod infer_in_fact_preimage_set_result;
 mod infer_in_fact_range_result;
 mod infer_in_fact_real_interval_result;
 mod infer_in_fact_result;
+mod infer_template_membership_result;
+pub use infer_template_membership_result::InferTemplateMembershipResult;
 mod infer_in_fact_seq_expand_result;
 mod infer_in_fact_set_minus_split_result;
 mod infer_in_fact_signed_standard_set_sign_result;

@@ -11,6 +11,9 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_sequence_limit_equality(fact) {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::SequenceLimit(proof)));
+        }
         if let Some(proof) = super::by_elementary_definitions::elementary_definition(fact) {
             return Ok(Some(proof));
         }

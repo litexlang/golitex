@@ -53,6 +53,51 @@ pub(super) fn project_store_and_infer(
     let Some(infer) = &node.infer else {
         return object_for(runtime, entries);
     };
+    if let InferResult::AtomicFact(InferAtomicFactResult::InFact(rules)) = infer {
+        let templates = rules
+            .iter()
+            .filter_map(|rule| {
+                let InferInFactResult::Template(proof) = rule else {
+                    return None;
+                };
+                Some(object_for(
+                    runtime,
+                    vec![
+                        ("source", fact_id_entry(runtime, proof.source_fact_id)),
+                        (
+                            "expanded_memberships",
+                            JsonValue::Array(
+                                proof
+                                    .expansions
+                                    .iter()
+                                    .map(|m| {
+                                        string(
+                                            Fact::AtomicFact(AtomicFact::InFact(m.clone()))
+                                                .readable_string(),
+                                        )
+                                    })
+                                    .collect(),
+                            ),
+                        ),
+                        (
+                            "native_conclusions",
+                            JsonValue::Array(
+                                proof
+                                    .native_rules
+                                    .iter()
+                                    .flat_map(|r| r.stored_fact_ids())
+                                    .map(|id| fact_id_entry(runtime, id))
+                                    .collect(),
+                            ),
+                        ),
+                    ],
+                ))
+            })
+            .collect::<Vec<_>>();
+        if !templates.is_empty() {
+            entries.push(("template_membership_rules", JsonValue::Array(templates)));
+        }
+    }
     let prop_rules = project_prop_definition_infer(infer, runtime);
     if !prop_rules.is_empty() {
         entries.push(("prop_definition_rules", JsonValue::Array(prop_rules)));

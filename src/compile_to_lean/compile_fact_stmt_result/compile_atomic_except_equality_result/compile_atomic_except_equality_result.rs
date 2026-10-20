@@ -45,6 +45,9 @@ impl LitexToLeanCompiler {
         let position = &formed;
         let proposition = self.atomic_proposition(&success.fact, position)?;
         let proof = match &success.searched_proof {
+                AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(_) => {
+                    return Err(LeanCompileError::unsupported("Atomic/TemplateMembership"));
+                }
                 AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(_) => {
                     return Err(LeanCompileError::unsupported("Atomic/KnownZeroRemainder"));
                 }

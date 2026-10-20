@@ -1,0 +1,8 @@
+# seq_limit_from_epsilon: explicit premises and checked conclusion.
+claim:
+    ? forall seq_u seq(R),target_limit R:
+        forall epsilon R+:
+            exist cutoff N+ st {{k N+: k>=cutoff} $subset preimage_set(seq_u,{v R: abs(v-target_limit)<epsilon})}
+        =>:
+            $has_seq_limit(seq_u,target_limit)
+    by thm seq_limit_from_epsilon(seq_u,target_limit) => $has_seq_limit(seq_u,target_limit)

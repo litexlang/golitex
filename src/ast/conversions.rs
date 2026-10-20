@@ -676,3 +676,31 @@ impl crate::ast::obj::SymmetricDifference {
         }
     }
 }
+
+impl From<crate::ast::fact::HasSequenceLimitFact> for AtomicFact {
+    fn from(f: crate::ast::fact::HasSequenceLimitFact) -> Self {
+        AtomicFact::HasSequenceLimitFact(f)
+    }
+}
+impl From<crate::ast::fact::HasSequenceLimitFact> for Fact {
+    fn from(f: crate::ast::fact::HasSequenceLimitFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::fact::NotHasSequenceLimitFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotHasSequenceLimitFact) -> Self {
+        AtomicFact::NotHasSequenceLimitFact(f)
+    }
+}
+impl From<crate::ast::fact::NotHasSequenceLimitFact> for Fact {
+    fn from(f: crate::ast::fact::NotHasSequenceLimitFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::obj::SequenceLimit> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::SequenceLimit) -> Self {
+        crate::ast::obj::Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(value))
+    }
+}

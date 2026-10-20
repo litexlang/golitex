@@ -1,0 +1,22 @@
+# Equivalent real sequence interfaces; candidate and existential WD.
+forall seq_input seq(R), limit_value R:
+    $has_seq_limit(seq_input,limit_value)
+    =>:
+        lim(seq_input)=limit_value
+        lim(seq_input) $in R
+
+forall seq_input fn(k N+) R, limit_value R:
+    $has_seq_limit(seq_input,limit_value)
+    =>:
+        lim(seq_input)=limit_value
+        lim(seq_input) $in R
+
+forall seq_input seq(R):
+    exist limit_value R st {$has_seq_limit(seq_input,limit_value)}
+    =>:
+        lim(seq_input) $in R
+
+forall seq_input fn(k N+) R:
+    exist limit_value R st {$has_seq_limit(seq_input,limit_value)}
+    =>:
+        lim(seq_input) $in R

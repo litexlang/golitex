@@ -1,0 +1,9 @@
+# A nonzero limiting value does not justify a quotient at every early index.
+claim:
+    ? forall a,b seq(R),A,B R:
+        $has_seq_limit(a,A)
+        $has_seq_limit(b,B)
+        B!=0
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)/b(k)},A/B)
+    release thm seq_limit_divide(a,b,A,B)

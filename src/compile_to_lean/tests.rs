@@ -922,6 +922,8 @@ fn phase1_equality_paths_preserve_orientation_and_transport() {
         ));
     }
     let output = compile_run(&result, &compiler, "phase1_paths").expect("oriented equality paths");
+    assert!(output.contains("let _litex_path_start := "));
+    assert!(output.contains("exact Litex.sameRefl _litex_path_start"));
     assert!(output.contains(".trans"));
     assert!(output.contains(".symm"));
     assert!(output.contains("congrArg₂ M.addValue"));
@@ -2140,6 +2142,19 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
             )
         ));
     }
+    let real = phase2_structural_mut(
+        &mut forall_proof_mut(&mut result.statement_results[3]).proved_then_facts[0].verify_result,
+    );
+    let StructuralMembershipReason::StandardSuperset(child) = &real.reason else {
+        panic!("the original standard inclusion");
+    };
+    assert_eq!((&child.set, &real.set), (&StandardSet::R, &StandardSet::C));
+    let output = compile_run(&result, &compiler, "phase2_original_hierarchy")
+        .expect("the selected hierarchy certificates compile");
+    assert!(output.contains("exact M.real_subset_complex _ _litex_real_member"));
+    for bridge in ["naturalToInteger", "integerToRational", "rationalToReal"] {
+        assert!(output.contains(&format!("Litex.{bridge}")));
+    }
     phase2_structural_mut(
         &mut forall_proof_mut(&mut result.statement_results[1]).proved_then_facts[0].verify_result,
     )
@@ -2150,6 +2165,45 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
         "phase2_changed_hierarchy_set",
         &["StructuralMembership/", "StructuralMembership"],
     );
+
+    for (change, index, expected_route) in [
+        ("subject", 3, "StructuralMembership/SupersetSubject"),
+        ("missing_wd", 3, "WdId/Resolution"),
+        ("reverse", 2, "StructuralMembership/StandardSuperset"),
+    ] {
+        let (mut result, compiler) = execute(PHASE2_HIERARCHY);
+        let atomic = atomic_proof_mut(
+            &mut forall_proof_mut(&mut result.statement_results[index]).proved_then_facts[0]
+                .verify_result,
+        );
+        if change == "missing_wd" {
+            let original = atomic.well_defined_proof.well_defined_of_each_parameter[0]
+                .obj()
+                .clone();
+            atomic.well_defined_proof.well_defined_of_each_parameter[0] =
+                ObjWellDefinedProof::ByKnown {
+                    obj: original,
+                    wd_id: WellDefinednessId::new(u64::MAX),
+                };
+        } else {
+            let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) =
+                &mut atomic.searched_proof
+            else {
+                panic!("the original structural hierarchy");
+            };
+            let StructuralMembershipReason::StandardSuperset(child) = &mut proof.reason else {
+                panic!("the original standard inclusion");
+            };
+            match change {
+                "subject" => child.element = number_object("29"),
+                "reverse" => child.set = StandardSet::C,
+                _ => unreachable!(),
+            }
+        }
+        let error = compile_run(&result, &compiler, "phase2_corrupted_hierarchy")
+            .expect_err("value-level inclusion must preserve the original evidence checks");
+        assert_eq!(error.route, expected_route, "{change}");
+    }
 
     let (mut result, compiler) = execute(PHASE2_DIVISION);
     let structural = phase2_structural_mut(
@@ -2903,7 +2957,12 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
                 invocation.stored.primary_fact_id().value()
             ))
             .expect("the selected fact");
-        let body = &output[consumer..];
+        // This assertion belongs to the selected invocation, not to later
+        // exported inference theorems, which can have their own `exact` steps.
+        let body = output[consumer..]
+            .split("\ntheorem ")
+            .next()
+            .expect("the selected invocation's declaration");
         let first_name = format!("h_{}", ids[0].value());
         let second_name = format!("h_{}", ids[1].value());
         let first = body
@@ -2916,12 +2975,16 @@ fn simplification_each_returned_component_has_an_invocation_local_producer() {
         assert!(body[first..second].contains("And.left"));
         assert!(body[second..].contains("And.right"));
         let selected_name = format!("h_{}", selected_id.value());
+        // An endpoint certificate can itself contain a multiline proof. Keep
+        // the rest of the selected term, not only the line starting `exact`.
         let selected_proof = body
-            .lines()
-            .rev()
-            .find(|line| line.trim_start().starts_with("exact "))
-            .expect("the invocation finishes by selecting its returned proof");
-        assert!(selected_proof.contains(&selected_name));
+            .rsplit_once("\n    exact ")
+            .expect("the invocation finishes by selecting its returned proof")
+            .1;
+        assert!(
+            selected_proof.contains(&selected_name),
+            "selected {selected_name} is missing from the invocation tail:\n{selected_proof}"
+        );
         assert!(!output[..consumer].contains(&first_name));
         assert!(!output[..consumer].contains(&second_name));
     }
