@@ -1,4 +1,6 @@
-# Litex: A Formal Language Where Mathematics Verifies Itself
+# Litex: In the AI Era, Let Machines and Humans Speak the Same Mathematical Language
+
+_A formal language that is easy to learn and understand, close to natural language, without sacrificing rigor_
 
 **Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”), not “LYE-tek” (“赖泰克”).
 

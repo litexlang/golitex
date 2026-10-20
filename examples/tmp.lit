@@ -1,1 +1,16 @@
 # Temporary scratch file for Litex probes.
+litex -session 
+
+>>> have fn vec_add(a, b) cart(R, R) = (a(1) + b(1) , a(2) + b(2))
+
+Litex: error a, b cart(R, R)
+
+>>> have fn vec_add(a, b cart(R, R)) cart(R, R) = (a(1) + b(1) , a(2) + b(2))
+
+Litex: accepted
+
+>>> ...
+
+```geo.lit
+have fn vec_add(a, b cart(R, R)) cart(R, R) = (a(1) + b(1) , a(2) + b(2))
+```

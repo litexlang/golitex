@@ -3,7 +3,7 @@
 
 # Litex
 
-### A Simple Formal Language Learnable in 2 Hours
+### A formal language which lets machines and humans say the same mathematical language
 
 **Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”), not “LYE-tek” (“赖泰克”).
 
