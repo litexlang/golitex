@@ -100,9 +100,12 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let mut current = left;
+        let start = self.compile_object_reference(left, position)?;
+        // Finish the original constructor before transitivity constrains its
+        // denotation; tactic-built objects otherwise retain host-type metavariables.
         let mut compiled = format!(
-            "(Litex.sameRefl {})",
-            self.compile_object_reference(left, position)?
+            "(by\n  let _litex_path_start := {}\n  exact Litex.sameRefl _litex_path_start\n)",
+            start.replace('\n', "\n  ")
         );
         self.compile_object_reference(right, position)?;
         for (from, to, id) in &proof.path {

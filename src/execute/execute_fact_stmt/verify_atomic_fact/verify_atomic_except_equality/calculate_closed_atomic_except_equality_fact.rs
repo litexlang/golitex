@@ -11,6 +11,7 @@ pub fn calculate_closed_atomic_except_equality_fact(
     use NumberCompareResult::{Equal, Greater, Less};
 
     let proof = match fact {
+        HasSequenceLimitFact(_) | NotHasSequenceLimitFact(_) => return None,
         EqualFact(_) => return None,
         NotEqualFact(f) => {
             let (values, equal) = calculate_value_pair(&f.left, &f.right)?;

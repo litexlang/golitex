@@ -102,11 +102,20 @@ impl LitexToLeanCompiler {
                         ))
                     }
                 };
+                let real_to_complex =
+                    matches!((&child.set, &proof.set), (StandardSet::R, StandardSet::C));
                 let child = self.compile_structural(child, position)?;
-                Ok(format!(
-                    "(Litex.{bridge} {} {child})",
-                    self.compile_object_reference(&proof.element, position)?
-                ))
+                // Validate the original constructor/WD even when its denotation
+                // can be inferred from the recorded membership proof.
+                let object = self.compile_object_reference(&proof.element, position)?;
+                if real_to_complex {
+                    Ok(format!(
+                        "(by\n  have _litex_real_member := {}\n  exact M.real_subset_complex _ _litex_real_member\n)",
+                        child.replace('\n', "\n  ")
+                    ))
+                } else {
+                    Ok(format!("(Litex.{bridge} {object} {child})"))
+                }
             }
             StructuralMembershipReason::KnownSubset(known) => {
                 let goal = InFact {

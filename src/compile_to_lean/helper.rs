@@ -6,12 +6,29 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 pub(super) fn finite_vector_proof(proofs: &[String]) -> String {
-    proofs
+    let tail = "(fun i => Fin.elim0 i)".to_string();
+    if proofs.is_empty() {
+        return tail;
+    }
+    let mut bindings = proofs
         .iter()
-        .rev()
-        .fold("(fun i => Fin.elim0 i)".to_string(), |tail, proof| {
-            format!("(Fin.cases ({proof}) {tail})")
+        .enumerate()
+        .map(|(index, proof)| {
+            format!(
+                "have _finiteProof_{index} := ({})",
+                proof.replace('\n', "\n  ")
+            )
         })
+        .collect::<Vec<_>>();
+    let cases = proofs
+        .iter()
+        .enumerate()
+        .rev()
+        .fold(tail, |tail, (index, _)| {
+            format!("(Fin.cases _finiteProof_{index} {tail})")
+        });
+    bindings.push(format!("exact {cases}"));
+    format!("(by\n  {}\n)", bindings.join("\n  "))
 }
 
 #[derive(Clone, Copy)]
@@ -72,6 +89,12 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             // This original call is an opaque scalar leaf. Its constructor
             // WD and numeric return evidence are consumed by the observer;
             // argument domains are not polynomial normalization obligations.
+            Ok(())
+        }
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => {
+            // Rational normalization treats the original square root as one
+            // scalar leaf. Its observer consumes the argument WD, real
+            // membership and nonnegativity; it does not normalize the radicand.
             Ok(())
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
@@ -375,6 +398,9 @@ pub(super) fn standard_term(set: &StandardSet) -> Result<String, LeanCompileErro
 
 pub(super) fn unsupported_wd_definition(proof: &ObjWellDefinedProofByDef) -> LeanCompileError {
     match proof {
+        ObjWellDefinedProofByDef::LimitOperator(_) => {
+            LeanCompileError::unsupported("WD/LimitOperator")
+        }
         ObjWellDefinedProofByDef::Identifier(_) => {
             LeanCompileError::unsupported("WD/IdentifierShape")
         }

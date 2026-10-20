@@ -113,6 +113,35 @@ impl Runtime {
                 },
             ));
         }
+        // The new limit family consumes the checked callable argument's exact
+        // signature; it does not rerun its body under the predicate-domain ceiling.
+        let sequence_limit = match fact {
+            AtomicFact::HasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::NotHasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            _ => None,
+        };
+        if let Some((sequence, value)) = sequence_limit {
+            if let Some(sequence_source) =
+                self.checked_real_sequence_domain(sequence, verify_state)?
+            {
+                if let Some(value_real) =
+                    self.search_structural_membership(value, &crate::ast::obj::StandardSet::R)
+                {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                        AtomicFactWellDefinedProof {
+                            well_defined_of_each_parameter: succeeded_args,
+                            predicate_signature,
+                            predicate_domain: PredicateDomainProof::SequenceLimit(
+                                super::well_defined_result::SequenceLimitPredicateDomainProof {
+                                    sequence_source: Box::new(sequence_source),
+                                    value_real,
+                                },
+                            ),
+                        },
+                    ));
+                }
+            }
+        }
         // A stored well-defined a%d=0 has exactly Dvd's integer/nonzero
         // domain. Reuse that checked source, including at a reduced ceiling.
         let divisibility_args = match fact {
@@ -415,6 +444,27 @@ impl Runtime {
         use crate::ast::obj::StandardSet;
         use crate::ast::obj::{FamilyUnion, SetOperator};
         use StandardSet::{ZStar, N, R, Z};
+        let sequence_limit = match fact {
+            AtomicFact::HasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            AtomicFact::NotHasSequenceLimitFact(f) => Some((&f.sequence, &f.value)),
+            _ => None,
+        };
+        if let Some((sequence, value)) = sequence_limit {
+            return vec![
+                crate::execute::execute_fact_stmt::sequence_limit::sequence_membership(
+                    self,
+                    sequence.clone(),
+                ),
+                crate::ast::fact::InFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    element: value.clone(),
+                    set: Obj::StandardSet(StandardSet::R),
+                    line_file: None,
+                }
+                .into(),
+            ];
+        }
+
         let function_property = function_property_signature_args(fact);
         if let Some((domain, codomain, function)) = function_property {
             let signature = self.predicate_unary_fn_set(domain, codomain);
@@ -555,6 +605,8 @@ fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotPrimeFact(f) => vec![&f.value],
         AtomicFact::CoprimeFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotCoprimeFact(f) => vec![&f.left, &f.right],
+        AtomicFact::HasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
+        AtomicFact::NotHasSequenceLimitFact(f) => vec![&f.sequence, &f.value],
         AtomicFact::DvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotDvdFact(f) => vec![&f.left, &f.right],
         AtomicFact::InjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],

@@ -239,7 +239,9 @@ impl LitexToLeanCompiler {
             }
             let term = self.compile_object_reference(&object, position)?;
             let native = self.compile_numeric_observation(&object, position)?;
-            native_guards.push(format!("have _litex_nz_{index} : {} ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote {term} {} {} {}", native.0, native.0, native.1, proved.1));
+            // A tactic-valued observation needs its expected scalar type before
+            // elaborating the zero in this standalone nonzero proposition.
+            native_guards.push(format!("have _litex_nz_{index} : ({} : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote {term} {} {} {}", native.0, native.0, native.1, proved.1));
         }
         let left = self.compile_object_reference(&fact.left, position)?;
         let right = self.compile_object_reference(&fact.right, position)?;

@@ -1,0 +1,2 @@
+# The real-sequence interface requires the complete N+ domain.
+$has_seq_limit(fn(k N) R {0},0)

@@ -1,0 +1,8 @@
+# seq_limit_constant: explicit premises and checked conclusion.
+claim:
+    ? forall seq_u seq(R),target_limit R:
+        forall k N+:
+            seq_u(k)=target_limit
+        =>:
+            $has_seq_limit(seq_u,target_limit)
+    by thm seq_limit_constant(seq_u,target_limit) => $has_seq_limit(seq_u,target_limit)

@@ -353,6 +353,7 @@ proof debt rather than repairing a verification route.
 | Preimages | `preimage(f, y)` collects inputs with output equal to the obj `y`; `preimage_set(f, Y)` collects inputs with output in `Y`. Both return sets and retain the complete input domain and guards. [Preview contract](Manual.md#preview-point-and-set-preimages). |
 | Tuples/sequences | `(a, b)`, `cart(R, R)`, `finite_seq(S,n)`, `seq(S)`; indices start at 1. `release tuple def t` publishes the exact finite-sequence membership and coordinates; `release cart def cart(A,B)` publishes the complete set definition. See [S52](Manual.md#s52-release-a-tuple-definition). |
 | Exact computation | `eval expression` checks domains and publishes the verified source/result equality. |
+| Real sequence limits | Prove `$has_seq_limit(a,L)` for `a seq(R)` (equivalently `fn(k N+) R`), then use `lim(a)=L`. WD consumes convergence evidence. [Rules and epsilon proofs](sequence-limits.md). |
 
 Function parameter carriers and the return carrier use the enclosing scope;
 they cannot refer to that signature's own parameters. Guards and the body can.

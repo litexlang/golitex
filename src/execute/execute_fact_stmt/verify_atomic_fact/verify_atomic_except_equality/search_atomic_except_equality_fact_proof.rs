@@ -7,12 +7,27 @@ impl Runtime {
         fact: &AtomicFact,
         state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
-        use AtomicExceptEqualityFactSearchedProof as P;
-        use VerifyStateLevel::*;
-
         if let Some(proof) = self.search_atomic_except_equality_fact_proof_directly(fact)? {
             return Ok(Some(proof));
         }
+        match fact {
+            AtomicFact::InFact(member)
+                if matches!(&member.set, Obj::InstantiatedTemplateObj(_)) =>
+            {
+                self.search_in_fact_proof(member, state)
+            }
+            _ => self.search_atomic_except_equality_fact_proof_by_rules(fact, state),
+        }
+    }
+
+    // Original rule pipeline; membership conversion is owned by InFact.
+    pub(super) fn search_atomic_except_equality_fact_proof_by_rules(
+        &mut self,
+        fact: &AtomicFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
+        use AtomicExceptEqualityFactSearchedProof as P;
+        use VerifyStateLevel::*;
         if let Some(child) = state.for_premises(KnownSpecialProperty) {
             if let Some(proof) =
                 self.search_atomic_except_equality_fact_proof_by_known_atomic_fact(fact, child)?

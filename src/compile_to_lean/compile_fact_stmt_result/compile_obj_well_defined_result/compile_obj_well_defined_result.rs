@@ -245,6 +245,9 @@ impl LitexToLeanCompiler {
             }
         }
         match &wd.predicate_domain {
+            PredicateDomainProof::SequenceLimit(_) => {
+                return Err(LeanCompileError::unsupported("WD/SequenceLimitPredicate"))
+            }
             PredicateDomainProof::ByKnownZeroRemainder(_) => {
                 return Err(LeanCompileError::unsupported("WD/DvdKnownZeroRemainder"));
             }

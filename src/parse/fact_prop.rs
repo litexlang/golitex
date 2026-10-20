@@ -10,6 +10,7 @@ use crate::ast::fact::{
     NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact, PrimeFact,
     ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
+use crate::ast::fact::{HasSequenceLimitFact, NotHasSequenceLimitFact};
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::AtomicName;
 use crate::ast::obj::Obj;
@@ -273,6 +274,25 @@ impl Runtime {
                         fact_id,
                         left: args[0].clone(),
                         right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            crate::parse::keywords::HAS_SEQ_LIMIT => {
+                two_args(name, &args, &line_file)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::HasSequenceLimitFact(HasSequenceLimitFact {
+                        fact_id,
+                        sequence: args[0].clone(),
+                        value: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotHasSequenceLimitFact(NotHasSequenceLimitFact {
+                        fact_id,
+                        sequence: args[0].clone(),
+                        value: args[1].clone(),
                         line_file: Some(line_file),
                     }))
                 }

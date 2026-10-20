@@ -65,6 +65,24 @@ fn prepare_contract(
     use BuiltinTheoremId::*;
     let a = args[0].clone();
     let result = match id {
+        SequenceLimitFromEpsilon
+        | SequenceLimitTail
+        | SequenceLimitConstant
+        | SequenceLimitNeg
+        | SequenceLimitAbs
+        | SequenceLimitScale
+        | SequenceLimitPower
+        | SequenceLimitAdd
+        | SequenceLimitSubtract
+        | SequenceLimitMultiply
+        | SequenceLimitDivide
+        | SequenceLimitEventuallyEqual
+        | SequenceLimitShift
+        | SequenceLimitCompare
+        | SequenceLimitSqueeze
+        | SequenceLimitUnique
+        | SequenceLimitExists
+        | SequenceLimitSelected => super::sequence_limits::prepare_sequence_limits(rt, id, args),
         FiniteSetReduceSingleton => folds::prepare_singleton(rt, args),
         // A ⊆ B and B finite implies A finite; no finiteness premise on A.
         SubsetOfFiniteSetIsFinite => {

@@ -24,6 +24,7 @@ fn pack_success_by_def(
     stages: ObjWellDefinedByDefCommonStages,
 ) -> ObjWellDefinedProofByDef {
     match obj {
+        Obj::LimitOperator(_) => unreachable!("limit WD has dedicated proof and failure stages"),
         Obj::Identifier(_)
         | Obj::Literal(Literal::Number(_))
         | Obj::Literal(Literal::ImaginaryUnit(_))
@@ -32,6 +33,9 @@ fn pack_success_by_def(
         | Obj::StandardSet(_) => {
             let _ = stages;
             match obj {
+                Obj::LimitOperator(_) => {
+                    unreachable!("limit WD has dedicated proof and failure stages")
+                }
                 Obj::Identifier(_) => {
                     ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new())
                 }
@@ -493,6 +497,7 @@ pub(super) fn wrap_common_fail(
     common: FailToVerifyObjWellDefinedByDefCommon,
 ) -> FailToVerifyObjWellDefinedResult {
     match obj {
+        Obj::LimitOperator(_) => unreachable!("limit WD has dedicated proof and failure stages"),
         Obj::Identifier(_) => FailToVerifyObjWellDefinedResult::Identifier(
             FailToVerifyIdentifierObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,

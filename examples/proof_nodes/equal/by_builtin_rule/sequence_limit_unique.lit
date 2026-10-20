@@ -1,0 +1,6 @@
+# Two finite real candidate limits of the same sequence coincide.
+forall a seq(R),L,M R:
+    $has_seq_limit(a,L)
+    $has_seq_limit(a,M)
+    =>:
+        L=M

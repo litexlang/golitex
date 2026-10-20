@@ -8,6 +8,12 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<InferAtomicFactResult> {
         match fact {
+            AtomicFact::HasSequenceLimitFact(_) => {
+                Ok(InferAtomicFactResult::HasSequenceLimitFact(Vec::new()))
+            }
+            AtomicFact::NotHasSequenceLimitFact(_) => {
+                Ok(InferAtomicFactResult::NotHasSequenceLimitFact(Vec::new()))
+            }
             AtomicFact::NormalAtomicFact(f) => Ok(InferAtomicFactResult::NormalAtomicFact(
                 self.infer_normal_atomic_fact(f, state)?,
             )),

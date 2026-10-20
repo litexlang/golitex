@@ -11,3 +11,5 @@ pub(super) use builtin_thm::prepare_builtin_thm;
 
 #[cfg(test)]
 mod tests;
+
+mod sequence_limits;

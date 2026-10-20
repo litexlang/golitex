@@ -35,6 +35,26 @@ pub(super) fn atomic_fact_with_args(
         }};
     }
     Some(match fact {
+        AtomicFact::HasSequenceLimitFact(f) => {
+            let (sequence, value) = take2!(args);
+            crate::ast::fact::HasSequenceLimitFact {
+                fact_id,
+                sequence,
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotHasSequenceLimitFact(f) => {
+            let (sequence, value) = take2!(args);
+            crate::ast::fact::NotHasSequenceLimitFact {
+                fact_id,
+                sequence,
+                value,
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
         AtomicFact::EqualFact(_) => return None,
         AtomicFact::NormalAtomicFact(f) => AtomicFact::NormalAtomicFact(NormalAtomicFact {
             fact_id,

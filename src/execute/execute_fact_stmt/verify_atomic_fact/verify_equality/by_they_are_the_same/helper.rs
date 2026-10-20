@@ -188,6 +188,10 @@ pub fn compound_objs_alpha_equal(left: &Obj, right: &Obj) -> bool {
 
 fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, IdentifierId>) -> bool {
     match (left, right) {
+        (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(r)),
+        ) => objs_alpha_equal(&l.sequence, &r.sequence, map),
         (Obj::Identifier(l), Obj::Identifier(r)) => identifier_objs_alpha_equal(l, r, map),
         (
             Obj::FunctionSpace(FunctionSpace::FnSet(l)),

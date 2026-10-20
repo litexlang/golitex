@@ -1,0 +1,7 @@
+# seq_limit_selected: explicit premises and checked conclusion.
+claim:
+    ? forall seq_u seq(R):
+        exist limit_witness R st {$has_seq_limit(seq_u,limit_witness)}
+        =>:
+            $has_seq_limit(seq_u,lim(seq_u))
+    by thm seq_limit_selected(seq_u) => $has_seq_limit(seq_u,lim(seq_u))

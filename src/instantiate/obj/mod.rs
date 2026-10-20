@@ -28,6 +28,12 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
         match obj {
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(a)) => {
+                Ok(crate::ast::obj::SequenceLimit::new(
+                    self.inst_obj_rec(&a.sequence, param_to_arg_map)?,
+                )
+                .into())
+            }
             Obj::Identifier(_) => self.inst_identifier_obj(obj, param_to_arg_map),
             Obj::Literal(Literal::Number(_))
             | Obj::Literal(Literal::ImaginaryUnit(_))

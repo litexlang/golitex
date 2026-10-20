@@ -1256,6 +1256,300 @@ thm span_is_subspace:
         release thm span_smul_closed(K, field, V, space, n, vectors, a, x)
     by def $is_subspace(K, field, V, space, \span<K, field, V, space, n, vectors>)
 
+prop is_prefix_of_length(V nonempty_set, n N, m N, vectors finite_seq(V, n), prefix finite_seq(V, m)):
+    m <= n
+    forall j N+:
+        j <= m
+        =>:
+            prefix(j) = vectors(j)
+
+prop is_list_with_index_removed(V nonempty_set, n N+, vectors finite_seq(V, n), k N+, reduced finite_seq(V, n - 1)):
+    k <= n
+    forall j N+:
+        j < k
+        j <= n - 1
+        =>:
+            reduced(j) = vectors(j)
+    forall j N+:
+        k <= j
+        j < n
+        j <= n - 1
+        =>:
+            reduced(j) = vectors(j + 1)
+
+thm prefix_exists:
+    ? forall V nonempty_set, n N, m N, vectors finite_seq(V, n):
+        m <= n
+        =>:
+            exist prefix finite_seq(V, m) st {$is_prefix_of_length(V, n, m, vectors, prefix)}
+    have fn prefix(j closed_range(1, m)) V = vectors(j)
+    claim:
+        ? forall j N+:
+            j <= m
+            =>:
+                prefix(j) = vectors(j)
+        j $in closed_range(1, m)
+        1 <= j <= m <= n
+        j $in closed_range(1, n)
+        prefix(j) = vectors(j)
+    by def $is_prefix_of_length(V, n, m, vectors, prefix)
+    witness exist p finite_seq(V, m) st {$is_prefix_of_length(V, n, m, vectors, p)} from prefix
+
+
+thm remove_index_exists:
+    ? forall V nonempty_set, n N+, vectors finite_seq(V, n), k N+:
+        k <= n
+        =>:
+            exist reduced finite_seq(V, n - 1) st {$is_list_with_index_removed(V, n, vectors, k, reduced)}
+    claim:
+        ? forall j closed_range(1, n - 1):
+            j < k
+            =>:
+                j $in closed_range(1, n)
+        j $in N+
+        1 <= j <= n - 1
+        j < k <= n
+        1 <= j <= n
+        j $in closed_range(1, n)
+    claim:
+        ? forall j closed_range(1, n - 1):
+            j >= k
+            =>:
+                j + 1 $in closed_range(1, n)
+        j $in N+
+        1 <= j <= n - 1
+        j >= k
+        n - 1 + 1 = n
+        j + 1 <= n - 1 + 1 = n
+        1 <= j + 1
+        j + 1 $in closed_range(1, n)
+    have fn reduced(j closed_range(1, n - 1)) V by cases:
+        case j < k: vectors(j)
+        case j >= k: vectors(j + 1)
+    claim:
+        ? forall j N+:
+            j < k
+            j <= n - 1
+            =>:
+                reduced(j) = vectors(j)
+        j $in closed_range(1, n - 1)
+        j $in closed_range(1, n)
+        j < k
+        reduced(j) = vectors(j)
+    claim:
+        ? forall j N+:
+            k <= j
+            j < n
+            j <= n - 1
+            =>:
+                reduced(j) = vectors(j + 1)
+        j $in closed_range(1, n - 1)
+        j + 1 $in closed_range(1, n)
+        j >= k
+        reduced(j) = vectors(j + 1)
+    by def $is_list_with_index_removed(V, n, vectors, k, reduced)
+    witness exist r finite_seq(V, n - 1) st {$is_list_with_index_removed(V, n, vectors, k, r)} from reduced
+
+prop is_linearly_dependent(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)):
+    not $is_linearly_independent(K, field, V, space, n, vectors)
+
+prop has_nontrivial_dependence_coefficients(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n)):
+    exist coefficients finite_seq(K, n) st {$has_linear_combination_value(K, field, V, space, n, coefficients, vectors, space.zero), not $has_only_zero_coefficients(K, field, n, coefficients)}
+
+thm dependent_has_nontrivial_coefficients:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, n N, vectors finite_seq(V, n):
+        $is_linearly_dependent(K, field, V, space, n, vectors)
+        =>:
+            $has_nontrivial_dependence_coefficients(K, field, V, space, n, vectors)
+    claim:
+        ? $has_nontrivial_dependence_coefficients(K, field, V, space, n, vectors)
+        by def $is_linearly_dependent(K, field, V, space, n, vectors)
+        by contra:
+            ? $has_nontrivial_dependence_coefficients(K, field, V, space, n, vectors)
+            claim:
+                ? forall coefficients finite_seq(K, n):
+                    $has_linear_combination_value(K, field, V, space, n, coefficients, vectors, space.zero)
+                    =>:
+                        $has_only_zero_coefficients(K, field, n, coefficients)
+                by contra:
+                    ? $has_only_zero_coefficients(K, field, n, coefficients)
+                    witness exist selected finite_seq(K, n) st {$has_linear_combination_value(K, field, V, space, n, selected, vectors, space.zero), not $has_only_zero_coefficients(K, field, n, selected)} from coefficients
+                    by def $has_nontrivial_dependence_coefficients(K, field, V, space, n, vectors)
+                    impossible $has_nontrivial_dependence_coefficients(K, field, V, space, n, vectors)
+            by def $is_linearly_independent(K, field, V, space, n, vectors)
+            impossible $is_linearly_independent(K, field, V, space, n, vectors)
+
+prop is_largest_nonzero_coefficient_index(K nonempty_set, field &Field<K>, n N+, coefficients finite_seq(K, n), k N+):
+    k <= n
+    coefficients(k) != field.zero
+    forall j N+:
+        j <= n
+        j > k
+        =>:
+            coefficients(j) = field.zero
+
+thm largest_nonzero_index_length_two:
+    ? forall K nonempty_set, field &Field<K>, coefficients finite_seq(K, 2):
+        not $has_only_zero_coefficients(K, field, 2, coefficients)
+        =>:
+            exist k N+ st {$is_largest_nonzero_coefficient_index(K, field, 2, coefficients, k)}
+    by cases:
+        ? exist k N+ st {$is_largest_nonzero_coefficient_index(K, field, 2, coefficients, k)}
+        case coefficients(2) != field.zero:
+            claim:
+                ? $is_largest_nonzero_coefficient_index(K, field, 2, coefficients, 2)
+                2 <= 2
+                coefficients(2) != field.zero
+                claim:
+                    ? forall j N+:
+                        j <= 2
+                        j > 2
+                        =>:
+                            coefficients(j) = field.zero
+                    by contra:
+                        ? coefficients(j) = field.zero
+                        j > 2
+                        j <= 2
+                        j - 2 > 0
+                        j - 2 <= 0
+                        impossible (j - 2) > 0
+                by def $is_largest_nonzero_coefficient_index(K, field, 2, coefficients, 2)
+            witness exist k N+ st {$is_largest_nonzero_coefficient_index(K, field, 2, coefficients, k)} from 2
+        case coefficients(2) = field.zero:
+            claim:
+                ? coefficients(1) != field.zero
+                by contra:
+                    ? coefficients(1) != field.zero
+                    coefficients(1) = field.zero
+                    claim:
+                        ? forall k closed_range(1, 2):
+                            coefficients(k) = field.zero
+                        by cases:
+                            ? coefficients(k) = field.zero
+                            case k = 1:
+                                coefficients(k) = coefficients(1) = field.zero
+                            case k != 1:
+                                k $in closed_range(1, 2)
+                                k != 1
+                                1 <= k
+                                k <= 2
+                                by contra:
+                                    ? k >= 2
+                                    k < 2
+                                    k <= 1
+                                    k >= 1
+                                    k = 1
+                                    impossible k != 1
+                                k >= 2
+                                k = 2
+                                coefficients(k) = coefficients(2) = field.zero
+                    claim:
+                        ? forall k N+:
+                            k <= 2
+                            =>:
+                                coefficients(k) = field.zero
+                        k $in N+
+                        1 <= k
+                        k <= 2
+                        k $in closed_range(1, 2)
+                        coefficients(k) = field.zero
+                    by def $has_only_zero_coefficients(K, field, 2, coefficients)
+                    impossible $has_only_zero_coefficients(K, field, 2, coefficients)
+            claim:
+                ? $is_largest_nonzero_coefficient_index(K, field, 2, coefficients, 1)
+                1 <= 2
+                coefficients(1) != field.zero
+                claim:
+                    ? forall j N+:
+                        j <= 2
+                        j > 1
+                        =>:
+                            coefficients(j) = field.zero
+                    j > 1
+                    j <= 2
+                    j >= 2
+                    j = 2
+                    coefficients(j) = coefficients(2) = field.zero
+                by def $is_largest_nonzero_coefficient_index(K, field, 2, coefficients, 1)
+            witness exist k N+ st {$is_largest_nonzero_coefficient_index(K, field, 2, coefficients, k)} from 1
+
+# Concrete LADR 2.19 for repeated directions: the second copy lies in the
+# span of the first.
+
+claim:
+    ? exist prefix finite_seq(R × R, 1) st {$is_prefix_of_length(R × R, 2, 1, repeated_directions, prefix), repeated_directions(2) $in \span<R, real_field, R × R, real_plane, 1, prefix>}
+    release thm prefix_exists(R × R, 2, 1, repeated_directions)
+    obtain prefix from exist p finite_seq(R × R, 1) st {$is_prefix_of_length(R × R, 2, 1, repeated_directions, p)}
+    by def $is_prefix_of_length(R × R, 2, 1, repeated_directions, prefix)
+    prefix(1) = repeated_directions(1) = e1
+    repeated_directions(2) = e1
+    have coefficients finite_seq(R, 1) = fn(k closed_range(1, 1)) R {1}
+    coefficients(1) = 1
+    release struct def real_plane
+    real_plane.add = plane_add
+    real_plane.smul = plane_smul
+    real_plane.zero = (0, 0)
+    e1 = (1, 0)
+    e1(1) = 1
+    e1(2) = 0
+    plane_smul(1, e1) = (1 * e1(1), 1 * e1(2)) = (1 * 1, 1 * 0) = (1, 0) = e1
+    have first_term R × R = plane_smul(1, e1)
+    first_term = plane_smul(1, e1) = e1
+    real_plane.smul(coefficients(1), prefix(1)) = real_plane.smul(1, e1) = plane_smul(1, e1) = first_term
+    real_plane.add(real_plane.zero, first_term) = first_term
+    claim:
+        ? forall j closed_range(0, 1):
+            j = 0 or j >= 1
+        j $in N
+        by cases:
+            ? j = 0 or j >= 1
+            case j = 0:
+                j = 0
+            case j != 0:
+                by contra:
+                    ? j > 0
+                    j <= 0
+                    j = 0
+                    impossible j != 0
+                j $in N+
+                j >= 1
+    have fn sums(j closed_range(0, 1)) R × R by induc j from 0:
+        case j = 0: (0, 0)
+        case j >= 1: plane_smul(1, e1)
+    sums(0) = (0, 0) = real_plane.zero
+    sums(1) = plane_smul(1, e1) = first_term
+    claim:
+        ? $is_partial_sum(R, real_field, R × R, real_plane, 1, coefficients, prefix, sums)
+        sums(0) = (0, 0) = real_plane.zero
+        claim:
+            ? forall j N+:
+                j <= 1
+                =>:
+                    sums(j) = real_plane.add(sums(j - 1), real_plane.smul(coefficients(j), prefix(j)))
+            j $in closed_range(1, 1)
+            expand: j $in closed_range(1, 1)
+            j = 1
+            by cases:
+                ? sums(j) = real_plane.add(sums(j - 1), real_plane.smul(coefficients(j), prefix(j)))
+                case j = 1:
+                    j - 1 = 0
+                    sums(j) = sums(1) = plane_smul(1, e1)
+                    sums(j - 1) = sums(0) = real_plane.zero
+                    real_plane.smul(coefficients(j), prefix(j)) = real_plane.smul(coefficients(1), prefix(1)) = first_term
+                    real_plane.add(sums(j - 1), real_plane.smul(coefficients(j), prefix(j))) = real_plane.add(real_plane.zero, first_term) = first_term = plane_smul(1, e1)
+        by def $is_partial_sum(R, real_field, R × R, real_plane, 1, coefficients, prefix, sums)
+    release thm partial_sum_determines_combination(R, real_field, R × R, real_plane, 1, coefficients, prefix, sums)
+    \linear_combination<R, real_field, R × R, real_plane, 1>(coefficients, prefix) = sums(1) = first_term = e1
+    e1 = repeated_directions(2)
+    obtain witness_sums from $has_linear_combination_value(R, real_field, R × R, real_plane, 1, coefficients, prefix, e1)
+    witness exist coeffs finite_seq(R, 1) st {$has_linear_combination_value(R, real_field, R × R, real_plane, 1, coeffs, prefix, e1)} from coefficients
+    by def $is_linear_combination(R, real_field, R × R, real_plane, 1, e1, prefix)
+    e1 $in {x R × R: $is_linear_combination(R, real_field, R × R, real_plane, 1, x, prefix)}
+    \span<R, real_field, R × R, real_plane, 1, prefix> = {x R × R: $is_linear_combination(R, real_field, R × R, real_plane, 1, x, prefix)}
+    repeated_directions(2) = e1
+    repeated_directions(2) $in \span<R, real_field, R × R, real_plane, 1, prefix>
+    witness exist p finite_seq(R × R, 1) st {$is_prefix_of_length(R × R, 2, 1, repeated_directions, p), repeated_directions(2) $in \span<R, real_field, R × R, real_plane, 1, p>} from prefix
+
 # Chapter 3. Linear Maps, Kernels, and Ranges
 # Selected lectures following Axler, Linear Algebra Done Right, fourth edition.
 # This chapter uses only the vector-space and subspace foundations in Chapter 1.

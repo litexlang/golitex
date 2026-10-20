@@ -1,0 +1,5 @@
+# Selected-value equality consumes an already proved candidate.
+forall a seq(R),L R:
+    $has_seq_limit(a,L)
+    =>:
+        lim(a)=L

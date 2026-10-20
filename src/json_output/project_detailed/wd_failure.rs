@@ -249,6 +249,9 @@ pub(super) fn project_obj_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     let projected = match f {
+        FailToVerifyObjWellDefinedResult::LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult::Sequence(p)) => node(rt,"SequenceLimit",None,
+            object_for(rt,vec![("obj",string(p.obj.readable_string())),("message",string("Sequence limit requires proved finite convergence; no limit is guessed from the body.")),("requirement",project_verify_fact(&p.result,rt))])),
+
         FailToVerifyObjWellDefinedResult::Identifier(p) => node(
             rt,
             "Identifier",

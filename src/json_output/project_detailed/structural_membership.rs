@@ -102,6 +102,7 @@ pub(super) fn project_structural_membership(
 fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
     use IntrinsicCodomain::*;
     match rule {
+        SequenceLimit => "lim",
         Floor => "floor",
         Ceil => "ceil",
         Sign => "sign",

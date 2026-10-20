@@ -1,0 +1,3 @@
+# Even a constant sequence needs a proved candidate before selected-value use.
+have fn a(k N+) R=0
+0*lim(a)=0

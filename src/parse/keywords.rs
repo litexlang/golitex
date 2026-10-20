@@ -28,6 +28,8 @@ pub const ALGO: &str = "algo";
 pub const FOR: &str = "for";
 pub const TUPLE: &str = "tuple";
 pub const CART: &str = "cart";
+pub const LIM: &str = "lim";
+pub const HAS_SEQ_LIMIT: &str = "has_seq_limit";
 pub const SEQ: &str = "seq";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const MATRIX: &str = "matrix";
@@ -288,6 +290,7 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | FN_RANGE
             | FINITE_SEQ
             | SEQ
+            | LIM
             | INDEX_UNION
             | INDEX_INTERSECT
             | INDEX_CART

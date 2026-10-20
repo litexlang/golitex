@@ -57,6 +57,7 @@ fn induction_bound_from_obj(
         return (found == name).then(|| crate::ast::names::BoundName::new(*id, found.clone()));
     }
     let children: Vec<&Obj> = match obj {
+        Obj::LimitOperator(LimitOperator::Sequence(a)) => vec![&a.sequence],
         Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => vec![&a.left, &a.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => vec![&a.left, &a.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => vec![&a.arg],

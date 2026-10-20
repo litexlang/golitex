@@ -16,6 +16,10 @@ parameter projection before its signature can imply `-1 $in N`.
 `struct_argument_domain.lit` rejects `&Box<-1>` when the header declares
 `n N`, even though `-1` is a well-defined scalar expression.
 
+`sequence_limit_*.lit` rejects selection without proved convergence (including
+constants), a complete domain other than `N+`, and quotient sequences without
+an all-indices nonzero denominator proof.
+
 ```bash
 target/release/litex -f <file>
 # expect exit != 0

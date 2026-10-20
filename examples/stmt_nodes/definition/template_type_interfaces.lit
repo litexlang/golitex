@@ -1,0 +1,92 @@
+# Template-defined carriers are usable directly as type interfaces.
+# Before this repair, first needed a redundant header condition:
+# template<S set: \pairs<S> = cart(S,S),>:
+#     have fn first(p \pairs<S>) S = p(1)
+# Calls also needed: \pairs<R> = cart(R,R)
+# The active examples below need neither bridge.
+
+template<S set>:
+    have pairs set = cart(S,S)
+
+template<S set>:
+    have fn first(p \pairs<S>) S = p(1)
+
+\first<R>((1,2)) = 1
+
+have pair_of_reals \pairs<R> = (1,2)
+
+forall S set, p \pairs<S>:
+    p(1) $in S
+    p(2) $in S
+
+template<A,B nonempty_set>:
+    have maps set = fn(x A) B
+
+have zero_map \maps<R,Z> = fn(x R) Z {0}
+
+template<A,B nonempty_set>:
+    have fn apply(f \maps<A,B>,x A) B = f(x)
+
+\apply<R,R>(fn(x R) R {x+1},2) = 3
+
+have fn make(a R) \maps<R,R> = fn(x R) R {x+a}
+
+make(2)(3) = 5
+
+template<S set,n N>:
+    have vectors set = finite_seq(S,n)
+
+have vector_of_reals \vectors<R,2> = (1,2)
+
+have fn second(v \vectors<R,2>) R = v(2)
+
+second((1,2)) = 2
+
+template<S set>:
+    have subsets set = power_set(S)
+
+have subset_of_reals \subsets<R> = {1,2}
+
+forall U \subsets<R>:
+    U $subset R
+
+template<a R>:
+    have above set = {x R: x>a}
+
+have positive \above<0> = 1
+
+template<n N>:
+    have singleton set = {n}
+
+have one \singleton<1> = 1
+
+template<a,b Z>:
+    have segment set = closed_range(a,b)
+
+have middle \segment<1,3> = 2
+
+forall a,b Z,x \segment<a,b>:
+    x>=a
+    x<=b
+
+template<T set>:
+    have wrapped_pairs set = \pairs<T>
+
+have nested_pair \wrapped_pairs<R> = (1,2)
+
+forall q \wrapped_pairs<R>:
+    q(2) $in R
+
+# Generic consumers of the same interfaces.
+
+forall n N, x \singleton<n>:
+    x = n
+
+forall f \maps<R,Z>:
+    f(2) $in Z
+
+forall n N,v \vectors<R,n>,k closed_range(1,n):
+    v(k) $in R
+
+forall a R, x \above<a>:
+    x > a

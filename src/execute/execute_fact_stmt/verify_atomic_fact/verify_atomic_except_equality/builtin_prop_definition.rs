@@ -38,6 +38,21 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
+            AtomicFact::HasSequenceLimitFact(f) => {
+                let epsilon_fact =
+                    self.sequence_limit_epsilon_fact(f.sequence.clone(), f.value.clone());
+                match self.verify_definition_requirements(vec![epsilon_fact], verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => {
+                        Ok(Ok(BuiltinPropDefinitionProof::SequenceLimit(
+                            super::result::BuiltinSequenceLimitDefinitionProof {
+                                requirement_facts,
+                                proof_of_requirement_facts,
+                            },
+                        )))
+                    }
+                    Err(failure) => Ok(Err(failure)),
+                }
+            }
             AtomicFact::SubsetFact(f) => self.prove_subset_by_definition(f, verify_state),
             AtomicFact::SupersetFact(f) => self.prove_superset_by_definition(f, verify_state),
             AtomicFact::ProperSubsetFact(f) => {

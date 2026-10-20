@@ -46,6 +46,7 @@ impl VerifyAtomicExceptEqualityFactResult {
 
 // Mirrors search_atomic_except_equality_fact_proof stage order.
 pub enum AtomicExceptEqualityFactSearchedProof {
+    ByTemplateMembership(super::search_in_fact_proof::TemplateMembershipProof),
     ByKnownZeroRemainder(super::known_divisibility::KnownZeroRemainderProof),
     ByStructuralMembership(super::super::structural_membership_proof::StructuralMembershipProof),
     ByClosedCalculation(
@@ -92,7 +93,8 @@ impl AtomicExceptEqualityFactKnownProof {
             AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(proof) => {
                 Some(proof.cite_fact_id)
             }
-            AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(_)
+            AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(_)
+            | AtomicExceptEqualityFactSearchedProof::ByKnownZeroRemainder(_)
             | AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(_)
             | AtomicExceptEqualityFactSearchedProof::ByClosedCalculation(_)
             | AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(_)
@@ -120,6 +122,7 @@ pub struct UserDefinedPropDefinitionProof {
 
 // One builtin predicate definition ↔ one dedicated evidence struct.
 pub enum BuiltinPropDefinitionProof {
+    SequenceLimit(BuiltinSequenceLimitDefinitionProof),
     Subset(BuiltinSubsetDefinitionProof),
     Superset(BuiltinSupersetDefinitionProof),
     ProperSubset(BuiltinProperSubsetDefinitionProof),
@@ -220,4 +223,9 @@ pub fn atomic_except_equality_fact_result_from_success(
             searched_proof,
         },
     )))
+}
+
+pub struct BuiltinSequenceLimitDefinitionProof {
+    pub requirement_facts: Vec<crate::ast::fact::Fact>,
+    pub proof_of_requirement_facts: Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
 }

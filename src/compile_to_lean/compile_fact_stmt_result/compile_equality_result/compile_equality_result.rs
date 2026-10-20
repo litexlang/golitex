@@ -63,7 +63,11 @@ impl LitexToLeanCompiler {
         // endpoint certificates. Bare searched proofs still need these checks.
         let checked_left = if parent_wd.is_none() {
             let left = self.compile_object_reference(&fact.left, position)?;
-            self.compile_object_reference(&fact.right, position)?;
+            // Identical ASTs at this same cursor resolve the same original
+            // producer. Keep the full second check when only their IR agrees.
+            if fact.left != fact.right {
+                self.compile_object_reference(&fact.right, position)?;
+            }
             Some(left)
         } else {
             None

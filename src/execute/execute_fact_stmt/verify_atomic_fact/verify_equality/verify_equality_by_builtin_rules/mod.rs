@@ -84,3 +84,5 @@ pub mod by_hyperbolic;
 pub mod by_reciprocal_trig;
 
 pub mod by_symmetric_difference;
+
+pub mod by_sequence_limit;

@@ -18,9 +18,11 @@ fn call(statement: &mut ExecStmtResult) -> &mut FnObjObjWellDefinedProof {
 #[test]
 fn returned_cart_call_replays_both_original_coordinate_domains() {
     let (result, compiler) = super::execute(SOURCE);
-    compiler
+    let output = compiler
         .compile_run(&result, "returned_cart_coordinates")
         .expect("both one-based coordinates replay from the original call's ordered evidence");
+    assert!(output.contains("exact M.real_subset_complex _ _litex_real_member"));
+    assert!(output.contains("Litex.subInR"));
 }
 
 #[test]

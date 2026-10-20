@@ -91,6 +91,16 @@ fn expression(
             },
             50,
         ),
+        Obj::LimitOperator(LimitOperator::Sequence(x)) => {
+            let source = x.sequence.readable_string();
+            let mut bound = "n".to_string();
+            while source.contains(&bound) {
+                bound.push('n');
+            }
+            let bound = ident(&bound);
+            let application = format!("{}{}", parens(&o(&x.sequence)?), call_parens(&bound));
+            (format!(r"\lim_{{{}\to\infty}} {}", bound, application), 50)
+        }
         Obj::HyperbolicOperator(x) => (
             match x {
                 HyperbolicOperator::Sinh(x) => operator("sinh", &[o(&x.arg)?]),

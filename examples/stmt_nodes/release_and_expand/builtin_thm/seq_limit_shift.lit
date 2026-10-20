@@ -1,0 +1,7 @@
+# seq_limit_shift: explicit premises and checked conclusion.
+claim:
+    ? forall seq_u seq(R),target_limit R,amount N:
+        $has_seq_limit(seq_u,target_limit)
+        =>:
+            $has_seq_limit(fn(k N+) R {seq_u(k+amount)},target_limit)
+    by thm seq_limit_shift(seq_u,target_limit,amount) => $has_seq_limit(fn(k N+) R {seq_u(k+amount)},target_limit)

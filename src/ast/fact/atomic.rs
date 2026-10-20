@@ -5,6 +5,8 @@ use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicFact {
+    HasSequenceLimitFact(HasSequenceLimitFact),
+    NotHasSequenceLimitFact(NotHasSequenceLimitFact),
     // User-defined `$prop(...)` only. Official builtins have dedicated variants.
     NormalAtomicFact(NormalAtomicFact),
     EqualFact(EqualFact),
@@ -393,6 +395,8 @@ pub struct NotIsChoiceFunctionForFact {
 impl AtomicFact {
     pub fn fact_id(&self) -> FactId {
         match self {
+            AtomicFact::HasSequenceLimitFact(f) => f.fact_id,
+            AtomicFact::NotHasSequenceLimitFact(f) => f.fact_id,
             AtomicFact::NormalAtomicFact(f) => f.fact_id,
             AtomicFact::EqualFact(f) => f.fact_id,
             AtomicFact::LessFact(f) => f.fact_id,
@@ -446,6 +450,11 @@ impl AtomicFact {
             PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
+            AtomicFact::HasSequenceLimitFact(_) | AtomicFact::NotHasSequenceLimitFact(_) => {
+                AtomicName::Plain {
+                    name: "has_seq_limit".into(),
+                }
+            }
             AtomicFact::NormalAtomicFact(f) => f.predicate.clone(),
             AtomicFact::NotNormalAtomicFact(f) => f.predicate.clone(),
             AtomicFact::EqualFact(_) | AtomicFact::NotEqualFact(_) => {
@@ -522,4 +531,20 @@ impl AtomicFact {
             }
         }
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HasSequenceLimitFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotHasSequenceLimitFact {
+    pub fact_id: FactId,
+    pub sequence: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
 }

@@ -46,6 +46,9 @@ pub enum Obj {
     // Real hyperbolic functions. Example: `sinh(0)`, `cosh(0)`.
     HyperbolicOperator(HyperbolicOperator),
 
+    // Finite real limit selected only after sequence convergence is proved.
+    LimitOperator(LimitOperator),
+
     // Exp / log / sqrt. Example: `exp(0)`, `ln(1)`, `log(2, 8)`, `sqrt(4)`.
     ExpLogOperator(ExpLogOperator),
 
@@ -1166,4 +1169,21 @@ pub struct Csch {
 pub struct SymmetricDifference {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LimitOperator {
+    Sequence(SequenceLimit),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SequenceLimit {
+    pub sequence: Box<Obj>,
+}
+impl SequenceLimit {
+    pub fn new(sequence: Obj) -> Self {
+        Self {
+            sequence: Box::new(sequence),
+        }
+    }
 }

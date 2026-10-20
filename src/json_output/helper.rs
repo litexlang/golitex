@@ -192,6 +192,8 @@ fn atomic_source_line(fact: &AtomicFact) -> Option<&SourceLine> {
         AtomicFact::ProperSupersetFact(f) => f.line_file.as_ref(),
         AtomicFact::PrimeFact(f) => f.line_file.as_ref(),
         AtomicFact::CoprimeFact(f) => f.line_file.as_ref(),
+        AtomicFact::HasSequenceLimitFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotHasSequenceLimitFact(f) => f.line_file.as_ref(),
         AtomicFact::DvdFact(f) => f.line_file.as_ref(),
         AtomicFact::InjectiveFact(f) => f.line_file.as_ref(),
         AtomicFact::SurjectiveFact(f) => f.line_file.as_ref(),

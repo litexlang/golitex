@@ -60,6 +60,10 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
     }
 
     match (left, right) {
+        (
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(l)),
+            Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(r)),
+        ) => Some(vec![(*l.sequence.clone(), *r.sequence.clone())]),
         (Obj::FnObj(l), Obj::FnObj(r)) => fn_obj_corresponding_arg_pairs(l, r),
 
         (

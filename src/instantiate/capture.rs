@@ -55,6 +55,9 @@ pub fn collect_free_plain_ids(
     out: &mut HashSet<IdentifierId>,
 ) {
     match obj {
+        Obj::LimitOperator(crate::ast::obj::LimitOperator::Sequence(a)) => {
+            collect_free_plain_ids(&a.sequence, bound, out)
+        }
         Obj::Identifier(id) => {
             if let IdentifierObj::Plain { id, .. } = id {
                 if !bound.contains(id) {
