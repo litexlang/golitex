@@ -360,6 +360,25 @@ impl LitexToLeanCompiler {
                     ));
                 }
                 self.validate_store(&derived.store, &fact)?;
+                if position.is_local() && matches!(fact, Fact::AtomicFact(_)) {
+                    // The checked predicate already determines this projection's
+                    // type, including constructors certified in its declaration.
+                    // Do not demand a second, instantiated WD run just to print it.
+                    let mut projection = format!("(show {} from {})", compiled.0, compiled.1);
+                    for _ in 0..witness_index {
+                        projection = format!("(Classical.choose_spec {projection})");
+                    }
+                    if witness_index + 1 < witness_ids.len() {
+                        projection = format!("(Classical.choose {projection})");
+                    }
+                    declarations.push(format!(
+                        "have h_{} :=\n  {}",
+                        fact.fact_id().value(),
+                        projection.replace('\n', "\n  ")
+                    ));
+                    completed += 1;
+                    continue;
+                }
                 let formed = SourcePosition {
                     parent: Some(&prior),
                     owner: SourceOwner::InferredStore(&derived.store),

@@ -102,7 +102,7 @@ impl LitexToLeanCompiler {
         let meaning = conclusions
             .into_iter()
             .rev()
-            .reduce(|tail, head| format!("({head} ∧ {tail})"))
+            .reduce(|tail, head| format!("(({head}) ∧ ({tail}))"))
             .unwrap();
         let meaning = self.scope_proposition(meaning, &definitions);
         let proposition = format!("∀ {}, {meaning}", binders.join(" "));

@@ -128,6 +128,69 @@ fn natural_exponents_require_the_recorded_operand_and_carrier() {
     }
 }
 
+const COORDINATE_SQUARE: &str = "forall a, b cart(R, R):\n    (b(1) - a(1))^2 $in C\n";
+
+fn coordinate_square_membership(result: &mut RunLitexCodeResult) -> &mut StructuralMembershipProof {
+    let forall = super::forall_proof_mut(&mut result.statement_results[0]);
+    let proof = super::atomic_proof_mut(&mut forall.proved_then_facts[0].verify_result);
+    let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) =
+        &mut proof.searched_proof
+    else {
+        panic!("the original complex membership uses structural power closure");
+    };
+    proof
+}
+
+#[test]
+fn coordinate_square_replays_its_structural_power_children() {
+    let (mut result, compiler) = super::execute(COORDINATE_SQUARE);
+    let proof = coordinate_square_membership(&mut result);
+    assert_eq!(proof.set, StandardSet::C);
+    let StructuralMembershipReason::Pow { base, exponent } = &proof.reason else {
+        panic!("the original square certificate");
+    };
+    assert_eq!(base.set, StandardSet::C);
+    assert_eq!(exponent.set, StandardSet::Z);
+    assert!(matches!(
+        base.reason,
+        StructuralMembershipReason::Sub { .. }
+    ));
+    let output = super::compile_run(&result, &compiler, "coordinate_square")
+        .expect("the original coordinate constructors and structural children compile");
+    for (child, endpoint, carrier) in [("base", "base", "C"), ("exponent", "exponent", "Z")] {
+        let inferred = output
+            .find(&format!("have _elaborated_power_{child} :="))
+            .expect("finish the original child proof before imposing the endpoint type");
+        let checked = output
+            .find(&format!(
+                "have _recorded_power_{child} : Litex.In _litex_power.val.{endpoint} (Litex.{carrier} (M := M)) := _elaborated_power_{child}"
+            ))
+            .expect("the elaborated child must still match the exact owned endpoint and carrier");
+        assert!(inferred < checked);
+    }
+}
+
+#[test]
+fn coordinate_square_rejects_changed_structural_children() {
+    for change in ["base", "exponent", "carrier"] {
+        let (mut result, compiler) = super::execute(COORDINATE_SQUARE);
+        let StructuralMembershipReason::Pow { base, exponent } =
+            &mut coordinate_square_membership(&mut result).reason
+        else {
+            panic!("the original square certificate");
+        };
+        match change {
+            "base" => base.element = super::number_object("7"),
+            "exponent" => exponent.element = super::number_object("3"),
+            "carrier" => exponent.set = StandardSet::N,
+            _ => unreachable!(),
+        }
+        let error = super::compile_run(&result, &compiler, "changed_coordinate_square")
+            .expect_err("local type annotations cannot replace the selected child evidence");
+        assert_eq!(error.route, "StructuralMembership/PowChild");
+    }
+}
+
 #[test]
 fn arithmetic_does_not_fabricate_natural_or_integer_membership() {
     for source in [
@@ -135,6 +198,7 @@ fn arithmetic_does_not_fabricate_natural_or_integer_membership() {
         "have fn opposite(x N) N=-x\n",
         "have fn half(x Z) Z=x/2\n",
         "have fn invalid(x R) R=x/0\n",
+        "forall a, b cart(R, R):\n    (b(1) - a(1))^2 $in N\n",
     ] {
         let command =
             parse_launch_command(&["-strict".to_string(), "-e".to_string(), source.to_string()])

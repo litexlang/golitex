@@ -122,6 +122,7 @@ pub enum FunctionSpaceObjWellDefinedProofByDef {
     FnSet(FnSetObjWellDefinedProof),
     AnonymousFn(AnonymousFnObjWellDefinedProof),
     FnRange(FnRangeObjWellDefinedProof),
+    Composition(CompositionObjWellDefinedProof),
     Preimage(PreimageObjWellDefinedProof),
     PreimageSet(PreimageSetObjWellDefinedProof),
 }
@@ -166,6 +167,7 @@ pub enum FnObjDomainFnSetEvidence {
         fact_id: FactId,
         function_equal: KnownEqualityPathProof,
     },
+    Composition(Box<CompositionCallableProof>),
     AnonymousLiteral {
         fn_set: FnSet,
     },

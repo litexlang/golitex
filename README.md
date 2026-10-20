@@ -3,7 +3,7 @@
 
 # Litex
 
-### Write mathematics. See why it holds.
+### A Simple Formal Language Learnable in 2 Hours
 
 **Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”), not “LYE-tek” (“赖泰克”).
 
@@ -20,38 +20,6 @@ _— George Boole, The Laws of Thought (1854), Chapter II (excerpt)_
 </div>
 
 <a id="the-goal-of-litex"></a>
-
-## A language for everyone who uses mathematics
-
-Litex is a human-readable, set-theoretic, fact-oriented formal language,
-with experimental Lean compilation for supported proofs.
-
-**Language is a carrier of knowledge.** A theorem advances mathematical
-knowledge; a mathematical language shapes how knowledge is expressed,
-understood, checked, shared, and reused across fields. Its design concerns
-everyone who uses mathematics: students, mathematicians, scientists, engineers,
-and programmers.
-
-**The more mathematics AI can produce, the more its language matters.**
-Each new result needs an intelligible statement, explicit conditions, and
-reasoning that others can inspect and build on. These needs reach across
-mathematics and its applications. Litex's long-term goal is to help turn
-growing mathematical capability into shared knowledge that more people can
-understand, check, and use.
-
-Litex explores whether familiar mathematical meanings, explicit facts, and
-incremental checking can reduce the effort people and AI spend constructing,
-understanding, reviewing, repairing, and reusing mathematical knowledge.
-Progress toward that goal must be measured in real mathematical work; the
-examples below demonstrate current capabilities within their stated limits.
-
-**Mathematics deserves credible alternatives for its formal expression.**
-Litex aims to offer another language route, with its own choices about meaning,
-domains, and proof writing. A viable alternative would give users more choice
-in how they learn, communicate, and apply mathematics. Interoperability with
-Lean can support that goal while preserving Litex's independent language
-design. The familiar expression `1 / 0` makes one such choice concrete.
-
 <a id="familiar-mathematics"></a>
 
 ## Familiar expressions, familiar mathematics
@@ -86,6 +54,28 @@ part of the language's default authoring experience.
 
 **Writing mathematics should mean writing mathematics:** preserve its meaning,
 state its conditions, and let the language check the reasoning.
+
+Litex is a human-readable, set-theoretic, fact-oriented formal language,
+with experimental Lean compilation for supported proofs.
+
+## A personal note
+
+I want people to be able to put their mathematical thoughts into words
+naturally: to see why an idea works, let someone else understand and check it,
+and give them a place to continue. From a classroom exercise to an engineering
+formula, more people should be able to enjoy that act of creation and
+understanding.
+
+The better AI becomes at proving theorems, the more I want to build this
+language. New theorems expand what we know; language shapes how that knowledge
+is expressed, understood, and passed on. This is a challenge shared across
+the mathematical world, touching everyone who learns or uses mathematics.
+
+**Language is a carrier of knowledge.** I hope Litex can offer another form
+worth choosing: one that brings rigorous machine checking closer to human
+understanding, so that alongside increasingly capable AI, more of us can
+understand mathematics, contribute to it, and enjoy it. That is what I want
+to keep working toward.
 
 ## Six characteristics, one goal
 

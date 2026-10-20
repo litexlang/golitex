@@ -1,0 +1,3 @@
+# Native strict composition: checked complete domains are required.
+forall ga fn(x,y R: x<y) R:
+    (fn(t R) R {t}) ∘ ga = ga

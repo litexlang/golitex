@@ -1,6 +1,7 @@
 pub mod aggregate_identity_builtin_rule_proof;
 pub mod by_cartesian_size;
 pub mod by_closed_trig;
+pub mod by_composition;
 pub mod by_dvd_zero_remainder;
 pub mod by_elementary_arithmetic;
 pub mod by_empty_function_graph;

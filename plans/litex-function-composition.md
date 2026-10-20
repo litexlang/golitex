@@ -1,6 +1,6 @@
 # 函数复合：`compose(f,g)` 与 `f ∘ g`
 
-日期：2026-10-18。状态：**设计提案，尚未实现**。接续 [Phase 1](litex-latex-phase-1.md) 的 P5；本文件替代其中旧的一元复合草案。用户已决定不增加原生 `restrict`，限制函数继续使用现有匿名函数。
+日期：2026-10-18。状态：**第一轮已实现并完成专项验证**。接续 [Phase 1](litex-latex-phase-1.md) 的 P5；本文件替代其中旧的一元复合草案。用户已决定不增加原生 `restrict`，限制函数继续使用现有匿名函数。
 
 ## 1. 推荐接口与主例子
 
@@ -12,7 +12,7 @@ compose(f,g) = f ∘ g
 (f ∘ g)(x,y) = f(g(x,y))
 ```
 
-以下是拟议验收程序，不是当前内核已经支持的代码：
+以下程序的正例已通过；最后一行是应拒绝的负例：
 
 ```text
 have fn square(t R) R = t^2
@@ -33,9 +33,9 @@ h(3,1) = 4
 
 ## 2. 当前源码依据
 
-以下是源码观察；本次设计没有重新构建或运行 Litex：
+本节保留设计时的源码依据；本轮实现与实际运行结果见文末验收记录：
 
-| 现有事实 | 来源与设计影响 |
+| 设计时已有事实 | 来源与设计影响 |
 | --- | --- |
 | 函数参数的载体和返回集合不能引用本签名参数；条件和函数体可以 | [签名解析](../src/parse/object/primary.rs)、[binder WD](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs)。本提案不引入依赖类型；`fn(x R,y S(x)) R` 不在范围内。`ast/obj.rs` 中关于 dependent return 的旧注释与当前检查不一致，以检查契约为准。 |
 | 函数空间成员关系要求完整定义域相同，再证明返回值所属集合 | [函数成员检查](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_strategy/function_membership.rs)、[完整定义域证据](../src/execute/execute_fact_stmt/function_domain.rs)。返回上界不是函数图的一部分，不能凭一个更小的输入类型改变函数图。 |
@@ -43,7 +43,7 @@ h(3,1) = 4
 | 完整定义域已有匿名函数、成员关系、模板、有限函数、返回函数等来源，并保留来源证明 | [function_domain.rs](../src/execute/execute_fact_stmt/function_domain.rs)。复合接入此证据体系，不创建平行签名缓存。 |
 | 函数体展开可以使用父调用已经检查的定义域 | [parent-checked beta](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/by_object_definition/by_fn_application/by_parent_checked_beta.rs)。复合应用属于这个定义展开责任。 |
 | 匿名函数已经能表达限制 | [一般子集载体例子](../examples/wd/known_subset_general_carrier.lit)、[限制函数 beta 例子](../examples/proof_nodes/equal/by_object_definition/by_fn_application/restricted_literal_beta.lit)。不增加 `Restriction` 对象。 |
-| 当前没有复合表达式层；任意对象已经可进入 `FnObjHead::Object` | [表达式解析](../src/parse/object/expression.rs)。不需要为复合再增加一种调用头。 |
+| 实现前没有复合表达式层；任意对象已经可进入 `FnObjHead::Object` | [表达式解析](../src/parse/object/expression.rs)。不需要为复合再增加一种调用头。 |
 
 依赖顺序是：已有函数图和完整定义域 → 检查内层输出能否进入外层 → 构造复合函数 → 暴露调用和成员关系 → 添加关系规则 → 接通输出。不能由某个希望通过的等式倒推一个较小的定义域。
 
@@ -140,7 +140,7 @@ fn(x R: x != 0) R {inv(identity(x))}
 # 作者显式选择较小定义域时，使用已有匿名函数。
 ```
 
-另一种数学选择是部分函数图复合，自动取 `g` 的定义域中满足外层载体及 `Q(g(x))` 的部分。它的优势是对任意两个一元函数图都可构造，函数图复合的结合律也无需整个中间值域相容。例如 `inv ∘ identity_R` 会自动得到定义在非零实数上的函数，`inv ∘ zero_R` 会得到空函数。本提案仍推荐保留内层完整域的严格复合：它与显式匿名函数接口一致，在构造时暴露域不相容；代价是不能承诺任意一侧嵌套合法就允许重新加括号。两种语义都是数学上可行的选择，但切换会改变已发布函数的域、WD 时机和等式，不能以后作为无行为变化的重构。最终实现前需由用户确定，当前记录为推荐方案。
+另一种数学选择是部分函数图复合，自动取 `g` 的定义域中满足外层载体及 `Q(g(x))` 的部分。它的优势是对任意两个一元函数图都可构造，函数图复合的结合律也无需整个中间值域相容。例如 `inv ∘ identity_R` 会自动得到定义在非零实数上的函数，`inv ∘ zero_R` 会得到空函数。本提案仍推荐保留内层完整域的严格复合：它与显式匿名函数接口一致，在构造时暴露域不相容；代价是不能承诺任意一侧嵌套合法就允许重新加括号。两种语义都是数学上可行的选择，但切换会改变已发布函数的域、WD 时机和等式，不能以后作为无行为变化的重构。用户后续授权按本提案实现；本轮采用上述严格语义。
 
 ### 多个签名、别名与空域
 
@@ -201,7 +201,7 @@ pub struct Composition {
 }
 ```
 
-`compose(f,g)` 和 `f ∘ g` 都对应 `outer=f, inner=g`。对象持有函数值，不持有复制的声明、参数列表、选择后的签名、缓存或证明。无需更改 `FnSet`、`AnonymousFn`、`FnObjHead`、`Stmt`、`Fact` 或 `Identifier` 的现有字段。此处是明确的结构提案，不是本次已经获准的内核编辑。
+`compose(f,g)` 和 `f ∘ g` 都对应 `outer=f, inner=g`。对象持有函数值，不持有复制的声明、参数列表、选择后的签名、缓存或证明。无需更改 `FnSet`、`AnonymousFn`、`FnObjHead`、`Stmt`、`Fact` 或 `Identifier` 的现有字段。用户后续已授权按此设计实现；本轮仅新增此变体与负载，既有 AST 字段保持不变。
 
 纯解析展开 `f ∘ g` 为 `fn(...) {...}` 的问题是：参数个数、条件和返回集合来自经过检查的函数接口，解析阶段不能猜；展开还会丢失复合对象的规则与输出身份。采用独立对象，检查后的匿名函数形状只作为定义解释/证明构造。
 
@@ -380,7 +380,7 @@ Lean 消费者必须同步处理新穷尽分支。第一轮可以与当前原生
 
 ## 10. 验收矩阵与完成标准
 
-建议新增持久主例子 `examples/wd/function_composition.lit`，规则例子 `examples/proof_nodes/equal/by_builtin_rule/function_composition.lit`。这些是**待创建路径**。保留原匿名函数写法作为对照注释，新写法为活动断言；拒绝用注释代替可执行负例。
+持久主例子已保存为 [function_composition.lit](../examples/wd/function_composition.lit)。结合律、左右单位律、定义等式分别位于 `examples/proof_nodes/equal/by_builtin_rule/composition_*.lit`，像集包含位于 [composition_range_subset.lit](../examples/proof_nodes/atomic/by_builtin_rule/composition_range_subset.lit)。可执行负例保存在对应 Rust 专项测试中。
 
 | 类别 | 必须观察的结果 |
 | --- | --- |
@@ -399,7 +399,7 @@ Lean 消费者必须同步处理新穷尽分支。第一轮可以与当前原生
 | 第一轮规则 | 双向等式、range 包含、函数空间成员、原像消费者 WD、受限搜索权限及证据树正确。 |
 | 兼容/输出 | 四处名称迁移保留原测试意义；规范文本回读；LaTeX 不丢括号；Lean 成功或精确拒绝，不伪造证明。 |
 
-本次计划为 L0：只做源码依据、链接、范围和文本检查，不据此宣称新能力通过。未来实现增加共享 AST/语法，按 L4 选择 gate：当前源码 release 构建、聚焦 parser/WD/规则/证据/消费者测试、strict 正例文件及可执行负例、LaTeX 输出，再做 release all-target Rust 和文档块检查。遵守根 AGENTS：不把本地 `scripts/` 教材或部署脚本作为 gate。
+最初设计轮为 L0。本次实现依照后续新增的 Rust 更新分级，归为 **R1 分支级更新，L3 生产者/消费者验证**：新构造分支及必要的穷尽分派接线不改变旧管线顺序、搜索权限、缓存、事务或模块契约。运行 release 构建、专项及相关旧分支测试、strict CLI 与新增文档块检查；未运行全仓 Cargo、发布 gate 或本地 `scripts/` 教材。保留字迁移单独列为源码兼容性变化。
 
 第一轮交付意味着步骤 1–6 和上述矩阵完成，第二轮规则继续明确标记待办。每次正常失败后应有后续合法事实成功，证明 Session 保留上下文；最后文件结果需要 exit 0，Normal JSON 为 `kind=run`、`run_result=success`、`session_terminated=false`、`termination=null`。实现后的真实命令和结果再补入验收记录。
 
@@ -408,3 +408,25 @@ Lean 消费者必须同步处理新穷尽分支。第一轮可以与当前原生
 设计检查记录（2026-10-18）：本文件与两份父计划的相对文件链接、代码围栏、名称/范围一致性和定向 whitespace 检查通过；核对了完整域、调用 arity、元组从 1 开始的下标及四处名称冲突。仅修改计划，未修改内核或运行实现测试。
 
 同日补充：按用户要求细化值域到完整域的兼容性判据、匿名函数 WD 复用、构造/调用两阶段、相邻兼容性推导结合律 WD，以及单满双射、消去和逆映射关系的准确前提。以上仍为设计和数学推导，尚无新内核实现或 Litex 测试结果。
+
+
+## 11. 第一轮实现与验收记录（2026-10-18）
+
+已交付 `Composition` 对象、`compose(f,g)` / `f ∘ g`、严格全域 WD、完整签名及应用消费者、带来源的证明结果、定义等式、结合律、左右单位律、合同替换和像集包含。LaTeX 保留括号；Lean 目前明确拒绝，不生成占位证明。原生限制语法和第二轮映射/原像关系仍未实现。
+
+构造阶段保存现有匿名函数 WD 的局部作用域与完整证明。后续 BT 消费父 atomic WD，不用较低的 BT 权限重新搜索已证的全称相容性。只在新增的复合来源分支中做有界循环检查，避免 `f = compose(id,f)` 被当作递归定义；旧搜索次序与展开预算不变。
+
+实际验证结果：
+
+- `cargo build --release` 成功。
+- `cargo test --release --lib function_composition -- --nocapture`：**17 passed**。覆盖两种语法/结合方向、严格域、guards、异类多元参数、错误 arity、合法嵌套、捕获、返回函数、高阶参数、字段/模板、有限函数、空域、循环等式、无接口别名拒绝、规则证据/权限、失败回滚、LaTeX 和 Lean 拒绝。
+- 同一 release 测试产物运行相关旧分支：**190 passed，1 个既有静态检查 failed**。失败为 `json_output::rule_language_methods_tests::every_rule_impl_owns_ten_methods_and_a_selection_only_dispatcher`：它逐字符要求 `match lang`，整除模块使用 `match language`。`dvd.rs` 与该测试均未改动；Git 基线 `781c21fc4` 已包含相同不匹配。没有因此修改整除分支，也不宣称全部 Cargo 测试通过。
+- 10 个 strict CLI 文件全部成功（6 个新示例和 4 个名称迁移文件，共 **82** 个顶层语句）；JSON 均为 success，未终止 Session。
+- 使用现有 Markdown harness 的提取/运行函数检查新增 Manual 代码块：**1/1 passed**。字段名称的说明同步迁移；历史运行记录保留原样。
+- `git diff --check` 通过。未提交、未暂存，保留共享工作区的其他修改。
+
+仍沿用的推理边界：复杂嵌套条件可先证明全称事实再构造；涉及外部常量或字段值的计算可先列中间等式；把复合直接放入结构元组前可能需要先发表其函数空间成员关系。测试和 persistent Session 都检查了这些显式路径，没有提高全局搜索权限。
+
+兼容性：`compose` 成为保留名。两个高阶函数示例及一个嵌入式 Rust 用例改名 `compose_on_R`；范畴论展示、WD 回归及配套说明的泛化态射字段改名 `compose_morphism`，参数顺序和原数学含义不变。
+
+运行日志和 Session 接受/拒绝记录位于本地 `tmp/2026-10-18/function-composition/`；持久功能契约、正例和可执行负例分别保存在 Manual、examples 和 [专项测试](../tests/unit/execute/function_composition/tests.rs)。

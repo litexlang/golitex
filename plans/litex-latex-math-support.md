@@ -47,7 +47,7 @@ For each operation, require all of the following:
 
 2026-10-18: the user authorized the concrete phase-1 Obj proposal and then deferred `compose`/`restrict`. The first increment implements the ten scalar/set objects with core equations and checked domains. See the [phase-1 progress and remaining rules](litex-latex-phase-1.md) and [current language documentation](../docs/native-elementary-operators.md). This does not complete every relationship in category 1.
 
-Later the same day, the user removed native restriction from scope and requested a careful composition design including `f ∘ g`. The [composition design](litex-function-composition.md) proposes `compose(f,g) = f ∘ g`, with unary outer function, fixed positive-arity inner function, preserved inner guards and complete domain, and right-associative notation. It records Obj, proof evidence, BT laws, name migrations and acceptance steps; implementation remains pending. Restrictions continue to use `fn(x S) B {f(x)}` or an explicitly guarded multi-argument anonymous function.
+Later the same day, the user removed native restriction from scope and requested a careful composition design including `f ∘ g`. The [composition design](litex-function-composition.md) proposes `compose(f,g) = f ∘ g`, with unary outer function, fixed positive-arity inner function, preserved inner guards and complete domain, and right-associative notation. The first delivery is now implemented: native Obj/syntax, strict WD, application consumers, core laws and checked examples. Later mapping/preimage laws remain pending; see the composition plan for exact validation and limits. Restrictions continue to use `fn(x S) B {f(x)}` or an explicitly guarded multi-argument anonymous function.
 
 ## Delivery order
 

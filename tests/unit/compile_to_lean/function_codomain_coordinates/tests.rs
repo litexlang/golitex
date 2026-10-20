@@ -96,7 +96,7 @@ fn function_codomain_coordinates_reject_an_unpublished_signature_citation() {
     let error = compiler
         .compile_run(&result, "function_codomain_unpublished_signature")
         .unwrap_err();
-    assert_eq!(error.route, "FactId/Producer");
+    assert_eq!(error.route, "FactId/Resolution");
 }
 
 #[test]

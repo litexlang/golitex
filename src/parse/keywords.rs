@@ -32,6 +32,8 @@ pub const SEQ: &str = "seq";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const MATRIX: &str = "matrix";
 pub const FN: &str = "fn";
+pub const COMPOSE: &str = "compose";
+pub const UNICODE_COMPOSE: &str = "∘";
 pub const PREIMAGE: &str = "preimage";
 pub const PREIMAGE_SET: &str = "preimage_set";
 pub const FN_PREIMAGE: &str = "fn_preimage";
@@ -282,6 +284,7 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | FINITE_SET_SIZE
             | FINITE_SET_MAX
             | FINITE_SET_MIN
+            | COMPOSE
             | FN_RANGE
             | FINITE_SEQ
             | SEQ

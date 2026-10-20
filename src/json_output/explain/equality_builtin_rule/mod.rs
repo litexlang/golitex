@@ -25,6 +25,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_en(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
@@ -290,6 +293,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_zh(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
@@ -555,6 +561,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_zh_hant(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
             }
@@ -820,6 +829,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_fr(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
             }
@@ -1087,6 +1099,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ru(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
             }
@@ -1353,6 +1368,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_es(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
             }
@@ -1620,6 +1638,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ar(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
             }
@@ -1885,6 +1906,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ja(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
             }
@@ -2150,6 +2174,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_ko(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
             }
@@ -2415,6 +2442,9 @@ impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
             Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_vi(),
+            Self::Composition(p) => {
+                native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
+            }
             Self::Conjugation(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
             }

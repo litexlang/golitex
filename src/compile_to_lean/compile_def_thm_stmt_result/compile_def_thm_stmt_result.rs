@@ -140,7 +140,7 @@ impl LitexToLeanCompiler {
         }
         let mut conclusion = conclusions.pop().expect("nonempty conclusions");
         while let Some(left) = conclusions.pop() {
-            conclusion.0 = format!("({} ∧ {})", left.0, conclusion.0);
+            conclusion.0 = format!("(({}) ∧ ({}))", left.0, conclusion.0);
             conclusion.1 = format!("(And.intro {} {})", left.1, conclusion.1);
         }
         let mut statements = Vec::new();

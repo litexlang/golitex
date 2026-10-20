@@ -259,6 +259,9 @@ fn expression(
                 FunctionSpace::FnSet(x) => parens(&fn_set(x, modules, lang)?),
                 FunctionSpace::AnonymousFn(x) => anonymous(x, modules, lang)?,
                 FunctionSpace::FnRange(x) => operator("range", &[o(&x.function)?]),
+                FunctionSpace::Composition(x) => {
+                    format!("{} \\circ {}", e(&x.outer, 26)?, e(&x.inner, 25)?)
+                }
                 FunctionSpace::Preimage(x) => {
                     operator("preimage", &[o(&x.function)?, o(&x.value)?])
                 }
@@ -266,7 +269,11 @@ fn expression(
                     operator("preimage_set", &[o(&x.function)?, o(&x.target_set)?])
                 }
             },
-            50,
+            if matches!(x, FunctionSpace::Composition(_)) {
+                25
+            } else {
+                50
+            },
         ),
         Obj::FnObj(x) => {
             let mut head = match x.head.as_ref() {

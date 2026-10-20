@@ -6,10 +6,87 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::resu
     ForallConclusionArgMatchProof, SearchProofByKnownForallFact, StrictEqualArgProof,
     StrictEqualWithFact,
 };
+use crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchProofByKnownOrFact;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_known_or_fact(
+        &self,
+        goal: &OrFact,
+        proof: &OrFactSearchProofByKnownOrFact,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let resolved = self.resolve_fact(proof.cite_fact_id, position)?;
+        let Fact::OrFact(source) = &resolved else {
+            return Err(LeanCompileError::unsupported("Or/KnownCitationFamily"));
+        };
+        let registered = self.cited_fact_reference(proof.cite_fact_id, position)?;
+        if source.fact_id != proof.cite_fact_id || *registered.0 != resolved {
+            return Err(LeanCompileError::unsupported("Or/KnownCitationIdentity"));
+        }
+        if source.facts.len() != goal.facts.len()
+            || !source
+                .facts
+                .iter()
+                .zip(&goal.facts)
+                .all(|(source, goal)| same_or_branch_shape(source, goal))
+        {
+            return Err(LeanCompileError::unsupported("Or/KnownShape"));
+        }
+        let source_args = or_fact_args_ref(source);
+        let goal_args = or_fact_args_ref(goal);
+        if source_args.len() != goal_args.len()
+            || proof.why_parameters_of_known_fact_are_equal_to_givens.len() != goal_args.len()
+        {
+            return Err(LeanCompileError::unsupported("Or/KnownArgumentArity"));
+        }
+        let mut equalities = Vec::new();
+        let mut exact_identity = true;
+        for ((source, goal_arg), equality) in source_args
+            .iter()
+            .zip(&goal_args)
+            .zip(&proof.why_parameters_of_known_fact_are_equal_to_givens)
+        {
+            // Known-Or lookup records only a direct identity comparison or a
+            // path through preceding equality stores; it performs no new search.
+            if !matches!(
+                equality,
+                EqualFactSearchedProof::ByTheyAreTheSame(_)
+                    | EqualFactSearchedProof::ByEquivalenceClass(
+                        EqualFactSearchedProofByEquivalenceClass::KnownPath(_)
+                    )
+            ) {
+                return Err(LeanCompileError::unsupported("Or/KnownArgumentRoute"));
+            }
+            let obligation = EqualFact {
+                fact_id: goal.fact_id,
+                left: (*source).clone(),
+                right: (*goal_arg).clone(),
+                line_file: None,
+            };
+            equalities.push(self.compile_equality_search(&obligation, equality, position)?);
+            exact_identity &= source.ir() == goal_arg.ir()
+                && matches!(
+                    equality,
+                    EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
+                );
+        }
+        let goal = Fact::OrFact(goal.clone());
+        let term = if exact_identity {
+            registered.1
+        } else {
+            self.compile_known_compound_transport(
+                &resolved,
+                &goal,
+                &equalities,
+                &registered.1,
+                position,
+            )?
+        };
+        Ok((self.fact_proposition(&goal, position)?, term))
+    }
+
     pub(in crate::compile_to_lean) fn compile_known_application(
         &self,
         goal: &Fact,

@@ -3,6 +3,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     AtomicExceptEqualityFactKnownProof, VerifyAtomicExceptEqualityFactResult,
     VerifyAtomicExceptEqualityFactSuccess,
 };
+use crate::prelude::*;
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, GreaterFact, InFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
 };
@@ -104,6 +105,8 @@ pub enum InFactSearchProofByBuiltinRule {
     // A checked anonymous function inhabits its own declared FnSet, modulo
     // binder renaming. Domain conditions and free owners must remain exact.
     // Example: `fn(x R) R {x} $in fn(y R) R`.
+    CompositionInFunctionSet(CompositionInFunctionSetProof),
+    CompositionApplicationInCodomain(CompositionApplicationInCodomainProof),
     AnonymousFnInDeclaredFnSet(AnonymousFnInDeclaredFnSetBuiltinRuleProof),
     // A fully checked uncurried literal call inherits its static scalar return
     // set, including its standard-set supertypes.
@@ -412,6 +415,50 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        // Composition's complete interface is certified by its constructor.
+        // Application WD has already checked this call's arguments and guards.
+        if let Obj::FunctionSpace(FunctionSpace::FnSet(target)) = &fact.set {
+            for callable in
+                self.parent_checked_composition_callables(&fact.element, verify_state)?
+            {
+                if fn_sets_alpha_equal(&callable.function.body, target) {
+                    return Ok(Some(
+                        InFactSearchProofByBuiltinRule::CompositionInFunctionSet(
+                            CompositionInFunctionSetProof {
+                                callable: Box::new(callable),
+                            },
+                        ),
+                    ));
+                }
+            }
+        }
+        if let Obj::FnObj(application) = &fact.element {
+            let head = fn_obj_head_as_obj(&application.head);
+            for callable in self.parent_checked_composition_callables(&head, verify_state)? {
+                let Some(return_set) =
+                    self.applied_fn_set_return_set(application, &callable.function.body)
+                else {
+                    continue;
+                };
+                let matches = return_set.ir() == fact.set.ir()
+                    || match (&return_set, &fact.set) {
+                        (Obj::StandardSet(source), Obj::StandardSet(target)) => {
+                            super::subset::standard_set_is_subset_eq(source, target)
+                        }
+                        _ => false,
+                    };
+                if matches {
+                    return Ok(Some(
+                        InFactSearchProofByBuiltinRule::CompositionApplicationInCodomain(
+                            CompositionApplicationInCodomainProof {
+                                callable: Box::new(callable),
+                                return_set,
+                            },
+                        ),
+                    ));
+                }
+            }
+        }
         if let Some(proof) = self.scalar_refined_product(fact, verify_state)? {
             return Ok(Some(proof));
         }

@@ -59,8 +59,15 @@ impl LitexToLeanCompiler {
         parent_wd: Option<&EqualFactWellDefinedProof>,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let left = self.compile_object_reference(&fact.left, position)?;
-        self.compile_object_reference(&fact.right, position)?;
+        // Both parent-WD callers have already compiled and matched the original
+        // endpoint certificates. Bare searched proofs still need these checks.
+        let checked_left = if parent_wd.is_none() {
+            let left = self.compile_object_reference(&fact.left, position)?;
+            self.compile_object_reference(&fact.right, position)?;
+            Some(left)
+        } else {
+            None
+        };
         let proof = match proof {
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_)) => {
                 if fact.left.ir() != fact.right.ir() {
@@ -69,6 +76,10 @@ impl LitexToLeanCompiler {
                         "Identity evidence has different endpoints.",
                     ));
                 }
+                let left = match checked_left {
+                    Some(left) => left,
+                    None => self.compile_object_reference(&fact.left, position)?,
+                };
                 format!("(Litex.sameRefl {left})")
             }
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameFreeParamShape(
@@ -83,6 +94,9 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(proof),
             ) => self.compile_abs_nonnegative_identity(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::SqrtSquare(proof),
+            ) => self.compile_sqrt_square(fact, &proof.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::ElementaryArithmetic(
                     ElementaryArithmeticProof::AbsEvenPower,

@@ -8,6 +8,7 @@ mod compile_equivalence_class;
 mod compile_function_definition;
 mod compile_known_special_property;
 mod compile_natural_power_laws;
+mod compile_sqrt_square;
 
 #[cfg(test)]
 mod known_special_property_tests;

@@ -79,7 +79,7 @@ impl LitexToLeanCompiler {
                 self.fact_proposition(&fact, position)?,
                 conjunction_projection(&compiled.1, index, components.len()),
             );
-            declarations.push(self.emit_internal_fact(&fact, &projection, position)?);
+            declarations.push(self.emit_internal_fact_reference(&fact, &projection, position)?);
         }
         let group = SourcePosition::new(Some(position), SourceOwner::CompoundInference(store), 0);
         match &store.infer {
@@ -130,7 +130,11 @@ impl LitexToLeanCompiler {
                         self.context_application(&name, &prior)
                     };
                     let seed = (self.fact_proposition(&captured.fact, &prior)?, reference);
-                    declarations.push(self.emit_internal_fact(&captured.fact, &seed, &prior)?);
+                    declarations.push(self.emit_internal_fact_reference(
+                        &captured.fact,
+                        &seed,
+                        &prior,
+                    )?);
                     let name = format!("h_{}", captured.fact.fact_id().value());
                     let reference = if prior.is_local() {
                         name

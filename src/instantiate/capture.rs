@@ -209,6 +209,9 @@ pub fn collect_free_plain_ids(
         Obj::FunctionSpace(FunctionSpace::FnRange(a)) => {
             collect_free_plain_ids(&a.function, bound, out)
         }
+        Obj::FunctionSpace(FunctionSpace::Composition(a)) => {
+            collect_binary(&a.outer, &a.inner, bound, out)
+        }
         Obj::FunctionSpace(FunctionSpace::Preimage(a)) => {
             collect_binary(&a.function, &a.value, bound, out)
         }

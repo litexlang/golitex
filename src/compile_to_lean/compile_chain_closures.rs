@@ -178,7 +178,7 @@ impl LitexToLeanCompiler {
                 };
             }
             let compiled = (self.fact_proposition(&fact, &formed)?, prefix_proof);
-            declarations.push(self.emit_internal_fact(&fact, &compiled, &prior)?);
+            declarations.push(self.emit_internal_fact_reference(&fact, &compiled, &prior)?);
         }
         Ok(declarations)
     }

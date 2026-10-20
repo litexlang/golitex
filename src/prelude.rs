@@ -99,3 +99,12 @@ pub(crate) use crate::execute::execute_fact_stmt::verify_chain_fact::{VerifyChai
 pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact::{VerifyForallFactResult, VerifyForallFactFailed};
 pub(crate) use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::{VerifyForallFactWithIffResult, VerifyForallFactWithIffFailed};
 pub(crate) use crate::execute::execute_fact_stmt::verify_not_forall_fact::{VerifyNotForallFactResult, VerifyNotForallFactFailed};
+
+pub(crate) use crate::execute::execute_fact_stmt::function_composition::*;
+pub(crate) use crate::execute::execute_fact_stmt::function_domain::{
+    function_application, CompleteFunctionDomainProof,
+};
+pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
+    ExpLogOperatorObjWellDefinedProofByDef, FailToVerifyFunctionSpaceObjWellDefinedResult,
+    ObjWellDefinedProofByDef,
+};

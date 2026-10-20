@@ -129,6 +129,9 @@ impl Runtime {
             }
         }
 
+        if let Obj::FunctionSpace(FunctionSpace::Composition(value)) = obj {
+            return self.verify_composition_obj_well_definedness(value, verify_state);
+        }
         if let Obj::FunctionSpace(FunctionSpace::Preimage(value)) = obj {
             return self.verify_preimage_obj_well_definedness(value, verify_state);
         }
@@ -369,7 +372,8 @@ impl Runtime {
             }
             Obj::SetFormer(SetFormer::SetBuilder(_))
             | Obj::FunctionSpace(FunctionSpace::FnSet(_))
-            | Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => {
+            | Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
+            | Obj::FunctionSpace(FunctionSpace::Composition(_)) => {
                 // Handled in verify_obj_well_definedness via binder pipelines.
                 Ok(ObjWellDefinedByDefCommonStages::leaf())
             }

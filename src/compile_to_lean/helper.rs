@@ -308,13 +308,17 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
         (Obj::ArithmeticOperator(Abs(a)), Obj::ArithmeticOperator(Abs(b))) => {
             Some(("absValue", vec![(&a.arg, &b.arg)]))
         }
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(b)),
+        ) => Some(("sqrtValue", vec![(&a.arg, &b.arg)])),
         _ => None,
     }
 }
 
 pub(super) fn arithmetic_operation_term(operation: &str) -> String {
-    if operation == "absValue" {
-        "(Litex.absValue (M := M))".to_string()
+    if matches!(operation, "absValue" | "sqrtValue") {
+        format!("(Litex.{operation} (M := M))")
     } else {
         format!("M.{operation}")
     }
@@ -394,6 +398,9 @@ pub(super) fn unsupported_wd_definition(proof: &ObjWellDefinedProofByDef) -> Lea
         ObjWellDefinedProofByDef::ProductShape(_) => {
             LeanCompileError::unsupported("WD/ProductShape")
         }
+        ObjWellDefinedProofByDef::FunctionSpace(
+            FunctionSpaceObjWellDefinedProofByDef::Composition(_),
+        ) => LeanCompileError::unsupported("WD/FunctionSpace/Composition"),
         ObjWellDefinedProofByDef::FunctionSpace(_) => {
             LeanCompileError::unsupported("WD/FunctionSpace")
         }
@@ -904,6 +911,10 @@ pub(super) fn instantiated_object_matches(
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)),
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(b)),
         ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(b)),
+        ) => instantiated_object_matches(&a.arg, &b.arg, substitution),
         _ => expected.ir() == actual.ir(),
     }
 }
@@ -1032,7 +1043,7 @@ pub(super) fn conjunction_proposition(
         return Err(LeanCompileError::unsupported("Compound/EmptyConjunction"));
     };
     for left in propositions {
-        proposition = format!("({left} ∧ {proposition})");
+        proposition = format!("(({left}) ∧ ({proposition}))");
     }
     Ok(proposition)
 }

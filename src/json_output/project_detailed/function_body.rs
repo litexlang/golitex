@@ -326,6 +326,23 @@ pub(super) fn project_parent_checked_function_body(
                 ),
             ],
         ),
+        ParentCheckedBetaFunctionBody::Composition {
+            composition,
+            function_equal,
+        } => object_for(
+            runtime,
+            vec![
+                ("type", string("composition_application")),
+                (
+                    "composition",
+                    string(Obj::from(composition.clone()).readable_string()),
+                ),
+                (
+                    "function_equal",
+                    project_known_equality_path(function_equal, runtime),
+                ),
+            ],
+        ),
         ParentCheckedBetaFunctionBody::AnonymousLiteral => {
             object_for(runtime, vec![("type", string("anonymous_literal"))])
         }
@@ -420,6 +437,32 @@ pub(super) fn project_function_body_normalization(
                         .expansions
                         .iter()
                         .map(|step| match step {
+                            FunctionBodyExpansionProof::Composition(step) => object_for(
+                                runtime,
+                                vec![
+                                    ("type", string("composition_beta")),
+                                    ("application", string(step.application.readable_string())),
+                                    (
+                                        "application_well_defined",
+                                        project_obj_wd_proof(
+                                            &step.application_well_defined,
+                                            runtime,
+                                        ),
+                                    ),
+                                    (
+                                        "function_equal",
+                                        project_known_equality_path(&step.function_equal, runtime),
+                                    ),
+                                    (
+                                        "expanded_body",
+                                        string(step.expanded_body.readable_string()),
+                                    ),
+                                    (
+                                        "continued_body",
+                                        string(step.continued_body.readable_string()),
+                                    ),
+                                ],
+                            ),
                             FunctionBodyExpansionProof::FiniteCoordinate(step) => object_for(
                                 runtime,
                                 vec![

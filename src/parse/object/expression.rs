@@ -119,7 +119,7 @@ fn parse_mul_div_mod(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 }
 
 fn parse_closed_range(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    let left = parse_unary(rt, tb)?;
+    let left = parse_compose(rt, tb)?;
     if tb.peek() == Some(DOT_DOT_DOT) {
         tb.advance()?;
         let right = parse_add_sub(rt, tb)?;
@@ -129,6 +129,18 @@ fn parse_closed_range(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Ob
         })))
     } else {
         Ok(left)
+    }
+}
+
+// Composition is right associative; old operators keep their relative precedence.
+fn parse_compose(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+    let outer = parse_unary(rt, tb)?;
+    if tb.peek() == Some(crate::parse::keywords::UNICODE_COMPOSE) {
+        tb.advance()?;
+        let inner = parse_compose(rt, tb)?;
+        Ok(crate::ast::obj::Composition::new(outer, inner).into())
+    } else {
+        Ok(outer)
     }
 }
 

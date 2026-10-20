@@ -222,38 +222,31 @@ impl LitexToLeanCompiler {
                         "Power membership changes its operand or integer carrier.",
                     ));
                 }
-                let ha_c = self.compile_structural(base, position)?;
-                let he_z = self.compile_structural(exponent, position)?;
-                match proof.set {
-                    StandardSet::N | StandardSet::Z => {
-                        let suffix = if proof.set == StandardSet::N {
-                            "N"
-                        } else {
-                            "Z"
-                        };
-                        Ok(format!(
-                            "(Litex.powStructuralIn{suffix} {} {ha_c} {he_z})",
-                            self.compile_object_reference(&proof.element, position)?
+                let base_proof = self.compile_structural(base, position)?;
+                let exponent_proof = self.compile_structural(exponent, position)?;
+                let (suffix, exponent_argument) = match proof.set {
+                    StandardSet::N => ("N", " _recorded_power_exponent"),
+                    StandardSet::Z => ("Z", " _recorded_power_exponent"),
+                    StandardSet::C => ("C", " _recorded_power_exponent"),
+                    StandardSet::R => ("R", ""),
+                    StandardSet::Q => ("Q", ""),
+                    _ => {
+                        return Err(LeanCompileError::unsupported(
+                            "StructuralMembership/PowCarrier",
                         ))
                     }
-                    StandardSet::C => Ok(format!(
-                        "(Litex.powStructuralInC {} {ha_c} {he_z})",
-                        self.compile_object_reference(&proof.element, position)?
-                    )),
-                    StandardSet::R | StandardSet::Q => {
-                        let suffix = if proof.set == StandardSet::Q {
-                            "Q"
-                        } else {
-                            "R"
-                        };
-                        // Replay the actual integer-child certificate even though the
-                        // owned power WD already proves exponent identification.
-                        Ok(format!("(by\n  have _recorded_exp : Litex.In {} (Litex.Z (M := M)) := {he_z}\n  exact Litex.powStructuralIn{suffix} {} {ha_c}\n)", self.compile_object_reference(&power.exponent, position)?, self.compile_object_reference(&proof.element, position)?))
-                    }
-                    _ => Err(LeanCompileError::unsupported(
-                        "StructuralMembership/PowCarrier",
-                    )),
-                }
+                };
+                let term = self.compile_object_reference(&proof.element, position)?;
+                // Finish each original proof independently before comparing its
+                // type with the owned endpoint. Nested tactic-built objects can
+                // otherwise still contain delayed elaboration metavariables.
+                // R/Q still replay the integer child although their law only
+                // needs the base child and the parent's certified power domain.
+                Ok(format!(
+                    "(by\n  let _litex_power := {term}\n  have _elaborated_power_base := {base_proof}\n  have _elaborated_power_exponent := {exponent_proof}\n  have _recorded_power_base : Litex.In _litex_power.val.base {} := _elaborated_power_base\n  have _recorded_power_exponent : Litex.In _litex_power.val.exponent {} := _elaborated_power_exponent\n  exact Litex.powStructuralIn{suffix} _litex_power _recorded_power_base{exponent_argument}\n)",
+                    standard_term(&proof.set)?,
+                    standard_term(&expected_exponent)?,
+                ))
             }
             StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Abs) => {
                 if proof.set != StandardSet::R
@@ -266,6 +259,15 @@ impl LitexToLeanCompiler {
                 }
                 let term = self.compile_object_reference(&proof.element, position)?;
                 Ok(format!("(by\n  let _litex_abs := {term}\n  exact Litex.absInR _litex_abs.val.arg _litex_abs.wd\n)"))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::Sqrt) => {
+                if proof.set != StandardSet::R
+                    || !matches!(&proof.element, Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)))
+                {
+                    return Err(LeanCompileError::new("StructuralMembership/IntrinsicSqrtSubject", "The intrinsic square-root codomain requires its original Sqrt object and R target."));
+                }
+                let term = self.compile_object_reference(&proof.element, position)?;
+                Ok(format!("(by\n  let _litex_sqrt := {term}\n  exact Litex.sqrtInR _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2\n)"))
             }
             StructuralMembershipReason::Intrinsic(_) => Err(LeanCompileError::unsupported(
                 "StructuralMembership/Intrinsic",

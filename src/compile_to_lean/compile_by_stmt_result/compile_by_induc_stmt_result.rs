@@ -397,7 +397,7 @@ fn induction_conjunction(mut parts: Vec<String>) -> Result<String, LeanCompileEr
         .pop()
         .ok_or_else(|| LeanCompileError::unsupported("Induction/EmptyGoals"))?;
     while let Some(left) = parts.pop() {
-        result = format!("({left} ∧ {result})");
+        result = format!("(({left}) ∧ ({result}))");
     }
     Ok(result)
 }

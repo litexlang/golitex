@@ -1939,6 +1939,15 @@ pub(super) fn project_atomic_builtin_rule(
             ("rule", string("FiniteSetMinMember")),
             ("set_equal", super::searched::project_equal_searched(&p.set_equal, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::CompositionInFunctionSet(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("CompositionInFunctionSet")),
+            ("callable", super::composition::callable(&p.callable, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::CompositionApplicationInCodomain(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("CompositionApplicationInCodomain")),
+            ("callable", super::composition::callable(&p.callable, runtime)),
+            ("return_set", string(p.return_set.readable_string())),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(_)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("family", string("InFact")),
             ("rule", string("AnonymousFnInDeclaredFnSet")),
@@ -2278,6 +2287,10 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::CompositionRangeSubset(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("CompositionRangeSubset")),
+            ("callable", super::composition::callable(&p.callable, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(p)) => {
             object_for(runtime, vec![
                 ("type", string("builtin_rule")),

@@ -343,6 +343,7 @@ pub enum EqualitySearchProofByBuiltinRule {
     UnionOverIntersectDistributive(UnionOverIntersectDistributiveBuiltinRuleProof),
     SetMinusChainToUnion(SetMinusChainToUnionBuiltinRuleProof),
     FnRangeOfConstantAnonymousFn(FnRangeOfConstantAnonymousFnBuiltinRuleProof),
+    Composition(super::by_composition::CompositionEqualityProof),
     FnRangeOfEmptyDomain(super::by_function_domain_image::FnRangeOfEmptyDomainBuiltinRuleProof),
     EmptyFunctionGraph(super::by_empty_function_graph::EmptyFunctionGraphBuiltinRuleProof),
     EmptyDomainFunctionSpaceSingleton(

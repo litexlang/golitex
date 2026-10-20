@@ -1,4 +1,7 @@
 use crate::compile_to_lean::LitexToLeanCompiler;
+use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
+    ExistShapedFactSearchProofByBuiltinRule, ExistShapedFactSearchedProof,
+};
 use crate::prelude::*;
 
 const NAMED_CASES: &str = "thm geo_cases_plain_exist_probe:\n    ? forall geo_cases_seed R:\n        exist geo_cases_copy R st {geo_cases_copy = geo_cases_seed}\n    by cases:\n        ? exist geo_cases_copy R st {geo_cases_copy = geo_cases_seed}\n        case geo_cases_seed = 0:\n            witness exist geo_cases_copy R st {geo_cases_copy = geo_cases_seed} from geo_cases_seed\n        case geo_cases_seed != 0:\n            witness exist geo_cases_copy R st {geo_cases_copy = geo_cases_seed} from geo_cases_seed\n";
@@ -47,9 +50,37 @@ fn forall(run: &mut RunLitexCodeResult) -> &mut VerifyForallFactSuccess {
     proof
 }
 
+fn real_line_requirements(
+    verification: &mut VerifyFactResult,
+) -> (&mut Vec<Fact>, &mut Vec<VerifyFactResult>) {
+    let VerifyFactResult::ExistShapedFact(result) = verification else {
+        panic!("original existential conclusion")
+    };
+    let VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(proof)) =
+        result.as_mut()
+    else {
+        panic!("original successful plain-exist result")
+    };
+    let ExistShapedFactSearchedProof::ByBuiltinRule(
+        ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(proof),
+    ) = &mut proof.searched_proof
+    else {
+        panic!("actual selected real-line witness rule")
+    };
+    (
+        &mut proof.requirement_facts,
+        &mut proof.proof_of_requirement_facts,
+    )
+}
+
 #[test]
 fn geo_named_exist_conclusion_replays_original_cases_and_witnesses() {
-    let (run, compiler) = checked(NAMED_CASES);
+    let (mut run, compiler) = checked(NAMED_CASES);
+    let ExecDefThmBodyProof::Forall(body) = &mut named(&mut run).body else {
+        panic!("original named forall body")
+    };
+    let (requirements, children) = real_line_requirements(&mut body.conclusion_proofs[0]);
+    assert_eq!((requirements.len(), children.len()), (1, 1));
     let lean = compiler
         .compile_run(&run, "named_exist_cases")
         .expect("plain exist conclusion");
@@ -71,6 +102,10 @@ fn geo_forall_exist_conclusions_replay_original_ordered_verifications_and_stores
     let lean = compiler
         .compile_run(&run, "forall_exist_ordered")
         .expect("plain exist conclusions");
+    // The first existential must close before the next conjunction component;
+    // otherwise Lean reads `exists x, P x ∧ exists y, Q y` instead of the two
+    // source conclusions proved by the original And.intro.
+    assert!(lean.contains(") ∧ (∃"));
     for id in ids {
         assert!(lean.contains(&format!("have h_{} :", id.value())));
     }
@@ -150,5 +185,67 @@ fn geo_forall_exist_conclusion_rejects_reordered_original_stores() {
             .unwrap_err()
             .route,
         "Store/Subject"
+    );
+}
+
+#[test]
+fn geo_exist_real_equality_rejects_missing_original_requirement() {
+    let (mut run, compiler) = checked(FORALL);
+    real_line_requirements(&mut forall(&mut run).proved_then_facts[0].verify_result)
+        .0
+        .clear();
+    assert_eq!(
+        compiler
+            .compile_run(&run, "missing_real_requirement")
+            .unwrap_err()
+            .route,
+        "Exist/RealLineEqualityRequirements"
+    );
+}
+
+#[test]
+fn geo_exist_real_equality_rejects_missing_original_child() {
+    let (mut run, compiler) = checked(FORALL);
+    real_line_requirements(&mut forall(&mut run).proved_then_facts[0].verify_result)
+        .1
+        .clear();
+    assert_eq!(
+        compiler
+            .compile_run(&run, "missing_real_child")
+            .unwrap_err()
+            .route,
+        "Exist/RealLineEqualityRequirements"
+    );
+}
+
+#[test]
+fn geo_exist_real_equality_rejects_another_original_requirement() {
+    let (mut run, compiler) = checked(FORALL);
+    let (first, rest) = forall(&mut run).proved_then_facts.split_at_mut(1);
+    let first = real_line_requirements(&mut first[0].verify_result).0;
+    let second = real_line_requirements(&mut rest[0].verify_result).0;
+    std::mem::swap(first, second);
+    assert_eq!(
+        compiler
+            .compile_run(&run, "wrong_real_requirement")
+            .unwrap_err()
+            .route,
+        "Exist/RealLineEqualityMembership"
+    );
+}
+
+#[test]
+fn geo_exist_real_equality_rejects_another_successful_child() {
+    let (mut run, compiler) = checked(FORALL);
+    let (first, rest) = forall(&mut run).proved_then_facts.split_at_mut(1);
+    let first = real_line_requirements(&mut first[0].verify_result).1;
+    let second = real_line_requirements(&mut rest[0].verify_result).1;
+    std::mem::swap(first, second);
+    assert_eq!(
+        compiler
+            .compile_run(&run, "wrong_real_child")
+            .unwrap_err()
+            .route,
+        "Exist/RealLineEqualityChild"
     );
 }

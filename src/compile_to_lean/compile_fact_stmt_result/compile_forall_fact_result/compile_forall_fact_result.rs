@@ -225,7 +225,7 @@ impl LitexToLeanCompiler {
         };
         let mut conclusion = propositions.pop().expect("validated nonempty conclusions");
         while let Some(left) = propositions.pop() {
-            conclusion = format!("({left} ∧ {conclusion})");
+            conclusion = format!("(({left}) ∧ ({conclusion}))");
         }
         let conclusion = self.scope_proposition(conclusion, &definitions);
         let proposition = if binders.is_empty() {
@@ -500,7 +500,7 @@ impl LitexToLeanCompiler {
         }
         let mut conclusion = conclusions.pop().expect("nonempty conclusions");
         while let Some(left) = conclusions.pop() {
-            conclusion.0 = format!("({} ∧ {})", left.0, conclusion.0);
+            conclusion.0 = format!("(({}) ∧ ({}))", left.0, conclusion.0);
             conclusion.1 = format!("(And.intro {} {})", left.1, conclusion.1);
         }
         let closed_proposition = self.scope_proposition(conclusion.0, &definitions);

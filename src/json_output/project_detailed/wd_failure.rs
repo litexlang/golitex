@@ -672,6 +672,9 @@ fn project_fail_to_verify_function_space_obj_well_defined_result(
             None,
             project_leaf_fail_to_verify_anonymous_fn_obj_well_defined(p, rt),
         ),
+        FailToVerifyFunctionSpaceObjWellDefinedResult::Composition(p) => {
+            node(rt, "Composition", None, super::composition::failure(p, rt))
+        }
         FailToVerifyFunctionSpaceObjWellDefinedResult::Preimage(p) => node(
             rt,
             "Preimage",

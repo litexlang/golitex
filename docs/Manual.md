@@ -6075,6 +6075,49 @@ fn(x R: x != 0) R {1 / x}(2) = 1 / 2
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
 
+### Preview Function composition
+
+`compose(f,g)` and `f ∘ g` construct the same native function: apply `g` first,
+then `f`. The outer function must be unary; the inner function may have any
+fixed positive number of arguments, including different carriers and guards.
+The complete inner domain is preserved. Construction checks `f(g(args))` for
+every legal inner input, using the existing anonymous-function WD pipeline.
+It does not silently restrict that domain to satisfy an outer guard.
+
+```litex
+have fn square(t R) R = t^2
+have fn gap(x,y R: x<y) R = y-x
+have h fn(x,y R: x<y) R = square ∘ gap
+h(1,3)=4
+compose(square,gap)(1,3)=4
+```
+
+Here `h(3,1)` rejects because `gap` requires `x<y`. Likewise, a reciprocal on
+nonzero reals cannot be composed with the identity on all reals. An abstract
+inner function can be used after proving a universal fact that its outputs
+satisfy the outer conditions. Missing compatibility evidence is a proof miss,
+not permission to weaken the domain.
+
+Native rules cover the defining lambda, associativity **when both sides are
+well-defined**, left identity, right identity on the same complete domain,
+congruence and `fn_range(f ∘ g) $subset fn_range(f)`. Calls, complete function
+membership, extensionality and preimage constructors consume the new object.
+Existing bounded search still applies: expose intermediate equations or a
+function-space membership when a nested consumer needs them.
+
+The infix operator is right associative. Application, powers and unary minus
+bind more tightly; ranges, multiplication and addition bind less tightly.
+Write `(f ∘ g)(x)` to apply the composition. Canonical text uses `compose(f,g)`;
+LaTeX output uses `\circ` with parentheses preserving the expression tree.
+`compose` is now reserved. Rename user-defined functions or fields with that
+name, for example to `compose_on_R` or `compose_morphism`.
+
+Lean replay for this native object is currently unsupported and fails
+explicitly at `WD/FunctionSpace/Composition`. Restriction continues to use
+ordinary anonymous functions; no new restriction syntax is introduced.
+See the [strict tracer](../examples/wd/function_composition.lit) and
+[composition implementation](../src/execute/execute_fact_stmt/function_composition.rs).
+
 ### O81. Function images
 
 **Public form:** `fn_range(f)`.

@@ -74,6 +74,8 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Finite aggregate scalar carrier", "Checked summands or factors close the declared scalar carrier; empty sums include zero");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_en(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Anonymous function return carrier", "A checked direct application inhabits its declared static scalar codomain"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_en(),
@@ -170,6 +172,8 @@ impl InFactSearchProofByBuiltinRule {
                     message: message.into(),
                 }
             }
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_zh(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text(
                 "匿名函数的返回载体",
@@ -267,6 +271,8 @@ impl InFactSearchProofByBuiltinRule {
                     message: message.into(),
                 }
             }
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_zh_hant(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text(
                 "匿名函數返回載體",
@@ -328,6 +334,8 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Ensemble porteur scalaire d'agrégat fini", "Les termes ou facteurs vérifiés ferment l'ensemble porteur scalaire déclaré ; les sommes vides incluent zéro");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_fr(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Ensemble porteur du retour de fonction anonyme", "Une application directe vérifiée appartient à son codomaine scalaire statique déclaré"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_fr(),
@@ -386,6 +394,8 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Скалярный носитель конечного агрегата", "Проверенные слагаемые или множители сохраняют объявленный скалярный носитель; пустые суммы включают ноль");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ru(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Носитель возврата анонимной функции", "Проверенное прямое применение принадлежит объявленной статической скалярной области значений"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_ru(),
@@ -444,6 +454,8 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Portador escalar de agregado finito", "Los sumandos o factores comprobados mantienen cerrado el portador escalar declarado; las sumas vacías incluyen cero");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_es(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Portador de retorno de función anónima", "Una aplicación directa comprobada pertenece a su codominio escalar estático declarado"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_es(),
@@ -502,6 +514,8 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("مجموعة حاملة قياسية لتجميع منتهٍ", "الحدود أو العوامل المتحقق منها تحفظ المجموعة الحاملة القياسية المعلنة؛ والمجاميع الخالية تتضمن صفرًا");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ar(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("مجموعة حاملة لإرجاع دالة مجهولة", "تطبيق مباشر متحقق منه ينتمي إلى مجاله المقابل القياسي الساكن المعلن"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_ar(),
@@ -575,6 +589,8 @@ impl InFactSearchProofByBuiltinRule {
                     message: message.into(),
                 }
             }
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ja(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text(
                 "無名関数の戻り値の台集合",
@@ -636,6 +652,8 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("유한 집계 스칼라 바탕 집합", "검사된 항 또는 인자는 선언된 스칼라 바탕 집합을 유지하며 빈 합은 0을 포함합니다");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_ko(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("익명 함수 반환 바탕 집합", "검사된 직접 적용은 선언된 정적 스칼라 공역에 속합니다"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_ko(),
@@ -694,6 +712,8 @@ impl InFactSearchProofByBuiltinRule {
                 let (name, message) = ("Tập nền vô hướng tổng hợp hữu hạn", "Các số hạng hoặc thừa số đã kiểm tra giữ tập nền vô hướng đã khai báo đóng; tổng rỗng gồm không");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
+            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
+            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_vi(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Tập nền trả về của hàm ẩn danh", "Áp dụng trực tiếp đã kiểm tra thuộc đối miền vô hướng tĩnh đã khai báo"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_vi(),
@@ -763,6 +783,7 @@ impl InFactSearchProofByBuiltinRule {
             Self::PositiveIntegerInNPos(_) => None,
             Self::AggregateScalarCodomain(_) => None,
             Self::FoldScalarCodomain(_) => None,
+            Self::CompositionInFunctionSet(_) | Self::CompositionApplicationInCodomain(_) => None,
             Self::AnonymousFnInDeclaredFnSet(_) => None,
             Self::AnonymousFnApplicationScalarCodomain(_) => None,
             Self::StandardSetSubsetMembership(_) => None,

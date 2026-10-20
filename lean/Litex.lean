@@ -1,5 +1,6 @@
 import Mathlib.Data.Complex.Basic
 import Mathlib.Algebra.Order.Archimedean.Real.Basic
+import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.FinCases
 import Mathlib.SetTheory.ZFC.Ordinal
@@ -1146,6 +1147,75 @@ theorem absOfNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
   exact (NativeBridge.denoteAbs a haR _ (NativeBridge.asReal_spec a haR)).trans
     ((congrArg (fun r : ℝ => M.number (r : ℂ)) (abs_of_nonneg h)).trans
       (NativeBridge.asReal_spec a haR).symm)
+
+/-- Principal real square root. Its total raw denotation is independent of WD;
+the owned constructor below requires a real, nonnegative argument. -/
+noncomputable def sqrtValue {M : Semantics.{u}} (x : M.Value) : M.Value := by
+  classical
+  exact if h : ∃ r : ℝ, x = M.number (r : ℂ) then
+    M.number ((Real.sqrt (Classical.choose h) : ℝ) : ℂ) else M.number 0
+
+theorem sqrtValue_number {M : Semantics.{u}} (r : ℝ) :
+    sqrtValue (M.number (r : ℂ)) = M.number ((Real.sqrt r : ℝ) : ℂ) := by
+  classical
+  have h : ∃ s : ℝ, M.number (r : ℂ) = M.number (s : ℂ) := ⟨r, rfl⟩
+  have hr : Classical.choose h = r :=
+    (Complex.ofReal_injective (M.number_injective (Classical.choose_spec h))).symm
+  unfold sqrtValue
+  rw [dif_pos h, hr]
+
+structure SqrtObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  arg : Obj (M := M) α
+
+noncomputable instance sqrtRepresentation {M : Semantics.{u}} {α : Type v}
+    [Representation M α] : Representation M (SqrtObj (M := M) α) where
+  wd a := In a.arg R ∧ Le (number 0) a.arg
+  denote a := sqrtValue (denote a.arg)
+  wd_isSet {a} ha := by
+    obtain ⟨r, hr⟩ := (M.real_members (denote a.arg)).mp ha.1
+    exact M.member_isSet ((M.real_members _).mpr ⟨Real.sqrt r, by
+      rw [hr, sqrtValue_number]⟩)
+
+noncomputable def sqrt {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) :
+    Obj (M := M) (SqrtObj (M := M) α) := ⟨⟨a⟩, haR, ha0⟩
+
+namespace NativeBridge
+
+theorem denoteSqrt {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) (r : ℝ)
+    (hr : denote a = M.number (r : ℂ)) :
+    denote (sqrt a haR ha0) = M.number ((Real.sqrt r : ℝ) : ℂ) := by
+  change sqrtValue (denote a) = _
+  rw [hr, sqrtValue_number]
+
+end NativeBridge
+
+theorem sqrtInR {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) :
+    In (sqrt a haR ha0) R :=
+  (M.real_members _).mpr ⟨Real.sqrt (NativeBridge.asReal a haR),
+    NativeBridge.denoteSqrt a haR ha0 _ (NativeBridge.asReal_spec a haR)⟩
+
+theorem sqrtInC {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) :
+    In (sqrt a haR ha0) C := realToComplex _ (sqrtInR a haR ha0)
+
+theorem sqrtNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) :
+    Le (number 0) (sqrt a haR ha0) :=
+  NativeBridge.leOfDenoteReal _ _ 0 (Real.sqrt (NativeBridge.asReal a haR)) rfl
+    (NativeBridge.denoteSqrt a haR ha0 _ (NativeBridge.asReal_spec a haR))
+    (Real.sqrt_nonneg _)
+
+theorem sqrtSquareValue {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haR : In a R) (ha0 : Le (number 0) a) :
+    M.powValue (denote (sqrt a haR ha0)) (M.number ((2 : ℕ) : ℂ)) = denote a := by
+  let r := NativeBridge.asReal a haR
+  have hr : denote a = M.number (r : ℂ) := NativeBridge.asReal_spec a haR
+  have h0 : 0 ≤ r := (NativeBridge.le_iff_ofDenoteReal (number 0) a 0 r rfl hr).mp ha0
+  rw [NativeBridge.denoteSqrt a haR ha0 r hr, M.pow_numbers_nat, ← Complex.ofReal_pow,
+    Real.sq_sqrt h0, ← hr]
 
 theorem addCancelRightRight {M : Semantics.{u}}
     {α : Type v} {β : Type w} {γ : Type x}
@@ -3028,6 +3098,22 @@ def callOn {M : Semantics.{u}} [FunctionSemantics M]
     (signature : FunctionSignature M) (f : Obj (M := M) α) (a : Obj (M := M) β)
     (hf : In f (fnSet signature)) (ha : M.mem (denote a) signature.domain) :
     Obj (M := M) (CallOnObj (M := M) α β) := ⟨⟨signature, f, a⟩, hf, ha⟩
+
+/-- Use the original base-domain and guard proofs for the same guarded call. -/
+def callOnDomain {M : Semantics.{u}} [FunctionSemantics M]
+    {δ : Type v} {ε : Type w} {α : Type x} {β : Type t}
+    [Representation M δ] [Representation M ε]
+    [Representation M α] [Representation M β]
+    (D : Obj (M := M) δ) (O : Obj (M := M) ε)
+    (guard : M.Value → Prop) (f : Obj (M := M) α) (a : Obj (M := M) β)
+    (hf : In f (fnSet (FunctionSignature.withGuard
+      (denote D) (denote O) (isSet D) (isSet O) guard)))
+    (ha : In a D) (hg : guard (denote a)) :
+    Obj (M := M) (CallOnObj (M := M) α β) :=
+  callOn (FunctionSignature.withGuard
+    (denote D) (denote O) (isSet D) (isSet O) guard) f a hf
+    ((FunctionSignature.withGuard_domain
+      (denote D) (denote O) (isSet D) (isSet O) guard (denote a)).mpr ⟨ha, hg⟩)
 
 theorem callOnInOutput {M : Semantics.{u}} [FunctionSemantics M]
     {α : Type v} {β : Type w} [Representation M α] [Representation M β]

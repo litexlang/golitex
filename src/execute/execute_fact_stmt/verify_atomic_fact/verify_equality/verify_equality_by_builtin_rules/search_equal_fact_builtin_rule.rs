@@ -14,6 +14,9 @@ impl Runtime {
         if let Some(proof) = super::by_elementary_definitions::elementary_definition(fact) {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.search_composition_equality(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::Composition(proof)));
+        }
         if let Some(proof) = self.search_fn_range_of_empty_domain(fact, verify_state)? {
             return Ok(Some(
                 EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(proof),

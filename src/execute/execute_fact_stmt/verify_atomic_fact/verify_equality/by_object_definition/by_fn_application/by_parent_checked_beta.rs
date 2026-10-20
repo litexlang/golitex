@@ -68,6 +68,10 @@ pub enum ParentCheckedBetaFunctionBody {
         function: AnonymousFn,
         domain: TemplateApplicationDomainProof,
     },
+    Composition {
+        composition: Composition,
+        function_equal: KnownEqualityPathProof,
+    },
     AnonymousLiteral,
     KnownAnonymousFunction {
         function: AnonymousFn,
@@ -194,6 +198,41 @@ impl Runtime {
         let Obj::FnObj(app) = side else {
             return Ok(None);
         };
+        if let Some(args) = app.body.first() {
+            let head = match app.head.as_ref() {
+                FnObjHead::Object(obj) => obj.as_ref().clone(),
+                FnObjHead::Identifier(name) => Obj::Identifier(name.clone()),
+                FnObjHead::FieldAccess(field) => Obj::StructAndFieldAccessObj(
+                    StructAndFieldAccessObj::FieldAccess(field.clone()),
+                ),
+                FnObjHead::InstantiatedTemplateObj(instance) => {
+                    Obj::InstantiatedTemplateObj(instance.clone())
+                }
+                FnObjHead::AnonymousFnLiteral(function) => {
+                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.as_ref().clone()))
+                }
+            };
+            for (candidate, path) in self.composition_source_values(&head) {
+                let Obj::FunctionSpace(FunctionSpace::Composition(composition)) = candidate else {
+                    continue;
+                };
+                let inner = function_application(&composition.inner, args.clone())
+                    .map_err(RuntimeError::InternalBug)?;
+                let mut expanded = function_application(&composition.outer, vec![Box::new(inner)])
+                    .map_err(RuntimeError::InternalBug)?;
+                for arguments in app.body.iter().skip(1) {
+                    expanded = function_application(&expanded, arguments.clone())
+                        .map_err(RuntimeError::InternalBug)?;
+                }
+                return Ok(Some((
+                    ParentCheckedBetaFunctionBody::Composition {
+                        composition,
+                        function_equal: KnownEqualityPathProof::new(path),
+                    },
+                    expanded,
+                )));
+            }
+        }
         if let FnObjHead::FieldAccess(field) = app.head.as_ref() {
             let receiver =
                 Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field.clone()));
@@ -208,8 +247,9 @@ impl Runtime {
                     // cyclic) under the guise of structural beta reduction.
                     if !matches!(
                         &value,
-                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
-                            | Obj::Identifier(_)
+                        Obj::FunctionSpace(
+                            FunctionSpace::AnonymousFn(_) | FunctionSpace::Composition(_)
+                        ) | Obj::Identifier(_)
                             | Obj::InstantiatedTemplateObj(_)
                     ) {
                         return Ok(None);
@@ -485,6 +525,7 @@ fn checked_application_domain(proof: &ObjWellDefinedProof) -> Option<&FnSet> {
         return None;
     };
     match proof.domain_fn_set.as_ref()? {
+        FnObjDomainFnSetEvidence::Composition(source) => Some(&source.function.body),
         FnObjDomainFnSetEvidence::FiniteFunction(source) => Some(&source.signature),
         FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
         | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }
