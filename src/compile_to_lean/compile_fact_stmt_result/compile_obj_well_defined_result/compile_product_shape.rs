@@ -1,4 +1,4 @@
-use crate::compile_to_lean::helper::ensure_object;
+use crate::compile_to_lean::helper::{ensure_object, finite_vector_proof};
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ProductShapeObjWellDefinedProofByDef;
@@ -52,13 +52,9 @@ impl LitexToLeanCompiler {
             let name = format!("_productChild_{index}");
             definitions.push(format!("let {name} := {child}"));
             values.push(format!("Litex.denote {name}"));
-            sethood.push(format!("  · exact Litex.isSet {name}"));
+            sethood.push(format!("Litex.isSet {name}"));
         }
-        let h_sets = if arguments.is_empty() {
-            "(by intro i; exact Fin.elim0 i)".to_string()
-        } else {
-            format!("(by\n  intro i\n  fin_cases i\n{})", sethood.join("\n"))
-        };
+        let h_sets = finite_vector_proof(&sethood);
         let term = format!(
             "Litex.{constructor} (M := M) ![{}] {h_sets}",
             values.join(", ")

@@ -99,11 +99,13 @@ impl LitexToLeanCompiler {
         );
         let proofs = sets
             .iter()
-            .map(|set| format!("exact Litex.isSet {set}"))
-            .collect::<Vec<_>>()
-            .join("\n  · ");
-        Ok((format!("(Litex.FiniteFunction.cartValue (M := M) {values})"),
-            format!("(Litex.FiniteFunction.cart_isSet (M := M) {values} (by\n  intro i\n  fin_cases i\n  · {proofs}))")))
+            .map(|set| format!("Litex.isSet {set}"))
+            .collect::<Vec<_>>();
+        let proofs = finite_vector_proof(&proofs);
+        Ok((
+            format!("(Litex.FiniteFunction.cartValue (M := M) {values})"),
+            format!("(Litex.FiniteFunction.cart_isSet (M := M) {values} {proofs})"),
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_function_packed_values(

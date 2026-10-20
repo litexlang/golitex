@@ -448,22 +448,20 @@ impl LitexToLeanCompiler {
                 .join(", ");
             let set_wd = sets
                 .iter()
-                .map(|set| format!("exact Litex.isSet {set}"))
-                .collect::<Vec<_>>()
-                .join("\n  · ");
+                .map(|set| format!("Litex.isSet {set}"))
+                .collect::<Vec<_>>();
             let wd = arguments
                 .iter()
-                .map(|argument| format!("exact Litex.isSet {argument}"))
-                .collect::<Vec<_>>()
-                .join("\n  · ");
-            let membership = members
-                .iter()
-                .map(|member| format!("exact {member}"))
-                .collect::<Vec<_>>()
-                .join("\n  · ");
-            (format!("(Litex.cart (M := M) ![{set_values}] (by\n  intro i\n  fin_cases i\n  · {set_wd}))"),
-                format!("(Litex.tuple (M := M) ![{values}] (by\n  intro i\n  fin_cases i\n  · {wd}))"),
-                format!("(Litex.FiniteFunction.tuple_inCart (M := M) ![{values}] ![{set_values}] (by\n  intro i\n  fin_cases i\n  · {membership}))"))
+                .map(|argument| format!("Litex.isSet {argument}"))
+                .collect::<Vec<_>>();
+            let set_wd = finite_vector_proof(&set_wd);
+            let wd = finite_vector_proof(&wd);
+            let membership = finite_vector_proof(members);
+            (
+                format!("(Litex.cart (M := M) ![{set_values}] {set_wd})"),
+                format!("(Litex.tuple (M := M) ![{values}] {wd})"),
+                format!("(Litex.FiniteFunction.tuple_inCart (M := M) ![{values}] ![{set_values}] {membership})"),
+            )
         };
         let guard_proof = if signature.dom_facts.is_empty() {
             "True.intro".to_string()

@@ -6,6 +6,7 @@ mod compile_closed_calculation;
 mod compile_complex_arithmetic_closure;
 mod compile_known_atomic;
 mod compile_natural_predecessor;
+mod compile_nonnegative_builtin;
 mod compile_order;
 mod compile_order_complement;
 mod compile_positive_order_strategy;

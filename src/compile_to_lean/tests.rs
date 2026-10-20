@@ -26,6 +26,8 @@ mod finite_cart_coordinates_tests;
 mod fn_application_unfold_substitution_tests;
 #[path = "../../tests/unit/compile_to_lean/function_codomain_coordinates/tests.rs"]
 mod function_codomain_coordinates_tests;
+#[path = "../../tests/unit/compile_to_lean/inference_context_citations/tests.rs"]
+mod inference_context_citations_tests;
 #[path = "../../tests/unit/compile_to_lean/inference_publication_once/tests.rs"]
 mod inference_publication_once_tests;
 #[path = "../../tests/unit/compile_to_lean/local_arbitrary_have/tests.rs"]
@@ -36,6 +38,8 @@ mod mobius_nonzero_tests;
 mod named_call_wd_tests;
 #[path = "../../tests/unit/compile_to_lean/natural_function_wd/tests.rs"]
 mod natural_function_wd_tests;
+#[path = "../../tests/unit/compile_to_lean/nonnegative_builtin/tests.rs"]
+mod nonnegative_builtin_tests;
 #[path = "../../tests/unit/compile_to_lean/nonzero_difference/tests.rs"]
 mod nonzero_difference_tests;
 #[path = "../../tests/unit/compile_to_lean/numeric_carrier_closure/tests.rs"]
@@ -44,6 +48,8 @@ mod numeric_carrier_closure_tests;
 mod returned_cart_call_tests;
 #[path = "../../tests/unit/compile_to_lean/set_builder_function_bodies/tests.rs"]
 mod set_builder_function_bodies_tests;
+#[path = "../../tests/unit/compile_to_lean/sqrt/tests.rs"]
+mod sqrt_tests;
 #[path = "../../tests/unit/compile_to_lean/subset_numeric_membership/tests.rs"]
 mod subset_numeric_membership_tests;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
@@ -1557,7 +1563,8 @@ fn phase1_computed_alias_membership_consumes_the_actual_closed_endpoint() {
     let output = compile_run(&result, &compiler, "phase1_computed_alias")
         .expect("computed alias membership and arithmetic WD");
     assert!(output.contains("Litex.inOfSame"));
-    assert!(output.contains("Litex.sameRefl (Litex.add"));
+    assert!(output.contains("let _litex_same := (Litex.add"));
+    assert!(output.contains("exact Litex.sameRefl _litex_same"));
     assert!(!output.contains("NativeBridge.sameOfDenoteNumber"));
 }
 

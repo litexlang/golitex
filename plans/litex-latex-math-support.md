@@ -49,6 +49,8 @@ For each operation, require all of the following:
 
 Later the same day, the user removed native restriction from scope and requested a careful composition design including `f ∘ g`. The [composition design](litex-function-composition.md) proposes `compose(f,g) = f ∘ g`, with unary outer function, fixed positive-arity inner function, preserved inner guards and complete domain, and right-associative notation. The first delivery is now implemented: native Obj/syntax, strict WD, application consumers, core laws and checked examples. Later mapping/preimage laws remain pending; see the composition plan for exact validation and limits. Restrictions continue to use `fn(x S) B {f(x)}` or an explicitly guarded multi-argument anonymous function.
 
+2026-10-20: the user selected limits as the first calculus planning task. The [limits plan](litex-limits.md) proposes real sequence and finite-point real function limits first, then one-sided and infinite approaches, followed by finite limsup/liminf. It separates candidate relations, nontrivial approach, existence, uniqueness and selected values, and records public-semantic and AST decisions before implementation. This is a design proposal, not delivered native limit support.
+
 ## Delivery order
 
 1. Complete category 1 in the small vertical increments specified in [phase 1](litex-latex-phase-1.md). Each increment includes Obj, WD, laws, evidence, output and regression controls.

@@ -218,7 +218,12 @@ impl LitexToLeanCompiler {
                 usize::MAX,
             );
             let object = self.compile_object_reference(&source.element, &formed)?;
-            let strict = format!("h_{}", sign.derived[0].primary_fact_id().value());
+            let strict = if index > 0 {
+                self.cited_fact_reference(sign.derived[0].primary_fact_id(), &prior)?
+                    .1
+            } else {
+                String::new()
+            };
             let proof = match index {
                 0 => format!("(Litex.inRPos_positive {object} {})", member.1),
                 1 => format!("(Litex.ltToLe (Litex.number (M := M) 0) {object} {strict})"),
