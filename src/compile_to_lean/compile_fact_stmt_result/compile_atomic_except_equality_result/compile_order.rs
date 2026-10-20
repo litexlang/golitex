@@ -247,6 +247,10 @@ impl LitexToLeanCompiler {
                 LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(p) => {
                     self.compile_even_power_nonnegative(goal, &p.base_in_real_proof, position)
                 }
+                rule @ (LessEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(_)
+                | LessEqualFactSearchProofByBuiltinRule::ProductOfNonnegatives(_)) => {
+                    self.compile_nonnegative_builtin(goal, rule, position)
+                }
                 LessEqualFactSearchProofByBuiltinRule::SqrtNonnegative(p) => {
                     let (zero, value, strict) = source_order_oriented(goal)?;
                     let Obj::ExpLogOperator(ExpLogOperator::Sqrt(root)) = value else {

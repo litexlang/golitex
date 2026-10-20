@@ -5,6 +5,15 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistF
 use crate::prelude::*;
 use std::collections::HashMap;
 
+pub(super) fn finite_vector_proof(proofs: &[String]) -> String {
+    proofs
+        .iter()
+        .rev()
+        .fold("(fun i => Fin.elim0 i)".to_string(), |tail, proof| {
+            format!("(Fin.cases ({proof}) {tail})")
+        })
+}
+
 #[derive(Clone, Copy)]
 pub(super) enum BinaryArithmetic {
     Add,

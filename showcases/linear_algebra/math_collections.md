@@ -3,8 +3,8 @@
 The central question of these lectures is how a small collection of directions
 can describe an entire vector space. We begin with coordinate arithmetic,
 establish the structures in which that question makes sense, and then develop
-span, independence, and bases. The real plane connects the abstract definitions
-to examples throughout.
+span, independence, bases, finite combination algebra, and linear maps. The
+real plane connects the abstract definitions to examples throughout.
 
 ## Vectors, scalars, and operations
 
@@ -52,20 +52,17 @@ A finite linear combination pairs each vector with a scalar coefficient.
 The relation `is_partial_sum` describes successive
 partial sums, beginning with zero. `has_linear_combination_value` identifies
 the final sum, and `is_linear_combination` allows the coefficients to vary.
-These relations distinguish a prescribed coefficient list from the question
-of whether a vector can be expressed using given directions.
+The selected function `linear_combination` exists for every finite length.
 
-The definitions apply to an arbitrary finite length. The notes construct the
-two-term partial sums and prove that their value is the usual sum of two
-scalar multiples. A general summation function would additionally require
-existence and uniqueness for arbitrary finite length.
+Coefficient lists support pointwise `add_coefficients`, `neg_coefficients`,
+and `smul_coefficients`. The corresponding selected-value identities show that
+span is closed under addition and scalar multiplication, and contains zero;
+hence every finite span is a subspace.
 
 `span` is a set-valued template: it selects precisely the vectors satisfying
 `is_linear_combination` for a given list. The predicate `spans` says that this
-set is the entire ambient space. A separate structure for span would obscure
-its role as an ordinary subset on which membership and equality are used.
-The standard directions span the plane because a vector's own coordinates
-provide suitable coefficients.
+set is the entire ambient space. The standard directions span the plane because
+a vector's own coordinates provide suitable coefficients.
 
 ## Independence, bases, and dimension
 
@@ -82,5 +79,12 @@ independence makes them unique. The notes prove the standard expansion and
 `has_basis_length(..., n)` expresses the existence of a basis with length `n`.
 The plane has such a basis with length two. Defining a general dimension
 requires the further theorems that finite-dimensional spaces have bases and
-that any two bases have equal length. The present notes conclude with this
-motivation; they do not yet define a general `dimension`.
+that any two bases have equal length.
+
+## Linear maps
+
+`is_linear_map` is a relation on an ordinary function between two vector spaces
+over the same field. Kernels and ranges reuse the builtin sets
+`preimage(T, zero)` and `fn_range(T)`. Composition is the template
+`map_compose`. The projection onto the horizontal axis is the running example:
+its kernel is the vertical axis and its range is the horizontal axis.

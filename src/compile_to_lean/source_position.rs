@@ -189,8 +189,9 @@ impl<'a> SourcePosition<'a> {
         parameters
     }
 
-    pub fn context_arguments(&self) -> String {
-        self.context_parameters()
+    pub fn context_application(&self, name: &str) -> String {
+        let arguments = self
+            .context_parameters()
             .iter()
             .flat_map(|(p, _, fact_id)| {
                 let id = p.id.value();
@@ -201,8 +202,8 @@ impl<'a> SourcePosition<'a> {
                     format!("h_{}", fact_id.value()),
                 ]
             })
-            .collect::<Vec<_>>()
-            .join(" ")
+            .collect::<Vec<_>>();
+        application(name, &arguments)
     }
 
     pub fn is_local(&self) -> bool {
@@ -6337,8 +6338,22 @@ fn atomic_search_stages(
     proof: &VerifyAtomicExceptEqualityFactSuccess,
 ) -> Vec<AtomicSearchStage<'_>> {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::{InFactSearchProofByBuiltinRule, PowerSetMembershipSubsetProof};
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule;
     let mut stages = Vec::new();
     match &proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
+        ) => match rule {
+            LessEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(proof) => {
+                stages.push(AtomicSearchStage::Verify(&proof.left_nonnegative_proof));
+                stages.push(AtomicSearchStage::Verify(&proof.right_nonnegative_proof));
+            }
+            LessEqualFactSearchProofByBuiltinRule::ProductOfNonnegatives(proof) => {
+                stages.push(AtomicSearchStage::Verify(&proof.left_nonnegative_proof));
+                stages.push(AtomicSearchStage::Verify(&proof.right_nonnegative_proof));
+            }
+            _ => {}
+        },
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
             AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule),
         ) => match rule {
@@ -6877,14 +6892,7 @@ fn inference_fact_reference(position: &SourcePosition<'_>, id: FactId) -> String
     if position.is_local() {
         name
     } else {
-        {
-            let arguments = position.context_arguments();
-            if arguments.is_empty() {
-                name
-            } else {
-                format!("({name} {arguments})")
-            }
-        }
+        position.context_application(&name)
     }
 }
 

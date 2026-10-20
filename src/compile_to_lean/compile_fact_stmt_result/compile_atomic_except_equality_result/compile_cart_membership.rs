@@ -126,18 +126,7 @@ impl LitexToLeanCompiler {
             let coordinate_prior = position.atomic_search_prior(3 + index)?;
             coordinates.push(self.compile_verify(proof, &coordinate_prior)?.1);
         }
-        let coordinate_proof = if coordinates.is_empty() {
-            "(by intro i; exact Fin.elim0 i)".into()
-        } else {
-            format!(
-                "(by\n  intro i\n  fin_cases i\n  · {})",
-                coordinates
-                    .iter()
-                    .map(|proof| format!("exact {proof}"))
-                    .collect::<Vec<_>>()
-                    .join("\n  · ")
-            )
-        };
+        let coordinate_proof = finite_vector_proof(&coordinates);
         let complete = position.atomic_search_prior(2 + proofs.len())?;
         let carrier = self.compile_object_reference(&definition.right, &complete)?;
         let target = self.compile_object_reference(&fact.set, &complete)?;

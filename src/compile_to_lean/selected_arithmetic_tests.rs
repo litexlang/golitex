@@ -440,7 +440,7 @@ fn intrinsic_abs_codomain_is_selected_by_its_actual_tag_and_original_wd() {
             .compile_run(&result, "intrinsic_wrong_codomain_tag")
             .unwrap_err()
             .route,
-        "StructuralMembership/Intrinsic"
+        "StructuralMembership/IntrinsicSqrtSubject"
     );
 }
 

@@ -1,0 +1,5 @@
+# Squaring the principal real square root recovers any positive real number.
+
+have x R+
+0 <= x
+(sqrt(x))^2 = x

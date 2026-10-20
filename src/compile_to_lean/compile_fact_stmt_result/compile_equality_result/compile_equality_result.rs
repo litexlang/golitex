@@ -80,7 +80,13 @@ impl LitexToLeanCompiler {
                     Some(left) => left,
                     None => self.compile_object_reference(&fact.left, position)?,
                 };
-                format!("(Litex.sameRefl {left})")
+                // Elaborate the original constructor before the outer equality
+                // constrains its denotation. In particular, normalized function
+                // bodies may expect a semantic-value Eq rather than an Obj type.
+                format!(
+                    "(by\n  let _litex_same := {}\n  exact Litex.sameRefl _litex_same\n)",
+                    left.replace('\n', "\n  ")
+                )
             }
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameFreeParamShape(
                 _,

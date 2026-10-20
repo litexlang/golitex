@@ -180,23 +180,7 @@ impl LitexToLeanCompiler {
         name: &str,
         position: &SourcePosition<'_>,
     ) -> String {
-        let arguments = position.context_arguments();
-        if arguments.is_empty() {
-            format!("({name} (M := M))")
-        } else {
-            let arguments = arguments.split_whitespace().collect::<Vec<_>>();
-            let arguments = arguments
-                .chunks_exact(4)
-                .map(|group| {
-                    format!(
-                        "({} := {}) ({} := {}) {} {}",
-                        group[0], group[0], group[1], group[1], group[2], group[3]
-                    )
-                })
-                .collect::<Vec<_>>()
-                .join(" ");
-            format!("({name} (M := M) {arguments})")
-        }
+        position.context_application(name)
     }
 
     /// Local producer names used inside constructor WD must also be in scope
