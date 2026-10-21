@@ -38,6 +38,9 @@ impl Obj {
                 s.push_str(LEFT_PAREN);
             }
             match o {
+                Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => {
+                    s.push_str(x.ir().as_str())
+                }
                 Obj::BoundOperator(BoundOperator::Supremum(x)) => s.push_str(x.ir().as_str()),
                 Obj::BoundOperator(BoundOperator::Infimum(x)) => s.push_str(x.ir().as_str()),
                 Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => {
@@ -1091,6 +1094,17 @@ impl FunctionLimit {
             ),
             None => format!("{}({})", self.approach.value_name(), self.function.ir()),
         })
+    }
+    impl_display_pair!();
+}
+
+impl DerivativeAt {
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(format!(
+            "derivative({}, {})",
+            self.function.ir(),
+            self.point.ir()
+        ))
     }
     impl_display_pair!();
 }

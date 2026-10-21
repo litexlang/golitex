@@ -44,6 +44,7 @@ pub(super) fn project_obj_wd_by_def(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p)) => super::function_derivative::object_wd(p,runtime),
         ObjWellDefinedProofByDef::BoundOperator(
             BoundOperatorObjWellDefinedProofByDef::Supremum(p),
         ) => object_for(

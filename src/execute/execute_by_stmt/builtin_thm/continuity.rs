@@ -536,7 +536,7 @@ fn prepare_sequence(
     Ok((req, out))
 }
 
-fn context(rt: &mut Runtime, function: &Obj) -> RuntimeResult<Option<(Vec<Fact>, Obj)>> {
+pub(super) fn context(rt: &mut Runtime, function: &Obj) -> RuntimeResult<Option<(Vec<Fact>, Obj)>> {
     let Some(proof) = rt.checked_real_function_limit_domain(
         function,
         VerifyState::new(VerifyStateLevel::BuiltinRule),

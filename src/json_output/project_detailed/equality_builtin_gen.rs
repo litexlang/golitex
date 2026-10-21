@@ -100,6 +100,20 @@ pub(super) fn project_equality_builtin_rule(
                 ),
             ],
         ),
+        EqualitySearchProofByBuiltinRule::DerivativeSelectedValue(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("builtin_rule")),
+                ("rule", string("DerivativeSelectedValue")),
+                (
+                    "premises",
+                    JsonValue::Array(vec![
+                        super::searched::project_known_premise(&p.candidate, runtime),
+                        super::searched::project_equal_searched(&p.value_equality, runtime),
+                    ]),
+                ),
+            ],
+        ),
         EqualitySearchProofByBuiltinRule::SequenceLimsup(p) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_sequence_limsup::SequenceLimsupEqualityProof as P;
             let premises = match p {

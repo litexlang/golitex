@@ -399,78 +399,127 @@ theorem h_10318 : ∀ {_Host_i14 : Type v14} [_rep_i14 : Litex.Representation M 
       (by
         let _atomic_wd_1_0 := _object_w58
         exact (fun _litex_equal => (Litex.subNonzeroOfNotSame (_atomic_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (_object_w57).wd.1 (_object_w57).wd.2.1 (_object_w57).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ)) (Litex.notSameOfSame (_object_w55).val.left (_atomic_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) h_10321 (show @Eq M.Value _ _ from Eq.refl _) h_10319)) ((_litex_equal).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))))))
-    have h_10323 : (Litex.Same (let _wd_1_0 := _object_w53;
-    (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
-      let _litex_return_call := _object_w53
-      exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_10319)) (let _wd_1_0 := (let _wd_2_0 := _object_w53;
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w55;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := _object_w53;
+    have h_10323 : (by
+      let _chain_wd_10323_0 := (let _wd_1_0 := _object_w53;
+      (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
+        let _litex_return_call := _object_w53
+        exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_10319))
+      let _chain_wd_10323_1 := (let _wd_1_0 := (let _wd_2_0 := _object_w53;
       let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-      (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (by
-        let _arithmetic := _atomic_wd_1_0
-        exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
-      let _arithmetic := _wd_1_1
-      exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_10320))) ∧ ((Litex.Same (let _wd_1_0 := (let _wd_2_0 := _object_w53;
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w55;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := _object_w53;
+      (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w55;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := _object_w53;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (by
+          let _arithmetic := _atomic_wd_1_0
+          exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+        let _arithmetic := _wd_1_1
+        exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_10320))
+      let _chain_wd_10323_2 := (let _wd_1_0 := (let _wd_2_0 := _object_w53;
       let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-      (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (by
-        let _arithmetic := _atomic_wd_1_0
-        exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
-      let _arithmetic := _wd_1_1
-      exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_10320)) (let _wd_1_0 := (let _wd_2_0 := _object_w57;
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w58;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := _object_w57;
+      (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w55;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := _object_w53;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (by
+          let _arithmetic := _atomic_wd_1_0
+          exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+        let _arithmetic := _wd_1_1
+        exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_10320))
+      let _chain_wd_10323_3 := (let _wd_1_0 := (let _wd_2_0 := _object_w57;
       let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-      (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_atomic_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ))) h_10322))) ∧ (Litex.Same (let _wd_1_0 := (let _wd_2_0 := _object_w57;
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w58;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := _object_w57;
+      (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w58;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := _object_w57;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_atomic_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ))) h_10322))
+      let _chain_wd_10323_4 := (let _wd_1_0 := (let _wd_2_0 := _object_w57;
       let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-      (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_atomic_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ))) h_10322)) _value_i14)) :=
-      (And.intro (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14))) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) from by
-        have _litex_residual : (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-        exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14))))).trans (by
-        let _litex_original := (let _wd_1_0 := _object_w53;
+      (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w58;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := _object_w57;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_atomic_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ))) h_10322))
+      exact (Litex.Same _chain_wd_10323_0 _chain_wd_10323_1) ∧ ((Litex.Same _chain_wd_10323_2 _chain_wd_10323_3) ∧ (Litex.Same _chain_wd_10323_4 _value_i14))) :=
+      (by
+        let _chain_wd_10323_0 := (let _wd_1_0 := _object_w53;
         (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
           let _litex_return_call := _object_w53
           exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_10319))
-        let _litex_literal := (let _wd_1_0 := (_object_i7 (M := M));
-        let _wd_1_1 := _object_w53;
-        (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) (by
-          let _litex_return_call := _object_w53
-          exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_10319))
-        have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_1039 (M := M)) (Litex.sameRefl _litex_original.val.argument)
-        have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
-        exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) from rfl))
-      ))).trans _litex_residual) (And.intro (congrArg₂ M.divValue (congrArg₂ M.addValue h_10321 (show @Eq M.Value _ _ from Eq.refl _)) (congrArg₂ M.subValue h_10321 (show @Eq M.Value _ _ from Eq.refl _))) (Litex.NativeBridge.sameOfDenoteNumber _ _ ((((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) + (1 : ℂ)) / (((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) - (2 : ℂ))) (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteDiv (let _wd_1_0 := _object_w57;
-      let _wd_1_1 := (Litex.number (M := M) (1 : ℂ));
-      (Litex.add _wd_1_0 _wd_1_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_1_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_1_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_1_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) _object_w58 (by
-        let _atomic_wd_1_0 := (let _wd_1_0 := _object_w57;
-        let _wd_1_1 := (Litex.number (M := M) (1 : ℂ));
-        (Litex.add _wd_1_0 _wd_1_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_1_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_1_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_1_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))))
-        exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_atomic_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_object_w58).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_object_w58).val.left).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ))) h_10322 _ _ (Litex.NativeBridge.denoteAdd _object_w57 (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_object_w58).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.denoteDiv (_object_w57).val.left (_object_w57).val.right (_object_w57).wd.1 (_object_w57).wd.2.1 (_object_w57).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.left).wd.1 ((_object_w57).val.left).wd.2 _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i14 (((_object_w57).val.left).val.left).wd.1 (((_object_w57).val.left).val.left).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.right).wd.1 ((_object_w57).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub (_object_w58).val.left (Litex.number (M := M) (2 : ℂ)) (_object_w58).wd.1 (_object_w58).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w57).val.left (_object_w57).val.right (_object_w57).wd.1 (_object_w57).wd.2.1 (_object_w57).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.left).wd.1 ((_object_w57).val.left).wd.2 _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i14 (((_object_w57).val.left).val.left).wd.1 (((_object_w57).val.left).val.left).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.right).wd.1 ((_object_w57).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)))) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (by
-        have _litex_nz_0 : (((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote (_object_w57).val.right ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ)) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (by
-        let _atomic_wd_1_0 := (Litex.sub _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ)))
-        exact (fun _litex_equal => (Litex.subNonzeroOfNotSame _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ)) h_10316) ((_litex_equal).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))))))
-        have _litex_nz_1 : ((((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) - (2 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote _object_w58 (((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) - (2 : ℂ)) (Litex.NativeBridge.denoteSub (_object_w58).val.left (Litex.number (M := M) (2 : ℂ)) (_object_w58).wd.1 (_object_w58).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w57).val.left (_object_w57).val.right (_object_w57).wd.1 (_object_w57).wd.2.1 (_object_w57).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.left).wd.1 ((_object_w57).val.left).wd.2 _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i14 (((_object_w57).val.left).val.left).wd.1 (((_object_w57).val.left).val.left).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.right).wd.1 ((_object_w57).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) h_10322
-        litex_normalize_rational (disch := repeat' first | exact _litex_nz_0 | exact _litex_nz_1 | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)
-      ))))
+        let _chain_wd_10323_1 := (let _wd_1_0 := (let _wd_2_0 := _object_w53;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w55;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := _object_w53;
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (by
+            let _arithmetic := _atomic_wd_1_0
+            exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+          let _arithmetic := _wd_1_1
+          exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_10320))
+        let _chain_wd_10323_2 := (let _wd_1_0 := (let _wd_2_0 := _object_w53;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w55;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := _object_w53;
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (Litex.rationalToComplex _object_w53 (Litex.callInOutput _object_w53)) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (by
+            let _arithmetic := _atomic_wd_1_0
+            exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+          let _arithmetic := _wd_1_1
+          exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_10320))
+        let _chain_wd_10323_3 := (let _wd_1_0 := (let _wd_2_0 := _object_w57;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w58;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := _object_w57;
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_atomic_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ))) h_10322))
+        let _chain_wd_10323_4 := (let _wd_1_0 := (let _wd_2_0 := _object_w57;
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w58;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := _object_w57;
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left _wd_2_1 (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 _wd_2_1 (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) (_wd_2_0).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_atomic_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_wd_1_0).val.left (Litex.number (M := M) (2 : ℂ)) (Litex.divInC (_object_w57).val.left (_object_w57).val.right (Litex.addInC ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) _value_i14 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425)) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ))) ((_wd_1_0).val.left).wd.2.2) (Litex.numberInC (M := M) (2 : ℂ))) h_10322))
+        exact (And.intro (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14))) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) from by
+          have _litex_residual : (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14))))).trans (by
+          let _litex_original := (let _wd_1_0 := _object_w53;
+          (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
+            let _litex_return_call := _object_w53
+            exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_10319))
+          let _litex_literal := (let _wd_1_0 := (_object_i7 (M := M));
+          let _wd_1_1 := _object_w53;
+          (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) (by
+            let _litex_return_call := _object_w53
+            exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_10319))
+          have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_1039 (M := M)) (Litex.sameRefl _litex_original.val.argument)
+          have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
+          exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i14)) (M.number (2 : ℂ)))) from rfl))
+        ))).trans _litex_residual) (And.intro (congrArg₂ M.divValue (congrArg₂ M.addValue h_10321 (show @Eq M.Value _ _ from Eq.refl _)) (congrArg₂ M.subValue h_10321 (show @Eq M.Value _ _ from Eq.refl _))) (Litex.NativeBridge.sameOfDenoteNumber _ _ ((((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) + (1 : ℂ)) / (((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) - (2 : ℂ))) (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteDiv (_chain_wd_10323_4).val.left (_chain_wd_10323_4).val.right (_chain_wd_10323_4).wd.1 (_chain_wd_10323_4).wd.2.1 (_chain_wd_10323_4).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_chain_wd_10323_4).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_chain_wd_10323_4).val.left).wd.1 ((_chain_wd_10323_4).val.left).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w57).val.left (_object_w57).val.right (_object_w57).wd.1 (_object_w57).wd.2.1 (_object_w57).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.left).wd.1 ((_object_w57).val.left).wd.2 _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i14 (((_object_w57).val.left).val.left).wd.1 (((_object_w57).val.left).val.left).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.right).wd.1 ((_object_w57).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub (_object_w58).val.left (Litex.number (M := M) (2 : ℂ)) (_object_w58).wd.1 (_object_w58).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w57).val.left (_object_w57).val.right (_object_w57).wd.1 (_object_w57).wd.2.1 (_object_w57).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.left).wd.1 ((_object_w57).val.left).wd.2 _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i14 (((_object_w57).val.left).val.left).wd.1 (((_object_w57).val.left).val.left).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.right).wd.1 ((_object_w57).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)))) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (by
+          have _litex_nz_0 : (((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote (_object_w57).val.right ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ)) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (by
+          let _atomic_wd_1_0 := (Litex.sub _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ)))
+          exact (fun _litex_equal => (Litex.subNonzeroOfNotSame _value_i14 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i14 h_10425) (Litex.numberInC (M := M) (1 : ℂ)) h_10316) ((_litex_equal).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))))))
+          have _litex_nz_1 : ((((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) - (2 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote (_chain_wd_10323_4).val.right (((((2 : ℂ) * (Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) - (1 : ℂ))) - (2 : ℂ)) (Litex.NativeBridge.denoteSub (_object_w58).val.left (Litex.number (M := M) (2 : ℂ)) (_object_w58).wd.1 (_object_w58).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w57).val.left (_object_w57).val.right (_object_w57).wd.1 (_object_w57).wd.2.1 (_object_w57).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_object_w57).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.left).wd.1 ((_object_w57).val.left).wd.2 _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _value_i14 (((_object_w57).val.left).val.left).wd.1 (((_object_w57).val.left).val.left).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i14 (Litex.number (M := M) (1 : ℂ)) ((_object_w57).val.right).wd.1 ((_object_w57).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i14 (Litex.rationalToComplex _value_i14 h_10425)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) h_10322
+          litex_normalize_rational (disch := repeat' first | exact _litex_nz_0 | exact _litex_nz_1 | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)
+        )))))
 
     have h_20895 :=
       (And.left h_10323)
@@ -573,168 +622,255 @@ theorem h_21070 : ∀ {_Host_i16 : Type v16} [_rep_i16 : Litex.Representation M 
       (by
         let _atomic_wd_1_0 := _object_w72
         exact (fun _litex_equal => (Litex.subNonzeroOfNotSame (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (_object_w71).wd.1 (_object_w71).wd.2.1 (_object_w71).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ)) (Litex.notSameOfSame (_object_w69).val.left (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.number (M := M) (1 : ℂ)) h_21073 (show @Eq M.Value _ _ from Eq.refl _) h_21071)) ((_litex_equal).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))))))
-    have h_21075 : (Litex.Same (let _wd_1_0 := _object_w67;
-    (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _wd_1_0 (h_627 (M := M)) (by
-      let _litex_return_call := _object_w67
-      exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_21071)) (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-    let _wd_3_1 := _object_w67;
-    (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (by
-      let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-      let _wd_3_1 := _object_w67;
-      (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
-      exact (by
-        let _arithmetic := _atomic_wd_1_0
-        exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w69;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+    have h_21075 : (by
+      let _chain_wd_21075_0 := (let _wd_1_0 := _object_w67;
+      (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _wd_1_0 (h_627 (M := M)) (by
+        let _litex_return_call := _object_w67
+        exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_21071))
+      let _chain_wd_21075_1 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
       let _wd_3_1 := _object_w67;
       (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
       let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
       (Litex.add _wd_2_0 _wd_2_1 (by
-        let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
         let _wd_3_1 := _object_w67;
         (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
         exact (by
-          let _arithmetic := _atomic_wd_2_0
-          exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (by
-        let _arithmetic := _atomic_wd_1_0
-        exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
-      let _arithmetic := _wd_1_1
-      exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_21072))) ∧ ((Litex.Same (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-    let _wd_3_1 := _object_w67;
-    (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (by
-      let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-      let _wd_3_1 := _object_w67;
-      (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
-      exact (by
-        let _arithmetic := _atomic_wd_1_0
-        exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w69;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _arithmetic := _atomic_wd_1_0
+          exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w69;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w67;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w67;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
+          exact (by
+            let _arithmetic := _atomic_wd_2_0
+            exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (by
+          let _arithmetic := _atomic_wd_1_0
+          exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+        let _arithmetic := _wd_1_1
+        exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_21072))
+      let _chain_wd_21075_2 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
       let _wd_3_1 := _object_w67;
       (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
       let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
       (Litex.add _wd_2_0 _wd_2_1 (by
-        let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
         let _wd_3_1 := _object_w67;
         (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
         exact (by
-          let _arithmetic := _atomic_wd_2_0
-          exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (by
-        let _arithmetic := _atomic_wd_1_0
-        exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
-      let _arithmetic := _wd_1_1
-      exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_21072)) (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-    let _wd_3_1 := _object_w71;
-    (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (by
-      let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-      let _wd_3_1 := _object_w71;
-      (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
-      exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w72;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-      let _wd_3_1 := _object_w71;
-      (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
-      let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-      (Litex.add _wd_2_0 _wd_2_1 (by
-        let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-        let _wd_3_1 := _object_w71;
-        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
-        exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_2_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) ((_atomic_wd_1_0).val.left).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_atomic_wd_1_0).val.left).val.right).wd.2.2)) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC ((_wd_1_0).val.left).val.right (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_wd_1_0).val.left).val.right).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))) h_21074))) ∧ (Litex.Same (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-    let _wd_3_1 := _object_w71;
-    (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
-    let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
-    (Litex.add _wd_2_0 _wd_2_1 (by
-      let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
-      let _wd_3_1 := _object_w71;
-      (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
-      exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))));
-    let _wd_1_1 := _object_w72;
-    (Litex.div _wd_1_0 _wd_1_1 (by
-      let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _arithmetic := _atomic_wd_1_0
+          exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w69;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w67;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w67;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
+          exact (by
+            let _arithmetic := _atomic_wd_2_0
+            exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (by
+          let _arithmetic := _atomic_wd_1_0
+          exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+        let _arithmetic := _wd_1_1
+        exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_21072))
+      let _chain_wd_21075_3 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
       let _wd_3_1 := _object_w71;
       (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
       let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
       (Litex.add _wd_2_0 _wd_2_1 (by
-        let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
         let _wd_3_1 := _object_w71;
         (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
-        exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_2_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))))
-      exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) ((_atomic_wd_1_0).val.left).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_atomic_wd_1_0).val.left).val.right).wd.2.2)) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC ((_wd_1_0).val.left).val.right (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_wd_1_0).val.left).val.right).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))) h_21074)) _value_i16)) :=
-      (And.intro (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) = (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) from by
-        have _litex_residual : (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) = (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
-        exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))))).trans (by
-        let _litex_original := (let _wd_1_0 := _object_w67;
+        exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w72;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w71;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w71;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
+          exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_2_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) ((_atomic_wd_1_0).val.left).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_atomic_wd_1_0).val.left).val.right).wd.2.2)) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC ((_wd_1_0).val.left).val.right (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_wd_1_0).val.left).val.right).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))) h_21074))
+      let _chain_wd_21075_4 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+      let _wd_3_1 := _object_w71;
+      (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
+      let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+      (Litex.add _wd_2_0 _wd_2_1 (by
+        let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w71;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
+        exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))));
+      let _wd_1_1 := _object_w72;
+      (Litex.div _wd_1_0 _wd_1_1 (by
+        let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w71;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w71;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
+          exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_2_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))))
+        exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) ((_atomic_wd_1_0).val.left).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_atomic_wd_1_0).val.left).val.right).wd.2.2)) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC ((_wd_1_0).val.left).val.right (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_wd_1_0).val.left).val.right).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))) h_21074))
+      exact (Litex.Same _chain_wd_21075_0 _chain_wd_21075_1) ∧ ((Litex.Same _chain_wd_21075_2 _chain_wd_21075_3) ∧ (Litex.Same _chain_wd_21075_4 _value_i16))) :=
+      (by
+        let _chain_wd_21075_0 := (let _wd_1_0 := _object_w67;
         (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _wd_1_0 (h_627 (M := M)) (by
           let _litex_return_call := _object_w67
           exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_21071))
-        let _litex_literal := (let _wd_1_0 := (_object_i4 (M := M));
-        let _wd_1_1 := _object_w67;
-        (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) (by
-          let _litex_return_call := _object_w67
-          exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_21071))
-        have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_628 (M := M)) (Litex.sameRefl _litex_original.val.argument)
-        have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (fun (_raw_i5 : M.Value) => (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) _raw_i5) (M.number (1 : ℂ))) (M.subValue _raw_i5 (M.number (1 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
-        exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i5 : M.Value) => (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) _raw_i5) (M.number (1 : ℂ))) (M.subValue _raw_i5 (M.number (1 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) from rfl))
-      ))).trans _litex_residual) (And.intro (((congrArg₂ M.divValue (congrArg₂ M.addValue (congrArg₂ M.mulValue (Eq.refl (M.number (2 : ℂ))) (by
-        let _litex_original := _object_w67
-        let _litex_literal := (let _wd_1_0 := (_object_i7 (M := M));
-        let _wd_1_1 := _value_i16;
-        (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) h_21180 h_21068))
-        have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_1039 (M := M)) (Litex.sameRefl _litex_original.val.argument)
-        have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
-        exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ)))) from rfl))
-      )) (Eq.refl (M.number (1 : ℂ)))) (congrArg₂ M.subValue (by
-        let _litex_original := _object_w67
-        let _litex_literal := (let _wd_1_0 := (_object_i7 (M := M));
-        let _wd_1_1 := _value_i16;
-        (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) h_21180 h_21068))
-        have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_1039 (M := M)) (Litex.sameRefl _litex_original.val.argument)
-        have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
-        exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ)))) from rfl))
-      ) (Eq.refl (M.number (1 : ℂ)))))).trans (((show @Eq M.Value _ _ from Eq.refl _)).trans ((Eq.refl (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ))))) (M.number (1 : ℂ))) (M.subValue (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ)))) (M.number (1 : ℂ)))))).symm)) (Litex.NativeBridge.sameOfDenoteNumber _ _ ((((2 : ℂ) * (((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ)))) + (1 : ℂ)) / ((((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ))) - (1 : ℂ))) (Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteDiv (let _wd_1_0 := (let _wd_2_0 := (Litex.number (M := M) (2 : ℂ));
-      let _wd_2_1 := _object_w71;
-      (Litex.mul _wd_2_0 _wd_2_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_2_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_2_1).wd.2.2)));
-      let _wd_1_1 := (Litex.number (M := M) (1 : ℂ));
-      (Litex.add _wd_1_0 _wd_1_1 (by
-        let _atomic_wd_1_0 := (let _wd_2_0 := (Litex.number (M := M) (2 : ℂ));
-        let _wd_2_1 := _object_w71;
-        (Litex.mul _wd_2_0 _wd_2_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_1_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_2_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_2_1).wd.2.2)))
-        exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_1_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ)))) _object_w72 (by
-        let _atomic_wd_1_0 := (let _wd_1_0 := (let _wd_2_0 := (Litex.number (M := M) (2 : ℂ));
-        let _wd_2_1 := _object_w71;
-        (Litex.mul _wd_2_0 _wd_2_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_2_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_2_1).wd.2.2)));
-        let _wd_1_1 := (Litex.number (M := M) (1 : ℂ));
-        (Litex.add _wd_1_0 _wd_1_1 (by
-          let _atomic_wd_2_0 := (let _wd_2_0 := (Litex.number (M := M) (2 : ℂ));
-          let _wd_2_1 := _object_w71;
-          (Litex.mul _wd_2_0 _wd_2_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_1_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_2_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_2_1).wd.2.2)))
-          exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_1_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_2_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))))
-        exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) ((_atomic_wd_1_0).val.left).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_atomic_wd_1_0).val.left).val.right).wd.2.2)) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC (_object_w72).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_object_w72).val.left).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))) h_21074 _ _ (Litex.NativeBridge.denoteAdd (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
-      let _wd_1_1 := _object_w71;
-      (Litex.mul _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_1_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_1_1).wd.2.2))) (Litex.number (M := M) (1 : ℂ)) (by
-        let _atomic_wd_1_0 := (let _wd_1_0 := (Litex.number (M := M) (2 : ℂ));
-        let _wd_1_1 := _object_w71;
-        (Litex.mul _wd_1_0 _wd_1_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_1_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_1_1).wd.2.2)))
-        exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ)) _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) _object_w71 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_object_w72).val.left).wd.2.2) _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteDiv (_object_w71).val.left (_object_w71).val.right (_object_w71).wd.1 (_object_w71).wd.2.1 (_object_w71).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd _value_i16 (Litex.number (M := M) (1 : ℂ)) ((_object_w71).val.left).wd.1 ((_object_w71).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) ((_object_w71).val.right).wd.1 ((_object_w71).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub (_object_w72).val.left (Litex.number (M := M) (1 : ℂ)) (_object_w72).wd.1 (_object_w72).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w71).val.left (_object_w71).val.right (_object_w71).wd.1 (_object_w71).wd.2.1 (_object_w71).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd _value_i16 (Litex.number (M := M) (1 : ℂ)) ((_object_w71).val.left).wd.1 ((_object_w71).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) ((_object_w71).val.right).wd.1 ((_object_w71).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (by
-        have _litex_nz_0 : (((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote (_object_w71).val.right ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ)) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) (by
-        let _atomic_wd_1_0 := (Litex.sub _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ)))
-        exact (fun _litex_equal => (Litex.subNonzeroOfNotSame _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ)) h_21068) ((_litex_equal).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))))))
-        have _litex_nz_1 : (((((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ))) - (1 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote _object_w72 ((((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ))) - (1 : ℂ)) (Litex.NativeBridge.denoteSub (_object_w72).val.left (Litex.number (M := M) (1 : ℂ)) (_object_w72).wd.1 (_object_w72).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w71).val.left (_object_w71).val.right (_object_w71).wd.1 (_object_w71).wd.2.1 (_object_w71).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd _value_i16 (Litex.number (M := M) (1 : ℂ)) ((_object_w71).val.left).wd.1 ((_object_w71).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) ((_object_w71).val.right).wd.1 ((_object_w71).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) h_21074
-        litex_normalize_rational (disch := repeat' first | exact _litex_nz_0 | exact _litex_nz_1 | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)
-      ))))
+        let _chain_wd_21075_1 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w67;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w67;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
+          exact (by
+            let _arithmetic := _atomic_wd_1_0
+            exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w69;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w67;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (by
+            let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+            let _wd_3_1 := _object_w67;
+            (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
+            exact (by
+              let _arithmetic := _atomic_wd_2_0
+              exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (by
+            let _arithmetic := _atomic_wd_1_0
+            exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+          let _arithmetic := _wd_1_1
+          exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_21072))
+        let _chain_wd_21075_2 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w67;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w67;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
+          exact (by
+            let _arithmetic := _atomic_wd_1_0
+            exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w69;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w67;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))));
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (by
+            let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+            let _wd_3_1 := _object_w67;
+            (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.rationalToComplex _object_w67 (Litex.callInOutput _object_w67))))
+            exact (by
+              let _arithmetic := _atomic_wd_2_0
+              exact Litex.mulInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (by
+            let _arithmetic := _atomic_wd_1_0
+            exact Litex.addInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2)) (by
+          let _arithmetic := _wd_1_1
+          exact Litex.subInC _arithmetic.val.left _arithmetic.val.right _arithmetic.wd.1 _arithmetic.wd.2) h_21072))
+        let _chain_wd_21075_3 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w71;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w71;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
+          exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w72;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w71;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (by
+            let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+            let _wd_3_1 := _object_w71;
+            (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
+            exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_2_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) ((_atomic_wd_1_0).val.left).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_atomic_wd_1_0).val.left).val.right).wd.2.2)) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC ((_wd_1_0).val.left).val.right (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_wd_1_0).val.left).val.right).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))) h_21074))
+        let _chain_wd_21075_4 := (let _wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+        let _wd_3_1 := _object_w71;
+        (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
+        let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+        (Litex.add _wd_2_0 _wd_2_1 (by
+          let _atomic_wd_1_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w71;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
+          exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_1_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_1_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))));
+        let _wd_1_1 := _object_w72;
+        (Litex.div _wd_1_0 _wd_1_1 (by
+          let _atomic_wd_1_0 := (let _wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+          let _wd_3_1 := _object_w71;
+          (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)));
+          let _wd_2_1 := (Litex.number (M := M) (1 : ℂ));
+          (Litex.add _wd_2_0 _wd_2_1 (by
+            let _atomic_wd_2_0 := (let _wd_3_0 := (Litex.number (M := M) (2 : ℂ));
+            let _wd_3_1 := _object_w71;
+            (Litex.mul _wd_3_0 _wd_3_1 (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 _wd_3_0 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (_wd_3_1).wd.2.2)))
+            exact (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) (_atomic_wd_2_0).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 _wd_2_1 (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) ((_atomic_wd_2_0).val.right).wd.2.2))) (Litex.numberInC (M := M) (1 : ℂ))))
+          exact (Litex.addInC (_atomic_wd_1_0).val.left (Litex.number (M := M) (1 : ℂ)) (Litex.mulInC (Litex.number (M := M) (2 : ℂ)) ((_atomic_wd_1_0).val.left).val.right (Litex.numberInC (M := M) (2 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_atomic_wd_1_0).val.left).val.right).wd.2.2)) (Litex.numberInC (M := M) (1 : ℂ)))) (Litex.subInC ((_wd_1_0).val.left).val.right (Litex.number (M := M) (1 : ℂ)) (Litex.divInC (_object_w71).val.left (_object_w71).val.right (Litex.addInC _value_i16 (Litex.number (M := M) (1 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (1 : ℂ))) (Litex.subInC _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ))) (((_wd_1_0).val.left).val.right).wd.2.2) (Litex.numberInC (M := M) (1 : ℂ))) h_21074))
+        exact (And.intro (show (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) = (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) from by
+          have _litex_residual : (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) = (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) := (show @Eq M.Value _ _ from Eq.refl _)
+          exact ((((Eq.refl (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))))).trans (by
+          let _litex_original := (let _wd_1_0 := _object_w67;
+          (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _wd_1_0 (h_627 (M := M)) (by
+            let _litex_return_call := _object_w67
+            exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_21071))
+          let _litex_literal := (let _wd_1_0 := (_object_i4 (M := M));
+          let _wd_1_1 := _object_w67;
+          (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) (by
+            let _litex_return_call := _object_w67
+            exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) h_21071))
+          have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_628 (M := M)) (Litex.sameRefl _litex_original.val.argument)
+          have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (fun (_raw_i5 : M.Value) => (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) _raw_i5) (M.number (1 : ℂ))) (M.subValue _raw_i5 (M.number (1 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
+          exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i5 : M.Value) => (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) _raw_i5) (M.number (1 : ℂ))) (M.subValue _raw_i5 (M.number (1 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16))) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i7 (M := M))) (Litex.denote _value_i16)) (M.number (1 : ℂ)))) from rfl))
+        ))).trans _litex_residual) (And.intro (((congrArg₂ M.divValue (congrArg₂ M.addValue (congrArg₂ M.mulValue (Eq.refl (M.number (2 : ℂ))) (by
+          let _litex_original := _object_w67
+          let _litex_literal := (let _wd_1_0 := (_object_i7 (M := M));
+          let _wd_1_1 := _value_i16;
+          (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) h_21180 h_21068))
+          have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_1039 (M := M)) (Litex.sameRefl _litex_original.val.argument)
+          have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
+          exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ)))) from rfl))
+        )) (Eq.refl (M.number (1 : ℂ)))) (congrArg₂ M.subValue (by
+          let _litex_original := _object_w67
+          let _litex_literal := (let _wd_1_0 := (_object_i7 (M := M));
+          let _wd_1_1 := _value_i16;
+          (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _wd_1_0 _wd_1_1 (Litex.formulaFnInFnSet _wd_1_0) h_21180 h_21068))
+          have _litex_call_eq := Litex.callCongr _litex_original _litex_literal (h_1039 (M := M)) (Litex.sameRefl _litex_original.val.argument)
+          have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
+          exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ)))) from rfl))
+        ) (Eq.refl (M.number (1 : ℂ)))))).trans (((show @Eq M.Value _ _ from Eq.refl _)).trans ((Eq.refl (M.divValue (M.addValue (M.mulValue (M.number (2 : ℂ)) (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ))))) (M.number (1 : ℂ))) (M.subValue (M.divValue (M.addValue (Litex.denote _value_i16) (M.number (1 : ℂ))) (M.subValue (Litex.denote _value_i16) (M.number (2 : ℂ)))) (M.number (1 : ℂ)))))).symm)) (Litex.NativeBridge.sameOfDenoteNumber _ _ ((((2 : ℂ) * (((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ)))) + (1 : ℂ)) / ((((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ))) - (1 : ℂ))) (Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteDiv (_chain_wd_21075_4).val.left (_chain_wd_21075_4).val.right (_chain_wd_21075_4).wd.1 (_chain_wd_21075_4).wd.2.1 (_chain_wd_21075_4).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd ((_chain_wd_21075_4).val.left).val.left (Litex.number (M := M) (1 : ℂ)) ((_chain_wd_21075_4).val.left).wd.1 ((_chain_wd_21075_4).val.left).wd.2 _ _ (Litex.NativeBridge.denoteMul (Litex.number (M := M) (2 : ℂ)) (((_chain_wd_21075_4).val.left).val.left).val.right (((_chain_wd_21075_4).val.left).val.left).wd.1 (((_chain_wd_21075_4).val.left).val.left).wd.2 _ _ (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)) (Litex.NativeBridge.denoteDiv (_object_w71).val.left (_object_w71).val.right (_object_w71).wd.1 (_object_w71).wd.2.1 (_object_w71).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd _value_i16 (Litex.number (M := M) (1 : ℂ)) ((_object_w71).val.left).wd.1 ((_object_w71).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) ((_object_w71).val.right).wd.1 ((_object_w71).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub (_object_w72).val.left (Litex.number (M := M) (1 : ℂ)) (_object_w72).wd.1 (_object_w72).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w71).val.left (_object_w71).val.right (_object_w71).wd.1 (_object_w71).wd.2.1 (_object_w71).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd _value_i16 (Litex.number (M := M) (1 : ℂ)) ((_object_w71).val.left).wd.1 ((_object_w71).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) ((_object_w71).val.right).wd.1 ((_object_w71).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ)))) (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (by
+          have _litex_nz_0 : (((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote (_object_w71).val.right ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ)) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ)) _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ))) (by
+          let _atomic_wd_1_0 := (Litex.sub _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ)))
+          exact (fun _litex_equal => (Litex.subNonzeroOfNotSame _value_i16 (Litex.number (M := M) (2 : ℂ)) (Litex.rationalToComplex _value_i16 h_21180) (Litex.numberInC (M := M) (2 : ℂ)) h_21068) ((_litex_equal).trans (((Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))).trans (congrArg M.number (by norm_num : (0 : ℂ) = (0 : ℂ)))))))
+          have _litex_nz_1 : (((((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ))) - (1 : ℂ)) : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote (_chain_wd_21075_4).val.right ((((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) + (1 : ℂ)) / ((Litex.NativeBridge.asComplex _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) - (2 : ℂ))) - (1 : ℂ)) (Litex.NativeBridge.denoteSub (_object_w72).val.left (Litex.number (M := M) (1 : ℂ)) (_object_w72).wd.1 (_object_w72).wd.2 _ _ (Litex.NativeBridge.denoteDiv (_object_w71).val.left (_object_w71).val.right (_object_w71).wd.1 (_object_w71).wd.2.1 (_object_w71).wd.2.2 _ _ (Litex.NativeBridge.denoteAdd _value_i16 (Litex.number (M := M) (1 : ℂ)) ((_object_w71).val.left).wd.1 ((_object_w71).val.left).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) (Litex.NativeBridge.denoteSub _value_i16 (Litex.number (M := M) (2 : ℂ)) ((_object_w71).val.right).wd.1 ((_object_w71).val.right).wd.2 _ _ (Litex.NativeBridge.asComplex_spec _value_i16 (Litex.rationalToComplex _value_i16 h_21180)) (Litex.NativeBridge.denoteNumber (M := M) (2 : ℂ)))) (Litex.NativeBridge.denoteNumber (M := M) (1 : ℂ))) h_21074
+          litex_normalize_rational (disch := repeat' first | exact _litex_nz_0 | exact _litex_nz_1 | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)
+        )))))
 
     have h_37120 :=
       (And.left h_21075)
@@ -984,44 +1120,62 @@ theorem h_37300 : ∀ {_Host_i18 : Type v18} [_rep_i18 : Litex.Representation M 
         have _litex_beta := Litex.callFormula_denote Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (by intro _x _hx _hg; exact _litex_literal.val.function.wd _x ((Litex.FunctionSignature.one_domain Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) _x).mpr ⟨_hx, _hg⟩)) _litex_literal.val.argument _litex_literal.wd.2.1 _litex_literal.wd.2.2
         exact _litex_call_eq.trans (_litex_beta.trans (show (fun (_raw_i8 : M.Value) => (M.divValue (M.addValue _raw_i8 (M.number (1 : ℂ))) (M.subValue _raw_i8 (M.number (2 : ℂ))))) (Litex.denote _litex_literal.val.argument) = (M.divValue (M.addValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i19)) (M.number (1 : ℂ))) (M.subValue (Litex.FunctionSemantics.callValue (M := M) (Litex.denote (_object_i4 (M := M))) (Litex.denote _value_i19)) (M.number (2 : ℂ)))) from rfl))
       ))).trans _litex_residual)
-    have h_37309 : (Litex.Same _value_i18 (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296);
-    (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
-      let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296)
-      exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
-      have h_37608 : Litex.In _value_i18 (Litex.Q (M := M)) :=
-        h_37337
-      have h_37613 : ¬ Litex.Same _value_i18 (Litex.number (M := M) (1 : ℂ)) :=
-        h_37296
-      exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i18)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i18 h_37608 h_37613))
-    )))) ∧ ((Litex.Same (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296);
-    (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
-      let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296)
-      exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
-      have h_37608 : Litex.In _value_i18 (Litex.Q (M := M)) :=
-        h_37337
-      have h_37613 : ¬ Litex.Same _value_i18 (Litex.number (M := M) (1 : ℂ)) :=
-        h_37296
-      exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i18)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i18 h_37608 h_37613))
-    ))) _object_w92) ∧ ((Litex.Same _object_w92 _object_w93) ∧ ((Litex.Same _object_w93 (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297);
-    (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
-      let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297)
-      exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
-      have h_37866 : Litex.In _value_i19 (Litex.Q (M := M)) :=
-        h_37338
-      have h_37873 : ¬ Litex.Same _value_i19 (Litex.number (M := M) (1 : ℂ)) :=
-        h_37297
-      exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i19)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i19 h_37866 h_37873))
-    )))) ∧ (Litex.Same (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297);
-    (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
-      let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297)
-      exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
-      have h_37866 : Litex.In _value_i19 (Litex.Q (M := M)) :=
-        h_37338
-      have h_37873 : ¬ Litex.Same _value_i19 (Litex.number (M := M) (1 : ℂ)) :=
-        h_37297
-      exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i19)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i19 h_37866 h_37873))
-    ))) _value_i19)))) :=
-      (And.intro (h_37301).symm (And.intro h_37307 (And.intro (congrArg₂ M.divValue (congrArg₂ M.addValue h_37298 (show @Eq M.Value _ _ from Eq.refl _)) (congrArg₂ M.subValue h_37298 (show @Eq M.Value _ _ from Eq.refl _))) (And.intro (h_37308).symm h_37302))))
+    have h_37309 : (by
+      let _chain_wd_37309_1 := (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296);
+      (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
+        let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296)
+        exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
+        have h_37608 : Litex.In _value_i18 (Litex.Q (M := M)) :=
+          h_37337
+        have h_37613 : ¬ Litex.Same _value_i18 (Litex.number (M := M) (1 : ℂ)) :=
+          h_37296
+        exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i18)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i18 h_37608 h_37613))
+      )))
+      let _chain_wd_37309_2 := _chain_wd_37309_1
+      let _chain_wd_37309_3 := _object_w92
+      let _chain_wd_37309_4 := _object_w92
+      let _chain_wd_37309_5 := _object_w93
+      let _chain_wd_37309_6 := _object_w93
+      let _chain_wd_37309_7 := (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297);
+      (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
+        let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297)
+        exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
+        have h_37866 : Litex.In _value_i19 (Litex.Q (M := M)) :=
+          h_37338
+        have h_37873 : ¬ Litex.Same _value_i19 (Litex.number (M := M) (1 : ℂ)) :=
+          h_37297
+        exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i19)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i19 h_37866 h_37873))
+      )))
+      let _chain_wd_37309_8 := _chain_wd_37309_7
+      exact (Litex.Same _value_i18 _chain_wd_37309_1) ∧ ((Litex.Same _chain_wd_37309_2 _chain_wd_37309_3) ∧ ((Litex.Same _chain_wd_37309_4 _chain_wd_37309_5) ∧ ((Litex.Same _chain_wd_37309_6 _chain_wd_37309_7) ∧ (Litex.Same _chain_wd_37309_8 _value_i19))))) :=
+      (by
+        let _chain_wd_37309_1 := (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296);
+        (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
+          let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i18 (h_627 (M := M)) h_37337 h_37296)
+          exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
+          have h_37608 : Litex.In _value_i18 (Litex.Q (M := M)) :=
+            h_37337
+          have h_37613 : ¬ Litex.Same _value_i18 (Litex.number (M := M) (1 : ℂ)) :=
+            h_37296
+          exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i18)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i18 h_37608 h_37613))
+        )))
+        let _chain_wd_37309_2 := _chain_wd_37309_1
+        let _chain_wd_37309_3 := _object_w92
+        let _chain_wd_37309_4 := _object_w92
+        let _chain_wd_37309_5 := _object_w93
+        let _chain_wd_37309_6 := _object_w93
+        let _chain_wd_37309_7 := (let _wd_1_0 := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297);
+        (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i8 : M.Value) => (¬ (_raw_i8 = (M.number (2 : ℂ))))) (_object_i7 (M := M)) _wd_1_0 (h_1038 (M := M)) (by
+          let _litex_return_call := (Litex.call Litex.StandardSetValue.rational Litex.StandardSetValue.rational (fun (_raw_i5 : M.Value) => (¬ (_raw_i5 = (M.number (1 : ℂ))))) (_object_i4 (M := M)) _value_i19 (h_627 (M := M)) h_37338 h_37297)
+          exact Litex.inOfSame _litex_return_call _litex_return_call (Litex.Q (M := M)) (Litex.Q (M := M)) (Litex.sameRefl _litex_return_call) (Litex.sameRefl (Litex.Q (M := M))) (Litex.callInOutput _litex_return_call)) (by
+          have h_37866 : Litex.In _value_i19 (Litex.Q (M := M)) :=
+            h_37338
+          have h_37873 : ¬ Litex.Same _value_i19 (Litex.number (M := M) (1 : ℂ)) :=
+            h_37297
+          exact (Litex.notSameOfSame _wd_1_0 _wd_1_0 (Litex.number (M := M) (2 : ℂ)) (Litex.number (M := M) (2 : ℂ)) (congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) (Litex.sameRefl (_object_i4 (M := M))) (Litex.sameRefl _value_i19)) (Litex.sameRefl (Litex.number (M := M) (2 : ℂ))) ((h_1042 (M := M)) _value_i19 h_37866 h_37873))
+        )))
+        let _chain_wd_37309_8 := _chain_wd_37309_7
+        exact (And.intro (h_37301).symm (And.intro h_37307 (And.intro (congrArg₂ M.divValue (congrArg₂ M.addValue h_37298 (show @Eq M.Value _ _ from Eq.refl _)) (congrArg₂ M.subValue h_37298 (show @Eq M.Value _ _ from Eq.refl _))) (And.intro (h_37308).symm h_37302)))))
 
     have h_44996 :=
       (And.left h_37309)

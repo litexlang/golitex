@@ -44,12 +44,19 @@ pub(super) fn project_structural_membership(
             fields.push(("source", project_structural_membership(p, rt)));
             "standard_superset"
         }
-        Add { left, right } | Sub { left, right } | Mul { left, right } | Div { left, right } => {
+        Add { left, right }
+        | Sub { left, right }
+        | Min { left, right }
+        | Max { left, right }
+        | Mul { left, right }
+        | Div { left, right } => {
             fields.push(("left", project_structural_membership(left, rt)));
             fields.push(("right", project_structural_membership(right, rt)));
             match &proof.reason {
                 Add { .. } => "add",
                 Sub { .. } => "sub",
+                Min { .. } => "min",
+                Max { .. } => "max",
                 Mul { .. } => "mul",
                 Div { .. } => {
                     fields.push(("domain_evidence", string("enclosing_object_wd")));
@@ -57,6 +64,19 @@ pub(super) fn project_structural_membership(
                 }
                 _ => unreachable!(),
             }
+        }
+        NaturalMaxDifference {
+            maximum,
+            subtrahend,
+            right_operand,
+        } => {
+            fields.push(("maximum", project_structural_membership(maximum, rt)));
+            fields.push(("subtrahend", project_structural_membership(subtrahend, rt)));
+            fields.push((
+                "maximum_operand",
+                string(if *right_operand { "right" } else { "left" }),
+            ));
+            "natural_max_difference"
         }
         Neg { argument } | Abs { argument } => {
             fields.push(("argument", project_structural_membership(argument, rt)));
@@ -104,6 +124,7 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
     match rule {
         SequenceLimit => "lim",
         SequenceLimsup => "limsup",
+        DerivativeAt => "derivative",
         Supremum => "sup",
         Infimum => "inf",
         SequenceLiminf => "liminf",

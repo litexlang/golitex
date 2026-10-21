@@ -146,12 +146,12 @@ impl LitexToLeanCompiler {
         }
         let negated = source_subject(&closing.negated_impossible)?;
         let impossible_is_negative = validate_atomic_negation(&impossible, &negated)?;
-        let positive = self.compile_verify(&closing.impossible, position)?.1;
+        let positive = self.compile_verify(&closing.impossible, position)?;
         let next = SourcePosition {
             before: position.before + 1,
             ..*position
         };
-        let negative = self.compile_verify(&closing.negated_impossible, &next)?.1;
+        let negative = self.compile_verify(&closing.negated_impossible, &next)?;
         let complete = SourcePosition {
             before: position.before + 2,
             ..*position
@@ -173,11 +173,15 @@ impl LitexToLeanCompiler {
                 }
             }
         }
-        Ok(if impossible_is_negative {
-            format!("({positive} {negative})")
+        let (asserted, denied) = if impossible_is_negative {
+            (negative, positive)
         } else {
-            format!("({negative} {positive})")
-        })
+            (positive, negative)
+        };
+        Ok(format!(
+            "(by\n  have _asserted : {} := {}\n  have _denied : ¬ ({}) := {}\n  exact _denied _asserted)",
+            asserted.0, asserted.1, asserted.0, denied.1
+        ))
     }
 
     // Output stores have flow-specific stage numbers; the ordinary one-stage

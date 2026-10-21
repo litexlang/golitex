@@ -105,6 +105,20 @@ impl LitexToLeanCompiler {
         proof: &FnObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, Obj, String), LeanCompileError> {
+        // A lexical constructor binding certifies this exact original node.
+        // Return-membership consumers can project its output law directly.
+        if application.body.len() == 1 {
+            if let Some(call) = position.bound_fn_call(application, proof) {
+                if let Some(
+                    FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
+                    | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set },
+                ) = &proof.domain_fn_set
+                {
+                    let member = self.compile_call_output_proof(application, proof, &call)?;
+                    return Ok((call, fn_set.ret_set.as_ref().clone(), member));
+                }
+            }
+        }
         let (call, output, member) =
             self.compile_fn_first_call_with_member(application, proof, position)?;
         if application.body.len() == 1 {
@@ -584,7 +598,10 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The original constructor is not this function application."));
             };
             let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
-            let call = self.compile_fn_obj_wd(application, evidence, &ctor_position)?;
+            let call = match position.bound_wd_child(wd).or_else(|| producer.bound_wd_child(wd)) {
+                Some(call) => call,
+                None => self.compile_fn_obj_wd(application, evidence, &ctor_position)?,
+            };
             let selected = evidence.domain_fn_set.as_ref().ok_or_else(|| LeanCompileError::new("FunctionReturn/DomainEvidence", "The original call has no domain source."))?;
             let (selected_signature, selected_id) = match selected {
                 FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id, .. } => (fn_set, Some(*fact_id)),
@@ -638,7 +655,8 @@ impl LitexToLeanCompiler {
                     if !anchored || !strict {
                         return Err(LeanCompileError::new("FunctionReturn/SelectedSignature", "The recorded strict-inclusion route does not cover the actual constructor's selected source."));
                     }
-                    let (source, member) = self.compile_fn_output_membership(application, evidence, &ctor_position)?;
+                    let source = self.compile_numeric_carrier(&selected_signature.ret_set, position)?;
+                    let member = self.compile_call_output_proof(application, evidence, &call)?;
                     lift_fn_return(&call, &source, target, &member)
                 }
                 _ => Err(LeanCompileError::unsupported("FunctionReturn/KnownRule")),
@@ -668,7 +686,10 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The original constructor is not this function application."));
             };
             let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
-            let call = self.compile_fn_obj_wd(application, evidence, &ctor_position)?;
+            let call = match position.bound_wd_child(wd).or_else(|| producer.bound_wd_child(wd)) {
+                Some(call) => call,
+                None => self.compile_fn_obj_wd(application, evidence, &ctor_position)?,
+            };
             let selected = evidence.domain_fn_set.as_ref().ok_or_else(|| LeanCompileError::new("FunctionReturn/DomainEvidence", "The original call has no domain source."))?;
             let (selected_signature, selected_id, selected_path) = match selected {
                 FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id, function_equal } => (fn_set, Some(*fact_id), Some(function_equal)),

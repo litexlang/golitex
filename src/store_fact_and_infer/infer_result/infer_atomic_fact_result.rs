@@ -109,6 +109,10 @@ impl InferFunctionLipschitzFactResult {
 pub enum InferNotFunctionLipschitzFactResult {}
 
 pub enum InferAtomicFactResult {
+    HasDerivativeAtFact(Vec<InferHasDerivativeAtFactResult>),
+    NotHasDerivativeAtFact(Vec<InferNotHasDerivativeAtFactResult>),
+    FunctionDifferentiableAtFact(Vec<InferFunctionDifferentiableAtFactResult>),
+    NotFunctionDifferentiableAtFact(Vec<InferNotFunctionDifferentiableAtFactResult>),
     RealSetBoundFact(Vec<InferRealSetBoundFactResult>),
     NotRealSetBoundFact(Vec<InferNotRealSetBoundFactResult>),
     RealSetBoundedFact(Vec<InferRealSetBoundedFactResult>),
@@ -194,6 +198,14 @@ impl InferAtomicFactResult {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }
             Self::NotRealAccumulationFact(_) => Vec::new(),
+            Self::HasDerivativeAtFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotHasDerivativeAtFact(_) => Vec::new(),
+            Self::FunctionDifferentiableAtFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotFunctionDifferentiableAtFact(_) => Vec::new(),
             Self::FunctionContinuousAtFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }
@@ -395,3 +407,35 @@ impl InferNotHasSequenceLiminfFactResult {
         match *self {}
     }
 }
+
+pub enum InferHasDerivativeAtFactResult {
+    Definition(InferHasDerivativeAtDefinitionResult),
+}
+pub struct InferHasDerivativeAtDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferHasDerivativeAtFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotHasDerivativeAtFactResult {}
+
+pub enum InferFunctionDifferentiableAtFactResult {
+    Definition(InferFunctionDifferentiableAtDefinitionResult),
+}
+pub struct InferFunctionDifferentiableAtDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferFunctionDifferentiableAtFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotFunctionDifferentiableAtFactResult {}

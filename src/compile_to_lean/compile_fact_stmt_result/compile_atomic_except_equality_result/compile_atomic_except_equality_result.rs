@@ -182,6 +182,8 @@ impl LitexToLeanCompiler {
                     self.compile_power_weak_order_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftLeftWeak(proof)) =>
                     self.compile_add_strict_shift(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CommonPositiveFactorLess(proof)) =>
+                    self.compile_strict_mul_strategy(&success.fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
                     return Err(LeanCompileError::new("Atomic/BuiltinStrategy", &format!("Unsupported selected strategy for `{}`.", success.fact.readable_string())))
                 }

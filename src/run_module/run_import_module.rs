@@ -2,7 +2,8 @@
 
 use super::import_kb::{try_finish_import_from_kb, write_kb_after_cold_import, ImportKbHit};
 use super::load_config::{load_config, normalize_module_dir};
-use super::run_export_file::run_export_file;
+use super::run_export_file::run_export_file_observed;
+use crate::run::source_observer::SourceObserver;
 use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunSessionError};
 use crate::runtime::{Runtime, RuntimeResult};
@@ -32,6 +33,19 @@ pub fn run_import_module(
     done: &mut HashSet<PathBuf>,
     running: &mut HashSet<PathBuf>,
     file_results: &mut Vec<RunFileResult>,
+) -> RuntimeResult<RunImportModuleOutcome> {
+    run_import_module_observed(runtime, module_dir, alias, std_root, done, running, file_results, &mut ())
+}
+
+pub fn run_import_module_observed(
+    runtime: &mut Runtime,
+    module_dir: &Path,
+    alias: &str,
+    std_root: &Path,
+    done: &mut HashSet<PathBuf>,
+    running: &mut HashSet<PathBuf>,
+    file_results: &mut Vec<RunFileResult>,
+    observer: &mut dyn SourceObserver,
 ) -> RuntimeResult<RunImportModuleOutcome> {
     let key = normalize_module_dir(module_dir);
     if done.contains(&key) {
@@ -67,7 +81,7 @@ pub fn run_import_module(
     };
 
     for import in &config.imports {
-        match run_import_module(
+        match run_import_module_observed(
             runtime,
             &import.path,
             &import.alias,
@@ -75,6 +89,7 @@ pub fn run_import_module(
             done,
             running,
             file_results,
+            observer,
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(mut error) => {
@@ -113,6 +128,7 @@ pub fn run_import_module(
         .exports
         .clone();
 
+    if !observer.requires_source_evidence() {
     match try_finish_import_from_kb(runtime, &key, &config, std_root, mod_id, &exports)? {
         ImportKbHit::Applied => {
             running.remove(&key);
@@ -125,9 +141,10 @@ pub fn run_import_module(
             return Ok(RunImportModuleOutcome::SessionError(error));
         }
     }
+    }
 
     for (export_file_id, export) in exports.iter().enumerate() {
-        let file_result = match run_export_file(
+        let file_result = match run_export_file_observed(
             runtime,
             &export.name,
             crate::runtime::CodeSource::ImportedExport {
@@ -136,6 +153,7 @@ pub fn run_import_module(
                 export_file_id,
             },
             false,
+            observer,
         ) {
             Ok(file_result) => file_result,
             Err(error) => {

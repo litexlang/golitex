@@ -939,3 +939,53 @@ impl From<crate::ast::obj::FunctionLimit> for crate::ast::obj::Obj {
         Self::LimitOperator(crate::ast::obj::LimitOperator::Function(value))
     }
 }
+
+impl From<crate::ast::fact::HasDerivativeAtFact> for AtomicFact {
+    fn from(f: crate::ast::fact::HasDerivativeAtFact) -> Self {
+        Self::HasDerivativeAtFact(f)
+    }
+}
+impl From<crate::ast::fact::HasDerivativeAtFact> for Fact {
+    fn from(f: crate::ast::fact::HasDerivativeAtFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::fact::NotHasDerivativeAtFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotHasDerivativeAtFact) -> Self {
+        Self::NotHasDerivativeAtFact(f)
+    }
+}
+impl From<crate::ast::fact::NotHasDerivativeAtFact> for Fact {
+    fn from(f: crate::ast::fact::NotHasDerivativeAtFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::fact::FunctionDifferentiableAtFact> for AtomicFact {
+    fn from(f: crate::ast::fact::FunctionDifferentiableAtFact) -> Self {
+        Self::FunctionDifferentiableAtFact(f)
+    }
+}
+impl From<crate::ast::fact::FunctionDifferentiableAtFact> for Fact {
+    fn from(f: crate::ast::fact::FunctionDifferentiableAtFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::fact::NotFunctionDifferentiableAtFact> for AtomicFact {
+    fn from(f: crate::ast::fact::NotFunctionDifferentiableAtFact) -> Self {
+        Self::NotFunctionDifferentiableAtFact(f)
+    }
+}
+impl From<crate::ast::fact::NotFunctionDifferentiableAtFact> for Fact {
+    fn from(f: crate::ast::fact::NotFunctionDifferentiableAtFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+
+impl From<crate::ast::obj::DerivativeAt> for crate::ast::obj::Obj {
+    fn from(v: crate::ast::obj::DerivativeAt) -> Self {
+        Self::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(v))
+    }
+}

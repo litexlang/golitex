@@ -195,6 +195,12 @@ fn fact_uses_functions(fact: &Fact) -> bool {
 
 fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
     match statement {
+        ExecStmtResult::By(ExecByStmtResult::Contra(crate::execute::execute_by_stmt::ExecByContraStmtResult::Success(proof))) => {
+            fact_uses_functions(&proof.goal)
+                || fact_uses_functions(&proof.reverse_assumption)
+                || proof.proof_steps.iter().any(statement_uses_functions)
+        }
+
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::ObtainObjFromAtomicFact(crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof)),
         )) => fact_uses_functions(&crate::ast::fact::exist_shaped_fact_to_fact(&proof.projected_exist))
@@ -344,6 +350,18 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         return true;
     }
     match statement {
+        ExecStmtResult::By(ExecByStmtResult::Contra(
+            crate::execute::execute_by_stmt::ExecByContraStmtResult::Success(proof),
+        )) => {
+            fact_uses_sets(&proof.goal)
+                || fact_uses_sets(&proof.reverse_assumption)
+                || store_has_set_inference(&proof.negation_assumed)
+                || proof.proof_steps.iter().any(statement_uses_sets)
+                || verify_has_set_inference(&proof.closing.impossible)
+                || verify_has_set_inference(&proof.closing.negated_impossible)
+                || store_has_set_inference(&proof.stored)
+        }
+
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
                 crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof),

@@ -14,7 +14,7 @@
 The showcase proves uniqueness of derivative values but stops before ODE
 solution existence/uniqueness theorems, systems, stability, phase portraits,
 and boundary-value problems. The selected derivative function is intentionally
-guarded by `is_differentiable_at`; it is not an unconditional total derivative
+guarded by `ode_is_differentiable_at`; it is not an unconditional total derivative
 operator on every function and point.
 
 The checked explicit IVP is already a complete vertical slice. If this module

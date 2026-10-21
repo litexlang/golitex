@@ -624,3 +624,66 @@ fn compound_theorem_domain_capture_keeps_pending_projections_and_inference_close
         "the local domain projection is not an exported caller fact"
     );
 }
+
+const LOCAL_THEOREM: &str = "have z R\nthm outer:\n    ? forall x R:\n        x+0=x\n    thm local_zero:\n        ? forall y R:\n            y+0=y\n        y+0=y\n    by thm local_zero(x) => x+0=x\n";
+
+#[test]
+fn local_named_theorem_replays_and_stays_lexical() {
+    let (result, compiler) = super::execute(LOCAL_THEOREM);
+    let output = super::compile_run(&result, &compiler, "local_theorem").expect("local theorem");
+    let outer = match &result.statement_results[1] {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(p),
+        )) => p,
+        _ => panic!("outer theorem"),
+    };
+    let ExecDefThmBodyProof::Forall(body) = &outer.body else {
+        panic!("forall")
+    };
+    let local = match &body.proof_steps[0] {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(p),
+        )) => p,
+        _ => panic!("nested theorem"),
+    };
+    let name = format!("h_{}", local.statement.fact.fact_id().value());
+    assert!(output.contains(&format!("have {name} :")));
+    assert!(!output.contains(&format!("theorem {name}")));
+    assert!(!output.contains(&format!("{name} (M := M)")));
+    let run = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+    let before = SourcePosition::new(Some(&run), SourceOwner::Named(outer), 1);
+    assert!(
+        before.visible_theorem("local_zero").is_err(),
+        "cannot cite a future local declaration"
+    );
+    let after = SourcePosition::new(Some(&run), SourceOwner::Named(outer), 2);
+    assert!(after.visible_theorem("local_zero").is_ok());
+    let closed = SourcePosition::new(None, SourceOwner::Run(&result), 2);
+    assert!(
+        closed.visible_theorem("local_zero").is_err(),
+        "local theorem cannot escape its body"
+    );
+}
+
+#[test]
+fn local_named_theorem_rejects_changed_captured_declaration() {
+    let (mut result, compiler) = super::execute(LOCAL_THEOREM);
+    let outer = super::named_theorem_mut(&mut result.statement_results[1]);
+    let Stmt::Definition(DefinitionStmt::DefThmStmt(local)) = &mut outer.statement.prove_process[0]
+    else {
+        panic!("nested source")
+    };
+    local.name = "another_declaration".into();
+    assert_eq!(
+        super::compile_run(&result, &compiler, "changed_local")
+            .unwrap_err()
+            .route,
+        "Theorem/ProofStepCapture"
+    );
+}
+
+#[test]
+fn named_theorem_replays_a_nested_claim() {
+    let (result, compiler) = super::execute("thm outer_claim:\n    ? forall x R:\n        x=x\n    claim:\n        ? x=x\n        x=x\n");
+    super::compile_run(&result, &compiler, "nested_claim").expect("original nested claim");
+}

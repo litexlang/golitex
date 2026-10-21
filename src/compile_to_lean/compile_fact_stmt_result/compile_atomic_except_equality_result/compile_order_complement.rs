@@ -11,17 +11,18 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_complement::FromKnownOrderComplementBuiltinRuleProof;
 
 impl LitexToLeanCompiler {
-    pub(in crate::compile_to_lean) fn compile_weak_order_complement(
+    pub(in crate::compile_to_lean) fn compile_order_complement(
         &self,
         goal: &AtomicFact,
         proof: &FromKnownOrderComplementBuiltinRuleProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (left_obj, right_obj, reversed, premise_matches) =
+        let (left_obj, right_obj, reversed, strict, premise_matches) =
             match (goal, &proof.premise_proof.fact) {
                 (AtomicFact::LessEqualFact(goal), AtomicFact::NotGreaterFact(premise)) => (
                     &goal.left,
                     &goal.right,
+                    false,
                     false,
                     premise.left.ir() == goal.left.ir() && premise.right.ir() == goal.right.ir(),
                 ),
@@ -29,9 +30,24 @@ impl LitexToLeanCompiler {
                     &goal.left,
                     &goal.right,
                     true,
+                    false,
                     premise.left.ir() == goal.left.ir() && premise.right.ir() == goal.right.ir(),
                 ),
-                _ => return Err(LeanCompileError::unsupported("Order/WeakComplement")),
+                (AtomicFact::LessFact(goal), AtomicFact::NotGreaterEqualFact(premise)) => (
+                    &goal.left,
+                    &goal.right,
+                    false,
+                    true,
+                    premise.left.ir() == goal.left.ir() && premise.right.ir() == goal.right.ir(),
+                ),
+                (AtomicFact::GreaterFact(goal), AtomicFact::NotLessEqualFact(premise)) => (
+                    &goal.left,
+                    &goal.right,
+                    true,
+                    true,
+                    premise.left.ir() == goal.left.ir() && premise.right.ir() == goal.right.ir(),
+                ),
+                _ => return Err(LeanCompileError::unsupported("Order/Complement")),
             };
         if !premise_matches || proof.real_carrier_proofs.len() != 2 {
             return Err(LeanCompileError::unsupported("Order/ComplementSubjects"));
@@ -64,7 +80,12 @@ impl LitexToLeanCompiler {
         } else {
             (left, right, &real[0], &real[1])
         };
-        Ok(format!("(by\n  let _left := {left}\n  let _right := {right}\n  have _leftReal : Litex.In _left Litex.R := {}\n  have _rightReal : Litex.In _right Litex.R := {}\n  exact (Litex.NativeBridge.le_iff_asReal _left _right _leftReal _rightReal).mpr (le_of_not_gt (fun _strict => ({premise}) ((Litex.NativeBridge.lt_iff_asReal _right _left _rightReal _leftReal).mpr _strict))))", left_real, right_real))
+        let (goal_bridge, complement_bridge, law) = if strict {
+            ("lt_iff_asReal", "le_iff_asReal", "lt_of_not_ge")
+        } else {
+            ("le_iff_asReal", "lt_iff_asReal", "le_of_not_gt")
+        };
+        Ok(format!("(by\n  let _left := {left}\n  let _right := {right}\n  have _leftReal : Litex.In _left Litex.R := {left_real}\n  have _rightReal : Litex.In _right Litex.R := {right_real}\n  exact (Litex.NativeBridge.{goal_bridge} _left _right _leftReal _rightReal).mpr ({law} (fun _opposite => ({premise}) ((Litex.NativeBridge.{complement_bridge} _right _left _rightReal _leftReal).mpr _opposite))))"))
     }
 
     pub(in crate::compile_to_lean) fn compile_negative_order_builtin(

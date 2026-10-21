@@ -95,6 +95,32 @@ impl Runtime {
                 left: child(&v.left, target)?,
                 right: child(&v.right, target)?,
             },
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(v)) if matches!(target, N) => {
+                let Obj::ArithmeticOperator(ArithmeticOperator::Max(maximum)) = v.left.as_ref()
+                else {
+                    return None;
+                };
+                let right_operand = if maximum.left.ir() == v.right.ir() {
+                    false
+                } else if maximum.right.ir() == v.right.ir() {
+                    true
+                } else {
+                    return None;
+                };
+                P::NaturalMaxDifference {
+                    maximum: child(&v.left, &N)?,
+                    subtrahend: child(&v.right, &N)?,
+                    right_operand,
+                }
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(v)) if !matches!(target, C) => P::Min {
+                left: child(&v.left, target)?,
+                right: child(&v.right, target)?,
+            },
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(v)) if !matches!(target, C) => P::Max {
+                left: child(&v.left, target)?,
+                right: child(&v.right, target)?,
+            },
             Obj::ArithmeticOperator(ArithmeticOperator::Mul(v)) => P::Mul {
                 left: child(&v.left, target)?,
                 right: child(&v.right, target)?,
@@ -212,6 +238,7 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
     use IntrinsicCodomain as K;
     use StandardSet::*;
     Some(match element {
+        Obj::DerivativeOperator(_) => (R, K::DerivativeAt),
         Obj::LimitOperator(LimitOperator::Sequence(_)) => (R, K::SequenceLimit),
         Obj::BoundOperator(BoundOperator::Supremum(_)) => (R, K::Supremum),
         Obj::BoundOperator(BoundOperator::Infimum(_)) => (R, K::Infimum),

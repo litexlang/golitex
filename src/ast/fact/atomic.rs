@@ -5,6 +5,11 @@ use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicFact {
+    HasDerivativeAtFact(HasDerivativeAtFact),
+    NotHasDerivativeAtFact(NotHasDerivativeAtFact),
+    FunctionDifferentiableAtFact(FunctionDifferentiableAtFact),
+    NotFunctionDifferentiableAtFact(NotFunctionDifferentiableAtFact),
+
     RealSetBoundFact(RealSetBoundFact),
     NotRealSetBoundFact(NotRealSetBoundFact),
     RealSetBoundedFact(RealSetBoundedFact),
@@ -415,6 +420,10 @@ pub struct NotIsChoiceFunctionForFact {
 impl AtomicFact {
     pub fn fact_id(&self) -> FactId {
         match self {
+            AtomicFact::HasDerivativeAtFact(f) => f.fact_id,
+            AtomicFact::NotHasDerivativeAtFact(f) => f.fact_id,
+            AtomicFact::FunctionDifferentiableAtFact(f) => f.fact_id,
+            AtomicFact::NotFunctionDifferentiableAtFact(f) => f.fact_id,
             AtomicFact::RealSetBoundFact(f) => f.fact_id,
             AtomicFact::NotRealSetBoundFact(f) => f.fact_id,
             AtomicFact::RealSetBoundedFact(f) => f.fact_id,
@@ -490,6 +499,14 @@ impl AtomicFact {
             PRIME, PROPER_SUBSET, PROPER_SUPERSET, SUBSET, SUPERSET, SURJECTIVE,
         };
         match self {
+            AtomicFact::HasDerivativeAtFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::NotHasDerivativeAtFact(f) => AtomicName::plain(f.predicate_name().into()),
+            AtomicFact::FunctionDifferentiableAtFact(f) => {
+                AtomicName::plain(f.predicate_name().into())
+            }
+            AtomicFact::NotFunctionDifferentiableAtFact(f) => {
+                AtomicName::plain(f.predicate_name().into())
+            }
             AtomicFact::RealSetBoundFact(f) => AtomicName::plain(f.predicate_name().into()),
             AtomicFact::NotRealSetBoundFact(f) => AtomicName::plain(f.predicate_name().into()),
             AtomicFact::RealSetBoundedFact(f) => AtomicName::plain(f.predicate_name().into()),
@@ -957,5 +974,59 @@ impl FunctionContinuityProperty {
             Self::Continuous => "is_continuous",
             Self::UniformContinuous => "is_uniformly_continuous",
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HasDerivativeAtFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub point: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl HasDerivativeAtFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "has_derivative_at"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotHasDerivativeAtFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub point: Obj,
+    pub value: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl NotHasDerivativeAtFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "has_derivative_at"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FunctionDifferentiableAtFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub point: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl FunctionDifferentiableAtFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "is_differentiable_at"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotFunctionDifferentiableAtFact {
+    pub fact_id: FactId,
+    pub function: Obj,
+    pub point: Obj,
+    pub line_file: Option<SourceLine>,
+}
+impl NotFunctionDifferentiableAtFact {
+    pub fn predicate_name(&self) -> &'static str {
+        "is_differentiable_at"
     }
 }

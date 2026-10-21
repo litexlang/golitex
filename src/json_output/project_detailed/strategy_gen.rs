@@ -11,6 +11,8 @@ pub(super) fn project_atomic_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p) => super::pointwise_derivative::project(p,runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseContinuity(p) => super::pointwise_continuity::project_pointwise_continuity(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SymDiffMembershipLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")), ("strategy", string("SymDiffMembershipLeft")),
             ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|fact| string(fact.readable_string())).collect())),

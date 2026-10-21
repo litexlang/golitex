@@ -1,8 +1,9 @@
 //! Project-aware `-f`: optional `litex.config` mount, then the target file.
 
 use super::load_config::{load_config_or_empty, resolve_std_root};
-use super::run_export_file::run_export_file;
-use super::run_import_module::{run_import_module, RunImportModuleOutcome};
+use super::run_export_file::run_export_file_observed;
+use super::run_import_module::{run_import_module_observed, RunImportModuleOutcome};
+use crate::run::source_observer::SourceObserver;
 use crate::launch_command::LaunchCommand;
 use crate::module_manager::LitexConfigExport;
 use crate::prelude::*;
@@ -20,6 +21,13 @@ use std::path::{Path, PathBuf};
 /// - target not in `[export]` → all imports + all exports, then target as extra file
 /// - mount soft fail → `FailToImport`; target soft fail → normal file failure
 pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResult> {
+    run_file_with_config_observed(command, &mut ())
+}
+
+pub fn run_file_with_config_observed(
+    command: LaunchCommand,
+    observer: &mut dyn SourceObserver,
+) -> RuntimeResult<RunFileResult> {
     let LaunchCommand::File { path, session, .. } = &command else {
         panic!("run_file_with_config expects LaunchCommand::File");
     };
@@ -43,7 +51,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
     let config = load_config_or_empty(&module_dir, &std_root)?;
 
     if config.imports.is_empty() && config.exports.is_empty() {
-        return run_file_isolated(command, path, session);
+        return run_file_isolated(command, path, session, observer);
     }
 
     let export_index = find_export_index(&config.exports, &path);
@@ -59,7 +67,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
     let mut mount_files = Vec::new();
 
     for import in &config.imports {
-        match run_import_module(
+        match run_import_module_observed(
             &mut runtime,
             &import.path,
             &import.alias,
@@ -67,6 +75,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             &mut done,
             &mut running,
             &mut mount_files,
+            observer,
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(mut session_error) => {
@@ -87,7 +96,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
         let is_target = export_index == Some(export_file_id);
         let keep_env_open = session && is_target;
 
-        match run_export_file(
+        match run_export_file_observed(
             &mut runtime,
             &export.name,
             crate::runtime::CodeSource::RootExport {
@@ -95,6 +104,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                 export_file_id,
             },
             keep_env_open,
+            observer,
         ) {
             Ok(mut file_result) => {
                 if !file_result.run.success {
@@ -144,11 +154,12 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
 
     // Target is not in [export]: run it as an extra file after full mount.
     let export_name = export_name_for_path(&path);
-    match run_export_file(
+    match run_export_file_observed(
         &mut runtime,
         &export_name,
         crate::runtime::CodeSource::Real(path.clone()),
         session,
+        observer,
     ) {
         Ok(mut file_result) => {
             if !file_result.run.success {
@@ -181,6 +192,7 @@ fn run_file_isolated(
     command: LaunchCommand,
     path: PathBuf,
     session: bool,
+    observer: &mut dyn SourceObserver,
 ) -> RuntimeResult<RunFileResult> {
     let source = fs::read_to_string(&path).map_err(|error| RuntimeError::Io {
         path: path.clone(),
@@ -188,7 +200,7 @@ fn run_file_isolated(
     })?;
 
     let mut runtime = Runtime::new(command);
-    let mut code_result = match runtime.run_litex_code(&source) {
+    let mut code_result = match runtime.run_litex_code_observed(&source, observer) {
         Ok(result) => result,
         Err(error) => {
             runtime.abort_source();

@@ -1,0 +1,2 @@
+have fn cusp(x R) R=abs(x)
+$is_differentiable_at(cusp,0)

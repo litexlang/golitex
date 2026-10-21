@@ -29,11 +29,23 @@ impl LitexToLeanCompiler {
                     0,
                 );
                 let compiled = self.compile_verify(&success.verify_result, &formed)?;
+                let completed_source = SourcePosition {
+                    before: 1,
+                    ..*position
+                };
+                let completed_objects = SourcePosition::new(
+                    Some(&completed_source),
+                    SourceOwner::FormedSubjects(
+                        &success.verify_result,
+                        &success.store_and_infer_result,
+                    ),
+                    0,
+                );
                 let compiled = self.compile_completed_fact_statement(
                     &source,
                     compiled,
                     &success.store_and_infer_result,
-                    position,
+                    &completed_objects,
                     index,
                     local,
                 )?;

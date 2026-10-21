@@ -25,6 +25,40 @@ impl Runtime {
     ) -> Result<AtomicFact, InstError> {
         let fact_id = self.global_ids.allocate_fact_id();
         match atomic {
+            AtomicFact::HasDerivativeAtFact(f) => Ok(crate::ast::fact::HasDerivativeAtFact {
+                fact_id,
+                function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotHasDerivativeAtFact(f) => Ok(crate::ast::fact::NotHasDerivativeAtFact {
+                fact_id,
+                function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                value: self.inst_obj_rec(&f.value, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::FunctionDifferentiableAtFact(f) => {
+                Ok(crate::ast::fact::FunctionDifferentiableAtFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
+            AtomicFact::NotFunctionDifferentiableAtFact(f) => {
+                Ok(crate::ast::fact::NotFunctionDifferentiableAtFact {
+                    fact_id,
+                    function: self.inst_obj_rec(&f.function, param_to_arg_map)?,
+                    point: self.inst_obj_rec(&f.point, param_to_arg_map)?,
+                    line_file: f.line_file.clone(),
+                }
+                .into())
+            }
             AtomicFact::RealSetBoundFact(f) => Ok(crate::ast::fact::RealSetBoundFact {
                 fact_id,
                 set: self.inst_obj_rec(&f.set, param_to_arg_map)?,

@@ -763,6 +763,14 @@ theorem addZero {M : Semantics.{u}} {α : Type v} [Representation M α]
   change M.addValue (denote a) (M.number 0) = denote a
   rw [hz, M.add_numbers, add_zero]
 
+
+theorem zeroAdd {M : Semantics.{u}} {α : Type v} [Representation M α]
+    (a : Obj (M := M) α) (haC : In a C) :
+    Same (add (number 0) a (numberInC 0) haC) a := by
+  obtain ⟨z, hz⟩ := (M.complex_members (denote a)).mp haC
+  change M.addValue (M.number 0) (denote a) = denote a
+  rw [hz, M.add_numbers, zero_add]
+
 end Litex
 
 namespace Litex.NativeBridge
@@ -1528,6 +1536,81 @@ theorem ltAddOfLeOfPos {M : Semantics.{u}}
     rw [hx', hy', M.add_numbers, Complex.ofReal_add]
   · have hpos : (0 : ℝ) < y' := hz0 ▸ hzy
     exact lt_of_le_of_lt hax (lt_add_of_pos_right x' hpos)
+
+theorem addLtAdd {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (q : Obj (M := M) (AddObj (M := M) γ δ))
+    (h₁ : Lt p.val.left q.val.left) (h₂ : Lt p.val.right q.val.right) : Lt p q := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h₁
+  obtain ⟨c, d, hc, hd, hcd⟩ := h₂
+  refine ⟨a + c, b + d, ?_, ?_, add_lt_add hab hcd⟩
+  · change M.addValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hc, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote q.val.left) (denote q.val.right) = _
+    rw [hb, hd, M.add_numbers, Complex.ofReal_add]
+
+theorem addStructuralLtLeft {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (AddObj (M := M) α β))
+    (rhs : Obj (M := M) (AddObj (M := M) γ δ))
+    (hSum : In lhs R)
+    (hOrder : Lt lhs.val.right rhs.val.right)
+    (hSame : Same lhs.val.left rhs.val.left) : Lt lhs rhs := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hSum
+  obtain ⟨a, b, ha, hb, hab⟩ := hOrder
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp lhs.wd.1
+  have hsum : z + (a : ℂ) = (r : ℂ) := by
+    apply M.number_injective
+    change M.addValue (denote lhs.val.left) (denote lhs.val.right) = _ at hr
+    simpa only [hz, ha, M.add_numbers] using hr
+  have hc : denote lhs.val.left = M.number ((r - a : ℝ) : ℂ) := by
+    rw [hz, Complex.ofReal_sub]
+    exact congrArg M.number (eq_sub_iff_add_eq.mpr hsum)
+  refine NativeBridge.ltOfDenoteReal lhs rhs ((r - a) + a) ((r - a) + b) ?_ ?_ (add_lt_add_right hab (r - a))
+  · change M.addValue (denote lhs.val.left) (denote lhs.val.right) = _
+    rw [hc, ha, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote rhs.val.left) (denote rhs.val.right) = _
+    rw [hSame.symm.trans hc, hb, M.add_numbers, Complex.ofReal_add]
+
+theorem addStructuralLtRight {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (AddObj (M := M) α β))
+    (rhs : Obj (M := M) (AddObj (M := M) γ δ))
+    (hSum : In lhs R)
+    (hOrder : Lt lhs.val.left rhs.val.left)
+    (hSame : Same lhs.val.right rhs.val.right) : Lt lhs rhs := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hSum
+  obtain ⟨a, b, ha, hb, hab⟩ := hOrder
+  obtain ⟨z, hz⟩ := (M.complex_members _).mp lhs.wd.2
+  have hsum : (a : ℂ) + z = (r : ℂ) := by
+    apply M.number_injective
+    change M.addValue (denote lhs.val.left) (denote lhs.val.right) = _ at hr
+    simpa only [hz, ha, M.add_numbers] using hr
+  have hc : denote lhs.val.right = M.number ((r - a : ℝ) : ℂ) := by
+    rw [hz, Complex.ofReal_sub]
+    exact congrArg M.number (eq_sub_iff_add_eq.mpr ((add_comm z (a : ℂ)).trans hsum))
+  refine NativeBridge.ltOfDenoteReal lhs rhs (a + (r - a)) (b + (r - a)) ?_ ?_ (add_lt_add_left hab (r - a))
+  · change M.addValue (denote lhs.val.left) (denote lhs.val.right) = _
+    rw [hc, ha, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote rhs.val.left) (denote rhs.val.right) = _
+    rw [hSame.symm.trans hc, hb, M.add_numbers, Complex.ofReal_add]
+
+theorem addLtAddSwap {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (p : Obj (M := M) (AddObj (M := M) α β))
+    (q : Obj (M := M) (AddObj (M := M) γ δ))
+    (h₁ : Lt p.val.left q.val.right) (h₂ : Lt p.val.right q.val.left) : Lt p q := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h₁
+  obtain ⟨c, d, hc, hd, hcd⟩ := h₂
+  refine ⟨a + c, d + b, ?_, ?_, ?_⟩
+  · change M.addValue (denote p.val.left) (denote p.val.right) = _
+    rw [ha, hc, M.add_numbers, Complex.ofReal_add]
+  · change M.addValue (denote q.val.left) (denote q.val.right) = _
+    rw [hd, hb, M.add_numbers, Complex.ofReal_add]
+  · simpa only [add_comm b d] using add_lt_add hab hcd
 
 theorem naturalNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
     (a : Obj (M := M) α) (haN : In a N) : Le (number 0) a := by
@@ -3875,6 +3958,60 @@ theorem mulStructuralLeRight {M : Semantics.{u}} {α β γ δ : Type*}
     rw [ha, hc, M.mul_numbers, Complex.ofReal_mul]
   · change M.mulValue (denote rhs.val.left) (denote rhs.val.right) = _
     rw [hb, hFactorSame.symm.trans hc, M.mul_numbers, Complex.ofReal_mul]
+
+theorem mulStructuralLtLeft {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (MulObj (M := M) α β))
+    (rhs : Obj (M := M) (MulObj (M := M) γ δ))
+    (hFactorPositive : Lt (number 0) lhs.val.left)
+    (hOperandsLt : Lt lhs.val.right rhs.val.right)
+    (hFactorSame : Same lhs.val.left rhs.val.left) : Lt lhs rhs := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfPositive lhs.val.left hFactorPositive
+  obtain ⟨a, b, ha, hb, hab⟩ := hOperandsLt
+  refine NativeBridge.ltOfDenoteReal lhs rhs (c * a) (c * b) ?_ ?_ (mul_lt_mul_of_pos_left hab hc0)
+  · change M.mulValue (denote lhs.val.left) (denote lhs.val.right) = _
+    rw [hc, ha, M.mul_numbers, Complex.ofReal_mul]
+  · change M.mulValue (denote rhs.val.left) (denote rhs.val.right) = _
+    rw [hFactorSame.symm.trans hc, hb, M.mul_numbers, Complex.ofReal_mul]
+
+theorem mulStructuralLtRight {M : Semantics.{u}} {α β γ δ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (lhs : Obj (M := M) (MulObj (M := M) α β))
+    (rhs : Obj (M := M) (MulObj (M := M) γ δ))
+    (hFactorPositive : Lt (number 0) lhs.val.right)
+    (hOperandsLt : Lt lhs.val.left rhs.val.left)
+    (hFactorSame : Same lhs.val.right rhs.val.right) : Lt lhs rhs := by
+  obtain ⟨c, hc, hc0⟩ := NativeBridge.realWitnessOfPositive lhs.val.right hFactorPositive
+  obtain ⟨a, b, ha, hb, hab⟩ := hOperandsLt
+  refine NativeBridge.ltOfDenoteReal lhs rhs (a * c) (b * c) ?_ ?_ (mul_lt_mul_of_pos_right hab hc0)
+  · change M.mulValue (denote lhs.val.left) (denote lhs.val.right) = _
+    rw [ha, hc, M.mul_numbers, Complex.ofReal_mul]
+  · change M.mulValue (denote rhs.val.left) (denote rhs.val.right) = _
+    rw [hb, hFactorSame.symm.trans hc, M.mul_numbers, Complex.ofReal_mul]
+
+theorem mulMinusOneNegativeLeft {M : Semantics.{u}} {α β : Type*}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MulObj (M := M) α β))
+    (hFactor : denote p.val.left = M.number (-1))
+    (hPositive : Lt (number 0) p.val.right) : Lt p (number 0) := by
+  obtain ⟨a, ha, ha0⟩ := NativeBridge.realWitnessOfPositive p.val.right hPositive
+  refine NativeBridge.ltOfDenoteReal p (number 0) ((-1) * a) 0 ?_ rfl ?_
+  · change M.mulValue (denote p.val.left) (denote p.val.right) = _
+    rw [hFactor, ha, M.mul_numbers, Complex.ofReal_mul]
+    simp only [Complex.ofReal_neg, Complex.ofReal_one]
+  · simpa only [neg_one_mul] using neg_neg_of_pos ha0
+
+theorem mulMinusOneNegativeRight {M : Semantics.{u}} {α β : Type*}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (MulObj (M := M) α β))
+    (hFactor : denote p.val.right = M.number (-1))
+    (hPositive : Lt (number 0) p.val.left) : Lt p (number 0) := by
+  obtain ⟨a, ha, ha0⟩ := NativeBridge.realWitnessOfPositive p.val.left hPositive
+  refine NativeBridge.ltOfDenoteReal p (number 0) (a * (-1)) 0 ?_ rfl ?_
+  · change M.mulValue (denote p.val.left) (denote p.val.right) = _
+    rw [hFactor, ha, M.mul_numbers, Complex.ofReal_mul]
+    simp only [Complex.ofReal_neg, Complex.ofReal_one]
+  · simpa only [mul_neg_one] using neg_neg_of_pos ha0
 
 theorem divStructuralLe {M : Semantics.{u}} {α β γ δ : Type*}
     [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]

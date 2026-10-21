@@ -1,0 +1,1 @@
+$is_differentiable_at(fn(t R:t!=0) R {1/t},0)

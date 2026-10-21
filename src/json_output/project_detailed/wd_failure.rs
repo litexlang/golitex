@@ -270,6 +270,7 @@ pub(super) fn project_obj_wd_failure(
     rt: &Runtime,
 ) -> JsonValue {
     let projected = match f {
+        FailToVerifyObjWellDefinedResult::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure::AtPoint(p)) => super::function_derivative::object_failure(p,rt),
         FailToVerifyObjWellDefinedResult::BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult::Supremum(p)) => node(rt,"Supremum",None,
             object_for(rt,vec![("obj",string(p.obj.readable_string())),("requirement",project_verify_fact(&p.result,rt))])),
         FailToVerifyObjWellDefinedResult::BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult::Infimum(p)) => node(rt,"Infimum",None,

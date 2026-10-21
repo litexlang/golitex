@@ -1,0 +1,2 @@
+have fn isolated(x {0}) R=x*x
+$is_differentiable_at(isolated,0)

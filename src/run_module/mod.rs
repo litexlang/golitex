@@ -31,6 +31,6 @@ pub use load_config::{
 };
 pub use mount_cwd_config::{mount_cwd_config, MountCwdConfigOutcome};
 pub use run_export_file::run_export_file;
-pub use run_file_with_config::run_file_with_config;
+pub use run_file_with_config::{run_file_with_config, run_file_with_config_observed};
 pub use run_import_module::{run_import_module, RunImportModuleOutcome};
-pub use run_project::run_project;
+pub use run_project::{run_project, run_project_observed};

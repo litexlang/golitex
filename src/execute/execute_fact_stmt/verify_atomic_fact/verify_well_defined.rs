@@ -144,6 +144,10 @@ impl Runtime {
             ));
         }
         let analysis_function = match fact {
+            AtomicFact::HasDerivativeAtFact(f) => Some(&f.function),
+            AtomicFact::NotHasDerivativeAtFact(f) => Some(&f.function),
+            AtomicFact::FunctionDifferentiableAtFact(f) => Some(&f.function),
+            AtomicFact::NotFunctionDifferentiableAtFact(f) => Some(&f.function),
             AtomicFact::FunctionContinuousAtFact(f) => Some(&f.function),
             AtomicFact::NotFunctionContinuousAtFact(f) => Some(&f.function),
             AtomicFact::FunctionContinuousFact(f) => Some(&f.function),
@@ -165,6 +169,10 @@ impl Runtime {
             };
             let mut requirements = Vec::new();
             let point = match fact {
+                AtomicFact::HasDerivativeAtFact(f) => Some(&f.point),
+                AtomicFact::NotHasDerivativeAtFact(f) => Some(&f.point),
+                AtomicFact::FunctionDifferentiableAtFact(f) => Some(&f.point),
+                AtomicFact::NotFunctionDifferentiableAtFact(f) => Some(&f.point),
                 AtomicFact::FunctionContinuousAtFact(f) => Some(&f.point),
                 AtomicFact::NotFunctionContinuousAtFact(f) => Some(&f.point),
                 _ => None,
@@ -176,6 +184,22 @@ impl Runtime {
                     set: function_domain.domain.clone(),
                     line_file: None,
                 }));
+            }
+            let derivative_value = match fact {
+                AtomicFact::HasDerivativeAtFact(f) => Some(&f.value),
+                AtomicFact::NotHasDerivativeAtFact(f) => Some(&f.value),
+                _ => None,
+            };
+            if let Some(value) = derivative_value {
+                requirements.push(
+                    crate::ast::fact::InFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        element: value.clone(),
+                        set: Obj::StandardSet(crate::ast::obj::StandardSet::R),
+                        line_file: None,
+                    }
+                    .into(),
+                );
             }
             let constant = match fact {
                 AtomicFact::FunctionLipschitzFact(f) => Some(&f.constant),
@@ -846,6 +870,10 @@ impl Runtime {
 
 fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
+        AtomicFact::HasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
+        AtomicFact::NotHasDerivativeAtFact(f) => vec![&f.function, &f.point, &f.value],
+        AtomicFact::FunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],
+        AtomicFact::NotFunctionDifferentiableAtFact(f) => vec![&f.function, &f.point],
         AtomicFact::RealSetBoundFact(f) => vec![&f.set, &f.bound],
         AtomicFact::NotRealSetBoundFact(f) => vec![&f.set, &f.bound],
         AtomicFact::RealSetBoundedFact(f) => vec![&f.set],

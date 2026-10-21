@@ -1,0 +1,60 @@
+# Before: the direct structural goal below required explicit intermediate BT calls.
+# $is_continuous_at(fn(t R) R {f(t)+g(t)+h(t)},0)
+# Now: consume checked leaf continuity and descend the expression.
+# Boundary: division retains nonzero premises, composition changes the centre.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_strategy/pointwise_continuity.lit
+claim:
+    ? forall f,g,h fn(x R) R,x0 R:
+        $is_continuous_at(f,x0)
+        $is_continuous_at(g,x0)
+        $is_continuous_at(h,x0)
+        =>:
+            $is_continuous_at(fn(t R) R {f(t)*g(t)*h(t)},x0)
+    $is_continuous_at(fn(t R) R {f(t)*g(t)*h(t)},x0)
+
+claim:
+    ? forall f fn(x R) R,x0 R,n N:
+        $is_continuous_at(f,x0)
+        =>:
+            $is_continuous_at(fn(t R) R {f(t)^n},x0)
+    $is_continuous_at(fn(t R) R {f(t)^n},x0)
+
+
+claim:
+    ? forall f,g,h fn(x R) R:
+        $is_continuous_at(f,0)
+        $is_continuous_at(g,0)
+        $is_continuous_at(h,0)
+        =>:
+            $is_continuous_at(fn(t R) R {f(t)+g(t)+h(t)},0)
+    $is_continuous_at(fn(t R) R {f(t)+g(t)+h(t)},0)
+
+claim:
+    ? forall f,g fn(x R) R:
+        $is_continuous_at(f,0)
+        $is_continuous_at(g,0)
+        g(0)!=0
+        =>:
+            $is_continuous_at(fn(t R:g(t)!=0) R {f(t)/g(t)},0)
+    $is_continuous_at(fn(t R:g(t)!=0) R {f(t)/g(t)},0)
+
+claim:
+    ? forall f,g,h fn(x R) R:
+        $is_continuous_at(h,0)
+        $is_continuous_at(g,h(0))
+        $is_continuous_at(f,g(h(0)))
+        =>:
+            $is_continuous_at(fn(t R) R {f(g(h(t)))},0)
+    $is_continuous_at(fn(t R) R {f(g(h(t)))},0)
+
+claim:
+    ? forall f,g,h fn(x R) R:
+        $is_continuous_at(f,0)
+        $is_continuous_at(g,0)
+        $is_continuous_at(h,0)
+        =>:
+            $is_continuous_at(fn(t R) R {-(f(t)*g(t)*h(t))+3*f(t)^4-abs(g(t))},0)
+    have fn total(t R) R=-(f(t)*g(t)*h(t))+3*f(t)^4-abs(g(t))
+    $is_continuous_at(total,0)
+    $is_continuous_at(fn(t R) R {-(f(t)*g(t)*h(t))+3*f(t)^4-abs(g(t))},0)
+

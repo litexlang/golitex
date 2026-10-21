@@ -25,6 +25,16 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_pointwise_continuity_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseContinuity(proof),
+            ));
+        }
+        if let Some(proof) = self.search_pointwise_derivative_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(proof),
+            ));
+        }
         if let Some(proof) =
             self.search_finite_function_application_membership_strategy(fact, ctx)?
         {

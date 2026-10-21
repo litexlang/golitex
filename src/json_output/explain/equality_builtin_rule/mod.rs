@@ -5,6 +5,7 @@
 mod add_zero_from_equalities;
 mod calculation;
 mod constructor_order;
+mod derivative_at;
 mod elementary_definitions;
 mod exponential_logarithm_identities;
 mod finite_partition;
@@ -34,6 +35,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::English),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
@@ -317,6 +319,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Chinese),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
@@ -599,6 +602,9 @@ impl EqualitySearchProofByBuiltinRule {
             }
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
+            }
+            Self::DerivativeSelectedValue(p) => {
+                p.rule_name_and_message(OutputLanguage::ChineseTraditional)
             }
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::ChineseTraditional)
@@ -883,6 +889,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::French),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::French)
             }
@@ -1168,6 +1175,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Russian),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Russian)
             }
@@ -1452,6 +1460,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Spanish),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Spanish)
             }
@@ -1737,6 +1746,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Arabic),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Arabic)
             }
@@ -2020,6 +2030,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Japanese),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Japanese)
             }
@@ -2303,6 +2314,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Korean),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Korean)
             }
@@ -2586,6 +2598,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::SequenceLimsup(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
             }
+            Self::DerivativeSelectedValue(p) => p.rule_name_and_message(OutputLanguage::Vietnamese),
             Self::RealBounds(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Vietnamese)
             }

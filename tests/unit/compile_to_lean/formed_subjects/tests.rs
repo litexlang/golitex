@@ -213,5 +213,6 @@ fn formed_subjects_reuse_a_preceding_forall_conclusion() {
         .compile_run(&result, "forall_construction")
         .unwrap();
     assert!(output.contains("let _object_w"));
-    assert!(output.contains("Litex.IsSet _object_w"));
+    assert!(output.contains("Litex.IsSet _atomic_wd"));
+    assert!(output.contains(" := _object_w"));
 }

@@ -1,8 +1,9 @@
 //! Run a repository root by `litex.config` (`-r`).
 
 use super::load_config::{load_config, resolve_std_root};
-use super::run_export_file::run_export_file;
-use super::run_import_module::{run_import_module, RunImportModuleOutcome};
+use super::run_export_file::run_export_file_observed;
+use super::run_import_module::{run_import_module_observed, RunImportModuleOutcome};
+use crate::run::source_observer::SourceObserver;
 use crate::launch_command::LaunchCommand;
 use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunRepoResult, RunSessionError};
@@ -13,6 +14,13 @@ use std::path::PathBuf;
 
 /// `-r <repository>`: load root config, run import modules, then root exports.
 pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
+    run_project_observed(command, &mut ())
+}
+
+pub fn run_project_observed(
+    command: LaunchCommand,
+    observer: &mut dyn SourceObserver,
+) -> RuntimeResult<RunRepoResult> {
     let LaunchCommand::Repository { path, session, .. } = &command else {
         panic!("run_project expects LaunchCommand::Repository");
     };
@@ -46,7 +54,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
     let mut file_results = Vec::new();
 
     for import in &root_config.imports {
-        match run_import_module(
+        match run_import_module_observed(
             &mut runtime,
             &import.path,
             &import.alias,
@@ -54,6 +62,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
             &mut done,
             &mut running,
             &mut file_results,
+            observer,
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(mut session_error) => {
@@ -75,7 +84,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         let is_last = export_file_id + 1 == export_count;
         let keep_env_open = session && is_last;
 
-        match run_export_file(
+        match run_export_file_observed(
             &mut runtime,
             &export.name,
             crate::runtime::CodeSource::RootExport {
@@ -83,6 +92,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
                 export_file_id,
             },
             keep_env_open,
+            observer,
         ) {
             Ok(file_result) => {
                 let failed = !file_result.run.success;

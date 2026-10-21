@@ -34,6 +34,24 @@ impl Runtime {
                 }
             }
         }
+        if let AtomicFact::HasDerivativeAtFact(f) = fact {
+            let existence = self.derivative_existence(f.function.clone(), f.point.clone());
+            derived.push(self.store_inferred_fact(&existence)?);
+            let differentiable: Fact = FunctionDifferentiableAtFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                function: f.function.clone(),
+                point: f.point.clone(),
+                line_file: None,
+            }
+            .into();
+            derived.push(self.store_inferred_fact(&differentiable)?);
+        }
+        if let AtomicFact::FunctionDifferentiableAtFact(f) = fact {
+            if let Some(domain) = self.checked_real_function_limit_domain(&f.function, state)? {
+                let interior = self.derivative_interior_condition(domain.domain, f.point.clone());
+                derived.push(self.store_inferred_fact(&interior)?);
+            }
+        }
         // Both bounds are a conjunction; exposing either part is definition
         // elimination, without invoking any convergence or completeness law.
         match fact {
@@ -75,6 +93,10 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<Option<Vec<Fact>>> {
         let clauses = match fact {
+            AtomicFact::HasDerivativeAtFact(_) | AtomicFact::FunctionDifferentiableAtFact(_) => {
+                return self.derivative_defining_clauses(fact, state)
+            }
+
             AtomicFact::RealSetBoundFact(f) => {
                 let x = self.fresh_internal_param();
                 let bound = match f.direction {

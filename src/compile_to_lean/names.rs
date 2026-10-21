@@ -318,7 +318,7 @@ impl LitexToLeanCompiler {
     ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
         let id = parameter.id;
         let host = format!("_Host_i{}", id.value());
-        let universe = format!("v{}", id.value());
+        let universe = position.parameter_universe(id);
 
         let instance = format!("_rep_i{}", id.value());
         let value = format!("_value_i{}", id.value());
@@ -362,7 +362,8 @@ impl LitexToLeanCompiler {
         self.validate_store(&store.store, &fact)?;
         let id = parameter.id.value();
         let name = format!("h_{}", fact.fact_id().value());
-        let binders = vec![format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"), format!("({name} : Litex.IsSet _value_i{id})")];
+        let universe = position.parameter_universe(parameter.id);
+        let binders = vec![format!("{{_Host_i{id} : Type {universe}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"), format!("({name} : Litex.IsSet _value_i{id})")];
         Ok((
             binders,
             vec![
@@ -500,6 +501,10 @@ impl LitexToLeanCompiler {
                 ))
             }
             AtomicFact::IsFiniteSetFact(_)
+            | AtomicFact::HasDerivativeAtFact(_)
+            | AtomicFact::NotHasDerivativeAtFact(_)
+            | AtomicFact::FunctionDifferentiableAtFact(_)
+            | AtomicFact::NotFunctionDifferentiableAtFact(_)
             | AtomicFact::RealSetBoundFact(_)
             | AtomicFact::NotRealSetBoundFact(_)
             | AtomicFact::RealSetBoundedFact(_)

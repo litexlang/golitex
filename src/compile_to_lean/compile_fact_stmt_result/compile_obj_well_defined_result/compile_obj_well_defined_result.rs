@@ -302,12 +302,10 @@ impl LitexToLeanCompiler {
                     term = alias;
                 }
             }
-            if matches!(proof, ObjWellDefinedProof::ByDef { .. })
-                && !matches!(
-                    arg,
-                    Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
-                )
-            {
+            if !matches!(
+                arg,
+                Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+            ) {
                 bindings.push(format!(
                     "let {} := {term}",
                     prior.atomic_wd_child_name(index)
@@ -457,6 +455,49 @@ impl LitexToLeanCompiler {
             }
         }
         Ok(bindings)
+    }
+
+    /// Render a goal from its original formation without discarding and then
+    /// rebuilding the same endpoint constructors.
+    pub(in crate::compile_to_lean) fn compile_formed_fact_proposition(
+        &self,
+        wd: &FactWellDefinedProof,
+        fact: &Fact,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        match (wd, fact) {
+            (FactWellDefinedProof::Equality(wd), Fact::AtomicFact(AtomicFact::EqualFact(fact))) => {
+                let bindings = self.compile_equal_wd_locals(fact, wd, position)?;
+                let formed =
+                    SourcePosition::new(Some(position), SourceOwner::EqualWDLocals(wd, 2), 2);
+                Ok(Self::scope_equal_wd(
+                    format!(
+                        "Litex.Same {} {}",
+                        self.compile_object_reference(&fact.left, &formed)?,
+                        self.compile_object_reference(&fact.right, &formed)?
+                    ),
+                    &bindings,
+                ))
+            }
+            (FactWellDefinedProof::AtomicExceptEquality(wd), Fact::AtomicFact(atomic)) => {
+                let bindings = self.compile_atomic_wd_locals(wd, atomic, position)?;
+                let formed = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::AtomicWDLocals(wd, wd.well_defined_of_each_parameter.len()),
+                    usize::MAX,
+                );
+                Ok(Self::scope_equal_wd(
+                    self.atomic_proposition(atomic, &formed)?,
+                    &bindings,
+                ))
+            }
+            _ => {
+                self.compile_fact_wd(wd, fact, position)?;
+                let formed =
+                    SourcePosition::new(Some(position), SourceOwner::FactWD(wd), usize::MAX);
+                self.fact_proposition(fact, &formed)
+            }
+        }
     }
 
     pub(in crate::compile_to_lean) fn compile_fact_wd(

@@ -11,6 +11,7 @@ use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result
 use crate::prelude::*;
 
 pub enum FailToVerifyObjWellDefinedResult {
+    DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedFailure),
     BoundOperator(FailToVerifyBoundOperatorObjWellDefinedResult),
     LimitOperator(FailToVerifyLimitOperatorObjWellDefinedResult),
     Identifier(FailToVerifyIdentifierObjWellDefined),

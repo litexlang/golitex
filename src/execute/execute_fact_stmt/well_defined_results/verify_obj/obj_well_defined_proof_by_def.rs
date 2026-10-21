@@ -13,6 +13,9 @@ use crate::prelude::*;
 use crate::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
+    DerivativeOperator(
+        crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof,
+    ),
     BoundOperator(BoundOperatorObjWellDefinedProofByDef),
     LimitOperator(LimitOperatorObjWellDefinedProofByDef),
     Identifier(IdentifierObjWellDefinedProof),

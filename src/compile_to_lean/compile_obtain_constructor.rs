@@ -18,6 +18,15 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<Option<String>, LeanCompileError> {
+        self.compile_obtain_expression_reference(object, position, false)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_obtain_expression_reference(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+        observe_numeric: bool,
+    ) -> Result<Option<String>, LeanCompileError> {
         if !matches!(object, Obj::ArithmeticOperator(_) | Obj::FnObj(_)) {
             return Ok(None);
         }
@@ -40,6 +49,7 @@ impl LitexToLeanCompiler {
                     &HashMap::new(),
                     current,
                     current,
+                    observe_numeric,
                 )
                 .map(|found| {
                     found.map(|(factory, arguments)| apply_constructor(factory, arguments))
@@ -80,6 +90,7 @@ impl LitexToLeanCompiler {
                     &substitution,
                     &original,
                     current,
+                    observe_numeric,
                 )?
                 else {
                     return Ok(None);
@@ -113,6 +124,7 @@ impl LitexToLeanCompiler {
         outer_substitution: &HashMap<IdentifierId, Obj>,
         original_parent: &SourcePosition<'_>,
         current: &SourcePosition<'_>,
+        observe_numeric: bool,
     ) -> Result<Option<(String, Vec<String>)>, LeanCompileError> {
         let ids = source.typed_parameters.ordered_param_ids();
         let renaming: HashMap<_, _> = ids
@@ -164,6 +176,7 @@ impl LitexToLeanCompiler {
                             checked,
                             site,
                             current,
+                            observe_numeric,
                         )
                     });
                 }
@@ -212,6 +225,7 @@ impl LitexToLeanCompiler {
                         checked,
                         site,
                         current,
+                        observe_numeric,
                     )
                 });
             }
@@ -231,6 +245,7 @@ impl LitexToLeanCompiler {
         checked: &ObjWellDefinedProof,
         site: &SourcePosition<'_>,
         caller: &SourcePosition<'_>,
+        observe_numeric: bool,
     ) -> Result<(String, Vec<String>), LeanCompileError> {
         let (binders, definitions) = self.compile_exist_constructor_prefix(
             source,
@@ -247,6 +262,15 @@ impl LitexToLeanCompiler {
                 "(show Litex.Obj (M := M) _ from by\n  {}\n  exact {constructor}\n)",
                 definitions.join("\n").replace('\n', "\n  ")
             )
+        };
+        let body = if observe_numeric {
+            // The same retained WD factory supplies the scalar observation;
+            // obtained names have renamed stores, not a second WD proof tree.
+            let (value, denotation, member, _) = self.numeric_wd(checked, site)?;
+            let definitions = definitions.join("\n").replace('\n', "\n  ");
+            format!("(let _obtained_object := {body};\nshow {{ _z : ℂ // Litex.denote _obtained_object = M.number _z ∧ Litex.In _obtained_object Litex.C }} from by\n  {definitions}\n  exact ⟨{value}, {denotation}, {member}⟩)")
+        } else {
+            body
         };
         let factory = if binders.is_empty() {
             body

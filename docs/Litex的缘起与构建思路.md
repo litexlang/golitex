@@ -2,6 +2,10 @@
 
 Jiachen Shen, 2026.10.21。中文初稿由作者本人手敲。
 
+官网：https://litexlang.com/
+
+Github: https://github.com/litexlang/golitex
+
 Litex围绕这样的想法展开：能不能写下数学，直接得到形式化代码？ 从小我们就知道数学是一种严格的语言，每一句话都能找到相应的佐证来支撑它的正确性。那既然数学本身就是一个严格的语言，为什么不能让数学本身成为一种形式化语言？或者设计一个形式化语言，它在书写上就和日常数学差不多，只是添加一些合理的约束就应该确保其足够结构化，方便去机械地做证明。
 
 这里的观察是，自然语言数学里的许多日常表达，其实已经承担着精确的逻辑责任：
@@ -18,15 +22,35 @@ Litex从第一性原理重新思考数学、自然语言与代码的关系。它
 
 先把这些数学表达与Litex、Lean（最主流的形式化语言）的代码放在一起。进行对比
 
+Lean 例子均使用 `import Mathlib`。
+
 | 数学表达及其责任 | Litex | Lean |
 | --- | --- | --- |
-| 任取实数x，假设它大于零，因此它不等于零 | <pre>forall x R:<br>    x > 0<br>    =>:<br>        x != 0</pre> | <pre>example (x : ℝ) (hx : x > 0) : x ≠ 0 := by<br>  exact ne_of_gt hx</pre> |
-| 存在一个实数，其平方等于4；取2为见证 | <pre>witness exist w R st {w^2 = 4} from 2</pre> | <pre>example : ∃ w : ℝ, w ^ 2 = 4 := by<br>  refine ⟨2, ?_⟩<br>  norm_num</pre> |
-| 由定义，3满足“超过二”的性质 | <pre>prop is_above_two(t R):<br>    t > 2<br><br>by def $is_above_two(3)</pre> | <pre>def isAboveTwo (t : ℝ) : Prop := t > 2<br><br>example : isAboveTwo 3 := by<br>  norm_num [isAboveTwo]</pre> |
-| 直接检查一个算式 | <pre>1 + 1 = 2</pre> | <pre>example : (1 : Nat) + 1 = 2 := by<br>  rfl</pre> |
-| 定义并调用非零实数上的倒数函数 | <pre>have fn reciprocal(x R: x != 0) R = 1 / x<br>reciprocal(2) = 1 / 2</pre> | <pre>noncomputable def reciprocal (x : {y : ℝ // y ≠ 0}) : ℝ :=<br>  (x : ℝ)⁻¹<br><br>example : reciprocal ⟨2, by norm_num⟩ = (2 : ℝ)⁻¹ := by<br>  simp [reciprocal]</pre> |
-| 数系间的成员关系与表示 | <pre>1 $in Z<br>1 $in R<br>1 $in C</pre> | <pre>example : ((1 : ℕ) : ℤ) = (1 : ℤ) := by simp<br>example : ((1 : ℝ) : ℂ) = (1 : ℂ) := by simp</pre> |
-| 定义集合，并检查一个成员 | <pre>have multiples_of_four power_set(N) = {a N: a % 4 = 0}<br>4 $in multiples_of_four</pre> | <pre>def multiplesOfFour : Set ℕ := {a &#124; a % 4 = 0}<br><br>example : (4 : ℕ) ∈ multiplesOfFour := by<br>  simp [multiplesOfFour]</pre> |
+| **任取实数x，假设它大于零，因此它不等于零** | `forall x R:` | `example (x : ℝ) (hx : x > 0) : x ≠ 0 := by` |
+|  | `    x > 0` | `  exact ne_of_gt hx` |
+|  | `    =>:` |  |
+|  | `        x != 0` |  |
+| **存在一个实数，其平方等于4；取2为见证** | `witness exist w R st {w^2 = 4} from 2` | `example : ∃ w : ℝ, w ^ 2 = 4 := by` |
+|  |  | `  refine ⟨2, ?_⟩` |
+|  |  | `  norm_num` |
+| **由定义，3满足“超过二”的性质** | `prop is_above_two(t R):` | `def isAboveTwo (t : ℝ) : Prop := t > 2` |
+|  | `    t > 2` |  |
+|  |  | `example : isAboveTwo 3 := by` |
+|  | `by def $is_above_two(3)` | `  norm_num [isAboveTwo]` |
+| **直接检查一个算式** | `1 + 1 = 2` | `example : (1 : Nat) + 1 = 2 := by` |
+|  |  | `  rfl` |
+| **定义并调用非零实数上的倒数函数** | `have fn reciprocal(x R: x != 0) R = 1 / x` | `noncomputable def reciprocal (x : {y : ℝ // y ≠ 0}) : ℝ :=` |
+|  | `reciprocal(2) = 1 / 2` | `  (x : ℝ)⁻¹` |
+|  |  |  |
+|  |  | `example : reciprocal ⟨2, by norm_num⟩ = (2 : ℝ)⁻¹ := by` |
+|  |  | `  simp [reciprocal]` |
+| **数系间的成员关系与表示** | `1 $in Z` | `example : ((1 : ℕ) : ℤ) = (1 : ℤ) := by simp` |
+|  | `1 $in R` | `example : ((1 : ℝ) : ℂ) = (1 : ℂ) := by simp` |
+|  | `1 $in C` |  |
+| **定义集合，并检查一个成员** | `have multiples_of_four power_set(N) = {a N: a % 4 = 0}` | `def multiplesOfFour : Set ℕ := {a \| a % 4 = 0}` |
+|  | `4 $in multiples_of_four` |  |
+|  |  | `example : (4 : ℕ) ∈ multiplesOfFour := by` |
+|  |  | `  simp [multiplesOfFour]` |
 
 下面再沿着这些例子，解释Litex的设计思路。Litex希望让用户能尽可能贴近自然语言的方式表达数学，最好能让Litex源码能和想表达的数学一一对应上，同时还不失严格性。（形式化语言大大降低了数学家审稿的时间，但不代表它就是完美无缺的。比如Lean的表面上的表达的东西的意义可能和标准的数学的意义对应不上，这已经成为形式化社区的一个绕不过去的坎了。参见[Faults in Our Formal Benchmarking: Dataset Defects and Evaluation Failures in Lean Theorem Proving](https://arxiv.org/html/2606.29493v1#A5)）
 
@@ -120,30 +144,36 @@ Litex内部有600多个内置规则（Litex有了几十种对象如`1`这样的�
 
 但检查一条陈述，只是我想要的一部分。我还希望系统返回对验证过程的解释：它用了哪些事实、哪些规则把它们连起来、哪一步无法被辩护。所以Litex有一个数学特化的搜索引擎，专门在这个为数学特化的数据库结构上工作，在支持的范围内，根据上下文和内置规则寻找陈述成立的依据，并报告验证失败的位置。
 
-<img src="https://litexlang.com/assets/diagrams/litex-verification-pipeline-v2.png" alt="Litex verification pipeline" style="max-width: 80%; height: auto;" />
+![Litex verification pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v2.png)
 
 litex能把常见的数学表达一步步解析成机器可识别可存储可调用的数学知识，是很难的，这个功能是Litex项目的核心，也是Litex多达20多万行Rust源代码的内核所做的（一边探索自己在完成什么，一边构建工程，花了我两年，在AI的帮助下，这个工程的细节才能完备完善。虽然我是内置了上百个快捷键的程序员，但没有ai帮助也不可能完成如此大的工程。）。为了把这些表达、上下文与验证依据连在一起，我自行开发了Litex的数学特化数据库和搜索引擎。现在，这个流程不只是能做验证，还能输出结果，告诉你为什么这些数学语句能成立。这也让我想到数学教育：我们可以构建可交互的数学书，数学书以接近自然数学表达的Litex源码出现，每句经过验证的语句都能对应一份“为什么成立”的结构化信息。所有的结构化信息连起来，就成了一张网，帮助读者理解数学概念之间怎样互相连接。这个过程可能会改变读者对数学、代码与证明的看法。
 
 用一个年龄小例子把这条链摊开：同一份推理，依次落成 Litex 源码、说明依据的 JSON、以及 `-lean` 生成的 Lean（当前为预览编译；下表 Lean 列为真实输出的节选）。
 
-```litex
-let my_age = 3
-let brother_age = 3 * my_age
-brother_age = 3 * 3 = 9
-```
-
 | Litex 源码 | JSON（验证结果摘要） | Lean（`-lean` 节选） |
 | --- | --- | --- |
-| `let my_age = 3`<br>`let brother_age = 3 * my_age`<br>`brother_age = 3 * 3 = 9` | <pre>{<br>  "statement_result": "accepted",<br>  "statement": "brother_age = (3 * 3) = 9",<br>  "proof_method": {<br>    "type": "compound_fact",<br>    "rule_name": "Chain"<br>  },<br>  "stores": [<br>    "brother_age = (3 * 3) = 9",<br>    "brother_age = (3 * 3)",<br>    "(3 * 3) = 9"<br>  ]<br>}</pre> | <pre>noncomputable def _object_i1 :=<br>  Litex.number (M := M) (3 : ℂ)<br><br>theorem h_1 :<br>  Litex.Same (_object_i1 …)<br>    (Litex.number … (3 : ℂ)) := …<br><br>-- … 中间略 …<br><br>theorem h_470 :<br>  Litex.Same (_object_i2 …)<br>    (Litex.number … (9 : ℂ)) := …</pre> |
+| `let my_age = 3` | `{` | `noncomputable def _object_i1 :=` |
+| `let brother_age = 3 * my_age` | `  "statement_result": "accepted",` | `  Litex.number (M := M) (3 : ℂ)` |
+| `brother_age = 3 * 3 = 9` | `  "statement": "brother_age = (3 * 3) = 9",` |  |
+|  | `  "proof_method": {` | `theorem h_1 :` |
+|  | `    "type": "compound_fact",` | `  Litex.Same (_object_i1 …)` |
+|  | `    "rule_name": "Chain"` | `    (Litex.number … (3 : ℂ)) := …` |
+|  | `  },` |  |
+|  | `  "stores": [` | `-- … 中间略 …` |
+|  | `    "brother_age = (3 * 3) = 9",` |  |
+|  | `    "brother_age = (3 * 3)",` | `theorem h_470 :` |
+|  | `    "(3 * 3) = 9"` | `  Litex.Same (_object_i2 …)` |
+|  | `  ]` | `    (Litex.number … (9 : ℂ)) := …` |
+|  | `}` |  |
 
-左边是人写的数学；中间是机器存下来的“为什么成立”；右边是同一结果接到 Lean 后的证明形态。可交互数学书吃的是中间这一列；要独立复核时，再走到右边。
+Litex 源码是人写的数学；JSON 记录机器存下来的“为什么成立”；Lean 代码是同一结果接到 Lean 后的证明形态。可交互数学书可以使用这些验证记录；需要独立复核时，再检查生成的 Lean 证明。
 
 一旦验证产出结构化的记录，进一步的可能就出现了。
 定义与已建立事实之间的关系可以支撑知识图谱；AI agent 可以用反馈修正失败的一步，并从已接受的知识继续。围绕这种交互构建一个有能力的数学 agent，是我更长远的目标之一。
 
-同一份记录也为通往 Lean 的桥梁提供了基础。编译器可以同时利用 Litex 源码及其验证结果，按 Litex 实际使用的推理生成 Lean 陈述与证明。有人会问，Litex源码这么多，是不是有Bug，有Bug是不是说明不严格？Litex当然会有bug，但Litex代码能编译到Lean。可以这样去理解：一般的形式化语言，比如Lean，需要被编译成lambda calculus，以确保里面的代码的严格性；而Litex，能被编译成Lean，确保正确性。这里还能看到抽象层级的区别：Litex可以理解成Lean的某种封装。
+同一份记录也为通往 Lean 的桥梁提供了基础。Litex 有自己的语言和验证机制。在当前编译器支持的范围内，可以结合源码和验证记录，按 Litex 实际使用的推理生成 Lean 陈述与证明，再交给 Lean 内核独立检查。这让我们在 Litex 给出的检查结果之外，多了一条复核途径。目前这条路径仍在扩展，尚未覆盖 Litex 的全部语言和推理规则。
 
-而因为Litex的执行不用触及lambda calculus这么底层的东西（lean的验证和执行本质上是一体的，都是靠编译到lambda calculus的。Litex的验证天然分成了两层，首先是litex帮你验证了一遍这一轮，通常你已经能觉得你证明完毕了；其次是如果你真的想要绝对无误（因为你可能担心litex的验证逻辑有bug），那就让litex帮你编译到lean代码再验证。litex帮你验证的这一轮可以非常快），本质上技术架构上是一种数据库和搜索，所以Litex在一些任务上非常快。下面是一次本地抽查（2026-10-21）：Litex 用 `target/release/litex -f`，Lean 在已有 Mathlib 缓存的工程里用 `lake env lean` 检查同一批小例子；Lean 时间为第二次较暖运行。这不是正式 benchmark，详细条件与公平阅读说明见[Lean–Litex 示例对比](Lean与Litex示例对比.md#9-local-runtime-spot-checks)。
+日常写作时，用户可以先用 Litex 检查每一步，查看依据并修改未通过的步骤。生成 Lean 证明后的内核复核，则是另一个环节。Litex 的这一轮检查围绕数学特化的数据库、事实查找和验证规则展开，在一些任务上能很快给出反馈。下面是一次本地抽查（2026-10-21）：Litex 用 `target/release/litex -f`，Lean 在已有 Mathlib 缓存的工程里用 `lake env lean` 检查同一批小例子；Lean 时间为第二次较暖运行。这不是正式 benchmark，详细条件与公平阅读说明见[Lean–Litex 示例对比](Lean与Litex示例对比.md#9-local-runtime-spot-checks)。
 
 | 场景 | Litex（中位） | Lean（第 2 次较暖） | 量级差 |
 | --- | --- | --- | --- |
@@ -155,6 +185,6 @@ brother_age = 3 * 3 = 9
 
 Litex能编译到Lean有巨大价值。它给 Litex 一条进入 Lean 生态的路径，并为翻译后的证明增加一层独立检查。Lean一直以难以被阅读著称，它的语义和标准数学语义也有一些冲突。Litex相当于提供了门槛更低的，让普通人使用形式化工具的一种途径：熟悉的表层与快速检查在 Litex；更深的库与独立内核复核可以接到 Lean。更完整的并排例子见[Lean–Litex 示例对比](Lean与Litex示例对比.md)；设计总论见[Litex 中文蓝图](Litex中文蓝图.md)。
 
-虽然做数学研究的评价体系受到了AI冲击，但我觉得现在是学习数学的最好的时候（相关讨论见 3Blue1Brown 的[《There's never been a better time to go into math》](https://www.youtube.com/watch?v=LKrwhjOI8Nc)）。普通人不需要做数学，他们只需要使用数学，把数学当做他们理解世界的工具。AI并没有促进人们理解数学，在帮人学习上，本质上还是一种电子化的做题家老师。但AI让Litex这样的项目得以快速实现，Litex从第一性原理上，重新审视了什么是数学，什么是推理这样的问题。希望学习过Litex的读者，未来看到自然语言写的数学，也能联想到Litex，联想到数学本身也是一个严格的语言，它有它背后的逻辑和脉络。我想就够了。
+虽然做数学研究的评价体系受到了AI冲击，但我觉得现在是学习数学的最好的时候（相关讨论见 3Blue1Brown 的[《There's never been a better time to go into math》](https://www.youtube.com/watch?v=LKrwhjOI8Nc)）。普通人不需要做数学，他们只需要使用数学，把数学当做他们理解世界的工具。AI并没有促进人们理解数学，它在帮人学习数学上还只是一种电子化的做题家老师。但Litex不同。Litex从第一性原理上，重新审视了什么是数学，什么是推理这样的问题。希望学习过Litex的读者，未来看到自然语言写的数学，也能联想到Litex，联想到数学本身也是一个严格的语言，它有它背后的逻辑和脉络。我想就够了。
 
-Litex 仍在快速开发中。欢迎大家使用并提出宝贵建议。官网：https://litexlang.com/。开源代码在https://github.com/litexlang/golitex。想要了解litex怎么工作的，可以联系litexlang@outlook.com。
+Litex 仍在快速开发中。欢迎大家使用并提出宝贵建议。想要了解litex怎么工作的，可以联系litexlang@outlook.com。

@@ -8,6 +8,32 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<InferAtomicFactResult> {
         match fact {
+            AtomicFact::HasDerivativeAtFact(f) => {
+                Ok(InferAtomicFactResult::HasDerivativeAtFact(vec![
+                    InferHasDerivativeAtFactResult::Definition(
+                        InferHasDerivativeAtDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotHasDerivativeAtFact(_) => {
+                Ok(InferAtomicFactResult::NotHasDerivativeAtFact(Vec::new()))
+            }
+            AtomicFact::FunctionDifferentiableAtFact(f) => {
+                Ok(InferAtomicFactResult::FunctionDifferentiableAtFact(vec![
+                    InferFunctionDifferentiableAtFactResult::Definition(
+                        InferFunctionDifferentiableAtDefinitionResult {
+                            source_fact_id: f.fact_id,
+                            derived: self.store_real_analysis_definition(fact, state)?,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotFunctionDifferentiableAtFact(_) => Ok(
+                InferAtomicFactResult::NotFunctionDifferentiableAtFact(Vec::new()),
+            ),
             AtomicFact::RealSetBoundFact(f) => Ok(InferAtomicFactResult::RealSetBoundFact(vec![
                 InferRealSetBoundFactResult::Definition(InferRealSetBoundDefinitionResult {
                     source_fact_id: f.fact_id,

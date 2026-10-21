@@ -1,0 +1,2 @@
+have fn wrong(x R) R=x^2
+$has_derivative_at(wrong,3,5)

@@ -1,0 +1,2 @@
+# Classical point derivative: checked full domain, interior and law premises.
+release thm fn_derivative_at_nonzero_interior(2)

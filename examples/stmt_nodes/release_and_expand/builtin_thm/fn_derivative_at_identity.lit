@@ -1,0 +1,4 @@
+# Classical point derivative: checked full domain, interior and law premises.
+have fn d_id(x R) R=x
+release thm fn_derivative_at_real_interior(0)
+release thm fn_derivative_at_identity(d_id,0)

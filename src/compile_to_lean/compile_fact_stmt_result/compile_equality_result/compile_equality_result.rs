@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourcePosition, SourceOwner};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::EqualFactWellDefinedProof;
 use crate::prelude::*;
@@ -13,34 +13,110 @@ impl LitexToLeanCompiler {
     ) -> Result<(String, String), LeanCompileError> {
         match result {
             VerifyEqualityResult::Success(success) => {
-                let left = self.compile_wd(&success.well_defined_proof.left, position)?;
-                let right = self.compile_wd(
-                    &success.well_defined_proof.right,
-                    &SourcePosition {
-                        before: 1,
-                        ..*position
-                    },
+                let bindings = self.compile_equal_wd_locals(
+                    &success.fact,
+                    &success.well_defined_proof,
+                    position,
                 )?;
+                let locals = SourcePosition::new(
+                    position.parent,
+                    SourceOwner::EqualWDLocals(&success.well_defined_proof, 2),
+                    2,
+                );
                 let formed = SourcePosition {
+                    parent: Some(&locals),
                     before: 2,
                     ..*position
                 };
                 let position = &formed;
-                ensure_object(&success.fact.left, &success.well_defined_proof.left)?;
-                ensure_object(&success.fact.right, &success.well_defined_proof.right)?;
+                let left = self.compile_object_reference(&success.fact.left, position)?;
+                let right = self.compile_object_reference(&success.fact.right, position)?;
                 let proof = self.compile_equality_search_with_parent_wd(
                     &success.fact,
                     &success.searched_proof,
                     Some(&success.well_defined_proof),
                     position,
                 )?;
-                Ok((format!("Litex.Same {left} {right}"), proof))
+                Ok((
+                    Self::scope_equal_wd(format!("Litex.Same {left} {right}"), &bindings),
+                    Self::scope_equal_wd_proof(
+                        format!("Litex.Same {left} {right}"),
+                        proof,
+                        &bindings,
+                    ),
+                ))
             }
             VerifyEqualityResult::Failed(_) => Err(LeanCompileError::new(
                 "Equality/Failed",
                 "Failed verification is not proof evidence.",
             )),
         }
+    }
+
+    pub(in crate::compile_to_lean) fn compile_equal_wd_locals(
+        &self,
+        fact: &EqualFact,
+        wd: &EqualFactWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let mut bindings = Vec::new();
+        for (index, (object, child)) in [(&fact.left, &wd.left), (&fact.right, &wd.right)]
+            .into_iter()
+            .enumerate()
+        {
+            ensure_object(object, child)?;
+            let prior =
+                SourcePosition::new(Some(position), SourceOwner::EqualWDLocals(wd, index), index);
+            let term = self.compile_wd(child, &prior)?;
+            if !matches!(
+                object,
+                Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+            ) {
+                bindings.push(format!(
+                    "let {} := {term}",
+                    prior.equal_wd_child_name(index)
+                ));
+            }
+        }
+        Ok(bindings)
+    }
+
+    pub(in crate::compile_to_lean) fn scope_equal_wd(term: String, bindings: &[String]) -> String {
+        if bindings.is_empty() {
+            term
+        } else {
+            format!(
+                "(by\n  {}\n  exact {})",
+                bindings.join("\n").replace('\n', "\n  "),
+                term.replace('\n', "\n  ")
+            )
+        }
+    }
+
+    pub(in crate::compile_to_lean) fn scope_equal_wd_proof(
+        proposition: String,
+        proof: String,
+        bindings: &[String],
+    ) -> String {
+        if !bindings.iter().any(|binding| {
+            let name = binding
+                .strip_prefix("let ")
+                .unwrap()
+                .split_whitespace()
+                .next()
+                .unwrap();
+            proof
+                .split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+                .any(|token| token == name)
+        }) {
+            return proof;
+        }
+        // A proof can be the receiver of .trans, with no expected type yet.
+        // Term lets and an explicit inner type remain inferable in that position.
+        format!(
+            "({};\n(show {proposition} from {proof}))",
+            bindings.join(";\n")
+        )
     }
 
     pub(in crate::compile_to_lean) fn compile_equality_search(
@@ -118,7 +194,24 @@ impl LitexToLeanCompiler {
             )?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::AddZeroRightFromEqualities(proof),
-            ) => self.compile_add_zero_from_equalities(fact, proof, position)?,
+            ) => self.compile_add_zero_from_equalities(
+                fact,
+                &proof.remaining_equal,
+                &proof.zero_equal,
+                proof.reversed,
+                false,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinRule(
+                EqualitySearchProofByBuiltinRule::AddZeroLeftFromEqualities(proof),
+            ) => self.compile_add_zero_from_equalities(
+                fact,
+                &proof.remaining_equal,
+                &proof.zero_equal,
+                proof.reversed,
+                true,
+                position,
+            )?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::Calculation(
                     EqualitySearchProofByCalculation::Rational {},

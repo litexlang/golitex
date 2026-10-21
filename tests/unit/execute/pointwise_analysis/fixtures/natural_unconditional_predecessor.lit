@@ -1,0 +1,4 @@
+claim:
+    ? forall n N:
+        n-1 $in N
+    n-1 $in N

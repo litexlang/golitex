@@ -28,6 +28,13 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
         match obj {
+            Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(a)) => {
+                Ok(crate::ast::obj::DerivativeAt::new(
+                    self.inst_obj_rec(&a.function, param_to_arg_map)?,
+                    self.inst_obj_rec(&a.point, param_to_arg_map)?,
+                )
+                .into())
+            }
             Obj::BoundOperator(crate::ast::obj::BoundOperator::Supremum(a)) => Ok(
                 crate::ast::obj::Supremum::new(self.inst_obj_rec(&a.set, param_to_arg_map)?).into(),
             ),
