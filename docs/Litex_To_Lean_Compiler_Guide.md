@@ -579,9 +579,15 @@ proof blocks can still produce substantially larger declarations.
 
 Named formula calls can project the signature already stored in the function
 object when the original membership ID and signature match its declaration.
-An output-membership proof can likewise reuse an emitted call when both its
-application and original WD node match. Argument and domain checks still run
-when that constructor is first emitted.
+An output-membership proof can likewise reuse an emitted call. A separately
+checked occurrence qualifies when it has the same source application, exact
+signature citation and compatible child constructors. The compiler validates
+that occurrence's own argument, domain and return evidence before choosing the
+existing binding. For example, the membership proof needed to square `f(x)`
+can refer to `let _litex_return_call := _wd_1_0` instead of emitting another
+`Litex.call` with the same arguments. Different signatures and arithmetic
+constructor variants are not interchangeable. This reduces generated terms;
+it does not remove duplicate subtrees from the Runtime result.
 
 Looking back at a completed statement's WD result retains its emitted object
 bindings. The original construction's fact prefix stays unchanged: replay may
@@ -621,6 +627,15 @@ later uses resolve that original producer. This needs no additional result
 field. In contrast, `formed_subjects` captures WD IDs which storage previously
 allocated without returning them. Both mechanisms use source-owned identities,
 not a compiler-owned cache.
+
+The [point reconstruction example](../lean/examples/point_from_coordinates/statement.lit)
+compiles `p = (p(1), p(2))` using `FiniteFunction.reconstruct`. Its recorded
+Cartesian membership supplies the dimension, and each recorded receiver
+equality supplies the corresponding coordinate. The generated proof normalizes
+the fixed `Fin n` index to the source's one-based numeral. The
+[generated Lean](../lean/examples/point_from_coordinates/statement.lean) has
+passed Lean checking, as have reversed three-dimensional reconstruction and
+coordinates transported through an original `p = q` fact.
 
 Fixed representation conversions and domain assembly belong in proved Core
 lemmas. `callArguments2_mem_cart` consumes the two original argument-membership

@@ -179,6 +179,24 @@ impl<'a> SourcePosition<'a> {
         })
     }
 
+    /// A separately checked occurrence can reuse a completed call with the
+    /// same source constructor and selected signature. Callers must validate
+    /// the occurrence's own WD evidence before using this output-only alias.
+    pub fn bound_compatible_fn_call(
+        &self,
+        application: &FnObj,
+        proof: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof,
+    ) -> Option<String> {
+        self.bound_child(|child| {
+            matches!(child,
+                ObjWellDefinedProof::ByDef {
+                    obj: Obj::FnObj(original_application),
+                    proof: ObjWellDefinedProofByDef::FnObj(original),
+                } if original_application == application && same_call_constructor(original, proof)
+            )
+        })
+    }
+
     fn bound_child(&self, matches: impl Fn(&ObjWellDefinedProof) -> bool) -> Option<String> {
         self.bound_constructor(matches).map(|(_, term)| term)
     }
@@ -7742,4 +7760,67 @@ fn function_argument_scope(
         } => access.argument_scope.as_ref(),
         _ => None,
     }
+}
+
+// This compares host-constructor shape, not mathematical equality. Arithmetic
+// variants and alternative signatures are deliberately not interchangeable.
+fn same_call_constructor(
+    left: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof,
+    right: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof,
+) -> bool {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
+    let (
+        Some(FnObjDomainFnSetEvidence::InFunctionSet {
+            fn_set: a,
+            fact_id: a_id,
+            ..
+        }),
+        Some(FnObjDomainFnSetEvidence::InFunctionSet {
+            fn_set: b,
+            fact_id: b_id,
+            ..
+        }),
+    ) = (&left.domain_fn_set, &right.domain_fn_set)
+    else {
+        return false;
+    };
+    if a != b
+        || a_id != b_id
+        || left.child_obj_well_defined.len() != right.child_obj_well_defined.len()
+    {
+        return false;
+    }
+    left.child_obj_well_defined
+        .iter()
+        .zip(&right.child_obj_well_defined)
+        .all(|(a, b)| {
+            if a.obj() != b.obj() {
+                return false;
+            }
+            if std::ptr::eq(a.as_ref(), b.as_ref())
+                || matches!(
+                    a.obj(),
+                    Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_)
+                )
+            {
+                return true;
+            }
+            match (a.as_ref(), b.as_ref()) {
+                (
+                    ObjWellDefinedProof::ByKnown { wd_id: a, .. },
+                    ObjWellDefinedProof::ByKnown { wd_id: b, .. },
+                ) => a == b,
+                (
+                    ObjWellDefinedProof::ByDef {
+                        proof: ObjWellDefinedProofByDef::FnObj(a),
+                        ..
+                    },
+                    ObjWellDefinedProof::ByDef {
+                        proof: ObjWellDefinedProofByDef::FnObj(b),
+                        ..
+                    },
+                ) => same_call_constructor(a, b),
+                _ => false,
+            }
+        })
 }
