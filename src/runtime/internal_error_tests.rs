@@ -91,8 +91,9 @@ fn internal_error_ordinary_user_failures_keep_their_existing_classification() {
     let parse = rt.run_litex_code("let broken =").unwrap();
     assert!(!parse.success);
     assert!(!parse
-        .session_error
+        .input_error
         .unwrap()
-        .to_string()
+        .error
+        .message
         .contains("Litex internal bug"));
 }

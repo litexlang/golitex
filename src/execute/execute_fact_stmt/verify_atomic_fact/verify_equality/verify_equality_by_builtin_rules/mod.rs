@@ -93,3 +93,6 @@ pub mod by_real_bounds;
 pub mod by_sequence_limsup;
 
 pub mod by_sequence_liminf;
+
+pub(crate) use by_trig_quotient_relations::TanCotProductBuiltinRuleProof;
+pub(crate) use by_trig_quotient_relations::TanSquareReciprocalCosineBuiltinRuleProof;

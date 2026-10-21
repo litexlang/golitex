@@ -139,7 +139,7 @@ fn tuple_comma_syntax_and_explicit_empty_constructor() {
     accepted(&mut rt, "tuple() = {}\n(1,)(1)=1\n((1,),)(1)(1)=1\n(1)=1");
     for source in ["eval ()", "eval (,)", "eval (1,,)", "eval (1,2,,)"] {
         let run = runtime().run_litex_code(source).unwrap();
-        assert!(!run.success && run.session_error.is_some(), "{source}");
+        assert!(!run.success && run.input_error.is_some(), "{source}");
     }
     rejected(&mut rt, "(1,) = 1");
 }

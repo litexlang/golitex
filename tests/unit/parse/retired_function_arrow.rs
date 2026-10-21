@@ -17,18 +17,18 @@ fn retired_function_arrow_rejects_in_each_object_context() {
     ] {
         let mut rt = runtime();
         let run = rt.run_litex_code(source).unwrap();
-        assert!(!run.success && run.session_error.is_some(), "{source}");
+        assert!(!run.success && run.input_error.is_some(), "{source}");
         assert!(run.statement_results.is_empty(), "{source}");
         assert!(
-            format!("{:?}", run.session_error)
+            format!("{:?}", run.input_error)
                 .contains("function-set arrow `->` is removed; use `fn(x A) B`"),
             "{source}: {:?}",
-            run.session_error
+            run.input_error
         );
     }
     // Compact R- set aliases absorb the hyphen; this spelling must still reject.
     let run = runtime().run_litex_code("let Retired=R->R->Z").unwrap();
-    assert!(!run.success && run.session_error.is_some());
+    assert!(!run.success && run.input_error.is_some());
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn retired_function_arrow_does_not_leave_an_attempted_binding() {
     assert!(rt.run_litex_code("have fn id(x R) R = x").unwrap().success);
     let before = rt.top_exec_env().facts.facts_by_id.len();
     let run = rt.run_litex_code("let Retired = R -> R").unwrap();
-    assert!(!run.success && run.session_error.is_some());
+    assert!(!run.success && run.input_error.is_some());
     assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before);
     let run = rt
         .run_litex_code("let Retired = fn(x R) R\nid(2) = 2")

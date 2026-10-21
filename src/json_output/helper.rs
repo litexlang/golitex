@@ -147,7 +147,7 @@ pub(super) fn fact_line(fact: &Fact) -> Option<usize> {
     fact_source_line(fact).map(|line| line.line)
 }
 
-pub(super) fn fact_source_line(fact: &Fact) -> Option<&SourceLine> {
+pub(crate) fn fact_source_line(fact: &Fact) -> Option<&SourceLine> {
     match fact {
         Fact::AtomicFact(a) => atomic_source_line(a),
         Fact::AndFact(f) => f.line_file.as_ref(),

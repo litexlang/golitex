@@ -148,6 +148,7 @@ fn compact_run_envelope_detail() {
         statement_results: vec![stmt],
         statement_texts: Vec::new(),
         failed_statement_results: None,
+        input_error: None,
         session_error: None,
         normal_json: None,
     };

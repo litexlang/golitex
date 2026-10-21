@@ -76,7 +76,8 @@ pub(super) fn project_run_statements_normal(
     runtime: &Runtime,
 ) -> Vec<JsonValue> {
     let lang = output_language(runtime);
-    run.statement_results
+    let mut statements: Vec<JsonValue> = run
+        .statement_results
         .iter()
         .enumerate()
         .map(|(index, stmt)| {
@@ -86,7 +87,11 @@ pub(super) fn project_run_statements_normal(
                 lang,
             )
         })
-        .collect()
+        .collect();
+    if let Some(input) = &run.input_error {
+        statements.push(super::feedback::input_failure(input, lang));
+    }
+    statements
 }
 
 /// Build the Normal run envelope while Runtime still holds cited facts.
@@ -97,7 +102,8 @@ pub fn project_run_normal(
     path: Option<&Path>,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let statement_results = project_run_statements_normal(run, runtime);
+    let (statement_results, errors) =
+        super::feedback::summarize_statements(project_run_statements_normal(run, runtime), lang);
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,
@@ -119,6 +125,7 @@ pub fn project_run_normal(
                 string(runtime.launch_command.output_language().as_str()),
             ),
             ("statement_results", JsonValue::Array(statement_results)),
+            ("errors", JsonValue::Array(errors)),
             (
                 "session_terminated",
                 JsonValue::Bool(run.session_error.is_some()),

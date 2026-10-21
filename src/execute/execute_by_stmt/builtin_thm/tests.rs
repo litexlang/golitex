@@ -332,7 +332,7 @@ fn exact_function_retired_cart_dimension_has_no_parse_wd_or_numeric_route() {
         let mut rt = runtime();
         let result = rt.run_litex_code(code).unwrap();
         assert!(
-            result.session_error.is_some(),
+            result.input_error.is_some(),
             "retired syntax accepted: {code}"
         );
         assert!(result.statement_results.is_empty());

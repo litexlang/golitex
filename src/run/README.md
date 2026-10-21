@@ -59,9 +59,11 @@ k = 1
 
 The overall run above still reports failure for the first statement, while
 the successful correction is committed. Soft failures continue to the next
-block. A parse/execution error stops the run with `session_terminated: true`
-and structured `termination`, alongside the already executed statement
-results. Earlier successful blocks
+block. A parse error stops only this source submission and is retained as
+`input_error`, alongside its raw source and the earlier execution results.
+It leaves `session_terminated: false` and `termination: null`; the REPL accepts
+the next input. Hard execution errors remain `session_error` with structured
+`termination`. Earlier successful blocks
 remain committed. For example, `let a = 1` followed by `let b =` commits a
 and restores the failed b binding. A tokenizer error anywhere still prevents
 all execution because tokenization happens before the block loop.
@@ -73,18 +75,28 @@ from its published facts. This presentation metadata does not change parse
 transactions, execution, commit or rollback.
 Rust callers constructing `RunLitexCodeResult` directly include `statement_texts`;
 `RunLitexCodeResult::new` defaults it to empty for source-free result trees.
+It also initializes `input_error` to `None`. Rejected tokenizer/parser input is
+now an `Ok` result with `success: false` and `input_error: Some(...)`, rather
+than `Err` or `session_error`. The Rust `statement_results` and
+`failed_statement_results` still describe executed AST statements only; JSON
+appends the rejected raw input as one final statement entry. Existing hard
+execution and mount failures remain separate. `run_repl_loop` returns `()` on
+normal exit instead of accumulating a Boolean over prior attempts.
 
 The CLI emits failed Normal JSON for recognized `-e` / `-f` / `-r` commands
 even when tokenization or I/O fails before a run result exists. Extraction
 errors use the artifact error envelope. Invalid launch arguments still use
 stderr and exit code 2. The REPL prints `success` for accepted blocks and
-Normal JSON for soft failures, preserving the live session.
-Hard REPL errors are reported once by the caller. In `-session`, any soft REPL
-rejection changes the final `run_result` to `"failure"` while leaving
-`session_terminated` false. A hard REPL error additionally adds structured
-termination information;
-the pre-REPL JSON snapshot keeps citations intact after the environment aborts.
-interactive parse/tokenizer diagnostics use `<repl>` rather than the initial
+Normal JSON for rejected inputs, preserving the live session. Normal run JSON
+summarizes rejected statements in `errors`; rejected `statement_results` entries
+contain only their verdict and source. Full evidence remains available through
+the standalone Normal and Detailed Rust projections.
+Hard REPL errors are reported once by the caller. Each interactive submission
+has an independent verdict. In `-session`, ordinary rejections do not rewrite the
+initial batch JSON or turn a normal REPL exit into failure. A hard error still
+adds structured termination information to that initial snapshot and exits 1;
+the pre-REPL snapshot keeps citations intact after the environment aborts.
+Interactive parse/tokenizer diagnostics use `<repl>` rather than the initial
 file or `<eval>`. The REPL text is English; `-lang` selects JSON field names
 and explanations. Non-UTF-8 argv is a launch error rather than a panic.
 Closing a stdout pipe discards further output while preserving the command's

@@ -253,3 +253,5 @@ mod exact_rational_powers;
 #[cfg(test)]
 #[path = "../../tests/unit/execute/tuple_cart_object_calls/tests.rs"]
 mod tuple_cart_object_call_tests;
+
+pub(crate) use execute_have_obj_in_nonempty_set_stmt::HaveObjInNonemptySetGroupResult;

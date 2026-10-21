@@ -1,5 +1,6 @@
 use crate::execute::ExecStmtResult;
 use crate::runtime::RuntimeError;
+use crate::runtime::RuntimeParseError;
 use std::fmt;
 use std::path::PathBuf;
 
@@ -49,9 +50,24 @@ pub struct RunLitexCodeResult {
     /// `None` when there is no soft Failed (JSON: null). `ExecStmtResult` is not
     /// Clone yet, so Rust stores indices; JSON can expand them to objects.
     pub failed_statement_results: Option<Vec<usize>>,
+    /// A rejected source submission that did not produce an executable AST.
+    /// The current submission stops, but its live Session can accept new input.
+    pub input_error: Option<RunInputError>,
     pub session_error: Option<RunSessionError>,
     /// Pretty Normal JSON for this run (filled while Runtime is still alive).
     pub normal_json: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct RunInputError {
+    pub statement: String,
+    pub error: RuntimeParseError,
+}
+
+impl RunInputError {
+    pub fn new(statement: String, error: RuntimeParseError) -> Self {
+        Self { statement, error }
+    }
 }
 
 pub struct RunFileResult {
@@ -147,6 +163,7 @@ impl RunLitexCodeResult {
             statement_results,
             statement_texts: Vec::new(),
             failed_statement_results,
+            input_error: None,
             session_error,
             normal_json: None,
         }
@@ -166,28 +183,6 @@ impl RunLitexCodeResult {
         self.normal_json = Some(crate::json_output::emit_run_normal(
             self, runtime, target, path,
         ));
-    }
-
-    /// A continuable interactive statement was rejected after the initial
-    /// file/eval run. The session stayed alive, but the whole submitted run no
-    /// longer qualifies as successful. Preserve already-rendered citations and
-    /// update only the envelope verdict.
-    pub fn attach_session_rejection(&mut self, runtime: &crate::runtime::Runtime) {
-        self.success = false;
-        if let Some(crate::knowledge_base::JsonValue::Object(mut fields)) = self
-            .normal_json
-            .as_deref()
-            .and_then(|json| crate::knowledge_base::JsonValue::parse(json).ok())
-        {
-            let language = runtime.launch_command.output_language();
-            let key = |name| crate::json_output::json_keys::localize_key(name, language);
-            fields.insert(
-                key("run_result"),
-                crate::knowledge_base::JsonValue::String("failure".into()),
-            );
-            self.normal_json =
-                Some(crate::knowledge_base::JsonValue::Object(fields).stringify_pretty());
-        }
     }
 
     /// Preserve the batch's already-rendered citations after a REPL abort has
@@ -241,6 +236,17 @@ impl RunFileResult {
     pub fn process_failed(&self) -> bool {
         self.run.process_failed()
     }
+
+    /// A rejected prerequisite prevents mounting the requested project context.
+    pub(crate) fn mount_error(&self) -> RunSessionError {
+        if let Some(error) = &self.run.session_error {
+            return error.clone();
+        }
+        if let Some(input) = &self.run.input_error {
+            return RunSessionError::Runtime(RuntimeError::ParseError(input.error.clone()));
+        }
+        RunSessionError::FailToImport(crate::prelude::ImportFailure::rejected_export(self))
+    }
 }
 
 impl RunEvalResult {
@@ -265,6 +271,7 @@ impl RunRepoResult {
             statement_results: Vec::new(),
             statement_texts: Vec::new(),
             failed_statement_results: None,
+            input_error: None,
             session_error,
             normal_json: None,
         };

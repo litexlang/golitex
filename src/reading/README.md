@@ -8,17 +8,71 @@ symbol identity, separately from proof dependencies.
 
 ## Current status
 
-Only the Rust module declaration and this design documentation exist.
-There is no reading exporter, public reading schema, browser viewer, HTTP
-service, static export command or `-reading` CLI mode yet.
+The initial implementation provides a typed reading projection, a shared
+browser viewer, loopback preview/upload, JSON output and static export.
+It reads actual execution results; it does not reconstruct dependencies from
+localized verifier messages or search for a different proof.
 
-[DESIGN.md](DESIGN.md) records the proposed responsibilities, command shapes,
-website integration, implementation sequence and acceptance criteria. It is
-a design proposal, not a statement of implemented support or a frozen API.
+```sh
+litex -reading
+litex -reading -f chapter.lit
+litex -reading -r book/
+litex -reading -json -f chapter.lit > chapter.reading.json
+litex -reading -export book-site -r book/
+```
+
+Preview opens a browser; `-no-browser` prints the URL without opening one.
+Use `-port 49181` to choose a port, `-lang zh` for Chinese presentation and
+`-strict` to use the verifier's strict execution policy. File/project inputs
+use the existing project loader. `-e` uses isolated source evaluation.
+Bare preview accepts `.lit` files, a complete project folder, or an existing
+reading JSON bundle. A dependent source needs its project configuration and
+dependencies. The local service listens only on `127.0.0.1`.
+
+The viewer follows the typography and palette of `../litex-webpage`: a light
+background, green controls, blue current statements, green cited facts and
+purple concepts. The initial selection prefers an accepted statement with
+actual citations. Premises lead into a conclusion card; detailed execution
+evidence and the Rule Book start collapsed. The same viewer handles local
+preview and static export without a Node runtime or frontend build.
+
+Source ranges use original UTF-8 byte offsets. Occurrence highlighting uses
+resolved identities and reports mapping coverage per statement. Typed proof
+payloads and retained local scopes are exported; nested source navigation,
+some local declaration identities and whole-book chunked loading still need
+further acceptance work. Rule descriptions are shown when authored metadata
+is available; a catalogue entry alone is not a complete mathematical rule
+specification. [DESIGN.md](DESIGN.md) records the full target and acceptance
+boundaries; this first implementation does not establish every target there.
+
+## Website embedding
+
+Publish the generated `book-site/` files alongside the website, then embed the
+published page:
+
+```html
+<iframe src="/books/book-site/index.html"
+        title="Interactive textbook"
+        style="width:100%;height:85vh;border:0"></iframe>
+```
+
+Or load `reader.css` and `reader.js`, then mount the viewer into an existing
+element. Its styles are scoped to the reader; standalone page styles require
+the `litex-reading-page` body class.
+
+```js
+const document = await fetch('/books/chapter.reading.json').then(r => r.json());
+const reader = LitexReading.mount(documentRoot, { document, locale: 'zh' });
+```
+
+Static browsing uses the exported evidence and needs no running Litex process.
+The loopback preview URL belongs to the local machine; publish the export to
+make it available to website visitors. Rechecking edited source requires a
+separate execution endpoint; mounting the viewer does not install one.
 
 ## Ownership
 
-The reading subsystem will own the exported reading model, its projection
+The reading subsystem owns the exported reading model, its projection
 from checked results, source/occurrence mappings, rule catalogue export,
 and the reusable browser viewer and its assets. Local preview and published
 websites should consume the same model and viewer.
@@ -31,11 +85,11 @@ Existing components retain their responsibilities:
   [store_fact_and_infer](../store_fact_and_infer/README.md) produce typed
   verification, storage and inference evidence.
 - [json_output](../json_output/README.md) retains its current Normal, Compact
-  and Detailed contracts. Reading will be a separate projection of the typed
+  and Detailed contracts. Reading is a separate projection of the typed
   evidence, without decoding localized JSON or replacing the evidence owners.
 - [identifier_identity.md](../identifier_identity.md) defines symbol identity;
   [TokenBlock](../tokenize/token_block.rs) retains original token byte ranges.
 
-Future CLI dispatch belongs in the existing launch/run layers and should
-delegate reading work here. Reading must preserve statement transactions,
+CLI dispatch in the existing launch/run layers delegates reading work here.
+Reading must preserve statement transactions,
 scope visibility, source order and explicit trust boundaries.

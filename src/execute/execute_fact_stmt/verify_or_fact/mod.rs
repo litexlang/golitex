@@ -15,3 +15,17 @@ pub use result::{
 pub use well_defined_result::{
     FailToVerifyOrFactWellDefinedResult, OrFactWellDefinedProof, VerifyOrFactWellDefinedResult,
 };
+
+pub(crate) use result::OrBuiltinAbsSignSplit;
+pub(crate) use result::OrBuiltinClassicalImplication;
+pub(crate) use result::OrBuiltinComplementaryAtomic;
+pub(crate) use result::OrBuiltinCompleteResidues;
+pub(crate) use result::OrBuiltinEqualityPlusStrictCoversWeak;
+pub(crate) use result::OrBuiltinGreaterOrLessEqual;
+pub(crate) use result::OrBuiltinIntegerDiscreteSplit;
+pub(crate) use result::OrBuiltinIntegerSuccessorTail;
+pub(crate) use result::OrBuiltinLessOrGreaterEqual;
+pub(crate) use result::OrBuiltinNaturalZeroOrAtLeastOne;
+pub(crate) use result::OrBuiltinSquareSumComponentNonzero;
+pub(crate) use result::OrBuiltinWeakOrderLeOrGe;
+pub(crate) use result::OrBuiltinZeroProductSplit;

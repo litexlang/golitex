@@ -1,8 +1,9 @@
 # Interactive reading design
 
-Status: proposed. This directory currently contains documentation and an
-empty registered Rust module. All commands, record shapes and implementation
-files described below are future work; no public schema is frozen.
+Status: target design with an initial implementation. The [README](README.md)
+lists currently implemented commands, embedding and limitations. The sections
+below retain the full target and illustrative record shapes; they are not a
+claim that all acceptance criteria have passed or a frozen public API.
 
 ## Goal and evidence
 
@@ -64,9 +65,8 @@ modules or a second family of verification result types.
 
 ## Proposed command surfaces
 
-These commands do not exist yet. Their spelling and launch/result variants
-must be finalized when the command branch is implemented. The current binary
-name is `litex`.
+These commands are implemented by the initial reading branch. The current
+binary name is `litex`.
 
 ```sh
 litex -reading

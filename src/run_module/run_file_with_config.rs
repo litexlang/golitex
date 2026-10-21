@@ -3,12 +3,11 @@
 use super::load_config::{load_config_or_empty, resolve_std_root};
 use super::run_export_file::run_export_file_observed;
 use super::run_import_module::{run_import_module_observed, RunImportModuleOutcome};
-use crate::run::source_observer::SourceObserver;
 use crate::launch_command::LaunchCommand;
 use crate::module_manager::LitexConfigExport;
-use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunLitexCodeResult, RunSessionError};
 use crate::run::run_repl::run_repl_loop;
+use crate::run::source_observer::SourceObserver;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::collections::HashSet;
 use std::fs;
@@ -114,19 +113,14 @@ pub fn run_file_with_config_observed(
                     return Ok(fail_to_import_result(
                         &runtime,
                         path,
-                        file_result.run.session_error.clone().unwrap_or_else(|| {
-                            RunSessionError::FailToImport(ImportFailure::rejected_export(
-                                &file_result,
-                            ))
-                        }),
+                        file_result.mount_error(),
                     ));
                 }
                 if is_target {
                     if keep_env_open {
                         attach_file_json(&runtime, &path, &mut file_result.run);
                         match run_repl_loop(&mut runtime) {
-                            Ok(true) => {}
-                            Ok(false) => file_result.run.attach_session_rejection(&runtime),
+                            Ok(()) => {}
                             Err(error) => {
                                 file_result.run.attach_session_error(
                                     &runtime,
@@ -168,8 +162,7 @@ pub fn run_file_with_config_observed(
             if session {
                 attach_file_json(&runtime, &path, &mut file_result.run);
                 match run_repl_loop(&mut runtime) {
-                    Ok(true) => {}
-                    Ok(false) => file_result.run.attach_session_rejection(&runtime),
+                    Ok(()) => {}
                     Err(error) => {
                         file_result.run.attach_session_error(
                             &runtime,
@@ -216,8 +209,7 @@ fn run_file_isolated(
 
     if session {
         match run_repl_loop(&mut runtime) {
-            Ok(true) => {}
-            Ok(false) => code_result.attach_session_rejection(&runtime),
+            Ok(()) => {}
             Err(error) => {
                 code_result.attach_session_error(
                     &runtime,

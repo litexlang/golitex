@@ -483,6 +483,6 @@ fn literal_object_heads_check_wd_while_retired_dimension_syntax_rejects_at_parse
     assert_eq!(run.statement_results.len(), 1);
     assert!(run.statement_results[0].is_failed());
     let run = runtime().run_litex_code("tuple_dim((1,2))=2").unwrap();
-    assert!(!run.success && run.session_error.is_some());
+    assert!(!run.success && run.input_error.is_some());
     assert!(run.statement_results.is_empty());
 }

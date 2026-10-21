@@ -46,8 +46,7 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
 
     if session {
         match run_repl_loop(&mut runtime) {
-            Ok(true) => {}
-            Ok(false) => code_result.attach_session_rejection(&runtime),
+            Ok(()) => {}
             Err(error) => {
                 code_result.attach_session_error(
                     &runtime,

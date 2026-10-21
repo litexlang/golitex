@@ -30,11 +30,11 @@ fn retired_product_surface_rejects_before_execution_and_keeps_existing_binding_s
         let before = rt.top_exec_env().facts.facts_by_id.len();
         let run = rt.run_litex_code(source).unwrap();
         assert!(
-            !run.success && run.session_error.is_some(),
+            !run.success && run.input_error.is_some(),
             "old surface accepted: {source}"
         );
         assert!(
-            format!("{:?}", run.session_error).contains(diagnostic),
+            format!("{:?}", run.input_error).contains(diagnostic),
             "wrong diagnostic: {source}"
         );
         assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before);
@@ -94,10 +94,7 @@ fn retired_spellings_cannot_reenter_a_populated_current_environment() {
         ] {
             let before = rt.top_exec_env().facts.facts_by_id.len();
             let result = rt.run_litex_code(source).unwrap();
-            assert!(
-                !result.success && result.session_error.is_some(),
-                "{source}"
-            );
+            assert!(!result.success && result.input_error.is_some(), "{source}");
             assert!(result.statement_results.is_empty());
             assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), before);
             assert!(rt.run_litex_code("p(2)=2").unwrap().success);

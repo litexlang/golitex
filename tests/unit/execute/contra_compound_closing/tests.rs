@@ -223,7 +223,7 @@ fn malformed_tails_and_cases_compound_tail_stay_rejected() {
     ] {
         let mut rt = runtime();
         match rt.run_litex_code(source) {
-            Ok(run) => assert!(!run.success && run.session_error.is_some(), "{source}"),
+            Ok(run) => assert!(!run.success && run.input_error.is_some(), "{source}"),
             Err(error) => assert!(matches!(error, crate::runtime::RuntimeError::ParseError(_))),
         }
         assert!(rt.run_litex_code("have q R = 2").unwrap().success);

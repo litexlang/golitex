@@ -56,6 +56,9 @@ fn print_help_message() -> RuntimeResult<Vec<String>> {
         format!("{} -e <code>", bin),
         format!("{} -f <file>", bin),
         format!("{} -r <repository>", bin),
+        format!("{} -reading [-f <file> | -r <project>]", bin),
+        format!("{} -reading -json -f <file>", bin),
+        format!("{} -reading -export <directory> -r <project>", bin),
         format!("{} -lean -f <file>", bin),
         format!("{} -extractpython <code>", bin),
         format!("{} -extractpython -f <file>", bin),
@@ -74,6 +77,7 @@ fn print_help_message() -> RuntimeResult<Vec<String>> {
         format!("{} -version", bin),
     ];
     let notes = vec![
+        "-reading opens an interactive local textbook reader; -json exports its data and -export writes an embeddable static site. Preview accepts -no-browser and -port <0..65535>.".to_string(),
         "-lean -f emits Lean source by replaying supported successful verification results; standalone files only.".to_string(),
         "-session keeps the Runtime env open and continues as REPL after -e/-f/-r.".to_string(),
         "-strict forbids `trust` / `trust have` / user `axiom`; abstract predicate declarations and named foundation releases are allowed.".to_string(),

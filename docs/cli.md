@@ -41,10 +41,11 @@ colon runs immediately; finish an indented block with a blank line. Use
 `exit`, `quit`, `:quit`, or end-of-input to exit. Successful blocks print
 `success`. A failed verification prints Normal JSON with the original
 statement and failure reason, then accepts the next block. Hard session
-errors stop the REPL and are reported once. In a continued `-session`, any
-rejected interactive block makes the final `run_result` a failure without
-marking the session terminated; a hard error additionally sets structured
-termination information. Interactive parse/tokenizer errors refer to `<repl>`.
+errors stop the REPL and are reported once. Parse/tokenizer errors reject the
+current submission and return to the prompt, retaining earlier accepted context.
+Every interactive submission has its own verdict. Ordinary rejections do not
+change the initial batch snapshot printed after `-session` exits; a hard error
+still marks that snapshot terminated. Interactive input errors refer to `<repl>`.
 
 Parse errors include the original source line. When the parser knows the exact
 token position, the diagnostic includes a one-based character column and a
@@ -176,6 +177,7 @@ Internally, each statement ends in one of three ways:
 |----------|---------|------------|---------|
 | **Success** | Statement completed | merge temp → parent | continue |
 | **Failed** | Soft miss (search / WD / similar) | discard temp | **continue** |
+| **InputError** | Tokenizer / parser rejection | retain earlier accepted statements | **continue with next input** |
 | **SessionError** | Hard failure | no merge | **stop** |
 
 Batch JSON presents those outcomes as:
@@ -183,12 +185,13 @@ Batch JSON presents those outcomes as:
 | Internal | In Normal JSON |
 |----------|----------------|
 | Success | statement `"statement_result": "accepted"`; run `"run_result": "success"` when every submitted statement was accepted and the session did not terminate |
-| Failed | statement `"statement_result": "rejected"` **inside** `statement_results` (Rust stays Failed) |
+| Failed / InputError | `"statement_result": "rejected"` inside `statement_results`, with a concise entry in `errors` |
 | SessionError | top-level `"session_terminated": true` with structured `termination`; session must stop |
 
 Soft Failed statements stay in `statement_results`. They are **not** lifted into
-a top-level `verify_error` that clears the array. Process exit is nonzero when
-any Failed occurred or a SessionError occurred.
+a top-level `verify_error` that clears the array. Batch exit is nonzero when
+any input was rejected or a SessionError occurred. A normal interactive exit is
+0 even after rejected attempts; each attempt reports its own verdict.
 
 A soft miss is not a proof that the proposition is false. It means the current
 routes did not establish it (or well-definedness failed). Add a smaller fact,
@@ -205,9 +208,9 @@ values and localized diagnostic messages.
 
 Explicit `by def` failures distinguish an unavailable definition from a failed
 definition requirement. A failed requirement includes its zero-based `index`,
-instantiated `goal`, and verification result; parameter-type requirements precede
-definition clauses. Nested proof-body failures retain the parsed `statement`
-and `source_location` (`path` and one-based `line`, or null for synthetic input).
+instantiated `goal`; parameter-type requirements precede definition clauses.
+Full verification results remain available through the Rust Detailed API.
+Nested proof-body failures retain `failed_statement` and `source_location` (`path` and one-based `line`, or null for synthetic input).
 The statement is rendered from the parsed syntax, not a verbatim source slice.
 
 Import termination retains `phase: import` and adds `cause`, `path`, and an
@@ -218,8 +221,12 @@ termination phases. These diagnostics do not change acceptance, rollback,
 search budgets, or session-stopping behavior.
 
 `-e`, `-f`, and `-r` batch outcomes emit one Normal `run` document on stdout.
-Tokenization, parsing and early I/O failures also produce a failed Normal
-document with `session_terminated: true` and structured `termination`. Invalid command-line shapes still produce text
+Tokenization and parsing failures produce a failed Normal document with concise
+`errors`, `session_terminated: false` and `termination: null`. They stop the
+current submission; the next REPL input can continue. I/O failures produce
+`session_terminated: true` and structured `termination`. A malformed prerequisite
+module still prevents loading the requested context and is a hard mount failure.
+Invalid command-line shapes still produce text
 on stderr with exit code `2`, because no command was selected. Extraction
 failures produce a failed artifact document with `error`. Success and failure
 artifacts share `format`, `target`, `path`, `output_path`, and `language`, and
@@ -230,12 +237,11 @@ is defined in [`src/json_output/README.md`](../src/json_output/README.md).
 It does **not** dump the full verify/exec IR; that tree remains available for
 the Rust Detailed projection and other tooling.
 
-When stderr is an interactive terminal, a batch parse/tokenizer error also
-prints the source diagnostic there. Stdout remains one JSON document. With
-stderr redirected or captured, batch commands retain JSON-only feedback;
-`termination.message` includes the expected token and the column when known.
-The bare REPL prints its source diagnostic once on stderr even when captured.
-The diagnostic heading is English; `-lang` continues to control JSON feedback.
+Recoverable input errors are reported on stdout in `errors`, including the
+original input and structured `source_location` (`path`, one-based `line`, and
+one-based `column` when known). Captured REPL runs use the same concise JSON
+feedback without an additional stderr error report. Hard session errors keep
+their command-specific termination diagnostic.
 When a downstream reader closes stdout, Litex preserves the command's exit
 status without panicking. Other output I/O errors are reported normally.
 
@@ -250,6 +256,7 @@ status without panicking. Other output I/O errors are reported normally.
   "detail": "normal",
   "language": "en",
   "statement_results": [],
+  "errors": [],
   "session_terminated": false,
   "termination": null
 }
@@ -264,10 +271,11 @@ status without panicking. Other output I/O errors are reported normally.
 | `detail` | `"normal"` for the default CLI projection |
 | `language` | Selected locale from `-lang`: `"en"`, `"zh"`, `"zh-hant"`, `"fr"`, `"ru"`, `"es"`, `"ar"`, `"ja"`, `"ko"`, or `"vi"` (default `"en"`); non-English output localizes known keys too |
 | `statement_results` | `-e` / target `-f` statements in order; the current `-r` summary leaves this array empty |
-| `session_terminated` | Boolean hard-stop indicator; ordinary proof rejection leaves it false |
+| `errors` | Concise failures from this submission, in statement order; zero-based `statement_index` refers to `statement_results` |
+| `session_terminated` | Boolean hard-stop indicator; ordinary proof and parse/tokenizer rejection leave it false |
 | `termination` | `null`, or `{ "phase": ..., "message": ... }` for a hard stop |
 
-Programs should read `run_result`, `statement_results`, `session_terminated`,
+Programs should read `run_result`, `statement_results`, `errors`, `session_terminated`,
 and `termination`. Exit
 status `0` means batch success; `1` means a failed run or a parse/I/O error;
 `2` means an invalid-argument error returned to the launcher. An invalid
@@ -282,7 +290,7 @@ Use `-f` on a target file when you need its statement explanations.
 `statement` preserves the complete parsed source in readable form, including
 theorem/axiom names, theorem arguments and selected conclusions. Computed or
 published facts belong in `stores`. For `1 / 0 = 0`, the failed statement stays
-`1 / 0 = 0`; `why_failed.phase` is `well_defined` and its message says that
+`1 / 0 = 0`; its `errors` entry has `phase: well_defined` and a message saying that
 well-definedness could not be proved. This is a proof failure, not an assertion
 that every unproved expression is mathematically undefined.
 
@@ -336,6 +344,7 @@ as proof explanations. Enum-like envelope values such as `run`, `eval`, and
       "推断": []
     }
   ],
+  "错误列表": [],
   "会话已终止": false,
   "终止信息": null
 }
@@ -358,29 +367,34 @@ Success, for `0 <= k` after `have k N` has already inferred it:
 }
 ```
 
-Soft failure (still inside `statement_results`):
+A rejected entry inside `statement_results` stays short:
 
 ```json
 {
   "statement_result": "rejected",
-  "statement": "a > 10",
-  "why_failed": {
-    "phase": "search_proof",
-    "goal": "a > 10"
-  },
-  "stores": [],
-  "infers": []
+  "statement": "a > 10"
 }
 ```
 
-Rules:
+Its explanation appears once in the run-level `errors` array. For a single
+submitted statement this may contain:
 
-- `statement_result` is the explicit string `"accepted"` or `"rejected"`.
-- `stores`, `infers`, `cite`, `statement`, and `goal` use readable Litex text.
-- Builtin explanations use `rule_name` and `message`, not the old `rule` tag.
-- Successful Normal entries summarize their proof route. Failed entries may
-  include nested well-definedness or proof-block evidence under `why_failed`;
-  start with `why_failed.phase` and follow its nested failure to the stopping point.
+```json
+{
+  "statement_index": 0,
+  "statement": "a > 10",
+  "phase": "search_proof",
+  "category": "proof_search",
+  "message": "Could not prove the goal.",
+  "obligation": "a > 10"
+}
+```
+
+`statement_result` is `"accepted"` or `"rejected"`. Successful entries retain
+`proof_method`, `stores`, and `infers`. Error summaries retain available missing
+conditions, arity/cause fields, and nested statement locations. They omit the
+full `verification` tree and repeated `diagnostic` wrappers. Standalone Normal
+and Detailed Rust statement projections still expose that full evidence.
 
 `proof_method.type` identifies the selected verification route for that
 statement. Read `statement_result` and `run_result` to determine acceptance;
@@ -412,6 +426,7 @@ Successful inline run:
       }
     }
   ],
+  "errors": [],
   "target": "eval"
 }
 ```
@@ -436,14 +451,18 @@ Selected-field excerpt of a soft miss with a successful prefix retained:
       "proof_method": { "type": "define_obj" }
     },
     {
-      "infers": [],
       "statement": "a > 10",
-      "stores": [],
-      "statement_result": "rejected",
-      "why_failed": {
-        "goal": "a > 10",
-        "phase": "search_proof"
-      }
+      "statement_result": "rejected"
+    }
+  ],
+  "errors": [
+    {
+      "statement_index": 1,
+      "statement": "a > 10",
+      "phase": "search_proof",
+      "category": "proof_search",
+      "message": "Could not prove the goal.",
+      "obligation": "a > 10"
     }
   ],
   "target": "eval"
@@ -629,6 +648,24 @@ discarded; earlier accepted context remains available. The agent can use the
 JSON feedback to repair its next proposal without rebuilding the checked
 prefix.
 
+Parsing recovery uses the same context:
+
+```text
+litex> have fn incomplete_function(x R) R = x +
+{"run_result": "failure", "errors": [{"phase": "parse", "message": "expected object", "...": "..."}], "session_terminated": false}
+litex> a = 2
+success
+litex> have fn incomplete_function(x R) R = x + 1
+success
+```
+
+The JSON above is abbreviated. Parsing stops the rest of the current submitted
+block, while tokenization failure prevents that whole block from executing.
+Neither prevents the next REPL submission. A rejected declaration reserves no
+name. `-session` still requires its initial batch input to pass before entering
+the REPL. A normal `exit` returns 0; earlier rejected attempts remain in their
+own feedback and do not taint later verdicts or the initial batch snapshot.
+
 ### One persistent Session
 
 ```bash
@@ -689,11 +726,11 @@ the contract the agent should parse.
 
 ### Well-definedness and failed-stage summaries
 
-Classified WD and execution-stage failures include `why_failed.diagnostic` in
-Normal and the same `diagnostic` in Detailed. With `-lang en`, its fields are
-`category`, `message`, and, when retained by the verifier, `expression` and
-`obligation`. Keys and messages follow the selected language; category values
-remain stable.
+Classified WD and execution-stage failures expose concise fields directly in
+Normal run `errors`: `category`, `message`, and, when retained by the verifier,
+`expression` and `obligation`. Standalone Normal and Detailed Rust projections
+retain the original `diagnostic` and nested verification evidence. Keys and
+messages follow the selected language; category values remain stable.
 
 For `forall x R => 1 / x = 1 / x`, the category is `well_defined`, the expression
 is `(1 / x)`, and the missing obligation is `x != 0`. A failed forall conclusion

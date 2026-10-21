@@ -3,9 +3,9 @@
 use super::import_kb::{try_finish_import_from_kb, write_kb_after_cold_import, ImportKbHit};
 use super::load_config::{load_config, normalize_module_dir};
 use super::run_export_file::run_export_file_observed;
-use crate::run::source_observer::SourceObserver;
 use crate::prelude::*;
 use crate::run::run_command_outcome::{RunFileResult, RunSessionError};
+use crate::run::source_observer::SourceObserver;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -34,7 +34,16 @@ pub fn run_import_module(
     running: &mut HashSet<PathBuf>,
     file_results: &mut Vec<RunFileResult>,
 ) -> RuntimeResult<RunImportModuleOutcome> {
-    run_import_module_observed(runtime, module_dir, alias, std_root, done, running, file_results, &mut ())
+    run_import_module_observed(
+        runtime,
+        module_dir,
+        alias,
+        std_root,
+        done,
+        running,
+        file_results,
+        &mut (),
+    )
 }
 
 pub fn run_import_module_observed(
@@ -129,18 +138,18 @@ pub fn run_import_module_observed(
         .clone();
 
     if !observer.requires_source_evidence() {
-    match try_finish_import_from_kb(runtime, &key, &config, std_root, mod_id, &exports)? {
-        ImportKbHit::Applied => {
-            running.remove(&key);
-            done.insert(key);
-            return Ok(RunImportModuleOutcome::Done);
+        match try_finish_import_from_kb(runtime, &key, &config, std_root, mod_id, &exports)? {
+            ImportKbHit::Applied => {
+                running.remove(&key);
+                done.insert(key);
+                return Ok(RunImportModuleOutcome::Done);
+            }
+            ImportKbHit::Miss => {}
+            ImportKbHit::SessionError(error) => {
+                running.remove(&key);
+                return Ok(RunImportModuleOutcome::SessionError(error));
+            }
         }
-        ImportKbHit::Miss => {}
-        ImportKbHit::SessionError(error) => {
-            running.remove(&key);
-            return Ok(RunImportModuleOutcome::SessionError(error));
-        }
-    }
     }
 
     for (export_file_id, export) in exports.iter().enumerate() {
@@ -164,11 +173,10 @@ pub fn run_import_module_observed(
             }
         };
         let failed = !file_result.run.success;
-        let session_error = file_result.run.session_error.clone().unwrap_or_else(|| {
-            let mut failure = ImportFailure::rejected_export(&file_result);
+        let mut session_error = file_result.mount_error();
+        if let RunSessionError::FailToImport(failure) = &mut session_error {
             failure.prepend(&key);
-            RunSessionError::FailToImport(failure)
-        });
+        }
         file_results.push(file_result);
         if failed {
             running.remove(&key);

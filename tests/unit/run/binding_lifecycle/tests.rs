@@ -24,10 +24,73 @@ fn success(rt: &mut Runtime, code: &str) {
 
 fn parse_error(result: &RunLitexCodeResult) {
     assert!(!result.success);
-    assert!(matches!(
-        result.session_error,
-        Some(RunSessionError::Runtime(RuntimeError::ParseError(_)))
-    ));
+    assert!(result.session_error.is_none());
+    assert!(result.input_error.is_some());
+}
+
+#[test]
+fn malformed_function_input_can_be_corrected_without_losing_the_context() {
+    let mut rt = runtime();
+    success(&mut rt, "have a R");
+    let code = "have fn incomplete_function(x R) R = x +";
+    let result = rt.run_litex_code(code).unwrap();
+    parse_error(&result);
+    assert_eq!(result.input_error.as_ref().unwrap().statement, code);
+    assert!(rt.resolve_plain_atom("incomplete_function").is_err());
+    success(&mut rt, "a $in R");
+    success(&mut rt, "have fn incomplete_function(x R) R = x + 1");
+    success(&mut rt, "incomplete_function(2) = 3");
+}
+
+#[test]
+fn tokenizer_rejection_retains_prior_context_and_publishes_no_partial_input() {
+    let mut rt = runtime();
+    success(&mut rt, "have a R = 2");
+    let result = rt.run_litex_code("have pending R\n\"").unwrap();
+    parse_error(&result);
+    assert!(result.statement_results.is_empty());
+    assert!(rt.resolve_plain_atom("pending").is_err());
+    success(&mut rt, "a + 1 = 3\nhave pending R");
+}
+
+#[test]
+fn malformed_proof_input_retains_raw_source_and_discards_all_its_local_names() {
+    let mut rt = runtime();
+    success(&mut rt, "have a R");
+    let block = "claim:\n    ? a = a\n    have pending R\n    have fn broken(x R) R = x +";
+    let result = rt.run_litex_code(block).unwrap();
+    parse_error(&result);
+    assert_eq!(result.input_error.as_ref().unwrap().statement, block);
+    assert_eq!(result.input_error.as_ref().unwrap().error.line, 4);
+    for name in ["pending", "broken"] {
+        assert!(rt.resolve_plain_atom(name).is_err());
+    }
+    success(
+        &mut rt,
+        "have pending R\nhave fn broken(x R) R = x + 1\na = a",
+    );
+}
+
+#[test]
+fn reading_consumer_reports_rejected_source_without_publishing_a_broken_statement() {
+    let result = crate::reading::build_reading(
+        &crate::reading::ReadingInput::Source(
+            "have a R\nhave fn incomplete_function(x R) R = x +".into(),
+        ),
+        true,
+        OutputLanguage::English,
+    );
+    assert!(!result.success);
+    let fields = result.document.as_object().unwrap();
+    assert_eq!(
+        fields.get("statements").unwrap().as_array().unwrap().len(),
+        1
+    );
+    assert!(fields
+        .get("diagnostics")
+        .unwrap()
+        .stringify()
+        .contains("expected object"));
 }
 
 #[test]
@@ -292,16 +355,15 @@ fn repeated_names_never_replace_an_existing_object_or_function() {
         parse_error(&result);
         assert!(result.statement_results.is_empty());
         assert!(result
-            .session_error
+            .input_error
             .unwrap()
-            .to_string()
+            .error
+            .message
             .contains("already bound"));
         assert_eq!(rt.resolve_plain_atom("item").unwrap(), original_id);
         assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), facts_before);
         assert_eq!(rt.execution_environments_stack.len(), 1);
         assert_eq!(rt.parse_scope_stack.len(), 1);
-        // Inspect the retained Runtime through its API; CLI parse errors end
-        // the interactive process and are not promised to be recoverable there.
         success(&mut rt, old_fact);
         assert!(!rt.run_litex_code(wrong_fact).unwrap().success);
         assert!(!rt.run_litex_code("0 = 1").unwrap().success);
@@ -354,9 +416,10 @@ fn repeated_names_keep_predicate_theorem_and_struct_definitions() {
         let result = rt.run_litex_code(duplicate).unwrap();
         parse_error(&result);
         assert!(result
-            .session_error
+            .input_error
             .unwrap()
-            .to_string()
+            .error
+            .message
             .contains("already bound"));
         assert_eq!(rt.resolve_plain_atom("item").unwrap(), original_id);
         success(&mut rt, old_fact);
@@ -380,9 +443,10 @@ fn repeated_names_reject_visible_shadowing_and_duplicate_binders() {
         let result = rt.run_litex_code(duplicate).unwrap();
         parse_error(&result);
         assert!(result
-            .session_error
+            .input_error
             .unwrap()
-            .to_string()
+            .error
+            .message
             .contains("already bound"));
         assert_eq!(rt.resolve_plain_atom("x").unwrap(), original_id);
         success(&mut rt, "x = 1");
@@ -415,7 +479,8 @@ fn repeated_names_after_closed_scopes_have_fresh_ids_and_no_old_equations() {
 #[test]
 fn tokenization_failure_still_precedes_all_execution() {
     let mut rt = runtime();
-    assert!(rt.run_litex_code("let unseen = 1\n\"\"\"\n").is_err());
+    let result = rt.run_litex_code("let unseen = 1\n\"\"\"\n").unwrap();
+    parse_error(&result);
     assert!(rt.resolve_plain_atom("unseen").is_err());
     assert!(!rt
         .top_exec_env()

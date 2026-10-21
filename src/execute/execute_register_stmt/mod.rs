@@ -12,3 +12,7 @@ pub use result::{
     ExecRegisterSymmetricPropStmtResult, ExecRegisterTransitivePropStmtFailed,
     ExecRegisterTransitivePropStmtResult,
 };
+
+pub(crate) use result::ExecRegisterReflexivePropStmtSuccess;
+pub(crate) use result::ExecRegisterSymmetricPropStmtSuccess;
+pub(crate) use result::ExecRegisterTransitivePropStmtSuccess;

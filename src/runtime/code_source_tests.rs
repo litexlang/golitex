@@ -71,9 +71,10 @@ fn one_source_stamps_paths_ast_and_export_identity() {
         let error = runtime
             .run_litex_code("have")
             .unwrap()
-            .session_error
-            .unwrap();
-        assert!(error.to_string().contains(&source.to_string()));
+            .input_error
+            .unwrap()
+            .error;
+        assert_eq!(error.path, source);
     }
 }
 
@@ -116,8 +117,8 @@ fn continued_repl_keeps_the_open_environment_and_original_snapshot() {
     let error = runtime
         .run_litex_code("$is_finite_set(1, 2)")
         .unwrap()
-        .session_error
-        .unwrap();
-    assert!(error.to_string().contains("<repl>"));
-    assert!(!error.to_string().contains("initial.lit"));
+        .input_error
+        .unwrap()
+        .error;
+    assert_eq!(error.path, CodeSource::Repl);
 }

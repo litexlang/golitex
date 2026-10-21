@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Litex Reading</title>
+  <link rel="stylesheet" href="reader.css">
+  <script defer src="reader.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body class="litex-reading-page" data-live="__LITEX_READING_LIVE__">
+  <header class="reading-shell-header">
+    <a class="reading-brand" href="#">Litex <span>Reading</span></a>
+    <div class="reading-upload-actions" id="upload-actions" hidden>
+      <button id="choose-files" class="reading-primary" type="button">Open files</button>
+      <button id="choose-project" type="button">Open project folder</button>
+      <input id="source-files" type="file" accept=".lit,.config,.json" multiple hidden>
+      <input id="project-files" type="file" webkitdirectory multiple hidden>
+    </div>
+    <label class="reading-language"><span id="language-label">Language</span> <select id="language"><option value="en">English</option><option value="zh">中文</option></select></label>
+  </header>
+  <div class="reading-upload-status" id="upload-status" role="status" aria-live="polite"></div>
+  <main id="reader"></main>
+  <script type="application/json" id="reading-data">__LITEX_READING_DATA__</script>
+</body>
+</html>

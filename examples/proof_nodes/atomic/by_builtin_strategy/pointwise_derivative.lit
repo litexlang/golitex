@@ -7,6 +7,15 @@ derivative(square,3)+2=8
 
 # Natural powers include n=0; reciprocals require the actual nonzero domain.
 claim:
+    ? forall f,g,h fn(x R) R,x0,A,B,E R:
+        $has_derivative_at(h,x0,E)
+        $has_derivative_at(g,h(x0),B)
+        $has_derivative_at(f,g(h(x0)),A)
+        =>:
+            $has_derivative_at(fn(t R) R {f(g(h(t)))},x0,A*B*E)
+    $has_derivative_at(fn(t R) R {f(g(h(t)))},x0,A*B*E)
+
+claim:
     ? forall f fn(x R) R,x0,L R:
         $has_limit_at(fn(x R:x-x0!=0) R {(f(x)-f(x0))/(x-x0)},x0,L)
         =>:

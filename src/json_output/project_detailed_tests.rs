@@ -144,6 +144,7 @@ fn detailed_run_envelope_detail_and_language() {
         statement_results: vec![stmt],
         statement_texts: Vec::new(),
         failed_statement_results: None,
+        input_error: None,
         session_error: None,
         normal_json: None,
     };
@@ -376,7 +377,7 @@ fn detailed_register_preserves_actual_failure_stage_in_both_languages() {
                 let run = rt.run_litex_code(&code).expect("run");
                 assert!(!run.success, "{code}");
                 if phase == "shape" {
-                    assert!(run.session_error.is_some());
+                    assert!(run.input_error.is_some());
                     assert!(!matches!(run.statement_results.last(), Some(ExecStmtResult::Register(_))));
                     continue;
                 }

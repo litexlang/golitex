@@ -363,7 +363,7 @@ fn anonymous_empty_complete_domains_check_body_wd_and_vacuous_return_bounds() {
     let run = rt
         .run_litex_code("have fn bad(k {}) R=missing_value")
         .unwrap();
-    assert!(!run.success && run.session_error.is_some());
+    assert!(!run.success && run.input_error.is_some());
     assert_eq!(facts(&rt), before);
 }
 

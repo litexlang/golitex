@@ -87,8 +87,12 @@ restart/replay.
 3. On the REPL's plain-text `success` response (not a JSON field), journal the
    accepted source and continue. On an ordinary
    failure with `session_terminated: false`, `termination: null` followed by another `litex>` prompt,
-   keep the process and repair the current statement. Failure is missing proof
-   or well-definedness evidence, not proof of the proposition's negation.
+   keep the process and repair the current statement. Read the concise `errors`
+   array for the failing statement, phase, location or missing condition. Each
+   submission has its own verdict; earlier rejected attempts do not taint a later
+   accepted submission or the initial batch snapshot. Verification rejection
+   means missing proof or well-definedness evidence, not proof of the
+   proposition's negation; parse rejection instead identifies malformed input.
 4. At a coherent checkpoint or final verification, save the accepted code and
    run a separate clean file gate while keeping the authoring Session open.
    Do not run the whole file again after each new statement or small batch.
@@ -99,6 +103,8 @@ A failed statement discards its own tentative parse bindings and execution
 state. Successful earlier statements remain. If a frame contains several
 top-level statements, its successful statements can commit even when the
 frame's overall `run_result` is `"failure"`; soft failures do not stop later statements.
+A parse error stops the rest of that submission, while a tokenizer error prevents
+the entire submission from executing. Both allow the next REPL submission.
 Do not assume a whole candidate fragment rolled back, or blindly resubmit names
 that already committed. Keep the accepted prefix in a journal outside the live
 process so it can be recovered after a restart or interruption.
@@ -128,8 +134,11 @@ already handles each statement's commit/discard boundary.
 Restart when the process exits or cannot accept input, when the loaded module
 prefix must change, or when replacing an already committed declaration under
 the same name requires a fresh context. A normal proof miss is not a restart
-condition. Parsing/tokenization errors and hard session errors can terminate
-the REPL; a stopped process cannot retain usable context for the next attempt.
+condition. Parsing and tokenization errors reject the current submission and
+return to the prompt, retaining previously accepted context. Correct the input
+in the same process; a failed declaration has not reserved its name. Hard session
+errors can still terminate the REPL; a stopped process cannot retain usable
+context for the next attempt.
 
 When deliberately adopting a verified rebuilt Litex executable, save the
 accepted source first, then restart and replay it. Replacing the binary on

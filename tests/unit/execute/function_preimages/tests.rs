@@ -92,7 +92,7 @@ fn function_preimages_do_not_hide_malformed_constructor_calls() {
         "preimage_set(1, {}, {})",
     ] {
         let run = runtime().run_litex_code(code).unwrap();
-        assert!(!run.success && run.session_error.is_some(), "{code}");
+        assert!(!run.success && run.input_error.is_some(), "{code}");
     }
 }
 
@@ -104,7 +104,7 @@ fn function_preimages_own_their_names_and_migrated_witnesses_work() {
     );
     for code in ["preimage = 2", "preimage_set = 3"] {
         let run = runtime().run_litex_code(code).unwrap();
-        assert!(!run.success && run.session_error.is_some(), "{code}");
+        assert!(!run.success && run.input_error.is_some(), "{code}");
     }
 }
 

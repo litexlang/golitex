@@ -18,3 +18,6 @@ pub mod subset;
 pub use result::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
 
 mod sym_diff_membership;
+
+pub(crate) use preimage::PreimageMembershipStrategySingleStep;
+pub(crate) use preimage::PreimageSetMembershipStrategySingleStep;
